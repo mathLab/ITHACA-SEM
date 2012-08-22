@@ -260,9 +260,12 @@ namespace Nektar
 					{
 						for(j = 0; j < m_num_points_per_proc[0];j++)
 						{
-							Vmath::Vcopy(copy_len,
-										 &(inarray[i*num_pencil_per_proc+j*num_points_per_plane]),1,
-										 &(outarray[i*num_pencil_per_proc*m_num_points_per_proc[0]+j*num_pencil_per_proc]),1);
+							if((i*num_pencil_per_proc+j*num_points_per_plane) < num_dofs)
+							{
+								Vmath::Vcopy(copy_len,
+											 &(inarray[i*num_pencil_per_proc+j*num_points_per_plane]),1,
+											 &(outarray[i*num_pencil_per_proc*m_num_points_per_proc[0]+j*num_pencil_per_proc]),1);
+							}
 						}
 					}
 				
@@ -373,9 +376,12 @@ namespace Nektar
 					{
 						for(j = 0; j < m_num_points_per_proc[0];j++)
 						{
-							Vmath::Vcopy(copy_len,
+							if((i*num_pencil_per_proc+j*num_points_per_plane) < num_dofs)
+							{
+								Vmath::Vcopy(copy_len,
 								 &(tmp_outarray[i*num_pencil_per_proc*m_num_points_per_proc[0]+j*num_pencil_per_proc]),1,
 								 &(outarray[i*num_pencil_per_proc+j*num_points_per_plane]),1);
+							}
 						}
 					}
 				}

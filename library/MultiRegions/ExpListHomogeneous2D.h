@@ -98,32 +98,31 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpListHomogeneous2D();
 
-            MULTI_REGIONS_EXPORT void Homogeneous2DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs = false);
+            MULTI_REGIONS_EXPORT void Homogeneous2DTrans(const Array<OneD, const NekDouble> &inarray, 
+														 Array<OneD, NekDouble> &outarray, 
+														 bool IsForwards, 
+														 bool UseContCoeffs = false,
+														 bool Shuff = true,
+														 bool UnShuff = true);
 
-            inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+            inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											Array<OneD, NekDouble> &outarray, 
+											bool UseContCoeffs = false,
+											bool Shuff = true,
+											bool UnShuff = true);
 
-            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											Array<OneD, NekDouble> &outarray, 
+											bool UseContCoeffs = false,
+											bool Shuff = true,
+											bool UnShuff = true);
 			
 			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
 									  const Array<OneD, NekDouble> &inarray2,
 									  Array<OneD, NekDouble> &outarray, 
 									  bool UseContCoeffs = false);
-
-            MULTI_REGIONS_EXPORT void ShuffleIntoHomogeneous2DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD, NekDouble> &outarray,
-                              bool UseNumModes = false);
-
-            MULTI_REGIONS_EXPORT void UnshuffleFromHomogeneous2DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD, NekDouble> &outarray,
-                              bool UseNumModes = false);
 			
 			MULTI_REGIONS_EXPORT void SetPaddingBase(void);
-			
-			MULTI_REGIONS_EXPORT void Transpose(const Array<OneD, const NekDouble> &inarray,
-												Array<OneD, NekDouble> &outarray,
-												bool XtoZ);
 			
 			MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
 								                Array<OneD, NekDouble> &out_d0,
@@ -210,12 +209,16 @@ namespace Nektar
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion, std::string var);
 			
 			virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs = false);
+											   Array<OneD, NekDouble> &outarray, 
+											   bool UseContCoeffs = false,
+											   bool Shuff = true,
+											   bool UnShuff = true);
 			
 			virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs = false);
+											   Array<OneD, NekDouble> &outarray, 
+											   bool UseContCoeffs = false,
+											   bool Shuff = true,
+											   bool UnShuff = true);
 			
 			virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
 										 const Array<OneD, NekDouble> &inarray2,
@@ -241,14 +244,22 @@ namespace Nektar
 			DNekMatSharedPtr    MatBwdPAD;
         };
 
-        inline void ExpListHomogeneous2D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        inline void ExpListHomogeneous2D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+															  Array<OneD, NekDouble> &outarray, 
+															  bool UseContCoeffs,
+															  bool Shuff,
+															  bool UnShuff)
         {
-			v_HomogeneousFwdTrans(inarray,outarray,UseContCoeffs);
+			v_HomogeneousFwdTrans(inarray,outarray,UseContCoeffs,Shuff,UnShuff);
         }
 		
-        inline void ExpListHomogeneous2D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        inline void ExpListHomogeneous2D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+															  Array<OneD, NekDouble> &outarray, 
+															  bool UseContCoeffs,
+															  bool Shuff,
+															  bool UnShuff)
         {
-            v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
+            v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs,Shuff,UnShuff);
         }
 		
 		inline void ExpListHomogeneous2D::DealiasedProd(const Array<OneD, NekDouble> &inarray1,

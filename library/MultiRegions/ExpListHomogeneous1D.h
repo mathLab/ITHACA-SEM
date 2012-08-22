@@ -88,11 +88,24 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpListHomogeneous1D();
 
-            MULTI_REGIONS_EXPORT void Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs = false);
+            MULTI_REGIONS_EXPORT void Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, 
+														 Array<OneD, NekDouble> &outarray, 
+														 bool IsForwards, 
+														 bool UseContCoeffs = false,
+														 bool Shuff = true,
+														 bool UnShuff = true);
 
-            inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+            inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											Array<OneD, NekDouble> &outarray, 
+											bool UseContCoeffs = false,
+											bool Shuff = true,
+											bool UnShuff = true);
 
-            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
+            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+											Array<OneD, NekDouble> &outarray, 
+											bool UseContCoeffs = false,
+											bool Shuff = true,
+											bool UnShuff = true);
 			
 			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
 									  const Array<OneD, NekDouble> &inarray2,
@@ -199,12 +212,16 @@ namespace Nektar
                                         std::string var);
 			
 			virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs = false);
+											   Array<OneD, NekDouble> &outarray, 
+											   bool UseContCoeffs = false,
+											   bool Shuff = true,
+											   bool UnShuff = true);
 			
 			virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs = false);
+											   Array<OneD, NekDouble> &outarray, 
+											   bool UseContCoeffs = false,
+											   bool Shuff = true,
+											   bool UnShuff = true);
 			
 			virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
 										 const Array<OneD, NekDouble> &inarray2,
@@ -236,14 +253,22 @@ namespace Nektar
 			DNekMatSharedPtr    MatBwdPAD;
         };
 
-        inline void ExpListHomogeneous1D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        inline void ExpListHomogeneous1D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+															  Array<OneD, NekDouble> &outarray, 
+															  bool UseContCoeffs,
+															  bool Shuff,
+															  bool UnShuff)
         {
-			v_HomogeneousFwdTrans(inarray,outarray,UseContCoeffs);
+			v_HomogeneousFwdTrans(inarray,outarray,UseContCoeffs,Shuff,UnShuff);
         }
 		
-        inline void ExpListHomogeneous1D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        inline void ExpListHomogeneous1D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+															  Array<OneD, NekDouble> &outarray, 
+															  bool UseContCoeffs,
+															  bool Shuff,
+															  bool UnShuff)
         {
-            v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
+            v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs,Shuff,UnShuff);
         }
 		
 		inline void ExpListHomogeneous1D::DealiasedProd(const Array<OneD, NekDouble> &inarray1,

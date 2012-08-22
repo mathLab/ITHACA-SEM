@@ -105,16 +105,24 @@ namespace Nektar
         {
         }
 		
-        void ExpListHomogeneous1D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        void ExpListHomogeneous1D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+														 Array<OneD, NekDouble> &outarray, 
+														 bool UseContCoeffs,
+														 bool Shuff,
+														 bool UnShuff)
         {
             // Forwards trans
-            Homogeneous1DTrans(inarray,outarray,true, UseContCoeffs);
+            Homogeneous1DTrans(inarray,outarray,true,UseContCoeffs,Shuff,UnShuff);
         }
 		
-        void ExpListHomogeneous1D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        void ExpListHomogeneous1D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+														 Array<OneD, NekDouble> &outarray, 
+														 bool UseContCoeffs,
+														 bool Shuff,
+														 bool UnShuff)
         {
             // Backwards trans
-            Homogeneous1DTrans(inarray,outarray,false, UseContCoeffs);
+            Homogeneous1DTrans(inarray,outarray,false,UseContCoeffs,Shuff,UnShuff);
         }
 		
 		/**
@@ -204,7 +212,6 @@ namespace Nektar
 				//Moving the results in physical space for the output
 				HomogeneousBwdTrans(V1V2,outarray,UseContCoeffs);
 			}
-
 		}
 		
 
@@ -352,7 +359,12 @@ namespace Nektar
 		/**
 		 * Homogeneous transform Bwd/Fwd (MVM and FFT)
 		 */
-        void ExpListHomogeneous1D::Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs)
+        void ExpListHomogeneous1D::Homogeneous1DTrans(const Array<OneD, const NekDouble> &inarray, 
+													  Array<OneD, NekDouble> &outarray, 
+													  bool IsForwards, 
+													  bool UseContCoeffs,
+													  bool Shuff,
+													  bool UnShuff)
         {
             if(m_useFFT)
             {		
@@ -360,11 +372,18 @@ namespace Nektar
 				int num_points_per_plane = num_dofs/m_planes.num_elements();
 				int num_dfts_per_proc    = num_points_per_plane/m_comm->GetColumnComm()->GetSize() + (num_points_per_plane%m_comm->GetColumnComm()->GetSize() > 0);
 		
-                Array<OneD, NekDouble> fft_in(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints());
-                Array<OneD, NekDouble> fft_out(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints());
+                Array<OneD, NekDouble> fft_in(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),0.0);
+                Array<OneD, NekDouble> fft_out(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),0.0);
 		
-                m_transposition->Transpose(inarray,fft_in,false,LibUtilities::eXYtoZ);
-								
+				if(Shuff)
+				{
+					m_transposition->Transpose(inarray,fft_in,false,LibUtilities::eXYtoZ);
+				}
+				else 
+				{
+					fft_in = inarray;
+				}
+
                 if(IsForwards)
                 {
                     for(int i = 0 ; i < num_dfts_per_proc ; i++)
@@ -380,7 +399,14 @@ namespace Nektar
                     }
                 }
 				
-				m_transposition->Transpose(fft_out,outarray,false,LibUtilities::eZtoXY);
+				if(UnShuff)
+				{
+					m_transposition->Transpose(fft_out,outarray,false,LibUtilities::eZtoXY);
+				}
+				else 
+				{
+					outarray = fft_out;
+				}
             }
             else 
             {
@@ -412,11 +438,18 @@ namespace Nektar
                 int nrows = blkmat->GetRows();
                 int ncols = blkmat->GetColumns();
 		
-                Array<OneD, NekDouble> sortedinarray(ncols);
-                Array<OneD, NekDouble> sortedoutarray(nrows);
+                Array<OneD, NekDouble> sortedinarray(ncols,0.0);
+                Array<OneD, NekDouble> sortedoutarray(nrows,0.0);
 		
-				m_transposition->Transpose(inarray,sortedinarray,!IsForwards,LibUtilities::eXYtoZ);
-                
+				if(Shuff)
+				{
+					m_transposition->Transpose(inarray,sortedinarray,!IsForwards,LibUtilities::eXYtoZ);
+				}
+				else 
+				{
+					sortedinarray = inarray;
+				}
+
                 // Create NekVectors from the given data arrays
                 NekVector<NekDouble> in (ncols,sortedinarray,eWrapper);
                 NekVector<NekDouble> out(nrows,sortedoutarray,eWrapper);
@@ -424,7 +457,15 @@ namespace Nektar
                 // Perform matrix-vector multiply.
                 out = (*blkmat)*in;
 				
-				m_transposition->Transpose(sortedoutarray,outarray,IsForwards,LibUtilities::eZtoXY);
+				if(UnShuff)
+				{
+					m_transposition->Transpose(sortedoutarray,outarray,IsForwards,LibUtilities::eZtoXY);
+				}
+				else 
+				{
+					outarray = sortedinarray;
+				}
+
             }
         }
 
@@ -502,7 +543,6 @@ namespace Nektar
 													StdPoint);
 					
 					loc_mat = StdPoint.GetStdMatrix(matkey);
-					
 				}
 				else
 				{
@@ -511,7 +551,6 @@ namespace Nektar
 													StdPoint);
 					
 					loc_mat = StdPoint.GetStdMatrix(matkey);
-					
 				}
 			}
 			//other cases
@@ -526,7 +565,6 @@ namespace Nektar
 													StdSeg);
 					
 					loc_mat = StdSeg.GetStdMatrix(matkey);
-					
 				}
 				else
 				{
@@ -535,7 +573,6 @@ namespace Nektar
 													StdSeg);
 					
 					loc_mat = StdSeg.GetStdMatrix(matkey);
-					
 				}				
 				
 			}
@@ -738,12 +775,9 @@ namespace Nektar
                 ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
 			
-
             Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[0],1);
-                          
         }
 		
-
 
         /**
          * Write Tecplot Files Header
@@ -891,8 +925,7 @@ namespace Nektar
 					
 					m_transposition->Transpose(outarray,out_d2,false,LibUtilities::eZtoXY);
 					
-					Vmath::Smul(nT_pts,2.0/m_lhom,out_d2,1,out_d2,1);
-					
+					Vmath::Smul(nT_pts,2.0/m_lhom,out_d2,1,out_d2,1);					
 				}
 			}
 		}

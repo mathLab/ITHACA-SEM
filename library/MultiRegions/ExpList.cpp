@@ -2292,16 +2292,20 @@ namespace Nektar
         }
 		
 		void ExpList::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-											  Array<OneD, NekDouble> &outarray, 
-											  bool UseContCoeffs)
+											Array<OneD, NekDouble> &outarray, 
+											bool UseContCoeffs,
+											bool Shuff,
+											bool UnShuff)
 		{
 			ASSERTL0(false,
                      "This method is not defined or valid for this class type");
 		}
 		
 		void ExpList::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-											  Array<OneD, NekDouble> &outarray, 
-											  bool UseContCoeffs)
+											Array<OneD, NekDouble> &outarray, 
+											bool UseContCoeffs,
+											bool Shuff,
+											bool UnShuff)
 		{
 			ASSERTL0(false,
                      "This method is not defined or valid for this class type");

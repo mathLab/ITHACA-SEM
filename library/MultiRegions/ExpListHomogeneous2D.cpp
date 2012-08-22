@@ -130,16 +130,24 @@ namespace Nektar
         {
         }
 		
-		void ExpListHomogeneous2D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		void ExpListHomogeneous2D::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+														 Array<OneD, NekDouble> &outarray, 
+														 bool UseContCoeffs,
+														 bool Shuff,
+														 bool UnShuff)
         {
 			// Forwards trans
-            Homogeneous2DTrans(inarray,outarray,true, UseContCoeffs);
+            Homogeneous2DTrans(inarray,outarray,true,UseContCoeffs,Shuff,UnShuff);
         }
 		
-		void ExpListHomogeneous2D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+		void ExpListHomogeneous2D::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+														 Array<OneD, NekDouble> &outarray, 
+														 bool UseContCoeffs,
+														 bool Shuff,
+														 bool UnShuff)
         {
 			// Backwards trans
-            Homogeneous2DTrans(inarray,outarray,false, UseContCoeffs);
+            Homogeneous2DTrans(inarray,outarray,false,UseContCoeffs,Shuff,UnShuff);
         }
 		
 		void ExpListHomogeneous2D::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1, 
@@ -359,8 +367,12 @@ namespace Nektar
             }
         }
 
-        void ExpListHomogeneous2D::Homogeneous2DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs)
-        {
+        void ExpListHomogeneous2D::Homogeneous2DTrans(const Array<OneD, const NekDouble> &inarray, 
+													  Array<OneD, NekDouble> &outarray, 
+													  bool IsForwards, 
+													  bool UseContCoeffs,
+													  bool Shuff,
+													  bool UnShuff)        {
             if(m_useFFT)
 			{
 				
@@ -415,7 +427,6 @@ namespace Nektar
 			}
 			else 
 			{
-				
 			    DNekBlkMatSharedPtr blkmatY;
 				DNekBlkMatSharedPtr blkmatZ;
 				
@@ -478,100 +489,6 @@ namespace Nektar
 			}
         }
 
-        void ExpListHomogeneous2D::ShuffleIntoHomogeneous2DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD, NekDouble> &outarray,
-                              bool UseNumModes)
-        {
-            int i, pts_per_line;
-            int n = inarray.num_elements();
-            int packed_len;
-			int NumMod_y = m_homogeneousBasis_y->GetNumModes();
-			int NumMod_z = m_homogeneousBasis_z->GetNumModes();
-
-            pts_per_line = n/m_lines.num_elements();
-
-            if(UseNumModes)
-            {
-                packed_len = NumMod_y*NumMod_z;
-            }
-            else
-            {
-                packed_len = m_lines.num_elements();
-            }
-
-            ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
-
-            for(i = 0; i < packed_len; ++i)
-            {
-                Vmath::Vcopy(pts_per_line,&(inarray[i*pts_per_line]),1,
-                             &(outarray[i]),packed_len);
-            }
-        }
-
-        void ExpListHomogeneous2D::UnshuffleFromHomogeneous2DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD, NekDouble> &outarray,
-                              bool UseNumModes)
-        {
-            int i,pts_per_line;
-            int n = inarray.num_elements();
-            int packed_len;
-			int NumMod_y = m_homogeneousBasis_y->GetNumModes();
-			int NumMod_z = m_homogeneousBasis_z->GetNumModes();
-
-            // use length of inarray to determine data storage type
-            // (i.e.modal or physical).
-            pts_per_line = n/m_lines.num_elements();
-			
-            if(UseNumModes)
-            {
-                packed_len = NumMod_y*NumMod_z;
-            }
-            else
-            {
-                packed_len = m_lines.num_elements();
-            }
-
-            ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
-
-
-            for(i = 0; i < packed_len; ++i)
-            {
-                Vmath::Vcopy(pts_per_line,&(inarray[i]),packed_len,
-                             &(outarray[i*pts_per_line]),1);
-            }
-        }
-		
-		void ExpListHomogeneous2D::Transpose(const Array<OneD, const NekDouble> &inarray,
-											 Array<OneD, NekDouble> &outarray,
-											 bool YtoZ)
-		{
-			int n = m_lines.num_elements();   //number of Fourier points in the Fourier directions (x-z grid)
-			int s = inarray.num_elements();   //number of total points = n. of Fourier points * n. of points per line
-			
-			int pts_per_line  = s/n;
-			
-			int packed_len = pts_per_line*m_nz;
-			
-			if (YtoZ)
-			{
-				for(int i = 0; i < m_ny ; ++i)
-				{
-					Vmath::Vcopy(packed_len,&(inarray[i]),m_ny,&(outarray[i*packed_len]),1);
-				}
-			  
-			}
-			else 
-			{
-				for(int i = 0; i < packed_len ; ++i)
-				{
-					Vmath::Vcopy(m_ny,&(inarray[i]),packed_len,&(outarray[i*m_ny]),1);
-				}
-				
-			}
-		}
-		
         DNekBlkMatSharedPtr ExpListHomogeneous2D::GetHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype, bool UseContCoeffs) const
         {
             Homo2DBlockMatrixMap::iterator matrixIter = m_homogeneous2DBlockMat->find(mattype);
@@ -586,7 +503,6 @@ namespace Nektar
                 return matrixIter->second;
             }
         }
-
 
         DNekBlkMatSharedPtr ExpListHomogeneous2D::GenHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype, bool UseContCoeffs) const
         {

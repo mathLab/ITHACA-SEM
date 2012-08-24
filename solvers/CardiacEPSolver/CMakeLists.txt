@@ -17,3 +17,5 @@ SET(CardiacEPSolverSource
 
 ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 
 			${CardiacEPSolverSource})
+
+ADD_SUBDIRECTORY(Utilities)

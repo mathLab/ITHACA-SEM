@@ -8,6 +8,7 @@
 //#include <vtkTextProperty.h>
 //#include <vtkTable.h>
 #include "vtkEventQtSlotConnect.h"
+#include "vtkPolyDataWriter.h"
 
 #include "MainWindow.h"
 
@@ -116,37 +117,47 @@ void MainWindow::Draw() {
     resize(800, 600);
 
     mLeftVtk = new QVTKWidget(this, QFlag(0) );
-    connect(mLeftVtk, SIGNAL(mouseDoubleClickEvent(QMouseEvent* event)), this, SLOT(CreateLeftPoint(QMouseEvent* event)));
     mRightVtk = new QVTKWidget(this, QFlag(0) );
 
     QLabel* vFileLeftLabel = new QLabel(tr("Left:"));
+    QLabel* vFilePointsLabel = new QLabel(tr("Landmarks:"));
     QLabel* vFileRightLabel = new QLabel(tr("Right:"));
 
     mFileLeftEditBox = new QLineEdit(tr(""));
     mFileLeftBrowse = new QPushButton(tr("Browse..."));
     mFileRightEditBox = new QLineEdit(tr(""));
     mFileRightBrowse = new QPushButton(tr("Browse..."));
+    mFilePointsEditBox = new QLineEdit(tr(""));
+    mFilePointsBrowse = new QPushButton(tr("Browse..."));
     connect(mFileLeftBrowse, SIGNAL(clicked()), this, SLOT(BrowseLeft()));
     connect(mFileRightBrowse, SIGNAL(clicked()), this, SLOT(BrowseRight()));
+    connect(mFilePointsBrowse, SIGNAL(clicked()), this, SLOT(BrowsePoints()));
 
     mFileLoadButton = new QPushButton(tr("Load"));
     connect(mFileLoadButton, SIGNAL(clicked()), this, SLOT(Load()));
+    mFileExportPointsButton = new QPushButton(tr("Export points..."));
+    connect(mFileExportPointsButton, SIGNAL(clicked()), this, SLOT(ExportRightPoints()));
 
     mFileGrid = new QGridLayout;
     mFileGrid->addWidget(vFileLeftLabel, 0, 0);
-    mFileGrid->addWidget(vFileRightLabel, 1, 0);
+    mFileGrid->addWidget(vFilePointsLabel, 1, 0);
+    mFileGrid->addWidget(vFileRightLabel, 2, 0);
     mFileGrid->addWidget(mFileLeftEditBox, 0, 1);
-    mFileGrid->addWidget(mFileRightEditBox, 1, 1);
+    mFileGrid->addWidget(mFilePointsEditBox, 1, 1);
+    mFileGrid->addWidget(mFileRightEditBox, 2, 1);
     mFileGrid->addWidget(mFileLeftBrowse, 0, 2);
-    mFileGrid->addWidget(mFileRightBrowse, 1, 2);
-    mFileGrid->addWidget(mFileLoadButton, 2, 1);
+    mFileGrid->addWidget(mFilePointsBrowse, 1, 2);
+    mFileGrid->addWidget(mFileRightBrowse, 2, 2);
+    mFileGrid->addWidget(mFileLoadButton, 3, 1);
+    mFileGrid->addWidget(mFileExportPointsButton, 4, 1);
 
     mFileBox = new QGroupBox(tr("Files"));
     mFileBox->setLayout(mFileGrid);
     mFileBox->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
-    mSettingsGrid = new QGridLayout;
-    mSettingsGrid->addWidget(mFileBox, 0, 0);
+    mSettingsGrid = new QVBoxLayout;
+    mSettingsGrid->addWidget(mFileBox);
+    mSettingsGrid->addStretch();
 
     mSettingsBox = new QGroupBox(tr("Settings"));
     mSettingsBox->setLayout(mSettingsGrid);
@@ -179,6 +190,12 @@ void MainWindow::BrowseRight() {
     mFileRightEditBox->setText(dataFile);
 }
 
+void MainWindow::BrowsePoints() {
+    QString pointsFile = QFileDialog::getOpenFileName(this,
+            tr("Load Source Landmark Points"), "", tr("Landmark Points (*.vtk)"));
+    mFilePointsEditBox->setText(pointsFile);
+}
+
 void MainWindow::Load() {
     vtkPolyDataReader* vLeftReader = vtkPolyDataReader::New();
     vLeftReader->SetFileName(mFileLeftEditBox->text().toStdString().c_str());
@@ -193,8 +210,6 @@ void MainWindow::Load() {
     mRightFilterSmooth->SetInput(mRightData);
 
     vtkPoints* vPointList = vtkPoints::New();
-    vPointList->InsertNextPoint(0.0, 0.0, 0.0);
-    vPointList->InsertNextPoint(50.0, 50.0, 50.0);
     mLeftPointsData->SetPoints(vPointList);
 
     mLeftRenderer->ResetCamera(mLeftActor->GetBounds());
@@ -241,4 +256,14 @@ void MainWindow::CreateLeftPoint(vtkObject* caller, unsigned long vtk_event, voi
 
     // Update display
     Update();
+}
+
+void MainWindow::ExportRightPoints() {
+    QString pointsFile = QFileDialog::getSaveFileName(this,
+            tr("Export Landmark Points"), "", tr("Landmark Points (*.vtk)"));
+
+    vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+    writer->SetInput(mLeftPointsData);
+    writer->SetFileName(pointsFile.toStdString().c_str());
+    writer->Write();
 }

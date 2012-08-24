@@ -43,23 +43,30 @@ class MainWindow : public QMainWindow
     private slots:
         void BrowseLeft();
         void BrowseRight();
+        void BrowsePoints();
         void Load();
         void Update();
+
         void CreateLeftPoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
+
+        void ExportRightPoints();
 
     private:
         // GUI widgets
         QWidget* mRootWidget;
         QGridLayout* mRootGrid;
         QGroupBox* mSettingsBox;
-        QGridLayout* mSettingsGrid;
+        QVBoxLayout* mSettingsGrid;
         QGroupBox* mFileBox;
         QGridLayout* mFileGrid;
         QLineEdit* mFileLeftEditBox;
         QPushButton* mFileLeftBrowse;
+        QLineEdit* mFilePointsEditBox;
+        QPushButton* mFilePointsBrowse;
         QLineEdit* mFileRightEditBox;
         QPushButton* mFileRightBrowse;
         QPushButton* mFileLoadButton;
+        QPushButton* mFileExportPointsButton;
         QVTKWidget* mLeftVtk;
         QVTKWidget* mRightVtk;
 

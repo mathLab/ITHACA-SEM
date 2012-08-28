@@ -366,9 +366,20 @@ namespace Nektar
 													  bool Shuff,
 													  bool UnShuff)
         {
+			int num_dofs;
+			
+			if(IsForwards)
+			{
+				num_dofs = inarray.num_elements();
+			}
+			else
+			{
+				num_dofs = outarray.num_elements();
+			}
+			
             if(m_useFFT)
             {		
-				int num_dofs             = inarray.num_elements();
+
 				int num_points_per_plane = num_dofs/m_planes.num_elements();
 				int num_dfts_per_proc    = num_points_per_plane/m_comm->GetColumnComm()->GetSize() + (num_points_per_plane%m_comm->GetColumnComm()->GetSize() > 0);
 		
@@ -412,7 +423,7 @@ namespace Nektar
             {
                 DNekBlkMatSharedPtr blkmat;
 		
-                if(inarray.num_elements() == m_npoints) //transform phys space
+                if(num_dofs == m_npoints) //transform phys space
                 {
                     if(IsForwards)
                     {

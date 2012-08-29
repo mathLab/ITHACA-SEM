@@ -237,44 +237,27 @@ namespace Nektar
 		{
 			if(m_num_processes[0] > 1)
 			{
-				int i,j;
+				// Paramerers set up =================================
+				int i,packed_len;
+				int copy_len = 0;
+				int index = 0;
+				int cnt = 0;
+				
 				int num_dofs             = inarray.num_elements();
 				int num_points_per_plane = num_dofs/m_num_points_per_proc[0];
 			    int num_pencil_per_proc  = num_points_per_plane/m_num_processes[0] + (num_points_per_plane%m_num_processes[0] > 0);
-			    int copy_len             = num_pencil_per_proc;
-				int packed_len;
-				
+			    
 				m_SizeMap = Array<OneD,int> (m_num_processes[0],0);
 			    m_OffsetMap = Array<OneD,int> (m_num_processes[0],0);
+				
+				for(i = 0; i < m_num_processes[0]; i++)
+				{
+					m_SizeMap[i]   = num_pencil_per_proc*m_num_points_per_proc[0];
+					m_OffsetMap[i] = i*num_pencil_per_proc*m_num_points_per_proc[0];
+				}
 			
 			    Array< OneD, NekDouble> tmp_outarray(num_pencil_per_proc*m_num_homogeneous_points[0],0.0);
-			
-			    for(i = 0; i < m_num_processes[0] ; i++)
-			    {
-					if(i == m_num_processes[0]-1)
-					{
-						copy_len = num_pencil_per_proc - ((num_pencil_per_proc*m_num_processes[0]) - num_points_per_plane);
-					}
-					
-					if (copy_len > 0)
-					{
-						for(j = 0; j < m_num_points_per_proc[0];j++)
-						{
-							if((i*num_pencil_per_proc+j*num_points_per_plane) < num_dofs)
-							{
-								Vmath::Vcopy(copy_len,
-											 &(inarray[i*num_pencil_per_proc+j*num_points_per_plane]),1,
-											 &(outarray[i*num_pencil_per_proc*m_num_points_per_proc[0]+j*num_pencil_per_proc]),1);
-							}
-						}
-					}
 				
-					m_SizeMap[i]   = num_pencil_per_proc*m_num_points_per_proc[0];
-					m_OffsetMap[i] = i*num_pencil_per_proc*m_num_points_per_proc[0];		
-				}
-							
-				m_hcomm->AlltoAllv(outarray,m_SizeMap,m_OffsetMap,tmp_outarray,m_SizeMap,m_OffsetMap);
-			    
 				if(UseNumMode)
 				{
 					packed_len = m_num_homogeneous_coeffs[0];
@@ -283,15 +266,35 @@ namespace Nektar
 				{
 					packed_len = m_num_homogeneous_points[0];
 				}
-			
-				ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
+				
+				// Start Transposition =================================
+				while(index < num_points_per_plane)
+				{
+					copy_len = num_pencil_per_proc < (num_points_per_plane-index) ? num_pencil_per_proc : (num_points_per_plane-index);
+					
+					for(i = 0 ; i < m_num_points_per_proc[0]; i++)
+					{
+						Vmath::Vcopy(copy_len,
+									 &(inarray[index+(i*num_points_per_plane)]),1,
+									 &(outarray[cnt]),1);
+						
+						cnt += copy_len;
+					}
+					
+					index += copy_len;
+				}
+							
+				m_hcomm->AlltoAllv(outarray,m_SizeMap,m_OffsetMap,tmp_outarray,m_SizeMap,m_OffsetMap);
 			
 				for(i = 0; i < packed_len; ++i)
 				{
 					Vmath::Vcopy(num_pencil_per_proc,&(tmp_outarray[i*num_pencil_per_proc]),1,
 							 &(outarray[i]),packed_len);
 				}
+				// End Transposition =================================
 			}
+			
+			// Serial case implementation (more efficient then MPI 1 processor implemenation)
 			else 
 			{
 				int i, pts_per_plane;
@@ -327,19 +330,28 @@ namespace Nektar
 		{
 			if(m_num_processes[0] > 1)
 			{
-				int i,j;
+				// Paramerers set up =================================
+				int i,packed_len;
+				int copy_len = 0;
+				int index = 0;
+				int cnt = 0;
+				
 				int num_dofs             = outarray.num_elements();
 				int num_points_per_plane = num_dofs/m_num_points_per_proc[0];
-				int num_pencil_per_proc  = num_points_per_plane/m_num_processes[0] + (num_points_per_plane%m_num_processes[0] > 0);
-				int copy_len             = num_pencil_per_proc;
-				int packed_len;
-			
+			    int num_pencil_per_proc  = num_points_per_plane/m_num_processes[0] + (num_points_per_plane%m_num_processes[0] > 0);
+			    
 				m_SizeMap = Array<OneD,int> (m_num_processes[0],0);
-				m_OffsetMap = Array<OneD,int> (m_num_processes[0],0);
-			
-				Array< OneD, NekDouble> tmp_inarray(num_pencil_per_proc*m_num_homogeneous_points[0],0.0);
+			    m_OffsetMap = Array<OneD,int> (m_num_processes[0],0);
+				
+				for(i = 0; i < m_num_processes[0]; i++)
+				{
+					m_SizeMap[i]   = num_pencil_per_proc*m_num_points_per_proc[0];
+					m_OffsetMap[i] = i*num_pencil_per_proc*m_num_points_per_proc[0];
+				}
+				
+			    Array< OneD, NekDouble> tmp_inarray(num_pencil_per_proc*m_num_homogeneous_points[0],0.0);
 				Array< OneD, NekDouble> tmp_outarray(num_pencil_per_proc*m_num_homogeneous_points[0],0.0);
-			
+				
 				if(UseNumMode)
 				{
 					packed_len = m_num_homogeneous_coeffs[0];
@@ -348,44 +360,35 @@ namespace Nektar
 				{
 					packed_len = m_num_homogeneous_points[0];
 				}
-			
-				ASSERTL1(&inarray[0] != &outarray[0],"Inarray and outarray cannot be the same");
-			
+
+				// Start Transposition =================================
 				for(i = 0; i < packed_len; ++i)
 				{
 					Vmath::Vcopy(num_pencil_per_proc,&(inarray[i]),packed_len,
                              &(tmp_inarray[i*num_pencil_per_proc]),1);
 				}
 			
-				for(i = 0; i < m_num_processes[0] ; i++)
-				{				
-					m_SizeMap[i]   = num_pencil_per_proc*m_num_points_per_proc[0];
-					m_OffsetMap[i] = i*num_pencil_per_proc*m_num_points_per_proc[0];				
-				}
-			
 				m_hcomm->AlltoAllv(tmp_inarray,m_SizeMap,m_OffsetMap,tmp_outarray,m_SizeMap,m_OffsetMap);
 
-				for(i = 0; i < m_num_processes[0];i++)
-				{	
-					if(i == m_num_processes[0]-1)
+				while(index < num_points_per_plane)
+				{
+					copy_len = num_pencil_per_proc < (num_points_per_plane-index) ? num_pencil_per_proc : (num_points_per_plane-index);
+					
+					for(i = 0 ; i < m_num_points_per_proc[0]; i++)
 					{
-						copy_len = num_pencil_per_proc - ((num_pencil_per_proc*m_num_processes[0])-num_points_per_plane);
+						Vmath::Vcopy(copy_len,
+									 &(tmp_outarray[cnt]),1,
+									 &(outarray[index+(i*num_points_per_plane)]),1);
+						
+						cnt += copy_len;
 					}
 					
-					if(copy_len > 0)
-					{
-						for(j = 0; j < m_num_points_per_proc[0];j++)
-						{
-							if((i*num_pencil_per_proc+j*num_points_per_plane) < num_dofs)
-							{
-								Vmath::Vcopy(copy_len,
-								 &(tmp_outarray[i*num_pencil_per_proc*m_num_points_per_proc[0]+j*num_pencil_per_proc]),1,
-								 &(outarray[i*num_pencil_per_proc+j*num_points_per_plane]),1);
-							}
-						}
-					}
+					index += copy_len;
 				}
+				// End Transposition =================================
 			}
+			
+			// Serial case implementation (more efficient then MPI 1 processor implemenation)
 			else 
 			{
 				int i,pts_per_plane;

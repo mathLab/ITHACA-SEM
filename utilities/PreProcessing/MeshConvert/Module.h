@@ -67,14 +67,28 @@ namespace Nektar
             "Output"
         };
 
+        /**
+         * @brief Represents a command-line configuration option.
+         */
         struct ConfigOption
         {
+            /**
+             * @brief Construct a new configuration option.
+             * 
+             * @param isBool    True if the option is boolean type.
+             * @param defValue  Default value of the option.
+             * @param desc      Description of the option.
+             */
             ConfigOption(bool isBool, string defValue, string desc) :
                 isBool(isBool), beenSet(false), defValue(defValue), 
                 desc(desc), value() {}
             ConfigOption() :
                 isBool(false), beenSet(false), defValue(), desc(), value() {}
             
+            /**
+             * @brief Re-interpret the value stored in #value as some type using
+             * boost::lexical_cast.
+             */
             template<typename T>
             T as()
             {
@@ -89,10 +103,17 @@ namespace Nektar
                 }
             }
             
+            /// True if the configuration option is a boolean (thus does not
+            /// need additional arguments).
             bool   isBool;
+            /// True if the configuration option has been set at command
+            /// line. If false, the default value will be put into #value.
             bool   beenSet;
+            /// The value of the configuration option.
             string value;
+            /// Default value of the configuration option.
             string defValue;
+            /// Description of the configuration option.
             string desc;
         };
         

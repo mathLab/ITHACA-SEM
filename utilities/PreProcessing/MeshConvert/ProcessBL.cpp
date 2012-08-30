@@ -39,6 +39,7 @@ using namespace std;
 #include "MeshElements.h"
 #include "ProcessBL.h"
 
+#include <LibUtilities/Foundations/BLPoints.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/PrismExp.h>
 #include <LocalRegions/QuadExp.h>
@@ -56,18 +57,28 @@ namespace Nektar
         
         ProcessBL::ProcessBL(MeshSharedPtr m) : ProcessModule(m)
         {
-            config["layers"] = ConfigOption(false, "5",       
+	    // BL mesh configuration.
+            config["layers"]     = ConfigOption(false, "0",       
                 "Number of layers to refine.");
-            config["Re"]     = ConfigOption(false, "11e6",
+	    config["nopoints"]   = ConfigOption(false, "3",       
+                "Number of points in high order elements.");
+	    config["powercoeff"] = ConfigOption(false, "2",       
+                "Initial power law coeficiant for layer spacing.");
+	    // Physical parameters of the problem.
+            config["Re"]         = ConfigOption(false, "11e6",
                 "Reynolds number to adapt to.");
-            config["yplus"]  = ConfigOption(false, "1",
+	    config["BLlength"]   = ConfigOption(false, "0.8059",       
+                "The length of the cord.");
+            config["yplus"]      = ConfigOption(false, "5",
                 "y^+ value (i.e. height of first element).");
-            config["delta"]  = ConfigOption(false, "0.4",
-                "Power law value.");
-            config["rho"]    = ConfigOption(false, "1.2",
+            config["delta"]      = ConfigOption(false, "0.04",
+                "Hight of elements to refine (m).");
+            config["rho"]        = ConfigOption(false, "1.205",
                 "Density (kg/m^3).");
-            config["nu"]     = ConfigOption(false, "15.68e-6",
-                "Kinematic viscosity (m^2/s).");
+            config["mu"]         = ConfigOption(false, "1.82e-5",
+                "Dynamic viscosity (kg\(m*s)).");
+	    config["TetsOff"]    = ConfigOption(true,  "0",
+                "Use this option to turn off splitting prisms into tetrahedra");
         }
       
         ProcessBL::~ProcessBL()
@@ -77,42 +88,66 @@ namespace Nektar
         
         void ProcessBL::Process()
         {
-	    int iLayers = 1;
-	    int npoints = 0;
+	    // Initialisation of parameters and settings.
+
+            // Physical problem parameters.
+	    double Reynolds   = config["Re"].        as<double>();
+	    double cord       = config["BLlength"].  as<double>();
+	    double y_plus     = config["yplus"].     as<double>();
+	    double delta_int  = config["delta"].     as<double>();
+	    // Physical constants for air (default at temperature of 293K
+	    // (20C)).
+	    double visc_mu    = config["mu"].        as<double>(); //kg\(m*s)
+	    double dens_rho   = config["rho"].       as<double>(); //kg\m^3
+	    
+	    // Mesh configuration parameters; powercoefficient only works when
+	    // iLayers is on, layers works when iLayers is off.
+	    double rr         = config["powercoeff"].as<double>(); 
+	    int    nLayers    = config["layers"].    as<int>   (); 
+	    int    layerWidth = config["nopoints"].  as<int>   ();
+
+	    // Derived parameters.
+	    double U          = visc_mu*Reynolds/(cord*dens_rho);
+	    double Cf         = pow(2*log10(Reynolds)-0.65,-2.3);
+	    double tau_w      = Cf*0.5*dens_rho*pow(U,2);
+	    double delta_y    = visc_mu*y_plus/(sqrt(tau_w/dens_rho)*dens_rho);
+	    double delta_star = delta_y*2/delta_int;
+            
+            // Used only when iLayers is on.
+	    int npoints = int(ceil(log10(2/delta_star)/log10(rr)))+2;
+            // Used for when iLayers is off.
+	    double rn = powf(2.0/delta_star,1/double(nLayers+1));
+
+	    // Options - Can be automaticaly changed based on if "powercoeff" or
+	    // "layers" is specified.
+	    bool tetsOn = !config["TetsOff"].as<bool>();
+            // Set to false for user defined no. of layers and true for user
+            // defined scaling factor.
+	    bool iLayers = true; 
+
+	    if (nLayers != 0)
+            {
+		iLayers = false;
+            }
+	    
 	    if (iLayers)
             {
-		double Reynolds = config["Re"].as<double>();
-		double y_plus = config["yplus"].as<double>();
-		double delta_int = config["delta"].as<double>();
-		//
-		const double cord = 0.8059; //m
-		const double visc_nu = 15.68e-6; //m2\s
-		const double dens_rho = 1.2; //kg\m3
-		//	   
-		double U = visc_nu*Reynolds/cord;
-		double Cf = pow(2*log10(Reynolds)-0.65,-2.3);
-		double tau_w = Cf*0.5*dens_rho*pow(U,2);
-		double delta_y = visc_nu*y_plus/sqrt(tau_w/dens_rho)*10;
-		double delta_star = delta_y*2/delta_int;
-		double rr = 2; // TODO: Make variable.
-		npoints = int(ceil(log10(2/delta_star)/log10(rr)))+2;
-		double rn = powf(2.0/delta_star,1/double(npoints-2));
-		cerr << "Reynolds no. : " << Reynolds << ", y plus : " << y_plus << endl;
-		cerr << "U :  " << U << ", Cf :  " << Cf << ", tau_w :  " << tau_w << endl;
-		cerr << "delta :  " << delta_y << ", delta_star :  " << delta_star << endl;
-		cerr << "factor :  " << rn << " no. of layers :  " << npoints-1 << endl;
+                nLayers = npoints-1;
+		rn = powf(2.0/delta_star,1/double(npoints-2));
             }
-      
-            // Create a duplicate of the element list.
-            //vector<ElementSharedPtr> el = m->element[m->expDim];
-	    const int nLayers = npoints-1;     
+            
+	    // Printouts - enable only in -v option??
+	    cerr << "Reynolds no. : " << Reynolds << ",  y plus : " 
+                 << y_plus << endl;
+	    cerr << "U : " << U << "m/s,  Cf : " << Cf << ",  tau_w : " 
+                 << tau_w << endl;
+	    cerr << "delta : " << delta_y << "m" << endl;
+	    cerr << "delta_star : " << delta_star << endl;
+	    cerr << "Number of layers :  " << nLayers << endl;
+	    cerr << "geometric factor :  " << rn << endl;
 
             // Create a duplicate of the element list.
             vector<ElementSharedPtr> el = m->element[m->expDim];
-            const int layerWidth = 3;
-            // Set to 0 for prismatic boundary layer and 1 for tetrahedral
-            // boundary layer mesh.
-            const int tetsOn = 1;
             int nodeId = m->vertexSet.size();
             
             // Erase all elements from the element list. Elements will be
@@ -137,7 +172,7 @@ namespace Nektar
             edgeMap[pair<int,int>(0,4)] = pair<int,int>(0,            nq*nq);
             edgeMap[pair<int,int>(1,4)] = pair<int,int>(nq-1,         nq*nq);
             edgeMap[pair<int,int>(2,5)] = pair<int,int>(nq*nq-1,      nq*nq);
-            edgeMap[pair<int,int>(3,5)] = pair<int,int>(nq*(nq-1),    nq*nq);            
+            edgeMap[pair<int,int>(3,5)] = pair<int,int>(nq*(nq-1),    nq*nq);
             // Face 0 diagonals
             edgeMap[pair<int,int>(0,2)] = pair<int,int>(0,            nq+1);
             edgeMap[pair<int,int>(1,3)] = pair<int,int>(nq-1,         nq-1);
@@ -154,6 +189,9 @@ namespace Nektar
             
             // Default PointsType.
             LibUtilities::PointsType pt = LibUtilities::eGaussLobattoLegendre;
+            
+            // Pass delta_star spacing through to BLPoints.
+            LibUtilities::BLPoints::delta_star = delta_star;
             
             // Iterate over list of elements of expansion dimension.
             for (int i = 0; i < el.size(); ++i)
@@ -179,18 +217,23 @@ namespace Nektar
                 SpatialDomains::PrismGeomSharedPtr geom = 
                     boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(
                         el[i]->GetGeom(m->spaceDim));
-
+                
                 // Create basis.
-                LibUtilities::BasisKey B0(LibUtilities::eModified_A, layerWidth,
-                                          LibUtilities::PointsKey(layerWidth,pt));
-                LibUtilities::BasisKey B1(LibUtilities::eModified_A, 2,
-                                          LibUtilities::PointsKey(nLayers+1,LibUtilities::ePolyEvenlySpaced));
-                LibUtilities::BasisKey B2(LibUtilities::eModified_A, layerWidth,
-                                          LibUtilities::PointsKey(layerWidth,pt));
+                LibUtilities::BasisKey B0(
+                    LibUtilities::eModified_A, layerWidth,
+                    LibUtilities::PointsKey(layerWidth,pt));
+                LibUtilities::BasisKey B1(
+                    LibUtilities::eModified_A, 2,
+                    LibUtilities::PointsKey(
+                        nLayers+1, LibUtilities::eBoundaryLayerPoints));
+                LibUtilities::BasisKey B2(
+                    LibUtilities::eModified_A, layerWidth,
+                    LibUtilities::PointsKey(layerWidth,pt));
                 
                 // Create local region.
                 LocalRegions::PrismExpSharedPtr q = 
-                    MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(B0,B1,B2,geom);
+                    MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(
+                        B0,B1,B2,geom);
                 
                 // Grab co-ordinates.
                 Array<OneD, NekDouble> x(layerWidth*layerWidth*(nLayers+1));
@@ -204,7 +247,10 @@ namespace Nektar
                     // Create corner vertices.
                     vector<NodeSharedPtr> nodeList(6);
                     int offset = j*layerWidth;
-                    if (j == 0) // For the first layer use nodes of the original prism at the bottom.
+
+                    // For the first layer use nodes of the original prism at
+                    // the bottom.
+                    if (j == 0)
                     {
                         nodeList[0] = el[i]->GetVertex(0);
                         
@@ -227,7 +273,9 @@ namespace Nektar
                                      y[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth],
                                      z[offset+1+layerWidth*(layerWidth-1)*(nLayers+1)+layerWidth]));
                     }
-                    else if (j == nLayers-1) // For the last layer use nodes of the original prism at the top.
+                    // For the last layer use nodes of the original prism at the
+                    // top.
+                    else if (j == nLayers-1)
                     {
                         nodeList[0] = checkNode(
                             new Node(nodeId++, 

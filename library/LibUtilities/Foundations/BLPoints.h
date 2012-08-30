@@ -49,67 +49,91 @@ namespace Nektar
     {
         class BLPoints: public Points<NekDouble>
         {
-            public:
-                typedef Points<NekDouble> PointsBaseType;
-                virtual ~BLPoints()
-                {
-                }            
+        public:
+            typedef Points<NekDouble> PointsBaseType;
+            virtual ~BLPoints()
+            {
+            }            
 
-                LIB_UTILITIES_EXPORT static boost::shared_ptr< PointsBaseType > Create(const PointsKey &key);
-                LIB_UTILITIES_EXPORT boost::shared_ptr< NekMatrix<NekDouble> > CreateMatrix(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT static boost::shared_ptr< PointsBaseType > 
+                Create(const PointsKey &key);
+            LIB_UTILITIES_EXPORT boost::shared_ptr< NekMatrix<NekDouble> > 
+                CreateMatrix(const PointsKey &pkey);
 
-                LIB_UTILITIES_EXPORT const MatrixSharedPtrType GetI(const PointsKey &pkey);
-                LIB_UTILITIES_EXPORT const MatrixSharedPtrType GetI(const Array<OneD, const NekDouble>& x);
-                LIB_UTILITIES_EXPORT const MatrixSharedPtrType GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& x);
+            LIB_UTILITIES_EXPORT const MatrixSharedPtrType 
+                GetI(const PointsKey &pkey);
+            LIB_UTILITIES_EXPORT const MatrixSharedPtrType 
+                GetI(const Array<OneD, const NekDouble>& x);
+            LIB_UTILITIES_EXPORT const MatrixSharedPtrType 
+                GetI(unsigned int numpoints, 
+                     const Array<OneD, const NekDouble>& x);
 
-                BLPoints(const PointsKey &key):PointsBaseType(key)
-                {
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPLegendre),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoLegendre),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussGaussChebyshev),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMChebyshev),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauPChebyshev),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussLobattoChebyshev),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta1),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha0Beta2),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha1Beta0),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eGaussRadauMAlpha2Beta0),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eFourierEvenlySpaced),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                    m_InterpManager.RegisterCreator(PointsKey(0, eBoundaryLayerPoints),
-                        boost::bind(&BLPoints::CreateMatrix, this, _1));
-                }
+            BLPoints(const PointsKey &key):PointsBaseType(key)
+            {
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussGaussLegendre),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussRadauMLegendre),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussRadauPLegendre),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussLobattoLegendre),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussGaussChebyshev),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussRadauMChebyshev),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussRadauPChebyshev),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussLobattoChebyshev),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussRadauMAlpha0Beta1),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussRadauMAlpha0Beta2),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussRadauMAlpha1Beta0),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eGaussRadauMAlpha2Beta0),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, ePolyEvenlySpaced),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eFourierEvenlySpaced),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+                m_InterpManager.RegisterCreator(
+                    PointsKey(0, eBoundaryLayerPoints),
+                    boost::bind(&BLPoints::CreateMatrix, this, _1));
+            }
 
-            private:
-                /// Default constructor should not be called except by Create method.
-                BLPoints();
+            static double delta_star;
+            
+        private:
+            /// Default constructor should not be called except by Create
+            /// method.
+            BLPoints();
 
-                /// Copy constructor should not be called.
-                BLPoints(const BLPoints &points);
+            /// Copy constructor should not be called.
+            BLPoints(const BLPoints &points);
 
-                void CalculatePoints();
-                void CalculateWeights();
-                void CalculateDerivMatrix();
-                void CalculateInterpMatrix(
-                    unsigned int                        npts, 
-                    const Array<OneD, const NekDouble>& xpoints, 
-                          Array<OneD,       NekDouble>& interp);
+            void CalculatePoints();
+            void CalculateWeights();
+            void CalculateDerivMatrix();
+            void CalculateInterpMatrix(
+                unsigned int                        npts, 
+                const Array<OneD, const NekDouble>& xpoints, 
+                      Array<OneD,       NekDouble>& interp);
         }; // class BLPoints
     } // end of namespace
 } // end of namespace 

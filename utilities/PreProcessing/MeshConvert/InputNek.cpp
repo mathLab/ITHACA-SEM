@@ -81,8 +81,22 @@ namespace Nektar
             int         i, j, k, nodeCounter = 0;
             int         nComposite = 0;
             ElementType elType;
+            double      vertex[3][6];
             map<ElementType,int> domainComposite;
-            
+            map<ElementType,vector< vector<NodeSharedPtr> > > elNodes;
+            map<ElementType,vector<int> > elIds;
+            boost::unordered_map<int,int> elMap;
+            vector<ElementType> elmOrder;
+
+            // Set up vector of processing orders.
+            elmOrder.push_back(eLine);
+            elmOrder.push_back(eTriangle);
+            elmOrder.push_back(eQuadrilateral);
+            elmOrder.push_back(ePrism);
+            elmOrder.push_back(ePyramid);
+            elmOrder.push_back(eTetrahedron);
+            elmOrder.push_back(eHexahedron);
+             
             m->expDim   = 0;
             m->spaceDim = 0;
             
@@ -221,11 +235,6 @@ namespace Nektar
                 
                 // Read in number of vertices for element type.
                 const int nNodes = GetNnodes(elType);
-                double* vertex[3];
-                for (j = 0; j < 3; ++j)
-                {
-                    vertex[j] = new double[nNodes];
-                }
 
                 for (j = 0; j < m->expDim; ++j)
                 {
@@ -237,6 +246,7 @@ namespace Nektar
                     }
                 }
                 
+                // Zero co-ordinates bigger than expansion dimension.
                 for (j = m->expDim; j < 3; ++j)
                 {
                     for (k = 0; k < nNodes; ++k)
@@ -245,49 +255,71 @@ namespace Nektar
                     }
                 }
 
-                // Nektar meshes do not contain a unique list of nodes, so
-                // this block constructs a unique set so that elements can be
-                // created with unique nodes.
+                // Nektar meshes do not contain a unique list of nodes, so this
+                // block constructs a unique set so that elements can be created
+                // with unique nodes.
                 vector<NodeSharedPtr> nodeList;
                 for (k = 0; k < nNodes; ++k)
                 {
                     NodeSharedPtr n = boost::shared_ptr<Node>(
                         new Node(nodeCounter++, vertex[0][k], 
                                  vertex[1][k],  vertex[2][k]));
-                    pair<NodeSet::iterator, bool> testIns = m->vertexSet.insert(n);
-                    
-                    if (!testIns.second)
-                    {
-                        n = *(testIns.first);
-                        nodeCounter--;
-                    }
                     nodeList.push_back(n);
                 }
                 
-                for (j = 0; j < 3; ++j)
-                {
-                    delete[] vertex[j];
-                }
+                elNodes[elType].push_back(nodeList);
+                elIds  [elType].push_back(i);
+            }
+            
+            int reorderedId = 0;
+            nodeCounter = 0;
+            
+            for (i = 0; i < elmOrder.size(); ++i)
+            {
+                ElementType elType = elmOrder[i];
+                vector<vector<NodeSharedPtr> > &tmp = elNodes[elType];
                 
-                vector<int> tags;
-                map<ElementType,int>::iterator compIt = domainComposite.find(elType);
-                if (compIt == domainComposite.end())
+                for (j = 0; j < tmp.size(); ++j)
                 {
-                    tags.push_back(nComposite);
-                    domainComposite[elType] = nComposite;
-                    nComposite++;
+                    vector<int> tags;
+                    map<ElementType,int>::iterator compIt = 
+                        domainComposite.find(elType);
+                    if (compIt == domainComposite.end())
+                    {
+                        tags.push_back(nComposite);
+                        domainComposite[elType] = nComposite;
+                        nComposite++;
+                    }
+                    else
+                    {
+                        tags.push_back(compIt->second);
+                    }
+                    
+                    elMap[elIds[elType][j]] = reorderedId++;
+                    
+                    vector<NodeSharedPtr> nodeList = tmp[j];
+                    
+                    for (k = 0; k < nodeList.size(); ++k)
+                    {
+                        pair<NodeSet::iterator, bool> testIns = 
+                            m->vertexSet.insert(nodeList[k]);
+                        
+                        if (!testIns.second)
+                        {
+                            nodeList[k] = *(testIns.first);
+                        }
+                        else
+                        {
+                            nodeList[k]->id = nodeCounter++;
+                        }
+                    }
+                    
+                    // Create linear element
+                    ElmtConfig conf(elType,1,false,false);
+                    ElementSharedPtr E = GetElementFactory().
+                        CreateInstance(elType,conf,nodeList,tags);
+                    m->element[E->GetDim()].push_back(E);
                 }
-                else
-                {
-                    tags.push_back(compIt->second);
-                }
-                //tags.push_back(elType);
-                
-                // Create linear element
-                ElmtConfig conf(elType,1,false,false);
-                ElementSharedPtr E = GetElementFactory().
-                    CreateInstance(elType,conf,nodeList,tags);
-                m->element[E->GetDim()].push_back(E);
             }
 
             // -- Read in curved data.
@@ -300,20 +332,9 @@ namespace Nektar
             
             // Read number of curves.
             getline(mshFile, line);
-            while (line.find("FLUID BOUNDARY CONDITIONS") == string::npos)
-            {
-                s.clear(); s.str(line);
-                if (line.find("Number of curve types") != string::npos)
-                {
-                    s >> nCurveTypes;
-                }
-                if (line.find("Curved sides follow") != string::npos)
-                {
-                    s >> nCurves;
-                }
-                getline(mshFile, line);
-            }
-
+            s.clear(); s.str(line);
+            s >> nCurves; 
+            
             if (nCurves > 0)
             {
                 string curveTag;
@@ -330,7 +351,15 @@ namespace Nektar
                         getline(mshFile, line);
                         s.clear(); s.str(line);
                         s >> word >> curveTag;
-                        curveTags[curveTag] = word;
+                        curveTags[curveTag] = make_pair(eFile, word);
+                    }
+                    else if (word == "Recon")
+                    {
+                        // Next line contains curve tag.
+                        getline(mshFile, line);
+                        s.clear(); s.str(line);
+                        s >> word >> curveTag;
+                        curveTags[curveTag] = make_pair(eRecon, word);
                     }
                     else
                     {
@@ -342,8 +371,8 @@ namespace Nektar
                 // Load high order surface information.
                 LoadHOSurfaces();
                 
-                // Read in connectivity information. First line should contain
-                // number of curved sides.
+                // Read in curve information. First line should contain number
+                // of curved sides.
                 getline(mshFile,line);
                 
                 if (line.find("side") == string::npos)
@@ -354,7 +383,7 @@ namespace Nektar
                 
                 int nCurvedSides;
                 int faceId, elId, vid1, vid2, vid3;
-                map<string,string>::iterator it;
+                map<string,pair<NekCurve, string> >::iterator it;
                 HOSurfSet::iterator hoIt;
 
                 s.clear(); s.str(line);
@@ -369,7 +398,28 @@ namespace Nektar
                     s.clear(); s.str(line);
                     s >> faceId >> elId >> word;
                     faceId--;
-                    elId--;
+                    elId = elMap[elId-1];
+                    ElementSharedPtr el = m->element[m->expDim][elId];
+                    
+                    if (el->GetConf().e == ePrism && faceId % 2 == 0)
+                    {
+                        boost::shared_ptr<Prism> p = 
+                            boost::dynamic_pointer_cast<Prism>(el);
+                        if (p->orientation == 1)
+                        {
+                            faceId = (faceId+2) % 5;
+                        }
+                        else if (p->orientation == 2)
+                        {
+                            faceId = (faceId+4) % 5;
+                        }
+                    }
+                    else if (el->GetConf().e == eTetrahedron)
+                    {
+                        boost::shared_ptr<Tetrahedron> t =
+                            boost::dynamic_pointer_cast<Tetrahedron>(el);
+                        faceId = t->orientationMap[faceId];
+                    }
                     
                     it = curveTags.find(word);
                     if (it == curveTags.end())
@@ -379,146 +429,207 @@ namespace Nektar
                         abort();
                     }
                     
-                    vector<unsigned int> vertId(3);
-                    s >> vertId[0] >> vertId[1] >> vertId[2];
+                    if (it->second.first == eRecon)
+                    {
+                        // Spherigon information: read in vertex normals.
+                        vector<NodeSharedPtr> &tmp = 
+                            el->GetFace(faceId)->vertexList;
+                        Node n[tmp.size()];
 
-                    // Find vertex combination in hoData.
-                    hoIt = hoData[word].find(HOSurfSharedPtr(new HOSurf(vertId)));
-                    
-                    if (hoIt == hoData[word].end())
-                    {
-                        cerr << "Unable to find high-order surface data for element id " 
-                             << elId+1 << endl;
-                        abort();
-                    }
+                        int offset = 0;
+                        if (el->GetConf().e == ePrism && faceId % 2 == 1)
+                        {
+                            offset = boost::dynamic_pointer_cast<Prism>(
+                                el)->orientation;
+                        }
+                        
+                        // Read x/y/z coordinates.
+                        getline(mshFile, line);
+                        s.clear(); s.str(line);
+                        for (j = 0; j < tmp.size(); ++j)
+                        {
+                            s >> n[j].x;
+                        }
 
-                    // Depending on order of vertices in rea file, surface
-                    // information may need to be rotated or reflected. These
-                    // procedures are taken from nektar/Hlib/src/HOSurf.C
-                    HOSurfSharedPtr surf = *hoIt;
+                        getline(mshFile, line);
+                        s.clear(); s.str(line);
+                        for (j = 0; j < tmp.size(); ++j)
+                        {
+                            s >> n[j].y;
+                        }
 
-                    if (vertId[0] == surf->vertId[0]) 
-                    {
-                        if (vertId[1] == surf->vertId[1] || 
-                            vertId[1] == surf->vertId[2])
+                        getline(mshFile, line);
+                        s.clear(); s.str(line);
+                        for (j = 0; j < tmp.size(); ++j)
                         {
-                            if (vertId[1] == surf->vertId[2])
+                            s >> n[j].z;
+                        }
+                            
+                        for (j = 0; j < tmp.size(); ++j)
+                        {
+                            int id = tmp[(j+offset) % tmp.size()]->id;
+                            boost::unordered_map<int, Node>::iterator vIt =
+                                m->vertexNormals.find(id);
+                            
+                            if (vIt == m->vertexNormals.end())
                             {
-                                surf->Rotate(1);
-                                surf->Reflect();
+                                m->vertexNormals[id] = n[j];
                             }
                         }
+                        
+                        // Add edge/face to list of faces to apply spherigons
+                        // to.
+                        m->spherigonFaces.insert(make_pair(elId, faceId));
                     }
-                    else if (vertId[0] == surf->vertId[1])
+                    else if (it->second.first == eFile)
                     {
-                        if (vertId[1] == surf->vertId[0] ||
-                            vertId[1] == surf->vertId[2]) 
+                        vector<unsigned int> vertId(3);
+                        s >> vertId[0] >> vertId[1] >> vertId[2];
+                        
+                        // Find vertex combination in hoData.
+                        hoIt = hoData[word].find(HOSurfSharedPtr(
+                            new HOSurf(vertId)));
+                        
+                        if (hoIt == hoData[word].end())
                         {
-                            if (vertId[1] == surf->vertId[0])
+                            cerr << "Unable to find high-order surface data "
+                                 << "for element id " << elId+1 << endl;
+                            abort();
+                        }
+                        
+                        // Depending on order of vertices in rea file, surface
+                        // information may need to be rotated or
+                        // reflected. These procedures are taken from
+                        // nektar/Hlib/src/HOSurf.C
+                        HOSurfSharedPtr surf = *hoIt;
+                        
+                        if (vertId[0] == surf->vertId[0]) 
+                        {
+                            if (vertId[1] == surf->vertId[1] || 
+                                vertId[1] == surf->vertId[2])
                             {
-                                surf->Reflect();
+                                if (vertId[1] == surf->vertId[2])
+                                {
+                                    surf->Rotate(1);
+                                    surf->Reflect();
+                                }
                             }
-                            else
+                        }
+                        else if (vertId[0] == surf->vertId[1])
+                        {
+                            if (vertId[1] == surf->vertId[0] ||
+                                vertId[1] == surf->vertId[2]) 
                             {
-                                surf->Rotate(2);
+                                if (vertId[1] == surf->vertId[0])
+                                {
+                                    surf->Reflect();
+                                }
+                                else
+                                {
+                                    surf->Rotate(2);
+                                }
                             }
                         }
-                    }
-                    else if (vertId[0] == surf->vertId[2])
-                    {
-                        if (vertId[1] == surf->vertId[0] ||
-                            vertId[1] == surf->vertId[1])
+                        else if (vertId[0] == surf->vertId[2])
                         {
-                            if (vertId[1] == surf->vertId[1])
+                            if (vertId[1] == surf->vertId[0] ||
+                                vertId[1] == surf->vertId[1])
                             {
-                                surf->Rotate(2);
-                                surf->Reflect();
+                                if (vertId[1] == surf->vertId[1])
+                                {
+                                    surf->Rotate(2);
+                                    surf->Reflect();
+                                }
+                                else
+                                {
+                                    surf->Rotate(1);
+                                }
                             }
-                            else
+                        }
+                        
+                        // If the element is a prism, check to see if
+                        // orientation has changed and update order of surface
+                        // vertices.
+                        int reverseSide = 2;
+                        
+                        // Prisms may have been rotated by OrientPrism routine
+                        // and break curved faces. This block rotates faces
+                        // accordingly.
+                        if (el->GetConf().e == ePrism)
+                        {
+                            boost::shared_ptr<Prism> pr = 
+                                boost::static_pointer_cast<Prism>(el);
+                            if (pr->orientation == 1)
                             {
-                                surf->Rotate(1);
+                                // Prism has been rotated clockwise; rotate
+                                // face, reverse what was the last edge (now
+                                // located at edge 0).
+                                (*hoIt)->Rotate(1);
+                                reverseSide = 0;
+                            }
+                            else if (pr->orientation == 2)
+                            {
+                                // Prism has been rotated counter-clockwise;
+                                // rotate face, reverse what was the last edge
+                                // (now located at edge 1).
+                                (*hoIt)->Rotate(2);
+                                reverseSide = 1;
                             }
                         }
-                    }
-
-                    // If the element is a prism, check to see if orientation
-                    // has changed and update order of surface vertices.
-                    ElementSharedPtr e = m->element[m->expDim][elId];
-                    int reverseSide = 2;
-                    
-                    // Prisms may have been rotated by OrientPrism routine and
-                    // break curved faces. This block rotates faces
-                    // accordingly.
-                    if (e->GetConf().e == ePrism)
-                    {
-                        boost::shared_ptr<Prism> pr = boost::static_pointer_cast<Prism>(e);
-                        if (pr->orientation == 1)
-                        {
-                            // Prism has been rotated clockwise; rotate face,
-                            // reverse what was the last edge (now located at
-                            // edge 0).
-                            (*hoIt)->Rotate(1);
-                            reverseSide = 0;
-                        }
-                        else if (pr->orientation == 2)
-                        {
-                            // Prism has been rotated counter-clockwise;
-                            // rotate face, reverse what was the last edge
-                            // (now located at edge 1).
-                            (*hoIt)->Rotate(2);
-                            reverseSide = 1;
-                        }
-                    }
-                    
-                    // Finally, add high order data to appropriate face. NOTE:
-                    // this is a bit of a hack since the elements are
-                    // technically linear, but should work just fine.
-                    FaceSharedPtr f    = e->GetFace(faceId);
-                    int           Ntot = (*hoIt)->surfVerts.size();
-                    int           N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
-                    EdgeSharedPtr edge;
-                    
-                    // Apply high-order map to convert face data to Nektar++
-                    // ordering (vertices->edges->internal).
-                    vector<NodeSharedPtr> tmpVerts = (*hoIt)->surfVerts;
-                    for (j = 0; j < tmpVerts.size(); ++j)
-                    {
-                        (*hoIt)->surfVerts[hoMap[j]] = tmpVerts[j];
-                    }
-                    
-                    for (j = 0; j < tmpVerts.size(); ++j)
-                    {
-                        NodeSharedPtr a = (*hoIt)->surfVerts[j];
-                    }
-                    
-                    for (j = 0; j < f->edgeList.size(); ++j)
-                    {
-                        edge = f->edgeList[j];
                         
-                        // Skip over edges which have already been populated,
-                        // apart from those which need to be reoriented.
-                        if (edge->edgeNodes.size() > 0 && reverseSide == 2)
+                        // Finally, add high order data to appropriate
+                        // face. NOTE: this is a bit of a hack since the
+                        // elements are technically linear, but should work just
+                        // fine.
+                        FaceSharedPtr f    = el->GetFace(faceId);
+                        int           Ntot = (*hoIt)->surfVerts.size();
+                        int           N    = ((int)sqrt(8.0*Ntot+1.0)-1)/2;
+                        EdgeSharedPtr edge;
+                        
+                        // Apply high-order map to convert face data to Nektar++
+                        // ordering (vertices->edges->internal).
+                        vector<NodeSharedPtr> tmpVerts = (*hoIt)->surfVerts;
+                        for (j = 0; j < tmpVerts.size(); ++j)
                         {
-                            continue;
+                            (*hoIt)->surfVerts[hoMap[j]] = tmpVerts[j];
                         }
                         
-                        edge->edgeNodes.clear();
-                        edge->curveType = LibUtilities::eGaussLobattoLegendre;
-                        
-                        for (int k = 0; k < N-2; ++k)
+                        for (j = 0; j < tmpVerts.size(); ++j)
                         {
-                            edge->edgeNodes.push_back((*hoIt)->surfVerts[3+j*(N-2)+k]);
+                            NodeSharedPtr a = (*hoIt)->surfVerts[j];
                         }
                         
-                        // Reverse order of modes along correct side.
-                        if (j == reverseSide)
+                        for (j = 0; j < f->edgeList.size(); ++j)
                         {
-                            reverse(edge->edgeNodes.begin(), edge->edgeNodes.end());
-                        }
-                        
-                        for (int k = 3+3*(N-2); k < Ntot; ++k)
-                        {
-                            f->faceNodes.push_back((*hoIt)->surfVerts[k]);
+                            edge = f->edgeList[j];
+                            
+                            // Skip over edges which have already been populated,
+                            // apart from those which need to be reoriented.
+                            if (edge->edgeNodes.size() > 0 && reverseSide == 2)
+                            {
+                                continue;
+                            }
+                            
+                            edge->edgeNodes.clear();
+                            edge->curveType = LibUtilities::eGaussLobattoLegendre;
+                            
+                            for (int k = 0; k < N-2; ++k)
+                            {
+                                edge->edgeNodes.push_back(
+                                    (*hoIt)->surfVerts[3+j*(N-2)+k]);
+                            }
+                            
+                            // Reverse order of modes along correct side.
+                            if (j == reverseSide)
+                            {
+                                reverse(edge->edgeNodes.begin(), 
+                                        edge->edgeNodes.end());
+                            }
+                            
+                            for (int k = 3+3*(N-2); k < Ntot; ++k)
+                            {
+                                f->faceNodes.push_back((*hoIt)->surfVerts[k]);
+                            }
                         }
                     }
                 }
@@ -548,23 +659,23 @@ namespace Nektar
                 {
                     break;
                 }
-
+                
                 // Read boundary type, element ID and face ID.
                 char bcType;
                 int elId, faceId;
                 s.clear(); s.str(line);
                 s >> bcType >> elId >> faceId;
-                elId--;
                 faceId--;
+                elId = elMap[elId-1];
                 
-                ConditionSharedPtr    c = MemoryManager<Condition>::AllocateSharedPtr();
                 vector<string>        vals;
                 vector<ConditionType> type;
+                ConditionSharedPtr    c = 
+                    MemoryManager<Condition>::AllocateSharedPtr();
                 
-                // First character on each line describes type of
-                // BC. Currently only support V, W, and O. In this switch
-                // statement we construct the quantities needed to search for
-                // the condition.
+                // First character on each line describes type of BC. Currently
+                // only support V, W, and O. In this switch statement we
+                // construct the quantities needed to search for the condition.
                 switch(bcType)
                 {
                     // Wall boundary.
@@ -581,8 +692,8 @@ namespace Nektar
                         break;
                     }
 
-                    // Velocity boundary condition (either constant or
-                    // dependent upon x,y,z).
+                    // Velocity boundary condition (either constant or dependent
+                    // upon x,y,z).
                     case 'V':
                     case 'v':
                     {
@@ -590,7 +701,8 @@ namespace Nektar
                         {
                             getline(mshFile, line);
                             size_t p = line.find_first_of('=');
-                            vals.push_back(boost::algorithm::trim_copy(line.substr(p+1)));
+                            vals.push_back(boost::algorithm::trim_copy(
+                                               line.substr(p+1)));
                             type.push_back(eDirichlet);
                         }
                         // Set high-order boundary condition for Dirichlet
@@ -623,7 +735,8 @@ namespace Nektar
                         break;
                         
                     default:
-                        cerr << "Unknown boundary condition type " << line[0] << endl;
+                        cerr << "Unknown boundary condition type " 
+                             << line[0] << endl;
                         abort();
                 }
                 
@@ -736,8 +849,7 @@ namespace Nektar
                 }
                 else
                 {
-                    // Otherwise find existing composite inside
-                    // surfaceCompMap.
+                    // Otherwise find existing composite inside surfaceCompMap.
                     map<int,vector<pair<int,ElementType> > >::iterator it2;
                     it2 = surfaceCompMap.find(it->first);
                     
@@ -767,7 +879,7 @@ namespace Nektar
                     if (!found)
                     {
                         it2->second.push_back(pair<int,ElementType>(
-                                                  nComposite,surfEl->GetConf().e));
+                            nComposite,surfEl->GetConf().e));
                         compTag = nComposite;
                         m->condition[it->first]->composite.push_back(compTag);
                         nComposite++;
@@ -802,16 +914,21 @@ namespace Nektar
          */
         void InputNek::LoadHOSurfaces()
         {
-            map<string,string>::iterator it;
+            map<string, pair<NekCurve, string> >::iterator it;
             int nodeId = m->GetNumEntities();
             
             for (it = curveTags.begin(); it != curveTags.end(); ++it)
             {
                 ifstream hsf;
-                string   line, fileName = it->second;
+                string   line, fileName = it->second.second;
                 size_t   pos;
                 int      N, Nface, dot;
 
+                if (it->second.first != eFile)
+                {
+                    continue;
+                }
+                
                 // Replace fro extension with hsf.
                 dot = fileName.find_last_of('.');
                 fileName = fileName.substr(0,dot);
@@ -831,7 +948,8 @@ namespace Nektar
                 pos = line.find("=");
                 if (pos == string::npos)
                 {
-                    cerr << "hsf header error: cannot read number of nodal points." << endl;
+                    cerr << "hsf header error: cannot read number of "
+                         << "nodal points." << endl;
                     abort();
                 }
                 line = line.substr(pos+1);
@@ -841,7 +959,8 @@ namespace Nektar
                 pos = line.find("=");
                 if (pos == string::npos)
                 {
-                    cerr << "hsf header error: cannot read number of faces." << endl;
+                    cerr << "hsf header error: cannot read number of "
+                         << "faces." << endl;
                     abort();
                 }
                 line = line.substr(pos+1);
@@ -865,7 +984,8 @@ namespace Nektar
                     
                     if (word != "#")
                     {
-                        cerr << "hsf header error: cannot read in r/s points" << endl;
+                        cerr << "hsf header error: cannot read in "
+                             << "r/s points" << endl;
                         abort();
                     }
                     
@@ -937,11 +1057,13 @@ namespace Nektar
                     
                     if (tmp != "#")
                     {
-                        cerr << "Unable to read hsf connectivity information." << endl;
+                        cerr << "Unable to read hsf connectivity information." 
+                             << endl;
                         abort();
                     }
                     
-                    hoData[it->first].insert(HOSurfSharedPtr(new HOSurf(nodeIds, faceMap[i])));
+                    hoData[it->first].insert(
+                        HOSurfSharedPtr(new HOSurf(nodeIds, faceMap[i])));
                 }
                 
                 hsf.close();
@@ -975,8 +1097,8 @@ namespace Nektar
         /** 
          * @brief Compares two %HOSurf objects referred to as shared pointers.
          *
-         * Two %HOSurf objects are defined to be equal if they contain
-         * identical vertex ids contained in HOSurf::vertId.
+         * Two %HOSurf objects are defined to be equal if they contain identical
+         * vertex ids contained in HOSurf::vertId.
          */
         bool operator==(HOSurfSharedPtr const &p1, HOSurfSharedPtr const &p2)
         {

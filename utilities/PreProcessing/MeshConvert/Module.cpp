@@ -71,6 +71,9 @@ namespace Nektar
             config["outfile"] = ConfigOption(false, "", "Output filename.");
         }
 
+        /**
+         * @brief Open a file for input.
+         */
         void InputModule::OpenStream()
         {
             string fname = config["infile"].as<string>();
@@ -82,6 +85,9 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Open a file for output.
+         */
         void OutputModule::OpenStream()
         {
             string fname = config["outfile"].as<string>();
@@ -94,6 +100,9 @@ namespace Nektar
         }
         
         /**
+         * @brief Create a unique set of mesh vertices from elements stored in
+         * Mesh::element.
+         * 
          * Each element is processed in turn and the vertices extracted and
          * inserted into #m_vertexSet, which at the end of the routine
          * contains all unique vertices in the mesh.
@@ -123,8 +132,9 @@ namespace Nektar
         }
 
         /**
-         * This routine only proceeds if the expansion dimension is 2 or 3.
-         *
+         * @brief Create a unique set of mesh edges from elements stored in
+         * Mesh::element.
+         * 
          * All elements are first scanned and a list of unique, enumerated
          * edges produced in #m_edgeSet. Since each element generated its
          * edges independently, we must now ensure that each element only uses
@@ -133,6 +143,8 @@ namespace Nektar
          * 1-D boundary elements which correspond to an edge in
          * #m_edgeSet. For such elements, we set its edgeLink to reference the
          * corresponding edge in #m_edgeSet.
+         * 
+         * This routine only proceeds if the expansion dimension is 2 or 3.
          */
         void Module::ProcessEdges()
         {
@@ -191,8 +203,9 @@ namespace Nektar
 
 
         /**
-         * This routine only proceeds if the expansion dimension is 3.
-         *
+         * @brief Create a unique set of mesh faces from elements stored in
+         * Mesh::element.
+         * 
          * All elements are scanned and a unique list of enumerated faces is
          * produced in #m_faceSet. Since elements created their own faces
          * independently, we examine each element only uses face objects from
@@ -201,6 +214,8 @@ namespace Nektar
          * elements for 2-D boundary faces which correspond to faces in
          * #m_faceSet. For such elements, we set its faceLink to reference the
          * corresponding face in #m_faceSet.
+         *
+         * This routine only proceeds if the expansion dimension is 3.
          */
         void Module::ProcessFaces()
         {
@@ -260,8 +275,9 @@ namespace Nektar
             }
         }
 
-
         /**
+         * @brief Enumerate elements stored in Mesh::element.
+         * 
          * For all elements of equal dimension to the mesh dimension, we
          * enumerate sequentially. All other elements in the list should be of
          * lower dimension and have ID set by a corresponding edgeLink or
@@ -276,12 +292,14 @@ namespace Nektar
             }
         }
         
-        
         /**
-         * Each element is assigned to a composite ID by Gmsh. First we scan
-         * the element list and generate a list of composite IDs. We then
-         * generate the composite objects and populate them with a second scan
-         * through the element list.
+         * @brief Generate a list of composites (groups of elements) from tag
+         * IDs stored in mesh vertices/edges/faces/elements.
+         * 
+         * Each element is assigned to a composite ID by an input module. First
+         * we scan the element list and generate a list of composite IDs. We
+         * then generate the composite objects and populate them with a second
+         * scan through the element list.
          */
         void Module::ProcessComposites()
         {
@@ -386,6 +404,9 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Print a brief summary of information.
+         */
         void InputModule::PrintSummary()
         {
             // Compute the number of full-dimensional elements and boundary

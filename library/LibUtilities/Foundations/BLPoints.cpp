@@ -46,25 +46,23 @@ namespace Nektar
 {
     namespace LibUtilities 
     {
+        // Default value.
+        double BLPoints::delta_star = 1.0;
+        
         void BLPoints::CalculatePoints()
         {
-            // Allocate the storage for points
+            // Allocate the storage for points.
             PointsBaseType::CalculatePoints();
-            unsigned int npts = m_pointsKey.GetNumPoints();
-	    double rr = pow(10.0,log10(4000.0)/(npts-2.0));
- 	    //cerr << "power coefficiant :  " << rr << endl;
-	    for(unsigned int i=0;i<npts;++i)
+            unsigned int npts = m_pointsKey.GetNumPoints(); 
+
+	    // Derived power coefficient.
+	    double rn = powf(2.0/BLPoints::delta_star,1.0/(npts-2.0));
+            
+            m_points[0][0] = -1.0;
+            
+	    for (unsigned int i = 1; i < npts; ++i)
             {
-		if ( i == 0 )
-                {
-		    m_points[0][i] = -1.0;
-		    //cerr << m_points[0][i] +1.0 << endl;
-                }		 
-		else
-                {
-		    m_points[0][i] = -1 + (1.0/2000.0)*pow(rr,(double(i-1)));
-		    //cerr << m_points[0][i] +1.0 << endl;
-                }
+                m_points[0][i] = -1.0 + delta_star*pow(rn,(double)i-1.0);
             }
         }
 

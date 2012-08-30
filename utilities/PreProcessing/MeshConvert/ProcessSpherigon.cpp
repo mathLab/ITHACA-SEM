@@ -29,8 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Process a mesh and 'explode' elements from some central point
-//  (e.g. for visualisation purposes).
+//  Description: Apply Spherigon surface smoothing technique to a 3D mesh.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,13 +53,47 @@ namespace Nektar
     {
         ModuleKey ProcessSpherigon::className = 
             GetModuleFactory().RegisterCreatorFunction(
-                ModuleKey(eProcessModule, "spherigon"), ProcessSpherigon::create);
+                ModuleKey(eProcessModule, "spherigon"),
+                ProcessSpherigon::create);
+        
+        /**
+         * @class ProcessSpherigon
+         * 
+         * This class implements the spherigon surface smoothing technique which
+         * is documented in
+         * 
+         *   "The SPHERIGON: A Simple Polygon Patch for Smoothing Quickly your
+         *   Polygonal Meshes": P. Volino and N. Magnenat Thalmann, Computer
+         *   Animation Proceedings (1998).
+         * 
+         * This implementation works in both a 2D manifold setting (for
+         * triangles and quadrilaterals embedded in 3-space) and in a full 3D
+         * enviroment (prisms, tetrahedra and hexahedra). 
+         * 
+         * No additional information needs to be supplied directly to the module
+         * in order for it to work. However, 3D elements do rely on the mapping
+         * Mesh::spherigonFaces to be populated by the relevant input modules.
+         * 
+         * Additionally, since the algorithm assumes normals are supplied which
+         * are perpendicular to the true surface defined at each vertex. If
+         * these are specified in Mesh::vertexNormals by the input module,
+         * better smoothing results can be obtained. Otherwise, normals are
+         * estimated by taking the average of all edge/face normals which
+         * connect to the vertex.
+         */
       
+        /**
+         * @brief Default constructor.
+         */
         ProcessSpherigon::ProcessSpherigon(MeshSharedPtr m) : ProcessModule(m)
         {
-
+            config["N"] = ConfigOption(false, "8",
+                "Number of points to add to face edges.");
         }
       
+        /**
+         * @brief Destructor.
+         */
         ProcessSpherigon::~ProcessSpherigon()
         {
             
@@ -97,251 +130,373 @@ namespace Nektar
             return sqrt(tmp1*tmp1 + tmp2*tmp2 + tmp3*tmp3);
         }
 
+        /**
+         * @brief Calculate the \f$ C^0 \f$ blending function for spherigon
+         * implementation.
+         * 
+         * See equation (5) of the paper.
+         * 
+         * @param r  Barycentric coordinate.
+         */
         double ProcessSpherigon::Blend(double r)
         {
             return r*r;
         }
 
+        /**
+         * @brief Calculate the \f$ C^1 \f$ blending function for spherigon
+         * implementation.
+         * 
+         * See equation (10) of the paper.
+         * 
+         * @param r      Generalised barycentric coordinates of the point P.
+         * @param Q      Vector of vertices denoting this triangle/quad.
+         * @param P      Point in the triangle to apply blending to.
+         * @param blend  The resulting blending components for each vertex.
+         */
         void ProcessSpherigon::SuperBlend(
-            Node &r, vector<Node> &Q, Node &P, Node &blend)
+            vector<double> &r, vector<Node> &Q, Node &P, vector<double> &blend)
         {
-            double v0_Qi_P_s, v1_Qi_P_s, v2_Qi_P_s;
-            int    i;
-            
-            blend.x = blend.y = blend.z = 0.0;
-            
-            v0_Qi_P_s = (Q[0]-P).abs2();
-            v1_Qi_P_s = (Q[1]-P).abs2();
-            v2_Qi_P_s = (Q[2]-P).abs2();
-            
-            if (r.x > TOL_BLEND && r.x < (1-TOL_BLEND))
+            vector<double> tmp(r.size());
+            double         totBlend = 0.0;
+            int            i;
+            int            nV = r.size();
+
+            for (i = 0; i < nV; ++i)
             {
-                blend.x = r.x*r.x*(
-                    r.z*r.z*v2_Qi_P_s/(v2_Qi_P_s+v0_Qi_P_s) +
-                    r.y*r.y*v1_Qi_P_s/(v1_Qi_P_s+v0_Qi_P_s));
+                blend[i] = 0.0;
+                tmp  [i] = (Q[i]-P).abs2();
             }
-            if (r.y > TOL_BLEND && r.y < (1-TOL_BLEND))
+
+            for (i = 0; i < nV; ++i)
             {
-                blend.y = r.y*r.y*( 
-                    r.x*r.x*v0_Qi_P_s/(v0_Qi_P_s+v1_Qi_P_s) + 
-                    r.z*r.z*v2_Qi_P_s/(v2_Qi_P_s+v1_Qi_P_s));
-            }
-            if (r.z > TOL_BLEND && r.z < (1-TOL_BLEND))
-            {
-                blend.z = r.z*r.z*(
-                    r.y*r.y*v1_Qi_P_s/(v1_Qi_P_s+v2_Qi_P_s) + 
-                    r.x*r.x*v0_Qi_P_s/(v0_Qi_P_s+v2_Qi_P_s));
+                int ip = (i+1) % nV, im = (i-1+nV) % nV;
+                
+                if (r[i] > TOL_BLEND && r[i] < (1-TOL_BLEND))
+                {
+                    blend[i] = r[i]*r[i]*(
+                        r[im]*r[im]*tmp[im]/(tmp[im] + tmp[i]) +
+                        r[ip]*r[ip]*tmp[ip]/(tmp[ip] + tmp[i]));
+                    totBlend += blend[i];
+                }
             }
             
-            blend /= (blend.x + blend.y + blend.z);
-            
-            if (r.x >= (1-TOL_BLEND))
+            for (i = 0; i < nV; ++i)
             {
-                blend.x = 1.0;
-            }
-            if (r.x <= TOL_BLEND)
-            {
-                blend.x = 0.0;
-            }
-            if (r.y >= (1-TOL_BLEND))
-            {
-                blend.y = 1.0;
-            }
-            if (r.y <= TOL_BLEND)
-            {
-                blend.y = 0.0;
-            }
-            if (r.z >= (1-TOL_BLEND))
-            {
-                blend.z = 1.0;
-            }
-            if (r.z <= TOL_BLEND)
-            {
-                blend.z = 0.0;
+                blend[i] /= totBlend;
+                if (r[i] >= (1-TOL_BLEND))
+                {
+                    blend[i] = 1.0;
+                }
+                if (r[i] <= TOL_BLEND)
+                {
+                    blend[i] = 0.0;
+                }
             }
         }
 
+        /**
+         * @brief Generate a set of approximate vertex normals to a surface
+         * represented as a hybrid triangular/quadrilateral mesh.
+         * 
+         * This routine approximates the true vertex normals to a surface by
+         * averaging the normals of all edges/faces which connect to the
+         * vertex. It is better to use the exact surface normals which can be
+         * set in Mesh::vertexNormals, but where they are not supplied this
+         * routine calculates an approximation for the spherigon implementation.
+         * 
+         * @param el  Vector of elements denoting the surface mesh.
+         */
+        void ProcessSpherigon::GenerateNormals(
+            std::vector<ElementSharedPtr> &el)
+        {
+            boost::unordered_map<int, Node>::iterator nIt;
+            
+            // First loop over elements and construct vertex normals.
+            for (int i = 0; i < el.size(); ++i)
+            {
+                ElementSharedPtr e = el[i];
+                
+                // Ensure that element is either a triangle or quad.
+                ASSERTL0(e->GetConf().e == eTriangle || 
+                         e->GetConf().e == eQuadrilateral,
+                         "Spherigon expansions must be either triangles or "
+                         "quadrilaterals.");
+                
+                // Calculate normal for this element.
+                NodeSharedPtr node[3] = {
+                    e->GetVertex(0), e->GetVertex(1), 
+                    e->GetVertex(e->GetConf().e == eQuadrilateral ? 3 : 2)
+                };
+                
+                Node v1 = *(node[1]) - *(node[0]);
+                Node v2 = *(node[2]) - *(node[0]);
+                Node n;
+                UnitCrossProd(v1, v2, n);
+                
+                // Insert face normal into vertex normal list or add to existing
+                // value.
+                for (int j = 0; j < e->GetVertexCount(); ++j)
+                {
+                    nIt = m->vertexNormals.find(e->GetVertex(j)->id);
+                    if (nIt == m->vertexNormals.end())
+                    {
+                        m->vertexNormals[e->GetVertex(j)->id] = n;
+                    }
+                    else
+                    {
+                        nIt->second += n;
+                    }
+                }
+            }
+            
+            // Normalize resulting vectors.
+            for (nIt = m->vertexNormals.begin(); nIt != m->vertexNormals.end(); ++nIt)
+            {
+                Node &n = m->vertexNormals[nIt->first];
+                n /= sqrt(n.abs2());
+            }
+        }
+
+        /**
+         * @brief Perform the spherigon smoothing technique on the mesh.
+         */
         void ProcessSpherigon::Process()
         {
             ASSERTL0(m->spaceDim == 3,
                      "Spherigon implementation only valid in 3D.");
+
+            boost::unordered_set<int>::iterator eIt;
+            boost::unordered_set<int>           visitedEdges;
+
+            // First construct vector of elements to process.
+            vector<ElementSharedPtr> el;
             
-            // Manifold case.
             if (m->expDim == 2)
             {
-                vector<ElementSharedPtr> &el = m->element[m->expDim];
+                // Manifold case - copy expansion dimension.
+                el = m->element[m->expDim];
+            }
+            else if (m->expDim == 3)
+            {
+                // Full 3D case - iterate over stored faces and create
+                // triangular elements representing faces.
+                set<pair<int,int> >::iterator it;
+                vector<int> t;
+                t.push_back(0);
                 
-                map<int, Node> vertexNormals;
-                map<int, Node>::iterator it;
-                
-                boost::unordered_set<int>  visitedEdges;
-                boost::unordered_set<int>::iterator it2;
-                
-                // First loop over elements and construct vertex normals.
-                for (int i = 0; i < el.size(); ++i)
+                if (m->spherigonFaces.size() == 0)
                 {
-                    ElementSharedPtr e = el[i];
-                    
-                    // Calculate normal for this element.
-                    NodeSharedPtr node[3] = {
-                        e->GetVertex(0), e->GetVertex(1), e->GetVertex(2)};
-                    
-                    Node v1 = *(node[1]) - *(node[0]);
-                    Node v2 = *(node[2]) - *(node[0]);
-                    Node n(0,0,0,0);
-                    UnitCrossProd(v1, v2, n);
-
-                    for (int j = 0; j < 3; ++j)
-                    {
-                        it = vertexNormals.find(node[j]->id);
-                        if (it == vertexNormals.end())
-                        {
-                            vertexNormals[node[j]->id] = n;
-                        }
-                        else
-                        {
-                            it->second += n;
-                        }
-                    }
+                    cerr << "WARNING: Spherigon faces have not been defined -- "
+                         << "ignoring smoothing." << endl;
                 }
                 
-                // Normalize vertex normals.
-                for (it = vertexNormals.begin(); it != vertexNormals.end(); ++it)
+                for (it  = m->spherigonFaces.begin();
+                     it != m->spherigonFaces.end(); ++it)
                 {
-                    Node &n = vertexNormals[it->first];
-                    double tmp = sqrt(n.x*n.x + n.y*n.y + n.z*n.z);
-                    n /= tmp;
+                    FaceSharedPtr f = m->element[m->expDim][it->first]->GetFace(
+                        it->second);
+                    vector<NodeSharedPtr> nodes = f->vertexList;
+                    ElementType eType = 
+                        nodes.size() == 3 ? eTriangle : eQuadrilateral;
+                    ElmtConfig conf(eType, 1, false, false);
+                    
+                    // Create 2D element.
+                    el.push_back(
+                        GetElementFactory().CreateInstance(eType,conf,nodes,t));
                 }
+            }
+            else
+            {
+                ASSERTL0(false, "Spherigon expansions must be 2/3 dimensional");
+            }
+            
+            // See if vertex normals have been generated. If they have not,
+            // approximate them by summing normals of surrounding elements.
+            if (m->vertexNormals.size() == 0)
+            {
+                GenerateNormals(el);
+            }
+            
+            int nq = config["N"].as<int>();
+            Array<OneD, NekDouble> x(nq*nq);
+            Array<OneD, NekDouble> y(nq*nq);
+            Array<OneD, NekDouble> z(nq*nq);
+            
+            ASSERTL0(nq > 2, "Number of points must be greater than 2.");
 
-                for (int i = 0; i < el.size(); ++i)
+            int edgeMap[2][4][2] = {
+                {{0, 1}, {nq-1, nq}, {nq*(nq-1), -nq}, {-1, -1}},        // tri
+                {{0, 1}, {nq-1, nq}, {nq*nq-1, -1},    {nq*(nq-1), -nq}} // quad
+            };
+            
+            for (int i = 0; i < el.size(); ++i)
+            {
+                // Construct a Nektar++ element to obtain coordinate points
+                // inside the element. TODO: Add options for various
+                // nodal/tensor point distributions + number of points to add.
+                ElementSharedPtr e = el[i];
+                
+                LibUtilities::BasisKey B0(
+                    LibUtilities::eModified_A, nq-1,
+                    LibUtilities::PointsKey(
+                        nq, LibUtilities::ePolyEvenlySpaced));
+                
+                if (e->GetConf().e == eTriangle)
                 {
-                    // Construct a Nektar++ element to obtain coordinate
-                    // points. TODO: Add options for various nodal/tensor point
-                    // distributions.
-                    int nq = 8;
-                    ElementSharedPtr e = el[i];
-                    
-                    LibUtilities::BasisKey B0(
-                        LibUtilities::eModified_A, nq-1,
-                        LibUtilities::PointsKey(
-                            nq, LibUtilities::ePolyEvenlySpaced));
-                    
-                    SpatialDomains::TriGeomSharedPtr geom = 
+                    SpatialDomains::TriGeomSharedPtr geom =
                         boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                             e->GetGeom(3));
-                    
                     LocalRegions::TriExpSharedPtr tri =
                         MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(
                             B0, B0, geom);
-                    
-                    Array<OneD, NekDouble> x(nq*nq);
-                    Array<OneD, NekDouble> y(nq*nq);
-                    Array<OneD, NekDouble> z(nq*nq);
-                    
                     tri->GetCoords(x,y,z);
-                    
-                    Node va(*(e->GetVertex(0)));
-                    Node vb(*(e->GetVertex(1)));
-                    Node vc(*(e->GetVertex(2)));
-                    
-                    Node ta = vb - va;
-                    Node tb = vc - va;
-                    
-                    Node &vna = vertexNormals[va.id];
-                    Node &vnb = vertexNormals[vb.id];
-                    Node &vnc = vertexNormals[vc.id];
-                    
-                    double A = CrossProdMag(ta, tb);
-                    
-                    // Perform Spherigon method to smooth manifold.
-                    for (int j = 0; j < nq*nq; ++j)
+                }
+                else
+                {
+                    SpatialDomains::QuadGeomSharedPtr geom =
+                        boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(
+                            e->GetGeom(3));
+                    LocalRegions::QuadExpSharedPtr quad =
+                        MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(
+                            B0, B0, geom);
+                    quad->GetCoords(x,y,z);
+                }
+                
+                // Find vertex normals.
+                int nV = e->GetVertexCount();
+                vector<Node> v, vN;
+                for (int j = 0; j < nV; ++j)
+                {
+                    v.push_back(*(e->GetVertex(j)));
+                    vN.push_back(m->vertexNormals[v[j].id]);
+                }
+                
+                // Calculate area of element.
+                Node ta  = v[1]    - v[0];
+                Node tb  = v[nV-1] - v[0];
+                double A = CrossProdMag(ta, tb);
+                
+                vector<Node>   tmp  (nV);
+                vector<double> r    (nV);
+                vector<Node>   K    (nV);
+                vector<Node>   Q    (nV);
+                vector<Node>   Qp   (nV);
+                vector<double> blend(nV);
+                
+                // Perform Spherigon method to smooth manifold.
+                for (int j = 0; j < nq*nq; ++j)
+                {
+                    Node P(0, x[j], y[j], z[j]);
+                    for (int k = 0; k < nV; ++k)
                     {
-                        Node npos(0, x[j], y[j], z[j]);
-                        Node a = npos - va;
-                        Node b = npos - vb;
-                        Node c = npos - vc;
-                        Node r(0, CrossProdMag(b,c) / A, CrossProdMag(c,a) / A,
-                               CrossProdMag(a,b) / A);
-                        
-                        // Calculate normalised Phong normals
-                        Node N(0,vna.x*r.x + vnb.x*r.y + vnc.x*r.z,
-                                 vna.y*r.x + vnb.y*r.y + vnc.y*r.z,
-                                 vna.z*r.x + vnb.z*r.y + vnc.z*r.z);
-                        N /= sqrt(N.abs2());
-                        
-                        double conta = (va.x-x[j])*N.x + (va.y-y[j])*N.y + (va.z-z[j])*N.z;
-                        double contb = (vb.x-x[j])*N.x + (vb.y-y[j])*N.y + (vb.z-z[j])*N.z;
-                        double contc = (vc.x-x[j])*N.x + (vc.y-y[j])*N.y + (vc.z-z[j])*N.z;
-                        
-                        //double ka[3], kb[3], kc[3];
-                        
-                        Node ka = npos + N*conta;
-                        Node kb = npos + N*contb;
-                        Node kc = npos + N*contc;
-                        
-                        conta = (va.x-ka.x)*vna.x + (va.y-ka.y)*vna.y +
-                            (va.z-ka.z)*vna.z;
-                        contb = (vb.x-kb.x)*vnb.x + (vb.y-kb.y)*vnb.y +
-                            (vb.z-kb.z)*vnb.z;
-                        contc = (vc.x-kc.x)*vnc.x + (vc.y-kc.y)*vnc.y +
-                            (vc.z-kc.z)*vnc.z;
-                        
-                        double ma = conta/(1 + N.dot(vna));
-                        double mb = contb/(1 + N.dot(vnb));
-                        double mc = contc/(1 + N.dot(vnc));
-                        
-                        Node qa = ka + N*ma;
-                        Node qb = kb + N*mb;
-                        Node qc = kc + N*mc;
-                        
-                        // Uncomment this region and comment out region below
-                        // for C0 spherigon.
-                        /*
-                        double ba = Blend(r.x);
-                        double bb = Blend(r.y);
-                        double bc = Blend(r.z);
-                        double invBlend = 1.0/(ba+bb+bc);
-
-                        x[j] = (ba*qa.x + bb*qb.x + bc*qc.x)*invBlend;
-                        y[j] = (ba*qa.y + bb*qb.y + bc*qc.y)*invBlend;
-                        z[j] = (ba*qa.z + bb*qb.z + bc*qc.z)*invBlend;
-                        */
-                        
-                        conta = (va.x-x[j])*N.x + (va.y-y[j])*N.y + (va.z-z[j])*N.z;
-                        contb = (vb.x-x[j])*N.x + (vb.y-y[j])*N.y + (vb.z-z[j])*N.z;
-                        contc = (vc.x-x[j])*N.x + (vc.y-y[j])*N.y + (vc.z-z[j])*N.z;
-
-                        vector<Node> Q(3);
-                        Q[0] = va - N*conta;
-                        Q[1] = vb - N*contb;
-                        Q[2] = vc - N*contc;
-                        
-                        Node blend;
-                        SuperBlend(r, Q, npos, blend);
-                        
-                        x[j] = blend.x*qa.x + blend.y*qb.x + blend.z*qc.x;
-                        y[j] = blend.x*qa.y + blend.y*qb.y + blend.z*qc.y;
-                        z[j] = blend.x*qa.z + blend.y*qb.z + blend.z*qc.z;
+                        tmp[k] = P - v[k];
                     }
                     
-                    // Push new nodes into edges (TODO: face nodes).
-                    int triEdgeMap[3][2] = {
-                        {0, 1}, {nq-1, nq}, {nq*(nq-1), -nq}
-                    };
-                    
-                    for (int edge = 0; edge < 3; ++edge)
+                    // Calculate generalized barycentric coordinate system (see
+                    // equation 6 of paper).
+                    double weight = 0.0;
+                    for (int k = 0; k < nV; ++k)
                     {
-                        it2 = visitedEdges.find(e->GetEdge(edge)->id);
-                        if (it2 == visitedEdges.end())
+                        r[k] = 1.0;
+                        for (int l = 0; l < nV-2; ++l)
                         {
-                            for (int j = 1; j < nq-1; ++j)
-                            {
-                                int v = triEdgeMap[edge][0] + j*triEdgeMap[edge][1];
-                                NodeSharedPtr tmp(new Node(0, x[v], y[v], z[v]));
-                                e->GetEdge(edge)->edgeNodes.push_back(tmp);
-                            }
-                            visitedEdges.insert(e->GetEdge(edge)->id);
+                            r[k] *= CrossProdMag(tmp[(k+l+1) % nV], 
+                                                 tmp[(k+l+2) % nV]);
                         }
+                        weight += r[k];
+                    }
+                    
+                    // Calculate normalised Phong normals (equation 1).
+                    Node N(0,0,0,0);
+                    for (int k = 0; k < nV; ++k)
+                    {
+                        r[k] /= weight;
+                        N    += vN[k]*r[k];
+                    }
+                    N /= sqrt(N.abs2());
+
+                    for (int k = 0; k < nV; ++k)
+                    {
+                        // Perform steps denoted in equations 2, 3, 8 for C1
+                        // smoothing.
+                        double tmp1;
+                        K[k]  = P+N*((v[k]-P).dot(N));
+                        tmp1  = (v[k]-K[k]).dot(vN[k]) / (1.0 + N.dot(vN[k]));
+                        Q[k]  = K[k] + N*tmp1;
+                        Qp[k] = v[k] - N*((v[k]-P).dot(N));
+                    }
+                    
+                    // Apply C1 blending function to the surface. TODO: Add
+                    // option to do (more efficient) C0 blending function.
+                    SuperBlend(r, Qp, P, blend);
+                    P.x = P.y = P.z = 0.0;
+                    
+                    // Apply blending (equation 4).
+                    for (int k = 0; k < nV; ++k)
+                    {
+                        P += Q[k]*blend[k];
+                    }
+                    
+                    x[j] = P.x;
+                    y[j] = P.y;
+                    z[j] = P.z;
+                }
+                
+                int offset = (int)e->GetConf().e-2;
+                
+                // Push new nodes into edges (TODO: face nodes).
+                for (int edge = 0; edge < e->GetEdgeCount(); ++edge)
+                {
+                    eIt = visitedEdges.find(e->GetEdge(edge)->id);
+                    if (eIt == visitedEdges.end() || m->expDim == 3)
+                    {
+                        for (int j = 1; j < nq-1; ++j)
+                        {
+                            int v = edgeMap[offset][edge][0] + 
+                                  j*edgeMap[offset][edge][1];
+                            NodeSharedPtr tmp(new Node(0, x[v], y[v], z[v]));
+                            e->GetEdge(edge)->edgeNodes.push_back(tmp);
+                        }
+                        visitedEdges.insert(e->GetEdge(edge)->id);
+                    }
+                }
+            }
+            
+            // Full 3D only: Copy high-order edge nodes back into original
+            // elements.
+            if (m->expDim == 3)
+            {
+                set<pair<int,int> >::iterator       it;
+                boost::unordered_set<int>::iterator it2;
+                int elCount = 0;
+                
+                visitedEdges.clear();
+                
+                for (it  = m->spherigonFaces.begin();
+                     it != m->spherigonFaces.end(); ++it, ++elCount)
+                {
+                    FaceSharedPtr f = m->element[m->expDim][it->first]->GetFace(
+                        it->second);
+                    for (int edge = 0; edge < f->edgeList.size(); ++edge)
+                    {
+                        EdgeSharedPtr e = el[elCount]->GetEdge(edge);
+                        bool reverseEdge = e->n1 == f->edgeList[edge]->n2;
+                        
+                        if (visitedEdges.count(f->edgeList[edge]->id) != 0)
+                        {
+                            continue;
+                        }
+                        
+                        f->edgeList[edge]->edgeNodes = e->edgeNodes;
+                        
+                        if (reverseEdge)
+                        {
+                            reverse(f->edgeList[edge]->edgeNodes.begin(),
+                                    f->edgeList[edge]->edgeNodes.end());
+                        }
+                        
+                        visitedEdges.insert(f->edgeList[edge]->id);
                     }
                 }
             }

@@ -44,6 +44,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_set.hpp>
+#include <boost/unordered_map.hpp>
 
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
@@ -96,7 +97,7 @@ namespace Nektar
             Node(const Node& pSrc)
                 : id(pSrc.id), x(pSrc.x), y(pSrc.y), 
                   z(pSrc.z), m_geom() {}
-            Node()  {}
+            Node() : id(0), x(0.0), y(0.0), z(0.0), m_geom() {}
             ~Node() {}
 
             /// Define node ordering based on ID.
@@ -128,6 +129,11 @@ namespace Nektar
             Node operator*(const double &alpha) const
             {
                 return Node(id, alpha*x, alpha*y, alpha*z);
+            }
+            
+            Node operator/(const double &alpha) const
+            {
+                return Node(id, x/alpha, y/alpha, z/alpha);
             }
             
             void operator+=(const Node &pSrc)
@@ -843,6 +849,8 @@ namespace Nektar
          */
         class Composite {
         public:
+            Composite() {}
+
             /// Generate the list of IDs of elements within this composite.
             std::string GetXmlString();
 
@@ -918,6 +926,11 @@ namespace Nektar
             ConditionMap               condition;
             /// List of fields names.
             std::vector<std::string>   fields;
+            /// Map of vertex normals.
+            boost::unordered_map<int, Node> vertexNormals;
+            /// Set of all pairs of element ID and face number on which to apply
+            /// spherigon surface smoothing.
+            set<pair<int,int> > spherigonFaces;
             /// Returns the total number of elements in the mesh with
             /// dimension expDim.
             unsigned int               GetNumElements();

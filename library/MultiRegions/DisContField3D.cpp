@@ -921,6 +921,30 @@ namespace Nektar
             out = (*InvHDGHelm)*F + (*HDGLamToU)*LocLambda;
         }
 
+        /**
+         * @brief Calculates the result of the multiplication of a global matrix
+         * of type specified by @a mkey with a vector given by @a inarray.
+         * 
+         * @param mkey      Key representing desired matrix multiplication.
+         * @param inarray   Input vector.
+         * @param outarray  Resulting multiplication.
+         */
+        void DisContField3D::v_GeneralMatrixOp(
+               const GlobalMatrixKey             &gkey,
+               const Array<OneD,const NekDouble> &inarray,
+                     Array<OneD,      NekDouble> &outarray,
+               bool UseContCoeffs)
+        {
+            int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
+            Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);
+            DNekVec LocLambda(LocBndCoeffs,loc_lambda,eWrapper);
+            const DNekScalBlkMatSharedPtr& HDGHelm = GetBlockMatrix(gkey);
+
+            m_traceMap->GlobalToLocalBnd(inarray, loc_lambda);
+            LocLambda = (*HDGHelm) * LocLambda;
+            m_traceMap->AssembleBnd(loc_lambda,outarray);
+        }
+
         void DisContField3D::v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
                                                     Array<OneD,int> &FaceID)
         {

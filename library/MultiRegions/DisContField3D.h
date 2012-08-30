@@ -156,6 +156,12 @@ namespace Nektar
                     const StdRegions::VarCoeffMap &varcoeff,
                     const Array<OneD, const NekDouble> &dirForcing);
 			
+            virtual void v_GeneralMatrixOp(
+                   const GlobalMatrixKey             &gkey,
+                   const Array<OneD,const NekDouble> &inarray,
+                   Array<OneD,      NekDouble> &outarray,
+                   bool UseContCoeffs = false);
+
             virtual void v_EvaluateBoundaryConditions(
                 const NekDouble time = 0.0,
                 const NekDouble x2_in = NekConstants::kNekUnsetDouble,

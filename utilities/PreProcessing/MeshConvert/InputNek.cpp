@@ -434,7 +434,7 @@ namespace Nektar
                         // Spherigon information: read in vertex normals.
                         vector<NodeSharedPtr> &tmp = 
                             el->GetFace(faceId)->vertexList;
-                        Node n[tmp.size()];
+                        vector<Node> n(tmp.size());
 
                         int offset = 0;
                         if (el->GetConf().e == ePrism && faceId % 2 == 1)

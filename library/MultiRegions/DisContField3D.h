@@ -128,16 +128,9 @@ namespace Nektar
                     const SpatialDomains::BoundaryConditions &bcs,
                     const std::string &variable);
 
-            bool SameTypeOfBoundaryConditions(const DisContField3D &In);
+            void SetUpDG();
 
-            /// Populates the list of boundary condition expansions.
-            void SetBoundaryConditionExpansion(
-                    const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                    const SpatialDomains::BoundaryConditions &bcs,
-                    const std::string variable,
-                    Array<OneD, ExpListSharedPtr> &bndCondExpansions,
-                    Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                    &bndConditions);
+            bool SameTypeOfBoundaryConditions(const DisContField3D &In);
 
             /// Generates a map of periodic faces in the mesh.
             void GetPeriodicFaces(
@@ -167,31 +160,8 @@ namespace Nektar
                 const NekDouble x2_in = NekConstants::kNekUnsetDouble,
                 const NekDouble x3_in = NekConstants::kNekUnsetDouble);
 
-            /**
-             * \brief This method extracts the "forward" and "backward" trace
-             * data from the array \a field and puts the data into output
-             * vectors \a Fwd and \a Bwd.
-             * 
-             * We first define the convention which defines "forwards" and
-             * "backwards". First an association is made between the face of
-             * each element and its corresponding face in the trace space
-             * using the mapping #m_traceMap. The element can either be
-             * left-adjacent or right-adjacent to this trace face (see
-             * Expansion2D::GetLeftAdjacentElementExp). Boundary faces are
-             * always left-adjacent since left-adjacency is populated first.
-             * 
-             * If the element is left-adjacent we extract the face trace data
-             * from \a field into the forward trace space \a Fwd; otherwise,
-             * we place it in the backwards trace space \a Bwd. In this way,
-             * we form a unique set of trace normals since these are always
-             * extracted from left-adjacent elements.
-             *
-             * \param field is a NekDouble array which contains the 3D data
-             * from which we wish to extract the backward and forward
-             * orientated trace/face arrays.
-             *
-             * \return Updates a NekDouble array \a Fwd and \a Bwd
-             */
+            bool IsLeftAdjacentFace(const int n, const int e);
+            
             virtual void v_GetFwdBwdTracePhys(
                 Array<OneD,NekDouble> &Fwd,
                 Array<OneD,NekDouble> &Bwd);
@@ -207,6 +177,10 @@ namespace Nektar
             virtual void v_AddTraceIntegral(
                 const Array<OneD, const NekDouble> &Fn,
                       Array<OneD,       NekDouble> &outarray);
+            virtual void v_AddFwdBwdTraceIntegral(
+                const Array<OneD, const NekDouble> &Fwd, 
+                const Array<OneD, const NekDouble> &Bwd, 
+                Array<OneD,       NekDouble> &outarray);
 
             virtual const Array<OneD, const MultiRegions::ExpListSharedPtr> 
                 &v_GetBndCondExpansions();
@@ -220,6 +194,10 @@ namespace Nektar
 
             virtual ExpListSharedPtr &v_GetTrace(void)
             {
+                if(m_trace == NullExpListSharedPtr)
+                {
+                    SetUpDG();
+                }
                 return m_trace;
             }
             

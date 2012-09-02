@@ -53,7 +53,8 @@ namespace Nektar
         DisContField3D::DisContField3D() :
             ExpList3D             (),
             m_bndCondExpansions   (),
-            m_bndConditions       ()
+            m_bndConditions       (),
+            m_trace(NullExpListSharedPtr)
         {
         }
 
@@ -62,87 +63,33 @@ namespace Nektar
          * 
          */
         DisContField3D::DisContField3D(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
+                                       const LibUtilities::SessionReaderSharedPtr &pSession,
             const SpatialDomains::MeshGraphSharedPtr   &graph3D,
             const std::string                          &variable,
             const bool                                  SetUpJustDG)
-        : ExpList3D          (pSession,graph3D),
-          m_bndCondExpansions(),
-          m_bndConditions    ()
+            : ExpList3D          (pSession,graph3D),
+              m_bndCondExpansions(),
+              m_bndConditions    (),
+              m_trace(NullExpListSharedPtr)
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
             
             GenerateBoundaryConditionExpansion(graph3D,bcs,variable);
             EvaluateBoundaryConditions();
             ApplyGeomInfo();
+
             
             if(SetUpJustDG)
             {
-                ExpList2DSharedPtr trace;
-                
-                // Set up matrix map
-                m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
                 map<int,int>          periodicEdges;
                 map<int,int>          periodicVertices;
                 map<int,PeriodicFace> periodicFaces;
                 GetPeriodicFaces(graph3D, bcs, variable,
                                  periodicVertices, periodicEdges, periodicFaces);
-                
-                // Set up Trace space
-                bool UseGenSegExp = true;
-                trace = MemoryManager<ExpList2D>
-                    ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
-                                        *m_exp,graph3D, periodicFaces, UseGenSegExp);
-                m_trace         = trace;
-                m_periodicFaces = periodicFaces;
-                
-                // Scatter trace segments to 3D elements. For each element,
-                // we find the trace segment associated to each face. The
-                // element then retains a pointer to the trace space segments
-                SpatialDomains::Geometry2DSharedPtr ElmtFaceGeom;
-                SpatialDomains::Geometry2DSharedPtr TraceFaceGeom;
-                for (int i = 0; i < m_exp->size(); ++i)
-                {
-                    for (int j = 0; j < (*m_exp)[i]->GetNfaces(); ++j)
-                    {
-                        ElmtFaceGeom  = ((*m_exp)[i]->GetGeom3D())->GetFace(j);
-                        for (int k = 0; k < m_trace->GetExpSize(); ++k)
-                        {
-                            TraceFaceGeom = m_trace->GetExp(k)->GetGeom2D();
-                            if (TraceFaceGeom == ElmtFaceGeom)
-                            {
-                                LocalRegions::Expansion3DSharedPtr exp3d
-                                    = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>((*m_exp)[i]);
-                                LocalRegions::Expansion2DSharedPtr exp2d
-                                    = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>(m_trace->GetExp(k));
-                                
-                                exp3d->SetFaceExp(j, exp2d);
-                                exp2d->SetAdjacentElementExp(j, exp3d);
-                                break;
-                            }
-                        }
-                    }
-                }
-                SetUpPhysNormals();
-                
-                m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
-                    m_session,graph3D,trace,*this,m_bndCondExpansions,
-                    m_bndConditions, periodicFaces);
 
-                // Set up information for periodic boundary conditions.
-                for (int n = 0; n < m_exp->size(); ++n)
-                {
-                    for (int e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
-                    {
-                        map<int,PeriodicFace>::iterator it = m_periodicFaces.find(
-                            (*m_exp)[n]->GetGeom3D()->GetFid(e));
-                        
-                        if (it != m_periodicFaces.end())
-                        {
-                            m_perFaceToExpMap[it->first] = make_pair(n, e);
-                        }
-                    }
-                }
+                m_periodicFaces = periodicFaces;
+
+                SetUpDG();
             }
             else
             {
@@ -193,6 +140,16 @@ namespace Nektar
            {
                if(SetUpJustDG)
                {
+                   map<int,int>          periodicEdges;
+                   map<int,int>          periodicVertices;
+                   map<int,PeriodicFace> periodicFaces;
+                   GetPeriodicFaces(graph3D, bcs, variable,
+                                    periodicVertices, periodicEdges, periodicFaces);
+                   
+                   m_periodicFaces = periodicFaces;
+
+                   SetUpDG();
+#if 0 
                    ExpList2DSharedPtr trace;
                    
                    // Set up matrix map
@@ -242,6 +199,7 @@ namespace Nektar
                    m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
                        m_session,graph3D,trace,*this, m_bndCondExpansions,
                        m_bndConditions, periodicFaces);
+#endif
                }
                else
                {
@@ -308,11 +266,26 @@ namespace Nektar
                        
                        cnt += m_bndCondExpansions[i]->GetExpSize();
                    }
-                   SetUpPhysNormals();
+
+                   if(m_session->DefinesSolverInfo("PROJECTION"))
+                   {
+                       std::string ProjectStr = m_session->GetSolverInfo("PROJECTION");
+                       if((ProjectStr == "MixedCGDG")||(ProjectStr == "Mixed_CG_Discontinuous"))
+                       {
+                           SetUpDG();
+                       }
+                       else
+                       {
+                           SetUpPhysNormals();
+                       }
+                   }
+                   else
+                   {
+                       SetUpPhysNormals();
+                   }                       
                }
            }
        }
-
 
         /**
          *
@@ -332,6 +305,80 @@ namespace Nektar
          */
         DisContField3D::~DisContField3D()
         {
+        }
+
+        
+        /**
+         * @brief Set up all DG member variables and maps.
+         */
+        void DisContField3D::SetUpDG()
+        {
+            if(m_trace == NullExpListSharedPtr) // check for multiple calls
+            {
+                ExpList2DSharedPtr trace;
+                
+                SpatialDomains::MeshGraph3DSharedPtr graph3D = 
+                    boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(
+                                                                             m_graph);
+
+                // Set up matrix map
+                m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
+
+                // Set up Trace space
+                bool UseGenSegExp = true;
+                trace = MemoryManager<ExpList2D>
+                    ::AllocateSharedPtr(m_bndCondExpansions, m_bndConditions,
+                                        *m_exp,graph3D, m_periodicFaces, UseGenSegExp);
+                m_trace         = trace;
+                
+                // Scatter trace segments to 3D elements. For each element,
+                // we find the trace segment associated to each face. The
+                // element then retains a pointer to the trace space segments
+                SpatialDomains::Geometry2DSharedPtr ElmtFaceGeom;
+                SpatialDomains::Geometry2DSharedPtr TraceFaceGeom;
+                for (int i = 0; i < m_exp->size(); ++i)
+                {
+                    for (int j = 0; j < (*m_exp)[i]->GetNfaces(); ++j)
+                    {
+                        ElmtFaceGeom  = ((*m_exp)[i]->GetGeom3D())->GetFace(j);
+                        for (int k = 0; k < m_trace->GetExpSize(); ++k)
+                        {
+                            TraceFaceGeom = m_trace->GetExp(k)->GetGeom2D();
+                            if (TraceFaceGeom == ElmtFaceGeom)
+                            {
+                                LocalRegions::Expansion3DSharedPtr exp3d
+                                    = boost::dynamic_pointer_cast<LocalRegions::Expansion3D>((*m_exp)[i]);
+                                LocalRegions::Expansion2DSharedPtr exp2d
+                                    = boost::dynamic_pointer_cast<LocalRegions::Expansion2D>(m_trace->GetExp(k));
+                                
+                                exp3d->SetFaceExp(j, exp2d);
+                                exp2d->SetAdjacentElementExp(j, exp3d);
+                                break;
+                            }
+                        }
+                    }
+                }
+                SetUpPhysNormals();
+                
+                m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
+                    m_session,graph3D,trace,*this,m_bndCondExpansions,
+                    m_bndConditions, m_periodicFaces);
+
+                // Set up information for periodic boundary conditions.
+                for (int n = 0; n < m_exp->size(); ++n)
+                {
+                    for (int e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
+                    {
+                        map<int,PeriodicFace>::iterator it = m_periodicFaces.find(
+                            (*m_exp)[n]->GetGeom3D()->GetFid(e));
+                        
+                        if (it != m_periodicFaces.end())
+                        {
+                            m_perFaceToExpMap[it->first] = make_pair(n, e);
+                        }
+                    }
+                }
+            }
         }
 
         GlobalLinSysSharedPtr DisContField3D::GetGlobalBndLinSys(const GlobalLinSysKey &mkey)
@@ -361,8 +408,6 @@ namespace Nektar
          * According to their boundary region, the separate segmental boundary
          * expansions are bundled together in an object of the class
          * MultiRegions#ExpList1D.
-         * The list of expansions of the Dirichlet boundary regions are listed
-         * first in the array #m_bndCondExpansions.
          *
          * \param graph2D A mesh, containing information about the domain and
          * the spectral/hp element expansion.
@@ -376,7 +421,10 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string &variable)
         {
-            int cnt1  = 0;
+            int i, cnt  = 0;
+            MultiRegions::ExpList2DSharedPtr       locExpList;
+            SpatialDomains::BoundaryConditionShPtr locBCond;
+
             const SpatialDomains::BoundaryRegionCollection    &bregions = 
                 bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions = 
@@ -385,21 +433,44 @@ namespace Nektar
             int nbnd = bregions.size();
 
             // count the number of non-periodic boundary regions
-            for(int i = 0; i < nbnd; ++i)
+            for(i = 0; i < nbnd; ++i)
             {
                 SpatialDomains::BoundaryConditionShPtr boundaryCondition = 
                     GetBoundaryCondition(bconditions, i, variable);
                 if (boundaryCondition->GetBoundaryConditionType() != 
                         SpatialDomains::ePeriodic)
                 {
-                    cnt1++;
+                    cnt++;
                 }
             }
 
-            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt1);
-            m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt1);
+            m_bndCondExpansions  = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
+            m_bndConditions      = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
-            SetBoundaryConditionExpansion(graph3D,bcs,variable,m_bndCondExpansions,m_bndConditions);
+            cnt=0;
+
+            // list Dirichlet boundaries first
+            for(i = 0; i < nbnd; ++i)
+            {
+                locBCond = GetBoundaryCondition(bconditions, i, variable);
+
+                if(locBCond->GetBoundaryConditionType()
+                   != SpatialDomains::ePeriodic)
+                {
+                    locExpList = MemoryManager<MultiRegions::ExpList2D>
+                        ::AllocateSharedPtr(m_session,*(bregions[i]), graph3D);
+
+                    // Set up normals on non-Dirichlet boundary conditions
+                    if(locBCond->GetBoundaryConditionType() != 
+                           SpatialDomains::eDirichlet)
+                    {
+                        SetUpPhysNormals();
+                    }
+
+                    m_bndCondExpansions[cnt]  = locExpList;
+                    m_bndConditions[cnt++]    = locBCond;
+                }
+            }
         }
 
 
@@ -438,85 +509,6 @@ namespace Nektar
             return (vSame == 1);
         }
 
-
-
-        /**
-         * @param   graph3D     A mesh containing information about the domain
-         *                      and the spectral/hp element expansions.
-         * @param   bcs         Information about the boundary conditions.
-         * @param   variable    Specifies the field.
-         * @param   bndCondExpansions   Array of ExpList2D objects each
-         *                      containing a 2D spectral/hp element expansion
-         *                      on a single boundary region.
-         * @param   bndConditions   Array of BoundaryCondition objects which
-         *                      contain information about the boundary
-         *                      conditions on the different boundary regions.
-         */
-        void DisContField3D::SetBoundaryConditionExpansion(
-                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                        const SpatialDomains::BoundaryConditions &bcs,
-                        const std::string variable,
-                        Array<OneD, ExpListSharedPtr> &bndCondExpansions,
-                        Array<OneD, SpatialDomains::BoundaryConditionShPtr>
-                        &bndConditions)
-        {
-            int i;
-            int cnt  = 0;
-
-            const SpatialDomains::BoundaryRegionCollection &bregions
-                                        = bcs.GetBoundaryRegions();
-            const SpatialDomains::BoundaryConditionCollection &bconditions
-                                        = bcs.GetBoundaryConditions();
-
-            MultiRegions::ExpList2DSharedPtr       locExpList;
-            SpatialDomains::BoundaryConditionShPtr locBCond;
-
-            int nbnd = bregions.size();
-
-            cnt=0;
-            // list Dirichlet boundaries first
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
-
-                if(locBCond->GetBoundaryConditionType()
-                                        == SpatialDomains::eDirichlet)
-                {
-                    locExpList = MemoryManager<MultiRegions::ExpList2D>
-                                        ::AllocateSharedPtr(m_session,*(bregions[i]),
-                                                            graph3D);
-                    bndCondExpansions[cnt]  = locExpList;
-                    bndConditions[cnt++]    = locBCond;
-                } // end if Dirichlet
-            }
-            // then, list the other (non-periodic) boundaries
-            for(i = 0; i < nbnd; ++i)
-            {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
-
-                switch(locBCond->GetBoundaryConditionType())
-                {
-                case SpatialDomains::eNeumann:
-                case SpatialDomains::eRobin:
-                    {
-                        locExpList = MemoryManager<MultiRegions::ExpList2D>
-                            ::AllocateSharedPtr(m_session,*(bregions[i]),
-                                                graph3D);
-                        bndCondExpansions[cnt]  = locExpList;
-                        bndConditions[cnt++]    = locBCond;
-                        SetUpPhysNormals();
-                    }
-                    break;
-                case SpatialDomains::eDirichlet: // do nothing for these types
-                case SpatialDomains::ePeriodic:
-                    break;
-                default:
-                    ASSERTL0(false,"This type of BC not implemented yet");
-                    break;
-                }
-            }
-        }
-        
         /**
          * @param   graph3D     A mesh containing information about the domain
          *                      and the spectral/hp element expansion.
@@ -1052,8 +1044,7 @@ namespace Nektar
                                         == SpatialDomains::eDirichlet)
                 {
                     LibUtilities::Equation  condition = boost::static_pointer_cast<
-                                                           SpatialDomains::DirichletBoundaryCondition
-                                                        >(m_bndConditions[i])->m_dirichletCondition;
+                    SpatialDomains::DirichletBoundaryCondition >(m_bndConditions[i])->m_dirichletCondition;
 
                     condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
 
@@ -1103,11 +1094,69 @@ namespace Nektar
             return m_bndConditions;
         }
 
+        bool DisContField3D::IsLeftAdjacentFace(const int n, const int e)
+        {
+            set<int>::iterator     it;
+            LocalRegions::Expansion2DSharedPtr traceEl = 
+                boost::dynamic_pointer_cast<LocalRegions::Expansion2D>((m_traceMap->GetElmtToTrace())[n][e]);
+            
+            int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
+            
+            bool fwd = true;
+            
+            if (traceEl->GetLeftAdjacentElementFace () == -1 ||
+                traceEl->GetRightAdjacentElementFace() == -1)
+            {
+                // Boundary face (1 connected element) - always put in
+                // forwards space.
+            }
+            else if (traceEl->GetLeftAdjacentElementFace () != -1 &&
+                     traceEl->GetRightAdjacentElementFace() != -1)
+            {
+                // Non-boundary face (2 connected elements).
+                fwd = dynamic_cast<Nektar::StdRegions::StdExpansion*>
+                    (traceEl->GetLeftAdjacentElementExp().get()) ==
+                    (*m_exp)[n].get();
+            }
+            else
+            {
+                ASSERTL2(false, "Unconnected trace element!");
+            }
+
+            return fwd;
+        }
+
+        /**
+         * \brief This method extracts the "forward" and "backward" trace
+         * data from the array \a field and puts the data into output
+         * vectors \a Fwd and \a Bwd.
+         * 
+         * We first define the convention which defines "forwards" and
+         * "backwards". First an association is made between the face of
+         * each element and its corresponding face in the trace space
+         * using the mapping #m_traceMap. The element can either be
+         * left-adjacent or right-adjacent to this trace face (see
+         * Expansion2D::GetLeftAdjacentElementExp). Boundary faces are
+         * always left-adjacent since left-adjacency is populated first.
+         * 
+         * If the element is left-adjacent we extract the face trace data
+         * from \a field into the forward trace space \a Fwd; otherwise,
+         * we place it in the backwards trace space \a Bwd. In this way,
+         * we form a unique set of trace normals since these are always
+         * extracted from left-adjacent elements.
+         *
+         * \param field is a NekDouble array which contains the 3D data
+         * from which we wish to extract the backward and forward
+         * orientated trace/face arrays.
+         *
+         * \return Updates a NekDouble array \a Fwd and \a Bwd
+         */
         void DisContField3D::v_GetFwdBwdTracePhys(Array<OneD, NekDouble> &Fwd,
                                                   Array<OneD, NekDouble> &Bwd)
         {
             v_GetFwdBwdTracePhys(m_phys, Fwd, Bwd);
         }
+        
         
         void DisContField3D::v_GetFwdBwdTracePhys(
             const Array<OneD, const NekDouble> &field,
@@ -1129,18 +1178,22 @@ namespace Nektar
             // Zero vectors.
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
-            
+             
+            bool fwd = true;
             for(n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
+                    offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+#if 1
+                    fwd = IsLeftAdjacentFace(n,e);
+#else
                     LocalRegions::Expansion2DSharedPtr traceEl = 
                         boost::dynamic_pointer_cast<
-                            LocalRegions::Expansion2D>(elmtToTrace[n][e]);
+                    LocalRegions::Expansion2D>(elmtToTrace[n][e]);
                     
                     offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
-                    bool fwd = true;
                     
                     if (traceEl->GetLeftAdjacentElementFace () == -1 ||
                         traceEl->GetRightAdjacentElementFace() == -1)
@@ -1153,14 +1206,15 @@ namespace Nektar
                     {
                         // Non-boundary face (2 connected elements).
                         fwd = dynamic_cast<Nektar::StdRegions::StdExpansion*>
-                                    (traceEl->GetLeftAdjacentElementExp().get()) ==
-                              (*m_exp)[n].get();
+                            (traceEl->GetLeftAdjacentElementExp().get()) ==
+                            (*m_exp)[n].get();
                     }
                     else
                     {
                         ASSERTL2(false, "Unconnected trace element!");
                     }
-                    
+#endif                    
+
                     if (fwd)
                     {
                         (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
@@ -1282,7 +1336,24 @@ namespace Nektar
             }
         }
         
-        /// Note this routine changes m_trace->m_coeffs space;
+        /**
+         * @brief Add trace contributions into elemental coefficient spaces.
+         * 
+         * Given some quantity \f$ \vec{Fn} \f$, which conatins this
+         * routine calculates the integral
+         * 
+         * \f[ 
+         * \int_{\Omega^e} \vec{Fn}, \mathrm{d}S
+         * \f] 
+         * 
+         * and adds this to the coefficient space provided by outarray.
+         * 
+         * @see Expansion3D::AddFaceNormBoundaryInt
+         * 
+         * @param Fn        The trace quantities.
+         * @param outarray  Resulting 3D coefficient space.
+         *
+         */
         void DisContField3D::v_AddTraceIntegral(
             const Array<OneD, const NekDouble> &Fn,
                   Array<OneD,       NekDouble> &outarray)
@@ -1304,5 +1375,64 @@ namespace Nektar
                 }
             }
         }
+
+
+        /**
+         * @brief Add trace contributions into elemental coefficient spaces.
+         * 
+         * Given some quantity \f$ \vec{Fn} \f$, which conatins this
+         * routine calculates the integral
+         * 
+         * \f[ 
+         * \int_{\Omega^e} \vec{Fn}, \mathrm{d}S
+         * \f] 
+         * 
+         * and adds this to the coefficient space provided by
+         * outarray. The value of q is determined from the routine
+         * IsLeftAdjacentFace() which if true we use Fwd else we use
+         * Bwd
+         *
+         * @see Expansion3D::AddFaceNormBoundaryInt
+         * 
+         * 
+         * @param Fwd       The trace quantities associated with left (fwd) adjancent elmt. 
+         * @param Bwd       The trace quantities associated with right (bwd) adjacent elet.
+         * @param outarray  Resulting 2D coefficient space.
+         *
+         */
+        void DisContField3D::v_AddFwdBwdTraceIntegral(
+            const Array<OneD, const NekDouble> &Fwd, 
+            const Array<OneD, const NekDouble> &Bwd, 
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int e,n,offset, t_offset;
+            Array<OneD, NekDouble> e_outarray;
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
+
+            for(n = 0; n < GetExpSize(); ++n)
+            {
+                offset = GetCoeff_Offset(n);
+                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
+                {
+                    t_offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+
+                    // Evaluate upwind flux less local edge 
+                    if(IsLeftAdjacentFace(n,e))
+                    {
+                        (*m_exp)[n]->AddFaceNormBoundaryInt(
+                         e, elmtToTrace[n][e],  Fwd + t_offset,
+                         e_outarray = outarray+offset);
+                    }
+                    else
+                    {
+                        (*m_exp)[n]->AddFaceNormBoundaryInt(
+                         e, elmtToTrace[n][e],  Bwd + t_offset,
+                         e_outarray = outarray+offset);
+                    }
+                }
+            }
+        }
+
     } // end of namespace
 } // end of namespace

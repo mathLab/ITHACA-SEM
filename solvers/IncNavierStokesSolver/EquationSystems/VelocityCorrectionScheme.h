@@ -96,7 +96,9 @@ namespace Nektar
 	void SelectiveFrequencyDamping(void);
     
 
-        void AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);
+        void AddDuDt  (const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);
+        void AddDuDt2D(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);
+        void AddDuDt3D(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);
 
     protected:
 

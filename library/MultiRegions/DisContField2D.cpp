@@ -450,8 +450,7 @@ namespace Nektar
          *
          * According to their boundary region, the separate segmental boundary
          * expansions are bundled together in an object of the class
-         * MultiRegions#ExpList1D.  The list of expansions of the Dirichlet
-         * boundary regions are listed first in the array #m_bndCondExpansions.
+         * MultiRegions#ExpList1D.  
          *
          * \param graph2D   A mesh, containing information about the domain and
          *                  the spectral/hp element expansion.

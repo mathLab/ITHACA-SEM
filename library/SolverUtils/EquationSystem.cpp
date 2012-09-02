@@ -300,9 +300,9 @@ namespace Nektar
                                     //m_fields[i]->SetWaveSpace(false);
 
                                 }
-							}
+                            }
                             // Half mode stability analysis
-							else if(m_HalfMode)
+			    else if(m_HalfMode)
                             {
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ, LibUtilities::eFourierSingleModeSpaced);
 									
@@ -398,7 +398,18 @@ namespace Nektar
                                 ::AllocateSharedPtr(*firstfield, m_graph, 
                                                     m_session->GetVariable(i));
                         }
-                        //}
+                        
+                        if(m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
+                        {
+                            /// Setting up the normals
+                            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+                            for(i = 0; i < m_spacedim; ++i)
+                            {
+                                m_traceNormals[i] = Array<OneD, NekDouble> (GetTraceNpoints());
+                            }
+                            
+                            m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
+                        }
                         break;
                     }
                     default:

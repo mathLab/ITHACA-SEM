@@ -1174,7 +1174,7 @@ namespace Nektar
                 if(dumpVar)
                 { 
                     outfile << "Variables = x";
-                    
+
                     if(coordim == 2)
                     {
                         outfile << ", y";
@@ -1183,7 +1183,7 @@ namespace Nektar
                     {
                         outfile << ", y, z";
                     }
-                    outfile << ", "<< var << std::endl << std::endl;
+                    outfile << std::endl << std::endl;
                 }
                 
                 outfile << "Zone, I=" << nquad0 << ", J=" << nquad1 << ", K=" << nquad2 << ", F=Point" << std::endl;
@@ -1192,13 +1192,9 @@ namespace Nektar
                 {
                     for(j = 0; j < coordim; ++j)
                     {
-                        for(k=0; k < coordim; ++k)
-                        {
-                            outfile << coords[k][j] << " ";
-                        }
-                        outfile << m_phys[j] << std::endl;
+                        outfile << coords[j][i] << " ";
                     }
-                    outfile << m_phys[i] << std::endl;
+                    outfile << std::endl;
                 }
             }
             else

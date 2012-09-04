@@ -85,14 +85,6 @@ L 2 error (variable v) : 2.91568e-14
 L inf error (variable v) : 2.14091e-13
 ----------------------------------------
 ChanStability.xml
-L 2 error (variable u) : 3.63474e-11
-L inf error (variable u) : 6.53318e-10
-L 2 error (variable v) : 1.03201e-10
-L inf error (variable v) : 1.55026e-09
-L 2 error (variable w) : 7.74576e-09
-L inf error (variable w) : 2.59194e-08
-L 2 error (variable p) : 8.18866e-08
-L inf error (variable p) : 3.42898e-07
 L 2 error (variable u) : 0.0372818
 L inf error (variable u) : 0
 L 2 error (variable v) : 0.0228428
@@ -169,14 +161,14 @@ L 2 error (variable v) : 2.96601e-14
 L inf error (variable v) : 1.25209e-13
 ----------------------------------------
 Test_ChanFlow_3DH1D_MVM.xml
-L 2 error (variable u) : 4.67619e-16
-L inf error (variable u) : 2.498e-15
-L 2 error (variable v) : 9.18537e-17
-L inf error (variable v) : 4.53618e-16
+L 2 error (variable u) : 3.34833e-16
+L inf error (variable u) : 1.94289e-15
+L 2 error (variable v) : 1.21337e-16
+L inf error (variable v) : 4.75925e-16
 L 2 error (variable w) : 0
-L inf error (variable w) : 1.53665e-16
-L 2 error (variable p) : 4.76821e-14
-L inf error (variable p) : 2.11386e-13
+L inf error (variable w) : 1.02571e-17
+L 2 error (variable p) : 2.64454e-14
+L inf error (variable p) : 1.4011e-13
 ----------------------------------------
 Test_ChanFlow_3DH1D_FFT.xml
 L 2 error (variable u) : 3.61998e-16
@@ -381,4 +373,14 @@ L 2 error (variable v) : 0.0020437
 L inf error (variable v) : 0.00586633
 L 2 error (variable p) : 0.0123206
 L inf error (variable p) : 0.0501207
+----------------------------------------
+Test_Hex_Kovasnay_SubStep.xml
+L 2 error (variable u) : 0.048372
+L inf error (variable u) : 0.0616737
+L 2 error (variable v) : 0.00253099
+L inf error (variable v) : 0.00726816
+L 2 error (variable w) : 0.000796309
+L inf error (variable w) : 0.00562612
+L 2 error (variable p) : 0.00900028
+L inf error (variable p) : 0.0453188
 ----------------------------------------

@@ -110,6 +110,8 @@ int main(int argc, char* argv[])
 
     //Test Substepping scheme on Kovasnay solution
     Execute("IncNavierStokesSolver","Test_KovaFlow_SubStep_2order.xml","Kovasnay solution using sub-stepping");
+
+    Execute("IncNavierStokesSolver","Test_Hex_Kovasnay_SubStep.xml","3D Hex Kovasnay solution using sub-stepping");
 	
     //Test Modified Arnoldi adjoint stability (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","ChanStability_adj.xml","Adjoint stability (Mod. Arnoldi): Channel");

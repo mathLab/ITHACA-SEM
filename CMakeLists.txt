@@ -60,6 +60,8 @@ SET(NEKTAR_BUILD_UTILITIES   ON CACHE BOOL
     "Build utilities for pre-processing and post-processing Nektar++ files.")
 SET(NEKTAR_BUILD_UNIT_TESTS  ON CACHE BOOL
     "Build unit tests.")
+SET(NEKTAR_BUILD_TESTS       ON CACHE BOOL
+    "Build tests for checking the correctness of the code.")
 SET(NEKTAR_BUILD_REGRESSION_TESTS ON CACHE BOOL
     "Build regression tests for checking the correctness of the code.")
 SET(NEKTAR_BUILD_TIMINGS     OFF CACHE BOOL 
@@ -249,6 +251,11 @@ IF (NEKTAR_BUILD_UTILITIES)
     INCLUDE_DIRECTORIES(utilities)
     ADD_SUBDIRECTORY(utilities)
 ENDIF (NEKTAR_BUILD_UTILITIES)
+
+IF (NEKTAR_BUILD_TESTS)
+    INCLUDE_DIRECTORIES(tests)
+    ADD_SUBDIRECTORY(tests)
+ENDIF (NEKTAR_BUILD_TESTS)
 
 IF (NEKTAR_BUILD_REGRESSION_TESTS)
     INCLUDE_DIRECTORIES(regressionTests)

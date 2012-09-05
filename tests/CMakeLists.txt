@@ -1,0 +1,36 @@
+SET(TESTER_SOURCES
+  Metric.cpp
+  MetricL2.cpp
+  MetricRegex.cpp
+  Tester.cpp
+)
+
+SET(TESTER_HEADERS
+  Metric.h
+  MetricL2.h
+  MetricRegex.h
+  Tester.h
+)
+
+ADD_EXECUTABLE(Tester ${TESTER_SOURCES} ${ARGN})
+TARGET_LINK_LIBRARIES(Tester
+  ${Boost_FILESYSTEM_LIBRARY} 
+  ${Boost_SYSTEM_LIBRARY}
+  ${Boost_REGEX_LIBRARY}
+  optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
+)
+ADD_DEPENDENCIES(Tester boost tinyxml)
+
+IF( ${CMAKE_SYSTEM} MATCHES "Linux.*")
+  TARGET_LINK_LIBRARIES(Tester optimized rt debug rt)
+ENDIF()
+
+IF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
+  SET_TARGET_PROPERTIES(Tester 
+    PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${LIB_DIR} -Wl,-rpath,${Boost_LIBRARY_DIRS}")
+ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
+
+INSTALL(TARGETS Tester 
+  RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT test OPTIONAL
+  ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} COMPONENT test OPTIONAL
+  LIBRARY DESTINATION ${NEKTAR_LIB_DIR} COMPONENT test OPTIONAL)

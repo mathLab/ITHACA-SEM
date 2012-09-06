@@ -157,6 +157,7 @@ INCLUDE (ThirdPartyFFTW)
 INCLUDE (ThirdPartyArpack)
 INCLUDE (ThirdPartyMPI)
 INCLUDE (ThirdPartyVTK)
+INCLUDE (ThirdPartyScalapack)
 
 IF( NEKTAR_USE_MKL )
     INCLUDE (FindMKL)
@@ -269,6 +270,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
 	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindScalapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/NektarCommon.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake

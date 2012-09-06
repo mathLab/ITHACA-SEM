@@ -1,0 +1,22 @@
+SET(NEKTAR_USE_SCALAPACK   OFF CACHE BOOL 
+    "Use ScaLAPACK for performing parallel matrix inversion.")
+SET(THIRDPARTY_BUILD_SCALAPACK OFF CACHE BOOL
+    "Build ScaLAPACK library from ThirdParty")
+
+IF (THIRDPARTY_BUILD_SCALAPACK)
+    INCLUDE(ExternalProject)
+    EXTERNALPROJECT_ADD(
+        scalapack-2.0.2
+        PREFIX ${TPSRC}
+        URL ${TPURL}/scalapack-2.0.2.tar.gz
+        URL_MD5 "2f75e600a2ba155ed9ce974a1c4b536f"
+        DOWNLOAD_DIR ${TPSRC}
+        CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist ${TPSRC}/src/scalapack-2.0.2
+    )
+    SET(SCALAPACK_LIB scalapack CACHE FILEPATH
+        "SCALAPACK library" FORCE)
+    LINK_DIRECTORIES(${TPSRC}/dist/lib)
+ELSE (THIRDPARTY_BUILD_SCALAPACK)
+    INCLUDE (FindScalapack)
+ENDIF (THIRDPARTY_BUILD_SCALAPACK)
+

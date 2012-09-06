@@ -73,8 +73,8 @@ namespace Nektar
         "UnsteadyStokes",
         "UnsteadyLinearisedNS",
         "UnsteadyNavierStokes",
-	"SteadyNavierStokes",
-	"SteadyNavierStokesBySFD"
+	    "SteadyNavierStokes",
+	    "SteadyNavierStokesBySFD"
     };
 
 
@@ -86,6 +86,7 @@ namespace Nektar
         eLinearised,
         eAdjoint,
         eSkewSymmetric,
+		eNoAdvection,
         eAdvectionFormSize
     };
     
@@ -98,6 +99,7 @@ namespace Nektar
         "Linearised",
         "Adjoint",
         "SkewSymmetric"
+		"NoAdvection"
     };
 	
     /**
@@ -132,7 +134,8 @@ namespace Nektar
 
 
         // Sub-stepping related methods
-        void SubStepAdvection (const Array<OneD, const Array<OneD, NekDouble> > &inarray,                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
+        void SubStepAdvection (const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+							   Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                const NekDouble time);
 
         void SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -242,8 +245,6 @@ namespace Nektar
             ASSERTL0(false,"This method is not defined in this class");
         }
 		
-				
-        
     private: 
     };
     

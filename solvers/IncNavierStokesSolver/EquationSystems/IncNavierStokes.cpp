@@ -162,6 +162,12 @@ namespace Nektar
             }
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
+		
+		if(m_equationType == eUnsteadyStokes)
+		{
+			std::string vConvectiveType = "NoAdvection";
+			m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
+		}
 	
 #if 0 // Not required if building on an UnsteadySystem rather than an EquationSystem
         // Set up filters

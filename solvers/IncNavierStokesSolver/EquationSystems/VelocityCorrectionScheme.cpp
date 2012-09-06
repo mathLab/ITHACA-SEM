@@ -472,9 +472,12 @@ namespace Nektar
                                                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                                     const NekDouble time)
     {
+		int nqtot      = m_fields[0]->GetTotPoints();
+		
         // evaluate convection terms
-        m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);        
-        //add the force
+        m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);  
+		        
+		//add the force
         if(m_session->DefinesFunction("BodyForce"))
         {
             if(m_SingleMode || m_HalfMode)
@@ -485,8 +488,6 @@ namespace Nektar
                     m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),m_forces[i]->UpdatePhys());
                 }
             }
-			
-            int nqtot      = m_fields[0]->GetTotPoints();
             for(int i = 0; i < m_nConvectiveFields; ++i)
             {
                 Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);

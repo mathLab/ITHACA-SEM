@@ -642,20 +642,31 @@ namespace Nektar
             //Local matrix key - the matrix key "ePreconditioner"
             //is a helmholz matrix constructed from a equalateral
             //Tetrahedron or Hexahedron
-            LocalRegions::MatrixKey matkey(StdRegions::ePreconditioner,
+	    if(MultiRegions::eLowEnergy)
+	    {
+                LocalRegions::MatrixKey matkey(StdRegions::ePreconditioner,
                                            vExp->DetExpansionType(),
                                            *vExp,
                                            m_linSysKey.GetConstFactors(),
                                            vVarCoeffMap);
 
-            //Get a LocalRegions static condensed matrix
-            loc_mat = vExp->GetLocStaticCondMatrix(matkey);
+		//Get a LocalRegions static condensed matrix
+		loc_mat = vExp->GetLocStaticCondMatrix(matkey);
+	    }
+	    else if(MultiRegions::eBlock)
+	    {
+                loc_mat = (m_linsys.lock())->GetStaticCondBlock(nel);
+	    }
+	    else
+	    {
+                ASSERTL0(0,"Unknown preconditiner for this method");
+	    }
 
             //local schur complement (boundary-boundary block)
-            bndry_mat = loc_mat->GetBlock(0,0);
+            bnd_mat = loc_mat->GetBlock(0,0);
 
             //number of rows=columns of the schur complement
-            bndry_rows=bndry_mat->GetRows();
+            bndry_rows=bnd_mat->GetRows();
 
             int nCoeffs=vExp->GetNcoeffs();
             int nint=nCoeffs-bndry_rows;
@@ -832,7 +843,7 @@ namespace Nektar
                 for (n=0; n<nedgemodesconnected; ++n)
                 {
                     //Matrix value for each coefficient location
-		    VertexEdgeFaceValue=(*bndry_mat)(vertModeLocation[vid], edgemodearray[n]);
+		    VertexEdgeFaceValue=(*bnd_mat)(vertModeLocation[vid], edgemodearray[n]);
 
                     //Set the value in the vertex edge/face matrix
                     Svef.SetValue(0,n,VertexEdgeFaceValue);
@@ -842,7 +853,7 @@ namespace Nektar
                 for (n=0; n<nfacemodesconnected; ++n)
                 {
                     //Matrix value for each coefficient location
-		    VertexEdgeFaceValue=(*bndry_mat)(vertModeLocation[vid],facemodearray[n]);
+		    VertexEdgeFaceValue=(*bnd_mat)(vertModeLocation[vid],facemodearray[n]);
 
                     //Set the value in the vertex edge/face matrix
                     //Svef.SetValue(vid,n+nedgemodesconnected,VertexEdgeFaceValue);
@@ -868,7 +879,7 @@ namespace Nektar
                     for (n=0; n<nedgemodesconnected; ++n)
                     {
                         //Matrix value for each coefficient location
-                        EdgeEdgeValue=(*bndry_mat)(edgemodearray[n],edgemodearray[m]);
+                        EdgeEdgeValue=(*bnd_mat)(edgemodearray[n],edgemodearray[m]);
 
                         //Set the value in the vertex edge/face matrix
                         Sefef.SetValue(n,m,EdgeEdgeValue);
@@ -881,7 +892,7 @@ namespace Nektar
                     for (m=0; m<nfacemodesconnected; ++m)
                     {
                         //Matrix value for each coefficient location
-                        FaceFaceValue=(*bndry_mat)(facemodearray[n],facemodearray[m]);
+                        FaceFaceValue=(*bnd_mat)(facemodearray[n],facemodearray[m]);
 
                         //Set the value in the vertex edge/face matrix
                         Sefef.SetValue(nedgemodesconnected+n,nedgemodesconnected+m,FaceFaceValue);
@@ -894,7 +905,7 @@ namespace Nektar
                     for (m=0; m<nfacemodesconnected; ++m)
                     {
                         //Matrix value for each coefficient location
-                        FaceFaceValue=(*bndry_mat)(edgemodearray[n],facemodearray[m]);
+                        FaceFaceValue=(*bnd_mat)(edgemodearray[n],facemodearray[m]);
 
                         //Set the value in the vertex edge/face matrix (and transpose)
                         Sefef.SetValue(n,nedgemodesconnected+m,FaceFaceValue);
@@ -1013,7 +1024,7 @@ namespace Nektar
                     for (m=0; m<nfacemodesconnected; ++m)
                     {
                         //Matrix value for each coefficient location
-                        EdgeFaceValue=(*bndry_mat)(edgemodearray[n],facemodearray[m]);
+                        EdgeFaceValue=(*bnd_mat)(edgemodearray[n],facemodearray[m]);
 
                         //Set the value in the edge/face matrix
                         Mef.SetValue(n,m,EdgeFaceValue);
@@ -1026,7 +1037,7 @@ namespace Nektar
                     for (m=0; m<nfacemodesconnected; ++m)
                     {
                         //Matrix value for each coefficient location
-                        FaceFaceValue=(*bndry_mat)(facemodearray[n],facemodearray[m]);
+                        FaceFaceValue=(*bnd_mat)(facemodearray[n],facemodearray[m]);
 
                         //Set the value in the vertex edge/face matrix
                         Meff.SetValue(n,m,FaceFaceValue);

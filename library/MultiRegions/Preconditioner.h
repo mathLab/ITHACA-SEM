@@ -67,7 +67,7 @@ namespace Nektar
             DNekMatSharedPtr                            m_preconditioner;
 	    DNekScalBlkMatSharedPtr                     GloBlkMat;
 
-            DNekScalMatSharedPtr                        bndry_mat;
+            DNekScalMatSharedPtr                        bnd_mat;
 
 	    DNekMatSharedPtr                            m_vertexedgefacetransformmatrix;
             DNekMatSharedPtr                            m_vertexedgefacecoupling;

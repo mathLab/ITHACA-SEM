@@ -109,18 +109,22 @@ namespace Nektar
 
         enum PreconditionerType
         {
-            eNoPreconditioner,    ///< No Solution type specified
+            eNull,    ///< No Solution type specified
             eDiagonal,
             eInverseLinear,
-	    eLowEnergy
+	    eLowEnergy,
+            eLinearLowEnergy,
+            eBlock
         };
 
         const char* const PreconditionerTypeMap[] =
         {
-            "No Preconditioner",
+            "Null",
             "Diagonal",
             "InverseLinear",
-	    "LowEnergy"
+	    "LowEnergy",
+	    "LinearLowEnergy",
+            "Block"
         };
 
 

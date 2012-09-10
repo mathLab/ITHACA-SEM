@@ -48,7 +48,7 @@ namespace Nektar
         public:
             MULTI_REGIONS_EXPORT Preconditioner(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
-                         const AssemblyMapSharedPtr &pLocToGloMap);
+	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~Preconditioner() {}
@@ -68,19 +68,17 @@ namespace Nektar
 	    DNekScalBlkMatSharedPtr                     GloBlkMat;
 
             DNekScalMatSharedPtr                        bndry_mat;
-            DNekScalMatSharedPtr                        full_mat;
 
+	    DNekMatSharedPtr                            m_vertexedgefacetransformmatrix;
             DNekMatSharedPtr                            m_vertexedgefacecoupling;
 	    DNekMatSharedPtr                            m_edgefacecoupling;
 	    DNekMatSharedPtr                            m_transformationmatrix;
+	    DNekMatSharedPtr                            m_transposedtransformationmatrix;
 	    DNekMatSharedPtr                            m_efedgefacecoupling;
 	    DNekMatSharedPtr                            m_effacefacecoupling;
 	    DNekMatSharedPtr                            m_edgefacetransformmatrix;
-	    DNekMatSharedPtr                            m_fullmatrix;
-	    DNekMatSharedPtr                            m_om;
-	    DNekMatSharedPtr                            m_SP;
 
-            boost::shared_ptr<AssemblyMap>     m_locToGloMap;
+            boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
             Array<OneD, int>                            vertModeLocation;
             Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation;
@@ -91,19 +89,17 @@ namespace Nektar
 
 	private:
 
-            void NullPreconditioner(
-                const boost::weak_ptr<GlobalLinSys> &plinsys,
-                const AssemblyMapSharedPtr &pLocToGloMap);
+            void NullPreconditioner(void);
 
             void DiagonalPreconditionerSum(void);
 
 	    void StaticCondDiagonalPreconditionerSum(void);
 
-	    void LinearInversePreconditioner(void);
+	    void InverseLinearSpacePreconditioner(void);
 
-	    void StaticCondLinearInversePreconditioner(void);
+	    void StaticCondInverseLinearSpacePreconditioner(void);
 
-	    void LowEnergyPreconditioner(void);
+	    void SetUpLowEnergyBasis(void);
 
             void CreateLinearFiniteElmentSpace(void);
 
@@ -113,19 +109,13 @@ namespace Nektar
 
 	    void SetLowEnergyModes_Ref(void);
 
-	    void BuildPreconditioner(void);
+	    void LowEnergyPreconditioner(void);
 
-	    void BuildPreconditioner_Reordered(void);
-
-	    void BwdTransToPlot(void);
+	    void BlockPreconditioner(void);
 
 	    void VertexEdgeFaceMatrix(void);
 
-	    void SetLowEnergyModes_Rordered(void);
-
-	    void SetLowEnergyModes_Ref_Reordered(void);
-
-        Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
+            Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
 
             static std::string lookupIds[];
             static std::string def;

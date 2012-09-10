@@ -63,5 +63,13 @@ namespace Nektar
         {
             v_Advect(nConvectiveFields, fields, advVel, inarray, outarray);
         }
+        
+        void Advection::InterpToInterface(
+                                          const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                                          Array<OneD, NekDouble>    &total,
+                                          Array<OneD, NekDouble>    &InterfaceValue)
+        {
+            v_InterpToInterface(fields, total, InterfaceValue);
+        }
     }
 }

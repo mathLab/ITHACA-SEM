@@ -162,6 +162,9 @@ namespace Nektar
             
             // Vector to store the solution in physical space
             Array<OneD, Array<OneD, NekDouble> > physfield (nConvectiveFields);
+            
+            // Vector to store the flux interpolated at the interfaces
+            Array<OneD, Array<OneD, NekDouble> > interpolatedFlux (nConvectiveFields);
                         
             // Resize each column of the flux vector to the number of 
             // solution points
@@ -173,7 +176,8 @@ namespace Nektar
             
             for(i = 0; i < nConvectiveFields; ++i)
             {
-                physfield[i] = inarray[i];
+                physfield[i]            = inarray[i];
+                interpolatedFlux[i]     = Array<OneD, NekDouble>(2*nTracePts-2);
             }
             
             // Get the discontinuous flux FD
@@ -200,6 +204,16 @@ namespace Nektar
                 }
             }
             
+            
+            // Interpolation routine for Gauss points
+            if (Basis->GetPointsType() == LibUtilities::eGaussGaussLegendre)
+            {
+                for (j = 0; j < nConvectiveFields; j++)
+                {
+                    v_InterpToInterface(fields, fluxvector[j], interpolatedFlux[j]);
+                }
+            }
+                        
             // Store forwards/backwards space along trace space.
             Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
@@ -213,6 +227,7 @@ namespace Nektar
                 fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
             
+
             // Computing the Riemann flux at each flux (interface) point
             m_riemann->Solve(Fwd, Bwd, numflux);
                         
@@ -250,6 +265,22 @@ namespace Nektar
                         offsetEnd                = offsetStart + nSolutionPts/nElements - 1;
                         numfluxjumpsLeft[0][i]   = numflux[0][i] - fluxvector[0][offsetStart];
                         numfluxjumpsRight[0][i]  = numflux[0][i+1] - fluxvector[0][offsetEnd];
+                    }
+                    
+                
+                    // Loop to compute the left and the right jumps of the flux 
+                    // with the new interpolation order used for Gauss points
+                    if (Basis->GetPointsType() == LibUtilities::eGaussGaussLegendre)
+                    {
+                        j = 0;
+                        for (i = 0; i < nElements; i++)
+                        {
+                            numfluxjumpsLeft[0][i]   = numflux[0][i] - interpolatedFlux[0][j];
+                            j++;
+                     
+                            numfluxjumpsRight[0][i]  = numflux[0][i+1] - interpolatedFlux[0][j];
+                            j++;
+                        }
                     }
                     
                     for (i = 0; i < nElements; i++) 
@@ -311,5 +342,68 @@ namespace Nektar
                 }
             }
         }
+        
+        
+        
+        void AdvectionFR::v_InterpToInterface(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            Array<OneD, NekDouble>    &total,
+            Array<OneD, NekDouble>    &InterfaceValue)
+        {            
+            // Counter variables
+            int n, i, j, cnt, numero;
+            
+            // Number of elements
+            int nElements = fields[0]->GetExpSize();
+            
+            // Initial index of each element
+            int phys_offset;
+            
+            // Number of quadrature points of each element
+            int nLocalSolutionPts;
+            
+            // Number of vertices of each element
+            int nLocalVertices;
+            
+            // Index of each interface between adjacent elements
+            int interface_offset;
+            
+            cnt = 0;
+            
+            for (n = 0; n < nElements; n++)
+            {
+                // Getting the basis
+                LibUtilities::BasisSharedPtr Basis;
+                Basis = fields[0]->GetExp(n)->GetBasis(0);
+                StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
+                
+                // Set the offset of each element
+                phys_offset = fields[0]->GetPhys_Offset(n);
+                
+                // Set the number of solution points of each element
+                nLocalSolutionPts = fields[0]->GetExp(n)->GetNumPoints(0);
+                
+                // Set the number of vertices of each element
+                nLocalVertices = fields[0]->GetExp(n)->GetNverts();
+                
+                Array<OneD, NekDouble> tmp(nLocalSolutionPts, 0.0);
+                tmp = total + n*nLocalSolutionPts;
+                
+                for (i = 0; i < nLocalVertices; i++)
+                {
+                    Array<OneD, NekDouble> interface_coord(3, 0.0);
+                    interface_offset = fields[0]->GetExp(n)->GetGeom1D()->GetVid(i);
+                    
+                    for (j = 0; j < (fields[0]->GetExp(n)->GetVertexNormal(i)).num_elements(); j++)
+                    {
+                        interface_coord[0] += (fields[0]->GetExp(n)->GetVertexNormal(i))[j][0];
+                        
+                        //InterfaceValue[cnt] = fields[0]->GetExp(n)->PhysEvaluate(interface_coord, total);
+                        InterfaceValue[cnt] = StdSeg.PhysEvaluate(interface_coord, tmp);
+                        cnt++;
+                    }
+                }
+            }
+        }// End v_InterpToInterface
     }
 }

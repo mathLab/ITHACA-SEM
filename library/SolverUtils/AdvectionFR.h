@@ -78,6 +78,11 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
+            
+            virtual void v_InterpToInterface(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                Array<OneD, NekDouble>    &total,
+                Array<OneD, NekDouble>    &InterfaceValue);
         }; 
     }
 }

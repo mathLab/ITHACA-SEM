@@ -1671,21 +1671,16 @@ namespace Nektar
 		    int nLocal  = m_locToGloMap->GetNumLocalBndCoeffs();
 		    int nLocalDir  = m_locToGloMap->GetNumLocalDirBndCoeffs();
                     int nNonDir = nGlobal-nDir;
-                    DNekScalBlkMat &M = (*GloBlkMat);
 
 		    int nblks = expList->GetExpSize();
-		    Array<OneD,unsigned int> exp_size(nblks);
 		    
-		    for(i=0; i<expList->GetExpSize(); ++i)
-		    {
-		        exp_size[i]=m_transformationmatrix->GetRows();
-		    }
+		    const Array<OneD,const unsigned int>& exp_size = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
 
                     MatrixStorage blkmatStorage = eDIAGONAL;
                     DNekScalBlkMatSharedPtr RBlkMat = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(exp_size,exp_size,blkmatStorage);
                     DNekScalBlkMatSharedPtr TRBlkMat = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(exp_size,exp_size,blkmatStorage);
 
-		    for(i=0; i<expList->GetExpSize(); ++i)
+		    for(i=0; i<nblks; ++i)
 		    {
 		        RBlkMat->SetBlock(i,i,Blktmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_transformationmatrix));
 		        TRBlkMat->SetBlock(i,i,Blktmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_transposedtransformationmatrix));
@@ -1693,6 +1688,7 @@ namespace Nektar
 
                     DNekScalBlkMat &R = (*RBlkMat);
                     DNekScalBlkMat &RT = (*TRBlkMat);
+                    DNekScalBlkMat &M = (*GloBlkMat);
 
 		    NekVector<NekDouble> r1(nLocal,0.0);
 		    NekVector<NekDouble> z1(nLocal,0.0);

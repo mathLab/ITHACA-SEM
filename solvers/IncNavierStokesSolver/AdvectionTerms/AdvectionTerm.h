@@ -103,8 +103,8 @@ namespace Nektar
 		
         bool m_dealiasing;           ///< flag to determine if use dealising or not
         bool m_UseContCoeff;
-        bool                         m_SingleMode;               ///< Flag to determine if use single mode or not
-        bool                         m_HalfMode;                 ///< Flag to determine if use half mode or not
+        bool m_SingleMode;               ///< Flag to determine if use single mode or not
+        bool m_HalfMode;                 ///< Flag to determine if use half mode or not
         
         /// Type of projection, i.e. Galerkin or DG.
         enum MultiRegions::ProjectionType m_projectionType;
@@ -128,8 +128,7 @@ namespace Nektar
         bool											    m_useFFTW;
 	
         /// Constructor
-        AdvectionTerm(
-                      const LibUtilities::SessionReaderSharedPtr&        pSession,
+        AdvectionTerm(const LibUtilities::SessionReaderSharedPtr&        pSession,
                       const SpatialDomains::MeshGraphSharedPtr&          pGraph);
         
         virtual void v_InitObject();

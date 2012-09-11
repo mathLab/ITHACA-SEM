@@ -392,7 +392,8 @@ namespace Nektar
 				}
 				else 
 				{
-					fft_in = inarray;
+					Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),inarray,1,fft_in,1);
+					//fft_in = inarray;
 				}
 
                 if(IsForwards)
@@ -416,7 +417,8 @@ namespace Nektar
 				}
 				else 
 				{
-					outarray = fft_out;
+					Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),fft_out,1,outarray,1);
+					//outarray = fft_out;
 				}
             }
             else 
@@ -458,7 +460,8 @@ namespace Nektar
 				}
 				else 
 				{
-					sortedinarray = inarray;
+					Vmath::Vcopy(ncols,inarray,1,sortedinarray,1);
+					//sortedinarray = inarray;
 				}
 
                 // Create NekVectors from the given data arrays
@@ -474,7 +477,8 @@ namespace Nektar
 				}
 				else 
 				{
-					outarray = sortedinarray;
+					Vmath::Vcopy(nrows,sortedinarray,1,outarray,1);
+					//outarray = sortedinarray;
 				}
 
             }

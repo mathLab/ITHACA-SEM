@@ -480,7 +480,7 @@ namespace Nektar
 		//add the force
         if(m_session->DefinesFunction("BodyForce"))
         {
-            if(m_SingleMode || m_HalfMode)
+            if(m_fields[0]->GetWaveSpace())
             {
                 for(int i = 0; i < m_nConvectiveFields; ++i)
                 {
@@ -813,32 +813,6 @@ namespace Nektar
                 Array<OneD, NekDouble> Wyz(maxpts);
 		
                 StdRegions::StdExpansion1DSharedPtr Pbc;
-		
-                //Array<OneD, Array< OneD, NekDouble> > velocity(m_nConvectiveFields);
-                //Array<OneD, Array< OneD, NekDouble> > advection(m_nConvectiveFields);
-		
-                //int phystot = m_fields[0]->GetTotPoints();
-		
-                //for(int n = 0; n < m_nConvectiveFields; ++n)
-                //{
-                //    velocity[n] = Array<OneD, NekDouble> (phystot);
-                //    advection[n] = Array<OneD, NekDouble> (phystot);
-                //}
-		
-                //for(int i = 0; i < fields.num_elements(); i++)
-                //{
-                    
-                //    if(m_pressure->GetWaveSpace())
-                //    {
-                //        velocity[i] = fields[i];
-                //        advection[i] = N[i];
-                //    }
-                //    else 
-                //    {
-                //        m_pressure->HomogeneousFwdTrans(fields[i],velocity[i]);
-                //        m_pressure->HomogeneousFwdTrans(N[i],advection[i]);
-                //    }
-                //}
 		
                 for(int j = 0 ; j < m_HBCnumber ; j++)
                 {

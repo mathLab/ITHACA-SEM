@@ -253,16 +253,31 @@ namespace Nektar
         {
             TiXmlElement* verTag = new TiXmlElement("COMPOSITE");
             CompositeMap::iterator it;
+            ConditionMap::iterator it2;
+            int cnt = 0;
 
-            for (it = m->composite.begin(); it != m->composite.end(); ++it)
+            for (it = m->composite.begin(); it != m->composite.end(); ++it, ++cnt)
             {
                 if (it->second->items.size() > 0) 
                 {
                     TiXmlElement *comp_tag = new TiXmlElement("C"); // Composite
                     TiXmlElement *elm_tag;
+                    bool doSort = true;
+                    
+                    // Ensure that this composite is not used for periodic BCs!
+                    for (it2 = m->condition.begin(); it2 != m->condition.end(); ++it2)
+                    {
+                        for (int i = 0; i < it2->second->composite.size(); ++i)
+                        {
+                            if (it2->second->composite[i] == cnt)
+                            {
+                                doSort = false;
+                            }
+                        }
+                    }
                     
                     comp_tag->SetAttribute("ID", it->second->id);
-                    comp_tag->LinkEndChild( new TiXmlText(it->second->GetXmlString()) );
+                    comp_tag->LinkEndChild( new TiXmlText(it->second->GetXmlString(doSort)) );
                     verTag->LinkEndChild(comp_tag);
                 }
                 else

@@ -852,7 +852,7 @@ namespace Nektar
             Composite() {}
 
             /// Generate the list of IDs of elements within this composite.
-            std::string GetXmlString();
+            std::string GetXmlString(bool doSort=true);
 
             /// ID of composite.
             unsigned int id;

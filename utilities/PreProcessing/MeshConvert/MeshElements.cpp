@@ -318,10 +318,13 @@ namespace Nektar
          * The list of composites may include individual element IDs or ranges
          * of element IDs.
          */
-        string Composite::GetXmlString()
+        string Composite::GetXmlString(bool doSort)
         {
-            element_id_less_than sortOperator;
-            sort(items.begin(), items.end(), sortOperator);
+            if (doSort)
+            {
+                element_id_less_than sortOperator;
+                sort(items.begin(), items.end(), sortOperator);
+            }
 
             stringstream st;
             vector<ElementSharedPtr>::iterator it;
@@ -685,7 +688,7 @@ namespace Nektar
                                                       edgeNodes,
                                                       m_conf.edgeCurveType)));
             }
-            
+
             if (m_conf.faceNodes)
             {
                 volumeNodes.insert(volumeNodes.begin(), 

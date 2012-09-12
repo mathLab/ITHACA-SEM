@@ -555,6 +555,8 @@ namespace Nektar
                 int elmt, side;
                 int periodicTagId = -1;
                 
+                set<pair<int, int> > visitedPeriodic;
+                
                 while (i < nSurf)
                 {
                     getline(mshFile, line);
@@ -597,9 +599,17 @@ namespace Nektar
                         ss >> elmtB >> sideB;
                         elmtB--;
                         sideB--;
+
+                        pair<int, int> c1(elmt,  side );
+                        pair<int, int> c2(elmtB, sideB);
                         
-                        insertEdge(elmt,  side,  periodicTagId);
-                        insertEdge(elmtB, sideB, periodicTagId+1);
+                        if (visitedPeriodic.count(c1) == 0 && visitedPeriodic.count(c2) == 0)
+                        {
+                            visitedPeriodic.insert(make_pair(elmtB, sideB));
+                            visitedPeriodic.insert(make_pair(elmt,  side ));
+                            insertEdge(elmt,  side,  periodicTagId);
+                            insertEdge(elmtB, sideB, periodicTagId+1);
+                        }
                     }
                     else if (word == "<B>")
                     {

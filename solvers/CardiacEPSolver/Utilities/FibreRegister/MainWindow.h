@@ -41,15 +41,15 @@ class MainWindow : public QMainWindow
         ~MainWindow();
 
     private slots:
-        void BrowseLeft();
-        void BrowseRight();
-        void BrowsePoints();
+        void BrowseSource();
+        void BrowseTarget();
+        void BrowseLandmarks();
         void Load();
         void Update();
 
-        void CreateLeftPoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
+        void CreateTargetPoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
 
-        void ExportRightPoints();
+        void ExportTargetPoints();
 
     private:
         // GUI widgets
@@ -59,47 +59,47 @@ class MainWindow : public QMainWindow
         QVBoxLayout* mSettingsGrid;
         QGroupBox* mFileBox;
         QGridLayout* mFileGrid;
-        QLineEdit* mFileLeftEditBox;
-        QPushButton* mFileLeftBrowse;
-        QLineEdit* mFilePointsEditBox;
-        QPushButton* mFilePointsBrowse;
-        QLineEdit* mFileRightEditBox;
-        QPushButton* mFileRightBrowse;
+        QLineEdit* mFileSourceEditBox;
+        QPushButton* mFileSourceBrowse;
+        QLineEdit* mFileLandmarksEditBox;
+        QPushButton* mFileLandmarksBrowse;
+        QLineEdit* mFileTargetEditBox;
+        QPushButton* mFileTargetBrowse;
         QPushButton* mFileLoadButton;
-        QPushButton* mFileExportPointsButton;
-        QVTKWidget* mLeftVtk;
-        QVTKWidget* mRightVtk;
+        QPushButton* mFileExportLandmarksButton;
+        QVTKWidget* mSourceVtk;
+        QVTKWidget* mTargetVtk;
 
         // VTK
         // Left Surface pipeline
-        vtkPolyData* mLeftData;
-        vtkSmoothPolyDataFilter* mLeftFilterSmooth;
-        vtkDepthSortPolyData* mLeftFilterDepthSort;
-        vtkPolyDataMapper* mLeftMapper;
-        vtkActor* mLeftActor;
-        vtkRenderer* mLeftRenderer;
+        vtkPolyData* mSourceData;
+        vtkSmoothPolyDataFilter* mSourceFilterSmooth;
+        vtkDepthSortPolyData* mSourceFilterDepthSort;
+        vtkPolyDataMapper* mSourceMapper;
+        vtkActor* mSourceActor;
+        vtkRenderer* mSourceRenderer;
 
         // Right Surface pipeline
-        vtkPolyData* mRightData;
-        vtkSmoothPolyDataFilter* mRightFilterSmooth;
-        vtkDepthSortPolyData* mRightFilterDepthSort;
-        vtkPolyDataMapper* mRightMapper;
-        vtkActor* mRightActor;
-        vtkRenderer* mRightRenderer;
+        vtkPolyData* mTargetData;
+        vtkSmoothPolyDataFilter* mTargetFilterSmooth;
+        vtkDepthSortPolyData* mTargetFilterDepthSort;
+        vtkPolyDataMapper* mTargetMapper;
+        vtkActor* mTargetActor;
+        vtkRenderer* mTargetRenderer;
 
-        // Left Points pipeline
-        vtkPolyData* mLeftPointsData;
-        vtkSphereSource* mLeftSphere;
-        vtkGlyph3D* mLeftFilterGlyph;
-        vtkPolyDataMapper* mLeftPointsMapper;
-        vtkActor* mLeftPointsActor;
+        // Source Points pipeline
+        vtkPolyData* mSourcePointsData;
+        vtkSphereSource* mSourceSphere;
+        vtkGlyph3D* mSourceFilterGlyph;
+        vtkPolyDataMapper* mSourcePointsMapper;
+        vtkActor* mSourcePointsActor;
 
-        // Right Points pipeline
-        vtkPolyData* mRightPointsData;
-        vtkSphereSource* mRightSphere;
-        vtkGlyph3D* mRightFilterGlyph;
-        vtkPolyDataMapper* mRightPointsMapper;
-        vtkActor* mRightPointsActor;
+        // Target Points pipeline
+        vtkPolyData* mTargetPointsData;
+        vtkSphereSource* mTargetSphere;
+        vtkGlyph3D* mTargetFilterGlyph;
+        vtkPolyDataMapper* mTargetPointsMapper;
+        vtkActor* mTargetPointsActor;
 
         vtkEventQtSlotConnect* Connections;
 

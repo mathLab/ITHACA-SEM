@@ -219,7 +219,7 @@ namespace Nektar
                     e->SetAttribute("EDGEID",    (*it)->id);
                     e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
                     e->SetAttribute("TYPE", 
-                                    LibUtilities::kPointsTypeStr[(*it)->curveType]);
+                        LibUtilities::kPointsTypeStr[(*it)->curveType]);
                     TiXmlText * t0 = new TiXmlText((*it)->GetXmlCurveString());
                     e->LinkEndChild(t0);
                     curved->LinkEndChild(e);
@@ -239,7 +239,7 @@ namespace Nektar
                     f->SetAttribute("FACEID",   (*it2)->id);
                     f->SetAttribute("NUMPOINTS",(*it2)->GetNodeCount());
                     f->SetAttribute("TYPE",
-                                    LibUtilities::kPointsTypeStr[(*it2)->curveType]);
+                        LibUtilities::kPointsTypeStr[(*it2)->curveType]);
                     TiXmlText * t0 = new TiXmlText((*it2)->GetXmlCurveString());
                     f->LinkEndChild(t0);
                     curved->LinkEndChild(f);
@@ -254,9 +254,9 @@ namespace Nektar
             TiXmlElement* verTag = new TiXmlElement("COMPOSITE");
             CompositeMap::iterator it;
             ConditionMap::iterator it2;
-            int cnt = 0;
+            int j = 0;
 
-            for (it = m->composite.begin(); it != m->composite.end(); ++it, ++cnt)
+            for (it = m->composite.begin(); it != m->composite.end(); ++it, ++j)
             {
                 if (it->second->items.size() > 0) 
                 {
@@ -265,11 +265,21 @@ namespace Nektar
                     bool doSort = true;
                     
                     // Ensure that this composite is not used for periodic BCs!
-                    for (it2 = m->condition.begin(); it2 != m->condition.end(); ++it2)
+                    for (it2  = m->condition.begin(); 
+                         it2 != m->condition.end(); ++it2)
                     {
-                        for (int i = 0; i < it2->second->composite.size(); ++i)
+                        ConditionSharedPtr c = it2->second;
+                        
+                        // Ignore non-periodic boundary conditions.
+                        if (find(c->type.begin(), c->type.end(), ePeriodic) ==
+                            c->type.end())
                         {
-                            if (it2->second->composite[i] == cnt)
+                            continue;
+                        }
+
+                        for (int i = 0; i < c->composite.size(); ++i)
+                        {
+                            if (c->composite[i] == j)
                             {
                                 doSort = false;
                             }
@@ -277,16 +287,18 @@ namespace Nektar
                     }
                     
                     comp_tag->SetAttribute("ID", it->second->id);
-                    comp_tag->LinkEndChild( new TiXmlText(it->second->GetXmlString(doSort)) );
+                    comp_tag->LinkEndChild(
+                        new TiXmlText(it->second->GetXmlString(doSort)));
                     verTag->LinkEndChild(comp_tag);
                 }
                 else
                 {
-                    cout << "Composite " << it->second->id << " contains nothing." << endl;
+                    cout << "Composite " << it->second->id << " "
+                         << "contains nothing." << endl;
                 }
             }
 
-            pRoot->LinkEndChild( verTag );
+            pRoot->LinkEndChild(verTag);
         }
 
         void OutputNekpp::WriteXmlDomain(TiXmlElement * pRoot)
@@ -351,12 +363,15 @@ namespace Nektar
         
         void OutputNekpp::WriteXmlConditions(TiXmlElement * pRoot)
         {
-            TiXmlElement *conditions = new TiXmlElement ("CONDITIONS");
+            TiXmlElement *conditions = 
+                new TiXmlElement("CONDITIONS");
+            TiXmlElement *boundaryregions = 
+                new TiXmlElement("BOUNDARYREGIONS");
+            TiXmlElement *boundaryconditions = 
+                new TiXmlElement("BOUNDARYCONDITIONS");
+            TiXmlElement *variables = 
+                new TiXmlElement("VARIABLES");
             ConditionMap::iterator it;
-
-            TiXmlElement *boundaryregions = new TiXmlElement("BOUNDARYREGIONS");
-            TiXmlElement *boundaryconditions = new TiXmlElement("BOUNDARYCONDITIONS");
-            TiXmlElement *variables = new TiXmlElement("VARIABLES");
             
             for (it = m->condition.begin(); it != m->condition.end(); ++it)
             {
@@ -379,7 +394,8 @@ namespace Nektar
                 boundaryregions->LinkEndChild(b);
                 
                 TiXmlElement *region = new TiXmlElement("REGION");
-                region->SetAttribute("REF", boost::lexical_cast<string>(it->first));
+                region->SetAttribute(
+                    "REF", boost::lexical_cast<string>(it->first));
                 
                 for (int i = 0; i < c->type.size(); ++i)
                 {

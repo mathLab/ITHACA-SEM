@@ -601,7 +601,7 @@ namespace Nektar
 
             SetLowEnergyModes_Ref();
 
-            SetUpInverserTransformationMatrix();
+            SetUpInverseTransformationMatrix();
 
 	}
 
@@ -1079,7 +1079,7 @@ namespace Nektar
 	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
 	 *
 	 */
-        void Preconditioner::SetUpInverserTransformationMatrix()
+        void Preconditioner::SetUpInverseTransformationMatrix()
 	{
 	    int i,j,n, eid, fid;
             int nCoeffs=vExp->NumBndryCoeffs();
@@ -1088,8 +1088,8 @@ namespace Nektar
             DNekMat &R = (*m_transformationmatrix);
             // Define storage for vertex transpose matrix and zero all entries
             MatrixStorage storage = eFULL;
-            DNekMatSharedPtr m_InvR = MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs, nCoeffs, zero, storage);
-            DNekMat &InvR = (*m_InvR);
+            m_inversetransformationmatrix = MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs, nCoeffs, zero, storage);
+            DNekMat &InvR = (*m_inversetransformationmatrix);
 
             int nVerts=vExp->GetGeom()->GetNumVerts();
             int nEdges=vExp->GetGeom()->GetNumEdges();
@@ -1906,6 +1906,23 @@ namespace Nektar
 	{
 	    return m_transformationmatrix;
 	}
+
+        /**
+         *
+         */
+        const DNekMatSharedPtr& Preconditioner::GetTransposedTransformationMatrix() const
+	{
+	    return m_transposedtransformationmatrix;
+	}
+
+        /**
+         *
+         */
+        const DNekMatSharedPtr& Preconditioner::GetInverseTransformationMatrix() const
+	{
+	    return m_inversetransformationmatrix;
+	}
+
     }
 }
 

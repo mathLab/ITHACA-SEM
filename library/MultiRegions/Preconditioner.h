@@ -58,6 +58,10 @@ namespace Nektar
 		      Array<OneD, NekDouble>& pOutput);
 
 	    const DNekMatSharedPtr& GetTransformationMatrix() const;
+
+	    const DNekMatSharedPtr& GetTransposedTransformationMatrix() const;
+
+	    const DNekMatSharedPtr& GetInverseTransformationMatrix() const;
 	    
 	protected:
 
@@ -75,6 +79,7 @@ namespace Nektar
             DNekMatSharedPtr                            m_vertexedgefacecoupling;
 	    DNekMatSharedPtr                            m_edgefacecoupling;
 	    DNekMatSharedPtr                            m_transformationmatrix;
+	    DNekMatSharedPtr                            m_inversetransformationmatrix;
 	    DNekMatSharedPtr                            m_transposedtransformationmatrix;
 	    DNekMatSharedPtr                            m_efedgefacecoupling;
 	    DNekMatSharedPtr                            m_effacefacecoupling;
@@ -111,7 +116,7 @@ namespace Nektar
 
 	    void SetLowEnergyModes_Ref(void);
 
-	    void SetUpInverserTransformationMatrix(void);
+	    void SetUpInverseTransformationMatrix(void);
 
 	    void LowEnergyPreconditioner(void);
 

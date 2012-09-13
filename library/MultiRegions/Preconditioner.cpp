@@ -600,6 +600,9 @@ namespace Nektar
             SetLowEnergyModes_Rv();
 
             SetLowEnergyModes_Ref();
+
+            SetUpInverserTransformationMatrix();
+
 	}
 
         /**
@@ -1067,6 +1070,88 @@ namespace Nektar
                 RT.SetValue(i,i,1.0);
             }
         }
+
+        /**
+	 * \brief Build inverser transformation matrix
+	 *
+	 *\f[\left[\begin{array}{ccc} \mathbf{I} & -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
+	 *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
+	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
+	 *
+	 */
+        void Preconditioner::SetUpInverserTransformationMatrix()
+	{
+	    int i,j,n, eid, fid;
+            int nCoeffs=vExp->NumBndryCoeffs();
+            NekDouble MatrixValue;
+            NekDouble zero=0.0;
+            DNekMat &R = (*m_transformationmatrix);
+            // Define storage for vertex transpose matrix and zero all entries
+            MatrixStorage storage = eFULL;
+            DNekMatSharedPtr m_InvR = MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs, nCoeffs, zero, storage);
+            DNekMat &InvR = (*m_InvR);
+
+            int nVerts=vExp->GetGeom()->GetNumVerts();
+            int nEdges=vExp->GetGeom()->GetNumEdges();
+            int nFaces=vExp->GetGeom()->GetNumFaces();
+            int nedgemodes, nfacemodes;
+
+            Array<OneD, unsigned int> edgemodearray(nEdges*edgeModeLocation[0].num_elements());
+            Array<OneD, unsigned int> facemodearray(nFaces*faceModeLocation[0].num_elements());
+
+            //create array of edge modes
+            for(eid=0; eid < nEdges; ++eid)
+            {
+                nedgemodes=edgeModeLocation[eid].num_elements();
+                Vmath::Vcopy(nedgemodes, &edgeModeLocation[eid][0], 1, &edgemodearray[eid*nedgemodes], 1);
+            }
+
+            //create array of face modes
+            for(fid=0; fid < nFaces; ++fid)
+            {
+                nfacemodes=faceModeLocation[fid].num_elements();
+                Vmath::Vcopy(nfacemodes, &faceModeLocation[fid][0], 1, &facemodearray[fid*nfacemodes], 1);
+            }
+ 
+            int nedgemodestotal=nedgemodes*nEdges;
+            int nfacemodestotal=nfacemodes*nFaces;
+
+            //vertex-edge/face
+            for (i=0; i<nVerts; ++i)
+            {
+                for(j=0; j<nedgemodestotal; ++j)
+                {
+                    InvR.SetValue(vertModeLocation[i],edgemodearray[j],-R(vertModeLocation[i],edgemodearray[j]));
+                }
+
+                for(j=0; j<nfacemodestotal; ++j)
+                {
+		    InvR.SetValue(vertModeLocation[i],facemodearray[j],-R(vertModeLocation[i],facemodearray[j]));
+		    for(n=0; n<nedgemodestotal; ++n)
+		    {
+		        MatrixValue=InvR.GetValue(vertModeLocation[i],facemodearray[j])+R(vertModeLocation[i],edgemodearray[n])*R(edgemodearray[n],facemodearray[j]);
+		        InvR.SetValue(vertModeLocation[i],facemodearray[j],MatrixValue);
+		    }
+                }
+            }
+
+	    //edge-face contributions
+            for (i=0; i<nedgemodestotal; ++i)
+            {
+                for(j=0; j<nfacemodestotal; ++j)
+                {
+                    InvR.SetValue(edgemodearray[i],facemodearray[j],-R(edgemodearray[i],facemodearray[j]));
+                }
+            }
+
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                InvR.SetValue(i,i,1.0);
+            }
+        }
+
+
+
 
         void Preconditioner::VertexEdgeFaceMatrix()
 	{
@@ -1696,7 +1781,7 @@ namespace Nektar
 
 		    m_locToGloMap->GlobalToLocalBnd(Globalin,r1,nDir);
 
-		    r1 = R * r1;
+		    //r1 = R * r1;
 
 		    NekVector<NekDouble> z1glo(nNonDir,0.0);
 		    m_locToGloMap->AssembleBnd(r1,z1glo,nDir);
@@ -1708,7 +1793,7 @@ namespace Nektar
 		    NekVector<NekDouble> z2(nLocal,0.0);
 		    m_locToGloMap->GlobalToLocalBnd(z2glo,z2,nDir);
 
-		    z2 = RT * z2;
+		    //z2 = RT * z2;
 
                     NekVector<NekDouble> Globalout(nNonDir,pOutput,eWrapper);
 
@@ -1812,6 +1897,14 @@ namespace Nektar
             ASSERTL0(0,"Unknown preconditioner");
             break;
 	    }
+	}
+
+        /**
+         *
+         */
+        const DNekMatSharedPtr& Preconditioner::GetTransformationMatrix() const
+	{
+	    return m_transformationmatrix;
 	}
     }
 }

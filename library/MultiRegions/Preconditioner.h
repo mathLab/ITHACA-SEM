@@ -57,6 +57,8 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
+	    const DNekMatSharedPtr& GetTransformationMatrix() const;
+	    
 	protected:
 
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
@@ -108,6 +110,8 @@ namespace Nektar
 	    void SetLowEnergyModes_Rv(void);
 
 	    void SetLowEnergyModes_Ref(void);
+
+	    void SetUpInverserTransformationMatrix(void);
 
 	    void LowEnergyPreconditioner(void);
 

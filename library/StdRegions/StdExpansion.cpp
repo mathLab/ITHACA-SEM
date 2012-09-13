@@ -1260,6 +1260,12 @@ namespace Nektar
                 return LibUtilities::NullBasisKey;
             }
 
+            const LibUtilities::BasisKey StdExpansion::v_DetFaceBasisKey(const int i, const int k) const
+            {
+                ASSERTL0(false, "This function is not valid or not defined");
+                return LibUtilities::NullBasisKey;
+            }
+
             int StdExpansion::v_GetFaceNumPoints(const int i) const
             {
                 ASSERTL0(false, "This function is not valid or not defined");

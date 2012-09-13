@@ -468,6 +468,10 @@ namespace Nektar
                 return v_DetEdgeBasisKey(i);
             }
 
+            const LibUtilities::BasisKey DetFaceBasisKey(const int i, const int k) const
+            {
+                return v_DetFaceBasisKey(i, k);
+            }
             /** 
              * \brief This function returns the number of quadrature points
              * belonging to the \a i-th face.
@@ -1614,6 +1618,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_DetCartesianDirOfEdge(const int edge);
 
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const;
+            
+			STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetFaceBasisKey(const int i, const int k) const;
 
             STD_REGIONS_EXPORT virtual int v_GetFaceNumPoints(const int i) const;
 

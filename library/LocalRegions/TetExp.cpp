@@ -1393,6 +1393,64 @@ namespace Nektar
                     }
                 }
                 break;
+            case StdRegions::eWeakDeriv0:
+            case StdRegions::eWeakDeriv1:
+            case StdRegions::eWeakDeriv2:
+                {
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
+                            mkey.GetNVarCoeff())
+                    {
+                        NekDouble one = 1.0;
+                        DNekMatSharedPtr mat = GenMatrix(mkey);
+
+                        returnval = MemoryManager<DNekScalMat>
+                                                ::AllocateSharedPtr(one,mat);
+                    }
+                    else
+                    {
+                        NekDouble jac = (m_metricinfo->GetJac())[0];
+                        Array<TwoD, const NekDouble> gmat
+                                                = m_metricinfo->GetGmat();
+                        int dir;
+
+                        switch(mkey.GetMatrixType())
+                        {
+                        case StdRegions::eWeakDeriv0:
+                            dir = 0;
+                            break;
+                        case StdRegions::eWeakDeriv1:
+                            dir = 1;
+                            break;
+                        case StdRegions::eWeakDeriv2:
+                            dir = 2;
+                            break;
+                        }
+
+                        MatrixKey deriv0key(StdRegions::eWeakDeriv0,
+                                            mkey.GetExpansionType(), *this);
+                        MatrixKey deriv1key(StdRegions::eWeakDeriv1,
+                                            mkey.GetExpansionType(), *this);
+                        MatrixKey deriv2key(StdRegions::eWeakDeriv2,
+                                            mkey.GetExpansionType(), *this);
+
+                        DNekMat &deriv0 = *GetStdMatrix(deriv0key);
+                        DNekMat &deriv1 = *GetStdMatrix(deriv1key);
+                        DNekMat &deriv2 = *GetStdMatrix(deriv2key);
+
+                        int rows = deriv0.GetRows();
+                        int cols = deriv1.GetColumns();
+
+                        DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>
+                                                ::AllocateSharedPtr(rows,cols);
+                        (*WeakDeriv) = gmat[3*dir][0]*deriv0
+                                                + gmat[3*dir+1][0]*deriv1
+												+ gmat[3*dir+2][0]*deriv2;
+
+                        returnval = MemoryManager<DNekScalMat>
+                                            ::AllocateSharedPtr(jac,WeakDeriv);
+                    }
+                }
+                break;
             case StdRegions::eLaplacian:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||

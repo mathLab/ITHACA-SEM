@@ -52,7 +52,7 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourceMapper->SetInputConnection(mSourceFilterDepthSort->GetOutputPort());
     mSourceMapper->ScalarVisibilityOff();
     mTargetMapper = vtkPolyDataMapper::New();
-    mTargetMapper->SetInputConnection(mSourceFilterDepthSort->GetOutputPort());
+    mTargetMapper->SetInputConnection(mTargetFilterDepthSort->GetOutputPort());
     mTargetMapper->ScalarVisibilityOff();
 
     // VTK Actor

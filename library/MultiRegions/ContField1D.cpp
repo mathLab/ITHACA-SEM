@@ -202,7 +202,7 @@ namespace Nektar
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
 
             GlobalSolve(key,wsp,outarray);
-            if(coeffstate != eGlobal)
+            if(coeffstate == eLocal)
             {
                 GlobalToLocal(outarray,outarray);
             }

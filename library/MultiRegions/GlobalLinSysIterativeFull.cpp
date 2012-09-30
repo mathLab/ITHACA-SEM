@@ -154,7 +154,7 @@ namespace Nektar
                     // substract it from the rhs
                     expList->GeneralMatrixOp(
                                     m_linSysKey,
-                                    pOutput, global_tmp, true);
+                                    pOutput, global_tmp, eGlobal);
 
                     Vmath::Vsub(nGlobDofs,  pInput.get(), 1,
                                             global_tmp.get(), 1,
@@ -222,7 +222,7 @@ namespace Nektar
                 Array<OneD, NekDouble> test(nGlobal, 0.0);
                 Array<OneD, NekDouble> test_local(nLocal, 0.0);
                 test[i+nDir] = 1.0;
-                expList->GeneralMatrixOp(m_linSysKey, test, test, true);
+                expList->GeneralMatrixOp(m_linSysKey, test, test, eGlobal);
 
                 M.SetValue(i,i,1.0/test[i+nDir]);
             }
@@ -308,7 +308,7 @@ namespace Nektar
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             // Perform matrix-vector operation A*d_i
             expList->GeneralMatrixOp(m_linSysKey,
-                                        pInput, pOutput, true);
+                                     pInput, pOutput, eGlobal);
 
             // retrieve robin boundary condition information and apply robin
             // boundary conditions to the solution.

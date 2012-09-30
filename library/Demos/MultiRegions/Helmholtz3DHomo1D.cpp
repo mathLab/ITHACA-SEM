@@ -51,11 +51,11 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Print summary of solution details
-    flags.set(eUseContCoeff, true);
+    flags.set(eUseGlobal, true);
     factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
     const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
     LibUtilities::BasisKey bkey0 
-                            = expansions.begin()->second->m_basisKeyVector[0];
+        = expansions.begin()->second->m_basisKeyVector[0];
 
     cout << "Solving 3D Helmholtz (Homogeneous in z-direction):"  << endl;
     cout << "         Lambda          : " << factors[StdRegions::eFactorLambda] << endl;
@@ -94,16 +94,14 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
-    //Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors);
      //----------------------------------------------
 
     //----------------------------------------------
     // Backward Transform Solution to get solved values at
-    //Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
-    Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(),true);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),MultiRegions::eGlobal);
     //----------------------------------------------
-
+    
     //----------------------------------------------
     // See if there is an exact solution, if so
     // evaluate and plot errors

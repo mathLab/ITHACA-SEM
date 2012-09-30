@@ -121,13 +121,13 @@ int main(int argc, char *argv[])
   
     //----------------------------------------------
     // Helmholtz solution taking physical forcing 
-    Exp->LinearAdvectionReactionSolve(Vel, Fce->GetPhys(), Exp->UpdateContCoeffs(), lambda, true);
+    Exp->LinearAdvectionReactionSolve(Vel, Fce->GetPhys(), Exp->UpdateCoeffs(), lambda, MultiRegions::eGlobal);
     //----------------------------------------------
     Timing("Linear Advection Solve ..");
     
     //----------------------------------------------
     // Backward Transform Solution to get solved values 
-    Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), MultiRegions::eGlobal);
     //----------------------------------------------
     
     //----------------------------------------------

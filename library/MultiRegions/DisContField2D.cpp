@@ -1355,8 +1355,8 @@ namespace Nektar
         void DisContField2D::v_GeneralMatrixOp(
                const GlobalMatrixKey             &gkey,
                const Array<OneD,const NekDouble> &inarray,
-                     Array<OneD,      NekDouble> &outarray,
-               bool UseContCoeffs)
+               Array<OneD,      NekDouble> &outarray,
+               CoeffState coeffstate)
         {
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);

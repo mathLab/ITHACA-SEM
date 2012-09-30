@@ -279,10 +279,10 @@ namespace Nektar
 	  Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 	  
 	  for(i = 0; i < nvariables; ++i)
-	    {
-	      m_fields[i]->FwdTrans(outarray[i],coeffs,false);
+          {
+              m_fields[i]->FwdTrans(outarray[i],coeffs);
 	      m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
-	    }
+          }
 	  PrimitiveToConservative(outarray,outarray);
 	  break;
 	}

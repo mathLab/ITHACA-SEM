@@ -356,7 +356,6 @@ namespace Nektar
               m_ncoeffs = 0;
               m_npoints = 0;
 
-              m_transState = eNotSet;
               m_physState  = false;
 
               SpatialDomains::ExpansionMap::const_iterator expIt;

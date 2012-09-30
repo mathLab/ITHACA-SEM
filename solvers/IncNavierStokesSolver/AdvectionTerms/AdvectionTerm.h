@@ -102,10 +102,11 @@ namespace Nektar
         SpatialDomains::MeshGraphSharedPtr          m_graph;
 		
         bool m_dealiasing;           ///< flag to determine if use dealising or not
-        bool m_UseContCoeff;
         bool m_SingleMode;               ///< Flag to determine if use single mode or not
         bool m_HalfMode;                 ///< Flag to determine if use half mode or not
         
+        MultiRegions::CoeffState m_CoeffState;
+
         /// Type of projection, i.e. Galerkin or DG.
         enum MultiRegions::ProjectionType m_projectionType;
         

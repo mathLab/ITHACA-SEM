@@ -153,7 +153,7 @@ namespace Nektar
                    const GlobalMatrixKey             &gkey,
                    const Array<OneD,const NekDouble> &inarray,
                    Array<OneD,      NekDouble> &outarray,
-                   bool UseContCoeffs = false);
+                   CoeffState coeffstate = eLocal);
 
             virtual void v_EvaluateBoundaryConditions(
                 const NekDouble time = 0.0,

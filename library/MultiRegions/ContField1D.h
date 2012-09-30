@@ -85,19 +85,19 @@ namespace Nektar
             //  subject to the boundary conditions specified.
             MULTI_REGIONS_EXPORT void FwdTrans(      const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             /// This function performs the backward transformation of the
             /// spectral/hp element expansion.
             MULTI_REGIONS_EXPORT void BwdTrans(      const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             ///
             MULTI_REGIONS_EXPORT void MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             /// Return the boundary conditions expansion.
             // inline
@@ -107,23 +107,6 @@ namespace Nektar
             // inline
             MULTI_REGIONS_EXPORT const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& GetBndConditions();
-
-            /// Returns the total number of global degrees of freedom
-            /// \f$N_{\mathrm{dof}}\f$.
-            // inline
-            inline int GetContNcoeffs();
-
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
-            /// (implemented as #m_contCoeffs) containing all global expansion
-            /// coefficients.
-            // inline
-            MULTI_REGIONS_EXPORT Array<OneD, NekDouble> &UpdateContCoeffs();
-
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
-            /// (implemented as #m_contCoeffs) containing all global expansion
-            /// coefficients.
-            // inline
-            MULTI_REGIONS_EXPORT const Array<OneD, const NekDouble> &GetContCoeffs() const;
 
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
@@ -163,14 +146,14 @@ namespace Nektar
             /// \f$\phi_n^e(x)\f$.
             MULTI_REGIONS_EXPORT void IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD, NekDouble> &outarray,
-                                bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             /// Calculates the result of the multiplication of a global matrix
             /// of type specified by \a mkey with a vector given by \a inarray.
             MULTI_REGIONS_EXPORT void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
                                 const Array<OneD,const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
         protected:
             /// (A shared pointer to) the object which contains all the required
@@ -178,13 +161,10 @@ namespace Nektar
             /// of freedom.
             AssemblyMapCGSharedPtr m_locToGloMap;
 
-            /// The total number of global degrees of freedom.
-            /// #m_contNcoeffs\f$=N_{\mathrm{dof}}\f$
-            int                             m_contNcoeffs;
 
-            /// The array of length #m_ncoeffs\f$=N_{\mathrm{dof}}\f$ containing
-            /// the global expansion coefficients.
-            Array<OneD, NekDouble>          m_contCoeffs;
+            /// A enum list declaring how to interpret coeffs,
+            /// i.e. eLocal, eHybrid or eGlobal
+            CoeffState m_coeffState;
 
             /// (A shared pointer to) a list which collects all the global
             /// matrices being assembled, such that they should be constructed
@@ -197,10 +177,6 @@ namespace Nektar
             LibUtilities::NekManager<GlobalLinSysKey, GlobalLinSys> m_globalLinSysManager;
 
         private:
-			MULTI_REGIONS_EXPORT virtual int v_GetContNcoeffs() const;
-			
-			MULTI_REGIONS_EXPORT virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
-			
             /// Returns the linear system specified by \a mkey.
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
@@ -217,12 +193,12 @@ namespace Nektar
             virtual void v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs);
+                                CoeffState coeffstate);
 
             virtual void v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs);
+                                CoeffState coeffstate);
 
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
@@ -235,17 +211,15 @@ namespace Nektar
             virtual const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& v_GetBndConditions();
 
-            virtual const Array<OneD, const NekDouble> &v_GetContCoeffs() const;
-
             virtual void v_BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs);
+                                CoeffState coeffstate);
 
             virtual void v_IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs);
+                                CoeffState coeffstate);
 
             /// Calculates the result of the multiplication of a global matrix
             /// of type specified by \a mkey with a vector given by \a inarray.
@@ -253,7 +227,7 @@ namespace Nektar
                                 const GlobalMatrixKey             &gkey,
                                 const Array<OneD,const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs);
+                                CoeffState coeffstate);
 
         };
         typedef boost::shared_ptr<ContField1D>      ContField1DSharedPtr;
@@ -272,40 +246,6 @@ namespace Nektar
             return m_bndConditions;
         }
 
-        /**
-         * @return  #m_contNcoeffs, the total number of global degrees of
-         * freedom.
-         */
-        inline int ContField1D::GetContNcoeffs()
-        {
-            return m_contNcoeffs;
-        }
-
-        /**
-         * If one wants to get hold of the underlying data without modifying
-         * them, rather use the function #GetContCoeffs instead.
-         *
-         * @return (A reference to) the array #m_contCoeffs.
-         */
-        inline Array<OneD, NekDouble> &ContField1D::UpdateContCoeffs()
-        {
-            m_transState = eContinuous;
-            return m_contCoeffs;
-        }
-
-        /**
-         * As the function returns a constant reference to a
-         * <em>const Array</em>, it is not possible to modify the underlying
-         * data of the array #m_contCoeffs. In order to do so, use the function
-         * #UpdateContCoeffs instead.
-         *
-         * \return (A reference to) the array #m_contCoeffs.
-         */
-        inline const Array<OneD, const NekDouble>&
-                                ContField1D::GetContCoeffs() const
-        {
-            return m_contCoeffs;
-        }
 
         /**
          * This operation is evaluated as:
@@ -326,14 +266,10 @@ namespace Nektar
          * \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
-         * @note The array #m_contCoeffs should be filled with the global
-         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ and that the resulting
-         * local coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in
-         * #m_coeffs.
          */
         inline void ContField1D::GlobalToLocal()
         {
-            m_locToGloMap->GlobalToLocal(m_contCoeffs,m_coeffs);
+            m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
         }
 
         /**
@@ -388,14 +324,10 @@ namespace Nektar
          * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
-         * @note    The array #m_coeffs should be filled with the local
-         *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the
-         *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
-         *          will be stored in #m_contCoeffs.
          */
         inline void ContField1D::LocalToGlobal()
         {
-            m_locToGloMap->LocalToGlobal(m_coeffs,m_contCoeffs);
+            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
         }
 
         /**
@@ -418,14 +350,10 @@ namespace Nektar
          * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
-         * @note    The array #m_coeffs should be filled with the local
-         * coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the resulting
-         * global coefficients \f$\boldsymbol{\hat{u}}_g\f$ will be stored in
-         * #m_contCoeffs.
          */
         inline void ContField1D::Assemble()
         {
-            m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
+            m_locToGloMap->Assemble(m_coeffs,m_coeffs);
         }
 
         /**

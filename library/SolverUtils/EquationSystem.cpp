@@ -1318,7 +1318,7 @@ namespace Nektar
 		
             if(UseContCoeffs)
             {
-                m_fields[0]->IProductWRTBase(tmp, outarray,UseContCoeffs);
+                m_fields[0]->IProductWRTBase(tmp, outarray,MultiRegions::eGlobal);
             }
             else
             {
@@ -1374,7 +1374,7 @@ namespace Nektar
                 case 3:
                     grad1 = Array<OneD, NekDouble> (nPointsTot);
                     grad2 = Array<OneD, NekDouble> (nPointsTot);
-                    m_fields[0]->PhysDeriv(u,grad0,grad1,grad2,m_UseContCoeff);
+                    m_fields[0]->PhysDeriv(u,grad0,grad1,grad2);
                     Vmath::Vmul (nPointsTot, grad0, 1, V[0], 1, outarray, 1);
                     Vmath::Vvtvp(nPointsTot, grad1, 1, V[1], 1, outarray, 1, outarray, 1);
                     Vmath::Vvtvp(nPointsTot, grad2, 1, V[2], 1, outarray, 1, outarray, 1);

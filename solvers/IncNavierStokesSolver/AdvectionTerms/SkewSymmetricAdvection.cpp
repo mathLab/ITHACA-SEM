@@ -123,14 +123,14 @@ namespace Nektar
 				
 			if(m_dealiasing == true && pFields[0]->GetWaveSpace() == false) 
 			{
-				pFields[0]->DealiasedProd(pV[0],gradV0,gradV0,m_UseContCoeff);
-				pFields[0]->DealiasedProd(pV[1],gradV1,gradV1,m_UseContCoeff);
-				pFields[0]->DealiasedProd(pV[2],gradV2,gradV2,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pV[0],gradV0,gradV0,m_CoeffState);
+				pFields[0]->DealiasedProd(pV[1],gradV1,gradV1,m_CoeffState);
+				pFields[0]->DealiasedProd(pV[2],gradV2,gradV2,m_CoeffState);
 				Vmath::Vadd(nPointsTot,gradV0,1,gradV1,1,pOutarray,1);
 				Vmath::Vadd(nPointsTot,gradV2,1,pOutarray,1,pOutarray,1);
-				pFields[0]->DealiasedProd(pU,pV[0],gradV0,m_UseContCoeff);
-				pFields[0]->DealiasedProd(pU,pV[1],gradV1,m_UseContCoeff);
-				pFields[0]->DealiasedProd(pU,pV[2],gradV2,m_UseContCoeff);
+				pFields[0]->DealiasedProd(pU,pV[0],gradV0,m_CoeffState);
+				pFields[0]->DealiasedProd(pU,pV[1],gradV1,m_CoeffState);
+				pFields[0]->DealiasedProd(pU,pV[2],gradV2,m_CoeffState);
 				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,gradVV0);
 				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,gradVV1);
 				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,gradVV2);

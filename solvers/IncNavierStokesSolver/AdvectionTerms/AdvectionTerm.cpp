@@ -105,16 +105,16 @@ namespace Nektar
             m_projectionType = MultiRegions::eGalerkin;
         }
 		
-		m_UseContCoeff = false;
-		m_dealiasing = false;
+        m_CoeffState = MultiRegions::eLocal;
+        m_dealiasing = false;
+        
+        if(m_session->DefinesSolverInfo("DEALIASING"))
+        {
+            m_dealiasing = true;
+        }
 		
-		if(m_session->DefinesSolverInfo("DEALIASING"))
-		{
-			m_dealiasing = true;
-		}
-		
-		m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
-		m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
+        m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
+        m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
     }
     
     AdvectionTerm::~AdvectionTerm()

@@ -43,8 +43,6 @@ namespace Nektar
         ContField3D::ContField3D():
             DisContField3D(),
             m_locToGloMap(),
-            m_contNcoeffs(0),
-            m_contCoeffs(),
             m_globalMat(),
             m_globalLinSysManager(
                     boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
@@ -63,7 +61,7 @@ namespace Nektar
          * mapping array (contained in #m_locToGloMap) for the transformation
          * between local elemental level and global level, it calculates the
          * total number global expansion coefficients \f$\hat{u}_n\f$ and
-         * allocates memory for the array #m_contCoeffs. The constructor also
+         * allocates memory for the array #m_coeffs. The constructor also
          * discretises the boundary conditions, specified by the argument \a
          * bcs, by expressing them in terms of the coefficient of the expansion
          * on the boundary.
@@ -94,8 +92,6 @@ namespace Nektar
                                                                                      periodicVertices,
                                                                                      periodicEdges,
                                                                                      periodicFaces);
-            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
 
@@ -109,7 +105,7 @@ namespace Nektar
          * mapping array (contained in #m_locToGloMap) for the transformation
          * between local elemental level and global level, it calculates the
          * total number global expansion coefficients \f$\hat{u}_n\f$ and
-         * allocates memory for the array #m_contCoeffs. The constructor also
+         * allocates memory for the array #m_coeffs. The constructor also
          * discretises the boundary conditions, specified by the argument \a
          * bcs, by expressing them in terms of the coefficient of the expansion
          * on the boundary.
@@ -127,9 +123,8 @@ namespace Nektar
                                  const std::string &variable):
 	    DisContField3D(In,graph3D,variable,false),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
-            m_globalLinSysManager(
-                    boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
-                    std::string("GlobalLinSys"))
+            m_globalLinSysManager(boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
+                                  std::string("GlobalLinSys"))
 
         {
             if(!SameTypeOfBoundaryConditions(In))
@@ -152,18 +147,12 @@ namespace Nektar
             {
                 m_locToGloMap = In.m_locToGloMap;
             }
-
-            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
-
 
 
         ContField3D::ContField3D(const ContField3D &In):
                 DisContField3D(In),
                 m_locToGloMap(In.m_locToGloMap),
-                m_contNcoeffs(In.m_contNcoeffs),
-                m_contCoeffs(m_contNcoeffs,0.0),
                 m_globalMat(In.m_globalMat),
                 m_globalLinSysManager(In.m_globalLinSysManager)
         {
@@ -182,9 +171,9 @@ namespace Nektar
          * evaluated locally by the function ExpList#BwdTrans.
          *
          * The coefficients of the expansion should be contained in the variable
-         * #m_coeffs of the ExpList object \a In. The resulting physical values
+         * #inarray of the ExpList object \a In. The resulting physical values
          * at the quadrature points \f$u^{\delta}(\boldsymbol{x}_i)\f$ are
-         * stored in the array #m_phys.
+         * stored in the array #outarray.
          *
          * @param   In          An ExpList, containing the local coefficients
          *                      \f$\hat{u}_n^e\f$ in its array #m_coeffs.
@@ -192,9 +181,9 @@ namespace Nektar
         void ContField3D::v_BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
+                                     CoeffState coeffstate)
         {
-            if(UseContCoeffs)
+            if(coeffstate == eGlobal)
             {
                 bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
                                                         StdRegions::eBwdTrans);
@@ -228,18 +217,17 @@ namespace Nektar
          * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
          * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
          * variable #m_phys of the ExpList object \a in. The result is stored
-         * in the array #m_contCoeffs.
+         * in the array #m_coeffs.
          *
          * @param   In          An ExpList, containing the discrete evaluation
          *                      of \f$f(\boldsymbol{x})\f$ at the quadrature
          *                      points in its array #m_phys.
          */
-        void ContField3D::v_IProductWRTBase(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD, NekDouble> &outarray,
-                                bool  UseContCoeffs)
+        void ContField3D::v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray,
+                                            Array<OneD, NekDouble> &outarray,
+                                            CoeffState coeffstate)
         {
-            if(UseContCoeffs)
+            if(coeffstate == eGlobal)
             {
                 bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
                                                 StdRegions::eIProductWRTBase);
@@ -263,174 +251,175 @@ namespace Nektar
                 IProductWRTBase_IterPerExp(inarray,outarray);
             }
         }
-
-
-        void ContField3D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
-                                         Array<OneD,       NekDouble> &outarray,
-                                   bool  UseContCoeffs)
-        {
-			cout << "ContField3D"<< endl;
-            // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);
-            IProductWRTBase(inarray,wsp,true);
-
-            // Solve the system
-            GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
-
-            if(UseContCoeffs)
-            {
-                GlobalSolve(key,wsp,outarray);
-            }
-            else
-            {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
-                GlobalSolve(key,wsp,tmp);
+      
+      
+      void ContField3D::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
+                                   Array<OneD,       NekDouble> &outarray,
+                                   CoeffState coeffstate)
+      {
+          // Inner product of forcing
+          int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+          Array<OneD,NekDouble> wsp(contNcoeffs);
+          IProductWRTBase(inarray,wsp,eGlobal);
+          
+          // Solve the system
+          GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
+          
+          if(coeffstate == eGlobal)
+          {
+              GlobalSolve(key,wsp,outarray);
+          }
+          else
+          {
+              Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
+              GlobalSolve(key,wsp,tmp);
                 GlobalToLocal(tmp,outarray);
+          }
+      }
+      
+      
+      void ContField3D::v_MultiplyByInvMassMatrix(
+                                          const Array<OneD, const NekDouble> &inarray,
+                                          Array<OneD,       NekDouble> &outarray,
+                                          CoeffState coeffstate)
+          
+      {
+          int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+          GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
+          
+          if(coeffstate == eGlobal)
+          {
+              if(inarray.data() == outarray.data())
+              {
+                  Array<OneD, NekDouble> tmp(contNcoeffs,0.0);
+                  Vmath::Vcopy(contNcoeffs,inarray,1,tmp,1);
+                  GlobalSolve(key,tmp,outarray);
+              }
+              else
+              {
+                  GlobalSolve(key,inarray,outarray);
+              }
+          }
+          else
+          {
+              Array<OneD, NekDouble> globaltmp(contNcoeffs,0.0);
+              
+              if(inarray.data() == outarray.data())
+              {
+                  Array<OneD,NekDouble> tmp(inarray.num_elements());
+                  Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
+                  Assemble(tmp,outarray);
+              }
+              else
+              {
+                  Assemble(inarray,outarray);
+              }
+              
+              GlobalSolve(key,outarray,globaltmp);
+              GlobalToLocal(globaltmp,outarray);
+          }
+      }
+      
+      
+      void ContField3D::GenerateDirBndCondForcing(const GlobalLinSysKey &key,
+                                                  Array<OneD, NekDouble> &inout,
+                                                  Array<OneD, NekDouble> &outarray)
+      {
+          int bndcnt=0;
+          const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+          NekDouble sign;
+          
+          for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+          {
+              if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+              {
+                  const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
+                  for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                  {
+                      sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                      inout[map[bndcnt++]] = sign * coeffs[j];
+                  }
+              }
+              else
+              {
+                  bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
+              }
             }
-        }
+          GeneralMatrixOp(key,inout,outarray,eGlobal);
+      }
+      
+      // Note inout contains initial guess and final output.
+      void ContField3D::GlobalSolve(const GlobalLinSysKey &key,
+                                    const Array<OneD, const NekDouble>& rhs,
+                                    Array<OneD,       NekDouble>& inout,
+                                    const Array<OneD, const NekDouble>& dirForcing)
+      {
+          int i,j;
+          int bndcnt=0;
+          int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+          int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+          
+          // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
+          //         IN THE SOLUTION ARRAY
+          const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+          NekDouble sign;
+          
+          for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+          {
+              if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+              {
+                  const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
+                  for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                  {
+                      sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                      inout[map[bndcnt++]] = sign * coeffs[j];
+                  }
+              }
+              else
+              {
+                  bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
+              }
+          }
+          
+          // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
+          if(contNcoeffs - NumDirBcs > 0)
+          {
+              GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
+              LinSys->Solve(rhs,inout,m_locToGloMap,dirForcing);
+          }
+      }
+      
+      GlobalLinSysSharedPtr ContField3D::GetGlobalLinSys(const GlobalLinSysKey &mkey)
+      {
+          return m_globalLinSysManager[mkey];
+      }
+      
+      
+      GlobalLinSysSharedPtr ContField3D::GenGlobalLinSys(const GlobalLinSysKey &mkey)
+      {
+          ASSERTL1(mkey.LocToGloMapIsDefined(),
+                   "To use method must have a AssemblyMap "
+                   "attached to key");
+          return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
+      }
+      
 
-
-        void ContField3D::v_MultiplyByInvMassMatrix(const Array<OneD, const NekDouble> &inarray,
-                                                        Array<OneD,       NekDouble> &outarray,
-                                                  bool  UseContCoeffs)
-
-        {
-            GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
-
-            if(UseContCoeffs)
-            {
-                if(inarray.data() == outarray.data())
-                {
-                    Array<OneD, NekDouble> tmp(m_contNcoeffs,0.0);
-                    Vmath::Vcopy(m_contNcoeffs,inarray,1,tmp,1);
-                    GlobalSolve(key,tmp,outarray);
-                }
-                else
-                {
-                    GlobalSolve(key,inarray,outarray);
-                }
-            }
-            else
-            {
-                Array<OneD, NekDouble> globaltmp(m_contNcoeffs,0.0);
-
-                if(inarray.data() == outarray.data())
-                {
-                    Array<OneD,NekDouble> tmp(inarray.num_elements());
-                    Vmath::Vcopy(inarray.num_elements(),inarray,1,tmp,1);
-                    Assemble(tmp,outarray);
-                }
-                else
-                {
-                    Assemble(inarray,outarray);
-                }
-
-                GlobalSolve(key,outarray,globaltmp);
-                GlobalToLocal(globaltmp,outarray);
-            }
-        }
-
-
-        void ContField3D::GenerateDirBndCondForcing(const GlobalLinSysKey &key,
-                                                    Array<OneD, NekDouble> &inout,
-                                                    Array<OneD, NekDouble> &outarray)
-        {
-            int bndcnt=0;
-            const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-            NekDouble sign;
-
-            for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-            {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {
-                    const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
-                    for(int j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
-                    {
-                        sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                        inout[map[bndcnt++]] = sign * coeffs[j];
-                    }
-                }
-                else
-                {
-                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
-                }
-            }
-            GeneralMatrixOp(key,inout,outarray,true);
-        }
-
-        // Note inout contains initial guess and final output.
-        void ContField3D::GlobalSolve(const GlobalLinSysKey &key,
-                                      const Array<OneD, const NekDouble>& rhs,
-                                            Array<OneD,       NekDouble>& inout,
-                                      const Array<OneD, const NekDouble>& dirForcing)
-        {
-            int i,j;
-            int bndcnt=0;
-            int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-
-            // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
-            //         IN THE SOLUTION ARRAY
-            const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-            NekDouble sign;
-
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-            {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {
-                    const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
-                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
-                    {
-                        sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                        inout[map[bndcnt++]] = sign * coeffs[j];
-                    }
-                }
-                else
-                {
-                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
-                }
-            }
-
-            // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
-            if(m_contNcoeffs - NumDirBcs > 0)
-            {
-                GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
-                LinSys->Solve(rhs,inout,m_locToGloMap,dirForcing);
-            }
-        }
-
-        GlobalLinSysSharedPtr ContField3D::GetGlobalLinSys(const GlobalLinSysKey &mkey)
-        {
-            return m_globalLinSysManager[mkey];
-        }
-
-
-        GlobalLinSysSharedPtr ContField3D::GenGlobalLinSys(
-                                const GlobalLinSysKey &mkey)
-        {
-            ASSERTL1(mkey.LocToGloMapIsDefined(),
-                     "To use method must have a AssemblyMap "
-                     "attached to key");
-            return ExpList::GenGlobalLinSys(mkey, m_locToGloMap);
-        }
-
-
-        /**
-         * Returns the global matrix associated with the given GlobalMatrixKey.
-         * If the global matrix has not yet been constructed on this field,
-         * it is first constructed using GenGlobalMatrix().
-         * @param   mkey        Global matrix key.
-         * @returns Assocated global matrix.
-         */
-        GlobalMatrixSharedPtr ContField3D::GetGlobalMatrix(
-                                const GlobalMatrixKey &mkey)
-        {
-            ASSERTL1(mkey.LocToGloMapIsDefined(),
-                     "To use method must have a AssemblyMap "
-                     "attached to key");
-
+      /**
+       * Returns the global matrix associated with the given GlobalMatrixKey.
+       * If the global matrix has not yet been constructed on this field,
+       * it is first constructed using GenGlobalMatrix().
+       * @param   mkey        Global matrix key.
+       * @returns Assocated global matrix.
+       */
+      GlobalMatrixSharedPtr ContField3D::GetGlobalMatrix(const GlobalMatrixKey &mkey)
+      {
+          ASSERTL1(mkey.LocToGloMapIsDefined(),
+                   "To use method must have a AssemblyMap "
+                   "attached to key");
+          
             GlobalMatrixSharedPtr glo_matrix;
             GlobalMatrixMap::iterator matrixIter = m_globalMat->find(mkey);
-
+            
             if(matrixIter == m_globalMat->end())
             {
                 glo_matrix = GenGlobalMatrix(mkey,m_locToGloMap);
@@ -440,117 +429,117 @@ namespace Nektar
             {
                 glo_matrix = matrixIter->second;
             }
-
+            
             return glo_matrix;
-        }
-
-
-        void ContField3D::v_HelmSolve(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray,
-                const FlagList &flags,
-                const StdRegions::ConstFactorMap &factors,
-                const StdRegions::VarCoeffMap &varcoeff,
-                const Array<OneD, const NekDouble> &dirForcing)
-        {
-            // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);
-            IProductWRTBase(inarray,wsp,true);
-            // Note -1.0 term necessary to invert forcing function to
-            // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs, wsp, 1);
-
-            // Forcing function with weak boundary conditions
-            int i,j;
-            int bndcnt = 0;
-            NekDouble sign;
-            Array<OneD, NekDouble> gamma(m_contNcoeffs, 0.0);
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-            {
-                if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
-                {
-                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
-                    {
-                        sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                        gamma[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=
-                            sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
-                    }
-                }
-                else
-                {
-                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
-                }
-            }
-            m_locToGloMap->UniversalAssemble(gamma);
-            
-            // Add weak boundary conditions to forcing
-            Vmath::Vadd(m_contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
-            
-            // Solve the system
-            GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors,varcoeff);
-
-            if(flags.isSet(eUseContCoeff))
-            {
-                GlobalSolve(key,wsp,outarray,dirForcing);
-            }
-            else
-            {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
-                GlobalSolve(key,wsp,tmp,dirForcing);
-                GlobalToLocal(tmp,outarray);
-            }
-        }
-
-        void ContField3D::v_GeneralMatrixOp(
-                                const GlobalMatrixKey             &gkey,
-                                const Array<OneD,const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs)
-        {
-            if(UseContCoeffs)
-            {
-                bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
-                                                        gkey.GetMatrixType());
-
-                if(doGlobalOp)
-                {
-                    GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
-                    mat->Multiply(inarray,outarray);
-                }
-                else
-                {
-                    Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
-                    Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
-                    GlobalToLocal(inarray,tmp1);
-                    GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
-                    Assemble(tmp2,outarray);
-                }
-            }
-            else
-            {
-                GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
-            }
-        }
-
-        int ContField3D::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
-        {
-            ASSERTL1(gkey.LocToGloMapIsDefined(),
-                     "To use method must have a AssemblyMap "
-                     "attached to key");
-
-            GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);
-
-            if(matrixIter == m_globalMat->end())
-            {
-                return 0;
-            }
-            else
-            {
-                return matrixIter->second->GetMatrix()->GetNumNonZeroEntries();
-            }
-
-            return 0;
-        }
-
+      }
+      
+      
+      void ContField3D::v_HelmSolve(
+                                    const Array<OneD, const NekDouble> &inarray,
+                                    Array<OneD,       NekDouble> &outarray,
+                                    const FlagList &flags,
+                                    const StdRegions::ConstFactorMap &factors,
+                                    const StdRegions::VarCoeffMap &varcoeff,
+                                    const Array<OneD, const NekDouble> &dirForcing)
+      {
+          // Inner product of forcing
+          int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+          Array<OneD,NekDouble> wsp(contNcoeffs);
+          IProductWRTBase(inarray,wsp,eGlobal);
+          // Note -1.0 term necessary to invert forcing function to
+          // be consistent with matrix definition
+          Vmath::Neg(contNcoeffs, wsp, 1);
+          
+          // Forcing function with weak boundary conditions
+          int i,j;
+          int bndcnt = 0;
+          NekDouble sign;
+          Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
+          for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+          {
+              if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
+              {
+                  for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); j++)
+                  {
+                      sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                      gamma[m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap(bndcnt++)] +=
+                          sign * (m_bndCondExpansions[i]->GetCoeffs())[j];
+                  }
+              }
+              else
+              {
+                  bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
+              }
+          }
+          m_locToGloMap->UniversalAssemble(gamma);
+          
+          // Add weak boundary conditions to forcing
+          Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
+          
+          // Solve the system
+          GlobalLinSysKey key(StdRegions::eHelmholtz, m_locToGloMap, factors,varcoeff);
+          
+          if(flags.isSet(eUseGlobal))
+          {
+              Vmath::Zero(contNcoeffs,outarray,1);
+              GlobalSolve(key,wsp,outarray,dirForcing);
+          }
+          else
+          {
+              Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
+              GlobalSolve(key,wsp,tmp,dirForcing);
+              GlobalToLocal(tmp,outarray);
+          }
+      }
+      
+      void ContField3D::v_GeneralMatrixOp(const GlobalMatrixKey             &gkey,
+                                          const Array<OneD,const NekDouble> &inarray,
+                                          Array<OneD,      NekDouble> &outarray,
+                                          CoeffState coeffstate)
+      {
+          if(coeffstate == eGlobal)
+          {
+              bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(gkey.GetMatrixType());
+              
+              if(doGlobalOp)
+              {
+                  GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                  mat->Multiply(inarray,outarray);
+              }
+              else
+              {
+                  Array<OneD,NekDouble> tmp1(2*m_ncoeffs);
+                  Array<OneD,NekDouble> tmp2(tmp1+m_ncoeffs);
+                  GlobalToLocal(inarray,tmp1);
+                  GeneralMatrixOp_IterPerExp(gkey,tmp1,tmp2);
+                  Assemble(tmp2,outarray);
+              }
+          }
+          else
+          {
+              GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
+          }
+      }
+      
+      int ContField3D::GetGlobalMatrixNnz(const GlobalMatrixKey &gkey)
+      {
+          ASSERTL1(gkey.LocToGloMapIsDefined(),
+                   "To use method must have a AssemblyMap "
+                   "attached to key");
+          
+          GlobalMatrixMap::iterator matrixIter = m_globalMat->find(gkey);
+          
+          if(matrixIter == m_globalMat->end())
+          {
+              return 0;
+          }
+          else
+          {
+              return matrixIter->second->GetMatrix()->GetNumNonZeroEntries();
+          }
+          
+          return 0;
+      }
+      
   } //end of namespace
 } //end of namespace

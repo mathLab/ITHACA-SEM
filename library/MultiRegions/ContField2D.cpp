@@ -85,8 +85,6 @@ namespace Nektar
         ContField2D::ContField2D():
             DisContField2D(),
             m_locToGloMap(),
-            m_contNcoeffs(0),
-            m_contCoeffs(),
             m_globalMat(),
             m_globalLinSysManager(
                     boost::bind(&ContField2D::GenGlobalLinSys, this, _1),
@@ -137,8 +135,6 @@ namespace Nektar
                                     m_periodicEdges,
                                     CheckIfSingularSystem);
 
-            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
 
@@ -152,7 +148,7 @@ namespace Nektar
          * mapping array (contained in #m_locToGloMap) for the transformation
          * between local elemental level and global level, it calculates the
          * total number global expansion coefficients \f$\hat{u}_n\f$ and
-         * allocates memory for the array #m_contCoeffs. The constructor also
+         * allocates memory for the array #m_coeffs. The constructor also
          * discretises the boundary conditions, specified by the argument \a
          * bcs, by expressing them in terms of the coefficient of the expansion
          * on the boundary.
@@ -192,8 +188,6 @@ namespace Nektar
                 m_locToGloMap = In.m_locToGloMap;
             }
 
-            m_contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-            m_contCoeffs  = Array<OneD,NekDouble>(m_contNcoeffs,0.0);
         }
 
 
@@ -206,14 +200,9 @@ namespace Nektar
         ContField2D::ContField2D(const ContField2D &In, bool DeclareCoeffPhysArrays):
             DisContField2D(In,DeclareCoeffPhysArrays),
             m_locToGloMap(In.m_locToGloMap),
-            m_contNcoeffs(In.m_contNcoeffs),
             m_globalMat(In.m_globalMat),
             m_globalLinSysManager(In.m_globalLinSysManager)
         {
-            if(DeclareCoeffPhysArrays)
-            {
-                m_contCoeffs = Array<OneD, NekDouble> (m_contNcoeffs,0.0);
-            }
         }
 
 
@@ -236,7 +225,7 @@ namespace Nektar
          * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
          * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
          * variable #m_phys of the ExpList object \a Sin. The resulting global
-         * coefficients \f$\hat{u}_g\f$ are stored in the array #m_contCoeffs.
+         * coefficients \f$\hat{u}_g\f$ are stored in the array #m_coeffs.
          *
          * @param   Sin         An ExpList, containing the discrete evaluation
          *                      of \f$f(\boldsymbol{x})\f$ at the quadrature
@@ -244,22 +233,24 @@ namespace Nektar
          */
         void ContField2D::FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                          Array<OneD,       NekDouble> &outarray,
-                                   bool  UseContCoeffs)
+                                   CoeffState coeffstate)
+
         {
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);
-            IProductWRTBase(inarray,wsp,true);
+            int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            Array<OneD,NekDouble> wsp(contNcoeffs);
+            IProductWRTBase(inarray,wsp,eGlobal);
 
             // Solve the system
             GlobalLinSysKey key(StdRegions::eMass, m_locToGloMap);
-
-            if(UseContCoeffs)
+            
+            if(coeffstate == eGlobal)
             {
                 GlobalSolve(key,wsp,outarray);
             }
             else
             {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
                 GlobalSolve(key,wsp,tmp);
                 GlobalToLocal(tmp,outarray);
             }
@@ -268,29 +259,30 @@ namespace Nektar
 
         /**
          * Computes the matrix vector product
-         * @f$ \mathbf{y} = \mathbf{M}^{-1}\mathbf{x} @f$. If \a UseContCoeffs
+         * @f$ \mathbf{y} = \mathbf{M}^{-1}\mathbf{x} @f$. If \a coeffstate == eGlobal
          * is set then the elemental system is used directly. If not set, the
          * global system is assembled, the system is solved, and mapped back to
          * the local elemental system.
          *
          * @param   inarray     Input vector @f$\mathbf{x}@f$.
          * @param   outarray    Output vector @f$\mathbf{y}@f$.
-         * @param   UseContCoeffs   Flag for using global system.
+         * @param   coeffState  Flag for using global system.
          */
         void ContField2D::MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
+                                CoeffState coeffstate)
 
         {
             GlobalLinSysKey key(StdRegions::eMass,m_locToGloMap);
+            int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 
-            if(UseContCoeffs)
+            if(coeffstate == eGlobal)
             {
                 if(inarray.data() == outarray.data())
                 {
-                    Array<OneD, NekDouble> tmp(m_contNcoeffs,0.0);
-                    Vmath::Vcopy(m_contNcoeffs,inarray,1,tmp,1);
+                    Array<OneD, NekDouble> tmp(contNcoeffs,0.0);
+                    Vmath::Vcopy(contNcoeffs,inarray,1,tmp,1);
                     GlobalSolve(key,tmp,outarray);
                 }
                 else
@@ -300,7 +292,7 @@ namespace Nektar
             }
             else
             {
-                Array<OneD, NekDouble> globaltmp(m_contNcoeffs,0.0);
+                Array<OneD, NekDouble> globaltmp(contNcoeffs,0.0);
 
                 if(inarray.data() == outarray.data())
                 {
@@ -343,7 +335,7 @@ namespace Nektar
          * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
          * variable #m_phys of the ExpList object \a Sin. The resulting global
          * coefficients \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array
-         * #m_contCoeffs.
+         * #m_coeffs.
          *
          * @param   Sin         An ExpList, containing the discrete evaluation
          *                      of the forcing function \f$f(\boldsymbol{x})\f$
@@ -372,14 +364,15 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &dirForcing,
                 const Array<OneD,       Array<OneD,NekDouble> >& variablecoeffs,
                 NekDouble time,
-                bool UseContCoeffs)
+                CoeffState coeffstate)
         {
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);
-            IProductWRTBase(inarray,wsp,true);
+            int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            Array<OneD,NekDouble> wsp(contNcoeffs);
+            IProductWRTBase(inarray,wsp,eGlobal);
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs, wsp, 1);
+            Vmath::Neg(m_ncoeffs, wsp, 1);
 
             // Forcing function with weak boundary conditions
             int i,j;
@@ -412,13 +405,13 @@ namespace Nektar
             GlobalLinSysKey key(StdRegions::eLaplacian,m_locToGloMap,factors,
                                 varcoeffs);
 
-            if(UseContCoeffs)
+            if(coeffstate == eGlobal)
             {
                 GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else
             {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
                 GlobalSolve(key,wsp,tmp,dirForcing);
                 GlobalToLocal(tmp,outarray);
             }
@@ -521,6 +514,7 @@ namespace Nektar
             int i,j;
             int bndcnt=0;
             int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
@@ -545,7 +539,7 @@ namespace Nektar
             }
 
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
-            if(m_contNcoeffs - NumDirBcs > 0)
+            if(contNcoeffs - NumDirBcs > 0)
             {
                 GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
                 LinSys->Solve(rhs,inout,m_locToGloMap,dirForcing);
@@ -608,39 +602,6 @@ namespace Nektar
         }
 
 
-        int ContField2D::v_GetContNcoeffs() const
-        {
-            return m_contNcoeffs;
-        }
-
-        /**
-         *
-         */
-        Array<OneD, NekDouble> &ContField2D::v_UpdateContCoeffs(void)
-        {
-            return ContField2D::UpdateContCoeffs();
-        };
-
-
-        /**
-         *
-         */
-        void ContField2D::v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray)
-        {
-            m_contCoeffs = inarray;
-        }
-
-
-
-        /**
-         *
-         */
-        const Array<OneD, const NekDouble> &ContField2D::v_GetContCoeffs(void) const
-        {
-            return ContField2D::GetContCoeffs();
-        };
-
-
         /**
          *
          */
@@ -665,9 +626,9 @@ namespace Nektar
         void ContField2D::v_BwdTrans(
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,       NekDouble> &outarray,
-                                     bool  UseContCoeffs)
+                                     CoeffState coeffstate)
         {
-            BwdTrans(inarray,outarray,UseContCoeffs);
+            BwdTrans(inarray,outarray,coeffstate);
         }
 
 
@@ -675,11 +636,11 @@ namespace Nektar
          *
          */
         void ContField2D::v_FwdTrans(
-                                const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
+                                     const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD,       NekDouble> &outarray,
+                                     CoeffState coeffstate)
         {
-            FwdTrans(inarray,outarray,UseContCoeffs);
+            FwdTrans(inarray,outarray,coeffstate);
         }
 
 
@@ -688,10 +649,10 @@ namespace Nektar
          */
         void ContField2D::v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
+                                Array<OneD,       NekDouble> &outarray,
+                                CoeffState coeffstate)
         {
-            MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
+            MultiplyByInvMassMatrix(inarray,outarray,coeffstate);
         }
 
 
@@ -707,7 +668,7 @@ namespace Nektar
          * \f$\boldsymbol{L}\f$ and \f$\boldsymbol{M}\f$ are the Laplacian and
          * mass matrix respectively. This function solves the system above for
          * the global coefficients \f$\boldsymbol{\hat{u}}\f$ by a call to the
-         * function #GlobalSolve. It is assumed #m_contCoeff contains an
+         * function #GlobalSolve. It is assumed #m_coeff contains an
          * initial estimate for the solution.
          *
          * The values of the function \f$f(\boldsymbol{x})\f$
@@ -716,7 +677,7 @@ namespace Nektar
          * object \a inarray. The resulting global coefficients
          * \f$\boldsymbol{\hat{u}}_g\f$ are stored in the array
          * #m_contCoeffs or #m_coeffs depending on whether
-         * \a UseContCoeffs is true or false
+         * \a coeffstate is eGlobal or eLocal
          *
          * @param   inarray     An ExpList, containing the discrete evaluation
          *                      of the forcing function \f$f(\boldsymbol{x})\f$
@@ -736,16 +697,17 @@ namespace Nektar
             //  Setup RHS Inner product
             //----------------------------------
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);
-            IProductWRTBase(inarray,wsp,true);
+            int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            Array<OneD,NekDouble> wsp(contNcoeffs);
+            IProductWRTBase(inarray,wsp,eGlobal);
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs, wsp, 1);
+            Vmath::Neg(contNcoeffs, wsp, 1);
 
             // Fill weak boundary conditions
             int i,j;
             int bndcnt=0;
-            Array<OneD, NekDouble> gamma(m_contNcoeffs, 0.0);
+            Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
@@ -765,18 +727,18 @@ namespace Nektar
             m_locToGloMap->UniversalAssemble(gamma);
 
             // Add weak boundary conditions to forcing
-            Vmath::Vadd(m_contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
+            Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
 
             GlobalLinSysKey key(StdRegions::eHelmholtz,m_locToGloMap,factors,varcoeff);
-
-            if(flags.isSet(eUseContCoeff))
+            
+            if(flags.isSet(eUseGlobal))
             {
-                Vmath::Zero(m_contNcoeffs,outarray,1);
+                Vmath::Zero(contNcoeffs,outarray,1);
                 GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else
             {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
                 GlobalSolve(key,wsp,tmp,dirForcing);
                 GlobalToLocal(tmp,outarray);
             }
@@ -803,9 +765,9 @@ namespace Nektar
                                        const GlobalMatrixKey             &gkey,
                                        const Array<OneD,const NekDouble> &inarray,
                                        Array<OneD,      NekDouble> &outarray,
-                                       bool  UseContCoeffs)
+                                       CoeffState coeffstate)
         {
-            if(UseContCoeffs)
+            if(coeffstate == eGlobal)
             {
                 bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
                                                         gkey.GetMatrixType());
@@ -837,7 +799,7 @@ namespace Nektar
          * @param   inarray     Forcing function.
          * @param   outarray    Result.
          * @param   lambda      reaction coefficient
-         * @param   UseContCoeffs   Use continuous coefficients.
+         * @param   coeffstate  State of Coefficients, Local or Global
          * @param   dirForcing  Dirichlet Forcing.
          */
 
@@ -846,20 +808,21 @@ namespace Nektar
                                                        const Array<OneD, const NekDouble> &inarray,
                                                        Array<OneD, NekDouble> &outarray,
                                                        const NekDouble lambda,
-                                                       bool        UseContCoeffs,
+                                                       CoeffState coeffstate,
                                                        const Array<OneD, const NekDouble>& dirForcing)
         {
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);
-            IProductWRTBase(inarray,wsp,true);
+            int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            Array<OneD,NekDouble> wsp(contNcoeffs);
+            IProductWRTBase(inarray,wsp,eGlobal);
             // Note -1.0 term necessary to invert forcing function to
             // be consistent with matrix definition
-            Vmath::Neg(m_contNcoeffs, wsp, 1);
+            Vmath::Neg(contNcoeffs, wsp, 1);
 
             // Forcing function with weak boundary conditions
             int i,j;
             int bndcnt=0;
-            Array<OneD, NekDouble> gamma(m_contNcoeffs, 0.0);
+            Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
@@ -878,7 +841,7 @@ namespace Nektar
             }
             m_locToGloMap->UniversalAssemble(wsp);
             // Add weak boundary conditions to forcing
-            Vmath::Vadd(m_contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
+            Vmath::Vadd(contNcoeffs, wsp, 1, gamma, 1, wsp, 1);
 
             // Solve the system
             StdRegions::ConstFactorMap factors;
@@ -888,13 +851,13 @@ namespace Nektar
             varcoeffs[StdRegions::eVarCoeffVelY] = velocity[1];
             GlobalLinSysKey key(StdRegions::eLinearAdvectionDiffusionReaction,m_locToGloMap,factors,varcoeffs);
 
-            if(UseContCoeffs)
+            if(coeffstate == eGlobal)
             {
                 GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else
             {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
                 GlobalSolve(key,wsp,tmp,dirForcing);
                 GlobalToLocal(tmp,outarray);
             }
@@ -907,19 +870,20 @@ namespace Nektar
          * @param   inarray     Forcing function.
          * @param   outarray    Result.
          * @param   lambda      reaction coefficient
-         * @param   UseContCoeffs   Use continuous coefficients.
+         * @param   coeffstate  State of Coefficients, Local or Global
          * @param   dirForcing  Dirichlet Forcing.
          */
         void ContField2D::v_LinearAdvectionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                                        const Array<OneD, const NekDouble> &inarray,
                                                        Array<OneD, NekDouble> &outarray,
                                                        const NekDouble lambda,
-                                                       bool        UseContCoeffs,
+                                                       CoeffState coeffstate,
                                                        const Array<OneD, const NekDouble>& dirForcing)
         {
             // Inner product of forcing
-            Array<OneD,NekDouble> wsp(m_contNcoeffs);
-            IProductWRTBase(inarray,wsp,true);
+            int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            Array<OneD,NekDouble> wsp(contNcoeffs);
+            IProductWRTBase(inarray,wsp,eGlobal);
 
             // Solve the system
             StdRegions::ConstFactorMap factors;
@@ -929,13 +893,13 @@ namespace Nektar
             varcoeffs[StdRegions::eVarCoeffVelY] = velocity[1];
             GlobalLinSysKey key(StdRegions::eLinearAdvectionReaction,m_locToGloMap,factors,varcoeffs);
 
-            if(UseContCoeffs)
+            if(coeffstate == eGlobal)
             {
                 GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else
             {
-                Array<OneD,NekDouble> tmp(m_contNcoeffs,0.0);
+                Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
                 GlobalSolve(key,wsp,tmp,dirForcing);
                 GlobalToLocal(tmp,outarray);
             }

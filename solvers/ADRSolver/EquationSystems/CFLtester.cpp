@@ -155,7 +155,7 @@ namespace Nektar
 
                 for(j = 0; j < nvariables; ++j)
                 {
-                    m_fields[j]->FwdTrans(inarray[j],coeffs,false);
+                    m_fields[j]->FwdTrans(inarray[j],coeffs);
                     m_fields[j]->BwdTrans_IterPerExp(coeffs,outarray[j]);
                 }
                 break;

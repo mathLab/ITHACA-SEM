@@ -45,12 +45,12 @@ namespace Nektar
     namespace MultiRegions
     {
 
-        enum TransState
+        enum CoeffState
         {
-            eNotSet,      ///< No transformed state set
-            eLocal,       ///< Local  Modal space array contains "true" expansion values
-            eContinuous,  ///< Continuous Modal space array contains "true" expansion values
-            eLocalCont,   ///< Both local and continuous space array contains "true" Expansion values
+            eNotSet,   ///< No state set
+            eLocal,    ///< Local  coefficients 
+            eHybrid,   ///< Hybrid coefficients
+            eGlobal,   ///< Global coefficients 
         };
 
         // Orientation of adjacent edge for use with boundary

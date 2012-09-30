@@ -70,17 +70,6 @@ namespace Nektar
         protected:
 
         private:
-            int m_contNcoeffs;
-            Array<OneD, NekDouble> m_contCoeffs;
-
-            void SetCoeffPhys(void);
-
-            // virtual functions
-
-            virtual Array<OneD, NekDouble> &v_UpdateContCoeffs(void);
-
-            virtual const Array<OneD, const NekDouble> &v_GetContCoeffs(void) const;
-
             /// Template method virtual forwarded for LocalToGlobal()
             virtual void v_LocalToGlobal();
 

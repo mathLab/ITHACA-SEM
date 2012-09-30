@@ -112,39 +112,6 @@ namespace Nektar
         }
 
 
-        void ContField3DHomogeneous1D::SetCoeffPhys(void)
-        {
-            int n,cnt;
-            int contncoeffs_per_plane = m_planes[0]->GetContNcoeffs();
-            int nzplanes = m_planes.num_elements();
-
-            ExpList3DHomogeneous1D::SetCoeffPhys();
-
-            // Set total coefficients and points
-            m_contNcoeffs = contncoeffs_per_plane*nzplanes;
-            
-            m_contCoeffs = Array<OneD, NekDouble> (m_contNcoeffs);
-
-            Array<OneD, NekDouble> tmparray;
-
-            for(cnt  = n = 0; n < nzplanes; ++n)
-            {
-                m_planes[n]->SetContCoeffsArray(tmparray= m_contCoeffs + contncoeffs_per_plane*n);
-            }
-        }
-
-        const Array<OneD, const NekDouble> &ContField3DHomogeneous1D::v_GetContCoeffs(void) const
-        {
-            return m_contCoeffs;
-        }
-       
-
-        Array<OneD, NekDouble> &ContField3DHomogeneous1D::v_UpdateContCoeffs(void)
-        {
-            return m_contCoeffs;
-        }
-       
- 
         /**
          * 
          */
@@ -188,34 +155,27 @@ namespace Nektar
             Array<OneD, NekDouble> fce(inarray.num_elements());
 
             // Fourier transform forcing function
-			if(m_WaveSpace)
-			{
-				fce = inarray;
-			}
-			else 
-			{
-				HomogeneousFwdTrans(inarray,fce,flags.isSet(eUseContCoeff));
-			}
-
+            if(m_WaveSpace)
+            {
+                fce = inarray;
+            }
+            else 
+            {
+                HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
+            }
+            
             for(n = 0; n < m_planes.num_elements(); ++n)
             {
-				beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
-				new_factors = factors;
-				new_factors[StdRegions::eFactorLambda] += beta*beta;
-
+                beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
+                new_factors = factors;
+                new_factors[StdRegions::eFactorLambda] += beta*beta;
+                
                 m_planes[n]->HelmSolve(fce + cnt,
                                        e_out = outarray + cnt1,
                                        flags, new_factors, varcoeff, dirForcing);
                 
                 cnt  += m_planes[n]->GetTotPoints();
-                if(flags.isSet(eUseContCoeff))
-                {
-                    cnt1 += m_planes[n]->GetContNcoeffs();
-                }
-                else
-                {
-                    cnt1 += m_planes[n]->GetNcoeffs();
-                }
+                cnt1 += m_planes[n]->GetNcoeffs();
             }
         }
     } // end of namespace

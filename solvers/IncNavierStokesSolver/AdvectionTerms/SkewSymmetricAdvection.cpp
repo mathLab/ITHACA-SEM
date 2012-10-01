@@ -81,41 +81,69 @@ namespace Nektar
         // ToDo: here we should add a check that V has right dimension
 	
         int nPointsTot = pFields[0]->GetNpoints();
-        Array<OneD, NekDouble> gradV0,gradV1,gradV2, gradVV0, gradVV1, gradVV2, Up;
+        Array<OneD, NekDouble> gradV0,gradV1,gradV2, tmp, Up;
 		
         gradV0   = Array<OneD, NekDouble> (nPointsTot);
-		gradVV0 = Array<OneD, NekDouble> (nPointsTot);
+		tmp = Array<OneD, NekDouble> (nPointsTot);
+		
+		/*//////////////////////////////////////////////////////
+		//FILE *pFile0;
+		if(pVelocityComponent==0)
+		{
+			pFile0= fopen("u_U_V_W.txt", "w");
+		}
+		else if(pVelocityComponent==1)
+		{
+			pFile0= fopen("v_U_V_W.txt", "w");
+		}
+		else 
+		{
+			pFile0= fopen("w_U_V_W.txt", "w");
+		}
+		for(int k=0; k < nPointsTot ; ++k)
+		{
+			fprintf(pFile0, "%i  %10.20lf\t %10.20lf\t %10.20lf\t %10.20lf\t  \n ", k, pU[k], pV[0][k], pV[1][k], pV[2][k]);
+		}
+			
+		fclose(pFile0);
+		
+		Array<OneD, NekDouble> dudx,dudy,dudz,duudx,duvdy,duwdz;
+		
+		dudx = Array<OneD, NekDouble> (nPointsTot);
+		dudy = Array<OneD, NekDouble> (nPointsTot);
+		dudz = Array<OneD, NekDouble> (nPointsTot);
+		duudx = Array<OneD, NekDouble> (nPointsTot);
+		duvdy = Array<OneD, NekDouble> (nPointsTot);
+		duwdz = Array<OneD, NekDouble> (nPointsTot);
+		//////////////////////////////////////////////////////*/
 		
         // Evaluate V\cdot Grad(u)
         switch(ndim)
         {
         case 1:
-            pFields[0]->PhysDeriv(pU,gradV0);
-            Vmath::Vmul(nPointsTot,gradV0,1,pV[0],1,pOutarray,1);
+			pFields[0]->PhysDeriv(pU,gradV0);
+			Vmath::Vmul(nPointsTot,gradV0,1,pV[0],1,pOutarray,1);
 			Vmath::Vmul(nPointsTot,pU,1,pV[0],1,gradV0,1);
-			pFields[0]->PhysDeriv(gradV0,gradVV0);
-			Vmath::Vadd(nPointsTot,gradVV0,1,pOutarray,1,pOutarray,1);
+			pFields[0]->PhysDeriv(gradV0,tmp);
+			Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
 			Vmath::Smul(nPointsTot,0.5,pOutarray,1,pOutarray,1);
             break;
         case 2:
-            gradV1 = Array<OneD, NekDouble> (nPointsTot);
-			gradVV1 = Array<OneD, NekDouble> (nPointsTot);
-            pFields[0]->PhysDeriv(pU,gradV0,gradV1);
-            Vmath::Vmul (nPointsTot,gradV0,1,pV[0],1,pOutarray,1);
-            Vmath::Vvtvp(nPointsTot,gradV1,1,pV[1],1,pOutarray,1,pOutarray,1);
+			gradV1 = Array<OneD, NekDouble> (nPointsTot);
+			pFields[0]->PhysDeriv(pU,gradV0,gradV1);
+			Vmath::Vmul (nPointsTot,gradV0,1,pV[0],1,pOutarray,1);
+			Vmath::Vvtvp(nPointsTot,gradV1,1,pV[1],1,pOutarray,1,pOutarray,1);
 			Vmath::Vmul(nPointsTot,pU,1,pV[0],1,gradV0,1);
 			Vmath::Vmul(nPointsTot,pU,1,pV[1],1,gradV1,1);
-			pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,gradVV0);
-			pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,gradVV1);
-			Vmath::Vadd(nPointsTot,gradVV0,1,pOutarray,1,pOutarray,1);
-			Vmath::Vadd(nPointsTot,gradVV1,1,pOutarray,1,pOutarray,1);
+			pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,tmp);
+			Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
+			pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,tmp);
+			Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
 			Vmath::Smul(nPointsTot,0.5,pOutarray,1,pOutarray,1);
             break;	 
         case 3:
 			gradV1 = Array<OneD, NekDouble> (nPointsTot);
 			gradV2 = Array<OneD, NekDouble> (nPointsTot);
-			gradVV1 = Array<OneD, NekDouble> (nPointsTot);
-			gradVV2 = Array<OneD, NekDouble> (nPointsTot);
 			
 			pFields[0]->PhysDeriv(pU,gradV0,gradV1,gradV2);
 			
@@ -131,12 +159,12 @@ namespace Nektar
 				pFields[0]->DealiasedProd(pU,pV[0],gradV0,m_CoeffState);
 				pFields[0]->DealiasedProd(pU,pV[1],gradV1,m_CoeffState);
 				pFields[0]->DealiasedProd(pU,pV[2],gradV2,m_CoeffState);
-				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,gradVV0);
-				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,gradVV1);
-				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,gradVV2);
-				Vmath::Vadd(nPointsTot,gradVV0,1,pOutarray,1,pOutarray,1);
-				Vmath::Vadd(nPointsTot,gradVV1,1,pOutarray,1,pOutarray,1);
-				Vmath::Vadd(nPointsTot,gradVV2,1,pOutarray,1,pOutarray,1);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,tmp);
+				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,tmp);
+				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,tmp);
+				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
 				Vmath::Smul(nPointsTot,0.5,pOutarray,1,pOutarray,1);
 			}
 			else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == false)
@@ -144,14 +172,23 @@ namespace Nektar
 				Up = Array<OneD, NekDouble> (nPointsTot);
 				//vector reused to avoid even more memory requirements
 				//names may be misleading
-				pFields[0]->HomogeneousBwdTrans(gradV0,pOutarray);
-				Vmath::Vmul(nPointsTot,pOutarray,1,pV[0],1,pOutarray,1); //u*du/dx
+				pFields[0]->HomogeneousBwdTrans(gradV0,tmp);
 				
-				pFields[0]->HomogeneousBwdTrans(gradV1,gradV0);
-				Vmath::Vvtvp(nPointsTot,gradV0,1,pV[1],1,pOutarray,1,pOutarray,1);//v*du/dy
+				//Vmath::Vcopy(nPointsTot,tmp,1,dudx,1);
 				
-				pFields[0]->HomogeneousBwdTrans(gradV2,gradV1);
-				Vmath::Vvtvp(nPointsTot,gradV1,1,pV[2],1,pOutarray,1,pOutarray,1);//w*du/dz
+				Vmath::Vmul(nPointsTot,tmp,1,pV[0],1,pOutarray,1); // + u*du/dx
+				
+				pFields[0]->HomogeneousBwdTrans(gradV1,tmp);
+				
+				//Vmath::Vcopy(nPointsTot,tmp,1,dudy,1);
+				
+				Vmath::Vvtvp(nPointsTot,tmp,1,pV[1],1,pOutarray,1,pOutarray,1);// + v*du/dy
+				
+				pFields[0]->HomogeneousBwdTrans(gradV2,tmp);
+				
+				//Vmath::Vcopy(nPointsTot,tmp,1,dudz,1);
+				
+				Vmath::Vvtvp(nPointsTot,tmp,1,pV[2],1,pOutarray,1,pOutarray,1);// + w*du/dz
 				
 				pFields[0]->HomogeneousBwdTrans(pU,Up);
 				
@@ -160,17 +197,44 @@ namespace Nektar
 				Vmath::Vmul(nPointsTot,Up,1,pV[2],1,gradV2,1);
 				
 				pFields[0]->SetWaveSpace(false);
-				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,gradVV0);//duu/dx
-				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,gradVV1);//duv/dy
-				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,gradVV2);//duw/dz
+				
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,tmp);//duu/dx
+				//Vmath::Vcopy(nPointsTot,tmp,1,duudx,1);
+				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
+				
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,tmp);//duv/dy
+				//Vmath::Vcopy(nPointsTot,tmp,1,duvdy,1);
+				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
+				
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,tmp);//duw/dz
+				//Vmath::Vcopy(nPointsTot,tmp,1,duwdz,1);
+				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
 				pFields[0]->SetWaveSpace(true);
 				
-				Vmath::Vadd(nPointsTot,gradVV0,1,pOutarray,1,pOutarray,1);
-				Vmath::Vadd(nPointsTot,gradVV1,1,pOutarray,1,pOutarray,1);
-				Vmath::Vadd(nPointsTot,gradVV2,1,pOutarray,1,pOutarray,1);
-				Vmath::Smul(nPointsTot,0.5,pOutarray,1,gradVV0,1);
+				Vmath::Smul(nPointsTot,0.5,pOutarray,1,tmp,1);
 				
-				pFields[0]->HomogeneousFwdTrans(gradVV0,pOutarray);
+				pFields[0]->HomogeneousFwdTrans(tmp,pOutarray);
+				
+				/*//////////////////////////////////////////////////////
+				FILE *pFile1;
+				if(pVelocityComponent==0)
+				{
+					pFile1= fopen("Nu_terms.txt", "w");
+				}
+				else if(pVelocityComponent==1)
+				{
+					pFile1= fopen("Nv_terms.txt", "w");
+				}
+				else 
+				{
+					pFile1= fopen("Nw_terms.txt", "w");
+				}
+				for(int k=0; k < nPointsTot ; ++k)
+				{
+					fprintf(pFile1, "%i  %10.20lf\t %10.20lf\t %10.20lf\t %10.20lf\t %10.20lf\t %10.20lf\t  \n ", k, dudx[k], dudy[k], dudz[k], duudx[k], duvdy[k], duwdz[k]);
+				}
+				fclose(pFile1);
+				//////////////////////////////////////////////////////*/
 			}
 			else if(pFields[0]->GetWaveSpace() == false && m_dealiasing == false) 
 			{
@@ -180,12 +244,12 @@ namespace Nektar
 				Vmath::Vmul(nPointsTot,pU,1,pV[0],1,gradV0,1);
 				Vmath::Vmul(nPointsTot,pU,1,pV[1],1,gradV1,1);
 				Vmath::Vmul(nPointsTot,pU,1,pV[2],1,gradV2,1);
-				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,gradVV0);
-				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,gradVV1);
-				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,gradVV2);
-				Vmath::Vadd(nPointsTot,gradVV0,1,pOutarray,1,pOutarray,1);
-				Vmath::Vadd(nPointsTot,gradVV1,1,pOutarray,1,pOutarray,1);
-				Vmath::Vadd(nPointsTot,gradVV2,1,pOutarray,1,pOutarray,1);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,tmp);
+				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,tmp);
+				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
+				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,tmp);
+				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
 				Vmath::Smul(nPointsTot,0.5,pOutarray,1,pOutarray,1);
 			}
 			else 

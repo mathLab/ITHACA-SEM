@@ -163,16 +163,27 @@ namespace Nektar
             {
                 HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
             }
+			
+			bool smode = false;
+			
+			if (m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe ||
+				m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm )
+			{
+				smode = true;
+			}
             
             for(n = 0; n < m_planes.num_elements(); ++n)
             {
-                beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
-                new_factors = factors;
-                new_factors[StdRegions::eFactorLambda] += beta*beta;
+				if(n != 1 || m_transposition->GetK(n) != 0 || smode)
+				{
+					beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
+					new_factors = factors;
+					new_factors[StdRegions::eFactorLambda] += beta*beta;
                 
-                m_planes[n]->HelmSolve(fce + cnt,
+					m_planes[n]->HelmSolve(fce + cnt,
                                        e_out = outarray + cnt1,
                                        flags, new_factors, varcoeff, dirForcing);
+				}
                 
                 cnt  += m_planes[n]->GetTotPoints();
                 cnt1 += m_planes[n]->GetNcoeffs();

@@ -133,7 +133,6 @@ namespace Nektar
         int VelDim           = vel_loc.num_elements();        
         int nqtot            = pFields[0]->GetTotPoints();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
-        Array<OneD, NekDouble > Deriv;
 	
         ASSERTL1(nConvectiveFields == pInarray.num_elements(),"Number of convective fields and Inarray are not compatible");
         

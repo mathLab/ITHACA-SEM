@@ -39,8 +39,8 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Define Expansion
     int bc_val = 0;
-    int nplanes = 8;
-    NekDouble lz     = vSession->GetParameter("Lz");
+    int nplanes      = vSession->GetParameter("HomModesZ");
+    NekDouble lz     = vSession->GetParameter("LZ");
 	bool useFFT = false;
 	bool deal = false;
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);

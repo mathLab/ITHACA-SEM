@@ -708,6 +708,7 @@ namespace Nektar
             int i,j;
             int bndcnt=0;
             Array<OneD, NekDouble> gamma(contNcoeffs, 0.0);
+			
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eDirichlet)
@@ -724,6 +725,7 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
+									
             m_locToGloMap->UniversalAssemble(gamma);
 
             // Add weak boundary conditions to forcing

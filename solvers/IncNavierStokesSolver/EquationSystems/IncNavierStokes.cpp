@@ -191,6 +191,17 @@ namespace Nektar
         int phystot  = m_fields[0]->GetTotPoints();
         int n_fields = m_fields.num_elements();
         static int nchk = 0;
+		
+		/*//////////////////////////////////////////////////////
+		FILE *pFile0;
+		pFile0= fopen("U_t0_phys.txt", "w");
+		
+		for(int i=0; i < phystot ; ++i)
+		{
+			fprintf(pFile0, "%i  %10.20lf\t  \n ", i, (m_fields[0]->GetPhys())[i]); 
+		}
+		fclose(pFile0);
+		//////////////////////////////////////////////////////*/
 		        
         if(m_HomogeneousType == eHomogeneous1D)
         {
@@ -208,6 +219,17 @@ namespace Nektar
         {
             fields[i]  = m_fields[i]->UpdatePhys();
         }
+		
+		/*//////////////////////////////////////////////////////
+		FILE *pFile1;
+		pFile1= fopen("U_t0_wave.txt", "w");
+		
+		for(int i=0; i < phystot ; ++i)
+		{
+			fprintf(pFile1, "%i  %10.20lf\t  \n ", i, fields[0][i]); 
+		}
+		fclose(pFile1);
+		//////////////////////////////////////////////////////*/
 		
         // Initialise NS solver which is set up to use a GLM method
         // with calls to EvaluateAdvection_SetPressureBCs and

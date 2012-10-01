@@ -773,7 +773,7 @@ namespace Nektar
                 //along y
                 for(int i = 0; i < m_ny; i++)
                 {
-                    beta = sign*2*M_PI*(i/2)/m_lhom_y;
+                    beta = -sign*2*M_PI*(i/2)/m_lhom_y;
                     
                     for(int j = 0; j < m_nz; j++)
                     {
@@ -787,7 +787,7 @@ namespace Nektar
                 sign = -1.0;
                 for(int i = 0; i < m_nz; i++)
                 {
-                    beta = sign*2*M_PI*(i/2)/m_lhom_z;
+                    beta = -sign*2*M_PI*(i/2)/m_lhom_z;
                     Vmath::Smul(m_ny*n_points_line,beta,tmp1 = temparray + i*m_ny*n_points_line,1,tmp2 = temparray2 + (i-int(sign))*m_ny*n_points_line,1);
                     sign = -1.0*sign;
                 }
@@ -872,7 +872,7 @@ namespace Nektar
                         //along y
                         for(int i = 0; i < m_ny; i++)
                         {
-                            beta = sign*2*M_PI*(i/2)/m_lhom_y;
+                            beta = -sign*2*M_PI*(i/2)/m_lhom_y;
                             
                             for(int j = 0; j < m_nz; j++)
                             {
@@ -894,7 +894,7 @@ namespace Nektar
                         //along z
                         for(int i = 0; i < m_nz; i++)
                         {
-                            beta = sign*2*M_PI*(i/2)/m_lhom_z;
+                            beta = -sign*2*M_PI*(i/2)/m_lhom_z;
                             Vmath::Smul(m_ny*n_points_line,beta,tmp1 = temparray + i*m_ny*n_points_line,1,tmp2 = temparray2 + (i-int(sign))*m_ny*n_points_line,1);
                             sign = -1.0*sign;
                         }

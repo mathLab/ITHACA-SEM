@@ -472,11 +472,12 @@ namespace Nektar
                                                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                                     const NekDouble time)
     {
-		int nqtot      = m_fields[0]->GetTotPoints();
+		int nqtot        = m_fields[0]->GetTotPoints();
+		//int ncoeffs      = m_fields[0]->GetNcoeffs();
 		
         // evaluate convection terms
-        m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);  
-		        
+        m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
+		
 		//add the force
         if(m_session->DefinesFunction("BodyForce"))
         {
@@ -493,6 +494,17 @@ namespace Nektar
                 Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
             }
         }
+		
+		/*///////////////////////////////////
+		FILE *pFile0;
+		pFile0= fopen("NF.txt", "w");
+		
+		for(int k=0; k < nqtot ; ++k)
+		{
+			fprintf(pFile0, "%i  %10.20lf\t %10.20lf\t %10.20lf\t  \n ", k,outarray[0][k],outarray[1][k],outarray[2][k]);
+		}
+		fclose(pFile0);
+		/////////////////////////////////////*/
         
         if(m_HBCnumber > 0)
         {
@@ -524,9 +536,32 @@ namespace Nektar
         {
             SubStepSetPressureBCs(inarray,aii_Dt);
         }
-
+		
+		/*///////////////////////////////////
+		FILE *pFile0;
+		pFile0= fopen("Uh.txt", "w");
+		
+		for(int k=0; k < phystot ; ++k)
+		{
+			fprintf(pFile0, "%i  %10.20lf\t %10.20lf\t %10.20lf\t  \n ", k, inarray[0][k], inarray[1][k], inarray[2][k]);
+		}
+		fclose(pFile0);
+		/////////////////////////////////////*/
+		
         // Pressure Forcing = Divergence Velocity; 
         SetUpPressureForcing(inarray, F, aii_Dt);
+		
+		/*///////////////////////////////////
+		FILE *pFile1;
+		pFile1= fopen("PressureForcing.txt", "w");
+		
+		for(int k=0; k < phystot ; ++k)
+		{
+			fprintf(pFile1, "%i  %10.20lf\t %10.20lf\t \n ", k, F[0][k],m_pressure->GetCoeffs()[k]);
+		}
+		fclose(pFile1);
+		/////////////////////////////////////*/
+		
 		
         // Solver Pressure Poisson Equation 
 #ifdef UseContCoeffs
@@ -540,6 +575,17 @@ namespace Nektar
 		
         // Viscous Term forcing
         SetUpViscousForcing(inarray, F, aii_Dt);
+		
+		/*///////////////////////////////////
+		FILE *pFile2;
+		pFile2= fopen("PFV.txt", "w");
+		
+		for(int k=0; k < phystot ; ++k)
+		{
+			fprintf(pFile2, "%i  %10.20lf\t %10.20lf\t %10.20lf\t %10.20lf\t  \n ", k,m_pressure->GetPhys()[k], F[0][k],F[1][k],F[2][k]);
+		}
+		fclose(pFile2);
+		/////////////////////////////////////*/
     
         factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
 
@@ -802,6 +848,57 @@ namespace Nektar
             
             if(m_HomogeneousType == eHomogeneous1D)
             {
+				/*Array<OneD, NekDouble> gradA(phystot);
+				Array<OneD, NekDouble> gradB(phystot);
+				
+				Array<OneD, Array<OneD, NekDouble> > velocity(m_nConvectiveFields);
+				Array<OneD, Array<OneD, NekDouble> > Q(m_nConvectiveFields);
+				
+				for(int n = 0; n < m_nConvectiveFields; ++n)
+				{
+					velocity[n] = Array<OneD, NekDouble> (phystot);
+					Q[n] = Array<OneD, NekDouble> (phystot);
+					m_pressure->HomogeneousBwdTrans(fields[n],velocity[n]);
+				}
+				
+				m_pressure->SetWaveSpace(false);
+				
+				//Q = curl V
+				m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[1],velocity[2],gradA);
+				m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[2],velocity[1],gradB);
+				Vmath::Vsub(phystot,gradA,1,gradB,1,Q[0],1);
+				
+				m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[2],velocity[0],gradA);
+				m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[0],velocity[2],gradB);
+				Vmath::Vsub(phystot,gradA,1,gradB,1,Q[1],1);
+				
+				m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[0],velocity[1],gradA);
+				m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[1],velocity[0],gradB);
+				Vmath::Vsub(phystot,gradA,1,gradB,1,Q[2],1);
+				
+				// curl Q
+				m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[1],Q[2],gradA);
+				m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[2],Q[1],gradB);
+				Vmath::Vsub(phystot,gradA,1,gradB,1,Q[1],1);
+				
+				m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[2],Q[0],gradA);
+				m_pressure->PhysDeriv(MultiRegions::DirCartesianMap[0],Q[2],gradB);
+			    Vmath::Vsub(phystot,gradA,1,gradB,1,Q[0],1);
+				
+				m_pressure->HomogeneousFwdTrans(Q[1],gradA);
+				m_pressure->HomogeneousFwdTrans(Q[0],gradB);
+				
+				m_pressure->HomogeneousBwdTrans(gradA,Q[1]);
+				m_pressure->HomogeneousBwdTrans(gradB,Q[0]);
+				
+				m_pressure->HomogeneousFwdTrans(Q[1],gradA);
+				m_pressure->HomogeneousFwdTrans(Q[0],gradB);
+
+				
+				m_pressure->SetWaveSpace(true);*/
+				
+				
+				
                 Array<OneD, NekDouble> Wz(maxpts);
                 Array<OneD, NekDouble> Vxx(maxpts);
                 Array<OneD, NekDouble> Vzz(maxpts);
@@ -813,31 +910,77 @@ namespace Nektar
                 Array<OneD, NekDouble> Wyz(maxpts);
 		
                 StdRegions::StdExpansion1DSharedPtr Pbc;
+				
+				//cout <<"====================================================="<<endl;
+				//cout <<"====================================================="<<endl;
+				//cout <<"====================================================="<<endl;
+				
+				//int n_points_on_a_edge = sqrt(m_HBC[1][0]);
+				//Array<OneD, NekDouble> tmp_Qx(n_points_on_a_edge);
+                //Array<OneD, NekDouble> tmp_Qy(n_points_on_a_edge);
+				//Array<OneD, NekDouble> tmp(n_points_on_a_edge);
 		
                 for(int j = 0 ; j < m_HBCnumber ; j++)
                 {
+					//cout <<"====================================================="<<endl;
+					//cout << "Element ID = " << m_HBC[0][j] << "\tedge = " << m_HBC[4][j] << endl;
+					Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[m_HBC[5][j]]->GetExp(m_HBC[3][j]));
+					
+					// Picking up the element where the HOPBc is located
                     m_elmt = m_fields[0]->GetExp(m_HBC[0][j]);
+					// Using the physical offset to get the velocity (W is taken on the coniugated plane)
                     U = fields[m_velocity[0]] + m_HBC[2][j];
                     V = fields[m_velocity[1]] + m_HBC[2][j];
                     W = fields[m_velocity[2]] + m_HBC[7][j];
                     
+					// Derivatives to build up the curl curl of the velocity
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Vx,tmp);
+					//cout <<"Vx  = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
+					
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Uy,tmp);
+					//cout <<"Uy  = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
+					
                     Vmath::Smul(m_HBC[1][j],m_wavenumber[j],W,1,Wz,1);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Wz,tmp);
+					//cout <<"Wz  = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
 				
                     // x-components of vorticity curl
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vx,Vxy);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Vxy,tmp);
+					//cout <<"Vxy = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
+					
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Uy,Uyy);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Uyy,tmp);
+					//cout <<"Uyy = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
+					
                     Vmath::Smul(m_HBC[1][j],m_beta[j],U,1,Uzz,1);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Uzz,tmp);
+					//cout <<"Uzz = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
+					
                     //x-component coming from the other plane
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Wz,Wxz);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Wxz,tmp);
+					//cout <<"Wxz = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
                     
 				    // y-components of vorticity curl
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vx,Vxx);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Vxx,tmp);
+					//cout <<"Vxx = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
+					
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Uy,Uxy);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Uxy,tmp);
+					//cout <<"Uxy = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
+					
                     Vmath::Smul(m_HBC[1][j],m_beta[j],V,1,Vzz,1);
-                    //y-component coming from the other plane
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Vzz,tmp);
+					//cout <<"Vzz = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
+                    
+					//y-component coming from the other plane
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Wz,Wyz);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Wyz,tmp);
+					//cout <<"Wyz = "; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp[k];} cout<< endl;
                     
                     // buinding up the curl of V adding the components
                     Vmath::Vsub(m_HBC[1][j],Vxy,1,Uyy,1,Qx,1);
@@ -847,7 +990,18 @@ namespace Nektar
                     Vmath::Vsub(m_HBC[1][j],Wyz,1,Vzz,1,Qy,1);
                     Vmath::Vsub(m_HBC[1][j],Qy,1,Vxx,1,Qy,1);
                     Vmath::Vadd(m_HBC[1][j],Qy,1,Uxy,1,Qy,1);
+					
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Qx,tmp_Qx);
+					//m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Qy,tmp_Qy);
+					
+					//cout << "mode = " << m_HBC[8][j] << "\tX: " << "CurlCurl ="; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp_Qx[k];} cout<< endl;
+					//cout << "mode = " << m_HBC[8][j] << "\tY: " << "CurlCurl ="; for(int k=0;k<n_points_on_a_edge;k++){cout <<"\t"<< tmp_Qy[k];} cout<< endl;
                     
+					// gettin the curl curl V
+					
+					//U = gradA + m_HBC[2][j];
+					//V = gradB + m_HBC[2][j];
+					
                     // getting the advective term
                     Nu = N[0] + m_HBC[2][j];
                     Nv = N[1] + m_HBC[2][j];
@@ -857,8 +1011,10 @@ namespace Nektar
                         // Evaluate [- kinvis Curlx Curl V]
                         // x-component (stored in Qx)
                         Vmath::Smul(m_HBC[1][j],-m_kinvis,Qx,1,Qx,1);
+						//Vmath::Smul(m_HBC[1][j],-m_kinvis,U,1,Qx,1);
                         // y-component (stored in Qy)
                         Vmath::Smul(m_HBC[1][j],-m_kinvis,Qy,1,Qy,1);
+						 //Vmath::Smul(m_HBC[1][j],-m_kinvis,V,1,Qy,1);
                         // z-component (stored in Qz) not required for this approach
                         // the third component of the normal vector is always zero
                     }
@@ -867,12 +1023,14 @@ namespace Nektar
                         // Evaluate [N - kinvis Curlx Curl V]
                         // x-component (stored in Qx)
                         Vmath::Svtvp(m_HBC[1][j],-m_kinvis,Qx,1,Nu,1,Qx,1);
+						//Vmath::Svtvp(m_HBC[1][j],-m_kinvis,U,1,Nu,1,Qx,1);
                         // y-component (stored in Qy)
                         Vmath::Svtvp(m_HBC[1][j],-m_kinvis,Qy,1,Nv,1,Qy,1);
+						//Vmath::Svtvp(m_HBC[1][j],-m_kinvis,V,1,Nv,1,Qy,1);
                         // z-component (stored in Qz) not required for this approach
                         // the third component of the normal vector is always zero
                     }
-                    Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[m_HBC[5][j]]->GetExp(m_HBC[3][j]));
+                    //Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[m_HBC[5][j]]->GetExp(m_HBC[3][j]));
                     
 				    // Get edge values and put into Uy, Vx
                     m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Qy,Uy);
@@ -882,6 +1040,7 @@ namespace Nektar
                     Pvals = PBndExp[m_HBC[5][j]]->UpdateCoeffs()+PBndExp[m_HBC[5][j]]->GetCoeff_Offset(m_HBC[3][j]);
                     
                     Pbc->NormVectorIProductWRTBase(Vx,Uy,Pvals);
+					//cout <<"====================================================="<<endl;
                 }
             }
             else if(m_HomogeneousType == eHomogeneous2D)
@@ -1353,8 +1512,9 @@ namespace Nektar
 			// m_HBC[5][j] contains the pressure bc ID
 			// m_HBC[6][j] contains the elment ids of the assocuated plane k_c (ex. k=0 k_c=1; k=1 k_c=0; k=3 k_c=4)
 			// m_HBC[7][j] contains the associated elments physical offset (k and k_c are the real and the complex plane)
+			// m_HBC[8][j] mode
 			
-			int num_data = 8;
+			int num_data = 9;
 			
 			Array<OneD, unsigned int> planes;
 			
@@ -1376,7 +1536,7 @@ namespace Nektar
 			int exp_size, exp_size_per_plane;
 			int j=0;
 			int K;
-			NekDouble sign = 1.0;
+			NekDouble sign = -1.0;
 			int cnt = 0;
 			for(int k = 0; k < num_planes; k++)
 			{
@@ -1395,11 +1555,16 @@ namespace Nektar
 							m_HBC[2][j] = m_fields[0]->GetPhys_Offset(m_HBC[0][j]);  
 							m_HBC[3][j] = i+k*exp_size_per_plane;                    
 							m_HBC[4][j] = m_pressureBCtoTraceID[cnt];                
-							m_HBC[5][j] = n;                                         
+							m_HBC[5][j] = n;
+							m_HBC[8][j] = planes[k];
 							
-							if(m_SingleMode || m_HalfMode || m_MultipleModes)
+							if(m_SingleMode)
 							{
-								//m_wavenumber[j] = 2*M_PI*sign/m_LhomZ;
+								m_wavenumber[j] = -2*M_PI/m_LhomZ;       
+								m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
+							}
+							else if(m_HalfMode || m_MultipleModes)
+							{
 								m_wavenumber[j] = 2*M_PI/m_LhomZ;       
 								m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
 							}

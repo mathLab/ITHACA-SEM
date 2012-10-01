@@ -151,7 +151,7 @@ L 2 error (variable u) : 1.27846e-15
 L inf error (variable u) : 6.75498e-15
 L 2 error (variable v) : 1.73027e-15
 L inf error (variable v) : 7.82707e-15
-L 2 error (variable w) : 1.15463e-05
+L 2 error (variable w) : 8.16448e-06
 L inf error (variable w) : 1.11177e-05
 ----------------------------------------
 Test_2DFlow_lineforcing_bcfromfile.xml
@@ -207,7 +207,7 @@ L 2 error (variable v) : 1.08091e-05
 L inf error (variable v) : 3.95269e-05
 L 2 error (variable w) : 1.90154e-05
 L inf error (variable w) : 3.94908e-05
-L 2 error (variable p) : 8.55847e-05
+L 2 error (variable p) : 6.05175e-05
 L inf error (variable p) : 0.000513632
 ----------------------------------------
 Test_ChanFlow_m3_SKS.xml
@@ -225,7 +225,7 @@ L 2 error (variable v) : 1.10749e-05
 L inf error (variable v) : 3.96307e-05
 L 2 error (variable w) : 1.92288e-05
 L inf error (variable w) : 4.03102e-05
-L 2 error (variable p) : 8.91694e-05
+L 2 error (variable p) : 6.30523e-05
 L inf error (variable p) : 0.000565207
 ----------------------------------------
 Test_Hex_channel_m3.xml
@@ -265,7 +265,7 @@ L 2 error (variable v) : 1.03201e-10
 L inf error (variable v) : 1.55026e-09
 L 2 error (variable w) : 7.74576e-09
 L inf error (variable w) : 2.59194e-08
-L 2 error (variable p) : 8.18866e-08
+L 2 error (variable p) : 9.34515e-08
 L inf error (variable p) : 3.42898e-07
 ----------------------------------------
 Test_Prism_channel_m6.xml

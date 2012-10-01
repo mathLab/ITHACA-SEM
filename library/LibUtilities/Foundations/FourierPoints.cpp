@@ -76,13 +76,13 @@ namespace Nektar
             unsigned int npts = m_pointsKey.GetNumPoints();
             if(npts==1)
             {
-                m_weights[0] = 2.0; //midpoint rule
+                m_weights[0] = 1.0; //midpoint rule
             }
             else
             {
                 for(unsigned int i=0; i<npts; ++i)
                 {
-                    m_weights[i] =  2.0/(double)npts;
+                    m_weights[i] =  1.0/(double)npts;
                 }
             }
         }

@@ -50,10 +50,10 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    lz      = vSession->GetParameter("Lz");
+	int nplanes      = vSession->GetParameter("HomModesZ");
+    lz     = vSession->GetParameter("LZ");
 	bool useFFT = false;
 	bool deal = false;
-    int nplanes = 8;
     const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey Bkey(LibUtilities::eFourier,nplanes,Pkey);
     Exp = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>::

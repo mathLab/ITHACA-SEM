@@ -114,18 +114,7 @@ namespace Nektar
 			}
 			
 			Vmath::Vmul(m_N, m_wsp, 1, m_FFTW_w, 1, coef, 1);
-			
-			//if(m_N>2)
-			//{
-				//int sign = 1;
-				//for(int i=2;i<(m_N-1);i=i+2)
-				//{
-				//	
-				//	coef[i]=coef[i]*sign;
-				//	sign=sign*(-1);
-				//	coef[i+1]=coef[i+1]*sign;
-				//}
-			//}
+
 			return;
 		}
 		
@@ -136,19 +125,7 @@ namespace Nektar
 			int halfN = m_N/2;
 			
             Vmath::Vmul(m_N, coef, 1, m_FFTW_w_inv, 1, coef, 1);
-			
-			//if(m_N>2)
-			//{
-			//	int sign = -1;
-			//	for(int i=2;i<(m_N-1);i=i+2)
-			//	{
-			//		
-			//		coef[i]=coef[i]*sign;
-			//		sign=sign*(-1);
-			//		coef[i+1]=coef[i+1]*sign;
-			//	}
-			//}
-			
+						
 			m_wsp[halfN]=coef[1];
 			
 			Vmath::Vcopy(halfN, coef, 2, m_wsp, 1);

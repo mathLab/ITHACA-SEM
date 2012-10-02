@@ -86,37 +86,6 @@ namespace Nektar
         gradV0   = Array<OneD, NekDouble> (nPointsTot);
 		tmp = Array<OneD, NekDouble> (nPointsTot);
 		
-		/*//////////////////////////////////////////////////////
-		//FILE *pFile0;
-		if(pVelocityComponent==0)
-		{
-			pFile0= fopen("u_U_V_W.txt", "w");
-		}
-		else if(pVelocityComponent==1)
-		{
-			pFile0= fopen("v_U_V_W.txt", "w");
-		}
-		else 
-		{
-			pFile0= fopen("w_U_V_W.txt", "w");
-		}
-		for(int k=0; k < nPointsTot ; ++k)
-		{
-			fprintf(pFile0, "%i  %10.20lf\t %10.20lf\t %10.20lf\t %10.20lf\t  \n ", k, pU[k], pV[0][k], pV[1][k], pV[2][k]);
-		}
-			
-		fclose(pFile0);
-		
-		Array<OneD, NekDouble> dudx,dudy,dudz,duudx,duvdy,duwdz;
-		
-		dudx = Array<OneD, NekDouble> (nPointsTot);
-		dudy = Array<OneD, NekDouble> (nPointsTot);
-		dudz = Array<OneD, NekDouble> (nPointsTot);
-		duudx = Array<OneD, NekDouble> (nPointsTot);
-		duvdy = Array<OneD, NekDouble> (nPointsTot);
-		duwdz = Array<OneD, NekDouble> (nPointsTot);
-		//////////////////////////////////////////////////////*/
-		
         // Evaluate V\cdot Grad(u)
         switch(ndim)
         {
@@ -173,68 +142,28 @@ namespace Nektar
 				//vector reused to avoid even more memory requirements
 				//names may be misleading
 				pFields[0]->HomogeneousBwdTrans(gradV0,tmp);
-				
-				//Vmath::Vcopy(nPointsTot,tmp,1,dudx,1);
-				
 				Vmath::Vmul(nPointsTot,tmp,1,pV[0],1,pOutarray,1); // + u*du/dx
-				
 				pFields[0]->HomogeneousBwdTrans(gradV1,tmp);
-				
-				//Vmath::Vcopy(nPointsTot,tmp,1,dudy,1);
-				
 				Vmath::Vvtvp(nPointsTot,tmp,1,pV[1],1,pOutarray,1,pOutarray,1);// + v*du/dy
-				
 				pFields[0]->HomogeneousBwdTrans(gradV2,tmp);
-				
-				//Vmath::Vcopy(nPointsTot,tmp,1,dudz,1);
-				
 				Vmath::Vvtvp(nPointsTot,tmp,1,pV[2],1,pOutarray,1,pOutarray,1);// + w*du/dz
 				
 				pFields[0]->HomogeneousBwdTrans(pU,Up);
-				
 				Vmath::Vmul(nPointsTot,Up,1,pV[0],1,gradV0,1);
 				Vmath::Vmul(nPointsTot,Up,1,pV[1],1,gradV1,1);
 				Vmath::Vmul(nPointsTot,Up,1,pV[2],1,gradV2,1);
 				
 				pFields[0]->SetWaveSpace(false);
-				
 				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[0],gradV0,tmp);//duu/dx
-				//Vmath::Vcopy(nPointsTot,tmp,1,duudx,1);
 				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
-				
 				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[1],gradV1,tmp);//duv/dy
-				//Vmath::Vcopy(nPointsTot,tmp,1,duvdy,1);
 				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
-				
 				pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],gradV2,tmp);//duw/dz
-				//Vmath::Vcopy(nPointsTot,tmp,1,duwdz,1);
 				Vmath::Vadd(nPointsTot,tmp,1,pOutarray,1,pOutarray,1);
 				pFields[0]->SetWaveSpace(true);
 				
 				Vmath::Smul(nPointsTot,0.5,pOutarray,1,tmp,1);
-				
 				pFields[0]->HomogeneousFwdTrans(tmp,pOutarray);
-				
-				/*//////////////////////////////////////////////////////
-				FILE *pFile1;
-				if(pVelocityComponent==0)
-				{
-					pFile1= fopen("Nu_terms.txt", "w");
-				}
-				else if(pVelocityComponent==1)
-				{
-					pFile1= fopen("Nv_terms.txt", "w");
-				}
-				else 
-				{
-					pFile1= fopen("Nw_terms.txt", "w");
-				}
-				for(int k=0; k < nPointsTot ; ++k)
-				{
-					fprintf(pFile1, "%i  %10.20lf\t %10.20lf\t %10.20lf\t %10.20lf\t %10.20lf\t %10.20lf\t  \n ", k, dudx[k], dudy[k], dudz[k], duudx[k], duvdy[k], duwdz[k]);
-				}
-				fclose(pFile1);
-				//////////////////////////////////////////////////////*/
 			}
 			else if(pFields[0]->GetWaveSpace() == false && m_dealiasing == false) 
 			{

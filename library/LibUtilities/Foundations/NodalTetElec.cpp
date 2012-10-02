@@ -32,7 +32,7 @@
 // Description: 3D Nodal Tet Electrostatic Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <iostream>
 #include <algorithm>
 #include <LibUtilities/Foundations/Points.h>

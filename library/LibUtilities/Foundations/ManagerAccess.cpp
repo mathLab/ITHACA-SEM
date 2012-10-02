@@ -32,7 +32,7 @@
 // Description: C functions to provide access to managers. 
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <iostream>
 #include <loki/Singleton.h>
 #include <LibUtilities/Foundations/GaussPoints.h>

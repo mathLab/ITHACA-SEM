@@ -32,7 +32,7 @@
 // Description: 1D Non Evenly-Spaced Fourier Points for stability analysis
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <iostream>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Foundations.hpp>

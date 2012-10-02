@@ -32,7 +32,6 @@
 // Description: implementation of time integration key class 
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
 #include <iostream>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 

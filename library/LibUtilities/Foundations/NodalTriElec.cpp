@@ -32,7 +32,7 @@
 // Description: 2D Nodal Triangle Fekete Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <iostream>
 #include <algorithm>
 #include <LibUtilities/Foundations/Points.h>

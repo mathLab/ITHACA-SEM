@@ -202,7 +202,7 @@ SET(LinearAlgebraSources
 )
 
 SET(PrecompiledHeaders
-	LibUtilities.h
+	#LibUtilities.h
 )
 
 SET(KernelHeaders
@@ -312,7 +312,7 @@ TARGET_LINK_LIBRARIES(LibUtilities
 	${TINYXML_LIB}
 )
 SET_LAPACK_LINK_LIBRARIES(LibUtilities)
-SET(PrecompiledHeaderName LibUtilities/LibUtilities.h)
+SET(PrecompiledHeaderName )
 SETUP_PRECOMPILED_HEADERS(LibUtilitySources PrecompiledHeaderName)
 
 # This doesn't preserve the BasicUtils, Memory, etc. Find a way to fix this.

@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include <LibUtilities/LibUtilities.h>
 #include "AnalyticExpressionEvaluator.hpp"
 #include <stdexcept>
 #include <algorithm>

@@ -32,8 +32,10 @@
 // Description:
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/LocalRegions.h>
+
 #include <LocalRegions/TetExp.h>
+#include <LibUtilities/Foundations/Interp.h>
+
 
 namespace Nektar
 {

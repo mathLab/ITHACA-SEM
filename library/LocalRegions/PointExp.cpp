@@ -32,7 +32,7 @@
 // Description: Definition of a Point expansion 
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/LocalRegions.h>
+
 #include <LocalRegions/LocalRegions.hpp>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/Expansion0D.h>

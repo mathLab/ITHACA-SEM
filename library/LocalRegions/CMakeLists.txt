@@ -25,7 +25,7 @@ Expansion2D.h
 Expansion3D.h
 HexExp.h
 LinSys.hpp
-LocalRegions.h
+#LocalRegions.h
 LocalRegions.hpp
 LocalRegionsDeclspec.h
 MatrixKey.h
@@ -41,7 +41,7 @@ TriExp.h
 )
 
 
-SET(PrecompiledHeaderName LocalRegions/LocalRegions.h)
+SET(PrecompiledHeaderName ) #LocalRegions/LocalRegions.h)
 
 ADD_DEFINITIONS(-DLOCAL_REGIONS_EXPORTS)
 

@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LocalRegions/LocalRegions.h>
+
 #include <LocalRegions/MatrixKey.h>
 
 namespace Nektar

@@ -33,8 +33,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LocalRegions/LocalRegions.h>
+
 #include <LocalRegions/PrismExp.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {

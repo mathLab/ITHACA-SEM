@@ -32,10 +32,12 @@
 // Description: SegExp routines
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/LocalRegions.h>
+
 #include <LocalRegions/LocalRegions.hpp>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/SegExp.h>
+#include <LibUtilities/Foundations/Interp.h>
+
 
 namespace Nektar
 {

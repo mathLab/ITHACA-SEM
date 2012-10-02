@@ -31,12 +31,14 @@
 // Description: Expasion for triangular elements.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/LocalRegions.h>
+
 #include <LocalRegions/LocalRegions.hpp>
 #include <stdio.h>
 #include <LocalRegions/TriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <LocalRegions/Expansion3D.h>
+#include <LibUtilities/Foundations/Interp.h>
+
 
 namespace Nektar
 {

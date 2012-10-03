@@ -201,10 +201,6 @@ SET(LinearAlgebraSources
 #	./LinearAlgebra/lapack.cpp
 )
 
-SET(PrecompiledHeaders
-	#LibUtilities.h
-)
-
 SET(KernelHeaders
 	./Kernel/kernel.h
 )
@@ -259,8 +255,6 @@ SOURCE_GROUP("Interpreter Sources" FILES ${InterpreterSources})
 SOURCE_GROUP("Communication Headers" FILES ${CommunicationHeaders})
 SOURCE_GROUP("Communication Sources" FILES ${CommunicationSources})
 
-SOURCE_GROUP("Precompiled Headers" FILES ${PrecompiledHeaders})
-
 SOURCE_GROUP("Kernel Headers" FILES ${KernelHeaders})
 SOURCE_GROUP("Kernel Sources" FILES ${KernelSources})
 
@@ -282,7 +276,6 @@ SET(LibUtilityHeaders
 	${LinearAlgebraHeaders}
 	${BasicConstHeaders}
 	${InterpreterHeaders}
-	${PrecompiledHeaders}
 	${KernelHeaders}
         ${TimeIntegrationHeaders}
         ${FFTHeaders}
@@ -312,8 +305,6 @@ TARGET_LINK_LIBRARIES(LibUtilities
 	${TINYXML_LIB}
 )
 SET_LAPACK_LINK_LIBRARIES(LibUtilities)
-SET(PrecompiledHeaderName )
-SETUP_PRECOMPILED_HEADERS(LibUtilitySources PrecompiledHeaderName)
 
 # This doesn't preserve the BasicUtils, Memory, etc. Find a way to fix this.
 INSTALL(FILES ${BasicConstHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicConst COMPONENT dev)

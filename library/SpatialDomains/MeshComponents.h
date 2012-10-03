@@ -42,6 +42,7 @@
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <set>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar
 {

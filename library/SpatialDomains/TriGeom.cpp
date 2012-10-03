@@ -38,6 +38,7 @@
 #include <SpatialDomains/TriGeom.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {

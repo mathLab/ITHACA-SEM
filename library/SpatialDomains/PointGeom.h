@@ -38,7 +38,7 @@
 
 
 #include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/SpatialDomains.hpp>
+//#include <SpatialDomains/SpatialDomains.hpp>
 
 #include <SpatialDomains/GeomFactors1D.h>
 #include <SpatialDomains/Geometry1D.h>

@@ -276,36 +276,3 @@ namespace Nektar
 } // end of namespace stdregion
 
 
-/**
-* $Log: NodalTetElec.cpp,v $
-* Revision 1.14  2008/11/01 22:04:34  bnelson
-* Removed references to MatrixStoragePolicy<T>
-*
-* Revision 1.13  2008/04/06 05:54:08  bnelson
-* Changed ConstArray to Array<const>
-*
-* Revision 1.12  2007/10/03 03:00:13  bnelson
-* Added precompiled headers.
-*
-* Revision 1.11  2007/08/15 01:43:48  ehan
-* Added calculating weights, interpolation, and derivation for Tetrahedron.
-*
-* Revision 1.10  2007/07/31 18:12:01  ehan
-* Updated Tetrahedron symmetry and calculate points
-*
-* Revision 1.9  2007/07/22 23:03:26  bnelson
-* Backed out Nektar::ptr.
-*
-* Revision 1.8  2007/07/20 00:28:26  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.7  2007/05/15 03:37:24  bnelson
-* Updated to use the new Array object.
-*
-* Revision 1.6  2007/04/30 23:29:09  jfrazier
-* More conversion to multi_array.
-*
-* Revision 1.5  2007/04/29 00:31:57  jfrazier
-* Updated to use multi_arrays.
-*
-*/

@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY1D_H
 
-#include <SpatialDomains/SpatialDomains.hpp>
+//#include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>

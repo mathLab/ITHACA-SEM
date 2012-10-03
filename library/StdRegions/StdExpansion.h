@@ -47,6 +47,9 @@
 #include <StdRegions/IndexMapKey.h>
 #include <StdRegions/StdLinSysKey.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 
 namespace Nektar
 {

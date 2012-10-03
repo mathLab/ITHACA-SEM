@@ -37,7 +37,7 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 
-#include <SpatialDomains/SpatialDomains.hpp>
+//#include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/GeomFactors.h>
 
 #include <boost/unordered_set.hpp>

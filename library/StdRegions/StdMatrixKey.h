@@ -38,6 +38,9 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
+#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/Basis.h>
+
 
 namespace Nektar
 {

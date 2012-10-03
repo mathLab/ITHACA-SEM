@@ -38,6 +38,8 @@
 #include <LocalRegions/NodalTriExp.h>
 #include <LocalRegions/Expansion3D.h>
 #include <MultiRegions/ExpList2D.h>
+#include <LibUtilities/Foundations/Interp.h>
+
 
 #include <iomanip>
 

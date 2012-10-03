@@ -85,8 +85,8 @@ namespace Nektar
 
 
             /** Construct optimal ordering a two-dimensional expansion
-            /*  given a vector of boundary condition information
-            */
+             *  given a vector of boundary condition information
+             */
             MULTI_REGIONS_EXPORT int SetUp2DGraphC0ContMap(
                                        const ExpList  &locExp,
                                        const Array<OneD, const MultiRegions::ExpListSharedPtr>  &bndCondExp,

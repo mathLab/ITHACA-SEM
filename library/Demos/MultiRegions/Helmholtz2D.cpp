@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     StdRegions::VarCoeffMap varcoeffs;
     FlagList flags;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
+    NekDouble    st;
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
     {

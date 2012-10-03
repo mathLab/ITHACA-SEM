@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY3D_H
 
 #include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/SpatialDomains.hpp>
+//#include <SpatialDomains/SpatialDomains.hpp>
 
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/Geometry2D.h>

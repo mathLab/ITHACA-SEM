@@ -34,46 +34,58 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <Metric.h>
+#include <loki/Singleton.h>
 
-/**
- * @brief Constructor.
- */
-Metric::Metric(int id) : m_id(id)
+namespace Nektar
 {
+    MetricFactory& GetMetricFactory()
+    {
+        typedef Loki::SingletonHolder<MetricFactory,
+                                      Loki::CreateUsingNew,
+                                      Loki::NoDestroy > Type;
+        return Type::Instance();
+    }
+    
+    /**
+     * @brief Constructor.
+     */
+    Metric::Metric(int id) : m_id(id)
+    {
+        
+    }
+    
+    /**
+     * @brief Parse the contents of a metric tag. This function is implemented by
+     * subclasses.
+     */
+    void Metric::Parse(TiXmlElement *metric)
+    {
+        v_Parse(metric);
+    }
 
-}
-
-/**
- * @brief Parse the contents of a metric tag. This function is implemented by
- * subclasses.
- */
-void Metric::Parse(TiXmlElement *metric)
-{
-    v_Parse(metric);
-}
-
-/**
- * @brief Test a line of output from an executible.
- */
-bool Metric::TestLine(std::string line)
-{
-    return v_TestLine(line);
-}
-
-/**
- * @brief Test which is run after the executible has finished.
- */
-bool Metric::FinishTest()
-{
-    return v_FinishTest();
-}
-
-bool Metric::v_TestLine(std::string line)
-{
-    return true;
-}
-
-bool Metric::v_FinishTest()
-{
-    return true;
+    /**
+     * @brief Test a line of output from an executible.
+     */
+    bool Metric::TestLine(std::string line)
+    {
+        return v_TestLine(line);
+    }
+    
+    /**
+     * @brief Test which is run after the executible has finished.
+     */
+    bool Metric::FinishTest()
+    {
+        return v_FinishTest();
+    }
+    
+    bool Metric::v_TestLine(std::string line)
+    {
+        return true;
+    }
+    
+    bool Metric::v_FinishTest()
+    {
+        return true;
+    }
 }

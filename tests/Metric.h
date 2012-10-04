@@ -39,22 +39,35 @@
 #include <tinyxml/tinyxml.h>
 #include <string>
 
-class Metric
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+
+namespace Nektar
 {
-public:
-    Metric(int id);
+    class Metric
+    {
+    public:
+        Metric(int id);
+        
+        void Parse     (TiXmlElement *metric);
+        bool TestLine  (std::string line);
+        bool FinishTest();
+        
+    protected:
+        // Stores the ID of this metric.
+        int m_id;
+        
+        virtual void v_Parse     (TiXmlElement *metric) = 0;
+        virtual bool v_TestLine  (std::string line);
+        virtual bool v_FinishTest();
+    };
+
+    /// A shared pointer to an EquationSystem object
+    typedef boost::shared_ptr<Metric> MetricSharedPtr;
     
-    void Parse     (TiXmlElement *metric);
-    bool TestLine  (std::string line);
-    bool FinishTest();
-    
-protected:
-    // Stores the ID of this metric.
-    int m_id;
-    
-    virtual void v_Parse     (TiXmlElement *metric) = 0;
-    virtual bool v_TestLine  (std::string line);
-    virtual bool v_FinishTest();
-};
+    /// Datatype of the NekFactory used to instantiate classes derived from the
+    /// Advection class.
+    typedef LibUtilities::NekFactory<std::string, Metric, int> MetricFactory;
+    MetricFactory& GetMetricFactory();
+}
 
 #endif

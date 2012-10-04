@@ -37,18 +37,41 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <sys/stat.h>
 
 #include <MetricL2.h>
 #include <MetricRegex.h>
 
+#include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/version.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/program_options.hpp>
+
+#ifdef _WINDOWS
+#define COPY_COMMAND "copy "
+#else
+#define COPY_COMMAND "cp "
+#endif
 
 using namespace std;
+using namespace Nektar;
+namespace po = boost::program_options;
+
+std::string PortablePath(const boost::filesystem::path& path)
+{
+    boost::filesystem::path temp = path;
+#if BOOST_VERSION > 104200
+    temp.make_preferred();
+    return temp.string();
+#else
+    return temp.file_string();
+#endif
+}
 
 int main(int argc, char *argv[])
 {
-    // Open file.
+    // Process test file format.
     TiXmlDocument *file = new TiXmlDocument(argv[1]);
     bool loadOkay = file->LoadFile();
     
@@ -65,23 +88,21 @@ int main(int argc, char *argv[])
     // Find description tag.
     TiXmlElement *descElement = handle.FirstChildElement("test").
         FirstChildElement("description").Element();
-    
     string description(descElement->GetText());
-    cout << description << endl;
     
     // Find solver tag.
     TiXmlElement *solverElement = handle.FirstChildElement("test").
         FirstChildElement("executable").Element();
     string executable(solverElement->GetText());
-    cout << executable << endl;
     
     // Find input tag.
     TiXmlElement *inputElement = handle.FirstChildElement("test").
         FirstChildElement("parameters").Element();
     string input(inputElement->GetText());
-    cout << input << endl;
 
-    // Iterate through metric tags.
+    /*
+     * Process and set up metric tags.
+     */
     TiXmlElement *metrics = testElement->FirstChildElement("metrics");
     
     if (!metrics)
@@ -91,25 +112,21 @@ int main(int argc, char *argv[])
     }
     
     // Construct vector of metrics.
-    TiXmlElement   *metric = metrics->FirstChildElement("metric");
-    vector<Metric*> metricList;
+    TiXmlElement *metric = metrics->FirstChildElement("metric");
+    vector<MetricSharedPtr> metricList;
     
     while (metric)
     {
         string  metricType = metric->Attribute("type");
         int     metricId   = boost::lexical_cast<int>(metric->Attribute("id"));
-        Metric *m;
+
+        boost::algorithm::to_lower(metricType);
+        
+        MetricSharedPtr m = GetMetricFactory().CreateInstance(
+            metricType, metricId);
+        metricList.push_back(m);
         
         cout << "Metric type: " << metricType << ", id = " << metricId << endl;
-        
-        if (metricType == "L2")
-        {
-            m = new MetricL2(metricId);
-        }
-        else if (metricType == "Regex")
-        {
-            m = new MetricRegex(metricId);
-        }
         
         m->Parse(metric);
         
@@ -117,7 +134,48 @@ int main(int argc, char *argv[])
     }
 
     /*
-    while (getline(fpstream, line))
+     * Copy required files for this test.
+     */
+    TiXmlElement *required = handle.FirstChildElement("test").
+        FirstChildElement("required").Element();
+    TiXmlElement *reqfile = required->FirstChildElement("file");
+    struct stat vFileInfo;
+    
+    while (reqfile)
+    {
+        string fname   = reqfile->GetText();
+        string source  = PortablePath(std::string(TEST_PATH)) + fname;
+        string command = std::string(COPY_COMMAND) + source + " .";
+        int vNotPresent = stat(source.c_str(), &vFileInfo);
+        
+        if (vNotPresent)
+        {
+            cerr << "Required file " << fname << " not found." << endl;
+            return 1;
+        }
+        
+        int status = system(command.c_str());
+        
+        if (status)
+        {
+            cerr << "Unable to copy file:" << source 
+                 << " to current location" << endl;
+            return 1;
+        }
+        
+        reqfile = metric->NextSiblingElement("required");
+    }
+    
+    /*
+     * Run executable and perform tests.
+     */
+    string cmd = executable + " " + input;
+    
+    
+    /*
+    ifstream file(filename);
+        
+    while (getline(file, line))
     {
         for (int i = 0; i < metricList.size(); ++i)
         {
@@ -127,7 +185,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-    
+
     for (int i = 0; i < metricList.size(); ++i)
     {
         if (!metricList[i]->FinishTest())
@@ -136,7 +194,6 @@ int main(int argc, char *argv[])
         }
     }
     */
-
     
     return 0;
 }

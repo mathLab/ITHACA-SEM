@@ -38,13 +38,23 @@
 
 #include <MetricRegex.h>
 
-class MetricL2 : public MetricRegex
+namespace Nektar
 {
-public:
-    MetricL2(int id);
-    
-protected:
-    virtual void v_Parse(TiXmlElement *metric);
-};
+    class MetricL2 : public MetricRegex
+    {
+    public:
+        static MetricSharedPtr create(int id)
+        {
+            return MetricSharedPtr(new MetricL2(id));
+        }
+
+        static std::string type;
+
+    protected:
+        MetricL2(int id);
+
+        virtual void v_Parse(TiXmlElement *metric);
+    };
+}
 
 #endif

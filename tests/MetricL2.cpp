@@ -35,35 +35,42 @@
 
 #include <MetricL2.h>
 
-MetricL2::MetricL2(int id) : MetricRegex(id)
+namespace Nektar
 {
+    std::string MetricL2::type = GetMetricFactory().
+        RegisterCreatorFunction("l2", MetricL2::create);
     
-}
-
-void MetricL2::v_Parse(TiXmlElement *metric)
-{
-    // Set up the regular expression. This (optionally) matches a variable
-    // name if it exists: first field is variable name, second field is L2
-    // error.
-    m_regex = "^L 2 error\\s*(?:\\(variable (\\w+)\\))?\\s*:\\s*([+-]?\\d.+\\d).*";
-        
-    // Find the L2 error to match against.
-    TiXmlElement *value;
-        
-    while (value = metric->FirstChildElement("value"))
+    MetricL2::MetricL2(int id) : MetricRegex(id)
     {
-        // Find name of field.
-        std::string variable = value->Attribute("variable");
+    
+    }
+
+    void MetricL2::v_Parse(TiXmlElement *metric)
+    {
+        // Set up the regular expression. This (optionally) matches a variable
+        // name if it exists: first field is variable name, second field is L2
+        // error.
+        m_regex = 
+           "^L 2 error\\s*(?:\\(variable (\\w+)\\))?\\s*:\\s*([+-]?\\d.+\\d).*";
+        
+        // Find the L2 error to match against.
+        TiXmlElement *value;
+        
+        while (value = metric->FirstChildElement("value"))
+        {
+            // Find name of field.
+            std::string variable = value->Attribute("variable");
             
-        // Set up a match with two fields which correspond with the
-        // subexpression above. The first is the variable name, second is
-        // the L2 error.
-        std::vector<std::string> tmp(2);
-        tmp[0] = variable;
-        tmp[1] = value->GetText();
-        m_matches.push_back(tmp);
+            // Set up a match with two fields which correspond with the
+            // subexpression above. The first is the variable name, second is
+            // the L2 error.
+            std::vector<std::string> tmp(2);
+            tmp[0] = variable;
+            tmp[1] = value->GetText();
+            m_matches.push_back(tmp);
             
-        // Indicate that the L2 error needs tolerance testing.
-        m_tolerance.insert(1);
+            // Indicate that the L2 error needs tolerance testing.
+            m_tolerance.insert(1);
+        }
     }
 }

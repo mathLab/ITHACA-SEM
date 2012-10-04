@@ -40,21 +40,31 @@
 #include <boost/regex.hpp>
 #include <vector>
 
-class MetricRegex : public Metric
+namespace Nektar
 {
-public:
-    MetricRegex(int id);
-    
-protected:
-    // Storage for the boost regex.
-    boost::regex                           m_regex;
-    // Stores the multiple matches defined in each <MATCH> tag.
-    std::vector<std::vector<std::string> > m_matches;
-    // Indicates which fields of a match need to be tested for tolerance.
-    std::set<int>                          m_tolerance;
+    class MetricRegex : public Metric
+    {
+    public:
+        static MetricSharedPtr create(int id)
+        {
+            return MetricSharedPtr(new MetricRegex(id));
+        }
 
-    virtual void v_Parse   (TiXmlElement *metric);
-    virtual bool v_TestLine(std::string line);
-};
+        static std::string type;
+    
+    protected:
+        /// Storage for the boost regex.
+        boost::regex                           m_regex;
+        /// Stores the multiple matches defined in each <MATCH> tag.
+        std::vector<std::vector<std::string> > m_matches;
+        /// Indicates which fields of a match need to be tested for tolerance.
+        std::set<int>                          m_tolerance;
+
+        MetricRegex(int id);
+
+        virtual void v_Parse   (TiXmlElement *metric);
+        virtual bool v_TestLine(std::string line);
+    };
+}
 
 #endif

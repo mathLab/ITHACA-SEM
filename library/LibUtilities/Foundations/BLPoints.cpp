@@ -34,13 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include <iostream>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Foundations.hpp>
-
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/Foundations/BLPoints.h>
+#include <LibUtilities/Foundations/Points.h>
+#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
 namespace Nektar
 {

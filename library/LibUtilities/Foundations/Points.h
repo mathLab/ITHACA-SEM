@@ -36,12 +36,11 @@
 #ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H
 #define NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H
 
-#include <math.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-#include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/BasicUtils/NekManager.hpp>
 
 namespace Nektar
 {

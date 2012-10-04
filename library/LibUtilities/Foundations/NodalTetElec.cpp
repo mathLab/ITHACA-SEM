@@ -33,16 +33,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <algorithm>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Foundations.hpp>
-
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/Foundations/NodalTetElec.h>
 #include <LibUtilities/Foundations/NodalTetElecData.h>
-
 #include <LibUtilities/Foundations/NodalUtil.h>
 
 namespace Nektar

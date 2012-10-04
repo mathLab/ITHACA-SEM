@@ -36,9 +36,7 @@
 #ifndef NODALTRIELEC_H
 #define NODALTRIELEC_H
 
-#include <math.h>
 #include <boost/shared_ptr.hpp>
-#include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>

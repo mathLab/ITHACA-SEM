@@ -48,7 +48,6 @@
 #include <LibUtilities/Foundations/NodalPrismEvenlySpaced.h>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar

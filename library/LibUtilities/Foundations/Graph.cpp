@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LibUtilities/Foundations/Graph.cpp,v $
+//  File:  Graph.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -79,33 +79,4 @@ namespace Nektar
         }
     } // end of namespace 
 } // end of namespace 
-
-//
-// $Log: Graph.cpp,v $
-// Revision 1.3  2006/08/16 03:26:36  jfrazier
-// Optimized the equality and inequality operators.
-//
-// Revision 1.2  2006/06/01 14:59:58  sherwin
-// Modified header file path
-//
-// Revision 1.1  2006/06/01 14:56:20  kirby
-// *** empty log message ***
-//
-// Revision 1.1  2006/05/04 18:57:42  kirby
-// *** empty log message ***
-//
-// Revision 1.11  2006/03/25 00:52:43  jfrazier
-// Minor formatting stuff to correct indenting.
-//
-// Revision 1.10  2006/03/13 11:17:03  sherwin
-//
-// First compiing version of Demos in SpatialDomains and LocalRegions. However they do not currently seem to execute properly
-//
-// Revision 1.9  2006/03/12 07:42:48  sherwin
-//
-// Updated to meet coding standard. Still has not been compiled
-//
-//
-
-
 

@@ -33,24 +33,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <algorithm>
-#include <limits>
-#include <math.h>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
-#include <LibUtilities/Polylib/Polylib.h>
-#include <LibUtilities/Foundations/NodalTriFeketeData.h>
-
-#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/LinearAlgebra/Lapack.hpp>
-#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-
 #include <LibUtilities/Foundations/NodalTriFekete.h>
+#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/NodalTriFeketeData.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
 
 namespace Nektar

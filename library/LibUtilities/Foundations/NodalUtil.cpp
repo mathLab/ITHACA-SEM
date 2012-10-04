@@ -34,14 +34,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
 #include <iomanip>
-#include <iosfwd>
+#include <limits>
 
 #include <LibUtilities/Foundations/NodalUtil.h>
 
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/LinearAlgebra/Lapack.hpp>
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 

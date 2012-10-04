@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include <math.h>
+//#include <math.h>
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/Points.h>
@@ -42,7 +42,6 @@
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
-#include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 
 namespace Nektar

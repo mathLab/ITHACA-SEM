@@ -36,14 +36,11 @@
 #ifndef GAUSSPOINTS_H
 #define GAUSSPOINTS_H
 
-#include <math.h>
 #include <boost/shared_ptr.hpp>
 #include <boost/bind.hpp>
 #include <boost/mem_fn.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 namespace Nektar
 {

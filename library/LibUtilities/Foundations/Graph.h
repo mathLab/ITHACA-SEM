@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/libs/LibUtilities/Graph.h,v $
+//  File:  Graph.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -115,18 +115,4 @@ namespace Nektar
     }  //end of namespace
 }  //end of namespace
 #endif // GRAPH_H
-
-//
-// $Log: Graph.h,v $
-// Revision 1.1  2006/05/04 18:57:42  kirby
-// *** empty log message ***
-//
-// Revision 1.11  2006/03/25 00:52:43  jfrazier
-// Minor formatting stuff to correct indenting.
-//
-// Revision 1.10  2006/03/12 07:42:48  sherwin
-//
-// Updated to meet coding standard. Still has not been compiled
-//
-//
 

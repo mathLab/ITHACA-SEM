@@ -54,37 +54,3 @@ namespace Nektar
 } // end of namespace Nektar
 #endif //NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
 
-/**
-$Log: ManagerAccess.h,v $
-Revision 1.10  2008/07/12 11:37:53  pvos
-Added time integration scheme manager
-
-Revision 1.9  2007/04/29 03:09:47  jfrazier
-More conversion to multi_arrays.
-
-Revision 1.8  2007/02/06 17:12:31  jfrazier
-Fixed a problem with global initialization in libraries.
-
-Revision 1.7  2007/02/01 23:28:42  jfrazier
-Basis is working, but not fully tested.
-
-Revision 1.6  2007/01/25 21:31:46  jfrazier
-Format change.
-
-Revision 1.5  2007/01/20 21:52:34  sherwin
-Remove Basis template class definitino
-
-Revision 1.4  2007/01/20 21:45:59  kirby
-*** empty log message ***
-
-Revision 1.3  2007/01/20 21:33:58  sherwin
-Added method
-
-Revision 1.2  2007/01/19 21:59:27  sherwin
-Some SJS mods - still does not compile yet
-
-Revision 1.1  2007/01/19 18:02:26  jfrazier
-Initial checkin.
-
-**/
-

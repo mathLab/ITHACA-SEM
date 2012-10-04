@@ -34,13 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Foundations/InterpCoeff.h>
-#include <LibUtilities/BasicUtils/Vmath.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
-#include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
 
 namespace Nektar

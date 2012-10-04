@@ -37,9 +37,6 @@
 #ifndef NODALUTIL_H
 #define NODALUTIL_H
 
-#include <iosfwd>
-
-#include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 

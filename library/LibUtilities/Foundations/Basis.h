@@ -36,7 +36,7 @@
 #ifndef NEKTAR_LIB_UTILIITIES_FOUNDATIONS_BASIS_H
 #define NEKTAR_LIB_UTILIITIES_FOUNDATIONS_BASIS_H
 
-#include <math.h>
+//#include <math.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/LibUtilitiesDeclspec.h>

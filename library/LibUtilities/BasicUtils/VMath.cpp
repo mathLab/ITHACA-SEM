@@ -35,8 +35,8 @@
 
 #include <string>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
-#include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include "LibUtilities/LibUtilitiesDeclspec.h"
 
 namespace Vmath
 {

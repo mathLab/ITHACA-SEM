@@ -259,13 +259,13 @@ int main(int argc, char *argv[])
     if (type == StdRegions::eHelmholtz)
     {
         FlagList flags;
-        flags.set(eUseContCoeff, true);
+        flags.set(eUseGlobal, true);
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = lambda;
 
         //----------------------------------------------
         // Helmholtz solution taking physical forcing
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),flags,factors);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
         // GeneralMatrixOp does not impose boundary conditions.
         //  MultiRegions::GlobalMatrixKey key(type, lambda, Exp->GetLocalToGlobalMap());
         //  Exp->GeneralMatrixOp (key, Fce->GetPhys(),Exp->UpdateContCoeffs(), true);
@@ -273,18 +273,21 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Backward Transform Solution to get solved values at
-        Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), 
+                      MultiRegions::eGlobal);
         //----------------------------------------------
         L2Error    = Exp->L2  (Sol->GetPhys());
         LinfError  = Exp->Linf(Sol->GetPhys());
     }
     else
     {
-        Exp->FwdTrans(Sol->GetPhys(), Exp->UpdateContCoeffs(), true);
+        Exp->FwdTrans(Sol->GetPhys(), Exp->UpdateCoeffs(),
+                      MultiRegions::eGlobal);
 
         //----------------------------------------------
         // Backward Transform Solution to get solved values at
-        Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),
+                      MultiRegions::eGlobal);
         //----------------------------------------------
         L2Error    = Exp->L2  (Sol->GetPhys());
         LinfError  = Exp->Linf(Sol->GetPhys());
@@ -352,8 +355,8 @@ int main(int argc, char *argv[])
 
     exeTime = TimeMatrixOp(type, Exp, Fce, NumCalls, lambda);
 
-    int nLocCoeffs     = Exp->GetNcoeffs();
-    int nGlobCoeffs    = Exp->GetContNcoeffs();
+    int nLocCoeffs     = Exp->GetLocalToGlobalMap()->GetNumLocalCoeffs();
+    int nGlobCoeffs    = Exp->GetLocalToGlobalMap()->GetNumGlobalCoeffs();
     int nLocBndCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalBndCoeffs();
     int nGlobBndCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalBndCoeffs();
     int nLocDirCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalDirBndCoeffs();
@@ -409,18 +412,21 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     //Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),true);
     if (type == StdRegions::eBwdTrans)
     {
-        Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),
+                      MultiRegions::eGlobal);
     }
     else if (type == StdRegions::eIProductWRTBase)
     {
-        Exp->IProductWRTBase(Fce->GetPhys(), Exp->UpdateContCoeffs(), true);
+        Exp->IProductWRTBase(Fce->GetPhys(), Exp->UpdateCoeffs(),
+                             MultiRegions::eGlobal);
     }
     else
     {
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = lambda;
         MultiRegions::GlobalMatrixKey key(type, Exp->GetLocalToGlobalMap(), factors);
-        Exp->GeneralMatrixOp (key, Exp->GetContCoeffs(),Exp->UpdatePhys(), true);
+        Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys(),
+                              MultiRegions::eGlobal);
     }
     gettimeofday(&timer2, NULL);
     time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
@@ -448,14 +454,16 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     {
         for(i = 0; i < NumCalls; ++i)
         {
-            Exp->BwdTrans (Exp->GetContCoeffs(),Exp->UpdatePhys(), true);
+            Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),
+                           MultiRegions::eGlobal);
         }
     }
     else if (type == StdRegions::eIProductWRTBase)
     {
         for(i = 0; i < NumCalls; ++i)
         {
-            Exp->IProductWRTBase (Exp->GetPhys(),Exp->UpdateContCoeffs(), true);
+            Exp->IProductWRTBase (Exp->GetPhys(),Exp->UpdateCoeffs(),
+                                  MultiRegions::eGlobal);
         }
     }
     else
@@ -465,7 +473,8 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
         MultiRegions::GlobalMatrixKey key(type, Exp->GetLocalToGlobalMap(), factors);
         for(i = 0; i < NumCalls; ++i)
         {
-            Exp->GeneralMatrixOp (key, Exp->GetContCoeffs(),Exp->UpdatePhys(), true);
+            Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys(),
+                                  MultiRegions::eGlobal);
         }
     }
     gettimeofday(&timer2, NULL);

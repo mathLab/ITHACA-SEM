@@ -36,7 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
 #define NEKTAR_LIB_UTILITIES_FOUNDATIONS_TIMEINTEGRATIONSCHEME_H
 
-#include <math.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>

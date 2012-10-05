@@ -15,6 +15,8 @@
 #include<SpatialDomains/Geometry.h>
 
 using namespace std;
+using namespace Nektar;
+
 
 void  PrintConditions(ofstream& output);
 

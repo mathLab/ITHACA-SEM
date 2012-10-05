@@ -5,7 +5,8 @@
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include "LibUtilities/Foundations/Basis.h"
 #include "SpatialDomains/MeshComponents.h"
-  
+#include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
+
 
 #include <algorithm>
 #include <iostream> 

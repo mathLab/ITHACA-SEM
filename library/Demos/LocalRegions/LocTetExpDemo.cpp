@@ -5,6 +5,7 @@
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include "LibUtilities/Foundations/Basis.h"
 #include "SpatialDomains/MeshComponents.h"
+#include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -16,6 +17,8 @@
 #include <iosfwd>
 
 // using namespace boost;
+
+using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::LocalRegions;
 using namespace Nektar::StdRegions;

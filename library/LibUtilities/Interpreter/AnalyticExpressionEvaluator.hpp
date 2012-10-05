@@ -67,7 +67,6 @@ namespace boost_spirit = boost::spirit;
 #endif
 
 #include <iostream>
-#include <stdarg.h>
 #include <string>
 #include <vector>
 #include <map>
@@ -76,8 +75,6 @@ namespace boost_spirit = boost::spirit;
 #else
 #include <cmath>
 #endif
-#include <errno.h>
-#include <stdlib.h>
 
 namespace Nektar
 {

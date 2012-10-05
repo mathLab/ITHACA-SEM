@@ -35,6 +35,13 @@
 
 #include <LibUtilities/Communication/Transposition.h>
 
+#include "LibUtilities/BasicUtils/ErrorUtil.hpp"  // for ASSERTL0, etc
+#include "LibUtilities/BasicUtils/SharedArray.hpp"  // for Array
+#include "LibUtilities/BasicUtils/Vmath.hpp"  // for Vcopy
+#include "LibUtilities/Foundations/Basis.h"  // for BasisKey
+#include "LibUtilities/Foundations/Foundations.hpp"
+
+
 namespace Nektar
 {
     namespace LibUtilities

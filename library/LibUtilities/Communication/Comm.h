@@ -36,9 +36,12 @@
 #define NEKTAR_LIB_UTILITIES_COMM_H
 
 #include <boost/enable_shared_from_this.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+
+#include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
+namespace Nektar { template <typename Dim, typename DataType> class Array; }
+
 
 namespace Nektar
 {

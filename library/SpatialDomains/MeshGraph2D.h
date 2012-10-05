@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph2D.h,v $
+//  File:  MeshGraph2D.h
 //
 //  For more information, please see: http://www.nektar.info/
 //

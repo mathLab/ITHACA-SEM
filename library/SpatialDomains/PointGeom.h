@@ -38,24 +38,16 @@
 
 
 #include <StdRegions/StdRegions.hpp>
-//#include <SpatialDomains/SpatialDomains.hpp>
-
-#include <SpatialDomains/GeomFactors1D.h>
 #include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/MeshComponents.h>
-
-#include <StdRegions/StdPointExp.h>
-#include <StdRegions/StdSegExp.h>
-
-#include <LibUtilities/Foundations/Basis.h>
-
-#include <SpatialDomains/Curve.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+
 namespace Nektar
 {
     namespace SpatialDomains
     {
         class PointGeom;
+        class SegGeom;
 
         // shorthand for boost pointer
         typedef boost::shared_ptr<PointGeom> PointGeomSharedPtr;

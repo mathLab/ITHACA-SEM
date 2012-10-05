@@ -32,12 +32,17 @@
 //  Description:
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
+//#include "pchSpatialDomains.h"
 
 #include <boost/foreach.hpp>
 
 #include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/Equation.h>
+#include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdPyrExp.h>
+#include <StdRegions/StdPrismExp.h>
 
 // Use the stl version, primarily for string.
 #ifndef TIXML_USE_STL

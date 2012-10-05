@@ -4,8 +4,10 @@
 
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include "LibUtilities/Foundations/Basis.h"
-#include "SpatialDomains/MeshComponents.h"
 #include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
+#include "SpatialDomains/MeshComponents.h"
+#include "SpatialDomains/TriGeom.h"
+#include "SpatialDomains/QuadGeom.h"
 
 #include <algorithm>
 #include <iostream>

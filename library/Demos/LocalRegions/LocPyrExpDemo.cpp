@@ -6,6 +6,8 @@
 #include "LibUtilities/Foundations/Basis.h"
 
 #include "SpatialDomains/MeshComponents.h"
+#include "SpatialDomains/TriGeom.h"
+#include "SpatialDomains/QuadGeom.h"
 
 
 #include <algorithm>

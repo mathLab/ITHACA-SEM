@@ -37,7 +37,12 @@ IF (THIRDPARTY_BUILD_BOOST)
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1
         )
-        
+
+        # If building ThirdParty zlib, force zlib build before boost
+        IF (THIRDPARTY_BUILD_ZLIB)
+            ADD_DEPENDENCIES(boost zlib)
+        ENDIF(THIRDPARTY_BUILD_ZLIB)
+
         # Set up CMake variables
         SET(Boost_DATE_TIME_LIBRARY boost_date_time)
         SET(Boost_DATE_TIME_LIBRARY_DEBUG boost_date_time)

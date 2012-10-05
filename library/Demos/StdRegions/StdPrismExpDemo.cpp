@@ -3,6 +3,7 @@
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include <StdRegions/StdExpUtil.h>
 #include <StdRegions/StdPrismExp.h>
+#include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
 
 
 #include <algorithm> 

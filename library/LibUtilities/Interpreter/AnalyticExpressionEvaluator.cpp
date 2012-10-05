@@ -63,28 +63,6 @@ namespace Nektar
     namespace LibUtilities
     {
 
-        /** Gcc 4.0.1 on the mac did not compile when isspace was passed as the third 
-            parameter to std::remove_if below (it takes an int as a parameter 
-            instead of a char).  This wrapper method gets around this problem. **/
-        static int ConvertIsSpaceForGcc(char c) { return isspace(c); }
-
-        // =========================================================================
-        //                       Math Function Declarations
-        // =========================================================================
-
-        /** This function is called each time a math function is parsed and executed. It checks
-            the errno to see if there was an error that occured in the math.h function. **/
-        static void CheckMathOperationForErrors(std::string const& functionName)
-        {
-            if (errno == EDOM)
-                throw std::runtime_error("Argument of " + functionName + " exceeds the range of the function.");
-            else if (errno == ERANGE)
-                throw std::runtime_error("The result from " + functionName + " overflowed the double type.");
-
-            errno = 0;
-        }
-
-
         // =========================================================================
         //             AnalyticExpression definitions for Spirit Parser
         // =========================================================================

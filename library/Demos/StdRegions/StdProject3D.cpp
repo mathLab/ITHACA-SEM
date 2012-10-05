@@ -11,7 +11,9 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
+#include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
 
+using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::StdRegions;
 

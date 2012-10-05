@@ -38,6 +38,8 @@
 #define TIXML_USE_STL
 #endif
 
+#include <LibUtilities/BasicUtils/MeshPartition.h>
+
 #include <iostream>
 #include <iomanip>
 #include <vector>
@@ -48,12 +50,12 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/Metis.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graph_utility.hpp>
 
-#include <LibUtilities/BasicUtils/MeshPartition.h>
 
 namespace Nektar
 {

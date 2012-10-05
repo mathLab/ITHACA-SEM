@@ -34,8 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdNodalPrismExp.h>
-
-#include <iomanip>
+#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
 
 namespace Nektar 
 {

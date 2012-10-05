@@ -36,6 +36,7 @@
 #include <MultiRegions/ExpList1D.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LocalRegions/SegExp.h>
+#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
 
 #include <iomanip>
 

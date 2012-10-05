@@ -37,34 +37,13 @@
 #define STDREGIONS_HPP
 
 
-// Headers from LibUtilities needed in StdRegions
-/*
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/Vmath.hpp>
-#include <LibUtilities/BasicUtils/VmathArray.hpp>
-#include <LibUtilities/LinearAlgebra/Lapack.hpp>
-
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-
-#include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
-
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Basis.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
-
-#include <string>
-#include <loki/Factory.h>
-*/
-
 #include<map>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include "LibUtilities/BasicUtils/SharedArray.hpp"  // for Array, etc
+
 
 namespace Nektar
 {
+
     /** \brief The namespace associated with the the StdRegions library
      * (\ref pageStdRegions "StdRegions introduction")
      */

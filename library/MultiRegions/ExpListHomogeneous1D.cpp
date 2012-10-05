@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpListHomogeneous1D.h>
+#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
 
 namespace Nektar
 {

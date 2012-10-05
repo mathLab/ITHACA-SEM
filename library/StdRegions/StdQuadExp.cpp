@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdQuadExp.h>
+#include "StdRegions/StdSegExp.h"       // for StdSegExp, etc
 
 namespace Nektar
 {

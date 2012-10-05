@@ -39,7 +39,6 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
-#include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
@@ -47,8 +46,12 @@ namespace Nektar
     namespace StdRegions
     {
 
-    class StdQuadExp: virtual public StdExpansion2D
+        class StdExpansion1D;
+
+        class StdQuadExp: virtual public StdExpansion2D
         {
+
+        typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
 
         public:
             STD_REGIONS_EXPORT StdQuadExp();

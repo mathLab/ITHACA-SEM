@@ -39,6 +39,7 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdSegExp.h>
+#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
 
 #include <fstream>
 

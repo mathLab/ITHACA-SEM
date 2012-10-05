@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/AdvectionFR.h>
+#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
 
 namespace Nektar
 {

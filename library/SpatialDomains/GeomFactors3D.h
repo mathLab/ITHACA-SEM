@@ -38,13 +38,14 @@
 
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+#include <StdRegions/StdExpansion3D.h>
 
 namespace Nektar
 {
+
     namespace SpatialDomains
     {
         // Forward declarations
-        class GeomFactors3D;
 
         /// Geometric factors for a 3D expansions.
         class GeomFactors3D : public GeomFactors

@@ -39,6 +39,7 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
+#include <StdRegions/StdExpansion2D.h>
 
 namespace Nektar
 {

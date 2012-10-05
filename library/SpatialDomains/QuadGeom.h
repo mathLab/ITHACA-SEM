@@ -37,18 +37,20 @@
 #define NEKTAR_SPATIALDOMAINS_QUADGEOM_H
 
 #include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdQuadExp.h>
 
-#include <SpatialDomains/GeomFactors2D.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+#include "SpatialDomains/SegGeom.h"     // for SegGeomSharedPtr, etc
+
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
         class QuadGeom;
+        class Curve;
+        typedef boost::shared_ptr<Curve> CurveSharedPtr;
         typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
         typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;
         typedef std::vector< QuadGeomSharedPtr >::iterator QuadGeomVectorIter;

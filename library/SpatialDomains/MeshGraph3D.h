@@ -38,7 +38,6 @@
 
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include <list>
 #include <boost/unordered_map.hpp>
 
 namespace Nektar

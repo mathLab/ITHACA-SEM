@@ -213,7 +213,7 @@ MACRO(ADD_NEKTAR_LIBRARY name component type)
     ADD_DEPENDENCIES(${name} spblastk0.9b modmetis-4.0 boost tinyxml zlib)
 
     IF (NEKTAR_USE_MPI)
-        TARGET_LINK_LIBRARIES( ${name} ${GSMPI_LIBRARY} )
+        TARGET_LINK_LIBRARIES( ${name} ${GSMPI_LIBRARY} ${XXT_LIBRARY})
     ENDIF (NEKTAR_USE_MPI)
     
     SET_COMMON_PROPERTIES(${name})

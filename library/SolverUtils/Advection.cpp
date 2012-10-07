@@ -42,34 +42,36 @@ namespace Nektar
         AdvectionFactory& GetAdvectionFactory()
         {
             typedef Loki::SingletonHolder<AdvectionFactory,
-                                          Loki::CreateUsingNew,
-                                          Loki::NoDestroy > Type;
+            Loki::CreateUsingNew,
+            Loki::NoDestroy > Type;
             return Type::Instance();
         }
-
+        
         void Advection::InitObject(
-            const LibUtilities::SessionReaderSharedPtr        pSession,
-            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+                                   const LibUtilities::SessionReaderSharedPtr        pSession,
+                                   Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
         {
             v_InitObject(pSession, pFields);
         }
         
         void Advection::Advect(
-            const int                                          nConvectiveFields,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+                               const int                                          nConvectiveFields,
+                               const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                               const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+                               const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                               Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
             v_Advect(nConvectiveFields, fields, advVel, inarray, outarray);
         }
         
-        void Advection::InterpToInterface(
-                                          const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                          Array<OneD, NekDouble>    &total,
-                                          Array<OneD, NekDouble>    &InterfaceValue)
+        void Advection::divCorrFlux(
+                                    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                                    const Array<OneD, const NekDouble> &fluxX, 
+                                    const Array<OneD, const NekDouble> &fluxY, 
+                                    const Array<OneD, const NekDouble> &numericalFlux,
+                                    Array<OneD,       NekDouble> &divCFlux)
         {
-            v_InterpToInterface(fields, total, InterfaceValue);
+            v_divCorrFlux(fields, fluxX, fluxY, numericalFlux, divCFlux);
         }
     }
 }

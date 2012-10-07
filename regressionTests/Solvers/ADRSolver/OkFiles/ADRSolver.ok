@@ -164,67 +164,91 @@ Test_Advection3D_m12_DG_prism.xml
 L 2 error (variable u) : 6.72764e-08
 L inf error (variable u) : 1.01404e-05
 ----------------------------------------
-Test_InviscidBurger1D_m11_WeakDG_GLL_LAGRANGE.xml
+Test_InviscidBurger1D_WeakDG_GLL_LAGRANGE.xml
 L 2 error (variable u) : 2.28218
-L inf error (variable u) : 2.49996
+L inf error (variable u) : 2.49995
 ----------------------------------------
-Test_InviscidBurger1D_m11_WeakDG_MODIFIED.xml
+Test_InviscidBurger1D_WeakDG_MODIFIED.xml
 L 2 error (variable u) : 2.28218
-L inf error (variable u) : 2.49996
+L inf error (variable u) : 2.49995
 ----------------------------------------
-Test_InviscidBurger1D_m11_FRDG_GLL_LAGRANGE.xml
-L 2 error (variable u) : 2.28376
+Test_InviscidBurger1D_FRDG_GLL_LAGRANGE.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.49995
+----------------------------------------
+Test_InviscidBurger1D_FRDG_MODIFIED.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.49995
+----------------------------------------
+Test_InviscidBurger1D_FRSD_GLL_LAGRANGE.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.5
+----------------------------------------
+Test_InviscidBurger1D_FRSD_MODIFIED.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.5
+----------------------------------------
+Test_InviscidBurger1D_FRHU_GLL_LAGRANGE.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.5
+----------------------------------------
+Test_InviscidBurger1D_FRHU_MODIFIED.xml
+L 2 error (variable u) : 2.28218
+L inf error (variable u) : 2.5
+----------------------------------------
+Test_InviscidBurger1D_FRDG_GLL_LAGRANGE_SEM.xml
+L 2 error (variable u) : 2.28218
 L inf error (variable u) : 2.50003
 ----------------------------------------
-Test_InviscidBurger1D_m11_FRDG_MODIFIED.xml
-L 2 error (variable u) : 2.28376
-L inf error (variable u) : 2.50003
-----------------------------------------
-Test_InviscidBurger1D_m11_FRSD_GLL_LAGRANGE.xml
-L 2 error (variable u) : 2.28219
+Test_InviscidBurger1D_FRSD_GLL_LAGRANGE_SEM.xml
+L 2 error (variable u) : 2.28218
 L inf error (variable u) : 2.5
 ----------------------------------------
-Test_InviscidBurger1D_m11_FRSD_MODIFIED.xml
-L 2 error (variable u) : 2.28219
+Test_InviscidBurger1D_FRHU_GLL_LAGRANGE_SEM.xml
+L 2 error (variable u) : 2.28218
 L inf error (variable u) : 2.5
 ----------------------------------------
-Test_InviscidBurger1D_m11_FRHU_GLL_LAGRANGE.xml
-L 2 error (variable u) : 2.28219
-L inf error (variable u) : 2.5
+Test_Advection1D_WeakDG_GLL_LAGRANGE.xml
+L 2 error (variable u) : 0.00960004
+L inf error (variable u) : 0.0177832
 ----------------------------------------
-Test_InviscidBurger1D_m11_FRHU_MODIFIED.xml
-L 2 error (variable u) : 2.28219
-L inf error (variable u) : 2.5
+Test_Advection1D_WeakDG_MODIFIED.xml
+L 2 error (variable u) : 0.00960004
+L inf error (variable u) : 0.0177832
 ----------------------------------------
-Test_Advection1D_m3_WeakDG_GLL_LAGRANGE.xml
-L 2 error (variable u) : 0.0791008
-L inf error (variable u) : 0.169845
+Test_Advection1D_FRDG_GLL_LAGRANGE.xml
+L 2 error (variable u) : 0.00960004
+L inf error (variable u) : 0.0177832
 ----------------------------------------
-Test_Advection1D_m3_WeakDG_MODIFIED.xml
-L 2 error (variable u) : 0.0791008
-L inf error (variable u) : 0.169845
+Test_Advection1D_FRDG_MODIFIED.xml
+L 2 error (variable u) : 0.00960004
+L inf error (variable u) : 0.0177832
 ----------------------------------------
-Test_Advection1D_m3_FRDG_GLL_LAGRANGE.xml
+Test_Advection1D_FRSD_GLL_LAGRANGE.xml
+L 2 error (variable u) : 0.0261109
+L inf error (variable u) : 0.0456513
+----------------------------------------
+Test_Advection1D_FRSD_MODIFIED.xml
+L 2 error (variable u) : 0.0261109
+L inf error (variable u) : 0.0456513
+----------------------------------------
+Test_Advection1D_FRHU_GLL_LAGRANGE.xml
+L 2 error (variable u) : 0.0369431
+L inf error (variable u) : 0.0642327
+----------------------------------------
+Test_Advection1D_FRHU_MODIFIED.xml
+L 2 error (variable u) : 0.0369431
+L inf error (variable u) : 0.0642327
+----------------------------------------
+Test_Advection1D_FRDG_GLL_LAGRANGE_SEM.xml
 L 2 error (variable u) : 0.00988799
 L inf error (variable u) : 0.0194621
 ----------------------------------------
-Test_Advection1D_m3_FRDG_MODIFIED.xml
-L 2 error (variable u) : 0.00988799
-L inf error (variable u) : 0.0194621
-----------------------------------------
-Test_Advection1D_m3_FRSD_GLL_LAGRANGE.xml
+Test_Advection1D_FRSD_GLL_LAGRANGE_SEM.xml
 L 2 error (variable u) : 0.0264657
 L inf error (variable u) : 0.0456232
 ----------------------------------------
-Test_Advection1D_m3_FRSD_MODIFIED.xml
-L 2 error (variable u) : 0.0264657
-L inf error (variable u) : 0.0456232
-----------------------------------------
-Test_Advection1D_m3_FRHU_GLL_LAGRANGE.xml
-L 2 error (variable u) : 0.0372516
-L inf error (variable u) : 0.0641954
-----------------------------------------
-Test_Advection1D_m3_FRHU_MODIFIED.xml
+Test_Advection1D_FRHU_GLL_LAGRANGE_SEM.xml
 L 2 error (variable u) : 0.0372516
 L inf error (variable u) : 0.0641954
 ----------------------------------------

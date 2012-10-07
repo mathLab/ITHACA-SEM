@@ -36,15 +36,11 @@
 #ifndef NODALTRIEXP_H
 #define NODALTRIEXP_H
 
-#include <LocalRegions/LocalRegions.hpp>
 #include <StdRegions/StdNodalTriExp.h>
 #include <SpatialDomains/TriGeom.h>
 
-#include <SpatialDomains/GeomFactors2D.h>
-
 #include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
-
 #include <LocalRegions/Expansion2D.h>
 
 namespace Nektar
@@ -443,96 +439,3 @@ namespace Nektar
 
 #endif // NODALTRIEXP_H
 
-/** 
- *    $Log: NodalTriExp.h,v $
- *    Revision 1.27  2009/04/29 10:53:48  pvos
- *    Made demos working with nodal expansions
- *
- *    Revision 1.26  2009/04/27 21:34:07  sherwin
- *    Updated WriteToField
- *
- *    Revision 1.25  2009/01/21 16:59:57  pvos
- *    Added additional geometric factors to improve efficiency
- *
- *    Revision 1.24  2008/11/24 10:31:14  pvos
- *    Changed name from _PartitionedOp to _MatFree
- *
- *    Revision 1.23  2008/11/19 16:01:41  pvos
- *    Added functionality for variable Laplacian coeffcients
- *
- *    Revision 1.22  2008/11/05 16:08:15  pvos
- *    Added elemental optimisation functionality
- *
- *    Revision 1.21  2008/07/29 22:25:34  sherwin
- *    general update for DG Advection including separation of GetGeom() into GetGeom1D,2D,3D()
- *
- *    Revision 1.20  2008/07/12 17:27:07  sherwin
- *    Update for AddBoundaryInt and moved various members to be private rather than protected
- *
- *    Revision 1.19  2008/07/04 10:19:04  pvos
- *    Some updates
- *
- *    Revision 1.18  2008/05/30 00:33:48  delisi
- *    Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
- *
- *    Revision 1.17  2008/05/29 21:33:37  pvos
- *    Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
- *
- *    Revision 1.16  2008/04/06 05:59:05  bnelson
- *    Changed ConstArray to Array<const>
- *
- *    Revision 1.15  2008/04/02 22:19:26  pvos
- *    Update for 2D local to global mapping
- *
- *    Revision 1.14  2008/03/18 14:12:53  pvos
- *    Update for nodal triangular helmholtz solver
- *
- *    Revision 1.13  2007/07/28 05:09:32  sherwin
- *    Fixed version with updated MemoryManager
- *
- *    Revision 1.12  2007/07/22 23:04:17  bnelson
- *    Backed out Nektar::ptr.
- *
- *    Revision 1.11  2007/07/20 00:45:50  bnelson
- *    Replaced boost::shared_ptr with Nektar::ptr
- *
- *    Revision 1.10  2007/07/13 09:02:21  sherwin
- *    Mods for Helmholtz solver
- *
- *    Revision 1.9  2007/07/11 19:26:03  sherwin
- *    update for new Manager structure
- *
- *    Revision 1.8  2007/07/10 17:17:24  sherwin
- *    Introduced Scaled Matrices into the MatrixManager
- *
- *    Revision 1.7  2007/06/07 15:54:18  pvos
- *    Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
- *    Also made corrections to various ASSERTL2 calls
- *
- *    Revision 1.6  2007/06/01 17:08:07  pvos
- *    Modification to make LocalRegions/Project2D run correctly (PART1)
- *
- *    Revision 1.5  2007/05/31 19:13:12  pvos
- *    Updated NodalTriExp + LocalRegions/Project2D + some other modifications
- *
- *    Revision 1.4  2006/12/10 18:59:46  sherwin
- *    Updates for Nodal points
- *
- *    Revision 1.3  2006/05/30 14:00:03  sherwin
- *    Updates to make MultiRegions and its Demos work
- *
- *    Revision 1.2  2006/05/29 17:05:49  sherwin
- *    Modified to put shared_ptr around geom definitions
- *
- *    Revision 1.1  2006/05/04 18:58:46  kirby
- *    *** empty log message ***
- *
- *    Revision 1.10  2006/03/12 21:59:48  sherwin
- *
- *    compiling version of LocalRegions
- *
- *    Revision 1.9  2006/03/12 07:43:32  sherwin
- *
- *    First revision to meet coding standard. Needs to be compiled
- *
- **/

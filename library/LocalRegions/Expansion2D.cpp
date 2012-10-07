@@ -32,11 +32,12 @@
 // Description: File for Expansion2D routines
 //
 ///////////////////////////////////////////////////////////////////////////////
-//#include <LocalRegions/SegExp.h>
 #include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/Expansion1D.h>
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
+#include <LocalRegions/MatrixKey.h>
 
 namespace Nektar
 {

@@ -36,17 +36,15 @@
 #ifndef NEKTAR_LIB_UTILIITIES_FFT_NEKTARFFT_H
 #define NEKTAR_LIB_UTILIITIES_FFT_NEKTARFFT_H
 
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/NekManager.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
 {
+    template <typename Dim, typename DataType>
+    class Array;
+    
 	namespace LibUtilities
 	{
 		/**

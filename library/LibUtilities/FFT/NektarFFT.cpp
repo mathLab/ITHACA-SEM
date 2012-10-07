@@ -33,10 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-using std::string;
-
 #include <LibUtilities/FFT/NektarFFT.h>
+#include <loki/Singleton.h>             // for CreateUsingNew, NoDestroy, etc
 
 namespace Nektar
 {

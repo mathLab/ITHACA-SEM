@@ -37,9 +37,8 @@
 #define EXPANSION2D_H
 
 #include <LocalRegions/Expansion.h>
-#include <LocalRegions/Expansion1D.h>
-#include <LocalRegions/LocalRegionsDeclspec.h>
 #include <StdRegions/StdExpansion2D.h>
+#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
@@ -282,5 +281,4 @@ namespace Nektar
     } //end of namespace
 } //end of namespace
 
-#define EXPANSION2D_H
 #endif

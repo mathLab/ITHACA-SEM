@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <VortexWaveInteraction/VortexWaveInteraction.h>
+#include <MultiRegions/GlobalLinSysKey.h>
 
 namespace Nektar
 {

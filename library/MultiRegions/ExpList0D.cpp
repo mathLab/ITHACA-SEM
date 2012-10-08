@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList0D.h>
-#include <LibUtilities/Polylib/Polylib.h>
 
 namespace Nektar
 {

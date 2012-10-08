@@ -1,5 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
+// File ExpList.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -34,24 +35,17 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
 #define NEKTAR_LIBS_MULTIREGIONS_EXPLIST_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
-#include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
-#include <MultiRegions/GlobalLinSysKey.h>
-
-#include <LocalRegions/MatrixKey.h>
-#include <SpatialDomains/SegGeom.h>
-#include <LocalRegions/PointExp.h>
-
 #include <SpatialDomains/MeshGraph.h>
-#include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>
 #include <boost/enable_shared_from_this.hpp>
+#include <MultiRegions/AssemblyMap/AssemblyMap.h>
 
 namespace Nektar
 {
@@ -61,9 +55,9 @@ namespace Nektar
         class GlobalLinSys;
         class AssemblyMapDG;
 
-        class ExpList0D;
-        class ExpList1D;
-        class ExpList2D;
+        class AssemblyMapCG;
+        class GlobalLinSysKey;
+        class GlobalMatrix;
 
     enum Direction
 	{
@@ -1935,251 +1929,3 @@ namespace Nektar
 
 #endif // EXPLIST_H
 
-/**
-* $Log: ExpList.h,v $
-* Revision 1.89  2010/03/02 23:50:23  sherwin
-* Updates related to making IncNavierStokesSolver able to use ContCoeffs
-*
-* Revision 1.88  2010/03/01 17:57:28  cantwell
-* Fixed 3D global matrix operations.
-* Fixed ProjectCont{1,2,3}D demos.
-* Fixed incorrectly placed ASSERT in boundary conditions.
-* Updated TimingGeneralMatrixOp3D to use contfield3d rather than explist3d.
-*
-* Revision 1.87  2010/01/27 13:19:13  cantwell
-* Added functions to write history/probe data during timestepping.
-*
-* Revision 1.86  2010/01/20 18:05:09  cantwell
-* Added utility for probing a line of points in a FLD file.
-*
-* Revision 1.85  2010/01/06 13:24:48  cantwell
-* Corrected naming of parameters in HelmSolve routines.
-* Documentation of DisContField1D.
-*
-* Revision 1.84  2010/01/03 19:39:09  cantwell
-* Added FldToVtk converter.
-* Added XmlToVtk converter.
-*
-* Revision 1.83  2009/12/15 18:09:02  cantwell
-* Split GeomFactors into 1D, 2D and 3D
-* Added generation of tangential basis into GeomFactors
-* Updated ADR2DManifold solver to use GeomFactors for tangents
-* Added <GEOMINFO> XML session section support in MeshGraph
-* Fixed const-correctness in VmathArray
-* Cleaned up LocalRegions code to generate GeomFactors
-* Removed GenSegExp
-* Temporary fix to SubStructuredGraph
-* Documentation for GlobalLinSys and GlobalMatrix classes
-*
-* Revision 1.82  2009/12/14 18:01:08  cbiotto
-* Adding functions for printing out tecplot file
-*
-* Revision 1.81  2009/12/08 15:10:50  sehunchun
-* HelmholtzSolver with additional variables are added
-*
-* Revision 1.80  2009/11/19 14:06:00  sehunchun
-* *** empty log message ***
-*
-* Revision 1.79  2009/11/19 13:48:06  sehunchun
-* *** empty log message ***
-*
-* Revision 1.78  2009/11/19 11:41:07  pvos
-* Fixed various bugs
-*
-* Revision 1.77  2009/11/10 19:05:34  sehunchun
-* *** empty log message ***
-*
-* Revision 1.76  2009/11/07 17:15:17  sehunchun
-* Add GetTotPoints(idx)
-*
-* Revision 1.75  2009/11/06 21:51:18  sherwin
-* Added L2_DGDeriv method
-*
-* Revision 1.74  2009/11/04 20:30:15  cantwell
-* Added documentation to ExpList and ExpList1D and tidied up code.
-*
-* Revision 1.73  2009/11/02 19:15:43  cantwell
-* Moved ContField1D to inherit from DisContField1D.
-* Moved ContField3D to inherit from DisContField3D.
-* Incorporated GenExpList1D functionality into ExpList1D.
-* Tidied up and added documentation to various classes.
-* Moved Namespace documentation and introductions to separate files along with
-* doxygen configuration.
-* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
-* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
-* Updated Linux compiling instructions.
-* Updated regDemo to use Helmholtz2D-g when built as debug.
-*
-* Revision 1.72  2009/10/30 14:02:55  pvos
-* Multi-level static condensation updates
-*
-* Revision 1.71  2009/10/25 18:54:38  sherwin
-* Added H1 norm for error evaluation
-*
-* Revision 1.70  2009/10/22 16:46:15  cbiotto
-* Adding function EvalBasisNumModesMaxPerExp
-*
-* Revision 1.69  2009/10/22 16:40:35  cbiotto
-* *** empty log message ***
-*
-* Revision 1.68  2009/09/06 22:28:45  sherwin
-* Updates for Navier-Stokes solver
-*
-* Revision 1.67  2009/07/08 17:22:47  sehunchun
-* Deleting GetTanBasis
-*
-* Revision 1.66  2009/07/08 11:13:54  sehunchun
-* Adding GetSurfaceNormal function
-*
-* Revision 1.65  2009/07/07 16:36:45  sehunchun
-* Adding AddTraceBiIntegral...
-*
-* Revision 1.64  2009/07/03 15:38:25  sehunchun
-* Adding GetTanBasis function
-*
-* Revision 1.63  2009/05/14 14:26:41  pvos
-* Updates to apply the dirichlet boundary condition forcing inside the static condensation algorithm
-*
-* Revision 1.62  2009/04/27 21:34:58  sherwin
-* Modified WriteToField Method
-*
-* Revision 1.61  2009/04/27 15:02:04  pvos
-* From h-to-p efficiently updates
-*
-* Revision 1.60  2009/04/22 22:32:10  sherwin
-* Added in method to read dat file
-*
-* Revision 1.59  2009/04/20 16:14:06  sherwin
-* Updates for optimising bandwidth of DG solver and allowing write import on explist
-*
-* Revision 1.58  2009/04/03 20:33:57  sherwin
-* Update for Eigenfunction evaluation
-*
-* Revision 1.57  2009/03/23 11:52:15  pvos
-* NekMatrix updates
-*
-* Revision 1.56  2009/03/23 10:51:52  pvos
-* Added BlockMatrix support
-*
-* Revision 1.55  2009/03/04 14:17:38  pvos
-* Removed all methods that take and Expansion as argument
-*
-* Revision 1.54  2009/03/04 05:58:49  bnelson
-* Fixed visual studio compile errors.
-*
-* Revision 1.53  2009/02/08 09:11:49  sherwin
-* General updates to introduce multiple matrix definitions based on different boundary types
-*
-* Revision 1.52  2009/02/03 14:33:08  pvos
-* Modifications for solvers with time-dependent dirichlet BC's
-*
-* Revision 1.51  2009/02/02 16:43:26  claes
-* Added virtual functions for solver access
-*
-* Revision 1.50  2009/01/06 21:05:57  sherwin
-* Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
-*
-* Revision 1.49  2008/11/19 10:52:55  pvos
-* Changed MultiplyByInvMassMatrix + added some virtual functions
-*
-* Revision 1.48  2008/11/01 22:06:45  bnelson
-* Fixed Visual Studio compile error.
-*
-* Revision 1.47  2008/10/29 22:46:35  sherwin
-* Updates for const correctness and a few other bits
-*
-* Revision 1.46  2008/10/19 15:57:52  sherwin
-* Added method EvalBasisNumModesMax
-*
-* Revision 1.45  2008/10/16 10:21:42  sherwin
-* Updates to make methods consisten with AdvectionDiffusionReactionsSolver. Modified MultiplyByInvMassMatrix to take local or global arrays
-*
-* Revision 1.44  2008/10/04 20:04:26  sherwin
-* Modifications for solver access
-*
-* Revision 1.43  2008/09/16 13:36:06  pvos
-* Restructured the LocalToGlobalMap classes
-*
-* Revision 1.42  2008/08/14 22:15:51  sherwin
-* Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
-*
-* Revision 1.41  2008/07/29 22:27:33  sherwin
-* Updates for DG solvers, including using GenSegExp, fixed forcing function on UDG HelmSolve and started to tidy up the mapping arrays to be 1D rather than 2D
-*
-* Revision 1.40  2008/07/15 13:00:04  sherwin
-* Updates for DG advection solver - not yet debugged
-*
-* Revision 1.39  2008/07/12 19:08:29  sherwin
-* Modifications for DG advection routines
-*
-* Revision 1.38  2008/07/12 17:31:39  sherwin
-* Added m_phys_offset and rename m_exp_offset to m_coeff_offset
-*
-* Revision 1.37  2008/07/11 15:48:32  pvos
-* Added Advection classes
-*
-* Revision 1.36  2008/06/06 23:27:20  ehan
-* Added doxygen documentation
-*
-* Revision 1.35  2008/06/05 15:06:58  pvos
-* Added documentation
-*
-* Revision 1.34  2008/05/29 21:35:03  pvos
-* Added WriteToFile routines for Gmsh output format + modification of BndCond implementation in MultiRegions
-*
-* Revision 1.33  2008/05/10 18:27:33  sherwin
-* Modifications necessary for QuadExp Unified DG Solver
-*
-* Revision 1.32  2008/04/06 06:00:07  bnelson
-* Changed ConstArray to Array<const>
-*
-* Revision 1.31  2008/03/12 15:25:45  pvos
-* Clean up of the code
-*
-* Revision 1.30  2008/01/23 21:50:52  sherwin
-* Update from EdgeComponents to SegGeoms
-*
-* Revision 1.29  2007/12/17 13:05:04  sherwin
-* Made files compatible with modifications in StdMatrixKey which now holds constants
-*
-* Revision 1.28  2007/12/06 22:52:30  pvos
-* 2D Helmholtz solver updates
-*
-* Revision 1.27  2007/11/20 16:27:16  sherwin
-* Zero Dirichlet version of UDG Helmholtz solver
-*
-* Revision 1.26  2007/10/03 11:37:50  sherwin
-* Updates relating to static condensation implementation
-*
-* Revision 1.25  2007/09/03 19:58:31  jfrazier
-* Formatting.
-*
-* Revision 1.24  2007/07/27 03:10:49  bnelson
-* Fixed g++ compile error.
-*
-* Revision 1.23  2007/07/26 08:40:49  sherwin
-* Update to use generalised i/o hooks in Helmholtz1D
-*
-* Revision 1.22  2007/07/22 23:04:20  bnelson
-* Backed out Nektar::ptr.
-*
-* Revision 1.21  2007/07/20 02:04:12  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.20  2007/07/17 07:11:05  sherwin
-* Chaned definition of NullExpList
-*
-* Revision 1.19  2007/07/16 18:28:43  sherwin
-* Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
-*
-* Revision 1.18  2007/07/13 09:02:24  sherwin
-* Mods for Helmholtz solver
-*
-* Revision 1.17  2007/06/07 15:54:19  pvos
-* Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
-* Also made corrections to various ASSERTL2 calls
-*
-* Revision 1.16  2007/06/05 16:36:55  pvos
-* Updated Explist2D ContExpList2D and corresponding demo-codes
-*
-**/

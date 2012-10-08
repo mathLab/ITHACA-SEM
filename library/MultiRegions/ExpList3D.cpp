@@ -34,7 +34,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList3D.h>
-#include <iomanip>
+
+#include <LocalRegions/HexExp.h>
+#include <LocalRegions/PrismExp.h>
+#include <LocalRegions/PyrExp.h>
+#include <LocalRegions/TetExp.h>
 
 namespace Nektar
 {

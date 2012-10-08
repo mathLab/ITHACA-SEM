@@ -34,25 +34,31 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
 #define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
+
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+#include <StdRegions/StdExpansion.h>
+#include "LibUtilities/BasicUtils/SharedArray.hpp"  // for Array
+#include "LibUtilities/LinearAlgebra/NekTypeDefs.hpp"
 
+#include <boost/shared_ptr.hpp>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
+        class AssemblyMap;
+        typedef boost::shared_ptr<AssemblyMap> AssemblyMapSharedPtr;
+
         class Preconditioner;
         typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
-
         typedef LibUtilities::NekFactory< std::string, Preconditioner, 
             const boost::shared_ptr<GlobalLinSys>&,
             const boost::shared_ptr<AssemblyMap>& > PreconFactory;
         PreconFactory& GetPreconFactory();
 
         class Preconditioner
-	{
+        {
         public:
             MULTI_REGIONS_EXPORT Preconditioner(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,

@@ -52,6 +52,9 @@
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
+#include <LocalRegions/SegExp.h>
+#include <LocalRegions/QuadExp.h>
+#include <LocalRegions/TriExp.h>
 //#include </PreProcessing/MeshConvert/Convert.h>
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
 //#include <LibUtilities/LinearAlgebra/alglib.hpp>

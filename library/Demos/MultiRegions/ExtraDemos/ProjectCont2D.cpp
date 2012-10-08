@@ -6,6 +6,7 @@
 #include <LibUtilities/Communication/Comm.h>
 #include "MultiRegions/MultiRegions.hpp"
 #include "MultiRegions/ContField2D.h"
+#include <SpatialDomains/MeshGraph2D.h>
 
 using namespace Nektar;
 

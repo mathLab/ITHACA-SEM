@@ -38,6 +38,8 @@
 #include <cstdlib>
 #include <FluxReconstruction/Advection1DFR.h>
 #include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
+#include <SpatialDomains/MeshGraph1D.h>
+#include <StdRegions/StdSegExp.h>
 
 namespace Nektar
 {

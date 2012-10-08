@@ -36,14 +36,20 @@
 
 #ifndef MULTIREGIONS_SUBSTRUCTUREDGRAPH_H
 #define MULTIREGIONS_SUBSTRUCTUREDGRAPH_H
-#include <MultiRegions/MultiRegionsDeclspec.h>
-#include <MultiRegions/MultiRegions.hpp>
 
+#include <MultiRegions/MultiRegionsDeclspec.h>
+
+#include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
+#include "LibUtilities/BasicUtils/SharedArray.hpp"  // for Array
+
+#include <vector>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
+
+using std::vector;
 
 namespace Nektar
 {

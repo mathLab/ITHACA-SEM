@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/DisContField1D.h>
-#include <LocalRegions/SegExp.h>
+#include <StdRegions/StdSegExp.h>
 
 
 namespace Nektar

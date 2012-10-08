@@ -10,6 +10,7 @@
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList1DHomogeneous2D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
+#include <StdRegions/StdTriExp.h>
 
 using namespace Nektar;
 

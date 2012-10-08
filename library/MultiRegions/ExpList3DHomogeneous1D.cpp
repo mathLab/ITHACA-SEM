@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
+#include <MultiRegions/ExpList2D.h>
 
 namespace Nektar
 {
@@ -474,9 +475,4 @@ namespace Nektar
     } //end of namespace
 } //end of namespace
 
-
-/**
-* $Log: v $
-*
-**/
 

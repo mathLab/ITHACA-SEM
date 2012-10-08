@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <iomanip>
 
 #include <CompressibleFlowSolver/EquationSystems/UnsteadySystem.h>
 

@@ -36,6 +36,7 @@
 #include <IncNavierStokesSolver/EquationSystems/CoupledLinearNS.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>
+#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
 namespace Nektar
 {

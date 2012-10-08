@@ -33,8 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 
 namespace Nektar

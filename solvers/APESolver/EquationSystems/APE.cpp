@@ -34,8 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <cstdio>
-#include <cstdlib>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>

@@ -33,16 +33,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Driver.h>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-
-#include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/GlobalLinSysKey.h>
+#include<VortexWaveInteraction/VortexWaveInteraction.h>
 
 using namespace Nektar;
-using namespace Nektar::SolverUtils;
-
-#include<VortexWaveInteraction/VortexWaveInteraction.h>
 
 #if defined(_MSC_VER) && BOOST_VERSION > 104700
 #include <windows.h>

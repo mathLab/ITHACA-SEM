@@ -34,8 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/AdvectionTerms/SkewSymmetricAdvection.h>
-#include <cstdio>
-#include <cstdlib>
 
 namespace Nektar
 {

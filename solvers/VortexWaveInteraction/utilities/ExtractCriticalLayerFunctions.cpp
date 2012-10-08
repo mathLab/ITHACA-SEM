@@ -34,10 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <cstdio>
-#include <cstdlib>
 
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList2D.h>
 
 
 void Computestreakpositions(MultiRegions::ExpListSharedPtr &streak,

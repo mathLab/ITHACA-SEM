@@ -34,12 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
-#include <cstdio>
-#include <cstdlib>
-
-#include <cmath>
-
 #include <string>
+
+
 namespace Nektar
 {
 

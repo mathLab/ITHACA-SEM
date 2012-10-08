@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <complex>
 
 #include <ADRSolver/EquationSystems/CFLtester.h>
 #include <LocalRegions/TriExp.h>

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.h>
+#include <StdRegions/StdSegExp.h>
 #include <cstdio>
 #include <cstdlib>
 #include <stdio.h>

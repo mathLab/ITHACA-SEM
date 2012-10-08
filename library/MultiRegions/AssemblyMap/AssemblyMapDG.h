@@ -37,9 +37,7 @@
 #define MULTIREGIONS_ASSEMBLY_MAP_DG_H
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
-#include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList0D.h>

@@ -35,6 +35,7 @@
 
 #include <IncNavierStokesSolver/EquationSystems/CoupledLinearNS.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LocalRegions/MatrixKey.h>
 
 namespace Nektar
 {

@@ -36,6 +36,7 @@
 #include <string>
 using std::string;
 
+#include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <iomanip>
 #include <MultiRegions/ContField1D.h>

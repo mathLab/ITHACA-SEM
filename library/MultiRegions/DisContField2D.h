@@ -36,17 +36,13 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <LocalRegions/SegExp.h>
-#include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/Conditions.h>
-#include <SpatialDomains/SegGeom.h>
 
 namespace Nektar
 {

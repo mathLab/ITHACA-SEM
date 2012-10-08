@@ -34,6 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <MultiRegions/ExpList.h>
+#include <LocalRegions/SegExp.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/QuadExp.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>

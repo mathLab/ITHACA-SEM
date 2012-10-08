@@ -35,17 +35,10 @@
 
 #ifndef EXPLIST3D_H
 #define EXPLIST3D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
-#include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList2D.h>
-
-#include <LocalRegions/HexExp.h>
-#include <LocalRegions/PrismExp.h>
-#include <LocalRegions/PyrExp.h>
-#include <LocalRegions/TetExp.h>
-#include <SpatialDomains/MeshGraph3D.h>
-#include <SpatialDomains/Conditions.h>
+#include "MultiRegions/ExpList.h"       // for ExpList
 
 namespace Nektar
 {

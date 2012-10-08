@@ -32,7 +32,7 @@
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
-
+#include <SpatialDomains/MeshGraph2D.h>
 
 
 //! Nektar++ namespace

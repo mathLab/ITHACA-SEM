@@ -35,10 +35,8 @@
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTSTATICCOND_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTSTATICCOND_H
 
-#include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSysDirect.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 namespace Nektar
 {

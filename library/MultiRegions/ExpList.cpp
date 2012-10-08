@@ -37,6 +37,15 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/GlobalLinSys.h>
 
+#include "LocalRegions/Expansion.h"     // for Expansion
+#include "LocalRegions/MatrixKey.h"     // for MatrixKey
+
+#include "MultiRegions/AssemblyMap/AssemblyMapCG.h"  // for AssemblyMapCG, etc
+#include "MultiRegions/GlobalLinSysKey.h"  // for GlobalLinSysKey
+#include "MultiRegions/GlobalMatrix.h"  // for GlobalMatrix, etc
+#include "MultiRegions/GlobalMatrixKey.h"  // for GlobalMatrixKey
+
+
 namespace Nektar
 {
     namespace MultiRegions

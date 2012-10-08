@@ -35,6 +35,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/DisContField3D.h>
+#include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
+#include <SpatialDomains/MeshGraph3D.h>
 
 namespace Nektar
 {

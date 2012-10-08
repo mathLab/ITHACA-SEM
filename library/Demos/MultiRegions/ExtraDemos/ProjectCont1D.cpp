@@ -6,6 +6,7 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ContField1D.h>
 #include <SpatialDomains/Conditions.h>
+#include <SpatialDomains/MeshGraph1D.h>
 
 using namespace Nektar;
 

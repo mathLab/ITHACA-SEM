@@ -36,11 +36,19 @@
 
 #include <MultiRegions/SubStructuredGraph.h>
 #include <LibUtilities/BasicUtils/Metis.hpp>
+#include "LibUtilities/BasicUtils/VmathArray.hpp"  // for Vcopy
+
+#include <iostream>
+#include <algorithm>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
+
+using std::max;
+using std::cout;
+using std::endl;
 
 namespace Nektar
 {

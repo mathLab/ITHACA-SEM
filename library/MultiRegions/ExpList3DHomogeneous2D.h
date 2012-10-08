@@ -36,12 +36,10 @@
 
 #ifndef EXPLIST3DHOMO2D_H
 #define EXPLIST3DHOMO2D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpListHomogeneous2D.h>
-#include <MultiRegions/ExpList1D.h>
-#include <SpatialDomains/MeshGraph1D.h>
 
 namespace Nektar
 {
@@ -137,9 +135,4 @@ namespace Nektar
 } //end of namespace
 
 #endif//EXPLIST3DHOMO2D_H
-
-/**
-* $Log: v $
-*
-**/
 

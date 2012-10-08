@@ -6,6 +6,7 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
+#include <SpatialDomains/MeshGraph1D.h>
 
 using namespace Nektar;
 

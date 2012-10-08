@@ -34,8 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSys.h>
-//#include <MultiRegions/AssemblyMapCG.h>
+#include <LocalRegions/Expansion.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LocalRegions/MatrixKey.h>
+
 namespace Nektar
 {
     namespace MultiRegions

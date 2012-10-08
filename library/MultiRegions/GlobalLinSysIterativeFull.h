@@ -36,16 +36,12 @@
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSIterativeCG_H
 
 #include <MultiRegions/GlobalLinSysIterative.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         // Forward declarations
-        class AssemblyMapCG;
-        class AssemblyMapDG;
         class ExpList;
 
         /// A global linear system.

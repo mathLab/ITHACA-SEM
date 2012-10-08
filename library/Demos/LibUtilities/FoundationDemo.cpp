@@ -3,13 +3,11 @@
 #include <iosfwd>
 #include <cmath>
 #include <cstdio>
-#include <limits>
 
 using namespace std;
 
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/PolyEPoints.h>
 #include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
 
 using namespace Nektar;

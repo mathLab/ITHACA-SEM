@@ -1,14 +1,10 @@
 #include <algorithm>
 #include <iostream>
-#include <limits>
-#include <cstdio>
 #include <cstdlib>
 #include <cmath>
 using namespace std;
 
-#include <StdRegions/StdExpUtil.h>
 #include <StdRegions/StdHexExp.h>
-#include "StdRegions/StdExpansion3D.h"
 #include "StdRegions/StdRegions.hpp"
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include "LibUtilities/Foundations/Basis.h"

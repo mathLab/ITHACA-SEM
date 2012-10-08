@@ -38,10 +38,7 @@
 
 #include <SolverUtils/Advection.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Communication/Comm.h>
-#include <SpatialDomains/SpatialData.h>
 
 
 namespace Nektar

@@ -1,6 +1,5 @@
 #include "StdRegions/StdExpansion3D.h"
 #include "LocalRegions/PrismExp.h"
-#include "LocalRegions/LocalRegions.hpp"
 
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include "LibUtilities/Foundations/Basis.h"
@@ -12,8 +11,6 @@
 
 #include <algorithm>
 #include <iostream> 
-#include <limits>
-#include <cstdio>
 #include <cstdlib>   
 #include <cmath>
 #include <iomanip>     

@@ -1,13 +1,10 @@
-#include <cstdio>
 #include <cstdlib>
 #include <math.h>
 
-#include "StdRegions/StdExpansion3D.h"
 #include "LocalRegions/HexExp.h"
 #include "LocalRegions/TetExp.h"
 #include "LocalRegions/PrismExp.h"
 
-#include "LocalRegions/LocalRegions.hpp"
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include "LibUtilities/Foundations/Basis.h"
 

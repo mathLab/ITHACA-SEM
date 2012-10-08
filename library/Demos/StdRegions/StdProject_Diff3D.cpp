@@ -2,12 +2,10 @@
 #include <cstdlib>
 #include <math.h>
 
-#include "StdRegions/StdExpansion2D.h"
 #include "StdRegions/StdHexExp.h"
 #include "StdRegions/StdPrismExp.h"
 #include "StdRegions/StdTetExp.h"
 
-#include "StdRegions/StdRegions.hpp"
 #include "LibUtilities/Foundations/Foundations.hpp"
 #include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
 

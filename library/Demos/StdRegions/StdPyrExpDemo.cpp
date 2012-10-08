@@ -1,13 +1,10 @@
 
-#include <StdRegions/StdExpUtil.h>
 #include <StdRegions/StdPyrExp.h>
 #include "StdRegions/StdRegions.hpp"
 #include "LibUtilities/Foundations/Foundations.hpp"
 
 #include <algorithm>
 #include <iostream>
-#include <limits>
-#include <cstdio>
 #include <cstdlib>
 #include <cmath>
 #include <iomanip>

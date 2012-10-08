@@ -1,7 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
 #include "StdRegions/StdSegExp.h"
-#include "StdRegions/StdRegions.hpp"
 #include "LibUtilities/Foundations/Foundations.hpp"
 
 using namespace Nektar;

@@ -3,7 +3,6 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ContField2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
 

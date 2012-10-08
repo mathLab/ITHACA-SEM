@@ -4,7 +4,6 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList3D.h>
 #include <SpatialDomains/MeshGraph3D.h>
 

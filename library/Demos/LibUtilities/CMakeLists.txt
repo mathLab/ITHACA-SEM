@@ -1,6 +1,6 @@
 
-SET(GraphSources 
-    GraphExample.cpp)
+#SET(GraphSources 
+#    GraphExample.cpp)
     
 SET(MemoryManagerSources 
     MemoryManager.cpp)
@@ -31,8 +31,9 @@ SET(TimeIntegrationDemoSources
    
 
    		
-ADD_NEKTAR_EXECUTABLE(Graph demos GraphSources )
-SET_LAPACK_LINK_LIBRARIES(Graph)
+#ADD_NEKTAR_EXECUTABLE(Graph demos GraphSources )
+#SET_LAPACK_LINK_LIBRARIES(Graph)
+
 #ADD_NEKTAR_EXECUTABLE(MemoryManager MemoryManagerSources )
 ADD_NEKTAR_EXECUTABLE(Matrix demos VecMatSources)
 SET_LAPACK_LINK_LIBRARIES(Matrix)

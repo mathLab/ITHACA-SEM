@@ -38,8 +38,10 @@
 
 #include <SolverUtils/Advection.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+
+/*
+<<<<<<< HEAD
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
@@ -52,6 +54,11 @@
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/Conditions.h>
 #include <SpatialDomains/SegGeom.h>
+=======
+
+>>>>>>> Removing some unnecessary includes in Demos and SolverUtils
+
+*/
 
 namespace Nektar
 {

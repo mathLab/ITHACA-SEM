@@ -34,13 +34,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Driver.h>
-#include <LibUtilities/BasicUtils/SessionReader.h>
+//#include <SolverUtils/Driver.h>
+//#include <LibUtilities/BasicUtils/SessionReader.h>
 
-using namespace Nektar;
 
 #include<VortexWaveInteraction/VortexWaveInteraction.h>
 
+using namespace Nektar;
 
 int main(int argc, char *argv[])
 {

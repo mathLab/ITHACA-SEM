@@ -37,23 +37,11 @@
 #define NEKTAR_SOLVERS_ADVECTIONTERM_H
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <SpatialDomains/MeshComponents.h>
+#include "LibUtilities/FFT/NektarFFT.h"  // for NektarFFTSharedPtr
+#include "SpatialDomains/MeshGraph.h"   // for MeshGraphSharedPtr
+#include "MultiRegions/ExpList.h"       // for ExpListSharedPtr
 
-#include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
-
-#include <MultiRegions/DisContField1D.h>
-#include <MultiRegions/DisContField2D.h>
-
-#include <MultiRegions/ContField3DHomogeneous1D.h>
-#include <MultiRegions/DisContField3DHomogeneous1D.h>
-#include <MultiRegions/ContField3DHomogeneous2D.h>
-#include <MultiRegions/DisContField3DHomogeneous2D.h>
-
-//#include <SolverUtils/EquationSystem.h>
 
 namespace Nektar
 {

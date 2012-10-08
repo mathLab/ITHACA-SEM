@@ -36,13 +36,16 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <sstream>
-#include <iomanip>
-#include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList2D.h>
+#include <map>
 #include <tinyxml/tinyxml.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <SpatialDomains/MeshGraph.h>
+
+using namespace std;
+using namespace Nektar;
 
 void ExpandVertices(TiXmlElement* mesh, map<int,int> jointVerts, map<int,int> &fullVerts);
 

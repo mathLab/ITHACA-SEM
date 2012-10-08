@@ -34,8 +34,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
-#include <cstdlib>
 #include <FluxReconstruction/Advection1DFR.h>
 #include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
 #include <SpatialDomains/MeshGraph1D.h>

@@ -706,7 +706,7 @@ namespace Nektar
                     Vmath::Vadd(nSolutionPts, 
                                 divFD, 1, 
                                 divFC, 1, 
-                                auxArray1 = outarray[0], 1); 
+                                auxArray1 = outarray[0], 1);
                     break;
                 }
                 case 3:
@@ -826,6 +826,16 @@ namespace Nektar
                                        auxArray1 = fluxJumps, 1,
                                        auxArray2 = fluxJumps, 1);
                     }
+                    
+                    // Multiply the edge components of the flux by the map to
+                    // go into the standard element
+                    for (i = 0; i < nEdgePts; ++i)
+                    {
+                        fluxJumps[i] = fluxJumps[i]* + 
+                        tmparrayY[i]*normals[1][i];
+                    }
+                    
+                    
  
                     // Multiply jumps by derivative of the correction functions
                     switch (e) 
@@ -866,7 +876,7 @@ namespace Nektar
                                 for (j = 0; j < nquad0; ++j)
                                 {
                                     cnt = (nquad0*nquad1 - nquad0) + j - i*nquad0;
-                                    divCFluxE3[cnt] = -fluxJumps[i] * derGE3[j];
+                                    divCFluxE3[cnt] = -fluxJumps[i] * m_dGL_xi1[n][j];
                                 }
                             }
                             break;

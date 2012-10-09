@@ -73,7 +73,7 @@ namespace Nektar
                                                  const Array<OneD, const NekDouble> &fluxX, 
                                                  const Array<OneD, const NekDouble> &fluxY, 
                                                  const Array<OneD, const NekDouble> &numericalFlux,
-                                                 Array<OneD,       NekDouble> &fluxJumps);
+                                                 Array<OneD,       NekDouble> &divCFlux);
             
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)

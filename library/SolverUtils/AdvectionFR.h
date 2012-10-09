@@ -41,10 +41,17 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Communication/Comm.h>
-#include <SpatialDomains/SpatialData.h>
+#include <MultiRegions/MultiRegionsDeclspec.h>
+#include <MultiRegions/MultiRegions.hpp>
+#include <MultiRegions/ExpList2D.h>
+#include <MultiRegions/ExpList1D.h>
+#include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-
-
+#include <LocalRegions/SegExp.h>
+#include <SpatialDomains/SpatialData.h>
+#include <SpatialDomains/MeshGraph2D.h>
+#include <SpatialDomains/Conditions.h>
+#include <SpatialDomains/SegGeom.h>
 
 namespace Nektar
 {

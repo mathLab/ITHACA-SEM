@@ -41,19 +41,19 @@ namespace Nektar
     {        
         std::string AdvectionFR::type[] = {
             GetAdvectionFactory().RegisterCreatorFunction(
-                                                          "FRDG", AdvectionFR::create), 
+                                        "FRDG", AdvectionFR::create), 
             GetAdvectionFactory().RegisterCreatorFunction(
-                                                          "FRSD", AdvectionFR::create), 
+                                        "FRSD", AdvectionFR::create), 
             GetAdvectionFactory().RegisterCreatorFunction(
-                                                          "FRHU", AdvectionFR::create)};
+                                        "FRHU", AdvectionFR::create)};
         
         AdvectionFR::AdvectionFR(std::string advType):m_advType(advType)
         {
         }
         
         void AdvectionFR::v_InitObject(
-                                       LibUtilities::SessionReaderSharedPtr              pSession,
-                                       Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+                LibUtilities::SessionReaderSharedPtr        pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
             int i, j, n;
             int nquad0, nquad1, nquad2;
@@ -91,14 +91,14 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (DG)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                                                      LibUtilities::eDG_DG_Left,  
-                                                                      nmodes0, 
-                                                                      FRPts0);
+                                    LibUtilities::eDG_DG_Left,  
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                                                       LibUtilities::eDG_DG_Right, 
-                                                                       nmodes0, 
-                                                                       FRPts0);
+                                    LibUtilities::eDG_DG_Right, 
+                                    nmodes0, 
+                                    FRPts0);
                             
                             BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
@@ -109,15 +109,15 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (SD)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                                                      LibUtilities::eDG_SD_Left,  
-                                                                      nmodes0, 
-                                                                      FRPts0);
+                                    LibUtilities::eDG_SD_Left,  
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                                                       LibUtilities::eDG_SD_Right, 
-                                                                       nmodes0, 
-                                                                       FRPts0);
-                            
+                                    LibUtilities::eDG_SD_Right, 
+                                    nmodes0, 
+                                    FRPts0);
+                        
                             BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
                         }
@@ -126,14 +126,14 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (HU)
                             const LibUtilities::BasisKey  FRBase_Left0(
-                                                                       LibUtilities::eDG_HU_Left,  
-                                                                       nmodes0, 
-                                                                       FRPts0);
+                                    LibUtilities::eDG_HU_Left,  
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey  FRBase_Right0(
-                                                                        LibUtilities::eDG_HU_Right, 
-                                                                        nmodes0, 
-                                                                        FRPts0);
+                                    LibUtilities::eDG_HU_Right, 
+                                    nmodes0, 
+                                    FRPts0);
                             
                             BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
@@ -177,24 +177,24 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (DG)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                                                      LibUtilities::eDG_DG_Left,  
-                                                                      nmodes0, 
-                                                                      FRPts0);
+                                    LibUtilities::eDG_DG_Left,  
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                                                       LibUtilities::eDG_DG_Right, 
-                                                                       nmodes0, 
-                                                                       FRPts0);
+                                    LibUtilities::eDG_DG_Right, 
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                                                      LibUtilities::eDG_DG_Left,  
-                                                                      nmodes1, 
-                                                                      FRPts1);
+                                    LibUtilities::eDG_DG_Left,  
+                                    nmodes1, 
+                                    FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                                                       LibUtilities::eDG_DG_Right, 
-                                                                       nmodes1, 
-                                                                       FRPts1);
+                                    LibUtilities::eDG_DG_Right, 
+                                    nmodes1, 
+                                    FRPts1);
                             
                             BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
@@ -207,24 +207,24 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (SD)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                                                      LibUtilities::eDG_SD_Left,  
-                                                                      nmodes0, 
-                                                                      FRPts0);
+                                    LibUtilities::eDG_SD_Left,  
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                                                       LibUtilities::eDG_SD_Right, 
-                                                                       nmodes0, 
-                                                                       FRPts0);
+                                    LibUtilities::eDG_SD_Right, 
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                                                      LibUtilities::eDG_SD_Left,  
-                                                                      nmodes1, 
-                                                                      FRPts1);
+                                    LibUtilities::eDG_SD_Left,  
+                                    nmodes1, 
+                                    FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                                                       LibUtilities::eDG_SD_Right, 
-                                                                       nmodes1, 
-                                                                       FRPts1);
+                                    LibUtilities::eDG_SD_Right, 
+                                    nmodes1, 
+                                    FRPts1);
                             
                             BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
@@ -236,24 +236,24 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (HU)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                                                      LibUtilities::eDG_HU_Left,  
-                                                                      nmodes0, 
-                                                                      FRPts0);
+                                    LibUtilities::eDG_HU_Left,  
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                                                       LibUtilities::eDG_HU_Right, 
-                                                                       nmodes0, 
-                                                                       FRPts0);
+                                    LibUtilities::eDG_HU_Right, 
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                                                      LibUtilities::eDG_HU_Left,  
-                                                                      nmodes1, 
-                                                                      FRPts1);
+                                    LibUtilities::eDG_HU_Left,  
+                                    nmodes1, 
+                                    FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                                                       LibUtilities::eDG_HU_Right, 
-                                                                       nmodes1, 
-                                                                       FRPts1);
+                                    LibUtilities::eDG_HU_Right, 
+                                    nmodes1, 
+                                    FRPts1);
                             
                             BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
@@ -309,34 +309,34 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (DG)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                                                      LibUtilities::eDG_DG_Left,  
-                                                                      nmodes0, 
-                                                                      FRPts0);
+                                    LibUtilities::eDG_DG_Left,  
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                                                       LibUtilities::eDG_DG_Right, 
-                                                                       nmodes0, 
-                                                                       FRPts0);
+                                    LibUtilities::eDG_DG_Right, 
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                                                      LibUtilities::eDG_DG_Left,  
-                                                                      nmodes1, 
-                                                                      FRPts1);
+                                    LibUtilities::eDG_DG_Left,  
+                                    nmodes1, 
+                                    FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                                                       LibUtilities::eDG_DG_Right, 
-                                                                       nmodes1, 
-                                                                       FRPts1);
+                                    LibUtilities::eDG_DG_Right, 
+                                    nmodes1, 
+                                    FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Left2(
-                                                                      LibUtilities::eDG_DG_Left,  
-                                                                      nmodes2, 
-                                                                      FRPts2);
+                                    LibUtilities::eDG_DG_Left,  
+                                    nmodes2, 
+                                    FRPts2);
                             
                             const LibUtilities::BasisKey FRBase_Right2(
-                                                                       LibUtilities::eDG_DG_Right, 
-                                                                       nmodes2, 
-                                                                       FRPts2);
+                                    LibUtilities::eDG_DG_Right, 
+                                    nmodes2, 
+                                    FRPts2);
                             
                             BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
@@ -351,34 +351,34 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (SD)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                                                      LibUtilities::eDG_SD_Left,  
-                                                                      nmodes0, 
-                                                                      FRPts0);
+                                    LibUtilities::eDG_SD_Left,  
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                                                       LibUtilities::eDG_SD_Right, 
-                                                                       nmodes0, 
-                                                                       FRPts0);
+                                    LibUtilities::eDG_SD_Right, 
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                                                      LibUtilities::eDG_SD_Left,  
-                                                                      nmodes1, 
-                                                                      FRPts1);
+                                    LibUtilities::eDG_SD_Left,  
+                                    nmodes1, 
+                                    FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                                                       LibUtilities::eDG_SD_Right, 
-                                                                       nmodes1, 
-                                                                       FRPts1);
+                                    LibUtilities::eDG_SD_Right, 
+                                    nmodes1, 
+                                    FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Left2(
-                                                                      LibUtilities::eDG_SD_Left,  
-                                                                      nmodes2, 
-                                                                      FRPts2);
+                                    LibUtilities::eDG_SD_Left,  
+                                    nmodes2, 
+                                    FRPts2);
                             
                             const LibUtilities::BasisKey FRBase_Right2(
-                                                                       LibUtilities::eDG_SD_Right, 
-                                                                       nmodes2, 
-                                                                       FRPts2);
+                                    LibUtilities::eDG_SD_Right, 
+                                    nmodes2, 
+                                    FRPts2);
                             
                             BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
@@ -392,34 +392,34 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (HU)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                                                      LibUtilities::eDG_HU_Left,  
-                                                                      nmodes0, 
-                                                                      FRPts0);
+                                    LibUtilities::eDG_HU_Left,  
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                                                       LibUtilities::eDG_HU_Right, 
-                                                                       nmodes0, 
-                                                                       FRPts0);
+                                    LibUtilities::eDG_HU_Right, 
+                                    nmodes0, 
+                                    FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                                                      LibUtilities::eDG_HU_Left,  
-                                                                      nmodes1, 
-                                                                      FRPts1);
+                                    LibUtilities::eDG_HU_Left,  
+                                    nmodes1, 
+                                    FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                                                       LibUtilities::eDG_HU_Right, 
-                                                                       nmodes1, 
-                                                                       FRPts1);
+                                    LibUtilities::eDG_HU_Right, 
+                                    nmodes1, 
+                                    FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Left2(
-                                                                      LibUtilities::eDG_HU_Left,  
-                                                                      nmodes2, 
-                                                                      FRPts2);
+                                    LibUtilities::eDG_HU_Left,  
+                                    nmodes2, 
+                                    FRPts2);
                             
                             const LibUtilities::BasisKey FRBase_Right2(
-                                                                       LibUtilities::eDG_HU_Right, 
-                                                                       nmodes2, 
-                                                                       FRPts2);
+                                    LibUtilities::eDG_HU_Right, 
+                                    nmodes2, 
+                                    FRPts2);
                             
                             BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
@@ -497,11 +497,11 @@ namespace Nektar
         }
         
         void AdvectionFR::v_Advect(
-                                   const int                                          nConvectiveFields,
-                                   const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                   const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-                                   const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
+            const int                                         nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
             int i, j, n, yepp;
             int nLocalSolutionPts, phys_offset;
@@ -566,15 +566,9 @@ namespace Nektar
                             nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
                             phys_offset       = fields[i]->GetPhys_Offset(n);
                             
-                            fields[i]->GetExp(n)->StdPhysDeriv(
-                                                               0, auxArray1 = fluxvector[0] + phys_offset, 
-                                                               auxArray2 = Dfluxvector[0] + phys_offset);
-                            
-                            Vmath::Smul(nLocalSolutionPts, 
-                                        gmat[0][0], 
-                                        auxArray1 = Dfluxvector[0] + phys_offset, 1, 
-                                        auxArray2 = Dfluxvector[0] + phys_offset, 1);
-                            
+                            fields[i]->GetExp(n)->PhysDeriv(
+                                0, auxArray1 = fluxvector[0] + phys_offset, 
+                                auxArray2 = Dfluxvector[0] + phys_offset);
                         }
                     }
                     
@@ -609,14 +603,14 @@ namespace Nektar
                                 physvals = fluxvector[0] + n*nLocalSolutionPts;
                                 
                                 interpolatedFlux_m[n] = Blas::Ddot(
-                                                                   nLocalSolutionPts,
-                                                                   m_Ixm->GetPtr(), 1,
-                                                                   physvals, 1);
+                                                            nLocalSolutionPts,
+                                                            m_Ixm->GetPtr(), 1,
+                                                            physvals, 1);
                                 
                                 interpolatedFlux_p[n] = Blas::Ddot(
-                                                                   nLocalSolutionPts, 
-                                                                   m_Ixp->GetPtr(), 1, 
-                                                                   physvals, 1);   
+                                                            nLocalSolutionPts, 
+                                                            m_Ixp->GetPtr(), 1, 
+                                                            physvals, 1);   
                                 
                                 JumpL[j][n] = numflux[j][n]   - interpolatedFlux_m[n];
                                 JumpR[j][n] = numflux[j][n+1] - interpolatedFlux_p[n];
@@ -683,34 +677,13 @@ namespace Nektar
                             {
                                 phys_offset = fields[i]->GetPhys_Offset(n);
                                 
-                                fields[i]->GetExp(n)->StdPhysDeriv(
-                                                                   j, auxArray1 = fluxvector[j] + phys_offset, 
-                                                                   auxArray2 = Dfluxvector[j] + phys_offset);
+                                fields[i]->GetExp(n)->PhysDeriv(
+                                    j, auxArray1 = fluxvector[j] + phys_offset, 
+                                    auxArray2 = Dfluxvector[j] + phys_offset);
                             }
                         }
                     }
-                    
-                    
-                    // Multiplication of the derivatives by metric terms
-                    for (n = 0; n < nElements; ++n)
-                    {
-                        gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat(); 
-                        jac = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                        
-                        nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
-                        phys_offset       = fields[0]->GetPhys_Offset(n);
-                        
-                        Vmath::Smul(nLocalSolutionPts, 
-                                    1.0/*(gmat[0][0] + gmat[2][0])*/, 
-                                    auxArray1 = Dfluxvector[0] + phys_offset, 1, 
-                                    auxArray2 = Dfluxvector[0] + phys_offset, 1);
-                        
-                        Vmath::Smul(nLocalSolutionPts, 
-                                    1.0/*(gmat[1][0] + gmat[3][0])*/, 
-                                    auxArray1 = Dfluxvector[1] + phys_offset, 1, 
-                                    auxArray2 = Dfluxvector[1] + phys_offset, 1);
-                    }
-                    
+                     
                     // Computation of the divergence of the discontinuous flux
                     Array<OneD, NekDouble> divFD(nSolutionPts, 0.0);
                     Vmath::Vadd(nSolutionPts, 
@@ -728,38 +701,12 @@ namespace Nektar
                                       numflux[j], 
                                       divFC);
                     }                        
-                    
+                                        
                     // Computation of the divergence of the final flux
-                    Vmath::Vadd(nLocalSolutionPts, 
+                    Vmath::Vadd(nSolutionPts, 
                                 divFD, 1, 
                                 divFC, 1, 
                                 auxArray1 = outarray[0], 1); 
-                    
-                    /*
-                     // Multiplication of the derivatives by metric terms
-                     for (n = 0; n < nElements; ++n)
-                     {
-                     gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
-                     jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                     
-                     cout<<"gmat[0][0] = "<<gmat[0][0]<<endl;
-                     cout<<"gmat[1][0] = "<<gmat[1][0]<<endl;
-                     cout<<"gmat[2][0] = "<<gmat[2][0]<<endl;
-                     cout<<"gmat[3][0] = "<<gmat[3][0]<<endl;
-                     
-                     cout<<"jac[0] = "<<jac[0]<<endl;
-                     cin>>yepp;
-                     
-                     
-                     nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
-                     phys_offset       = fields[0]->GetPhys_Offset(n);
-                     
-                     Vmath::Smul(nLocalSolutionPts, 
-                     gmat[0][0]*jac[0], 
-                     auxArray1 = outarray[0] + phys_offset, 1, 
-                     auxArray2 = outarray[0] + phys_offset, 1);
-                     }
-                     */
                     break;
                 }
                 case 3:
@@ -773,14 +720,12 @@ namespace Nektar
         
         
         void AdvectionFR::v_divCorrFlux(
-                                        const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                        const Array<OneD, const NekDouble> &fluxX, 
-                                        const Array<OneD, const NekDouble> &fluxY, 
-                                        const Array<OneD, const NekDouble> &numericalFlux,
-                                        Array<OneD,       NekDouble> &divCFlux)
-        {       
-            int yepp;
-            
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, const NekDouble> &fluxX, 
+                const Array<OneD, const NekDouble> &fluxY, 
+                const Array<OneD, const NekDouble> &numericalFlux,
+                      Array<OneD,       NekDouble> &divCFlux)
+        {                   
             int n, e, i, j, cnt; 
             int nElements = fields[0]->GetExpSize();
             int nLocalSolutionPts;
@@ -815,29 +760,18 @@ namespace Nektar
                 Array<OneD, NekDouble> divCFluxE2(nquad0 * nquad1, 0.0);
                 Array<OneD, NekDouble> divCFluxE3(nquad0 * nquad1, 0.0);
                 
+                Array<OneD, NekDouble> derGE0(nquad1, 0.0);
+                Array<OneD, NekDouble> derGE1(nquad0, 0.0);
+                Array<OneD, NekDouble> derGE2(nquad1, 0.0);
+                Array<OneD, NekDouble> derGE3(nquad0, 0.0);
+                
                 // Get the metric terms
                 gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
                 jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
                 
-                /*
-                 cout<<"gmat[0][0] = "<<gmat[0][0]<<endl;
-                 cout<<"gmat[1][0] = "<<gmat[1][0]<<endl;
-                 cout<<"gmat[2][0] = "<<gmat[2][0]<<endl;
-                 cout<<"gmat[3][0] = "<<gmat[3][0]<<endl;
-                 
-                 cout<<"jac[0] = "<<jac[0]<<endl;
-                 cin>>yepp;
-                 */
-                
                 // Loop on the edges
                 for(e = 0; e < fields[0]->GetExp(n)->GetNedges(); ++e)
                 {   
-                    /*
-                     cout<<"\n\n***********************************************************************\n";
-                     cout<<"\t\t\t EDGE    =   "<< e <<endl;
-                     cout<<"***********************************************************************\n";
-                     */
-                    
                     // Number of edge points of edge e
                     nEdgePts = fields[0]->GetExp(n)->GetEdgeNumPoints(e);
                     
@@ -849,7 +783,7 @@ namespace Nektar
                     
                     // Offset of the trace space correspondent to edge e
                     trace_offset  = fields[0]->GetTrace()->GetPhys_Offset(
-                                                                          elmtToTrace[n][e]->GetElmtId());
+                                                elmtToTrace[n][e]->GetElmtId());
                     
                     // Get the normals of edge e
                     const Array<OneD, const Array<OneD, NekDouble> > &normals = 
@@ -858,16 +792,17 @@ namespace Nektar
                     // Extract the edge values of flux-x on edge e and order 
                     // them accordingly to the order of the trace space 
                     fields[0]->GetExp(n)->GetEdgePhysVals(
-                                                          e, elmtToTrace[n][e],
-                                                          fluxX + phys_offset,
-                                                          auxArray1 = tmparrayX);
+                                                e, elmtToTrace[n][e],
+                                                fluxX + phys_offset,
+                                                auxArray1 = tmparrayX);
                     
                     // Extract the edge values of flux-y on edge e and order 
                     // them accordingly to the order of the trace space
                     fields[0]->GetExp(n)->GetEdgePhysVals(
-                                                          e, elmtToTrace[n][e],
-                                                          fluxY + phys_offset,
-                                                          auxArray1 = tmparrayY);
+                                                e, elmtToTrace[n][e],
+                                                fluxY + phys_offset,
+                                                auxArray1 = tmparrayY);
+                    
                     
                     // Multiply the edge components of the flux by the normal
                     for (i = 0; i < normals[0].num_elements(); ++i)
@@ -883,7 +818,7 @@ namespace Nektar
                     Vmath::Vsub(nEdgePts, 
                                 &numericalFlux[trace_offset], 1, 
                                 &fluxN[0], 1, &fluxJumps[0], 1);
-                    
+
                     // Check the ordering of the jumps vector
                     if(fields[0]->GetExp(n)->GetEorient(e) == StdRegions::eBackwards)
                     {
@@ -891,18 +826,7 @@ namespace Nektar
                                        auxArray1 = fluxJumps, 1,
                                        auxArray2 = fluxJumps, 1);
                     }
-                    
-                    /*
-                     // Check the orientation (has to be improved for rotated elements)
-                     if((normals[0][0] < 0) || (normals[1][0] < 0))
-                     {
-                     Vmath::Smul(nEdgePts, 
-                     -1.0, 
-                     auxArray1 = fluxJumps, 1,
-                     auxArray2 = fluxJumps, 1);
-                     }
-                     */  
-                    
+ 
                     // Multiply jumps by derivative of the correction functions
                     switch (e) 
                     {
@@ -913,13 +837,6 @@ namespace Nektar
                                 {
                                     cnt = i + j*nquad0;
                                     divCFluxE0[cnt] = -fluxJumps[i] * m_dGL_xi2[n][j];
-                                    /*
-                                     cout<<"---------------------------\n";
-                                     cout<<"i = "    << i    <<",\t\tfluxJumps[i] \t= "              <<fluxJumps[i]   <<endl;
-                                     cout<<"n,j = "  << n    <<", "<< j <<",\tm_dGL_xi2[n][j] = "    <<m_dGL_xi2[n][j]<<endl;
-                                     cout<<"cnt = "  << cnt  <<",\tdivCFluxE0[cnt] = "               <<divCFluxE0[cnt]<<endl;
-                                     cout<<"---------------------------\n";
-                                     */
                                 }
                             }
                             break;
@@ -930,13 +847,6 @@ namespace Nektar
                                 {
                                     cnt = (nquad0)*i + nquad0-1 - j;
                                     divCFluxE1[cnt] = fluxJumps[i] * m_dGR_xi1[n][j];
-                                    /*
-                                     cout<<"---------------------------\n";
-                                     cout<<"i = "    << i <<",\t\tfluxJumps[i] \t= "             <<fluxJumps[i]   <<endl;
-                                     cout<<"n,j = "  << n <<", "<< j <<",\tm_dGR_xi1[n][j] = "   <<m_dGR_xi1[n][j]<<endl;
-                                     cout<<"cnt = "  << cnt <<",\tdivCFluxE1 \t= "               <<divCFluxE1[cnt]<<endl;
-                                     cout<<"---------------------------\n";
-                                     */
                                 }
                             }
                             break;
@@ -947,13 +857,6 @@ namespace Nektar
                                 {
                                     cnt = (nquad0*nquad1 - 1) - j*nquad0 - i;
                                     divCFluxE2[cnt] = fluxJumps[i] * m_dGR_xi2[n][j];
-                                    /*
-                                     cout<<"---------------------------\n";
-                                     cout<<"i = "    << i <<",\t\tfluxJumps[i] \t= "             <<fluxJumps[i]   <<endl;
-                                     cout<<"n,j = "  << n <<", "<< j <<",\tm_dGR_xi2[n][j] = "   <<m_dGR_xi2[n][j]<<endl;
-                                     cout<<"cnt = "  << cnt <<",\tdivCFluxE2 \t= "               <<divCFluxE2[cnt]<<endl;
-                                     cout<<"---------------------------\n";
-                                     */
                                 }
                             }
                             break;
@@ -963,14 +866,7 @@ namespace Nektar
                                 for (j = 0; j < nquad0; ++j)
                                 {
                                     cnt = (nquad0*nquad1 - nquad0) + j - i*nquad0;
-                                    divCFluxE3[cnt] = -fluxJumps[i] * m_dGL_xi1[n][j];
-                                    /*
-                                     cout<<"---------------------------\n";
-                                     cout<<"i = "    << i    <<",\t\tfluxJumps[i] \t= "          <<fluxJumps[i]   <<endl;
-                                     cout<<"n,j = "  << n    <<", "<< j <<",\tm_dGL_xi1[n][j] = "<<m_dGL_xi1[n][j]<<endl;
-                                     cout<<"cnt = "  << cnt  <<",\tdivCFluxE3 \t= "              <<divCFluxE3[cnt]<<endl;
-                                     cout<<"---------------------------\n";
-                                     */
+                                    divCFluxE3[cnt] = -fluxJumps[i] * derGE3[j];
                                 }
                             }
                             break;
@@ -1001,7 +897,7 @@ namespace Nektar
                             (gmat[0][0] + gmat[2][0]), 
                             auxArray1 = divCFluxE3, 1, 
                             auxArray2 = divCFluxE3, 1);
-                
+
                 // Sum each edge contribution
                 for (i = 0; i < nquad0 * nquad1; ++i)
                 {

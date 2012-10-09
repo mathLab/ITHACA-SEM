@@ -739,7 +739,7 @@ namespace Nektar
             Array<TwoD, const NekDouble> gmat;
             Array<OneD, const NekDouble> jac;
             
-            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            const Array<OneD, const Array<OneD, StdRegions::StdExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
             Array<OneD, LibUtilities::BasisSharedPtr> base;

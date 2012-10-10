@@ -63,8 +63,9 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-                return MemoryManager<GlobalLinSysIterativeStaticCond>
-                    ::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
+            GlobalLinSysSharedPtr p = MemoryManager<GlobalLinSysIterativeStaticCond>::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
+            p->InitObject();
+            return p;
             }
 
             /// Name of class
@@ -101,6 +102,11 @@ namespace Nektar
             DNekScalBlkMatSharedPtr m_C;
             DNekScalBlkMatSharedPtr m_invD;
 
+	    // Block matrices for low energy
+            DNekScalBlkMatSharedPtr m_RBlk;
+            DNekScalBlkMatSharedPtr m_RTBlk;
+            DNekScalBlkMatSharedPtr m_S1Blk;
+
             /// Globally assembled Schur complement matrix at this level
             GlobalMatrixSharedPtr m_globalSchurCompl;
 
@@ -109,6 +115,8 @@ namespace Nektar
 
             // Workspace array for matrix multiplication
             Array<OneD, NekDouble> m_wsp;
+
+            PreconditionerSharedPtr  m_precon;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
@@ -119,6 +127,8 @@ namespace Nektar
                         const Array<OneD, const NekDouble>  &dirForcing
                                                         = NullNekDouble1DArray);
 
+            virtual void v_InitObject();
+
             /// Initialise this object
             void Initialise(
                     const boost::shared_ptr<AssemblyMap>& locToGloMap);
@@ -126,6 +136,9 @@ namespace Nektar
             /// Set up the storage for the Schur complement or the top level
             /// of the multi-level Schur complement.
             void SetupTopLevel(
+                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
+
+            void SetupLowEnergyTopLevel(
                     const boost::shared_ptr<AssemblyMap>& locToGloMap);
 
             /// Assemble the Schur complement matrix.

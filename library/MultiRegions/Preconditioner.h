@@ -62,6 +62,8 @@ namespace Nektar
 	    const DNekMatSharedPtr& GetTransposedTransformationMatrix() const;
 
 	    const DNekMatSharedPtr& GetInverseTransformationMatrix() const;
+
+	    const DNekMatSharedPtr& GetInverseTransposedTransformationMatrix() const;
 	    
 	protected:
 
@@ -81,6 +83,7 @@ namespace Nektar
 	    DNekMatSharedPtr                            m_transformationmatrix;
 	    DNekMatSharedPtr                            m_inversetransformationmatrix;
 	    DNekMatSharedPtr                            m_transposedtransformationmatrix;
+	    DNekMatSharedPtr                            m_inversetransposedtransformationmatrix;
 	    DNekMatSharedPtr                            m_efedgefacecoupling;
 	    DNekMatSharedPtr                            m_effacefacecoupling;
 	    DNekMatSharedPtr                            m_edgefacetransformmatrix;

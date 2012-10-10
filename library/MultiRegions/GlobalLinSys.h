@@ -87,6 +87,8 @@ namespace Nektar
 
             const inline DNekMatSharedPtr &GetGmat(void) const;
 
+	    inline void InitObject();
+
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
             MULTI_REGIONS_EXPORT
@@ -140,6 +142,8 @@ namespace Nektar
                     const int pNumDir)=0;
 
             virtual const DNekMatSharedPtr& v_GetGmat(void) const;
+
+	    virtual void v_InitObject();
 
             static std::string lookupIds[];
             static std::string def;
@@ -197,6 +201,10 @@ namespace Nektar
 	  return v_GetGmat();
         }
 
+        inline void GlobalLinSys::InitObject()
+        {
+            v_InitObject();
+        }
     } //end of namespace
 } //end of namespace
 

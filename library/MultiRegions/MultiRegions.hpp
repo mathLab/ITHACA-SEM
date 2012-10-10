@@ -114,7 +114,8 @@ namespace Nektar
             eInverseLinear,
 	    eLowEnergy,
             eLinearLowEnergy,
-            eBlock
+            eBlock,
+            eLocalLowEnergy
         };
 
         const char* const PreconditionerTypeMap[] =
@@ -124,7 +125,8 @@ namespace Nektar
             "InverseLinear",
 	    "LowEnergy",
 	    "LinearLowEnergy",
-            "Block"
+            "Block",
+            "LocalLowEnergy"
         };
 
 

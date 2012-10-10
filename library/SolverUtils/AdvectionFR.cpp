@@ -827,16 +827,6 @@ namespace Nektar
                                        auxArray2 = fluxJumps, 1);
                     }
                     
-                    // Multiply the edge components of the flux by the map to
-                    // go into the standard element
-                    for (i = 0; i < nEdgePts; ++i)
-                    {
-                        fluxJumps[i] = fluxJumps[i]* + 
-                        tmparrayY[i]*normals[1][i];
-                    }
-                    
-                    
- 
                     // Multiply jumps by derivative of the correction functions
                     switch (e) 
                     {

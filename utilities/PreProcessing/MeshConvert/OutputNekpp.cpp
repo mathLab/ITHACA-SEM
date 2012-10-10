@@ -226,6 +226,26 @@ namespace Nektar
                 }
             }
 
+            if (m->expDim == 2 && m->spaceDim == 3)
+            {
+                vector<ElementSharedPtr>::iterator it;
+                for (it = m->element[m->expDim].begin(); it != m->element[m->expDim].end(); ++it)
+                {
+                    if ((*it)->GetVolumeNodes().size() > 0)
+                    {
+                        TiXmlElement * e = new TiXmlElement( "F" );
+                        e->SetAttribute("ID",        facecnt++);
+                        e->SetAttribute("FACEID",    (*it)->GetId());
+                        e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
+                        e->SetAttribute("TYPE",
+                            "PolyEvenlySpaced");
+                        TiXmlText * t0 = new TiXmlText((*it)->GetXmlCurveString());
+                        e->LinkEndChild(t0);
+                        curved->LinkEndChild(e);
+                    }
+                }
+            }
+
             // This code is commented out until face nodes are fully supported
             // in Nektar++.
             /*

@@ -613,6 +613,26 @@ namespace Nektar
             std::vector<NodeSharedPtr> GetVolumeNodes() const {
                 return volumeNodes;
             }
+            /// Returns the total number of nodes (vertices, edge nodes and
+            /// face nodes and volume nodes).
+            unsigned int GetNodeCount() const
+            {
+                unsigned int n = volumeNodes.size();
+                if (m_dim == 2)
+                {
+                    for (int i = 0; i < edge.size(); ++i)
+                    {
+                        n += edge[i]->GetNodeCount();
+                    }
+                    n -= vertex.size();
+                }
+                else
+                {
+                    cerr << "Not supported." << endl;
+                    exit(1);
+                }
+                return n;
+            }
             /// Access the list of tags associated with this element.
             std::vector<int> GetTagList() const {
                 return m_taglist;
@@ -743,6 +763,97 @@ namespace Nektar
                 }
                 return s.str();
             }
+
+            /// Reorders Gmsh ordered nodes into a row-by-row ordering required
+            /// for Nektar++ curve tags.
+            std::vector<NodeSharedPtr> tensorNodeOrdering(
+                    const std::vector<NodeSharedPtr> &nodes,
+                    int n) const
+            {
+                std::vector<NodeSharedPtr> nodeList;
+                if (vertex.size() == 3)
+                {
+
+                }
+                else
+                {
+                    nodeList.resize(nodes.size());
+                    nodeList[0] = nodes[0];
+                    if (n > 1)
+                    {
+                        nodeList[n-1] = nodes[1];
+                        nodeList[n*n-1] = nodes[2];
+                        nodeList[n*(n-1)] = nodes[3];
+                    }
+                    for (int i = 1; i < n-1; ++i)
+                    {
+                        nodeList[i] = nodes[4+i-1];
+                    }
+                    for (int i = 1; i < n-1; ++i)
+                    {
+                        nodeList[n*n-1-i] = nodes[4+2*(n-2)+i-1];
+                    }
+                    if (n > 2)
+                    {
+                        std::vector<NodeSharedPtr> interior((n-2)*(n-2));
+                        std::copy(nodes.begin() + 4+4*(n-2), nodes.end(), interior.begin());
+                        interior = tensorNodeOrdering(interior, n-2);
+                        for (int j = 1; j < n-1; ++j)
+                        {
+                            nodeList[j*n] = nodes[4+3*(n-2)+n-2-j];
+                            for (int i = 1; i < n-1; ++i)
+                            {
+                                nodeList[j*n+i] = interior[(j-1)*(n-2)+(i-1)];
+                            }
+                            nodeList[(j+1)*n-1] = nodes[4+(n-2)+j-1];
+                        }
+                    }
+                }
+                return nodeList;
+            }
+
+            /// Generates a string listing the coordinates of all nodes
+            /// associated with this face.
+            std::string GetXmlCurveString() const
+            {
+                std::vector<NodeSharedPtr> nodeList;
+
+                // Triangle
+                if (vertex.size() == 3)
+                {
+                    cerr << "Triangle todo" << endl;
+                }
+                // Quad
+                else if (vertex.size() == 4)
+                {
+                    int n = edge[0]->GetNodeCount();
+                    nodeList.resize(n*n);
+                    std::copy(vertex.begin(), vertex.end(), nodeList.begin());
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        std::copy(edge[i]->edgeNodes.begin(), edge[i]->edgeNodes.end(), nodeList.begin() + 4 + i*(n-2));
+                    }
+                    std::copy(volumeNodes.begin(), volumeNodes.end(), nodeList.begin() + 4*(n-1));
+                    nodeList = tensorNodeOrdering(nodeList, n);
+                }
+                else
+                {
+                    cerr << "GetXmlCurveString for a " << vertex.size()
+                         << "-vertex element is not yet implemented." << endl;
+                }
+
+                std::stringstream s;
+                std::string str;
+                for (int k = 0; k < nodeList.size(); ++k)
+                {
+                    s << std::scientific << std::setprecision(8) << "    "
+                      <<  nodeList[k]->x << "  " << nodeList[k]->y
+                      << "  " << nodeList[k]->z << "    ";
+
+                }
+                return s.str();
+            }
+
             /// Generate a Nektar++ geometry object for this element.
             virtual SpatialDomains::GeometrySharedPtr GetGeom(int coordDim)
             {

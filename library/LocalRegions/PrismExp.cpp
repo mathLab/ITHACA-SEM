@@ -1049,9 +1049,10 @@ namespace Nektar
                     }
                     
                     case 2:
-                        for (j=0; j< nquad1; ++j)
+                    {
+                        for (j = 0; j < nquad1; ++j)
                         {
-                            for(k=0; k<nquad2; ++k)
+                            for(k = 0; k < nquad2; ++k)
                             {
                                 normals[j+k*nquad0]  = (gmat[0][nquad0-1+nquad0*j+nquad0*nquad1*k]
                                                         +gmat[2][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
@@ -1061,11 +1062,14 @@ namespace Nektar
                                                                 +gmat[8][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
                             } 
                         }
+                        
                         points0 = geomFactors->GetPointsKey(1);
                         points1 = geomFactors->GetPointsKey(2);
+                        break;
+                    }
                         
-                        break;               
                     case 3:
+                    {
                         for (j=0; j< nquad0; ++j)
                         {
                             for(k=0; k<nquad2; ++k)
@@ -1079,7 +1083,10 @@ namespace Nektar
                         points0 = geomFactors->GetPointsKey(0);
                         points1 = geomFactors->GetPointsKey(2);
                         break;
+                    }
+                    
                     case 4:
+                    {
                         for (j=0; j< nquad0; ++j)
                         {
                             for(k=0; k<nquad2; ++k)
@@ -1089,9 +1096,11 @@ namespace Nektar
                                 normals[2*nqtot+j+k*nquad0]  = -gmat[6][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
                             } 
                         }
+                        
                         points0 = geomFactors->GetPointsKey(1);
                         points1 = geomFactors->GetPointsKey(2);
                         break;
+                    }
                         
                     default:
                         ASSERTL0(false,"face is out of range (face < 4)");

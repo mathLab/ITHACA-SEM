@@ -36,6 +36,7 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD3D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD3D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
@@ -52,34 +53,22 @@ namespace Nektar
 {
     namespace MultiRegions
     {        
-        /**
-         * Abstraction of a global discontinuous three-dimensional spectral/hp
-         * element expansion which approximates the solution of a set of
-         * partial differential equations.
-         */
         class DisContField3D : public ExpList3D
         {
         public:
-            /**
-             * Default constructor
-             */
             MULTI_REGIONS_EXPORT DisContField3D();
 
-            /**
-             * Constructs a global discontinuous field based on an input mesh
-             * with boundary conditions.
-             */
             MULTI_REGIONS_EXPORT DisContField3D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                const std::string &variable,
-                const bool SetUpJustDG = true);
+                const SpatialDomains::MeshGraphSharedPtr   &graph3D,
+                const std::string                          &variable,
+                const bool                                  SetUpJustDG = true);
 
             MULTI_REGIONS_EXPORT DisContField3D(
-                const DisContField3D &In,
-                const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                const std::string &variable,
-                const bool SetUpJustDG = false);
+                const DisContField3D                       &In,
+                const SpatialDomains::MeshGraphSharedPtr   &graph3D,
+                const std::string                          &variable,
+                const bool                                 SetUpJustDG = false);
             
             /// Constructs a global discontinuous field based on another
             /// discontinuous field.
@@ -88,20 +77,26 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~DisContField3D();
 
-            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(const GlobalLinSysKey &mkey);
+            MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GetGlobalBndLinSys(
+                const GlobalLinSysKey &mkey);
+            
         protected:
             /**
-             * An array of size equal to the number of boundary regions and
-             * consists of entries of the type MultiRegions#ExpList1D. Every
-             * entry corresponds to the one-dimensional spectral/hp expansion
-             * on a single boundary region.  The values of the boundary
-             * conditions are stored as the coefficients of the
-             * one-dimensional expansion.
+             * @brief An object which contains the discretised boundary
+             * conditions.
+             *
+             * It is an array of size equal to the number of boundary regions
+             * and consists of entries of the type MultiRegions#ExpList2D. Every
+             * entry corresponds to the two-dimensional spectral/hp expansion on
+             * a single boundary region.  The values of the boundary conditions
+             * are stored as the coefficients of the two-dimensional expansion.
              */
-            Array<OneD,MultiRegions::ExpListSharedPtr>        m_bndCondExpansions;
+            Array<OneD,MultiRegions::ExpListSharedPtr> m_bndCondExpansions;
 
-            /// An array which contains the information about the boundary
-            /// condition on the different boundary regions.
+            /**
+             * @brief An array which contains the information about
+             * the boundary condition on the different boundary regions.
+             */
             Array<OneD,SpatialDomains::BoundaryConditionShPtr> m_bndConditions;
 
             GlobalLinSysMapShPtr        m_globalBndMat;
@@ -109,10 +104,31 @@ namespace Nektar
             AssemblyMapDGSharedPtr      m_traceMap;
 
             /**
+             * @brief A set storing the global IDs of any boundary faces.
+             */
+            std::set<int> m_boundaryFaces;
+
+            /**
              * @brief A map which identifies pairs of periodic faces.
              */
             map<int, PeriodicFace> m_periodicFaces;
+            
+            /**
+             * @brief A map which identifies pairs of periodic edges.
+             */
+            map<int, int> m_periodicEdges;
 	    
+            /**
+             * @brief A map identifying pairs of periodic vertices.
+             */
+            map<int, int> m_periodicVertices;
+            
+            /*
+             * @brief A map identifying which faces are left- and right-adjacent
+             * for DG.
+             */
+            vector<bool> m_leftAdjacentFaces;
+
             /**
              * @brief Auxiliary map for periodic boundary conditions.
              * 
@@ -120,48 +136,19 @@ namespace Nektar
              * is the expansion containing the edge and e the local edge number.
              */
             boost::unordered_map<int,pair<int,int> > m_perFaceToExpMap;
-
-            /// This function discretises the boundary conditions by setting up
-            /// a list of one-dimensional boundary expansions.
-            void GenerateBoundaryConditionExpansion(
-                    const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                    const SpatialDomains::BoundaryConditions &bcs,
-                    const std::string &variable);
-
+            
             void SetUpDG();
-
             bool SameTypeOfBoundaryConditions(const DisContField3D &In);
-
-            /// Generates a map of periodic faces in the mesh.
-            void GetPeriodicFaces(
+            void GenerateBoundaryConditionExpansion(
                 const SpatialDomains::MeshGraphSharedPtr &graph3D,
                 const SpatialDomains::BoundaryConditions &bcs,
-                const std::string                        &variable,
-                map<int,int>                             &periodicVertices,
-                map<int,int>                             &periodicEdges,
-                map<int,PeriodicFace>                    &periodicFaces);
-
-            virtual void v_HelmSolve(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                    const FlagList &flags,
-                    const StdRegions::ConstFactorMap &factors,
-                    const StdRegions::VarCoeffMap &varcoeff,
-                    const Array<OneD, const NekDouble> &dirForcing);
-			
-            virtual void v_GeneralMatrixOp(
-                   const GlobalMatrixKey             &gkey,
-                   const Array<OneD,const NekDouble> &inarray,
-                   Array<OneD,      NekDouble> &outarray,
-                   CoeffState coeffstate = eLocal);
-
-            virtual void v_EvaluateBoundaryConditions(
-                const NekDouble time = 0.0,
-                const NekDouble x2_in = NekConstants::kNekUnsetDouble,
-                const NekDouble x3_in = NekConstants::kNekUnsetDouble);
+                const std::string                        &variable);
+            void FindPeriodicFaces(
+                const SpatialDomains::BoundaryConditions &bcs,
+                const std::string                        &variable);
 
             bool IsLeftAdjacentFace(const int n, const int e);
-            
+
             virtual void v_GetFwdBwdTracePhys(
                 Array<OneD,NekDouble> &Fwd,
                 Array<OneD,NekDouble> &Bwd);
@@ -180,31 +167,81 @@ namespace Nektar
             virtual void v_AddFwdBwdTraceIntegral(
                 const Array<OneD, const NekDouble> &Fwd, 
                 const Array<OneD, const NekDouble> &Bwd, 
-                Array<OneD,       NekDouble> &outarray);
+                      Array<OneD,       NekDouble> &outarray);
+            virtual void v_HelmSolve(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                const FlagList &flags,
+                const StdRegions::ConstFactorMap   &factors,
+                const StdRegions::VarCoeffMap      &varcoeff,
+                const Array<OneD, const NekDouble> &dirForcing);
+            virtual void v_GeneralMatrixOp(
+                const GlobalMatrixKey             &gkey,
+                const Array<OneD,const NekDouble> &inarray,
+                      Array<OneD,      NekDouble> &outarray,
+                CoeffState                         coeffstate = eLocal);
+            virtual void v_GetBoundaryToElmtMap(
+                Array<OneD, int> &ElmtID,
+                Array<OneD, int> &FaceID);
 
-            virtual const Array<OneD, const MultiRegions::ExpListSharedPtr> 
-                &v_GetBndCondExpansions();
-            virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> 
-                &v_GetBndConditions();
+            /*
+             * @brief Obtain a copy of the periodic edges and vertices for this
+             * field.
+             */
+            virtual void v_GetPeriodicFaces(
+                map<int,int>          &periodicVertices,
+                map<int,int>          &periodicEdges,
+                map<int,PeriodicFace> &periodicFaces)
+            {
+                periodicVertices = m_periodicVertices;
+                periodicEdges    = m_periodicEdges;
+                periodicFaces    = m_periodicFaces;
+            }
 
-            /// \brief Set up a list of element ids and edge ids the link to the
-            /// boundary conditions
-            virtual void v_GetBoundaryToElmtMap(Array<OneD,int> &ElmtID,
-                                                Array<OneD,int> &FaceID);
-
-            virtual ExpListSharedPtr &v_GetTrace(void)
+            virtual ExpListSharedPtr &v_GetTrace()
             {
                 if(m_trace == NullExpListSharedPtr)
                 {
                     SetUpDG();
                 }
+
                 return m_trace;
             }
-            
+
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
             {
                 return m_traceMap;
             }
+
+            virtual const Array<OneD,const MultiRegions::ExpListSharedPtr>
+                &v_GetBndCondExpansions()
+            {
+                return m_bndCondExpansions;
+            }
+
+            virtual const 
+                Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
+                &v_GetBndConditions()
+            {
+                return m_bndConditions;
+            }
+
+            virtual MultiRegions::ExpListSharedPtr 
+                &v_UpdateBndCondExpansion(int i)
+            {
+                return m_bndCondExpansions[i];
+            }
+
+            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr> 
+                &v_UpdateBndConditions()
+            {
+                return m_bndConditions;
+            }
+
+            virtual void v_EvaluateBoundaryConditions(
+                const NekDouble time = 0.0,
+                const NekDouble x2_in = NekConstants::kNekUnsetDouble,
+                const NekDouble x3_in = NekConstants::kNekUnsetDouble);
 
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo();
         };

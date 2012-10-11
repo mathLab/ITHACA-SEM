@@ -499,7 +499,7 @@ namespace Nektar
 
                     //Peter order_e = locSegExp->GetNcoeffs();
                     order_e = (*exp2D)[eid]->GetEdgeNcoeffs(j);
-
+                    
                     if((*exp2D)[eid]->GetEorient(j) == StdRegions::eForwards)
                     {
                         for(k = 0; k < order_e; ++k)
@@ -540,6 +540,7 @@ namespace Nektar
 
                         }
                     }
+                    
                     cnt += order_e;
                 }
             }
@@ -1092,7 +1093,7 @@ namespace Nektar
             {
                 // order list according to m_offset_elmt_id details in Exp3D
                 eid = locExp.GetOffset_Elmt_Id(i);
-                
+
                 for(j = 0; j < (*exp3D)[eid]->GetNfaces(); ++j)
                 {
                     //if face is quad
@@ -1114,18 +1115,19 @@ namespace Nektar
                     gid = FaceElmtGid[MeshFaceId.find(id)->second];
                     order_e = (*exp3D)[eid]->GetFaceNcoeffs(j);
                     
+                    std::map<int,int> orientMap;
+                    
                     Array<OneD, unsigned int> elmMap1 (order_e);
                     Array<OneD,          int> elmSign1(order_e);
                     Array<OneD, unsigned int> elmMap2 (order_e);
                     Array<OneD,          int> elmSign2(order_e);
+                    
                     StdRegions::Orientation fo = (*exp3D)[eid]->GetFaceOrient(j);
                     
                     // Construct mapping which will permute global IDs
                     // according to face orientations. 
                     (*exp3D)[eid]->GetFaceToElementMap(j,fo,elmMap1,elmSign1);
-                    (*exp3D)[eid]->GetFaceToElementMap(j,(StdRegions::Orientation)0,elmMap2,elmSign2);
-                    
-                    std::map<int,int> orientMap;
+                    (*exp3D)[eid]->GetFaceToElementMap(j,StdRegions::eDir1FwdDir1_Dir2FwdDir2,elmMap2,elmSign2);
                     
                     for (k = 0; k < elmMap1.num_elements(); ++k)
                     {

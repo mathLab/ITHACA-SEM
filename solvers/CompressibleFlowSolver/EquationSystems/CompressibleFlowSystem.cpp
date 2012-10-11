@@ -178,7 +178,8 @@ namespace Nektar
                     // Calculate (v.n)
                     for (i = 0; i < m_expdim; ++i)
                     {
-                        Vmath::Vvtvp(npts,&Fwd[1+i][id2],1,&m_traceNormals[i][id2],1,
+                        Vmath::Vvtvp(npts,
+                                     &Fwd[1+i][id2],1,&m_traceNormals[i][id2],1,
                                      &tmp[0],1,&tmp[0],1);
                     }
                     

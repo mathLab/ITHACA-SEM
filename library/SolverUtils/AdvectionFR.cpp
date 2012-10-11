@@ -532,7 +532,7 @@ namespace Nektar
             // Get the discontinuous flux FD ("i" is used by inarray)
             for(i = 0; i < nConvectiveFields; ++i)
             {                
-                // Get the ith component of the flux vector in physical space
+                // Get the ith component of the flux vector in standard space
                 m_fluxVector(i, inarray, fluxvector);
             }
             
@@ -622,7 +622,6 @@ namespace Nektar
                         for(n = 0; n < nElements; ++n)
                         {
                             nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
-                            jac = fields[0]->GetExp(n)->GetGeom1D()->GetJac();
                             
                             offsetStart = fields[0]->GetPhys_Offset(n);
                             offsetEnd   = offsetStart + nLocalSolutionPts - 1;
@@ -638,7 +637,8 @@ namespace Nektar
                         phys_offset = fields[0]->GetPhys_Offset(n);
                         
                         gmat = fields[0]->GetExp(n)->GetGeom1D()->GetGmat();
-                        
+                        jac = fields[0]->GetExp(n)->GetGeom1D()->GetJac();
+
                         Vmath::Smul(nLocalSolutionPts, 
                                     JumpL[0][n], 
                                     auxArray1 = m_dGL_xi1[n], 1, 
@@ -655,7 +655,7 @@ namespace Nektar
                                     auxArray1 = outarray[0] + phys_offset, 1);
                         
                         Vmath::Smul(nLocalSolutionPts, 
-                                    gmat[0][0], 
+                                    1/jac[0], 
                                     auxArray1 = outarray[0] + phys_offset, 1, 
                                     auxArray2 = outarray[0] + phys_offset, 1);
                         
@@ -700,7 +700,7 @@ namespace Nektar
                                       fluxvector[1],
                                       numflux[j], 
                                       divFC);
-                    }                        
+                    }     
                                         
                     // Computation of the divergence of the final flux
                     Vmath::Vadd(nSolutionPts, 
@@ -739,7 +739,7 @@ namespace Nektar
             Array<TwoD, const NekDouble> gmat;
             Array<OneD, const NekDouble> jac;
             
-            const Array<OneD, const Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
             Array<OneD, LibUtilities::BasisSharedPtr> base;
@@ -803,7 +803,6 @@ namespace Nektar
                                                 fluxY + phys_offset,
                                                 auxArray1 = tmparrayY);
                     
-                    
                     // Multiply the edge components of the flux by the normal
                     for (i = 0; i < normals[0].num_elements(); ++i)
                     {
@@ -818,7 +817,7 @@ namespace Nektar
                     Vmath::Vsub(nEdgePts, 
                                 &numericalFlux[trace_offset], 1, 
                                 &fluxN[0], 1, &fluxJumps[0], 1);
-
+                    
                     // Check the ordering of the jumps vector
                     if(fields[0]->GetExp(n)->GetEorient(e) == StdRegions::eBackwards)
                     {
@@ -860,7 +859,7 @@ namespace Nektar
                                 }
                             }
                             break;
-                        case 3:                            
+                        case 3:  
                             for (i = 0; i < nquad1; ++i)
                             {
                                 for (j = 0; j < nquad0; ++j)
@@ -879,22 +878,22 @@ namespace Nektar
                 
                 // Multiply each edge contribution by the proper metrics
                 Vmath::Smul(nLocalSolutionPts, 
-                            (gmat[1][0] + gmat[3][0]), 
+                            (1/jac[0])*(1/jac[0])/*gmat[3][0]*/, 
                             auxArray1 = divCFluxE0, 1, 
                             auxArray2 = divCFluxE0, 1);
                 
                 Vmath::Smul(nLocalSolutionPts, 
-                            (gmat[0][0] + gmat[2][0]), 
+                            (1/jac[0])*(1/jac[0])/*gmat[0][0]*/, 
                             auxArray1 = divCFluxE1, 1, 
                             auxArray2 = divCFluxE1, 1);
                 
                 Vmath::Smul(nLocalSolutionPts, 
-                            (gmat[1][0] + gmat[3][0]), 
+                            (1/jac[0])*(1/jac[0])/*gmat[0][0]*/, 
                             auxArray1 = divCFluxE2, 1, 
                             auxArray2 = divCFluxE2, 1);
                 
                 Vmath::Smul(nLocalSolutionPts, 
-                            (gmat[0][0] + gmat[2][0]), 
+                            (1/jac[0])*(1/jac[0])/*gmat[3][0]*/, 
                             auxArray1 = divCFluxE3, 1, 
                             auxArray2 = divCFluxE3, 1);
 

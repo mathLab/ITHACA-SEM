@@ -123,7 +123,8 @@ namespace Nektar
             m_globalToUniversalBndMap(oldLevelMap->GetGlobalToUniversalBndMap()),
             m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),
             m_gsh(oldLevelMap->m_gsh),
-            m_bndGsh(oldLevelMap->m_bndGsh)
+            m_bndGsh(oldLevelMap->m_bndGsh),
+            m_preconType(oldLevelMap->m_preconType)
         {
             int i;
             int j;

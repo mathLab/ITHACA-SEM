@@ -73,7 +73,9 @@ namespace Nektar
              {
              case MultiRegions::eNull:
                  {
-                     if (solvertype == eIterativeFull)
+                     if (solvertype == eIterativeFull ||
+                         solvertype == eIterativeStaticCond ||
+                         solvertype == eIterativeMultiLevelStaticCond)
                      {
                          NullPreconditioner();
                      }
@@ -89,7 +91,8 @@ namespace Nektar
                      {
                          DiagonalPreconditionerSum();
                      }
-                     else if(solvertype == eIterativeStaticCond)
+                     else if(solvertype == eIterativeStaticCond ||
+                             solvertype == eIterativeMultiLevelStaticCond)
                      {
                          StaticCondDiagonalPreconditionerSum();
                      }
@@ -250,11 +253,9 @@ namespace Nektar
             int sign1, sign2, gid1, gid2, i, j, n, cnt;
             Array<OneD, NekDouble> diagonals(rows,0.0);
 
-            boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
-
             // Extract diagonal contributions of globally assembled
             // schur complement matrix
-            for(cnt=n=0; n < expList->GetNumElmts(); ++n)
+            for(cnt=n=0; n < m_linsys.lock()->GetNumBlocks(); ++n)
             {
                 //Get statically condensed local matrix
                 loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
@@ -1749,6 +1750,11 @@ namespace Nektar
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
             switch(m_preconType)
             {
+            case MultiRegions::eNull:
+                {
+                    Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
+                    break;
+                }
             case MultiRegions::eDiagonal:
             case MultiRegions::eInverseLinear:
                  {
@@ -1763,7 +1769,8 @@ namespace Nektar
                         NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
                         z = M * r;
                     }
-                    else if(solvertype == eIterativeStaticCond)
+                    else if(solvertype == eIterativeStaticCond ||
+                            solvertype == eIterativeMultiLevelStaticCond)
                     {
                         int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                         int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();

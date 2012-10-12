@@ -92,6 +92,10 @@ namespace Nektar
 
             virtual ~GlobalLinSysIterativeStaticCond();
 
+        protected:
+            virtual int v_GetNumBlocks();
+            virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
+
         private:
             /// Schur complement for Direct Static Condensation.
             GlobalLinSysIterativeStaticCondSharedPtr m_recursiveSchurCompl;

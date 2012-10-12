@@ -105,8 +105,9 @@ namespace Nektar
 	        return shared_from_this();
 	    }
 
-            DNekScalMatSharedPtr GetBlock(unsigned int n);
-            DNekScalBlkMatSharedPtr GetStaticCondBlock(unsigned int n);
+            inline int GetNumBlocks();
+            inline DNekScalMatSharedPtr GetBlock(unsigned int n);
+            inline DNekScalBlkMatSharedPtr GetStaticCondBlock(unsigned int n);
 
         protected:
             /// Key associated with this linear system.
@@ -123,6 +124,10 @@ namespace Nektar
                           Array<OneD,      NekDouble> &pOutput,
                     const AssemblyMapSharedPtr &locToGloMap,
                     const int pNumDir = 0);
+            
+            virtual int v_GetNumBlocks();
+            virtual DNekScalMatSharedPtr v_GetBlock(unsigned int n);
+            virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
 
         private:
             /// Solve a linear system based on mapping.
@@ -204,6 +209,21 @@ namespace Nektar
         inline void GlobalLinSys::InitObject()
         {
             v_InitObject();
+        }
+
+        inline DNekScalMatSharedPtr GlobalLinSys::GetBlock(unsigned int n)
+        {
+            return v_GetBlock(n);
+        }
+        
+        inline DNekScalBlkMatSharedPtr GlobalLinSys::GetStaticCondBlock(unsigned int n)
+        {
+            return v_GetStaticCondBlock(n);
+        }
+
+        inline int GlobalLinSys::GetNumBlocks()
+        {
+            return v_GetNumBlocks();
         }
     } //end of namespace
 } //end of namespace

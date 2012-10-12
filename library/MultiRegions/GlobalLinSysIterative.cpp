@@ -351,7 +351,7 @@ namespace Nektar
                 m_precon = MemoryManager<Preconditioner>::AllocateSharedPtr(
                                             GetSharedThisPtr(),plocToGloMap);
             }
-
+            
             // Get the communicator for performing data exchanges
             LibUtilities::CommSharedPtr vComm
                                 = m_expList.lock()->GetComm()->GetRowComm();
@@ -472,6 +472,7 @@ namespace Nektar
                 // test if norm is within tolerance
                 if (eps*bb_inv < m_tolerance * m_tolerance)
                 {
+                    cout << "k = " << k << endl;
                     break;
                 }
                 min_resid = min(min_resid, eps);

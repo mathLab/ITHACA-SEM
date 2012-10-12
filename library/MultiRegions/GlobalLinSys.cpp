@@ -41,12 +41,13 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        std::string GlobalLinSys::lookupIds[5] = {
+        std::string GlobalLinSys::lookupIds[6] = {
                 LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectFull",MultiRegions::eDirectFullMatrix),
                 LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectStaticCond",MultiRegions::eDirectStaticCond),
                 LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectMultiLevelStaticCond",MultiRegions::eDirectMultiLevelStaticCond),
                 LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeFull",MultiRegions::eIterativeFull),
-                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeStaticCond",MultiRegions::eIterativeStaticCond)
+                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeStaticCond",MultiRegions::eIterativeStaticCond),
+                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeMultiLevelStaticCond",MultiRegions::eIterativeMultiLevelStaticCond)
         };
         std::string GlobalLinSys::def = LibUtilities::SessionReader::RegisterDefaultSolverInfo("GlobalSysSoln","DirectMultiLevelStaticCond");
 
@@ -171,6 +172,11 @@ namespace Nektar
             return Type::Instance();
         }
 
+        
+        int GlobalLinSys::v_GetNumBlocks()
+        {
+            return m_expList.lock()->GetExpSize();
+        }
 
         /**
          * Retrieves  the block matrix from n'th expansion using the matrix
@@ -178,7 +184,7 @@ namespace Nektar
          * @param   n           Number of the expansion.
          * @returns             Block matrix for the specified expansion.
          */
-        DNekScalMatSharedPtr GlobalLinSys::GetBlock(unsigned int n)
+        DNekScalMatSharedPtr GlobalLinSys::v_GetBlock(unsigned int n)
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int cnt = 0;
@@ -244,7 +250,7 @@ namespace Nektar
          * @returns             2x2 Block matrix holding the static condensation
          *                      matrices for the n'th expansion.
          */
-        DNekScalBlkMatSharedPtr GlobalLinSys::GetStaticCondBlock(unsigned int n)
+        DNekScalBlkMatSharedPtr GlobalLinSys::v_GetStaticCondBlock(unsigned int n)
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int cnt = 0;

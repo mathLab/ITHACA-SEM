@@ -180,7 +180,7 @@ namespace Nektar
             /// Important: All memory allocated from this method must be returned to the pool
             /// via the Deallocate method.  Deleting pointers allocated from the memory pool with the 
             /// delete operator will result in undefined behavior.
-            void* Allocate(unsigned int bytes)
+            void* Allocate(size_t bytes)
             {
                 if( bytes <= 4 )
                 {
@@ -204,7 +204,7 @@ namespace Nektar
             ///
             /// \attention It is an error to deallocate memory not allocated
             /// from this pool.  Doing this will result in undefined behavior.
-            void Deallocate(void* p, unsigned int bytes)
+            void Deallocate(void* p, size_t bytes)
             {
                 if( bytes <= 4 )
                 {

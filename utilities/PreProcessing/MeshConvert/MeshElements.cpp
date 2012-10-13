@@ -33,11 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <sstream>
 #include <iostream>
-#include <iomanip>
 #include <vector>
-#include <sstream>
 #include <loki/Singleton.h>
 
 #include <StdRegions/StdNodalTriExp.h>
@@ -47,6 +44,10 @@
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
+#include <SpatialDomains/TetGeom.h>
+#include <SpatialDomains/PyrGeom.h>
+#include <SpatialDomains/PrismGeom.h>
+#include <SpatialDomains/HexGeom.h>
 
 #include "MeshElements.h"
 using namespace std;

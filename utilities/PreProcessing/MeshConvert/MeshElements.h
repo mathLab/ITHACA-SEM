@@ -40,7 +40,6 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
-#include <sstream>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/unordered_set.hpp>
@@ -49,14 +48,9 @@
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
-#include <SpatialDomains/InterfaceComponent.h>
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/TetGeom.h>
-#include <SpatialDomains/PyrGeom.h>
-#include <SpatialDomains/PrismGeom.h>
-#include <SpatialDomains/HexGeom.h>
 #include <SpatialDomains/Curve.hpp>
 #include <SpatialDomains/MeshComponents.h>
 

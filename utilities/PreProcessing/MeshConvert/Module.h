@@ -38,9 +38,6 @@
 
 #include <string>
 #include <iostream>
-#include <fstream>
-
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
 #include "MeshElements.h"

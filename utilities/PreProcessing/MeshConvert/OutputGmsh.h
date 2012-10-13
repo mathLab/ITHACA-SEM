@@ -36,9 +36,6 @@
 #ifndef UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTGMSH
 #define UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTGMSH
 
-#include <tinyxml/tinyxml.h>
-#include <boost/unordered_map.hpp>
-
 #include "Module.h"
 
 namespace Nektar

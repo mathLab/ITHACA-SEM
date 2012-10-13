@@ -4,21 +4,12 @@
 #include <iomanip>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList0D.h>
 #include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList3D.h>
-#include <MultiRegions/ExpList2DHomogeneous1D.h>
-#include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList1DHomogeneous2D.h>
-#include <MultiRegions/ExpList3DHomogeneous2D.h>
-#include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
-#include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/Expansion2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
@@ -1354,7 +1345,7 @@ cout<<"x"<<"  P_re"<<"  dP_re"<<"   streak"<<"   dstreak"<<"   pjump"<<endl;
                  Vmath::Vcopy(nqedge, &(der_edge[0]),1, &(der_fun1Db_std[w*nqedge]),1);           
                  Vmath::Zero(nqedge, phys_edge,1);
                  Vmath::Zero(nqedge, der_edge,1);
-/*
+
                  Vmath::Vcopy(nqedge, &(Rephysreg[w*nqedge]),1, &(phys_edge[0]),1);
                  edgestdexp->StdPhysDeriv(phys_edge, der_edge);
                  Vmath::Vcopy(nqedge, &(der_edge[0]),1, &(der_Pre_std[w*nqedge]),1);

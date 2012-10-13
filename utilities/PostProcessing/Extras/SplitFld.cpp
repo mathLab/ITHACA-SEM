@@ -1,24 +1,12 @@
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
-#include <iomanip>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList0D.h>
-#include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList3D.h>
-#include <MultiRegions/ExpList2DHomogeneous1D.h>
-#include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList1DHomogeneous2D.h>
-#include <MultiRegions/ExpList3DHomogeneous2D.h>
-#include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
-#include <LocalRegions/MatrixKey.h>
 
 
 using namespace Nektar;

@@ -280,6 +280,7 @@ namespace Nektar
                     pLocToGloMap->GlobalToLocalBnd(F_GlobBnd,F_LocBnd);
                     F_LocBnd=R*F_LocBnd;
                     pLocToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
+                    //pLocToGloMap->LocalBndToGlobal(F_LocBnd,F_HomBnd, nDirBndDofs);
                 }
 		
       
@@ -300,24 +301,11 @@ namespace Nektar
                     {
                         DNekScalBlkMat &RT = *m_RTBlk;
 
-                        NekVector<NekDouble> ml(nLocBndDofs,0.0);
-                        NekVector<NekDouble> MultVector(nGlobHomBndDofs,1.0);
-
-                        m_locToGloMap->GlobalToLocalBnd(MultVector,ml,nDirBndDofs);
-                        m_locToGloMap->AssembleBnd(ml,MultVector,nDirBndDofs);
-                     
-                        for(int i=0; i<nGlobHomBndDofs; ++i)
-                        {
-                            MultVector[i]=1/MultVector[i];
-                        }
-
                         pLocToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
  
                         V_LocBnd=RT*V_LocBnd;
 
-                        pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBnd, nDirBndDofs);
-
-                        V_GlobHomBnd=V_GlobHomBnd*MultVector;
+                        pLocToGloMap->LocalBndToGlobal(V_LocBnd,V_GlobHomBnd, nDirBndDofs);
                     }
                 }
                 else
@@ -851,11 +839,6 @@ namespace Nektar
                 m_locToGloMap->AssembleBnd(m_wsp, pOutput);
             }
         }
-
-        void GlobalLinSysIterativeStaticCond::v_ComputePreconditioner()
-        {
-	  //
-	}
 
         void GlobalLinSysIterativeStaticCond::v_UniqueMap()
         {

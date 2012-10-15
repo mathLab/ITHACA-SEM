@@ -36,19 +36,22 @@
 #ifndef NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
 #define NEKTAR_LIB_UTILIITIES_FOUNDATIONS_MANAGER_ACCESS_H
 
-#include <LibUtilities/BasicUtils/NekManager.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
+//#include "LibUtilities/BasicUtils/BasicUtilsFwd.hpp"  // for NekManager
+#include "LibUtilities/BasicUtils/NekManager.hpp"  // for NekManager
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
-        typedef NekManager<PointsKey, Points<NekDouble>, PointsKey::opLess> PointsManagerT;
-        LIB_UTILITIES_EXPORT PointsManagerT &PointsManager(void);
 
+        typedef NekManager<PointsKey, Points<NekDouble>, PointsKey::opLess> PointsManagerT;
         typedef NekManager<BasisKey, Basis, BasisKey::opLess> BasisManagerT;
-        LIB_UTILITIES_EXPORT BasisManagerT &BasisManager(void);
+
+        LIB_UTILITIES_EXPORT PointsManagerT &PointsManager(void);
+        LIB_UTILITIES_EXPORT BasisManagerT  &BasisManager(void);
 
     } // end of namespace LibUtilities
 } // end of namespace Nektar

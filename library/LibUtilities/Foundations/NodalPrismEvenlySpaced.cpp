@@ -395,7 +395,7 @@ namespace Nektar
 
         } 
 
-        boost::shared_ptr<NodalPrismEvenlySpaced::PointsBaseType> NodalPrismEvenlySpaced::Create(const PointsKey &key)
+        boost::shared_ptr<PointsBaseType> NodalPrismEvenlySpaced::Create(const PointsKey &key)
         {
             boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalPrismEvenlySpaced>::AllocateSharedPtr(key));
 

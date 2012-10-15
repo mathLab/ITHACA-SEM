@@ -38,6 +38,7 @@
 
 #include <list>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 
 namespace Nektar
 {
@@ -46,8 +47,6 @@ namespace Nektar
         class GraphVertexObject
         {
         public:
-
-            typedef int GraphVertexID;
 
             GraphVertexObject()
             {

@@ -36,14 +36,19 @@
 #ifndef NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H
 #define NEKTAR_LIB_UTILITIES_FOUNDATIONS_POINTS_H
 
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicUtils/NekManager.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+
+//#include "LibUtilities/BasicUtils/BasicUtilsFwd.hpp"  // for NekManager
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 
 namespace Nektar
 {
+
     namespace LibUtilities
     {
         // Need to add method to compute total number of points given dimension
@@ -362,8 +367,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Default Constructor for Points should not be called");
             }
         };
-
-        typedef boost::shared_ptr<Points<NekDouble> > PointsSharedPtr;
 
     }; // end of namespace
 } // end of namespace 

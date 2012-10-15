@@ -36,14 +36,22 @@
 #ifndef POLYEPOINTS_H
 #define POLYEPOINTS_H
 
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <boost/shared_ptr.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+
+//#include "LibUtilities/BasicUtils/BasicUtilsFwd.hpp"  // for NekManager
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
     namespace LibUtilities 
     {
+
+
+
         class PolyEPoints: public Points<NekDouble>
         {
         public:

@@ -37,8 +37,16 @@
 #ifndef NODALUTIL_H
 #define NODALUTIL_H
 
-#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
+#include <LibUtilities/Foundations/Points.h>
+
+
+//#include "LibUtilities/BasicUtils/BasicUtilsFwd.hpp"  // for NekManager
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+
 
 namespace Nektar
 {

@@ -37,6 +37,8 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/NodalTetEvenlySpaced.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <vector>
 
 
@@ -367,7 +369,7 @@ namespace Nektar
 
         } 
 
-        boost::shared_ptr<NodalTetEvenlySpaced::PointsBaseType> NodalTetEvenlySpaced::Create(const PointsKey &key)
+        boost::shared_ptr<PointsBaseType> NodalTetEvenlySpaced::Create(const PointsKey &key)
         {
             boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTetEvenlySpaced>::AllocateSharedPtr(key));
 

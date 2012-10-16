@@ -771,9 +771,41 @@ namespace Nektar
                     int n) const
             {
                 std::vector<NodeSharedPtr> nodeList;
+                int cnt, cnt2;
                 if (vertex.size() == 3)
                 {
-
+                    nodeList.resize(nodes.size());
+                    nodeList[0] = nodes[0];
+                    if (n > 1)
+                    {
+                        nodeList[n-1] = nodes[1];
+                        nodeList[n*(n+1)/2 - 1] = nodes[2];
+                    }
+                    int cnt = n;
+                    for (int i = 1; i < n-1; ++i)
+                    {
+                        nodeList[i] = nodes[3+i-1];
+                        nodeList[cnt] = nodes[3+3*(n-2)-i];
+                        nodeList[cnt+n-i-1] = nodes[3+(n-2)+i-1];
+                        cnt += n-i;
+                    }
+                    if (n > 3)
+                    {
+                        std::vector<NodeSharedPtr> interior((n-3)*(n-2)/2);
+                        std::copy(nodes.begin() + 3+3*(n-2), nodes.end(), interior.begin());
+                        interior = tensorNodeOrdering(interior, n-3);
+                        cnt = n;
+                        cnt2 = 0;
+                        for (int j = 1; j < n-2; ++j)
+                        {
+                            for (int i = 0; i < n-j-2; ++i)
+                            {
+                                nodeList[cnt+i+1] = interior[cnt2+i];
+                            }
+                            cnt += n-j;
+                            cnt2 += n-2-j;
+                        }
+                    }
                 }
                 else
                 {
@@ -821,7 +853,25 @@ namespace Nektar
                 // Triangle
                 if (vertex.size() == 3)
                 {
-                    cerr << "Triangle todo" << endl;
+                    int n = edge[0]->GetNodeCount();
+                    nodeList.resize(n*(n+1)/2);
+                    std::copy(vertex.begin(), vertex.end(), nodeList.begin());
+                    for (int i = 0; i < 3; ++i)
+                    {
+                        std::copy(edge[i]->edgeNodes.begin(), edge[i]->edgeNodes.end(), nodeList.begin() + 3 + i*(n-2));
+                        if (edge[i]->n1 != vertex[i])
+                        {
+                            // If edge orientation is reversed relative to node
+                            // ordering, we need to reverse order of nodes.
+                            std::reverse(nodeList.begin() + 3 + i*(n-2),
+                                         nodeList.begin() + 3 + (i+1)*(n-2));
+                        }
+                    }
+                    std::vector<NodeSharedPtr> interior(volumeNodes.size());
+                    std::copy(volumeNodes.begin(), volumeNodes.end(), interior.begin());
+
+                    interior = tensorNodeOrdering(interior, n-3);
+                    std::copy(interior.begin(), interior.end(), nodeList.begin() + 3*(n-1));
                 }
                 // Quad
                 else if (vertex.size() == 4)
@@ -831,7 +881,17 @@ namespace Nektar
                     std::copy(vertex.begin(), vertex.end(), nodeList.begin());
                     for (int i = 0; i < 4; ++i)
                     {
-                        std::copy(edge[i]->edgeNodes.begin(), edge[i]->edgeNodes.end(), nodeList.begin() + 4 + i*(n-2));
+                        std::copy(edge[i]->edgeNodes.begin(),
+                                  edge[i]->edgeNodes.end(),
+                                  nodeList.begin() + 4 + i*(n-2));
+
+                        if (edge[i]->n1 != vertex[i])
+                        {
+                            // If edge orientation is reversed relative to node
+                            // ordering, we need to reverse order of nodes.
+                            std::reverse(nodeList.begin() + 4 + i*(n-2),
+                                         nodeList.begin() + 4 + (i+1)*(n-2));
+                        }
                     }
                     std::copy(volumeNodes.begin(), volumeNodes.end(), nodeList.begin() + 4*(n-1));
                     nodeList = tensorNodeOrdering(nodeList, n);

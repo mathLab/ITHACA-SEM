@@ -237,8 +237,14 @@ namespace Nektar
                         e->SetAttribute("ID",        facecnt++);
                         e->SetAttribute("FACEID",    (*it)->GetId());
                         e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
-                        e->SetAttribute("TYPE",
-                            "PolyEvenlySpaced");
+                        if ((*it)->GetVertexCount() == 4)
+                        {
+                            e->SetAttribute("TYPE", "PolyEvenlySpaced");
+                        }
+                        else
+                        {
+                            e->SetAttribute("TYPE", "NodalTriEvenlySpaced");
+                        }
                         TiXmlText * t0 = new TiXmlText((*it)->GetXmlCurveString());
                         e->LinkEndChild(t0);
                         curved->LinkEndChild(e);

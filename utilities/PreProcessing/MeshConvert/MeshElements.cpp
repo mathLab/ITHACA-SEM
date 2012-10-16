@@ -513,6 +513,14 @@ namespace Nektar
                                                       edgeNodes,
                                                       m_conf.edgeCurveType)));
             }
+
+            if (m_conf.faceNodes)
+            {
+                volumeNodes.insert(volumeNodes.begin(),
+                                   pNodeList.begin()+3*m_conf.order,
+                                   pNodeList.end());
+            }
+
         }
 
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)

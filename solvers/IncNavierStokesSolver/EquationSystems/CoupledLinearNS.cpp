@@ -128,7 +128,8 @@ namespace Nektar
                 {
                     nz_loc = 2;
                     // Assume all higher modes have the same boundary conditions and re-use mapping
-                    m_locToGloMap[1] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_graph,m_boundaryConditions,velocity,m_pressure->GetPlane(2),nz_loc);
+                    m_locToGloMap[1] = MemoryManager<CoupledLocalToGlobalC0ContMap>::AllocateSharedPtr(m_session,m_graph,m_boundaryConditions,velocity,m_pressure->GetPlane(2),nz_loc,false);
+                    // Note high order modes cannot be singular
                     for(i = 2; i < nz; ++i)
                     {
                         m_locToGloMap[i] = m_locToGloMap[1];

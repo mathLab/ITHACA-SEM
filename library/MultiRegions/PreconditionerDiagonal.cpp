@@ -85,7 +85,7 @@ namespace Nektar
                     DiagonalPreconditionerSum();
                 }
                 else if(solvertype == eIterativeStaticCond ||
-                      solvertype == eIterativeMultiLevelStaticCond)
+                        solvertype == eIterativeMultiLevelStaticCond)
                 {
                     StaticCondDiagonalPreconditionerSum();
                 }
@@ -248,7 +248,8 @@ namespace Nektar
                          NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
                          z = M * r;
 		     }
-                     else if(solvertype == eIterativeStaticCond)
+                     else if(solvertype == eIterativeStaticCond ||
+                             solvertype == eIterativeMultiLevelStaticCond)
                      {
                          int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                          int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();

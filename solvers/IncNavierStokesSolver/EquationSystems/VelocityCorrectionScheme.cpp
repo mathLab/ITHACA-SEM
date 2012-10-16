@@ -579,7 +579,7 @@ namespace Nektar
 						//cout << "\nOscillation = " << Oscillation << "\n" << endl; 
 					}
 					
-					if (Oscillation==123)
+					if (Oscillation==50)
 					{					
 						Delta = Delta + 0.25;
 						

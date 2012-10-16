@@ -1297,10 +1297,20 @@ namespace Nektar
 				}
 				else //We solve the Stokes Problem
 				{
+					
+					/*Array<OneD, Array<OneD, NekDouble> >ZERO(m_velocity.num_elements());
+					
+					for(int i = 0; i < m_velocity.num_elements(); ++i)
+					{				
+						ZERO[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+						m_fields[m_velocity[i]]->FwdTrans(ZERO[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+					}*/
+					
 					SetUpCoupledMatrix(0.0);						
 					m_initialStep = true;
 					m_counter=1;
-					SolveLinearNS(m_ForcingTerm_Coeffs);
+					//SolveLinearNS(m_ForcingTerm_Coeffs);
+					Solve();
 					m_initialStep = false;
 					cout << "Saving the Stokes Flow for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
 				}
@@ -1444,28 +1454,31 @@ namespace Nektar
 				int Check(0);
 				
 				//Saving the init datas
-				//Checkpoint_Output(Check);
+				Checkpoint_Output(Check);
 				//TmpOutput(Check);
 				Check++;
 				
-				while(m_kinvis >= m_kinvisMin)
+				cout<<"We execute INITIALLY SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
+				SolveSteadyNavierStokes();
+				
+				while(m_kinvis > m_kinvisMin)
 				{		
-					if (Check == 1)
+					/*if (Check == 1)
 					{
 						cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
 						SolveSteadyNavierStokes();
 						//Checkpoint_Output(Check);
 						//TmpOutput(Check);
 						Check++;
-					}
+					}*/
 					
 					Continuation();
 					
-					if (m_kinvis >= m_kinvisMin)
+					if (m_kinvis > m_kinvisMin)
 					{
 						cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
 						SolveSteadyNavierStokes();
-						//Checkpoint_Output(Check);
+						Checkpoint_Output(Check);
 						//TmpOutput(Check);
 						Check++;
 					}
@@ -1493,6 +1506,9 @@ namespace Nektar
 		Array<OneD, Array<OneD, NekDouble> > qBar0(m_velocity.num_elements());
 		Array<OneD, Array<OneD, NekDouble> > qBar1(m_velocity.num_elements());
 		
+		Array<OneD, NekDouble > NormDiff(m_velocity.num_elements(), 0.0);
+		Array<OneD, Array<OneD, NekDouble> > Diff(m_velocity.num_elements());
+		
 		//Definition of the SFD parameters:
 		NekDouble Delta;
 		NekDouble X;
@@ -1510,7 +1526,7 @@ namespace Nektar
 		cst1=X*m_timestep;
 		cst2=1.0/(1.0 + cst1);
 		cst3=m_timestep/Delta;
-		cst4=1.0/(1.0 + cst2);
+		cst4=1.0/(1.0 + cst3);
 		
 		cout << "------------------ SFD Parameters ------------------" << endl;
 		cout << "Delta = " << Delta << endl;
@@ -1533,6 +1549,14 @@ namespace Nektar
 			if (n<StartSFDatStep)
 			{
 				AdvanceInTime(1);
+				
+				//For plotting residual:
+				/*for(int i = 0; i < m_velocity.num_elements(); ++i)
+				{	
+					Diff[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(), 0.0);
+					m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), Diff[i]);
+				}*/
+				
 				if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
 				{
 					cout << "Step: " << n+1 << "  Time: " << m_time << endl;
@@ -1561,6 +1585,8 @@ namespace Nektar
 					q1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
 					qBar1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
 					
+					Diff[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+					
 					m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), q0[i]);	
 					
 					if (n==0)
@@ -1570,7 +1596,7 @@ namespace Nektar
 					
 					Vmath::Smul(q1[i].num_elements(), cst1, qBar0[i], 1, q1[i], 1);
 					Vmath::Vadd(q1[i].num_elements(), q0[i], 1, q1[i], 1, q1[i], 1);
-					Vmath::Smul(q1[i].num_elements(), cst2, q1[i], 1, q1[i], 1);				
+					Vmath::Smul(q1[i].num_elements(), cst2, q1[i], 1, q1[i], 1);
 					
 					Vmath::Smul(qBar1[i].num_elements(), cst3, q1[i], 1, qBar1[i], 1);
 					Vmath::Vadd(qBar1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
@@ -1578,11 +1604,47 @@ namespace Nektar
 					
 					qBar0[i] = qBar1[i];
 					
+					
+					
+					Vmath::Vsub(Diff[i].num_elements(), q1[i], 1, qBar1[i], 1, Diff[i], 1);
+					
+					
+
 					Vmath::Vcopy( q1[i].num_elements(), q1[i], 1, m_fields[i]->UpdatePhys(), 1 );
 					//m_fields[i]->FwdTrans_IterPerExp( q1[i], m_fields[i]->UpdateCoeffs() );
+					
+					//if(i==0)
+					/*{
+						for(int j = 0; j < q1[i].num_elements(); ++j)
+						//for(int j = 0; j < 70; ++j)
+						{
+							//cout << "q0[" << i << "]["<<j<<"] - q1["<<i<<"]["<<j<<"] = " << q1[i][j]-qBar1[i][j] << endl;
+							Diff[i][j]=q1[i][j]-qBar1[i][j];
+						}
+					}*/		
+					
 				}
 			}
+			/*std::ofstream file( "Zfichier.txt", std::ios_base::app );
+			
+			//L2Norm(Diff, NormDiff);
+			InfNorm(Diff, NormDiff);
+			
+			if(n-StartSFDatStep>=0)
+			{
+				file << n-StartSFDatStep << "\t" << NormDiff[0] << "\t" << NormDiff[1] << endl;
+				//file << n << "\t" << NormDiff[0] << "\t" << NormDiff[1] << endl;
+			}
+			
+			file.close();*/
 		}
+		
+		/*for(int i = 0; i < m_velocity.num_elements(); ++i)
+		{
+			cout << "On Enregistre qBar1 en valeur a plotter" << endl;
+			Vmath::Vcopy( q1[i].num_elements(), qBar1[i], 1, m_fields[i]->UpdatePhys(), 1 );
+		}*/
+		
 		SFDtimer.Stop();
         	cout << "\n -- SFD time -- " << SFDtimer.TimePerTest(1)/60 << " minutes" << endl << endl;
 		
@@ -1671,11 +1733,11 @@ namespace Nektar
 		
 		m_counter=1;
 		
-		InfNorm(delta_velocity_Phys, Inf_norm);
-		//L2Norm(delta_velocity_Phys, L2_norm);		
+		//InfNorm(delta_velocity_Phys, Inf_norm);
+		L2Norm(delta_velocity_Phys, L2_norm);		
 
-		while(max(Inf_norm[0], Inf_norm[1]) > m_tol)// && m_counter <= m_maxIt)
-		//while(max(L2_norm[0], L2_norm[1]) > m_tol && m_counter <= m_maxIt)
+		//while(max(Inf_norm[0], Inf_norm[1]) > m_tol)// && m_counter <= m_maxIt)
+		while(max(L2_norm[0], L2_norm[1]) > m_tol)// && m_counter <= m_maxIt)
 		{
 			if(m_counter == 1) //At the first Newton step, we use the solution of the Stokes problem (if Restart=0 in input file)
 				               //Or the solution of the .rst file (if Restart=1 in input file) 
@@ -1691,8 +1753,11 @@ namespace Nektar
 					m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
 				}
 				
+				//m_initialStep = true; //TTTTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTTTTTTTT !!!!!!!!!!!!!!!!!!!!!!!!!!!
 				EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
 				SetUpCoupledMatrix(0.0, Velocity_Phys, true);
+				SolveLinearNS(RHS_Coeffs);
+				//m_initialStep = false; //TTTTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTTTTTTTT !!!!!!!!!!!!!!!!!!!!!!!!!!!
 			}
 			if(m_counter > 1)
 			{
@@ -1702,9 +1767,10 @@ namespace Nektar
 				{
 					SetUpCoupledMatrix(0.0, Velocity_Phys, true);
 				}
+				SolveLinearNS(RHS_Coeffs);
 			}
 				
-			SolveLinearNS(RHS_Coeffs);
+			//SolveLinearNS(RHS_Coeffs);
 			
 			for(int i = 0; i < m_velocity.num_elements(); ++i)
 			{
@@ -1718,8 +1784,8 @@ namespace Nektar
 							Velocity_Phys[i], 1);
 			}	
 			
-			InfNorm(delta_velocity_Phys, Inf_norm);
-			//L2Norm(delta_velocity_Phys, L2_norm);
+			//InfNorm(delta_velocity_Phys, Inf_norm);
+			L2Norm(delta_velocity_Phys, L2_norm);
 				
 			if(max(Inf_norm[0], Inf_norm[1]) > 100)
 			{
@@ -1777,7 +1843,7 @@ namespace Nektar
 			m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_star[i]);
 		
 			//u_star(k+1) = u_N(k) + DeltaKinvis *  u_star(k)
-			Vmath::Smul(u_star[i].num_elements(), m_kinvis*m_KinvisPercentage/100, u_star[i], 1, u_star[i], 1);
+			Vmath::Smul(u_star[i].num_elements(), m_kinvis, u_star[i], 1, u_star[i], 1);
 			Vmath::Vadd(u_star[i].num_elements(), u_star[i], 1, u_N[i], 1, u_star[i], 1);
 					
 			m_fields[m_velocity[i]]->FwdTrans(u_star[i], m_fields[m_velocity[i]]->UpdateCoeffs());
@@ -2393,11 +2459,11 @@ namespace Nektar
 		}
         variables[i] = "p"; 
 		
-		// crÃ©er un flux de sortie
+		// créer un flux de sortie
 		std::ostringstream oss;
-		// Ã©crire un nombre dans le flux
+		// écrire un nombre dans le flux
 		oss << Check;
-		// rÃ©cupÃ©rer une chaÃ®ne de caractÃ¨res
+		// récupérer une chaîne de caractères
 		std::string step = oss.str();
 		
         std::string outname = m_sessionName + "_" + step + ".fld";

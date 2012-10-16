@@ -239,7 +239,7 @@ namespace Nektar
                 }
                 else
                 {
-                    DNekScalBlkMat &S1 = *m_S1Blk;
+		    DNekScalBlkMat &S1 = *m_S1Blk;
                     DNekScalBlkMat &R = *m_RBlk;
                     DNekScalBlkMat &BinvD = *m_BinvD;
 
@@ -280,7 +280,6 @@ namespace Nektar
                     pLocToGloMap->GlobalToLocalBnd(F_GlobBnd,F_LocBnd);
                     F_LocBnd=R*F_LocBnd;
                     pLocToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
-                    //pLocToGloMap->LocalBndToGlobal(F_LocBnd,F_HomBnd, nDirBndDofs);
                 }
 		
       
@@ -299,7 +298,7 @@ namespace Nektar
                     //transform back to original basis
                     if(pLocToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
                     {
-                        DNekScalBlkMat &RT = *m_RTBlk;
+		        DNekScalBlkMat &RT = *m_RTBlk;
 
                         pLocToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
  
@@ -431,7 +430,7 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::SetupLowEnergyTopLevel(
                 const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
-            int n;
+	    int n;
             int n_exp = m_expList.lock()->GetNumElmts();
 
             const Array<OneD,const unsigned int>& nbdry_size
@@ -439,10 +438,12 @@ namespace Nektar
             const Array<OneD,const unsigned int>& nint_size
                     = pLocToGloMap->GetNumLocalIntCoeffsPerPatch();
 
+            MultiRegions::PreconditionerType pType = pLocToGloMap->GetPreconType();
+
+            std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
 
             v_UniqueMap();
-            m_precon = MemoryManager<Preconditioner>::AllocateSharedPtr(
-                                            GetSharedThisPtr(),m_locToGloMap);
+	    m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),pLocToGloMap);
 
             // Setup Block Matrix systems
             MatrixStorage blkmatStorage = eDIAGONAL;
@@ -501,7 +502,7 @@ namespace Nektar
                 m_RBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_R));
                 m_RTBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_RT));
 	    }
-	}
+        }
 
         /**
          * Assemble the schur complement matrix from the block matrices stored

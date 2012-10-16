@@ -40,7 +40,10 @@ GlobalMatrixKey.cpp
 
 GlobalOptimizationParameters.cpp
 SubStructuredGraph.cpp
+
 Preconditioner.cpp
+PreconditionerDiagonal.cpp
+PreconditionerLowEnergy.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
@@ -80,6 +83,8 @@ MultiRegionsDeclspec.h
 GlobalOptimizationParameters.h
 SubStructuredGraph.h
 Preconditioner.h
+PreconditionerDiagonal.h
+PreconditionerLowEnergy.h
 )
 
 SET(ASSEMBLY_MAP_HEADERS

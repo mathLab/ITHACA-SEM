@@ -347,9 +347,14 @@ namespace Nektar
             // Check if preconditioner has been computed and compute if needed.
             if (!m_precon)
             {
-                v_UniqueMap();
-                m_precon = MemoryManager<Preconditioner>::AllocateSharedPtr(
-                                            GetSharedThisPtr(),plocToGloMap);
+            MultiRegions::PreconditionerType pType = plocToGloMap->GetPreconType();
+
+            std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
+
+            v_UniqueMap();
+	    m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),plocToGloMap);
+	    //m_precon = MemoryManager<Preconditioner>::AllocateSharedPtr(
+            //                                GetSharedThisPtr(),plocToGloMap);
             }
 
             // Get the communicator for performing data exchanges

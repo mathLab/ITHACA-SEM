@@ -116,7 +116,7 @@ namespace Nektar
             // Workspace array for matrix multiplication
             Array<OneD, NekDouble> m_wsp;
 
-            PreconditionerSharedPtr  m_precon;
+	    PreconditionerSharedPtr  m_precon;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.

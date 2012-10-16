@@ -80,18 +80,11 @@ namespace Nektar
                         boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
                         std::string("GlobalLinSys"))
         {
-            map<int,PeriodicFace> periodicFaces;
-            map<int,int>          periodicEdges;
-            map<int,int>          periodicVertices;
             SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
-            GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
-
-            m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(m_session,m_ncoeffs,*this,
-                                                                                     m_bndCondExpansions,
-                                                                                     m_bndConditions,
-                                                                                     periodicVertices,
-                                                                                     periodicEdges,
-                                                                                     periodicFaces);
+            
+            m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
+                m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
+                m_periodicVertices,m_periodicEdges,m_periodicFaces);
         }
 
 
@@ -129,18 +122,11 @@ namespace Nektar
         {
             if(!SameTypeOfBoundaryConditions(In))
             {
-                map<int,PeriodicFace> periodicFaces;
-                map<int,int>          periodicEdges;
-                map<int,int>          periodicVertices;
                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
-                GetPeriodicFaces(graph3D,bcs,variable,periodicVertices,periodicEdges,periodicFaces);
 
-                m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(m_session,m_ncoeffs,*this,
-                                                                                         m_bndCondExpansions,
-                                                                                         m_bndConditions,
-                                                                                         periodicVertices,
-                                                                                         periodicEdges,
-                                                                                         periodicFaces);
+                m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
+                    m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
+                    m_periodicVertices, m_periodicEdges, m_periodicFaces);
 
             }
             else

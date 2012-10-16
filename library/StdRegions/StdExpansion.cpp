@@ -1740,6 +1740,12 @@ namespace Nektar
             {
                 ASSERTL0(false, "Not implemented.");
             }
+        
+            void StdExpansion::v_NegateFaceNormal(const int face)
+            {
+                ASSERTL0(false, "Not implemented.");
+            }
+
 		
 			void StdExpansion::v_ComputeVertexNormal(const int vertex)
 			{

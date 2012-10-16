@@ -66,9 +66,6 @@ namespace Nektar
             /// Global to universal unique map
             Array<OneD, int>                            m_map;
 
-            /// Operator preconditioner matrix.
-            DNekMatSharedPtr                            m_preconditioner;
-
             /// Tolerance of iterative solver.
             NekDouble                                   m_tolerance;
 
@@ -137,8 +134,6 @@ namespace Nektar
             virtual void v_DoMatrixMultiply(
                     const Array<OneD, NekDouble>& pInput,
                           Array<OneD, NekDouble>& pOutput) = 0;
-
-            virtual void v_ComputePreconditioner() = 0;
 
             virtual void v_UniqueMap() = 0;
         };

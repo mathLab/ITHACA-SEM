@@ -210,7 +210,7 @@ namespace Nektar
             const size_t GetHash() const
             {
                 size_t hash = 0;
-                boost::hash_combine(hash, m_type);
+                boost::hash_combine(hash, (int)m_type);
                 boost::hash_combine(hash, m_expDim);
                 boost::hash_combine(hash, m_coordDim);
                 boost::hash_combine(hash, m_isUsingQuadMetrics);

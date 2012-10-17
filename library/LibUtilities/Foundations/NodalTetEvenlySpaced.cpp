@@ -32,7 +32,7 @@
 // Description: 3D Nodal Tetrahedron Evenly Spaced Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <iostream>
 #include <algorithm>
 #include <limits>

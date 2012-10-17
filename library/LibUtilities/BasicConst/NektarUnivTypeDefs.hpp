@@ -77,12 +77,12 @@ namespace Nektar
     /// Enumeration of flags for passing a list of options.
     enum FlagType
     {
-        eUseContCoeff
+        eUseGlobal
     };
 
     /// String map for FlagType enumeration.
     const char* const FlagTypeMap[] = {
-        "UseContCoeff"
+        "UseGlobal"
     };
 
     /// Defines a list of flags.

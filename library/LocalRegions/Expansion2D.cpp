@@ -36,6 +36,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/Geometry2D.h>
+#include <LibUtilities/Foundations/InterpCoeff.h>
 
 namespace Nektar
 {

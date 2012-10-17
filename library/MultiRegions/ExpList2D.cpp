@@ -38,6 +38,8 @@
 #include <LocalRegions/NodalTriExp.h>
 #include <LocalRegions/Expansion3D.h>
 #include <MultiRegions/ExpList2D.h>
+#include <LibUtilities/Foundations/Interp.h>
+
 
 #include <iomanip>
 
@@ -356,7 +358,6 @@ namespace Nektar
               m_ncoeffs = 0;
               m_npoints = 0;
 
-              m_transState = eNotSet;
               m_physState  = false;
 
               SpatialDomains::ExpansionMap::const_iterator expIt;

@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 //
 // File UnsteadyAdvection.cpp
 //
@@ -231,11 +231,10 @@ namespace Nektar
         case MultiRegions::eGalerkin:
         case MultiRegions::eMixed_CG_Discontinuous:
             {
-                Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
-
+                Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs(),0.0);
                 for(i = 0; i < nVariables; ++i)
                 {
-                    m_fields[i]->FwdTrans(inarray[i], coeffs, false);
+                    m_fields[i]->FwdTrans(inarray[i], coeffs);
                     m_fields[i]->BwdTrans_IterPerExp(coeffs, outarray[i]);
                 }
                 break;

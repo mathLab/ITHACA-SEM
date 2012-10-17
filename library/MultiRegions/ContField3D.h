@@ -88,20 +88,6 @@ namespace Nektar
                     Array<OneD, NekDouble> &inout,
                     Array<OneD, NekDouble> &outarray);
 
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
-            /// (implemented as #m_contCoeffs) containing all global expansion
-            /// coefficients.
-            inline Array<OneD, NekDouble> &UpdateContCoeffs();
-
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
-            /// (implemented as #m_contCoeffs) containing all global expansion
-            /// coefficients.
-            inline const Array<OneD, const NekDouble> &GetContCoeffs() const;
-
-            /// Returns the total number of global degrees of freedom
-            /// \f$N_{\mathrm{dof}}\f$.
-            inline int GetContNcoeffs();
-
             inline void GlobalToLocal();
 
             inline void GlobalToLocal(
@@ -124,8 +110,6 @@ namespace Nektar
 
         protected:
             AssemblyMapCGSharedPtr m_locToGloMap;
-            int                             m_contNcoeffs;
-            Array<OneD, NekDouble>          m_contCoeffs;
 
             /// (A shared pointer to) a list which collects all the global
             /// matrices being assembled, such that they should be constructed
@@ -141,21 +125,21 @@ namespace Nektar
             /// element expansion.
             virtual void v_BwdTrans(
                     const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          bool UseContCoeffs = false);
+                    Array<OneD,       NekDouble> &outarray,
+                    CoeffState coeffstate = eLocal);
 
             /// Calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to all <em>global</em>
             /// expansion modes \f$\phi_n^e(\boldsymbol{x})\f$.
             virtual void v_IProductWRTBase(
                     const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          bool  UseContCoeffs = false);
+                    Array<OneD,       NekDouble> &outarray,
+                    CoeffState coeffstate = eLocal);
 
             virtual void v_FwdTrans(
                     const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,       NekDouble> &outarray,
-                          bool  UseContCoeffs);
+                    Array<OneD,       NekDouble> &outarray,
+                    CoeffState coeffstate);
 
         private:
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
@@ -175,7 +159,7 @@ namespace Nektar
             virtual void v_MultiplyByInvMassMatrix(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
-                          bool  UseContCoeffs);
+                    CoeffState coeffstate);
 
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
@@ -188,8 +172,8 @@ namespace Nektar
             virtual void v_GeneralMatrixOp(
                     const GlobalMatrixKey             &gkey,
                     const Array<OneD,const NekDouble> &inarray,
-                          Array<OneD,      NekDouble> &outarray,
-                          bool  UseContCoeffs);
+                    Array<OneD,      NekDouble> &outarray,
+                    CoeffState coeffstate);
 
 
         };
@@ -201,44 +185,10 @@ namespace Nektar
             return m_bndCondExpansions;
         }
 
-        /**
-         * If one wants to get hold of the underlying data without modifying
-         * them, rather use the function #GetContCoeffs instead.
-         *
-         * @return  (A reference to) the array #m_contCoeffs.
-         */
-        inline Array<OneD, NekDouble> &ContField3D::UpdateContCoeffs()
-        {
-            m_transState = eContinuous;
-            return m_contCoeffs;
-        }
-
-        /**
-         * As the function returns a constant reference to a
-         * <em>const Array</em>, it is not possible to modify the underlying
-         * data of the array #m_contCoeffs. In order to do so, use the function
-         * #UpdateContCoeffs instead.
-         *
-         * \return (A reference to) the array #m_contCoeffs.
-         */
-        inline const Array<OneD, const NekDouble>
-                                            &ContField3D::GetContCoeffs() const
-        {
-            return m_contCoeffs;
-        }
-
-        /**
-         * @return  #m_contNcoeffs, the total number of global degrees of
-         * freedom.
-         */
-        inline int ContField3D::GetContNcoeffs()
-        {
-            return m_contNcoeffs;
-        }
 
         inline void ContField3D::GlobalToLocal()
         {
-            m_locToGloMap->GlobalToLocal(m_contCoeffs, m_coeffs);
+            m_locToGloMap->GlobalToLocal(m_coeffs, m_coeffs);
         }
 
         inline void ContField3D::GlobalToLocal(
@@ -250,12 +200,12 @@ namespace Nektar
 
         inline void ContField3D::LocalToGlobal()
         {
-            m_locToGloMap->LocalToGlobal(m_coeffs, m_contCoeffs);
+            m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs);
         }
 
         inline void ContField3D::Assemble()
         {
-            m_locToGloMap->Assemble(m_coeffs, m_contCoeffs);
+            m_locToGloMap->Assemble(m_coeffs, m_coeffs);
         }
 
         inline void ContField3D::Assemble(

@@ -131,11 +131,12 @@ namespace Nektar
 
                     m_expList.lock()->GeneralMatrixOp(
                             m_linSysKey,
-                            pOutput, tmp, true);
-
-                    Vmath::Vsub( nGlobDofs, pInput.get(),1,
-                                            tmp.get(),   1,
-                                            tmp.get(),   1);
+                            pOutput, tmp, eGlobal);
+                    
+                    Vmath::Vsub(nGlobDofs, 
+                                pInput.get(),1,
+                                tmp.get(),   1,
+                                tmp.get(),   1);
                 }
 
                 Array<OneD, NekDouble> offsetarray;

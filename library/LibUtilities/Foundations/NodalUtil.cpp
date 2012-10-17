@@ -33,7 +33,7 @@
 //              Basis function, Interpolation, Integral, Derivation, etc.                
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <iostream>
 #include <iomanip>
 #include <iosfwd>

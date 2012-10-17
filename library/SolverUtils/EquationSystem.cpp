@@ -294,15 +294,10 @@ namespace Nektar
                                     m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
                                         ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT, m_dealiasing, 
                                                             m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
-								
-                                    // necessary to perform to HomoBwdTrans for the fields 
-                                    // (are complex differently from the base flow)
-                                    //m_fields[i]->SetWaveSpace(false);
-
                                 }
                             }
                             // Half mode stability analysis
-			    else if(m_HalfMode)
+			                else if(m_HalfMode)
                             {
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ, LibUtilities::eFourierSingleModeSpaced);
 									
@@ -321,10 +316,6 @@ namespace Nektar
                                     m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
                                         ::AllocateSharedPtr(m_session, BkeyZR, m_LhomZ, m_useFFT, m_dealiasing,
                                                             m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
-										
-                                    // necessary to perform to HomoBwdTrans for the fields 
-                                    // (are complex differently from the base flow)
-                                    //m_fields[i]->SetWaveSpace(false);
                                 }
                             }
                             // Normal homogeneous 1D
@@ -338,11 +329,6 @@ namespace Nektar
                                     m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
                                         ::AllocateSharedPtr(m_session, BkeyZ, m_LhomZ, m_useFFT, m_dealiasing,
                                                             m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
-
-									//if(m_MultipleModes)
-                                    //{
-                                    //    m_fields[i]->SetWaveSpace(false);
-                                    //}
                                 }
                             }
                         }
@@ -379,12 +365,6 @@ namespace Nektar
                     }
                     case 3:
                     {
-                        //if(m_HomogeneousType == eHomogeneous3D)
-                        //{
-                        //    ASSERTL0(false,"3D fully periodic problems not implemented yet");
-                        //}
-                        //else
-                        //{
                         i = 0;
                         MultiRegions::ContField3DSharedPtr firstfield =
                             MemoryManager<MultiRegions::ContField3D>
@@ -1338,7 +1318,7 @@ namespace Nektar
 		
             if(UseContCoeffs)
             {
-                m_fields[0]->IProductWRTBase(tmp, outarray,UseContCoeffs);
+                m_fields[0]->IProductWRTBase(tmp, outarray,MultiRegions::eGlobal);
             }
             else
             {
@@ -1394,7 +1374,7 @@ namespace Nektar
                 case 3:
                     grad1 = Array<OneD, NekDouble> (nPointsTot);
                     grad2 = Array<OneD, NekDouble> (nPointsTot);
-                    m_fields[0]->PhysDeriv(u,grad0,grad1,grad2,m_UseContCoeff);
+                    m_fields[0]->PhysDeriv(u,grad0,grad1,grad2);
                     Vmath::Vmul (nPointsTot, grad0, 1, V[0], 1, outarray, 1);
                     Vmath::Vvtvp(nPointsTot, grad1, 1, V[1], 1, outarray, 1, outarray, 1);
                     Vmath::Vvtvp(nPointsTot, grad2, 1, V[2], 1, outarray, 1, outarray, 1);

@@ -32,34 +32,8 @@
 // Description: 
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 
 
 
-/**
-    $Log: blas.cpp,v $
-    Revision 1.7  2007/04/03 03:59:24  bnelson
-    Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
-
-    Revision 1.6  2007/02/15 06:56:55  bnelson
-    *** empty log message ***
-
-    Revision 1.5  2007/02/04 00:15:41  bnelson
-    *** empty log message ***
-
-    Revision 1.4  2006/11/18 16:19:27  bnelson
-    Added the gfortran version of ACML.
-
-    Revision 1.3  2006/11/06 17:09:09  bnelson
-    *** empty log message ***
-
-    Revision 1.2  2006/10/30 05:11:16  bnelson
-    Added preliminary linear system and block matrix support.
-
-    Revision 1.1  2006/10/02 01:16:37  bnelson
-    Started working on adding BLAS and LAPACK
-
-
- **/
- 

@@ -85,6 +85,10 @@ namespace Nektar
 		
 		NekDouble                                       m_h0;
 		
+		NekDouble m_C;
+		NekDouble m_RT;
+		NekDouble m_pout;
+		
 		Array<OneD, Array<OneD, NekDouble> >			m_A_0global;
 		
 		Array<OneD, NekDouble>							m_A_0;

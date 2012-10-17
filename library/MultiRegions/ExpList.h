@@ -109,9 +109,9 @@ namespace Nektar
             /// The default destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList();
 			
-			////
-			//virtual boost::shared_ptr<ExpList> do_clone(void);
-
+            ////
+            //virtual boost::shared_ptr<ExpList> do_clone(void);
+            
             /// Copy coefficients from concatenated list to expansion list.
             MULTI_REGIONS_EXPORT void PutCoeffsInToElmtExp(void);
 
@@ -146,7 +146,6 @@ namespace Nektar
             // for element eid
             MULTI_REGIONS_EXPORT int GetNcoeffs(const int eid) const;
 			
-			inline int GetContNcoeffs(void) const;
 
             /// Evaulates the maximum number of modes in the elemental basis
             /// order over all elements
@@ -168,28 +167,21 @@ namespace Nektar
             /// \f$=Q_{\mathrm{tot}}\f$.
             inline int GetNpoints(void) const;
 
-            /// Sets the transformed state #m_transState of the coefficient
-            /// arrays.
-            inline void SetTransState(const TransState transState);
-
-            /// This function returns the transformed state #m_transState of
-            /// the coefficient arrays.
-            inline TransState GetTransState(void) const;
 			
-			/// Sets the wave space to the one of the possible configuration
-			/// true or false
+            /// Sets the wave space to the one of the possible configuration
+            /// true or false
             inline void SetWaveSpace(const bool wavespace);
+            
 			
-			
-			///Set Modified Basis for the stability analysis
-			inline void SetModifiedBasis(const bool modbasis);
-
-			
+            ///Set Modified Basis for the stability analysis
+            inline void SetModifiedBasis(const bool modbasis);
+            
+            
             /// This function returns the third direction expansion condition,
-			/// which can be in wave space (coefficient) or not
+            /// which can be in wave space (coefficient) or not
             /// It is stored in the variable m_WaveSpace.
             inline bool GetWaveSpace(void) const;
-
+            
             /// Fills the array #m_phys
             inline void SetPhys(const Array<OneD, const NekDouble> &inarray);
 
@@ -225,7 +217,7 @@ namespace Nektar
             inline void IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             /// This function calculates the inner product of a function
             /// \f$f(\boldsymbol{x})\f$ with respect to the derivative (in
@@ -244,7 +236,7 @@ namespace Nektar
             ///
             inline void FwdTrans(const Array<OneD, const NekDouble> &inarray,
 								Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             /// This function elementally mulplies the coefficient space of
             /// Sin my the elemental inverse of the mass matrix.
@@ -256,7 +248,7 @@ namespace Nektar
             inline void MultiplyByInvMassMatrix(
                                 const Array<OneD,const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             /// Solve helmholtz problem
             inline void HelmSolve(
@@ -273,7 +265,7 @@ namespace Nektar
                        const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray,
                        const NekDouble lambda,
-                       bool  UseContCoeffs = false,
+                       CoeffState coeffstate = eLocal, 
                        const Array<OneD, const NekDouble>&
                        dirForcing = NullNekDouble1DArray);
 
@@ -284,7 +276,7 @@ namespace Nektar
                        const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray,
                        const NekDouble lambda,
-                       bool  UseContCoeffs = false,
+                       CoeffState coeffstate = eLocal,
                        const Array<OneD, const NekDouble>&
                        dirForcing = NullNekDouble1DArray);
 
@@ -302,7 +294,7 @@ namespace Nektar
             ///
             inline void BwdTrans (const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray,
-                                  bool  UseContCoeffs = false);
+                                  CoeffState coeffstate = eLocal);
 
             /// This function calculates the coordinates of all the elemental
             /// quadrature points \f$\boldsymbol{x}_i\f$.
@@ -319,31 +311,32 @@ namespace Nektar
             inline void GetCoord(Array<OneD, NekDouble> &coords);
 			
 			// Homogeneous transforms
-			inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-											Array<OneD, NekDouble> &outarray, 
-											bool UseContCoeffs = false,
-											bool Shuff = true,
-											bool UnShuff = true);
+            inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                            Array<OneD, NekDouble> &outarray, 
+                                            
+                                            CoeffState coeffstate = eLocal,
+                                            bool Shuff = true,
+                                            bool UnShuff = true);
+            
+            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                            Array<OneD, NekDouble> &outarray, 
+                                            CoeffState coeffstate = eLocal,
+                                            bool Shuff = true,
+                                            bool UnShuff = true);
+            
+            inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+                                      const Array<OneD, NekDouble> &inarray2,
+                                      Array<OneD, NekDouble> &outarray, 
+                                      CoeffState coeffstate = eLocal);
 			
-			inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-											Array<OneD, NekDouble> &outarray, 
-											bool UseContCoeffs = false,
-											bool Shuff = true,
-											bool UnShuff = true);
-			
-			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
-									  const Array<OneD, NekDouble> &inarray2,
-									  Array<OneD, NekDouble> &outarray, 
-									  bool UseContCoeffs = false);
-			
-			inline void GetBCValues(Array<OneD, NekDouble> &BndVals, 
-									const Array<OneD, NekDouble> &TotField, 
-									int BndID);
-			
-			inline void NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
-												  Array<OneD, const NekDouble> &V2,
-												  Array<OneD, NekDouble> &outarray,
-												  int BndID);
+            inline void GetBCValues(Array<OneD, NekDouble> &BndVals, 
+                                    const Array<OneD, NekDouble> &TotField, 
+                                    int BndID);
+            
+            inline void NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
+                                                  Array<OneD, const NekDouble> &V2,
+                                                  Array<OneD, NekDouble> &outarray,
+                                                  int BndID);
 			
             /// This function calculates Surface Normal vector of a smooth
             /// manifold.
@@ -422,25 +415,15 @@ namespace Nektar
             /// Set the  #m_coeffs array to inarray
             inline void SetCoeffsArray(Array<OneD, NekDouble> &inarray);
 
-            /// Set the  #m_contCoeffs array to inarray
-            inline void SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
-
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
             /// containing all local expansion coefficients.
             inline const Array<OneD, const NekDouble> &GetCoeffs() const;
 
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
-            /// (implemented as #m_contCoeffs) containing all global expansion
-            /// coefficients.
-            inline const Array<OneD, const NekDouble> &GetContCoeffs() const;
-
-            /// Put the coefficients from m_coeffs into m_contCoeffs using
-            /// local to global mapping
+            /// Put the coefficients into global ordering using m_coeffs 
             inline void LocalToGlobal(void);
 
-            /// Put the coefficients from m_contCoeffs into m_contCoeffs using
-            /// local to global mapping
+            /// Put the coefficients into local ordering and place in m_coeffs
             inline void GlobalToLocal(void);
 
             /// Get the \a i th value  (coefficient) of #m_coeffs
@@ -486,24 +469,24 @@ namespace Nektar
                 return v_HomogeneousEnergy();
             }
 			
-			/// This function returns a vector containing the wave numbers in z-direction associated
-			/// with the 3D homogenous expansion. Required if a parellelisation is applied in the Fourier direction
-			Array<OneD, unsigned int> GetZIDs(void)
-			{
-				return v_GetZIDs();
-			}
-			
-			/// This function returns a vector containing the wave numbers in y-direction associated
-			/// with the 3D homogenous expansion. Required if a parellelisation is applied in the Fourier direction
-			Array<OneD, unsigned int> GetYIDs(void)
-			{
-				return v_GetYIDs();
-			}
-
+            /// This function returns a vector containing the wave numbers in z-direction associated
+            /// with the 3D homogenous expansion. Required if a parellelisation is applied in the Fourier direction
+            Array<OneD, unsigned int> GetZIDs(void)
+            {
+                return v_GetZIDs();
+            }
+            
+            /// This function returns a vector containing the wave numbers in y-direction associated
+            /// with the 3D homogenous expansion. Required if a parellelisation is applied in the Fourier direction
+            Array<OneD, unsigned int> GetYIDs(void)
+            {
+                return v_GetYIDs();
+            }
+            
             /// Calculates the \f$H^1\f$ error of the global spectral/hp
             /// element approximation.
             MULTI_REGIONS_EXPORT NekDouble H1 (const Array<OneD, const NekDouble> &soln);
-
+            
             /// This function returns the number of elements in the expansion.
             inline int GetExpSize(void);
 
@@ -549,13 +532,6 @@ namespace Nektar
             /// containing all local expansion coefficients.
             inline Array<OneD, NekDouble> &UpdateCoeffs();
 
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
-            /// (implemented as #m_contCoeffs) containing all global expansion
-            /// coefficients in ContField
-            inline Array<OneD, NekDouble> &UpdateContCoeffs()
-            {
-                return v_UpdateContCoeffs();
-            }
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{u}_l\f$ (implemented as #m_phys) containing the
@@ -563,28 +539,28 @@ namespace Nektar
             /// quadrature points.
             inline Array<OneD, NekDouble> &UpdatePhys();
 
-	        inline void PhysDeriv(Direction edir, 
-								  const Array<OneD, const NekDouble> &inarray,
-								  Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);	
+            inline void PhysDeriv(Direction edir, 
+                                  const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD, NekDouble> &out_d);	
 	    
             /// This function discretely evaluates the derivative of a function
             /// \f$f(\boldsymbol{x})\f$ on the domain consisting of all
             /// elements of the expansion.
-			inline void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-								  Array<OneD, NekDouble> &out_d0,
-								  Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
-								  Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray, bool UseContCoeffs = false);
-			
+            inline void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD, NekDouble> &out_d0,
+                                  Array<OneD, NekDouble> &out_d1 = NullNekDouble1DArray,
+                                  Array<OneD, NekDouble> &out_d2 = NullNekDouble1DArray);
+            
             inline void PhysDeriv(const int dir,
-								  const Array<OneD, const NekDouble> &inarray,
-								  Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
-
-
+                                  const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD, NekDouble> &out_d);
+            
+            
             // functions associated with DisContField
             inline const Array<OneD, const  boost::shared_ptr<ExpList> > &GetBndCondExpansions();
-
+            
             inline boost::shared_ptr<ExpList> &UpdateBndCondExpansion(int i);
-
+            
             inline void Upwind(
                 const Array<OneD, const Array<OneD,       NekDouble> > &Vec,
                 const Array<OneD,                   const NekDouble>   &Fwd,
@@ -656,7 +632,7 @@ namespace Nektar
             inline void GeneralMatrixOp(const GlobalMatrixKey             &gkey,
                                         const Array<OneD,const NekDouble> &inarray,
                                         Array<OneD,      NekDouble> &outarray,
-                                        bool  UseContCoeffs = false);
+                                        CoeffState coeffstate = eLocal);
 
             MULTI_REGIONS_EXPORT void GeneralMatrixOp_IterPerExp(
                     const GlobalMatrixKey      &gkey,
@@ -867,22 +843,6 @@ namespace Nektar
             Array<OneD, NekDouble> m_phys;
 
             /**
-             * \brief The transformed state of the array of coefficients of the
-             * expansion.
-             *
-             * #TransState is the enumeration which can attain the following
-             * values:
-             * - <em>eNotSet</em>: The coefficients are not set.
-             * - <em>eLocal</em>: The array #m_coeffs is filled with the proper
-             *   local coefficients.
-             * - <em>eContinuous</em>: The array #m_contCoeffs is filled with
-             *   the proper global coefficients.
-             * - <em>eLocalCont</em>: Both the arrays #m_coeffs and
-             *   #m_contCoeffs are filled with the proper coefficients.
-             */
-            TransState m_transState;
-
-            /**
              * \brief The state of the array #m_phys.
              *
              * Indicates whether the array #m_phys, created to contain the
@@ -1034,7 +994,7 @@ namespace Nektar
             virtual void v_MultiplyByInvMassMatrix(
                                                    const Array<OneD,const NekDouble> &inarray,
                                                    Array<OneD,      NekDouble> &outarray,
-                                                   bool  UseContCoeffs);
+                                                   CoeffState coeffstate);
 
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
@@ -1049,7 +1009,7 @@ namespace Nektar
                                                                  const Array<OneD, const NekDouble> &inarray,
                                                                  Array<OneD, NekDouble> &outarray,
                                                                  const NekDouble lambda,
-                                                                 bool  UseContCoeffs = false,
+                                                                 CoeffState coeffstate = eLocal, 
                                                                  const Array<OneD, const NekDouble>&
                                                                  dirForcing = NullNekDouble1DArray);
 
@@ -1058,50 +1018,41 @@ namespace Nektar
                                                         const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD, NekDouble> &outarray,
                                                         const NekDouble lambda,
-                                                        bool  UseContCoeffs = false,
+                                                        CoeffState coeffstate = eLocal, 
                                                         const Array<OneD, const NekDouble>&
                                                         dirForcing = NullNekDouble1DArray);
 
             // wrapper functions about virtual functions
-            virtual Array<OneD, NekDouble> &v_UpdateContCoeffs();
-
-            virtual const
-                Array<OneD, const NekDouble> &v_GetContCoeffs() const;
-
             virtual void v_LocalToGlobal();
 
             virtual void v_GlobalToLocal();
 
             virtual void v_BwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
-                                    bool  UseContCoeffs);
+                                    CoeffState coeffstate);
 			
-			virtual void v_BwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
-											   Array<OneD,NekDouble> &outarray);
+            virtual void v_BwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
+                                               Array<OneD,NekDouble> &outarray);
 	    
             virtual void v_FwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
-                                    bool  UseContCoeffs);
-			
-			virtual void v_FwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
-                                    Array<OneD,      NekDouble> &outarray);
+                                    CoeffState coeffstate);
+            
+            virtual void v_FwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray, Array<OneD,      NekDouble> &outarray);
 
 
-            virtual void v_IProductWRTBase(const Array<OneD,const NekDouble> &inarray,
-                                           Array<OneD,      NekDouble> &outarray,
-                                           bool  UseContCoeffs);
+            virtual void v_IProductWRTBase(const Array<OneD,const NekDouble> &inarray,Array<OneD,      NekDouble> &outarray, CoeffState coeffstate);
 			
-			virtual void v_IProductWRTBase_IterPerExp(const Array<OneD,const NekDouble> &inarray,
-                                           Array<OneD,      NekDouble> &outarray);
+            virtual void v_IProductWRTBase_IterPerExp(const Array<OneD,const NekDouble> &inarray,  Array<OneD,      NekDouble> &outarray);
 			
-			virtual void v_SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
-
+            virtual void v_SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
+            
             virtual void v_GeneralMatrixOp(
                                            const GlobalMatrixKey             &gkey,
                                            const Array<OneD,const NekDouble> &inarray,
                                            Array<OneD,      NekDouble> &outarray,
-                                           bool  UseContCoeffs);
-
+                                           CoeffState coeffstate);
+            
             virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
@@ -1121,32 +1072,32 @@ namespace Nektar
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
                                      Array<OneD, NekDouble> &out_d1, 
-                                     Array<OneD, NekDouble> &out_d2, bool UseContCoeffs = false);
+                                     Array<OneD, NekDouble> &out_d2);
             
             virtual void v_PhysDeriv(const int dir,
                                      const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
+                                     Array<OneD, NekDouble> &out_d);
             
             virtual void v_PhysDeriv(Direction edir, 
                                      const Array<OneD, const NekDouble> &inarray,
-                                     Array<OneD, NekDouble> &out_d, bool UseContCoeffs = false);
+                                     Array<OneD, NekDouble> &out_d);
             
             virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                Array<OneD, NekDouble> &outarray, 
-                                               bool UseContCoeffs = false,
-											   bool Shuff = true,
-											   bool UnShuff = true);
+                                               CoeffState coeffstate = eLocal,
+                                               bool Shuff = true,
+                                               bool UnShuff = true);
             
             virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                Array<OneD, NekDouble> &outarray, 
-                                               bool UseContCoeffs = false,
-											   bool Shuff = true,
-											   bool UnShuff = true);
+                                               CoeffState coeffstate = eLocal,
+                                               bool Shuff = true,
+                                               bool UnShuff = true);
             
             virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
-										 const Array<OneD, NekDouble> &inarray2,
-										 Array<OneD, NekDouble> &outarray, 
-										 bool UseContCoeffs = false);
+                                         const Array<OneD, NekDouble> &inarray2,
+                                         Array<OneD, NekDouble> &outarray, 
+                                         CoeffState coeffstate = eLocal);
             
             virtual void v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
                                        const Array<OneD, NekDouble> &TotField, 
@@ -1196,34 +1147,31 @@ namespace Nektar
 
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
-			
-			virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
-			virtual Array<OneD, unsigned int> v_GetZIDs(void);
-			virtual Array<OneD, unsigned int> v_GetYIDs(void);
-			
-
-            virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
-
-            // Utility function for a common case of retrieving a BoundaryCondition from a
-            // boundary condition collection.
+            
+            virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
+            virtual Array<OneD, unsigned int> v_GetZIDs(void);
+            virtual Array<OneD, unsigned int> v_GetYIDs(void);
+            
+            
+            // Utility function for a common case of retrieving a
+            // BoundaryCondition from a boundary condition collection.
             MULTI_REGIONS_EXPORT
-            static SpatialDomains::BoundaryConditionShPtr GetBoundaryCondition(const SpatialDomains::BoundaryConditionCollection& collection,
-                                                                               unsigned int index, const std::string& variable);
-
+                static SpatialDomains::BoundaryConditionShPtr GetBoundaryCondition(const SpatialDomains::BoundaryConditionCollection& collection,
+                                                                                   unsigned int index, const std::string& variable);
+            
         private:
-            virtual int v_GetContNcoeffs() const;
-
+            
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
-
+            
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions();
 
             virtual void v_EvaluateBoundaryConditions(const NekDouble time = 0.0, 
-													  const NekDouble x2_in = NekConstants::kNekUnsetDouble,
-													  const NekDouble x3_in = NekConstants::kNekUnsetDouble);
-
+                                                      const NekDouble x2_in = NekConstants::kNekUnsetDouble,
+                                                      const NekDouble x3_in = NekConstants::kNekUnsetDouble);
+            
             virtual map<int, RobinBCInfoSharedPtr> v_GetRobinBCInfo(void);
-
-
+            
+            
             virtual void v_GetPeriodicEdges(
                 vector<map<int,int> > &periodicVertices,
                 map<int,int>          &periodicEdges);
@@ -1260,11 +1208,6 @@ namespace Nektar
         inline int ExpList::GetNcoeffs(const int eid) const
         {
             return (*m_exp)[eid]->GetNcoeffs();
-        }
-
-        inline int ExpList::GetContNcoeffs() const
-        {
-            return v_GetContNcoeffs();
         }
 
         /**
@@ -1325,23 +1268,8 @@ namespace Nektar
             return m_npoints;
         }
 
-        /**
-         *
-         */
-        inline void ExpList::SetTransState(const TransState transState)
-        {
-            m_transState = transState;
-        }
 
         /**
-         *
-         */
-        inline TransState ExpList::GetTransState() const
-        {
-            return m_transState;
-        }
-		
-		/**
          *
          */
         inline void ExpList::SetWaveSpace(const bool wavespace)
@@ -1404,10 +1332,10 @@ namespace Nektar
          */
         inline void ExpList::IProductWRTBase(
                                              const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,       NekDouble> &outarray,
-                                             bool  UseContCoeffs)
+                                             Array<OneD, NekDouble> &outarray,
+                                             CoeffState coeffstate)
         {
-            v_IProductWRTBase(inarray,outarray,UseContCoeffs);
+            v_IProductWRTBase(inarray,outarray, coeffstate);
         }
 
 		/**
@@ -1424,9 +1352,9 @@ namespace Nektar
          */
         inline void ExpList::FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                      bool  UseContCoeffs)
+                                      CoeffState coeffstate)
         {
-            v_FwdTrans(inarray,outarray,UseContCoeffs);
+            v_FwdTrans(inarray,outarray,coeffstate);
         }
 		
 		/**
@@ -1443,9 +1371,9 @@ namespace Nektar
          */
         inline void ExpList::BwdTrans (const Array<OneD, const NekDouble> &inarray,
                                        Array<OneD,       NekDouble> &outarray,
-                                       bool  UseContCoeffs)
+                                       CoeffState coeffstate)
         {
-            v_BwdTrans(inarray,outarray,UseContCoeffs);
+            v_BwdTrans(inarray,outarray,coeffstate);
         }
 		
 		/**
@@ -1461,12 +1389,11 @@ namespace Nektar
         /**
          *
          */
-        inline void ExpList::MultiplyByInvMassMatrix(
-                                                     const Array<OneD,const NekDouble> &inarray,
+        inline void ExpList::MultiplyByInvMassMatrix(const Array<OneD,const NekDouble> &inarray,
                                                      Array<OneD,      NekDouble> &outarray,
-                                                     bool  UseContCoeffs)
+                                                     CoeffState coeffstate)
         {
-            v_MultiplyByInvMassMatrix(inarray,outarray,UseContCoeffs);
+            v_MultiplyByInvMassMatrix(inarray,outarray,coeffstate);
         }
 
         /**
@@ -1492,21 +1419,21 @@ namespace Nektar
                                                                    const Array<OneD, const NekDouble> &inarray,
                                                                    Array<OneD, NekDouble> &outarray,
                                                                    const NekDouble lambda,
-                                                                   bool  UseContCoeffs,
+                                                                   CoeffState coeffstate,
                                                                    const Array<OneD, const NekDouble>&  dirForcing)
         {
-            v_LinearAdvectionDiffusionReactionSolve(velocity,inarray, outarray, lambda, UseContCoeffs,dirForcing);
+            v_LinearAdvectionDiffusionReactionSolve(velocity,inarray, outarray, lambda, coeffstate,dirForcing);
         }
-
+        
         inline void ExpList::LinearAdvectionReactionSolve(
                                                           const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                                           const Array<OneD, const NekDouble> &inarray,
                                                           Array<OneD, NekDouble> &outarray,
                                                           const NekDouble lambda,
-                                                          bool  UseContCoeffs,
+                                                          CoeffState coeffstate,
                                                           const Array<OneD, const NekDouble>&  dirForcing)
         {
-            v_LinearAdvectionReactionSolve(velocity,inarray, outarray, lambda, UseContCoeffs,dirForcing);
+            v_LinearAdvectionReactionSolve(velocity,inarray, outarray, lambda, coeffstate,dirForcing);
         }
 
         /**
@@ -1520,7 +1447,7 @@ namespace Nektar
             v_GetCoords(coord_0,coord_1,coord_2);
         }
 		
-		/**
+        /**
          *
          */
         inline void ExpList::SetCoeff(NekDouble val)
@@ -1532,126 +1459,126 @@ namespace Nektar
 		/**
          *
          */
-		inline const SpatialDomains::VertexComponentSharedPtr &ExpList::GetGeom(void) const
-		{
-			return v_GetGeom();
-		}
-		
-		/**
+        inline const SpatialDomains::VertexComponentSharedPtr &ExpList::GetGeom(void) const
+        {
+            return v_GetGeom();
+        }
+	
+        /**
          *
          */
-		inline const SpatialDomains::VertexComponentSharedPtr &ExpList::GetVertex(void) const
-		{
-			return v_GetVertex();
-		}
+        inline const SpatialDomains::VertexComponentSharedPtr &ExpList::GetVertex(void) const
+        {
+            return v_GetVertex();
+        }
+	
 		
-		
-		/**
+        /**
          *
          */
         inline void ExpList::SetPhys(NekDouble val)
-		
+            
         {
             v_SetPhys(val);
         }
-		
-		/**
+	
+        /**
          *
          */
         inline void ExpList::GetCoords(NekDouble &x,NekDouble &y,NekDouble &z)
         {
             v_GetCoords(x,y,z);
         }
-		
-		inline void ExpList::GetCoord(Array<OneD, NekDouble> &coords)
+	
+        inline void ExpList::GetCoord(Array<OneD, NekDouble> &coords)
         {
             v_GetCoord(coords);
         }
-
-		/**
-		 *
-		 */
-		inline void ExpList::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-									   Array<OneD, NekDouble> &out_d0,
-									   Array<OneD, NekDouble> &out_d1, 
-									   Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
-		{
-			v_PhysDeriv(inarray,out_d0,out_d1,out_d2,UseContCoeffs);
-		}
+        
+        /**
+         *
+         */
+        inline void ExpList::PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD, NekDouble> &out_d0,
+                                       Array<OneD, NekDouble> &out_d1, 
+                                       Array<OneD, NekDouble> &out_d2)
+        {
+            v_PhysDeriv(inarray,out_d0,out_d1,out_d2);
+        }
+	
+        /**
+         *
+         */
+        inline void ExpList::PhysDeriv(const int dir,
+                                       const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD, NekDouble> &out_d)
+        {
+            v_PhysDeriv(dir,inarray,out_d);
+        }
+        
+        inline void ExpList::PhysDeriv(Direction edir,
+                                       const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD, NekDouble> &out_d)
+        {
+            v_PhysDeriv(edir, inarray,out_d);
+        }		
+	
+        /**
+         *
+         */
+        inline void ExpList::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                                 Array<OneD, NekDouble> &outarray, 
+                                                 CoeffState coeffstate,
+                                                 bool Shuff,
+                                                 bool UnShuff)
+        {
+            v_HomogeneousFwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
+        }
+	
+        /**
+         *
+         */
+        inline void ExpList::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                                 Array<OneD, NekDouble> &outarray, 
+                                                 CoeffState coeffstate,
+                                                 bool Shuff,
+                                                 bool UnShuff)
+        {
+            v_HomogeneousBwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
+        }
+	
+        /**
+         *
+         */
+        inline void ExpList::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+                                           const Array<OneD, NekDouble> &inarray2,
+                                           Array<OneD, NekDouble> &outarray, 
+                                           CoeffState coeffstate)
+        {
+            v_DealiasedProd(inarray1,inarray2,outarray,coeffstate);
+        }
 		
-		/**
-		 *
-		 */
-		inline void ExpList::PhysDeriv(const int dir,
-									   const Array<OneD, const NekDouble> &inarray,
-									   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
-		{
-			v_PhysDeriv(dir,inarray,out_d,UseContCoeffs);
-		}
-
-	    inline void ExpList::PhysDeriv(Direction edir,
-							   const Array<OneD, const NekDouble> &inarray,
-							   Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
-		{
-			v_PhysDeriv(edir, inarray,out_d, UseContCoeffs);
-		}		
-		
-		/**
-		 *
-		 */
-		inline void ExpList::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs,
-												 bool Shuff,
-												 bool UnShuff)
-		{
-			v_HomogeneousFwdTrans(inarray,outarray,UseContCoeffs,Shuff,UnShuff);
-		}
-		
-		/**
-		 *
-		 */
-		inline void ExpList::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs,
-												 bool Shuff,
-												 bool UnShuff)
-		{
-			v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs,Shuff,UnShuff);
-		}
-		
-		/**
-		 *
-		 */
-		inline void ExpList::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
-										   const Array<OneD, NekDouble> &inarray2,
-										   Array<OneD, NekDouble> &outarray, 
-										   bool UseContCoeffs)
-		{
-			v_DealiasedProd(inarray1,inarray2,outarray,UseContCoeffs);
-		}
-		
-		/**
-		 *
-		 */
-		inline void ExpList::GetBCValues(Array<OneD, NekDouble> &BndVals, 
-						                 const Array<OneD, NekDouble> &TotField, 
-						                 int BndID)
-		{
-			v_GetBCValues(BndVals,TotField,BndID);
-		}
-		
-		/**
-		 *
-		 */
-		inline void ExpList::NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
-									                   Array<OneD, const NekDouble> &V2,
-									                   Array<OneD, NekDouble> &outarray,
-									                   int BndID)
-		{
-			v_NormVectorIProductWRTBase(V1,V2,outarray,BndID);
-		}
-		
+        /**
+         *
+         */
+        inline void ExpList::GetBCValues(Array<OneD, NekDouble> &BndVals, 
+                                         const Array<OneD, NekDouble> &TotField, 
+                                         int BndID)
+        {
+            v_GetBCValues(BndVals,TotField,BndID);
+        }
+	
+        /**
+         *
+         */
+        inline void ExpList::NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
+                                                       Array<OneD, const NekDouble> &V2,
+                                                       Array<OneD, NekDouble> &outarray,
+                                                       int BndID)
+        {
+            v_NormVectorIProductWRTBase(V1,V2,outarray,BndID);
+        }
+	
         /**
          * @param   eid         The index of the element to be checked.
          * @return  The dimension of the coordinates of the specific element.
@@ -1662,7 +1589,7 @@ namespace Nektar
                      "eid is larger than number of elements");
             return (*m_exp)[eid]->GetCoordim();
         }
-
+        
         /**
          * @param   i           The index of m_coeffs to be set
          * @param   val         The value which m_coeffs[i] is to be set to.
@@ -1671,8 +1598,8 @@ namespace Nektar
         {
             m_coeffs[i] = val;
         }
-
-
+        
+        
         /**
          * @param   i           The index of #m_coeffs to be set.
          * @param   val         The value which #m_coeffs[i] is to be set to.
@@ -1681,18 +1608,13 @@ namespace Nektar
         {
             m_coeffs[i] = val;
         }
-
-
+        
+        
         inline void ExpList::SetCoeffsArray(Array<OneD, NekDouble> &inarray)
         {
             m_coeffs = inarray;
         }
-
-        inline void ExpList::SetContCoeffsArray(Array<OneD, NekDouble> &inarray)
-        {
-            v_SetContCoeffsArray(inarray);
-        }
-
+        
         /**
          * As the function returns a constant reference to a
          * <em>const Array</em>, it is not possible to modify the
@@ -1705,23 +1627,17 @@ namespace Nektar
         {
             return m_coeffs;
         }
-
-        inline const Array<OneD, const NekDouble> &ExpList::GetContCoeffs()
-                                                                        const
-        {
-            return v_GetContCoeffs();
-        }
-
+        
         inline void ExpList::LocalToGlobal()
         {
             v_LocalToGlobal();
         }
-
+        
         inline void ExpList::GlobalToLocal()
         {
             v_GlobalToLocal();
         }
-
+        
 
         /**
          * @param   i               The index of #m_coeffs to be returned
@@ -1816,7 +1732,6 @@ namespace Nektar
          */
         inline Array<OneD, NekDouble> &ExpList::UpdateCoeffs()
         {
-            m_transState = eLocal;
             return m_coeffs;
         }
 
@@ -1838,7 +1753,7 @@ namespace Nektar
         {
             return v_GetBndCondExpansions();
         }
-
+        
         inline boost::shared_ptr<ExpList>  &ExpList::UpdateBndCondExpansion(int i)
         {
             return v_UpdateBndCondExpansion(i);
@@ -1947,7 +1862,7 @@ namespace Nektar
 
         inline void ExpList::EvaluateBoundaryConditions(const NekDouble time,
                                                         const NekDouble x2_in,
-														const NekDouble x3_in)
+                                                        const NekDouble x3_in)
         {
             v_EvaluateBoundaryConditions(time,x2_in,x3_in);
         }
@@ -1985,9 +1900,9 @@ namespace Nektar
                                 const GlobalMatrixKey             &gkey,
                                 const Array<OneD,const NekDouble> &inarray,
                                       Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs)
+                                CoeffState coeffstate)
         {
-            v_GeneralMatrixOp(gkey,inarray,outarray,UseContCoeffs);
+            v_GeneralMatrixOp(gkey,inarray,outarray,coeffstate);
         }
 
 

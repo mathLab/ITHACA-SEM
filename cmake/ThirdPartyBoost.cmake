@@ -37,7 +37,12 @@ IF (THIRDPARTY_BUILD_BOOST)
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1
         )
-        
+
+        # If building ThirdParty zlib, force zlib build before boost
+        IF (THIRDPARTY_BUILD_ZLIB)
+            ADD_DEPENDENCIES(boost zlib)
+        ENDIF(THIRDPARTY_BUILD_ZLIB)
+
         # Set up CMake variables
         SET(Boost_DATE_TIME_LIBRARY boost_date_time)
         SET(Boost_DATE_TIME_LIBRARY_DEBUG boost_date_time)
@@ -75,8 +80,9 @@ IF (THIRDPARTY_BUILD_BOOST)
         )
     ENDIF ()
 ELSE (THIRDPARTY_BUILD_BOOST)
+    SET(Boost_DEBUG 1)
     SET(Boost_USE_MULTITHREAD ON)
-    SET(Boost_ADDITIONAL_VERSIONS "1.48" "1.48.0" "1.47.0" "1.47" "1.46" "1.46. 1" "1.40" "1.40.0" "1.35.0" "1.35")
+    SET(Boost_ADDITIONAL_VERSIONS "1.49" "1.49.0" "1.48" "1.48.0" "1.47.0" "1.47" "1.46" "1.46. 1" "1.40" "1.40.0" "1.35.0" "1.35")
     SET(Boost_NO_BOOST_CMAKE ON)
 
     IF( NOT BOOST_ROOT )

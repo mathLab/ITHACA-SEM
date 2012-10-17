@@ -4,7 +4,6 @@
 // Description:	Parses string math expressions with Spirit.
 // Author:		Michael DeLisi
 // Date:		July 27, 2007
-#include <LibUtilities/LibUtilities.h>
 #include "ExpressionEvaluator.h"
 #include <stdexcept>
 

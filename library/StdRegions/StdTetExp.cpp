@@ -1309,6 +1309,31 @@ namespace Nektar
             
             return nmodes;
         }
+        
+		const LibUtilities::BasisKey StdTetExp::v_DetFaceBasisKey(
+            const int i, const int k) const
+        {
+            ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
+           	int nummodes = GetBasis(0)->GetNumModes(); 
+			//temporary solution, need to add conditions based on face id
+			//also need to add check of the points type
+			switch (k)
+			{
+				case 0:
+					{
+						const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+						return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
+					}
+					break;
+				case 1:
+					{
+						const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+						//const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+						return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
+					}
+					break;
+			}
+        }
 
         LibUtilities::BasisType StdTetExp::v_GetEdgeBasisType(const int i) const
         {

@@ -159,38 +159,51 @@ int main(int argc, char* argv[])
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo2D_MVM.xml","3D-Homogeneous-2D unsteady advection-diffusion (MVM)");
     
     // Test inviscid Burger equation in 1D for DG and FR
-    Execute("ADRSolver","Test_InviscidBurger1D_m11_WeakDG_GLL_LAGRANGE.xml","1D unsteady WeakDG inviscidBurger GLL_LAGRANGE, P=11");
-
-    Execute("ADRSolver","Test_InviscidBurger1D_m11_WeakDG_MODIFIED.xml","1D unsteady WeakDG inviscidBurger MODIFIED, P=11");
+    Execute("ADRSolver","Test_InviscidBurger1D_WeakDG_GLL_LAGRANGE.xml","1D unsteady WeakDG inviscidBurger GLL_LAGRANGE, P=10");
     
-    Execute("ADRSolver","Test_InviscidBurger1D_m11_FRDG_GLL_LAGRANGE.xml","1D unsteady FRDG inviscidBurger GLL_LAGRANGE, P=11");
+    Execute("ADRSolver","Test_InviscidBurger1D_WeakDG_MODIFIED.xml","1D unsteady WeakDG inviscidBurger MODIFIED, P=10");
     
-    Execute("ADRSolver","Test_InviscidBurger1D_m11_FRDG_MODIFIED.xml","1D unsteady FRDG inviscidBurger MODIFIED, P=11");
+    Execute("ADRSolver","Test_InviscidBurger1D_FRDG_GLL_LAGRANGE.xml","1D unsteady FRDG inviscidBurger GLL_LAGRANGE, P=10");
     
-    Execute("ADRSolver","Test_InviscidBurger1D_m11_FRSD_GLL_LAGRANGE.xml","1D unsteady FRSD inviscidBurger GLL_LAGRANGE, P=11");
+    Execute("ADRSolver","Test_InviscidBurger1D_FRDG_MODIFIED.xml","1D unsteady FRDG inviscidBurger MODIFIED, P=10");
     
-    Execute("ADRSolver","Test_InviscidBurger1D_m11_FRSD_MODIFIED.xml","1D unsteady FRSD inviscidBurger MODIFIED, P=11");
+    Execute("ADRSolver","Test_InviscidBurger1D_FRSD_GLL_LAGRANGE.xml","1D unsteady FRSD inviscidBurger GLL_LAGRANGE, P=10");
     
-    Execute("ADRSolver","Test_InviscidBurger1D_m11_FRHU_GLL_LAGRANGE.xml","1D unsteady FRHU inviscidBurger GLL_LAGRANGE, P=11");
+    Execute("ADRSolver","Test_InviscidBurger1D_FRSD_MODIFIED.xml","1D unsteady FRSD inviscidBurger MODIFIED, P=10");
     
-    Execute("ADRSolver","Test_InviscidBurger1D_m11_FRHU_MODIFIED.xml","1D unsteady FRHU inviscidBurger MODIFIED, P=11");
+    Execute("ADRSolver","Test_InviscidBurger1D_FRHU_GLL_LAGRANGE.xml","1D unsteady FRHU inviscidBurger GLL_LAGRANGE, P=10");
+    
+    Execute("ADRSolver","Test_InviscidBurger1D_FRHU_MODIFIED.xml","1D unsteady FRHU inviscidBurger MODIFIED, P=10");
+    
+    Execute("ADRSolver","Test_InviscidBurger1D_FRDG_GLL_LAGRANGE_SEM.xml","1D unsteady FRDG inviscidBurger GLL_LAGRANGE_SEM, P=10");
+    
+    Execute("ADRSolver","Test_InviscidBurger1D_FRSD_GLL_LAGRANGE_SEM.xml","1D unsteady FRSD inviscidBurger GLL_LAGRANGE_SEM, P=10");
+    
+    Execute("ADRSolver","Test_InviscidBurger1D_FRHU_GLL_LAGRANGE_SEM.xml","1D unsteady FRHU inviscidBurger GLL_LAGRANGE_SEM, P=10");
+    
     
     // Test linear advection equation in 1D for DG and FR
-    Execute("ADRSolver","Test_Advection1D_m3_WeakDG_GLL_LAGRANGE.xml","1D unsteady WeakDG advection GLL_LAGRANGE, P=3");
+    Execute("ADRSolver","Test_Advection1D_WeakDG_GLL_LAGRANGE.xml","1D unsteady WeakDG advection GLL_LAGRANGE, P=3");
     
-    Execute("ADRSolver","Test_Advection1D_m3_WeakDG_MODIFIED.xml","1D unsteady WeakDG advection MODIFIED, P=3");
+    Execute("ADRSolver","Test_Advection1D_WeakDG_MODIFIED.xml","1D unsteady WeakDG advection MODIFIED, P=3");
     
-    Execute("ADRSolver","Test_Advection1D_m3_FRDG_GLL_LAGRANGE.xml","1D unsteady FRDG advection GLL_LAGRANGE, P=3");
+    Execute("ADRSolver","Test_Advection1D_FRDG_GLL_LAGRANGE.xml","1D unsteady FRDG advection GLL_LAGRANGE, P=3");
     
-    Execute("ADRSolver","Test_Advection1D_m3_FRDG_MODIFIED.xml","1D unsteady FRDG advection MODIFIED, P=3");
+    Execute("ADRSolver","Test_Advection1D_FRDG_MODIFIED.xml","1D unsteady FRDG advection MODIFIED, P=3");
     
-    Execute("ADRSolver","Test_Advection1D_m3_FRSD_GLL_LAGRANGE.xml","1D unsteady FRSD advection GLL_LAGRANGE, P=3");
+    Execute("ADRSolver","Test_Advection1D_FRSD_GLL_LAGRANGE.xml","1D unsteady FRSD advection GLL_LAGRANGE, P=3");
     
-    Execute("ADRSolver","Test_Advection1D_m3_FRSD_MODIFIED.xml","1D unsteady FRSD advection MODIFIED, P=3");
+    Execute("ADRSolver","Test_Advection1D_FRSD_MODIFIED.xml","1D unsteady FRSD advection MODIFIED, P=3");
     
-    Execute("ADRSolver","Test_Advection1D_m3_FRHU_GLL_LAGRANGE.xml","1D unsteady FRHU advection GLL_LAGRANGE, P=3");
+    Execute("ADRSolver","Test_Advection1D_FRHU_GLL_LAGRANGE.xml","1D unsteady FRHU advection GLL_LAGRANGE, P=3");
     
-    Execute("ADRSolver","Test_Advection1D_m3_FRHU_MODIFIED.xml","1D unsteady FRHU advection MODIFIED, P=3");
+    Execute("ADRSolver","Test_Advection1D_FRHU_MODIFIED.xml","1D unsteady FRHU advection MODIFIED, P=3");
+    
+    Execute("ADRSolver","Test_Advection1D_FRDG_GLL_LAGRANGE_SEM.xml","1D unsteady FRDG advection GLL_LAGRANGE_SEM, P=3");
+    
+    Execute("ADRSolver","Test_Advection1D_FRSD_GLL_LAGRANGE_SEM.xml","1D unsteady FRSD advection GLL_LAGRANGE_SEM, P=3");
+    
+    Execute("ADRSolver","Test_Advection1D_FRHU_GLL_LAGRANGE_SEM.xml","1D unsteady FRHU advection GLL_LAGRANGE_SEM, P=3");
 	
 #ifdef NEKTAR_USING_FFTW
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo1D_FFT.xml","3D-Homogeneous-1D unsteady advection-diffusion (FFT)");

@@ -33,10 +33,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LocalRegions/LocalRegions.h>
+
 #include <LocalRegions/LocalRegions.hpp>
 #include <stdio.h>
 #include <LocalRegions/HexExp.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {

@@ -36,7 +36,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <ShallowWaterSolver/EquationSystems/ShallowWaterSystem.h>
 
 namespace Nektar

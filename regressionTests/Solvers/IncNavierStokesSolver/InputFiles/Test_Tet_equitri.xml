@@ -649,6 +649,7 @@
             <I PROPERTY="Projection" VALUE="Galerkin" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXOrder1" />
             <I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond" />
+            <\I PROPERTY="SuccessiveRHS" VALUE="20"/>
         </SOLVERINFO>
 
         <PARAMETERS>

@@ -1,3 +1,4 @@
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File GlobalLinSys.cpp
@@ -308,6 +309,12 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             return NullDNekMatSharedPtr;
         }
+
+        void GlobalLinSys::v_InitObject()
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
+	}
+
 
     } //end of namespace
 } //end of namespace

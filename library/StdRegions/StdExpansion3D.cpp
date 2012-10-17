@@ -200,5 +200,15 @@ namespace Nektar
                       "face normal not computed.");
             return x->second;
         }
+
+        void StdExpansion3D::v_NegateFaceNormal(const int face)
+        {
+            m_negatedNormals[face] = true;
+            for (int i = 0; i < GetCoordim(); ++i)
+            {
+                Vmath::Neg(m_faceNormals[face][i].num_elements(), 
+                           m_faceNormals[face][i], 1);
+            }
+        }
     }//end namespace
 }//end namespace

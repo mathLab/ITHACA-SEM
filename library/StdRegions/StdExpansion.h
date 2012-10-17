@@ -47,6 +47,9 @@
 #include <StdRegions/IndexMapKey.h>
 #include <StdRegions/StdLinSysKey.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+
 
 namespace Nektar
 {
@@ -468,6 +471,10 @@ namespace Nektar
                 return v_DetEdgeBasisKey(i);
             }
 
+            const LibUtilities::BasisKey DetFaceBasisKey(const int i, const int k) const
+            {
+                return v_DetFaceBasisKey(i, k);
+            }
             /** 
              * \brief This function returns the number of quadrature points
              * belonging to the \a i-th face.
@@ -1391,8 +1398,13 @@ namespace Nektar
             {
                 v_ComputeFaceNormal(face);
             }
-			
-			void ComputeVertexNormal(const int vertex)
+            
+            void NegateFaceNormal(const int face)
+            {
+                v_NegateFaceNormal(face);
+            }
+
+            void ComputeVertexNormal(const int vertex)
             {
                 v_ComputeVertexNormal(vertex);
             }
@@ -1614,6 +1626,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_DetCartesianDirOfEdge(const int edge);
 
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const;
+            
+			STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetFaceBasisKey(const int i, const int k) const;
 
             STD_REGIONS_EXPORT virtual int v_GetFaceNumPoints(const int i) const;
 
@@ -1842,9 +1856,11 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
 
-			STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
-
-			STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
+            STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(const int face);
+            
+            STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
+            
+            STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
 			
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;

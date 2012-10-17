@@ -176,6 +176,13 @@ namespace Nektar
                         {
                             e2->curveType = ed->curveType;
                             e2->edgeNodes = ed->edgeNodes;
+                            
+                            // Reverse nodes if appropriate.
+                            if (e2->n1->id != ed->n1->id)
+                            {
+                                reverse(e2->edgeNodes.begin(),
+                                        e2->edgeNodes.end());
+                            }
                         }
                     }
                 }

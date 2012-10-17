@@ -74,7 +74,10 @@ namespace Nektar
                 const int pNumDir)
         {
             DNekVec Vin(pInput.num_elements(),pInput);
-            DNekVec Vout(pOutput.num_elements(),pOutput,eWrapper);
+            //  DNekVec Vout(pOutput.num_elements(),pOutput,eWrapper);
+            ASSERTL1(pInput.num_elements() <= pOutput.num_elements(),
+                     "output array must be at least as long as input array");
+            DNekVec Vout(pInput.num_elements(),pOutput,eWrapper);
             m_linSys->Solve(Vin,Vout);
         }
 

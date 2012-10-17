@@ -88,25 +88,9 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &dirForcing
                                                         = NullNekDouble1DArray);
 
-            // Populates the preconditioner with the identity matrix.
-            void ComputeNullPreconditioner(
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
-
-            // Populates the preconditioner with the diagonal of the operator
-            // matrix by applying the operator to the standard basis.
-            void ComputeDiagonalPreconditioner(
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
-
-            // Populates the preconditioner with the diagonal of the operator
-            // matrix using a more efficient summation of local matrix entries.
-            void ComputeDiagonalPreconditionerSum(
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
-
             virtual void v_DoMatrixMultiply(
                     const Array<OneD, NekDouble>& pInput,
                           Array<OneD, NekDouble>& pOutput);
-
-            virtual void v_ComputePreconditioner();
 
             virtual void v_UniqueMap();
 

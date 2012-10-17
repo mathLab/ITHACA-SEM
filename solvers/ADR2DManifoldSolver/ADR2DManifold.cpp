@@ -1114,7 +1114,7 @@ namespace Nektar
                 // SetBoundaryConditions(m_time);
                 for(i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
+                    m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i]);
                     fields[i] = tmp[i];
                 }
             }

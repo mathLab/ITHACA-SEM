@@ -240,8 +240,9 @@
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> Lambda    = 1 </P>
-            <P> Lz        = 1 </P>
+            <P> Lambda    = 1        </P>
+            <P> HomModesZ     = 8   </P>
+            <P> LZ            = 1    </P>
         </PARAMETERS>
 
         <VARIABLES>
@@ -254,17 +255,17 @@
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/Lz)" />
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
             </REGION>
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="Forcing">
             <E VAR="u"
-                VALUE="-(Lambda + 2*PI*PI + 4*PI*PI/(Lz*Lz))*sin(PI*x)*sin(PI*y)*sin(2*PI*z/Lz)" />
+                VALUE="-(Lambda + 2*PI*PI + 4*PI*PI/(LZ*LZ))*sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">
-            <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/Lz)" />
+            <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
         </FUNCTION>
 
     </CONDITIONS>

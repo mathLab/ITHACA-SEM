@@ -298,8 +298,6 @@ namespace Nektar
 
             SOLVER_UTILS_EXPORT inline int GetNcoeffs();
 		
-            SOLVER_UTILS_EXPORT inline int GetContNcoeffs();
-
             SOLVER_UTILS_EXPORT inline int GetNcoeffs(const int eid);
  
             SOLVER_UTILS_EXPORT inline int GetNumExpModes();
@@ -707,11 +705,6 @@ namespace Nektar
             return m_fields[0]->GetNcoeffs();
         }
 
-        inline int EquationSystem::GetContNcoeffs(void)
-        {
-            return m_fields[0]->GetContNcoeffs();
-        }
-	
         inline int EquationSystem::GetNcoeffs(const int eid)
         {
             return m_fields[0]->GetNcoeffs(eid);

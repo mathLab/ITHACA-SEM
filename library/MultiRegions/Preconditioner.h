@@ -43,94 +43,99 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        class Preconditioner;
+        typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
+
+        typedef LibUtilities::NekFactory< std::string, Preconditioner, 
+            const boost::shared_ptr<GlobalLinSys>&,
+            const boost::shared_ptr<AssemblyMap>& > PreconFactory;
+        PreconFactory& GetPreconFactory();
+
         class Preconditioner
 	{
         public:
             MULTI_REGIONS_EXPORT Preconditioner(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
-                         const AssemblyMapSharedPtr &pLocToGloMap);
+	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~Preconditioner() {}
 
-	    void DoPreconditioner(
+	    inline void DoPreconditioner(
                 const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
+
+   	    inline void InitObject();
+
+            Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
+
+            const inline DNekMatSharedPtr &GetTransformationMatrix(void) const;
+
+            const inline DNekMatSharedPtr &GetTransposedTransformationMatrix(void) const;
 
 	protected:
 
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
             PreconditionerType                          m_preconType;
-	    StdRegions::StdExpansionSharedPtr           vExp;
 
             DNekMatSharedPtr                            m_preconditioner;
-	    DNekScalBlkMatSharedPtr                     GloBlkMat;
 
-            DNekScalMatSharedPtr                        bndry_mat;
-            DNekScalMatSharedPtr                        full_mat;
-
-            DNekMatSharedPtr                            m_vertexedgefacecoupling;
-	    DNekMatSharedPtr                            m_edgefacecoupling;
-	    DNekMatSharedPtr                            m_transformationmatrix;
-	    DNekMatSharedPtr                            m_efedgefacecoupling;
-	    DNekMatSharedPtr                            m_effacefacecoupling;
-	    DNekMatSharedPtr                            m_edgefacetransformmatrix;
-	    DNekMatSharedPtr                            m_fullmatrix;
-	    DNekMatSharedPtr                            m_om;
-	    DNekMatSharedPtr                            m_SP;
-
-            boost::shared_ptr<AssemblyMap>     m_locToGloMap;
-
-            Array<OneD, int>                            vertModeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     faceModeLocation;
-
-            Array<OneD, Array<OneD, unsigned int> >     MatEdgeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     MatFaceLocation;
+            boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
 	private:
 
-            void NullPreconditioner(
-                const boost::weak_ptr<GlobalLinSys> &plinsys,
-                const AssemblyMapSharedPtr &pLocToGloMap);
+            void NullPreconditioner(void);
 
-            void DiagonalPreconditionerSum(void);
+	    virtual void v_InitObject();
 
-	    void StaticCondDiagonalPreconditionerSum(void);
+	    virtual void v_DoPreconditioner(
+                const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
 
-	    void LinearInversePreconditioner(void);
+            virtual const DNekMatSharedPtr& v_GetTransformationMatrix(void) const;
 
-	    void StaticCondLinearInversePreconditioner(void);
-
-	    void LowEnergyPreconditioner(void);
-
-            void CreateLinearFiniteElmentSpace(void);
-
-            void CreateReferenceGeometryAndMatrix(void);
-
-	    void SetLowEnergyModes_Rv(void);
-
-	    void SetLowEnergyModes_Ref(void);
-
-	    void BuildPreconditioner(void);
-
-	    void BuildPreconditioner_Reordered(void);
-
-	    void BwdTransToPlot(void);
-
-	    void VertexEdgeFaceMatrix(void);
-
-	    void SetLowEnergyModes_Rordered(void);
-
-	    void SetLowEnergyModes_Ref_Reordered(void);
-
-        Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
+            virtual const DNekMatSharedPtr& v_GetTransposedTransformationMatrix(void) const;
 
             static std::string lookupIds[];
             static std::string def;
 	};
         typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
+
+        /**
+         *
+         */
+        inline void Preconditioner::InitObject()
+        {
+            v_InitObject();
+        }
+
+        /**
+         *
+         */
+        inline const DNekMatSharedPtr& Preconditioner::GetTransformationMatrix(void) const
+        {
+	  return v_GetTransformationMatrix();
+        }
+
+        /**
+         *
+         */
+        inline const DNekMatSharedPtr& Preconditioner::GetTransposedTransformationMatrix(void) const
+        {
+	  return v_GetTransposedTransformationMatrix();
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoPreconditioner(
+                const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput)
+        {
+	    v_DoPreconditioner(pInput,pOutput);
+        }
+
     }
 }
 

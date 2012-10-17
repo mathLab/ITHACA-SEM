@@ -361,13 +361,24 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const
         {
-            if(m_signChange)
+            Array<OneD, const NekDouble> local;
+            if(global.data() == loc.data())
             {
-                Vmath::Scatr(m_numLocalCoeffs, m_localToGlobalSign.get(), loc.get(), m_localToGlobalMap.get(), global.get());
+                local = Array<OneD, NekDouble>(local.num_elements(),local.data());
             }
             else
             {
-                Vmath::Scatr(m_numLocalCoeffs, loc.get(), m_localToGlobalMap.get(), global.get());
+                local = loc; // create reference
+            }
+
+
+            if(m_signChange)
+            {
+                Vmath::Scatr(m_numLocalCoeffs, m_localToGlobalSign.get(), local.get(), m_localToGlobalMap.get(), global.get());
+            }
+            else
+            {
+                Vmath::Scatr(m_numLocalCoeffs, local.get(), m_localToGlobalMap.get(), global.get());
             }
         }
 
@@ -382,13 +393,24 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const
         {
-            if(m_signChange)
+            Array<OneD, const NekDouble> glo;
+            if(global.data() == loc.data())
             {
-                Vmath::Gathr(m_numLocalCoeffs, m_localToGlobalSign.get(), global.get(), m_localToGlobalMap.get(), loc.get());
+                glo = Array<OneD, NekDouble>(global.num_elements(),global.data());
             }
             else
             {
-                Vmath::Gathr(m_numLocalCoeffs, global.get(), m_localToGlobalMap.get(), loc.get());
+                glo = global; // create reference
+            }
+            
+                
+            if(m_signChange)
+            {
+                Vmath::Gathr(m_numLocalCoeffs, m_localToGlobalSign.get(), glo.get(), m_localToGlobalMap.get(), loc.get());
+            }
+            else
+            {
+                Vmath::Gathr(m_numLocalCoeffs, glo.get(), m_localToGlobalMap.get(), loc.get());
             }
         }
 
@@ -403,17 +425,26 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const
         {
-            ASSERTL1(loc.get() != global.get(),"Local and Global Arrays cannot be the same");
+            Array<OneD, const NekDouble> local;
+            if(global.data() == loc.data())
+            {
+                local = Array<OneD, NekDouble>(local.num_elements(),local.data());
+            }
+            else
+            {
+                local = loc; // create reference
+            }
+            //ASSERTL1(loc.get() != global.get(),"Local and Global Arrays cannot be the same");
 
             Vmath::Zero(m_numGlobalCoeffs, global.get(), 1);
 
             if(m_signChange)
             {
-                Vmath::Assmb(m_numLocalCoeffs, m_localToGlobalSign.get(), loc.get(), m_localToGlobalMap.get(), global.get());
+                Vmath::Assmb(m_numLocalCoeffs, m_localToGlobalSign.get(), local.get(), m_localToGlobalMap.get(), global.get());
             }
             else
             {
-                Vmath::Assmb(m_numLocalCoeffs, loc.get(), m_localToGlobalMap.get(), global.get());
+                Vmath::Assmb(m_numLocalCoeffs, local.get(), m_localToGlobalMap.get(), global.get());
             }
             UniversalAssemble(global);
         }

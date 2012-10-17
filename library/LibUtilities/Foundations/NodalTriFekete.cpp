@@ -32,7 +32,7 @@
 // Description: 2D Nodal Triangle Fekete Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <iostream>
 #include <algorithm>
 #include <limits>
@@ -295,50 +295,4 @@ namespace Nektar
 
     } // end of namespace stdregion
 } // end of namespace stdregion
-
-/**
-* $Log: NodalTriFekete.cpp,v $
-* Revision 1.27  2008/12/18 14:07:46  pvos
-* NekConstants update
-*
-* Revision 1.26  2008/11/01 22:04:34  bnelson
-* Removed references to MatrixStoragePolicy<T>
-*
-* Revision 1.25  2008/04/06 05:54:08  bnelson
-* Changed ConstArray to Array<const>
-*
-* Revision 1.24  2008/04/02 21:12:35  pvos
-* Update of the 2D local to global map
-*
-* Revision 1.23  2008/03/18 14:11:50  pvos
-* Update for nodal triangular helmholtz solver
-*
-* Revision 1.22  2007/10/03 03:00:13  bnelson
-* Added precompiled headers.
-*
-* Revision 1.21  2007/08/06 05:41:25  ehan
-* Fixed derivative matrix
-*
-* Revision 1.20  2007/07/31 18:19:11  ehan
-* Conform to Coding Style Standard
-*
-* Revision 1.19  2007/07/26 22:24:24  ehan
-* conform to Coding Style Standard
-*
-* Revision 1.18  2007/07/22 23:03:27  bnelson
-* Backed out Nektar::ptr.
-*
-* Revision 1.17  2007/07/21 05:01:50  ehan
-* Completed version of NodalTriFekete with integration, derivation, and interpolation implemented and tested.
-*
-* Revision 1.12  2007/05/15 03:37:24  bnelson
-* Updated to use the new Array object.
-*
-* Revision 1.11  2007/04/30 23:29:10  jfrazier
-* More conversion to multi_array.
-*
-* Revision 1.10  2007/04/29 00:31:57  jfrazier
-* Updated to use multi_arrays.
-*
-*/
 

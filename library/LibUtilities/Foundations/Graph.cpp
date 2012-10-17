@@ -33,7 +33,7 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar

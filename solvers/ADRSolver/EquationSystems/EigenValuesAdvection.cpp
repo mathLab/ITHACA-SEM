@@ -77,7 +77,7 @@ namespace Nektar
     {
         int nvariables = 1;
 		int i,dofs;
-		bool UseContCoeffs = false;
+		//bool UseContCoeffs = false;
 		
 		Array<OneD, Array<OneD, NekDouble> > inarray(nvariables);
 		Array<OneD, Array<OneD, NekDouble> > tmp(nvariables);
@@ -97,8 +97,8 @@ namespace Nektar
                 case MultiRegions::eGalerkin:
                 case MultiRegions::eMixed_CG_Discontinuous:
                     {
-                        dofs = GetContNcoeffs();
-                        UseContCoeffs = true;
+                        //dofs = GetContNcoeffs();
+                        //UseContCoeffs = true;
                         break;
                     }
 		}

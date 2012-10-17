@@ -35,6 +35,7 @@
 
 #include <SpatialDomains/GeomFactors2D.h>
 #include <SpatialDomains/Geometry.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {

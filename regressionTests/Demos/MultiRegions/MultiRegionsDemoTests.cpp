@@ -102,6 +102,10 @@ int main(int argc, char* argv[])
 
     Execute("Helmholtz2D", "helmholtz2D_9modes_varcoeff.xml","CG Helmholtz2D P=9 Var Coeffs");
 
+    Execute("Helmholtz2D", "helmholtz2D_curved_quad.xml","CG Helmholtz2D P=7 curved quads");
+
+    Execute("Helmholtz2D", "helmholtz2D_curved_tri.xml","CG Helmholtz2D P=7 curved tris");
+
     Execute("HDGHelmholtz2D", "helmholtz2D_7modes.xml","HDG Helmholtz2D  P=7");
 
     Execute("HDGHelmholtz2D", "helmholtz2D_7modes_AllBCs.xml","HDG Helmholtz2D  P=7 All BCs, ML Static Condensation");

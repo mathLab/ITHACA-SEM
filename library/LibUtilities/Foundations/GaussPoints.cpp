@@ -32,7 +32,7 @@
 // Description: GaussPoints Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
 
@@ -392,47 +392,4 @@ namespace Nektar
 
     } // end of namespace LibUtilities
 } // end of namespace Nektar
-
-/**
-* $Log: GaussPoints.cpp,v $
-* Revision 1.27  2009/06/15 01:59:21  claes
-* Gauss-Kronrod updates
-*
-* Revision 1.26  2009/06/12 15:50:11  mirzaee
-* no message
-*
-* Revision 1.25  2008/04/06 05:54:08  bnelson
-* Changed ConstArray to Array<const>
-*
-* Revision 1.24  2007/10/03 03:00:13  bnelson
-* Added precompiled headers.
-*
-* Revision 1.23  2007/08/06 05:42:28  ehan
-* Fixed m_derivativematrix so that compatible with 3-dimension
-*
-* Revision 1.22  2007/07/27 00:22:26  bnelson
-* Memory manager now accepts non-const parameters to the allocate methods.
-*
-* Revision 1.21  2007/07/22 23:03:26  bnelson
-* Backed out Nektar::ptr.
-*
-* Revision 1.20  2007/07/20 00:28:26  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.19  2007/05/15 05:17:19  bnelson
-* Updated to use the new Array object.
-*
-* Revision 1.18  2007/05/15 03:37:24  bnelson
-* Updated to use the new Array object.
-*
-* Revision 1.17  2007/04/30 23:28:59  jfrazier
-* More conversion to multi_array.
-*
-* Revision 1.16  2007/04/29 03:09:47  jfrazier
-* More conversion to multi_arrays.
-*
-* Revision 1.15  2007/04/29 00:31:57  jfrazier
-* Updated to use multi_arrays.
-*
-*/
 

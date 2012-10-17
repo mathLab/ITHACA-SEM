@@ -102,19 +102,21 @@ namespace Nektar
 
             /// Return the number of boundary segments on which Dirichlet
             /// boundary conditions are imposed.
-            int GetNumDirichletBndPhys();
+            MULTI_REGIONS_EXPORT int GetNumDirichletBndPhys();
 
-            Array<OneD, StdRegions::StdExpansionSharedPtr>
+            MULTI_REGIONS_EXPORT Array<OneD, StdRegions::StdExpansionSharedPtr>
                 &GetElmtToTrace(const int i);
 
-            Array<OneD,Array<OneD,StdRegions::StdExpansionSharedPtr> >
+            MULTI_REGIONS_EXPORT 
+                Array<OneD,Array<OneD,StdRegions::StdExpansionSharedPtr> >
                 &GetElmtToTrace();
 
-            int GetTraceToUniversalMap(int i);
+            MULTI_REGIONS_EXPORT int GetTraceToUniversalMap(int i);
 
-            int GetTraceToUniversalMapUnique(int i);
+            MULTI_REGIONS_EXPORT int GetTraceToUniversalMapUnique(int i);
 
-            void UniversalTraceAssemble(Array<OneD, NekDouble> &pGlobal) const;
+            MULTI_REGIONS_EXPORT void UniversalTraceAssemble(
+                Array<OneD, NekDouble> &pGlobal) const;
 
         protected:
 

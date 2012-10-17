@@ -450,11 +450,10 @@ namespace Nektar
                     getline(mshFile, line);
                     ss.clear(); ss.str(line);
                     ss >> id >> tag;
-                    conditionMap[tag] = id;
-                    if (maxTag < id)
-                        maxTag = id;
-                    ++i;
+                    conditionMap[tag] = i++;
                 }
+                
+                maxTag = i;
 
                 // Now read in actual values for boundary conditions from BCS
                 // section.
@@ -535,7 +534,7 @@ namespace Nektar
                     // Finally set composite for condition. In this case, all
                     // composites will be lines so there is one set per
                     // composite.
-                    p->composite.push_back(conditionMap[tag]);
+                    p->composite.push_back(conditionMap[tag]+1);
                     
                     ++i;
                 }
@@ -555,6 +554,8 @@ namespace Nektar
                 int elmt, side;
                 int periodicTagId = -1;
                 
+                set<pair<int, int> > visitedPeriodic;
+                
                 while (i < nSurf)
                 {
                     getline(mshFile, line);
@@ -570,7 +571,7 @@ namespace Nektar
                         // periodic conditions.
                         if (periodicTagId == -1)
                         {
-                            periodicTagId = maxTag+1;
+                            periodicTagId = maxTag;
                             ConditionSharedPtr in  = 
                                 ConditionSharedPtr(new Condition());
                             ConditionSharedPtr out = 
@@ -586,8 +587,8 @@ namespace Nektar
                                 out->value.push_back("["+boost::lexical_cast<
                                     string>(periodicTagId)+"]");
                             }
-                            in-> composite.push_back(periodicTagId);
-                            out->composite.push_back(periodicTagId+1);
+                            in-> composite.push_back(periodicTagId+1);
+                            out->composite.push_back(periodicTagId+2);
                             m->  condition[periodicTagId]   = in;
                             m->  condition[periodicTagId+1] = out;
                         }
@@ -597,14 +598,23 @@ namespace Nektar
                         ss >> elmtB >> sideB;
                         elmtB--;
                         sideB--;
+
+                        pair<int, int> c1(elmt,  side );
+                        pair<int, int> c2(elmtB, sideB);
                         
-                        insertEdge(elmt,  side,  periodicTagId);
-                        insertEdge(elmtB, sideB, periodicTagId+1);
+                        if (visitedPeriodic.count(c1) == 0 && 
+                            visitedPeriodic.count(c2) == 0)
+                        {
+                            visitedPeriodic.insert(make_pair(elmtB, sideB));
+                            visitedPeriodic.insert(make_pair(elmt,  side ));
+                            insertEdge(elmt,  side,  periodicTagId+1);
+                            insertEdge(elmtB, sideB, periodicTagId+2);
+                        }
                     }
                     else if (word == "<B>")
                     {
                         ss >> tag;
-                        insertEdge(elmt, side, conditionMap[tag]);
+                        insertEdge(elmt, side, conditionMap[tag]+1);
                     }
                     else
                     {

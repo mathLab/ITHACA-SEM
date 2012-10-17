@@ -38,6 +38,7 @@
 #include <SpatialDomains/TriGeom.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {
@@ -689,8 +690,6 @@ namespace Nektar
                 //NEKERROR(ErrorUtil::efatal,
                 //        "inverse mapping must be set up to use this call");
 
-
-
                 int i;
                 NekDouble len0 = 0.0 ;
                 NekDouble len1 = 0.0;
@@ -698,50 +697,18 @@ namespace Nektar
                 NekDouble xi1 = 0.0;
                 Array<OneD, const NekDouble> pts;
                 int nq0, nq1;
-/*
-                // get points;
-                //find end points
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    nq0 = m_xmap[i]->GetNumPoints(0);
-                    nq1 = m_xmap[i]->GetNumPoints(1);
 
-                    pts = m_xmap[i]->GetPhys();
-
-                    // use projection to side 1 to determine xi_1 coordinate based on length
-                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);
-                    xi0  += (coords[i] -pts[0])*(pts[nq0-1]-pts[0]);
-
-                    // use projection to side 4 to determine xi_2 coordinate based on length
-                    len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
-                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
-                }
-
-                Lcoords[0] =  2*xi0/len0-1.0;
-                Lcoords[1] =  2*xi1/len1-1.0;
-                if( abs(Lcoords[0]) > 1.001)
-                {
-                     Lcoords[0]=0.5;	
-                }
-                if( abs(Lcoords[1]) > 1.001)
-                {
-                     Lcoords[1]=0.5;	
-                }                
-         //   }
-         //   else
-         //   { 
-         
-
-*/
                 Array<OneD, NekDouble> ptsx;
                 Array<OneD, NekDouble> ptsy;  
+                Array<OneD, NekDouble> za;
+                Array<OneD, NekDouble> zb;  
+                Array<OneD, NekDouble> wa;
+                Array<OneD, NekDouble> wb;  
                 NekDouble xmap,ymap, F1,F2;
                 NekDouble jac, derx_1k, derx_2k, dery_1k, dery_2k ;
                 NekDouble invderx_1k, invderx_2k, invdery_1k, invdery_2k;
-                F1=F2 = 2000;
-                //guess the first local coords
-                //Lcoords[0]=0.5;
-                //Lcoords[1]=0.5; 
+                F1= F2 = 2000;
+
 
                 ptsx = m_xmap[0]->GetPhys();
                 ptsy = m_xmap[1]->GetPhys();
@@ -750,149 +717,96 @@ namespace Nektar
                 Array<OneD, NekDouble> dery_1 (ptsy.num_elements());
                 Array<OneD, NekDouble> dery_2 (ptsy.num_elements());
                 m_xmap[0]->StdPhysDeriv(ptsx, derx_1, derx_2);                  
-                m_xmap[1]->StdPhysDeriv(ptsy, dery_1, dery_2);      
-                int elmtid = m_fid;
+                m_xmap[1]->StdPhysDeriv(ptsy, dery_1, dery_2);    
+
+
+                //guess the first local coords
+                //Lcoords[0]=0.0;
+                //Lcoords[1]=0.0; 
+
+
+                boost::shared_ptr<StdRegions::StdTriExp> trimap0 = 
+                        boost::dynamic_pointer_cast<StdRegions::StdTriExp>(m_xmap[0]);
+                boost::shared_ptr<StdRegions::StdTriExp> trimap1 = 
+                        boost::dynamic_pointer_cast<StdRegions::StdTriExp>(m_xmap[1]);
+                int icx,icy,ic;
+
+                int trinp = m_xmap[0]->GetTotPoints();
+                Array<OneD, NekDouble> ltrix(trinp);
+                Array<OneD, NekDouble> ltriy(trinp);
+                m_xmap[0]->GetCoords(ltrix,ltriy);
+        
+
+                NekDouble tmp = 1e10;
+
+                for(i = 0; i < ptsx.num_elements()*ptsy.num_elements(); ++i)
+                {
+                    Lcoords[0] = (coords[0]-ptsx[i])*(coords[0]-ptsx[i]) 
+                               + (coords[1]-ptsy[i])*(coords[1]-ptsy[i]);
+                    if(Lcoords[0] < tmp){
+                    tmp = Lcoords[0];
+                    ic = i;
+                    }
+                }
+
+                Lcoords[0] = ltrix[ic];
+                Lcoords[1] = ltriy[ic];
+               
 	 
+
                 //int offset=0;              
                 //determine y
                 int cnt=0;
-                while( abs(F2) > 0.00001 || abs(F1)> 0.00001)
+                while( abs(F2) > 0.00001 || abs(F1)> 0.00001        )
                 {
-//cout<<"CURVED TRI"<<endl;
+
+
                     //calculate the gradient tensor at Lcoords
                     derx_1k = m_xmap[0]->PhysEvaluate(Lcoords, derx_1);
                     derx_2k = m_xmap[0]->PhysEvaluate(Lcoords, derx_2);
                     dery_1k = m_xmap[1]->PhysEvaluate(Lcoords, dery_1);
                     dery_2k = m_xmap[1]->PhysEvaluate(Lcoords, dery_2);                  
+
                     jac = (derx_1k*dery_2k - derx_2k*dery_1k);//determinant IS the jac
+
 
                     //invert matrix:
                     invderx_1k = dery_2k/jac;
                     invderx_2k = -derx_2k/jac;
                     invdery_1k = -dery_1k/jac;
                     invdery_2k = derx_1k/jac;
+
                     //calculate the global point corresponding to Lcoords
-                    xmap = m_xmap[0]->PhysEvaluate(Lcoords, ptsx);
-                    ymap = m_xmap[1]->PhysEvaluate(Lcoords, ptsy);
+                    xmap = trimap0->PhysEvaluate(Lcoords, ptsx);
+                    ymap = trimap1->PhysEvaluate(Lcoords, ptsy);
                     Lcoords[0] = Lcoords[0] + invderx_1k*(coords[0]-xmap) + invderx_2k*(coords[1]-ymap);
                     Lcoords[1] = Lcoords[1] + invdery_1k*(coords[0]-xmap) + invdery_2k*(coords[1]-ymap);
 
                     F1 = coords[0] - xmap;
                     F2 = coords[1] - ymap;
-         
+     
                     cnt++;
          
                     if( cnt >= 21)
                     {   
-                  	    
-                    	if( (abs(F1)< 0.0001 || abs(F2)<0.0001)
-                    	    &&( 	abs(Lcoords[0])<1.001) && (abs(Lcoords[1])<1.001)
-                          )
-                    	{
-                    	       NEKERROR(ErrorUtil::ewarning,"warning loccoords with precision <10^-4");
-                    	       break;	
-                        }
-                        else
-                        {
                              Lcoords[0] = Lcoords[1] = 2.0;    
                              break;
-                        }
                     }
                   
 		 }
-/*		 
-if(elmtid==45)
-{
-cout<<"elmt="<<elmtid<<"     "<<coords[0]<<"       "<<coords[1]<<endl;	 
-cout<<Lcoords[0]<<"       "<<Lcoords[1]<<endl;
-}
-*/
-
-		 if((abs(F2)< 0.0001 || abs(F2)<0.0001)
-                    	    &&( 	abs(Lcoords[0])>1.1) || (abs(Lcoords[1])>1.1)&&jac<0)
-		 {
-//cout<<"CURVED TRI(abs)"<<endl;
-	 	      //try forcing jac(as it is in geomfactor2D)
-                      cnt=0;
-                      F1=F2 = 2000;
-                      //guess the first local coords
-                      //Lcoords[0]=0.5;
-                      //Lcoords[1]=0.5; 
-                      //Lcoords[0] =  2*xi0/len0-1.0;
-                      //Lcoords[1] =  2*xi1/len1-1.0;   
-                      if( abs(Lcoords[0]) > 1.001)
-                      {
-                           Lcoords[0] = 0.5;	   
-                      }
-                      if( abs(Lcoords[1]) > 1.001)
-                      {
-                           Lcoords[1] = 0.5;                                                      
-                      } 
-/*                      
-if(elmtid==45)
-{
-cout<<Lcoords[0]<<"    dsds   "<<Lcoords[1]<<endl;	
-}
-*/
-                      while( abs(F2) > 0.00001 || abs(F1)> 0.00001)
-                      {
-
-                           //calculate the gradient tensor at Lcoords
-                           derx_1k = m_xmap[0]->PhysEvaluate(Lcoords, derx_1);
-                           derx_2k = m_xmap[0]->PhysEvaluate(Lcoords, derx_2);
-                           dery_1k = m_xmap[1]->PhysEvaluate(Lcoords, dery_1);
-                           dery_2k = m_xmap[1]->PhysEvaluate(Lcoords, dery_2);                  
-                           jac = abs(derx_1k*dery_2k - derx_2k*dery_1k);//determinant IS the jac
-
-                           //invert matrix:
-                           invderx_1k = dery_2k/jac;
-                           invderx_2k = -derx_2k/jac;
-                           invdery_1k = -dery_1k/jac;
-                           invdery_2k = derx_1k/jac;
-                           //calculate the global point corresponding to Lcoords
-                           xmap = m_xmap[0]->PhysEvaluate(Lcoords, ptsx);
-                           ymap = m_xmap[1]->PhysEvaluate(Lcoords, ptsy);
-                           Lcoords[0] = Lcoords[0] + invderx_1k*(coords[0]-xmap) + invderx_2k*(coords[1]-ymap);
-                           Lcoords[1] = Lcoords[1] + invdery_1k*(coords[0]-xmap) + invdery_2k*(coords[1]-ymap);
-
-                           F1 = coords[0] - xmap;
-                           F2 = coords[1] - ymap;
-/*                           
-if(elmtid==45)
-{		       
-cout<<"jacpos"<<Lcoords[0]<<"       "<<Lcoords[1]<<endl;
-cout<<F1<<"  dsfd  "<<F2<<endl;
-} 
-*/
-                           cnt++;             
-                                                     
-			   if( cnt >= 21)
-			   {   
-               	    
-                    	        if( (abs(F1)< 0.0001 || abs(F2)<0.0001)
-                    	            &&( 	abs(Lcoords[0])<1.001) && (abs(Lcoords[1])<1.001)
-                                  )
-                    	        {
-                                     NEKERROR(ErrorUtil::ewarning,
-                                     	     "warning loccoords with precision <10^-4 and jac forced positive");                    	        	
-                    	             break;	
-                    	        }                  	        
-                    	        else
-                    	        {
-                    	             Lcoords[0] = Lcoords[1] = 2.0;    
-                    	             break;
-                    	        }
-                    	        
-                    	        
-                    	   }		      	 
-		 	 
-		       }
-
-		 }
-
-
 
             }
+
+
+
+//cout<<"it finished"<<endl;
+            if(Lcoords[1]>1.01 && Lcoords[0]>1.01)
+            {
+  	        Lcoords[0] = Lcoords[1] = 2.0;    
+            }
+
+
+//cout<<elmtid<<"Locx="<<Lcoords[0]<<"  Locy="<<Lcoords[1]<<endl;
         }
 
 

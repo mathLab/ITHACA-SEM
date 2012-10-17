@@ -31,12 +31,14 @@
 // Description: Expasion for triangular elements.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/LocalRegions.h>
+
 #include <LocalRegions/LocalRegions.hpp>
 #include <stdio.h>
 #include <LocalRegions/TriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <LocalRegions/Expansion3D.h>
+#include <LibUtilities/Foundations/Interp.h>
+
 
 namespace Nektar
 {
@@ -522,26 +524,31 @@ namespace Nektar
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
 
         }
-
+        
         void TriExp::v_NormVectorIProductWRTBase(
-                const Array<OneD, const NekDouble> &Fx,
-                const Array<OneD, const NekDouble> &Fy,
-                const Array<OneD, const NekDouble> &Fz,
-                Array< OneD, NekDouble> &outarray)
+            const Array<OneD, const NekDouble> &Fx,
+            const Array<OneD, const NekDouble> &Fy,
+            const Array<OneD, const NekDouble> &Fz,
+                  Array<OneD,       NekDouble> &outarray)
         {
- 
             int nq = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);
 
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = GetLeftAdjacentElementExp()->GetFaceNormal(GetLeftAdjacentElementFace());
-
-            //Vmath::Vmul (nq,&Fx[0],1,normals[0][0], 1,&Fn[0],1);
-            //Vmath::Vvtvp(nq,&Fy[0],1,&normals[1][0],1,&Fn[0],1,&Fn[0],1);
-            //Vmath::Vvtvp(nq,&Fz[0],1,&normals[2][0],1,&Fn[0],1,&Fn[0],1);
-
-            for (int i=0; i<nq; ++i)
+            const Array<OneD, const Array<OneD, NekDouble> > &normals = 
+                GetLeftAdjacentElementExp()->GetFaceNormal(
+                    GetLeftAdjacentElementFace());
+            
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Fn[i]=Fx[i]*normals[0][0]+Fy[i]*normals[1][0]+Fz[i]*normals[2][0];
+                Vmath::Vmul   (nq,&normals[0][0],1,&Fx[0],1,&Fn[0],1);
+                Vmath::Vvtvvtp(nq,&normals[1][0],1,&Fy[0],1,
+                                  &normals[2][0],1,&Fz[0],1,&Fn[0],1);
+            }
+            else
+            {
+                Vmath::Smul   (nq,normals[0][0],&Fx[0],1,&Fn[0],1);
+                Vmath::Svtsvtp(nq,normals[1][0],&Fy[0],1,
+                                  normals[2][0],&Fz[0],1,&Fn[0],1);
             }
 
             IProductWRTBase(Fn,outarray);

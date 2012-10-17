@@ -36,6 +36,8 @@
 #ifndef SPATIALDOMDEF_H
 #define SPATIALDOMDEF_H
 
+#include<boost/shared_ptr.hpp>
+
 namespace Nektar
 {
     namespace SpatialDomains

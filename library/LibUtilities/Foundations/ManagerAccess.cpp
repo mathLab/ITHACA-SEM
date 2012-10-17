@@ -32,7 +32,7 @@
 // Description: C functions to provide access to managers. 
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
+
 #include <iostream>
 #include <loki/Singleton.h>
 #include <LibUtilities/Foundations/GaussPoints.h>
@@ -102,80 +102,5 @@ namespace Nektar
 
     } // end of namespace LibUtilities
 } // end of namespace Nektar
-
-
-/**
-$Log: ManagerAccess.cpp,v $
-Revision 1.23  2009/06/15 01:59:21  claes
-Gauss-Kronrod updates
-
-Revision 1.22  2009/06/12 18:07:02  claes
-minor Gauss-Kronrod alterations
-
-Revision 1.21  2008/11/12 12:11:52  pvos
-Time Integration update
-
-Revision 1.20  2008/07/17 16:12:41  pvos
-Updated time integration manager into general linear method format
-
-Revision 1.19  2008/07/12 11:37:53  pvos
-Added time integration scheme manager
-
-Revision 1.18  2008/05/27 20:05:50  ehan
-Added NodalTetEvenlySpaced points.
-
-Revision 1.17  2008/05/23 20:02:13  ehan
-Added NodalTriEvenlySpaced points.
-
-Revision 1.16  2008/05/12 23:47:24  ehan
-Added monomial basis
-
-Revision 1.15  2007/10/03 03:00:13  bnelson
-Added precompiled headers.
-
-Revision 1.14  2007/07/20 00:28:26  bnelson
-Replaced boost::shared_ptr with Nektar::ptr
-
-Revision 1.13  2007/06/01 17:08:07  pvos
-Modification to make LocalRegions/Project2D run correctly (PART1)
-
-Revision 1.12  2007/04/30 23:29:09  jfrazier
-More conversion to multi_array.
-
-Revision 1.11  2007/04/29 00:31:57  jfrazier
-Updated to use multi_arrays.
-
-Revision 1.10  2007/04/10 14:00:45  sherwin
-Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
-
-Revision 1.9  2007/04/10 02:40:53  bnelson
-Updated loki capitalization.
-
-Revision 1.8  2007/03/19 12:46:16  kirby
-*** empty log message ***
-
-Revision 1.7  2007/03/13 21:31:32  kirby
- small update to the numbering.
-
-Revision 1.6  2007/03/13 16:59:04  kirby
- added GaussLobattoChebyshev -- we had forgotten it
-
-Revision 1.5  2007/02/26 15:52:31  sherwin
-Working version for Fourier points calling from StdRegions. Fourier interpolations not working yet
-
-Revision 1.4  2007/02/06 17:12:31  jfrazier
-Fixed a problem with global initialization in libraries.
-
-Revision 1.3  2007/02/01 23:28:42  jfrazier
-Basis is not working, but not fully tested.
-
-Revision 1.2  2007/01/20 21:45:59  kirby
-*** empty log message ***
-
-Revision 1.1  2007/01/19 18:02:26  jfrazier
-Initial checkin.
-
-**/
-
 
 

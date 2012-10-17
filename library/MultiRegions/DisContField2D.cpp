@@ -35,17 +35,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/DisContField2D.h>
-//#include <LocalRegions/SegExp.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         DisContField2D::DisContField2D(void):
-            ExpList2D(),
+            ExpList2D          (),
             m_bndCondExpansions(),
-            m_bndConditions(),
-            m_trace(NullExpListSharedPtr)
+            m_bndConditions    (),
+            m_trace            (NullExpListSharedPtr)
         {
         }
 
@@ -296,6 +295,32 @@ namespace Nektar
         {
             
         }
+        
+        GlobalLinSysSharedPtr DisContField2D::GetGlobalBndLinSys(
+            const GlobalLinSysKey &mkey)
+        {
+            ASSERTL0(mkey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam,
+                     "Routine currently only tested for HybridDGHelmholtz");
+            ASSERTL1(mkey.GetGlobalSysSolnType() == 
+                         m_traceMap->GetGlobalSysSolnType(),
+                     "The local to global map is not set up for the requested "
+                     "solution type");
+
+            GlobalLinSysSharedPtr glo_matrix;
+            GlobalLinSysMap::iterator matrixIter = m_globalBndMat->find(mkey);
+
+            if(matrixIter == m_globalBndMat->end())
+            {
+                glo_matrix = GenGlobalBndLinSys(mkey,m_traceMap);
+                (*m_globalBndMat)[mkey] = glo_matrix;
+            }
+            else
+            {
+                glo_matrix = matrixIter->second;
+            }
+
+            return glo_matrix;
+        }
 
         /**
          * @brief Set up all DG member variables and maps.
@@ -336,8 +361,6 @@ namespace Nektar
             // retains a pointer to the trace space segments, to ensure
             // uniqueness of normals when retrieving from two adjoining elements
             // which do not lie in a plane.
-            SpatialDomains::Geometry1DSharedPtr ElmtSegGeom;
-            SpatialDomains::Geometry1DSharedPtr TraceSegGeom;
             for (int i = 0; i < m_exp->size(); ++i)
             {
                 for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j)
@@ -678,38 +701,12 @@ namespace Nektar
             }
         }
 
-        GlobalLinSysSharedPtr DisContField2D::GetGlobalBndLinSys(
-            const GlobalLinSysKey &mkey)
-        {
-            ASSERTL0(mkey.GetMatrixType() == StdRegions::eHybridDGHelmBndLam,
-                     "Routine currently only tested for HybridDGHelmholtz");
-            ASSERTL1(mkey.GetGlobalSysSolnType() == 
-                         m_traceMap->GetGlobalSysSolnType(),
-                     "The local to global map is not set up for the requested "
-                     "solution type");
-
-            GlobalLinSysSharedPtr glo_matrix;
-            GlobalLinSysMap::iterator matrixIter = m_globalBndMat->find(mkey);
-
-            if(matrixIter == m_globalBndMat->end())
-            {
-                glo_matrix = GenGlobalBndLinSys(mkey,m_traceMap);
-                (*m_globalBndMat)[mkey] = glo_matrix;
-            }
-            else
-            {
-                glo_matrix = matrixIter->second;
-            }
-
-            return glo_matrix;
-        }
-
-
         bool DisContField2D::IsLeftAdjacentEdge(const int n, const int e)
         {
             set<int>::iterator     it;
             LocalRegions::Expansion1DSharedPtr traceEl = 
-                boost::dynamic_pointer_cast<LocalRegions::Expansion1D>((m_traceMap->GetElmtToTrace())[n][e]);
+                boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(
+                    (m_traceMap->GetElmtToTrace())[n][e]);
             
             int offset = m_trace->GetPhys_Offset(traceEl->GetElmtId());
             
@@ -809,8 +806,8 @@ namespace Nektar
 
                 for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
                 {
-
-                    int offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
+                    int offset = m_trace->GetPhys_Offset(
+                        elmtToTrace[n][e]->GetElmtId());
                     
                     fwd = IsLeftAdjacentEdge(n,e);
 
@@ -1051,9 +1048,10 @@ namespace Nektar
          * 
          * @see Expansion2D::AddEdgeNormBoundaryInt
          * 
-         * 
-         * @param Fwd       The trace quantities associated with left (fwd) adjancent elmt. 
-         * @param Bwd       The trace quantities associated with right (bwd) adjacent elet.
+         * @param Fwd       The trace quantities associated with left (fwd)
+         *                  adjancent elmt.
+         * @param Bwd       The trace quantities associated with right (bwd)
+         *                  adjacent elet.
          * @param outarray  Resulting 2D coefficient space.
          */
         void DisContField2D::v_AddFwdBwdTraceIntegral(
@@ -1355,8 +1353,8 @@ namespace Nektar
         void DisContField2D::v_GeneralMatrixOp(
                const GlobalMatrixKey             &gkey,
                const Array<OneD,const NekDouble> &inarray,
-                     Array<OneD,      NekDouble> &outarray,
-               bool UseContCoeffs)
+               Array<OneD,      NekDouble> &outarray,
+               CoeffState coeffstate)
         {
             int     LocBndCoeffs = m_traceMap->GetNumLocalBndCoeffs();
             Array<OneD, NekDouble> loc_lambda(LocBndCoeffs);

@@ -36,7 +36,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <CompressibleFlowSolver/EquationSystems/UnsteadySystem.h>
 
 namespace Nektar

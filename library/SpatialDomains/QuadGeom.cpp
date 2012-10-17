@@ -36,6 +36,7 @@
 #include "pchSpatialDomains.h"
 
 #include <SpatialDomains/QuadGeom.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {

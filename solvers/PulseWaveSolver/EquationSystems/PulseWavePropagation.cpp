@@ -167,8 +167,12 @@ namespace Nektar
     {
         int i;
         int nvariables = inarray.num_elements();
-		NekDouble Q, A_r, u_r, Au, uu;
+	NekDouble Q, A_r, u_r;
+	NekDouble A_u, u_u;
         NekDouble R_t, A_l, u_l, u_0, c_0, c_l;
+	if (time == 0)
+	  {pc = 0.0;
+	  }
 		
 		SetBoundaryConditions(time);
 				
@@ -187,18 +191,25 @@ namespace Nektar
 				u_r = m_fields[1]->GetCoeffs()[0];
 				
 				// Call the Q-inflow Riemann solver
-				Q_inflowRiemannSolver(Q,A_r,u_r,m_A_0[0],m_beta[0],Au,uu);
-				
-				// Store the upwinded values in the boundary condition
-				(m_fields[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = Au;
-				(m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = uu;
+				Q_inflowRiemannSolver(Q,A_r,u_r,m_A_0[0],m_beta[0],A_u,u_u);
+
+				// Set the boundary conditions to  prescribe
+				A_l=A_r;
+				u_l=2*u_u-u_r;
+
+				// Store the updated values in the boundary condition
+				(m_fields[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_l;
+				(m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_l;
 			}
 			/* Find the terminal resistance boundary condition and calculate the reflection. We assume 
 			 * A_r = A_l and apply the reflection in u_r after paper "Computational Modelling of 1D 
 			 * blood flow"*/
 			else if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eTerminal)
 			{
+			  // Note: The R_t value is contained in A in the inputfile
 				R_t = (m_fields[0]->UpdateBndCondExpansion(n))->GetCoeffs()[0];
+				ASSERTL0((-1<=R_t && R_t<=1),
+						 "R_t must be comprised between -1 and 1");
 								
 				// Get the left values A_l and u_l needed for Eq. 37
 				A_l = m_fields[0]->GetCoeffs()[1];
@@ -211,12 +222,109 @@ namespace Nektar
 				// Calculate the boundary values
 				A_r = A_l;
 				c_l = sqrt(m_beta[GetTotPoints()-1]/(2*m_rho))*sqrt(sqrt(A_l));
-				u_r = (1-R_t)*((u_0+u_l) + 4*(c_l-c_0)) - u_l;
+				u_r = (1-R_t)*((u_l-u_0) + 4*(c_l-c_0)) - u_l;
 				
 				// Store the new values in the boundary condition
 				(m_fields[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_r;
 				(m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_r;
 			}
+
+			/* Find the terminal R boundary condition and calculates the updated velocity and area as well as the updated boundary conditions */
+			else if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eRterminal)
+			{
+			  // cout << "R boundary condition found" << endl;
+			        NekDouble RT = m_RT;
+				NekDouble R_t;
+				NekDouble pout = m_pout;
+				NekDouble rho = m_rho;
+
+				// Get the values of all variables needed for the Riemann problem
+				A_l = m_fields[0]->GetCoeffs()[1];
+				u_l = m_fields[1]->GetCoeffs()[1];
+
+				// Goes through the resistance			
+
+				// Call the R RiemannSolver
+				R_RiemannSolver(RT,A_l,u_l,m_A_0[0],m_beta[GetTotPoints()-1],pout,A_u,u_u);
+
+				// Calculates the new boundary conditions
+				A_r=A_l;
+				u_r=2*u_u-u_l;
+
+				// Store the updated values in the boundary condition
+
+				(m_fields[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_r;
+				(m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_r;
+			}
+
+			/* Find the terminal CR boundary condition and calculates the updated velocity and area as well as the updated boundary conditions */
+			else if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eCRterminal)
+			{
+			        // cout << "CR boundary condition found" << endl;
+			        NekDouble C = m_C;
+			        NekDouble R = m_RT;
+				NekDouble pout = m_pout;
+				
+				// Get the values of all variables needed for the Riemann problem
+				A_l = m_fields[0]->GetCoeffs()[1];
+				u_l = m_fields[1]->GetCoeffs()[1];
+				
+				// Call the CR Riemann solver
+				CR_RiemannSolver(C,R,A_l,u_l,m_A_0[0],m_beta[GetTotPoints()-1],pout,A_u,u_u);
+
+				// Calculates the boundary conditions
+				u_r=u_l;
+				A_r=4*sqrt(m_beta[GetTotPoints()-1]/(2*m_rho))*(2*sqrt(sqrt(A_u))-sqrt(sqrt(A_l)));
+				A_r=A_r*A_r;
+				A_r=A_r*A_r;
+				
+				// Store the updated values in the boundary condition
+
+				(m_fields[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_r;
+				(m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_r;
+			}
+
+			/* Find the terminal RCR boundary condition and calculates the updated velocity and area as well as the updated boundary conditions */
+			else if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eRCRterminal)
+			{
+
+			        NekDouble C = m_C;
+			        NekDouble RT = m_RT;
+				NekDouble R1;
+				NekDouble R2;
+				NekDouble R_t;
+				NekDouble pout = m_pout;
+				NekDouble rho = m_rho;
+
+				// Get the values of all variables needed for the Riemann problem
+				A_l = m_fields[0]->GetCoeffs()[1];
+				u_l = m_fields[1]->GetCoeffs()[1];
+
+				// Goes through the first resistance
+
+				// Calculate c_0
+
+				c_0 = sqrt(m_betaglobal[m_omega][0]/(2*m_rho))*sqrt(sqrt(m_A_0global[m_omega][0]));			
+
+				// Calculate R1 and R2, R1 being calculated so as to eliminate reflections in the vessel
+				R1 = rho*c_0/m_A_0[0];
+				R2 = RT-R1;
+
+				// Call the R RiemannSolver
+				R_RiemannSolver(R1,A_l,u_l,m_A_0[0],m_beta[GetTotPoints()-1],pc,A_u,u_u);
+				A_r = A_l;
+				u_r = 2*u_u-u_l;
+
+				// Goes through the CR system, it consists in updating the pressure pc
+
+				pc = pc + m_timestep/C*(A_u*u_u-(pc-pout)/R2);
+
+				// Store the updated values in the boundary condition
+
+				(m_fields[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_r;
+				(m_fields[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_r;
+			}
+
 			
 		}
 			
@@ -240,7 +348,7 @@ namespace Nektar
 				
                 for(i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->FwdTrans(inarray[i],coeffs,false);
+                    m_fields[i]->FwdTrans(inarray[i],coeffs);
                     m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
                 }
             }
@@ -462,7 +570,7 @@ namespace Nektar
 		NekDouble Tol = 1.0e-10;
 	 
 		// Riemann invariant \f$W_2(Ar,ur)\f$
-		W2 = u_r - 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_r)) - sqrt(sqrt(A_0)));
+		W2 = u_r - 4*sqrt(beta/(2*rho))*sqrt(sqrt(A_r));
 	 
 		// Calculate the wave speed
 		c = sqrt(beta/(2*rho))*sqrt(sqrt(A_r));
@@ -473,8 +581,8 @@ namespace Nektar
 		{	
 			iter =iter+1;
 	 
-			fa = Q - W2*A_calc - A_calc*4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc)) - sqrt(sqrt(A_0)));
-			dfa = -W2 - A_calc*4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc)) - sqrt(sqrt(A_0))) - sqrt(beta/(2*rho))*sqrt(sqrt(A_calc));
+			fa = Q - W2*A_calc - A_calc*4*sqrt(beta/(2*rho))*sqrt(sqrt(A_calc));
+			dfa = -W2 - 5*sqrt(beta/(2*rho))*sqrt(sqrt(A_calc));
 			delta_A_calc = fa/dfa;
 			A_calc = A_calc - delta_A_calc;
 	 
@@ -482,12 +590,105 @@ namespace Nektar
 				proceed = 0;
 		}
 		
-		// Obtain u from W2 and A_calc
-		uu = W2 + 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc)) - sqrt(sqrt(A_0))); 
+		// Obtain u_u and A_u
+		uu = W2+4*sqrt(beta/(2*rho))*sqrt(sqrt(A_calc)); 
 		Au = A_calc;
 		
 		//cout << "-----------------------------------------------------"<<endl;
 		//cout << "| Q_inflow Riemann solver; number of iterations: "<<iter<<"  |"<<endl;
+		//cout << "| A_u = "<<Au<<"\tu_u = "<<uu<<"\tQ = "<<Au*uu<<"\t\t    |"<<endl;
+		//cout << "----------------------------------------------------"<< endl;
+		
+	 }
+
+  void PulseWavePropagation::R_RiemannSolver(NekDouble R,NekDouble A_l,NekDouble u_l,NekDouble A_0, NekDouble beta, NekDouble pout,
+													 NekDouble &A_u,NekDouble &u_u)
+	{		
+		NekDouble W1 = 0.0;
+		NekDouble Wf = 0.0;
+		NekDouble c_l = 0.0;
+		NekDouble c_0 = 0.0;
+		NekDouble p = 0.0;
+		NekDouble pext = m_pext;
+		NekDouble p_t = 0.0;
+		NekDouble A_calc = 0.0;
+		NekDouble fa = 0.0;
+		NekDouble dfa = 0.0;
+		NekDouble delta_A_calc = 0.0;
+		NekDouble rho = m_rho;
+		NekDouble delta_t = m_timestep;
+
+		int proceed = 1;
+		int iter = 0;
+		int MAX_ITER = 200;
+
+		// Tolerances for the algorithm
+		NekDouble Tol = 1.0e-10;
+
+		// Calculate the wave speed
+		c_l = sqrt(beta/(2*rho))*sqrt(sqrt(A_l));
+		// cout << "c_l=" << c_l << endl;
+		c_0 = sqrt(beta/(2*rho))*sqrt(sqrt(A_0));
+		// cout<<"c_0="<<c_0<<endl;
+	 
+		// Riemann invariant \f$W_1(Al,ul)\f$
+		W1 = u_l + 4*c_l;	 
+
+		// Newton Iteration (Area only)
+		A_calc = A_l;
+		while ((proceed) && (iter < MAX_ITER))
+		{	
+			iter =iter+1;
+	 
+			fa = R*W1*A_calc-4*R*sqrt(beta/(2*rho))*A_calc*sqrt(sqrt(A_calc))-pext-beta*(sqrt(A_calc)-sqrt(A_0))+pout;
+			dfa = R*W1-5*R*sqrt(beta/(2*rho))*sqrt(sqrt(A_calc))-beta/(2*sqrt(A_calc));
+			delta_A_calc = fa/dfa;
+			A_calc = A_calc - delta_A_calc;
+	 
+			if (sqrt(delta_A_calc*delta_A_calc) < Tol)
+				proceed = 0;
+		}
+
+		// Obtain u_u and A_u
+		//u_u = W1 - 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc))); 
+		u_u=(pext+beta*(sqrt(A_calc)-sqrt(A_0))-pout)/(R*A_calc);
+		A_u = A_calc;
+
+		//cout << "----------------------------------------------------"<< endl;
+		//cout << "| A_u = "<<Au<<"\tu_u = "<<uu<<"\tQ = "<<Au*uu<<"\t\t    |"<<endl;
+		//cout << "----------------------------------------------------"<< endl;
+		
+	 }
+
+	/**
+	 *  CR Riemann solver for pulse wave propagation. 
+	 */
+  void PulseWavePropagation::CR_RiemannSolver(NekDouble C,NekDouble R,NekDouble A_l,NekDouble u_l,NekDouble A_0, NekDouble beta, NekDouble pout,
+													 NekDouble &A_u,NekDouble &u_u)
+	{		
+	  //cout << "Entering CR_RiemannSolver" << endl;
+		NekDouble W1 = 0.0;
+		NekDouble c_l = 0.0;
+		NekDouble p = 0.0;
+		NekDouble pext = m_pext;
+		NekDouble p_t = 0.0;
+		NekDouble rho = m_rho;
+		NekDouble A_calc = 0.0;
+		// to modify
+		NekDouble delta_t = m_timestep;
+
+		// Calculate the wave speed
+		c_l = sqrt(beta/(2*rho))*sqrt(sqrt(A_l));
+		
+		// First order finite difference scheme
+		
+		A_calc = sqrt(A_l)+delta_t/(C*beta)*(A_l*u_l+1/R*(pout-pext-beta*(sqrt(A_l)-sqrt(A_0))));
+		A_u=A_calc*A_calc;
+
+		// u_u is assumed to be equal to u_l
+		u_u = u_l; 
+		
+		//cout << "----------------------------------------------------"<< endl;
 		//cout << "| A_u = "<<Au<<"\tu_u = "<<uu<<"\tQ = "<<Au*uu<<"\t\t    |"<<endl;
 		//cout << "----------------------------------------------------"<< endl;
 		

@@ -407,11 +407,11 @@ namespace Nektar
                             boost::dynamic_pointer_cast<Prism>(el);
                         if (p->orientation == 1)
                         {
-                            faceId = (faceId+2) % 5;
+                            faceId = (faceId+2) % 6;
                         }
                         else if (p->orientation == 2)
                         {
-                            faceId = (faceId+4) % 5;
+                            faceId = (faceId+4) % 6;
                         }
                     }
                     else if (el->GetConf().e == eTetrahedron)
@@ -777,11 +777,11 @@ namespace Nektar
                             boost::dynamic_pointer_cast<Prism>(elm);
                         if (p->orientation == 1)
                         {
-                            faceId = (faceId+2) % 5;
+                            faceId = (faceId+2) % 6;
                         }
                         else if (p->orientation == 2)
                         {
-                            faceId = (faceId+4) % 5;
+                            faceId = (faceId+4) % 6;
                         }
                     }
                     else if (elm->GetConf().e == eTetrahedron)

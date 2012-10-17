@@ -543,7 +543,7 @@ namespace Nektar
                     {
                         if( (nz_loc == 2)&&(j == 2)) // handle d/dz derivative
                         {
-                            NekDouble beta =  2*M_PI*HomogeneousMode/m_LhomZ;
+                            NekDouble beta =  -2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1);
 
@@ -589,7 +589,7 @@ namespace Nektar
                     {
                         if( (nz_loc == 2)&&(j == 2)) // handle d/dz derivative
                         {
-                            NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
+                            NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1); 
 
@@ -739,7 +739,7 @@ namespace Nektar
                     {
                         if((nz_loc == 2)&&(k == 2)) // handle d/dz derivative
                         { 
-                            NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
+                            NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             // Real Component
                             Vmath::Smul(npoints,beta,phys,1,deriv,1);
@@ -916,7 +916,7 @@ namespace Nektar
                     {
                         if((nz_loc == 2)&&(k == 2)) // handle d/dz derivative
                         { 
-                            NekDouble beta = 2*M_PI*HomogeneousMode/m_LhomZ;
+                            NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
 
                             // Real Component
                             Vmath::Smul(npoints,beta,phys,1,deriv,1);

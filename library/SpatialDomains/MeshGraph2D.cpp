@@ -201,10 +201,11 @@ namespace Nektar
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
             // Set up curve map for curved elements on an embedded manifold.
-            map<int, int> face_curved;
+            map<int, int> faceCurves;
+            map<int,int>::iterator x;
             for (int i = 0; i < m_curvedFaces.size(); ++i)
             {
-                face_curved[m_curvedFaces[i]->m_curveID] = i;
+                faceCurves[m_curvedFaces[i]->m_curveID] = i;
             }
 
             int nextElementNumber = -1;
@@ -275,13 +276,20 @@ namespace Nektar
                         };
 
                             TriGeomSharedPtr trigeom;
-                            if (face_curved.count(indx) == 0)
+                            if ((x = faceCurves.find(indx)) == faceCurves.end())
                             {
-                                trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx,edges,edgeorient);
+                                trigeom = MemoryManager<TriGeom>
+                                            ::AllocateSharedPtr(indx,
+                                                    edges,
+                                                    edgeorient);
                             }
                             else
                             {
-                                trigeom = MemoryManager<TriGeom>::AllocateSharedPtr(indx,edges,edgeorient,m_curvedFaces[face_curved.find(indx)->second]);
+                                trigeom = MemoryManager<TriGeom>
+                                            ::AllocateSharedPtr(indx,
+                                                    edges,
+                                                    edgeorient,
+                                                    m_curvedFaces[x->second]);
                             }
                             trigeom->SetGlobalID(indx);
 
@@ -320,16 +328,21 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
                         };
 
-                            //QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
                             QuadGeomSharedPtr quadgeom;
-
-                            if (face_curved.count(indx) == 0)
+                            if ((x = faceCurves.find(indx)) == faceCurves.end())
                             {
-                                quadgeom  = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                                quadgeom = MemoryManager<QuadGeom>
+                                            ::AllocateSharedPtr(indx,
+                                                    edges,
+                                                    edgeorient);
                             }
                             else
                             {
-                                quadgeom  = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient, m_curvedFaces[face_curved.find(indx)->second]);
+                                quadgeom = MemoryManager<QuadGeom>
+                                            ::AllocateSharedPtr(indx,
+                                                    edges,
+                                                    edgeorient,
+                                                    m_curvedFaces[x->second]);
                             }
                             quadgeom->SetGlobalID(indx);
 

@@ -226,17 +226,22 @@ namespace Nektar
                 }
             }
 
+            // 2D elements in 3-space, output face curvature information
             if (m->expDim == 2 && m->spaceDim == 3)
             {
                 vector<ElementSharedPtr>::iterator it;
                 for (it = m->element[m->expDim].begin(); it != m->element[m->expDim].end(); ++it)
                 {
+                    // Only generate face curve if there are volume nodes
                     if ((*it)->GetVolumeNodes().size() > 0)
                     {
                         TiXmlElement * e = new TiXmlElement( "F" );
                         e->SetAttribute("ID",        facecnt++);
                         e->SetAttribute("FACEID",    (*it)->GetId());
                         e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
+
+                        // Quad use PolyEvenlySpaced points, tri uses
+                        // NodalTriEvenlySpaced points
                         if ((*it)->GetVertexCount() == 4)
                         {
                             e->SetAttribute("TYPE", "PolyEvenlySpaced");

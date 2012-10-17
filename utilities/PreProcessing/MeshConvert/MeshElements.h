@@ -764,23 +764,35 @@ namespace Nektar
                 return s.str();
             }
 
-            /// Reorders Gmsh ordered nodes into a row-by-row ordering required
-            /// for Nektar++ curve tags.
+            /**
+             * @brief Reorders Gmsh ordered nodes into a row-by-row ordering
+             * required for Nektar++ curve tags.
+             *
+             * The interior nodes of elements in the Gmsh format are ordered
+             * as for a lower-order element of the same type. This promotes
+             * the recursive approach to the reordering algorithm.
+             */
             std::vector<NodeSharedPtr> tensorNodeOrdering(
                     const std::vector<NodeSharedPtr> &nodes,
                     int n) const
             {
                 std::vector<NodeSharedPtr> nodeList;
                 int cnt, cnt2;
+
+                // Triangle
                 if (vertex.size() == 3)
                 {
                     nodeList.resize(nodes.size());
+
+                    // Vertices
                     nodeList[0] = nodes[0];
                     if (n > 1)
                     {
                         nodeList[n-1] = nodes[1];
                         nodeList[n*(n+1)/2 - 1] = nodes[2];
                     }
+
+                    // Edges
                     int cnt = n;
                     for (int i = 1; i < n-1; ++i)
                     {
@@ -789,11 +801,16 @@ namespace Nektar
                         nodeList[cnt+n-i-1] = nodes[3+(n-2)+i-1];
                         cnt += n-i;
                     }
+
+                    // Interior (recursion)
                     if (n > 3)
                     {
+                        // Reorder interior nodes
                         std::vector<NodeSharedPtr> interior((n-3)*(n-2)/2);
                         std::copy(nodes.begin() + 3+3*(n-2), nodes.end(), interior.begin());
                         interior = tensorNodeOrdering(interior, n-3);
+
+                        // Copy into full node list
                         cnt = n;
                         cnt2 = 0;
                         for (int j = 1; j < n-2; ++j)
@@ -807,9 +824,12 @@ namespace Nektar
                         }
                     }
                 }
-                else
+                // Quad
+                else if (m_dim == 2 && vertex.size() == 4)
                 {
                     nodeList.resize(nodes.size());
+
+                    // Vertices and edges
                     nodeList[0] = nodes[0];
                     if (n > 1)
                     {
@@ -825,11 +845,16 @@ namespace Nektar
                     {
                         nodeList[n*n-1-i] = nodes[4+2*(n-2)+i-1];
                     }
+
+                    // Interior (recursion)
                     if (n > 2)
                     {
+                        // Reorder interior nodes
                         std::vector<NodeSharedPtr> interior((n-2)*(n-2));
                         std::copy(nodes.begin() + 4+4*(n-2), nodes.end(), interior.begin());
                         interior = tensorNodeOrdering(interior, n-2);
+
+                        // Copy into full node list
                         for (int j = 1; j < n-1; ++j)
                         {
                             nodeList[j*n] = nodes[4+3*(n-2)+n-2-j];
@@ -841,20 +866,29 @@ namespace Nektar
                         }
                     }
                 }
+                else
+                {
+                    cerr << "TensorNodeOrdering for a " << vertex.size()
+                         << "-vertex element is not yet implemented." << endl;
+                }
                 return nodeList;
             }
 
             /// Generates a string listing the coordinates of all nodes
-            /// associated with this face.
+            /// associated with this element.
             std::string GetXmlCurveString() const
             {
+                // Temporary node list for reordering
                 std::vector<NodeSharedPtr> nodeList;
 
+                // Node orderings are different for different elements.
                 // Triangle
                 if (vertex.size() == 3)
                 {
                     int n = edge[0]->GetNodeCount();
                     nodeList.resize(n*(n+1)/2);
+
+                    // Populate nodelist
                     std::copy(vertex.begin(), vertex.end(), nodeList.begin());
                     for (int i = 0; i < 3; ++i)
                     {
@@ -867,17 +901,22 @@ namespace Nektar
                                          nodeList.begin() + 3 + (i+1)*(n-2));
                         }
                     }
+
+                    // Triangle ordering lists vertices, edges then interior.
+                    // Interior nodes are row by row from edge 0 up to vertex 2
+                    // so need to reorder interior nodes only.
                     std::vector<NodeSharedPtr> interior(volumeNodes.size());
                     std::copy(volumeNodes.begin(), volumeNodes.end(), interior.begin());
-
                     interior = tensorNodeOrdering(interior, n-3);
                     std::copy(interior.begin(), interior.end(), nodeList.begin() + 3*(n-1));
                 }
                 // Quad
-                else if (vertex.size() == 4)
+                else if (m_dim == 2 && vertex.size() == 4)
                 {
                     int n = edge[0]->GetNodeCount();
                     nodeList.resize(n*n);
+
+                    // Populate nodelist
                     std::copy(vertex.begin(), vertex.end(), nodeList.begin());
                     for (int i = 0; i < 4; ++i)
                     {
@@ -894,6 +933,10 @@ namespace Nektar
                         }
                     }
                     std::copy(volumeNodes.begin(), volumeNodes.end(), nodeList.begin() + 4*(n-1));
+
+                    // Quadrilateral ordering lists all nodes row by row
+                    // starting from edge 0 up to edge 2, so need to reorder
+                    // all nodes.
                     nodeList = tensorNodeOrdering(nodeList, n);
                 }
                 else
@@ -902,6 +945,8 @@ namespace Nektar
                          << "-vertex element is not yet implemented." << endl;
                 }
 
+                // Finally generate the XML string corresponding to our new
+                // node reordering.
                 std::stringstream s;
                 std::string str;
                 for (int k = 0; k < nodeList.size(); ++k)

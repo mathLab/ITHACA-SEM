@@ -878,22 +878,22 @@ namespace Nektar
                 
                 // Multiply each edge contribution by the proper metrics
                 Vmath::Smul(nLocalSolutionPts, 
-                            (1/jac[0])*(1/jac[0])/*gmat[3][0]*/, 
+                            1/jac[0], 
                             auxArray1 = divCFluxE0, 1, 
                             auxArray2 = divCFluxE0, 1);
                 
                 Vmath::Smul(nLocalSolutionPts, 
-                            (1/jac[0])*(1/jac[0])/*gmat[0][0]*/, 
+                            1/jac[0], 
                             auxArray1 = divCFluxE1, 1, 
                             auxArray2 = divCFluxE1, 1);
                 
                 Vmath::Smul(nLocalSolutionPts, 
-                            (1/jac[0])*(1/jac[0])/*gmat[0][0]*/, 
+                            1/jac[0], 
                             auxArray1 = divCFluxE2, 1, 
                             auxArray2 = divCFluxE2, 1);
                 
                 Vmath::Smul(nLocalSolutionPts, 
-                            (1/jac[0])*(1/jac[0])/*gmat[3][0]*/, 
+                            1/jac[0], 
                             auxArray1 = divCFluxE3, 1, 
                             auxArray2 = divCFluxE3, 1);
 

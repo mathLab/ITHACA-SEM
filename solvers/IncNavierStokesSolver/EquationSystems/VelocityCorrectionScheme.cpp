@@ -326,7 +326,7 @@ namespace Nektar
 			{
 				//cout << "\nOn test eSteadyNavierStokesBySFD!!!\n" << endl;
 				SelectiveFrequencyDamping();
-				cout << "\n\nOn es sorti de SelectiveFrequencyDamping() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n" << endl;
+				//cout << "\n\nOn es sorti de SelectiveFrequencyDamping() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n" << endl;
 				break;
 			}
 			case eNoEquationType:
@@ -353,8 +353,6 @@ namespace Nektar
 		NekDouble cst3;
 		NekDouble cst4;
 		NekDouble cst5;
-		NekDouble cst6;
-		int StartSFDatStep(0);
 		NekDouble TOL(0);
 		int Check(0);
 		int n(0);
@@ -367,28 +365,17 @@ namespace Nektar
 				
 		m_session->LoadParameter("FilterWidth", Delta);
 		m_session->LoadParameter("ControlCoeff", X);
-		m_session->LoadParameter("StartSFDatStep", StartSFDatStep);
 		m_session->LoadParameter("TOL", TOL);
 				
 		cst1=X*m_timestep;
 		cst2=1.0/(1.0 + cst1);
 		cst3=m_timestep/Delta;
-		cst4=1.0/(1.0 + cst3);
-		//cst4=1.0/(1.0 + cst2);
-		cst5=cst2*cst3;
-		cst6=1.0/(1.0 + cst3*(1.0-cst1*cst2));
+		cst4=cst2*cst3;
+		cst5=1.0/(1.0 + cst3*(1.0-cst1*cst2));
 		
 		cout << "------------------ SFD Parameters ------------------" << endl;
-		cout << "Delta = " << Delta << endl;
-		cout << "X = " << X << endl;
-		cout << "SFD will start at step " << StartSFDatStep << endl;
-		//cout << "SFD will stop at step " << StopSFDatStep << endl;
-		cout << "cst1 = " << cst1 << endl;
-		cout << "cst2 = " << cst2 << endl;
-		cout << "cst3 = " << cst3 << endl;
-		cout << "cst4 = " << cst4 << endl;
-		cout << "cst5 = " << cst5 << endl;
-		cout << "cst6 = " << cst6 << endl;
+		cout << "\tDelta = " << Delta << endl;
+		cout << "\tX = " << X << endl;
 		cout << "----------------------------------------------------" << endl;
 
 		
@@ -402,22 +389,6 @@ namespace Nektar
 		//for (int n=0 ; n < m_steps; ++n).
 		while (NormDiff_q_qBar[0] > TOL)
 		{
-			
-			if (n<StartSFDatStep)
-			{
-				AdvanceInTime(1);
-				if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
-				{
-					cout << "Step: " << n+1 << "  Time: " << m_time << endl;
-				}
-				if(m_checksteps && n&&(!((n+1)%m_checksteps)))
-				{
-					Check++;
-					Checkpoint_Output(Check);
-				}
-			}
-			else 
-			{
 				AdvanceInTime(1);
 				
 				for(int i = 0; i < m_velocity.num_elements(); ++i)
@@ -429,94 +400,30 @@ namespace Nektar
 					
 					Diff_q_qBar[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
 					
-					if (n==StartSFDatStep)
+					if (n==0)
 					{
-						//qBar0[i] = q0[i];
+						qBar0[i] = q0[i];
 					}
 					
-					Vmath::Smul(qBar1[i].num_elements(), cst5, q0[i], 1, qBar1[i], 1);
+					Vmath::Smul(qBar1[i].num_elements(), cst4, q0[i], 1, qBar1[i], 1);
 					Vmath::Vadd(qBar1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
-					Vmath::Smul(qBar1[i].num_elements(), cst6, qBar1[i], 1, qBar1[i], 1);
+					Vmath::Smul(qBar1[i].num_elements(), cst5, qBar1[i], 1, qBar1[i], 1);
 					
 					Vmath::Smul(q1[i].num_elements(), cst1, qBar1[i], 1, q1[i], 1);
 					Vmath::Vadd(q1[i].num_elements(), q0[i], 1, q1[i], 1, q1[i], 1);
 					Vmath::Smul(q1[i].num_elements(), cst2, q1[i], 1, q1[i], 1);
 					
-					/*Vmath::Smul(q1[i].num_elements(), cst1, qBar0[i], 1, q1[i], 1);
-					Vmath::Vadd(q1[i].num_elements(), q0[i], 1, q1[i], 1, q1[i], 1);
-					Vmath::Smul(q1[i].num_elements(), cst2, q1[i], 1, q1[i], 1);
-					
-					Vmath::Smul(qBar1[i].num_elements(), cst3, q1[i], 1, qBar1[i], 1);
-					Vmath::Vadd(qBar1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
-					Vmath::Smul(qBar1[i].num_elements(), cst4, qBar1[i], 1, qBar1[i], 1);*/
-					
 					qBar0[i] = qBar1[i];
 					
 					
 					Vmath::Vcopy(q1[i].num_elements(), q1[i], 1, m_fields[i]->UpdatePhys(), 1 );
-					//m_fields[i]->FwdTrans_IterPerExp( q1[i], m_fields[i]->UpdateCoeffs() );
+					//m_fields[i]->FwdTrans_IterPerExp(q1[i], m_fields[i]->UpdateCoeffs());
+					//m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), m_fields[i]->UpdatePhys());
 				}
 				
-				//----------------------------------------------------------------------------------------------------------------
-				/*Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.num_elements());
-				Array<OneD, Array<OneD, NekDouble> > tmp_DerVel(m_velocity.num_elements());
-				Array<OneD, Array<OneD, NekDouble> > AdvTerm(m_velocity.num_elements());
-				Array<OneD, Array<OneD, NekDouble> > ViscTerm(m_velocity.num_elements());
-				Array<OneD, Array<OneD, NekDouble> > Forc(m_velocity.num_elements());
-				Array<OneD, Array<OneD, NekDouble> > outarray(m_velocity.num_elements());
-				Array<OneD, Array<OneD, NekDouble> > Velocity(m_velocity.num_elements());
-				Array<OneD, Array<OneD, NekDouble> > Pressu(m_velocity.num_elements());
-				
-				for(int i = 0; i < m_velocity.num_elements(); ++i)
-				{
-					Vmath::Vcopy(Velocity[i].num_elements(), m_fields[i]->GetPhys(), 1, Velocity[i], 1 );
-					
-					Pressu[i] = Array<OneD, NekDouble> (m_pressure->GetTotPoints(),0.0);
-					
-					Eval_Adv[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					tmp_DerVel[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					
-					AdvTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					ViscTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					Forc[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					outarray[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					
-					m_fields[m_velocity[i]]->PhysDeriv(i, Velocity[i], tmp_DerVel[i]);
-					
-					Vmath::Smul(tmp_DerVel[i].num_elements(), m_kinvis, tmp_DerVel[i], 1, tmp_DerVel[i], 1);
-				}
-				
-				EvaluateAdvectionTerms(Velocity, Eval_Adv);
-				
-				Array<OneD, NekDouble > tmpPressu(m_pressure->GetTotPoints(), 0.0);
-				m_pressure->BwdTrans_IterPerExp(m_pressure->GetPhys(), tmpPressu);
-				
-				for(int i = 0; i < m_velocity.num_elements(); ++i)
-				{
-					m_fields[m_velocity[i]]->IProductWRTBase(Eval_Adv[i], AdvTerm[i]); //(w, (u.grad)u)
-					m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_DerVel[i], ViscTerm[i]); //(grad w, grad u)
-					
-					m_pressure->IProductWRTDerivBase(i, tmpPressu, Pressu[i]);//(grad w, p)
-					
-					Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1, ViscTerm[i], 1, outarray[i], 1);
-					Vmath::Smul(outarray[i].num_elements(), m_kinvis, outarray[i], 1, outarray[i], 1);
-					Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1, AdvTerm[i], 1, outarray[i], 1);
-					
-					Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, Pressu[i], 1, outarray[i], 1);
-				}*/
-				//----------------------------------------------------------------------------------------------------------------
 
-				
-	
-				
 				if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
 				{
-					
-					/*for(int j = 0; j < 50; ++j)
-					{
-						cout << "outarray[0][" << j << "] = " << outarray[0][j] << endl;
-					}*/
-					
 					//Norm Calculation
 					Vmath::Vsub(Diff_q_qBar[0].num_elements(), q1[0], 1, qBar1[0], 1, Diff_q_qBar[0], 1);
 					Vmath::Smul(Diff_q_qBar[0].num_elements(), cst1, Diff_q_qBar[0], 1, Diff_q_qBar[0], 1);
@@ -527,18 +434,14 @@ namespace Nektar
 						NormDiff_q_qBar[i] = 0.0;
 						for(int j = 0; j < Diff_q_qBar[i].num_elements(); ++j)
 						{
-							//if(Diff_q_qBar[i][j] > NormDiff_q_qBar[i]) 
-							{
-								//NormDiff_q_qBar[i] = Diff_q_qBar[i][j];
-								NormDiff_q_qBar[i] += Diff_q_qBar[i][j]*Diff_q_qBar[i][j];
-							}
-													}
+							NormDiff_q_qBar[i] += Diff_q_qBar[i][j]*Diff_q_qBar[i][j];
+						}
 						NormDiff_q_qBar[i]=sqrt(NormDiff_q_qBar[i]);
 					}					
 					cout << "SFD - Step: " << n+1 << "; Time: " << m_time <<  "; |q-qBar|L2 = " << NormDiff_q_qBar[0] <<endl;
 					
 					std::ofstream file( "Zfichier.txt", std::ios_base::app ); 
-					file << n-StartSFDatStep << "\t" << NormDiff_q_qBar[0] << endl;
+					file << n << "\t" << NormDiff_q_qBar[0] << endl;
 					file.close();
 					
 					
@@ -588,9 +491,8 @@ namespace Nektar
 						cst1=X*m_timestep;
 						cst2=1.0/(1.0 + cst1);
 						cst3=m_timestep/Delta;
-						cst4=1.0/(1.0 + cst3);
-						cst5=cst2*cst3;
-						cst6=1.0/(1.0 + cst3*(1.0-cst1*cst2));
+						cst4=cst2*cst3;
+						cst5=1.0/(1.0 + cst3*(1.0-cst1*cst2));
 						
 						cout << "\nNew Filter Width: Delta = " << Delta << "; New Control Coeff: X = " << X << "\n" << endl;
 						
@@ -602,8 +504,6 @@ namespace Nektar
 						//DoInitialise();
 						SetBoundaryConditions(0.0);
 						SetInitialConditions(0.0);
-						
-						//n=-1;
 					}
 				}
 				
@@ -613,7 +513,7 @@ namespace Nektar
 					Checkpoint_Output(Check);
 				}
 
-			}
+			
 			n++;
 		}
 		cout << "FINAL Filter Width: Delta = " << Delta << "; FINAL Control Coeff: X = " << X << endl;

@@ -325,8 +325,20 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline int GetTotPoints(int n);
 
             SOLVER_UTILS_EXPORT inline int GetNpoints();
+			
+			SOLVER_UTILS_EXPORT inline int GetNumElmVelocity();
             
-            SOLVER_UTILS_EXPORT inline int GetSteps();
+			SOLVER_UTILS_EXPORT inline int GetSteps();
+			
+			SOLVER_UTILS_EXPORT inline NekDouble GetTimeStep();
+			
+			SOLVER_UTILS_EXPORT inline void GetPhys(const int i,
+													Array<OneD, NekDouble> &output);
+			
+			SOLVER_UTILS_EXPORT inline void UpdatePhys(const int i,
+													Array<OneD, NekDouble> &output);
+			
+			SOLVER_UTILS_EXPORT inline void SetStepsToOne();
 
             SOLVER_UTILS_EXPORT void ZeroPhysFields();
 
@@ -771,11 +783,39 @@ namespace Nektar
         {
             return m_fields[0]->GetNpoints();
         }
+        
+        inline int EquationSystem::GetNumElmVelocity(void)
+		{
+			return (m_fields.num_elements() - 1);
+		}
 
         inline int EquationSystem::GetSteps(void)
         {
             return m_steps;
         }
+        
+        inline NekDouble EquationSystem::GetTimeStep(void)
+		{
+			return m_timestep;
+		}
+        
+        inline void EquationSystem::SetStepsToOne(void)
+		{
+			m_steps=1;
+		}
+		
+		inline void EquationSystem::GetPhys(const int i,
+											Array<OneD, NekDouble> &output)
+		{
+			m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), output);	
+		}
+		
+		inline void EquationSystem::UpdatePhys(const int i,
+											Array<OneD, NekDouble> &output)
+		{
+			//m_fields[i]->FwdTrans_IterPerExp(output, m_fields[i]->UpdateCoeffs());
+			Vmath::Vcopy(output.num_elements(), output, 1, m_fields[i]->UpdatePhys(), 1 );
+		}
 
         inline void EquationSystem::GetFluxVector(const int i,
                                                   Array<OneD, Array<OneD, NekDouble> >&physfield,

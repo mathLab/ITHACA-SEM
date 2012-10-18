@@ -83,16 +83,20 @@ namespace Nektar
         
         ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
         
+        if(m_HomogeneousType == eHomogeneous1D)
+        {
+            ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
+        }
 
         m_session->MatchSolverInfo("SubSteppingScheme","True",m_subSteppingScheme,false);
 
         if(m_subSteppingScheme)
         {
-
+            
             ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,"Projection must be set to Mixed_CG_Discontinuous for substepping");
-
+            
             m_session->LoadParameter("SubStepCFL", m_cfl,0.5);
-
+            
             // Set to 1 for first step and it will then be increased in
             // time advance routines
             switch(intMethod)
@@ -125,12 +129,12 @@ namespace Nektar
                     m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
 
 
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eBackwardEuler);
+                    LibUtilities::TimeIntegrationSchemeKey  IntKey0(LibUtilities::eBackwardEuler);
                     m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
+                    LibUtilities::TimeIntegrationSchemeKey   IntKey1(intMethod);
                     m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
 
-                    LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eRungeKutta2_ImprovedEuler);
+                    LibUtilities::TimeIntegrationSchemeKey   SubIntKey(LibUtilities::eRungeKutta2_ImprovedEuler);
 
                     m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
                     

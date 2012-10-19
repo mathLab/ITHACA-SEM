@@ -324,9 +324,7 @@ namespace Nektar
             }
 			case eSteadyNavierStokesBySFD:
 			{
-				//cout << "\nOn test eSteadyNavierStokesBySFD!!!\n" << endl;
 				SelectiveFrequencyDamping();
-				//cout << "\n\nOn es sorti de SelectiveFrequencyDamping() !!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n" << endl;
 				break;
 			}
 			case eNoEquationType:
@@ -385,9 +383,11 @@ namespace Nektar
 			q0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
 			qBar0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
 		}
+		
+		
 
-		//for (int n=0 ; n < m_steps; ++n).
-		while (NormDiff_q_qBar[0] > TOL)
+		//while (NormDiff_q_qBar[0] > TOL)
+		while(n < 2000)
 		{
 				AdvanceInTime(1);
 				

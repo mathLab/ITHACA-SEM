@@ -332,10 +332,10 @@ namespace Nektar
 			
 			SOLVER_UTILS_EXPORT inline NekDouble GetTimeStep();
 			
-			SOLVER_UTILS_EXPORT inline void GetPhys(const int i,
+			SOLVER_UTILS_EXPORT inline void CopyFromPhysField(const int i,
 													Array<OneD, NekDouble> &output);
 			
-			SOLVER_UTILS_EXPORT inline void UpdatePhys(const int i,
+			SOLVER_UTILS_EXPORT inline void CopyToPhysField(const int i,
 													Array<OneD, NekDouble> &output);
 			
 			SOLVER_UTILS_EXPORT inline void SetStepsToOne();
@@ -804,16 +804,15 @@ namespace Nektar
 			m_steps=1;
 		}
 		
-		inline void EquationSystem::GetPhys(const int i,
+		inline void EquationSystem::CopyFromPhysField(const int i,
 											Array<OneD, NekDouble> &output)
 		{
-			m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), output);	
+			Vmath::Vcopy(output.num_elements(), m_fields[i]->GetPhys(), 1, output, 1 );
 		}
 		
-		inline void EquationSystem::UpdatePhys(const int i,
+		inline void EquationSystem::CopyToPhysField(const int i,
 											Array<OneD, NekDouble> &output)
 		{
-			//m_fields[i]->FwdTrans_IterPerExp(output, m_fields[i]->UpdateCoeffs());
 			Vmath::Vcopy(output.num_elements(), output, 1, m_fields[i]->UpdatePhys(), 1 );
 		}
 

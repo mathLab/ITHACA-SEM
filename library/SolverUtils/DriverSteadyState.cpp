@@ -137,24 +137,18 @@ namespace Nektar
 				qBar0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
 			}
 			
-			
 		while (NormDiff_q_qBar[0] > TOL)
 			{
 				m_equ[0]->DoSolve();
 				
 				for(int i = 0; i < NumElmVelocity; ++i)
-				{		
-					m_equ[0]->GetPhys(i, q0[i]);
+				{						
+					m_equ[0]->CopyFromPhysField(i, q0[i]);
 					
 					q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
 					qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
 					
 					Diff_q_qBar[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
-					
-					if (n==0)
-					{
-						qBar0[i] = q0[i];
-					}
 					
 					Vmath::Smul(qBar1[i].num_elements(), cst4, q0[i], 1, qBar1[i], 1);
 					Vmath::Vadd(qBar1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
@@ -166,7 +160,7 @@ namespace Nektar
 					
 					qBar0[i] = qBar1[i];
 					
-					m_equ[0]->UpdatePhys(i, q0[i]);
+					m_equ[0]->CopyToPhysField(i, q1[i]);
 				}
 				
 				

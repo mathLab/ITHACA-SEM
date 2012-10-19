@@ -63,6 +63,8 @@ namespace Nektar
                                     m_tolerance,
                                     NekConstants::kNekIterativeTol);
 
+            m_verbose = (vSession->DefinesCmdLineArgument("verbose"))? true :false;
+
             std::string successiveRhs;
             vSession->LoadSolverInfo("SuccessiveRHS",  successiveRhs );
             try
@@ -119,7 +121,10 @@ namespace Nektar
                 // applying plain Conjugate Gradient
                 DoConjugateGradient(nGlobal, pInput, pOutput, plocToGloMap, nDir);
             }
-            //std::cout << "CG iterations made = " << m_totalIterations << std::endl << std::endl;
+            if(m_verbose)
+            {
+                std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << std::endl;
+            }
         }
 
 

@@ -82,6 +82,9 @@ namespace Nektar
             /// Whether to apply projection technique
             bool                                        m_useProjection;
 
+            /// Provide verbose output 
+            bool                                        m_verbose;
+
             /// Storage for solutions to previous linear problems
             boost::circular_buffer<Array<OneD, NekDouble> > m_prevLinSol;
 

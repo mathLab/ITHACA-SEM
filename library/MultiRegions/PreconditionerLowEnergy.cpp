@@ -401,7 +401,7 @@ namespace Nektar
         void PreconditionerLowEnergy::SetUpLowEnergyBasis()
         {
             //Local regions matrix and geometrical info
-            CreateReferenceGeometryAndMatrix(StdRegions::eTetrahedron);
+            CreateReferenceGeometryAndMatrix(StdRegions::ePrism);
 
             //Determine the low energy modes
             SetLowEnergyModes_Rv();

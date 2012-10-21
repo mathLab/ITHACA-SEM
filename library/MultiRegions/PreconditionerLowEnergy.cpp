@@ -100,7 +100,7 @@ namespace Nektar
 		break;
             case MultiRegions::eBlock:
                 {
-                    CreateReferenceGeometryAndMatrix();
+                    CreateReferenceGeometryAndMatrix(StdRegions::eTetrahedron);
                     BlockPreconditioner();
 		}
 		break;
@@ -401,7 +401,7 @@ namespace Nektar
         void PreconditionerLowEnergy::SetUpLowEnergyBasis()
         {
             //Local regions matrix and geometrical info
-            CreateReferenceGeometryAndMatrix();
+            CreateReferenceGeometryAndMatrix(StdRegions::eTetrahedron);
 
             //Determine the low energy modes
             SetLowEnergyModes_Rv();
@@ -416,7 +416,7 @@ namespace Nektar
 	 * \brief Create reference element and statically condensed matrix
 	 *
 	 **/
-        void PreconditionerLowEnergy::CreateReferenceGeometryAndMatrix()
+        void PreconditionerLowEnergy::CreateReferenceGeometryAndMatrix(StdRegions::ExpansionType)
         {
             boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
 
@@ -452,6 +452,11 @@ namespace Nektar
             //Local matrix key - the matrix key "ePreconditioner"
             //is a helmholz matrix constructed from a equalateral
             //Tetrahedron or Hexahedron
+
+	    //StdRegions::eTetrahedron;
+	    //StdRegions::ePrism;
+	    //StdRegions::eHexahedron;
+
 
             if(m_preconType == MultiRegions::eLowEnergy || m_preconType == MultiRegions::eLocalLowEnergy)
             {

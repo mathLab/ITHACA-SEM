@@ -868,6 +868,7 @@ namespace Nektar
             {
                 Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
+          UniversalAssembleBnd(tmp);
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
         }
 

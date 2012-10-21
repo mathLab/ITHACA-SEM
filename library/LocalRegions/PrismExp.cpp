@@ -1988,5 +1988,80 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
+
+        SpatialDomains::PrismGeomSharedPtr PrismExp::CreateReferencePrismGeom()
+        {
+	    const int three=3;
+            const int nVerts = 6;
+            const double point[][3] = {
+            {0,0,0}, {1,0,0}, {1,1,0}, 
+            {0,1,0}, {0,0,1}, {0,1,1}
+            };
+
+            SpatialDomains::VertexComponentSharedPtr verts[6];
+            for(int i=0; i < nVerts; ++i){
+            verts[i] =  MemoryManager<SpatialDomains::VertexComponent>::
+            AllocateSharedPtr( three, i, point[i][0], point[i][1], point[i][2] );
+            }
+            const int nEdges = 9;
+            const int vertexConnectivity[][2] = {
+                {0,1}, {1,2}, {3,2}, {0,3}, {0,4}, 
+                {1,4}, {2,5}, {3,5}, {4,5}
+            };
+
+            // Populate the list of edges
+            SpatialDomains::SegGeomSharedPtr edges[nEdges]; 
+            for(int i=0; i < nEdges; ++i){
+                SpatialDomains::VertexComponentSharedPtr vertsArray[2];
+            for(int j=0; j<2; ++j){
+                vertsArray[j] = verts[vertexConnectivity[i][j]];
+            }
+            edges[i] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(i, three, vertsArray);
+            }
+ 
+            //////////////////////////////////////////////////////////////
+            // Set up Prism faces
+            const int nFaces = 5;
+            //quad-edge connectivity base-face0, vertical-quadface2, vertical-quadface4
+            const int quadEdgeConnectivity[][4] = { {0,1,2,3}, {1,6,8,5}, {3,7,8,4} }; 
+            const bool   isQuadEdgeFlipped[][4] = { {0,0,1,1}, {0,0,1,1}, {0,0,1,1} };
+            // QuadId ordered as 0, 1, 2, otherwise return false
+            const int                  quadId[] = { 0,-1,1,-1,2 }; 
+
+            //triangle-edge connectivity side-triface-1, side triface-3 
+            const int  triEdgeConnectivity[][3] = { {0,5,4}, {2,6,7} };
+            const bool    isTriEdgeFlipped[][3] = { {0,0,1}, {0,0,1} };
+            // TriId ordered as 0, 1, otherwise return false
+            const int                   triId[] = { -1,0,-1,1,-1 }; 
+
+            // Populate the list of faces  
+            SpatialDomains::Geometry2DSharedPtr faces[nFaces]; 
+            for(int f = 0; f < nFaces; ++f){
+                if(f == 1 || f == 3) {
+                    int i = triId[f];
+                    SpatialDomains::SegGeomSharedPtr edgeArray[3];
+		    StdRegions::Orientation eorientArray[3];
+                    for(int j = 0; j < 3; ++j){
+                        edgeArray[j] = edges[triEdgeConnectivity[i][j]];
+                        eorientArray[j] = isTriEdgeFlipped[i][j] ? StdRegions::eBackwards : StdRegions::eForwards;
+                    }
+                    faces[f] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
+                }            
+                else {
+                    int i = quadId[f];
+                    SpatialDomains::SegGeomSharedPtr edgeArray[4];
+		    StdRegions::Orientation eorientArray[4]; 
+                    for(int j=0; j < 4; ++j){
+                        edgeArray[j] = edges[quadEdgeConnectivity[i][j]];
+                        eorientArray[j] = isQuadEdgeFlipped[i][j] ? StdRegions::eBackwards : StdRegions::eForwards;
+                    }
+                    faces[f] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
+                }
+            } 
+
+            SpatialDomains::PrismGeomSharedPtr geom = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
+            geom->SetOwnData();
+            return geom;
+	}
     }//end of namespace
 }//end of namespace

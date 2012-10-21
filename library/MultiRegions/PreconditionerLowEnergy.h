@@ -123,7 +123,7 @@ namespace Nektar
 
             void CreateLinearFiniteElmentSpace(void);
 
-            void CreateReferenceGeometryAndMatrix(void);
+            void CreateReferenceGeometryAndMatrix(StdRegions::ExpansionType);
 
 	    void SetLowEnergyModes_Rv(void);
 

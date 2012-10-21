@@ -216,6 +216,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       Array<OneD,       NekDouble> &wsp);
+	    LOCAL_REGIONS_EXPORT SpatialDomains::PrismGeomSharedPtr CreateReferencePrismGeom();
         };
 
         // type defines for use of PrismExp in a boost vector

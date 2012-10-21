@@ -1567,7 +1567,46 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                     break;
                 }
+             case StdRegions::ePreconditioner:
+                {
+                    LibUtilities::BasisKey PrismBa = m_base[0]->GetBasisKey();
+		    LibUtilities::BasisKey PrismBb = m_base[1]->GetBasisKey();
+		    LibUtilities::BasisKey PrismBc = m_base[2]->GetBasisKey();
 
+		    SpatialDomains::PrismGeomSharedPtr RefPrismGeom=CreateReferencePrismGeom();
+
+		    //create TetExp with equilateral Tet geometry object
+                    PrismExp refprism(PrismBa,PrismBb,PrismBc,RefPrismGeom);
+		
+		    int nquad0 = m_base[0]->GetNumPoints();
+		    int nquad1 = m_base[1]->GetNumPoints();
+		    int nquad2 = m_base[2]->GetNumPoints();
+
+		    int nq=nquad0*nquad1*nquad2;
+		    Array<OneD,NekDouble> coords[3];
+
+		    coords[0] = Array<OneD,NekDouble>(nq);
+		    coords[1] = Array<OneD,NekDouble>(nq);
+		    coords[2] = Array<OneD,NekDouble>(nq);
+		    refprism.GetCoords(coords[0],coords[1],coords[2]);
+
+                    NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetExpansionType(), refprism);
+                    DNekScalMat &MassMat = *(refprism.m_matrixManager[masskey]);
+                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetExpansionType(), refprism, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalMat &LapMat = *(refprism.m_matrixManager[lapkey]);
+
+                    int rows = LapMat.GetRows();
+                    int cols = LapMat.GetColumns();
+
+                    DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows, cols);
+
+                    NekDouble one = 1.0;
+                    (*helm) = LapMat + factor*MassMat;
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, helm);
+                }
+                break;
                 case StdRegions::eHybridDGHelmholtz:
                 case StdRegions::eHybridDGLamToU:
                 case StdRegions::eHybridDGLamToQ0:

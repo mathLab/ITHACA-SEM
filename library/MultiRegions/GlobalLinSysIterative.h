@@ -82,7 +82,8 @@ namespace Nektar
             /// Whether to apply projection technique
             bool                                        m_useProjection;
 
-            /// Provide verbose output 
+            /// Provide verbose output and root if parallel. 
+            bool                                        m_root;
             bool                                        m_verbose;
 
             /// Storage for solutions to previous linear problems

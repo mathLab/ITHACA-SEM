@@ -318,146 +318,146 @@ namespace Nektar
     {
         switch(m_equationType)
         {
-			case eUnsteadyStokes: 
-			case eUnsteadyNavierStokes:
-			case eUnsteadyLinearisedNS:
+        case eUnsteadyStokes: 
+        case eUnsteadyNavierStokes:
+        case eUnsteadyLinearisedNS:
             {  
                 // Integrate from start time to end time
                 AdvanceInTime(m_steps);
                 break;
             }
-			case eSteadyNavierStokesBySFD:
-			{
-				//cout << "\nOn test eSteadyNavierStokesBySFD!!!\n" << endl;
-				SelectiveFrequencyDamping();
-				break;
-			}
-			case eNoEquationType:
-			default:
-				ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
+        case eSteadyNavierStokesBySFD:
+            {
+                //cout << "\nOn test eSteadyNavierStokesBySFD!!!\n" << endl;
+                SelectiveFrequencyDamping();
+                break;
+            }
+        case eNoEquationType:
+        default:
+            ASSERTL0(false,"Unknown or undefined equation type for VelocityCorrectionScheme");
         }
     }
+    
+    void VelocityCorrectionScheme::SelectiveFrequencyDamping(void)
+    {		
+        Array<OneD, Array<OneD, NekDouble> > q0(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > q1(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > qBar0(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > qBar1(m_velocity.num_elements());
 	
-	void VelocityCorrectionScheme::SelectiveFrequencyDamping(void)
-	{		
-		Array<OneD, Array<OneD, NekDouble> > q0(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > q1(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > qBar0(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > qBar1(m_velocity.num_elements());
-		
-		//Definition of the SFD parameters:
-		NekDouble Delta;
-		NekDouble X;
-		NekDouble cst1;
-		NekDouble cst2;
-		NekDouble cst3;
-		NekDouble cst4;
-		NekDouble StartSFDatStep(0);
-		int Check(0);
-		
-		m_session->LoadParameter("FilterWidth", Delta);
-		m_session->LoadParameter("ControlCoeff", X);
-		m_session->LoadParameter("StartSFDatStep", StartSFDatStep);
-		
-		cst1=X*m_timestep;
-		cst2=1.0/(1.0 + cst1);
-		cst3=m_timestep/Delta;
-		cst4=1.0/(1.0 + cst2);
-		
-		cout << "------------------ SFD Parameters ------------------" << endl;
-		cout << "Delta = " << Delta << endl;
-		cout << "X = " << X << endl;
-		cout << "SFD will start at step " << StartSFDatStep << endl;
-		cout << "----------------------------------------------------" << endl;
-
-		
-		
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			q0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			qBar0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-		}
-
-		for (int n=0 ; n < m_steps; ++n)
-		{
-			
-			if (n<StartSFDatStep)
-			{
-				AdvanceInTime(1);
-				if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
-				{
-					cout << "Step: " << n+1 << "  Time: " << m_time << endl;
-				}
-				if(m_checksteps && n&&(!((n+1)%m_checksteps)))
-				{
-					Check++;
-					Checkpoint_Output(Check);
-				}
-			}
-			else
-			{
-				AdvanceInTime(1);
-				if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
-				{
-					cout << "Step: " << n+1 << "  Time: " << m_time << endl;
-				}
-				if(m_checksteps && n&&(!((n+1)%m_checksteps)))
-				{
-					Check++;
-					Checkpoint_Output(Check);
-				}
-				
-				for(int i = 0; i < m_velocity.num_elements(); ++i)
-				{					
-					q1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					qBar1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					
-					m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), q0[i]);	
-					
-					if (n==0)
-					{
-						qBar0[i] = q0[i];
-					}
-					
-					Vmath::Smul(q1[i].num_elements(), cst1, qBar0[i], 1, q1[i], 1);
-					Vmath::Vadd(q1[i].num_elements(), q0[i], 1, q1[i], 1, q1[i], 1);
-					Vmath::Smul(q1[i].num_elements(), cst2, q1[i], 1, q1[i], 1);				
-					
-					Vmath::Smul(qBar1[i].num_elements(), cst3, q1[i], 1, qBar1[i], 1);
-					Vmath::Vadd(qBar1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
-					Vmath::Smul(qBar1[i].num_elements(), cst4, qBar1[i], 1, qBar1[i], 1);
-					
-					qBar0[i] = qBar1[i];
-					
-					Vmath::Vcopy( q1[i].num_elements(), q1[i], 1, m_fields[i]->UpdatePhys(), 1 );
-					m_fields[i]->FwdTrans_IterPerExp( q1[i], m_fields[i]->UpdateCoeffs() );
-				}
-			}
-		}
-	}
+        //Definition of the SFD parameters:
+        NekDouble Delta;
+        NekDouble X;
+        NekDouble cst1;
+        NekDouble cst2;
+        NekDouble cst3;
+        NekDouble cst4;
+        NekDouble StartSFDatStep(0);
+        int Check(0);
+	
+        m_session->LoadParameter("FilterWidth", Delta);
+        m_session->LoadParameter("ControlCoeff", X);
+        m_session->LoadParameter("StartSFDatStep", StartSFDatStep);
+	
+        cst1=X*m_timestep;
+        cst2=1.0/(1.0 + cst1);
+        cst3=m_timestep/Delta;
+        cst4=1.0/(1.0 + cst2);
+	
+        cout << "------------------ SFD Parameters ------------------" << endl;
+        cout << "Delta = " << Delta << endl;
+        cout << "X = " << X << endl;
+        cout << "SFD will start at step " << StartSFDatStep << endl;
+        cout << "----------------------------------------------------" << endl;
+        
 	
 	
-	void VelocityCorrectionScheme:: v_TransCoeffToPhys(void)
-	{
-		int nfields = m_fields.num_elements() - 1;
-		for (int k=0 ; k < nfields; ++k)
-		{
-			//Backward Transformation in physical space for time evolution
-			m_fields[k]->BwdTrans_IterPerExp(m_fields[k]->GetCoeffs(),
-										     m_fields[k]->UpdatePhys());
-		}
-	}
-	
-	void VelocityCorrectionScheme:: v_TransPhysToCoeff(void)
-	{
-
-		int nfields = m_fields.num_elements() - 1;
-		for (int k=0 ; k < nfields; ++k)
-		{
-			//Forward Transformation in physical space for time evolution
-			m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),m_fields[k]->UpdateCoeffs());
-		}
-	}
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            q0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+            qBar0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+        }
+        
+        for (int n=0 ; n < m_steps; ++n)
+        {
+            
+            if (n<StartSFDatStep)
+            {
+                AdvanceInTime(1);
+                if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
+                {
+                    cout << "Step: " << n+1 << "  Time: " << m_time << endl;
+                }
+                if(m_checksteps && n&&(!((n+1)%m_checksteps)))
+                {
+                    Check++;
+                    Checkpoint_Output(Check);
+                }
+            }
+            else
+            {
+                AdvanceInTime(1);
+                if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
+                {
+                    cout << "Step: " << n+1 << "  Time: " << m_time << endl;
+                }
+                if(m_checksteps && n&&(!((n+1)%m_checksteps)))
+                {
+                    Check++;
+                    Checkpoint_Output(Check);
+                }
+		
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                {					
+                    q1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                    qBar1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                    
+                    m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), q0[i]);	
+                    
+                    if (n==0)
+                    {
+                        qBar0[i] = q0[i];
+                    }
+                    
+                    Vmath::Smul(q1[i].num_elements(), cst1, qBar0[i], 1, q1[i], 1);
+                    Vmath::Vadd(q1[i].num_elements(), q0[i], 1, q1[i], 1, q1[i], 1);
+                    Vmath::Smul(q1[i].num_elements(), cst2, q1[i], 1, q1[i], 1);				
+                    
+                    Vmath::Smul(qBar1[i].num_elements(), cst3, q1[i], 1, qBar1[i], 1);
+                    Vmath::Vadd(qBar1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
+                    Vmath::Smul(qBar1[i].num_elements(), cst4, qBar1[i], 1, qBar1[i], 1);
+                    
+                    qBar0[i] = qBar1[i];
+                    
+                    Vmath::Vcopy( q1[i].num_elements(), q1[i], 1, m_fields[i]->UpdatePhys(), 1 );
+                    m_fields[i]->FwdTrans_IterPerExp( q1[i], m_fields[i]->UpdateCoeffs() );
+                }
+            }
+        }
+    }
+    
+    
+    void VelocityCorrectionScheme:: v_TransCoeffToPhys(void)
+    {
+        int nfields = m_fields.num_elements() - 1;
+        for (int k=0 ; k < nfields; ++k)
+        {
+            //Backward Transformation in physical space for time evolution
+            m_fields[k]->BwdTrans_IterPerExp(m_fields[k]->GetCoeffs(),
+                                             m_fields[k]->UpdatePhys());
+        }
+    }
+    
+    void VelocityCorrectionScheme:: v_TransPhysToCoeff(void)
+    {
+        
+        int nfields = m_fields.num_elements() - 1;
+        for (int k=0 ; k < nfields; ++k)
+        {
+            //Forward Transformation in physical space for time evolution
+            m_fields[k]->FwdTrans_IterPerExp(m_fields[k]->GetPhys(),m_fields[k]->UpdateCoeffs());
+        }
+    }
 	
     Array<OneD, bool> VelocityCorrectionScheme::v_GetSystemSingularChecks()
     {
@@ -476,13 +476,13 @@ namespace Nektar
                                                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                                     const NekDouble time)
     {
-		int nqtot        = m_fields[0]->GetTotPoints();
-		//int ncoeffs      = m_fields[0]->GetNcoeffs();
-		
+        int nqtot        = m_fields[0]->GetTotPoints();
+        //int ncoeffs      = m_fields[0]->GetNcoeffs();
+	
         // evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
-		
-		//add the force
+	
+        //add the force
         if(m_session->DefinesFunction("BodyForce"))
         {
             if(m_fields[0]->GetWaveSpace())
@@ -498,7 +498,7 @@ namespace Nektar
                 Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
             }
         }
-		        
+	
         if(m_HBCnumber > 0)
         {
             // Set pressure BCs
@@ -589,7 +589,7 @@ namespace Nektar
         int  n,cnt;
         int  nint    = min(m_pressureCalls++,m_intSteps);
         int  nlevels = m_pressureHBCs.num_elements();
-
+        
         PBndConds   = m_pressure->GetBndConditions();
         PBndExp     = m_pressure->GetBndCondExpansions();
 		
@@ -821,37 +821,37 @@ namespace Nektar
 				
                 for(int j = 0 ; j < m_HBCnumber ; j++)
                 {
-					Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[m_HBC[5][j]]->GetExp(m_HBC[3][j]));
+                    Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[m_HBC[5][j]]->GetExp(m_HBC[3][j]));
 					
-					// Picking up the element where the HOPBc is located
+                    // Picking up the element where the HOPBc is located
                     m_elmt = m_fields[0]->GetExp(m_HBC[0][j]);
-					
-					// Using the physical offset to get the velocity (W is taken on the coniugated plane)
+                    
+                    // Using the physical offset to get the velocity (W is taken on the coniugated plane)
                     U = fields[m_velocity[0]] + m_HBC[2][j];
                     V = fields[m_velocity[1]] + m_HBC[2][j];
                     W = fields[m_velocity[2]] + m_HBC[7][j];
                     
-					// Derivatives to build up the curl curl of the velocity
+                    // Derivatives to build up the curl curl of the velocity
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
-					m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);
-					Vmath::Smul(m_HBC[1][j],m_wavenumber[j],W,1,Wz,1);
-					
+                    m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);
+                    Vmath::Smul(m_HBC[1][j],m_wavenumber[j],W,1,Wz,1);
+                    
 					// x-components of vorticity curl
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vx,Vxy);
-					m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Uy,Uyy);
-					Vmath::Smul(m_HBC[1][j],m_beta[j],U,1,Uzz,1);
-					
+                    m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Uy,Uyy);
+                    Vmath::Smul(m_HBC[1][j],m_beta[j],U,1,Uzz,1);
+                    
                     //x-component coming from the other plane
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Wz,Wxz);
-					
-					// y-components of vorticity curl
+                    
+                    // y-components of vorticity curl
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vx,Vxx);
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Uy,Uxy);
                     Vmath::Smul(m_HBC[1][j],m_beta[j],V,1,Vzz,1);
-					
-					//y-component coming from the other plane
+                    
+                    //y-component coming from the other plane
                     m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Wz,Wyz);
-					
+                    
                     // buinding up the curl of V adding the components
                     Vmath::Vsub(m_HBC[1][j],Vxy,1,Uyy,1,Qx,1);
                     Vmath::Vsub(m_HBC[1][j],Qx,1,Uzz,1,Qx,1);
@@ -886,7 +886,7 @@ namespace Nektar
                         // the third component of the normal vector is always zero
                     }
                     
-				    // Get edge values and put into Uy, Vx
+                    // Get edge values and put into Uy, Vx
                     m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Qy,Uy);
                     m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Qx,Vx);
                     
@@ -894,7 +894,7 @@ namespace Nektar
                     Pvals = PBndExp[m_HBC[5][j]]->UpdateCoeffs()+PBndExp[m_HBC[5][j]]->GetCoeff_Offset(m_HBC[3][j]);
                     
                     Pbc->NormVectorIProductWRTBase(Vx,Uy,Pvals);
-					//cout <<"====================================================="<<endl;
+                    //cout <<"====================================================="<<endl;
                 }
             }
             else if(m_HomogeneousType == eHomogeneous2D)
@@ -1017,8 +1017,9 @@ namespace Nektar
                             // the 3 components of the vorticity to
                             // store the 3 components od the vorticity
                             // curl to save space Qx = Qzy-Qyz = Uy-Uz
-                            // // Qy = Qxz-Qzx = Vx-Vz // Qz= Qyx-Qxy
-                            // = Wx-Wy
+                            // 
+                            // Qy = Qxz-Qzx = Vx-Vz 
+                            // Qz=  Qyx-Qxy = Wx-Wy
                             Vmath::Vsub(nq,Uy,1,Uz,1,Qx,1);
                             Vmath::Vsub(nq,Vx,1,Vz,1,Qy,1);
                             Vmath::Vsub(nq,Wx,1,Wy,1,Qz,1);

@@ -63,6 +63,9 @@ namespace Nektar
                                     m_tolerance,
                                     NekConstants::kNekIterativeTol);
 
+            LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
+            m_root = (vComm->GetRank())? false : true;
+
             m_verbose = (vSession->DefinesCmdLineArgument("verbose"))? true :false;
 
             std::string successiveRhs;
@@ -121,9 +124,13 @@ namespace Nektar
                 // applying plain Conjugate Gradient
                 DoConjugateGradient(nGlobal, pInput, pOutput, plocToGloMap, nDir);
             }
+            
             if(m_verbose)
             {
-                std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << std::endl;
+                if(m_root)
+                {
+                    std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << std::endl;
+                }
             }
         }
 

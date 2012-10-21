@@ -713,14 +713,12 @@ namespace Nektar
                 LibUtilities::EquationSharedPtr ffunc
                     = m_session->GetFunction(pFunctionName, pFieldName);
 
-                /*
                 if (m_comm->GetRank() == 0)
                 {
                     cout << "- Field " << pFieldName << ": " 
                          << ffunc->GetExpression() << endl;
                 }
-                */
-
+                
                 ffunc->Evaluate(x0,x1,x2,pTime,pArray);
             }
             else if (vType == LibUtilities::eFunctionTypeFile)

@@ -33,6 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/BasicUtils/VmathArray.hpp>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <iostream>
 #include <math.h>
 

@@ -39,9 +39,7 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
@@ -49,10 +47,8 @@ namespace Nektar
     namespace LibUtilities
     {
         // Forward declaration of all classes in this file
-        class TimeIntegrationSchemeKey;
         class TimeIntegrationScheme;
         class TimeIntegrationSolution;
-        class TimeIntegrationSchemeOperators;
 
         // typedefs
         typedef boost::shared_ptr<TimeIntegrationScheme>                TimeIntegrationSchemeSharedPtr;

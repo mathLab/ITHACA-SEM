@@ -37,6 +37,10 @@
 #include "AnalyticExpressionEvaluator.hpp"
 #include <stdexcept>
 #include <algorithm>
+#include <iostream>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/random/detail/seed.hpp>
 
 #ifdef _MSC_VER
 #include <boost/preprocessor/cat.hpp>

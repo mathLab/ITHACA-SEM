@@ -46,7 +46,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/program_options.hpp>
+#include <boost/program_options/variables_map.hpp>
 
 class TiXmlElement;
 class TiXmlDocument;

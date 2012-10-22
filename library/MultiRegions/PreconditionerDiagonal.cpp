@@ -79,7 +79,8 @@ namespace Nektar
         {
 	    if(m_preconType == MultiRegions::eDiagonal)
 	    {
- 	        GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
+ 	        GlobalSysSolnType solvertype = 
+                    m_locToGloMap->GetGlobalSysSolnType();
                 if (solvertype == eIterativeFull)
                 {
                     DiagonalPreconditionerSum();
@@ -96,37 +97,17 @@ namespace Nektar
 	    }
 	}
 
-
-        /**
-         * Populates preconditioner matrix with the identity i.e no
-         * preconditioning.
-         * @param   pLocToGloMap    Local to Global mapping.
-         */
-        void Preconditioner::NullPreconditioner()
-        {
-            int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-            int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nInt = nGlobal - nDir;
-            MatrixStorage storage = eDIAGONAL;
-            m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nInt, storage);
-            DNekMat &M = (*m_preconditioner);
-
-            for (unsigned int i = 0; i < nInt; ++i)
-            {
-                M.SetValue(i,i,1.0);
-            }
-        }
-
-
         /**
          * Diagonal preconditioner computed by summing the relevant elements of
          * the local matrix system.
          */
          void PreconditionerDiagonal::DiagonalPreconditionerSum()
          {
-             boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
+             boost::shared_ptr<MultiRegions::ExpList> expList = 
+                 ((m_linsys.lock())->GetLocMat()).lock();
 
-             const StdRegions::StdExpansionVector &locExpVector = *(expList->GetExp());
+             const StdRegions::StdExpansionVector &locExpVector = 
+                 *(expList->GetExp());
              StdRegions::StdExpansionSharedPtr locExpansion;
 
              int i,j,n,cnt,gid1,gid2;
@@ -187,10 +168,6 @@ namespace Nektar
              }
          }
 
-
-
-
-
         /**
          * Diagonal preconditioner defined as the inverse of the main
 	 * diagonal of the Schur complement
@@ -232,48 +209,35 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
-            switch(m_preconType)
+            GlobalSysSolnType solvertype = 
+                m_locToGloMap->GetGlobalSysSolnType();
+            switch (m_preconType)
             {
-            case MultiRegions::eDiagonal:
-                 {
-                     if (solvertype == eIterativeFull)
-                     {
-                         int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-                         int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-                         int nNonDir = nGlobal-nDir;
-                         DNekMat &M = (*m_preconditioner);
-
-                         NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
-                         NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
-                         z = M * r;
-		     }
-                     else if(solvertype == eIterativeStaticCond ||
-                             solvertype == eIterativeMultiLevelStaticCond)
-                     {
-                         int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-                         int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
-                         int nNonDir = nGlobal-nDir;
-                         DNekMat &M = (*m_preconditioner);
-
-                         NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
-                         NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
-                         z = M * r;
-		     }
-		     else
-		     {
-                         ASSERTL0(0,"Unsupported solver type");
-		     }
-		 }
-                 break;
-            case MultiRegions::eNull:
-	         {
-                     Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
-		 }
-		 break;
-            default:
-            ASSERTL0(0,"Unknown preconditioner");
-            break;
+                case MultiRegions::eDiagonal:
+                {
+                    int nGlobal = solvertype == eIterativeFull ?
+                        m_locToGloMap->GetNumGlobalCoeffs() :
+                        m_locToGloMap->GetNumGlobalBndCoeffs();
+                    int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+                    int nNonDir = nGlobal-nDir;
+                    DNekMat &M = (*m_preconditioner);
+                    
+                    NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
+                    NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
+                    z = M * r;
+                    
+                    break;
+                }
+                case MultiRegions::eNull:
+                {
+                    Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
+                    break;
+                }
+                default:
+                {
+                    ASSERTL0(0,"Unknown preconditioner");
+                    break;
+                }
 	    }
 	}
     }

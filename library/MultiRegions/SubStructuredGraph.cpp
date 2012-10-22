@@ -798,7 +798,9 @@ namespace Nektar
                                            Array<OneD, int>& perm,
                                            Array<OneD, int>& iperm,
                                            BottomUpSubStructuredGraphSharedPtr& substructgraph,
-                                           const int mdswitch)
+                                           const int mdswitch,
+                                           set<int> vertMark,
+                                           set<int> edgeMark)
         {
             int nGraphVerts = boost::num_vertices(graph);
             int nGraphEdges = boost::num_edges(graph);
@@ -961,42 +963,6 @@ namespace Nektar
                 perm[i] = i;
                 iperm[i] = i;
             }
-
         }
-
     }
 }
-
-/**
- * $Log: SubStructuredGraph.cpp,v $
- * Revision 1.7  2010/01/03 12:18:26  cantwell
- * Removed unnecessary header file inclusions.
- *
- * Revision 1.6  2009/12/21 17:50:09  cantwell
- * Restored CutEmptyLeaves calls.
- *
- * Revision 1.5  2009/12/15 18:09:03  cantwell
- * Split GeomFactors into 1D, 2D and 3D
- * Added generation of tangential basis into GeomFactors
- * Updated ADR2DManifold solver to use GeomFactors for tangents
- * Added <GEOMINFO> XML session section support in MeshGraph
- * Fixed const-correctness in VmathArray
- * Cleaned up LocalRegions code to generate GeomFactors
- * Removed GenSegExp
- * Temporary fix to SubStructuredGraph
- * Documentation for GlobalLinSys and GlobalMatrix classes
- *
- * Revision 1.4  2009/11/19 11:41:07  pvos
- * Fixed various bugs
- *
- * Revision 1.3  2009/11/09 15:57:11  pvos
- * multi-level recursion bug fixes
- *
- * Revision 1.2  2009/11/02 11:19:44  pvos
- * Fixed a bug for reordering a graph without edges
- *
- * Revision 1.1  2009/10/30 14:02:55  pvos
- * Multi-level static condensation updates
- *
- **/
-

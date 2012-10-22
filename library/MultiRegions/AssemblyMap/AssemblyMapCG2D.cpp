@@ -428,9 +428,6 @@ namespace Nektar
             }
             m_numGlobalCoeffs = globalId;
 
-
-            ASSERTL0(!(m_comm->GetRowComm()->GetSize() > 1 && m_solnType == eIterativeMultiLevelStaticCond),
-                     "Parallel Multi-Level Static Condensation not yet supported.");
             SetUpUniversalC0ContMap(locExp);
 
             // Set up the local to global map for the next level when using
@@ -587,6 +584,7 @@ namespace Nektar
             Array<OneD, int> offsets(n, 0);
             counts[p] = ReorderedGraphVertId[0].size();
             vCommRow->AllReduce(counts, LibUtilities::ReduceSum);
+            
             for (i = 1; i < n; ++i)
             {
                 offsets[i] = offsets[i-1] + counts[i-1];
@@ -1016,7 +1014,121 @@ namespace Nektar
                 localOffset+=nVerts;
             }
 
+            vector<long> procVerts, procEdges;
+            map<int,int> foundVerts, foundEdges;
+            map<int,int> cntMap;
+            int cnt_tmp = 0;
+            
+            for(i = cnt = 0; i < locExpVector.size(); ++i)
+            {
+                elmtid = locExp.GetOffset_Elmt_Id(i);
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
+                                                                    locExpVector[elmtid]))
+                {
+                    for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
+                    {
+                        int vid = locExpansion->GetGeom2D()->GetVid(j);
+                        
+                        if (foundVerts.count(vid) == 0)
+                        {
+                            cntMap[cnt] = procVerts.size();
+                            procVerts.push_back(vid);
+                            foundVerts.insert(make_pair(vid, cnt_tmp++));
+                        }
+                        else
+                        {
+                            cntMap[cnt] = foundVerts.find(vid)->second;
+                        }
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
+                }
+            }
+            
+            for(i = cnt_tmp = 0; i < locExpVector.size(); ++i)
+            {
+                elmtid = locExp.GetOffset_Elmt_Id(i);
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
+                                                                    locExpVector[elmtid]))
+                {
+                    for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
+                    {
+                        int eid = locExpansion->GetGeom2D()->GetEid(j);
+                        
+                        if (foundEdges.count(eid) == 0)
+                        {
+                            cntMap[cnt] = procEdges.size();
+                            procEdges.push_back(eid);
+                            foundEdges.insert(make_pair(eid, cnt_tmp++));
+                        }
+                        else
+                        {
+                            cntMap[cnt] = foundEdges.find(eid)->second;
+                        }
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
+                }
+            }
 
+            int unique_verts = foundVerts.size();
+            int unique_edges = foundEdges.size();
+            
+            Array<OneD, long> vertArray(unique_verts, &procVerts[0]);
+            Array<OneD, long> edgeArray(unique_edges, &procEdges[0]);
+            Gs::gs_data *tmp1 = Gs::Init(vertArray, m_comm);
+            Gs::gs_data *tmp2 = Gs::Init(edgeArray, m_comm);
+            Array<OneD, NekDouble> tmp3(unique_verts, 1.0);
+            Array<OneD, NekDouble> tmp4(unique_edges, 1.0);
+            Gs::Gather(tmp3, Gs::gs_add, tmp1);
+            Gs::Gather(tmp4, Gs::gs_add, tmp2);
+            
+            set<int> vertMark;
+
+            for(i = cnt = 0; i < locExpVector.size(); ++i)
+            {
+                elmtid = locExp.GetOffset_Elmt_Id(i);
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
+                                                                    locExpVector[elmtid]))
+                {
+                    for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
+                    {
+                        if (tmp3[cntMap[cnt]] > 1.0)
+                        {
+                            vertMark.insert(cnt);
+                        }
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
+                }
+            }
+
+            for(i = 0; i < locExpVector.size(); ++i)
+            {
+                elmtid = locExp.GetOffset_Elmt_Id(i);
+                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
+                                                                    locExpVector[elmtid]))
+                {
+                    for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
+                    {
+                        if (tmp4[cntMap[cnt]] > 1.0)
+                        {
+                            vertMark.insert(cnt);
+                        }
+                    }
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
+                }
+            }
+            
             /**
              * STEP 3: Reorder graph for optimisation.
              */
@@ -1049,7 +1161,7 @@ namespace Nektar
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
                     {
-                        MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph, mdswitch);
+                        MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph, mdswitch, vertMark, vertMark);
                     }
                     break;
                 default:

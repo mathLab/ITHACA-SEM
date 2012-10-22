@@ -243,12 +243,16 @@ namespace Nektar
                                     Array<OneD, int>& perm,
                                     Array<OneD, int>& iperm);
 
-        MULTI_REGIONS_EXPORT void MultiLevelBisectionReordering(const BoostGraph& graph,
-                                           const Array<OneD, const int>& vwgts,
-                                           Array<OneD, int>& perm,
-                                           Array<OneD, int>& iperm,
-                                           BottomUpSubStructuredGraphSharedPtr& substructgraph,
-                                           const int mdswitch = 1);
+        MULTI_REGIONS_EXPORT void MultiLevelBisectionReordering(
+            const BoostGraph& graph,
+            const Array<OneD, const int>& vwgts,
+            Array<OneD, int>& perm,
+            Array<OneD, int>& iperm,
+            BottomUpSubStructuredGraphSharedPtr& substructgraph,
+            const int mdswitch = 1,
+            set<int> vertMark = set<int>(),
+            set<int> edgeMark = set<int>());
+        
         // The parameter MDSWITCH.
         // This parameters defines the maximal size of the smallest patches.
         // If at a certain level, a patch bundles less than MDSWITCH graph-vertices,

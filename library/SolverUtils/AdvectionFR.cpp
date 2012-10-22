@@ -36,6 +36,7 @@
 #include <SolverUtils/AdvectionFR.h>
 #include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
 #include <StdRegions/StdSegExp.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 namespace Nektar
 {

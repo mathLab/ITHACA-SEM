@@ -36,9 +36,9 @@
 
 #include <MultiRegions/DisContField2D.h>
 
-//#include <LocalRegions/Expansion2D.h>
-//#include <LocalRegions/MatrixKey.h>
-//#include <SpatialDomains/MeshGraph2D.h>
+#include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/MatrixKey.h>
+#include <SpatialDomains/MeshGraph2D.h>
 
 namespace Nektar
 {

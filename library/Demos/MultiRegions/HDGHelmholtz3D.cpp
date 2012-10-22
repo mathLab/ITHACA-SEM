@@ -5,6 +5,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/DisContField3D.h>
+#include <SpatialDomains/MeshGraph3D.h>
 
 #define TIMING
 

@@ -73,10 +73,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysXxtFull();
 
         private:
-            int nLocNondir;
-            Array<OneD, int> m_locNonDirToGloNonDir;
-            Array<OneD, NekDouble> m_locNonDirToGloNonDirSign;
-            Array<OneD, NekDouble> m_locNonDirToGloNonDirSignMultiplicity;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
@@ -90,15 +86,6 @@ namespace Nektar
 
             void AssembleMatrixArrays(const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
 
-            void GlobalToLocalNonDir(const Array<OneD, const NekDouble> &global,
-                                           Array<OneD, NekDouble> &local,
-                                   const boost::shared_ptr<AssemblyMap>
-                                                          &pLocToGloMap);
-
-            void LocalNonDirToGlobal(const Array<OneD, const NekDouble> &local,
-                                           Array<OneD, NekDouble> &global,
-                                   const boost::shared_ptr<AssemblyMap>
-                                                          &pLocToGloMap);
 
         };
     }

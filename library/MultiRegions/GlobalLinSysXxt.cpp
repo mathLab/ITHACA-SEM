@@ -70,11 +70,11 @@ namespace Nektar
                 const int pNumDir)
         {
             unsigned int nCoeffs = pLocToGloMap->GetNumLocalCoeffs();
-            Array<OneD, NekDouble> vLocalIn(nCoeffs, 0.0);
-            Array<OneD, NekDouble> vLocalOut(nCoeffs, 0.0);
-            pLocToGloMap->GlobalToLocal(pInput, vLocalIn);
+            Array<OneD, NekDouble> vLocalIn(m_rank, 0.0);
+            Array<OneD, NekDouble> vLocalOut(m_rank, 0.0);
+            GlobalToLocalNonDir(pInput, vLocalIn, pLocToGloMap);
             Xxt::Solve(vLocalOut, m_crsData, vLocalIn);
-            pLocToGloMap->Assemble(vLocalOut, pOutput);
+            LocalNonDirToGlobal(vLocalOut, pOutput, pLocToGloMap);
         }
 
         /// Solve the linear system for given input and output vectors
@@ -86,6 +86,25 @@ namespace Nektar
         {
             ASSERTL0(false, "Not implemented for this GlobalLinSys type.");
         }
+
+        void GlobalLinSysXxt::GlobalToLocalNonDir(const Array<OneD, const NekDouble> &global,
+                                       Array<OneD, NekDouble> &local,
+                               const boost::shared_ptr<AssemblyMap>
+                                                      &pLocToGloMap)
+        {
+            int n = m_locToGloMap.num_elements();
+            Vmath::Gathr(n, m_locToGloSignMult.get(), global.get(), m_locToGloMap.get(), local.get());
+        }
+
+        void GlobalLinSysXxt::LocalNonDirToGlobal(const Array<OneD, const NekDouble> &local,
+                                       Array<OneD, NekDouble> &global,
+                               const boost::shared_ptr<AssemblyMap>
+                                                      &pLocToGloMap)
+        {
+            int n = m_locToGloMap.num_elements();
+            Vmath::Scatr(n, m_locToGloSign.get(), local.get(), m_locToGloMap.get(), global.get());
+        }
+
     }
 }
 

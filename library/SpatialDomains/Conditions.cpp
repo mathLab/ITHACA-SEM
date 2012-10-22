@@ -34,9 +34,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <SpatialDomains/Conditions.h>
+#include <tinyxml/tinyxml.h>
 
 namespace Nektar
 {

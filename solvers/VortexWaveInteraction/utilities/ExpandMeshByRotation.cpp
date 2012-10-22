@@ -34,15 +34,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include <cstdio>
-#include <cstdlib>
-#include <sstream>
-#include <map>
-#include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <SpatialDomains/MeshGraph.h>
+#include <cstdio>
+#include <cstdlib>
+#include <sstream>
+#include <map>
+#include <iomanip>
+#include <tinyxml/tinyxml.h>
 
 using namespace std;
 using namespace Nektar;

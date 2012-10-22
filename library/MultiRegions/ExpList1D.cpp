@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
 #include <MultiRegions/ExpList1D.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LocalRegions/SegExp.h>

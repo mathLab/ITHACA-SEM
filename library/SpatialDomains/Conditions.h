@@ -38,7 +38,6 @@
 
 #include <string>
 #include <map>
-#include <tinyxml/tinyxml.h>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/Equation.h>
@@ -48,8 +47,6 @@
 namespace Nektar
 {
     struct OneD;
-    class SpatialDomainsDeclspec;
-    class Equation;
 
     namespace SpatialDomains
     {

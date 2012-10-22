@@ -1,6 +1,5 @@
 #include <iostream>
 #include <iomanip>
-#include <iosfwd>
 #include <cmath>
 #include <cstdio>
 

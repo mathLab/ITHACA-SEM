@@ -40,40 +40,78 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-        /// Base class for the development of solvers.
-        class DriverSteadyState: public Driver
-        {
-        public:
+	namespace SolverUtils
+	{
+		/// Base class for the development of solvers.
+		class DriverSteadyState: public Driver
+		{
+		public:
 			friend class MemoryManager<DriverSteadyState>;
-
-            /// Creates an instance of this class
-            static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
+			
+			/// Creates an instance of this class
+			static DriverSharedPtr create(const LibUtilities::SessionReaderSharedPtr& pSession) {
 				DriverSharedPtr p = MemoryManager<DriverSteadyState>::AllocateSharedPtr(pSession);
-                p->InitObject();
-                return p;
-            }
-	
-            ///Name of the class
-            static std::string className;
-	
-        protected:
-            /// Constructor
+				p->InitObject();
+				return p;
+			}
+			
+			///Name of the class
+			static std::string className;
+			
+			void ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &q1, 
+									const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
+						   Array<OneD, Array<OneD, NekDouble> > &Diff_q_qBar,
+						   Array<OneD, NekDouble > &NormDiff_q_qBar);
+			
+			void EvaluateNextSFDVariables(const int i,
+										  const Array<OneD, const Array<OneD, NekDouble> > &q0,
+								 const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+								 Array<OneD, Array<OneD, NekDouble> > &q1,
+								 Array<OneD, Array<OneD, NekDouble> > &qBar1);
+			
+		protected:
+			/// Constructor
             SOLVER_UTILS_EXPORT DriverSteadyState(const LibUtilities::SessionReaderSharedPtr pSession);
-
-            /// Destructor
+			
+			/// Destructor
 			SOLVER_UTILS_EXPORT virtual ~DriverSteadyState();
-        
-            /// Second-stage initialisation
-            SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
-
-            /// Virtual function for solve implementation.
-            SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout);
-		
-            static std::string driverLookupId;
-	};
-    }	
+			
+			/// Second-stage initialisation
+			SOLVER_UTILS_EXPORT virtual void v_InitObject(ostream &out = cout);
+			
+			/// Virtual function for solve implementation.
+			SOLVER_UTILS_EXPORT virtual void v_Execute(ostream &out = cout);
+			
+			static std::string driverLookupId;
+			
+		private:
+			//Definition of the SFD parameters:
+			NekDouble m_Delta;
+			NekDouble m_X;
+			NekDouble m_dt;
+			NekDouble m_cst1;
+			NekDouble m_cst2;
+			NekDouble m_cst3;
+			NekDouble m_cst4;
+			NekDouble m_cst5;
+			
+			int m_n;
+			int m_Check;
+			
+			int m_infosteps;
+			int m_checksteps;
+			
+			bool m_Growing;
+			bool m_Shrinking;
+			
+			NekDouble m_MinNormDiff_q_qBar;
+			NekDouble m_MaxNormDiff_q_qBar;
+			NekDouble m_First_MinNormDiff_q_qBar;
+			int m_Oscillation;
+			
+			std::ofstream m_file;
+		};
+	}	
 } //end of namespace
 
 #endif //NEKTAR_SOLVERUTILS_DRIVERSTEADYSTATE_H

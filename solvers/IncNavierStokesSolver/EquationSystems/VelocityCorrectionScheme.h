@@ -92,9 +92,6 @@ namespace Nektar
         void EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                               const NekDouble time);
-		
-	void SelectiveFrequencyDamping(void);
-    
 
         void AddDuDt  (const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);
         void AddDuDt2D(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);

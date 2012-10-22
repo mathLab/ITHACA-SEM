@@ -1183,7 +1183,6 @@ namespace Nektar
         {
         case eUnsteadyStokes:
         case eUnsteadyNavierStokes:
-        case eSteadyNavierStokesBySFD:
             {
                 
                 LibUtilities::TimeIntegrationMethod intMethod;
@@ -1441,11 +1440,6 @@ namespace Nektar
 				Solve();				
 				break;
 			}
-			case eSteadyNavierStokesBySFD:
-			{
-				SelectiveFrequencyDamping();
-				break;
-			}
 			case eSteadyNavierStokes:
 			{	
 				Timer Generaltimer;
@@ -1498,157 +1492,6 @@ namespace Nektar
         }
     }
 
-	
-	void CoupledLinearNS::SelectiveFrequencyDamping(void)
-	{		
-		Array<OneD, Array<OneD, NekDouble> > q0(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > q1(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > qBar0(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > qBar1(m_velocity.num_elements());
-		
-		Array<OneD, NekDouble > NormDiff(m_velocity.num_elements(), 0.0);
-		Array<OneD, Array<OneD, NekDouble> > Diff(m_velocity.num_elements());
-		
-		//Definition of the SFD parameters:
-		NekDouble Delta;
-		NekDouble X;
-		NekDouble cst1;
-		NekDouble cst2;
-		NekDouble cst3;
-		NekDouble cst4;
-		NekDouble StartSFDatStep(0);
-		int Check(0);
-		
-		m_session->LoadParameter("FilterWidth", Delta);
-		m_session->LoadParameter("ControlCoeff", X);
-		m_session->LoadParameter("StartSFDatStep", StartSFDatStep);
-		
-		cst1=X*m_timestep;
-		cst2=1.0/(1.0 + cst1);
-		cst3=m_timestep/Delta;
-		cst4=1.0/(1.0 + cst3);
-		
-		cout << "------------------ SFD Parameters ------------------" << endl;
-		cout << "Delta = " << Delta << endl;
-		cout << "X = " << X << endl;
-		cout << "SFD will start at step " << StartSFDatStep << endl;
-		cout << "----------------------------------------------------" << endl;
-
-		Timer SFDtimer;
-        	SFDtimer.Start();
-		
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			q0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			qBar0[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-		}
-		
-		for (int n=0 ; n < m_steps; ++n)
-		{
-			
-			if (n<StartSFDatStep)
-			{
-				AdvanceInTime(1);
-				
-				//For plotting residual:
-				/*for(int i = 0; i < m_velocity.num_elements(); ++i)
-				{	
-					Diff[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(), 0.0);
-					m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), Diff[i]);
-				}*/
-				
-				if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
-				{
-					cout << "Step: " << n+1 << "  Time: " << m_time << endl;
-				}
-				if(m_checksteps && n&&(!((n+1)%m_checksteps)))
-				{
-					Check++;
-					Checkpoint_Output(Check);
-				}
-			}
-			else
-			{
-				AdvanceInTime(1);
-				if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
-				{
-					cout << "Step: " << n+1 << "  Time: " << m_time << endl;
-				}
-				if(m_checksteps && n&&(!((n+1)%m_checksteps)))
-				{
-					Check++;
-					Checkpoint_Output(Check);
-				}
-				
-				for(int i = 0; i < m_velocity.num_elements(); ++i)
-				{					
-					q1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					qBar1[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					
-					Diff[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					
-					m_fields[i]->BwdTrans_IterPerExp(m_fields[i]->GetCoeffs(), q0[i]);	
-					
-					if (n==0)
-					{
-						qBar0[i] = q0[i];
-					}
-					
-					Vmath::Smul(q1[i].num_elements(), cst1, qBar0[i], 1, q1[i], 1);
-					Vmath::Vadd(q1[i].num_elements(), q0[i], 1, q1[i], 1, q1[i], 1);
-					Vmath::Smul(q1[i].num_elements(), cst2, q1[i], 1, q1[i], 1);
-					
-					Vmath::Smul(qBar1[i].num_elements(), cst3, q1[i], 1, qBar1[i], 1);
-					Vmath::Vadd(qBar1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
-					Vmath::Smul(qBar1[i].num_elements(), cst4, qBar1[i], 1, qBar1[i], 1);
-					
-					qBar0[i] = qBar1[i];
-					
-					
-					
-					Vmath::Vsub(Diff[i].num_elements(), q1[i], 1, qBar1[i], 1, Diff[i], 1);
-					
-					
-
-					Vmath::Vcopy( q1[i].num_elements(), q1[i], 1, m_fields[i]->UpdatePhys(), 1 );
-					//m_fields[i]->FwdTrans_IterPerExp( q1[i], m_fields[i]->UpdateCoeffs() );
-					
-					//if(i==0)
-					/*{
-						for(int j = 0; j < q1[i].num_elements(); ++j)
-						//for(int j = 0; j < 70; ++j)
-						{
-							//cout << "q0[" << i << "]["<<j<<"] - q1["<<i<<"]["<<j<<"] = " << q1[i][j]-qBar1[i][j] << endl;
-							Diff[i][j]=q1[i][j]-qBar1[i][j];
-						}
-					}*/		
-					
-				}
-			}
-			/*std::ofstream file( "Zfichier.txt", std::ios_base::app );
-			
-			//L2Norm(Diff, NormDiff);
-			InfNorm(Diff, NormDiff);
-			
-			if(n-StartSFDatStep>=0)
-			{
-				file << n-StartSFDatStep << "\t" << NormDiff[0] << "\t" << NormDiff[1] << endl;
-				//file << n << "\t" << NormDiff[0] << "\t" << NormDiff[1] << endl;
-			}
-			
-			file.close();*/
-		}
-		
-		/*for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			cout << "On Enregistre qBar1 en valeur a plotter" << endl;
-			Vmath::Vcopy( q1[i].num_elements(), qBar1[i], 1, m_fields[i]->UpdatePhys(), 1 );
-		}*/
-		
-		SFDtimer.Stop();
-        	cout << "\n -- SFD time -- " << SFDtimer.TimePerTest(1)/60 << " minutes" << endl << endl;
-		
-	}
 	
 	
     void CoupledLinearNS::Solve(void)
@@ -2426,55 +2269,10 @@ namespace Nektar
         WriteFld(outname,m_fields[0],fieldcoeffs,variables);
     }
 
-	void CoupledLinearNS::TmpOutput(int &Check)
-    {    
-        Array<OneD, Array<OneD, NekDouble > > fieldcoeffs(m_fields.num_elements()+1);
-        Array<OneD, std::string> variables(m_fields.num_elements()+1);
-        int i;
-        
-        for(i = 0; i < m_fields.num_elements(); ++i)
-        {
-            fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
-            variables[i]   = m_boundaryConditions->GetVariable(i);
-        }
-		
-        fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());  
-        // project pressure field to velocity space        
-        if(m_singleMode==true)
-        {
-			Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
-			m_pressure->GetPlane(0)->BwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetCoeffs(), m_pressure->GetPlane(0)->UpdatePhys());
-			m_pressure->GetPlane(1)->BwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetCoeffs(), m_pressure->GetPlane(1)->UpdatePhys()); 
-			m_fields[0]->GetPlane(0)->FwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetPhys(),fieldcoeffs[i]);
-			m_fields[0]->GetPlane(1)->FwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetPhys(),tmpfieldcoeffs);
-			for(int e=0; e<m_fields[0]->GetNcoeffs()/2; e++)
-			{
-				fieldcoeffs[i][e+m_fields[0]->GetNcoeffs()/2] = tmpfieldcoeffs[e];
-			}          
-		}
-		else
-		{
-			m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
-            m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
-		}
-        variables[i] = "p"; 
-		
-		// créer un flux de sortie
-		std::ostringstream oss;
-		// écrire un nombre dans le flux
-		oss << Check;
-		// récupérer une chaîne de caractères
-		std::string step = oss.str();
-		
-        std::string outname = m_sessionName + "_" + step + ".fld";
-		
-        WriteFld(outname,m_fields[0],fieldcoeffs,variables);
-    }
-
     int CoupledLinearNS::v_GetForceDimension()
-    {
-        return m_session->GetVariables().size();
-    }
+	{
+		return m_session->GetVariables().size();
+	}
 }
 
 /**

@@ -84,6 +84,9 @@ namespace Nektar
             eIterativeFull,
             eIterativeStaticCond,
             eIterativeMultiLevelStaticCond,
+            eXxtFullMatrix,
+            eXxtStaticCond,
+            eXxtMultiLevelStaticCond,
             eSIZE_GlobalSysSolnType
         };
 
@@ -96,7 +99,10 @@ namespace Nektar
             "DirectMultiLevelStaticCond",
             "IterativeFull",
             "IterativeStaticCond",
-            "IterativeMultiLevelStaticCond"
+            "IterativeMultiLevelStaticCond",
+            "XxtFull",
+            "XxtStaticCond",
+            "XxtMultiLevelStaticCond"
         };
 
         /// Type of Galerkin projection.

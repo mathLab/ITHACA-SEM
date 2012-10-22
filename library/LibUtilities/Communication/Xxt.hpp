@@ -41,13 +41,14 @@ using namespace std;
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/BasicUtils/VmathArray.hpp>
+#ifdef NEKTAR_USE_MPI
+#include <LibUtilities/Communication/CommMpi.h>
+#endif
 using namespace Nektar;
 
 namespace Xxt
 {
-    typedef struct { void *ptr; size_t n,max; } array;
-    typedef array buffer;
 #ifdef NEKTAR_USE_MPI
     typedef MPI_Comm comm_ext;
     typedef MPI_Request comm_req;
@@ -71,7 +72,7 @@ namespace Xxt
         unsigned int n, *Arp, *Aj; double *A;
     };
 
-    struct xxt {
+    struct crs_data {
 
         /* communication */
         struct comm comm;
@@ -126,13 +127,13 @@ namespace Xxt
 
     extern "C"
     {
-        struct crs_data *crs_setup(
+        struct crs_data *nektar_crs_setup(
           unsigned int n, const unsigned long *id,
           unsigned int nz, const unsigned int *Ai, const unsigned int *Aj,
           const double *A,  unsigned int null_space, const struct comm *comm);
-        void crs_solve(double *x, struct crs_data *data, double *b);
-        void crs_stats(struct crs_data *data);
-        void crs_free(struct crs_data *data);
+        void nektar_crs_solve(double *x, struct crs_data *data, double *b);
+        void nektar_crs_stats(struct crs_data *data);
+        void nektar_crs_free(struct crs_data *data);
     }
 
     /**
@@ -152,33 +153,35 @@ namespace Xxt
      *                      communication.
      * @returns crs_data structure
      */
-    struct crs_data* Init ( const Nektar::Array<OneD, long> pId,
+    static struct crs_data* Init ( unsigned int pRank,
+                            const Nektar::Array<OneD, unsigned long> pId,
                             const Nektar::Array<OneD, unsigned int> pAi,
                             const Nektar::Array<OneD, unsigned int> pAj,
                             const Nektar::Array<OneD, NekDouble> pAr,
                             const LibUtilities::CommSharedPtr& pComm)
     {
-        unsigned int n  = Vmath::Vmax(pAi.num_elements(), pAi, 1) + 1;
         unsigned int nz = pAr.num_elements();
+        LibUtilities::CommMpiSharedPtr vCommMpi = boost::dynamic_pointer_cast<LibUtilities::CommMpi> (pComm);
+        ASSERTL1(vCommMpi, "Failed to cast MPI Comm object.");
         comm vComm;
-        vComm.c  = pComm->GetComm();
-        vComm.id = pComm->GetRank();
-        vComm.np = pComm->GetSize();
-        return nektar_crs(n, &pId[0], nz, &pAi[0], &pAj[0], &pAr[0], 0, &vComm);
+        vComm.c  = vCommMpi->GetComm();
+        vComm.id = vCommMpi->GetRank();
+        vComm.np = vCommMpi->GetSize();
+        return nektar_crs_setup(pRank, &pId[0], nz, &pAi[0], &pAj[0], &pAr[0], 0, &vComm);
     }
 
 
     /**
      * @brief Solve the matrix system for a given input vector b.
      */
-    void Solve ( const Nektar::Array<OneD, NekDouble> pX,
+    static void Solve ( Nektar::Array<OneD, NekDouble> pX,
                  struct crs_data* pCrs,
-                 const Nektar::Array<OneD, NekDouble> pB )
+                 Nektar::Array<OneD, NekDouble> pB )
     {
         if (!pCrs) {
             return;
         }
-        crs_solve(&pX[0], pCrs, &pB[0]);
+        nektar_crs_solve(&pX[0], pCrs, &pB[0]);
     }
 
 

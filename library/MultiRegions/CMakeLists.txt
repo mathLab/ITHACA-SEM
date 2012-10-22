@@ -28,6 +28,8 @@ GlobalLinSysDirectStaticCond.cpp
 GlobalLinSysIterative.cpp
 GlobalLinSysIterativeFull.cpp
 GlobalLinSysIterativeStaticCond.cpp
+GlobalLinSysXxt.cpp
+GlobalLinSysXxtFull.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
 
@@ -73,6 +75,8 @@ GlobalLinSysDirectStaticCond.h
 GlobalLinSysIterative.h
 GlobalLinSysIterativeFull.h
 GlobalLinSysIterativeStaticCond.h
+GlobalLinSysXxt.h
+GlobalLinSysXxtFull.h
 GlobalMatrix.h
 GlobalMatrixKey.h
 MultiRegions.hpp

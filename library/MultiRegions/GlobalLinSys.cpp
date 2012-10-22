@@ -40,12 +40,13 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        std::string GlobalLinSys::lookupIds[5] = {
+        std::string GlobalLinSys::lookupIds[6] = {
                 LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectFull",MultiRegions::eDirectFullMatrix),
                 LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectStaticCond",MultiRegions::eDirectStaticCond),
                 LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectMultiLevelStaticCond",MultiRegions::eDirectMultiLevelStaticCond),
                 LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeFull",MultiRegions::eIterativeFull),
-                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeStaticCond",MultiRegions::eIterativeStaticCond)
+                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeStaticCond",MultiRegions::eIterativeStaticCond),
+                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","XxtFull",MultiRegions::eXxtFullMatrix)
         };
         std::string GlobalLinSys::def = LibUtilities::SessionReader::RegisterDefaultSolverInfo("GlobalSysSoln","DirectMultiLevelStaticCond");
 

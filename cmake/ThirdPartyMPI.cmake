@@ -16,7 +16,7 @@ IF( NEKTAR_USE_MPI )
             gsmpi-1.1
             PREFIX ${TPSRC}
             URL ${TPURL}/gsmpi-1.1.tar.bz2
-            URL_MD5 "238e6df3ca1185756a38867f5c0bbd74"
+            URL_MD5 "f2c1f7695f361c6d87365e2ea63aece1"
             DOWNLOAD_DIR ${TPSRC}
             CONFIGURE_COMMAND 
                 ${CMAKE_COMMAND} 

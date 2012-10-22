@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include <math.h>
+#include <cmath>
 
 #include "StdRegions/StdQuadExp.h"
 #include "StdRegions/StdTriExp.h"

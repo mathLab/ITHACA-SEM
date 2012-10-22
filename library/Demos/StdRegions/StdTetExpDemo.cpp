@@ -4,7 +4,6 @@
 #include "LibUtilities/Foundations/Basis.h"
 
 
-#include <algorithm>
 #include <iostream>
 #include <cstdlib>
 #include <cmath>

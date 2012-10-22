@@ -3,7 +3,6 @@
 #include <StdRegions/StdPrismExp.h>
 #include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
 
-#include <algorithm>
 #include <iostream>
 #include <cstdlib>
 #include <cmath>

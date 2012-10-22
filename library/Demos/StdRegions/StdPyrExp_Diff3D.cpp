@@ -3,7 +3,6 @@
 #include "StdRegions/StdRegions.hpp"
 #include "LibUtilities/Foundations/Foundations.hpp"
 
-#include <algorithm>
 #include <iostream>
 #include <cstdlib>
 #include <cmath>

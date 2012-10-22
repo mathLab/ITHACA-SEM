@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
-#include <math.h>
+#include <cmath>
 
 #include <StdRegions/StdHexExp.h>
 #include <StdRegions/StdPrismExp.h>

@@ -36,9 +36,12 @@
 #ifndef NODALTETEVENLYSPACED_H
 #define NODALTETEVENLYSPACED_H
 
-#include <boost/shared_ptr.hpp>
-#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+#include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <boost/shared_ptr.hpp>
+//#include "LibUtilities/BasicUtils/BasicUtilsFwd.hpp"
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
@@ -50,7 +53,6 @@ namespace Nektar
         class NodalTetEvenlySpaced: public Points<NekDouble>
         {
         public:
-            typedef Points<NekDouble> PointsBaseType;
 
             virtual ~NodalTetEvenlySpaced()
             {

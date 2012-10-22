@@ -40,26 +40,6 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
-/*
-<<<<<<< HEAD
-#include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/MultiRegionsDeclspec.h>
-#include <MultiRegions/MultiRegions.hpp>
-#include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/GlobalLinSys.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <LocalRegions/SegExp.h>
-#include <SpatialDomains/SpatialData.h>
-#include <SpatialDomains/MeshGraph2D.h>
-#include <SpatialDomains/Conditions.h>
-#include <SpatialDomains/SegGeom.h>
-=======
-
->>>>>>> Removing some unnecessary includes in Demos and SolverUtils
-
-*/
-
 namespace Nektar
 {
     namespace SolverUtils

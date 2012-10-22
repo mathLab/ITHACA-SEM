@@ -33,12 +33,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-
 #include <LibUtilities/Foundations/NodalTriEvenlySpaced.h>
+#include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <vector>
 
 
@@ -154,7 +154,7 @@ namespace Nektar
 
         } 
 
-        boost::shared_ptr<NodalTriEvenlySpaced::PointsBaseType> NodalTriEvenlySpaced::Create(const PointsKey &key)
+        boost::shared_ptr<PointsBaseType> NodalTriEvenlySpaced::Create(const PointsKey &key)
         {
             boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriEvenlySpaced>::AllocateSharedPtr(key));
 

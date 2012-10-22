@@ -40,6 +40,8 @@
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
 
 namespace Nektar
@@ -180,7 +182,7 @@ namespace Nektar
 
         }
 
-        boost::shared_ptr<NodalTriFekete::PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
+        boost::shared_ptr<PointsBaseType> NodalTriFekete::Create(const PointsKey &key)
         {
             boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriFekete>::AllocateSharedPtr(key));
             returnval->Initialize();

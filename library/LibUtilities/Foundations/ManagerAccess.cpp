@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
 #include <loki/Singleton.h>
 #include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/FourierPoints.h>

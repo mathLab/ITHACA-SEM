@@ -182,9 +182,9 @@ namespace Nektar
          }
 
 
-        boost::shared_ptr<NodalTriElec::PointsBaseType> NodalTriElec::Create(const PointsKey &key)
+        boost::shared_ptr<PointsBaseType> NodalTriElec::Create(const PointsKey &key)
         {
-            boost::shared_ptr<NodalTriElec::PointsBaseType> returnval(MemoryManager<NodalTriElec>::AllocateSharedPtr(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriElec>::AllocateSharedPtr(key));
             returnval->Initialize();
             return returnval;
         }

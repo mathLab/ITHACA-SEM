@@ -37,6 +37,8 @@
 #include <LibUtilities/Foundations/NodalTetElec.h>
 #include <LibUtilities/Foundations/NodalTetElecData.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 namespace Nektar
 {
@@ -254,7 +256,7 @@ namespace Nektar
             *m_derivmatrix[2] = *GetTetZDerivativeMatrix(x,y,z,xi,yi,zi);
         }
 
-        boost::shared_ptr<NodalTetElec::PointsBaseType> NodalTetElec::Create(const PointsKey &key)
+        boost::shared_ptr<PointsBaseType> NodalTetElec::Create(const PointsKey &key)
         {
             boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTetElec>::AllocateSharedPtr(key));
             returnval->Initialize();

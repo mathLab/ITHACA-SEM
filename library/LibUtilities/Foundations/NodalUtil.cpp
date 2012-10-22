@@ -39,9 +39,10 @@
 
 #include <LibUtilities/Foundations/NodalUtil.h>
 
-#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/NekVector.hpp>
 
 namespace Nektar
 {

@@ -38,6 +38,7 @@
 #include <LibUtilities/Foundations/Points.h>
 #include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+//#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 namespace Nektar
 {

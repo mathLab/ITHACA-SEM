@@ -36,11 +36,12 @@
 #ifndef GAUSSPOINTS_H
 #define GAUSSPOINTS_H
 
-#include <boost/shared_ptr.hpp>
-#include <boost/bind.hpp>
-#include <boost/mem_fn.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/bind.hpp>
 
 namespace Nektar
 {
@@ -49,8 +50,6 @@ namespace Nektar
         class GaussPoints: public Points<NekDouble>
         {
         public:
-            typedef Points<NekDouble> PointsBaseType;
-
             virtual ~GaussPoints()
             {
             }            

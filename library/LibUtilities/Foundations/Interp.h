@@ -36,10 +36,11 @@
 #ifndef NEKTAR_LIB_UTILTIES_FOUNDATIONS_INTERP_H
 #define NEKTAR_LIB_UTILTIES_FOUNDATIONS_INTERP_H
 
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
 #include "LibUtilities/LibUtilitiesDeclspec.h"
-namespace Nektar { namespace LibUtilities { class BasisKey; } }
-namespace Nektar { namespace LibUtilities { class PointsKey; } }
+
+//#include "LibUtilities/BasicUtils/BasicUtilsFwd.hpp"  // for SharedArray
 namespace Nektar { template <typename Dim, typename DataType> class Array; }
 
 

@@ -36,9 +36,9 @@
 #ifndef BLPONITS_H
 #define BLPOINTS_H
 
-#include <boost/shared_ptr.hpp>
-#include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 
 namespace Nektar
 {
@@ -47,7 +47,6 @@ namespace Nektar
         class BLPoints: public Points<NekDouble>
         {
         public:
-            typedef Points<NekDouble> PointsBaseType;
             virtual ~BLPoints()
             {
             }            

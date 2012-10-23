@@ -37,6 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH3D_H
 
 #include <SpatialDomains/MeshGraph.h>
+#include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <boost/unordered_map.hpp>
 

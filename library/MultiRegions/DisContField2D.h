@@ -43,6 +43,7 @@
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <SpatialDomains/Conditions.h>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
 namespace Nektar
 {

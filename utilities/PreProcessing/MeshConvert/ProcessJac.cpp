@@ -33,13 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-using namespace std;
-
 #include "MeshElements.h"
 #include "ProcessJac.h"
 
 #include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
+
+#include <vector>
+using namespace std;
 
 namespace Nektar
 {

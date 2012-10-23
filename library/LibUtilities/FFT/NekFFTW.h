@@ -39,6 +39,8 @@
 #include <LibUtilities/FFT/NektarFFT.h>
 
 #include <LibUtilities/BasicUtils/NekManager.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 

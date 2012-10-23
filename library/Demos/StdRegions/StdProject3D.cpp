@@ -9,7 +9,7 @@
 #include <StdRegions/StdNodalTetExp.h>
 
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 using namespace Nektar;
 using namespace Nektar::LibUtilities;

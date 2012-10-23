@@ -1,7 +1,7 @@
 
 #include "StdRegions/StdTetExp.h"
-#include "LibUtilities/Foundations/Foundations.hpp"
-#include "LibUtilities/Foundations/Basis.h"
+#include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/Foundations/Basis.h>
 
 
 #include <iostream>

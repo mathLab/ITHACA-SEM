@@ -1,7 +1,7 @@
 
 #include <StdRegions/StdPyrExp.h>
-#include "StdRegions/StdRegions.hpp"
-#include "LibUtilities/Foundations/Foundations.hpp"
+#include <StdRegions/StdRegions.hpp>
+#include <LibUtilities/Foundations/Foundations.hpp>
 
 #include <iostream>
 #include <cstdlib>

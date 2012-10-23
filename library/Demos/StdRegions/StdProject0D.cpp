@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include "StdRegions/StdPointExp.h"
 
-#include "LibUtilities/Foundations/Foundations.hpp"
+#include <LibUtilities/Foundations/Foundations.hpp>
 
 using namespace Nektar;
 

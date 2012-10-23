@@ -1,12 +1,12 @@
-#include "StdRegions/StdExpansion3D.h"
-#include "LocalRegions/PrismExp.h"
+#include <StdRegions/StdExpansion3D.h>
+#include <LocalRegions/PrismExp.h>
 
-#include "LibUtilities/Foundations/Foundations.hpp"
-#include "LibUtilities/Foundations/Basis.h"
-#include "SpatialDomains/MeshComponents.h"
-#include "SpatialDomains/TriGeom.h"
-#include "SpatialDomains/QuadGeom.h"
-#include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
+#include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/Foundations/Basis.h>
+#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/QuadGeom.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 
 #include <algorithm>

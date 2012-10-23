@@ -420,6 +420,9 @@ namespace Nektar
             /// containing all local expansion coefficients.
             inline const Array<OneD, const NekDouble> &GetCoeffs() const;
 
+            /// Impose Dirichlet Boundary Conditions onto Array
+            inline void ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
+
             /// Put the coefficients into global ordering using m_coeffs 
             inline void LocalToGlobal(void);
 
@@ -1023,6 +1026,8 @@ namespace Nektar
                                                         dirForcing = NullNekDouble1DArray);
 
             // wrapper functions about virtual functions
+            virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
+
             virtual void v_LocalToGlobal();
 
             virtual void v_GlobalToLocal();
@@ -1628,6 +1633,11 @@ namespace Nektar
             return m_coeffs;
         }
         
+        inline void ExpList::ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+        {
+            v_ImposeDirichletConditions(outarray);
+        }
+
         inline void ExpList::LocalToGlobal()
         {
             v_LocalToGlobal();

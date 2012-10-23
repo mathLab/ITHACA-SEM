@@ -454,6 +454,8 @@ namespace Nektar
         }
 
 
+
+        
         /**
          * Given a linear system specified by the key \a key,
          * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
@@ -511,32 +513,12 @@ namespace Nektar
                                       Array<OneD,       NekDouble>& inout,
                                 const Array<OneD, const NekDouble>& dirForcing)
         {
-            int i,j;
-            int bndcnt=0;
             int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
-            const Array<OneD,const int>& map
-                        = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-
-            for(i = 0; i < m_bndConditions.num_elements(); ++i)
-            {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {
-                    const Array<OneD,const NekDouble>& coeffs
-                        = m_bndCondExpansions[i]->GetCoeffs();
-                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
-                    {
-                        inout[map[bndcnt++]] = coeffs[j];
-                    }
-                }
-                else
-                {
-                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
-                }
-            }
+            v_ImposeDirichletConditions(inout);
 
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(contNcoeffs - NumDirBcs > 0)
@@ -641,6 +623,32 @@ namespace Nektar
                                      CoeffState coeffstate)
         {
             FwdTrans(inarray,outarray,coeffstate);
+        }
+
+        void ContField2D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+        {
+            int i,j;
+            int bndcnt=0;
+
+            const Array<OneD,const int>& map
+                        = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+
+            for(i = 0; i < m_bndConditions.num_elements(); ++i)
+            {
+                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                {
+                    const Array<OneD,const NekDouble>& coeffs
+                        = m_bndCondExpansions[i]->GetCoeffs();
+                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        outarray[map[bndcnt++]] = coeffs[j];
+                    }
+                }
+                else
+                {
+                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
+                }
+            }
         }
 
 

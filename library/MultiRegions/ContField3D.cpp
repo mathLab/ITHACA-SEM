@@ -334,38 +334,21 @@ namespace Nektar
           GeneralMatrixOp(key,inout,outarray,eGlobal);
       }
       
+
+
       // Note inout contains initial guess and final output.
       void ContField3D::GlobalSolve(const GlobalLinSysKey &key,
                                     const Array<OneD, const NekDouble>& rhs,
                                     Array<OneD,       NekDouble>& inout,
                                     const Array<OneD, const NekDouble>& dirForcing)
       {
-          int i,j;
-          int bndcnt=0;
           int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
           int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
           
           // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
           //         IN THE SOLUTION ARRAY
-          const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-          NekDouble sign;
+          v_ImposeDirichletConditions(inout);
           
-          for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-          {
-              if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-              {
-                  const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
-                  for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
-                  {
-                      sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                      inout[map[bndcnt++]] = sign * coeffs[j];
-                  }
-              }
-              else
-              {
-                  bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
-              }
-          }
           
           // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
           if(contNcoeffs - NumDirBcs > 0)
@@ -420,6 +403,34 @@ namespace Nektar
       }
       
       
+      void ContField3D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+      {
+          int i,j;
+          int bndcnt=0;
+          
+          // SET THE DIRICHLET DOFS TO THE RIGHT VALUE
+          //         IN inarray
+          const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+          NekDouble sign;
+          
+          for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+          {
+              if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+              {
+                  const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
+                  for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                  {
+                      sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
+                      outarray[map[bndcnt++]] = sign * coeffs[j];
+                  }
+              }
+              else
+              {
+                  bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
+              }
+          }
+      }          
+
       void ContField3D::v_HelmSolve(
                                     const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD,       NekDouble> &outarray,
@@ -467,12 +478,13 @@ namespace Nektar
           
           if(flags.isSet(eUseGlobal))
           {
-              Vmath::Zero(contNcoeffs,outarray,1);
+              //Vmath::Zero(contNcoeffs,outarray,1);
               GlobalSolve(key,wsp,outarray,dirForcing);
           }
           else
           {
               Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
+              LocalToGlobal(outarray,tmp);// use outarray as initial guess
               GlobalSolve(key,wsp,tmp,dirForcing);
               GlobalToLocal(tmp,outarray);
           }

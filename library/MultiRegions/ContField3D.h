@@ -96,6 +96,10 @@ namespace Nektar
 
             inline void LocalToGlobal();
 
+            inline void LocalToGlobal(
+                          const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,NekDouble> &outarray);
+
             inline void Assemble();
 
             inline void Assemble(
@@ -141,6 +145,7 @@ namespace Nektar
                     Array<OneD,       NekDouble> &outarray,
                     CoeffState coeffstate);
 
+            
         private:
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
@@ -155,6 +160,10 @@ namespace Nektar
                           Array<OneD,       NekDouble> &inout,
                     const Array<OneD, const NekDouble> &dirForcing
                                                      = NullNekDouble1DArray);
+
+            /// Impose the Dirichlet Boundary Conditions on outarray 
+            virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
+
 
             virtual void v_MultiplyByInvMassMatrix(
                     const Array<OneD, const NekDouble> &inarray,
@@ -201,6 +210,14 @@ namespace Nektar
         inline void ContField3D::LocalToGlobal()
         {
             m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs);
+        }
+
+
+        inline void ContField3D::LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray)
+        {
+            m_locToGloMap->LocalToGlobal(inarray, outarray);
         }
 
         inline void ContField3D::Assemble()

@@ -295,7 +295,14 @@ namespace Nektar
     {
         // Set initial condition using time t=0
         SetInitialConditions(0.0);
-	
+        // Set Boundary conditions on the intiial conditions
+        SetBoundaryConditions(0.0);
+        for(int i = 0; i < m_nConvectiveFields; ++i)
+        {
+            m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+        }
+
         //insert white noise in initial condition
         NekDouble Noise;
         int phystot = m_fields[0]->GetTotPoints();

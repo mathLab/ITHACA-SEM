@@ -218,6 +218,10 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
 
+            /// Impose the Dirichlet Boundary Conditions on outarray 
+            MULTI_REGIONS_EXPORT virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
+
+
             /// Template method virtual forwarded for LocalToGlobal()
             MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal();
 

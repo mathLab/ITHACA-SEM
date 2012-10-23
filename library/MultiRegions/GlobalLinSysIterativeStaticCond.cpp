@@ -227,7 +227,7 @@ namespace Nektar
                           pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
                           V_LocBnd = SchurCompl*V_LocBnd;
                       }
-                      else
+                      else // next level of recursive forcing 
                       {
                           DNekScalBlkMat &BinvD      = *m_BinvD;
                           V_LocBnd = BinvD*F_Int;
@@ -291,8 +291,11 @@ namespace Nektar
                     Timer t;
                     t.Start();
 
-                    SolveLinearSystem(nGlobBndDofs, F, out, pLocToGloMap, nDirBndDofs);
-
+                    // Solve for difference from initial solution given in out;
+                    SolveLinearSystem(nGlobBndDofs, F, F, pLocToGloMap, nDirBndDofs);
+                    // Add homogenoous solution to original vector 
+                    V_GlobHomBnd = V_GlobHomBnd + F_HomBnd;
+                    
                     t.Stop();
 
                     //transform back to original basis

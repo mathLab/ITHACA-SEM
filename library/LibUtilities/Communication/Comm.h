@@ -39,7 +39,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
-#include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 namespace Nektar { template <typename Dim, typename DataType> class Array; }
 
 

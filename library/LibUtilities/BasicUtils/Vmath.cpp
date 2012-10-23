@@ -35,7 +35,7 @@
 
 #include <LibUtilities/BasicUtils/Vmath.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include "LibUtilities/LibUtilitiesDeclspec.h"
+#include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Vmath
 {

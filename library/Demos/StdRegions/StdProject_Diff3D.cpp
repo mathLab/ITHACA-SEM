@@ -2,9 +2,9 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "StdRegions/StdHexExp.h"
-#include "StdRegions/StdPrismExp.h"
-#include "StdRegions/StdTetExp.h"
+#include <StdRegions/StdHexExp.h>
+#include <StdRegions/StdPrismExp.h>
+#include <StdRegions/StdTetExp.h>
 
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>

@@ -1,7 +1,7 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include "StdRegions/StdPointExp.h"
+#include <StdRegions/StdPointExp.h>
 
 #include <LibUtilities/Foundations/Foundations.hpp>
 

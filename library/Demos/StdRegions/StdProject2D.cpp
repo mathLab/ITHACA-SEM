@@ -2,9 +2,9 @@
 #include <cstdlib>
 #include <cmath>
 
-#include "StdRegions/StdQuadExp.h"
-#include "StdRegions/StdTriExp.h"
-#include "StdRegions/StdNodalTriExp.h"
+#include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdNodalTriExp.h>
 
 #include <LibUtilities/Foundations/Foundations.hpp>
 

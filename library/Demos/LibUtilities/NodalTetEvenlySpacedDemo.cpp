@@ -8,7 +8,7 @@ using namespace std;
 #include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/NodalTetEvenlySpaced.h>
 
-#include "LibUtilities/Foundations/Foundations.hpp"
+#include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
 
 

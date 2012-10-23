@@ -36,9 +36,6 @@
 #ifndef NEKTAR_SOLVERS_LINEARISEDADVECTION_H
 #define NEKTAR_SOLVERS_LINEARISEDADVECTION_H
 
-//#include <Auxiliary/EquationSystem.h>
-
-
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 
 //#define TIMING

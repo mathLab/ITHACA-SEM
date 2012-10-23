@@ -38,9 +38,9 @@
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include "LibUtilities/FFT/NektarFFT.h"  // for NektarFFTSharedPtr
-#include "SpatialDomains/MeshGraph.h"   // for MeshGraphSharedPtr
-#include "MultiRegions/ExpList.h"       // for ExpListSharedPtr
+#include <LibUtilities/FFT/NektarFFT.h>  // for NektarFFTSharedPtr
+#include <SpatialDomains/MeshGraph.h>   // for MeshGraphSharedPtr
+#include <MultiRegions/ExpList.h>       // for ExpListSharedPtr
 
 
 namespace Nektar

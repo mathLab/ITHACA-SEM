@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
     {
         cerr << "Usage: FoundationDemo Points1D-Type nPts" << endl;
 
-        cerr << "Where type is an integer value which dictates the basis as:\n";
+        cerr << "Where type is an integer value which dictates the basis as:" << endl;
         for(int i=0; i<SIZE_PointsType; ++i) {
             cerr << setw(30) << kPointsTypeStr[i] << " = " << i << endl;
         }
@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
     cout << "\nRMS    = " << setw(6) << RMS << endl;
     
     // Show the interpolation matrix
-    cout << "\nI = \n";
+    cout << "\nI = " << endl;
     for(int i = 0; i < int(I.GetRows()); ++i)
     {
         cout << "     ";
@@ -278,7 +278,7 @@ int main(int argc, char *argv[])
         {
             printf("% 5.3f  ", I(i,j));
         }
-        cout << "\n";
+        cout << "" << endl;
     }
 
 
@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
     
 
     // Show the derivation matrix
-    cout << "\nD = \n";
+    cout << "\nD = " << endl;
     for(int i = 0; i < int(D.GetRows()); ++i)
     {
         cout << "     ";
@@ -359,7 +359,7 @@ int main(int argc, char *argv[])
         {
             printf("% 5.3f  ", D(i,j));
         }
-        cout << "\n";
+        cout << "" << endl;
     }
 
 

@@ -176,18 +176,18 @@ int main(int argc, char *argv[])
     // Check if the number of arguments given to the executable is correct
     if(argc != 4)
     {
-        cerr << "Usage: Project1D Npoints Ntimesteps TimeIntegrationMethod\n";        
-        cerr << "Where  - Npoints is the number of grid points to be used\n";      
-        cerr << "         for the finite difference discretisation\n"; 
-        cerr << "       - Ntimesteps is the number of timesteps to be used\n";
-        cerr << "         for the time-integration method\n";    
-        cerr << "       - TimeIntegrationMethod is a number in the range [1,5]\n";    
-        cerr << "         and defines the time-integration method to be used, i.e.\n"; 
-        cerr << "           - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)\n";   
-        cerr << "           - 2: 2nd order multi-step IMEX scheme\n";   
-        cerr << "           - 3: 3rd order multi-step IMEX scheme\n"; 
-        cerr << "           - 4: 2nd order multi-stage DIRK IMEX scheme\n";    
-        cerr << "           - 5: 3nd order multi-stage DIRK IMEX scheme\n";    
+        cerr << "Usage: Project1D Npoints Ntimesteps TimeIntegrationMethod" << endl;        
+        cerr << "Where  - Npoints is the number of grid points to be used" << endl;      
+        cerr << "         for the finite difference discretisation" << endl; 
+        cerr << "       - Ntimesteps is the number of timesteps to be used" << endl;
+        cerr << "         for the time-integration method" << endl;    
+        cerr << "       - TimeIntegrationMethod is a number in the range [1,5]" << endl;    
+        cerr << "         and defines the time-integration method to be used, i.e." << endl; 
+        cerr << "           - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;   
+        cerr << "           - 2: 2nd order multi-step IMEX scheme" << endl;   
+        cerr << "           - 3: 3rd order multi-step IMEX scheme" << endl; 
+        cerr << "           - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;    
+        cerr << "           - 5: 3nd order multi-stage DIRK IMEX scheme" << endl;    
         exit(1);
     }
 
@@ -273,13 +273,13 @@ int main(int argc, char *argv[])
         break;
     default : 
         {      
-            cerr << "The third argument defines the time-integration method to be used\n";    
-            cerr << "and should be a number in the range [1,5], i.e.\n"; 
-            cerr << "  - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)\n";   
-            cerr << "  - 2: 2nd order multi-step IMEX scheme\n";   
-            cerr << "  - 3: 3rd order multi-step IMEX scheme\n"; 
-            cerr << "  - 4: 2nd order multi-stage DIRK IMEX scheme\n";    
-            cerr << "  - 5: 3rd order multi-stage DIRK IMEX scheme\n";  
+            cerr << "The third argument defines the time-integration method to be used" << endl;    
+            cerr << "and should be a number in the range [1,5], i.e." << endl; 
+            cerr << "  - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;   
+            cerr << "  - 2: 2nd order multi-step IMEX scheme" << endl;   
+            cerr << "  - 3: 3rd order multi-step IMEX scheme" << endl; 
+            cerr << "  - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;    
+            cerr << "  - 5: 3rd order multi-stage DIRK IMEX scheme" << endl;  
             exit(1); 
         }
     }

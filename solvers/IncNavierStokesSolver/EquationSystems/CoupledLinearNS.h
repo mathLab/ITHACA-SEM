@@ -41,6 +41,7 @@
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList2D.h>
+#include <boost/shared_ptr.hpp>
 //#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
 namespace Nektar

@@ -39,6 +39,7 @@
 #include <string>
 #include <sys/stat.h>
 #include "RegressBase.h"
+#include <boost/lexical_cast.hpp>
 
 #include <boost/version.hpp>
 

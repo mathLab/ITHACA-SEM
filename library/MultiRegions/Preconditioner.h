@@ -38,8 +38,8 @@
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <StdRegions/StdExpansion.h>
-#include "LibUtilities/BasicUtils/SharedArray.hpp"  // for Array
-#include "LibUtilities/LinearAlgebra/NekTypeDefs.hpp"
+#include <LibUtilities/BasicUtils/SharedArray.hpp>  // for Array
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 
 #include <boost/shared_ptr.hpp>
 

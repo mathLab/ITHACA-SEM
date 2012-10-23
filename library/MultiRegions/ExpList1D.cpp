@@ -39,7 +39,7 @@
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/Expansion2D.h>
 #include <SpatialDomains/MeshGraph2D.h>
-#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
+#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
 namespace Nektar
 {

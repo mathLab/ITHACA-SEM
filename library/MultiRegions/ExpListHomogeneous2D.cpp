@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpListHomogeneous2D.h>
-#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
+#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdQuadExp.h>
 

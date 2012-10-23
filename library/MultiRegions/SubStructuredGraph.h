@@ -39,8 +39,8 @@
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
 
-#include "LibUtilities/BasicConst/NektarUnivTypeDefs.hpp"
-#include "LibUtilities/BasicUtils/SharedArray.hpp"  // for Array
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>  // for Array
 
 #include <vector>
 #include <boost/config.hpp>

@@ -36,7 +36,7 @@
 
 #include <MultiRegions/SubStructuredGraph.h>
 #include <LibUtilities/BasicUtils/Metis.hpp>
-#include "LibUtilities/BasicUtils/VmathArray.hpp"  // for Vcopy
+#include <LibUtilities/BasicUtils/VmathArray.hpp>  // for Vcopy
 
 #include <iostream>
 #include <algorithm>

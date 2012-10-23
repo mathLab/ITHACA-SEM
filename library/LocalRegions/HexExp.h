@@ -36,7 +36,7 @@
 #ifndef HEXEXP_H
 #define HEXEXP_H
 
-#include "LibUtilities/BasicUtils/NekManager.hpp"  // for NekManager
+#include <LibUtilities/BasicUtils/NekManager.hpp>  // for NekManager
 
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <LocalRegions/MatrixKey.h>

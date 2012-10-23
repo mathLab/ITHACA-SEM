@@ -37,8 +37,8 @@
 #define EXPLIST3D_H
 
 #include <MultiRegions/MultiRegionsDeclspec.h>
+#include <MultiRegions/ExpList.h>       // for ExpList
 #include <vector>
-#include "MultiRegions/ExpList.h"       // for ExpList
 
 namespace Nektar
 {

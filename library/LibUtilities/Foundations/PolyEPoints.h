@@ -42,7 +42,7 @@
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
 
-//#include "LibUtilities/BasicUtils/BasicUtilsFwd.hpp"  // for NekManager
+//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar

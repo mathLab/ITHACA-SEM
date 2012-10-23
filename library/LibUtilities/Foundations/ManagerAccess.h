@@ -39,8 +39,8 @@
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Basis.h>
-//#include "LibUtilities/BasicUtils/BasicUtilsFwd.hpp"  // for NekManager
-#include "LibUtilities/BasicUtils/NekManager.hpp"  // for NekManager
+//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
+#include <LibUtilities/BasicUtils/NekManager.hpp>  // for NekManager
 
 namespace Nektar
 {

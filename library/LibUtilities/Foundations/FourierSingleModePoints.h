@@ -39,8 +39,8 @@
 #include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
-//#include "LibUtilities/BasicUtils/BasicUtilsFwd.hpp"  // for NekManager
-#include "LibUtilities/BasicUtils/NekManager.hpp"  // for NekManager
+//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
+#include <LibUtilities/BasicUtils/NekManager.hpp>  // for NekManager
 #include <boost/shared_ptr.hpp>
 
 

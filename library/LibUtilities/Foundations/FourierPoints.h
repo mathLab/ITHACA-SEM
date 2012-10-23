@@ -40,8 +40,8 @@
 #include <LibUtilities/Foundations/Points.h>
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
-//#include "LibUtilities/BasicUtils/BasicUtilsFwd.hpp"  // for NekManager
-#include "LibUtilities/BasicUtils/NekManager.hpp"  // for NekManager
+//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
+#include <LibUtilities/BasicUtils/NekManager.hpp>  // for NekManager
 
 
 namespace Nektar

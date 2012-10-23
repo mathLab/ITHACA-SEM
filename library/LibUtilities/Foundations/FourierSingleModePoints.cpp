@@ -35,7 +35,7 @@
 
 #include <LibUtilities/Foundations/FourierSingleModePoints.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
+#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 namespace Nektar

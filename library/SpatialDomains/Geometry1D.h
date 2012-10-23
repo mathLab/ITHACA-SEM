@@ -39,7 +39,7 @@
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include "StdRegions/StdExpansion1D.h"  // for StdExpansion1DSharedPtr, etc
+#include <StdRegions/StdExpansion1D.h>  // for StdExpansion1DSharedPtr, etc
 
 namespace Nektar
 {

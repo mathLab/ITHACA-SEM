@@ -38,7 +38,7 @@
 
 #include <SpatialDomains/GeomFactors.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include "StdRegions/StdExpansion1D.h"  // for StdExpansion1DSharedPtr
+#include <StdRegions/StdExpansion1D.h>  // for StdExpansion1DSharedPtr
 
 namespace Nektar
 {

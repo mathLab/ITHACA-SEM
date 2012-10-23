@@ -37,7 +37,7 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY2D_H
 
 #include <StdRegions/StdRegions.hpp>
-#include "StdRegions/StdExpansion2D.h"  // for StdExpansion2DSharedPtr, etc
+#include <StdRegions/StdExpansion2D.h>  // for StdExpansion2DSharedPtr, etc
 
 #include <SpatialDomains/Geometry.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>

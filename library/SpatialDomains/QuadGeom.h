@@ -41,7 +41,7 @@
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include "SpatialDomains/SegGeom.h"     // for SegGeomSharedPtr, etc
+#include <SpatialDomains/SegGeom.h>     // for SegGeomSharedPtr, etc
 
 
 namespace Nektar

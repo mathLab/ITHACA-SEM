@@ -39,7 +39,7 @@ using namespace std;
 #include "ProcessJac.h"
 
 #include <SpatialDomains/MeshGraph.h>
-#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
+#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
 namespace Nektar
 {

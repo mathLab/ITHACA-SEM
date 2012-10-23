@@ -1,14 +1,13 @@
 #include <cstdio>
 #include <cstdlib>
 
-//#include <MultiRegions/ExpList.h>
-#include "LibUtilities/BasicUtils/ErrorUtil.hpp"  // for ASSERTL0
-#include "LibUtilities/BasicUtils/SessionReader.h"  // for SessionReader, etc
-#include "LibUtilities/BasicUtils/SharedArray.hpp"  // for Array
-#include "SpatialDomains/MeshComponents.h"  // for VertexComponent
-#include "SpatialDomains/MeshGraph.h"   // for MeshGraph, etc
-#include "SpatialDomains/QuadGeom.h"    // for QuadGeom, QuadGeomMap, etc
-#include "SpatialDomains/TriGeom.h"     // for TriGeom, TriGeomMap, etc
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>  // for ASSERTL0
+#include <LibUtilities/BasicUtils/SessionReader.h>  // for SessionReader, etc
+#include <LibUtilities/BasicUtils/SharedArray.hpp>  // for Array
+#include <SpatialDomains/MeshComponents.h>  // for VertexComponent
+#include <SpatialDomains/MeshGraph.h>   // for MeshGraph, etc
+#include <SpatialDomains/QuadGeom.h>    // for QuadGeom, QuadGeomMap, etc
+#include <SpatialDomains/TriGeom.h>     // for TriGeom, TriGeomMap, etc
 
 using namespace Nektar;
 

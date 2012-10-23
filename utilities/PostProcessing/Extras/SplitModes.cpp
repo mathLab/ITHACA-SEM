@@ -2,7 +2,7 @@
 #include <cstdlib>
 
 #include <StdRegions/StdTriExp.h>
-#include "SpatialDomains/MeshGraph.h"   // for FieldDefinitions, etc
+#include <SpatialDomains/MeshGraph.h>   // for FieldDefinitions, etc
 
 using namespace Nektar;
 

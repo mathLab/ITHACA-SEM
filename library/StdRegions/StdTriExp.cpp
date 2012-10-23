@@ -35,7 +35,7 @@
 
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
-#include "StdRegions/StdSegExp.h"       // for StdSegExp, etc
+#include <StdRegions/StdSegExp.h>       // for StdSegExp, etc
 
 namespace Nektar
 {

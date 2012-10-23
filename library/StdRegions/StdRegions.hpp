@@ -38,7 +38,7 @@
 
 
 #include<map>
-#include "LibUtilities/BasicUtils/SharedArray.hpp"  // for Array, etc
+#include <LibUtilities/BasicUtils/SharedArray.hpp>  // for Array, etc
 
 
 namespace Nektar

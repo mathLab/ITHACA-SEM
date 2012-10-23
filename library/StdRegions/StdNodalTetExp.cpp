@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdNodalTetExp.h>
-#include "LibUtilities/Foundations/ManagerAccess.h"  // for PointsManager, etc
+#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
 namespace Nektar 
 {

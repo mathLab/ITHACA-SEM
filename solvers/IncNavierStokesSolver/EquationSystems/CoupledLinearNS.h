@@ -42,15 +42,15 @@
 
 namespace Nektar
 {     
-
+    
     typedef struct coupledSolverMatrices
     {
         /**  \brief Boundary-interior Laplacian plus linearised convective
-             terms pre-multiplying Cinv: 
-             \f$ m\_BCinv[n,m] = (\nabla \phi^b_n, \nu \nabla
-             \phi^i_j) + (\phi^b_n,{\bf U \cdot \nabla} \phi^i_j) +
-             (\phi^b_n \nabla^T {\bf U} \phi^i_j)  m_Cinv[j,m]\f$  
-        */
+         *             terms pre-multiplying Cinv: 
+         *             \f$ m\_BCinv[n,m] = (\nabla \phi^b_n, \nu \nabla
+         *             \phi^i_j) + (\phi^b_n,{\bf U \cdot \nabla} \phi^i_j) +
+         *             (\phi^b_n \nabla^T {\bf U} \phi^i_j)  m_Cinv[j,m]\f$  
+         */
         DNekScalBlkMatSharedPtr m_BCinv;
         
         /** \brief Interior-boundary Laplacian plus linearised convective terms
@@ -71,7 +71,7 @@ namespace Nektar
          *   \f$ m\_D\_{bnd}[n,m] = (\psi_n,\nabla \phi^b_m),\f$ 
          */
         DNekScalBlkMatSharedPtr  m_D_bnd; 
-
+        
         /** \brief Inner product of pressure system with divergence of the
          *  interior velocity space  
          *  \f$ m\_D\_{int}[n,m] = (\psi_j,\nabla \phi^i_m) \f$
@@ -80,15 +80,15 @@ namespace Nektar
         
         MultiRegions::GlobalLinSysSharedPtr m_CoupledBndSys;
     } CoupledSolverMatrices;
-
+    
     class CoupledLinearNS: public IncNavierStokes
     {
     public:
         friend class MemoryManager<CoupledLinearNS>;
-
+        
         /// Creates an instance of this class
         static SolverUtils::EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession)
+            const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             SolverUtils::EquationSystemSharedPtr p = MemoryManager<CoupledLinearNS>::AllocateSharedPtr(pSession);
             p->InitObject();
@@ -110,7 +110,7 @@ namespace Nektar
         const SpatialDomains::ExpansionMap &GenPressureExp(const SpatialDomains::ExpansionMap &VelExp);
         
         void Solve(void);
-
+        
         /**
          *   Solve the coupled linear Navier-Stokes solve using matrix
          *   systems set up at construction.  The solution is stored
@@ -123,43 +123,43 @@ namespace Nektar
                            MultiRegions::ExpListSharedPtr &pressure,
                            const int HomogeneousMode = 0);
         
-		void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+        void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                        Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                        const NekDouble time,
                                        const NekDouble a_iixDt);
-
+        
         void EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                const NekDouble time);
-		
-		void SolveSteadyNavierStokes(void);
-		
-		void Continuation(void);
-		
-		/*void EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
-								 Array<OneD, Array<OneD, NekDouble> > &PreviousForcing,
-								 Array<OneD, Array<OneD, NekDouble> > &outarray);*/
-		
-		void EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
-								 Array<OneD, Array<OneD, NekDouble> > &outarray);
-		
-		void PressureReconstruction(void);
-		
-		void InfNorm(Array<OneD, Array<OneD, NekDouble> > &inarray,
-					 Array<OneD, NekDouble> &outarray);
-		
-		void L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
-					 Array<OneD, NekDouble> &outarray);
-		
-		void DefineForcingTerm(void);
-		Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
-		Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
-				
+        
+        void SolveSteadyNavierStokes(void);
+        
+        void Continuation(void);
+        
+        /*void EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
+         *								 Array<OneD, Array<OneD, NekDouble> > &PreviousForcing,
+         *								 Array<OneD, Array<OneD, NekDouble> > &outarray);*/
+        
+        void EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
+                               Array<OneD, Array<OneD, NekDouble> > &outarray);
+        
+        void PressureReconstruction(void);
+        
+        void InfNorm(Array<OneD, Array<OneD, NekDouble> > &inarray,
+                     Array<OneD, NekDouble> &outarray);
+        
+        void L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, NekDouble> &outarray);
+        
+        void DefineForcingTerm(void);
+        Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm;
+        Array<OneD, Array<OneD, NekDouble> > m_ForcingTerm_Coeffs;
+        
         Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> m_locToGloMap;
         
     protected:
         CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSesssion);
-
+        
         virtual void v_InitObject();
         
     private:
@@ -167,23 +167,23 @@ namespace Nektar
         bool m_singleMode; 
         /// Id to identify when single mode is mean mode (i.e. beta=0);
         bool m_zeroMode;
-		
-		int m_counter;
-		bool m_initialStep;
-		NekDouble   m_tol;        // Tolerence
-		int m_maxIt;           // Max number of iteration
-		int m_Restart;    // 0=Stokes solution as init guess; 1=Restart.cont as init guess
-		int m_MatrixSetUpStep; 
-		NekDouble m_kinvisMin;
-		NekDouble m_kinvisStep;
-		NekDouble m_KinvisPercentage;
-		
-		
-		
-
+        
+        int m_counter;
+        bool m_initialStep;
+        NekDouble   m_tol;        // Tolerence
+        int m_maxIt;           // Max number of iteration
+        int m_Restart;    // 0=Stokes solution as init guess; 1=Restart.cont as init guess
+        int m_MatrixSetUpStep; 
+        NekDouble m_kinvisMin;
+        NekDouble m_kinvisStep;
+        NekDouble m_KinvisPercentage;
+        
+        
+        
+        
         Array<OneD, CoupledSolverMatrices> m_mat;
         
-
+        
         /**
          *  Generate the linearised Navier Stokes solver based on the
          *  static condensation of the interior velocity space and
@@ -199,30 +199,30 @@ namespace Nektar
                                 CoupledSolverMatrices &mat,
                                 CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap,
                                 const NekDouble lambda_imag = NekConstants::kNekUnsetDouble);
-
+        
         virtual void v_PrintSummary(std::ostream &out);
-
+        
         virtual void v_DoInitialise(void);
-
+        
         virtual void v_DoSolve(void);
-		
-		virtual void v_TransCoeffToPhys(void);
-		
-		virtual void v_TransPhysToCoeff(void);
-
+        
+        virtual void v_TransCoeffToPhys(void);
+        
+        virtual void v_TransPhysToCoeff(void);
+        
         virtual void v_Output(void);
-
+        
         virtual int v_GetForceDimension(void);
     };
     
-
-
+    
+    
 } //end of namespace
 
 #endif //COUPLEDSTOKESSCHEME_H
 
 /**
-* $Log:$
-*
-**/
+ * $Log:$
+ *
+ **/
 

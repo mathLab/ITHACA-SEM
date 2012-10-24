@@ -1557,143 +1557,143 @@ namespace Nektar
 	}
 	
 	void CoupledLinearNS::SolveSteadyNavierStokes(void)
-	{
-		Timer Newtontimer;
-		Newtontimer.Start();
-		
-		Array<OneD, Array<OneD, NekDouble> > RHS_Coeffs(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > RHS_Phys(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > delta_velocity_Phys(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> >Velocity_Phys(m_velocity.num_elements());
-		Array<OneD, NekDouble > L2_norm(m_velocity.num_elements(), 1.0);
-		Array<OneD, NekDouble > Inf_norm(m_velocity.num_elements(), 1.0);
-		
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{				
-			delta_velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),1.0); 
-			Velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-		}
-		
-		m_counter=1;
-		
-		//InfNorm(delta_velocity_Phys, Inf_norm);
-		L2Norm(delta_velocity_Phys, L2_norm);		
-
-		//while(max(Inf_norm[0], Inf_norm[1]) > m_tol)// && m_counter <= m_maxIt)
-		while(max(L2_norm[0], L2_norm[1]) > m_tol)// && m_counter <= m_maxIt)
+    {
+        Timer Newtontimer;
+        Newtontimer.Start();
+        
+        Array<OneD, Array<OneD, NekDouble> > RHS_Coeffs(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > RHS_Phys(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > delta_velocity_Phys(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> >Velocity_Phys(m_velocity.num_elements());
+        Array<OneD, NekDouble > L2_norm(m_velocity.num_elements(), 1.0);
+        Array<OneD, NekDouble > Inf_norm(m_velocity.num_elements(), 1.0);
+        
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {				
+            delta_velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),1.0); 
+            Velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+        }
+        
+        m_counter=1;
+        
+        //InfNorm(delta_velocity_Phys, Inf_norm);
+        L2Norm(delta_velocity_Phys, L2_norm);		
+        
+        //while(max(Inf_norm[0], Inf_norm[1]) > m_tol)// && m_counter <= m_maxIt)
+        while(max(L2_norm[0], L2_norm[1]) > m_tol)// && m_counter <= m_maxIt)
 		{
-			if(m_counter == 1) //At the first Newton step, we use the solution of the Stokes problem (if Restart=0 in input file)
+            if(m_counter == 1) //At the first Newton step, we use the solution of the Stokes problem (if Restart=0 in input file)
 				               //Or the solution of the .rst file (if Restart=1 in input file) 
-			{				
-				for(int i = 0; i < m_velocity.num_elements(); ++i)
+            {				
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    RHS_Coeffs[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetNcoeffs(),0.0);
+                    RHS_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                }
+                
+                for(int i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
+                }
+                
+                //m_initialStep = true; //TTTTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTTTTTTTT !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
+                SetUpCoupledMatrix(0.0, Velocity_Phys, true);
+                SolveLinearNS(RHS_Coeffs);
+                //m_initialStep = false; //TTTTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTTTTTTTT !!!!!!!!!!!!!!!!!!!!!!!!!!!
+            }
+            if(m_counter > 1)
+            {
+                EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
+                
+                if(m_counter%m_MatrixSetUpStep == 0) //Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.
 				{
-					RHS_Coeffs[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetNcoeffs(),0.0);
-					RHS_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-				}
-				
-				for(int i = 0; i < m_velocity.num_elements(); ++i)
-				{
-					m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
-				}
-				
-				//m_initialStep = true; //TTTTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTTTTTTTT !!!!!!!!!!!!!!!!!!!!!!!!!!!
-				EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
-				SetUpCoupledMatrix(0.0, Velocity_Phys, true);
-				SolveLinearNS(RHS_Coeffs);
-				//m_initialStep = false; //TTTTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTTTTTTTT !!!!!!!!!!!!!!!!!!!!!!!!!!!
-			}
-			if(m_counter > 1)
-			{
-				EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
-				
-				if(m_counter%m_MatrixSetUpStep == 0) //Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.
-				{
-					SetUpCoupledMatrix(0.0, Velocity_Phys, true);
-				}
-				SolveLinearNS(RHS_Coeffs);
-			}
-				
-			//SolveLinearNS(RHS_Coeffs);
-			
-			for(int i = 0; i < m_velocity.num_elements(); ++i)
-			{
-				m_fields[m_velocity[i]]->BwdTrans_IterPerExp(RHS_Coeffs[i], RHS_Phys[i]);
-				m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), delta_velocity_Phys[i]); 
-			}
-			
-			for(int i = 0; i < m_velocity.num_elements(); ++i)
-			{
-				Vmath::Vadd(Velocity_Phys[i].num_elements(),Velocity_Phys[i], 1, delta_velocity_Phys[i], 1, 
-							Velocity_Phys[i], 1);
-			}	
-			
-			//InfNorm(delta_velocity_Phys, Inf_norm);
-			L2Norm(delta_velocity_Phys, L2_norm);
-				
-			if(max(Inf_norm[0], Inf_norm[1]) > 100)
-			{
-				cout<<"\nThe Newton method has failed at m_kinvis = "<<m_kinvis<<" (<=> Re = " << 1/m_kinvis << ")"<< endl;
-				ASSERTL0(0, "The Newton method has failed... \n");
-			}
-			 
-			
-			cout << "\n";
-			m_counter++;
-		}	
-		
-		if (m_counter > 1) //We save u:=u+\delta u in u->Coeffs
+                    SetUpCoupledMatrix(0.0, Velocity_Phys, true);
+                }
+                SolveLinearNS(RHS_Coeffs);
+            }
+            
+            //SolveLinearNS(RHS_Coeffs);
+            
+            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                m_fields[m_velocity[i]]->BwdTrans_IterPerExp(RHS_Coeffs[i], RHS_Phys[i]);
+                m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), delta_velocity_Phys[i]); 
+            }
+            
+            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                Vmath::Vadd(Velocity_Phys[i].num_elements(),Velocity_Phys[i], 1, delta_velocity_Phys[i], 1, 
+                            Velocity_Phys[i], 1);
+            }	
+            
+            //InfNorm(delta_velocity_Phys, Inf_norm);
+            L2Norm(delta_velocity_Phys, L2_norm);
+            
+            if(max(Inf_norm[0], Inf_norm[1]) > 100)
+            {
+                cout<<"\nThe Newton method has failed at m_kinvis = "<<m_kinvis<<" (<=> Re = " << 1/m_kinvis << ")"<< endl;
+                ASSERTL0(0, "The Newton method has failed... \n");
+            }
+            
+            
+            cout << "\n";
+            m_counter++;
+        }	
+        
+        if (m_counter > 1) //We save u:=u+\delta u in u->Coeffs
 		{
-			for(int i = 0; i < m_velocity.num_elements(); ++i)
-			{			
-				m_fields[m_velocity[i]]->FwdTrans(Velocity_Phys[i], m_fields[m_velocity[i]]->UpdateCoeffs());
-			}
-		}
-					
-		Newtontimer.Stop();
-		cout<<"We have done "<< m_counter-1 << " iteration(s) in " << Newtontimer.TimePerTest(1)/60 << " minute(s). \n\n";
-	}
-	
-	
-	void CoupledLinearNS::Continuation(void)
-	{
-		Array<OneD, Array<OneD, NekDouble> > u_N(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > tmp_RHS(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > RHS(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > u_star(m_velocity.num_elements());
-		
-		cout << "We apply the continuation method: " <<endl;
-		
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			u_N[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
-			m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_N[i]);
-		
-			RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
-			tmp_RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
-			
-			m_fields[m_velocity[i]]->PhysDeriv(i, u_N[i], tmp_RHS[i]);
-			Vmath::Smul(tmp_RHS[i].num_elements(), m_kinvis, tmp_RHS[i], 1, tmp_RHS[i], 1);
-		
-			m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_RHS[i], RHS[i]);
-		}
-		
-		SetUpCoupledMatrix(0.0, u_N, true);
-		SolveLinearNS(RHS);
-		
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			u_star[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
-			m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_star[i]);
-		
-			//u_star(k+1) = u_N(k) + DeltaKinvis *  u_star(k)
-			Vmath::Smul(u_star[i].num_elements(), m_kinvis, u_star[i], 1, u_star[i], 1);
-			Vmath::Vadd(u_star[i].num_elements(), u_star[i], 1, u_N[i], 1, u_star[i], 1);
-					
-			m_fields[m_velocity[i]]->FwdTrans(u_star[i], m_fields[m_velocity[i]]->UpdateCoeffs());
-		}
-		
-		m_kinvis -= m_kinvis*m_KinvisPercentage/100;
-	}		
+            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            {			
+                m_fields[m_velocity[i]]->FwdTrans(Velocity_Phys[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+            }
+        }
+        
+        Newtontimer.Stop();
+        cout<<"We have done "<< m_counter-1 << " iteration(s) in " << Newtontimer.TimePerTest(1)/60 << " minute(s). \n\n";
+    }
+    
+    
+    void CoupledLinearNS::Continuation(void)
+    {
+        Array<OneD, Array<OneD, NekDouble> > u_N(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > tmp_RHS(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > RHS(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > u_star(m_velocity.num_elements());
+        
+        cout << "We apply the continuation method: " <<endl;
+        
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            u_N[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_N[i]);
+            
+            RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            tmp_RHS[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            
+            m_fields[m_velocity[i]]->PhysDeriv(i, u_N[i], tmp_RHS[i]);
+            Vmath::Smul(tmp_RHS[i].num_elements(), m_kinvis, tmp_RHS[i], 1, tmp_RHS[i], 1);
+            
+            m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_RHS[i], RHS[i]);
+        }
+        
+        SetUpCoupledMatrix(0.0, u_N, true);
+        SolveLinearNS(RHS);
+        
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            u_star[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);	
+            m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), u_star[i]);
+            
+            //u_star(k+1) = u_N(k) + DeltaKinvis *  u_star(k)
+            Vmath::Smul(u_star[i].num_elements(), m_kinvis, u_star[i], 1, u_star[i], 1);
+            Vmath::Vadd(u_star[i].num_elements(), u_star[i], 1, u_N[i], 1, u_star[i], 1);
+            
+            m_fields[m_velocity[i]]->FwdTrans(u_star[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+        }
+        
+        m_kinvis -= m_kinvis*m_KinvisPercentage/100;
+    }		
 	
 	
 	void  CoupledLinearNS::InfNorm(Array<OneD, Array<OneD, NekDouble> > &inarray,

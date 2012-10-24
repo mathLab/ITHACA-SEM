@@ -109,7 +109,6 @@ namespace Nektar
             break;
         case eUnsteadyNavierStokes:
         case eUnsteadyStokes:
-        case eSteadyNavierStokesBySFD:
             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
             m_session->LoadParameter("IO_EnergySteps", m_energysteps, 0);
             m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
@@ -141,8 +140,7 @@ namespace Nektar
         
         m_session->LoadParameter("Kinvis", m_kinvis);
         
-        if (m_equationType == eUnsteadyNavierStokes || m_equationType == eSteadyNavierStokesBySFD 
-			|| m_equationType == eSteadyNavierStokes)
+        if (m_equationType == eUnsteadyNavierStokes || m_equationType == eSteadyNavierStokes)
         {
             std::string vConvectiveType = "Convective";
             if (m_session->DefinesTag("AdvectiveType"))

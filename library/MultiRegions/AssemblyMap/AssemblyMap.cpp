@@ -185,7 +185,7 @@ namespace Nektar
             // Retrieve the number of patches at the next level
             int numPatchesWithIntNew = multiLevelGraph->GetNpatchesWithInterior(newLevel);
             int numPatchesNew        = numPatchesWithIntNew;
-
+            
             // Allocate memory to store the number of local dofs associated to each
             // of elemental boundaries of these patches
             map<int, int> numLocalBndCoeffsPerPatchNew;
@@ -199,15 +199,18 @@ namespace Nektar
             int curPatch;
             for(i = cnt = 0; i < numPatchesOld; i++)
             {
-                // For every patch at the current level, the mask array locPatchMask
-                // should be filled with
-                // - the same (positive) number for each entry
-                //   (which will correspond to the patch at the next level it belongs to)
-                // - the same (positive) number for each entry, except some entries that are -1
-                //   (the enties correspond to -1, will be mapped to the local boundary of the
-                //    next level patch given by the positive number)
-                // - -1 for all entries. In this case, we will make an additional patch only
-                //   consisting of boundaries at the next level
+                // For every patch at the current level, the mask array
+                // locPatchMask should be filled with
+                // - the same (positive) number for each entry (which will
+                //   correspond to the patch at the next level it
+                //   belongs to)
+                // - the same (positive) number for each entry, except some
+                //   entries that are -1 (the enties correspond to -1, will be
+                //   mapped to the local boundary of the next level patch given
+                //   by the positive number)
+                // - -1 for all entries. In this case, we will make an
+                //   additional patch only consisting of boundaries at the next
+                //   level
                 minval = *min_element(&locPatchMask[cnt],
                                       &locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
                 maxval = *max_element(&locPatchMask[cnt],

@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File GlobalLinSys.cpp
@@ -35,9 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSys.h>
+#include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/Expansion.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LocalRegions/MatrixKey.h>
 
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>

@@ -33,12 +33,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ExpList.h>
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/GlobalLinSys.h>
 
-#include <LocalRegions/Expansion.h>     // for Expansion
 #include <LocalRegions/MatrixKey.h>     // for MatrixKey
+#include <LocalRegions/Expansion.h>     // for Expansion
 
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>  // for AssemblyMapCG, etc
 #include <MultiRegions/GlobalLinSysKey.h>  // for GlobalLinSysKey

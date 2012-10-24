@@ -35,11 +35,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/DisContField2D.h>
-#include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/Expansion.h>     // for Expansion
 #include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+
 
 namespace Nektar
 {

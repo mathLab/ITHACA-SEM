@@ -445,10 +445,10 @@ namespace Nektar
                         Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
                     for(i = 0; i < locExpVector.size(); ++i)
                     {
+                        int eid = locExp.GetOffset_Elmt_Id(i);
                         locExpansion = boost::dynamic_pointer_cast<
-                            StdRegions::StdExpansion2D>(
-                                locExpVector[locExp.GetOffset_Elmt_Id(i)]);
-                        for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
+                            StdRegions::StdExpansion2D>(locExpVector[eid]);
+                        for(j = 0; j < locExpansion->GetNverts(); ++j)
                         {
                             meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
                             meshVertId = (locExpansion->GetGeom2D())->GetVid(j);

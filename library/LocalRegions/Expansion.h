@@ -62,9 +62,9 @@ namespace Nektar
                 LOCAL_REGIONS_EXPORT Expansion(); // default constructor. 
                 LOCAL_REGIONS_EXPORT virtual ~Expansion();
 
-                DNekScalMatSharedPtr GetLocMatrix(const LocalRegions::MatrixKey &mkey);
+                LOCAL_REGIONS_EXPORT DNekScalMatSharedPtr GetLocMatrix(const LocalRegions::MatrixKey &mkey);
 
-                DNekScalMatSharedPtr GetLocMatrix(const StdRegions::MatrixType mtype,
+                LOCAL_REGIONS_EXPORT DNekScalMatSharedPtr GetLocMatrix(const StdRegions::MatrixType mtype,
                             const StdRegions::ConstFactorMap &factors = StdRegions::NullConstFactorMap,
                             const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap);
 

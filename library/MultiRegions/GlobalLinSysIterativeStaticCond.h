@@ -116,7 +116,7 @@ namespace Nektar
             // Workspace array for matrix multiplication
             Array<OneD, NekDouble> m_wsp;
 
-            PreconditionerSharedPtr  m_precon;
+	    PreconditionerSharedPtr  m_precon;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
@@ -149,17 +149,10 @@ namespace Nektar
             void ConstructNextLevelCondensedSystem(
                     const boost::shared_ptr<AssemblyMap>& locToGloMap);
 
-            /// Compute a diagonal preconditioner of the Shur-complement matrix.
-            void ComputeDiagonalPreconditioner(
-                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
-
             /// Perform a Shur-complement matrix multiply operation.
             virtual void v_DoMatrixMultiply(
                     const Array<OneD, NekDouble>& pInput,
                           Array<OneD, NekDouble>& pOutput);
-
-            /// Compute the preconditioner for the Shur-complement matrix.
-            virtual void v_ComputePreconditioner();
 
             virtual void v_UniqueMap();
 

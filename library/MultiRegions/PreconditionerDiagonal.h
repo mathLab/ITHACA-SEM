@@ -32,9 +32,10 @@
 // Description: Preconditioner header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
-#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONER_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERDIAGONAL_H
+#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERDIAGONAL_H
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
@@ -43,99 +44,63 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class Preconditioner;
-        typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
+        class PreconditionerDiagonal;
+        typedef boost::shared_ptr<PreconditionerDiagonal>  PreconditionerDiagonalSharedPtr;
 
-        typedef LibUtilities::NekFactory< std::string, Preconditioner, 
-            const boost::shared_ptr<GlobalLinSys>&,
-            const boost::shared_ptr<AssemblyMap>& > PreconFactory;
-        PreconFactory& GetPreconFactory();
-
-        class Preconditioner
+        class PreconditionerDiagonal: public Preconditioner
 	{
         public:
-            MULTI_REGIONS_EXPORT Preconditioner(
+            /// Creates an instance of this class
+            static PreconditionerSharedPtr create(
+                        const boost::shared_ptr<GlobalLinSys> &plinsys,
+                        const boost::shared_ptr<AssemblyMap>
+                                                               &pLocToGloMap)
+            {
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerDiagonal>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        p->InitObject();
+	        return p;
+            }
+
+            /// Name of class
+            static std::string className;
+            static std::string className1;
+
+            MULTI_REGIONS_EXPORT PreconditionerDiagonal(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~Preconditioner() {}
-
-	    inline void DoPreconditioner(
-                const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput);
-
-   	    inline void InitObject();
-
-            Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
-
-            const inline DNekMatSharedPtr &GetTransformationMatrix(void) const;
-
-            const inline DNekMatSharedPtr &GetTransposedTransformationMatrix(void) const;
+            virtual ~PreconditionerDiagonal() {}
 
 	protected:
 
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
             PreconditionerType                          m_preconType;
+	    StdRegions::StdExpansionSharedPtr           vExp;
 
             DNekMatSharedPtr                            m_preconditioner;
+	    DNekScalBlkMatSharedPtr                     GloBlkMat;
+
+            DNekScalMatSharedPtr                        bnd_mat;
 
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
 	private:
 
-            void NullPreconditioner(void);
+            void DiagonalPreconditionerSum(void);
 
-	    virtual void v_InitObject();
+	    void StaticCondDiagonalPreconditionerSum(void);
 
-	    virtual void v_DoPreconditioner(
-                const Array<OneD, NekDouble>& pInput,
+            virtual void v_InitObject();
+
+            virtual void v_DoPreconditioner(                
+                      const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
-
-            virtual const DNekMatSharedPtr& v_GetTransformationMatrix(void) const;
-
-            virtual const DNekMatSharedPtr& v_GetTransposedTransformationMatrix(void) const;
 
             static std::string lookupIds[];
             static std::string def;
 	};
-        typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
-
-        /**
-         *
-         */
-        inline void Preconditioner::InitObject()
-        {
-            v_InitObject();
-        }
-
-        /**
-         *
-         */
-        inline const DNekMatSharedPtr& Preconditioner::GetTransformationMatrix(void) const
-        {
-	  return v_GetTransformationMatrix();
-        }
-
-        /**
-         *
-         */
-        inline const DNekMatSharedPtr& Preconditioner::GetTransposedTransformationMatrix(void) const
-        {
-	  return v_GetTransposedTransformationMatrix();
-        }
-
-        /**
-         *
-         */
-        inline void Preconditioner::DoPreconditioner(
-                const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput)
-        {
-	    v_DoPreconditioner(pInput,pOutput);
-        }
-
     }
 }
 

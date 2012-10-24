@@ -39,66 +39,70 @@ namespace Nektar
 {
     string VelocityCorrectionScheme::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction("VelocityCorrectionScheme", VelocityCorrectionScheme::create);
     
-    
-    /**
+     /**
      * Constructor. Creates ...
      *
      * \param 
      * \param
      */
     VelocityCorrectionScheme::VelocityCorrectionScheme(
-        const LibUtilities::SessionReaderSharedPtr& pSession):
+            const LibUtilities::SessionReaderSharedPtr& pSession):
         IncNavierStokes(pSession)
+    {
+        
+    }
+
+    void VelocityCorrectionScheme::v_InitObject()
+    {
+        UnsteadySystem::v_InitObject();
+        IncNavierStokes::v_InitObject();
+        // Set m_pressure to point to last field of m_fields; 
+        if(NoCaseStringCompare(m_session->GetVariable(m_fields.num_elements()-1),"p") == 0)
         {
-            
+            m_nConvectiveFields = m_fields.num_elements()-1;
+            m_pressure = m_fields[m_nConvectiveFields];
+            m_pressureCalls = 1;
+        }
+        else
+        {
+            ASSERTL0(false,"Need to set up pressure field definition");
         }
         
-        void VelocityCorrectionScheme::v_InitObject()
+        LibUtilities::TimeIntegrationMethod intMethod;
+        std::string TimeIntStr = m_session->GetSolverInfo("TimeIntegrationMethod");
+        int i;
+        for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
         {
-            UnsteadySystem::v_InitObject();
-            IncNavierStokes::v_InitObject();
-            // Set m_pressure to point to last field of m_fields; 
-            if(NoCaseStringCompare(m_session->GetVariable(m_fields.num_elements()-1),"p") == 0)
+            if(NoCaseStringCompare(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr) == 0 )
             {
-                m_nConvectiveFields = m_fields.num_elements()-1;
-                m_pressure = m_fields[m_nConvectiveFields];
-                m_pressureCalls = 1;
+                intMethod = (LibUtilities::TimeIntegrationMethod)i; 
+                break;
             }
-            else
+        }
+        
+        ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
+        
+        if(m_HomogeneousType == eHomogeneous1D)
+        {
+            ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
+        }
+
+        m_session->MatchSolverInfo("SubSteppingScheme","True",m_subSteppingScheme,false);
+
+        if(m_subSteppingScheme)
+        {
+            
+            ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,"Projection must be set to Mixed_CG_Discontinuous for substepping");
+            
+            m_session->LoadParameter("SubStepCFL", m_cfl,0.5);
+            
+            // Set to 1 for first step and it will then be increased in
+            // time advance routines
+            switch(intMethod)
             {
-                ASSERTL0(false,"Need to set up pressure field definition");
-            }
-            
-            LibUtilities::TimeIntegrationMethod intMethod;
-            std::string TimeIntStr = m_session->GetSolverInfo("TimeIntegrationMethod");
-            int i;
-            for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)
-            {
-                if(NoCaseStringCompare(LibUtilities::TimeIntegrationMethodMap[i],TimeIntStr) == 0 )
-                {
-                    intMethod = (LibUtilities::TimeIntegrationMethod)i; 
-                    break;
-                }
-            }
-            
-            ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
-            
-            
-            m_session->MatchSolverInfo("SubSteppingScheme","True",m_subSteppingScheme,false);
-            
-            if(m_subSteppingScheme)
-            {
-                
-                ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,"Projection must be set to Mixed_CG_Discontinuous for substepping");
-                
-                m_session->LoadParameter("SubStepCFL", m_cfl,0.5);
-                
-                // Set to 1 for first step and it will then be increased in
-                // time advance routines
-                switch(intMethod)
-                {
-                    case LibUtilities::eBackwardEuler:
-                    case LibUtilities::eBDFImplicitOrder1: 
+            case LibUtilities::eBackwardEuler:
+            case LibUtilities::eBDFImplicitOrder1: 
+    
                     {
                         m_intSteps = 1;
                         m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);

@@ -832,7 +832,7 @@ namespace Nektar
                 return m_stdStaticCondMatrixManager[mkey];
             }
 			
-			inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
+	    inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
             {
                 return m_IndexMapManager[ikey];
             }
@@ -1007,6 +1007,7 @@ namespace Nektar
                 v_GetFaceToElementMap(fid,faceOrient,maparray,signarray,
                                       nummodesA,nummodesB);
             }
+
 
             /**
              * @brief Extract the physical values along edge \a edge from \a
@@ -1425,6 +1426,30 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
+            DNekScalMatSharedPtr CreateReferenceStaticCondBndMatrix(const LocalRegions::MatrixKey &mkey)
+	    {
+                return v_CreateReferenceStaticCondBndMatrix(mkey);
+	    }
+
+            void BuildTransformationMatrix(const DNekScalMatSharedPtr &r_bnd,
+							   const DNekMatSharedPtr & m_transformationmatrix,
+							   const DNekMatSharedPtr & m_transposedtransformationmatrix)
+	    {
+	        v_BuildTransformationMatrix(r_bnd, m_transformationmatrix,m_transposedtransformationmatrix);
+	    }
+
+            void GetModeMappings(const Array<OneD, int > vma,
+				 const Array<OneD, Array<OneD, unsigned int> > ema,
+				 const Array<OneD, Array<OneD, unsigned int> > fma)
+	    {
+	        v_GetModeMappings(vma,ema,fma);
+	    }
+
+	    void SetUpInverseTransformationMatrix()
+            {
+                v_SetUpInverseTransformationMatrix();
+	    }
+
         protected:
 
 
@@ -1436,7 +1461,7 @@ namespace Nektar
             Array<OneD, NekDouble> m_phys;                    /**< Array containing expansion evaluated at the quad points */
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
-			LibUtilities::NekManager<IndexMapKey, IndexMapValues , IndexMapKey::opLess> m_IndexMapManager;
+	    LibUtilities::NekManager<IndexMapKey, IndexMapValues , IndexMapKey::opLess> m_IndexMapManager;
 			
             bool StdMatManagerAlreadyCreated(const StdMatrixKey &mkey)
             {
@@ -1864,6 +1889,16 @@ namespace Nektar
 			
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
+
+            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr v_CreateReferenceStaticCondBndMatrix(const 
+								       LocalRegions::MatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual void v_BuildTransformationMatrix(const DNekScalMatSharedPtr &r_bnd,
+							   DNekMatSharedPtr m_transformationmatrix,
+							   DNekMatSharedPtr m_transposedtransformationmatrix);
+            STD_REGIONS_EXPORT virtual void v_GetModeMappings(Array<OneD, int > vma,
+				                        Array<OneD, Array<OneD, unsigned int> > ema,
+				                        Array<OneD, Array<OneD, unsigned int> > fma);
+	    STD_REGIONS_EXPORT virtual void v_SetUpInverseTransformationMatrix(void);
         };
 
 

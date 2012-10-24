@@ -1538,7 +1538,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-
             void StdExpansion::v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
@@ -1772,348 +1771,33 @@ namespace Nektar
                 static NormalVector result;
                 return result;
             }
+
+            DNekScalMatSharedPtr StdExpansion::v_CreateReferenceStaticCondBndMatrix(const LocalRegions::MatrixKey &mkey)
+	    {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+                return NullDNekScalMatSharedPtr;
+	    }
+
+            void StdExpansion::v_BuildTransformationMatrix(const DNekScalMatSharedPtr &r_bnd,
+							   DNekMatSharedPtr m_transformationmatrix,
+							   DNekMatSharedPtr m_transposedtransformationmatrix)
+	    {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+	    }
+
+            void StdExpansion::v_GetModeMappings(Array<OneD, int > vma,
+				                 Array<OneD, Array<OneD, unsigned int> > ema,
+				                 Array<OneD, Array<OneD, unsigned int> > fma)
+	    {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+	    }
+
+
+	    void StdExpansion::v_SetUpInverseTransformationMatrix(void)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+	    }
+
+
     }//end namespace
 }//end namespace
-
-/**
-* $Log: StdExpansion.cpp,v $
-* Revision 1.94  2010/01/03 19:39:09  cantwell
-* Added FldToVtk converter.
-* Added XmlToVtk converter.
-*
-* Revision 1.93  2009/12/18 00:11:03  bnelson
-* Fixed windows compiler warnings.
-*
-* Revision 1.92  2009/12/14 18:03:18  cbiotto
-* Adding functions for tecplot file
-*
-* Revision 1.91  2009/11/13 16:17:46  sehunchun
-* *** empty log message ***
-*
-* Revision 1.90  2009/11/11 18:43:58  sehunchun
-* *** empty log message ***
-*
-* Revision 1.89  2009/11/10 19:01:37  sehunchun
-* Update related to Variable coefficients of HDG2D Solver
-*
-* Revision 1.88  2009/11/06 21:42:16  sherwin
-* Added call to DGDeriv function
-*
-* Revision 1.87  2009/11/02 19:15:43  cantwell
-* Moved ContField1D to inherit from DisContField1D.
-* Moved ContField3D to inherit from DisContField3D.
-* Incorporated GenExpList1D functionality into ExpList1D.
-* Tidied up and added documentation to various classes.
-* Moved Namespace documentation and introductions to separate files along with
-* doxygen configuration.
-* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
-* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
-* Updated Linux compiling instructions.
-* Updated regDemo to use Helmholtz2D-g when built as debug.
-*
-* Revision 1.86  2009/10/30 14:01:19  pvos
-* Multi-level static condensation updates
-*
-* Revision 1.85  2009/10/25 18:53:39  sherwin
-* Added H1 norm definition
-*
-* Revision 1.84  2009/07/09 21:43:29  sehunchun
-* Mass Matrix multiplicatin with variablecoefficient
-*
-* Revision 1.83  2009/07/02 13:27:51  sehunchun
-* Unnecessary error message for 2D restriction is deleted
-*
-* Revision 1.82  2009/04/27 09:20:21  pvos
-* Fixed small bug
-*
-* Revision 1.81  2009/04/03 14:57:34  sherwin
-* Linear Advection matrices added, corrected unsigned int intialisation
-*
-* Revision 1.80  2008/11/24 10:31:14  pvos
-* Changed name from _PartitionedOp to _MatFree
-*
-* Revision 1.79  2008/11/19 16:02:47  pvos
-* Added functionality for variable Laplacian coeffcients
-*
-* Revision 1.78  2008/11/07 11:37:31  pvos
-* Minor correction
-*
-* Revision 1.77  2008/11/05 16:08:15  pvos
-* Added elemental optimisation functionality
-*
-* Revision 1.76  2008/09/09 14:12:51  sherwin
-* Removed Interp1D/2D/3D and put the into LibUtilities
-*
-* Revision 1.75  2008/08/14 22:09:50  sherwin
-* Modifications to remove HDG routines from StdRegions and removed StdExpMap
-*
-* Revision 1.74  2008/07/29 22:21:15  sherwin
-* A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
-*
-* Revision 1.73  2008/07/19 21:12:54  sherwin
-* Removed MapTo function and made orientation convention anticlockwise in UDG routines
-*
-* Revision 1.72  2008/07/12 16:30:07  sherwin
-* Added an new member m_elmt_id so that there is an element number for use later in lists
-*
-* Revision 1.71  2008/07/02 14:08:56  pvos
-* Implementation of HelmholtzMatOp and LapMatOp on shape level
-*
-* Revision 1.70  2008/05/30 00:33:49  delisi
-* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
-*
-* Revision 1.69  2008/05/10 18:27:33  sherwin
-* Modifications necessary for QuadExp Unified DG Solver
-*
-* Revision 1.68  2008/04/06 06:04:14  bnelson
-* Changed ConstArray to Array<const>
-*
-* Revision 1.67  2008/04/02 22:18:10  pvos
-* Update for 2D local to global mapping
-*
-* Revision 1.66  2008/03/18 14:15:45  pvos
-* Update for nodal triangular helmholtz solver
-*
-* Revision 1.65  2008/03/12 15:25:09  pvos
-* Clean up of the code
-*
-* Revision 1.63  2008/02/29 19:15:19  sherwin
-* Update for UDG stuff
-*
-* Revision 1.62  2008/02/16 05:59:14  ehan
-* Added interpolation 3D.
-*
-* Revision 1.61  2008/01/23 09:09:46  sherwin
-* Updates for Hybrized DG
-*
-* Revision 1.60  2007/12/17 13:03:45  sherwin
-* Modified StdMatrixKey to contain a list of constants and GenMatrix to take a StdMatrixKey
-*
-* Revision 1.59  2007/12/06 22:44:46  pvos
-* 2D Helmholtz solver updates
-*
-* Revision 1.58  2007/11/29 21:40:20  sherwin
-* updates for MultiRegions and DG solver
-*
-* Revision 1.57  2007/11/08 16:55:12  pvos
-* Updates towards 2D helmholtz solver
-*
-* Revision 1.56  2007/10/15 20:38:32  ehan
-* Tested standard mass matrix
-*
-* Revision 1.55  2007/10/04 12:10:04  sherwin
-* Update for working version of static condensation in Helmholtz1D and put lambda coefficient on the mass matrix rather than the Laplacian operator.
-*
-* Revision 1.54  2007/10/03 11:37:51  sherwin
-* Updates relating to static condensation implementation
-*
-* Revision 1.53  2007/09/27 12:55:57  pvos
-* Column major Blas calls corrections
-*
-* Revision 1.52  2007/09/25 14:25:56  pvos
-* Update for helmholtz1D with different expansion orders
-*
-* Revision 1.51  2007/08/29 23:26:48  jfrazier
-* Created non-static manager that shares data across instances.
-*
-* Revision 1.50  2007/07/27 16:56:50  jfrazier
-* Changed manager to static.
-*
-* Revision 1.49  2007/07/27 00:22:53  bnelson
-* Memory manager now accepts non-const parameters to the allocate methods.
-*
-* Revision 1.48  2007/07/22 23:04:25  bnelson
-* Backed out Nektar::ptr.
-*
-* Revision 1.47  2007/07/16 18:28:43  sherwin
-* Modification to introduce non-zero Dirichlet boundary conditions into the Helmholtz1D Demo
-*
-* Revision 1.46  2007/07/15 19:28:28  bnelson
-* *** empty log message ***
-*
-* Revision 1.45  2007/07/13 15:20:19  kirby
-* *** empty log message ***
-*
-* Revision 1.43  2007/07/13 09:02:25  sherwin
-* Mods for Helmholtz solver
-*
-* Revision 1.42  2007/07/12 12:55:14  sherwin
-* Simplified Matrix Generation
-*
-* Revision 1.41  2007/07/10 20:41:52  kirby
-* more fixes
-*
-* Revision 1.40  2007/07/10 19:27:58  kirby
-* Update for new matrix structures
-*
-* Revision 1.39  2007/07/09 15:19:14  sherwin
-* Introduced an InvMassMatrix and replaced the StdLinSysManager call with a StdMatrixManager call to the inverse matrix
-*
-* Revision 1.38  2007/06/07 15:54:19  pvos
-* Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
-* Also made corrections to various ASSERTL2 calls
-*
-* Revision 1.37  2007/05/30 23:56:54  sherwin
-* Silly errors
-*
-* Revision 1.36  2007/05/30 20:49:12  sherwin
-* Updates to do with LocalRegions and SpatialDomains
-*
-* Revision 1.35  2007/05/23 15:12:45  pvos
-* removed some obsolete lines
-*
-* Revision 1.34  2007/05/15 05:18:23  bnelson
-* Updated to use the new Array object.
-*
-* Revision 1.33  2007/04/26 15:00:17  sherwin
-* SJS compiling working version using SHaredArrays
-*
-* Revision 1.32  2007/04/18 16:09:12  pvos
-* Added some new Tensor Operations routines
-*
-* Revision 1.31  2007/04/10 14:00:45  sherwin
-* Update to include SharedArray in all 2D element (including Nodal tris). Have also remvoed all new and double from 2D shapes in StdRegions
-*
-* Revision 1.30  2007/04/08 03:36:57  jfrazier
-* Updated to use SharedArray consistently and minor reformatting.
-*
-* Revision 1.29  2007/03/31 00:40:02  bnelson
-* *** empty log message ***
-*
-* Revision 1.28  2007/03/29 19:35:08  bnelson
-* Replaced boost::shared_array with SharedArray
-*
-* Revision 1.27  2007/03/25 15:48:22  sherwin
-* UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
-*
-* Revision 1.26  2007/03/21 20:56:42  sherwin
-* Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
-*
-* Revision 1.25  2007/03/20 16:58:42  sherwin
-* Update to use Array<OneD, NekDouble> storage and NekDouble usage, compiling and executing up to Demos/StdRegions/Project1D
-*
-* Revision 1.24  2007/03/14 21:24:09  sherwin
-* Update for working version of MultiRegions up to ExpList1D
-*
-* Revision 1.23  2007/03/02 12:01:51  sherwin
-* Update for working version of LocalRegions/Project1D
-*
-* Revision 1.22  2007/02/28 19:05:11  sherwin
-* Moved key definitions to their own files to make things more transparent
-*
-* Revision 1.21  2007/02/24 09:07:25  sherwin
-* Working version of stdMatrixManager and stdLinSysMatrix
-*
-* Revision 1.20  2007/02/23 19:26:07  jfrazier
-* General bug fix and formatting.
-*
-* Revision 1.19  2007/02/22 22:02:27  sherwin
-* Update with executing StdMatManager
-*
-* Revision 1.18  2007/02/22 18:11:31  sherwin
-* Version with some create functions introduced for StdMatManagers
-*
-* Revision 1.17  2007/02/21 22:55:16  sherwin
-* First integration of StdMatrixManagers
-*
-* Revision 1.16  2007/02/17 04:03:22  jfrazier
-* Added NekManager for holding matrices.  Need to finish the create function.
-*
-* Revision 1.15  2007/02/14 16:35:50  pvos
-* Corrected an error in the code
-*
-* Revision 1.14  2007/02/13 09:52:27  sherwin
-* Updates to fix mass matrix inverse issues
-*
-* Revision 1.13  2007/02/07 12:51:52  sherwin
-* Compiling version of Project1D
-*
-* Revision 1.12  2007/02/06 02:23:28  jfrazier
-* Minor cleanup.
-*
-* Revision 1.11  2007/01/30 20:01:35  sherwin
-* Update for first compiling Project1D routine
-*
-* Revision 1.10  2007/01/29 15:04:53  sherwin
-* StdBasis.h moved to LibUtilities. Other minor mods
-*
-* Revision 1.9  2007/01/28 18:34:18  sherwin
-* More modifications to make Demo Project1D compile
-*
-* Revision 1.8  2007/01/23 23:20:20  sherwin
-* New version after Jan 07 update
-*
-* Revision 1.7  2007/01/20 22:35:20  sherwin
-* Version with StdExpansion compiling
-*
-* Revision 1.6  2007/01/15 11:08:37  pvos
-* Updating doxygen documentation
-*
-* Revision 1.5  2006/12/10 19:00:54  sherwin
-* Modifications to handle nodal expansions
-*
-* Revision 1.4  2006/08/05 19:03:48  sherwin
-* Update to make the multiregions 2D expansion in connected regions work
-*
-* Revision 1.3  2006/06/01 14:46:16  kirby
-* *** empty log message ***
-*
-* Revision 1.2  2006/05/29 19:03:08  sherwin
-* Modifications to wrap geometric information in shared_ptr
-*
-* Revision 1.1  2006/05/04 18:58:31  kirby
-* *** empty log message ***
-*
-* Revision 1.54  2006/04/25 20:23:33  jfrazier
-* Various fixes to correct bugs, calls to ASSERT, etc.
-*
-* Revision 1.53  2006/04/01 21:59:26  sherwin
-* Sorted new definition of ASSERT
-*
-* Revision 1.52  2006/03/21 09:21:31  sherwin
-* Introduced NekMemoryManager
-*
-* Revision 1.51  2006/03/12 14:20:44  sherwin
-*
-* First compiling version of SpatialDomains and associated modifications
-*
-* Revision 1.50  2006/03/06 12:39:59  sherwin
-*
-* Added NekConstants class for all constants in this library
-*
-* Revision 1.49  2006/03/05 22:11:02  sherwin
-*
-* Sorted out Project1D, Project2D and Project_Diff2D as well as some test scripts
-*
-* Revision 1.48  2006/03/03 23:04:54  sherwin
-*
-* Corrected Mistake in StdBasis.cpp to do with eModified_B
-*
-* Revision 1.47  2006/03/02 16:20:20  sherwin
-*
-* Introduced method GetPointsTot
-*
-* Revision 1.46  2006/03/01 08:25:03  sherwin
-*
-* First compiling version of StdRegions
-*
-* Revision 1.45  2006/02/26 23:37:29  sherwin
-*
-* Updates and compiling checks upto StdExpansions1D
-*
-* Revision 1.44  2006/02/26 21:23:20  bnelson
-* Fixed a variety of compiler errors caused by updates to the coding standard.
-*
-* Revision 1.43  2006/02/15 08:06:36  sherwin
-*
-* Put files into coding standard (although they do not compile)
-*
-* Revision 1.42  2006/02/12 21:51:42  sherwin
-*
-* Added licence
-*
-* Revision 1.41  2006/02/10 16:44:10  sherwin
-*
-* Updated to comply with coding standard
-*
-**/

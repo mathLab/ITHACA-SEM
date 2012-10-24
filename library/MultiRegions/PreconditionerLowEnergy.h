@@ -123,11 +123,15 @@ namespace Nektar
 
             void CreateLinearFiniteElmentSpace(void);
 
+            void DetermineElementTypeAndOffset(void);
+
             void CreateReferenceGeometryAndMatrix(StdRegions::ExpansionType);
 
-	    void SetLowEnergyModes_Rv(void);
+	    void SetLowEnergyModes_Rv(const DNekMatSharedPtr &m_transformationmatrix,
+                           const DNekMatSharedPtr &m_transposedtransformationmatrix);
 
-	    void SetLowEnergyModes_Ref(void);
+	    void SetLowEnergyModes_Ref(const DNekMatSharedPtr &m_transformationmatrix,
+                           const DNekMatSharedPtr &m_transposedtransformationmatrix);
 
 	    void SetUpInverseTransformationMatrix(void);
 

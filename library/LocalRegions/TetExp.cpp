@@ -2141,5 +2141,535 @@ namespace Nektar
            return geom;
        }
 
+        /**
+	 * \brief Create reference statically condensed matrix
+	 *
+	 **/
+        DNekScalMatSharedPtr TetExp::v_CreateReferenceStaticCondBndMatrix(
+                 const MatrixKey &mkey)
+        {
+        }
+
+        void TetExp::v_BuildTransformationMatrix(const DNekScalMatSharedPtr &r_bnd,
+						 DNekMatSharedPtr m_transformationmatrix,
+                                                 DNekMatSharedPtr m_transposedtransformationmatrix)
+        {
+            int nVerts, nEdges, nFaces;
+            int vMap, eid, fid, vid, cnt, n, i, j;
+            int nEdgeCoeffs, nFaceCoeffs;
+
+            int nBndCoeffs=NumBndryCoeffs();
+            int nCoeffs=GetNcoeffs();
+            int nIntCoeffs=nCoeffs-nBndCoeffs;
+
+            //Get geometric information about this element
+            nVerts=GetNverts();
+            nEdges=GetNedges();
+            nFaces=GetNfaces();
+
+            //Set up map between element vertex, edge or face on the reference
+            //element and modes in the matrix
+            Array<OneD, int > vertModeLocation(nVerts);
+            Array<OneD, Array<OneD, unsigned int> > edgeModeLocation(nEdges);
+            Array<OneD, Array<OneD, unsigned int> > faceModeLocation(nFaces);
+
+            //mapping arrays for vertices, edges and faces
+            GetModeMappings(vertModeLocation,edgeModeLocation,faceModeLocation);
+
+            /*************************************/
+            /* Vetex-edge & vertex-face matrices */
+            /*************************************/
+
+            /**
+             * The matrix component of \f$\mathbf{R}\f$ is given by
+             *\f[
+             *  \mathbf{R^{T}_{v}}=-\mathbf{S}^{-1}_{ef,ef}\mathbf{S}^{T}_{v,ef}\f]
+             *
+             * For every vertex mode we extract the submatrices from statically condensed 
+             * matrix \f$\mathbf{S}\f$ corresponding to the coupling between the attached 
+             * edges and faces of a vertex (\f$\mathbf{S_{ef,ef}}\f$). This matrix is then
+             * inverted and multiplied by the submatrix representing the coupling between
+             * a vertex and the attached edges and faces (\f$\mathbf{S_{v,ef}}\f$). 
+             */
+
+ 	    int nmodes;
+            int eid2, fid2, cnt2, m;
+            int FaceTotNCoeffs, EdgeTotNCoeffs;
+            NekDouble MatrixValue, VertexEdgeFaceValue;
+            NekDouble zero = 0.0;
+
+            //The number of connected edges/faces is 3 (for all elements)
+            int nConnectedEdges=3;
+            int nConnectedFaces=3;
+
+            //location in the matrix
+            Array<OneD, Array<OneD, unsigned int> > MatEdgeLocation(nConnectedEdges);
+            Array<OneD, Array<OneD, unsigned int> > MatFaceLocation(nConnectedFaces);
+
+            // Define storage for vertex transpose matrix and zero all entries
+            MatrixStorage storage = eFULL;
+            DNekMat &R = (*m_transformationmatrix);
+            DNekMat &RT = (*m_transposedtransformationmatrix);
+
+            //Build the vertex-edge/face transform matrix: This matrix is
+            //constructed from the submatrices corresponding to the couping
+            //between each vertex and the attached edges/faces
+            for(vid=0; vid<nVerts; ++vid)
+            {
+                //row and column size of the vertex-edge/face matrix
+                int efRow = GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,0)) +
+                            GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,1)) +
+                            GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,2)) +
+                            GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,0)) +
+                            GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,1)) +
+                            GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,2)) - 6;
+
+                int nedgemodesconnected=nConnectedEdges * (GetEdgeNcoeffs(
+                                                           m_geom->GetVertexEdgeMap(vid,0))-2);
+                Array<OneD, unsigned int> edgemodearray(nedgemodesconnected);
+
+                int nfacemodesconnected=nConnectedFaces * (GetFaceIntNcoeffs(
+                                                           m_geom->GetVertexFaceMap(vid,0)));
+                Array<OneD, unsigned int> facemodearray(nfacemodesconnected);
+
+
+                //create array of edge modes
+                for(eid=0; eid < nConnectedEdges; ++eid)
+                {
+                    MatEdgeLocation[eid]=edgeModeLocation[m_geom->GetVertexEdgeMap(vid,eid)];
+                    nmodes=MatEdgeLocation[eid].num_elements();
+                    Vmath::Vcopy(nmodes, &MatEdgeLocation[eid][0], 1, &edgemodearray[eid*nmodes], 1);
+                }
+
+                //create array of face modes
+                for(fid=0; fid < nConnectedFaces; ++fid)
+                {
+                    MatFaceLocation[fid]=faceModeLocation[m_geom->GetVertexFaceMap(vid,fid)];
+                    nmodes=MatFaceLocation[fid].num_elements();
+                    Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 1, &facemodearray[fid*nmodes], 1);
+                }
+
+                DNekMatSharedPtr m_vertexedgefacetransformmatrix = MemoryManager<DNekMat>::AllocateSharedPtr(
+											    1, efRow, zero, storage);
+                DNekMat &Sveft = (*m_vertexedgefacetransformmatrix);
+
+                DNekMatSharedPtr m_vertexedgefacecoupling = MemoryManager<DNekMat>::AllocateSharedPtr(
+										     1, efRow, zero, storage);
+                DNekMat &Svef = (*m_vertexedgefacecoupling);
+
+                //vertex-edge coupling
+                for (n=0; n<nedgemodesconnected; ++n)
+                {
+                    //Matrix value for each coefficient location
+                    VertexEdgeFaceValue=(*r_bnd)(vertModeLocation[vid], edgemodearray[n]);
+
+                    //Set the value in the vertex edge/face matrix
+                    Svef.SetValue(0,n,VertexEdgeFaceValue);
+                }
+
+                //vertex-face coupling
+                for (n=0; n<nfacemodesconnected; ++n)
+                {
+                    //Matrix value for each coefficient location
+                    VertexEdgeFaceValue=(*r_bnd)(vertModeLocation[vid],facemodearray[n]);
+
+                    //Set the value in the vertex edge/face matrix
+                    //Svef.SetValue(vid,n+nedgemodesconnected,VertexEdgeFaceValue);
+                    Svef.SetValue(0,n+nedgemodesconnected,VertexEdgeFaceValue);
+                }
+
+
+                /*Build the edge-face transform matrix: This matrix is constructed
+                  from the submatrices corresponding to the couping between the edges
+                  and faces on the attached faces/edges of a vertex*/
+
+                //Allocation of matrix to store edge/face-edge/face coupling
+                DNekMatSharedPtr m_edgefacecoupling = 
+                    MemoryManager<DNekMat>::AllocateSharedPtr(
+                                           efRow, efRow,zero, storage);
+                DNekMat &Sefef = (*m_edgefacecoupling);
+
+                NekDouble EdgeEdgeValue, FaceFaceValue;
+
+                //edge-edge coupling (S_{ee})
+                for (m=0; m<nedgemodesconnected; ++m)
+                {
+                    for (n=0; n<nedgemodesconnected; ++n)
+                    {
+                        //Matrix value for each coefficient location
+                        EdgeEdgeValue=(*r_bnd)(edgemodearray[n],
+                                               edgemodearray[m]);
+
+                        //Set the value in the vertex edge/face matrix
+                        Sefef.SetValue(n,m,EdgeEdgeValue);
+                    }
+                }
+
+                //face-face coupling (S_{ff})
+                for (n=0; n<nfacemodesconnected; ++n)
+                {
+                    for (m=0; m<nfacemodesconnected; ++m)
+                    {
+                        //Matrix value for each coefficient location
+                        FaceFaceValue=(*r_bnd)(facemodearray[n],
+                                               facemodearray[m]);
+
+                        //Set the value in the vertex edge/face matrix
+                        Sefef.SetValue(nedgemodesconnected+n,
+                                       nedgemodesconnected+m,FaceFaceValue);
+                    }
+                }
+
+                //edge-face coupling (S_{ef} and trans(S_{ef}))
+                for (n=0; n<nedgemodesconnected; ++n)
+                {
+                    for (m=0; m<nfacemodesconnected; ++m)
+                    {
+                        //Matrix value for each coefficient location
+                        FaceFaceValue=(*r_bnd)(edgemodearray[n],
+                                               facemodearray[m]);
+
+                        //Set the value in the vertex edge/face matrix 
+                        Sefef.SetValue(n,nedgemodesconnected+m,FaceFaceValue);
+
+                        //and transpose
+                        Sefef.SetValue(nedgemodesconnected+m,n,FaceFaceValue);
+                    }
+                }                
+
+                // Invert edge-face coupling matrix
+                Sefef.Invert();
+
+                //R_{v}=-S_{v,ef}inv(S_{ef,ef})
+                Sveft=-Svef*Sefef;
+
+                // Populate R with R_{ve} components
+                for(n=0; n<edgemodearray.num_elements(); ++n)
+                {
+                    RT.SetValue(edgemodearray[n], vertModeLocation[vid], 
+                                Sveft(0,n));
+                    R.SetValue(vertModeLocation[vid], edgemodearray[n], 
+                               Sveft(0,n));
+                }
+
+                // Populate R with R_{vf} components
+                for(n=0; n<facemodearray.num_elements(); ++n)
+                {
+                    RT.SetValue(facemodearray[n], vertModeLocation[vid], 
+                                Sveft(0,n+nedgemodesconnected));
+                    R.SetValue(vertModeLocation[vid], facemodearray[n], 
+                               Sveft(0,n+nedgemodesconnected));
+                }
+            }
+
+            /********************/
+            /* edge-face matrix */
+            /********************/
+
+            /* The matrix component of \f$\mathbf{R}\f$ is given by \f[
+             *\mathbf{R^{T}_{ef}}=-\mathbf{S}^{-1}_{ff}\mathbf{S}^{T}_{ef}\f]
+             *
+             * For each edge extract the submatrices from statically condensed
+             * matrix \f$\mathbf{S}\f$ corresponding to inner products of modes
+             * on the two attached faces within themselves as well as the
+             * coupling matrix between the two faces
+             * (\f$\mathbf{S}_{ff}\f$). This matrix of face coupling is then
+             * inverted and multiplied by the submatrices of corresponding to
+             * the coupling between the edge and attached faces
+             * (\f$\mathbf{S}_{ef}\f$).
+             *
+             */
+
+            NekDouble EdgeFaceValue, FaceFaceValue, Rvalue;
+            int efCol, efRow, nedgemodes;
+	    
+            //number of attached faces is always 2
+            nConnectedFaces=2;
+
+            //location in the matrix
+            MatEdgeLocation = Array<OneD, Array<OneD, unsigned int> > 
+                (nEdges);
+            MatFaceLocation = Array<OneD, Array<OneD, unsigned int> > 
+                (nConnectedFaces);
+
+            FaceTotNCoeffs=GetTotalFaceIntNcoeffs();
+            EdgeTotNCoeffs=GetTotalEdgeIntNcoeffs();
+
+            //Build the edge/face transform matrix: This matrix is constructed
+            //from the submatrices corresponding to the couping between a
+            //specific edge and the two attached faces.
+            for (cnt=eid=0; eid<nEdges; ++eid)
+            {
+                //row and column size of the vertex-edge/face matrix
+                efCol=GetFaceIntNcoeffs(m_geom->GetEdgeFaceMap(eid,0))+
+                    GetFaceIntNcoeffs(m_geom->GetEdgeFaceMap(eid,1));
+                efRow=GetEdgeNcoeffs(eid)-2;
+                
+                // Edge-face coupling matrix
+                DNekMatSharedPtr m_efedgefacecoupling = MemoryManager<DNekMat>::
+                    AllocateSharedPtr(efRow, efCol, zero, storage);
+                DNekMat &Mef = (*m_efedgefacecoupling);
+                
+                // Face-face coupling matrix
+                DNekMatSharedPtr m_effacefacecoupling = MemoryManager<DNekMat>::
+                    AllocateSharedPtr(efCol, efCol, zero, storage);
+                DNekMat &Meff = (*m_effacefacecoupling);
+
+                // Edge-face transformation matrix
+                DNekMatSharedPtr m_edgefacetransformmatrix = MemoryManager<DNekMat>::
+                    AllocateSharedPtr(efRow, efCol, zero, storage);
+                DNekMat &Meft = (*m_edgefacetransformmatrix);
+
+                int nfacemodesconnected=nConnectedFaces * (
+                    GetFaceIntNcoeffs(m_geom->GetEdgeFaceMap(eid,0)));
+                Array<OneD, unsigned int> 
+                    facemodearray(nfacemodesconnected);
+
+                //create array of edge modes
+                nedgemodes=edgeModeLocation[eid].num_elements();
+                Array<OneD, unsigned int> edgemodearray(nedgemodes);
+                Vmath::Vcopy(nedgemodes, &edgeModeLocation[eid][0], 
+                             1, &edgemodearray[0], 1);
+
+                //create array of face modes
+                for(fid=0; fid < nConnectedFaces; ++fid)
+                {
+                    MatFaceLocation[fid]=faceModeLocation[
+                        m_geom->GetEdgeFaceMap(eid,fid)];
+                    nmodes=MatFaceLocation[fid].num_elements();
+                    Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 1, 
+                                 &facemodearray[fid*nmodes], 1);
+                }
+
+                //edge-face coupling
+                for (n=0; n<nedgemodes; ++n)
+                {
+                    for (m=0; m<nfacemodesconnected; ++m)
+                    {
+                        //Matrix value for each coefficient location
+                        EdgeFaceValue=(*r_bnd)(edgemodearray[n],facemodearray[m]);
+
+                        //Set the value in the edge/face matrix
+                        Mef.SetValue(n,m,EdgeFaceValue);
+                    }
+                }
+
+                //face-face coupling
+                for (n=0; n<nfacemodesconnected; ++n)
+                {
+                    for (m=0; m<nfacemodesconnected; ++m)
+                    {
+                        //Matrix value for each coefficient location
+                        FaceFaceValue=(*r_bnd)(facemodearray[n],facemodearray[m]);
+
+                        //Set the value in the vertex edge/face matrix
+                        Meff.SetValue(n,m,FaceFaceValue);
+                    }
+                }
+
+                // Invert edge-face coupling matrix
+                Meff.Invert();
+
+                // trans(R_{ef})=-S_{ef}*(inv(S_{ff})
+                Meft=-Mef*Meff;
+                
+                //Populate transformation matrix with Meft
+                for(n=0; n<Meft.GetRows(); ++n)
+                {
+                    for(m=0; m<Meft.GetColumns(); ++m)
+                    {
+                        R.SetValue(edgemodearray[n], facemodearray[m], Meft(n,m));
+                        RT.SetValue(facemodearray[m], edgemodearray[n], Meft(n,m));
+                    }
+                }
+            }
+
+            for (i = 0; i < R.GetRows(); ++i)
+            {
+                R.SetValue(i,i,1.0);
+                RT.SetValue(i,i,1.0);
+            }
+	}
+
+        void TetExp::v_GetModeMappings(Array<OneD, int > vma,
+				       Array<OneD, Array<OneD, unsigned int> > ema,
+				       Array<OneD, Array<OneD, unsigned int> > fma)
+        {
+            int nVerts, nEdges, nFaces;
+            int vMap, eid, fid, vid, cnt, n, i, j;
+            int nEdgeCoeffs, nFaceCoeffs;
+
+            int nBndCoeffs=NumBndryCoeffs();
+            int nCoeffs=GetNcoeffs();
+            int nIntCoeffs=nCoeffs-nBndCoeffs;
+
+            Array<OneD,unsigned int> bmap(nBndCoeffs);
+            GetBoundaryMap(bmap);
+
+            Array<OneD,unsigned int> imap(nIntCoeffs);
+            GetInteriorMap(imap);
+
+            //map from full system to statically condensed system
+            //i.e reverse GetBoundaryMap
+
+            map<int,int> invmap;
+            for(j = 0; j < bmap.num_elements(); ++j)
+            {
+                invmap[bmap[j]] = j;
+            }
+
+	    nVerts=vma.num_elements();
+	    nEdges=ema.num_elements();
+	    nFaces=fma.num_elements();
+
+            //loop over vertices and determine the location of vertex
+            //coefficients in the storage array
+            for (vid=0; vid<nVerts; ++vid)
+            {
+                //location in matrix
+                vMap = GetVertexMap(vid);
+                vma[vid]=vMap;
+            }
+
+            //loop over edges and determine location of edge coefficients in the
+            //storage array
+            for (eid=0; eid<nEdges; ++eid)
+            {
+                //Number of interior edge coefficients
+                nEdgeCoeffs=GetEdgeNcoeffs(eid)-2;
+
+                StdRegions::Orientation eOrient=m_geom->GetEorient(eid);
+                Array< OneD, unsigned int > maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+                Array< OneD, int > signarray = Array<OneD, int>(nEdgeCoeffs,1);
+
+                //maparray is the location of the edge within the matrix
+                GetEdgeInteriorMap(eid,eOrient,maparray,signarray);
+
+                for (n=0; n<maparray.num_elements(); ++n)
+                {
+                    maparray[n]=invmap[maparray[n]];
+                }
+                ema[eid]=maparray;
+            }
+
+            int nTotFaceCoeffs=GetTotalFaceIntNcoeffs();
+	                
+            //loop over faces and determine location of face coefficients in the storage array
+            for (cnt=fid=0; fid<nFaces; ++fid)
+            {
+                //Number of interior edge coefficients
+                nFaceCoeffs=GetFaceIntNcoeffs(fid);
+ 
+                StdRegions::Orientation fOrient=GetFaceOrient(fid);
+                Array< OneD, unsigned int > maparray = Array<OneD, unsigned int>(nFaceCoeffs);
+                Array< OneD, int > signarray = Array<OneD, int>(nFaceCoeffs,1);
+
+                //maparray is the location of the face within the matrix
+                GetFaceInteriorMap(fid,fOrient,maparray,signarray);
+
+                for (n=0; n<maparray.num_elements(); ++n)
+                {
+                    maparray[n]=invmap[maparray[n]];
+                }
+                fma[fid]=maparray;
+            }
+	}
+
+        /**
+	 * \brief Build inverse and inverse transposed transformation matrix: \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
+	 *
+	 * \f\mathbf{R^{-T}}=[\left[\begin{array}{ccc} \mathbf{I} & -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
+	 *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
+	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
+	 *
+	 */
+        void TetExp::v_SetUpInverseTransformationMatrix()
+	{
+	  /*int i,j,n, eid, fid;
+            int nCoeffs=vExp->NumBndryCoeffs();
+            NekDouble MatrixValue;
+            NekDouble zero=0.0;
+            DNekMat &R = (*m_transformationmatrix);
+            // Define storage for vertex transpose matrix and zero all entries
+            MatrixStorage storage = eFULL;
+            m_inversetransformationmatrix = MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs, nCoeffs, 
+                                                                                        zero, storage);
+            DNekMat &InvR = (*m_inversetransformationmatrix);
+            //transposed inverse transformation matrix
+            m_inversetransposedtransformationmatrix = MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs, 
+                                                                                 nCoeffs,zero, storage);
+            DNekMat &InvRT = (*m_inversetransposedtransformationmatrix);
+
+            int nVerts=vExp->GetGeom()->GetNumVerts();
+            int nEdges=vExp->GetGeom()->GetNumEdges();
+            int nFaces=vExp->GetGeom()->GetNumFaces();
+            int nedgemodes, nfacemodes;
+
+            Array<OneD, unsigned int> edgemodearray(nEdges*edgeModeLocation[0].num_elements());
+            Array<OneD, unsigned int> facemodearray(nFaces*faceModeLocation[0].num_elements());
+
+            //create array of edge modes
+            for(eid=0; eid < nEdges; ++eid)
+            {
+                nedgemodes=edgeModeLocation[eid].num_elements();
+                Vmath::Vcopy(nedgemodes, &edgeModeLocation[eid][0], 1, &edgemodearray[eid*nedgemodes], 1);
+            }
+
+            //create array of face modes
+            for(fid=0; fid < nFaces; ++fid)
+            {
+                nfacemodes=faceModeLocation[fid].num_elements();
+                Vmath::Vcopy(nfacemodes, &faceModeLocation[fid][0], 1, &facemodearray[fid*nfacemodes], 1);
+            }
+ 
+            int nedgemodestotal=nedgemodes*nEdges;
+            int nfacemodestotal=nfacemodes*nFaces;
+
+            //vertex-edge/face
+            for (i=0; i<nVerts; ++i)
+            {
+                for(j=0; j<nedgemodestotal; ++j)
+                {
+                    InvR.SetValue(vertModeLocation[i],edgemodearray[j],
+                             -R(vertModeLocation[i],edgemodearray[j]));
+                    InvRT.SetValue(edgemodearray[j],vertModeLocation[i],
+                              -R(vertModeLocation[i],edgemodearray[j]));
+                }
+
+                for(j=0; j<nfacemodestotal; ++j)
+                {
+                    InvR.SetValue(vertModeLocation[i],facemodearray[j],
+                             -R(vertModeLocation[i],facemodearray[j]));
+                    InvRT.SetValue(facemodearray[j],vertModeLocation[i],
+                              -R(vertModeLocation[i],facemodearray[j]));
+                    for(n=0; n<nedgemodestotal; ++n)
+                    {
+                        MatrixValue=InvR.GetValue(vertModeLocation[i],facemodearray[j])
+                                               +R(vertModeLocation[i],edgemodearray[n])
+                                                 *R(edgemodearray[n],facemodearray[j]);
+                        InvR.SetValue(vertModeLocation[i],facemodearray[j],MatrixValue);
+                        InvRT.SetValue(facemodearray[j],vertModeLocation[i],MatrixValue);
+                    }
+                }
+            }
+
+            //edge-face contributions
+            for (i=0; i<nedgemodestotal; ++i)
+            {
+                for(j=0; j<nfacemodestotal; ++j)
+                {
+                    InvR.SetValue(edgemodearray[i],facemodearray[j],-R(edgemodearray[i],facemodearray[j]));
+                    InvRT.SetValue(facemodearray[j],edgemodearray[i],-R(edgemodearray[i],facemodearray[j]));
+                }
+            }
+
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                InvR.SetValue(i,i,1.0);
+                InvRT.SetValue(i,i,1.0);
+		}*/
+	}
+
+
     }//end of namespace
 }//end of namespace

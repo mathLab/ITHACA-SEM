@@ -38,6 +38,7 @@
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/MatrixKey.h>
 #include <SpatialDomains/MeshGraph2D.h>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 namespace Nektar

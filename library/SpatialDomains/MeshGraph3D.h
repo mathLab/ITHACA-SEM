@@ -46,7 +46,6 @@ namespace Nektar
     namespace SpatialDomains
     {
         class SegGeom;
-        class TriGeom;
         class QuadGeom;
         class TetGeom;
         class PyrGeom;

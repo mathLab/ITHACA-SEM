@@ -44,6 +44,7 @@
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
+#include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TetGeom.h>
 #include <SpatialDomains/PyrGeom.h>
 #include <SpatialDomains/PrismGeom.h>

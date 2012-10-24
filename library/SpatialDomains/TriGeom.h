@@ -40,6 +40,10 @@
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/SegGeom.h>
+
+#include <SpatialDomains/GeomFactors2D.h>
+#include <StdRegions/StdTriExp.h>
 
 namespace Nektar
 {
@@ -101,7 +105,7 @@ namespace Nektar
             protected:
                 VertexComponentVector           m_verts;
                 SegGeomVector                   m_edges;
-                StdRegions::Orientation     m_eorient [kNedges];
+                StdRegions::Orientation         m_eorient [kNedges];
                 int				                m_fid;
                 bool				            m_ownVerts;
                 std::list<CompToElmt>		    m_elmtMap;

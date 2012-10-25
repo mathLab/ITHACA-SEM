@@ -50,6 +50,7 @@ SET(LinearAlgebraHeaders
 SET(FoundationHeaders
     ./Foundations/Graph.h
     ./Foundations/Basis.h
+    ./Foundations/BasisType.h
     ./Foundations/Foundations.hpp
     ./Foundations/FourierPoints.h
     ./Foundations/FourierSingleModePoints.h
@@ -62,6 +63,7 @@ SET(FoundationHeaders
     ./Foundations/NodalTriElec.h
     ./Foundations/NodalTriFekete.h
     ./Foundations/Points.h
+    ./Foundations/POintsType.h
     ./Foundations/PolyEPoints.h
     ./Foundations/NodalUtil.h
     ./Foundations/NodalTriEvenlySpaced.h

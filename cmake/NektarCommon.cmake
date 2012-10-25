@@ -69,11 +69,12 @@ MACRO(SET_COMMON_PROPERTIES name)
         #   warning)" warning (4800)
         # 4250 - Inheritance via dominance.  Nektar appears to be handling the 
         # diamond correctly.
-
+            # 4373 - Overriding a virtual method with parameters that differ by const
+            #        or volatile conforms to the standard.
         # /Za is necessary to prevent temporaries being bound to reference
         #   parameters.
         SET_TARGET_PROPERTIES(${name} PROPERTIES COMPILE_FLAGS 
-                            "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800 /wd4250")
+                                "/wd4521 /wd4522 /wd4351 /wd4018 /wd4800 /wd4250 /wd4373")
 
         # Enable source level parallel builds.
         SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
@@ -198,6 +199,7 @@ MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
             PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup -Wl,-rpath,${CMAKE_INSTALL_PREFIX}/${LIB_DIR} -Wl,-rpath,${Boost_LIBRARY_DIRS}")
     ENDIF( ${CMAKE_SYSTEM} MATCHES "Darwin-*")
     
+    SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
 	INSTALL(TARGETS ${name} 
 		RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT ${component} OPTIONAL
 		ARCHIVE DESTINATION ${NEKTAR_LIB_DIR} COMPONENT ${component} OPTIONAL
@@ -211,7 +213,7 @@ MACRO(ADD_NEKTAR_LIBRARY name component type)
     # NIST Sparse BLAS only static, so link into Nektar libraries directly.
     TARGET_LINK_LIBRARIES( ${name} ${NIST_SPARSE_BLAS} ${METIS_LIB})
     ADD_DEPENDENCIES(${name} spblastk0.9b modmetis-4.0 boost tinyxml zlib)
-
+    SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
     IF (NEKTAR_USE_MPI)
         TARGET_LINK_LIBRARIES( ${name} ${GSMPI_LIBRARY} )
     ENDIF (NEKTAR_USE_MPI)

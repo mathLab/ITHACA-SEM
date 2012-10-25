@@ -40,16 +40,15 @@
 #include <MultiRegions/MultiRegionsDeclspec.h>
 
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>  // for Array
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <vector>
+#include <set>
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/cuthill_mckee_ordering.hpp>
 #include <boost/graph/properties.hpp>
 #include <boost/graph/bandwidth.hpp>
-
-using std::vector;
 
 namespace Nektar
 {
@@ -171,7 +170,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT void DumpNBndDofs(void) const;
 
-            MULTI_REGIONS_EXPORT void CollectLeaves(vector<SubGraphSharedPtr>& leaves) const;
+            MULTI_REGIONS_EXPORT void CollectLeaves(std::vector<SubGraphSharedPtr>& leaves) const;
 
             MULTI_REGIONS_EXPORT inline int  GetNdaughterGraphs() const;
 
@@ -214,7 +213,7 @@ namespace Nektar
             
             MULTI_REGIONS_EXPORT int GetInteriorOffset(const int whichlevel, const int patch = 0) const;
 
-            MULTI_REGIONS_EXPORT vector<SubGraphSharedPtr> GetInteriorBlocks(const int whichlevel) const;
+            MULTI_REGIONS_EXPORT std::vector<SubGraphSharedPtr> GetInteriorBlocks(const int whichlevel) const;
 
             MULTI_REGIONS_EXPORT int GetNumGlobalDofs(const int whichlevel) const;
 
@@ -223,7 +222,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void Dump() const;
 
         protected:
-            vector<SubGraphSharedPtr> m_IntBlocks;
+            std::vector<SubGraphSharedPtr> m_IntBlocks;
             BottomUpSubStructuredGraphSharedPtr m_daughterGraph;
 
         private:
@@ -233,7 +232,7 @@ namespace Nektar
             {
                 return m_daughterGraph;
             }
-            inline vector<SubGraphSharedPtr> GetInteriorBlocks() const
+            inline std::vector<SubGraphSharedPtr> GetInteriorBlocks() const
             {
                 return m_IntBlocks;
             }
@@ -256,8 +255,7 @@ namespace Nektar
             Array<OneD, int>& iperm,
             BottomUpSubStructuredGraphSharedPtr& substructgraph,
             const int mdswitch = 1,
-            set<int> vertMark = set<int>(),
-            set<int> edgeMark = set<int>());
+            std::set<int> vertMark = std::set<int>());
         
         // The parameter MDSWITCH.
         // This parameters defines the maximal size of the smallest patches.

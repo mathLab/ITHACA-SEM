@@ -230,7 +230,7 @@ namespace Nektar
             cout << "  "  << m_BndDofs->GetNverts() << "   " << m_BndDofs->GetIdOffset() << endl;
         }
 
-        void MultiLevelBisectedGraph::CollectLeaves(vector<SubGraphSharedPtr>& leaves) const
+        void MultiLevelBisectedGraph::CollectLeaves(std::vector<SubGraphSharedPtr>& leaves) const
         {
             int cnt = 0;
             if(m_leftDaughterGraph.get())
@@ -688,9 +688,9 @@ namespace Nektar
             return returnval;
         }
 
-        vector<SubGraphSharedPtr> BottomUpSubStructuredGraph::GetInteriorBlocks(const int whichlevel) const
+        std::vector<SubGraphSharedPtr> BottomUpSubStructuredGraph::GetInteriorBlocks(const int whichlevel) const
         {
-            vector<SubGraphSharedPtr> returnval;
+            std::vector<SubGraphSharedPtr> returnval;
             static int level = 0;
             level++;
 
@@ -790,7 +790,7 @@ namespace Nektar
             // Call boost::cuthill_mckee_ordering to reorder the
             // graph-vertices using the reverse Cuthill-Mckee
             // algorithm
-            vector<BoostVertex> reorderedVerts(nGraphVerts);
+            std::vector<BoostVertex> reorderedVerts(nGraphVerts);
             boost::cuthill_mckee_ordering(graph, reorderedVerts.rbegin());
 
             //copy the reordering to the Arrays perm and iperm
@@ -807,8 +807,7 @@ namespace Nektar
                                            Array<OneD, int>& iperm,
                                            BottomUpSubStructuredGraphSharedPtr& substructgraph,
                                            const int mdswitch,
-                                           set<int> vertMark,
-                                           set<int> edgeMark)
+                                           std::set<int> vertMark)
         {
             int nGraphVerts = boost::num_vertices(graph);
             int nGraphEdges = boost::num_edges(graph);

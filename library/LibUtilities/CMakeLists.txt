@@ -63,7 +63,7 @@ SET(FoundationHeaders
     ./Foundations/NodalTriElec.h
     ./Foundations/NodalTriFekete.h
     ./Foundations/Points.h
-    ./Foundations/POintsType.h
+    ./Foundations/PointsType.h
     ./Foundations/PolyEPoints.h
     ./Foundations/NodalUtil.h
     ./Foundations/NodalTriEvenlySpaced.h

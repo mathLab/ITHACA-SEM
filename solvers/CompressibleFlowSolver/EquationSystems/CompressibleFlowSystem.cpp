@@ -33,15 +33,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <cstdio>
-#include <cstdlib>
-
-#include <boost/math/constants/constants.hpp>
-
+#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
 namespace Nektar
 {

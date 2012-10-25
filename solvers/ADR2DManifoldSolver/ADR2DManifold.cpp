@@ -35,10 +35,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ADR2DManifoldSolver/ADR2DManifold.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <boost/math/special_functions/spherical_harmonic.hpp>
 
-#include <cstdio>
-#include <cstdlib>
 #if defined(__INTEL_COMPILER)
     #include <mathimf.h>
 #else

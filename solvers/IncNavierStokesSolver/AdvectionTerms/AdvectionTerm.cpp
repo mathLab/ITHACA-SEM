@@ -34,12 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
-#include <cstdio>
-#include <cstdlib>
-
-#include <cmath>
-
 #include <string>
+
+
 namespace Nektar
 {
 
@@ -129,7 +126,7 @@ namespace Nektar
                                     NekDouble time,
                                     Array<OneD, NekDouble> &pWk)
     {
-        int i,j;
+		int i,j;
         int VelDim           = vel_loc.num_elements();        
         int nqtot            = pFields[0]->GetTotPoints();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);

@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
-#include "StdRegions.h"
-#include "StdSegExp.h"
+#include <StdRegions.h>
+#include <StdSegExp.h>
 
 using namespace StdRegions; 
 using namespace std;

@@ -33,8 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
 #include <ADRSolver/EquationSystems/UnsteadyInviscidBurger.h>
 
 namespace Nektar

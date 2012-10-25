@@ -1,7 +1,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include <iosfwd>
 
 using namespace std;
 
@@ -9,7 +8,7 @@ using namespace std;
 #include <LibUtilities/Foundations/NodalUtil.h>
 #include <LibUtilities/Foundations/NodalTriFekete.h>
 
-#include "LibUtilities/Foundations/Foundations.hpp"
+#include <LibUtilities/Foundations/Foundations.hpp>
 #include <LibUtilities/Foundations/Points.h>
 
 using namespace Nektar;
@@ -24,7 +23,7 @@ int main(int argc, char *argv[])
     {
         cerr << "Usage: NodalTriFeketeDemo Points2D-Type nPtsPerSide" << endl;
 
-        cerr << "Where type is an integer value which dictates the basis as:\n";
+        cerr << "Where type is an integer value which dictates the basis as:" << endl;
         for(int i=0; i<SIZE_PointsType; ++i)
         {
             cerr << setw(30) << kPointsTypeStr[i] << " =" << i << endl;

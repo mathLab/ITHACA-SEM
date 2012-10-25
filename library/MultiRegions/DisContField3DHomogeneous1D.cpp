@@ -36,6 +36,7 @@
 
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
+#include <MultiRegions/DisContField2D.h>
 
 namespace Nektar
 {

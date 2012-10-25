@@ -36,8 +36,8 @@
 #ifndef NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_VECTORDISTMATHARRAY_HPP
 #define NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_VECTORDISTMATHARRAY_HPP
 
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/VDmath.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Communication/Comm.h>
 
 using namespace Nektar;

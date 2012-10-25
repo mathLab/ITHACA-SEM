@@ -36,6 +36,7 @@
 using namespace std;
 
 #include <LibUtilities/Communication/CommMpi.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {

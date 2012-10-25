@@ -36,16 +36,13 @@
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVESTATICCOND_H
 
 #include <MultiRegions/GlobalMatrix.h>
-#include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSysIterative.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         // Forward declarations
-        class AssemblyMapCG;
         class ExpList;
         class GlobalLinSysIterativeStaticCond;
 

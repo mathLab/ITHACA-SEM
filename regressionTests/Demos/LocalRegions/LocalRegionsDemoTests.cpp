@@ -34,8 +34,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include "../../Auxiliary/RegressBase.h"
-#include <cstdio>
-#include <cstdlib>
 #include <iostream>
 
 void RunL2RegressionTest(std::string demo, std::string input, std::string info);

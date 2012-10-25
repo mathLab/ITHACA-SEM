@@ -39,7 +39,6 @@
 #define STDEXP2D_H
 
 #include <StdRegions/StdExpansion.h>
-#include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar

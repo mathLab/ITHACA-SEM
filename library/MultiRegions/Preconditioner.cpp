@@ -33,10 +33,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/GlobalMatrixKey.h>
-#include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
+#include <LocalRegions/MatrixKey.h>
 #include <math.h>
 
 namespace Nektar

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdNodalTriExp.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
 namespace Nektar
 {

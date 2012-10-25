@@ -32,10 +32,8 @@
 // Description: header file for Base class for regression tests 
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <cstdio>
-#include <cstdlib>
+#include <boost/filesystem.hpp>
 #include <string>
-#include <cmath>
 
 #ifndef RegressBase_H
 #define RegressBase_H
@@ -51,7 +49,6 @@
 
 #define REGRESS_DOUBLE_TOL 1e-8
 
-#include <boost/filesystem.hpp>
 
 //header of class RegressBase
 class RegressBase

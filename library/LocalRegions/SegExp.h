@@ -36,18 +36,13 @@
 #ifndef SEGEXP_H
 #define SEGEXP_H
 
-#include <LocalRegions/LocalRegions.hpp>
-
 #include <StdRegions/StdSegExp.h>
-#include <SpatialDomains/SegGeom.h>
-
-#include <SpatialDomains/GeomFactors1D.h>
+#include <SpatialDomains/Geometry1D.h>
 #include <LocalRegions/MatrixKey.h>
-
 #include <LocalRegions/Expansion1D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 
-#include <fstream>
+//#include <fstream>
 
 namespace Nektar
 {

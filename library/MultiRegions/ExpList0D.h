@@ -38,21 +38,12 @@
 
 #ifndef NEKTAR_LIB_MULTIREGIONS_EXPLIST0D_H
 #define NEKTAR_LIB_MULTIREGIONS_EXPLIST0D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
-#include <fstream>
-
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
-#include <LocalRegions/SegExp.h>
-#include <LocalRegions/TriExp.h>
-#include <LocalRegions/QuadExp.h>
 #include <LocalRegions/PointExp.h>
-#include <SpatialDomains/MeshGraph1D.h>
-#include <SpatialDomains/MeshGraph2D.h>
-#include <LibUtilities/Kernel/kernel.h>
 #include <SpatialDomains/MeshComponents.h>
-//#include <LocalRegions/Expansion0D.h>
 
 
 namespace Nektar
@@ -135,7 +126,3 @@ namespace Nektar
 
 #endif//NEKTAR_LIB_MULTIREGIONS_EXPLIST0D_H
 
-/**
- * $Log: v $
- *
- **/

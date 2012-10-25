@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File GlobalLinSys.cpp
@@ -35,8 +34,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSys.h>
-//#include <MultiRegions/AssemblyMapCG.h>
+#include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/Expansion.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+
 namespace Nektar
 {
     namespace MultiRegions

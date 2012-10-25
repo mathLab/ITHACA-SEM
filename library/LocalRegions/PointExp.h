@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/PointExp.h,v $
+// File PointExp.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -36,14 +36,10 @@
 #ifndef POINTEXP_H
 #define POINTEXP_H
 
-#include <LocalRegions/LocalRegions.hpp>
-
 #include <StdRegions/StdPointExp.h>
-
 #include <SpatialDomains/MeshComponents.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <LocalRegions/Expansion0D.h>
-#include <StdRegions/StdExpansion.h>
 
 namespace Nektar
 {

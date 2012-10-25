@@ -33,8 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
 
 namespace Nektar

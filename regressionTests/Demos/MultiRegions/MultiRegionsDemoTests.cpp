@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include "../../Auxiliary/RegressBase.h"
-#include <cstdio>
 #include <cstdlib>
 #include <iostream>
 #include <boost/filesystem.hpp>
@@ -101,6 +100,10 @@ int main(int argc, char* argv[])
     Execute("Helmholtz2D", "helmholtz2D_7modes_AllBCs_iter_ml.xml","CG Helmholtz2D  P=7 All BCs, Iterative ML Static Condensation");
 
     Execute("Helmholtz2D", "helmholtz2D_9modes_varcoeff.xml","CG Helmholtz2D P=9 Var Coeffs");
+
+    Execute("Helmholtz2D", "helmholtz2D_curved_quad.xml","CG Helmholtz2D P=7 curved quads");
+
+    Execute("Helmholtz2D", "helmholtz2D_curved_tri.xml","CG Helmholtz2D P=7 curved tris");
 
     Execute("HDGHelmholtz2D", "helmholtz2D_7modes.xml","HDG Helmholtz2D  P=7");
 

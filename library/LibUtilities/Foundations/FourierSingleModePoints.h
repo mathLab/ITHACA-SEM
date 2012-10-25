@@ -36,12 +36,13 @@
 #ifndef FOURIERSINGLEMODEPOINTS_H
 #define FOURIERSINGLEMODEPOINTS_H
 
-#include <math.h>
-#include <boost/shared_ptr.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>
+//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
+#include <LibUtilities/BasicUtils/NekManager.hpp>  // for NekManager
+#include <boost/shared_ptr.hpp>
+
 
 namespace Nektar
 {
@@ -50,7 +51,6 @@ namespace Nektar
         class FourierSingleModePoints: public Points<NekDouble>
         {
             public:
-                typedef Points<NekDouble> PointsBaseType;
                 virtual ~FourierSingleModePoints()
                 {
                 }            

@@ -41,10 +41,8 @@
 #include <LibUtilities/BasicUtils/Timer.h>
 
 #include <boost/version.hpp>
-#include <boost/algorithm/string/trim.hpp>
-#include <boost/lexical_cast.hpp>
-
-#include <boost/random.hpp>
+#include <boost/random/mersenne_twister.hpp>  // for mt19937
+#include <boost/random/variate_generator.hpp>  // for variate_generator
 #include <boost/random/normal_distribution.hpp>
 
 
@@ -66,8 +64,6 @@ namespace boost_spirit = boost::spirit::classic;
 namespace boost_spirit = boost::spirit;
 #endif
 
-#include <iostream>
-#include <stdarg.h>
 #include <string>
 #include <vector>
 #include <map>
@@ -76,8 +72,6 @@ namespace boost_spirit = boost::spirit;
 #else
 #include <cmath>
 #endif
-#include <errno.h>
-#include <stdlib.h>
 
 namespace Nektar
 {

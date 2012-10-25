@@ -1,18 +1,17 @@
-#include <cstdio>
 #include <cstdlib>
 #include <math.h>
 
-#include "StdRegions/StdExpansion3D.h"
-#include "LocalRegions/HexExp.h"
-#include "LocalRegions/PrismExp.h"
-#include "LocalRegions/TetExp.h"
+#include <LocalRegions/HexExp.h>
+#include <LocalRegions/PrismExp.h>
+#include <LocalRegions/TetExp.h>
 
-#include "LocalRegions/LocalRegions.hpp"
-#include "LibUtilities/Foundations/Foundations.hpp"
-#include "LibUtilities/Foundations/Basis.h"
+#include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/Foundations/Basis.h>
 
-#include "SpatialDomains/MeshComponents.h"
+#include <SpatialDomains/MeshComponents.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
+using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::LocalRegions;
 using namespace Nektar::StdRegions;

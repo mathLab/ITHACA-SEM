@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 

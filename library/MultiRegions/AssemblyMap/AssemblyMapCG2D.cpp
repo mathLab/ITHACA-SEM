@@ -434,26 +434,39 @@ namespace Nektar
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
-            if ((m_solnType == eDirectMultiLevelStaticCond
-                    || m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts)
+            if ((m_solnType == eDirectMultiLevelStaticCond ||
+                 m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts)
             {
-                if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1)&&
-                   (m_staticCondLevel < m_maxStaticCondLevel))
+                if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1) &&
+                    m_staticCondLevel < m_maxStaticCondLevel)
                 {
-                    Array<OneD, int> vwgts_perm(Dofs[0].size()+Dofs[1].size()+-firstNonDirGraphVertId);
-                    for(i = 0; i < Dofs[0].size(); ++i)
+                    Array<OneD, int> vwgts_perm(
+                        Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
+                    for(i = 0; i < locExpVector.size(); ++i)
                     {
-                        if(ReorderedGraphVertId[0][i] >= firstNonDirGraphVertId)
+                        int eid = locExp.GetOffset_Elmt_Id(i);
+                        locExpansion = boost::dynamic_pointer_cast<
+                            StdRegions::StdExpansion2D>(locExpVector[eid]);
+                        for(j = 0; j < locExpansion->GetNverts(); ++j)
                         {
-                            vwgts_perm[ReorderedGraphVertId[0][i]-firstNonDirGraphVertId] = Dofs[0][i];
-                        }
-                    }
-                        
-                    for(i = 0; i < Dofs[1].size(); ++i)
-                    {
-                        if(ReorderedGraphVertId[1][i] >= firstNonDirGraphVertId)
-                        {
-                            vwgts_perm[ReorderedGraphVertId[1][i]-firstNonDirGraphVertId] = Dofs[1][i];
+                            meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
+                            meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
+                            
+                            if(ReorderedGraphVertId[0][meshVertId] >= 
+                                   firstNonDirGraphVertId)
+                            {
+                                vwgts_perm[ReorderedGraphVertId[0][meshVertId]-
+                                           firstNonDirGraphVertId] = 
+                                    Dofs[0][meshVertId];
+                            }
+                            
+                            if(ReorderedGraphVertId[1][meshEdgeId] >= 
+                                   firstNonDirGraphVertId)
+                            {
+                                vwgts_perm[ReorderedGraphVertId[1][meshEdgeId]-
+                                           firstNonDirGraphVertId] = 
+                                    Dofs[1][meshEdgeId];
+                            }
                         }
                     }
 
@@ -463,7 +476,9 @@ namespace Nektar
                         AllocateSharedPtr(this,bottomUpGraph);
                 }
             }
-            m_hash = boost::hash_range(m_localToGlobalMap.begin(), m_localToGlobalMap.end());
+            
+            m_hash = boost::hash_range(
+                m_localToGlobalMap.begin(), m_localToGlobalMap.end());
         }
 
 

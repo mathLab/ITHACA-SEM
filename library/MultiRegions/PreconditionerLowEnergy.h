@@ -147,14 +147,6 @@ namespace Nektar
                       const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
-	    virtual const DNekMatSharedPtr& v_GetTransformationMatrix() const;
-
-	    virtual const DNekMatSharedPtr& v_GetTransposedTransformationMatrix() const;
-
-	    virtual const DNekMatSharedPtr& v_GetInverseTransformationMatrix() const;
-
-	    virtual const DNekMatSharedPtr& v_GetInverseTransposedTransformationMatrix() const;
-
 	};
     }
 }

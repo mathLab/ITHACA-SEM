@@ -224,15 +224,18 @@ namespace Nektar
             // Low Energy Basis functions
             //-----------------------------
 
-            LOCAL_REGIONS_EXPORT virtual DNekScalMatSharedPtr 
-	      v_CreateReferenceStaticCondBndMatrix(const MatrixKey &mkey);
-	    LOCAL_REGIONS_EXPORT virtual void v_BuildTransformationMatrix(const DNekScalMatSharedPtr &r_bnd,
-							   DNekMatSharedPtr m_transformationmatrix,
-							   DNekMatSharedPtr m_transposedtransformationmatrix);
-            LOCAL_REGIONS_EXPORT virtual void v_GetModeMappings(Array<OneD, int > vma,
-				                        Array<OneD, Array<OneD, unsigned int> > ema,
-				                        Array<OneD, Array<OneD, unsigned int> > fma);
-	    LOCAL_REGIONS_EXPORT virtual void v_SetUpInverseTransformationMatrix(void);
+            LOCAL_REGIONS_EXPORT virtual void v_GetModeMappings(
+                Array<OneD, int > vma,
+                Array<OneD, Array<OneD, unsigned int> > ema,
+                Array<OneD, Array<OneD, unsigned int> > fma);
+
+	    LOCAL_REGIONS_EXPORT void SetUpInverseTransformationMatrix(
+                const DNekMatSharedPtr & m_transformationmatrix,
+                DNekMatSharedPtr m_inversetransformationmatrix,
+                DNekMatSharedPtr m_inversetransposedtransformationmatrix);
+            LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
+                const DNekMatSharedPtr &r_bnd, 
+                const StdRegions::MatrixType matrixType);
 
         private:
             SpatialDomains::Geometry3DSharedPtr m_geom;
@@ -254,8 +257,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       Array<OneD,       NekDouble> &wsp);
+            LOCAL_REGIONS_EXPORT SpatialDomains::TetGeomSharedPtr CreateEquilateralTetGeom();
 
-	    LOCAL_REGIONS_EXPORT SpatialDomains::TetGeomSharedPtr CreateEquilateralTetGeom();
+
         };
 
         // type defines for use of TetExp in a boost vector

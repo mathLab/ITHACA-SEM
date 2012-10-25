@@ -2157,7 +2157,7 @@ namespace Nektar
                     }
                 }
                 break;
-            case StdRegions::ePreconditioner:
+            case StdRegions::ePreconR:
             case StdRegions::eHelmholtz:
                 {
                     NekDouble lambda = mkey.GetConstFactor(StdRegions::eFactorLambda);
@@ -2253,7 +2253,7 @@ namespace Nektar
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eLaplacian:
-            case StdRegions::ePreconditioner:
+            case StdRegions::ePreconR:
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
                 // use Deformed case for both regular and deformed geometries

@@ -1426,18 +1426,6 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
-            DNekScalMatSharedPtr CreateReferenceStaticCondBndMatrix(const LocalRegions::MatrixKey &mkey)
-	    {
-                return v_CreateReferenceStaticCondBndMatrix(mkey);
-	    }
-
-            void BuildTransformationMatrix(const DNekScalMatSharedPtr &r_bnd,
-							   const DNekMatSharedPtr & m_transformationmatrix,
-							   const DNekMatSharedPtr & m_transposedtransformationmatrix)
-	    {
-	        v_BuildTransformationMatrix(r_bnd, m_transformationmatrix,m_transposedtransformationmatrix);
-	    }
-
             void GetModeMappings(const Array<OneD, int > vma,
 				 const Array<OneD, Array<OneD, unsigned int> > ema,
 				 const Array<OneD, Array<OneD, unsigned int> > fma)
@@ -1445,10 +1433,6 @@ namespace Nektar
 	        v_GetModeMappings(vma,ema,fma);
 	    }
 
-	    void SetUpInverseTransformationMatrix()
-            {
-                v_SetUpInverseTransformationMatrix();
-	    }
 
         protected:
 
@@ -1468,7 +1452,7 @@ namespace Nektar
                 return m_stdMatrixManager.AlreadyCreated(mkey);
             }
 			
-			bool IndexMapManagerAlreadyCreated(const IndexMapKey &ikey)
+            bool IndexMapManagerAlreadyCreated(const IndexMapKey &ikey)
             {
                 return m_IndexMapManager.AlreadyCreated(ikey);
             }
@@ -1890,15 +1874,9 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
 
-            STD_REGIONS_EXPORT virtual DNekScalMatSharedPtr v_CreateReferenceStaticCondBndMatrix(const 
-								       LocalRegions::MatrixKey &mkey);
-            STD_REGIONS_EXPORT virtual void v_BuildTransformationMatrix(const DNekScalMatSharedPtr &r_bnd,
-							   DNekMatSharedPtr m_transformationmatrix,
-							   DNekMatSharedPtr m_transposedtransformationmatrix);
             STD_REGIONS_EXPORT virtual void v_GetModeMappings(Array<OneD, int > vma,
 				                        Array<OneD, Array<OneD, unsigned int> > ema,
 				                        Array<OneD, Array<OneD, unsigned int> > fma);
-	    STD_REGIONS_EXPORT virtual void v_SetUpInverseTransformationMatrix(void);
         };
 
 

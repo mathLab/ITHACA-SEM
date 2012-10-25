@@ -1664,13 +1664,13 @@ namespace Nektar
         void StdExpansion::v_WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                                           Array<OneD,NekDouble> &outarray,
                                                           const StdMatrixKey &mkey)
-            {
-                // If this function is not reimplemented on shape level, the function
-                // below will be called
-                WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
-
-            }
-
+        {
+            // If this function is not reimplemented on shape level, the function
+            // below will be called
+            WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
+            
+        }
+        
         void StdExpansion::v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,NekDouble> &outarray,
                                                         const StdMatrixKey &mkey)
@@ -1691,113 +1691,94 @@ namespace Nektar
 
         }
 
-            void StdExpansion::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+        void StdExpansion::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
-                                             const StdMatrixKey &mkey)
-            {
+                                               const StdMatrixKey &mkey)
+        {
+            // If this function is not reimplemented on shape level, the function
+            // below will be called
+            HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
+        }
+
+        void StdExpansion::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                       Array<OneD,NekDouble> &outarray,
+                                                       const StdMatrixKey &mkey)
+        {
                 // If this function is not reimplemented on shape level, the function
                 // below will be called
-                HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
-            }
-
-            void StdExpansion::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                           Array<OneD,NekDouble> &outarray,
-                                                           const StdMatrixKey &mkey)
-            {
-                // If this function is not reimplemented on shape level, the function
-                // below will be called
-                LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }
-
-            void StdExpansion::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                           Array<OneD,NekDouble> &outarray,
-                                                           const StdMatrixKey &mkey)
-            {
-                // If this function is not reimplemented on shape level, the function
-                // below will be called
-                HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }
-
-            const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
-            {
-                ASSERTL0(false, "Cannot get edge normals for this expansion.");
-                static NormalVector result;
-                return result;
-            }
-
-            void StdExpansion::v_ComputeEdgeNormal(const int edge)
-            {
-                ASSERTL0(false, "Cannot compute edge normal for this expansion.");
-            }
-
-            void StdExpansion::v_ComputeFaceNormal(const int face)
-            {
-                ASSERTL0(false, "Cannot compute face normal for this expansion.");
-            }
-
-            void StdExpansion::v_NegateEdgeNormal(const int edge)
-            {
-                ASSERTL0(false, "Not implemented.");
-            }
+            LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+        }
         
-            void StdExpansion::v_NegateFaceNormal(const int face)
-            {
-                ASSERTL0(false, "Not implemented.");
-            }
+        void StdExpansion::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                       Array<OneD,NekDouble> &outarray,
+                                                       const StdMatrixKey &mkey)
+        {
+            // If this function is not reimplemented on shape level, the function
+            // below will be called
+            HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+        }
+        
+        const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
+        {
+            ASSERTL0(false, "Cannot get edge normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
+        
+        void StdExpansion::v_ComputeEdgeNormal(const int edge)
+        {
+                ASSERTL0(false, "Cannot compute edge normal for this expansion.");
+        }
+        
+        void StdExpansion::v_ComputeFaceNormal(const int face)
+        {
+            ASSERTL0(false, "Cannot compute face normal for this expansion.");
+        }
+        
+        void StdExpansion::v_NegateEdgeNormal(const int edge)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+        
+        void StdExpansion::v_NegateFaceNormal(const int face)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
 
+	
+        void StdExpansion::v_ComputeVertexNormal(const int vertex)
+        {
+            ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
+        }
+
+        const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
+        {
+            ASSERTL0(false, "Cannot get face normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
 		
-			void StdExpansion::v_ComputeVertexNormal(const int vertex)
-			{
-				ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
-			}
-
-            const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
-            {
-                ASSERTL0(false, "Cannot get face normals for this expansion.");
-                static NormalVector result;
-                return result;
-            }
-		
-			const NormalVector & StdExpansion::v_GetVertexNormal(const int vertex) const
-			{
-				ASSERTL0(false, "Cannot get vertex normals for this expansion.");
-                static NormalVector result;
-                return result;
-			}	
-		
-            const NormalVector & StdExpansion::v_GetSurfaceNormal() const
-            {
-                ASSERTL0(false, "Cannot get face normals for this expansion.");
-                static NormalVector result;
-                return result;
-            }
-
-            DNekScalMatSharedPtr StdExpansion::v_CreateReferenceStaticCondBndMatrix(const LocalRegions::MatrixKey &mkey)
-	    {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-                return NullDNekScalMatSharedPtr;
-	    }
-
-            void StdExpansion::v_BuildTransformationMatrix(const DNekScalMatSharedPtr &r_bnd,
-							   DNekMatSharedPtr m_transformationmatrix,
-							   DNekMatSharedPtr m_transposedtransformationmatrix)
-	    {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-	    }
-
-            void StdExpansion::v_GetModeMappings(Array<OneD, int > vma,
-				                 Array<OneD, Array<OneD, unsigned int> > ema,
-				                 Array<OneD, Array<OneD, unsigned int> > fma)
-	    {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-	    }
-
-
-	    void StdExpansion::v_SetUpInverseTransformationMatrix(void)
-            {
-                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
-	    }
-
+        const NormalVector & StdExpansion::v_GetVertexNormal(const int vertex) const
+        {
+            ASSERTL0(false, "Cannot get vertex normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }	
+        
+        const NormalVector & StdExpansion::v_GetSurfaceNormal() const
+        {
+            ASSERTL0(false, "Cannot get face normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
+        
+        void StdExpansion::v_GetModeMappings(
+            Array<OneD, int > vma,
+            Array<OneD, Array<OneD, unsigned int> > ema,
+            Array<OneD, Array<OneD, unsigned int> > fma)
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+        }
 
     }//end namespace
 }//end namespace

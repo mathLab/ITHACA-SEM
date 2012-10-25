@@ -439,19 +439,22 @@ namespace Nektar
 
             MatrixStorage storage = eFULL;
             MatrixStorage vertstorage = eDIAGONAL;
-            DNekMatSharedPtr m_transformationmatrix = MemoryManager<DNekMat>::AllocateSharedPtr(
-	                             nCoeffs, nCoeffs, zero, storage);
-            DNekMatSharedPtr m_transposedtransformationmatrix = MemoryManager<DNekMat>::AllocateSharedPtr(
-                                     nCoeffs, nCoeffs, zero, storage);
 
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
 
             DNekScalBlkMatSharedPtr r_mat;
-            DNekScalMatSharedPtr    r_bnd;
+            DNekScalBlkMatSharedPtr rt_mat;
 
             DNekMatSharedPtr    m_RS;
             DNekMatSharedPtr    m_RSRT;
+
+            DNekMat R;
+            DNekMat RT;
+            
+            DNekScalMatSharedPtr m_transformationmatrix;
+            DNekScalMatSharedPtr m_transposedtransformationmatrix;
+
 
             m_RS = MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs, nCoeffs, zero, storage);
             DNekMat &RS = (*m_RS);
@@ -465,6 +468,14 @@ namespace Nektar
             nVerts=vExp->GetGeom()->GetNumVerts();
             nEdges=vExp->GetGeom()->GetNumEdges();
             nFaces=vExp->GetGeom()->GetNumFaces();
+
+            LibUtilities::BasisSharedPtr Ba;
+            LibUtilities::BasisSharedPtr Bb;
+            LibUtilities::BasisSharedPtr Bc;
+            Ba=vExp->GetBasis(0);
+            Bb=vExp->GetBasis(1);
+            Bc=vExp->GetBasis(2);
+
 
             Array<OneD, int>                            vertModeLocation(nVerts);
             Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation(nEdges);
@@ -498,6 +509,7 @@ namespace Nektar
             DNekMatSharedPtr FaceBlk = MemoryManager<DNekMat>::
                 AllocateSharedPtr(nNonDirFaces,nNonDirFaces,zero,storage);
 
+            
             for(cnt=n=0; n < expList->GetNumElmts(); ++n)
             {
 
@@ -505,6 +517,7 @@ namespace Nektar
 
                 vExp = expList->GetExp(nel);
 
+                StdRegions::ExpansionType eType=vExp->DetExpansionType();
 
                 // retrieve variable coefficient
                 if(m_linSysKey.GetNVarCoeffs() > 0)
@@ -518,28 +531,57 @@ namespace Nektar
                     }
                 }
 
-	        LocalRegions::MatrixKey matkey(StdRegions::ePreconditioner,
-                                               vExp->DetExpansionType(),
-                                               *vExp,
-                                               m_linSysKey.GetConstFactors(),
-                                               vVarCoeffMap);
 
-                //Get a LocalRegions static condensed matrix
-                r_mat = vExp->GetLocStaticCondMatrix(matkey);
+                if(eType==StdRegions::eTetrahedron && !m_transformationmatrix)
+                {
+                    LocalRegions::MatrixKey r_matkey(StdRegions::ePreconR,
+                                                   vExp->DetExpansionType(),
+                                                   *vExp,
+                                                   m_linSysKey.GetConstFactors(),
+                                                   vVarCoeffMap);
 
-                r_bnd=r_mat->GetBlock(0,0);
+                    LocalRegions::MatrixKey rt_matkey(StdRegions::ePreconRT,
+                                                   vExp->DetExpansionType(),
+                                                   *vExp,
+                                                   m_linSysKey.GetConstFactors(),
+                                                   vVarCoeffMap);
+
+                    
+                    //Get a LocalRegions static condensed matrix
+                    r_mat = vExp->GetLocStaticCondMatrix(r_matkey);
+                    rt_mat = vExp->GetLocStaticCondMatrix(rt_matkey);
+                    
+                    m_transformationmatrix=r_mat->GetBlock(0,0);
+                    m_transposedtransformationmatrix=rt_mat->GetBlock(0,0);
+                    
+                    R=(*m_transformationmatrix);
+                    RT=(*m_transposedtransformationmatrix);
+
+                    for(int i=0; i<R.GetRows(); ++i)
+                    {
+                        for(j=0; j<R.GetRows(); ++j)
+                        {
+                            cout<<R(i,j)<<" ";
+                        }
+                        cout<<endl;
+                    }
+                    cout<<endl;
+                    for(int i=0; i<RT.GetRows(); ++i)
+                    {
+                        for(j=0; j<RT.GetRows(); ++j)
+                        {
+                            cout<<RT(i,j)<<" ";
+                        }
+                        cout<<endl;
+                    }
 
 
-		vExp->BuildTransformationMatrix(r_bnd, m_transformationmatrix, 
-                                                m_transposedtransformationmatrix);
-                DNekMat R=(*m_transformationmatrix);
-	        DNekMat RT=(*m_transposedtransformationmatrix);
-
-		vExp->GetModeMappings(vertModeLocation,edgeModeLocation,
+                    vExp->GetModeMappings(vertModeLocation,edgeModeLocation,
                                       faceModeLocation);
 
-                //number of rows=columns of the schur complement
-                bnd_rows=r_bnd->GetRows();
+                    //number of rows=columns of the schur complement
+                    bnd_rows=m_transformationmatrix->GetRows();
+                }
 
                 //Get statically condensed matrix
                 loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
@@ -1009,37 +1051,6 @@ namespace Nektar
 	    }
 	}
 
-        /**
-         * \brief Get the transformation matrix \f$\mathbf{R}\f$
-         */
-        const DNekMatSharedPtr& PreconditionerLowEnergy::v_GetTransformationMatrix() const
-	{
-	    return m_transformationmatrix;
-	}
-
-        /**
-         * \brief Get the transposed transformation matrix \f$\mathbf{R}^{T}\f$
-         */
-        const DNekMatSharedPtr& PreconditionerLowEnergy::v_GetTransposedTransformationMatrix() const
-	{
-	    return m_transposedtransformationmatrix;
-	}
-
-        /**
-         * \brief Get the inverse transformation matrix \f$\mathbf{R}^{-1}\f$
-         */
-        const DNekMatSharedPtr& PreconditionerLowEnergy::v_GetInverseTransformationMatrix() const
-	{
-	    return m_inversetransformationmatrix;
-	}
-
-        /**
-         * \brief Get the inverse of the transposed transformation matrix \f$\mathbf{R}^{-T}\f$
-         */
-        const DNekMatSharedPtr& PreconditionerLowEnergy::v_GetInverseTransposedTransformationMatrix() const
-	{
-	    return m_inversetransposedtransformationmatrix;
-	}
 
     }
 }

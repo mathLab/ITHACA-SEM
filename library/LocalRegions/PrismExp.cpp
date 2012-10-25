@@ -1567,7 +1567,7 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                     break;
                 }
-             case StdRegions::ePreconditioner:
+             case StdRegions::ePreconR:
                 {
                     LibUtilities::BasisKey PrismBa = m_base[0]->GetBasisKey();
 		    LibUtilities::BasisKey PrismBb = m_base[1]->GetBasisKey();

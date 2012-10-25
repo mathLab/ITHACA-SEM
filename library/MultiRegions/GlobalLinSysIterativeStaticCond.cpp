@@ -464,36 +464,41 @@ namespace Nektar
             m_S1Blk      = MemoryManager<DNekScalBlkMat>
                     ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
 
-            DNekMatSharedPtr m_R = m_precon->GetTransformationMatrix();
-            DNekMatSharedPtr m_RT = m_precon->GetTransposedTransformationMatrix();
+            DNekMatSharedPtr m_R;
+            DNekMatSharedPtr m_RT;
 
             for(n = 0; n < n_exp; ++n)
             {
+                StdRegions::StdExpansionSharedPtr locExpansion;
+                locExpansion=m_expList.lock()->GetExp(n);
+                //m_R = locExpansion->GetTransformationMatrix();
+                //m_RT = locExpansion->GetTransposedTransformationMatrix();
+
                 DNekScalBlkMatSharedPtr loc_mat = GetStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
                 DNekScalMatSharedPtr tmp_mat;
                 DNekScalMatSharedPtr m_S1=loc_mat->GetBlock(0,0);
                 DNekScalMat &S1 = (*m_S1);
-
+                
                 int nRow=S1.GetRows();
                 NekDouble zero = 0.0;
                 NekDouble one  = 1.0;
                 MatrixStorage storage = eFULL;
-
+                
                 DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
                 DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
-
+                
                 //transformation matrices
                 DNekMat &R = (*m_R);
                 DNekMat &RT = (*m_RT);
-
+                
                 //create low energy matrix
                 DNekMat &RS1 = (*m_RS1);
                 DNekMat &S2 = (*m_S2);
-
+                
                 //setup S2
                 RS1=R*S1;
                 S2=RS1*RT;
-
+                
                 m_schurCompl->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_S2));
                 m_BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
                 m_C         ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));

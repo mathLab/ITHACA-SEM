@@ -1,14 +1,11 @@
 
-#include "StdRegions/StdRegions.hpp"
-#include "LibUtilities/Foundations/Foundations.hpp"
-#include <StdRegions/StdExpUtil.h>
+#include <StdRegions/StdRegions.hpp>
+#include <LibUtilities/Foundations/Foundations.hpp>
 #include <StdRegions/StdPrismExp.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 
-#include <algorithm> 
 #include <iostream>     
-#include <limits> 
-#include <cstdio>
 #include <cstdlib>
 #include <cmath>    
 #include <iomanip>  

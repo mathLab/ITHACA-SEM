@@ -36,13 +36,10 @@
 #ifndef NEKTAR_SPATIALDOMAINS_PYRGEOM_H
 #define NEKTAR_SPATIALDOMAINS_PYRGEOM_H
 
-#include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdPyrExp.h>
-
 #include <SpatialDomains/Geometry3D.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+
+#include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar
 {

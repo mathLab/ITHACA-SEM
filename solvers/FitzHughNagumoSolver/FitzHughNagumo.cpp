@@ -35,8 +35,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <FitzHughNagumoSolver/FitzHughNagumo.h>
-#include <cstdio>
-#include <cstdlib>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+
 namespace Nektar
 {
     /**

@@ -34,15 +34,21 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef EXPANSION3D_H
+#define EXPANSION3D_H
 
 #include <LocalRegions/Expansion.h>
-#include <LocalRegions/Expansion2D.h>
+#include <StdRegions/StdExpansion3D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
     namespace LocalRegions 
     {
+
+        class Expansion2D;
+        typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
+        typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
+
         class Expansion3D: virtual public Expansion, 
                            virtual public StdRegions::StdExpansion3D
         {
@@ -164,5 +170,4 @@ namespace Nektar
     } //end of namespace
 } //end of namespace
 
-#define EXPANSION3D_H
 #endif

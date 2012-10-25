@@ -37,9 +37,7 @@
 #ifndef NEKTAR_SOLVERS_COUPLEDLOCALTOGLOBALC0CONTMAP_H
 #define NEKTAR_SOLVERS_COUPLEDLOCALTOGLOBALC0CONTMAP_H
 
-#include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG2D.h>
-#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 #include <SpatialDomains/MeshGraph.h>
 
 namespace Nektar

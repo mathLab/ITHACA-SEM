@@ -33,8 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
 #include <ADRSolver/EquationSystems/UnsteadyDiffusion.h>
 
 namespace Nektar

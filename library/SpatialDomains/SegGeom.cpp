@@ -33,14 +33,13 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
 
 #include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/GeomFactors1D.h>
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdSegExp.h>
-
-#include <fstream>
+#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
 namespace Nektar
 {

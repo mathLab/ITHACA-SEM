@@ -34,11 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <map>
-
-#include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysIterativeFull.h>
-//#include <MultiRegions/AssemblyMapCG.h>
-//#include <MultiRegions/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 namespace Nektar
 {

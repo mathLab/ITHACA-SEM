@@ -54,30 +54,3 @@ namespace Nektar
 
 #endif
 
-/***
-$Log: NektarUnivConsts.hpp,v $
-Revision 1.8  2008/09/09 13:59:51  sherwin
-Added NekZeroTol
-
-Revision 1.7  2007/11/29 17:00:13  sherwin
-Update to do with MultiRegions stuff
-
-Revision 1.6  2007/05/14 23:25:15  bnelson
-Removed unneeded code.
-
-Revision 1.5  2007/05/14 23:24:40  bnelson
-Removed unneeded code.
-
-Revision 1.4  2007/04/26 21:51:54  jfrazier
-Converted to new multi_array implementation.
-
-Revision 1.3  2007/03/31 00:39:51  bnelson
-*** empty log message ***
-
-Revision 1.2  2007/03/21 20:56:42  sherwin
-Update to change BasisSharedVector to boost::shared_array<BasisSharedPtr> and removed tthe Vector definitions in GetCoords and PhysDeriv
-
-Revision 1.1  2007/03/20 11:56:25  sherwin
-.
-
-**/

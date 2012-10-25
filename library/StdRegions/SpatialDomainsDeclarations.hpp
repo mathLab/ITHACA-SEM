@@ -62,37 +62,3 @@ namespace Nektar
 
 #endif //SPATIALDOMDEF_H
 
-/**
- * $Log: SpatialDomainsDeclarations.hpp,v $
- * Revision 1.8  2008/08/03 20:13:03  sherwin
- * Put return values in virtual functions
- *
- * Revision 1.7  2008/07/29 22:21:15  sherwin
- * A bunch of mods for DG advection and separaring the GetGeom calls into GetGeom1D ...
- *
- * Revision 1.6  2008/04/02 22:18:10  pvos
- * Update for 2D local to global mapping
- *
- * Revision 1.5  2007/07/13 09:02:25  sherwin
- * Mods for Helmholtz solver
- *
- * Revision 1.4  2007/03/25 15:48:22  sherwin
- * UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
- *
- * Revision 1.3  2007/03/20 09:12:46  kirby
- * update of geofac and metric info; fix style issues
- *
- * Revision 1.2  2007/03/14 21:24:09  sherwin
- * Update for working version of MultiRegions up to ExpList1D
- *
- * Revision 1.1  2006/05/04 18:58:30  kirby
- * *** empty log message ***
- *
- * Revision 1.2  2006/03/04 20:26:54  bnelson
- * Added comments after #endif.
- *
- * Revision 1.1  2006/02/26 23:37:29  sherwin
- *
- * Updates and compiling checks upto StdExpansions1D
- *
- **/

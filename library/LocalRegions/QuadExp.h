@@ -35,25 +35,20 @@
 
 #ifndef QUADEXP_H
 #define QUADEXP_H
-#include <LocalRegions/LocalRegions.hpp>
 
+#include <LocalRegions/LocalRegionsDeclspec.h>
+#include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/MatrixKey.h>
 #include <StdRegions/StdQuadExp.h>
 #include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/SegGeom.h>
-
 #include <SpatialDomains/GeomFactors.h>
 
-#include <LocalRegions/MatrixKey.h>
-#include <LocalRegions/SegExp.h>
-
-#include <LocalRegions/Expansion2D.h>
-#include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
     namespace LocalRegions
     {
-        
+
         class QuadExp:  virtual public StdRegions::StdQuadExp,
                         virtual public Expansion2D
         {

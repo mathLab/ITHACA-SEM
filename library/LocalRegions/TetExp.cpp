@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/TetExp.h>
+#include <SpatialDomains/SegGeom.h>
+
 #include <LibUtilities/Foundations/Interp.h>
 
 

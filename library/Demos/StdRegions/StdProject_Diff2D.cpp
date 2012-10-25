@@ -1,12 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
-#include "StdRegions/StdExpansion2D.h"
-#include "StdRegions/StdQuadExp.h"
-#include "StdRegions/StdTriExp.h"
-#include "StdRegions/StdNodalTriExp.h"
+#include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdNodalTriExp.h>
 
-#include "StdRegions/StdRegions.hpp"
-#include "LibUtilities/Foundations/Foundations.hpp"
+#include <LibUtilities/Foundations/Foundations.hpp>
 
 using namespace Nektar;
 

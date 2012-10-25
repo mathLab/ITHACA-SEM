@@ -39,9 +39,9 @@
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/Vmath.hpp> 
 
-using namespace Nektar;
     namespace Vmath 
     {
+        using namespace Nektar;
     
         /***************** Math routines  ***************/
         /// \brief Fill a vector with a constant value
@@ -459,28 +459,3 @@ using namespace Nektar;
     }
 #endif //VECTORMATHARRAY_HPP
 
-/***
-$Log: VmathArray.hpp,v $
-Revision 1.7  2009/03/10 23:44:15  claes
-Made y in z = x/y a constant in the parameter list.
-
-Revision 1.6  2008/11/01 22:04:34  bnelson
-Removed references to MatrixStoragePolicy<T>
-
-Revision 1.5  2008/11/01 19:10:03  bnelson
-Fixed compiler warning
-
-Revision 1.4  2008/09/09 14:00:55  sherwin
-Fixed error in Sdiv definition
-
-Revision 1.3  2008/05/10 18:27:32  sherwin
-Modifications necessary for QuadExp Unified DG Solver
-
-Revision 1.2  2008/04/06 05:47:20  bnelson
-Changed ConstArray to Array<const>
-
-Revision 1.1  2008/02/28 09:55:57  sherwin
-Added Array version of math routines
-
-
-**/

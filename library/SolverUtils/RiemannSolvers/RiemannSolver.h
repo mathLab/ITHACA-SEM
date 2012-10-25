@@ -36,18 +36,21 @@
 #ifndef NEKTAR_SOLVERUTILS_RIEMANNSOLVER
 #define NEKTAR_SOLVERUTILS_RIEMANNSOLVER
 
-#include <string>
-
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <SolverUtils/SolverUtilsDeclspec.h>
+
+#include <string>
 
 #include <boost/function.hpp>
 #include <boost/call_traits.hpp>
 
 namespace Nektar
 {
+
+    template <typename Dim, typename DataType>
+    class Array;
+
     namespace SolverUtils
     {
         typedef boost::function<

@@ -2,6 +2,7 @@
 #include <cstdlib>
 
 #include <MultiRegions/ExpList2D.h>
+#include <SpatialDomains/MeshGraph2D.h>
 
 using namespace Nektar;
 

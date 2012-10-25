@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <cstdlib>
 
 const int size = 10;
 

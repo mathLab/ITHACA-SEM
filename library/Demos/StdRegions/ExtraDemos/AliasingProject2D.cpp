@@ -1,11 +1,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
-#include "StdRegions/StdExpansion2D.h"
-#include "StdRegions/StdQuadExp.h"
-#include "StdRegions/StdTriExp.h"
+#include <StdRegions/StdExpansion2D.h>
+#include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdTriExp.h>
 
-#include "StdRegions/StdRegions.hpp"
+#include <StdRegions/StdRegions.hpp>
 
 using namespace Nektar;
 using namespace StdRegions; 

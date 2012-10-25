@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <iomanip>
 
 #include <MultiRegions/ContField1D.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>

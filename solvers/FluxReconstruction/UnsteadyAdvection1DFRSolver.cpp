@@ -36,11 +36,7 @@
 
 #include <cstdio>
 #include <cstdlib>
-#include <cmath>
-#include <fstream>
-#include <iomanip>
 
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <FluxReconstruction/Advection1DFR.h>

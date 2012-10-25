@@ -389,31 +389,37 @@ namespace Nektar
             } 
         }
 
-        BottomUpSubStructuredGraph::BottomUpSubStructuredGraph(const Array<OneD, const int> septree):
+        BottomUpSubStructuredGraph::BottomUpSubStructuredGraph(
+            const Array<OneD, const int> septree) :
             m_IntBlocks(),
             m_daughterGraph()
         {
-            // First, create a top-down graph structure based upon the
-            // separator tree. This is easier as separation tree is also 
-            // structured following a top-down approach
-            MultiLevelBisectedGraphSharedPtr topDownGraph = MemoryManager<MultiLevelBisectedGraph>::
-                AllocateSharedPtr(septree);
+            // First, create a top-down graph structure based upon the separator
+            // tree. This is easier as separation tree is also structured
+            // following a top-down approach
+            MultiLevelBisectedGraphSharedPtr topDownGraph = 
+                MemoryManager<MultiLevelBisectedGraph>::AllocateSharedPtr(
+                    septree);
+            
             // set the global numbering of the top-down graph
             topDownGraph->SetGlobalNumberingOffset();
 
             topDownGraph->CutEmptyLeaves();
-            // Secondly, recursively construct the subgraphs of the
-            // bottom up point of view 1. Collect all the leaves of
-            // the topdown graph this will be the first level of the
-            // bottom up graph
+
+            // Secondly, recursively construct the subgraphs of the bottom up
+            // point of view 1. Collect all the leaves of the topdown graph this
+            // will be the first level of the bottom up graph
             topDownGraph->CollectLeaves(m_IntBlocks);
-            // 2. Reduce the topdown graph by cutting the leaves (this
-            //    will allow a recursive approach)
+            
+            // 2. Reduce the topdown graph by cutting the leaves (this will
+            //    allow a recursive approach)
             int ncuts = topDownGraph->CutLeaves();
+            
             // 3. If there were leaves to cut, proceed recursively
-            if(ncuts)
+            if (ncuts)
             {
-                m_daughterGraph = MemoryManager<BottomUpSubStructuredGraph>::AllocateSharedPtr(topDownGraph);
+                m_daughterGraph = MemoryManager<BottomUpSubStructuredGraph>::
+                    AllocateSharedPtr(topDownGraph);
             }
         }
 
@@ -807,7 +813,7 @@ namespace Nektar
                                            Array<OneD, int>& iperm,
                                            BottomUpSubStructuredGraphSharedPtr& substructgraph,
                                            const int mdswitch,
-                                           std::set<int> vertMark)
+                                           std::set<int> vertMark);
         {
             int nGraphVerts = boost::num_vertices(graph);
             int nGraphEdges = boost::num_edges(graph);
@@ -815,35 +821,33 @@ namespace Nektar
             ASSERTL1(perm.num_elements()>=nGraphVerts,"Non-matching dimensions");
             ASSERTL1(iperm.num_elements()>=nGraphVerts,"Non-matching dimensions");
 
-            // We will now use METIS to reorder the graph.  For the
-            // purpose of multi-level static condensation, we will use
-            // a METIS routine that partitions the graph recursively
-            // using a multi-level bisection algorithm.  The name of
-            // this routine is METIS_NodeND and it was originally
-            // designed to reorder the DOFs in a matrix in order to
-            // minimise the fill-in when applying a factorisation
-            // technique (such as Cholesky).  However, this reordering
-            // of DOFs also seems to be perfectly suited in the
-            // context of multilevel substructering. Therefore, we
-            // will use this metis routine instead of the more
-            // well-known graph-partitioning routines. However, as the
-            // standard metis implementation of METIS_NodeND only
-            // gives the resulting re-ordering as an output, we we
-            // will use an modified version of this routine that also
-            // returns information about the structure of the
-            // multi-level bisected partitioning.
+            // We will now use METIS to reorder the graph.  For the purpose of
+            // multi-level static condensation, we will use a METIS routine that
+            // partitions the graph recursively using a multi-level bisection
+            // algorithm.  The name of this routine is METIS_NodeND and it was
+            // originally designed to reorder the DOFs in a matrix in order to
+            // minimise the fill-in when applying a factorisation technique
+            // (such as Cholesky).  However, this reordering of DOFs also seems
+            // to be perfectly suited in the context of multilevel
+            // substructering. Therefore, we will use this metis routine instead
+            // of the more well-known graph-partitioning routines. However, as
+            // the standard metis implementation of METIS_NodeND only gives the
+            // resulting re-ordering as an output, we we will use an modified
+            // version of this routine that also returns information about the
+            // structure of the multi-level bisected partitioning.
 
-            // This modified implementation has been written by W. GAO
-            // and collaborators and it additionally returns the
-            // separator tree compared to the standard implementation.
+            // This modified implementation has been written by W. GAO and
+            // collaborators and it additionally returns the separator tree
+            // compared to the standard implementation.
 
-            // The name of this modified routine AS_METIS_NodeND (where AS stands for 
-            // automated substructering)
-            // More information can be found in the paper:
-            //  W. Gao, S. Li Xiaoye, C. Yang and Z. Bai
-            //  'An implementation and evaluation of the AMLS method 
+            // The name of this modified routine AS_METIS_NodeND (where AS
+            // stands for automated substructering) More information can be
+            // found in the paper:
+            //
+            //   W. Gao, S. Li Xiaoye, C. Yang and Z. Bai
+            //   'An implementation and evaluation of the AMLS method 
             //   for sparse eigenvalue problems'
-            //  ACM Trans. Math. Softw. 34, 4, Article 20 (July 2008)
+            //   - ACM Trans. Math. Softw. 34, 4, Article 20 (July 2008)
             
             if(nGraphEdges)
             {
@@ -856,47 +860,65 @@ namespace Nektar
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
                 
-                for ( boost::tie(vertit, vertit_end) = boost::vertices(graph); 
-                      vertit != vertit_end; 
-                      ++vertit) 
+                // Remove partition boundaries from graph to be sent to METIS.
+                boost::property_map<BoostGraph, boost::vertex_index_t>::type 
+                    index = get(boost::vertex_index, graph);
+                boost::get(boost::vertex_index, graph);
+                
+                for (boost::tie(vertit, vertit_end) = boost::vertices(graph); 
+                     vertit != vertit_end; 
+                     ++vertit) 
                 {
-                    for ( boost::tie(adjvertit, adjvertit_end) = boost::adjacent_vertices(*vertit,graph); 
-                          adjvertit != adjvertit_end;
-                          ++adjvertit) 
+                    if (vertMark.count(index[*vertit]) > 0)
                     {
+                        continue;
+                    }
+                    
+                    for (boost::tie(adjvertit, adjvertit_end) = 
+                             boost::adjacent_vertices(*vertit,graph);
+                         adjvertit != adjvertit_end;
+                         ++adjvertit) 
+                    {
+                        if (vertMark.count(index[*adjvertit]) > 0)
+                        {
+                            continue;
+                        }
                         adjncy[acnt++] = *adjvertit;
-                        
                     }
                     xadj[++vcnt] = acnt;
                 }
                 
-                // Step 2: use metis to reorder the dofs
-                // We do not know on forehand the size of the
-                // separator tree that METIS will return, so we just 
-                // assume a really big value and try with that
+                // Step 2: use metis to reorder the dofs We do not know on
+                // forehand the size of the separator tree that METIS will
+                // return, so we just assume a really big value and try with
+                // that
                 int sizeSeparatorTree = nGraphVerts*10;
                 Array<OneD,int> septreeTmp(sizeSeparatorTree,-1);  
                 
-                // The separatortree returned by metis has the following structure:
-                // It is a one dimensional array and information per level
-                // is contained per 5 elements:
+                // The separatortree returned by metis has the following
+                // structure: It is a one dimensional array and information per
+                // level is contained per 5 elements:
+                //
                 // m_septree[i*5 + 0]: the level of recursion (top-level = 1)
-                // m_septree[i*5 + 1]: is this substructure a left or right branch? (1 or 2)
-                //                                1: left branch
-                //                                2: right branch
-                // m_septree[i*5 + 2]: the number of 'interior' DOFs in left branch
-                // m_septree[i*5 + 3]: the number of 'interior' DOFs in right branch
+                // m_septree[i*5 + 1]: is this substructure a left or right
+                //                     branch? 1 = left branchm 2 = right branch
+                // m_septree[i*5 + 2]: the number of 'interior' DOFs in left 
+                //                     branch
+                // m_septree[i*5 + 3]: the number of 'interior' DOFs in right 
+                //                     branch
                 // m_septree[i*5 + 4]: the number of 'boundary' DOFs     
                 
-                // now try to call Call METIS 
+                // Now try to call Call METIS.
                 try
                 {
-                    Metis::as_onmetis(nGraphVerts,xadj,adjncy,perm,iperm,septreeTmp,mdswitch);
+                    Metis::as_onmetis(
+                        nGraphVerts,xadj,adjncy,perm,iperm,septreeTmp,mdswitch);
                 }
                 catch(...)
                 {
                     NEKERROR(ErrorUtil::efatal,
-                             "Error in calling metis (the size of the separator tree might not be sufficient)");
+                             "Error in calling metis (the size of the separator"
+                             " tree might not be sufficient)");
                 }
                 
                 // Post-process the separatortree
@@ -904,32 +926,31 @@ namespace Nektar
                 for(int i = 0 ; septreeTmp[i] != -1; i++)
                 {
                     trueSizeSepTree++;
-                }            
+                }
                 Array<OneD,int> septree(trueSizeSepTree);
                 Vmath::Vcopy(trueSizeSepTree,septreeTmp,1,septree,1);
                 
-                // Based upon the separator tree, where are going to
-                // set up an object of the class
-                // BottomUpSubStructuredGraph. The constructor will
-                // read the separatortree and will interprete the
-                // information from a bottom-up point of view.
-                substructgraph = MemoryManager<BottomUpSubStructuredGraph>::AllocateSharedPtr(septree);
-                // Important, we cannot simply use the ordering given
-                // by metis as it does not order the different blocks
-                // as we would like it. Therefore, we use following
-                // command to re-order them again in the context of
-                // the bottom-up substructering. As a result, we will
-                // now obtain an ordering where the interior degrees
-                // of freedom of the first (=bottom) level will be
-                // ordered last (block by block ofcoarse). The
-                // interior degrees of freedom of the second level
-                // will be ordered second to last, etc ... As a
-                // result, the boundary degrees of freedom of the last
-                // level (i.e. the dofs that will have to solved
-                // non-recursively) will be ordered first (after the
-                // Dirichlet Dofs that is).  (this way, we actually
-                // follow the same idea and convention in the standard
-                // (non-multi-level) static condensation approach)
+                // Based upon the separator tree, where are going to set up an
+                // object of the class BottomUpSubStructuredGraph. The
+                // constructor will read the separatortree and will interprete
+                // the information from a bottom-up point of view.
+                substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
+                    AllocateSharedPtr(septree);
+                
+                // Important, we cannot simply use the ordering given by metis
+                // as it does not order the different blocks as we would like
+                // it. Therefore, we use following command to re-order them
+                // again in the context of the bottom-up substructering. As a
+                // result, we will now obtain an ordering where the interior
+                // degrees of freedom of the first (=bottom) level will be
+                // ordered last (block by block ofcoarse). The interior degrees
+                // of freedom of the second level will be ordered second to
+                // last, etc ... As a result, the boundary degrees of freedom of
+                // the last level (i.e. the dofs that will have to solved
+                // non-recursively) will be ordered first (after the Dirichlet
+                // Dofs that is).  (this way, we actually follow the same idea
+                // and convention in the standard (non-multi-level) static
+                // condensation approach)
                 substructgraph->UpdateBottomUpReordering(perm,iperm);
             }
             else

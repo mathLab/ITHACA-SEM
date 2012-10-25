@@ -403,35 +403,41 @@ namespace Nektar
 
 
        /**
-	 * \brief Construct the low energy preconditioner from \f$\mathbf{S}_{2}\f$
+	 * \brief Construct the low energy preconditioner from
+	 * \f$\mathbf{S}_{2}\f$
 	 *
-	 *\f[\mathbf{M}^{-1}=\left[\begin{array}{ccc} Diag[(\mathbf{S_{2}})_{vv}] & & \\
-	 *  & (\mathbf{S}_{2})_{eb} & \\
-	 *  &  & (\mathbf{S}_{2})_{fb} \end{array}\right] \f]
+	 *\f[\mathbf{M}^{-1}=\left[\begin{array}{ccc}
+	 *  Diag[(\mathbf{S_{2}})_{vv}] & & \\ & (\mathbf{S}_{2})_{eb} & \\ & &
+	 *  (\mathbf{S}_{2})_{fb} \end{array}\right] \f]
 	 *
-	 * where \f$\mathbf{R}\f$ is the transformation matrix and \f$\mathbf{S}_{2}\f$
-	 * the Schur complement of the modified basis, given by
+	 * where \f$\mathbf{R}\f$ is the transformation matrix and
+	 * \f$\mathbf{S}_{2}\f$ the Schur complement of the modified basis,
+	 * given by
 	 *
 	 * \f[\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{T}\f]
 	 *
-	 * where \f$\mathbf{S}_{1}\f$ is the local schur complement matrix for each
-	 * element.
+	 * where \f$\mathbf{S}_{1}\f$ is the local schur complement matrix for
+	 * each element.
 	 */
         void PreconditionerLowEnergy::LowEnergyPreconditioner()
         {
-            boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
-            const StdRegions::StdExpansionVector &locExpVector = *(expList->GetExp());
+            boost::shared_ptr<MultiRegions::ExpList> 
+                expList=((m_linsys.lock())->GetLocMat()).lock();
+            const StdRegions::StdExpansionVector &locExpVector = 
+                *(expList->GetExp());
             StdRegions::StdExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
-
+            
             int nRow, i, j, nmodes, ntotaledgemodes, ntotalfacemodes, nel;
-            int nVerts, nEdges,nFaces, eid, fid, eid2, fid2, n, cnt, nedgemodes, nfacemodes;
+            int nVerts, nEdges,nFaces; 
+            int eid, fid, eid2, fid2, n, cnt, nedgemodes, nfacemodes;
             int nEdgeCoeffs, nFaceCoeffs;
             NekDouble zero = 0.0;
             NekDouble MatrixValue;
 
-            int vMap1, vMap2, sign1, sign2, gid1, gid2, m, v, eMap1, eMap2, fMap1, fMap2;
+            int vMap1, vMap2, sign1, sign2, gid1, gid2;
+            int m, v, eMap1, eMap2, fMap1, fMap2;
             int offset, globalrow, globalcol, bnd_rows;
             NekDouble globalMatrixValue, globalRValue;
 
@@ -457,11 +463,13 @@ namespace Nektar
             DNekScalMatSharedPtr m_transposedtransformationmatrix;
 
 
-            m_RS = MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs, nCoeffs, zero, storage);
+            m_RS = MemoryManager<DNekMat>::AllocateSharedPtr
+                (nCoeffs, nCoeffs, zero, storage);
             DNekMat &RS = (*m_RS);
-            m_RSRT = MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs, nCoeffs, zero, storage);
+            m_RSRT = MemoryManager<DNekMat>::AllocateSharedPtr
+                (nCoeffs, nCoeffs, zero, storage);
             DNekMat &RSRT = (*m_RSRT);
-
+            
             DNekMatSharedPtr m_VertBlk;
             DNekMatSharedPtr m_EdgeBlk;
             DNekMatSharedPtr m_FaceBlk;
@@ -470,21 +478,13 @@ namespace Nektar
             nEdges=vExp->GetGeom()->GetNumEdges();
             nFaces=vExp->GetGeom()->GetNumFaces();
 
-            LibUtilities::BasisSharedPtr Ba;
-            LibUtilities::BasisSharedPtr Bb;
-            LibUtilities::BasisSharedPtr Bc;
-            Ba=vExp->GetBasis(0);
-            Bb=vExp->GetBasis(1);
-            Bc=vExp->GetBasis(2);
-
-
-            Array<OneD, int>                            vertModeLocation(nVerts);
-            Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation(nEdges);
-            Array<OneD, Array<OneD, unsigned int> >     faceModeLocation(nFaces);
+            Array<OneD, int>                           vertModeLocation(nVerts);
+            Array<OneD, Array<OneD, unsigned int> >    edgeModeLocation(nEdges);
+            Array<OneD, Array<OneD, unsigned int> >    faceModeLocation(nFaces);
 
             int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nDirBnd    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int nNonDir = nGlobal-nDirBnd;
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
             int nNonDirEdges  = m_locToGloMap->GetNumNonDirEdgeModes();
@@ -516,74 +516,59 @@ namespace Nektar
 
                 nel = expList->GetOffset_Elmt_Id(n);
 
-                vExp = expList->GetExp(nel);
+                locExpansion = expList->GetExp(nel);
 
-                StdRegions::ExpansionType eType=vExp->DetExpansionType();
+                StdRegions::ExpansionType eType=
+                    locExpansion->DetExpansionType();
 
-                // retrieve variable coefficient
-                if(m_linSysKey.GetNVarCoeffs() > 0)
-                {
-                    StdRegions::VarCoeffMap::const_iterator x;
-                    cnt = expList->GetPhys_Offset(nel);
-                    for (x = m_linSysKey.GetVarCoeffs().begin(); 
-                         x != m_linSysKey.GetVarCoeffs().end(); ++x)
-                    {
-                        vVarCoeffMap[x->first] = x->second + cnt;
-                    }
-                }
 
 
                 if(eType==StdRegions::eTetrahedron && !m_transformationmatrix)
                 {
-                    LocalRegions::MatrixKey r_matkey(StdRegions::ePreconR,
-                                                   vExp->DetExpansionType(),
-                                                   *vExp,
-                                                   m_linSysKey.GetConstFactors(),
-                                                   vVarCoeffMap);
+                    // retrieve variable coefficient
+                    if(m_linSysKey.GetNVarCoeffs() > 0)
+                    {
+                        StdRegions::VarCoeffMap::const_iterator x;
+                        cnt = expList->GetPhys_Offset(nel);
+                        for (x = m_linSysKey.GetVarCoeffs().begin(); 
+                             x != m_linSysKey.GetVarCoeffs().end(); ++x)
+                        {
+                            vVarCoeffMap[x->first] = x->second + cnt;
+                        }
+                    }
 
-                    LocalRegions::MatrixKey rt_matkey(StdRegions::ePreconRT,
-                                                   vExp->DetExpansionType(),
-                                                   *vExp,
-                                                   m_linSysKey.GetConstFactors(),
-                                                   vVarCoeffMap);
-
+                    LocalRegions::MatrixKey r_matkey
+                        (StdRegions::ePreconR,
+                         eType,
+                         *locExpansion,
+                         m_linSysKey.GetConstFactors(),
+                         vVarCoeffMap);
+                    
+                    LocalRegions::MatrixKey rt_matkey
+                        (StdRegions::ePreconRT,
+                         eType,
+                         *locExpansion,
+                         m_linSysKey.GetConstFactors(),
+                         vVarCoeffMap);
+                    
                     
                     //Get a LocalRegions static condensed matrix
-                    r_mat = vExp->GetLocStaticCondMatrix(r_matkey);
-                    rt_mat = vExp->GetLocStaticCondMatrix(rt_matkey);
+                    r_mat = locExpansion->GetLocStaticCondMatrix(r_matkey);
+                    rt_mat = locExpansion->GetLocStaticCondMatrix(rt_matkey);
                     
                     m_transformationmatrix=r_mat->GetBlock(0,0);
                     m_transposedtransformationmatrix=rt_mat->GetBlock(0,0);
                     
                     R=(*m_transformationmatrix);
                     RT=(*m_transposedtransformationmatrix);
-
-                    for(int i=0; i<R.GetRows(); ++i)
-                    {
-                        for(j=0; j<R.GetRows(); ++j)
-                        {
-                            cout<<R(i,j)<<" ";
-                        }
-                        cout<<endl;
-                    }
-                    cout<<endl;
-                    for(int i=0; i<RT.GetRows(); ++i)
-                    {
-                        for(j=0; j<RT.GetRows(); ++j)
-                        {
-                            cout<<RT(i,j)<<" ";
-                        }
-                        cout<<endl;
-                    }
-
-
-                    vExp->GetModeMappings(vertModeLocation,edgeModeLocation,
-                                      faceModeLocation);
+                    
+                    locExpansion->GetModeMappings
+                        (vertModeLocation,edgeModeLocation,faceModeLocation);
 
                     //number of rows=columns of the schur complement
                     bnd_rows=m_transformationmatrix->GetRows();
                 }
-
+                
                 //Get statically condensed matrix
                 loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
 		
@@ -601,13 +586,15 @@ namespace Nektar
                 //Calculate R*S*trans(R)
                 RSRT=RS*RT;
 
-                //loop over vertices of the element and return the vertex map for each vertex
+                //loop over vertices of the element and return the vertex map
+                //for each vertex
                 for (v=0; v<nVerts; ++v)
                 {
                     vMap1=vertModeLocation[v];
                     
                     //Get vertex map
-                    globalrow = m_locToGloMap->GetLocalToGlobalBndMap(cnt+vMap1)-nDirBnd;
+                    globalrow = m_locToGloMap->
+                        GetLocalToGlobalBndMap(cnt+vMap1)-nDirBnd;
 
                     if(globalrow >= 0)
                     {
@@ -615,27 +602,34 @@ namespace Nektar
                         {
                             vMap2=vertModeLocation[m];
 
-                            //global matrix location (without offset due to dirichlet values)
-                            globalcol = m_locToGloMap->GetLocalToGlobalBndMap(cnt+vMap2)-nDirBnd;
+                            //global matrix location (without offset due to
+                            //dirichlet values)
+                            globalcol = m_locToGloMap->
+                                GetLocalToGlobalBndMap(cnt+vMap2)-nDirBnd;
 
                             //offset for dirichlet conditions
                             if (globalcol == globalrow)
                             {
                                 //modal connectivity between elements
-                                sign1 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + vMap1);
-                                sign2 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + vMap2);
-
+                                sign1 = m_locToGloMap->
+                                    GetLocalToGlobalBndSign(cnt + vMap1);
+                                sign2 = m_locToGloMap->
+                                    GetLocalToGlobalBndSign(cnt + vMap2);
+                                
                                 //Global matrix value
-                                globalMatrixValue = VertBlk->GetValue(globalrow,globalcol)
-                                                  + sign1*sign2*RSRT(vMap1,vMap2);
+                                globalMatrixValue = VertBlk->
+                                    GetValue(globalrow,globalcol)
+                                    + sign1*sign2*RSRT(vMap1,vMap2);
 
-                                //build matrix containing the linear finite element space
-                                VertBlk->SetValue(globalrow,globalcol,globalMatrixValue);
+                                //build matrix containing the linear finite
+                                //element space
+                                VertBlk->SetValue
+                                    (globalrow,globalcol,globalMatrixValue);
                             }
                         }
                     }
                 }
-
+                
                 //loop over edges of the element and return the edge map
                 for (eid=0; eid<nEdges; ++eid)
                 {
@@ -643,38 +637,48 @@ namespace Nektar
             
                     for (v=0; v<nedgemodes; ++v)
                     {
-                    
+                        
                         eMap1=edgeModeLocation[eid][v];
-
-                        globalrow = m_locToGloMap->GetLocalToGlobalBndMap(cnt+eMap1)-nDirBnd-nNonDirVerts;
-
+v                        
+                        globalrow = m_locToGloMap->
+                            GetLocalToGlobalBndMap(cnt+eMap1)
+                            -nDirBnd-nNonDirVerts;
+                        
                         if(globalrow >= 0)
                         {
                             for (m=0; m<nedgemodes; ++m)
                             {
                                 eMap2=edgeModeLocation[eid][m];
-
-                                //global matrix location (without offset due to dirichlet values)
-                                globalcol = m_locToGloMap->GetLocalToGlobalBndMap(cnt+eMap2)-nDirBnd-nNonDirVerts;
-
+                                
+                                //global matrix location (without offset due to
+                                //dirichlet values)
+                                globalcol = m_locToGloMap->
+                                    GetLocalToGlobalBndMap(cnt+eMap2)
+                                    -nDirBnd-nNonDirVerts;
+                                
                                 //offset for dirichlet conditions
                                 if (globalcol >= 0)
                                 {
                                     //modal connectivity between elements
-                                    sign1 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + eMap1);
-                                    sign2 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + eMap2);
+                                    sign1 = m_locToGloMap->
+                                        GetLocalToGlobalBndSign(cnt + eMap1);
+                                    sign2 = m_locToGloMap->
+                                        GetLocalToGlobalBndSign(cnt + eMap2);
 
-                                    globalMatrixValue = EdgeBlk->GetValue(globalrow,globalcol)
-                                                      + sign1*sign2*RSRT(eMap1,eMap2);
+                                    globalMatrixValue = EdgeBlk->
+                                        GetValue(globalrow,globalcol)
+                                        + sign1*sign2*RSRT(eMap1,eMap2);
 
-                                    //build matrix containing the linear finite element space
-                                    EdgeBlk->SetValue(globalrow,globalcol,globalMatrixValue);
+                                    //build matrix containing the linear finite
+                                    //element space
+                                    EdgeBlk->SetValue
+                                        (globalrow,globalcol,globalMatrixValue);
                                 }
                             }
                         }
                     }
                 }
-
+                
                  //loop over faces of the element and return the face map
                 for (fid=0; fid<nFaces; ++fid)
                 {
@@ -683,30 +687,40 @@ namespace Nektar
                     for (v=0; v<nfacemodes; ++v)
                     {
                         fMap1=faceModeLocation[fid][v];
-
-                        globalrow = m_locToGloMap->GetLocalToGlobalBndMap(cnt+fMap1)-nDirBnd-nNonDirVerts-nNonDirEdges;
-
+                        
+                        globalrow = m_locToGloMap->
+                            GetLocalToGlobalBndMap(cnt+fMap1)
+                            -nDirBnd-nNonDirVerts-nNonDirEdges;
+                        
                         if(globalrow >= 0)
                         {
                             for (m=0; m<nfacemodes; ++m)
                             {
                                 fMap2=faceModeLocation[fid][m];
 
-                                //global matrix location (without offset due to dirichlet values)
-                                globalcol = m_locToGloMap->GetLocalToGlobalBndMap(cnt+fMap2)-nDirBnd-nNonDirVerts-nNonDirEdges;
+                                //global matrix location (without offset due to
+                                //dirichlet values)
+                                globalcol = m_locToGloMap->
+                                    GetLocalToGlobalBndMap(cnt+fMap2)
+                                    -nDirBnd-nNonDirVerts-nNonDirEdges;
 
                                 //offset for dirichlet conditions
                                 if (globalcol >= 0)
                                 {
                                     //modal connectivity between elements
-                                    sign1 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + fMap1);
-                                    sign2 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + fMap2);
+                                    sign1 = m_locToGloMap->
+                                        GetLocalToGlobalBndSign(cnt + fMap1);
+                                    sign2 = m_locToGloMap->
+                                        GetLocalToGlobalBndSign(cnt + fMap2);
 
-                                    globalMatrixValue = FaceBlk->GetValue(globalrow,globalcol)
-                                                      + sign1*sign2*RSRT(fMap1,fMap2);
-
-                                    //build matrix containing the linear finite element space
-                                    FaceBlk->SetValue(globalrow,globalcol,globalMatrixValue);
+                                    globalMatrixValue = FaceBlk->
+                                        GetValue(globalrow,globalcol)
+                                        + sign1*sign2*RSRT(fMap1,fMap2);
+                                    
+                                    //build matrix containing the linear finite
+                                    //element space
+                                    FaceBlk->SetValue
+                                        (globalrow,globalcol,globalMatrixValue);
                                 }
                             }
                         }
@@ -750,20 +764,26 @@ namespace Nektar
             DNekScalMatSharedPtr     Blktmp;
             NekDouble                one = 1.0;
 
-            GloBlkMat->SetBlock(0,0,Blktmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,VertBlk));
-            GloBlkMat->SetBlock(1,1,Blktmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,EdgeBlk));
-            GloBlkMat->SetBlock(2,2,Blktmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,FaceBlk));
+            GloBlkMat->SetBlock(0,0,Blktmp = 
+                                MemoryManager<DNekScalMat>::AllocateSharedPtr
+                                (one,VertBlk));
+            GloBlkMat->SetBlock(1,1,Blktmp = 
+                                MemoryManager<DNekScalMat>::AllocateSharedPtr
+                                (one,EdgeBlk));
+            GloBlkMat->SetBlock(2,2,Blktmp = 
+                                MemoryManager<DNekScalMat>::AllocateSharedPtr
+                                (one,FaceBlk));
         }
 
-       /**
+        /**
 	 * \brief Construct the Block preconditioner from \f$\mathbf{S}_{1}\f$
 	 *
-	 * \f[\mathbf{M}^{-1}=\left[\begin{array}{ccc} Diag[(\mathbf{S_{1}})_{vv}] & & \\
-	 *  & (\mathbf{S}_{1})_{eb} & \\
-	 *  &  & (\mathbf{S}_{1})_{fb} \end{array}\right]\f]
+	 * \f[\mathbf{M}^{-1}=\left[\begin{array}{ccc}
+	 *  Diag[(\mathbf{S_{1}})_{vv}] & & \ \ & (\mathbf{S}_{1})_{eb} & \\ & &
+	 *  (\mathbf{S}_{1})_{fb} \end{array}\right]\f]
 	 *
-	 * where \f$\mathbf{R}\f$ is the transformation matrix and \f$\mathbf{S}_{1}\f$
-	 * is the Schur complement of each element.
+	 * where \f$\mathbf{R}\f$ is the transformation matrix and
+	 * \f$\mathbf{S}_{1}\f$ is the Schur complement of each element.
 	 *
 	 */
         void PreconditionerLowEnergy::BlockPreconditioner()

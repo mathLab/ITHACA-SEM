@@ -33,12 +33,15 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
 
 #include <SpatialDomains/TriGeom.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/Interp.h>
+
+#include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/GeomFactors2D.h>
+
 
 namespace Nektar
 {

@@ -33,11 +33,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "pchSpatialDomains.h"
-
 #include <SpatialDomains/GeomFactors.h>
-#include <SpatialDomains/Geometry2D.h>
-#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {

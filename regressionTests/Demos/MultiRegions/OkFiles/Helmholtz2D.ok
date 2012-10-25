@@ -45,3 +45,13 @@ L infinity error: 0.00275842
 L 2 error:        0.00226302
 H 1 error:        0.0341802
 ----------------------------------------
+helmholtz2D_curved_quad.xml
+L infinity error: 6.31597e-07
+L 2 error:        6.51213e-07
+H 1 error:        7.59902e-06
+----------------------------------------
+helmholtz2D_curved_tri.xml
+L infinity error: 4.89836e-05
+L 2 error:        2.24549e-05
+H 1 error:        0.000805337
+----------------------------------------

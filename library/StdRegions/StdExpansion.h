@@ -38,17 +38,15 @@
 #define NEKTAR_LIB_STDREGIONS_STANDARDEXPANSION_H
 
 #include <fstream>
-#include <vector> 
+#include <vector>
 
 #include <StdRegions/StdRegions.hpp>
+#include <StdRegions/StdRegionsDeclspec.h>
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
-#include <StdRegions/LocalRegionsDeclarations.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
-#include <StdRegions/StdLinSysKey.hpp>
-#include <StdRegions/StdRegionsDeclspec.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
-#include <LibUtilities/Foundations/ManagerAccess.h>
+namespace Nektar { namespace LocalRegions { class MatrixKey; } }
 
 
 namespace Nektar

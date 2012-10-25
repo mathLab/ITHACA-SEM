@@ -33,11 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <MultiRegions/ExpList.h>
-#include <LocalRegions/PointExp.h>
-#include <LocalRegions/SegExp.h>
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>

@@ -34,9 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTFULL_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSDIRECTFULL_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalLinSysDirect.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 namespace Nektar
 {

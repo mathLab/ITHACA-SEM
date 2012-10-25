@@ -33,10 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <cstdio>
-#include <cstdlib>
-
 #include <CompressibleFlowSolver/EquationSystems/EulerArtificialDiffusionCFE.h>
 
 namespace Nektar

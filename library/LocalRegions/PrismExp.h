@@ -36,15 +36,11 @@
 #ifndef PRISMEXP_H
 #define PRISMEXP_H
 
-#include <LocalRegions/LocalRegions.hpp>
-
 #include <StdRegions/StdPrismExp.h>
 #include <SpatialDomains/PrismGeom.h>
-
-#include <SpatialDomains/GeomFactors3D.h>
 #include <LocalRegions/MatrixKey.h>
-
 #include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar

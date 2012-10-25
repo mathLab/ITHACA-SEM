@@ -1,4 +1,4 @@
-
+/*
 #include <LibUtilities/Memory/ThreadSpecificPool.hpp>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 
@@ -9,12 +9,13 @@
 
 #include <boost/mpl/size_t.hpp>
 
+using namespace Nektar;
+*/
 
 
 #include <iostream>
 
 using namespace std;
-using namespace Nektar;
 
 class Disabled
 {

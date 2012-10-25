@@ -76,9 +76,8 @@
 //    gnuplot OneDfinDiffAdvDiffSolverOutput.p
 //
 //--------------------------------------------------
-#include <cstdio>
 #include <fstream>
-#include <fstream>
+#include <iostream>
 #include <iomanip>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
@@ -177,18 +176,18 @@ int main(int argc, char *argv[])
     // Check if the number of arguments given to the executable is correct
     if(argc != 4)
     {
-        fprintf(stderr,"Usage: Project1D Npoints Ntimesteps TimeIntegrationMethod\n");        
-        fprintf(stderr,"Where  - Npoints is the number of grid points to be used\n");      
-        fprintf(stderr,"         for the finite difference discretisation\n"); 
-        fprintf(stderr,"       - Ntimesteps is the number of timesteps to be used\n");
-        fprintf(stderr,"         for the time-integration method\n");    
-        fprintf(stderr,"       - TimeIntegrationMethod is a number in the range [1,5]\n");    
-        fprintf(stderr,"         and defines the time-integration method to be used, i.e.\n"); 
-        fprintf(stderr,"           - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)\n");   
-        fprintf(stderr,"           - 2: 2nd order multi-step IMEX scheme\n");   
-        fprintf(stderr,"           - 3: 3rd order multi-step IMEX scheme\n"); 
-        fprintf(stderr,"           - 4: 2nd order multi-stage DIRK IMEX scheme\n");    
-        fprintf(stderr,"           - 5: 3nd order multi-stage DIRK IMEX scheme\n");    
+        cerr << "Usage: Project1D Npoints Ntimesteps TimeIntegrationMethod" << endl;        
+        cerr << "Where  - Npoints is the number of grid points to be used" << endl;      
+        cerr << "         for the finite difference discretisation" << endl; 
+        cerr << "       - Ntimesteps is the number of timesteps to be used" << endl;
+        cerr << "         for the time-integration method" << endl;    
+        cerr << "       - TimeIntegrationMethod is a number in the range [1,5]" << endl;    
+        cerr << "         and defines the time-integration method to be used, i.e." << endl; 
+        cerr << "           - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;   
+        cerr << "           - 2: 2nd order multi-step IMEX scheme" << endl;   
+        cerr << "           - 3: 3rd order multi-step IMEX scheme" << endl; 
+        cerr << "           - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;    
+        cerr << "           - 5: 3nd order multi-stage DIRK IMEX scheme" << endl;    
         exit(1);
     }
 
@@ -274,13 +273,13 @@ int main(int argc, char *argv[])
         break;
     default : 
         {      
-            fprintf(stderr,"The third argument defines the time-integration method to be used\n");    
-            fprintf(stderr,"and should be a number in the range [1,5], i.e.\n"); 
-            fprintf(stderr,"  - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)\n");   
-            fprintf(stderr,"  - 2: 2nd order multi-step IMEX scheme\n");   
-            fprintf(stderr,"  - 3: 3rd order multi-step IMEX scheme\n"); 
-            fprintf(stderr,"  - 4: 2nd order multi-stage DIRK IMEX scheme\n");    
-            fprintf(stderr,"  - 5: 3rd order multi-stage DIRK IMEX scheme\n");  
+            cerr << "The third argument defines the time-integration method to be used" << endl;    
+            cerr << "and should be a number in the range [1,5], i.e." << endl; 
+            cerr << "  - 1: 1st order multi-step IMEX scheme (Euler Backwards/Euler Forwards)" << endl;   
+            cerr << "  - 2: 2nd order multi-step IMEX scheme" << endl;   
+            cerr << "  - 3: 3rd order multi-step IMEX scheme" << endl; 
+            cerr << "  - 4: 2nd order multi-stage DIRK IMEX scheme" << endl;    
+            cerr << "  - 5: 3rd order multi-stage DIRK IMEX scheme" << endl;  
             exit(1); 
         }
     }

@@ -33,11 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <sstream>
 #include <iostream>
-#include <iomanip>
 #include <vector>
-#include <sstream>
 #include <loki/Singleton.h>
 
 #include <StdRegions/StdNodalTriExp.h>
@@ -47,6 +44,11 @@
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
+#include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/TetGeom.h>
+#include <SpatialDomains/PyrGeom.h>
+#include <SpatialDomains/PrismGeom.h>
+#include <SpatialDomains/HexGeom.h>
 
 #include "MeshElements.h"
 using namespace std;
@@ -513,6 +515,14 @@ namespace Nektar
                                                       edgeNodes,
                                                       m_conf.edgeCurveType)));
             }
+
+            if (m_conf.faceNodes)
+            {
+                volumeNodes.insert(volumeNodes.begin(),
+                                   pNodeList.begin()+3*m_conf.order,
+                                   pNodeList.end());
+            }
+
         }
 
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)

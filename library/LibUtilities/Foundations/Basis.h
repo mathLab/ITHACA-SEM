@@ -36,10 +36,11 @@
 #ifndef NEKTAR_LIB_UTILIITIES_FOUNDATIONS_BASIS_H
 #define NEKTAR_LIB_UTILIITIES_FOUNDATIONS_BASIS_H
 
-#include <math.h>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 namespace Nektar
 {
@@ -206,10 +207,6 @@ namespace Nektar
         /// Defines a null basis with no type or points.
         static const BasisKey NullBasisKey(eNoBasisType, 0, NullPointsKey);
 
-        /// Name for a vector of BasisKeys.
-        typedef std::vector< BasisKey > BasisKeyVector;
-        /// Name for an iterator over a BasisKeyVector.
-        typedef std::vector< BasisKey >::iterator BasisKeyVectorIter;
 
         /// Represents a basis of a given type.
         class Basis
@@ -363,10 +360,6 @@ namespace Nektar
         LIB_UTILITIES_EXPORT bool operator>(const BasisKey &lhs, const BasisKey &rhs);
 
         LIB_UTILITIES_EXPORT std::ostream& operator<<(std::ostream& os, const BasisKey& rhs);
-
-        typedef boost::shared_ptr<Basis> BasisSharedPtr;
-        typedef std::vector< BasisSharedPtr > BasisVector;
-        typedef std::vector< BasisSharedPtr >::iterator BasisVectorIter;
 
         static BasisSharedPtr NullBasisSharedPtr;
         static Array<OneD, BasisSharedPtr> NullBasisSharedPtr1DArray;

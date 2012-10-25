@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
+#include <MultiRegions/ExpList1D.h>
 
 namespace Nektar
 {

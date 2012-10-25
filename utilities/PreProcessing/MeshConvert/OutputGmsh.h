@@ -36,9 +36,6 @@
 #ifndef UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTGMSH
 #define UTILITIES_PREPROCESSING_MESHCONVERT_OUTPUTGMSH
 
-#include <tinyxml/tinyxml.h>
-#include <boost/unordered_map.hpp>
-
 #include "Module.h"
 
 namespace Nektar
@@ -52,10 +49,10 @@ namespace Nektar
             std::size_t operator()(ElmtConfig const& el) const
             {
                 std::size_t seed = 0;
-                boost::hash_combine(seed, el.e            );
-                boost::hash_combine(seed, el.faceNodes    );
-                boost::hash_combine(seed, el.volumeNodes  );
-                boost::hash_combine(seed, el.order        );
+                boost::hash_combine(seed, (int)el.e          );
+                boost::hash_combine(seed,      el.faceNodes  );
+                boost::hash_combine(seed,      el.volumeNodes);
+                boost::hash_combine(seed,      el.order      );
                 return seed;
             }
         };

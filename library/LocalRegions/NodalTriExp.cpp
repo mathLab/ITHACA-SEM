@@ -33,9 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LocalRegions/LocalRegions.hpp>
-#include <stdio.h>
-
 #include <LocalRegions/NodalTriExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 

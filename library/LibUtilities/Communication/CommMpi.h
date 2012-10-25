@@ -38,8 +38,8 @@
 #include <string>
 #include <mpi.h>
 
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #ifndef MPI_SYNC
 #define MPISYNC 0

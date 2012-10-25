@@ -38,9 +38,7 @@
 #define STDNODALTRIEXP_H
 
 #include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdTriExp.h>
-#include <StdRegions/LocalRegionsDeclarations.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar

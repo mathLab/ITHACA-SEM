@@ -36,8 +36,6 @@
 #ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
 #define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
 
-#include <tinyxml/tinyxml.h>
-#include <boost/unordered_map.hpp>
 
 #include "Module.h"
 

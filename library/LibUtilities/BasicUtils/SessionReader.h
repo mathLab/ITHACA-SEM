@@ -35,19 +35,18 @@
 #ifndef NEKTAR_LIB_UTILITIES_SESSIONREADER_H
 #define NEKTAR_LIB_UTILITIES_SESSIONREADER_H
 
-#include <iostream>
+//#include <iostream>
 #include <map>
 #include <string>
 
 #include <LibUtilities/Communication/Comm.h>
-//#include <LibUtilities/BasicUtils/Equation.h>
-#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/program_options.hpp>
+#include <boost/program_options/variables_map.hpp>
 
 class TiXmlElement;
 class TiXmlDocument;

@@ -34,12 +34,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <boost/enable_shared_from_this.hpp>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+
 
 namespace Nektar
 {

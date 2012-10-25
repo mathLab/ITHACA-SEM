@@ -37,19 +37,21 @@
 #define TIXML_USE_STL
 #endif
 
+#include <LibUtilities/BasicUtils/SessionReader.h>
+
 #include <iostream>
 #include <string>
 using namespace std;
 
 #include <boost/algorithm/string.hpp>
-//#include <boost/algorithm/string/regex.hpp>
 #include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 

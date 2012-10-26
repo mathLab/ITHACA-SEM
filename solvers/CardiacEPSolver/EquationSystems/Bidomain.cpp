@@ -102,8 +102,8 @@ namespace Nektar
 
 
 	if (m_session->DefinesFunction("IntracellularConductivity") && m_session->DefinesFunction("ExtracellularConductivity"))
+	{
             for (int i = 0; i < m_spacedim; ++i)
-            {
             	{
                     int nq = m_fields[0]->GetNpoints();
                     Array<OneD,NekDouble> x0(nq);

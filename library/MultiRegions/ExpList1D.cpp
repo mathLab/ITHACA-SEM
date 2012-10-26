@@ -33,11 +33,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
 #include <MultiRegions/ExpList1D.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LocalRegions/SegExp.h>
-
-#include <iomanip>
+#include <LocalRegions/Expansion2D.h>
+#include <SpatialDomains/MeshGraph2D.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
 namespace Nektar
 {

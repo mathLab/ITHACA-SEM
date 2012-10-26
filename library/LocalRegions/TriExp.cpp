@@ -32,11 +32,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LocalRegions/LocalRegions.hpp>
-#include <stdio.h>
 #include <LocalRegions/TriExp.h>
-#include <StdRegions/StdNodalTriExp.h>
+#include <LocalRegions/SegExp.h>
 #include <LocalRegions/Expansion3D.h>
+#include <StdRegions/StdNodalTriExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 
 

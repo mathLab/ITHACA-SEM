@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LocalRegions/LocalRegions.hpp>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/SegExp.h>
 #include <LibUtilities/Foundations/Interp.h>

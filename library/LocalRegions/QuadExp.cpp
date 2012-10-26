@@ -33,13 +33,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LocalRegions/LocalRegions.hpp>
-#include <stdio.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
 #include <LibUtilities/Foundations/Interp.h>
+#include <LocalRegions/SegExp.h>
 
 
 namespace Nektar

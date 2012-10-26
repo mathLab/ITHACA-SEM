@@ -35,8 +35,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
-#include <cstdio>
-#include <cstdlib>
+#include <LibUtilities/Communication/Comm.h>
+#include <SolverUtils/Filters/Filter.h>
 #include <iomanip>
 
 namespace Nektar

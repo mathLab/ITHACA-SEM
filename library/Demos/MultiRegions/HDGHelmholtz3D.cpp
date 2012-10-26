@@ -4,8 +4,8 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-//#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/DisContField3D.h>
+#include <SpatialDomains/MeshGraph3D.h>
 
 #define TIMING
 

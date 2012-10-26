@@ -1,8 +1,9 @@
-#include <cstdio>
 #include <cstdlib>
 
 #include <LocalRegions/HexExp.h>
 #include <SpatialDomains/MeshGraph3D.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+
 
 using namespace Nektar;
 

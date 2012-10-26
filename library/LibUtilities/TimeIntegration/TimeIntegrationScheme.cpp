@@ -32,8 +32,11 @@
 // Description: implementation of time integration key class 
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <iostream>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
+#include <LibUtilities/BasicUtils/VmathArray.hpp>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <iostream>
+#include <math.h>
 
 namespace Nektar
 {

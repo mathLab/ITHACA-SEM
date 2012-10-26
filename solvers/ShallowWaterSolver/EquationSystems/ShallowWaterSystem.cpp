@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <iomanip>
 
 #include <ShallowWaterSolver/EquationSystems/ShallowWaterSystem.h>
 

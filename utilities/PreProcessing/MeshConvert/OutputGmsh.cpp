@@ -33,12 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-using namespace std;
-
 #include "MeshElements.h"
 #include "OutputGmsh.h"
 #include "InputGmsh.h"
+
+#include <map>
+#include <vector>
+#include <string>
+using namespace std;
 
 namespace Nektar
 {

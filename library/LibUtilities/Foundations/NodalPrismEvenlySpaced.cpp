@@ -34,22 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include <iostream>
-#include <algorithm>
-#include <limits>
-#include <math.h>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Polylib/Polylib.h>
-
-#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/LinearAlgebra/Lapack.hpp>
-#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-
 #include <LibUtilities/Foundations/NodalPrismEvenlySpaced.h>
-#include <LibUtilities/Foundations/NodalUtil.h>
+#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <vector>
 
 namespace Nektar
@@ -407,7 +395,7 @@ namespace Nektar
 
         } 
 
-        boost::shared_ptr<NodalPrismEvenlySpaced::PointsBaseType> NodalPrismEvenlySpaced::Create(const PointsKey &key)
+        boost::shared_ptr<PointsBaseType> NodalPrismEvenlySpaced::Create(const PointsKey &key)
         {
             boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalPrismEvenlySpaced>::AllocateSharedPtr(key));
 

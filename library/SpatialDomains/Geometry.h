@@ -37,19 +37,17 @@
 #ifndef NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 
-//#include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/GeomFactors.h>
 
 #include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
 #include <boost/shared_ptr.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+
 namespace Nektar
 {
     namespace SpatialDomains
     {
-
-        class Geometry1D;
 
         // Types of geometry types.
         enum GeomShapeType

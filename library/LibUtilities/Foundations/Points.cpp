@@ -33,12 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/Foundations.hpp>
-
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Polylib/Polylib.h>
+#include <LibUtilities/Foundations/Points.h>
 
 namespace Nektar
 {

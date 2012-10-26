@@ -33,14 +33,18 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-using namespace std;
 
 #include "MeshElements.h"
 #include "InputNek.h"
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <boost/algorithm/string.hpp>
+
+#include <map>
+#include <vector>
+#include <sstream>
+#include <string>
+using namespace std;
 
 namespace Nektar
 {

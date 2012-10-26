@@ -34,10 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include <LocalRegions/LocalRegions.hpp>
-#include <stdio.h>
 #include <LocalRegions/HexExp.h>
 #include <LibUtilities/Foundations/Interp.h>
+#include <SpatialDomains/HexGeom.h>
 
 namespace Nektar
 {

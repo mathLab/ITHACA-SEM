@@ -34,8 +34,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 #include <SpatialDomains/Geometry2D.h>
-#include <StdRegions/StdTriExp.h>
-#include <StdRegions/StdQuadExp.h>
+#include <SpatialDomains/SegGeom.h>
+
 
 namespace Nektar
 {

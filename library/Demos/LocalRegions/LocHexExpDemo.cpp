@@ -1,16 +1,14 @@
-#include "StdRegions/StdExpansion3D.h"
-#include "LocalRegions/HexExp.h"
-#include "LocalRegions/LocalRegions.hpp"
+#include <StdRegions/StdExpansion3D.h>
+#include <LocalRegions/HexExp.h>
 
-#include "LibUtilities/Foundations/Foundations.hpp"
-#include "LibUtilities/Foundations/Basis.h"
+#include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/Foundations/Basis.h>
 
-#include "SpatialDomains/MeshComponents.h"
+#include <SpatialDomains/MeshComponents.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 #include <algorithm>
 #include <iostream>
-#include <limits>
-#include <cstdio>
 #include <cstdlib>
 #include <cmath>
 #include <iomanip>
@@ -18,6 +16,7 @@
 
 using namespace std;
 using namespace boost;
+using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::LocalRegions;
 using namespace Nektar::StdRegions;

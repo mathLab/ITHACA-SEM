@@ -36,9 +36,9 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3DHOMO2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3DHOMO2D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/DisContField3DHomogeneous2D.h>
-#include <MultiRegions/ContField1D.h>
 
 namespace Nektar
 {

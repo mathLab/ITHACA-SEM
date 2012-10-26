@@ -38,12 +38,22 @@
 #include <iostream>
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
+#include <boost/optional.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace ErrorUtil
 {
-    LIB_UTILITIES_EXPORT void SetErrorStream(std::ostream& o);
-    LIB_UTILITIES_EXPORT bool HasCustomErrorStream();
+    static boost::optional<std::ostream&> outStream;
+
+    LIB_UTILITIES_EXPORT static void SetErrorStream(std::ostream& o)
+    {
+        outStream = o;
+    }
+
+    LIB_UTILITIES_EXPORT static bool HasCustomErrorStream()
+    {
+        return outStream;
+    }
 
     enum ErrType
     {
@@ -57,10 +67,62 @@ namespace ErrorUtil
             NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
-    LIB_UTILITIES_EXPORT void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level);
-    LIB_UTILITIES_EXPORT void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level);
-    LIB_UTILITIES_EXPORT void Error(ErrType type, const char *routine, int lineNumber, const char *msg);
-    
+    LIB_UTILITIES_EXPORT static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
+    {
+        // The user of outStream is primarily for the unit tests.
+        // The unit tests often generate errors on purpose to make sure
+        // invalid usage is flagged appropriately.  Printing the error
+        // messages to cerr made the unit test output hard to parse.
+
+        std::string baseMsg = std::string("Level ") +
+            boost::lexical_cast<std::string>(level) +
+            std::string(" assertion violation\n") +
+#if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+            std::string("Where   : ") + boost::lexical_cast<std::string>(routine) +  std::string("[") +  boost::lexical_cast<std::string>(lineNumber) +  std::string("]\n") + std::string("Message : ") +
+#endif
+            msg;
+
+        switch(type)
+        {
+            case efatal:
+                if( outStream )
+                {
+                    (*outStream) << "Fatal   : " << baseMsg << std::endl;
+                }
+                else
+                {
+                    std::cerr << std::endl << "Fatal   : " << baseMsg << std::endl;
+                }
+                throw NekError(baseMsg);
+                break;
+
+            case ewarning:
+                if( outStream )
+                {
+                    (*outStream) << "Warning: " << baseMsg << std::endl;
+                }
+                else
+                {
+                    std::cerr << "Warning: " << baseMsg << std::endl;
+                }
+                break;
+
+            default:
+                std::cerr << "Unknown warning type: " << baseMsg << std::endl;
+        }
+    }
+
+    LIB_UTILITIES_EXPORT static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
+    {
+        Error(type, routine, lineNumber, msg.c_str(), level);
+
+    }
+
+    LIB_UTILITIES_EXPORT static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
+    {
+        Error(type, routine, lineNumber, msg, 0);
+
+    }
     
 } // end of namespace
 

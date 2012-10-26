@@ -113,7 +113,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/Equation.h
     ./BasicUtils/ErrorUtil.hpp
-    ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp

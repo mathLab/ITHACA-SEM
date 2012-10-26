@@ -2,6 +2,7 @@ SET(TESTER_SOURCES
   Metric.cpp
   MetricL2.cpp
   MetricRegex.cpp
+  TestData.cpp
   Tester.cpp
 )
 
@@ -9,8 +10,11 @@ SET(TESTER_HEADERS
   Metric.h
   MetricL2.h
   MetricRegex.h
+  TestData.h
   Tester.h
 )
+
+ADD_DEFINITIONS(-DBUILD_PATH="${CMAKE_BINARY_DIR}" -DSOURCE_PATH="${CMAKE_SOURCE_DIR}")
 
 ADD_EXECUTABLE(Tester ${TESTER_SOURCES} ${ARGN})
 TARGET_LINK_LIBRARIES(Tester

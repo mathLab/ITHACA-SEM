@@ -45,9 +45,9 @@ namespace Nektar
     class MetricRegex : public Metric
     {
     public:
-        static MetricSharedPtr create(int id)
+        static MetricSharedPtr create(TiXmlElement *metric)
         {
-            return MetricSharedPtr(new MetricRegex(id));
+            return MetricSharedPtr(new MetricRegex(metric));
         }
 
         static std::string type;
@@ -60,7 +60,7 @@ namespace Nektar
         /// Indicates which fields of a match need to be tested for tolerance.
         std::set<int>                          m_tolerance;
 
-        MetricRegex(int id);
+        MetricRegex(TiXmlElement *metric);
 
         virtual void v_Parse   (TiXmlElement *metric);
         virtual bool v_TestLine(std::string line);

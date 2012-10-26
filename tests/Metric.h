@@ -46,9 +46,8 @@ namespace Nektar
     class Metric
     {
     public:
-        Metric(int id);
+        Metric(TiXmlElement *metric);
         
-        void Parse     (TiXmlElement *metric);
         bool TestLine  (std::string line);
         bool FinishTest();
         
@@ -59,6 +58,9 @@ namespace Nektar
         virtual void v_Parse     (TiXmlElement *metric) = 0;
         virtual bool v_TestLine  (std::string line);
         virtual bool v_FinishTest();
+
+    private:
+        void Parse     (TiXmlElement *metric);
     };
 
     /// A shared pointer to an EquationSystem object
@@ -66,8 +68,10 @@ namespace Nektar
     
     /// Datatype of the NekFactory used to instantiate classes derived from the
     /// Advection class.
-    typedef LibUtilities::NekFactory<std::string, Metric, int> MetricFactory;
+    typedef LibUtilities::NekFactory<std::string, Metric, TiXmlElement*> MetricFactory;
     MetricFactory& GetMetricFactory();
+
 }
+
 
 #endif

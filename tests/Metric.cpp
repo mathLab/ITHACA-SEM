@@ -36,6 +36,8 @@
 #include <Metric.h>
 #include <loki/Singleton.h>
 
+using namespace std;
+
 namespace Nektar
 {
     MetricFactory& GetMetricFactory()
@@ -49,9 +51,13 @@ namespace Nektar
     /**
      * @brief Constructor.
      */
-    Metric::Metric(int id) : m_id(id)
+    Metric::Metric(TiXmlElement *metric)
     {
-        
+        if (!metric->Attribute("id"))
+        {
+            cout << "Metric has no ID" << endl;
+        }
+        m_id = atoi(metric->Attribute("id"));
     }
     
     /**

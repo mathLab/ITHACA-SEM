@@ -43,17 +43,16 @@ namespace Nektar
     class MetricL2 : public MetricRegex
     {
     public:
-        static MetricSharedPtr create(int id)
+        static MetricSharedPtr create(TiXmlElement *metric)
         {
-            return MetricSharedPtr(new MetricL2(id));
+            return MetricSharedPtr(new MetricL2(metric));
         }
 
         static std::string type;
 
     protected:
-        MetricL2(int id);
+        MetricL2(TiXmlElement *metric);
 
-        virtual void v_Parse(TiXmlElement *metric);
     };
 }
 

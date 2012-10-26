@@ -40,12 +40,7 @@ namespace Nektar
     std::string MetricL2::type = GetMetricFactory().
         RegisterCreatorFunction("l2", MetricL2::create);
     
-    MetricL2::MetricL2(int id) : MetricRegex(id)
-    {
-    
-    }
-
-    void MetricL2::v_Parse(TiXmlElement *metric)
+    MetricL2::MetricL2(TiXmlElement *metric) : MetricRegex(metric)
     {
         // Set up the regular expression. This (optionally) matches a variable
         // name if it exists: first field is variable name, second field is L2
@@ -54,9 +49,9 @@ namespace Nektar
            "^L 2 error\\s*(?:\\(variable (\\w+)\\))?\\s*:\\s*([+-]?\\d.+\\d).*";
         
         // Find the L2 error to match against.
-        TiXmlElement *value;
+        TiXmlElement *value = metric->FirstChildElement("value");
         
-        while (value = metric->FirstChildElement("value"))
+        while (value)
         {
             // Find name of field.
             std::string variable = value->Attribute("variable");
@@ -71,6 +66,9 @@ namespace Nektar
             
             // Indicate that the L2 error needs tolerance testing.
             m_tolerance.insert(1);
+
+            value = value->NextSiblingElement("value");
         }
     }
+
 }

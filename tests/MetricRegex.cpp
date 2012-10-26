@@ -45,7 +45,7 @@ namespace Nektar
     /**
      * @brief Constructor.
      */
-    MetricRegex::MetricRegex(int id) : Metric(id) 
+    MetricRegex::MetricRegex(TiXmlElement *metric) : Metric(metric)
     {
     
     }

@@ -39,6 +39,7 @@
 #include <vector>
 #include <sys/stat.h>
 
+#include <TestData.h>
 #include <MetricL2.h>
 #include <MetricRegex.h>
 
@@ -50,8 +51,12 @@
 
 #ifdef _WINDOWS
 #define COPY_COMMAND "copy "
+#define MKDIR_COMMAND "mkdir "
+#define DEL_COMMAND "del "
 #else
 #define COPY_COMMAND "cp "
+#define MKDIR_COMMAND "mkdir "
+#define DEL_COMMAND "rm -rf "
 #endif
 
 using namespace std;
@@ -71,86 +76,30 @@ std::string PortablePath(const boost::filesystem::path& path)
 
 int main(int argc, char *argv[])
 {
-    // Process test file format.
-    TiXmlDocument *file = new TiXmlDocument(argv[1]);
-    bool loadOkay = file->LoadFile();
-    
-    if (!loadOkay)
-    {
-        cout << file->ErrorDesc() << endl;
-        return 1;
-    }
-    
-    TiXmlHandle handle(file);
-    TiXmlElement *testElement;
-    testElement = handle.FirstChildElement("test").Element();
-    
-    // Find description tag.
-    TiXmlElement *descElement = handle.FirstChildElement("test").
-        FirstChildElement("description").Element();
-    string description(descElement->GetText());
-    
-    // Find solver tag.
-    TiXmlElement *solverElement = handle.FirstChildElement("test").
-        FirstChildElement("executable").Element();
-    string executable(solverElement->GetText());
-    
-    // Find input tag.
-    TiXmlElement *inputElement = handle.FirstChildElement("test").
-        FirstChildElement("parameters").Element();
-    string input(inputElement->GetText());
+    // Parse the test file
+    Test::TestData file("example.xml");
 
-    /*
-     * Process and set up metric tags.
-     */
-    TiXmlElement *metrics = testElement->FirstChildElement("metrics");
-    
-    if (!metrics)
+    // Generate the metric objects
+    vector<MetricSharedPtr> metrics;
+    for (unsigned int i = 0; i < file.GetNumMetrics(); ++i)
     {
-        cout << "Couldn't find metrics tag." << endl;
-        return 1;
-    }
-    
-    // Construct vector of metrics.
-    TiXmlElement *metric = metrics->FirstChildElement("metric");
-    vector<MetricSharedPtr> metricList;
-    
-    while (metric)
-    {
-        string  metricType = metric->Attribute("type");
-        int     metricId   = boost::lexical_cast<int>(metric->Attribute("id"));
-
-        boost::algorithm::to_lower(metricType);
-        
-        MetricSharedPtr m = GetMetricFactory().CreateInstance(
-            metricType, metricId);
-        metricList.push_back(m);
-        
-        cout << "Metric type: " << metricType << ", id = " << metricId << endl;
-        
-        m->Parse(metric);
-        
-        metric = metric->NextSiblingElement("metric");
+        metrics.push_back(GetMetricFactory().CreateInstance(file.GetMetricType(i), file.GetMetric(i)));
     }
 
-    /*
-     * Copy required files for this test.
-     */
-    TiXmlElement *required = handle.FirstChildElement("test").
-        FirstChildElement("required").Element();
-    TiXmlElement *reqfile = required->FirstChildElement("file");
+    // Copy required files for this test.
     struct stat vFileInfo;
-    
-    while (reqfile)
+    for (unsigned int i = 0; i < file.GetNumDependentFiles(); ++i)
     {
-        string fname   = reqfile->GetText();
-        string source  = PortablePath(std::string(TEST_PATH)) + fname;
-        string command = std::string(COPY_COMMAND) + source + " .";
+        Test::DependentFile f = file.GetDependentFile(i);
+        string fname = file.GetDependentFile(i).m_filename;
+        string source  = PortablePath(std::string(SOURCE_PATH) + "/" + fname);
+        string command = std::string(COPY_COMMAND)
+                        + source + " .";
         int vNotPresent = stat(source.c_str(), &vFileInfo);
         
         if (vNotPresent)
         {
-            cerr << "Required file " << fname << " not found." << endl;
+            cerr << "Required file " << source << " not found." << endl;
             return 1;
         }
         
@@ -158,19 +107,24 @@ int main(int argc, char *argv[])
         
         if (status)
         {
-            cerr << "Unable to copy file:" << source 
+            cerr << "Unable to copy file:" << source
                  << " to current location" << endl;
             return 1;
         }
-        
-        reqfile = metric->NextSiblingElement("required");
     }
-    
-    /*
-     * Run executable and perform tests.
-     */
-    string cmd = executable + " " + input;
-    
+
+    // Construct command to run
+    std::string command;
+    command += PortablePath(std::string(BUILD_PATH) + "/" + file.GetExecutable());
+//#if defined(NDEBUG)
+    command += "-g";
+//#endif
+    command += " " + file.GetParameters();
+    command += " 1>output.out 2>output.err";
+
+    // Run executable and perform tests.
+    cout << "EXECUTING: " << command << endl;
+    int status=system(command.c_str());
     
     /*
     ifstream file(filename);

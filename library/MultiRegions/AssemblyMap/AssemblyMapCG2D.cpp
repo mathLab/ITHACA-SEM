@@ -713,7 +713,6 @@ namespace Nektar
             map<int, int>    vertTempGraphVertId;
             map<int, int>    edgeTempGraphVertId;
             map<int, int>    intTempGraphVertId;
-            map<int, int>    vwgts_map;
             Array<OneD, int> localVerts;
             Array<OneD, int> localEdges;
             Array<OneD, int> localinterior;
@@ -858,7 +857,6 @@ namespace Nektar
                                 vertTempGraphVertId[meshVertId] = tempGraphVertId++;
                             }
                             localVerts[localOffset + vertCnt++] = vertTempGraphVertId[meshVertId];
-                            vwgts_map[ vertTempGraphVertId[meshVertId] ] = Dofs[0][meshVertId];
                         }
                     }
                 }
@@ -888,7 +886,6 @@ namespace Nektar
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                             }
                             localEdges[localOffset + edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
-                            vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = Dofs[1][meshEdgeId];
                         }
                     }
                 }
@@ -906,7 +903,6 @@ namespace Nektar
 
                         boost::add_vertex(boostGraphObj);
                         intTempGraphVertId[elmtid] = tempGraphVertId++;
-                        vwgts_map[ intTempGraphVertId[elmtid] ] = Dofs[2][elmtid];
                     }
                 }
             }
@@ -1149,12 +1145,6 @@ namespace Nektar
             int nGraphVerts = tempGraphVertId;
             Array<OneD, int> perm(nGraphVerts);
             Array<OneD, int> iperm(nGraphVerts);
-            Array<OneD, int> vwgts(nGraphVerts);
-            ASSERTL1(vwgts_map.size()==nGraphVerts,"Non matching dimensions");
-            for(i = 0; i < nGraphVerts; ++i)
-            {
-                vwgts[i] = vwgts_map[i];
-            }
 
             if(nGraphVerts)
             {
@@ -1175,7 +1165,7 @@ namespace Nektar
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
                     {
-                        MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph, mdswitch, vertMark);
+                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph, mdswitch, vertMark);
                     }
                     break;
                 default:

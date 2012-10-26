@@ -463,7 +463,7 @@ namespace Nektar
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
                     {
-                        MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph);
+                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph);
                     }
                     break;
                 default:
@@ -1071,7 +1071,7 @@ namespace Nektar
                     break;
                 case eDirectMultiLevelStaticCond:
                     {
-                        MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph);
+                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph);
                     }
                     break;
                 default:

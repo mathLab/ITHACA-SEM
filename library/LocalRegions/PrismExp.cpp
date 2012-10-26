@@ -2030,7 +2030,7 @@ namespace Nektar
 
         SpatialDomains::PrismGeomSharedPtr PrismExp::CreateReferencePrismGeom()
         {
-	    const int three=3;
+	    /*const int three=3;
             const int nVerts = 6;
             const double point[][3] = {
             {0,0,0}, {1,0,0}, {1,1,0}, 
@@ -2100,7 +2100,7 @@ namespace Nektar
 
             SpatialDomains::PrismGeomSharedPtr geom = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
             geom->SetOwnData();
-            return geom;
+            return geom;*/
 	}
     }//end of namespace
 }//end of namespace

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
+#include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
 namespace Nektar
@@ -463,48 +464,86 @@ namespace Nektar
             m_S1Blk      = MemoryManager<DNekScalBlkMat>
                     ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
 
-            DNekMatSharedPtr m_R;
-            DNekMatSharedPtr m_RT;
+            DNekScalBlkMatSharedPtr r_mat;
+            DNekScalBlkMatSharedPtr rt_mat;
+
+            DNekScalMatSharedPtr m_R;
+            DNekScalMatSharedPtr m_RT;
 
             for(n = 0; n < n_exp; ++n)
             {
-                StdRegions::StdExpansionSharedPtr locExpansion;
-                locExpansion=m_expList.lock()->GetExp(n);
-                //m_R = locExpansion->GetTransformationMatrix();
-                //m_RT = locExpansion->GetTransposedTransformationMatrix();
-
                 DNekScalBlkMatSharedPtr loc_mat = GetStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
                 DNekScalMatSharedPtr tmp_mat;
                 DNekScalMatSharedPtr m_S1=loc_mat->GetBlock(0,0);
                 DNekScalMat &S1 = (*m_S1);
-                
+
                 int nRow=S1.GetRows();
                 NekDouble zero = 0.0;
                 NekDouble one  = 1.0;
                 MatrixStorage storage = eFULL;
-                
+
                 DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
                 DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
+
+                StdRegions::StdExpansionSharedPtr locExpansion;
+                locExpansion=m_expList.lock()->GetExp(n);
+
+                StdRegions::ExpansionType eType=
+                    locExpansion->DetExpansionType();
+
+                StdRegions::VarCoeffMap vVarCoeffMap;
+
+                // retrieve variable coefficient
+                if(m_linSysKey.GetNVarCoeffs() > 0)
+                {
+                    StdRegions::VarCoeffMap::const_iterator x;
+                    int cnt = m_expList.lock()->GetPhys_Offset(n);
+                    for (x = m_linSysKey.GetVarCoeffs().begin(); 
+                         x != m_linSysKey.GetVarCoeffs().end(); ++x)
+                    {
+                        vVarCoeffMap[x->first] = x->second + cnt;
+                    }
+                }
                 
+                LocalRegions::MatrixKey r_matkey
+                    (StdRegions::ePreconR,
+                     eType,
+                     *locExpansion,
+                     m_linSysKey.GetConstFactors(),
+                     vVarCoeffMap);
+                
+                LocalRegions::MatrixKey rt_matkey
+                    (StdRegions::ePreconRT,
+                     eType,
+                     *locExpansion,
+                     m_linSysKey.GetConstFactors(),
+                     vVarCoeffMap);
+                
+                r_mat = locExpansion->GetLocStaticCondMatrix(r_matkey);
+                rt_mat = locExpansion->GetLocStaticCondMatrix(rt_matkey);
+                
+                m_R=r_mat->GetBlock(0,0);
+                m_RT=rt_mat->GetBlock(0,0);
+
                 //transformation matrices
-                DNekMat &R = (*m_R);
-                DNekMat &RT = (*m_RT);
-                
+                DNekScalMat &R = (*m_R);
+                DNekScalMat &RT = (*m_RT);
+
                 //create low energy matrix
                 DNekMat &RS1 = (*m_RS1);
                 DNekMat &S2 = (*m_S2);
-                
+
                 //setup S2
                 RS1=R*S1;
                 S2=RS1*RT;
-                
+
                 m_schurCompl->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_S2));
                 m_BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
                 m_C         ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
                 m_invD      ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
                 m_S1Blk->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
-                m_RBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_R));
-                m_RTBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_RT));
+                m_RBlk->SetBlock(n,n, m_R);//tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_R));
+                m_RTBlk->SetBlock(n,n, m_RT);//tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_RT));
 	    }
         }
 

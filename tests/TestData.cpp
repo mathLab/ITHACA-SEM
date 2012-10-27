@@ -6,6 +6,7 @@
  */
 
 #include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include "TestData.h"
 
@@ -55,7 +56,7 @@ std::string TestData::GetMetricType(unsigned int pId) const
     ASSERTL0(m_metrics[pId]->Attribute("type"),
             "Missing 'type' attribute in metric "
             + boost::lexical_cast<string>(pId) + ").");
-    return string(m_metrics[pId]->Attribute("type"));
+    return boost::to_upper_copy(string(m_metrics[pId]->Attribute("type")));
 }
 
 unsigned int TestData::GetNumMetrics() const

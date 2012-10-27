@@ -62,8 +62,7 @@ namespace Nektar
 
         MetricRegex(TiXmlElement *metric);
 
-        virtual void v_Parse   (TiXmlElement *metric);
-        virtual bool v_TestLine(std::string line);
+        virtual bool v_Test(std::istream& pStdout, std::istream& pStderr);
     };
 }
 

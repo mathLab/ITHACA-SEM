@@ -35,6 +35,7 @@
 
 #include <cstdio>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <sys/stat.h>
@@ -76,8 +77,13 @@ std::string PortablePath(const boost::filesystem::path& path)
 
 int main(int argc, char *argv[])
 {
+    if (argc != 2)
+    {
+        cout << "Error: incorrect number of arguments" << endl;
+    }
+    const string specFile = string(argv[1]);
     // Parse the test file
-    Test::TestData file("example.xml");
+    Test::TestData file(specFile);
 
     // Generate the metric objects
     vector<MetricSharedPtr> metrics;
@@ -123,31 +129,19 @@ int main(int argc, char *argv[])
     command += " 1>output.out 2>output.err";
 
     // Run executable and perform tests.
-    cout << "EXECUTING: " << command << endl;
     int status=system(command.c_str());
-    
-    /*
-    ifstream file(filename);
-        
-    while (getline(file, line))
-    {
-        for (int i = 0; i < metricList.size(); ++i)
-        {
-            if (!metricList[i]->TestLine(line))
-            {
-                return 1;
-            }
-        }
-    }
 
-    for (int i = 0; i < metricList.size(); ++i)
+    // Open the output files and test against all metrics
+    ifstream vStdout("output.out");
+    ifstream vStderr("output.err");
+    for (int i = 0; i < metrics.size(); ++i)
     {
-        if (!metricList[i]->FinishTest())
+        if (!metrics[i]->Test(vStdout, vStderr))
         {
+            cout << "FAILED" << endl;
             return 1;
         }
     }
-    */
-    
+
     return 0;
 }

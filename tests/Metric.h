@@ -48,19 +48,19 @@ namespace Nektar
     public:
         Metric(TiXmlElement *metric);
         
-        bool TestLine  (std::string line);
+        bool Test  (std::istream& pStdout, std::istream& pStderr);
         bool FinishTest();
         
     protected:
         // Stores the ID of this metric.
         int m_id;
         
-        virtual void v_Parse     (TiXmlElement *metric) = 0;
-        virtual bool v_TestLine  (std::string line);
-        virtual bool v_FinishTest();
+//        virtual void v_Parse     (TiXmlElement *metric) = 0;
+        virtual bool v_Test      (std::istream& pStdout, std::istream& pStderr);
+//        virtual bool v_FinishTest();
 
-    private:
-        void Parse     (TiXmlElement *metric);
+//    private:
+//        void Parse     (TiXmlElement *metric);
     };
 
     /// A shared pointer to an EquationSystem object

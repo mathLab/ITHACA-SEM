@@ -37,26 +37,23 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string.hpp>
 
+using namespace std;
+
 namespace Nektar
 {
     std::string MetricRegex::type = GetMetricFactory().
-        RegisterCreatorFunction("regex", MetricRegex::create);
+        RegisterCreatorFunction("REGEX", MetricRegex::create);
     
     /**
      * @brief Constructor.
      */
     MetricRegex::MetricRegex(TiXmlElement *metric) : Metric(metric)
     {
-    
-    }
-
-    void MetricRegex::v_Parse(TiXmlElement *metric)
-    {
         // Parse a regex <METRIC> tag. This would populate m_regex, m_matches
         // and m_tolerance below.
     }
 
-    bool MetricRegex::v_TestLine(std::string line)
+    bool MetricRegex::v_Test(std::istream& pStdout, std::istream& pStderr)
     {
         // If we have matched everything, nothing to do.
         if (m_matches.size() == 0)
@@ -67,35 +64,50 @@ namespace Nektar
         boost::cmatch             matches;
         std::vector<std::string> &okValues = m_matches[0];
 
-        // Test to see if we have a match.
-        if (boost::regex_match(line.c_str(), matches, m_regex))
+        // Process output file line by line searching for regex matches
+        std::string line;
+        while (getline(pStdout, line))
         {
-            for (int i = 0; i < matches.size(); ++i)
+            // Test to see if we have a match on this line.
+            if (boost::regex_match(line.c_str(), matches, m_regex))
             {
-                std::string match(matches[i].first, matches[i].second);
+                // Error if no fields in regex then throw an error.
+                if (matches.size() == 1)
+                {
+                    cout << "No test sections in regex!" << endl;
+                    return false;
+                }
 
-                if (m_tolerance.count(i) > 0)
+                // Check each field in turn
+                for (int i = 1; i < matches.size(); ++i)
                 {
-                    // If the okValues are not within tolerance, failed the
-                    // test.
-                    if (fabs(boost::lexical_cast<int>(okValues[i]) -
-                             boost::lexical_cast<int>(match)) > 1e-6)
+                    std::string match(matches[i].first, matches[i].second);
+
+                    if (m_tolerance.count(i-1) > 0)
                     {
-                        return false;
+                        // If the okValues are not within tolerance, failed the
+                        // test.
+                        if (fabs(boost::lexical_cast<double>(okValues[i-1]) -
+                                 boost::lexical_cast<double>(match)) > 1e-6)
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        // Case insensitive match.
+                        if (!boost::iequals(match, okValues[i-1]))
+                        {
+                            return false;
+                        }
                     }
                 }
-                else
-                {
-                    // Case insensitive match.
-                    if (!boost::iequals(match, okValues[i]))
-                    {
-                        return false;
-                    }
-                }
+
+                // Remove this match from the list of matches.
+                m_matches.erase(m_matches.begin());
             }
-            
-            // Remove this match from the list of matches.
-            m_matches.erase(m_matches.begin());
         }
+
+        return true;
     }
 }

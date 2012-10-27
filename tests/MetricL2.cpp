@@ -38,7 +38,7 @@
 namespace Nektar
 {
     std::string MetricL2::type = GetMetricFactory().
-        RegisterCreatorFunction("l2", MetricL2::create);
+        RegisterCreatorFunction("L2", MetricL2::create);
     
     MetricL2::MetricL2(TiXmlElement *metric) : MetricRegex(metric)
     {
@@ -46,11 +46,10 @@ namespace Nektar
         // name if it exists: first field is variable name, second field is L2
         // error.
         m_regex = 
-           "^L 2 error\\s*(?:\\(variable (\\w+)\\))?\\s*:\\s*([+-]?\\d.+\\d).*";
+           "^L 2 error\\s*(?:\\(variable (\\w+)\\))?\\s*:\\s*([+-]?\\d.+\\d|0).*";
         
         // Find the L2 error to match against.
         TiXmlElement *value = metric->FirstChildElement("value");
-        
         while (value)
         {
             // Find name of field.

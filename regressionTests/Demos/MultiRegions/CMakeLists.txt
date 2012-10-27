@@ -27,4 +27,4 @@ INSTALL(FILES ${input_files}
 FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Demos/MultiRegions/OkFiles COMPONENT test)
-ADD_TEST(NAME MultiRegionsDemoTest COMMAND MultiRegionsDemoTest)
+#ADD_TEST(NAME MultiRegionsDemoTest COMMAND MultiRegionsDemoTest)

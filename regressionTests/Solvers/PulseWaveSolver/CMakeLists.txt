@@ -29,4 +29,4 @@ FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/PulseWaveSolver/OkFiles COMPONENT test)
 
-ADD_TEST(NAME PulseWaveSolverTest COMMAND PulseWaveSolverTest)
+#ADD_TEST(NAME PulseWaveSolverTest COMMAND PulseWaveSolverTest)

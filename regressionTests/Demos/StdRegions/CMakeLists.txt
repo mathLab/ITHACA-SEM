@@ -28,4 +28,4 @@ FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Demos/StdRegions/OkFiles COMPONENT test)
 
-ADD_TEST(NAME StdRegionsDemoTest COMMAND StdRegionsDemoTest)
+#ADD_TEST(NAME StdRegionsDemoTest COMMAND StdRegionsDemoTest)

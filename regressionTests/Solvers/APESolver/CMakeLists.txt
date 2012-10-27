@@ -29,4 +29,4 @@ FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/APESolver/OkFiles COMPONENT test)
 
-ADD_TEST(NAME APESolverTest COMMAND APESolverTest)
+#ADD_TEST(NAME APESolverTest COMMAND APESolverTest)

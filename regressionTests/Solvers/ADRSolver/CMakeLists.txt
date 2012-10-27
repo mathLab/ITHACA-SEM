@@ -29,4 +29,4 @@ INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/ADRSolver/OkFiles COMPONENT test)
 
 
-ADD_TEST(NAME ADRSolverTest COMMAND ADRSolverTest)
+#ADD_TEST(NAME ADRSolverTest COMMAND ADRSolverTest)

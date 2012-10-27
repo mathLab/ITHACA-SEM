@@ -28,4 +28,4 @@ INSTALL(FILES ${input_files}
 FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/CompressibleFlowSolver/OkFiles COMPONENT test)
-ADD_TEST(NAME CompressibleFlowSolverTest COMMAND CompressibleFlowSolverTest)
+#ADD_TEST(NAME CompressibleFlowSolverTest COMMAND CompressibleFlowSolverTest)

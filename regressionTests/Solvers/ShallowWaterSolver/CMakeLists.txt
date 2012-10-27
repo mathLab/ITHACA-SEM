@@ -29,4 +29,4 @@ FILE(GLOB ok_files "OkFiles/*.ok")
 INSTALL(FILES ${ok_files}
 		DESTINATION ${NEKTAR_SHARE_DIR}/test/Solvers/ShallowWaterSolver/OkFiles COMPONENT test)
 
-ADD_TEST(NAME ShallowWaterSolverTest COMMAND ShallowWaterSolverTest)
+#ADD_TEST(NAME ShallowWaterSolverTest COMMAND ShallowWaterSolverTest)

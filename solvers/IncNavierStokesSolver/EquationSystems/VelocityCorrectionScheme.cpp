@@ -541,14 +541,7 @@ namespace Nektar
         SetUpPressureForcing(inarray, F, aii_Dt);
 		
         // Solver Pressure Poisson Equation 
-#ifdef UseContCoeffs
-        FlagList flags;
-        flags.set(eUseContCoeff, true);
-        m_pressure->HelmSolve(F[0], m_pressure->UpdateContCoeffs(),flags,factors);
-#else
-        
         m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList, factors);
-#endif
 		
         // Viscous Term forcing
         SetUpViscousForcing(inarray, F, aii_Dt);
@@ -558,13 +551,8 @@ namespace Nektar
         // Solve Helmholtz system and put in Physical space
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
-#ifdef UseContCoeffs
-            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateContCoeffs(),flags,factors);
-            m_fields[i]->BwdTrans(m_fields[i]->GetContCoeffs(),outarray[i],true);
-#else
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);            
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
-#endif
         }
     }
 
@@ -1332,11 +1320,7 @@ namespace Nektar
         int phystot = m_fields[0]->GetTotPoints();
 
         // Grad p
-#ifdef UseContCoeffs
-        m_pressure->BwdTrans(m_pressure->GetContCoeffs(),m_pressure->UpdatePhys(),true);
-#else
         m_pressure->BwdTrans(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
-#endif
         
         if(m_nConvectiveFields == 2)
         {
@@ -1366,103 +1350,102 @@ namespace Nektar
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 		if(m_HomogeneousType == eHomogeneous1D)
 		{
-			// m_HBC[0][j] contains the elements ID in the global ordering
-			// m_HBC[1][j] contains the number of physical points of the element
-			// m_HBC[2][j] contains the elmenent physical offset in the global list
-			// m_HBC[3][j] contains the element offset in the boundary expansion
-			// m_HBC[4][j] contains the trace ID on the element j
-			// m_HBC[5][j] contains the pressure bc ID
-			// m_HBC[6][j] contains the elment ids of the assocuated plane k_c (ex. k=0 k_c=1; k=1 k_c=0; k=3 k_c=4)
-			// m_HBC[7][j] contains the associated elments physical offset (k and k_c are the real and the complex plane)
-			
-			int num_data = 8;
-			
-			Array<OneD, unsigned int> planes;
-			
-			planes = m_fields[0]->GetZIDs();
-			
-			int num_planes = planes.num_elements();
-			
-			int num_elm_per_plane = (m_fields[0]->GetExpSize())/num_planes;
-			
-			m_HBC = Array<OneD, Array<OneD, int> > (num_data);
-			for(int n = 0; n < num_data; ++n)
-			{
-				m_HBC[n] = Array<OneD, int>(m_HBCnumber);
-			}
-			
-			m_wavenumber = Array<OneD, NekDouble>(m_HBCnumber);
-			m_beta       = Array<OneD, NekDouble>(m_HBCnumber);
-			
-			int exp_size, exp_size_per_plane;
-			int j=0;
-			int K;
-			NekDouble sign = -1.0;
-			int cnt = 0;
-			for(int k = 0; k < num_planes; k++)
-			{
-				K = planes[k]/2;
-				for(int n = 0 ; n < PBndConds.num_elements(); ++n)
-				{
-					exp_size = PBndExp[n]->GetExpSize();
-					exp_size_per_plane = exp_size/num_planes;
-					if(PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
-					{
-						for(int i = 0; i < exp_size_per_plane; ++i,cnt++)
-						{
-							m_HBC[0][j] = m_pressureBCtoElmtID[cnt];                 
-							m_elmt      = m_fields[0]->GetExp(m_HBC[0][j]);
-							m_HBC[1][j] = m_elmt->GetTotPoints();                    
-							m_HBC[2][j] = m_fields[0]->GetPhys_Offset(m_HBC[0][j]);  
-							m_HBC[3][j] = i+k*exp_size_per_plane;                    
-							m_HBC[4][j] = m_pressureBCtoTraceID[cnt];                
-							m_HBC[5][j] = n;
-							
-							if(m_SingleMode)
-							{
-								m_wavenumber[j] = -2*M_PI/m_LhomZ;       
-								m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-							}
-							else if(m_HalfMode || m_MultipleModes)
-							{
-								m_wavenumber[j] = 2*M_PI/m_LhomZ;       
-								m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-							}
-							else
-							{
-								m_wavenumber[j] = 2*M_PI*sign*(double(K))/m_LhomZ;       
-								m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
-							}
-							sign = -1.0*sign;
-							
-							if(k%2==0)
-							{
-								if(m_HalfMode)
-								{
-									m_HBC[6][j] = m_HBC[0][j];
-
-								}
-								else
-								{
-									m_HBC[6][j] = m_HBC[0][j] + num_elm_per_plane;
-								}
-							}
-							else 
-							{
-								m_HBC[6][j] = m_HBC[0][j] - num_elm_per_plane;
-							}
-							
-							m_HBC[7][j] = m_fields[0]->GetPhys_Offset(m_HBC[6][j]);
-							
-							j = j+1;
-						}
-					}
-					else // setting if just standard BC no High order
-					{
-						cnt += exp_size_per_plane;
-					}
-				}
-			}
+                    // m_HBC[0][j] contains the elements ID in the global ordering
+                    // m_HBC[1][j] contains the number of physical points of the element
+                    // m_HBC[2][j] contains the elmenent physical offset in the global list
+                    // m_HBC[3][j] contains the element offset in the boundary expansion
+                    // m_HBC[4][j] contains the trace ID on the element j
+                    // m_HBC[5][j] contains the pressure bc ID
+                    // m_HBC[6][j] contains the elment ids of the assocuated plane k_c (ex. k=0 k_c=1; k=1 k_c=0; k=3 k_c=4)
+                    // m_HBC[7][j] contains the associated elments physical offset (k and k_c are the real and the complex plane)
+                    
+                    int num_data = 8;
+                    
+                    Array<OneD, unsigned int> planes;
+                    
+                    planes = m_fields[0]->GetZIDs();
+                    
+                    int num_planes = planes.num_elements();
+                    int num_elm_per_plane = (m_fields[0]->GetExpSize())/num_planes;
+                    
+                    m_HBC = Array<OneD, Array<OneD, int> > (num_data);
+                    for(int n = 0; n < num_data; ++n)
+                    {
+                        m_HBC[n] = Array<OneD, int>(m_HBCnumber);
+                    }
+                    
+                    m_wavenumber = Array<OneD, NekDouble>(m_HBCnumber);
+                    m_beta       = Array<OneD, NekDouble>(m_HBCnumber);
+                    
+                    int exp_size, exp_size_per_plane;
+                    int j=0;
+                    int K;
+                    NekDouble sign = -1.0;
+                    int cnt = 0;
+                    for(int k = 0; k < num_planes; k++)
+                    {
+                        K = planes[k]/2;
+                        for(int n = 0 ; n < PBndConds.num_elements(); ++n)
+                        {
+                            exp_size = PBndExp[n]->GetExpSize();
+                            exp_size_per_plane = exp_size/num_planes;
+                            if(PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+                            {
+                                for(int i = 0; i < exp_size_per_plane; ++i,cnt++)
+                                {
+                                    m_HBC[0][j] = m_pressureBCtoElmtID[cnt];                 
+                                    m_elmt      = m_fields[0]->GetExp(m_HBC[0][j]);
+                                    m_HBC[1][j] = m_elmt->GetTotPoints();                    
+                                    m_HBC[2][j] = m_fields[0]->GetPhys_Offset(m_HBC[0][j]);  
+                                    m_HBC[3][j] = i+k*exp_size_per_plane;                    
+                                    m_HBC[4][j] = m_pressureBCtoTraceID[cnt];                
+                                    m_HBC[5][j] = n;
+                                    
+                                    if(m_SingleMode)
+                                    {
+                                        m_wavenumber[j] = -2*M_PI/m_LhomZ;       
+                                        m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
+                                    }
+                                    else if(m_HalfMode || m_MultipleModes)
+                                    {
+                                        m_wavenumber[j] = 2*M_PI/m_LhomZ;       
+                                        m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
+                                    }
+                                    else
+                                    {
+                                        m_wavenumber[j] = 2*M_PI*sign*(double(K))/m_LhomZ;       
+                                        m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
+                                    }
+                                    sign = -1.0*sign;
+                                    
+                                    if(k%2==0)
+                                    {
+                                        if(m_HalfMode)
+                                        {
+                                            m_HBC[6][j] = m_HBC[0][j];
+                                            
+                                        }
+                                        else
+                                        {
+                                            m_HBC[6][j] = m_HBC[0][j] + num_elm_per_plane;
+                                        }
+                                    }
+                                    else 
+                                    {
+                                        m_HBC[6][j] = m_HBC[0][j] - num_elm_per_plane;
+                                    }
+                                    
+                                    m_HBC[7][j] = m_fields[0]->GetPhys_Offset(m_HBC[6][j]);
+                                    
+                                    j = j+1;
+                                }
+                            }
+                            else // setting if just standard BC no High order
+                            {
+                                cnt += exp_size_per_plane;
+                            }
+                        }
+                    }
 		}
 		///////////////////////////////////////////////////////////////////////////////////////////////////
 		else if(m_HomogeneousType == eHomogeneous2D)

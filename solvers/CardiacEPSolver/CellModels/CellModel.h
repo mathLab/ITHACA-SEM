@@ -140,6 +140,8 @@ namespace Nektar
         virtual void v_PrintSummary(std::ostream &out) = 0;
 
         virtual void v_SetInitialConditions() = 0;
+
+        void LoadCellModel();
     };
 
 }

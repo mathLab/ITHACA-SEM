@@ -139,7 +139,14 @@ namespace Nektar
             m_gates_tau[i] = Array<OneD, NekDouble>(m_nq);
         }
 
-        v_SetInitialConditions();
+        if (m_session->DefinesFunction("CellModelInitialConditions"))
+        {
+            LoadCellModel();
+        }
+        else
+        {
+            v_SetInitialConditions();
+        }
     }
 
     /**
@@ -303,5 +310,34 @@ namespace Nektar
         }
 
         return outarray;
+    }
+
+    void CellModel::LoadCellModel()
+    {
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+        std::vector<std::vector<NekDouble> > FieldData;
+        Array<OneD, NekDouble> coeffs;
+
+        SpatialDomains::MeshGraphSharedPtr vGraph = m_field->GetGraph();
+
+        // Copy FieldData into m_fields
+        for(int j = 0; j < m_cellSol.num_elements(); ++j)
+        {
+            if (m_session->GetFunctionType("CellModelInitialConditions", j) == LibUtilities::eFunctionTypeFile)
+            {
+                vGraph->Import(m_session->GetFunctionFilename("CellModelInitialConditions", j),FieldDef,FieldData);
+                for(int i = 0; i < FieldDef.size(); ++i)
+                {
+                    m_field->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                                                    FieldDef[i]->m_fields[j], coeffs);
+                }
+                m_field->BwdTrans(coeffs, m_cellSol[j]);
+            }
+            else
+            {
+
+            }
+        }
+
     }
 }

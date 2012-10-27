@@ -157,6 +157,14 @@ namespace Nektar
             }
         }
 
+        MultiLevelBisectedGraph::MultiLevelBisectedGraph(
+            MultiLevelBisectedGraphSharedPtr oldLevel,
+            const int                        nPartition)
+        {
+            m_leftDaughterGraph = oldLevel;
+            m_BndDofs = MemoryManager<SubGraph>::AllocateSharedPtr(nPartition);
+        }
+
         MultiLevelBisectedGraph::MultiLevelBisectedGraph(const int nBndDofs):
             m_BndDofs(MemoryManager<SubGraph>::AllocateSharedPtr(nBndDofs)),
             m_leftDaughterGraph(),
@@ -400,7 +408,8 @@ namespace Nektar
         }
 
         BottomUpSubStructuredGraph::BottomUpSubStructuredGraph(
-            const Array<OneD, const int> septree) :
+            const Array<OneD, const int> septree,
+            const int                    nPartition) :
             m_IntBlocks(),
             m_daughterGraph()
         {
@@ -410,6 +419,12 @@ namespace Nektar
             MultiLevelBisectedGraphSharedPtr topDownGraph = 
                 MemoryManager<MultiLevelBisectedGraph>::AllocateSharedPtr(
                     septree);
+            
+            if (nPartition > 0)
+            {
+                topDownGraph = MemoryManager<MultiLevelBisectedGraph>::
+                    AllocateSharedPtr(topDownGraph, nPartition);
+            }
             
             // set the global numbering of the top-down graph
             topDownGraph->SetGlobalNumberingOffset();
@@ -805,19 +820,19 @@ namespace Nektar
 
         namespace
         {
-                // the first template parameter (=OutEdgeList) is chosen to be
-                // of type std::set as in the set up of the adjacency, a similar
-                // edge might be created multiple times.  And to prevent the
-                // definition of parallell edges, we use std::set (=boost::setS)
-                // rather than std::vector (=boost::vecS)
-                typedef boost::adjacency_list<
-                    boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
-                typedef boost::graph_traits<BoostGraph>::vertex_descriptor
-                    BoostVertex;
-                typedef boost::graph_traits<BoostGraph>::vertex_iterator
-                    BoostVertexIterator;
-                typedef boost::graph_traits<BoostGraph>::adjacency_iterator
-                    BoostAdjacencyIterator;
+            // the first template parameter (=OutEdgeList) is chosen to be of
+            // type std::set as in the set up of the adjacency, a similar edge
+            // might be created multiple times.  And to prevent the definition
+            // of parallell edges, we use std::set (=boost::setS) rather than
+            // std::vector (=boost::vecS)
+            typedef boost::adjacency_list<
+                boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
+            typedef boost::graph_traits<BoostGraph>::vertex_descriptor
+                BoostVertex;
+            typedef boost::graph_traits<BoostGraph>::vertex_iterator
+                BoostVertexIterator;
+            typedef boost::graph_traits<BoostGraph>::adjacency_iterator
+                BoostAdjacencyIterator;
         }
 
         void CuthillMckeeReordering(const BoostGraph& graph,
@@ -888,17 +903,25 @@ namespace Nektar
             
             if(nGraphEdges)
             {
+                cout << "nGraphVerts = " << nGraphVerts << endl;
+                
                 // Step 1: Convert boost graph to a graph in adjncy-list format
                 // as required by METIS
                 int acnt = 0;
                 int vcnt = 0;
                 int i, cnt;
+                int nPartition    = vertMark.size();
                 int nNonPartition = nGraphVerts - vertMark.size();
                 BoostVertexIterator    vertit, vertit_end;
                 BoostAdjacencyIterator adjvertit, adjvertit_end;
-                Array<OneD, int> xadj(nGraphVerts+1,0);
+                Array<OneD, int> xadj(nNonPartition+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
                 Array<OneD, int> initial_perm(nGraphVerts);
+                Array<OneD, int> iinitial_perm(nGraphVerts);
+                Array<OneD, int> perm_tmp (nNonPartition);
+                Array<OneD, int> iperm_tmp(nNonPartition);
+
+                std::set<int>::iterator it;
                 
                 // First reorder vertices so that partition nodes are at the
                 // end. This allows METIS to partition the interior nodes.
@@ -906,15 +929,17 @@ namespace Nektar
                 {
                     if (vertMark.count(i) == 0)
                     {
-                        initial_perm[i] = cnt++;
+                        initial_perm [i]     = cnt;
+                        iinitial_perm[cnt++] = i;
                     }
                 }
 
-                for (i = cnt = 0; i < nGraphVerts; ++i)
+                for (i = 0; i < nGraphVerts; ++i)
                 {
                     if (vertMark.count(i) > 0)
                     {
-                        initial_perm[i] = cnt++;
+                        initial_perm [i]     = cnt;
+                        iinitial_perm[cnt++] = i;
                     }
                 }
 
@@ -944,14 +969,14 @@ namespace Nektar
                     xadj[++vcnt] = acnt;
                 }
                 
-                // Step 2: use metis to reorder the dofs We do not know on
+                // Step 2: use metis to reorder the dofs. We do not know on
                 // forehand the size of the separator tree that METIS will
                 // return, so we just assume a really big value and try with
                 // that
                 int sizeSeparatorTree = nGraphVerts*10;
                 Array<OneD,int> septreeTmp(sizeSeparatorTree,-1);  
                 
-                // The separatortree returned by metis has the following
+                // The separator tree returned by metis has the following
                 // structure: It is a one dimensional array and information per
                 // level is contained per 5 elements:
                 //
@@ -968,7 +993,8 @@ namespace Nektar
                 try
                 {
                     Metis::as_onmetis(
-                        nGraphVerts,xadj,adjncy,perm,iperm,septreeTmp,mdswitch);
+                        nNonPartition,xadj,adjncy,perm_tmp,iperm_tmp,
+                        septreeTmp,mdswitch);
                 }
                 catch(...)
                 {
@@ -977,9 +1003,31 @@ namespace Nektar
                              " tree might not be sufficient)");
                 }
                 
-                // Post-process the separatortree
-                int trueSizeSepTree=0;
-                for(int i = 0 ; septreeTmp[i] != -1; i++)
+                // Change permutations to account for initial offset.
+                for (i = 0; i < nGraphVerts; ++i)
+                {
+                    if (vertMark.count(i) == 0)
+                    {
+                        perm [i] = perm_tmp[initial_perm[i]] + nPartition;
+                        iperm[perm_tmp[initial_perm[i]] + nPartition] = i;
+                    }
+                }
+                
+                for (i = 0, it = vertMark.begin(); it != vertMark.end(); ++it, ++i)
+                {
+                    perm [*it] = i;
+                    iperm[i]   = *it;
+                }
+                
+                for (i = 0; i < nGraphVerts; ++i)
+                {
+                    ASSERTL0(perm[iperm[i]] == i, 
+                             "Perm error " + boost::lexical_cast<std::string>(i));
+                }
+
+                // Post-process the separator tree
+                int trueSizeSepTree = 0;
+                for (i = 0; septreeTmp[i] != -1; i++)
                 {
                     trueSizeSepTree++;
                 }
@@ -991,7 +1039,7 @@ namespace Nektar
                 // constructor will read the separatortree and will interprete
                 // the information from a bottom-up point of view.
                 substructgraph = MemoryManager<BottomUpSubStructuredGraph>::
-                    AllocateSharedPtr(septree);
+                    AllocateSharedPtr(septree, nPartition);
                 
                 // Important, we cannot simply use the ordering given by metis
                 // as it does not order the different blocks as we would like

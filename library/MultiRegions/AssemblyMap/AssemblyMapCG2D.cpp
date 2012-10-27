@@ -1025,9 +1025,7 @@ namespace Nektar
             }
 
             vector<long> procVerts, procEdges;
-            map<int,int> foundVerts, foundEdges;
-            map<int,int> cntMap;
-            int cnt_tmp = 0;
+            set<int> foundVerts, foundEdges;
             
             for(i = cnt = 0; i < locExpVector.size(); ++i)
             {
@@ -1038,44 +1036,18 @@ namespace Nektar
                     for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
                     {
                         int vid = locExpansion->GetGeom2D()->GetVid(j);
+                        int eid = locExpansion->GetGeom2D()->GetEid(j);
                         
                         if (foundVerts.count(vid) == 0)
                         {
-                            cntMap[cnt] = procVerts.size();
                             procVerts.push_back(vid);
-                            foundVerts.insert(make_pair(vid, cnt_tmp++));
+                            foundVerts.insert(vid);
                         }
-                        else
-                        {
-                            cntMap[cnt] = foundVerts.find(vid)->second;
-                        }
-                    }
-                }
-                else
-                {
-                    ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
-                }
-            }
-            
-            for(i = cnt_tmp = 0; i < locExpVector.size(); ++i)
-            {
-                elmtid = locExp.GetOffset_Elmt_Id(i);
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
-                                                                    locExpVector[elmtid]))
-                {
-                    for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
-                    {
-                        int eid = locExpansion->GetGeom2D()->GetEid(j);
                         
                         if (foundEdges.count(eid) == 0)
                         {
-                            cntMap[cnt] = procEdges.size();
                             procEdges.push_back(eid);
-                            foundEdges.insert(make_pair(eid, cnt_tmp++));
-                        }
-                        else
-                        {
-                            cntMap[cnt] = foundEdges.find(eid)->second;
+                            foundEdges.insert(eid);
                         }
                     }
                 }
@@ -1098,45 +1070,32 @@ namespace Nektar
             Gs::Gather(tmp4, Gs::gs_add, tmp2);
             
             set<int> vertMark;
-
-            for(i = cnt = 0; i < locExpVector.size(); ++i)
+            set<int>::iterator iter;
+            
+            for (i = 0; i < unique_verts; ++i)
             {
-                elmtid = locExp.GetOffset_Elmt_Id(i);
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
-                                                                    locExpVector[elmtid]))
+                if (tmp3[i] > 1.0)
                 {
-                    for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
-                    {
-                        if (tmp3[cntMap[cnt]] > 1.0)
-                        {
-                            vertMark.insert(cnt);
-                        }
-                    }
-                }
-                else
-                {
-                    ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
+                    vertMark.insert(vertTempGraphVertId[procVerts[i]]);
                 }
             }
-
-            for(i = 0; i < locExpVector.size(); ++i)
+            
+            for (i = 0; i < unique_edges; ++i)
             {
-                elmtid = locExp.GetOffset_Elmt_Id(i);
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
-                                                                    locExpVector[elmtid]))
+                if (tmp4[i] > 1.0)
                 {
-                    for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
-                    {
-                        if (tmp4[cntMap[cnt]] > 1.0)
-                        {
-                            vertMark.insert(cnt);
-                        }
-                    }
+                    vertMark.insert(edgeTempGraphVertId[procEdges[i]]);
                 }
-                else
+            }
+            
+            if (m_comm->GetRank() == 0)
+            {
+                cout << "vertMark = ";
+                for (iter = vertMark.begin(); iter != vertMark.end(); ++iter)
                 {
-                    ASSERTL0(false,"dynamic cast to a local 2D expansion failed");
+                    cout << *iter << " ";
                 }
+                cout << endl;
             }
             
             /**
@@ -1172,6 +1131,14 @@ namespace Nektar
                     {
                         ASSERTL0(false,"Unrecognised solution type: " + std::string(MultiRegions::GlobalSysSolnTypeMap[m_solnType]));
                     }
+                }
+            }
+            
+            if (m_comm->GetRank() == 0)
+            {
+                for (i = 0; i < nGraphVerts; ++i)
+                {
+                    cout << perm[i] << " " << (i == perm[iperm[i]]) << endl;
                 }
             }
 

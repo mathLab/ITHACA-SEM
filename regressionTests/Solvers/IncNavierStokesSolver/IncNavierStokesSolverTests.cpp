@@ -155,7 +155,8 @@ int main(int argc, char* argv[])
     //Test Modified Arnoldi Transient growth  (VelCorrectionScheme)
     Execute("IncNavierStokesSolver","Test_Hex_channel_m3.xml","3D channel flow, Hexahedral elements, P=3");
     Execute("IncNavierStokesSolver","Test_Hex_channel_m8.xml","3D channel flow, Hexahedral elements, P=8");
-    Execute("IncNavierStokesSolver","Test_Tet_channel_m3.xml","3D channel flow, Tetrahedral elements, P=3");
+    Execute("IncNavierStokesSolver","Test_Tet_channel_m3.xml","3D channel flow, Tetrahedral elements, P=4");
+    Execute("IncNavierStokesSolver","Test_Chan3D_Periodic.xml","3D channel flow, Tetrahedral elements, P=3, Iterative, Periodic BCs");
     Execute("IncNavierStokesSolver","Test_Prism_channel_m6.xml","3D channel flow, Prismatic elements, P=6");
     Execute("IncNavierStokesSolver","Test_Tet_equitri.xml","3D equilateral triangle flow, Tetrahedral elements, P=5");
 

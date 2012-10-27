@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 #include <cstdio>
 #include <cstdlib>
 #include <iomanip>
@@ -192,6 +193,8 @@ namespace Nektar
         int n_fields = m_fields.num_elements();
         static int nchk = 0;
 		
+        Timer timer;
+
         if(m_HomogeneousType == eHomogeneous1D)
         {
             for(i = 0; i < n_fields; ++i)
@@ -232,6 +235,8 @@ namespace Nektar
         for(n = 0; n < nsteps; ++n)
         {
 
+            timer.Start();
+
             if(m_subSteppingScheme)
             {
                 SubStepSaveFields(n);
@@ -243,10 +248,12 @@ namespace Nektar
             
             m_time += m_timestep;
             
+            timer.Stop();
+
             // Write out current time step
             if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
             {
-                cout << "Step: " << n+1 << "  Time: " << m_time << endl;
+                cout << "Step: " << n+1 << "  Time: " << m_time << " CPU-Time: " << timer.TimePerTest(1) << " s" << endl;
             }
 
             // Write out energy data to file
@@ -378,6 +385,7 @@ namespace Nektar
             {
                 (*x)->Update(m_fields, m_time);
             }
+
         }
 	
         if(m_HomogeneousType == eHomogeneous1D)

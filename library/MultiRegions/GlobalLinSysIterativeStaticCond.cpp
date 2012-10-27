@@ -227,7 +227,7 @@ namespace Nektar
                           pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
                           V_LocBnd = SchurCompl*V_LocBnd;
                       }
-                      else // next level of recursive forcing 
+                      else 
                       {
                           DNekScalBlkMat &BinvD      = *m_BinvD;
                           V_LocBnd = BinvD*F_Int;
@@ -235,6 +235,28 @@ namespace Nektar
 
                       pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
                                            nDirBndDofs);
+
+                      // Set up normalisation factor for iterative solve. 
+                      if(atLastLevel)
+                      {
+                          v_UniqueMap();
+
+                          Array<OneD, NekDouble> vExchange(1);
+                          // ideally might have included the F_int removal?
+                          vExchange[0] = Vmath::Dot2(nGlobBndDofs - nDirBndDofs,
+                                                     F + nDirBndDofs,
+                                                     F + nDirBndDofs,
+                                                     m_map + nDirBndDofs);
+
+                          m_expList.lock()->GetComm()->GetRowComm()->
+                              AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
+
+                          // for weird cases make sure normalisation
+                          // is not less than 1e-6
+                          m_bb_inv = (vExchange[0] < 10e-6)? 1.0:1.0/vExchange[0];
+                      }
+                      
+                      
                       F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
                 }
                 else

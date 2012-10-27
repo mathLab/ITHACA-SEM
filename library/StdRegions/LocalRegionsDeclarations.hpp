@@ -48,28 +48,3 @@ namespace Nektar
 
 #endif //LOCALREGDEF_H
 
-/**
- * $Log: LocalRegionsDeclarations.hpp,v $
- * Revision 1.5  2008/07/31 11:10:15  sherwin
- * Updates for handling EdgeBasisKey for use with DG advection. Depracated GetEdgeBasis and added DetEdgeBasisKey
- *
- * Revision 1.4  2008/02/29 19:15:19  sherwin
- * Update for UDG stuff
- *
- * Revision 1.3  2007/07/13 09:02:25  sherwin
- * Mods for Helmholtz solver
- *
- * Revision 1.2  2007/03/14 21:24:09  sherwin
- * Update for working version of MultiRegions up to ExpList1D
- *
- * Revision 1.1  2006/05/04 18:58:29  kirby
- * *** empty log message ***
- *
- * Revision 1.2  2006/03/04 20:26:54  bnelson
- * Added comments after #endif.
- *
- * Revision 1.1  2006/02/26 23:37:29  sherwin
- *
- * Updates and compiling checks upto StdExpansions1D
- *
- **/

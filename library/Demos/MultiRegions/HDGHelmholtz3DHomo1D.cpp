@@ -6,6 +6,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
+#include <SpatialDomains/MeshGraph2D.h>
 
 //#define TIMING
 #ifdef TIMING

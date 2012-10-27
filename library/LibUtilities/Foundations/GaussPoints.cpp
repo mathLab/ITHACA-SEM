@@ -41,6 +41,8 @@
 #include <LibUtilities/Foundations/GaussPoints.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+
 
 namespace Nektar
 {

@@ -34,8 +34,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.h>
-#include <cstdio>
-#include <cstdlib>
+#include <StdRegions/StdSegExp.h>
+
+#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/DisContField1D.h>
+#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/ContField3DHomogeneous1D.h>
+#include <MultiRegions/DisContField3DHomogeneous1D.h>
+#include <MultiRegions/ContField3DHomogeneous2D.h>
+#include <MultiRegions/DisContField3DHomogeneous2D.h>
+
 
 namespace Nektar
 {

@@ -36,12 +36,13 @@
 #ifndef NODALTRIELEC_H
 #define NODALTRIELEC_H
 
-#include <math.h>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <boost/shared_ptr.hpp>
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+
+//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
@@ -52,7 +53,6 @@ namespace Nektar
         class NodalTriElec: public Points<NekDouble>
         {
         public:
-            typedef Points<NekDouble> PointsBaseType;
 
             virtual ~NodalTriElec()
             {

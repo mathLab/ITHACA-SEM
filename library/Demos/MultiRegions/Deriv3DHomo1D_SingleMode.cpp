@@ -5,6 +5,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
+#include <SpatialDomains/MeshGraph2D.h>
 
 using namespace Nektar;
 

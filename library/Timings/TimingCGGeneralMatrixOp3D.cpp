@@ -3,7 +3,8 @@
 #include <sys/time.h>
 #include <iomanip>
 
-#include "boost/filesystem.hpp"
+#include <boost/filesystem.hpp>
+#include <SpatialDomains/MeshGraph3D.h>
 #include <MultiRegions/ContField3D.h>
 
 #ifdef NEKTAR_USING_CHUD

@@ -36,11 +36,11 @@
 #ifndef NEKTAR_SOLVERS_FitzHughNagumo_FitzHughNagumo_H
 #define NEKTAR_SOLVERS_FitzHughNagumo_FitzHughNagumo_H
 
-#include <MultiRegions/DisContField2D.h>
+//#include <MultiRegions/DisContField2D.h>
 #include <SolverUtils/EquationSystem.h>
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
+//#include <LibUtilities/Communication/Comm.h>
 
 using namespace Nektar::SolverUtils;
 

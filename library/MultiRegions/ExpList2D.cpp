@@ -33,15 +33,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/NodalTriExp.h>
 #include <LocalRegions/Expansion3D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <LibUtilities/Foundations/Interp.h>
+#include <SpatialDomains/MeshGraph3D.h>
 
-
-#include <iomanip>
 
 namespace Nektar
 {

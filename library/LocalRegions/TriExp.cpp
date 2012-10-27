@@ -32,11 +32,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LocalRegions/LocalRegions.hpp>
-#include <stdio.h>
 #include <LocalRegions/TriExp.h>
-#include <StdRegions/StdNodalTriExp.h>
+#include <LocalRegions/SegExp.h>
 #include <LocalRegions/Expansion3D.h>
+#include <StdRegions/StdNodalTriExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 
 
@@ -935,22 +934,20 @@ namespace Nektar
                 }
 
                 outfile<<"ST("<<endl;
-                // write the coordinates of the vertices of the triangle
-                Array<OneD,NekDouble> coordVert1(2);
-                Array<OneD,NekDouble> coordVert2(2);
-                Array<OneD,NekDouble> coordVert3(2);
-                coordVert1[0]=-1.0;
-                coordVert1[1]=-1.0;
-                coordVert2[0]=1.0;
-                coordVert2[1]=-1.0;
-                coordVert3[0]=-1.0;
-                coordVert3[1]=1.0;
-                outfile<<m_geom->GetCoord(0,coordVert1)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert1)<<", 0.0,"<<endl;
-                outfile<<m_geom->GetCoord(0,coordVert2)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert2)<<", 0.0,"<<endl;
-                outfile<<m_geom->GetCoord(0,coordVert3)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert3)<<", 0.0"<<endl;
+                // write the coordinates of the vertices of the quadrilateral
+                unsigned int vCoordDim = m_geom->GetCoordim();
+                unsigned int nVertices = GetNverts();
+                Array<OneD, NekDouble> coordVert(vCoordDim);
+                for (unsigned int i = 0; i < nVertices; ++i)
+                {
+                    m_geom->GetVertex(i)->GetCoords(coordVert);
+                    for (unsigned int j = 0; j < vCoordDim; ++j)
+                    {
+                        outfile << coordVert[j];
+                        outfile << (j < vCoordDim - 1 ? ", " : "");
+                    }
+                    outfile << (i < nVertices - 1 ? "," : "") << endl;
+                }
                 outfile<<")"<<endl;
 
                 // calculate the coefficients (monomial format)

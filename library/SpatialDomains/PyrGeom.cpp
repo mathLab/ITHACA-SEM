@@ -33,8 +33,15 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "pchSpatialDomains.h"
 #include <SpatialDomains/PyrGeom.h>
+
+#include <SpatialDomains/Geometry1D.h>
+#include <SpatialDomains/Geometry2D.h>
+#include <StdRegions/StdPyrExp.h>
+#include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/TriGeom.h>
+#include <SpatialDomains/MeshComponents.h>
+
 
 namespace Nektar
 {

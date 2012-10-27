@@ -1,17 +1,17 @@
 #include <cstdio>
 #include <cstdlib>
-#include <math.h>
+#include <cmath>
 
-#include <StdRegions/StdExpansion2D.h>
 #include <StdRegions/StdHexExp.h>
 #include <StdRegions/StdPrismExp.h>
 #include <StdRegions/StdNodalPrismExp.h>
 #include <StdRegions/StdTetExp.h>
 #include <StdRegions/StdNodalTetExp.h>
 
-#include <StdRegions/StdRegions.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
+using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::StdRegions;
 

@@ -40,10 +40,7 @@ using namespace std;
 #include "ProcessBL.h"
 
 #include <LibUtilities/Foundations/BLPoints.h>
-#include <SpatialDomains/MeshGraph.h>
 #include <LocalRegions/PrismExp.h>
-#include <LocalRegions/QuadExp.h>
-#include <LocalRegions/TriExp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar

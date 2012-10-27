@@ -36,15 +36,9 @@
 #ifndef NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
-//#include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
-#include <IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.h>
-#include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
-#include <IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
-#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {     
@@ -59,7 +53,6 @@ namespace Nektar
         eUnsteadyLinearisedNS,
         eUnsteadyNavierStokes,
         eSteadyNavierStokes,
-		eSteadyNavierStokesBySFD,
         eEquationTypeSize
     };
     
@@ -74,7 +67,6 @@ namespace Nektar
         "UnsteadyLinearisedNS",
         "UnsteadyNavierStokes",
 	    "SteadyNavierStokes",
-	    "SteadyNavierStokesBySFD"
     };
 
 

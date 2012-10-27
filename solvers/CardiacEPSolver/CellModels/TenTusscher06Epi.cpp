@@ -35,7 +35,7 @@
 
 #include <iostream>
 #include <string>
-#include <LibUtilities/BasicUtils/Vmath.hpp>
+//#include <LibUtilities/BasicUtils/Vmath.hpp>
 #include <CardiacEPSolver/CellModels/TenTusscher06Epi.h>
 
 namespace Nektar

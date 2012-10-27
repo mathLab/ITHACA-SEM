@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph1D.cpp,v $
+//  File:  MeshGraph1D.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -33,10 +33,10 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <tinyxml/tinyxml.h>
 
 namespace Nektar
 {

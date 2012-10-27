@@ -33,9 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath>
 
 #include <SolverUtils/EquationSystem.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>

@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////////
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph2D.cpp,v $
+//  File:  MeshGraph2D.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -32,11 +32,12 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
 
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/TriGeom.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <tinyxml/tinyxml.h>
 
 namespace Nektar
 {

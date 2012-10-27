@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <iomanip>
 
 #include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <APESolver/EquationSystems/APESystem.h>

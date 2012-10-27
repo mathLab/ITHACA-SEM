@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "StdRegions/StdExpansion.h"
-#include "StdRegions/IndexMapKey.h"
+#include <StdRegions/IndexMapKey.h>
+#include <StdRegions/StdRegions.hpp>
 
 namespace Nektar
 {

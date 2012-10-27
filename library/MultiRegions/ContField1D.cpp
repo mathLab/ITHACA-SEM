@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField1D.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG1D.h>
 
 namespace Nektar
 {

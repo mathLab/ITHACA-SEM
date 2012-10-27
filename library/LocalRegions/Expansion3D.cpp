@@ -34,7 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
 #include <SpatialDomains/Geometry3D.h>
+#include <LocalRegions/MatrixKey.h>
 
 namespace Nektar
 {

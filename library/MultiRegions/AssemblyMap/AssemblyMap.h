@@ -35,11 +35,11 @@
 
 #ifndef MULTIREGIONS_ASSEMBLY_MAP_H
 #define MULTIREGIONS_ASSEMBLY_MAP_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/SubStructuredGraph.h>
 #include <vector>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/Communication/GsLib.hpp>
 

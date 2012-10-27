@@ -33,8 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
 #include <CompressibleFlowSolver/RiemannSolvers/AverageSolver.h>
 
 using namespace std;

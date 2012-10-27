@@ -37,6 +37,7 @@
 #include <MultiRegions/PreconditionerLowEnergy.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
+#include <LocalRegions/MatrixKey.h>
 #include <math.h>
 
 namespace Nektar

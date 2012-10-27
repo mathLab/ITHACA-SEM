@@ -88,7 +88,7 @@ namespace Nektar
         /// Vertex Component
         class VertexComponent: public Geometry, public NekPoint <NekDouble>
         {
-            public:
+        public:
                 SPATIAL_DOMAINS_EXPORT VertexComponent(const int coordim, const int vid,
                     double x, double y, double z);
                 SPATIAL_DOMAINS_EXPORT VertexComponent(){}

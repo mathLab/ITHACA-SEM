@@ -389,7 +389,7 @@ namespace Nektar
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
             v_DoMatrixMultiply(w_A, s_A);
             k = 0;
-
+            
             vExchange[0] = Vmath::Dot2(nNonDir,
                                        r_A,
                                        w_A + nDir,
@@ -476,7 +476,6 @@ namespace Nektar
                 // test if norm is within tolerance
                 if (eps*bb_inv < m_tolerance * m_tolerance)
                 {
-                    cout << "k = " << k << endl;
                     break;
                 }
                 min_resid = min(min_resid, eps);

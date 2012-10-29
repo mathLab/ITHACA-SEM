@@ -54,7 +54,6 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-       
         PatchMap::PatchMap(void)
         {
             
@@ -232,6 +231,10 @@ namespace Nektar
 
         void MultiLevelBisectedGraph::DumpNBndDofs(void) const
         {
+            static int level = 0;
+            level++;
+            cout << "LEVEL " << level << " " << m_BndDofs->GetNverts() << endl;
+            
             if (m_leftDaughterGraph.get())
             {
                 m_leftDaughterGraph->DumpNBndDofs();
@@ -240,8 +243,8 @@ namespace Nektar
             {
                 m_rightDaughterGraph->DumpNBndDofs();
             }
-            cout << "  "  << m_BndDofs->GetNverts() 
-                 << "   " << m_BndDofs->GetIdOffset() << endl;
+            
+            level--;
         }
 
         void MultiLevelBisectedGraph::CollectLeaves(
@@ -864,7 +867,7 @@ namespace Nektar
             Array<OneD, int>                    &iperm,
             BottomUpSubStructuredGraphSharedPtr &substructgraph,
             const int                            mdswitch,
-            std::set<int>                        vertMark)
+            std::set<int>                        partVerts)
         {
             int nGraphVerts = boost::num_vertices(graph);
             int nGraphEdges = boost::num_edges   (graph);
@@ -903,15 +906,13 @@ namespace Nektar
             
             if(nGraphEdges)
             {
-                cout << "nGraphVerts = " << nGraphVerts << endl;
-                
                 // Step 1: Convert boost graph to a graph in adjncy-list format
                 // as required by METIS
                 int acnt = 0;
                 int vcnt = 0;
                 int i, cnt;
-                int nPartition    = vertMark.size();
-                int nNonPartition = nGraphVerts - vertMark.size();
+                int nPartition    = partVerts.size();
+                int nNonPartition = nGraphVerts - partVerts.size();
                 BoostVertexIterator    vertit, vertit_end;
                 BoostAdjacencyIterator adjvertit, adjvertit_end;
                 Array<OneD, int> xadj(nNonPartition+1,0);
@@ -927,7 +928,7 @@ namespace Nektar
                 // end. This allows METIS to partition the interior nodes.
                 for (i = cnt = 0; i < nGraphVerts; ++i)
                 {
-                    if (vertMark.count(i) == 0)
+                    if (partVerts.count(i) == 0)
                     {
                         initial_perm [i]     = cnt;
                         iinitial_perm[cnt++] = i;
@@ -936,7 +937,7 @@ namespace Nektar
 
                 for (i = 0; i < nGraphVerts; ++i)
                 {
-                    if (vertMark.count(i) > 0)
+                    if (partVerts.count(i) > 0)
                     {
                         initial_perm [i]     = cnt;
                         iinitial_perm[cnt++] = i;
@@ -950,7 +951,7 @@ namespace Nektar
                 for (boost::tie(vertit, vertit_end) = boost::vertices(graph); 
                      vertit != vertit_end; ++vertit) 
                 {
-                    if (vertMark.count(index[*vertit]) > 0)
+                    if (partVerts.count(index[*vertit]) > 0)
                     {
                         continue;
                     }
@@ -960,7 +961,7 @@ namespace Nektar
                          adjvertit != adjvertit_end;
                          ++adjvertit) 
                     {
-                        if (vertMark.count(index[*adjvertit]) > 0)
+                        if (partVerts.count(index[*adjvertit]) > 0)
                         {
                             continue;
                         }
@@ -982,7 +983,7 @@ namespace Nektar
                 //
                 // m_septree[i*5 + 0]: the level of recursion (top-level = 1)
                 // m_septree[i*5 + 1]: is this substructure a left or right
-                //                     branch? 1 = left branchm 2 = right branch
+                //                     branch? 1 = left branch, 2 = right branch
                 // m_septree[i*5 + 2]: the number of 'interior' DOFs in left 
                 //                     branch
                 // m_septree[i*5 + 3]: the number of 'interior' DOFs in right 
@@ -1003,20 +1004,21 @@ namespace Nektar
                              " tree might not be sufficient)");
                 }
                 
-                // Change permutations to account for initial offset.
+                // Change permutations from METIS to account for initial offset.
                 for (i = 0; i < nGraphVerts; ++i)
                 {
-                    if (vertMark.count(i) == 0)
+                    if (partVerts.count(i) == 0)
                     {
-                        perm [i] = perm_tmp[initial_perm[i]] + nPartition;
-                        iperm[perm_tmp[initial_perm[i]] + nPartition] = i;
+                        iperm[i] = iperm_tmp[initial_perm[i]];
+                        perm[iperm[i]] = i;
                     }
                 }
                 
-                for (i = 0, it = vertMark.begin(); it != vertMark.end(); ++it, ++i)
+                for (i = nNonPartition, it = partVerts.begin(); 
+                     it != partVerts.end(); ++it, ++i)
                 {
-                    perm [*it] = i;
-                    iperm[i]   = *it;
+                    perm [i]   = *it;
+                    iperm[*it] = i;
                 }
                 
                 for (i = 0; i < nGraphVerts; ++i)
@@ -1024,7 +1026,7 @@ namespace Nektar
                     ASSERTL0(perm[iperm[i]] == i, 
                              "Perm error " + boost::lexical_cast<std::string>(i));
                 }
-
+                
                 // Post-process the separator tree
                 int trueSizeSepTree = 0;
                 for (i = 0; septreeTmp[i] != -1; i++)

@@ -179,7 +179,7 @@ namespace Nektar
         protected:
             SubGraphSharedPtr                m_BndDofs;
             MultiLevelBisectedGraphSharedPtr m_leftDaughterGraph;
-            MultiLevelBisectedGraphSharedPtr m_rightDaughterGraph;        
+            MultiLevelBisectedGraphSharedPtr m_rightDaughterGraph;            
         };
 
 
@@ -262,8 +262,8 @@ namespace Nektar
             Array<OneD, int>                    &perm,
             Array<OneD, int>                    &iperm,
             BottomUpSubStructuredGraphSharedPtr &substructgraph,
-            const int                            mdswitch = 1,
-            std::set<int>                        vertMark = std::set<int>());
+            const int                            mdswitch  = 1,
+            std::set<int>                        partVerts = std::set<int>());
         
         // The parameter MDSWITCH.
         //

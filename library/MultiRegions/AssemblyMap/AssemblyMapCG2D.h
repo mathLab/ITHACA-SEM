@@ -41,7 +41,6 @@
 #include <MultiRegions/ExpList0D.h>
 #include <MultiRegions/ExpList.h>
 
-
 namespace Nektar
 {
     namespace MultiRegions
@@ -118,7 +117,6 @@ namespace Nektar
                                            const vector<map<int,int> >& periodicVerticesId = NullVecIntIntMap,
                                            const map<int,int>& periodicEdgesId = NullIntIntMap,
                                            const bool checkIfSystemSingular = false);
-
         };
 
 

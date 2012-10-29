@@ -124,7 +124,8 @@ namespace Nektar
             m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),
             m_gsh(oldLevelMap->m_gsh),
             m_bndGsh(oldLevelMap->m_bndGsh),
-            m_preconType(oldLevelMap->m_preconType)
+            m_preconType(oldLevelMap->m_preconType),
+            m_lowestStaticCondLevel(oldLevelMap->m_lowestStaticCondLevel)
         {
             int i;
             int j;
@@ -162,17 +163,20 @@ namespace Nektar
             Array<OneD, int>       locPatchMask          (numLocalBndCoeffsOld);
 
             // Fill the array globPatchMask as follows:
-            // - The first part (i.e. the glob bnd dofs) is filled with the value -1
+            // - The first part (i.e. the glob bnd dofs) is filled with the
+            //   value -1
             // - The second part (i.e. the glob interior dofs) is numbered
-            //   according to the patch it belongs to (i.e. dofs in first
-            //   block all are numbered 0, the second block numbered are 1, etc...)
+            //   according to the patch it belongs to (i.e. dofs in first block
+            //   all are numbered 0, the second block numbered are 1, etc...)
             multiLevelGraph->MaskPatches(newLevel,globHomPatchMask);
+            
             // Map from Global Dofs to Local Dofs
             // As a result, we know for each local dof whether
             // it is mapped to the boundary of the next level, or to which
             // patch. Based upon this, we can than later associate every patch
             // of the current level with a patch in the next level.
             oldLevelMap->GlobalToLocalBndWithoutSign(globPatchMask,locPatchMask_NekDouble);
+
             // Convert the result to an array of integers rather than doubles
             RoundNekDoubleToInt(locPatchMask_NekDouble,locPatchMask);
 
@@ -186,8 +190,8 @@ namespace Nektar
             int numPatchesWithIntNew = multiLevelGraph->GetNpatchesWithInterior(newLevel);
             int numPatchesNew        = numPatchesWithIntNew;
             
-            // Allocate memory to store the number of local dofs associated to each
-            // of elemental boundaries of these patches
+            // Allocate memory to store the number of local dofs associated to
+            // each of elemental boundaries of these patches
             map<int, int> numLocalBndCoeffsPerPatchNew;
             for(int i = 0; i < numPatchesNew; i++)
             {
@@ -202,8 +206,7 @@ namespace Nektar
                 // For every patch at the current level, the mask array
                 // locPatchMask should be filled with
                 // - the same (positive) number for each entry (which will
-                //   correspond to the patch at the next level it
-                //   belongs to)
+                //   correspond to the patch at the next level it belongs to)
                 // - the same (positive) number for each entry, except some
                 //   entries that are -1 (the enties correspond to -1, will be
                 //   mapped to the local boundary of the next level patch given
@@ -216,7 +219,7 @@ namespace Nektar
                 maxval = *max_element(&locPatchMask[cnt],
                                       &locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
                 ASSERTL0((minval==maxval)||(minval==-1),"These values should never be the same");
-
+                
                 if(maxval == -1)
                 {
                     curPatch = numPatchesNew;
@@ -227,7 +230,7 @@ namespace Nektar
                 {
                     curPatch = maxval;
                 }
-
+                
                 for(j = 0; j < numLocalBndCoeffsPerPatchOld[i]; j++ )
                 {
                     ASSERTL0((locPatchMask[cnt]==maxval)||(locPatchMask[cnt]==minval),
@@ -271,7 +274,7 @@ namespace Nektar
             {
                 m_localToGlobalBndSign    = Array<OneD,NekDouble>(m_numLocalBndCoeffs);
             }
-
+            
             m_patchMapFromPrevLevel = MemoryManager<PatchMap>::AllocateSharedPtr(numLocalBndCoeffsOld);
 
             // Set up an offset array that denotes the offset of the local
@@ -936,9 +939,14 @@ namespace Nektar
         const void AssemblyMap::UniversalAssembleBnd(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
+            /*
+            if (m_staticCondLevel < m_lowestStaticCondLevel)
+            {
+            */
             ASSERTL1(pGlobal.num_elements() == m_numGlobalBndCoeffs,
-                    "Wrong size.");
+                     "Wrong size.");
             Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
+            //}
         }
 
         const void AssemblyMap::UniversalAssembleBnd(
@@ -1015,7 +1023,5 @@ namespace Nektar
 
             Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get());
         }
-
-
     } // namespace
 } // namespace

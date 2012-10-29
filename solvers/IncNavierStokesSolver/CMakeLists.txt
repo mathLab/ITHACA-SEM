@@ -16,5 +16,4 @@ SET(IncNavierStokesSolverSource
 ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver solvers 
 			${IncNavierStokesSolverSource})
 
-ADD_TEST(NAME ChanFlowM3
-         COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/ChanFlowM3.tst)
+ADD_NEKTAR_TEST(ChanFlowM3)

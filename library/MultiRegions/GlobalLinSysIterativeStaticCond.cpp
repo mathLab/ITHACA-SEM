@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
-#include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 
 namespace Nektar
@@ -464,11 +463,8 @@ namespace Nektar
             m_S1Blk      = MemoryManager<DNekScalBlkMat>
                     ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
 
-            DNekScalBlkMatSharedPtr r_mat;
-            DNekScalBlkMatSharedPtr rt_mat;
-
-            DNekScalMatSharedPtr m_R;
-            DNekScalMatSharedPtr m_RT;
+            DNekScalMatSharedPtr m_R = m_precon->GetTransformationMatrix();
+            DNekScalMatSharedPtr m_RT = m_precon->GetTransposedTransformationMatrix();
 
             for(n = 0; n < n_exp; ++n)
             {
@@ -484,46 +480,6 @@ namespace Nektar
 
                 DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
                 DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
-
-                StdRegions::StdExpansionSharedPtr locExpansion;
-                locExpansion=m_expList.lock()->GetExp(n);
-
-                StdRegions::ExpansionType eType=
-                    locExpansion->DetExpansionType();
-
-                StdRegions::VarCoeffMap vVarCoeffMap;
-
-                // retrieve variable coefficient
-                if(m_linSysKey.GetNVarCoeffs() > 0)
-                {
-                    StdRegions::VarCoeffMap::const_iterator x;
-                    int cnt = m_expList.lock()->GetPhys_Offset(n);
-                    for (x = m_linSysKey.GetVarCoeffs().begin(); 
-                         x != m_linSysKey.GetVarCoeffs().end(); ++x)
-                    {
-                        vVarCoeffMap[x->first] = x->second + cnt;
-                    }
-                }
-                
-                LocalRegions::MatrixKey r_matkey
-                    (StdRegions::ePreconR,
-                     eType,
-                     *locExpansion,
-                     m_linSysKey.GetConstFactors(),
-                     vVarCoeffMap);
-                
-                LocalRegions::MatrixKey rt_matkey
-                    (StdRegions::ePreconRT,
-                     eType,
-                     *locExpansion,
-                     m_linSysKey.GetConstFactors(),
-                     vVarCoeffMap);
-                
-                r_mat = locExpansion->GetLocStaticCondMatrix(r_matkey);
-                rt_mat = locExpansion->GetLocStaticCondMatrix(rt_matkey);
-                
-                m_R=r_mat->GetBlock(0,0);
-                m_RT=rt_mat->GetBlock(0,0);
 
                 //transformation matrices
                 DNekScalMat &R = (*m_R);
@@ -542,8 +498,8 @@ namespace Nektar
                 m_C         ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
                 m_invD      ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
                 m_S1Blk->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
-                m_RBlk->SetBlock(n,n, m_R);//tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_R));
-                m_RTBlk->SetBlock(n,n, m_RT);//tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_RT));
+                m_RBlk->SetBlock(n,n, m_R);
+                m_RTBlk->SetBlock(n,n, m_RT);
 	    }
         }
 

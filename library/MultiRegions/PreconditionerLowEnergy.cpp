@@ -99,7 +99,6 @@ namespace Nektar
 		break;
             case MultiRegions::eBlock:
                 {
-                    CreateReferenceGeometryAndMatrix(StdRegions::eTetrahedron);
                     BlockPreconditioner();
 		}
 		break;
@@ -488,8 +487,8 @@ namespace Nektar
             DNekMat RS;
             DNekMat RSRT;
             
-            DNekScalMatSharedPtr m_transformationmatrix;
-            DNekScalMatSharedPtr m_transposedtransformationmatrix;
+            //DNekScalMatSharedPtr m_transformationmatrix;
+            //DNekScalMatSharedPtr m_transposedtransformationmatrix;
 
             DNekMatSharedPtr m_VertBlk;
             DNekMatSharedPtr m_EdgeBlk;
@@ -1152,6 +1151,21 @@ namespace Nektar
 	    }
 	}
 
+        /**
+         * \brief Get the transformation matrix \f$\mathbf{R}\f$
+         */
+        const DNekScalMatSharedPtr& PreconditionerLowEnergy::v_GetTransformationMatrix() const
+	{
+	    return m_transformationmatrix;
+	}
+
+        /**
+         * \brief Get the transposed transformation matrix \f$\mathbf{R}^{T}\f$
+         */
+        const DNekScalMatSharedPtr& PreconditionerLowEnergy::v_GetTransposedTransformationMatrix() const
+	{
+	    return m_transposedtransformationmatrix;
+	}
 
     }
 }

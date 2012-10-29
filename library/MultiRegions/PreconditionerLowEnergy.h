@@ -73,14 +73,6 @@ namespace Nektar
             MULTI_REGIONS_EXPORT
             virtual ~PreconditionerLowEnergy() {}
 
-	    /*const DNekMatSharedPtr& GetTransformationMatrix() const;
-
-	    const DNekMatSharedPtr& GetTransposedTransformationMatrix() const;
-
-	    const DNekMatSharedPtr& GetInverseTransformationMatrix() const;
-
-	    const DNekMatSharedPtr& GetInverseTransposedTransformationMatrix() const;*/
-	    
 	protected:
 
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
@@ -93,16 +85,8 @@ namespace Nektar
 
             DNekScalMatSharedPtr                        bnd_mat;
 
-	    DNekMatSharedPtr                            m_vertexedgefacetransformmatrix;
-            DNekMatSharedPtr                            m_vertexedgefacecoupling;
-	    DNekMatSharedPtr                            m_edgefacecoupling;
-	    DNekMatSharedPtr                            m_transformationmatrix;
-	    DNekMatSharedPtr                            m_inversetransformationmatrix;
-	    DNekMatSharedPtr                            m_transposedtransformationmatrix;
-	    DNekMatSharedPtr                            m_inversetransposedtransformationmatrix;
-	    DNekMatSharedPtr                            m_efedgefacecoupling;
-	    DNekMatSharedPtr                            m_effacefacecoupling;
-	    DNekMatSharedPtr                            m_edgefacetransformmatrix;
+	    DNekScalMatSharedPtr                        m_transformationmatrix;
+	    DNekScalMatSharedPtr                        m_transposedtransformationmatrix;
 
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
@@ -123,23 +107,9 @@ namespace Nektar
 
             void CreateLinearFiniteElmentSpace(void);
 
-            void DetermineElementTypeAndOffset(void);
-
-            void CreateReferenceGeometryAndMatrix(StdRegions::ExpansionType);
-
-	    void SetLowEnergyModes_Rv(const DNekMatSharedPtr &m_transformationmatrix,
-                           const DNekMatSharedPtr &m_transposedtransformationmatrix);
-
-	    void SetLowEnergyModes_Ref(const DNekMatSharedPtr &m_transformationmatrix,
-                           const DNekMatSharedPtr &m_transposedtransformationmatrix);
-
-	    void SetUpInverseTransformationMatrix(void);
-
 	    void LowEnergyPreconditioner(void);
 
 	    void BlockPreconditioner(void);
-
-	    void VertexEdgeFaceMatrix(void);
 
             virtual void v_InitObject();
 
@@ -147,6 +117,9 @@ namespace Nektar
                       const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
+	    virtual const DNekScalMatSharedPtr& v_GetTransformationMatrix() const;
+            
+	    virtual const DNekScalMatSharedPtr& v_GetTransposedTransformationMatrix() const;
 	};
     }
 }

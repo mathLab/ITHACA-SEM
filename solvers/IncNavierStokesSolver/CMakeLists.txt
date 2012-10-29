@@ -16,4 +16,4 @@ SET(IncNavierStokesSolverSource
 ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver solvers 
 			${IncNavierStokesSolverSource})
 
-ADD_NEKTAR_TEST(ChanFlowM3)
+ADD_NEKTAR_TEST(Channel_Flow_3modes)

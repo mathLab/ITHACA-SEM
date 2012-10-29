@@ -1,9 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>Channel Flow P=3</description>
+    <description>Channel Flow P=2</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>Test_ChanFlow_m3.xml</parameters>
+    <parameters>Channel_Flow_3modes.xml</parameters>
     <files>
-        <file description="Session File">Test_ChanFlow_m3.xml</file>
+        <file description="Session File">Channel_Flow_3modes.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

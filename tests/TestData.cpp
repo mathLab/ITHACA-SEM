@@ -48,6 +48,11 @@ const std::string& TestData::GetParameters() const
     return m_parameters;
 }
 
+const unsigned int& TestData::GetNProcesses() const
+{
+    return m_processes;
+}
+
 std::string TestData::GetMetricType(unsigned int pId) const
 {
     ASSERTL0(pId < m_metrics.size(), "Metric ID out of range.");
@@ -90,19 +95,31 @@ void TestData::Parse(TiXmlDocument* pDoc)
 
     // Find description tag.
     tmp = testElement->FirstChildElement("description");
-    m_description = string(tmp->GetText());
     ASSERTL0(tmp, "Cannot find 'description' for test.");
+    m_description = string(tmp->GetText());
 
-    // Find solver tag.
+    // Find executable tag.
     tmp = testElement->FirstChildElement("executable");
-    m_executable = string(tmp->GetText());
     ASSERTL0(tmp, "Cannot find 'executable' for test.");
+    m_executable = string(tmp->GetText());
 
-    // Find input tag.
+    // Find parameters tag.
     tmp = testElement->FirstChildElement("parameters");
-    m_parameters = string(tmp->GetText());
     ASSERTL0(tmp, "Cannot find 'parameters' for test.");
+    m_parameters = string(tmp->GetText());
 
+    // Find parallel processes tah.
+    tmp = testElement->FirstChildElement("processes");
+    if (tmp)
+    {
+        m_processes = atoi(tmp->GetText());
+    }
+    else
+    {
+        m_processes = 1;
+    }
+
+    // Extract metric tags
     metrics = testElement->FirstChildElement("metrics");
     ASSERTL0(metrics, "No metrics defined for test.");
 
@@ -113,6 +130,7 @@ void TestData::Parse(TiXmlDocument* pDoc)
         tmp = tmp->NextSiblingElement("metric");
     }
 
+    // Extract list of dependent files
     files = testElement->FirstChildElement("files");
     if (files)
     {

@@ -17,3 +17,7 @@ ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver solvers
 			${IncNavierStokesSolverSource})
 
 ADD_NEKTAR_TEST(Channel_Flow_3modes)
+
+IF (NEKTAR_USE_MPI)
+    ADD_NEKTAR_TEST(Channel_Flow_3modes_Parallel)
+ENDIF (NEKTAR_USE_MPI)

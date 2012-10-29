@@ -37,6 +37,7 @@ public:
     const std::string& GetDescription() const;
     const std::string& GetExecutable() const;
     const std::string& GetParameters() const;
+    const unsigned int& GetNProcesses() const;
 
     std::string GetMetricType(unsigned int pId) const;
     unsigned int GetNumMetrics() const;
@@ -50,6 +51,7 @@ private:
     std::string                     m_description;
     std::string                     m_executable;
     std::string                     m_parameters;
+    unsigned int                    m_processes;
     TiXmlDocument*                  m_doc;
     std::vector<TiXmlElement*>      m_metrics;
     std::vector<DependentFile>      m_files;

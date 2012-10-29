@@ -128,6 +128,12 @@ int main(int argc, char *argv[])
         // Construct test command to run. If in debug mode, append "-g"
         // Output from stdout and stderr are directed to the files output.out
         // and output.err, respectively.
+        if (file.GetNProcesses() > 1)
+        {
+            command += "mpirun -np "
+                    + boost::lexical_cast<std::string>(file.GetNProcesses())
+                    + " ";
+        }
         fs::path execPath = startDir / fs::path(file.GetExecutable());
         command += PortablePath(execPath);
     #if defined(NDEBUG)

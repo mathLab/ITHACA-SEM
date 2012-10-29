@@ -90,6 +90,9 @@ namespace Nektar
                         if (fabs(boost::lexical_cast<double>(okValues[i-1]) -
                                  boost::lexical_cast<double>(match)) > 1e-6)
                         {
+                            cout << "Failed tolerance match." << endl;
+                            cout << "  Expected: " << okValues[i-1] << endl;
+                            cout << "  Result:   " << match << endl;
                             return false;
                         }
                     }
@@ -98,6 +101,9 @@ namespace Nektar
                         // Case insensitive match.
                         if (!boost::iequals(match, okValues[i-1]))
                         {
+                            cout << "Failed case-insensitive match." << endl;
+                            cout << "  Expected: " << okValues[i-1] << endl;
+                            cout << "  Result:   " << match << endl;
                             return false;
                         }
                     }

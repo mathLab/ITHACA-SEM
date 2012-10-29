@@ -122,14 +122,20 @@ int main(int argc, char *argv[])
     // Construct command to run
     std::string command;
     command += PortablePath(std::string(BUILD_PATH) + "/" + file.GetExecutable());
-//#if defined(NDEBUG)
+#if defined(NDEBUG)
+#else
     command += "-g";
-//#endif
+#endif
     command += " " + file.GetParameters();
     command += " 1>output.out 2>output.err";
 
     // Run executable and perform tests.
     int status=system(command.c_str());
+    if (status)
+    {
+        cout << "Failed to execute command: " << command << endl;
+        return 1;
+    }
 
     // Open the output files and test against all metrics
     ifstream vStdout("output.out");
@@ -138,7 +144,6 @@ int main(int argc, char *argv[])
     {
         if (!metrics[i]->Test(vStdout, vStderr))
         {
-            cout << "FAILED" << endl;
             return 1;
         }
     }

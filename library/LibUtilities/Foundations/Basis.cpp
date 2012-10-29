@@ -964,10 +964,10 @@ namespace Nektar
         */
         bool BasisKey::Collocation() const
         {
-            return ( m_basistype == eGLL_Lagrange &&
-                GetPointsType() == eGaussLobattoLegendre &&
-                GetNumModes() == GetNumPoints() || 
-                m_basistype == eGauss_Lagrange);
+            return (m_basistype     == eGLL_Lagrange &&
+                    GetPointsType() == eGaussLobattoLegendre &&
+                    GetNumModes()   == GetNumPoints()) || 
+                    m_basistype     == eGauss_Lagrange;
         }
 
         // BasisKey compared to BasisKey

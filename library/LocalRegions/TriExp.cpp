@@ -1284,15 +1284,17 @@ namespace Nektar
                         Array<OneD, NekDouble> &varcoeffs = NullNekDouble1DArray;
                         switch(mkey.GetMatrixType())
                         {
-                        case StdRegions::eWeakDeriv0:
-                            dir = 0;
-                            break;
-                        case StdRegions::eWeakDeriv1:
-                            dir = 1;
-                            break;
-                        case StdRegions::eWeakDeriv2:
-                            dir = 2;
-                            break;
+                            case StdRegions::eWeakDeriv0:
+                                dir = 0;
+                                break;
+                            case StdRegions::eWeakDeriv1:
+                                dir = 1;
+                                break;
+                            case StdRegions::eWeakDeriv2:
+                                dir = 2;
+                                break;
+                            default:
+                                break;
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
@@ -1436,15 +1438,17 @@ namespace Nektar
 
                         switch(mkey.GetMatrixType())
                         {
-                        case StdRegions::eIProductWRTDerivBase0:
-                            dir = 0;
-                            break;
-                        case StdRegions::eIProductWRTDerivBase1:
-                            dir = 1;
-                            break;
-                        case StdRegions::eIProductWRTDerivBase2:
-                            dir = 2;
-                            break;
+                            case StdRegions::eIProductWRTDerivBase0:
+                                dir = 0;
+                                break;
+                            case StdRegions::eIProductWRTDerivBase1:
+                                dir = 1;
+                                break;
+                            case StdRegions::eIProductWRTDerivBase2:
+                                dir = 2;
+                                break;
+                            default:
+                                break;
                         }
 
                         MatrixKey iProdDeriv0Key(StdRegions::eIProductWRTDerivBase0,
@@ -2132,18 +2136,23 @@ namespace Nektar
 
                 switch(m_base[1]->GetPointsType())
                 {
-                case LibUtilities::eGaussLobattoLegendre:  // Legendre inner product
-                    for(i = 0; i < nquad1; ++i)
-                    {
-                        Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
-                    }
-                    break;
-                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
-                    for(i = 0; i < nquad1; ++i)
-                    {
-                        Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);
-                    }
-                    break;
+                    // Legendre inner product
+                    case LibUtilities::eGaussLobattoLegendre:
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
+                        }
+                        break;
+                    // (1,0) Jacobi Inner product
+                    case LibUtilities::eGaussRadauMAlpha1Beta0: 
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false, "Unsupported quadrature points type.");
+                        break;
                 }
             }
         }

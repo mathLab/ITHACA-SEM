@@ -1,9 +1,9 @@
 <test>
     <description>Channel Flow P=3</description>
-    <executable>solvers/IncNavierStokesSolver/IncNavierStokesSolver</executable>
+    <executable>IncNavierStokesSolver</executable>
     <parameters>Test_ChanFlow_m3.xml</parameters>
     <files>
-        <file description="Session File">regressionTests/Solvers/IncNavierStokesSolver/InputFiles/Test_ChanFlow_m3.xml</file>
+        <file description="Session File">Test_ChanFlow_m3.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

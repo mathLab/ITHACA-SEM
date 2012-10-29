@@ -8,10 +8,14 @@
 #ifndef TESTDATA_H_
 #define TESTDATA_H_
 
+#include <boost/filesystem.hpp>
+
 #include <string>
 #include <vector>
 
 #include <tinyxml/tinyxml.h>
+
+namespace fs = boost::filesystem;
 
 namespace Nektar
 {
@@ -27,7 +31,7 @@ struct DependentFile
 class TestData
 {
 public:
-    TestData(const std::string& pFilename);
+    TestData(const fs::path& pFilename);
     TestData(const TestData& pSrc);
 
     const std::string& GetDescription() const;

@@ -29,40 +29,28 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Tester executible.
+// Description: Tester executable.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <vector>
-#include <sys/stat.h>
 
 #include <TestData.h>
-#include <MetricL2.h>
-#include <MetricRegex.h>
+#include <Metric.h>
 
 #include <boost/filesystem.hpp>
-#include <boost/lexical_cast.hpp>
 #include <boost/version.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
-
-#ifdef _WINDOWS
-#define COPY_COMMAND "copy "
-#define MKDIR_COMMAND "mkdir "
-#define DEL_COMMAND "del "
-#else
-#define COPY_COMMAND "cp "
-#define MKDIR_COMMAND "mkdir "
-#define DEL_COMMAND "rm -rf "
-#endif
 
 using namespace std;
 using namespace Nektar;
+
+// Define some namespace aliases
 namespace po = boost::program_options;
+namespace fs = boost::filesystem;
 
 std::string PortablePath(const boost::filesystem::path& path)
 {
@@ -77,76 +65,139 @@ std::string PortablePath(const boost::filesystem::path& path)
 
 int main(int argc, char *argv[])
 {
+    int status = 0;
+    std::string command;
+
     if (argc != 2)
     {
-        cout << "Error: incorrect number of arguments" << endl;
-    }
-    const string specFile = string(argv[1]);
-    // Parse the test file
-    Test::TestData file(specFile);
-
-    // Generate the metric objects
-    vector<MetricSharedPtr> metrics;
-    for (unsigned int i = 0; i < file.GetNumMetrics(); ++i)
-    {
-        metrics.push_back(GetMetricFactory().CreateInstance(file.GetMetricType(i), file.GetMetric(i)));
+        cerr << "Error: incorrect number of arguments" << endl;
+        cerr << "Usage: " << argv[0] << " [test-definition.tst]" << endl;
+        return -1;
     }
 
-    // Copy required files for this test.
-    struct stat vFileInfo;
-    for (unsigned int i = 0; i < file.GetNumDependentFiles(); ++i)
+    // Path to test definition file
+    const fs::path specFile(argv[1]);
+
+    // Parent path of test definition file containing dependent files
+    const fs::path specPath = specFile.parent_path();
+
+    // Temporary directory to create and in which to conduct test
+    const fs::path tmpDir = fs::current_path() / fs::path("tmp_" + specFile.stem().string());
+
+    // The current directory
+    const fs::path startDir = fs::current_path();
+
+    try
     {
-        Test::DependentFile f = file.GetDependentFile(i);
-        string fname = file.GetDependentFile(i).m_filename;
-        string source  = PortablePath(std::string(SOURCE_PATH) + "/" + fname);
-        string command = std::string(COPY_COMMAND)
-                        + source + " .";
-        int vNotPresent = stat(source.c_str(), &vFileInfo);
-        
-        if (vNotPresent)
+        // Parse the test file
+        Test::TestData file(specFile);
+
+        // Generate the metric objects
+        vector<MetricSharedPtr> metrics;
+        for (unsigned int i = 0; i < file.GetNumMetrics(); ++i)
         {
-            cerr << "Required file " << source << " not found." << endl;
-            return 1;
+            metrics.push_back( GetMetricFactory().CreateInstance(
+                                                    file.GetMetricType(i),
+                                                    file.GetMetric(i)
+                                                  ));
         }
-        
-        int status = system(command.c_str());
-        
-        if (status)
+
+        // Remove the temporary directory if left from a previous test
+        if (fs::exists(tmpDir))
         {
-            cerr << "Unable to copy file:" << source
-                 << " to current location" << endl;
-            return 1;
+            fs::remove_all(tmpDir);
         }
-    }
 
-    // Construct command to run
-    std::string command;
-    command += PortablePath(std::string(BUILD_PATH) + "/" + file.GetExecutable());
-#if defined(NDEBUG)
-#else
-    command += "-g";
-#endif
-    command += " " + file.GetParameters();
-    command += " 1>output.out 2>output.err";
+        // Create temporary directory
+        fs::create_directory(tmpDir);
 
-    // Run executable and perform tests.
-    int status=system(command.c_str());
-    if (status)
-    {
-        cout << "Failed to execute command: " << command << endl;
-        return 1;
-    }
+        // Change working directory to the temporary directory
+        fs::current_path(tmpDir);
 
-    // Open the output files and test against all metrics
-    ifstream vStdout("output.out");
-    ifstream vStderr("output.err");
-    for (int i = 0; i < metrics.size(); ++i)
-    {
-        if (!metrics[i]->Test(vStdout, vStderr))
+        // Copy required files for this test from the test definition directory
+        // to the temporary directory.
+        for (unsigned int i = 0; i < file.GetNumDependentFiles(); ++i)
         {
-            return 1;
+            fs::path source_file(file.GetDependentFile(i).m_filename);
+
+            fs::path source = specPath / source_file;
+            fs::path dest   = tmpDir   / source_file;
+            fs::copy_file(source, dest);
+        }
+
+        // Construct test command to run. If in debug mode, append "-g"
+        // Output from stdout and stderr are directed to the files output.out
+        // and output.err, respectively.
+        fs::path execPath = startDir / fs::path(file.GetExecutable());
+        command += PortablePath(execPath);
+    #if defined(NDEBUG)
+        command += " ";
+    #else
+        command += "-g ";
+    #endif
+        command += file.GetParameters();
+        command += " 1>output.out 2>output.err";
+
+        // Run executable to perform test.
+        if (system(command.c_str()))
+        {
+            cerr << "Error occurred running test:" << endl;
+            cerr << "Command: " << command << endl;
+            throw 1;
+        }
+
+        // Check output files exist
+        if (!(fs::exists("output.out") && fs::exists("output.err")))
+        {
+            cerr << "One or more test output files are missing." << endl;
+            throw 1;
+        }
+
+        // Open output files and check they are readable
+        ifstream vStdout("output.out");
+        ifstream vStderr("output.err");
+        if (vStdout.bad() || vStderr.bad())
+        {
+            cerr << "One or more test output files are unreadable." << endl;
+            throw 1;
+        }
+
+        // Test against all metrics
+        status = 0;
+        for (int i = 0; i < metrics.size(); ++i)
+        {
+            vStdout.seekg(0, ios::beg);
+            vStderr.seekg(0, ios::beg);
+            if (!metrics[i]->Test(vStdout, vStderr))
+            {
+                status = 1;
+            }
+        }
+
+        // Change back to the original path and delete temporary directory
+        fs::current_path(startDir);
+        fs::remove_all(tmpDir);
+
+        // Return status of test. 0 = PASS, 1 = FAIL
+        return status;
+    }
+    catch (const fs::filesystem_error e)
+    {
+        cout << "Filesystem operation error occurred:" << endl;
+        cout << "  " << e.what() << endl;
+        if (fs::exists(tmpDir))
+        {
+            fs::remove_all(tmpDir);
+        }
+    }
+    catch (...)
+    {
+        if (fs::exists(tmpDir))
+        {
+            fs::remove_all(tmpDir);
         }
     }
 
-    return 0;
+    // If a system error, return -1
+    return -1;
 }

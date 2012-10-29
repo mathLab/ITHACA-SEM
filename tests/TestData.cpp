@@ -17,7 +17,7 @@ namespace Nektar
 namespace Test
 {
 
-TestData::TestData(const std::string& pFilename)
+TestData::TestData(const fs::path& pFilename)
 {
     // Process test file format.
     m_doc = new TiXmlDocument(pFilename.c_str());

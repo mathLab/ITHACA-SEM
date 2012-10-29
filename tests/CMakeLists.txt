@@ -1,6 +1,7 @@
 SET(TESTER_SOURCES
   Metric.cpp
   MetricL2.cpp
+  MetricLInf.cpp
   MetricRegex.cpp
   TestData.cpp
   Tester.cpp
@@ -9,6 +10,7 @@ SET(TESTER_SOURCES
 SET(TESTER_HEADERS
   Metric.h
   MetricL2.h
+  MetricLInf.h
   MetricRegex.h
   TestData.h
   Tester.h

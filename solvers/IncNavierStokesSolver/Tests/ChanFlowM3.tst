@@ -11,6 +11,11 @@
             <value variable="v">0</value>
             <value variable="p">8.50369e-15</value>
         </metric>
+        <metric type="Linf" id="2">
+            <value variable="u">4.7462e-15</value>
+            <value variable="v">3.04438e-16</value>
+            <value variable="p">6.23945e-14</value>
+        </metric>
     </metrics>
 </test>
 

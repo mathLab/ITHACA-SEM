@@ -55,15 +55,16 @@ namespace Nektar
             // Set up a match with two fields which correspond with the
             // subexpression above. The first is the variable name, second is
             // the L2 error.
-            ASSERTL0(value->Attribute("variable"),
-                     "Missing variable name in L2 metric.");
             ASSERTL0(value->Attribute("tolerance"),
                      "Missing tolerance in L2 metric");
             ASSERTL0(value->GetText() || value->GetText() == "",
                      "Missing value in L2 metric.");
 
             MetricRegexFieldValue var;
-            var.m_value = value->Attribute("variable");
+            if (value->Attribute("variable"))
+            {
+                var.m_value = value->Attribute("variable");
+            }
 
             MetricRegexFieldValue val;
             val.m_value = value->GetText();

@@ -192,17 +192,11 @@ int main(int argc, char *argv[])
     {
         cerr << "Filesystem operation error occurred:" << endl;
         cerr << "  " << e.what() << endl;
-        if (fs::exists(tmpDir))
-        {
-            fs::remove_all(tmpDir);
-        }
+        cerr << "  Files left in " << tmpDir.string() << endl;
     }
     catch (...)
     {
-        if (fs::exists(tmpDir))
-        {
-            fs::remove_all(tmpDir);
-        }
+        cerr << "  Files left in " << tmpDir.string() << endl;
     }
 
     // If a system error, return 2

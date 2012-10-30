@@ -23,7 +23,9 @@ TestData::TestData(const fs::path& pFilename)
     m_doc = new TiXmlDocument(pFilename.c_str());
     bool loadOkay = m_doc->LoadFile();
 
-    ASSERTL0(loadOkay, "Failed to load file: " + string(m_doc->ErrorDesc()));
+    ASSERTL0(loadOkay, "Failed to load test definition file: "
+                       + pFilename.string() + "\n"
+                       + string(m_doc->ErrorDesc()));
 
     Parse(m_doc);
 }

@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     {
         cerr << "Error: incorrect number of arguments" << endl;
         cerr << "Usage: " << argv[0] << " [test-definition.tst]" << endl;
-        return -1;
+        return 2;
     }
 
     // Path to test definition file
@@ -82,7 +82,8 @@ int main(int argc, char *argv[])
     const fs::path specPath = specFile.parent_path();
 
     // Temporary directory to create and in which to conduct test
-    const fs::path tmpDir = fs::current_path() / fs::path("tmp_" + specFile.stem().string());
+    const fs::path tmpDir = fs::current_path()
+                            / fs::path("tmp_" + specFile.stem().string());
 
     // The current directory
     const fs::path startDir = fs::current_path();
@@ -187,10 +188,10 @@ int main(int argc, char *argv[])
         // Return status of test. 0 = PASS, 1 = FAIL
         return status;
     }
-    catch (const fs::filesystem_error e)
+    catch (const fs::filesystem_error& e)
     {
-        cout << "Filesystem operation error occurred:" << endl;
-        cout << "  " << e.what() << endl;
+        cerr << "Filesystem operation error occurred:" << endl;
+        cerr << "  " << e.what() << endl;
         if (fs::exists(tmpDir))
         {
             fs::remove_all(tmpDir);
@@ -204,6 +205,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    // If a system error, return -1
-    return -1;
+    // If a system error, return 2
+    return 2;
 }

@@ -35,6 +35,7 @@
 
 #include <Metric.h>
 #include <loki/Singleton.h>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 
@@ -55,9 +56,14 @@ namespace Nektar
     {
         if (!metric->Attribute("id"))
         {
-            cout << "Metric has no ID" << endl;
+            cerr << "Metric has no ID" << endl;
+        }
+        if (!metric->Attribute("type"))
+        {
+            cerr << "Metric has no type" << endl;
         }
         m_id = atoi(metric->Attribute("id"));
+        m_type = boost::to_upper_copy(string(metric->Attribute("type")));
     }
 
     /**
@@ -66,10 +72,5 @@ namespace Nektar
     bool Metric::Test(std::istream& pStdout, std::istream& pStderr)
     {
         return v_Test(pStdout, pStderr);
-    }
-    
-    bool Metric::v_Test(std::istream& pStdout, std::istream& pStderr)
-    {
-        return true;
     }
 }

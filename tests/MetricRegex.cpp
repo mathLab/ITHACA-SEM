@@ -49,20 +49,58 @@ namespace Nektar
      */
     MetricRegex::MetricRegex(TiXmlElement *metric) : Metric(metric)
     {
-        // Parse a regex <METRIC> tag. This would populate m_regex, m_matches
-        // and m_tolerance below.
+        // If we are a derived class, do nothing
+        if (m_type != "REGEX")
+        {
+            return;
+        }
+
+        // Parse Regex expression
+        TiXmlElement *regex = metric->FirstChildElement("regex");
+        ASSERTL0(regex, "No Regex defined.");
+        ASSERTL0(regex->GetText(), "Failed to get text");
+        m_regex = regex->GetText();
+
+        // Parse matching values
+        TiXmlElement *matches = metric->FirstChildElement("matches");
+        ASSERTL0(matches, "No matches defined.");
+        TiXmlElement *match = matches->FirstChildElement("match");
+        while (match)
+        {
+            std::vector<MetricRegexFieldValue> tmp;
+            TiXmlElement *field = match->FirstChildElement("field");
+            while (field)
+            {
+                MetricRegexFieldValue v;
+                v.m_value = field->GetText();
+                v.m_useTolerance = false;
+
+                const char * tol = field->Attribute("tolerance");
+                if (tol)
+                {
+                    v.m_useTolerance = true;
+                    v.m_tolerance = atof(tol);
+                }
+                tmp.push_back(v);
+                field = field->NextSiblingElement("field");
+            }
+            m_matches.push_back(tmp);
+
+            match = match->NextSiblingElement("match");
+        }
     }
 
+
+    /**
+     * @brief Test output against a regex expression and set of matches.
+     */
     bool MetricRegex::v_Test(std::istream& pStdout, std::istream& pStderr)
     {
-        // If we have matched everything, nothing to do.
-        if (m_matches.size() == 0)
-        {
-            return true;
-        }
-        
+        ASSERTL0(m_matches.size(), "No test conditions defined for Regex.");
+
+        bool success = true;
         boost::cmatch             matches;
-        std::vector<std::string> &okValues = m_matches[0];
+        std::vector<MetricRegexFieldValue> &okValues = m_matches[0];
 
         // Process output file line by line searching for regex matches
         std::string line;
@@ -83,28 +121,33 @@ namespace Nektar
                 {
                     std::string match(matches[i].first, matches[i].second);
 
-                    if (m_tolerance.count(i-1) > 0)
+                    if (okValues[i-1].m_useTolerance)
                     {
+                        double val = fabs(boost::lexical_cast<double>(
+                                                        okValues[i-1].m_value)
+                                          - boost::lexical_cast<double>(match));
                         // If the okValues are not within tolerance, failed the
                         // test.
-                        if (fabs(boost::lexical_cast<double>(okValues[i-1]) -
-                                 boost::lexical_cast<double>(match)) > 1e-6)
+                        if (val > okValues[i-1].m_tolerance)
                         {
-                            cout << "Failed tolerance match." << endl;
-                            cout << "  Expected: " << okValues[i-1] << endl;
-                            cout << "  Result:   " << match << endl;
-                            return false;
+                            cerr << "Failed tolerance match." << endl;
+                            cerr << "  Expected: " << okValues[i-1].m_value
+                                 << " +/- " << okValues[i-1].m_tolerance
+                                 << endl;
+                            cerr << "  Result:   " << match << endl;
+                            success = false;
                         }
                     }
                     else
                     {
                         // Case insensitive match.
-                        if (!boost::iequals(match, okValues[i-1]))
+                        if (!boost::iequals(match, okValues[i-1].m_value))
                         {
-                            cout << "Failed case-insensitive match." << endl;
-                            cout << "  Expected: " << okValues[i-1] << endl;
-                            cout << "  Result:   " << match << endl;
-                            return false;
+                            cerr << "Failed case-insensitive match." << endl;
+                            cerr << "  Expected: " << okValues[i-1].m_value
+                                 << endl;
+                            cerr << "  Result:   " << match << endl;
+                            success = false;
                         }
                     }
                 }
@@ -114,6 +157,6 @@ namespace Nektar
             }
         }
 
-        return true;
+        return success;
     }
 }

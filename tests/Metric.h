@@ -48,19 +48,17 @@ namespace Nektar
     public:
         Metric(TiXmlElement *metric);
         
+        /// Perform the test, given the standard output and error streams
         bool Test  (std::istream& pStdout, std::istream& pStderr);
-        bool FinishTest();
         
     protected:
-        // Stores the ID of this metric.
+        /// Stores the ID of this metric.
         int m_id;
-        
-//        virtual void v_Parse     (TiXmlElement *metric) = 0;
-        virtual bool v_Test      (std::istream& pStdout, std::istream& pStderr);
-//        virtual bool v_FinishTest();
 
-//    private:
-//        void Parse     (TiXmlElement *metric);
+        /// Stores the type of this metric (uppercase).
+        std::string m_type;
+        
+        virtual bool v_Test (std::istream& pStdout, std::istream& pStderr) = 0;
     };
 
     /// A shared pointer to an EquationSystem object
@@ -68,9 +66,10 @@ namespace Nektar
     
     /// Datatype of the NekFactory used to instantiate classes derived from the
     /// Advection class.
-    typedef LibUtilities::NekFactory<std::string, Metric, TiXmlElement*> MetricFactory;
-    MetricFactory& GetMetricFactory();
+    typedef LibUtilities::NekFactory<std::string, Metric, TiXmlElement*>
+                                                                MetricFactory;
 
+    MetricFactory& GetMetricFactory();
 }
 
 

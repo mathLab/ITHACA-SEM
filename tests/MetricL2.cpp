@@ -45,27 +45,36 @@ namespace Nektar
         // Set up the regular expression. This (optionally) matches a variable
         // name if it exists: first field is variable name, second field is L2
         // error.
-        m_regex = 
-           "^L 2 error\\s*(?:\\(variable (\\w+)\\))?\\s*:\\s*([+-]?\\d.+\\d|0).*";
+        m_regex = "^L 2 error\\s*(?:\\(variable "
+                  "(\\w+)\\))?\\s*:\\s*([+-]?\\d.+\\d|0).*";
         
         // Find the L2 error to match against.
         TiXmlElement *value = metric->FirstChildElement("value");
         while (value)
         {
-            // Find name of field.
-            std::string variable = value->Attribute("variable");
-            
             // Set up a match with two fields which correspond with the
             // subexpression above. The first is the variable name, second is
             // the L2 error.
-            std::vector<std::string> tmp(2);
-            tmp[0] = variable;
-            tmp[1] = value->GetText();
+            ASSERTL0(value->Attribute("variable"),
+                     "Missing variable name in L2 metric.");
+            ASSERTL0(value->Attribute("tolerance"),
+                     "Missing tolerance in L2 metric");
+            ASSERTL0(value->GetText() || value->GetText() == "",
+                     "Missing value in L2 metric.");
+
+            MetricRegexFieldValue var;
+            var.m_value = value->Attribute("variable");
+
+            MetricRegexFieldValue val;
+            val.m_value = value->GetText();
+            val.m_useTolerance = true;
+            val.m_tolerance = atof(value->Attribute("tolerance"));
+
+            std::vector<MetricRegexFieldValue> tmp(2);
+            tmp[0] = var;
+            tmp[1] = val;
             m_matches.push_back(tmp);
             
-            // Indicate that the L2 error needs tolerance testing.
-            m_tolerance.insert(1);
-
             value = value->NextSiblingElement("value");
         }
     }

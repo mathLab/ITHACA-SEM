@@ -42,6 +42,19 @@
 
 namespace Nektar
 {
+    /**
+     * @brief Data structure for a Regex value to match.
+     */
+    struct MetricRegexFieldValue
+    {
+        MetricRegexFieldValue()
+            : m_value(""), m_useTolerance(false), m_tolerance(0.0) {}
+
+        std::string m_value;
+        bool m_useTolerance;
+        double m_tolerance;
+    };
+
     class MetricRegex : public Metric
     {
     public:
@@ -56,9 +69,7 @@ namespace Nektar
         /// Storage for the boost regex.
         boost::regex                           m_regex;
         /// Stores the multiple matches defined in each <MATCH> tag.
-        std::vector<std::vector<std::string> > m_matches;
-        /// Indicates which fields of a match need to be tested for tolerance.
-        std::set<int>                          m_tolerance;
+        std::vector<std::vector<MetricRegexFieldValue> > m_matches;
 
         MetricRegex(TiXmlElement *metric);
 

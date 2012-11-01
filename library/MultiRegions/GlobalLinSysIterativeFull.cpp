@@ -34,11 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <map>
-
-#include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysIterativeFull.h>
-//#include <MultiRegions/AssemblyMapCG.h>
-//#include <MultiRegions/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 namespace Nektar
 {
@@ -116,14 +113,13 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             bool vCG;
-            if (m_locToGloMap
-                = boost::dynamic_pointer_cast<AssemblyMapCG>(
-                                                                pLocToGloMap))
+            if ((m_locToGloMap = boost::dynamic_pointer_cast<AssemblyMapCG>(
+                     pLocToGloMap)))
             {
                 vCG = true;
             }
-            else if (m_locToGloMap
-                = boost::dynamic_pointer_cast<AssemblyMapDG>(pLocToGloMap))
+            else if ((m_locToGloMap = boost::dynamic_pointer_cast<
+                          AssemblyMapDG>(pLocToGloMap)))
             {
                 vCG = false;
             }

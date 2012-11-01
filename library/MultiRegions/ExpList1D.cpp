@@ -33,11 +33,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <iomanip>
 #include <MultiRegions/ExpList1D.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LocalRegions/SegExp.h>
-
-#include <iomanip>
+#include <LocalRegions/Expansion2D.h>
+#include <SpatialDomains/MeshGraph2D.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 
 namespace Nektar
 {
@@ -115,12 +117,12 @@ namespace Nektar
             SpatialDomains::ExpansionMap::const_iterator expIt;
             for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
             {
-                if(SegmentGeom = boost
-                            ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
-                                                expIt->second->m_geomShPtr))
+                if ((SegmentGeom = boost::dynamic_pointer_cast<
+                         SpatialDomains::SegGeom>(
+                             expIt->second->m_geomShPtr)))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>
-                                            ::AllocateSharedPtr(Ba,SegmentGeom);
+                        ::AllocateSharedPtr(Ba,SegmentGeom);
                     seg->SetElmtId(id++);
                     (*m_exp).push_back(seg);
                 }
@@ -185,9 +187,9 @@ namespace Nektar
                 // Retrieve basis key from expansion
                 LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
 
-                if(SegmentGeom = boost
-                            ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
-                                                expIt->second->m_geomShPtr))
+                if ((SegmentGeom = boost::dynamic_pointer_cast<
+                         SpatialDomains::SegGeom>(
+                             expIt->second->m_geomShPtr)))
                 {
                     seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
@@ -256,9 +258,9 @@ namespace Nektar
                 // Process each expansion in the region.
                 for(j = 0; j < compIt->second->size(); ++j)
                 {
-                    if(SegmentGeom = boost
-                            ::dynamic_pointer_cast<SpatialDomains::SegGeom>(
-                                                                    (*compIt->second)[j]))
+                    if((SegmentGeom = boost::dynamic_pointer_cast<
+                            SpatialDomains::SegGeom>(
+                                (*compIt->second)[j])))
                     {
                         // Retrieve the basis key from the expansion.
                         LibUtilities::BasisKey bkey
@@ -321,49 +323,51 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
 			
-			int offset = 0;
-			const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
-			SpatialDomains::ExpansionMap::const_iterator expIt;
+            int offset = 0;
+            const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
+            SpatialDomains::ExpansionMap::const_iterator expIt;
 			
 			
             // Find the correct composite region to process
-			compIt = domain.begin();
+            compIt = domain.begin();
             for(int k = 0; k < i; ++k)
             {
-				offset += compIt->second->size();
-				++compIt;
-			}	
-			comp = compIt->second;
+                offset += compIt->second->size();
+                ++compIt;
+            }	
+            comp = compIt->second;
 			
-			//Find the correct expansion start point for the current composite
-			expIt = expansions.begin();
-			for(int k = 0; k < offset; ++k)
+            //Find the correct expansion start point for the current composite
+            expIt = expansions.begin();
+            for(int k = 0; k < offset; ++k)
             {
-				++expIt;
-			}	
+                ++expIt;
+            }	
 			
-			// Process each expansion in the region.
+            // Process each expansion in the region.
             for(int j = 0; j < compIt->second->size(); ++j)
             {
-				if(SegmentGeom = boost::dynamic_pointer_cast<SpatialDomains::SegGeom>((*compIt->second)[j]))
-				{					
-					// Retrieve the basis key from the expansion.
-					LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
+                if ((SegmentGeom = boost::dynamic_pointer_cast<
+                         SpatialDomains::SegGeom>(
+                             (*compIt->second)[j])))
+                {					
+                    // Retrieve the basis key from the expansion.
+                    LibUtilities::BasisKey bkey = expIt->second->m_basisKeyVector[0];
 																				
-					seg = MemoryManager<LocalRegions::SegExp>
-					::AllocateSharedPtr(bkey, SegmentGeom);
+                    seg = MemoryManager<LocalRegions::SegExp>
+                        ::AllocateSharedPtr(bkey, SegmentGeom);
 					
-					// Add the segment to the expansion list.
-					seg->SetElmtId(id++);
-					(*m_exp).push_back(seg);
+                    // Add the segment to the expansion list.
+                    seg->SetElmtId(id++);
+                    (*m_exp).push_back(seg);
 					
-					expIt++;
-				}
-				else
-				{
-					ASSERTL0(false,"dynamic cast to a SegGeom failed");
-				}
-			}
+                    expIt++;
+                }
+                else
+                {
+                    ASSERTL0(false,"dynamic cast to a SegGeom failed");
+                }
+            }
 			
 			
             // Setup Default optimisation information.

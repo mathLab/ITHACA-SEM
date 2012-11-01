@@ -1,5 +1,6 @@
 #include <MultiRegions/ExpList1D.h>
 #include <LibUtilities/Kernel/kernel.h>
+#include <SpatialDomains/MeshGraph1D.h>
 
 int main(int argc, char *argv[])
 {

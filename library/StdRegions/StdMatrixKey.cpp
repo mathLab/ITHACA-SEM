@@ -33,9 +33,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <StdRegions/StdMatrixKey.h>
 #include <boost/functional/hash.hpp>
-#include "StdRegions/StdExpansion.h"
-#include "StdRegions/StdMatrixKey.h"
+#include <StdRegions/StdExpansion.h>
 
 namespace Nektar
 {

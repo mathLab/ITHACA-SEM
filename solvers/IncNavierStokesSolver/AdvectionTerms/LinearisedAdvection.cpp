@@ -34,9 +34,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.h>
-#include <cstdio>
-#include <cstdlib>
-#include <stdio.h>
+#include <StdRegions/StdSegExp.h>
+
+#include <MultiRegions/ContField3DHomogeneous1D.h>
+#include <MultiRegions/ContField3DHomogeneous2D.h>
+#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/DisContField1D.h>
+#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/DisContField3DHomogeneous1D.h>
+#include <MultiRegions/DisContField3DHomogeneous2D.h>
+
 
 namespace Nektar
 {
@@ -474,7 +483,7 @@ namespace Nektar
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
-                if((m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"|| m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))& nvar==3)
+                if((m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"|| m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))&& nvar==3)
                 {
                     
                     // w-component must be ignored and set to zero.

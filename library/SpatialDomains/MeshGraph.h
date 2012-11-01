@@ -35,14 +35,9 @@
 #ifndef NEKTAR_SPATIALDOMAINS_MESHGRAPH_H
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH_H
 
-#include <cstdlib>
-#include <fstream>
-
 #include <boost/unordered_map.hpp>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/Equation.h>
-#include <SpatialDomains/InterfaceComponent.h>
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/QuadGeom.h>
@@ -99,6 +94,7 @@ namespace Nektar
 			"FOURIER-MODIFIED"
         };
 
+        class InterfaceComponent;
         typedef boost::shared_ptr< InterfaceComponent > SharedInterfaceCompPtr;
         typedef std::vector< VertexComponentSharedPtr > VertexVector;
         typedef std::map<int, VertexComponentSharedPtr> VertexMap;

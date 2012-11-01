@@ -34,10 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
-#include <LocalRegions/LocalRegions.hpp>
-#include <stdio.h>
 #include <LocalRegions/HexExp.h>
 #include <LibUtilities/Foundations/Interp.h>
+#include <SpatialDomains/HexGeom.h>
 
 namespace Nektar
 {
@@ -2057,15 +2056,17 @@ namespace Nektar
 
                         switch(mkey.GetMatrixType())
                         {
-                        case StdRegions::eWeakDeriv0:
-                            dir = 0;
-                            break;
-                        case StdRegions::eWeakDeriv1:
-                            dir = 1;
-                            break;
-                        case StdRegions::eWeakDeriv2:
-                            dir = 2;
-                            break;
+                            case StdRegions::eWeakDeriv0:
+                                dir = 0;
+                                break;
+                            case StdRegions::eWeakDeriv1:
+                                dir = 1;
+                                break;
+                            case StdRegions::eWeakDeriv2:
+                                dir = 2;
+                                break;
+                            default:
+                                break;
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,

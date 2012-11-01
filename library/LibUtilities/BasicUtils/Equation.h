@@ -37,6 +37,8 @@
 #define NEKTAR_LIBUTILITIES_EQUATION_HPP
 
 #include <string>
+#include <map>                          // for map
+#include <stdexcept>                    // for runtime_error
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -53,14 +55,14 @@ namespace Nektar
         {
 
         public: 
-            Equation(const Equation &src):
+            LIB_UTILITIES_EXPORT Equation(const Equation &src):
               m_expr      (src.m_expr),
               m_expr_id   (src.m_expr_id),
               m_evaluator (src.m_evaluator)
             {
             }
 
-            Equation(const SessionReaderSharedPtr& session, const std::string& expr = ""):
+            LIB_UTILITIES_EXPORT Equation(const SessionReaderSharedPtr& session, const std::string& expr = ""):
               m_expr      (expr),
               m_expr_id   (-1),
               m_evaluator (session->GetExpressionEvaluator())
@@ -90,12 +92,12 @@ namespace Nektar
                 }
             }
 
-            Equation& operator=(const Equation &src)
+            LIB_UTILITIES_EXPORT Equation& operator=(const Equation &src)
             {
                 return *this;
             }
 
-            NekDouble Evaluate() const
+            LIB_UTILITIES_EXPORT NekDouble Evaluate() const
             {
                 try
                 {
@@ -117,7 +119,7 @@ namespace Nektar
                 return 0;
             }
 
-            NekDouble Evaluate(NekDouble x, NekDouble y=0, NekDouble z=0, NekDouble t=0) const
+            LIB_UTILITIES_EXPORT NekDouble Evaluate(NekDouble x, NekDouble y=0, NekDouble z=0, NekDouble t=0) const
             {
                 try
                 {
@@ -139,7 +141,7 @@ namespace Nektar
                 return 0;
             }
 
-            void Evaluate(
+            LIB_UTILITIES_EXPORT void Evaluate(
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
                     const Array<OneD, const NekDouble>& z,
@@ -149,7 +151,7 @@ namespace Nektar
                 Evaluate(x,y,z,zero, result);
             }
 
-            void Evaluate(
+            LIB_UTILITIES_EXPORT void Evaluate(
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
                     const Array<OneD, const NekDouble>& z,
@@ -161,7 +163,7 @@ namespace Nektar
             }
 
 
-            void Evaluate(
+            LIB_UTILITIES_EXPORT void Evaluate(
                     const Array<OneD, const NekDouble>& x,
                     const Array<OneD, const NekDouble>& y,
                     const Array<OneD, const NekDouble>& z,
@@ -189,24 +191,24 @@ namespace Nektar
                 }
             }
 
-            void SetParameter(const std::string& name, double value)
+            LIB_UTILITIES_EXPORT void SetParameter(const std::string& name, double value)
             {
                 m_evaluator.SetParameter(name, value);
             }
 
-            void SetConstants(const std::map<std::string, NekDouble> &constants)
+            LIB_UTILITIES_EXPORT void SetConstants(const std::map<std::string, NekDouble> &constants)
             {
                 m_evaluator.AddConstants(constants);
             }
 
-            std::string GetExpression(void) const
+            LIB_UTILITIES_EXPORT std::string GetExpression(void) const
             {
                 return m_expr;
             }
 
             /// Returns time spend on expression evaluation at
             /// points (it does not include parse/pre-processing time).
-            double GetTime() const
+            LIB_UTILITIES_EXPORT double GetTime() const
             {
                 return m_evaluator.GetTime();
             }

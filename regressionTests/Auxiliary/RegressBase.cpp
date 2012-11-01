@@ -36,14 +36,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <cstring>
-#include <sstream>
 #include <sys/stat.h>
 #include "RegressBase.h"
-
 #include <boost/lexical_cast.hpp>
+
 #include <boost/version.hpp>
 
 RegressBase::RegressBase(){

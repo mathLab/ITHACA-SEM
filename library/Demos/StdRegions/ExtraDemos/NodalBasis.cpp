@@ -2,17 +2,16 @@
 #include <cstdlib>
 #include <math.h>
 
-#include "StdRegions/StdExpansion2D.h"
-#include "StdRegions/StdNodalTriExp.h"
+#include <StdRegions/StdExpansion2D.h>
+#include <StdRegions/StdNodalTriExp.h>
 
-#include "StdRegions/StdRegions.hpp"
-#include "LibUtilities/Foundations/Foundations.hpp"
+#include <StdRegions/StdRegions.hpp>
+#include <LibUtilities/Foundations/Foundations.hpp>
 
 using namespace Nektar;
 using namespace StdRegions; 
 using namespace std;
 
-#include "StdRegions/StdNodalTriExp.h"
 
 // This routine projects a polynomial or trigonmetric functions which 
 // has energy in all mdoes of the expansions and report an error.

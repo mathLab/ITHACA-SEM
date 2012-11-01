@@ -34,11 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVE_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVE_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 #include <boost/circular_buffer.hpp>
 

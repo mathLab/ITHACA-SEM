@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/FFT/NekFFTW.h>
+#include <LibUtilities/BasicUtils/VmathArray.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {

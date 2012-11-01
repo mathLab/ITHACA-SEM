@@ -39,7 +39,6 @@
 #include <SpatialDomains/MeshGraph.h>
 #include <SpatialDomains/SegGeom.h>
 
-#include <list>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 namespace Nektar
 {

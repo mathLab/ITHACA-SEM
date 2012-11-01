@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <string>
 #include <sstream>
 #include <vector>
 #include <list>
@@ -9,7 +8,6 @@
 #include <tinyxml/tinyxml.h>
 using namespace std;
 
-class TiXmlDocument;
 
 struct Vertex
 {

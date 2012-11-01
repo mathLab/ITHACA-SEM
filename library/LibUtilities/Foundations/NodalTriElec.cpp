@@ -33,22 +33,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <algorithm>
+#include <LibUtilities/Foundations/NodalTriElec.h>
 #include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Foundations.hpp>
-
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
-#include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/Foundations/NodalTriElecData.h>
-
-#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/LinearAlgebra/Lapack.hpp>
-#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-
-#include <LibUtilities/Foundations/NodalTriElec.h>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
 namespace Nektar
@@ -192,9 +182,9 @@ namespace Nektar
          }
 
 
-        boost::shared_ptr<NodalTriElec::PointsBaseType> NodalTriElec::Create(const PointsKey &key)
+        boost::shared_ptr<PointsBaseType> NodalTriElec::Create(const PointsKey &key)
         {
-            boost::shared_ptr<NodalTriElec::PointsBaseType> returnval(MemoryManager<NodalTriElec>::AllocateSharedPtr(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriElec>::AllocateSharedPtr(key));
             returnval->Initialize();
             return returnval;
         }

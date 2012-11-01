@@ -37,16 +37,8 @@
 #ifndef NEKTAR_SOLVERS_FluxReconstruction_Advection1DFR_H
 #define NEKTAR_SOLVERS_FluxReconstruction_Advection1DFR_H
 
-#include <cstdio>
-#include <fstream>
-#include <fstream>
-#include <iomanip>
 #include <MultiRegions/DisContField1D.h>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
-#include <LibUtilities/Polylib/Polylib.h>
 
 namespace Nektar
 {

@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/TetExp.h>
+#include <SpatialDomains/SegGeom.h>
+
 #include <LibUtilities/Foundations/Interp.h>
 
 
@@ -1417,15 +1419,17 @@ namespace Nektar
 
                         switch(mkey.GetMatrixType())
                         {
-                        case StdRegions::eWeakDeriv0:
-                            dir = 0;
-                            break;
-                        case StdRegions::eWeakDeriv1:
-                            dir = 1;
-                            break;
-                        case StdRegions::eWeakDeriv2:
-                            dir = 2;
-                            break;
+                            case StdRegions::eWeakDeriv0:
+                                dir = 0;
+                                break;
+                            case StdRegions::eWeakDeriv1:
+                                dir = 1;
+                                break;
+                            case StdRegions::eWeakDeriv2:
+                                dir = 2;
+                                break;
+                            default:
+                                break;
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
@@ -1831,49 +1835,56 @@ namespace Nektar
 
             switch(m_base[1]->GetPointsType())
             {
-            // Legendre inner product.
-            case LibUtilities::eGaussLobattoLegendre:
+                // Legendre inner product.
+                case LibUtilities::eGaussLobattoLegendre:
 
-                for(j = 0; j < nquad2; ++j)
-                {
-                    for(i = 0; i < nquad1; ++i)
+                    for(j = 0; j < nquad2; ++j)
                     {
-                        Blas::Dscal(nquad0,
-                                    0.5*(1-z1[i])*w1[i],
-                                    &outarray[0]+i*nquad0 + j*nquad0*nquad1,
-                                    1 );
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,
+                                        0.5*(1-z1[i])*w1[i],
+                                        &outarray[0]+i*nquad0 + j*nquad0*nquad1,
+                                        1 );
+                        }
                     }
-                }
-                break;
+                    break;
 
-            // (1,0) Jacobi Inner product.
-            case LibUtilities::eGaussRadauMAlpha1Beta0:
-                for(i = 0; i < nquad1*nquad2; ++i)
-                {
-                    Vmath::Smul(nquad0, 0.5*w1[i%nquad2], outarray.get()+i*nquad0, 1,
-                                outarray.get()+i*nquad0, 1);
-                }
-                break;
+                // (1,0) Jacobi Inner product.
+                case LibUtilities::eGaussRadauMAlpha1Beta0:
+                    for(i = 0; i < nquad1*nquad2; ++i)
+                    {
+                        Vmath::Smul(nquad0, 0.5*w1[i%nquad2], outarray.get()+i*nquad0, 1,
+                                    outarray.get()+i*nquad0, 1);
+                    }
+                    break;
+                    
+                default:
+                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    break;
             }
 
             switch(m_base[2]->GetPointsType())
             {
-            // Legendre inner product.
-            case LibUtilities::eGaussLobattoLegendre:
-                for(i = 0; i < nquad2; ++i)
-                {
-                    Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
-                                &outarray[0]+i*nquad0*nquad1,1);
-                }
-                break;
-            // (2,0) Jacobi inner product.
-            case LibUtilities::eGaussRadauMAlpha2Beta0:
-                for(i = 0; i < nquad2; ++i)
-                {
-                    Vmath::Smul(nquad0*nquad1, 0.25*w2[i], outarray.get()+i*nquad0*nquad1, 1,
-                                outarray.get()+i*nquad0*nquad1, 1);
-                }
-                break;
+                // Legendre inner product.
+                case LibUtilities::eGaussLobattoLegendre:
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
+                    break;
+                    // (2,0) Jacobi inner product.
+                case LibUtilities::eGaussRadauMAlpha2Beta0:
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Vmath::Smul(nquad0*nquad1, 0.25*w2[i], outarray.get()+i*nquad0*nquad1, 1,
+                                    outarray.get()+i*nquad0*nquad1, 1);
+                    }
+                    break;
+                default:
+                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    break;
             }
         }
         

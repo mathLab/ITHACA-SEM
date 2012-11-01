@@ -36,7 +36,6 @@
 #ifndef MATRIXKEY_H
 #define MATRIXKEY_H
 
-#include <LocalRegions/LocalRegions.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <SpatialDomains/GeomFactors.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
@@ -94,67 +93,3 @@ namespace Nektar
 
 #endif //STDMATRIXKEY_H
 
-/**
-* $Log: MatrixKey.h,v $
-* Revision 1.19  2009/11/07 21:10:13  sehunchun
-* Add more functions with various parameters
-*
-* Revision 1.18  2008/11/19 16:01:41  pvos
-* Added functionality for variable Laplacian coeffcients
-*
-* Revision 1.17  2008/07/09 11:39:48  sherwin
-* Removed m_scalefactor and made operator< dependent upon StdMatKey
-*
-* Revision 1.16  2008/05/30 00:33:48  delisi
-* Renamed StdRegions::ShapeType to StdRegions::ExpansionType.
-*
-* Revision 1.15  2008/04/06 05:59:04  bnelson
-* Changed ConstArray to Array<const>
-*
-* Revision 1.14  2007/12/17 13:04:29  sherwin
-* Modified GenMatrix to take a StdMatrixKey and removed m_constant from MatrixKey
-*
-* Revision 1.13  2007/11/20 16:28:45  sherwin
-* Added terms for UDG Helmholtz solver
-*
-* Revision 1.12  2007/07/26 02:39:21  bnelson
-* Fixed Visual C++ compiler errors when compiling in release mode.
-*
-* Revision 1.11  2007/07/12 12:53:00  sherwin
-* Updated to have a helmholtz matrix
-*
-* Revision 1.10  2007/07/10 17:17:22  sherwin
-* Introduced Scaled Matrices into the MatrixManager
-*
-* Revision 1.9  2007/05/28 08:35:25  sherwin
-* Updated for localregions up to Project1D
-*
-* Revision 1.8  2007/05/27 16:10:28  bnelson
-* Update to new Array type.
-*
-* Revision 1.7  2007/04/08 03:33:30  jfrazier
-* Minor reformatting and fixing SharedArray usage.
-*
-* Revision 1.6  2007/04/04 21:49:23  sherwin
-* Update for SharedArray
-*
-* Revision 1.5  2007/03/29 19:02:05  bnelson
-* Replaced boost::shared_array with SharedArray
-*
-* Revision 1.4  2007/03/25 15:48:21  sherwin
-* UPdate LocalRegions to take new NekDouble and shared_array formats. Added new Demos
-*
-* Revision 1.3  2007/03/20 09:13:37  kirby
-* new geomfactor routines; update for metricinfo; update style
-*
-* Revision 1.2  2007/03/14 21:24:07  sherwin
-* Update for working version of MultiRegions up to ExpList1D
-*
-* Revision 1.1  2007/03/04 20:42:14  sherwin
-* Keys for matrix managers
-*
-* Revision 1.1  2007/02/28 19:05:11  sherwin
-* Moved key definitions to their own files to make things more transparent
-*
-*
-***/

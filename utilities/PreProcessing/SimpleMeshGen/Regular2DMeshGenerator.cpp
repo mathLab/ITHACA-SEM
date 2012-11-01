@@ -1,20 +1,17 @@
-#include <cmath>
 #include <cstdlib>
-#include <cstdio>
 #include <string>
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <vector>
 #include <map>
 
 #include <boost/lexical_cast.hpp>
 
-#include<LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include<SpatialDomains/Geometry.h>
 
 using namespace std;
+using namespace Nektar;
+
 
 void  PrintConditions(ofstream& output);
 

@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysDirectStaticCond.h>
-//#include <MultiRegions/AssemblyMapCG.h>
 
 namespace Nektar
 {

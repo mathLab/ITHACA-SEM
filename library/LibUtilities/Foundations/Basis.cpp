@@ -33,16 +33,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
-#include <math.h>
-
+#include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
-#include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 
 namespace Nektar
@@ -968,10 +964,10 @@ namespace Nektar
         */
         bool BasisKey::Collocation() const
         {
-            return ( m_basistype == eGLL_Lagrange &&
-                GetPointsType() == eGaussLobattoLegendre &&
-                GetNumModes() == GetNumPoints() || 
-                m_basistype == eGauss_Lagrange);
+            return (m_basistype     == eGLL_Lagrange &&
+                    GetPointsType() == eGaussLobattoLegendre &&
+                    GetNumModes()   == GetNumPoints()) || 
+                    m_basistype     == eGauss_Lagrange;
         }
 
         // BasisKey compared to BasisKey

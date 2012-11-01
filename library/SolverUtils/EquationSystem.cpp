@@ -33,18 +33,25 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-using std::string;
+#include <SolverUtils/EquationSystem.h>
 
+#include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/BasicUtils/Equation.h>
-#include <iomanip>
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 
-#include <SolverUtils/EquationSystem.h>
+#include <MultiRegions/ExpList2D.h>     // for ExpList2D, etc
+#include <MultiRegions/ExpList3D.h>     // for ExpList3D
+#include <MultiRegions/ExpList3DHomogeneous1D.h>
+#include <MultiRegions/ExpList3DHomogeneous2D.h>
+
+#include <string>
+
+
+using std::string;
 
 namespace Nektar
 {
@@ -2018,8 +2025,8 @@ namespace Nektar
                     case MultiRegions::eGalerkin:
                     {
                         out << "\tProjection Type : Continuous Galerkin" <<endl;
-                    }
                         break;
+                    }
                         
                     case MultiRegions::eDiscontinuous:
                     {
@@ -2042,7 +2049,16 @@ namespace Nektar
                         {
                             out << "\tProjection Type : Flux Reconstruction HU" <<endl;
                         }
+                        break;
                     }
+                    
+                    case MultiRegions::eMixed_CG_Discontinuous:
+                    {
+                        out << "\tProjection Type : Mixed CG/DG" << endl;
+                        break;
+                    }
+                    
+                    default:
                         break;
                 }
             }

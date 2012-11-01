@@ -35,15 +35,12 @@
 #ifndef NEKTAR_LIB_UTILITIES_HOMOGENEOUS1D_H
 #define NEKTAR_LIB_UTILITIES_HOMOGENEOUS1D_H
 
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicUtils/NekManager.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/VmathArray.hpp>
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
-#include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Communication/Comm.h>
-#include <LibUtilities/Foundations/Basis.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/LibUtilitiesDeclspec.h>
+
+namespace Nektar { namespace LibUtilities { class BasisKey; } }
 
 namespace Nektar
 {

@@ -35,8 +35,9 @@
 
 #include <iostream>
 #include <string>
-#include <LibUtilities/BasicUtils/Vmath.hpp>
+//#include <LibUtilities/BasicUtils/Vmath.hpp>
 #include <CardiacEPSolver/CellModels/Fox02.h>
+
 namespace Nektar
 {
     std::string Fox02::className

@@ -33,9 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG1D.h>
-#include <LocalRegions/PointExp.h>
 #include <LocalRegions/SegExp.h>
 
 #include <boost/config.hpp>
@@ -234,7 +232,7 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 cnt = locExp.GetCoeff_Offset(i);
-                if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(locExpVector[i]))
+                if((locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(locExpVector[i])))
                 {
                     for(j = 0; j < locSegExp->GetNverts(); ++j)
                     {

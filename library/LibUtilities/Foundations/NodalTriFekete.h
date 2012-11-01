@@ -36,14 +36,13 @@
 #ifndef NODALTRIFEKETE_H
 #define NODALTRIFEKETE_H
 
-#include <iostream>
-
-#include <math.h>
-#include <boost/shared_ptr.hpp>
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <iostream>
+#include <boost/shared_ptr.hpp>
+//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
@@ -55,8 +54,6 @@ namespace Nektar
         class NodalTriFekete: public Points<NekDouble>
         {
         public:
-            typedef Points<NekDouble> PointsBaseType;
-
             virtual ~NodalTriFekete()
             {
                 std::cout << "******* ~NodalTriFekete() destructor called!" << endl;

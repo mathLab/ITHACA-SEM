@@ -37,12 +37,7 @@
 #define NODALTETEXP_H
 
 #include <LocalRegions/TetExp.h>
-#include <LocalRegions/LocalRegions.hpp>
-
-#include <StdRegions/StdTetExp.h>
 #include <SpatialDomains/TetGeom.h>
-#include <SpatialDomains/GeomFactors.h>
-#include <LocalRegions/MatrixKey.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 
 
@@ -88,20 +83,3 @@ namespace Nektar
 #endif // NODALTETEXP_H
 
 
-/** 
- *    $Log: NodalTetExp.h,v $
- *    Revision 1.2  2007/07/20 00:45:50  bnelson
- *    Replaced boost::shared_ptr with Nektar::ptr
- *
- *    Revision 1.1  2006/05/04 18:58:45  kirby
- *    *** empty log message ***
- *
- *    Revision 1.7  2006/03/12 21:59:48  sherwin
- *
- *    compiling version of LocalRegions
- *
- *    Revision 1.6  2006/03/12 07:43:32  sherwin
- *
- *    First revision to meet coding standard. Needs to be compiled
- *
- **/

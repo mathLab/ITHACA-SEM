@@ -35,6 +35,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.h>
 #include <SpatialDomains/MeshGraph.h>
+#include <LocalRegions/SegExp.h>
+#include <LocalRegions/Expansion2D.h>
+#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
 namespace Nektar
 {    

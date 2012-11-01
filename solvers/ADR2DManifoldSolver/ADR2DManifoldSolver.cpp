@@ -33,10 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <cstdio>
-#include <cstdlib>
-#include <cmath> 
-
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <ADR2DManifoldSolver/ADR2DManifold.h>
 

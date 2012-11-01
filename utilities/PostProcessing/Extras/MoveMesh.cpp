@@ -2869,7 +2869,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
             Array<OneD, int> V2tmp(4*nel, 10000);
             for(int i=0; i<nel; i++)
             { 
-                if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i]))
+                if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i])))
                 {
                      for(int j = 0; j < locQuadExp->GetNedges(); ++j)
                      {
@@ -2885,7 +2885,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
                 }
                 //in the future the tri edges may be not necessary (if the nedges is known)
 
-                else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i]))
+                else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i])))
                 {
                      for(int j = 0; j < locTriExp->GetNedges(); ++j)
                      {

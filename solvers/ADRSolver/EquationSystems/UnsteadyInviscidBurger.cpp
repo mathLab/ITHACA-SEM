@@ -89,6 +89,11 @@ namespace Nektar
                 m_advection->InitObject      (m_session, m_fields);
                 break;
             }
+            default:
+            {
+                ASSERTL0(false, "Unsupported projection type.");
+                break;
+            }
         }
                 
         // If explicit it computes RHS and PROJECTION for the time integration

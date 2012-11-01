@@ -465,8 +465,8 @@ namespace Nektar
             /// - All other vertices and edges
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
-                                               locExpVector[locExp.GetOffset_Elmt_Id(i)]))
+                if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     nTotalVerts += locExpansion->GetNverts();
                     nTotalEdges += locExpansion->GetNedges();
@@ -483,8 +483,8 @@ namespace Nektar
 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
-                                               locExpVector[locExp.GetOffset_Elmt_Id(i)]))
+                if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     vertCnt = 0;
                     nVerts = locExpansion->GetNverts();
@@ -515,8 +515,8 @@ namespace Nektar
 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
-                                               locExpVector[locExp.GetOffset_Elmt_Id(i)]))
+                if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     edgeCnt = 0;
                     nEdges = locExpansion->GetNedges();
@@ -547,8 +547,8 @@ namespace Nektar
 
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
-                                               locExpVector[locExp.GetOffset_Elmt_Id(i)]))
+                if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     nFaces = locExpansion->GetNfaces();
                     faceCnt = 0;
@@ -582,8 +582,8 @@ namespace Nektar
             localFaceOffset=0;
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
-                                               locExpVector[locExp.GetOffset_Elmt_Id(i)]))
+                if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
+                        locExpVector[locExp.GetOffset_Elmt_Id(i)])))
                 {
                     nVerts = locExpansion->GetNverts();
                     nEdges = locExpansion->GetNedges();

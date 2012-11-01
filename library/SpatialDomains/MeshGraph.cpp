@@ -1962,30 +1962,33 @@ namespace Nektar
             // Determine nummodes vector lists are correct length
             switch(fielddefs->m_shapeType)
             {
-            case eSegment:
-                numbasis = 1;
-                if(fielddefs->m_numHomogeneousDir)
-                {
-                    numbasis += fielddefs->m_numHomogeneousDir;
-                }
+                case eSegment:
+                    numbasis = 1;
+                    if(fielddefs->m_numHomogeneousDir)
+                    {
+                        numbasis += fielddefs->m_numHomogeneousDir;
+                    }
 
-                break;
-            case eTriangle:  case eQuadrilateral:
-                if(fielddefs->m_numHomogeneousDir)
-                {
+                    break;
+                case eTriangle:  case eQuadrilateral:
+                    if(fielddefs->m_numHomogeneousDir)
+                    {
+                        numbasis = 3;
+                    }
+                    else
+                    {
+                        numbasis = 2;
+                    }
+                    break;
+                case eTetrahedron:
+                case ePyramid:
+                case ePrism:
+                case eHexahedron:
                     numbasis = 3;
-                }
-                else
-                {
-                    numbasis = 2;
-                }
-                break;
-            case eTetrahedron:
-            case ePyramid:
-            case ePrism:
-            case eHexahedron:
-                numbasis = 3;
-                break;
+                    break;
+                default:
+                    ASSERTL0(false, "Unsupported shape type.");
+                    break;
             }
 
             unsigned int datasize = 0;
@@ -2071,6 +2074,9 @@ namespace Nektar
                     fielddefs->m_numModes[cnt++]*
                     fielddefs->m_numModes[cnt++];
                     break;
+                default:
+                    ASSERTL0(false, "Unsupported shape type.");
+                    break;
                 }
 
                 datasize *= fielddefs->m_elementIDs.size();
@@ -2125,6 +2131,9 @@ namespace Nektar
                         datasize += fielddefs->m_numModes[cnt++]*
                         fielddefs->m_numModes[cnt++]*
                         fielddefs->m_numModes[cnt++];
+                        break;
+                    default:
+                        ASSERTL0(false, "Unsupported shape type.");
                         break;
                     }
                 }

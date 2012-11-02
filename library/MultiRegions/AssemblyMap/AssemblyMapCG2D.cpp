@@ -488,9 +488,6 @@ namespace Nektar
                 m_localToGlobalMap.begin(), m_localToGlobalMap.end());
         }
 
-
-
-
         /**
          * The only unique identifiers of the vertices and edges of the mesh are
          * the vertex id and the mesh id (stored in their corresponding Geometry
@@ -1043,8 +1040,8 @@ namespace Nektar
                 for(i = cnt = 0; i < locExpVector.size(); ++i)
                 {
                     elmtid = locExp.GetOffset_Elmt_Id(i);
-                    if(locExpansion = boost::dynamic_pointer_cast<
-                           StdRegions::StdExpansion2D>(locExpVector[elmtid]))
+                    if((locExpansion = boost::dynamic_pointer_cast<
+                            StdRegions::StdExpansion2D>(locExpVector[elmtid])))
                     {
                         for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
                         {

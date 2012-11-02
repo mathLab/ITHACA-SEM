@@ -728,6 +728,120 @@ namespace Nektar
                 localFaceOffset+=nFaces;
             }
 
+            // Container to store vertices of the graph which correspond to
+            // degrees of freedom along the boundary.
+            set<int> partVerts;
+            
+            if (m_solnType == eIterativeMultiLevelStaticCond)
+            {
+                vector<long> procVerts,  procEdges,  procFaces;
+                set   <int>  foundVerts, foundEdges, foundFaces;
+                
+                // Loop over element and construct the procVerts and procEdges
+                // vectors, which store the geometry IDs of mesh vertices and
+                // edges respectively which are local to this process.
+                for(i = cnt = 0; i < locExpVector.size(); ++i)
+                {
+                    int elmtid = locExp.GetOffset_Elmt_Id(i);
+                    if((locExpansion = boost::dynamic_pointer_cast<
+                            StdRegions::StdExpansion3D>(locExpVector[elmtid])))
+                    {
+                        for (j = 0; j < locExpansion->GetNverts(); ++j)
+                        {
+                            int vid = locExpansion->GetGeom3D()->GetVid(j);
+                            
+                            if (foundVerts.count(vid) == 0)
+                            {
+                                procVerts.push_back(vid);
+                                foundVerts.insert(vid);
+                            }
+                        }
+
+                        for (j = 0; j < locExpansion->GetNedges(); ++j)
+                        {
+                            int eid = locExpansion->GetGeom3D()->GetEid(j);
+
+                            if (foundEdges.count(eid) == 0)
+                            {
+                                procEdges.push_back(eid);
+                                foundEdges.insert(eid);
+                            }
+                        }
+
+                        for (j = 0; j < locExpansion->GetNfaces(); ++j)
+                        {
+                            int fid = locExpansion->GetGeom3D()->GetFid(j);
+                            
+                            if (foundFaces.count(fid) == 0)
+                            {
+                                procFaces.push_back(fid);
+                                foundFaces.insert(fid);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ASSERTL0(false,
+                                 "dynamic cast to a local 3D expansion failed");
+                    }
+                }
+
+                int unique_verts = foundVerts.size();
+                int unique_edges = foundEdges.size();
+                int unique_faces = foundEdges.size();
+
+                // Now construct temporary GS objects. These will be used to
+                // populate the arrays tmp3 and tmp4 with the multiplicity of
+                // the vertices and edges respectively to identify those
+                // vertices and edges which are located on partition boundary.
+                Array<OneD, long> vertArray(unique_verts, &procVerts[0]);
+                Array<OneD, long> edgeArray(unique_edges, &procEdges[0]);
+                Array<OneD, long> faceArray(unique_faces, &procFaces[0]);
+                Gs::gs_data *tmp1 = Gs::Init(vertArray, m_comm);
+                Gs::gs_data *tmp2 = Gs::Init(edgeArray, m_comm);
+                Gs::gs_data *tmp3 = Gs::Init(faceArray, m_comm);
+                Array<OneD, NekDouble> tmp4(unique_verts, 1.0);
+                Array<OneD, NekDouble> tmp5(unique_edges, 1.0);
+                Array<OneD, NekDouble> tmp6(unique_faces, 1.0);
+                Gs::Gather(tmp4, Gs::gs_add, tmp1);
+                Gs::Gather(tmp5, Gs::gs_add, tmp2);
+                Gs::Gather(tmp6, Gs::gs_add, tmp3);
+
+                // Finally, fill the partVerts set with all non-Dirichlet
+                // vertices which lie on a partition boundary.
+                for (i = 0; i < unique_verts; ++i)
+                {
+                    if (tmp4[i] > 1.0)
+                    {
+                        if (vertReorderedGraphVertId.count(procVerts[i]) == 0)
+                        {
+                            partVerts.insert(vertTempGraphVertId[procVerts[i]]);
+                        }
+                    }
+                }
+            
+                for (i = 0; i < unique_edges; ++i)
+                {
+                    if (tmp5[i] > 1.0)
+                    {
+                        if (edgeReorderedGraphVertId.count(procEdges[i]) == 0)
+                        {
+                            partVerts.insert(edgeTempGraphVertId[procEdges[i]]);
+                        }
+                    }
+                }
+
+                for (i = 0; i < unique_faces; ++i)
+                {
+                    if (tmp6[i] > 1.0)
+                    {
+                        if (faceReorderedGraphVertId.count(procFaces[i]) == 0)
+                        {
+                            partVerts.insert(faceTempGraphVertId[procFaces[i]]);
+                        }
+                    }
+                }
+            }
 
             /**
              * STEP 3: Reorder graph for optimisation.
@@ -762,7 +876,8 @@ namespace Nektar
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
                     {
-                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph);
+                        int mdswitch = 1;
+                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph,mdswitch,partVerts);
                     }
                     break;
                 default:
@@ -1041,9 +1156,9 @@ namespace Nektar
             // Set up the local to global map for the next level when using
             // multi-level static condensation
             if ((m_solnType == eDirectMultiLevelStaticCond ||
-                m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts )
+                 m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts)
             {
-                if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
+                if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
                     Array<OneD, int> vwgts_perm(nGraphVerts);
                     for(i = 0; i < nGraphVerts; ++i)

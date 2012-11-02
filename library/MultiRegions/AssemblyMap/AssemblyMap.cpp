@@ -51,13 +51,11 @@ namespace Nektar
          *
          */
 
-
         /// Rounds a double precision number to an integer.
         int RoundNekDoubleToInt(NekDouble x)
         {
             return int(x > 0.0 ? x + 0.5 : x - 0.5);
         }
-
 
         /// Rounds an array of double precision numbers to integers.
         void RoundNekDoubleToInt(const Array<OneD,const NekDouble> inarray, Array<OneD,int> outarray)
@@ -72,7 +70,6 @@ namespace Nektar
                 outarray[i] =  int(x > 0.0 ? x + 0.5 : x - 0.5);
             }
         }
-
 
         /**
          * Initialises an empty mapping.
@@ -109,9 +106,9 @@ namespace Nektar
         }
 
 
-        /** Create a new level of mapping using the information in
-         *  multiLevelGraph and performing the following steps:
-         *
+        /** 
+         * Create a new level of mapping using the information in
+         * multiLevelGraph and performing the following steps:
          */
         AssemblyMap::AssemblyMap(
                     AssemblyMap* oldLevelMap,

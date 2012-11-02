@@ -269,7 +269,11 @@ int main(int argc, char *argv[])
         fs::remove_all(tmpDir);
         
         // Save any changes.
-        file.SaveFile();
+        if (vm.count("generate-metric")      > 0 || 
+            vm.count("generate-all-metrics") > 0)
+        {
+            file.SaveFile();
+        }
         
         // Return status of test. 0 = PASS, 1 = FAIL
         return status;

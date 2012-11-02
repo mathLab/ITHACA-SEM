@@ -49,7 +49,7 @@ namespace Nektar
         // Set up the regular expression. This (optionally) matches a variable
         // name if it exists: first field is variable name, second field is L2
         // error.
-        m_regex = "^L inf\\w+ error\\s*(?:\\(variable "
+        m_regex = "^L inf\\w* error\\s*(?:\\(variable "
                   "(\\w+)\\))?\\s*:\\s*([+-]?\\d.+\\d|0).*";
         
         // Find the L2 error to match against.

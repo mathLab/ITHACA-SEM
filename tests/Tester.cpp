@@ -52,7 +52,7 @@ using namespace Nektar;
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-std::string PortablePath(const boost::filesystem::path& path)
+string PortablePath(const boost::filesystem::path& path)
 {
     boost::filesystem::path temp = path;
 #if BOOST_VERSION > 104200
@@ -66,20 +66,70 @@ std::string PortablePath(const boost::filesystem::path& path)
 int main(int argc, char *argv[])
 {
     int status = 0;
-    std::string command;
+    string command;
 
-    if (argc != 2)
+    // Set up command line options.
+    po::options_description desc("Available options");
+    desc.add_options()
+        ("help,h",                 "Produce this help message.")
+        ("verbose,v",              "Turn on verbosity.")
+        ("generate-metric,g",      po::value<vector<int> >(), 
+                                   "Generate a single metric.")
+        ("generate-all-metrics,a", "Generate all metrics.");
+    
+    po::options_description hidden("Hidden options");
+    hidden.add_options()
+        ("input-file",   po::value<string>(), "Input filename");
+    
+    po::options_description cmdline_options;
+    cmdline_options.add(hidden).add(desc);
+    
+    po::options_description visible("Allowed options");
+    visible.add(desc);
+    
+    po::positional_options_description p;
+    p.add("input-file", -1);
+    
+    po::variables_map vm;
+    
+    try
     {
-        cerr << "Error: incorrect number of arguments" << endl;
-        cerr << "Usage: " << argv[0] << " [test-definition.tst]" << endl;
-        return 2;
+        po::store(po::command_line_parser(argc, argv).
+                  options(cmdline_options).positional(p).run(), vm);
+        po::notify(vm);
+    } 
+    catch (const exception& e)
+    {
+        cerr << e.what() << endl;
+        cerr << desc;
+        return 1;
     }
 
+    if (vm.count("help") || vm.count("input-file") != 1) {
+        cerr << "Usage: Tester [options] input-file.tst" << endl;
+        cout << desc;
+        return 1;
+    }
+    
+    // Set up set containing metrics to be generated.
+    vector<int> metricGenVec;
+    if (vm.count("generate-metric"))
+    {
+        metricGenVec = vm["generate-metric"].as<vector<int> >();
+        cout << "SIZE = " << metricGenVec.size() << endl;
+    }
+    set<int> metricGen(metricGenVec.begin(), metricGenVec.end());
+
     // Path to test definition file
-    const fs::path specFile(argv[1]);
+    const fs::path specFile(vm["input-file"].as<string>());
 
     // Parent path of test definition file containing dependent files
-    const fs::path specPath = specFile.parent_path();
+    fs::path specPath = specFile.parent_path();
+
+    if (specPath.empty())
+    {
+        specPath = fs::current_path();
+    }
 
     // Temporary directory to create and in which to conduct test
     const fs::path tmpDir = fs::current_path()
@@ -91,16 +141,39 @@ int main(int argc, char *argv[])
     try
     {
         // Parse the test file
-        Test::TestData file(specFile);
+        TestData file(specFile);
 
         // Generate the metric objects
         vector<MetricSharedPtr> metrics;
         for (unsigned int i = 0; i < file.GetNumMetrics(); ++i)
         {
+            set<int>::iterator it = metricGen.find(file.GetMetricId(i));
+            bool genMetric = it != metricGen.end() || 
+                             (vm.count("generate-all-metrics") > 0);
+            
             metrics.push_back( GetMetricFactory().CreateInstance(
                                                     file.GetMetricType(i),
-                                                    file.GetMetric(i)
+                                                    file.GetMetric(i),
+                                                    genMetric
                                                   ));
+            
+            if (it != metricGen.end())
+            {
+                metricGen.erase(it);
+            }
+        }
+
+        if (metricGen.size() != 0)
+        {
+            string s = metricGen.size() == 1 ? "s" : "";
+            set<int>::iterator it;
+            cerr << "Unable to find metric"+s+" with ID"+s+" ";
+            for (it = metricGen.begin(); it != metricGen.end(); ++it)
+            {
+                cerr << *it << " ";
+            }
+            cerr << endl;
+            return 1;
         }
 
         // Remove the temporary directory if left from a previous test
@@ -132,10 +205,18 @@ int main(int argc, char *argv[])
         if (file.GetNProcesses() > 1)
         {
             command += "mpirun -np "
-                    + boost::lexical_cast<std::string>(file.GetNProcesses())
+                    + boost::lexical_cast<string>(file.GetNProcesses())
                     + " ";
         }
+
+        // If executable doesn't exist in path then hope that it is in the
+        // user's PATH environment variable.
         fs::path execPath = startDir / fs::path(file.GetExecutable());
+        if (!fs::exists(execPath))
+        {
+            execPath = fs::path(file.GetExecutable());
+        }
+
         command += PortablePath(execPath);
     #if defined(NDEBUG)
         command += " ";
@@ -173,6 +254,8 @@ int main(int argc, char *argv[])
         status = 0;
         for (int i = 0; i < metrics.size(); ++i)
         {
+            vStdout.clear();
+            vStderr.clear();
             vStdout.seekg(0, ios::beg);
             vStderr.seekg(0, ios::beg);
             if (!metrics[i]->Test(vStdout, vStderr))
@@ -184,7 +267,10 @@ int main(int argc, char *argv[])
         // Change back to the original path and delete temporary directory
         fs::current_path(startDir);
         fs::remove_all(tmpDir);
-
+        
+        // Save any changes.
+        file.SaveFile();
+        
         // Return status of test. 0 = PASS, 1 = FAIL
         return status;
     }

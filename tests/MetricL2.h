@@ -36,6 +36,7 @@
 #ifndef NEKTAR_TESTS_METRICL2_H
 #define NEKTAR_TESTS_METRICL2_H
 
+#include <map>
 #include <MetricRegex.h>
 
 namespace Nektar
@@ -43,16 +44,20 @@ namespace Nektar
     class MetricL2 : public MetricRegex
     {
     public:
-        static MetricSharedPtr create(TiXmlElement *metric)
+        static MetricSharedPtr create(TiXmlElement *metric, bool generate)
         {
-            return MetricSharedPtr(new MetricL2(metric));
+            return MetricSharedPtr(new MetricL2(metric, generate));
         }
 
         static std::string type;
+        static std::string defaultTolerance;
 
     protected:
-        MetricL2(TiXmlElement *metric);
+        MetricL2(TiXmlElement *metric, bool generate);
 
+        std::map<std::string, std::string> m_varTolerance;
+        
+        virtual void v_Generate(std::istream& pStdout, std::istream& pStderr);
     };
 }
 

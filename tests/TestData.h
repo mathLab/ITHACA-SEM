@@ -1,12 +1,40 @@
-/*
- * TestData.h
- *
- *  Created on: 18 Oct 2012
- *      Author: cc
- */
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: Tester.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Encapsulation of test XML file.
+//
+///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TESTDATA_H_
-#define TESTDATA_H_
+#ifndef NEKTAR_TESTER_TESTDATA
+#define NEKTAR_TESTER_TESTDATA
 
 #include <boost/filesystem.hpp>
 
@@ -19,48 +47,45 @@ namespace fs = boost::filesystem;
 
 namespace Nektar
 {
-namespace Test
-{
+    struct DependentFile
+    {
+        std::string m_description;
+        std::string m_filename;
+    };
 
-struct DependentFile
-{
-    std::string m_description;
-    std::string m_filename;
-};
+    class TestData
+    {
+    public:
+        TestData(const fs::path& pFilename);
+        TestData(const TestData& pSrc);
 
-class TestData
-{
-public:
-    TestData(const fs::path& pFilename);
-    TestData(const TestData& pSrc);
+        const std::string& GetDescription() const;
+        const std::string& GetExecutable() const;
+        const std::string& GetParameters() const;
+        const unsigned int& GetNProcesses() const;
 
-    const std::string& GetDescription() const;
-    const std::string& GetExecutable() const;
-    const std::string& GetParameters() const;
-    const unsigned int& GetNProcesses() const;
+        std::string GetMetricType(unsigned int pId) const;
+        unsigned int GetNumMetrics() const;
+        TiXmlElement* GetMetric(unsigned int pId);
+        unsigned int GetMetricId(unsigned int pId);
 
-    std::string GetMetricType(unsigned int pId) const;
-    unsigned int GetNumMetrics() const;
-    TiXmlElement* GetMetric(unsigned int pId);
+        DependentFile GetDependentFile(unsigned int pId) const;
+        unsigned int GetNumDependentFiles() const;
 
-    DependentFile GetDependentFile(unsigned int pId) const;
-    unsigned int GetNumDependentFiles() const;
+        void SaveFile();
 
-private:
-    std::string                     m_filename;
-    std::string                     m_description;
-    std::string                     m_executable;
-    std::string                     m_parameters;
-    unsigned int                    m_processes;
-    TiXmlDocument*                  m_doc;
-    std::vector<TiXmlElement*>      m_metrics;
-    std::vector<DependentFile>      m_files;
+    private:
+        std::string                     m_filename;
+        std::string                     m_description;
+        std::string                     m_executable;
+        std::string                     m_parameters;
+        unsigned int                    m_processes;
+        TiXmlDocument*                  m_doc;
+        std::vector<TiXmlElement*>      m_metrics;
+        std::vector<DependentFile>      m_files;
 
-    void Parse(TiXmlDocument* pDoc);
-
-};
-
-}
+        void Parse(TiXmlDocument* pDoc);
+    };
 }
 
-#endif /* TESTDATA_H_ */
+#endif

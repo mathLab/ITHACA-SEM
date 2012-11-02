@@ -40,25 +40,31 @@ namespace Nektar
     std::string MetricLInf::type = GetMetricFactory().
         RegisterCreatorFunction("LINF", MetricLInf::create);
 
-    MetricLInf::MetricLInf(TiXmlElement *metric) : MetricRegex(metric)
+    // Guess default tolerance for generation routine.
+    std::string MetricLInf::defaultTolerance = "1e-12";
+
+    MetricLInf::MetricLInf(TiXmlElement *metric, bool generate) : 
+        MetricRegex(metric, generate)
     {
         // Set up the regular expression. This (optionally) matches a variable
         // name if it exists: first field is variable name, second field is L2
         // error.
-        m_regex = "^L inf error\\s*(?:\\(variable "
+        m_regex = "^L inf\\w+ error\\s*(?:\\(variable "
                   "(\\w+)\\))?\\s*:\\s*([+-]?\\d.+\\d|0).*";
-
+        
         // Find the L2 error to match against.
         TiXmlElement *value = metric->FirstChildElement("value");
+        ASSERTL0(value || m_generate, "Missing value tag for LInf metric!");
+        
         while (value)
         {
             // Set up a match with two fields which correspond with the
             // subexpression above. The first is the variable name, second is
             // the L2 error.
             ASSERTL0(value->Attribute("tolerance"),
-                     "Missing tolerance in LInf metric");
+                     "Missing tolerance in L2 metric");
             ASSERTL0(value->GetText() || value->GetText() == "",
-                     "Missing value in LInf metric.");
+                     "Missing value in L2 metric.");
 
             MetricRegexFieldValue var;
             if (value->Attribute("variable"))
@@ -71,14 +77,70 @@ namespace Nektar
             val.m_useTolerance = true;
             val.m_tolerance = atof(value->Attribute("tolerance"));
 
-            std::vector<MetricRegexFieldValue> tmp(2);
-            tmp[0] = var;
-            tmp[1] = val;
-            m_matches.push_back(tmp);
+            if (!m_generate)
+            {
+                std::vector<MetricRegexFieldValue> tmp(2);
+                tmp[0] = var;
+                tmp[1] = val;
+                m_matches.push_back(tmp);
+            }
+            else
+            {
+                m_varTolerance[var.m_value] = value->Attribute("tolerance");
+            }
 
             value = value->NextSiblingElement("value");
-
         }
     }
+    
+    void MetricLInf::v_Generate(std::istream& pStdout, std::istream& pStderr)
+    {
+        // Run MetricRegex to generate matches.
+        MetricRegex::v_Generate(pStdout, pStderr);
 
+        // First remove all existing values.
+        m_metric->Clear();
+
+        ASSERTL0(m_matches.size() > 0,
+                 "Unable to find L infinity norm in output!");
+
+        // Now create new values.
+        for (int i = 0; i < m_matches.size(); ++i)
+        {
+            ASSERTL0(m_matches[i].size() == 2,
+                     "Wrong number of matches for regular expression.");
+
+            bool          tolSet = false;
+            std::string   tol    = MetricLInf::defaultTolerance;
+            TiXmlElement *value  = new TiXmlElement("value");
+            
+            // See if there is a tolerance found already for this variable
+            // (including empty variables).
+            std::map<std::string,std::string>::iterator it = 
+                m_varTolerance.find(m_matches[i][0].m_value);
+
+            if (it != m_varTolerance.end())
+            {
+                tol    = it->second;
+                tolSet = true;
+            }                
+            
+            if (m_matches[i][0].m_value.size() > 0)
+            {
+                value->SetAttribute("variable", m_matches[i][0].m_value);
+                
+                if (m_matches[i][0].m_value == "p" && !tolSet)
+                {
+                    // Set lower tolerance for pressure fields automatically if
+                    // we haven't already got a tolerance from the existing
+                    // file.
+                    tol = "1e-8";
+                }
+            }
+            
+            value->SetAttribute("tolerance", tol);
+            value->LinkEndChild(new TiXmlText(m_matches[i][1].m_value));
+            m_metric->LinkEndChild(value);
+        }
+    }
 }

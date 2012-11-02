@@ -46,19 +46,26 @@ namespace Nektar
     class Metric
     {
     public:
-        Metric(TiXmlElement *metric);
+        Metric(TiXmlElement *metric, bool generate);
         
         /// Perform the test, given the standard output and error streams
-        bool Test  (std::istream& pStdout, std::istream& pStderr);
+        bool Test     (std::istream& pStdout, std::istream& pStderr);
+        /// Perform the test, given the standard output and error streams
+        void Generate (std::istream& pStdout, std::istream& pStderr);
         
     protected:
         /// Stores the ID of this metric.
         int m_id;
-
         /// Stores the type of this metric (uppercase).
         std::string m_type;
+        /// 
+        bool m_generate;
+        TiXmlElement *m_metric;
         
-        virtual bool v_Test (std::istream& pStdout, std::istream& pStderr) = 0;
+        virtual bool v_Test     (std::istream& pStdout, 
+                                 std::istream& pStderr) = 0;
+        virtual void v_Generate (std::istream& pStdout, 
+                                 std::istream& pSrderr) = 0;
     };
 
     /// A shared pointer to an EquationSystem object
@@ -66,8 +73,8 @@ namespace Nektar
     
     /// Datatype of the NekFactory used to instantiate classes derived from the
     /// Advection class.
-    typedef LibUtilities::NekFactory<std::string, Metric, TiXmlElement*>
-                                                                MetricFactory;
+    typedef LibUtilities::NekFactory<std::string, Metric, TiXmlElement*, bool>
+        MetricFactory;
 
     MetricFactory& GetMetricFactory();
 }

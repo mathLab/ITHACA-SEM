@@ -47,7 +47,8 @@ namespace Nektar
     /**
      * @brief Constructor.
      */
-    MetricRegex::MetricRegex(TiXmlElement *metric) : Metric(metric)
+    MetricRegex::MetricRegex(TiXmlElement *metric, bool generate) : 
+        Metric(metric, generate)
     {
         // If we are a derived class, do nothing
         if (m_type != "REGEX")
@@ -61,7 +62,12 @@ namespace Nektar
         ASSERTL0(regex->GetText(), "Failed to get text");
         m_regex = regex->GetText();
 
-        // Parse matching values
+        // Parse matching values if not generating.
+        if (m_generate)
+        {
+            return;
+        }
+        
         TiXmlElement *matches = metric->FirstChildElement("matches");
         ASSERTL0(matches, "No matches defined.");
         TiXmlElement *match = matches->FirstChildElement("match");
@@ -90,7 +96,6 @@ namespace Nektar
         }
     }
 
-
     /**
      * @brief Test output against a regex expression and set of matches.
      */
@@ -98,9 +103,10 @@ namespace Nektar
     {
         ASSERTL0(m_matches.size(), "No test conditions defined for Regex.");
 
-        bool success = true;
-        boost::cmatch             matches;
         std::vector<MetricRegexFieldValue> &okValues = m_matches[0];
+        int                                 nMatch   = m_matches.size();
+        bool                                success  = true;
+        boost::cmatch                       matches;
 
         // Process output file line by line searching for regex matches
         std::string line;
@@ -112,7 +118,7 @@ namespace Nektar
                 // Error if no fields in regex then throw an error.
                 if (matches.size() == 1)
                 {
-                    cout << "No test sections in regex!" << endl;
+                    cerr << "No test sections in regex!" << endl;
                     return false;
                 }
 
@@ -120,7 +126,7 @@ namespace Nektar
                 for (int i = 1; i < matches.size(); ++i)
                 {
                     std::string match(matches[i].first, matches[i].second);
-
+                    
                     if (okValues[i-1].m_useTolerance)
                     {
                         double val = fabs(boost::lexical_cast<double>(
@@ -157,6 +163,87 @@ namespace Nektar
             }
         }
 
+        if (m_matches.size() != 0)
+        {
+            cerr << "Expected " << nMatch << " matches but only found "
+                 << (nMatch - m_matches.size()) << "!" << endl;
+            success = false;
+        }
+
         return success;
+    }
+
+    /**
+     * @brief Test output against a regex expression and set of matches.
+     */
+    void MetricRegex::v_Generate(std::istream& pStdout, std::istream& pStderr)
+    {
+        boost::cmatch matches;
+
+        // Process output file line by line searching for regex matches
+        std::string line;
+        while (getline(pStdout, line))
+        {
+            // Test to see if we have a match on this line.
+            if (boost::regex_match(line.c_str(), matches, m_regex))
+            {
+                // Error if no fields in regex then throw an error.
+                ASSERTL0(matches.size() != 1, "No test sections in regex!");
+                
+                vector<MetricRegexFieldValue> okValues;
+
+                for (int i = 1; i < matches.size(); ++i)
+                {
+                    // Create new field.
+                    MetricRegexFieldValue okValue;
+                    okValue.m_useTolerance = false;
+                    okValue.m_value        = std::string(matches[i].first, 
+                                                         matches[i].second);
+                    okValues.push_back(okValue);
+                }
+                
+                m_matches.push_back(okValues);
+            }
+        }
+
+        // If we are not a derived class then create a new structure.
+        if (m_type == "REGEX")
+        {
+            // Remove matches if they already exist.
+            TiXmlElement *matches = m_metric->FirstChildElement("matches");
+            if (matches)
+            {
+                ASSERTL0(m_metric->RemoveChild(matches), 
+                         "Couldn't remove matches from metric!");
+            }
+
+            // Create new matches element.
+            matches = new TiXmlElement("matches");
+            m_metric->LinkEndChild(matches);
+            
+            for (int i = 0; i < m_matches.size(); ++i)
+            {
+                TiXmlElement *match = new TiXmlElement("match");
+                matches->LinkEndChild(match);
+                
+                for (int j = 0; j < m_matches[i].size(); ++j)
+                {
+                    TiXmlElement *field = new TiXmlElement("field");
+                    match->LinkEndChild(field);
+                    
+                    field->SetAttribute(
+                        "id", boost::lexical_cast<std::string>(j));
+                    
+                    if (m_matches[i][j].m_useTolerance)
+                    {
+                        field->SetAttribute(
+                            "tolerance", boost::lexical_cast<
+                                std::string>(m_matches[i][j].m_tolerance));
+                    }
+                    
+                    field->LinkEndChild(new TiXmlText(m_matches[i][j].m_value));
+                }
+            }
+        }
     }
 }

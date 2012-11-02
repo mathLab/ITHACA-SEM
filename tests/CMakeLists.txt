@@ -1,19 +1,23 @@
 SET(TESTER_SOURCES
   Metric.cpp
+  MetricFile.cpp
   MetricL2.cpp
   MetricLInf.cpp
   MetricRegex.cpp
   TestData.cpp
   Tester.cpp
+  sha1.cpp
 )
 
 SET(TESTER_HEADERS
   Metric.h
+  MetricFile.h
   MetricL2.h
   MetricLInf.h
   MetricRegex.h
   TestData.h
   Tester.h
+  sha1.h
 )
 
 ADD_DEFINITIONS(-DBUILD_PATH="${CMAKE_BINARY_DIR}")
@@ -23,6 +27,7 @@ TARGET_LINK_LIBRARIES(Tester
   ${Boost_FILESYSTEM_LIBRARY} 
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_REGEX_LIBRARY}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
   optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
 )
 ADD_DEPENDENCIES(Tester boost tinyxml)

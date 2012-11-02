@@ -52,7 +52,8 @@ namespace Nektar
     /**
      * @brief Constructor.
      */
-    Metric::Metric(TiXmlElement *metric)
+    Metric::Metric(TiXmlElement *metric, bool generate) :
+        m_metric(metric), m_generate(generate)
     {
         if (!metric->Attribute("id"))
         {
@@ -71,6 +72,14 @@ namespace Nektar
      */
     bool Metric::Test(std::istream& pStdout, std::istream& pStderr)
     {
-        return v_Test(pStdout, pStderr);
+        if (m_generate)
+        {
+            v_Generate(pStdout, pStderr);
+            return true;
+        }
+        else
+        {
+            return v_Test(pStdout, pStderr);
+        }
     }
 }

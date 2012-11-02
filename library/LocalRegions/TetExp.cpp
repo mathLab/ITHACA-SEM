@@ -875,103 +875,127 @@ namespace Nektar
                 // Set up deformed normals
                 int j, k;
 
-                int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
-                int nquad1 = geomFactors->GetPointsKey(1).GetNumPoints();
-                int nquad2 = geomFactors->GetPointsKey(2).GetNumPoints();
+                int nq0 = geomFactors->GetPointsKey(0).GetNumPoints();
+                int nq1 = geomFactors->GetPointsKey(1).GetNumPoints();
+                int nq2 = geomFactors->GetPointsKey(2).GetNumPoints();
                 int nqtot;
-                
+                int nq01 =nq0*nq1;
+
                 if (face == 0)
                 {
-                    nqtot = nquad0*nquad1;
+                    nqtot = nq01;
                 }
                 else if (face == 1)
                 {
-                    nqtot = nquad0*nquad2;
+                    nqtot = nq0*nq2;
                 }
                 else
                 {
-                    nqtot = nquad1*nquad2;
+                    nqtot = nq1*nq2;
                 }
+
+
 
                 LibUtilities::PointsKey points0;
                 LibUtilities::PointsKey points1;
 
                 Array<OneD,NekDouble> work   (nq,              0.0);
                 Array<OneD,NekDouble> normals(vCoordDim*nqtot, 0.0);
-
+                
                 // Extract Jacobian along face and recover local derivates
                 // (dx/dr) for polynomial interpolation by multiplying m_gmat by
                 // jacobian
                 switch (face)
 	        {
-                    case 0:
+                case 0:
+                {
+                    for(j = 0; j < nq01; ++j)
                     {
-                        for(j = 0; j < nquad0*nquad1; ++j)
-                        {
-                            normals[j]         = -gmat[2][j]*jac[j];
-                            normals[nqtot+j]   = -gmat[5][j]*jac[j];
-                            normals[2*nqtot+j] = -gmat[8][j]*jac[j];
-                        }
-
+                        normals[j]         = -gmat[2][j]*jac[j];
+                        normals[nqtot+j]   = -gmat[5][j]*jac[j];
+                        normals[2*nqtot+j] = -gmat[8][j]*jac[j];
+                    }
+                    
                         points0 = geomFactors->GetPointsKey(0);
                         points1 = geomFactors->GetPointsKey(1);
                         break;
-                    }
-
-                    case 1:
+                }
+                
+                case 1:
+                {
+                    for (j = 0; j < nq0; ++j)
                     {
-                        for (j = 0; j < nquad0; ++j)
+                        for(k = 0; k < nq2; ++k)
                         {
-                            for(k = 0; k < nquad2; ++k)
-                            {
-                                normals[j+k*nquad0]  = -gmat[1][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
-                                normals[nqtot+j+k*nquad0]  = -gmat[4][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
-                                normals[2*nqtot+j+k*nquad0]  = -gmat[7][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
-                            } 
-                        }
-
-                        points0 = geomFactors->GetPointsKey(0);
-                        points1 = geomFactors->GetPointsKey(2);
-                        break;
-                    }
-
-                    case 2:
-                    {
-                        for (j = 0; j < nquad1; ++j)
-                        {
-                            for(k = 0; k < nquad2; ++k)
-                            {
-                                normals[j+k*nquad1]  = (gmat[0][nquad0-1+nquad0*j+nquad0*nquad1*k]+gmat[1][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                                        +gmat[2][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                                normals[nqtot+j+k*nquad1]  = (gmat[3][nquad0-1+nquad0*j+nquad0*nquad1*k]+gmat[4][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                                              +gmat[5][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                                normals[2*nqtot+j+k*nquad1]  = (gmat[6][nquad0-1+nquad0*j+nquad0*nquad1*k]+gmat[7][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                                                +gmat[8][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                            } 
-                        }
-                        
-                        points0 = geomFactors->GetPointsKey(1);
-                        points1 = geomFactors->GetPointsKey(2);
-                        break;
+                            normals[j+k*nq0]  = 
+                                -gmat[1][j+nq01*k]*
+                                jac[j+nq01*k];
+                            normals[nqtot+j+k*nq0]  = 
+                                -gmat[4][j+nq01*k]*
+                                jac[j+nq01*k];
+                            normals[2*nqtot+j+k*nq0]  = 
+                                -gmat[7][j+nq01*k]*
+                                jac[j+nq01*k];
+                        } 
                     }
                     
-                    case 3:
+                    points0 = geomFactors->GetPointsKey(0);
+                    points1 = geomFactors->GetPointsKey(2);
+                    break;
+                }
+                
+                case 2:
+                {
+                    for (j = 0; j < nq1; ++j)
                     {
-                        for (j = 0; j < nquad1; ++j)
+                        for(k = 0; k < nq2; ++k)
                         {
-                            for(k = 0; k < nquad2; ++k)
-                            {
-                                normals[j+k*nquad1]  = -gmat[0][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                                normals[nqtot+j+k*nquad1]  = -gmat[3][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                                normals[2*nqtot+j+k*nquad1]  = -gmat[6][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                            } 
-                        }
-                        
-                        points0 = geomFactors->GetPointsKey(1);
-                        points1 = geomFactors->GetPointsKey(2);
-                        break;
+                            normals[j+k*nq1]  = 
+                                (gmat[0][nq0-1+nq0*j+nq01*k]+
+                                 gmat[1][nq0-1+nq0*j+nq01*k]+
+                                 gmat[2][nq0-1+nq0*j+nq01*k])*
+                                jac[nq0-1+nq0*j+nq01*k];
+                            normals[nqtot+j+k*nq1]  = 
+                                (gmat[3][nq0-1+nq0*j+nq01*k]+
+                                 gmat[4][nq0-1+nq0*j+nq01*k]+
+                                 gmat[5][nq0-1+nq0*j+nq01*k])*
+                                jac[nq0-1+nq0*j+nq01*k];
+                            normals[2*nqtot+j+k*nq1]  = 
+                                (gmat[6][nq0-1+nq0*j+nq01*k]+
+                                 gmat[7][nq0-1+nq0*j+nq01*k]+
+                                 gmat[8][nq0-1+nq0*j+nq01*k])*
+                                jac[nq0-1+nq0*j+nq01*k];
+                        } 
                     }
-
+                    
+                    points0 = geomFactors->GetPointsKey(1);
+                    points1 = geomFactors->GetPointsKey(2);
+                    break;
+                }
+                
+                case 3:
+                {
+                    for (j = 0; j < nq1; ++j)
+                    {
+                        for(k = 0; k < nq2; ++k)
+                        {
+                            normals[j+k*nq1]  = 
+                                -gmat[0][j*nq0+nq01*k]*
+                                jac[j*nq0+nq01*k];
+                            normals[nqtot+j+k*nq1]  = 
+                                -gmat[3][j*nq0+nq01*k]*
+                                jac[j*nq0+nq01*k];
+                            normals[2*nqtot+j+k*nq1]  = 
+                                -gmat[6][j*nq0+nq01*k]*
+                                jac[j*nq0+nq01*k];
+                        } 
+                    }
+                        
+                    points0 = geomFactors->GetPointsKey(1);
+                    points1 = geomFactors->GetPointsKey(2);
+                    break;
+                }
+                
                     default:
                         ASSERTL0(false,"face is out of range (face < 3)");
                 }

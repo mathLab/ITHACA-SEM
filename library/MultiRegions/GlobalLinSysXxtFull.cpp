@@ -129,33 +129,20 @@ namespace Nektar
         void GlobalLinSysXxtFull::CreateMap(const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
         {
             const Array<OneD, const int> &vMap = pLocToGloMap->GetLocalToGlobalMap();
-            const Array<OneD, NekDouble> &vMapSign = pLocToGloMap->GetLocalToGlobalSign();
             unsigned int nGloBnd = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             unsigned int i,j;
-            unsigned int nEntries = 0;
+            unsigned int nEntries = pLocToGloMap->GetNumLocalCoeffs();
 
-            Array<OneD, int> vCounts(pLocToGloMap->GetNumGlobalCoeffs());
-            for (i = j = 0; i < pLocToGloMap->GetNumLocalCoeffs(); ++i)
+            Array<OneD, int> vCounts(pLocToGloMap->GetNumGlobalCoeffs(), 0);
+            for (i = 0; i < nEntries; ++i)
             {
-                if (vMap[i] >= nGloBnd)
-                {
-                    nEntries++;
-                }
                 vCounts[vMap[i]]++;
             }
-            m_locToGloMap = Array<OneD, int>(nEntries);
-            m_locToGloSign = Array<OneD, NekDouble>(nEntries);
-            m_locToGloSignMult = Array<OneD, NekDouble>(nEntries);
 
-            for (i = j = 0; i < pLocToGloMap->GetNumLocalCoeffs(); ++i)
+            m_locToGloSignMult = Array<OneD, NekDouble>(nEntries);
+            for (i = 0; i < nEntries; ++i)
             {
-                if (vMap[i] >= nGloBnd)
-                {
-                    m_locToGloMap[j] = vMap[i];
-                    m_locToGloSign[j] = vMapSign[i];
-                    m_locToGloSignMult[j] = 1.0/vCounts[vMap[i]]*vMapSign[i];
-                    j++;
-                }
+                m_locToGloSignMult[i] = 1.0/vCounts[vMap[i]];
             }
         }
 
@@ -177,30 +164,23 @@ namespace Nektar
             unsigned int i = 0, j = 0, k = 0, n = 0, cnt = 0, iCnt = 0, jCnt = 0;
             unsigned int nEntries = 0;
             unsigned int numDirBnd = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            unsigned int nLocal = pLocToGloMap->GetNumLocalCoeffs();
+            const Array<OneD, NekDouble> &vMapSign = pLocToGloMap->GetLocalToGlobalSign();
+            bool doSign = pLocToGloMap->GetSignChange();
             int gid1, gid2;
             Array<OneD, unsigned int> vSizes(nElmt);
 
             for (n = 0; n < nElmt; ++n)
             {
                 nRows = vExp->GetExp(vExp->GetOffset_Elmt_Id(n))->GetNcoeffs();
-                for (i = j = 0; i < nRows; ++i)
-                {
-                    gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt + i) - numDirBnd;
-                    if (gid1 >= 0)
-                    {
-                        j++;
-                    }
-                }
-                vSizes[n] = j;
+                vSizes[n] = nRows;
                 nEntries += vSizes[n]*vSizes[n];
-                m_rank   += vSizes[n];
-                cnt      += nRows;
             }
 
             m_Ai = Array<OneD, unsigned int>(nEntries);
             m_Aj = Array<OneD, unsigned int>(nEntries);
-            m_Ar = Array<OneD, double>(nEntries);
-            Array<OneD, unsigned long> vId(m_rank);
+            m_Ar = Array<OneD, double>(nEntries, 0.0);
+            Array<OneD, unsigned long> vId(nLocal);
 
             iCount = 0;
             for(n = cnt = 0; n < nElmt; ++n)
@@ -208,30 +188,24 @@ namespace Nektar
                 loc_mat = GetBlock(vExp->GetOffset_Elmt_Id(n));
                 nRows = loc_mat->GetRows();
 
-                iCnt = 0;
                 for(i = 0; i < nRows; ++i)
                 {
-                    gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt + i)-numDirBnd;
-                    if(gid1 >= 0)
+                    gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt + i);
+                    for(j = 0; j < nRows; ++j)
                     {
-                        jCnt = 0;
-                        for(j = 0; j < nRows; ++j)
-                        {
-                            gid2 = pLocToGloMap->GetLocalToGlobalMap(cnt + j)
-                                                                    - numDirBnd;
-                            if(gid2 >= 0)
+                            k = rCount + i*vSizes[n] + j;
+                            m_Ai[k] = iCount + i;
+                            m_Aj[k] = iCount + j;
+                            m_Ar[k] = (*loc_mat)(i,j);
+                            if (doSign)
                             {
-                                k = rCount + iCnt*vSizes[n] + jCnt;
-                                m_Ai[k] = iCount + iCnt;
-                                m_Aj[k] = iCount + jCnt;
-                                m_Ar[k] = (*loc_mat)(i,j);
-                                jCnt++;
+                                m_Ar[k] *= vMapSign[cnt+i]*vMapSign[cnt+j];
                             }
-
-                        }
-                        vId[iCount + iCnt] = gid1 + numDirBnd;
-                        iCnt++;
                     }
+                    if (gid1 < numDirBnd)
+                        vId[iCount + i] = 0;
+                    else
+                        vId[iCount + i] = gid1;
                 }
                 cnt   += nRows;
                 iCount += vSizes[n];
@@ -239,7 +213,7 @@ namespace Nektar
             }
 
             LibUtilities::CommSharedPtr vComm = pLocToGloMap->GetComm();
-            m_crsData = Xxt::Init(m_rank, vId, m_Ai, m_Aj, m_Ar, vComm);
+            m_crsData = Xxt::Init(nLocal, vId, m_Ai, m_Aj, m_Ar, vComm);
         }
     }
 }

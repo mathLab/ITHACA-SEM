@@ -69,12 +69,13 @@ namespace Nektar
                 const AssemblyMapSharedPtr &pLocToGloMap,
                 const int pNumDir)
         {
-            unsigned int nCoeffs = pLocToGloMap->GetNumLocalCoeffs();
-            Array<OneD, NekDouble> vLocalIn(m_rank, 0.0);
-            Array<OneD, NekDouble> vLocalOut(m_rank, 0.0);
-            GlobalToLocalNonDir(pInput, vLocalIn, pLocToGloMap);
+            unsigned int nLocal = pLocToGloMap->GetNumLocalCoeffs();
+            Array<OneD, NekDouble> vLocalIn(nLocal, 0.0);
+            Array<OneD, NekDouble> vLocalOut(nLocal, 0.0);
+            Array<OneD, NekDouble> vTmpLocal(pLocToGloMap->GetNumLocalCoeffs());
+            GlobalToLocalNoSign(pInput, vLocalIn, pLocToGloMap);
             Xxt::Solve(vLocalOut, m_crsData, vLocalIn);
-            LocalNonDirToGlobal(vLocalOut, pOutput, pLocToGloMap);
+            LocalToGlobalNoSign(vLocalOut, pOutput, pLocToGloMap);
         }
 
         /// Solve the linear system for given input and output vectors
@@ -87,22 +88,22 @@ namespace Nektar
             ASSERTL0(false, "Not implemented for this GlobalLinSys type.");
         }
 
-        void GlobalLinSysXxt::GlobalToLocalNonDir(const Array<OneD, const NekDouble> &global,
+        void GlobalLinSysXxt::GlobalToLocalNoSign(const Array<OneD, const NekDouble> &global,
                                        Array<OneD, NekDouble> &local,
                                const boost::shared_ptr<AssemblyMap>
                                                       &pLocToGloMap)
         {
-            int n = m_locToGloMap.num_elements();
-            Vmath::Gathr(n, m_locToGloSignMult.get(), global.get(), m_locToGloMap.get(), local.get());
+            int n = pLocToGloMap->GetNumLocalCoeffs();
+            Vmath::Gathr(n, m_locToGloSignMult.get(), global.get(), pLocToGloMap->GetLocalToGlobalMap().get(), local.get());
         }
 
-        void GlobalLinSysXxt::LocalNonDirToGlobal(const Array<OneD, const NekDouble> &local,
+        void GlobalLinSysXxt::LocalToGlobalNoSign(const Array<OneD, const NekDouble> &local,
                                        Array<OneD, NekDouble> &global,
                                const boost::shared_ptr<AssemblyMap>
                                                       &pLocToGloMap)
         {
-            int n = m_locToGloMap.num_elements();
-            Vmath::Scatr(n, m_locToGloSign.get(), local.get(), m_locToGloMap.get(), global.get());
+            int n = pLocToGloMap->GetNumLocalCoeffs();
+            Vmath::Scatr(n, local.get(), pLocToGloMap->GetLocalToGlobalMap().get(), global.get());
         }
 
     }

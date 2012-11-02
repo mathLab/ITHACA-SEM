@@ -39,14 +39,12 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual ~GlobalLinSysXxt();
 
         protected:
-            struct Xxt::crs_data* m_crsData;
-            Array<OneD, unsigned int> m_Ai;
-            Array<OneD, unsigned int> m_Aj;
-            Array<OneD, double> m_Ar;
-            unsigned int m_rank;
-            Array<OneD, int> m_locToGloMap;
-            Array<OneD, NekDouble> m_locToGloSign;
-            Array<OneD, NekDouble> m_locToGloSignMult;
+            struct Xxt::crs_data*       m_crsData;
+            Array<OneD, unsigned int>   m_Ai;
+            Array<OneD, unsigned int>   m_Aj;
+            Array<OneD, double>         m_Ar;
+
+            Array<OneD, NekDouble>      m_locToGloSignMult;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
@@ -64,12 +62,12 @@ namespace Nektar
                     const AssemblyMapSharedPtr &locToGloMap,
                     const int pNumDir = 0);
 
-            void GlobalToLocalNonDir(const Array<OneD, const NekDouble> &global,
+            void GlobalToLocalNoSign(const Array<OneD, const NekDouble> &global,
                                            Array<OneD, NekDouble> &local,
                                    const boost::shared_ptr<AssemblyMap>
                                                           &pLocToGloMap);
 
-            void LocalNonDirToGlobal(const Array<OneD, const NekDouble> &local,
+            void LocalToGlobalNoSign(const Array<OneD, const NekDouble> &local,
                                            Array<OneD, NekDouble> &global,
                                    const boost::shared_ptr<AssemblyMap>
                                                           &pLocToGloMap);

@@ -159,10 +159,10 @@ namespace Nektar
          * @param   out_d2      Derivative in third coordinate direction.
          */
         void TetExp::v_PhysDeriv(
-                 const Array<OneD, const NekDouble> & inarray,
-                       Array<OneD,NekDouble> &out_d0,
-                       Array<OneD,NekDouble> &out_d1,
-                       Array<OneD,NekDouble> &out_d2)
+            const Array<OneD, const NekDouble> & inarray,
+            Array<OneD,NekDouble> &out_d0,
+            Array<OneD,NekDouble> &out_d1,
+            Array<OneD,NekDouble> &out_d2)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -173,7 +173,7 @@ namespace Nektar
             Array<OneD,NekDouble> Diff2 = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
 
             StdTetExp::v_PhysDeriv(inarray, Diff0, Diff1, Diff2);
-
+            
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 if(out_d0.num_elements())
@@ -182,7 +182,7 @@ namespace Nektar
                     Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[1][0],1,&Diff1[0],1, &out_d0[0], 1,&out_d0[0],1);
                     Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[2][0],1,&Diff2[0],1, &out_d0[0], 1,&out_d0[0],1);
                 }
-
+                
                 if(out_d1.num_elements())
                 {
                     Vmath::Vmul  (nquad0*nquad1*nquad2,&gmat[3][0],1,&Diff0[0],1, &out_d1[0], 1);
@@ -246,7 +246,7 @@ namespace Nektar
             else
             {
                 IProductWRTBase(inarray,outarray);
-
+                
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
                                               DetExpansionType(),*this);
@@ -799,8 +799,25 @@ namespace Nektar
             SpatialDomains::GeomType            type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
-            int nq = m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
+            int nq= m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             int vCoordDim = GetCoordim();
+            
+            /*int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
+            
+            if (face == 0)
+            {
+                nq = nquad0*nquad1;
+            }
+            else if (face == 1)
+            {
+                nq = nquad0*nquad2;
+            }
+            else
+            {
+                nq = nquad1*nquad2;
+                }*/
             
             m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
             Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
@@ -2131,7 +2148,7 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
-
+        
         SpatialDomains::TetGeomSharedPtr TetExp::CreateEquilateralTetGeom()
         {
 	    int i,j;
@@ -2210,10 +2227,12 @@ namespace Nektar
             SpatialDomains::TetGeomSharedPtr geom =
                 MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr
                 (faces);
+
+            SpatialDomains::GeomFactorsSharedPtr m_geomFactors = geom->GetRefGeomFactors(m_base);
+
+            geom->SetOwnData();
             
-	   geom->SetOwnData();
-           
-           return geom;
+            return geom;
         }
         
         DNekMatSharedPtr TetExp::BuildTransformationMatrix(

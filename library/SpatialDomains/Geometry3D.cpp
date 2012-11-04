@@ -187,6 +187,34 @@ namespace Nektar
                 Gtype, m_coordim, m_xmap, tbasis);
       }
 
+      /**
+       * Generate the geometry factors for this element.
+       */
+      void Geometry3D::v_GenRefGeomFactors(
+          const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+      {
+            GeomType      Gtype  = eRegular;
+            GeomShapeType GSType = eQuadrilateral;
+
+            v_FillGeom();
+
+            // check to see if expansions are linear
+            for(int i = 0; i < m_coordim; ++i)
+            {
+                if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
+                    m_xmap[i]->GetBasisNumModes(1) != 2 ||
+                    m_xmap[i]->GetBasisNumModes(2) != 2)
+                {
+                    Gtype = eDeformed;
+                }
+            }
+
+            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                Gtype, m_coordim, m_xmap, tbasis);
+      }
+
+
+
       /** 
        * @brief Given local collapsed coordinate Lcoord return the value of
        * physical coordinate in direction i.

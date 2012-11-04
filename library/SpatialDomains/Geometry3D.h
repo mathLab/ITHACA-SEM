@@ -107,6 +107,8 @@ namespace Nektar
                 const int i, const Array<OneD, const NekDouble> &Lcoord);
             virtual void      v_GenGeomFactors(
                 const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
+            virtual void      v_GenRefGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 
             //---------------------------------------
             // Helper functions

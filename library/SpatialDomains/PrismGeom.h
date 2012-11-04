@@ -38,6 +38,8 @@
 
 #include <SpatialDomains/Geometry3D.h>
 #include <LibUtilities/Foundations/Graph.h>
+#include <SpatialDomains/QuadGeom.h>
+#include <SpatialDomains/TriGeom.h>
 
 namespace Nektar
 {
@@ -65,6 +67,12 @@ namespace Nektar
                       Array<OneD,       NekDouble> &Lcoords);
             virtual int v_GetNumVerts() const;
             virtual int v_GetNumEdges() const;
+	    virtual int v_GetVertexEdgeMap(
+                const int i, const int j) const;
+	    virtual int v_GetVertexFaceMap(
+                const int i, const int j) const;
+	    virtual int v_GetEdgeFaceMap(
+                const int i, const int j) const;
             
         private:
             void SetUpLocalEdges();

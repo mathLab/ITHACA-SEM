@@ -140,6 +140,8 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT const int GetCoordim() const;
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetRefGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetMetricInfo();
                 SPATIAL_DOMAINS_EXPORT GeomShapeType GetGeomShapeType(void);
                 SPATIAL_DOMAINS_EXPORT int GetGlobalID(void);
@@ -182,6 +184,9 @@ namespace Nektar
 
                 void GenGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                void GenRefGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+
 
         private:
                 GeomType m_geomType;
@@ -205,6 +210,8 @@ namespace Nektar
 
                 virtual int  v_GetEid(int i) const;
                 virtual void v_GenGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                virtual void v_GenRefGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
                 virtual int  v_GetVid(int i) const;
                 virtual int  v_GetNumVerts() const;

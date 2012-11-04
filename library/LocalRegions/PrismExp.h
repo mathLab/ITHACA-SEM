@@ -197,6 +197,18 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT DNekScalBlkMatSharedPtr CreateStaticCondMatrix(
                 const MatrixKey &mkey);
 
+            //-----------------------------
+            // Low Energy Basis functions
+            //-----------------------------
+
+            LOCAL_REGIONS_EXPORT virtual void v_GetModeMappings(
+                Array<OneD, int > vma,
+                Array<OneD, Array<OneD, unsigned int> > ema,
+                Array<OneD, Array<OneD, unsigned int> > fma);
+
+            LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
+                const DNekMatSharedPtr &r_bnd, 
+                const StdRegions::MatrixType matrixType);
 
         private:
             SpatialDomains::Geometry3DSharedPtr m_geom;

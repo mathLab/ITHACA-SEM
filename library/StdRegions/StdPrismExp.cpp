@@ -1060,6 +1060,18 @@ namespace Nektar
                 return Qi * Ri;
             }
         }
+
+        int StdPrismExp::v_GetTotalFaceIntNcoeffs() const
+        {
+            int Pi = GetBasisNumModes(0) - 2;
+            int Qi = GetBasisNumModes(1) - 2;
+            int Ri = GetBasisNumModes(2) - 2;
+
+            return Pi * Qi +
+                Pi * (2*Ri - Pi - 1) / 2 +
+                Pi * (2*Ri - Pi - 1) / 2 +
+                Qi * Ri;
+	}
         
         int StdPrismExp::v_GetFaceNumPoints(const int i) const
         {

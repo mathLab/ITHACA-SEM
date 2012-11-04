@@ -306,6 +306,10 @@ namespace Nektar
                         wz_hat[k] = 0.5*(1.0 - z[k]) * wz[k];
                     }
                     break;
+                    
+                default:
+                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    break;
             }
 
 

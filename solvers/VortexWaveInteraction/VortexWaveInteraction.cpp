@@ -232,7 +232,7 @@ namespace Nektar
                 {
                     FILE *fp;
                     // Check for OuterIter.his file to read
-                    if(fp = fopen("OuterIter.his","r"))
+                    if((fp = fopen("OuterIter.his","r")))
                     {
                         char buf[BUFSIZ];
                         std::vector<NekDouble> Alpha, Growth, Phase;
@@ -290,7 +290,7 @@ namespace Nektar
         // Check for ConveredSoln to update DAlphaDWaveForce
         {
             FILE *fp;
-            if(fp = fopen("ConvergedSolns","r"))
+            if((fp = fopen("ConvergedSolns","r")))
             {
                 char buf[BUFSIZ];
                 std::vector<NekDouble> WaveForce, Alpha;

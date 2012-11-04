@@ -38,6 +38,7 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 
 #include <SpatialDomains/GeomFactors.h>
+#include <SpatialDomains/GeometryShapeType.h>
 
 #include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
@@ -48,22 +49,6 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-
-        // Types of geometry types.
-        enum GeomShapeType
-        {
-            eNoGeomShapeType,
-            eSegment,
-            ePoint,
-            eTriangle,
-            eQuadrilateral,
-            eTetrahedron,
-            ePyramid,
-            ePrism,
-            eHexahedron,
-            SIZE_GeomShapeType
-        };
-
 
         const char* const GeomShapeTypeMap[] =
         {

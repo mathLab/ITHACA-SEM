@@ -525,6 +525,11 @@ namespace Nektar
                         output[1][i] = -1.0*xdis/radius;
                     }
                 }
+                default:
+                {
+                    ASSERTL0(false, "Unsupported tangent direction.");
+                    break;
+                }
             }
         }
 

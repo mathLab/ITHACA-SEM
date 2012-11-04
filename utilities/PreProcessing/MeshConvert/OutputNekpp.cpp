@@ -438,6 +438,7 @@ namespace Nektar
                         case eNeumann:      tagId = "N"; break;
                         case ePeriodic:     tagId = "P"; break;
                         case eHOPCondition: tagId = "N"; break;
+                        default:                         break;
                     }
                     
                     TiXmlElement *tag = new TiXmlElement(tagId);

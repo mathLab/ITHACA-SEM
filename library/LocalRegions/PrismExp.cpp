@@ -1464,6 +1464,8 @@ namespace Nektar
                             case StdRegions::eWeakDeriv2:
                                 dir = 2;
                                 break;
+                            default:
+                                break;
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,

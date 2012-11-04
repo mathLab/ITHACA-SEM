@@ -1,5 +1,6 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
+#include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ExpList2D.h>
 
 #include <vtkPolyDataReader.h>

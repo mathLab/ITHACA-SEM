@@ -960,16 +960,22 @@ namespace Nektar
 
             switch(DetExpansionType())
             {
-            case eSegment:
-                outfile << "Zone, I=" << GetNumPoints(0) << ", F=Block" << std::endl;
-                break;
-            case eTriangle: case eQuadrilateral:
-
-                outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) <<", F=Block" << std::endl;
-                break;
-            case eTetrahedron: case ePrism: case ePyramid: case eHexahedron:
-                outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) << ", K="<< GetNumPoints(2) << ", F=Block" << std::endl;
-                break;
+                case eSegment:
+                    outfile << "Zone, I=" << GetNumPoints(0) << ", F=Block" << std::endl;
+                    break;
+                case eTriangle: 
+                case eQuadrilateral:
+                    outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) <<", F=Block" << std::endl;
+                    break;
+                case eTetrahedron: 
+                case ePrism: 
+                case ePyramid: 
+                case eHexahedron:
+                    outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) << ", K="<< GetNumPoints(2) << ", F=Block" << std::endl;
+                    break;
+                default:
+                    ASSERTL0(false, "Unsupported expansion type.");
+                    break;
             }
 
             for(j = 0; j < coordim; ++j)

@@ -80,14 +80,14 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
             
-            SOLVER_UTILS_EXPORT void divCFlux_1D(
+            SOLVER_UTILS_EXPORT void DivCFlux_1D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux);
             
-            SOLVER_UTILS_EXPORT void divCFlux_2D(
+            SOLVER_UTILS_EXPORT void DivCFlux_2D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
@@ -95,7 +95,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux);
             
-            SOLVER_UTILS_EXPORT void divCFlux_3D(
+            SOLVER_UTILS_EXPORT void DivCFlux_3D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
@@ -151,7 +151,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray)=0;
             
-            virtual void v_divCFlux_1D(
+            virtual void v_DivCFlux_1D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
@@ -161,7 +161,7 @@ namespace Nektar
                 
             };
             
-            virtual void v_divCFlux_2D(
+            virtual void v_DivCFlux_2D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
@@ -172,7 +172,7 @@ namespace Nektar
                 
             };
             
-            virtual void v_divCFlux_3D(
+            virtual void v_DivCFlux_3D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 

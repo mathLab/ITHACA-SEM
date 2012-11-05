@@ -234,8 +234,6 @@ namespace Nektar
                             BasisFR_Right0 = 
                                 LibUtilities::BasisManager()[FRBase_Right0];
                         }
-                        
-                        
                         else if (m_advType == "FRSD")
                         {
                             // Derivatives of the correction functions (SD)
@@ -254,7 +252,6 @@ namespace Nektar
                             BasisFR_Right0 = 
                                 LibUtilities::BasisManager()[FRBase_Right0];
                         }
-                        
                         else if (m_advType == "FRHU")
                         {
                             // Derivatives of the correction functions (HU)
@@ -279,8 +276,7 @@ namespace Nektar
                         m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
                     }
                     break;
-                }
-                    
+                }   
                 case 2:
                 {
                     LibUtilities::BasisSharedPtr BasisFR_Left0;
@@ -340,8 +336,6 @@ namespace Nektar
                             BasisFR_Right1 = 
                                 LibUtilities::BasisManager()[FRBase_Right1];
                         }
-                        
-                        
                         else if (m_advType == "FRSD")
                         {
                             // Derivatives of the correction functions (SD)
@@ -374,7 +368,6 @@ namespace Nektar
                             BasisFR_Right1 = 
                                 LibUtilities::BasisManager()[FRBase_Right1];
                         }
-                        
                         else if (m_advType == "FRHU")
                         {
                             // Derivatives of the correction functions (HU)
@@ -498,8 +491,6 @@ namespace Nektar
                             BasisFR_Right2 = 
                                 LibUtilities::BasisManager()[FRBase_Right2];
                         }
-                        
-                        
                         else if (m_advType == "FRSD")
                         {
                             // Derivatives of the correction functions (SD)
@@ -546,7 +537,6 @@ namespace Nektar
                             BasisFR_Right2 = 
                                 LibUtilities::BasisManager()[FRBase_Right2];
                         }
-                        
                         else if (m_advType == "FRHU")
                         {
                             // Derivatives of the correction functions (HU)
@@ -593,7 +583,6 @@ namespace Nektar
                             BasisFR_Right2 = 
                                 LibUtilities::BasisManager()[FRBase_Right2];
                         }
-                        
                         // Storing the derivatives into two global variables 
                         m_dGL_xi1[n] = BasisFR_Left0 ->GetBdata();
                         m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
@@ -754,8 +743,6 @@ namespace Nektar
                     {
                         for (n = 0; n < nElements; n++)
                         {
-                            gmat = fields[0]->GetExp(n)->GetGeom1D()->GetGmat();
-                            nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
                             phys_offset       = fields[0]->GetPhys_Offset(n);
                             
                             fields[i]->GetExp(n)->PhysDeriv(
@@ -768,7 +755,7 @@ namespace Nektar
                     Array<OneD, NekDouble> divFC(nSolutionPts, 0.0);
                     for (i = 0; i < nConvectiveFields; ++i)
                     {
-                        v_divCFlux_1D(nConvectiveFields,
+                        v_DivCFlux_1D(nConvectiveFields,
                                       fields, 
                                       fluxvector[0], 
                                       numflux[i], 
@@ -780,8 +767,6 @@ namespace Nektar
                     {
                         nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = fields[0]->GetPhys_Offset(n);
-                        
-                        gmat = fields[0]->GetExp(n)->GetGeom1D()->GetGmat();
                         jac = fields[0]->GetExp(n)->GetGeom1D()->GetJac();
                         
                         Vmath::Smul(nLocalSolutionPts, 
@@ -859,7 +844,7 @@ namespace Nektar
                     Array<OneD, NekDouble> divFC(nSolutionPts, 0.0);
                     for (j = 0; j < nConvectiveFields; ++j)
                     {
-                        v_divCFlux_2D(nConvectiveFields,
+                        v_DivCFlux_2D(nConvectiveFields,
                                       fields, 
                                       fluxvector[0], 
                                       fluxvector[1],
@@ -914,15 +899,17 @@ namespace Nektar
         /**
          * @brief Compute the divergence of the corrective flux for 1D problems.
          *
-         * @param fields            Pointer to fields.
-         * @param fluxX1            Volumetric flux in the physical space in 
-         *                          direction X1.
-         * @param numericalFlux     Riemann flux in the physical space.
-         * @param divCFlux          Divergence of the corrective flux for 1D
-         *                          Problems.
+         * @param nConvectiveFields   Number of fields (i.e. independent 
+         *                            variables).
+         * @param fields              Pointer to fields.
+         * @param fluxX1              Volumetric flux in the physical space in 
+         *                            direction X1.
+         * @param numericalFlux       Riemann flux in the physical space.
+         * @param divCFlux            Divergence of the corrective flux for 1D
+         *                            Problems.
          *
          */
-        void AdvectionFR::v_divCFlux_1D(
+        void AdvectionFR::v_DivCFlux_1D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
@@ -1031,22 +1018,23 @@ namespace Nektar
             }
         }
         
-        
         /**
          * @brief Compute the divergence of the corrective flux for 2D problems.
          *
-         * @param fields            Pointer to fields.
-         * @param fluxX1            Volumetric flux in the physical space in 
-         *                          direction X1.
-         * @param fluxX2            Volumetric flux in the physical space in 
-         *                          direction X2.
-         * @param numericalFlux     Riemann flux in the physical space.
-         * @param divCFlux          Divergence of the corrective flux for 2D
-         *                          Problems.
+         * @param nConvectiveFields   Number of fields (i.e. independent 
+         *                            variables).
+         * @param fields              Pointer to fields.
+         * @param fluxX1              Volumetric flux in the physical space in 
+         *                            direction X1.
+         * @param fluxX2              Volumetric flux in the physical space in 
+         *                            direction X2.
+         * @param numericalFlux       Riemann flux in the physical space.
+         * @param divCFlux            Divergence of the corrective flux for 2D
+         *                            Problems.
          *
          * \todo: Switch on shapes eventually here.
          */
-        void AdvectionFR::v_divCFlux_2D(
+        void AdvectionFR::v_DivCFlux_2D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
@@ -1091,12 +1079,7 @@ namespace Nektar
                 base = fields[0]->GetExp(n)->GetBase();
                 nquad0 = base[0]->GetNumPoints();
                 nquad1 = base[1]->GetNumPoints();
-                
-                Array<OneD, const NekDouble> jac  = fields[0]->
-                GetExp(n)->GetGeom2D()->GetJac();
-                Array<TwoD, const NekDouble> gmat = fields[0]->
-                GetExp(n)->GetGeom2D()->GetGmat();
-                
+                                
                 Array<OneD, NekDouble> divCFluxE0(nLocalSolutionPts, 0.0);
                 Array<OneD, NekDouble> divCFluxE1(nLocalSolutionPts, 0.0);
                 Array<OneD, NekDouble> divCFluxE2(nLocalSolutionPts, 0.0);
@@ -1153,7 +1136,7 @@ namespace Nektar
                     if (fields[0]->GetExp(n)->GetEorient(e) == 
                         StdRegions::eBackwards)
                     {
-                        Vmath::Reverse(nquad0, 
+                        Vmath::Reverse(nEdgePts, 
                                        auxArray1 = fluxJumps, 1,
                                        auxArray2 = fluxJumps, 1);
                     }
@@ -1229,7 +1212,6 @@ namespace Nektar
                     }
                 }
                 
-                
                 // Sum each edge contribution
                 for (i = 0; i < nLocalSolutionPts; ++i)
                 {
@@ -1241,24 +1223,25 @@ namespace Nektar
             }
         }        
         
-        
         /**
          * @brief Compute the divergence of the corrective flux for 3D problems.
          *
-         * @param fields            Pointer to fields.
-         * @param fluxX1            Volumetric flux in the physical space in 
-         *                          direction X1.
-         * @param fluxX2            Volumetric flux in the physical space in 
-         *                          direction X2.
-         * @param fluxX3            Volumetric flux in the physical space in 
-         *                          direction X3.
-         * @param numericalFlux     Riemann flux in the physical space.
-         * @param divCFlux          Divergence of the corrective flux for 3D
-         *                          Problems.
+         * @param nConvectiveFields   Number of fields (i.e. independent 
+         *                            variables).
+         * @param fields              Pointer to fields.
+         * @param fluxX1              Volumetric flux in the physical space in 
+         *                            direction X1.
+         * @param fluxX2              Volumetric flux in the physical space in 
+         *                            direction X2.
+         * @param fluxX3              Volumetric flux in the physical space in 
+         *                            direction X3.
+         * @param numericalFlux       Riemann flux in the physical space.
+         * @param divCFlux            Divergence of the corrective flux for 3D
+         *                            Problems.
          *
          * \todo: To be implemented. Switch on shapes eventually here.
          */
-        void AdvectionFR::v_divCFlux_3D(
+        void AdvectionFR::v_DivCFlux_3D(
             const int nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, const NekDouble> &fluxX1, 

@@ -85,17 +85,17 @@ namespace Nektar
             v_Advect(nConvectiveFields, fields, advVel, inarray, outarray);
         }
         
-        void Advection::divCFlux_1D(
+        void Advection::DivCFlux_1D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux)
         {
-            v_divCFlux_1D(nConvectiveFields, fields, fluxX1, numericalFlux, divCFlux);
+            v_DivCFlux_1D(nConvectiveFields, fields, fluxX1, numericalFlux, divCFlux);
         }
         
-        void Advection::divCFlux_2D(
+        void Advection::DivCFlux_2D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
@@ -103,10 +103,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux)
         {
-            v_divCFlux_2D(nConvectiveFields, fields, fluxX1, fluxX2, numericalFlux, divCFlux);
+            v_DivCFlux_2D(nConvectiveFields, fields, fluxX1, fluxX2, numericalFlux, divCFlux);
         }
         
-        void Advection::divCFlux_3D(
+        void Advection::DivCFlux_3D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
@@ -115,7 +115,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux)
         {
-            v_divCFlux_3D(nConvectiveFields, fields, fluxX1, fluxX2, fluxX3, numericalFlux, divCFlux);
+            v_DivCFlux_3D(nConvectiveFields, fields, fluxX1, fluxX2, fluxX3, numericalFlux, divCFlux);
         }
     }
 }

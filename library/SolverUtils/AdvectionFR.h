@@ -99,14 +99,14 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);            
             
-            virtual void v_divCFlux_1D(
+            virtual void v_DivCFlux_1D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1,  
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux);
             
-            virtual void v_divCFlux_2D(
+            virtual void v_DivCFlux_2D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 
@@ -114,7 +114,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux);
             
-            virtual void v_divCFlux_3D(
+            virtual void v_DivCFlux_3D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, const NekDouble> &fluxX1, 

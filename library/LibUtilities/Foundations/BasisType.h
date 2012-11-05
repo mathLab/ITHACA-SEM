@@ -64,6 +64,10 @@ namespace Nektar
             eDG_SD_Right,		//!< Derivative of the Right correction function for SD FR \f$ dGR_{p}(z_i) \f$
             eDG_HU_Left,		//!< Derivative of the left correction function for HU FR  \f$ dGL_{p}(z_i) \f$
             eDG_HU_Right,		//!< Derivative of the Right correction function for HU FR \f$ dGR_{p}(z_i) \f$
+            eDG_c_Left,         //!< Derivative of the left correction function for c FR  \f$ dGL_{p}(z_i) \f$
+            eDG_c_Right,		//!< Derivative of the Right correction function for c FR \f$ dGR_{p}(z_i) \f$
+            eDG_inf_Left,		//!< Derivative of the left correction function for c_inf FR  \f$ dGL_{p}(z_i) \f$
+            eDG_inf_Right,		//!< Derivative of the Right correction function for c_inf FR \f$ dGR_{p}(z_i) \f$
             SIZE_BasisType		//!< Length of enum list
         };
     }

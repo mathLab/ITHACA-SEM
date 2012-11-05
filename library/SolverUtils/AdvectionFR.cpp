@@ -34,9 +34,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/AdvectionFR.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/Foundations/Basis.h>
+#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Polylib/Polylib.h>
 #include <StdRegions/StdSegExp.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+
+
 
 namespace Nektar
 {
@@ -50,21 +55,142 @@ namespace Nektar
             GetAdvectionFactory().RegisterCreatorFunction(
                                         "FRHU", AdvectionFR::create)};
         
+        /**
+         * @brief AdvectionFR uses the Flux Reconstruction (FR) approach to 
+         * compute the advection term. The implementation is only for segments,
+         * quadrilaterals and hexahedra at the moment.
+         * 
+         * \todo Extension to triangles, tetrahedra and other shapes. 
+         * (Long term objective) 
+         */
         AdvectionFR::AdvectionFR(std::string advType):m_advType(advType)
         {
         }
         
+        /**
+         * @brief Initiliase AdvectionFR objects and store them before starting 
+         * the time-stepping.
+         * 
+         * This routine calls the virtual functions #v_SetupMetrics, 
+         * #v_SetupCFunctions and #v_SetupInterpolationMatrices to 
+         * initialise the objects needed by AdvectionFR. 
+         * 
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         */
         void AdvectionFR::v_InitObject(
                 LibUtilities::SessionReaderSharedPtr        pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
-            int i, j, n;
+            v_SetupMetrics(pSession, pFields);
+            v_SetupCFunctions(pSession, pFields);
+            v_SetupInterpolationMatrices(pSession, pFields);
+        }
+        
+        /**
+         * @brief Setup the metric terms to compute the contravariant 
+         * fluxes. (i.e. this special metric terms transform the fluxes
+         * at the interfaces of each element from the physical space to 
+         * the standard space).
+         * 
+         * This routine calls the function #GetEdgeQFactors to compute and 
+         * store the metric factors following an anticlockwise conventions
+         * along the edges/faces of each element. Note: for 1D problem 
+         * the transformation is not needed.
+         * 
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         *
+         * \todo Add the metric terms for 3D Hexahedra.
+         */
+        void AdvectionFR::v_SetupMetrics(
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+        {
+            int n;
+            int nquad0, nquad1, nquad2;
+            int nElements   = pFields[0]->GetExpSize();            
+            int nDimensions = pFields[0]->GetCoordim(0);
+            Array<OneD, LibUtilities::BasisSharedPtr> base;
+            Array<OneD, NekDouble> auxArray1;
+
+            
+            switch (nDimensions)
+            {
+                case 1:
+                {
+                    // nothing to do for 1D problems
+                    break;
+                }
+                case 2:
+                {
+                    m_Q2D_e0 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_Q2D_e1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_Q2D_e2 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_Q2D_e3 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    
+                    for (n = 0; n < nElements; ++n)
+                    {
+                        base        = pFields[0]->GetExp(n)->GetBase();
+                        nquad0      = base[0]->GetNumPoints();
+                        nquad1      = base[1]->GetNumPoints();
+                        
+                        m_Q2D_e0[n] = Array<OneD, NekDouble>(nquad0);
+                        m_Q2D_e1[n] = Array<OneD, NekDouble>(nquad1);
+                        m_Q2D_e2[n] = Array<OneD, NekDouble>(nquad0);
+                        m_Q2D_e3[n] = Array<OneD, NekDouble>(nquad1);
+                    
+                        // Extract the Q factors at each edge point
+                        pFields[0]->GetExp(n)->GetEdgeQFactors(
+                            0, auxArray1 = m_Q2D_e0[n]);
+                        pFields[0]->GetExp(n)->GetEdgeQFactors(
+                            1, auxArray1 = m_Q2D_e1[n]);
+                        pFields[0]->GetExp(n)->GetEdgeQFactors(
+                            2, auxArray1 = m_Q2D_e2[n]);
+                        pFields[0]->GetExp(n)->GetEdgeQFactors(
+                            3, auxArray1 = m_Q2D_e3[n]);
+                    }
+                    break;
+                }
+                case 3:
+                {
+                    ASSERTL0(false,"3DFR Metric terms not implemented yet");
+                    break;
+                }      
+                default:
+                {
+                    ASSERTL0(false, "Expansion dimension not recognised");
+                    break;
+                }
+            }
+        }
+        
+        /**
+         * @brief Setup the derivatives of the correction functions. For more 
+         * details see J Sci Comput (2011) 47: 50–72
+         * 
+         * This routine calls 3 different bases: 
+         *      #eDG_DG_Left - #eDG_DG_Left which recovers a nodal DG scheme,
+         *      #eDG_SD_Left - #eDG_SD_Left which recovers the SD scheme,
+         *      #eDG_HU_Left - #eDG_HU_Left which recovers the Huynh scheme.
+         * The values of the derivatives of the correction function are then 
+         * stored into global variables and reused into the virtual functions 
+         * #v_DivCFlux_1D, #v_DivCFlux_2D, #v_DivCFlux_3D to compute the
+         * the divergence of the correction flux for 1D, 2D or 3D problems. 
+         *
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         */
+        void AdvectionFR::v_SetupCFunctions(
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+        {        
+            int i, j, n, p;
             int nquad0, nquad1, nquad2;
             int nmodes0, nmodes1, nmodes2;
             Array<OneD, NekDouble> auxArray1, auxArray2;
-            
             LibUtilities::PointsKey FRPts0, FRPts1, FRPts2;
-            
+                        
             int nElements   = pFields[0]->GetExpSize();            
             int nDimensions = pFields[0]->GetCoordim(0);
             
@@ -74,9 +200,6 @@ namespace Nektar
             {
                 case 1:
                 {
-                    LibUtilities::BasisSharedPtr BasisFR_Left0;
-                    LibUtilities::BasisSharedPtr BasisFR_Right0;
-                    
                     m_dGL_xi1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     m_dGR_xi1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     
@@ -85,7 +208,10 @@ namespace Nektar
                         base      = pFields[0]->GetExp(n)->GetBase();
                         nquad0    = base[0]->GetNumPoints();
                         nmodes0   = base[0]->GetNumModes();
-                        FRPts0    = base[0]->GetPointsKey();
+                        FRPts0    = base[0]->GetPointsKey();   
+                        
+                        LibUtilities::BasisSharedPtr BasisFR_Left0;
+                        LibUtilities::BasisSharedPtr BasisFR_Right0;
                         
                         m_dGL_xi1[n] = Array<OneD, NekDouble>(nquad0);
                         m_dGR_xi1[n] = Array<OneD, NekDouble>(nquad0);
@@ -94,52 +220,58 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (DG)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                    LibUtilities::eDG_DG_Left,  
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_DG_Left,  
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                    LibUtilities::eDG_DG_Right, 
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_DG_Right, 
+                                nmodes0, 
+                                FRPts0);
                             
-                            BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
+                            BasisFR_Left0  = 
+                                LibUtilities::BasisManager()[FRBase_Left0];
+                            BasisFR_Right0 = 
+                                LibUtilities::BasisManager()[FRBase_Right0];
                         }
                         
                         
-                        else if(m_advType == "FRSD")
+                        else if (m_advType == "FRSD")
                         {
                             // Derivatives of the correction functions (SD)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                    LibUtilities::eDG_SD_Left,  
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_SD_Left,  
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                    LibUtilities::eDG_SD_Right, 
-                                    nmodes0, 
-                                    FRPts0);
-                        
-                            BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
+                                LibUtilities::eDG_SD_Right, 
+                                nmodes0, 
+                                FRPts0);
+                            
+                            BasisFR_Left0  = 
+                                LibUtilities::BasisManager()[FRBase_Left0];
+                            BasisFR_Right0 = 
+                                LibUtilities::BasisManager()[FRBase_Right0];
                         }
                         
                         else if (m_advType == "FRHU")
                         {
                             // Derivatives of the correction functions (HU)
                             const LibUtilities::BasisKey  FRBase_Left0(
-                                    LibUtilities::eDG_HU_Left,  
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_HU_Left,  
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey  FRBase_Right0(
-                                    LibUtilities::eDG_HU_Right, 
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_HU_Right, 
+                                nmodes0, 
+                                FRPts0);
                             
-                            BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
+                            BasisFR_Left0  = 
+                                LibUtilities::BasisManager()[FRBase_Left0];
+                            BasisFR_Right0 = 
+                                LibUtilities::BasisManager()[FRBase_Right0];
                         }
                         
                         // Storing the derivatives into two global variables 
@@ -156,10 +288,10 @@ namespace Nektar
                     LibUtilities::BasisSharedPtr BasisFR_Left1;
                     LibUtilities::BasisSharedPtr BasisFR_Right1;
                     
-                    m_dGL_xi1     = Array<OneD, Array<OneD, NekDouble> >(nElements);
-                    m_dGR_xi1     = Array<OneD, Array<OneD, NekDouble> >(nElements);
-                    m_dGL_xi2     = Array<OneD, Array<OneD, NekDouble> >(nElements);
-                    m_dGR_xi2     = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_dGL_xi1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_dGR_xi1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_dGL_xi2 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_dGR_xi2 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     
                     for (n = 0; n < nElements; ++n)
                     {
@@ -180,88 +312,100 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (DG)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                    LibUtilities::eDG_DG_Left,  
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_DG_Left,  
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                    LibUtilities::eDG_DG_Right, 
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_DG_Right, 
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                    LibUtilities::eDG_DG_Left,  
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_DG_Left,  
+                                nmodes1, 
+                                FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                    LibUtilities::eDG_DG_Right, 
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_DG_Right, 
+                                nmodes1, 
+                                FRPts1);
                             
-                            BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = LibUtilities::BasisManager()[FRBase_Right1];
+                            BasisFR_Left0  = 
+                                LibUtilities::BasisManager()[FRBase_Left0];
+                            BasisFR_Right0 = 
+                                LibUtilities::BasisManager()[FRBase_Right0];
+                            BasisFR_Left1  = 
+                                LibUtilities::BasisManager()[FRBase_Left1];
+                            BasisFR_Right1 = 
+                                LibUtilities::BasisManager()[FRBase_Right1];
                         }
                         
                         
-                        else if(m_advType == "FRSD")
+                        else if (m_advType == "FRSD")
                         {
                             // Derivatives of the correction functions (SD)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                    LibUtilities::eDG_SD_Left,  
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_SD_Left,  
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                    LibUtilities::eDG_SD_Right, 
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_SD_Right, 
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                    LibUtilities::eDG_SD_Left,  
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_SD_Left,  
+                                nmodes1, 
+                                FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                    LibUtilities::eDG_SD_Right, 
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_SD_Right, 
+                                nmodes1, 
+                                FRPts1);
                             
-                            BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = LibUtilities::BasisManager()[FRBase_Right1];
+                            BasisFR_Left0  = 
+                                LibUtilities::BasisManager()[FRBase_Left0];
+                            BasisFR_Right0 = 
+                                LibUtilities::BasisManager()[FRBase_Right0];
+                            BasisFR_Left1  = 
+                                LibUtilities::BasisManager()[FRBase_Left1];
+                            BasisFR_Right1 = 
+                                LibUtilities::BasisManager()[FRBase_Right1];
                         }
                         
                         else if (m_advType == "FRHU")
                         {
                             // Derivatives of the correction functions (HU)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                    LibUtilities::eDG_HU_Left,  
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_HU_Left,  
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                    LibUtilities::eDG_HU_Right, 
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_HU_Right, 
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                    LibUtilities::eDG_HU_Left,  
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_HU_Left,  
+                                nmodes1, 
+                                FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                    LibUtilities::eDG_HU_Right, 
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_HU_Right, 
+                                nmodes1, 
+                                FRPts1);
                             
-                            BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = LibUtilities::BasisManager()[FRBase_Right1];
+                            BasisFR_Left0  = 
+                                LibUtilities::BasisManager()[FRBase_Left0];
+                            BasisFR_Right0 = 
+                                LibUtilities::BasisManager()[FRBase_Right0];
+                            BasisFR_Left1  = 
+                                LibUtilities::BasisManager()[FRBase_Left1];
+                            BasisFR_Right1 = 
+                                LibUtilities::BasisManager()[FRBase_Right1];
                         }
                         
                         // Storing the derivatives into two global variables 
@@ -281,12 +425,12 @@ namespace Nektar
                     LibUtilities::BasisSharedPtr BasisFR_Left2;
                     LibUtilities::BasisSharedPtr BasisFR_Right2;
                     
-                    m_dGL_xi1     = Array<OneD, Array<OneD, NekDouble> >(nElements);
-                    m_dGR_xi1     = Array<OneD, Array<OneD, NekDouble> >(nElements);
-                    m_dGL_xi2     = Array<OneD, Array<OneD, NekDouble> >(nElements);
-                    m_dGR_xi2     = Array<OneD, Array<OneD, NekDouble> >(nElements);
-                    m_dGL_xi3     = Array<OneD, Array<OneD, NekDouble> >(nElements);
-                    m_dGR_xi3     = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_dGL_xi1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_dGR_xi1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_dGL_xi2 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_dGR_xi2 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_dGL_xi3 = Array<OneD, Array<OneD, NekDouble> >(nElements);
+                    m_dGR_xi3 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     
                     for (n = 0; n < nElements; ++n)
                     {
@@ -312,124 +456,142 @@ namespace Nektar
                         {
                             // Derivatives of the correction functions (DG)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                    LibUtilities::eDG_DG_Left,  
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_DG_Left,  
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                    LibUtilities::eDG_DG_Right, 
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_DG_Right, 
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                    LibUtilities::eDG_DG_Left,  
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_DG_Left,  
+                                nmodes1, 
+                                FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                    LibUtilities::eDG_DG_Right, 
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_DG_Right, 
+                                nmodes1, 
+                                FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Left2(
-                                    LibUtilities::eDG_DG_Left,  
-                                    nmodes2, 
-                                    FRPts2);
+                                LibUtilities::eDG_DG_Left,  
+                                nmodes2, 
+                                FRPts2);
                             
                             const LibUtilities::BasisKey FRBase_Right2(
-                                    LibUtilities::eDG_DG_Right, 
-                                    nmodes2, 
-                                    FRPts2);
+                                LibUtilities::eDG_DG_Right, 
+                                nmodes2, 
+                                FRPts2);
                             
-                            BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = LibUtilities::BasisManager()[FRBase_Right1];
-                            BasisFR_Left2  = LibUtilities::BasisManager()[FRBase_Left2];
-                            BasisFR_Right2 = LibUtilities::BasisManager()[FRBase_Right2];
+                            BasisFR_Left0  = 
+                                LibUtilities::BasisManager()[FRBase_Left0];
+                            BasisFR_Right0 = 
+                                LibUtilities::BasisManager()[FRBase_Right0];
+                            BasisFR_Left1  = 
+                                LibUtilities::BasisManager()[FRBase_Left1];
+                            BasisFR_Right1 = 
+                                LibUtilities::BasisManager()[FRBase_Right1];
+                            BasisFR_Left2  = 
+                                LibUtilities::BasisManager()[FRBase_Left2];
+                            BasisFR_Right2 = 
+                                LibUtilities::BasisManager()[FRBase_Right2];
                         }
                         
                         
-                        else if(m_advType == "FRSD")
+                        else if (m_advType == "FRSD")
                         {
                             // Derivatives of the correction functions (SD)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                    LibUtilities::eDG_SD_Left,  
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_SD_Left,  
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                    LibUtilities::eDG_SD_Right, 
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_SD_Right, 
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                    LibUtilities::eDG_SD_Left,  
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_SD_Left,  
+                                nmodes1, 
+                                FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                    LibUtilities::eDG_SD_Right, 
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_SD_Right, 
+                                nmodes1, 
+                                FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Left2(
-                                    LibUtilities::eDG_SD_Left,  
-                                    nmodes2, 
-                                    FRPts2);
+                                LibUtilities::eDG_SD_Left,  
+                                nmodes2, 
+                                FRPts2);
                             
                             const LibUtilities::BasisKey FRBase_Right2(
-                                    LibUtilities::eDG_SD_Right, 
-                                    nmodes2, 
-                                    FRPts2);
+                                LibUtilities::eDG_SD_Right, 
+                                nmodes2, 
+                                FRPts2);
                             
-                            BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = LibUtilities::BasisManager()[FRBase_Right1];
-                            BasisFR_Left2  = LibUtilities::BasisManager()[FRBase_Left2];
-                            BasisFR_Right2 = LibUtilities::BasisManager()[FRBase_Right2];
+                            BasisFR_Left0  = 
+                                LibUtilities::BasisManager()[FRBase_Left0];
+                            BasisFR_Right0 = 
+                                LibUtilities::BasisManager()[FRBase_Right0];
+                            BasisFR_Left1  = 
+                                LibUtilities::BasisManager()[FRBase_Left1];
+                            BasisFR_Right1 = 
+                                LibUtilities::BasisManager()[FRBase_Right1];
+                            BasisFR_Left2  = 
+                                LibUtilities::BasisManager()[FRBase_Left2];
+                            BasisFR_Right2 = 
+                                LibUtilities::BasisManager()[FRBase_Right2];
                         }
                         
                         else if (m_advType == "FRHU")
                         {
                             // Derivatives of the correction functions (HU)
                             const LibUtilities::BasisKey FRBase_Left0(
-                                    LibUtilities::eDG_HU_Left,  
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_HU_Left,  
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Right0(
-                                    LibUtilities::eDG_HU_Right, 
-                                    nmodes0, 
-                                    FRPts0);
+                                LibUtilities::eDG_HU_Right, 
+                                nmodes0, 
+                                FRPts0);
                             
                             const LibUtilities::BasisKey FRBase_Left1(
-                                    LibUtilities::eDG_HU_Left,  
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_HU_Left,  
+                                nmodes1, 
+                                FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Right1(
-                                    LibUtilities::eDG_HU_Right, 
-                                    nmodes1, 
-                                    FRPts1);
+                                LibUtilities::eDG_HU_Right, 
+                                nmodes1, 
+                                FRPts1);
                             
                             const LibUtilities::BasisKey FRBase_Left2(
-                                    LibUtilities::eDG_HU_Left,  
-                                    nmodes2, 
-                                    FRPts2);
+                                LibUtilities::eDG_HU_Left,  
+                                nmodes2, 
+                                FRPts2);
                             
                             const LibUtilities::BasisKey FRBase_Right2(
-                                    LibUtilities::eDG_HU_Right, 
-                                    nmodes2, 
-                                    FRPts2);
+                                LibUtilities::eDG_HU_Right, 
+                                nmodes2, 
+                                FRPts2);
                             
-                            BasisFR_Left0  = LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = LibUtilities::BasisManager()[FRBase_Right1];
-                            BasisFR_Left2  = LibUtilities::BasisManager()[FRBase_Left2];
-                            BasisFR_Right2 = LibUtilities::BasisManager()[FRBase_Right2];
+                            BasisFR_Left0  = 
+                                LibUtilities::BasisManager()[FRBase_Left0];
+                            BasisFR_Right0 = 
+                                LibUtilities::BasisManager()[FRBase_Right0];
+                            BasisFR_Left1  = 
+                                LibUtilities::BasisManager()[FRBase_Left1];
+                            BasisFR_Right1 = 
+                                LibUtilities::BasisManager()[FRBase_Right1];
+                            BasisFR_Left2  = 
+                                LibUtilities::BasisManager()[FRBase_Left2];
+                            BasisFR_Right2 = 
+                                LibUtilities::BasisManager()[FRBase_Right2];
                         }
                         
                         // Storing the derivatives into two global variables 
@@ -448,10 +610,25 @@ namespace Nektar
                     break;
                 }
             }
-            
+        }
+        
+        /**
+         * @brief Setup the interpolation matrices to compute the solution 
+         * as well as the fluxes at the interfaces in case of Gauss points.
+         *
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         *
+         * \todo Complete the implementation in a more efficient way.
+         */
+        void AdvectionFR::v_SetupInterpolationMatrices(
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+        {
             LibUtilities::BasisSharedPtr Basis;
             Basis = pFields[0]->GetExp(0)->GetBasis(0);
-            
+            Array<OneD, LibUtilities::BasisSharedPtr> base;
+
             if (Basis->GetPointsType() == LibUtilities::eGaussGaussLegendre)
             {
                 int n, i, j, nLocalVertices;
@@ -499,6 +676,19 @@ namespace Nektar
             }
         }
         
+        /**
+         * @brief Compute the advection term at each time-step using the Flux
+         * Reconstruction approach (FR).
+         *
+         * @param nConvectiveFields   Number of fields (i.e. independent 
+         *                            variables).
+         * @param fields              Pointer to fields.
+         * @param advVel              Advection velocities.
+         * @param inarray             Solution at the previous time-step.
+         * @param outarray            Advection term to be passed at the 
+         *                            time integration class.
+         *
+         */
         void AdvectionFR::v_Advect(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -506,9 +696,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int i, j, n, yepp;
+            int i, j, n;
             int nLocalSolutionPts, phys_offset;
-            int offsetStart, offsetEnd;
             
             Array<OneD,       NekDouble> auxArray1, auxArray2, auxArray3;
             Array<TwoD, const NekDouble> gmat;
@@ -520,7 +709,6 @@ namespace Nektar
             int nElements       = fields[0]->GetExpSize();            
             int nDimensions     = fields[0]->GetCoordim(0);                        
             int nSolutionPts    = fields[0]->GetTotPoints();
-            int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePts       = fields[0]->GetTrace()->GetTotPoints();
             
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nDimensions);            
@@ -555,19 +743,20 @@ namespace Nektar
             // Computing the Riemann flux at each trace point
             m_riemann->Solve(Fwd, Bwd, numflux);
             
-            // Divergence of the correction and final fluxes  
+            // Divergence of the flux (computing the RHS)  
             switch(nDimensions)
             {
+                // 1D-Problems 
                 case 1:
-                {                    
-                    // Divergence of the discontinuous flux at each solution point
+                {       
+                    // Divergence of the discontinuous flux
                     for (i = 0; i < nConvectiveFields; i++)
                     {
                         for (n = 0; n < nElements; n++)
                         {
                             gmat = fields[0]->GetExp(n)->GetGeom1D()->GetGmat();
                             nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
-                            phys_offset       = fields[i]->GetPhys_Offset(n);
+                            phys_offset       = fields[0]->GetPhys_Offset(n);
                             
                             fields[i]->GetExp(n)->PhysDeriv(
                                 0, auxArray1 = fluxvector[0] + phys_offset, 
@@ -575,65 +764,18 @@ namespace Nektar
                         }
                     }
                     
-                    // Arrays to store the intercell numerical flux jumps
-                    Array<OneD, Array<OneD, NekDouble> > JumpL(nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> > JumpR(nConvectiveFields);
-                    
-                    // Arrays to store the derivatives of the correction flux
-                    Array<OneD, NekDouble> DCL(nSolutionPts/nElements, 0.0); 
-                    Array<OneD, NekDouble> DCR(nSolutionPts/nElements, 0.0);
-                    
-                    // The dimension of each column of the jump arrays
-                    for(i = 0; i < nConvectiveFields; ++i)
+                    // Divergence of the correction flux
+                    Array<OneD, NekDouble> divFC(nSolutionPts, 0.0);
+                    for (i = 0; i < nConvectiveFields; ++i)
                     {
-                        JumpL[i] = Array<OneD, NekDouble>(nElements);
-                        JumpR[i] = Array<OneD, NekDouble>(nElements);
+                        v_divCFlux_1D(nConvectiveFields,
+                                      fields, 
+                                      fluxvector[0], 
+                                      numflux[i], 
+                                      divFC);
                     }
-                    
-                    if (Basis->GetPointsType() == LibUtilities::eGaussGaussLegendre)
-                    {
-                        // Interpolation routine for Gauss points
-                        Array<OneD, NekDouble> interpolatedFlux_m(nElements);
-                        Array<OneD, NekDouble> interpolatedFlux_p(nElements);
-                        
-                        for (j = 0; j < nConvectiveFields; ++j)
-                        {
-                            for (n = 0; n < nElements; ++n)
-                            {
-                                nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
-                                
-                                Array<OneD, NekDouble> physvals(nLocalSolutionPts, 0.0);
-                                physvals = fluxvector[0] + n*nLocalSolutionPts;
-                                
-                                interpolatedFlux_m[n] = Blas::Ddot(
-                                                            nLocalSolutionPts,
-                                                            m_Ixm->GetPtr(), 1,
-                                                            physvals, 1);
-                                
-                                interpolatedFlux_p[n] = Blas::Ddot(
-                                                            nLocalSolutionPts, 
-                                                            m_Ixp->GetPtr(), 1, 
-                                                            physvals, 1);   
-                                
-                                JumpL[j][n] = numflux[j][n]   - interpolatedFlux_m[n];
-                                JumpR[j][n] = numflux[j][n+1] - interpolatedFlux_p[n];
-                            }
-                        }
-                    }
-                    else
-                    {
-                        for(n = 0; n < nElements; ++n)
-                        {
-                            nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
-                            
-                            offsetStart = fields[0]->GetPhys_Offset(n);
-                            offsetEnd   = offsetStart + nLocalSolutionPts - 1;
-                            
-                            JumpL[0][n] = numflux[0][n]   - fluxvector[0][offsetStart];
-                            JumpR[0][n] = numflux[0][n+1] - fluxvector[0][offsetEnd];
-                        }
-                    }
-                    
+
+                    // Computation of the advection term
                     for (n = 0; n < nElements; n++) 
                     {
                         nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
@@ -641,25 +783,10 @@ namespace Nektar
                         
                         gmat = fields[0]->GetExp(n)->GetGeom1D()->GetGmat();
                         jac = fields[0]->GetExp(n)->GetGeom1D()->GetJac();
-
-                        Vmath::Smul(nLocalSolutionPts, 
-                                    JumpL[0][n], 
-                                    auxArray1 = m_dGL_xi1[n], 1, 
-                                    DCL, 1);
-                        
-                        Vmath::Smul(nLocalSolutionPts, 
-                                    JumpR[0][n], 
-                                    auxArray1 = m_dGR_xi1[n], 1, 
-                                    DCR, 1);
-                        
-                        Vmath::Vadd(nLocalSolutionPts, 
-                                    DCL, 1, 
-                                    DCR, 1, 
-                                    auxArray1 = outarray[0] + phys_offset, 1);
                         
                         Vmath::Smul(nLocalSolutionPts, 
                                     1/jac[0], 
-                                    auxArray1 = outarray[0] + phys_offset, 1, 
+                                    auxArray1 = divFC + phys_offset, 1, 
                                     auxArray2 = outarray[0] + phys_offset, 1);
                         
                         Vmath::Vadd(nLocalSolutionPts, 
@@ -669,24 +796,58 @@ namespace Nektar
                     }
                     break;
                 }
+                // 2D-Problems 
                 case 2:
-                {                    
-                    // Derivatives of the discontinuous flux at each solution point
-                    for (i = 0; i < nConvectiveFields; ++i)
+                { 
+                    // Divergence of the discontinuous flux
+                    for (n = 0; n < nElements; ++n)
                     {
-                        for (j = 0; j < nDimensions; ++j)
+                        nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
+                        phys_offset = fields[0]->GetPhys_Offset(n);
+                        
+                        jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
+                        gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
+                        
+                        Array<OneD, NekDouble> f_hat(nLocalSolutionPts, 0.0);
+                        Array<OneD, NekDouble> g_hat(nLocalSolutionPts, 0.0);
+                        
+                        if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype()
+                            == SpatialDomains::eDeformed)
                         {
-                            for (n = 0; n < nElements; ++n)
+                            for (j = 0; j < nLocalSolutionPts; j++)
                             {
-                                phys_offset = fields[i]->GetPhys_Offset(n);
+                                f_hat[j] = 
+                                (fluxvector[0][j+phys_offset]*gmat[0][j] + 
+                                 fluxvector[1][j+phys_offset]*gmat[2][j])*jac[j];
                                 
-                                fields[i]->GetExp(n)->PhysDeriv(
-                                    j, auxArray1 = fluxvector[j] + phys_offset, 
-                                    auxArray2 = Dfluxvector[j] + phys_offset);
+                                g_hat[j] = 
+                                (fluxvector[0][j+phys_offset]*gmat[1][j] + 
+                                 fluxvector[1][j+phys_offset]*gmat[3][j])*jac[j];
                             }
                         }
+                        else
+                        {
+                            for (j = 0; j < nLocalSolutionPts; j++)
+                            {
+                                f_hat[j] = 
+                                (fluxvector[0][j+phys_offset]*gmat[0][0] + 
+                                 fluxvector[1][j+phys_offset]*gmat[2][0])*jac[0];
+                                
+                                g_hat[j] = 
+                                (fluxvector[0][j+phys_offset]*gmat[1][0] + 
+                                 fluxvector[1][j+phys_offset]*gmat[3][0])*jac[0];
+                            }
+                        }
+                        
+                        fields[0]->GetExp(n)->StdPhysDeriv(0, 
+                                    auxArray1 = f_hat, 
+                                    auxArray2 = Dfluxvector[0] + phys_offset); 
+                        
+                        fields[0]->GetExp(n)->StdPhysDeriv(1, 
+                                    auxArray1 = g_hat, 
+                                    auxArray2 = Dfluxvector[1] + phys_offset); 
                     }
-                     
+                                                    
                     // Computation of the divergence of the discontinuous flux
                     Array<OneD, NekDouble> divFD(nSolutionPts, 0.0);
                     Vmath::Vadd(nSolutionPts, 
@@ -698,20 +859,50 @@ namespace Nektar
                     Array<OneD, NekDouble> divFC(nSolutionPts, 0.0);
                     for (j = 0; j < nConvectiveFields; ++j)
                     {
-                        v_divCorrFlux(fields, 
+                        v_divCFlux_2D(nConvectiveFields,
+                                      fields, 
                                       fluxvector[0], 
                                       fluxvector[1],
                                       numflux[j], 
                                       divFC);
                     }     
-                                        
+                        
                     // Computation of the divergence of the final flux
                     Vmath::Vadd(nSolutionPts, 
                                 divFD, 1, 
                                 divFC, 1, 
                                 auxArray1 = outarray[0], 1);
+                    
+                    // Multiplication by the inverse of the jacobian
+                    for (n = 0; n < nElements; ++n)
+                    {
+                        nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
+                        phys_offset = fields[0]->GetPhys_Offset(n);
+                        
+                        jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
+                        gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
+                        
+                        if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype() 
+                            == SpatialDomains::eDeformed)
+                        {
+                            for (i = 0; i < nLocalSolutionPts; i++)
+                            {
+                                outarray[0][phys_offset + i] = 
+                                outarray[0][phys_offset + i]/jac[i];
+                            }
+                        }
+                        else
+                        {
+                            Vmath::Smul(
+                                nLocalSolutionPts, 
+                                1/jac[0], 
+                                auxArray1 = outarray[0] + phys_offset, 1, 
+                                auxArray2 = outarray[0] + phys_offset, 1);
+                        }
+                    }
                     break;
                 }
+                // 3D-Problems 
                 case 3:
                 {
                     ASSERTL0(false,"3D FRDG case not implemented yet");
@@ -720,17 +911,155 @@ namespace Nektar
             }
         }
         
-        
-        
-        void AdvectionFR::v_divCorrFlux(
+        /**
+         * @brief Compute the divergence of the corrective flux for 1D problems.
+         *
+         * @param fields            Pointer to fields.
+         * @param fluxX1            Volumetric flux in the physical space in 
+         *                          direction X1.
+         * @param numericalFlux     Riemann flux in the physical space.
+         * @param divCFlux          Divergence of the corrective flux for 1D
+         *                          Problems.
+         *
+         */
+        void AdvectionFR::v_divCFlux_1D(
+                const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, const NekDouble> &fluxX, 
-                const Array<OneD, const NekDouble> &fluxY, 
+                const Array<OneD, const NekDouble> &fluxX1, 
+                const Array<OneD, const NekDouble> &numericalFlux,
+                      Array<OneD,       NekDouble> &divCFlux)
+        {
+            int i, j, n;
+            int nLocalSolutionPts, phys_offset;
+            
+            Array<OneD,       NekDouble> auxArray1, auxArray2, auxArray3;
+            Array<TwoD, const NekDouble> gmat;
+            Array<OneD, const NekDouble> jac;
+            
+            LibUtilities::BasisSharedPtr Basis;
+            Basis = fields[0]->GetExp(0)->GetBasis(0);
+            
+            int nElements       = fields[0]->GetExpSize();            
+            int nDimensions     = fields[0]->GetCoordim(0);                        
+            int nSolutionPts    = fields[0]->GetTotPoints();
+            int nTracePts       = fields[0]->GetTrace()->GetTotPoints();
+            
+            // Offsets for interface operations
+            int offsetStart, offsetEnd;
+
+            // Arrays to store the intercell numerical flux jumps
+            Array<OneD, Array<OneD, NekDouble> > JumpL(nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > JumpR(nConvectiveFields);
+            
+            // Arrays to store the derivatives of the correction flux
+            Array<OneD, NekDouble> DCL(nSolutionPts/nElements, 0.0); 
+            Array<OneD, NekDouble> DCR(nSolutionPts/nElements, 0.0);
+            
+            // The dimension of each column of the jump arrays
+            for(i = 0; i < nConvectiveFields; ++i)
+            {
+                JumpL[i] = Array<OneD, NekDouble>(nElements);
+                JumpR[i] = Array<OneD, NekDouble>(nElements);
+            }
+            
+            // Interpolation routine for Gauss points and fluxJumps computation                   
+            if (Basis->GetPointsType() == LibUtilities::eGaussGaussLegendre)
+            {
+                Array<OneD, NekDouble> interpolatedFlux_m(nElements);
+                Array<OneD, NekDouble> interpolatedFlux_p(nElements);
+                
+
+                for (n = 0; n < nElements; ++n)
+                {
+                    nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
+                        
+                    Array<OneD, NekDouble> physvals(nLocalSolutionPts, 0.0);
+                    physvals = fluxX1 + n*nLocalSolutionPts;
+                        
+                    interpolatedFlux_m[n] = Blas::Ddot(
+                                                    nLocalSolutionPts,
+                                                    m_Ixm->GetPtr(), 1,
+                                                    physvals, 1);
+                        
+                    interpolatedFlux_p[n] = Blas::Ddot(
+                                                    nLocalSolutionPts, 
+                                                    m_Ixp->GetPtr(), 1, 
+                                                    physvals, 1);   
+                        
+                    JumpL[0][n] = numericalFlux[n]   - interpolatedFlux_m[n];
+                    JumpR[0][n] = numericalFlux[n+1] - interpolatedFlux_p[n];
+                }
+            }
+            
+            // FluxJumps computation without interpolation                  
+            else
+            {
+                for(n = 0; n < nElements; ++n)
+                {
+                    nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
+                    
+                    offsetStart = fields[0]->GetPhys_Offset(n);
+                    offsetEnd   = offsetStart + nLocalSolutionPts - 1;
+                    
+                    JumpL[0][n] = numericalFlux[n]   - fluxX1[offsetStart];
+                    JumpR[0][n] = numericalFlux[n+1] - fluxX1[offsetEnd];
+                }
+            }
+            
+            for (n = 0; n < nElements; ++n)
+            {
+                nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
+                phys_offset       = fields[0]->GetPhys_Offset(n);
+
+                // Left jump multiplied by left derivative of C function
+                Vmath::Smul(nLocalSolutionPts, 
+                            JumpL[0][n], 
+                            auxArray1 = m_dGL_xi1[n], 1, 
+                            DCL, 1);
+            
+                // Right jump multiplied by right derivative of C function
+                Vmath::Smul(nLocalSolutionPts, 
+                            JumpR[0][n], 
+                            auxArray1 = m_dGR_xi1[n], 1, 
+                            DCR, 1);
+            
+                // Assembling divergence of the correction flux
+                Vmath::Vadd(nLocalSolutionPts, 
+                            DCL, 1, 
+                            DCR, 1, 
+                            auxArray1 = divCFlux + phys_offset, 1);
+            }
+        }
+        
+        
+        /**
+         * @brief Compute the divergence of the corrective flux for 2D problems.
+         *
+         * @param fields            Pointer to fields.
+         * @param fluxX1            Volumetric flux in the physical space in 
+         *                          direction X1.
+         * @param fluxX2            Volumetric flux in the physical space in 
+         *                          direction X2.
+         * @param numericalFlux     Riemann flux in the physical space.
+         * @param divCFlux          Divergence of the corrective flux for 2D
+         *                          Problems.
+         *
+         * \todo: Switch on shapes eventually here.
+         */
+        void AdvectionFR::v_divCFlux_2D(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, const NekDouble> &fluxX1, 
+                const Array<OneD, const NekDouble> &fluxX2, 
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux)
         {                   
-            int n, e, i, j, cnt; 
-            int nElements = fields[0]->GetExpSize();
+            int n, e, i, j, cnt;
+            
+            int nElements   = fields[0]->GetExpSize();
+            int nDimensions = fields[0]->GetCoordim(0);  
+            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
+            
             int nLocalSolutionPts;
             int nEdgePts;  
             int trace_offset; 
@@ -739,13 +1068,18 @@ namespace Nektar
             int nquad1;
             
             Array<OneD, NekDouble> auxArray1, auxArray2;
-            Array<TwoD, const NekDouble> gmat;
-            Array<OneD, const NekDouble> jac;
+            Array<OneD, LibUtilities::BasisSharedPtr> base;
             
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
-            Array<OneD, LibUtilities::BasisSharedPtr> base;
+            // Setting up the normals
+            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
+            for(i = 0; i < nDimensions; ++i)
+            {
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+            }
+            fields[0]->GetTrace()->GetNormals(m_traceNormals);
             
             // Loop on the elements
             for(n = 0; n < nElements; ++n)
@@ -758,19 +1092,15 @@ namespace Nektar
                 nquad0 = base[0]->GetNumPoints();
                 nquad1 = base[1]->GetNumPoints();
                 
-                Array<OneD, NekDouble> divCFluxE0(nquad0 * nquad1, 0.0);
-                Array<OneD, NekDouble> divCFluxE1(nquad0 * nquad1, 0.0);
-                Array<OneD, NekDouble> divCFluxE2(nquad0 * nquad1, 0.0);
-                Array<OneD, NekDouble> divCFluxE3(nquad0 * nquad1, 0.0);
+                Array<OneD, const NekDouble> jac  = fields[0]->
+                GetExp(n)->GetGeom2D()->GetJac();
+                Array<TwoD, const NekDouble> gmat = fields[0]->
+                GetExp(n)->GetGeom2D()->GetGmat();
                 
-                Array<OneD, NekDouble> derGE0(nquad1, 0.0);
-                Array<OneD, NekDouble> derGE1(nquad0, 0.0);
-                Array<OneD, NekDouble> derGE2(nquad1, 0.0);
-                Array<OneD, NekDouble> derGE3(nquad0, 0.0);
-                
-                // Get the metric terms
-                gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
-                jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
+                Array<OneD, NekDouble> divCFluxE0(nLocalSolutionPts, 0.0);
+                Array<OneD, NekDouble> divCFluxE1(nLocalSolutionPts, 0.0);
+                Array<OneD, NekDouble> divCFluxE2(nLocalSolutionPts, 0.0);
+                Array<OneD, NekDouble> divCFluxE3(nLocalSolutionPts, 0.0);
                 
                 // Loop on the edges
                 for(e = 0; e < fields[0]->GetExp(n)->GetNedges(); ++e)
@@ -778,15 +1108,15 @@ namespace Nektar
                     // Number of edge points of edge e
                     nEdgePts = fields[0]->GetExp(n)->GetEdgeNumPoints(e);
                     
-                    Array<OneD, NekDouble> tmparrayX(nEdgePts, 0.0);
-                    Array<OneD, NekDouble> tmparrayY(nEdgePts, 0.0);
+                    Array<OneD, NekDouble> tmparrayX1(nEdgePts, 0.0);
+                    Array<OneD, NekDouble> tmparrayX2(nEdgePts, 0.0);
                     Array<OneD, NekDouble> fluxN    (nEdgePts, 0.0);
                     Array<OneD, NekDouble> fluxT    (nEdgePts, 0.0);                    
                     Array<OneD, NekDouble> fluxJumps(nEdgePts, 0.0);
                     
                     // Offset of the trace space correspondent to edge e
                     trace_offset  = fields[0]->GetTrace()->GetPhys_Offset(
-                                                elmtToTrace[n][e]->GetElmtId());
+                                    elmtToTrace[n][e]->GetElmtId());
                     
                     // Get the normals of edge e
                     const Array<OneD, const Array<OneD, NekDouble> > &normals = 
@@ -796,24 +1126,22 @@ namespace Nektar
                     // them accordingly to the order of the trace space 
                     fields[0]->GetExp(n)->GetEdgePhysVals(
                                                 e, elmtToTrace[n][e],
-                                                fluxX + phys_offset,
-                                                auxArray1 = tmparrayX);
+                                                fluxX1 + phys_offset,
+                                                auxArray1 = tmparrayX1);
                     
                     // Extract the edge values of flux-y on edge e and order 
                     // them accordingly to the order of the trace space
                     fields[0]->GetExp(n)->GetEdgePhysVals(
                                                 e, elmtToTrace[n][e],
-                                                fluxY + phys_offset,
-                                                auxArray1 = tmparrayY);
+                                                fluxX2 + phys_offset,
+                                                auxArray1 = tmparrayX2);
                     
                     // Multiply the edge components of the flux by the normal
-                    for (i = 0; i < normals[0].num_elements(); ++i)
+                    for (i = 0; i < nEdgePts; ++i)
                     {
-                        fluxN[i] = tmparrayX[i]*normals[0][i] + 
-                        tmparrayY[i]*normals[1][i];
-                        
-                        fluxT[i] = -tmparrayX[i]*normals[1][i] + 
-                        tmparrayY[i]*normals[0][i];
+                        fluxN[i] = 
+                        tmparrayX1[i]*m_traceNormals[0][trace_offset+i] + 
+                        tmparrayX2[i]*m_traceNormals[1][trace_offset+i];
                     }
                     
                     // Subtract to the Riemann flux the discontinuous flux 
@@ -821,33 +1149,49 @@ namespace Nektar
                                 &numericalFlux[trace_offset], 1, 
                                 &fluxN[0], 1, &fluxJumps[0], 1);
                     
-                    // Check the ordering of the jumps vector
-                    if(fields[0]->GetExp(n)->GetEorient(e) == StdRegions::eBackwards)
+                    // Check the ordering of the jump vectors
+                    if (fields[0]->GetExp(n)->GetEorient(e) == 
+                        StdRegions::eBackwards)
                     {
                         Vmath::Reverse(nquad0, 
                                        auxArray1 = fluxJumps, 1,
                                        auxArray2 = fluxJumps, 1);
                     }
                     
-                    // Multiply jumps by derivative of the correction functions
+                    for (i = 0; i < nEdgePts; ++i)
+                    {
+                        if (m_traceNormals[0][trace_offset+i] != normals[0][i] 
+                        || m_traceNormals[1][trace_offset+i] != normals[1][i])
+                        {
+                            fluxJumps[i] = -fluxJumps[i];
+                        }
+                    }
+                                        
+                    // Multiply jumps by derivatives of the correction functions
                     switch (e) 
                     {
                         case 0:
                             for (i = 0; i < nquad0; ++i)
                             {
+                                // Multiply fluxJumps by Q factors
+                                fluxJumps[i] = -(m_Q2D_e0[n][i]) * fluxJumps[i];
+                                
                                 for (j = 0; j < nquad1; ++j)
                                 {
                                     cnt = i + j*nquad0;
-                                    divCFluxE0[cnt] = -fluxJumps[i] * m_dGL_xi2[n][j];
+                                    divCFluxE0[cnt] = fluxJumps[i] * m_dGL_xi2[n][j];
                                 }
                             }
                             break;
                         case 1:
                             for (i = 0; i < nquad1; ++i)
                             {
+                                // Multiply fluxJumps by Q factors
+                                fluxJumps[i] = (m_Q2D_e1[n][i]) * fluxJumps[i];
+                                
                                 for (j = 0; j < nquad0; ++j)
                                 {
-                                    cnt = (nquad0)*i + nquad0-1 - j;
+                                    cnt = (nquad0)*i + j;
                                     divCFluxE1[cnt] = fluxJumps[i] * m_dGR_xi1[n][j];
                                 }
                             }
@@ -855,20 +1199,26 @@ namespace Nektar
                         case 2:
                             for (i = 0; i < nquad0; ++i)
                             {
+                                // Multiply fluxJumps by Q factors
+                                fluxJumps[i] = (m_Q2D_e2[n][i]) * fluxJumps[i];
+                                
                                 for (j = 0; j < nquad1; ++j)
                                 {
-                                    cnt = (nquad0*nquad1 - 1) - j*nquad0 - i;
+                                    cnt = (nquad0 - 1) + j*nquad0 - i;
                                     divCFluxE2[cnt] = fluxJumps[i] * m_dGR_xi2[n][j];
                                 }
                             }
                             break;
-                        case 3:  
+                        case 3:
                             for (i = 0; i < nquad1; ++i)
                             {
+                                // Multiply fluxJumps by Q factors
+                                fluxJumps[i] = -(m_Q2D_e3[n][i]) * fluxJumps[i];
                                 for (j = 0; j < nquad0; ++j)
                                 {
                                     cnt = (nquad0*nquad1 - nquad0) + j - i*nquad0;
-                                    divCFluxE3[cnt] = -fluxJumps[i] * m_dGL_xi1[n][j];
+                                    divCFluxE3[cnt] = fluxJumps[i] * m_dGL_xi1[n][j];
+                                    
                                 }
                             }
                             break;
@@ -879,34 +1229,45 @@ namespace Nektar
                     }
                 }
                 
-                // Multiply each edge contribution by the proper metrics
-                Vmath::Smul(nLocalSolutionPts, 
-                            1/jac[0], 
-                            auxArray1 = divCFluxE0, 1, 
-                            auxArray2 = divCFluxE0, 1);
                 
-                Vmath::Smul(nLocalSolutionPts, 
-                            1/jac[0], 
-                            auxArray1 = divCFluxE1, 1, 
-                            auxArray2 = divCFluxE1, 1);
-                
-                Vmath::Smul(nLocalSolutionPts, 
-                            1/jac[0], 
-                            auxArray1 = divCFluxE2, 1, 
-                            auxArray2 = divCFluxE2, 1);
-                
-                Vmath::Smul(nLocalSolutionPts, 
-                            1/jac[0], 
-                            auxArray1 = divCFluxE3, 1, 
-                            auxArray2 = divCFluxE3, 1);
-
                 // Sum each edge contribution
-                for (i = 0; i < nquad0 * nquad1; ++i)
+                for (i = 0; i < nLocalSolutionPts; ++i)
                 {
-                    divCFlux[phys_offset + i] = divCFluxE0[i] + divCFluxE1[i] +
-                    divCFluxE2[i] + divCFluxE3[i];
+                    divCFlux[phys_offset + i] = divCFluxE0[i] + 
+                    divCFluxE1[i] +
+                    divCFluxE2[i] + 
+                    divCFluxE3[i];
                 }
             }
+        }        
+        
+        
+        /**
+         * @brief Compute the divergence of the corrective flux for 3D problems.
+         *
+         * @param fields            Pointer to fields.
+         * @param fluxX1            Volumetric flux in the physical space in 
+         *                          direction X1.
+         * @param fluxX2            Volumetric flux in the physical space in 
+         *                          direction X2.
+         * @param fluxX3            Volumetric flux in the physical space in 
+         *                          direction X3.
+         * @param numericalFlux     Riemann flux in the physical space.
+         * @param divCFlux          Divergence of the corrective flux for 3D
+         *                          Problems.
+         *
+         * \todo: To be implemented. Switch on shapes eventually here.
+         */
+        void AdvectionFR::v_divCFlux_3D(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, const NekDouble> &fluxX1, 
+            const Array<OneD, const NekDouble> &fluxX2,
+            const Array<OneD, const NekDouble> &fluxX3, 
+            const Array<OneD, const NekDouble> &numericalFlux,
+                  Array<OneD,       NekDouble> &divCFlux)
+        {
+
         }
         
     }

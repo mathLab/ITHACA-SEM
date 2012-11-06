@@ -78,7 +78,7 @@ namespace Nektar
             m_equ[0]->PrintSummary(out);
             m_equ[0]->DoInitialise();
             
-            //--------------------------------------------------------- SFD Routine ---------------------------------------------------------
+            // - SFD Routine -
             int NumElmVelocity(0);
             NumElmVelocity = m_equ[0]->GetNumElmVelocity();
             
@@ -111,7 +111,7 @@ namespace Nektar
             cout << "\tX = " << m_X << endl;
             cout << "----------------------------------------------------" << endl;
             
-            m_equ[0]->SetStepsToOne();			
+            m_equ[0]->SetStepsToOne(); //m_steps is set to 1. Then "m_equ[0]->DoSolve()" will run for only one time step			
             ofstream m_file("ConvergenceHistory.txt", ios::out | ios::trunc);
             
             for(int i = 0; i < NumElmVelocity; ++i)
@@ -145,12 +145,12 @@ namespace Nektar
                 m_n++;
             }
             
-            cout << "FINAL Filter Width: Delta = " << m_Delta << "; FINAL Control Coeff: X = " << m_X << endl;
+            cout << "\nFINAL Filter Width: Delta = " << m_Delta << "; FINAL Control Coeff: X = " << m_X << "\n" << endl;
             m_Check++;
             m_equ[0]->Checkpoint_Output(m_Check);
             
             m_file.close();
-            //--------------------------------------------------------- End SFD Routine ---------------------------------------------------------
+            // - End SFD Routine -
             
             m_equ[0]->Output();
             
@@ -201,7 +201,7 @@ namespace Nektar
             m_Growing=false;
             m_Shrinking=false;
             
-            m_MinNormDiff_q_qBar = 1000;
+            m_MinNormDiff_q_qBar = 9999;
             m_MaxNormDiff_q_qBar = 0;
             m_First_MinNormDiff_q_qBar = 0;
             m_Oscillation = 0;
@@ -240,13 +240,11 @@ namespace Nektar
                     m_First_MinNormDiff_q_qBar=0;
                 }
             }
-            
             if (NormDiff_q_qBar[0] < m_MaxNormDiff_q_qBar && m_Growing==true)
             {
                 m_Growing=false;
                 m_MaxNormDiff_q_qBar=0;
             }
-            
             if (m_Growing==false && NormDiff_q_qBar[0] < m_MinNormDiff_q_qBar)
             {
                 m_MinNormDiff_q_qBar=NormDiff_q_qBar[0];
@@ -256,14 +254,13 @@ namespace Nektar
                     m_First_MinNormDiff_q_qBar=m_MinNormDiff_q_qBar;
                 }
             }
-            
             if (NormDiff_q_qBar[0] > m_MinNormDiff_q_qBar && m_Shrinking==true)
             {
                 m_Shrinking=false;
                 m_MinNormDiff_q_qBar=1000;
                 m_Oscillation=m_Oscillation+1;
             }
-            
+			
             if (m_Oscillation==25)
             {					
                 m_Delta = m_Delta + 0.25;

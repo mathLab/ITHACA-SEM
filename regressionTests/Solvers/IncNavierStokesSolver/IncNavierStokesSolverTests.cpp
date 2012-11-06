@@ -85,6 +85,9 @@ int main(int argc, char* argv[])
     Execute("IncNavierStokesSolver","Test_ChanFlow_m8_singular.xml","Channel Flow P=8 Singularity Check");
     Execute("IncNavierStokesSolver","Test_ChanFlow2D_bcsfromfiles.xml","Channel Flow P=5 Boundary Conditions from files");  
     
+	//Test Steady State by Selective Frequancy Damping
+	Execute("IncNavierStokesSolver","SteadyState_ChanFlow.xml","Channel Flow P=5 - Steady State by Selective Frequency Damping"); 
+	
     //Test Kovasznay Flow
     Execute("IncNavierStokesSolver","Test_KovaFlow_m3.xml","Kovasznay Flow P=3");
     Execute("IncNavierStokesSolver","Test_KovaFlow_m8.xml","Kovasznay Flow P=8");

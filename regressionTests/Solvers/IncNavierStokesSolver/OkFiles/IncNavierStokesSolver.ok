@@ -32,6 +32,14 @@ L inf error (variable v) : 2.54448e-13
 L 2 error (variable p) : 4.8272e-11
 L inf error (variable p) : 1.03323e-10
 ----------------------------------------
+SteadyState_ChanFlow.xml
+L 2 error (variable u) : 1.33864e-06
+L inf error (variable u) : 5.57033e-06
+L 2 error (variable v) : 9.72445e-07
+L inf error (variable v) : 3.82138e-06
+L 2 error (variable p) : 4.40799e-07
+L inf error (variable p) : 6.43728e-07
+----------------------------------------
 Test_KovaFlow_m3.xml
 L 2 error (variable u) : 0.343606
 L inf error (variable u) : 0.322039

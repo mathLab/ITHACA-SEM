@@ -1599,11 +1599,11 @@ namespace Nektar
                     m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
                 }
                 
-                //m_initialStep = true; //TTTTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTTTTTTTT !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                m_initialStep = true; 
                 EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
                 SetUpCoupledMatrix(0.0, Velocity_Phys, true);
                 SolveLinearNS(RHS_Coeffs);
-                //m_initialStep = false; //TTTTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTTTTTTTT !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                m_initialStep = false; 
             }
             if(m_counter > 1)
             {
@@ -1615,9 +1615,7 @@ namespace Nektar
                 }
                 SolveLinearNS(RHS_Coeffs);
             }
-            
-            //SolveLinearNS(RHS_Coeffs);
-            
+                        
             for(int i = 0; i < m_velocity.num_elements(); ++i)
             {
                 m_fields[m_velocity[i]]->BwdTrans_IterPerExp(RHS_Coeffs[i], RHS_Phys[i]);
@@ -1731,51 +1729,6 @@ namespace Nektar
 		}
 	}
 	
-	
-	void CoupledLinearNS::PressureReconstruction(void)
-	{
-		//We solve the Poisson equation for the pressure with div((u.grad)u) as forcing term
-		Array<OneD, Array<OneD, NekDouble> > Velocity_Phys(m_velocity.num_elements());
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{	
-			Velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
-		}
-		
-		Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > tmp_Div_Eval_Adv(m_velocity.num_elements());
-		
-		Array<OneD, NekDouble > Div_Eval_Adv(m_fields[m_velocity[0]]->GetTotPoints(), 0.0);
-		Array<OneD, NekDouble > Div_Eval_Adv_Coeffs(m_fields[m_velocity[0]]->GetNcoeffs(), 0.0);
-		
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			Eval_Adv[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			tmp_Div_Eval_Adv[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-		}
-		
-		//We evaluate the nonlinear term (u.grad)u
-		EvaluateAdvectionTerms(Velocity_Phys, Eval_Adv);
-		
-		//And we calculate the divergence of this nonlinear tern
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			m_fields[m_velocity[i]]->PhysDeriv(i, Eval_Adv[i], tmp_Div_Eval_Adv[i]);
-		}
-		Vmath::Vadd(Div_Eval_Adv.num_elements(), tmp_Div_Eval_Adv[0], 1, tmp_Div_Eval_Adv[1], 1, Div_Eval_Adv, 1);				
-		
-						
-		//-------------------------------------------------------------------------------------------------	
-		StdRegions::ConstFactorMap factors;
-		factors[StdRegions::eFactorLambda] = 0;
-		
-        // Solver Pressure Poisson Equation 
-		//m_pressure->HelmSolve(Div_Eval_Adv, m_pressure->UpdateCoeffs(), NullFlagList, factors);
-		//m_fields[1]->HelmSolve(Div_Eval_Adv, m_pressure->UpdateCoeffs(), NullFlagList, factors);
-		//-------------------------------------------------------------------------------------------------	
-		
-		cout<<"Reconstruction of the pressure \n";
-	}	
 	
 	void CoupledLinearNS::EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
 											  Array<OneD, Array<OneD, NekDouble> > &outarray)

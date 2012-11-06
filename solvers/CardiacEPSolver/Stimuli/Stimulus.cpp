@@ -44,7 +44,7 @@ namespace Nektar
 {
     StimulusFactory& GetStimulusFactory()
     {
-        typedef Loki::SingletonHolder<CellModelFactory,
+        typedef Loki::SingletonHolder<StimulusFactory,
         Loki::CreateUsingNew,
         Loki::NoDestroy > Type;
         return Type::Instance();

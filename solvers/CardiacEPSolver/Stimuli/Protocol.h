@@ -4,13 +4,35 @@
 //
 // For more information, please see: http://www.nektar.info
 //
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
 //
 // Description: Stimulus protocol base class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-//#ifndef NEKTAR_SOLVERS_ADRSOLVER_CELLMODELS_CELLMODEL
-//#define NEKTAR_SOLVERS_ADRSOLVER_CELLMODELS_CELLMODEL
+#ifndef NEKTAR_SOLVERS_CARDIACEPSOLVER_STIMULI_PROTOCOL
+#define NEKTAR_SOLVERS_CARDIACEPSOLVER_STIMULI_PROTOCOL
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
@@ -30,7 +52,38 @@ namespace Nektar
     /// Protocol base class.
     class Protocol
     {
-    
+    public:
+        Protocol(const LibUtilities::SessionReaderSharedPtr& pSession,
+                 const MultiRegions::ExpListSharedPtr& pField);
+        
+        virtual ~Protocol() {}
+        
+        /// Initialise the protocol storage and set initial conditions
+        void Initialise();
+        
+        /// Compute the derivatives of cell model variables
+        NekDouble GetAmplitude(
+                               const NekDouble time)
+        {
+            v_GetAmplitude(time);
+        }
+        
+        /// Print a summary of the cell model
+        void PrintSummary(std::ostream &out)
+        {
+            v_PrintSummary(out);
+        }
+        
+    protected:
+        /// Session
+        LibUtilities::SessionReaderSharedPtr m_session;
+        /// Transmembrane potential field from PDE system
+        
+        virtual NekDouble v_GetAmplitude(
+                              const NekDouble time) = 0;
+        
+        virtual void v_PrintSummary(std::ostream &out) = 0;
+        
     };
     
 }

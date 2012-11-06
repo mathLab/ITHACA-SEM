@@ -44,7 +44,7 @@ namespace Nektar
 {
     StimulusFactory& GetStimulusFactory()
     {
-        typedef Loki::SingletonHolder<CellModelFactory,
+        typedef Loki::SingletonHolder<StimulusFactory,
         Loki::CreateUsingNew,
         Loki::NoDestroy > Type;
         return Type::Instance();
@@ -64,11 +64,13 @@ namespace Nektar
      * Stimulus base class constructor.
      */
     Stimulus::Stimulus(const LibUtilities::SessionReaderSharedPtr& pSession,
-                         const MultiRegions::ExpListSharedPtr& pField)
+                         const MultiRegions::ExpListSharedPtr& pField,
+                        const TiXmlElement* pXml)
     {
         m_session = pSession;
         m_field = pField;
         m_nq = pField->GetTotPoints();
+        
  
     }
     

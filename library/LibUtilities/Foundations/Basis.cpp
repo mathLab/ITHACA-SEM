@@ -39,7 +39,7 @@
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
-
+#include <boost/math/special_functions/gamma.hpp>
 
 namespace Nektar
 {
@@ -967,20 +967,33 @@ namespace Nektar
                     NekDouble sign = pow(-1.0, p);
                     
                     // Factors to build the scheme
-                    NekDouble ap;
-                    ap = tgamma(2 * p + 1) / (pow(2.0, p) * tgamma(p + 1) * tgamma(p + 1));
-                    double c = 2 * p / ((2 * p + 1) * (p + 1) * tgamma(p + 1) * tgamma(p + 1));
-                    //double c = 2 * (p + 1) / ((2 * p + 1) * p * tgamma(p + 1) * tgamma(p + 1));
-                    double c_p = -2/((2 * p + 1) * (ap * tgamma(p + 1))*(ap * tgamma(p + 1)));
+                    NekDouble ap = boost::math::tgamma(2 * p + 1) / (pow(2.0, p)
+                                 * boost::math::tgamma(p + 1) 
+                                 * boost::math::tgamma(p + 1));
                     
-                    if (c < c_p)
+                    NekDouble c = 2 * p / ((2 * p + 1) * (p + 1) 
+                             * boost::math::tgamma(p + 1) 
+                             * boost::math::tgamma(p + 1));
+                    
+                    /*
+                    NekDouble c = 2 * (p + 1) / ((2 * p + 1) * p 
+                                * boost::math::tgamma(p + 1) 
+                                * boost::math::tgamma(p + 1));
+                    */
+                    
+                    NekDouble c_min = -2/((2 * p + 1) 
+                                    * (ap * boost::math::tgamma(p + 1)) 
+                                    * (ap * boost::math::tgamma(p + 1)));
+                    
+                    if (c < c_min)
                     {
                         ASSERTL0(false, "c out of bounds");
                         break;
                     }
                     
-                    NekDouble etap;
-                    etap = 0.5 * c * (2 * p + 1) * pow (1.0 * ap * tgamma(p + 1), 2 );
+                    NekDouble etap = 0.5 * c * (2 * p + 1) 
+                                   * (ap * boost::math::tgamma(p + 1)) 
+                                   * (ap * boost::math::tgamma(p + 1));
                     
                     NekDouble overeta = 1.0 / (1.0 + etap);
                     
@@ -991,8 +1004,6 @@ namespace Nektar
                     Polylib::jacobd(numPoints, z.data(), &(dLp[0]),  p,   0.0, 0.0);
                     Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
                     Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
-                    
-                    
                     
                     // Building the DG_c_Left
                     for(i = 0; i < numPoints; ++i)
@@ -1027,20 +1038,32 @@ namespace Nektar
                     NekDouble sign = pow(-1.0, p);
                     
                     // Factors to build the scheme
-                    NekDouble ap;
-                    ap = tgamma(2 * p + 1) / (pow(2.0, p) * tgamma(p + 1) * tgamma(p + 1));
-                    double c = 2 * p / ((2 * p + 1) * (p + 1) * tgamma(p + 1) * tgamma(p + 1));
-                    //double c = 2 * (p + 1) / ((2 * p + 1) * p * tgamma(p + 1) * tgamma(p + 1));
-                    double c_p = -2/((2 * p + 1) * (ap * tgamma(p + 1))*(ap * tgamma(p + 1)));
+                    NekDouble ap = boost::math::tgamma(2 * p + 1) / (pow(2.0, p)
+                                 * boost::math::tgamma(p + 1) 
+                                 * boost::math::tgamma(p + 1));
                     
-                    if (c < c_p)
+                    NekDouble c = 2 * p / ((2 * p + 1) * (p + 1) 
+                                * boost::math::tgamma(p + 1) 
+                                * boost::math::tgamma(p + 1));
+                    /*
+                    NekDouble c = 2 * (p + 1) / ((2 * p + 1) * p 
+                                  * boost::math::tgamma(p + 1) 
+                                  * boost::math::tgamma(p + 1));
+                    */
+                    
+                    NekDouble c_min = -2/((2 * p + 1) 
+                                    * (ap * boost::math::tgamma(p + 1)) 
+                                    * (ap * boost::math::tgamma(p + 1)));
+                    
+                    if (c < c_min)
                     {
                         ASSERTL0(false, "c out of bounds");
                         break;
                     }
                     
-                    NekDouble etap;
-                    etap = 0.5 * c * (2 * p + 1) * pow (1.0 * ap * tgamma(p + 1), 2 );
+                    NekDouble etap = 0.5 * c * (2 * p + 1) 
+                                   * (ap * tgamma(p + 1)) 
+                                   * (ap * tgamma(p + 1));
                     
                     NekDouble overeta = 1.0 / (1.0 + etap);
                     

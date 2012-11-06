@@ -1062,8 +1062,8 @@ namespace Nektar
                     }
                     
                     NekDouble etap = 0.5 * c * (2 * p + 1) 
-                                   * (ap * tgamma(p + 1)) 
-                                   * (ap * tgamma(p + 1));
+                                   * (ap * boost::math::tgamma(p + 1)) 
+                                   * (ap * boost::math::tgamma(p + 1));
                     
                     NekDouble overeta = 1.0 / (1.0 + etap);
                     

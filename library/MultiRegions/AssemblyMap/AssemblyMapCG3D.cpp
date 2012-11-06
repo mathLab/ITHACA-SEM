@@ -748,7 +748,7 @@ namespace Nektar
                     {
                         for (j = 0; j < locExpansion->GetNverts(); ++j)
                         {
-                            int vid = locExpansion->GetGeom3D()->GetVid(j);
+                            int vid = locExpansion->GetGeom3D()->GetVid(j)+1;
                             
                             if (foundVerts.count(vid) == 0)
                             {
@@ -759,7 +759,7 @@ namespace Nektar
 
                         for (j = 0; j < locExpansion->GetNedges(); ++j)
                         {
-                            int eid = locExpansion->GetGeom3D()->GetEid(j);
+                            int eid = locExpansion->GetGeom3D()->GetEid(j)+1;
 
                             if (foundEdges.count(eid) == 0)
                             {
@@ -770,7 +770,7 @@ namespace Nektar
 
                         for (j = 0; j < locExpansion->GetNfaces(); ++j)
                         {
-                            int fid = locExpansion->GetGeom3D()->GetFid(j);
+                            int fid = locExpansion->GetGeom3D()->GetFid(j)+1;
                             
                             if (foundFaces.count(fid) == 0)
                             {
@@ -788,7 +788,7 @@ namespace Nektar
 
                 int unique_verts = foundVerts.size();
                 int unique_edges = foundEdges.size();
-                int unique_faces = foundEdges.size();
+                int unique_faces = foundFaces.size();
 
                 // Now construct temporary GS objects. These will be used to
                 // populate the arrays tmp3 and tmp4 with the multiplicity of
@@ -813,9 +813,9 @@ namespace Nektar
                 {
                     if (tmp4[i] > 1.0)
                     {
-                        if (vertReorderedGraphVertId.count(procVerts[i]) == 0)
+                        if (vertReorderedGraphVertId.count(procVerts[i]-1) == 0)
                         {
-                            partVerts.insert(vertTempGraphVertId[procVerts[i]]);
+                            partVerts.insert(vertTempGraphVertId[procVerts[i]-1]);
                         }
                     }
                 }
@@ -824,9 +824,9 @@ namespace Nektar
                 {
                     if (tmp5[i] > 1.0)
                     {
-                        if (edgeReorderedGraphVertId.count(procEdges[i]) == 0)
+                        if (edgeReorderedGraphVertId.count(procEdges[i]-1) == 0)
                         {
-                            partVerts.insert(edgeTempGraphVertId[procEdges[i]]);
+                            partVerts.insert(edgeTempGraphVertId[procEdges[i]-1]);
                         }
                     }
                 }
@@ -835,14 +835,14 @@ namespace Nektar
                 {
                     if (tmp6[i] > 1.0)
                     {
-                        if (faceReorderedGraphVertId.count(procFaces[i]) == 0)
+                        if (faceReorderedGraphVertId.count(procFaces[i]-1) == 0)
                         {
-                            partVerts.insert(faceTempGraphVertId[procFaces[i]]);
+                            partVerts.insert(faceTempGraphVertId[procFaces[i]-1]);
                         }
                     }
                 }
             }
-
+            
             /**
              * STEP 3: Reorder graph for optimisation.
              */
@@ -887,6 +887,18 @@ namespace Nektar
                 }
             }
 
+            // For parallel multi-level static condensation determine the lowest
+            // static condensation level amongst processors.
+            if (m_solnType == eIterativeMultiLevelStaticCond)
+            {
+                m_lowestStaticCondLevel = bottomUpGraph->GetNlevels()-1;
+                m_comm->AllReduce(m_lowestStaticCondLevel, 
+                                  LibUtilities::ReduceMax);
+            }
+            else
+            {
+                m_lowestStaticCondLevel = 0;
+            }
 
             /**
              * STEP 4: Fill the #vertReorderedGraphVertId and
@@ -960,7 +972,7 @@ namespace Nektar
             {
                 graphVertOffset[i] += graphVertOffset[i-1];
             }
-
+            
             // Allocate the proper amount of space for the class-data
             m_numLocalCoeffs                 = numLocalCoeffs;
             m_numGlobalDirBndCoeffs          = graphVertOffset[firstNonDirGraphVertId];
@@ -981,8 +993,11 @@ namespace Nektar
             m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
             for(i = 0; i < m_numPatches; ++i)
             {
-                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
-                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() - locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) 
+                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) 
+                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() - 
+                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
             }
 
 

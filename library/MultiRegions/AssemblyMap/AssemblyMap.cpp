@@ -936,14 +936,9 @@ namespace Nektar
         const void AssemblyMap::UniversalAssembleBnd(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
-            /*
-            if (m_staticCondLevel < m_lowestStaticCondLevel)
-            {
-            */
             ASSERTL1(pGlobal.num_elements() == m_numGlobalBndCoeffs,
                      "Wrong size.");
             Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
-            //}
         }
 
         const void AssemblyMap::UniversalAssembleBnd(

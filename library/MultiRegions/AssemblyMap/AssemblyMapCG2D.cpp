@@ -1045,8 +1045,8 @@ namespace Nektar
                     {
                         for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
                         {
-                            int vid = locExpansion->GetGeom2D()->GetVid(j);
-                            int eid = locExpansion->GetGeom2D()->GetEid(j);
+                            int vid = locExpansion->GetGeom2D()->GetVid(j)+1;
+                            int eid = locExpansion->GetGeom2D()->GetEid(j)+1;
                         
                             if (foundVerts.count(vid) == 0)
                             {
@@ -1090,9 +1090,9 @@ namespace Nektar
                 {
                     if (tmp3[i] > 1.0)
                     {
-                        if (ReorderedGraphVertId[0].count(procVerts[i]) == 0)
+                        if (ReorderedGraphVertId[0].count(procVerts[i]-1) == 0)
                         {
-                            partVerts.insert(vertTempGraphVertId[procVerts[i]]);
+                            partVerts.insert(vertTempGraphVertId[procVerts[i]-1]);
                         }
                     }
                 }
@@ -1101,9 +1101,9 @@ namespace Nektar
                 {
                     if (tmp4[i] > 1.0)
                     {
-                        if (ReorderedGraphVertId[1].count(procEdges[i]) == 0)
+                        if (ReorderedGraphVertId[1].count(procEdges[i]-1) == 0)
                         {
-                            partVerts.insert(edgeTempGraphVertId[procEdges[i]]);
+                            partVerts.insert(edgeTempGraphVertId[procEdges[i]-1]);
                         }
                     }
                 }
@@ -1152,6 +1152,10 @@ namespace Nektar
                 m_lowestStaticCondLevel = bottomUpGraph->GetNlevels()-1;
                 vCommRow->AllReduce(m_lowestStaticCondLevel, 
                                     LibUtilities::ReduceMax);
+            }
+            else
+            {
+                m_lowestStaticCondLevel = 0;
             }
             
             /**

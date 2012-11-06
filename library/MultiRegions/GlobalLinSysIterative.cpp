@@ -428,10 +428,12 @@ namespace Nektar
                 ASSERTL0(k < 20000,
                          "Exceeded maximum number of iterations (20000)");
 
+                /*
                 ASSERTL0(eps*bb_inv <= 1.0 || k < 10,
                          "Conjugate gradient diverged. Tolerance too small?"
                          "Minimum residual achieved: "
                          + boost::lexical_cast<std::string>(sqrt(min_resid)));
+                */
 
                 // Compute new search direction p_k, q_k
                 p   = w   + beta  * p;
@@ -451,20 +453,20 @@ namespace Nektar
 
                 // <r_{k+1}, w_{k+1}>
                 vExchange[0] = Vmath::Dot2(nNonDir,
-                                        r_A,
-                                        w_A + nDir,
-                                        m_map + nDir);
+                                           r_A,
+                                           w_A + nDir,
+                                           m_map + nDir);
                 // <s_{k+1}, w_{k+1}>
                 vExchange[1] = Vmath::Dot2(nNonDir,
-                                        s_A + nDir,
-                                        w_A + nDir,
-                                        m_map + nDir);
+                                           s_A + nDir,
+                                           w_A + nDir,
+                                           m_map + nDir);
 
                 // <r_{k+1}, r_{k+1}>
                 vExchange[2] = Vmath::Dot2(nNonDir,
-                                        r_A,
-                                        r_A,
-                                        m_map + nDir);
+                                           r_A,
+                                           r_A,
+                                           m_map + nDir);
 
                 // Perform inner-product exchanges
                 vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);

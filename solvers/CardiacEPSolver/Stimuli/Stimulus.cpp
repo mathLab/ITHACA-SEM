@@ -64,11 +64,13 @@ namespace Nektar
      * Stimulus base class constructor.
      */
     Stimulus::Stimulus(const LibUtilities::SessionReaderSharedPtr& pSession,
-                         const MultiRegions::ExpListSharedPtr& pField)
+                         const MultiRegions::ExpListSharedPtr& pField,
+                        const TiXmlElement* pXml)
     {
         m_session = pSession;
         m_field = pField;
         m_nq = pField->GetTotPoints();
+        
  
     }
     

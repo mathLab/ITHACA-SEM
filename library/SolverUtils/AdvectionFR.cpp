@@ -42,7 +42,6 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 
-
 namespace Nektar
 {
     namespace SolverUtils
@@ -53,7 +52,9 @@ namespace Nektar
             GetAdvectionFactory().RegisterCreatorFunction(
                                         "FRSD", AdvectionFR::create), 
             GetAdvectionFactory().RegisterCreatorFunction(
-                                        "FRHU", AdvectionFR::create)};
+                                        "FRHU", AdvectionFR::create),
+            GetAdvectionFactory().RegisterCreatorFunction(
+                                        "FRc", AdvectionFR::create)};
         
         /**
          * @brief AdvectionFR uses the Flux Reconstruction (FR) approach to 
@@ -208,7 +209,10 @@ namespace Nektar
                         base      = pFields[0]->GetExp(n)->GetBase();
                         nquad0    = base[0]->GetNumPoints();
                         nmodes0   = base[0]->GetNumModes();
-                        FRPts0    = base[0]->GetPointsKey();   
+                        FRPts0    = base[0]->GetPointsKey();
+                        Array<OneD, const NekDouble> z0;
+                        Array<OneD, const NekDouble> w0;                            
+                        base[0]->GetZW(z0, w0);
                         
                         LibUtilities::BasisSharedPtr BasisFR_Left0;
                         LibUtilities::BasisSharedPtr BasisFR_Right0;
@@ -233,6 +237,10 @@ namespace Nektar
                                 LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = 
                                 LibUtilities::BasisManager()[FRBase_Right0];
+                            
+                            // Storing the derivatives into two global variables 
+                            m_dGL_xi1[n] = BasisFR_Left0 ->GetBdata();
+                            m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
                         }
                         else if (m_advType == "FRSD")
                         {
@@ -251,6 +259,10 @@ namespace Nektar
                                 LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = 
                                 LibUtilities::BasisManager()[FRBase_Right0];
+                            
+                            // Storing the derivatives into two global variables 
+                            m_dGL_xi1[n] = BasisFR_Left0 ->GetBdata();
+                            m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
                         }
                         else if (m_advType == "FRHU")
                         {
@@ -269,11 +281,84 @@ namespace Nektar
                                 LibUtilities::BasisManager()[FRBase_Left0];
                             BasisFR_Right0 = 
                                 LibUtilities::BasisManager()[FRBase_Right0];
+                            
+                            // Storing the derivatives into two global variables 
+                            m_dGL_xi1[n] = BasisFR_Left0 ->GetBdata();
+                            m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
                         }
                         
-                        // Storing the derivatives into two global variables 
-                        m_dGL_xi1[n] = BasisFR_Left0 ->GetBdata();
-                        m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
+                        else if (m_advType == "FRc")
+                        {
+                            int p = nmodes0 - 1;
+                            
+                            // Auxiliary vectors to build up the auxiliary 
+                            // derivatives of the Legendre polynomials
+                            Array<OneD,NekDouble> dLp   (nquad0, 0.0);
+                            Array<OneD,NekDouble> dLpp  (nquad0, 0.0);
+                            Array<OneD,NekDouble> dLpm  (nquad0, 0.0);
+                            
+                            // Function sign
+                            NekDouble sign = pow(-1.0, p);
+                            
+                            // Factors to build the scheme
+                            NekDouble ap = boost::math::tgamma(2 * p + 1) 
+                                         / (pow(2.0, p) 
+                                         * boost::math::tgamma(p + 1) 
+                                         * boost::math::tgamma(p + 1));
+                            /*
+                            NekDouble c = 2 * p / ((2 * p + 1) * (p + 1) 
+                                        * boost::math::tgamma(p + 1) 
+                                        * boost::math::tgamma(p + 1));
+                            */
+
+                            NekDouble c = 2 * (p + 1) / ((2 * p + 1) * p 
+                                        * boost::math::tgamma(p + 1) 
+                                        * boost::math::tgamma(p + 1));
+                            
+                            NekDouble c_min = -2 / ((2 * p + 1) 
+                                        * (ap * boost::math::tgamma(p + 1))
+                                        * (ap * boost::math::tgamma(p + 1)));
+                            
+                            if (c < c_min)
+                            {
+                                ASSERTL0(false, "c out of bounds");
+                                break;
+                            }
+                            
+                            NekDouble etap = 0.5 * c * (2 * p + 1) 
+                                        * (ap * boost::math::tgamma(p + 1)) 
+                                        * (ap * boost::math::tgamma(p + 1));
+                            
+                            NekDouble overeta = 1.0 / (1.0 + etap);
+                            
+                            // Derivative of the Legendre polynomials
+                            // dLp  = derivative of the Legendre polynomial of order p
+                            // dLpp = derivative of the Legendre polynomial of order p+1
+                            // dLpm = derivative of the Legendre polynomial of order p-1
+                            Polylib::jacobd(nquad0, z0.data(), &(dLp[0]),  p,   0.0, 0.0);
+                            Polylib::jacobd(nquad0, z0.data(), &(dLpp[0]), p+1, 0.0, 0.0);
+                            Polylib::jacobd(nquad0, z0.data(), &(dLpm[0]), p-1, 0.0, 0.0);
+                            
+                            // Building the DG_c_Left
+                            for(i = 0; i < nquad0; ++i)
+                            {
+                                m_dGL_xi1[n][i]  = etap * dLpm[i];
+                                m_dGL_xi1[n][i] += dLpp[i];
+                                m_dGL_xi1[n][i] *= overeta;
+                                m_dGL_xi1[n][i]  = dLp[i] - m_dGL_xi1[n][i];
+                                m_dGL_xi1[n][i]  = 0.5 * sign * m_dGL_xi1[n][i];
+                            }
+                            
+                            // Building the DG_c_Right
+                            for(i = 0; i < nquad0; ++i)
+                            {
+                                m_dGR_xi1[n][i]  = etap * dLpm[i];
+                                m_dGR_xi1[n][i] += dLpp[i];
+                                m_dGR_xi1[n][i] *= overeta;
+                                m_dGR_xi1[n][i] += dLp[i];
+                                m_dGR_xi1[n][i]  = 0.5 * m_dGR_xi1[n][i];
+                            }
+                        }
                     }
                     break;
                 }   

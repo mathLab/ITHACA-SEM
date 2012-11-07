@@ -67,8 +67,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > m_dGR_xi3;
             DNekMatSharedPtr                     m_Ixm;
             DNekMatSharedPtr                     m_Ixp;
-            
-            
+
         protected:
             AdvectionFR(std::string advType);
             

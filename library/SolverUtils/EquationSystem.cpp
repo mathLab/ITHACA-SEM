@@ -2049,6 +2049,10 @@ namespace Nektar
                         {
                             out << "\tProjection Type : Flux Reconstruction HU" <<endl;
                         }
+                        else if (AdvectionType == "FRc")
+                        {
+                            out << "\tProjection Type : Flux Reconstruction C" <<endl;
+                        }
                         break;
                     }
                     

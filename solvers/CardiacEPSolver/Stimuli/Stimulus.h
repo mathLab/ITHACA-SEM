@@ -58,7 +58,7 @@ namespace Nektar
     typedef LibUtilities::NekFactory< std::string, Stimulus,
                 const LibUtilities::SessionReaderSharedPtr&,
                 const MultiRegions::ExpListSharedPtr&,
-                TiXmlElement*> StimulusFactory;
+                const TiXmlElement*> StimulusFactory;
 
     StimulusFactory& GetStimulusFactory();
 

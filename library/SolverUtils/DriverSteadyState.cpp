@@ -93,11 +93,11 @@ namespace Nektar
             m_n=0;
             m_Check=0;			
             
-            m_session->LoadParameter("FilterWidth", m_Delta);
-            m_session->LoadParameter("ControlCoeff",m_X);
-            m_session->LoadParameter("TOL", TOL);
-            m_session->LoadParameter("IO_InfoSteps", m_infosteps);
-            m_session->LoadParameter("IO_CheckSteps", m_checksteps);
+            m_session->LoadParameter("FilterWidth", m_Delta, 1);
+            m_session->LoadParameter("ControlCoeff",m_X, 1);
+            m_session->LoadParameter("TOL", TOL, 1.0e-08);
+            m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1000);
+            m_session->LoadParameter("IO_CheckSteps", m_checksteps, 100000);
             
             m_dt = m_equ[0]->GetTimeStep();
             m_cst1=m_X*m_dt;

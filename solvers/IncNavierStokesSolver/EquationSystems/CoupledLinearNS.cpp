@@ -1452,7 +1452,6 @@ namespace Nektar
 				
 				//Saving the init datas
 				Checkpoint_Output(Check);
-				//TmpOutput(Check);
 				Check++;
 				
 				cout<<"We execute INITIALLY SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
@@ -1460,14 +1459,13 @@ namespace Nektar
 				
 				while(m_kinvis > m_kinvisMin)
 				{		
-					/*if (Check == 1)
+					if (Check == 1)
 					{
 						cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
 						SolveSteadyNavierStokes();
-						//Checkpoint_Output(Check);
-						//TmpOutput(Check);
+						Checkpoint_Output(Check);
 						Check++;
-					}*/
+					}
 					
 					Continuation();
 					
@@ -1476,13 +1474,10 @@ namespace Nektar
 						cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
 						SolveSteadyNavierStokes();
 						Checkpoint_Output(Check);
-						//TmpOutput(Check);
 						Check++;
 					}
 				}
 				
-				//The pressure is evaluated at the very end of the process
-				//PressureReconstruction();
 				
 				Generaltimer.Stop();
 				cout<<"\nThe total calculation time is : " << Generaltimer.TimePerTest(1)/60 << " minute(s). \n\n";
@@ -1579,11 +1574,10 @@ namespace Nektar
         
         m_counter=1;
         
-        //InfNorm(delta_velocity_Phys, Inf_norm);
         L2Norm(delta_velocity_Phys, L2_norm);		
         
-        //while(max(Inf_norm[0], Inf_norm[1]) > m_tol)// && m_counter <= m_maxIt)
-        while(max(L2_norm[0], L2_norm[1]) > m_tol)// && m_counter <= m_maxIt)
+        //while(max(Inf_norm[0], Inf_norm[1]) > m_tol)
+        while(max(L2_norm[0], L2_norm[1]) > m_tol)
 		{
             if(m_counter == 1) //At the first Newton step, we use the solution of the Stokes problem (if Restart=0 in input file)
 				               //Or the solution of the .rst file (if Restart=1 in input file) 

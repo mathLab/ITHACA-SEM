@@ -63,7 +63,7 @@ namespace Nektar
     {
     public:
         Protocol(const LibUtilities::SessionReaderSharedPtr& pSession,
-                 const MultiRegions::ExpListSharedPtr& pField);
+                 const TiXmlElement* pXml);
         
         virtual ~Protocol() {}
         

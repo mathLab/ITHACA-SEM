@@ -36,101 +36,33 @@
 #ifndef NEKTAR_SOLVERS_ADRSOLVER_CELLMODELS_CELLMODEL
 #define NEKTAR_SOLVERS_ADRSOLVER_CELLMODELS_CELLMODEL
 
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-//#include <SpatialDomains/SpatialData.h>
-#include <MultiRegions/ExpList.h>
-#include <StdRegions/StdNodalTriExp.h>
-#include <StdRegions/StdNodalTetExp.h>
+#include <CardiacEPSolver/Stimuli/Stimulus.h>
 
 namespace Nektar
 {
     // Forward declaration
-    class CellModel;
+    class StimulusCircle;
     
     /// Cell model base class.
-    class CellModel
+    class StimulusCircle : public Stimulus
     {
     public:
-        CellModel(const LibUtilities::SessionReaderSharedPtr& pSession,
-                  const MultiRegions::ExpListSharedPtr& pField);
+        StimulusCircle(const LibUtilities::SessionReaderSharedPtr& pSession,
+                  const MultiRegions::ExpListSharedPtr& pField,
+                  const TiXmlElement* pXml);
         
-        virtual ~CellModel() {}
+        virtual ~StimulusCircle() {}
         
         /// Initialise the cell model storage and set initial conditions
         void Initialise();
-        
-        /// Time integrate the cell model by one PDE timestep
-        void TimeIntegrate(
-                           const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                           Array<OneD,       Array<OneD, NekDouble> > &outarray,
-                           const NekDouble time);
-        
-        /// Compute the derivatives of cell model variables
-        void Update(
-                    const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                    Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                    const NekDouble time)
-        {
-            v_Update(inarray, outarray, time);
-        }
-        
-        /// Print a summary of the cell model
-        void PrintSummary(std::ostream &out)
-        {
-            v_PrintSummary(out);
-        }
-        
-        const unsigned int GetNumCellVariables()
-        {
-            return m_nvar;
-        }
-        
-        Array<OneD, NekDouble> GetCellSolutionCoeffs(unsigned int idx);
-        
+
     protected:
-        /// Session
-        LibUtilities::SessionReaderSharedPtr m_session;
-        /// Transmembrane potential field from PDE system
-        MultiRegions::ExpListSharedPtr m_field;
-        /// Number of physical points.
-        int m_nq;
-        /// Number of variables in cell model (inc. transmembrane voltage)
-        int m_nvar;
-        /// Timestep for pde model
-        NekDouble m_lastTime;
-        /// Number of substeps to take
-        int m_substeps;
+        virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
+                              const NekDouble time);
         
-        /// Cell model solution variables
-        Array<OneD, Array<OneD, NekDouble> > m_cellSol;
-        /// Cell model integration workspace
-        Array<OneD, Array<OneD, NekDouble> > m_wsp;
+        virtual void v_PrintSummary(std::ostream &out);
         
-        /// Flag indicating whether nodal projection in use
-        bool m_useNodal;
-        /// StdNodalTri for cell model calculations
-        StdRegions::StdNodalTriExpSharedPtr m_nodalTri;
-        StdRegions::StdNodalTetExpSharedPtr m_nodalTet;
-        /// Temporary array for nodal projection
-        Array<OneD, Array<OneD, NekDouble> > m_nodalTmp;
-        
-        /// Indices of cell model variables which are concentrations
-        std::vector<int> m_concentrations;
-        /// Indices of cell model variables which are gates
-        std::vector<int> m_gates;
-        /// Storage for gate tau values
-        Array<OneD, Array<OneD, NekDouble> > m_gates_tau;
-        
-        virtual void v_Update(
-                              const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                              Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                              const NekDouble time) = 0;
-        
-        virtual void v_PrintSummary(std::ostream &out) = 0;
-        
-        virtual void v_SetInitialConditions() = 0;
+        virtual void v_SetInitialConditions();
     };
     
 }

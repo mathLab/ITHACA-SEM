@@ -64,7 +64,7 @@ namespace Nektar
      * Protocol base class constructor.
      */
     Protocol::Protocol(const LibUtilities::SessionReaderSharedPtr& pSession,
-                       const MultiRegions::ExpListSharedPtr& pField)
+                       const TiXmlElement* pXml)
     {
         m_session = pSession;
     }

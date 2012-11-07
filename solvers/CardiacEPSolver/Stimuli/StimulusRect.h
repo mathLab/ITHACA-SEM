@@ -83,6 +83,7 @@ namespace Nektar
         NekDouble m_py2;
         NekDouble m_pz2;
         NekDouble m_pis;
+        NekDouble m_strength;
         virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                               const NekDouble time);
         

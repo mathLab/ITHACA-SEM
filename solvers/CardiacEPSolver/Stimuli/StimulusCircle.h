@@ -1,10 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CellModel.h
+// File Stimulus.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
+//
 //
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
@@ -29,42 +30,65 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Cell model base class.
+// Description: Stimulus class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_CELLMODELS_CELLMODEL
-#define NEKTAR_SOLVERS_ADRSOLVER_CELLMODELS_CELLMODEL
+#ifndef NEKTAR_SOLVERS_CARDIACEPSOLVER_STIMULI_STIMULUSCIRC
+#define NEKTAR_SOLVERS_CARDIACEPSOLVER_STIMULI_STIMULUSCIRC
 
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+//#include <SpatialDomains/SpatialData.h>
+#include <MultiRegions/ExpList.h>
+#include <StdRegions/StdNodalTriExp.h>
+#include <StdRegions/StdNodalTetExp.h>
 #include <CardiacEPSolver/Stimuli/Stimulus.h>
 
 namespace Nektar
 {
-    // Forward declaration
-    class StimulusCircle;
     
-    /// Cell model base class.
-    class StimulusCircle : public Stimulus
+    /// Protocol base class.
+    class StimulusCirc: public Stimulus
     {
     public:
-        StimulusCircle(const LibUtilities::SessionReaderSharedPtr& pSession,
-                  const MultiRegions::ExpListSharedPtr& pField,
-                  const TiXmlElement* pXml);
+        /// Creates an instance of this class
+        static StimulusSharedPtr create(
+                                        const LibUtilities::SessionReaderSharedPtr& pSession,
+                                        const MultiRegions::ExpListSharedPtr& pField,
+                                        const TiXmlElement* pXml)
+        {
+            return MemoryManager<StimulusCirc>
+            ::AllocateSharedPtr(pSession, pField, pXml);
+        }
         
-        virtual ~StimulusCircle() {}
+        /// Name of class
+        static std::string className;
+        
+        StimulusCirc(const LibUtilities::SessionReaderSharedPtr& pSession,
+                     const MultiRegions::ExpListSharedPtr& pField,
+                     const TiXmlElement* pXml);
+        
+        virtual ~StimulusCirc() {}
         
         /// Initialise the cell model storage and set initial conditions
         void Initialise();
-
+        
     protected:
+        NekDouble m_px1;
+        NekDouble m_py1;
+        NekDouble m_pz1;
+        NekDouble m_pr1;
+        NekDouble m_pis;
+        NekDouble m_strength;
         virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                               const NekDouble time);
         
         virtual void v_PrintSummary(std::ostream &out);
         
-        virtual void v_SetInitialConditions();
     };
     
 }
 
-#endif /* CELLMODEL_H_ */
+#endif 

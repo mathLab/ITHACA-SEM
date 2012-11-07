@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: StimulusCircle.cpp
+// File Stimulus.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,58 +29,117 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Cell model base class.
+// Description: Stimulus base class.
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <iostream>
+#include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
+
+#include <StdRegions/StdNodalTriExp.h>
 
 #include <CardiacEPSolver/Stimuli/StimulusCircle.h>
 
-#include <StdRegions/StdNodalTriExp.h>
+
+
 //#include <LibUtilities/LinearAlgebra/Blas.hpp>
 
 namespace Nektar
 {
+    std::string StimulusCirc::className
+    = GetStimulusFactory().RegisterCreatorFunction(
+                                                   "StimulusCirc",
+                                                   StimulusCirc::create,
+                                                   "Circular stimulus.");
+    
     /**
-     * @class StimulusCircle
+     * @class StimulusCirc
+     *
+     * The Stimulus class and derived classes implement a range of stimuli.
+     * The stimulus contains input stimuli that can be applied throughout the
+     * domain, on specified regions determined by the derived classes of Stimulus,
+     * at specified frequencies determined by the derived classes of Protocol.
+     *
      */
     
     /**
-     * Cell model base class constructor.
+     * Stimulus base class constructor.
      */
-    StimulusCircle::StimulusCircle(
-            const LibUtilities::SessionReaderSharedPtr& pSession,
-            const MultiRegions::ExpListSharedPtr& pField,
-            const TiXmlElement* pXml)
-            : Stimulus(pSession, pField, pXml)
+    StimulusCirc::StimulusCirc(const LibUtilities::SessionReaderSharedPtr& pSession,
+                               const MultiRegions::ExpListSharedPtr& pField,
+                               const TiXmlElement* pXml)
+    : Stimulus(pSession, pField, pXml)
     {
-
+        m_session = pSession;
+        m_field = pField;
+        m_nq = pField->GetTotPoints();
+        
+        
+        if (!pXml)
+        {
+            return;
+        }
+        
+        
+        const TiXmlElement *pXmlparameter; //Declaring variable called pxml...
+        // See if we have parameters defined.  They are optional so we go on if not.
+        
+        
+        //member variables m_p defined in StimulusCirc.h
+        
+        pXmlparameter = pXml->FirstChildElement("p_x1");
+        m_px1 = atof(pXmlparameter->GetText()); //text value within px1, convert to a floating pt and save in m_px1
+        
+        pXmlparameter = pXml->FirstChildElement("p_y1");
+        m_py1 = atof(pXmlparameter->GetText());
+        
+        pXmlparameter = pXml->FirstChildElement("p_z1");
+        m_pz1 = atof(pXmlparameter->GetText());
+        
+        pXmlparameter = pXml->FirstChildElement("p_r1");
+        m_pr1 = atof(pXmlparameter->GetText());
+     
+        
+        pXmlparameter = pXml->FirstChildElement("p_is");
+        m_pis = atof(pXmlparameter->GetText());
+        
+        pXmlparameter = pXml->FirstChildElement("p_strength");
+        m_strength = atof(pXmlparameter->GetText());
     }
-    
     
     /**
-     * Initialise the cell model. Allocate workspace and variable storage.
+     * Initialise the stimulus. Allocate workspace and variable storage.
      */
-    void StimulusCircle::Initialise()
+    void StimulusCirc::Initialise()
     {
-
+        
+        
     }
     
-    void StimulusCircle::v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
-                          const NekDouble time)
+    void StimulusCirc::v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
+                                const NekDouble time)
     {
-
+        //Code to get co ordinates
+        int nq = m_field->GetNpoints();
+        Array<OneD,NekDouble> x0(nq);
+        Array<OneD,NekDouble> x1(nq);
+        Array<OneD,NekDouble> x2(nq);
+        
+        // get the coordinates
+        m_field->GetCoords(x0,x1,x2);
+        for(int j=0; j<nq; j++)
+        {
+            outarray[0][j]= outarray[0][j] + m_strength *
+            (-tanh( (m_pis * x0[j] - m_px1+m_pr1) * (m_pis * x0[j] - m_px1-m_pr1) +
+                    (m_pis * x1[j] - m_py1+m_pr1) * (m_pis * x1[j] - m_py1-m_pr1) +
+                    (m_pis * x2[j] - m_pz1+m_pr1) * (m_pis * x2[j] - m_pz1-m_pr1))  / 2.0 + 0.5);
+        }
     }
-
-    void StimulusCircle::v_PrintSummary(std::ostream &out)
+    
+    void StimulusCirc::v_PrintSummary(std::ostream &out)
     {
-
+        
+        
     }
-
-    void StimulusCircle::v_SetInitialConditions()
-    {
-
-    }
-
+    
 }

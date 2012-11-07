@@ -130,7 +130,7 @@ namespace Nektar
         // get the coordinates
         m_field->GetCoords(x0,x1,x2);
         for(int j=0; j<nq; j++)
-            {
+            {   
                 outarray[0][j]= outarray[0][j] +
                                 (-tanh( (m_pis * x0[j] - m_px1) * (m_pis * x0[j] - m_px2)) / 2.0 + 0.5) *
                                 (-tanh( (m_pis * x1[j] - m_py1) * (m_pis * x1[j] - m_py2)) / 2.0 + 0.5) *

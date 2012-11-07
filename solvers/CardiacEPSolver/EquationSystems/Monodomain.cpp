@@ -170,17 +170,17 @@ namespace Nektar
                 WriteFld(filename.str());
             }
         }
-
-        if (m_session->DefinesParameter("StimulusDuration"))
-        {
-            ASSERTL0(m_session->DefinesFunction("Stimulus", "u"),
-                    "Stimulus function not defined.");
-            m_session->LoadParameter("StimulusDuration", m_stimDuration);
-        }
-        else
-        {
-            m_stimDuration = 0;
-        }
+//
+//        if (m_session->DefinesParameter("StimulusDuration"))
+//        {
+//            ASSERTL0(m_session->DefinesFunction("Stimulus", "u"),
+//                    "Stimulus function not defined.");
+//            m_session->LoadParameter("StimulusDuration", m_stimDuration);
+//        }
+//        else
+//        {
+//            m_stimDuration = 0;
+//        }
 
         // Search through the loaded filters and pass the cell model to any
         // CheckpointCellModel filters loaded.
@@ -274,7 +274,7 @@ namespace Nektar
         m_cell->TimeIntegrate(inarray, outarray, time);
 
         for (unsigned int i = 0; i < m_stimulus.size(); ++i)
-        {
+        {   
             m_stimulus[i]->Update(outarray, time);
         }
 

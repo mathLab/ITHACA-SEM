@@ -35,7 +35,7 @@
 
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
-#include <CardiacEPSolver/Stimuli/Protocol>
+#include <CardiacEPSolver/Stimuli/Protocol.h>
 
 #include <StdRegions/StdNodalTriExp.h>
 //#include <LibUtilities/LinearAlgebra/Blas.hpp>

@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
+#include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include <StdRegions/StdNodalTriExp.h>
@@ -45,17 +46,14 @@
 
 namespace Nektar
 {
-    StimulusFactory& GetStimulusFactory()
-    {
-        typedef Loki::SingletonHolder<CellModelFactory,
-        Loki::CreateUsingNew,
-        Loki::NoDestroy > Type;
-        return Type::Instance();
-    }
+    std::string StimulusRect::className
+          = GetStimulusFactory().RegisterCreatorFunction(
+                    "StimulusRect",
+                    StimulusRect::create,
+                     "Rectangular stimulus.");
 
-    
     /**
-     * @class Stimulus
+     * @class StimulusRect
      *
      * The Stimulus class and derived classes implement a range of stimuli.
      * The stimulus contains input stimuli that can be applied throughout the
@@ -70,6 +68,7 @@ namespace Nektar
     StimulusRect::StimulusRect(const LibUtilities::SessionReaderSharedPtr& pSession,
                        const MultiRegions::ExpListSharedPtr& pField, 
                        const TiXmlElement* pXml)
+            : Stimulus(pSession, pField, pXml)
     {
         m_session = pSession;
         m_field = pField;
@@ -82,29 +81,29 @@ namespace Nektar
         }
         
 
-        TiXmlElement *pXmlparameter; //Declaring variable called pxml...
+        const TiXmlElement *pXmlparameter; //Declaring variable called pxml...
         // See if we have parameters defined.  They are optional so we go on if not.
     
         
         //member variables m_p defined in StimulusRect.h
         
-        pXmlparameter = pXmlElement->FirstChildElement("p_x1");
-        m_px1 = atof(pXml->GetText()); //text value within px1, convert to a floating pt and save in m_px1
+        pXmlparameter = pXml->FirstChildElement("p_x1");
+        m_px1 = atof(pXmlparameter->GetText()); //text value within px1, convert to a floating pt and save in m_px1
         
-        pXmlparameter = pXmlElement->FirstChildElement("p_y1");
-        m_py1 = atof(pXml->GetText());
+        pXmlparameter = pXml->FirstChildElement("p_y1");
+        m_py1 = atof(pXmlparameter->GetText());
     
-        pXmlparameter = pXmlElement->FirstChildElement("p_z1");
-        m_pz1 = atof(pXml->GetText());
+        pXmlparameter = pXml->FirstChildElement("p_z1");
+        m_pz1 = atof(pXmlparameter->GetText());
     
-        pXmlparameter = pXmlElement->FirstChildElement("p_x2");
-        m_px2 = atof(pXml->GetText());
+        pXmlparameter = pXml->FirstChildElement("p_x2");
+        m_px2 = atof(pXmlparameter->GetText());
 
-        pXmlparameter = pXmlElement->FirstChildElement("p_y2");
-        m_py2 = atof(pXml->GetText());
+        pXmlparameter = pXml->FirstChildElement("p_y2");
+        m_py2 = atof(pXmlparameter->GetText());
     
-        pXmlparameter = pXmlElement->FirstChildElement("p_z2");
-        m_pz2 = atof(pXml->GetText());
+        pXmlparameter = pXml->FirstChildElement("p_z2");
+        m_pz2 = atof(pXmlparameter->GetText());
     }
     
     /**
@@ -116,5 +115,16 @@ namespace Nektar
         
     }
     
+    void StimulusRect::v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
+                          const NekDouble time)
+    {
+
+    }
     
+    void StimulusRect::v_PrintSummary(std::ostream &out)
+    {
+
+
+    }
+
 }

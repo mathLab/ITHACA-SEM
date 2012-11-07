@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
 #include <CardiacEPSolver/Stimuli/Stimulus.h>
@@ -85,4 +86,26 @@ namespace Nektar
     }
     
     
+    vector<StimulusSharedPtr> Stimulus::LoadStimuli(
+                        const LibUtilities::SessionReaderSharedPtr& pSession,
+                        const MultiRegions::ExpListSharedPtr& pField)
+    {
+        vector<StimulusSharedPtr> vStimList;
+
+        TiXmlElement* vStimuli = pSession->GetElement("Nektar/Stimuli");
+        if (vStimuli)
+        {
+            TiXmlElement* vStimulus = vStimuli->FirstChildElement("Stimulus");
+            while (vStimulus)
+            {
+                string vType = vStimulus->Attribute("TYPE");
+                unsigned int vId = atoi(vStimulus->Attribute("ID"));
+
+                vStimList.push_back(GetStimulusFactory().CreateInstance(
+                                        vType, pSession, pField, vStimulus));
+            }
+        }
+        return vStimList;
+    }
+
 }

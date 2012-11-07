@@ -47,6 +47,15 @@ namespace Nektar
     // Forward declaration
     class Protocol;
     
+    /// A shared pointer to an EquationSystem object
+    typedef boost::shared_ptr<Protocol> ProtocolSharedPtr;
+    /// Datatype of the NekFactory used to instantiate classes derived from
+    /// the EquationSystem class.
+    typedef LibUtilities::NekFactory< std::string, Protocol,
+                const LibUtilities::SessionReaderSharedPtr&,
+                const MultiRegions::ExpListSharedPtr&,
+                TiXmlElement*> ProtocolFactory;
+    ProtocolFactory& GetProtocolFactory();
 
     
     /// Protocol base class.

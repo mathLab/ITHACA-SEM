@@ -198,6 +198,9 @@ namespace Nektar
             }
         }
 
+        // Load stimuli
+        m_stimulus = Stimulus::LoadStimuli(m_session, m_fields[0]);
+
         if (!m_explicitDiffusion)
         {
             m_ode.DefineImplicitSolve (&Monodomain::DoImplicitSolve, this);
@@ -270,22 +273,11 @@ namespace Nektar
 
         m_cell->TimeIntegrate(inarray, outarray, time);
 
-        if (m_stimDuration > 0 && time < m_stimDuration)
+        for (unsigned int i = 0; i < m_stimulus.size(); ++i)
         {
-            Array<OneD,NekDouble> x0(nq);
-            Array<OneD,NekDouble> x1(nq);
-            Array<OneD,NekDouble> x2(nq);
-            Array<OneD,NekDouble> result(nq);
-
-            // get the coordinates
-            m_fields[0]->GetCoords(x0,x1,x2);
-
-            LibUtilities::EquationSharedPtr ifunc
-                    = m_session->GetFunction("Stimulus", "u");
-            ifunc->Evaluate(x0,x1,x2,time, result);
-
-            Vmath::Vadd(nq, outarray[0], 1, result, 1, outarray[0], 1);
+            m_stimulus[i]->Update(outarray, time);
         }
+
         Vmath::Smul(nq, 1.0/m_capMembrane, outarray[0], 1, outarray[0], 1);
     }
 
@@ -327,5 +319,6 @@ namespace Nektar
         }
         m_cell->PrintSummary(out);
     }
+
 
 }

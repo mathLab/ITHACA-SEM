@@ -50,14 +50,26 @@ namespace Nektar
     // Forward declaration
     class Stimulus;
     
-    
+    /// A shared pointer to an EquationSystem object
+    typedef boost::shared_ptr<Stimulus> StimulusSharedPtr;
+
+    /// Datatype of the NekFactory used to instantiate classes derived from
+    /// the EquationSystem class.
+    typedef LibUtilities::NekFactory< std::string, Stimulus,
+                const LibUtilities::SessionReaderSharedPtr&,
+                const MultiRegions::ExpListSharedPtr&,
+                TiXmlElement*> StimulusFactory;
+
+    StimulusFactory& GetStimulusFactory();
+
     
     /// Protocol base class.
     class Stimulus
     {
     public:
         Stimulus(const LibUtilities::SessionReaderSharedPtr& pSession,
-                  const MultiRegions::ExpListSharedPtr& pField);
+                  const MultiRegions::ExpListSharedPtr& pField,
+                  const TiXmlElement* pXml);
         
         virtual ~Stimulus() {}
         
@@ -65,12 +77,10 @@ namespace Nektar
         void Initialise();
         
         /// Compute the derivatives of cell model variables
-        void Update(
-                    const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                    Array<OneD,        Array<OneD, NekDouble> >&outarray,
+        void Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                     const NekDouble time)
         {
-            v_Update(inarray, outarray, time);
+            v_Update(outarray, time);
         }
         
         /// Print a summary of the cell model
@@ -79,6 +89,10 @@ namespace Nektar
             v_PrintSummary(out);
         }
         
+        static std::vector<StimulusSharedPtr> LoadStimuli(
+                    const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const MultiRegions::ExpListSharedPtr& pField);
+
     protected:
         /// Session
         LibUtilities::SessionReaderSharedPtr m_session;
@@ -87,9 +101,7 @@ namespace Nektar
         /// Number of physical points.
         int m_nq;
         
-        virtual void v_Update(
-                              const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                              Array<OneD,        Array<OneD, NekDouble> >&outarray,
+        virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                               const NekDouble time) = 0;
         
         virtual void v_PrintSummary(std::ostream &out) = 0;

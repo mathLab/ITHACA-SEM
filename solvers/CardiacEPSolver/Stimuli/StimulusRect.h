@@ -48,19 +48,29 @@
 
 namespace Nektar
 {
-    // Forward declaration
-    class StimulusRect;
-    
-    
     
     /// Protocol base class.
     class StimulusRect: public Stimulus
     {
     public:
-        Stimulus(const LibUtilities::SessionReaderSharedPtr& pSession,
-                 const MultiRegions::ExpListSharedPtr& pField);
+        /// Creates an instance of this class
+        static StimulusSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField,
+                const TiXmlElement* pXml)
+        {
+            return MemoryManager<StimulusRect>
+                                    ::AllocateSharedPtr(pSession, pField, pXml);
+        }
+
+        /// Name of class
+        static std::string className;
+
+        StimulusRect(const LibUtilities::SessionReaderSharedPtr& pSession,
+                 const MultiRegions::ExpListSharedPtr& pField,
+                 const TiXmlElement* pXml);
         
-        virtual ~Stimulus() {}
+        virtual ~StimulusRect() {}
         
         /// Initialise the cell model storage and set initial conditions
         void Initialise();
@@ -73,14 +83,10 @@ namespace Nektar
         NekDouble m_py2;
         NekDouble m_pz2;
         
+        virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
+                              const NekDouble time);
         
-        
-        virtual void v_Update(
-                              const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                              Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                              const NekDouble time) = 0;
-        
-        virtual void v_PrintSummary(std::ostream &out) = 0;
+        virtual void v_PrintSummary(std::ostream &out);
         
     };
     

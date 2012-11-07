@@ -72,6 +72,11 @@ namespace Nektar
         m_field = pField;
         m_nq = pField->GetTotPoints();
         
+        TiXmlElement* vProtocol = vProtocol->FirstChildElement("PROTOCOL");
+        string vTypeP = vProtocol->Attribute("TYPE");
+        
+        m_Protocol = GetProtocolFactory().CreateInstance(
+                                vTypeP, pSession, vProtocol);
  
     }
     
@@ -106,6 +111,9 @@ namespace Nektar
                 vStimList.push_back(GetStimulusFactory().CreateInstance(
                                         vType, pSession, pField, vStimulus));
                 vStimulus = vStimulus->NextSiblingElement("STIMULUS");
+                
+                
+                
             }
         }
         return vStimList;

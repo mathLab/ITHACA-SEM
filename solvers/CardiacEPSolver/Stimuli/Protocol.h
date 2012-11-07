@@ -53,7 +53,6 @@ namespace Nektar
     /// the EquationSystem class.
     typedef LibUtilities::NekFactory< std::string, Protocol,
                 const LibUtilities::SessionReaderSharedPtr&,
-                const MultiRegions::ExpListSharedPtr&,
                 TiXmlElement*> ProtocolFactory;
     ProtocolFactory& GetProtocolFactory();
 
@@ -74,7 +73,7 @@ namespace Nektar
         NekDouble GetAmplitude(
                                const NekDouble time)
         {
-            v_GetAmplitude(time);
+            return v_GetAmplitude(time);
         }
         
         /// Print a summary of the cell model

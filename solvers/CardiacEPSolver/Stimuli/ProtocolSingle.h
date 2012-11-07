@@ -56,6 +56,9 @@ namespace Nektar
         void Initialise();
         
     protected:
+        NekDouble m_start;
+        NekDouble m_dur;
+        
         virtual NekDouble v_GetAmplitude(
                               const NekDouble time);
         

@@ -33,6 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <tinyxml/tinyxml.h>
 #include <CardiacEPSolver/Stimuli/ProtocolSingle.h>
 
 namespace Nektar
@@ -55,12 +56,32 @@ namespace Nektar
                          const TiXmlElement* pXml)
             : Protocol(pSession, pXml)
     {
-
+        m_session = pSession;
+        
+        if (!pXml)
+        {
+            return;
+        }
+        
+        
+        const TiXmlElement *pXmlparameter; //Declaring variable called pxml...
+        // See if we have parameters defined.  They are optional so we go on if not.
+        
+        //member variables m_* defined in ProtocolSingle.h
+        
+        pXmlparameter = pXml->FirstChildElement("START");
+        m_start = atof(pXmlparameter->GetText()); //text value within px1, convert to a floating pt and save in m_px1
+        
+        pXmlparameter = pXml->FirstChildElement("DURATION");
+        m_dur = atof(pXmlparameter->GetText());
+        
+        
     }
     
     
+    
     /**
-     * Initialise the cell model. Allocate workspace and variable storage.
+     * Initialise the protocol. Allocate workspace and variable storage.
      */
     void ProtocolSingle::Initialise()
     {
@@ -71,7 +92,15 @@ namespace Nektar
     NekDouble ProtocolSingle::v_GetAmplitude(
                           const NekDouble time)
     {
-
+        if(time > m_start && time < (m_start+m_dur))
+        {
+            return 1.0;
+        }
+        else
+        {
+            return 0.0;
+        }
+        
     }
 
     void ProtocolSingle::v_PrintSummary(std::ostream &out)

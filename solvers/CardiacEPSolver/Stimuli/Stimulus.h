@@ -44,6 +44,7 @@
 #include <MultiRegions/ExpList.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdNodalTetExp.h>
+#include <CardiacEPSolver/Stimuli/Protocol.h>
 
 namespace Nektar
 {
@@ -63,7 +64,7 @@ namespace Nektar
     StimulusFactory& GetStimulusFactory();
 
     
-    /// Protocol base class.
+    /// Stimulus base class.
     class Stimulus
     {
     public:
@@ -100,6 +101,7 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr m_field;
         /// Number of physical points.
         int m_nq;
+        ProtocolSharedPtr m_Protocol;
         
         virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                               const NekDouble time) = 0;

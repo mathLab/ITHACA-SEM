@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
-
+    
     <GEOMETRY DIM="2" SPACE="2">
-
+        
         <VERTEX>
             <V ID="0">2.285e+00 3.636e-01 0.000e+00</V>
             <V ID="1">2.083e+00 0.000e+00 0.000e+00</V>
@@ -505,7 +505,8 @@
     <EXPANSIONS>
         <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v" TYPE="MODIFIED" />
     </EXPANSIONS>
-
+    
+    
     <CONDITIONS>
         <PARAMETERS>
             <P> TimeStep       = 0.02  </P>
@@ -550,24 +551,36 @@
                 <N VAR="u" VALUE="0.0" />
             </REGION>
         </BOUNDARYCONDITIONS>
-
+        
         <FUNCTION NAME="InitialConditions">
             <E VAR="u" VALUE="-81.19" />
         </FUNCTION>
-
+        
         <FUNCTION NAME="IsotropicConductivity">
             <E VAR="intensity" VALUE="0.13341" />
         </FUNCTION>
-
-        <EXPRESSIONS>
-            <E NAME="P" VALUE="1.0/(1.0 + exp( 32*(x-1)))" />
-        </EXPRESSIONS>
-
-        <FUNCTION NAME="Stimulus">
-            <E VAR="u" VALUE="C*P" />
-        </FUNCTION>
+        
+        
     </CONDITIONS>
-
+    
+    <STIMULI>
+        <STIMULUS ID="1" TYPE = "StimulusRect">
+            <p_x1> 0.1</p_x1>
+            <p_y1> 0.1</p_y1>
+            <p_z1> 0.0</p_z1>
+            <p_x2> 0.9</p_x2>
+            <p_y2> 0.9</p_y2>
+            <p_z2> 0.0</p_z2>
+            <!--<p_r1> 0.1</p_r1>> -->
+            <p_is> 1.0</p_is>
+            <p_strength> 3.0 </p_strength>
+            <!--             <PROTOCOL TYPE = "SINGLE">
+             <START> 0.0  </START>
+             <DURATION>  2.0 </DURATION>
+             </PROTOCOL> -->
+        </STIMULUS>
+    </STIMULI>
+    
     <FILTERS>
         <FILTER TYPE="HistoryPoints">
             <PARAM NAME="OutputFile">crn.his</PARAM>

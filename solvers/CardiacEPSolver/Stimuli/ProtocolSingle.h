@@ -47,6 +47,18 @@ namespace Nektar
     class ProtocolSingle : public Protocol
     {
     public:
+        /// Creates an instance of this class
+        static ProtocolSharedPtr create(
+                                        const LibUtilities::SessionReaderSharedPtr& pSession,
+                                        const TiXmlElement* pXml)
+        {
+            return MemoryManager<ProtocolSingle>
+            ::AllocateSharedPtr(pSession, pXml);
+        }
+        
+        /// Name of class
+        static std::string className;
+        
         ProtocolSingle(const LibUtilities::SessionReaderSharedPtr& pSession,
                   const TiXmlElement* pXml);
         

@@ -37,7 +37,11 @@
 #include <CardiacEPSolver/Stimuli/ProtocolSingle.h>
 
 namespace Nektar
-{
+{   std::string ProtocolSingle::className
+    = GetProtocolFactory().RegisterCreatorFunction(
+                            "ProtocolSingle",
+                            ProtocolSingle::create,
+                            "Single stimulus protocol.");
     /**
      * @class ProtocolSingle
      *

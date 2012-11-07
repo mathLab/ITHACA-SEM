@@ -574,10 +574,11 @@
             <!--<p_r1> 0.1</p_r1>> -->
             <p_is> 1.0</p_is>
             <p_strength> 3.0 </p_strength>
-            <!--             <PROTOCOL TYPE = "SINGLE">
+            
+            <PROTOCOL TYPE = "ProtocolSingle">
              <START> 0.0  </START>
-             <DURATION>  2.0 </DURATION>
-             </PROTOCOL> -->
+             <DURATION>  1.0 </DURATION>
+             </PROTOCOL>
         </STIMULUS>
     </STIMULI>
     

@@ -53,7 +53,7 @@ namespace Nektar
     /// the EquationSystem class.
     typedef LibUtilities::NekFactory< std::string, Protocol,
                 const LibUtilities::SessionReaderSharedPtr&,
-                TiXmlElement*> ProtocolFactory;
+                const TiXmlElement*> ProtocolFactory;
     ProtocolFactory& GetProtocolFactory();
 
     

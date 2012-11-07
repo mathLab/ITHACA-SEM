@@ -67,9 +67,6 @@ namespace Nektar
                        const MultiRegions::ExpListSharedPtr& pField)
     {
         m_session = pSession;
-        m_field = pField;
-        m_nq = pField->GetTotPoints();
-        
     }
     
     

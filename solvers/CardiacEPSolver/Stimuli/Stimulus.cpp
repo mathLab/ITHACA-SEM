@@ -103,6 +103,7 @@ namespace Nektar
 
                 vStimList.push_back(GetStimulusFactory().CreateInstance(
                                         vType, pSession, pField, vStimulus));
+                vStimuli = vStimuli->NextSiblingElement("Stimulus");
             }
         }
         return vStimList;

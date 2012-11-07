@@ -58,16 +58,6 @@ namespace Nektar
             eFourierHalfModeRe, //!< Fourier Modified expansions with just the real part of the first mode  \f$ Re[\exp(i \pi  z_i)]\f$    
             eFourierHalfModeIm, //!< Fourier Modified expansions with just the imaginary part of the first mode  \f$ Im[\exp(i \pi  z_i)]\f$    
             eGauss_Lagrange,	//!< Lagrange Polynomials using the Gauss points \f$ h_p(z_i) \f$
-            eDG_DG_Left,		//!< Derivative of the left correction function for DG FR  \f$ dGL_{p}(z_i) \f$
-            eDG_DG_Right,		//!< Derivative of the Right correction function for DG FR \f$ dGR_{p}(z_i) \f$
-            eDG_SD_Left,		//!< Derivative of the left correction function for SD FR  \f$ dGL_{p}(z_i) \f$
-            eDG_SD_Right,		//!< Derivative of the Right correction function for SD FR \f$ dGR_{p}(z_i) \f$
-            eDG_HU_Left,		//!< Derivative of the left correction function for HU FR  \f$ dGL_{p}(z_i) \f$
-            eDG_HU_Right,		//!< Derivative of the Right correction function for HU FR \f$ dGR_{p}(z_i) \f$
-            eDG_c_Left,         //!< Derivative of the left correction function for c FR  \f$ dGL_{p}(z_i) \f$
-            eDG_c_Right,		//!< Derivative of the Right correction function for c FR \f$ dGR_{p}(z_i) \f$
-            eDG_inf_Left,		//!< Derivative of the left correction function for c_inf FR  \f$ dGL_{p}(z_i) \f$
-            eDG_inf_Right,		//!< Derivative of the Right correction function for c_inf FR \f$ dGR_{p}(z_i) \f$
             SIZE_BasisType		//!< Length of enum list
         };
     }

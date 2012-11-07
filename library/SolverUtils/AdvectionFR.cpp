@@ -40,6 +40,7 @@
 #include <LibUtilities/Polylib/Polylib.h>
 #include <StdRegions/StdSegExp.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <boost/math/special_functions/gamma.hpp>
 
 
 namespace Nektar
@@ -54,7 +55,9 @@ namespace Nektar
             GetAdvectionFactory().RegisterCreatorFunction(
                                         "FRHU", AdvectionFR::create),
             GetAdvectionFactory().RegisterCreatorFunction(
-                                        "FRc", AdvectionFR::create)};
+                                        "FRcmin", AdvectionFR::create),
+            GetAdvectionFactory().RegisterCreatorFunction(
+                                        "FRcinf", AdvectionFR::create)};
         
         /**
          * @brief AdvectionFR uses the Flux Reconstruction (FR) approach to 
@@ -114,8 +117,7 @@ namespace Nektar
             int nDimensions = pFields[0]->GetCoordim(0);
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             Array<OneD, NekDouble> auxArray1;
-
-            
+                        
             switch (nDimensions)
             {
                 case 1:
@@ -186,16 +188,14 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {        
-            int i, j, n, p;
+            int i, j, n;
+            NekDouble c0, c1, c2;
             int nquad0, nquad1, nquad2;
             int nmodes0, nmodes1, nmodes2;
-            Array<OneD, NekDouble> auxArray1, auxArray2;
-            LibUtilities::PointsKey FRPts0, FRPts1, FRPts2;
-                        
+            Array<OneD, LibUtilities::BasisSharedPtr> base;
+            
             int nElements   = pFields[0]->GetExpSize();            
             int nDimensions = pFields[0]->GetCoordim(0);
-            
-            Array<OneD, LibUtilities::BasisSharedPtr> base;
             
             switch (nDimensions)
             {
@@ -209,155 +209,92 @@ namespace Nektar
                         base      = pFields[0]->GetExp(n)->GetBase();
                         nquad0    = base[0]->GetNumPoints();
                         nmodes0   = base[0]->GetNumModes();
-                        FRPts0    = base[0]->GetPointsKey();
                         Array<OneD, const NekDouble> z0;
-                        Array<OneD, const NekDouble> w0;                            
-                        base[0]->GetZW(z0, w0);
+                        Array<OneD, const NekDouble> w0;
                         
-                        LibUtilities::BasisSharedPtr BasisFR_Left0;
-                        LibUtilities::BasisSharedPtr BasisFR_Right0;
+                        base[0]->GetZW(z0, w0);
                         
                         m_dGL_xi1[n] = Array<OneD, NekDouble>(nquad0);
                         m_dGR_xi1[n] = Array<OneD, NekDouble>(nquad0);
                         
+                        // Auxiliary vectors to build up the auxiliary 
+                        // derivatives of the Legendre polynomials
+                        Array<OneD,NekDouble> dLp0   (nquad0, 0.0);
+                        Array<OneD,NekDouble> dLpp0  (nquad0, 0.0);
+                        Array<OneD,NekDouble> dLpm0  (nquad0, 0.0);
+                        
+                        // Degree of the correction functions
+                        int p0 = nmodes0 - 1;
+
+                        // Function sign to compute  left correction function
+                        NekDouble sign0 = pow(-1.0, p0);
+                        
+                        // Factorial factor to build the scheme
+                        NekDouble ap0 = boost::math::tgamma(2 * p0 + 1) 
+                                      / (pow(2.0, p0) 
+                                      * boost::math::tgamma(p0 + 1) 
+                                      * boost::math::tgamma(p0 + 1));
+                        
+                        // Scalar parameter which recovers the FR schemes
                         if (m_advType == "FRDG")
                         {
-                            // Derivatives of the correction functions (DG)
-                            const LibUtilities::BasisKey FRBase_Left0(
-                                LibUtilities::eDG_DG_Left,  
-                                nmodes0, 
-                                FRPts0);
-                            
-                            const LibUtilities::BasisKey FRBase_Right0(
-                                LibUtilities::eDG_DG_Right, 
-                                nmodes0, 
-                                FRPts0);
-                            
-                            BasisFR_Left0  = 
-                                LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = 
-                                LibUtilities::BasisManager()[FRBase_Right0];
-                            
-                            // Storing the derivatives into two global variables 
-                            m_dGL_xi1[n] = BasisFR_Left0 ->GetBdata();
-                            m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
+                            c0 = 0.0;
                         }
                         else if (m_advType == "FRSD")
                         {
-                            // Derivatives of the correction functions (SD)
-                            const LibUtilities::BasisKey FRBase_Left0(
-                                LibUtilities::eDG_SD_Left,  
-                                nmodes0, 
-                                FRPts0);
-                            
-                            const LibUtilities::BasisKey FRBase_Right0(
-                                LibUtilities::eDG_SD_Right, 
-                                nmodes0, 
-                                FRPts0);
-                            
-                            BasisFR_Left0  = 
-                                LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = 
-                                LibUtilities::BasisManager()[FRBase_Right0];
-                            
-                            // Storing the derivatives into two global variables 
-                            m_dGL_xi1[n] = BasisFR_Left0 ->GetBdata();
-                            m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
+                            c0 = 2.0 * p0 / ((2.0 * p0 + 1.0) * (p0 + 1.0) 
+                               * (ap0 * boost::math::tgamma(p0 + 1)) 
+                               * (ap0 * boost::math::tgamma(p0 + 1)));
                         }
                         else if (m_advType == "FRHU")
                         {
-                            // Derivatives of the correction functions (HU)
-                            const LibUtilities::BasisKey  FRBase_Left0(
-                                LibUtilities::eDG_HU_Left,  
-                                nmodes0, 
-                                FRPts0);
-                            
-                            const LibUtilities::BasisKey  FRBase_Right0(
-                                LibUtilities::eDG_HU_Right, 
-                                nmodes0, 
-                                FRPts0);
-                            
-                            BasisFR_Left0  = 
-                                LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = 
-                                LibUtilities::BasisManager()[FRBase_Right0];
-                            
-                            // Storing the derivatives into two global variables 
-                            m_dGL_xi1[n] = BasisFR_Left0 ->GetBdata();
-                            m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
+                            c0 = 2.0 * (p0 + 1.0) / ((2.0 * p0 + 1.0) * p0 
+                               * (ap0 * boost::math::tgamma(p0 + 1)) 
+                               * (ap0 * boost::math::tgamma(p0 + 1)));
+                        }
+                        else if (m_advType == "FRcmin")
+                        {
+                            c0 = -2.0 / ((2.0 * p0 + 1.0) 
+                               * (ap0 * boost::math::tgamma(p0 + 1))
+                               * (ap0 * boost::math::tgamma(p0 + 1)));
+                        }
+                        else if (m_advType == "FRinf")
+                        {
+                            c0 = 10000000000000000.0;
                         }
                         
-                        else if (m_advType == "FRc")
+                        NekDouble etap0 = 0.5 * c0 * (2.0 * p0 + 1.0) 
+                        * (ap0 * boost::math::tgamma(p0 + 1)) 
+                        * (ap0 * boost::math::tgamma(p0 + 1));
+                        
+                        NekDouble overeta0 = 1.0 / (1.0 + etap0);
+                        
+                        // Derivative of the Legendre polynomials
+                        // dLp  = derivative of the Legendre polynomial of order p
+                        // dLpp = derivative of the Legendre polynomial of order p+1
+                        // dLpm = derivative of the Legendre polynomial of order p-1
+                        Polylib::jacobd(nquad0, z0.data(), &(dLp0[0]),  p0,   0.0, 0.0);
+                        Polylib::jacobd(nquad0, z0.data(), &(dLpp0[0]), p0+1, 0.0, 0.0);
+                        Polylib::jacobd(nquad0, z0.data(), &(dLpm0[0]), p0-1, 0.0, 0.0);
+                        
+                        // Building the DG_c_Left
+                        for(i = 0; i < nquad0; ++i)
                         {
-                            int p = nmodes0 - 1;
-                            
-                            // Auxiliary vectors to build up the auxiliary 
-                            // derivatives of the Legendre polynomials
-                            Array<OneD,NekDouble> dLp   (nquad0, 0.0);
-                            Array<OneD,NekDouble> dLpp  (nquad0, 0.0);
-                            Array<OneD,NekDouble> dLpm  (nquad0, 0.0);
-                            
-                            // Function sign
-                            NekDouble sign = pow(-1.0, p);
-                            
-                            // Factors to build the scheme
-                            NekDouble ap = boost::math::tgamma(2 * p + 1) 
-                                         / (pow(2.0, p) 
-                                         * boost::math::tgamma(p + 1) 
-                                         * boost::math::tgamma(p + 1));
-                            /*
-                            NekDouble c = 2 * p / ((2 * p + 1) * (p + 1) 
-                                        * boost::math::tgamma(p + 1) 
-                                        * boost::math::tgamma(p + 1));
-                            */
-
-                            NekDouble c = 2 * (p + 1) / ((2 * p + 1) * p 
-                                        * boost::math::tgamma(p + 1) 
-                                        * boost::math::tgamma(p + 1));
-                            
-                            NekDouble c_min = -2 / ((2 * p + 1) 
-                                        * (ap * boost::math::tgamma(p + 1))
-                                        * (ap * boost::math::tgamma(p + 1)));
-                            
-                            if (c < c_min)
-                            {
-                                ASSERTL0(false, "c out of bounds");
-                                break;
-                            }
-                            
-                            NekDouble etap = 0.5 * c * (2 * p + 1) 
-                                        * (ap * boost::math::tgamma(p + 1)) 
-                                        * (ap * boost::math::tgamma(p + 1));
-                            
-                            NekDouble overeta = 1.0 / (1.0 + etap);
-                            
-                            // Derivative of the Legendre polynomials
-                            // dLp  = derivative of the Legendre polynomial of order p
-                            // dLpp = derivative of the Legendre polynomial of order p+1
-                            // dLpm = derivative of the Legendre polynomial of order p-1
-                            Polylib::jacobd(nquad0, z0.data(), &(dLp[0]),  p,   0.0, 0.0);
-                            Polylib::jacobd(nquad0, z0.data(), &(dLpp[0]), p+1, 0.0, 0.0);
-                            Polylib::jacobd(nquad0, z0.data(), &(dLpm[0]), p-1, 0.0, 0.0);
-                            
-                            // Building the DG_c_Left
-                            for(i = 0; i < nquad0; ++i)
-                            {
-                                m_dGL_xi1[n][i]  = etap * dLpm[i];
-                                m_dGL_xi1[n][i] += dLpp[i];
-                                m_dGL_xi1[n][i] *= overeta;
-                                m_dGL_xi1[n][i]  = dLp[i] - m_dGL_xi1[n][i];
-                                m_dGL_xi1[n][i]  = 0.5 * sign * m_dGL_xi1[n][i];
-                            }
-                            
-                            // Building the DG_c_Right
-                            for(i = 0; i < nquad0; ++i)
-                            {
-                                m_dGR_xi1[n][i]  = etap * dLpm[i];
-                                m_dGR_xi1[n][i] += dLpp[i];
-                                m_dGR_xi1[n][i] *= overeta;
-                                m_dGR_xi1[n][i] += dLp[i];
-                                m_dGR_xi1[n][i]  = 0.5 * m_dGR_xi1[n][i];
-                            }
+                            m_dGL_xi1[n][i]  = etap0 * dLpm0[i];
+                            m_dGL_xi1[n][i] += dLpp0[i];
+                            m_dGL_xi1[n][i] *= overeta0;
+                            m_dGL_xi1[n][i]  = dLp0[i] - m_dGL_xi1[n][i];
+                            m_dGL_xi1[n][i]  = 0.5 * sign0 * m_dGL_xi1[n][i];
+                        }
+                        
+                        // Building the DG_c_Right
+                        for(i = 0; i < nquad0; ++i)
+                        {
+                            m_dGR_xi1[n][i]  = etap0 * dLpm0[i];
+                            m_dGR_xi1[n][i] += dLpp0[i];
+                            m_dGR_xi1[n][i] *= overeta0;
+                            m_dGR_xi1[n][i] += dLp0[i];
+                            m_dGR_xi1[n][i]  = 0.5 * m_dGR_xi1[n][i];
                         }
                     }
                     break;
@@ -380,129 +317,158 @@ namespace Nektar
                         nquad0    = base[0]->GetNumPoints();
                         nquad1    = base[1]->GetNumPoints();
                         nmodes0   = base[0]->GetNumModes();
-                        nmodes1   = base[1]->GetNumModes();
-                        FRPts0    = base[0]->GetPointsKey();   
-                        FRPts1    = base[1]->GetPointsKey(); 
+                        nmodes1   = base[1]->GetNumModes(); 
                         
+                        Array<OneD, const NekDouble> z0;
+                        Array<OneD, const NekDouble> w0;   
+                        Array<OneD, const NekDouble> z1;
+                        Array<OneD, const NekDouble> w1;
+                        
+                        base[0]->GetZW(z0, w0);
+                        base[1]->GetZW(z1, w1);
+
                         m_dGL_xi1[n] = Array<OneD, NekDouble>(nquad0);
                         m_dGR_xi1[n] = Array<OneD, NekDouble>(nquad0);
                         m_dGL_xi2[n] = Array<OneD, NekDouble>(nquad1);
                         m_dGR_xi2[n] = Array<OneD, NekDouble>(nquad1);
                         
+                        // Auxiliary vectors to build up the auxiliary 
+                        // derivatives of the Legendre polynomials
+                        Array<OneD,NekDouble> dLp0   (nquad0, 0.0);
+                        Array<OneD,NekDouble> dLpp0  (nquad0, 0.0);
+                        Array<OneD,NekDouble> dLpm0  (nquad0, 0.0);
+                        Array<OneD,NekDouble> dLp1   (nquad1, 0.0);
+                        Array<OneD,NekDouble> dLpp1  (nquad1, 0.0);
+                        Array<OneD,NekDouble> dLpm1  (nquad1, 0.0);
+                        
+                        // Degree of the correction functions
+                        int p0 = nmodes0 - 1;
+                        int p1 = nmodes1 - 1;
+                        
+                        // Function sign to compute  left correction function
+                        NekDouble sign0 = pow(-1.0, p0);                        
+                        NekDouble sign1 = pow(-1.0, p1);
+                        
+                        // Factorial factor to build the scheme
+                        NekDouble ap0 = boost::math::tgamma(2 * p0 + 1) 
+                                      / (pow(2.0, p0) 
+                                      * boost::math::tgamma(p0 + 1) 
+                                      * boost::math::tgamma(p0 + 1));
+                        
+                        NekDouble ap1 = boost::math::tgamma(2 * p1 + 1) 
+                                      / (pow(2.0, p1) 
+                                      * boost::math::tgamma(p1 + 1) 
+                                      * boost::math::tgamma(p1 + 1));
+                        
+                        // Scalar parameter which recovers the FR schemes
                         if (m_advType == "FRDG")
                         {
-                            // Derivatives of the correction functions (DG)
-                            const LibUtilities::BasisKey FRBase_Left0(
-                                LibUtilities::eDG_DG_Left,  
-                                nmodes0, 
-                                FRPts0);
-                            
-                            const LibUtilities::BasisKey FRBase_Right0(
-                                LibUtilities::eDG_DG_Right, 
-                                nmodes0, 
-                                FRPts0);
-                            
-                            const LibUtilities::BasisKey FRBase_Left1(
-                                LibUtilities::eDG_DG_Left,  
-                                nmodes1, 
-                                FRPts1);
-                            
-                            const LibUtilities::BasisKey FRBase_Right1(
-                                LibUtilities::eDG_DG_Right, 
-                                nmodes1, 
-                                FRPts1);
-                            
-                            BasisFR_Left0  = 
-                                LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = 
-                                LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = 
-                                LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = 
-                                LibUtilities::BasisManager()[FRBase_Right1];
+                            c0 = 0.0;
+                            c1 = 0.0;
                         }
                         else if (m_advType == "FRSD")
                         {
-                            // Derivatives of the correction functions (SD)
-                            const LibUtilities::BasisKey FRBase_Left0(
-                                LibUtilities::eDG_SD_Left,  
-                                nmodes0, 
-                                FRPts0);
+                            c0 = 2.0 * p0 / ((2.0 * p0 + 1.0) * (p0 + 1.0) 
+                               * (ap0 * boost::math::tgamma(p0 + 1)) 
+                               * (ap0 * boost::math::tgamma(p0 + 1)));
                             
-                            const LibUtilities::BasisKey FRBase_Right0(
-                                LibUtilities::eDG_SD_Right, 
-                                nmodes0, 
-                                FRPts0);
-                            
-                            const LibUtilities::BasisKey FRBase_Left1(
-                                LibUtilities::eDG_SD_Left,  
-                                nmodes1, 
-                                FRPts1);
-                            
-                            const LibUtilities::BasisKey FRBase_Right1(
-                                LibUtilities::eDG_SD_Right, 
-                                nmodes1, 
-                                FRPts1);
-                            
-                            BasisFR_Left0  = 
-                                LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = 
-                                LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = 
-                                LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = 
-                                LibUtilities::BasisManager()[FRBase_Right1];
+                            c1 = 2.0 * p1 / ((2.0 * p1 + 1.0) * (p1 + 1.0) 
+                               * (ap1 * boost::math::tgamma(p1 + 1)) 
+                               * (ap1 * boost::math::tgamma(p1 + 1)));
                         }
                         else if (m_advType == "FRHU")
                         {
-                            // Derivatives of the correction functions (HU)
-                            const LibUtilities::BasisKey FRBase_Left0(
-                                LibUtilities::eDG_HU_Left,  
-                                nmodes0, 
-                                FRPts0);
+                            c0 = 2.0 * (p0 + 1.0) / ((2.0 * p0 + 1.0) * p0 
+                               * (ap0 * boost::math::tgamma(p0 + 1)) 
+                               * (ap0 * boost::math::tgamma(p0 + 1)));
                             
-                            const LibUtilities::BasisKey FRBase_Right0(
-                                LibUtilities::eDG_HU_Right, 
-                                nmodes0, 
-                                FRPts0);
+                            c1 = 2.0 * (p1 + 1.0) / ((2.0 * p1 + 1.0) * p1 
+                               * (ap1 * boost::math::tgamma(p1 + 1)) 
+                               * (ap1 * boost::math::tgamma(p1 + 1)));
+                        }
+                        else if (m_advType == "FRcmin")
+                        {
+                            c0 = -2.0 / ((2.0 * p0 + 1.0) 
+                               * (ap0 * boost::math::tgamma(p0 + 1))
+                               * (ap0 * boost::math::tgamma(p0 + 1)));
                             
-                            const LibUtilities::BasisKey FRBase_Left1(
-                                LibUtilities::eDG_HU_Left,  
-                                nmodes1, 
-                                FRPts1);
-                            
-                            const LibUtilities::BasisKey FRBase_Right1(
-                                LibUtilities::eDG_HU_Right, 
-                                nmodes1, 
-                                FRPts1);
-                            
-                            BasisFR_Left0  = 
-                                LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = 
-                                LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = 
-                                LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = 
-                                LibUtilities::BasisManager()[FRBase_Right1];
+                            c1 = -2.0 / ((2.0 * p1 + 1.0) 
+                               * (ap1 * boost::math::tgamma(p1 + 1))
+                               * (ap1 * boost::math::tgamma(p1 + 1)));
+                        }
+                        else if (m_advType == "FRinf")
+                        {
+                            c0 = 10000000000000000.0;
+                            c1 = 10000000000000000.0;
                         }
                         
-                        // Storing the derivatives into two global variables 
-                        m_dGL_xi1[n] = BasisFR_Left0 ->GetBdata();
-                        m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
-                        m_dGL_xi2[n] = BasisFR_Left1 ->GetBdata();
-                        m_dGR_xi2[n] = BasisFR_Right1->GetBdata();
+                        NekDouble etap0 = 0.5 * c0 * (2.0 * p0 + 1.0) 
+                                        * (ap0 * boost::math::tgamma(p0 + 1)) 
+                                        * (ap0 * boost::math::tgamma(p0 + 1));
+                        
+                        NekDouble etap1 = 0.5 * c1 * (2.0 * p1 + 1.0) 
+                                        * (ap1 * boost::math::tgamma(p1 + 1)) 
+                                        * (ap1 * boost::math::tgamma(p1 + 1));
+                        
+                        NekDouble overeta0 = 1.0 / (1.0 + etap0);
+                        NekDouble overeta1 = 1.0 / (1.0 + etap1);
+                        
+                        // Derivative of the Legendre polynomials
+                        // dLp  = derivative of the Legendre polynomial of order p
+                        // dLpp = derivative of the Legendre polynomial of order p+1
+                        // dLpm = derivative of the Legendre polynomial of order p-1
+                        Polylib::jacobd(nquad0, z0.data(), &(dLp0[0]),  p0,   0.0, 0.0);
+                        Polylib::jacobd(nquad0, z0.data(), &(dLpp0[0]), p0+1, 0.0, 0.0);
+                        Polylib::jacobd(nquad0, z0.data(), &(dLpm0[0]), p0-1, 0.0, 0.0);
+                        
+                        Polylib::jacobd(nquad0, z1.data(), &(dLp1[0]),  p1,   0.0, 0.0);
+                        Polylib::jacobd(nquad0, z1.data(), &(dLpp1[0]), p1+1, 0.0, 0.0);
+                        Polylib::jacobd(nquad0, z1.data(), &(dLpm1[0]), p1-1, 0.0, 0.0);
+                        
+                        // Building the DG_c_Left
+                        for(i = 0; i < nquad0; ++i)
+                        {
+                            m_dGL_xi1[n][i]  = etap0 * dLpm0[i];
+                            m_dGL_xi1[n][i] += dLpp0[i];
+                            m_dGL_xi1[n][i] *= overeta0;
+                            m_dGL_xi1[n][i]  = dLp0[i] - m_dGL_xi1[n][i];
+                            m_dGL_xi1[n][i]  = 0.5 * sign0 * m_dGL_xi1[n][i];
+                        }
+                        
+                        // Building the DG_c_Left
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            m_dGL_xi2[n][i]  = etap1 * dLpm1[i];
+                            m_dGL_xi2[n][i] += dLpp1[i];
+                            m_dGL_xi2[n][i] *= overeta1;
+                            m_dGL_xi2[n][i]  = dLp1[i] - m_dGL_xi2[n][i];
+                            m_dGL_xi2[n][i]  = 0.5 * sign1 * m_dGL_xi2[n][i];
+                        }
+                        
+                        // Building the DG_c_Right
+                        for(i = 0; i < nquad0; ++i)
+                        {
+                            m_dGR_xi1[n][i]  = etap0 * dLpm0[i];
+                            m_dGR_xi1[n][i] += dLpp0[i];
+                            m_dGR_xi1[n][i] *= overeta0;
+                            m_dGR_xi1[n][i] += dLp0[i];
+                            m_dGR_xi1[n][i]  = 0.5 * m_dGR_xi1[n][i];
+                        }
+                        
+                        // Building the DG_c_Right
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            m_dGR_xi2[n][i]  = etap1 * dLpm1[i];
+                            m_dGR_xi2[n][i] += dLpp1[i];
+                            m_dGR_xi2[n][i] *= overeta1;
+                            m_dGR_xi2[n][i] += dLp1[i];
+                            m_dGR_xi2[n][i]  = 0.5 * m_dGR_xi2[n][i];
+                        }
                     }
                     break;
                 }
                 case 3:
-                {
-                    LibUtilities::BasisSharedPtr BasisFR_Left0;
-                    LibUtilities::BasisSharedPtr BasisFR_Right0;
-                    LibUtilities::BasisSharedPtr BasisFR_Left1;
-                    LibUtilities::BasisSharedPtr BasisFR_Right1;
-                    LibUtilities::BasisSharedPtr BasisFR_Left2;
-                    LibUtilities::BasisSharedPtr BasisFR_Right2;
-                    
+                {                    
                     m_dGL_xi1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     m_dGR_xi1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     m_dGL_xi2 = Array<OneD, Array<OneD, NekDouble> >(nElements);
@@ -519,9 +485,17 @@ namespace Nektar
                         nmodes0   = base[0]->GetNumModes();
                         nmodes1   = base[1]->GetNumModes();
                         nmodes2   = base[2]->GetNumModes();
-                        FRPts0    = base[0]->GetPointsKey();   
-                        FRPts1    = base[1]->GetPointsKey(); 
-                        FRPts2    = base[2]->GetPointsKey(); 
+                        
+                        Array<OneD, const NekDouble> z0;
+                        Array<OneD, const NekDouble> w0;   
+                        Array<OneD, const NekDouble> z1;
+                        Array<OneD, const NekDouble> w1;
+                        Array<OneD, const NekDouble> z2;
+                        Array<OneD, const NekDouble> w2;
+                        
+                        base[0]->GetZW(z0, w0);
+                        base[1]->GetZW(z1, w1);
+                        base[1]->GetZW(z2, w2);
                         
                         m_dGL_xi1[n] = Array<OneD, NekDouble>(nquad0);
                         m_dGR_xi1[n] = Array<OneD, NekDouble>(nquad0);
@@ -530,151 +504,193 @@ namespace Nektar
                         m_dGL_xi3[n] = Array<OneD, NekDouble>(nquad2);
                         m_dGR_xi3[n] = Array<OneD, NekDouble>(nquad2);
                         
+                        // Auxiliary vectors to build up the auxiliary 
+                        // derivatives of the Legendre polynomials
+                        Array<OneD,NekDouble> dLp0   (nquad0, 0.0);
+                        Array<OneD,NekDouble> dLpp0  (nquad0, 0.0);
+                        Array<OneD,NekDouble> dLpm0  (nquad0, 0.0);
+                        Array<OneD,NekDouble> dLp1   (nquad1, 0.0);
+                        Array<OneD,NekDouble> dLpp1  (nquad1, 0.0);
+                        Array<OneD,NekDouble> dLpm1  (nquad1, 0.0);
+                        Array<OneD,NekDouble> dLp2   (nquad2, 0.0);
+                        Array<OneD,NekDouble> dLpp2  (nquad2, 0.0);
+                        Array<OneD,NekDouble> dLpm2  (nquad2, 0.0);
+                        
+                        // Degree of the correction functions
+                        int p0 = nmodes0 - 1;
+                        int p1 = nmodes1 - 1;
+                        int p2 = nmodes2 - 1;
+                        
+                        // Function sign to compute  left correction function
+                        NekDouble sign0 = pow(-1.0, p0);
+                        NekDouble sign1 = pow(-1.0, p1);
+                        NekDouble sign2 = pow(-1.0, p2);
+                        
+                        // Factorial factor to build the scheme
+                        NekDouble ap0 = boost::math::tgamma(2 * p0 + 1) 
+                                      / (pow(2.0, p0) 
+                                      * boost::math::tgamma(p0 + 1) 
+                                      * boost::math::tgamma(p0 + 1));
+                        
+                        // Factorial factor to build the scheme
+                        NekDouble ap1 = boost::math::tgamma(2 * p1 + 1) 
+                                      / (pow(2.0, p1) 
+                                      * boost::math::tgamma(p1 + 1) 
+                                      * boost::math::tgamma(p1 + 1));
+                        
+                        // Factorial factor to build the scheme
+                        NekDouble ap2 = boost::math::tgamma(2 * p2 + 1) 
+                                      / (pow(2.0, p2) 
+                                      * boost::math::tgamma(p2 + 1) 
+                                      * boost::math::tgamma(p2 + 1));
+                        
+                        // Scalar parameter which recovers the FR schemes
                         if (m_advType == "FRDG")
                         {
-                            // Derivatives of the correction functions (DG)
-                            const LibUtilities::BasisKey FRBase_Left0(
-                                LibUtilities::eDG_DG_Left,  
-                                nmodes0, 
-                                FRPts0);
-                            
-                            const LibUtilities::BasisKey FRBase_Right0(
-                                LibUtilities::eDG_DG_Right, 
-                                nmodes0, 
-                                FRPts0);
-                            
-                            const LibUtilities::BasisKey FRBase_Left1(
-                                LibUtilities::eDG_DG_Left,  
-                                nmodes1, 
-                                FRPts1);
-                            
-                            const LibUtilities::BasisKey FRBase_Right1(
-                                LibUtilities::eDG_DG_Right, 
-                                nmodes1, 
-                                FRPts1);
-                            
-                            const LibUtilities::BasisKey FRBase_Left2(
-                                LibUtilities::eDG_DG_Left,  
-                                nmodes2, 
-                                FRPts2);
-                            
-                            const LibUtilities::BasisKey FRBase_Right2(
-                                LibUtilities::eDG_DG_Right, 
-                                nmodes2, 
-                                FRPts2);
-                            
-                            BasisFR_Left0  = 
-                                LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = 
-                                LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = 
-                                LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = 
-                                LibUtilities::BasisManager()[FRBase_Right1];
-                            BasisFR_Left2  = 
-                                LibUtilities::BasisManager()[FRBase_Left2];
-                            BasisFR_Right2 = 
-                                LibUtilities::BasisManager()[FRBase_Right2];
+                            c0 = 0.0;
+                            c1 = 0.0;
+                            c2 = 0.0;
                         }
                         else if (m_advType == "FRSD")
                         {
-                            // Derivatives of the correction functions (SD)
-                            const LibUtilities::BasisKey FRBase_Left0(
-                                LibUtilities::eDG_SD_Left,  
-                                nmodes0, 
-                                FRPts0);
+                            c0 = 2.0 * p0 / ((2.0 * p0 + 1.0) * (p0 + 1.0) 
+                               * (ap0 * boost::math::tgamma(p0 + 1)) 
+                               * (ap0 * boost::math::tgamma(p0 + 1)));
                             
-                            const LibUtilities::BasisKey FRBase_Right0(
-                                LibUtilities::eDG_SD_Right, 
-                                nmodes0, 
-                                FRPts0);
+                            c1 = 2.0 * p1 / ((2.0 * p1 + 1.0) * (p1 + 1.0) 
+                               * (ap1 * boost::math::tgamma(p1 + 1)) 
+                               * (ap1 * boost::math::tgamma(p1 + 1)));
                             
-                            const LibUtilities::BasisKey FRBase_Left1(
-                                LibUtilities::eDG_SD_Left,  
-                                nmodes1, 
-                                FRPts1);
-                            
-                            const LibUtilities::BasisKey FRBase_Right1(
-                                LibUtilities::eDG_SD_Right, 
-                                nmodes1, 
-                                FRPts1);
-                            
-                            const LibUtilities::BasisKey FRBase_Left2(
-                                LibUtilities::eDG_SD_Left,  
-                                nmodes2, 
-                                FRPts2);
-                            
-                            const LibUtilities::BasisKey FRBase_Right2(
-                                LibUtilities::eDG_SD_Right, 
-                                nmodes2, 
-                                FRPts2);
-                            
-                            BasisFR_Left0  = 
-                                LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = 
-                                LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = 
-                                LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = 
-                                LibUtilities::BasisManager()[FRBase_Right1];
-                            BasisFR_Left2  = 
-                                LibUtilities::BasisManager()[FRBase_Left2];
-                            BasisFR_Right2 = 
-                                LibUtilities::BasisManager()[FRBase_Right2];
+                            c2 = 2.0 * p2 / ((2.0 * p2 + 1.0) * (p2 + 1.0) 
+                               * (ap2 * boost::math::tgamma(p2 + 1)) 
+                               * (ap2 * boost::math::tgamma(p2 + 1)));
                         }
                         else if (m_advType == "FRHU")
                         {
-                            // Derivatives of the correction functions (HU)
-                            const LibUtilities::BasisKey FRBase_Left0(
-                                LibUtilities::eDG_HU_Left,  
-                                nmodes0, 
-                                FRPts0);
+                            c0 = 2.0 * (p0 + 1.0) / ((2.0 * p0 + 1.0) * p0 
+                               * (ap0 * boost::math::tgamma(p0 + 1)) 
+                               * (ap0 * boost::math::tgamma(p0 + 1)));
                             
-                            const LibUtilities::BasisKey FRBase_Right0(
-                                LibUtilities::eDG_HU_Right, 
-                                nmodes0, 
-                                FRPts0);
+                            c1 = 2.0 * (p1 + 1.0) / ((2.0 * p1 + 1.0) * p1 
+                               * (ap1 * boost::math::tgamma(p1 + 1)) 
+                               * (ap1 * boost::math::tgamma(p1 + 1)));
                             
-                            const LibUtilities::BasisKey FRBase_Left1(
-                                LibUtilities::eDG_HU_Left,  
-                                nmodes1, 
-                                FRPts1);
-                            
-                            const LibUtilities::BasisKey FRBase_Right1(
-                                LibUtilities::eDG_HU_Right, 
-                                nmodes1, 
-                                FRPts1);
-                            
-                            const LibUtilities::BasisKey FRBase_Left2(
-                                LibUtilities::eDG_HU_Left,  
-                                nmodes2, 
-                                FRPts2);
-                            
-                            const LibUtilities::BasisKey FRBase_Right2(
-                                LibUtilities::eDG_HU_Right, 
-                                nmodes2, 
-                                FRPts2);
-                            
-                            BasisFR_Left0  = 
-                                LibUtilities::BasisManager()[FRBase_Left0];
-                            BasisFR_Right0 = 
-                                LibUtilities::BasisManager()[FRBase_Right0];
-                            BasisFR_Left1  = 
-                                LibUtilities::BasisManager()[FRBase_Left1];
-                            BasisFR_Right1 = 
-                                LibUtilities::BasisManager()[FRBase_Right1];
-                            BasisFR_Left2  = 
-                                LibUtilities::BasisManager()[FRBase_Left2];
-                            BasisFR_Right2 = 
-                                LibUtilities::BasisManager()[FRBase_Right2];
+                            c2 = 2.0 * (p2 + 1.0) / ((2.0 * p2 + 1.0) * p2 
+                               * (ap2 * boost::math::tgamma(p2 + 1)) 
+                               * (ap2 * boost::math::tgamma(p2 + 1)));
                         }
-                        // Storing the derivatives into two global variables 
-                        m_dGL_xi1[n] = BasisFR_Left0 ->GetBdata();
-                        m_dGR_xi1[n] = BasisFR_Right0->GetBdata();
-                        m_dGL_xi2[n] = BasisFR_Left1 ->GetBdata();
-                        m_dGR_xi2[n] = BasisFR_Right1->GetBdata();
-                        m_dGL_xi3[n] = BasisFR_Left2 ->GetBdata();
-                        m_dGR_xi3[n] = BasisFR_Right2->GetBdata();
+                        else if (m_advType == "FRcmin")
+                        {
+                            c0 = -2.0 / ((2.0 * p0 + 1.0) 
+                               * (ap0 * boost::math::tgamma(p0 + 1))
+                               * (ap0 * boost::math::tgamma(p0 + 1)));
+                            
+                            c1 = -2.0 / ((2.0 * p1 + 1.0) 
+                               * (ap1 * boost::math::tgamma(p1 + 1))
+                               * (ap1 * boost::math::tgamma(p1 + 1)));
+                            
+                            c2 = -2.0 / ((2.0 * p2 + 1.0) 
+                               * (ap2 * boost::math::tgamma(p2 + 1))
+                               * (ap2 * boost::math::tgamma(p2 + 1)));
+                        }
+                        else if (m_advType == "FRinf")
+                        {
+                            c0 = 10000000000000000.0;
+                            c1 = 10000000000000000.0;
+                            c2 = 10000000000000000.0;
+                        }
+                        
+                        NekDouble etap0 = 0.5 * c0 * (2.0 * p0 + 1.0) 
+                                        * (ap0 * boost::math::tgamma(p0 + 1)) 
+                                        * (ap0 * boost::math::tgamma(p0 + 1));
+                        
+                        NekDouble etap1 = 0.5 * c1 * (2.0 * p1 + 1.0) 
+                                        * (ap1 * boost::math::tgamma(p1 + 1)) 
+                                        * (ap1 * boost::math::tgamma(p1 + 1));
+                        
+                        NekDouble etap2 = 0.5 * c2 * (2.0 * p2 + 1.0) 
+                                        * (ap2 * boost::math::tgamma(p2 + 1)) 
+                                        * (ap2 * boost::math::tgamma(p2 + 1));
+                        
+                        NekDouble overeta0 = 1.0 / (1.0 + etap0);
+                        NekDouble overeta1 = 1.0 / (1.0 + etap1);
+                        NekDouble overeta2 = 1.0 / (1.0 + etap2);
+
+                        // Derivative of the Legendre polynomials
+                        // dLp  = derivative of the Legendre polynomial of order p
+                        // dLpp = derivative of the Legendre polynomial of order p+1
+                        // dLpm = derivative of the Legendre polynomial of order p-1
+                        Polylib::jacobd(nquad0, z0.data(), &(dLp0[0]),  p0,   0.0, 0.0);
+                        Polylib::jacobd(nquad0, z0.data(), &(dLpp0[0]), p0+1, 0.0, 0.0);
+                        Polylib::jacobd(nquad0, z0.data(), &(dLpm0[0]), p0-1, 0.0, 0.0);
+                        
+                        Polylib::jacobd(nquad0, z1.data(), &(dLp1[0]),  p1,   0.0, 0.0);
+                        Polylib::jacobd(nquad0, z1.data(), &(dLpp1[0]), p1+1, 0.0, 0.0);
+                        Polylib::jacobd(nquad0, z1.data(), &(dLpm1[0]), p1-1, 0.0, 0.0);
+                        
+                        Polylib::jacobd(nquad0, z2.data(), &(dLp2[0]),  p2,   0.0, 0.0);
+                        Polylib::jacobd(nquad0, z2.data(), &(dLpp2[0]), p2+1, 0.0, 0.0);
+                        Polylib::jacobd(nquad0, z2.data(), &(dLpm2[0]), p2-1, 0.0, 0.0);
+                        
+                        // Building the DG_c_Left
+                        for(i = 0; i < nquad0; ++i)
+                        {
+                            m_dGL_xi1[n][i]  = etap0 * dLpm0[i];
+                            m_dGL_xi1[n][i] += dLpp0[i];
+                            m_dGL_xi1[n][i] *= overeta0;
+                            m_dGL_xi1[n][i]  = dLp0[i] - m_dGL_xi1[n][i];
+                            m_dGL_xi1[n][i]  = 0.5 * sign0 * m_dGL_xi1[n][i];
+                        }
+                        
+                        // Building the DG_c_Left
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            m_dGL_xi2[n][i]  = etap1 * dLpm1[i];
+                            m_dGL_xi2[n][i] += dLpp1[i];
+                            m_dGL_xi2[n][i] *= overeta1;
+                            m_dGL_xi2[n][i]  = dLp1[i] - m_dGL_xi2[n][i];
+                            m_dGL_xi2[n][i]  = 0.5 * sign1 * m_dGL_xi2[n][i];
+                        }
+                        
+                        // Building the DG_c_Left
+                        for(i = 0; i < nquad2; ++i)
+                        {
+                            m_dGL_xi3[n][i]  = etap2 * dLpm2[i];
+                            m_dGL_xi3[n][i] += dLpp2[i];
+                            m_dGL_xi3[n][i] *= overeta2;
+                            m_dGL_xi3[n][i]  = dLp2[i] - m_dGL_xi3[n][i];
+                            m_dGL_xi3[n][i]  = 0.5 * sign1 * m_dGL_xi3[n][i];
+                        }
+                        
+                        // Building the DG_c_Right
+                        for(i = 0; i < nquad0; ++i)
+                        {
+                            m_dGR_xi1[n][i]  = etap0 * dLpm0[i];
+                            m_dGR_xi1[n][i] += dLpp0[i];
+                            m_dGR_xi1[n][i] *= overeta0;
+                            m_dGR_xi1[n][i] += dLp0[i];
+                            m_dGR_xi1[n][i]  = 0.5 * m_dGR_xi1[n][i];
+                        }
+                        
+                        // Building the DG_c_Right
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            m_dGR_xi2[n][i]  = etap1 * dLpm1[i];
+                            m_dGR_xi2[n][i] += dLpp1[i];
+                            m_dGR_xi2[n][i] *= overeta1;
+                            m_dGR_xi2[n][i] += dLp1[i];
+                            m_dGR_xi2[n][i]  = 0.5 * m_dGR_xi2[n][i];
+                        }
+                        
+                        // Building the DG_c_Right
+                        for(i = 0; i < nquad2; ++i)
+                        {
+                            m_dGR_xi3[n][i]  = etap2 * dLpm2[i];
+                            m_dGR_xi3[n][i] += dLpp2[i];
+                            m_dGR_xi3[n][i] *= overeta2;
+                            m_dGR_xi3[n][i] += dLp2[i];
+                            m_dGR_xi3[n][i]  = 0.5 * m_dGR_xi3[n][i];
+                        }
                     }
                     break;
                 }
@@ -852,6 +868,7 @@ namespace Nektar
                     {
                         nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
                         phys_offset = fields[0]->GetPhys_Offset(n);
+                        //Array<OneD, const NekDouble> &jac = ;
                         jac = fields[0]->GetExp(n)->GetGeom1D()->GetJac();
                         
                         Vmath::Smul(nLocalSolutionPts, 

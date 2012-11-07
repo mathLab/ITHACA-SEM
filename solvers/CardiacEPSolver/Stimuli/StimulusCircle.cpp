@@ -98,7 +98,7 @@ namespace Nektar
         
         pXmlparameter = pXml->FirstChildElement("p_r1");
         m_pr1 = atof(pXmlparameter->GetText());
-     
+    
         
         pXmlparameter = pXml->FirstChildElement("p_is");
         m_pis = atof(pXmlparameter->GetText());

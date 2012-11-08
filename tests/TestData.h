@@ -60,7 +60,7 @@ namespace Nektar
         TestData(const TestData& pSrc);
 
         const std::string& GetDescription() const;
-        const std::string& GetExecutable() const;
+        const std::string  GetExecutable() const;
         const std::string& GetParameters() const;
         const unsigned int& GetNProcesses() const;
 

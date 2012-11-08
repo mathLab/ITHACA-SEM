@@ -66,9 +66,13 @@ namespace Nektar
         return m_description;
     }
 
-    const std::string& TestData::GetExecutable() const
+    const std::string TestData::GetExecutable() const
     {
-        return m_executable;
+        std::string execname = m_executable;
+    #if !defined(NDEBUG)
+        execname += "-g";
+    #endif
+        return execname;
     }
 
     const std::string& TestData::GetParameters() const

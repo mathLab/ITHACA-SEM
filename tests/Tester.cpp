@@ -218,11 +218,7 @@ int main(int argc, char *argv[])
         }
 
         command += PortablePath(execPath);
-    #if defined(NDEBUG)
         command += " ";
-    #else
-        command += "-g ";
-    #endif
         command += file.GetParameters();
         command += " 1>output.out 2>output.err";
 

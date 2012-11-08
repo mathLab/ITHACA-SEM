@@ -2104,10 +2104,10 @@ namespace Nektar
 	    const int three=3;
             const int nVerts = 6;
             const double point[][3] = {
-            {0,0,0}, {1,0,0}, {1,1,0}, 
-            {0,1,0}, {0,0,1}, {0,1,1}
+                {-1,-1,0}, {1,-1,0}, {1,1,0}, 
+                {-1,1,0}, {0,-1,sqrt(double(3))}, {0,1,sqrt(double(3))},
             };
-
+                
             //boost::shared_ptr<SpatialDomains::VertexComponent> verts[6];
             SpatialDomains::VertexComponentSharedPtr verts[6];
             for(int i=0; i < nVerts; ++i)
@@ -2173,12 +2173,6 @@ namespace Nektar
             } 
             
             SpatialDomains::PrismGeomSharedPtr geom = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
-
-            SpatialDomains::GeomFactorsSharedPtr m_geomFactors = geom->GetRefGeomFactors(m_base);
-                
-            
-                //m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                //Gtype, m_coordim, m_xmap, tbasis);
 
             geom->SetOwnData();
             return geom;
@@ -2273,12 +2267,16 @@ namespace Nektar
                     GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,2)) 
                     - 6;
 
-                int nedgemodesconnected=nConnectedEdges * 
-                    (GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,0))-2);
+                int nedgemodesconnected=
+                    GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,0)) +
+                    GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,1)) +
+                    GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,2))-6;
                 Array<OneD, unsigned int> edgemodearray(nedgemodesconnected);
 
-                int nfacemodesconnected=nConnectedFaces * 
-                    (GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,0)));
+                int nfacemodesconnected=
+                    GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,0)) +
+                    GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,1)) +
+                    GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,2));                   
                 Array<OneD, unsigned int> facemodearray(nfacemodesconnected);
 
 
@@ -2344,7 +2342,7 @@ namespace Nektar
                 //Allocation of matrix to store edge/face-edge/face coupling
                 DNekMatSharedPtr m_edgefacecoupling = 
                     MemoryManager<DNekMat>::AllocateSharedPtr(
-                                           efRow, efRow,zero, storage);
+                                           efRow, efRow,zero,storage);
                 DNekMat &Sefef = (*m_edgefacecoupling);
 
                 NekDouble EdgeEdgeValue, FaceFaceValue;
@@ -2599,9 +2597,9 @@ namespace Nektar
                 invmap[bmap[j]] = j;
             }
 
-	    nVerts=vma.num_elements();
-	    nEdges=ema.num_elements();
-	    nFaces=fma.num_elements();
+            nVerts=GetNverts();
+            nEdges=GetNedges();
+            nFaces=GetNfaces();
 
             //loop over vertices and determine the location of vertex
             //coefficients in the storage array
@@ -2633,8 +2631,6 @@ namespace Nektar
                 ema[eid]=maparray;
             }
 
-            int nTotFaceCoeffs=GetTotalFaceIntNcoeffs();
-	                
             //loop over faces and determine location of face coefficients in the storage array
             for (cnt=fid=0; fid<nFaces; ++fid)
             {

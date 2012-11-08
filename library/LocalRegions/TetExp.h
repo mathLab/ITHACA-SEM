@@ -59,6 +59,7 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT TetExp(const TetExp &T);
 
+
             LOCAL_REGIONS_EXPORT ~TetExp();
 
         protected:

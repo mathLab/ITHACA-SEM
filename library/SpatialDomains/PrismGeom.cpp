@@ -180,6 +180,11 @@ namespace Nektar
             return 9;
         }
 
+        int PrismGeom::v_GetNumFaces() const
+        {
+            return 5;
+        }
+
         void PrismGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)

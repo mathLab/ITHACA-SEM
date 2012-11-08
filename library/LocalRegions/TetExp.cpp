@@ -94,7 +94,6 @@ namespace Nektar
         {
         }
 
-
         /**
 	 * \brief Destructor
 	 */
@@ -801,23 +800,6 @@ namespace Nektar
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
             int nq= m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             int vCoordDim = GetCoordim();
-            
-            /*int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
-            
-            if (face == 0)
-            {
-                nq = nquad0*nquad1;
-            }
-            else if (face == 1)
-            {
-                nq = nquad0*nquad2;
-            }
-            else
-            {
-                nq = nquad1*nquad2;
-                }*/
             
             m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
             Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
@@ -1565,6 +1547,7 @@ namespace Nektar
 		    LibUtilities::BasisKey TetBc = m_base[2]->GetBasisKey();
 
 		    SpatialDomains::TetGeomSharedPtr EquilateralTetGeom=CreateEquilateralTetGeom();
+                    StdRegions::ExpansionType shape = DetExpansionType();
 
 		    //create TetExp with equilateral Tet geometry object
                     TetExp eqtet(TetBa,TetBb,TetBc,EquilateralTetGeom);
@@ -2236,8 +2219,6 @@ namespace Nektar
             SpatialDomains::TetGeomSharedPtr geom =
                 MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr
                 (faces);
-
-            SpatialDomains::GeomFactorsSharedPtr m_geomFactors = geom->GetRefGeomFactors(m_base);
 
             geom->SetOwnData();
             

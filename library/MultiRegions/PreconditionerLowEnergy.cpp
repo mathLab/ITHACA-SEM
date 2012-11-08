@@ -534,9 +534,9 @@ namespace Nektar
                 StdRegions::ExpansionType eType=
                     locExpansion->DetExpansionType();
 
-                if(eType==StdRegions::eTetrahedron && !m_transformationmatrix)
+                //if(eType==StdRegions::eTetrahedron && !m_transformationmatrix)
                     //if(eType==StdRegions::ePrism && !m_transformationmatrix)
-                {
+                //{
                     // retrieve variable coefficient
                     if(m_linSysKey.GetNVarCoeffs() > 0)
                     {
@@ -582,7 +582,7 @@ namespace Nektar
 
                     //number of rows=columns of the schur complement
                     bnd_rows=m_transformationmatrix->GetRows();
-                }
+                    //}
                 /*else if(eType==StdRegions::ePrism && !m_transformationmatrix)
                 {
                 }

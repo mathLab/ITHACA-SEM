@@ -421,9 +421,9 @@ namespace Nektar
                         Polylib::jacobd(nquad0, z0.data(), &(dLpp0[0]), p0+1, 0.0, 0.0);
                         Polylib::jacobd(nquad0, z0.data(), &(dLpm0[0]), p0-1, 0.0, 0.0);
                         
-                        Polylib::jacobd(nquad0, z1.data(), &(dLp1[0]),  p1,   0.0, 0.0);
-                        Polylib::jacobd(nquad0, z1.data(), &(dLpp1[0]), p1+1, 0.0, 0.0);
-                        Polylib::jacobd(nquad0, z1.data(), &(dLpm1[0]), p1-1, 0.0, 0.0);
+                        Polylib::jacobd(nquad1, z1.data(), &(dLp1[0]),  p1,   0.0, 0.0);
+                        Polylib::jacobd(nquad1, z1.data(), &(dLpp1[0]), p1+1, 0.0, 0.0);
+                        Polylib::jacobd(nquad1, z1.data(), &(dLpm1[0]), p1-1, 0.0, 0.0);
                         
                         // Building the DG_c_Left
                         for(i = 0; i < nquad0; ++i)
@@ -624,13 +624,13 @@ namespace Nektar
                         Polylib::jacobd(nquad0, z0.data(), &(dLpp0[0]), p0+1, 0.0, 0.0);
                         Polylib::jacobd(nquad0, z0.data(), &(dLpm0[0]), p0-1, 0.0, 0.0);
                         
-                        Polylib::jacobd(nquad0, z1.data(), &(dLp1[0]),  p1,   0.0, 0.0);
-                        Polylib::jacobd(nquad0, z1.data(), &(dLpp1[0]), p1+1, 0.0, 0.0);
-                        Polylib::jacobd(nquad0, z1.data(), &(dLpm1[0]), p1-1, 0.0, 0.0);
+                        Polylib::jacobd(nquad1, z1.data(), &(dLp1[0]),  p1,   0.0, 0.0);
+                        Polylib::jacobd(nquad1, z1.data(), &(dLpp1[0]), p1+1, 0.0, 0.0);
+                        Polylib::jacobd(nquad1, z1.data(), &(dLpm1[0]), p1-1, 0.0, 0.0);
                         
-                        Polylib::jacobd(nquad0, z2.data(), &(dLp2[0]),  p2,   0.0, 0.0);
-                        Polylib::jacobd(nquad0, z2.data(), &(dLpp2[0]), p2+1, 0.0, 0.0);
-                        Polylib::jacobd(nquad0, z2.data(), &(dLpm2[0]), p2-1, 0.0, 0.0);
+                        Polylib::jacobd(nquad2, z2.data(), &(dLp2[0]),  p2,   0.0, 0.0);
+                        Polylib::jacobd(nquad2, z2.data(), &(dLpp2[0]), p2+1, 0.0, 0.0);
+                        Polylib::jacobd(nquad2, z2.data(), &(dLpm2[0]), p2-1, 0.0, 0.0);
                         
                         // Building the DG_c_Left
                         for(i = 0; i < nquad0; ++i)

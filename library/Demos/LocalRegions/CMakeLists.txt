@@ -88,3 +88,16 @@ FOREACH(dir ${dir_list})
         ADD_SUBDIRECTORY(${dir})
     ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
 ENDFOREACH(dir ${dir_list})
+
+ADD_NEKTAR_TEST(LocProject1D_Ortho_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject1D_Mod_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject_Diff1D_Ortho_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject_Diff1D_Mod_Basis_P6_Q7)
+
+ADD_NEKTAR_TEST(LocProject2D_Tri_Ortho_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject2D_Tri_Mod_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject2D_Tri_Nodal_Basis_P6_Q7)
+
+ADD_NEKTAR_TEST(LocProject2D_Quad_Ortho_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject2D_Quad_Mod_Basis_P6_Q7)
+

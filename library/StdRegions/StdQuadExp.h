@@ -186,10 +186,13 @@ namespace Nektar
                 Array<OneD, NekDouble> &coords_0,
                 Array<OneD, NekDouble> &coords_1,
                 Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray);            
-	    STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  
+            STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  
                     StdExpansion1DSharedPtr &EdgeExp, 
                     const Array<OneD, const NekDouble> &inarray, 
                     Array<OneD,NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
+                    const int edge,  
+                    Array<OneD, NekDouble> &outarray);
             STD_REGIONS_EXPORT void v_WriteToFile(std::ofstream &outfile, 
                     OutputFormat format, 
                     const bool dumpVar = true, 

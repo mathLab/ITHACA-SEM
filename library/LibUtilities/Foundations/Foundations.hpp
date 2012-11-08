@@ -61,13 +61,7 @@ namespace Nektar
             "FourierSingleMode",
             "FourierHalfModeRe",
             "FourierHalfModeIm",
-            "Gauss_Lagrange",
-            "DG_DG_Left",
-            "DG_DG_Right",
-            "DG_SD_Left",
-            "DG_SD_Right",
-            "DG_HU_Left"
-            "DG_HU_Right"
+            "Gauss_Lagrange"
         };
 
 

@@ -54,11 +54,10 @@ namespace Nektar
      */
     
     /**
-     * Cell model base class constructor.
+     * Protocol base class constructor.
      */
-    ProtocolSingle::ProtocolSingle(const LibUtilities::SessionReaderSharedPtr& pSession,
-                         const TiXmlElement* pXml)
-            : Protocol(pSession, pXml)
+    ProtocolSingle::ProtocolSingle(const LibUtilities::SessionReaderSharedPtr& pSession,const TiXmlElement* pXml)
+        : Protocol(pSession, pXml)
     {
         m_session = pSession;
         

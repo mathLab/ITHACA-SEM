@@ -535,7 +535,7 @@
             <I PROPERTY="Projection" VALUE="Continuous"/>
             <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_3_4_3"/>
-            <I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond" />
+            <I PROPERTY="GlobalSysSoln" VALUE="DirectStaticCond" />
         </SOLVERINFO>
         
         <VARIABLES>
@@ -564,20 +564,20 @@
     </CONDITIONS>
     
     <STIMULI>
-        <STIMULUS ID="1" TYPE = "StimulusRect">
-            <p_x1> 0.1</p_x1>
-            <p_y1> 0.1</p_y1>
+        <STIMULUS ID="0" TYPE = "StimulusRect">
+            <p_x1> 0.2</p_x1>
+            <p_y1> 0.2</p_y1>
             <p_z1> 0.0</p_z1>
-            <p_x2> 0.9</p_x2>
-            <p_y2> 0.9</p_y2>
+            <p_x2> 0.8</p_x2>
+            <p_y2> 0.8</p_y2>
             <p_z2> 0.0</p_z2>
             <!--<p_r1> 0.1</p_r1>> -->
             <p_is> 1.0</p_is>
             <p_strength> 3.0 </p_strength>
             
             <PROTOCOL TYPE = "ProtocolSingle">
-             <START> 0.0  </START>
-             <DURATION>  1.0 </DURATION>
+                <START> 0.0  </START>
+                <DURATION>  1.0 </DURATION>
              </PROTOCOL>
         </STIMULUS>
     </STIMULI>

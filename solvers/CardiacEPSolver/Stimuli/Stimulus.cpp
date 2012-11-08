@@ -72,7 +72,7 @@ namespace Nektar
         m_field = pField;
         m_nq = pField->GetTotPoints();
         
-        TiXmlElement* vProtocol = vProtocol->FirstChildElement("PROTOCOL");
+        const TiXmlElement* vProtocol = pXml->FirstChildElement("PROTOCOL");
         string vTypeP = vProtocol->Attribute("TYPE");
         
         m_Protocol = GetProtocolFactory().CreateInstance(

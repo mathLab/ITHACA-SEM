@@ -88,3 +88,9 @@ FOREACH(dir ${dir_list})
         ADD_SUBDIRECTORY(${dir})
     ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
 ENDFOREACH(dir ${dir_list})
+
+ADD_NEKTAR_TEST(Helmholtz1D_CG_P8)
+ADD_NEKTAR_TEST(Helmholtz1D_CG_P8_RBC)
+
+ADD_NEKTAR_TEST(Helmholtz1D_HDG_P8)
+ADD_NEKTAR_TEST(Helmholtz1D_HDG_P8_RBC)

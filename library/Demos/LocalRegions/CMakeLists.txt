@@ -89,10 +89,6 @@ FOREACH(dir ${dir_list})
     ENDIF(IS_DIRECTORY ${dir} AND EXISTS ${dir}/CMakeLists.txt)
 ENDFOREACH(dir ${dir_list})
 
-
-
-ADD_NEKTAR_TEST(LocalProject1D_Seg_01_Orth_Basis_P6_Q7)
-
 ADD_NEKTAR_TEST(LocProject1D_Ortho_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject1D_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff1D_Ortho_Basis_P6_Q7)
@@ -101,9 +97,23 @@ ADD_NEKTAR_TEST(LocProject_Diff1D_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject2D_Tri_Ortho_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject2D_Tri_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject2D_Tri_Nodal_Basis_P6_Q7)
-
 ADD_NEKTAR_TEST(LocProject2D_Quad_Ortho_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject2D_Quad_Mod_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject2D_Quad_Lagrange_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject2D_Def_Quad_Ortho_Basis_P4_Q5)
+ADD_NEKTAR_TEST(LocProject2D_Def_Quad_Mod_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject2D_Def_Quad_Lagrange_Basis_P6_Q7)
+
+ADD_NEKTAR_TEST(LocProject3D_Tet_Ortho_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject3D_Tet_Mod_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject3D_Prism_Ortho_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject3D_Prism_Mod_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject3D_Hex_Ortho_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject3D_Hex_Mod_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject3D_Hex_Lagrange_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject3D_Def_Hex_Ortho_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject3D_Def_Hex_Mod_Basis_P6_Q7)
+ADD_NEKTAR_TEST(LocProject3D_Def_Hex_Lagrange_Basis_P6_Q7)
 
 ADD_NEKTAR_TEST(LocProject_Diff3D_Lin_Deformed_Hex_Lagrange_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff3D_Lin_Deformed_Hex_Mod_Basis_P6_Q7)
@@ -115,7 +125,6 @@ ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Prism_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Prism_Ortho_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Tet_Mod_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff3D_Reg_Tet_Ortho_Basis_P6_Q7)
-
 
 ADD_NEKTAR_TEST(LocProject_Diff2D_Lin_Deformed_Quad_Lagrange_Basis_P6_Q7)
 ADD_NEKTAR_TEST(LocProject_Diff2D_Lin_Deformed_Quad_Mod_Basis_P6_Q7)

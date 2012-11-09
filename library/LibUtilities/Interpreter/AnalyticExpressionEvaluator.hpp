@@ -481,6 +481,8 @@ namespace Nektar
                 EvaluationStep(rgt rn, ci i, ci l, ci r, vr s, cvr c, cvr p, cvr v):
                     rng(rn), storeIdx(i), argIdx1(l), argIdx2(r), state(s), consts(c), params(p), vars(v) {};
 
+                virtual ~EvaluationStep() {}
+
                 ///  declaring this guy pure virtual shortens virtual table. It saves some execution time.
                 virtual void run_many(ci n) = 0;
                 virtual void run_once() = 0;

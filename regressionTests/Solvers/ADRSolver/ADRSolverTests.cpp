@@ -203,6 +203,49 @@ int main(int argc, char* argv[])
     Execute("ADRSolver","Test_Advection1D_FRSD_GLL_LAGRANGE_SEM.xml","1D unsteady FRSD advection GLL_LAGRANGE_SEM, P=3");
     
     Execute("ADRSolver","Test_Advection1D_FRHU_GLL_LAGRANGE_SEM.xml","1D unsteady FRHU advection GLL_LAGRANGE_SEM, P=3");
+    
+    // Test linear advection equation for 2D Flux Reconstruction (FR)
+    Execute("ADRSolver","Dirichlet_deformed_GLL_LAGRANGE_10x10.xml","2D unsteady FRDG advection GLL_LAGRANGE, P=3, Dirichlet bcs, deformed elements");
+    
+    Execute("ADRSolver","Dirichlet_deformed_MODIFIED_10x10.xml","2D unsteady FRDG advection MODIFIED, P=3, Dirichlet bcs, deformed elements");
+    
+    Execute("ADRSolver","Dirichlet_deformed_GLL_LAGRANGE_SEM_10x10.xml","2D unsteady FRDG advection GLL_LAGRANGE_SEM, P=3, Dirichlet bcs, deformed elements");
+    
+    Execute("ADRSolver","Dirichlet_regular_GLL_LAGRANGE_10x10.xml","2D unsteady FRDG advection GLL_LAGRANGE, P=3, Dirichlet bcs, regular elements");
+    
+    Execute("ADRSolver","Dirichlet_regular_MODIFIED_10x10.xml","2D unsteady FRDG advection MODIFIED, P=3, Dirichlet bcs, regular elements");
+    
+    Execute("ADRSolver","Dirichlet_regular_GLL_LAGRANGE_SEM_10x10.xml","2D unsteady FRDG advection GLL_LAGRANGE_SEM, P=3, Dirichlet bcs, regular elements");
+    
+    Execute("ADRSolver","ISO_deformed_GLL_LAGRANGE_3x3.xml","2D unsteady FRDG advection GLL_LAGRANGE, P=10, homogeneous Dirichlet bcs, deformed elements");
+    
+    Execute("ADRSolver","ISO_deformed_MODIFIED_3x3.xml","2D unsteady FRHU advection MODIFIED, P=10, homogeneous Dirichlet bcs, deformed elements");
+    
+    Execute("ADRSolver","ISO_deformed_GLL_LAGRANGE_SEM_3x3.xml","2D unsteady FRSD advection GLL_LAGRANGE_SEM, P=10, homogeneous Dirichlet bcs, deformed elements");
+    
+    Execute("ADRSolver","ISO_regular_GLL_LAGRANGE_3x3.xml","2D unsteady FRSD advection GLL_LAGRANGE, P=10, homogeneous Dirichlet bcs, regular elements");
+    
+    Execute("ADRSolver","ISO_regular_MODIFIED_3x3.xml","2D unsteady FRSD advection MODIFIED, P=10, homogeneous Dirichlet bcs, regular elements");
+    
+    Execute("ADRSolver","ISO_regular_GLL_LAGRANGE_SEM_3x3.xml","2D unsteady FRDG advection GLL_LAGRANGE_SEM, P=10, homogeneous Dirichlet bcs, regular elements");
+    
+    Execute("ADRSolver","Periodic_deformed_GLL_LAGRANGE_2x2.xml","2D unsteady FRDG advection GLL_LAGRANGE, P=15, periodic bcs, deformed elements");
+    
+    Execute("ADRSolver","Periodic_deformed_MODIFIED_2x2.xml","2D unsteady FRDG advection MODIFIED, P=15, periodic bcs, deformed elements");
+    
+    Execute("ADRSolver","Periodic_deformed_GLL_LAGRANGE_SEM_2x2.xml","2D unsteady FRDG advection GLL_LAGRANGE_SEM, P=15, periodic bcs, deformed elements");
+    
+    Execute("ADRSolver","Periodic_regular_GLL_LAGRANGE_2x2.xml","2D unsteady FRDG advection GLL_LAGRANGE, P=15, periodic bcs, regular elements");
+    
+    Execute("ADRSolver","Periodic_regular_MODIFIED_2x2.xml","2D unsteady FRDG advection MODIFIED, P=15, periodic bcs, regular elements");
+    
+    Execute("ADRSolver","Periodic_regular_GLL_LAGRANGE_SEM_2x2.xml","2D unsteady FRDG advection GLL_LAGRANGE_SEM, P=15, periodic bcs, regular elements");
+    
+    Execute("ADRSolver","Periodic_deformed_GLL_LAGRANGE_10x10.xml","2D unsteady FRDG advection GLL_LAGRANGE, P=6, periodic bcs, deformed elements");
+    
+    Execute("ADRSolver","Periodic_deformed_MODIFIED_10x10.xml","2D unsteady FRDG advection MODIFIED, P=6, periodic bcs, deformed elements");
+    
+    Execute("ADRSolver","Periodic_deformed_GLL_LAGRANGE_SEM_10x10.xml","2D unsteady FRDG advection GLL_LAGRANGE_SEM, P=6, periodic bcs, deformed elements");
 	
 #ifdef NEKTAR_USING_FFTW
 	Execute("ADRSolver","Test_UnsteadyAdvectionDiffusion_3DHomo1D_FFT.xml","3D-Homogeneous-1D unsteady advection-diffusion (FFT)");
@@ -242,7 +285,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info)
         exit(2);
     }
 
-    if(fail = Test.TestL2()) // test failed
+    if((fail = Test.TestL2()))
     {
         if (!quiet)
         {
@@ -295,7 +338,7 @@ void MakeOkFile(std::string Demo, std::string input, std::string info)
         exit(2);
     }
 
-    if(fail = Test.MakeOkFile())
+    if((fail = Test.MakeOkFile()))
     {
         std::cout << "Failed to make OK file\n";
         // Explain cause of error if available

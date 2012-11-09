@@ -411,6 +411,10 @@ namespace Nektar
                         wz_hat[k] = 0.25*(1.0-z[k])*(1.0-z[k]) * wz[k];
                     }
                     break;
+                    
+                default:
+                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    break;
             }
             
             return Integral3D(inarray, wx, wy, wz_hat);

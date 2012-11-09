@@ -2342,7 +2342,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
       Array<OneD, int> V2tmp(4*nel, 10000);
       for(int i=0; i<nel; i++)
       { 
-           if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i]))
+           if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i])))
            {
                 for(int j = 0; j < locQuadExp->GetNedges(); ++j)
                 {
@@ -2358,7 +2358,7 @@ void GenerateMapEidsv1v2(MultiRegions::ExpListSharedPtr field,
            }
            //in the future the tri edges may be not necessary (if the nedges is known)
 
-           else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i]))
+           else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i])))
            {
                 for(int j = 0; j < locTriExp->GetNedges(); ++j)
                 {
@@ -3756,7 +3756,7 @@ void CheckSingularQuads( MultiRegions::ExpListSharedPtr Exp,
       Array<OneD, int> locEids(4);
       for(int i=0; i<nel; i++)
       { 
-           if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i]))
+           if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i])))
            {
                 SegGeom = (locQuadExp->GetGeom2D())->GetEdge(0);
                 idbef = SegGeom->GetEid();

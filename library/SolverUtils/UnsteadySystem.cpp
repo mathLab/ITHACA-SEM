@@ -177,17 +177,23 @@ namespace Nektar
 		
             switch(m_timeIntMethod)
             {
-            case LibUtilities::eIMEXdirk_2_3_2:
-            case LibUtilities::eIMEXdirk_3_4_3:
-            case LibUtilities::eDIRKOrder2:
-            case LibUtilities::eDIRKOrder3:
-            case LibUtilities::eBackwardEuler:
-            case LibUtilities::eForwardEuler:
-            case LibUtilities::eClassicalRungeKutta4:
-            case LibUtilities::eRungeKutta2_ModifiedEuler:
-            case LibUtilities::eRungeKutta2_ImprovedEuler:
-            case LibUtilities::eAdamsBashforthOrder1:
-            case LibUtilities::eIMEXOrder1:
+		case LibUtilities::eIMEXdirk_1_1_1:
+		case LibUtilities::eIMEXdirk_1_2_1:
+		case LibUtilities::eIMEXdirk_1_2_2:
+		case LibUtilities::eIMEXdirk_4_4_3:	  
+		case LibUtilities::eIMEXdirk_2_2_2:
+		case LibUtilities::eIMEXdirk_2_3_3:
+		case LibUtilities::eIMEXdirk_2_3_2:
+		case LibUtilities::eIMEXdirk_3_4_3:	  
+		case LibUtilities::eDIRKOrder2:
+		case LibUtilities::eDIRKOrder3:
+		case LibUtilities::eBackwardEuler:
+		case LibUtilities::eForwardEuler:
+		case LibUtilities::eClassicalRungeKutta4:	  
+		case LibUtilities::eIMEXOrder1:	
+		case LibUtilities::eMidpoint:
+		case LibUtilities::eRungeKutta2_ModifiedEuler:
+		case LibUtilities::eRungeKutta2_ImprovedEuler:
                 {
                     numMultiSteps = 1;
                     
@@ -199,7 +205,9 @@ namespace Nektar
                     u = IntScheme[0]->InitializeScheme(m_timestep,fields,m_time,m_ode);
                     break;
                 }
-            case LibUtilities::eAdamsBashforthOrder2:
+		case LibUtilities::eAdamsBashforthOrder2:
+		case LibUtilities::eAdamsBashforthOrder3:	  
+		case LibUtilities::eBDFImplicitOrder2:
                 {
                     numMultiSteps = 2;
                     
@@ -217,7 +225,8 @@ namespace Nektar
                     u = IntScheme[1]->InitializeScheme(m_timestep,fields,m_time,m_ode);
                     break;
                 }
-            case LibUtilities::eIMEXOrder2:
+		case LibUtilities::eIMEXOrder2: 
+		case LibUtilities::eAdamsMoultonOrder2:
                 {
                     numMultiSteps = 2;
                     
@@ -235,7 +244,27 @@ namespace Nektar
                     u = IntScheme[1]->InitializeScheme(m_timestep,fields,m_time,m_ode);
                     break;
                 }    
-            case LibUtilities::eIMEXOrder3:
+		case LibUtilities::eIMEXGear:	  
+		    {
+		        numMultiSteps = 2;
+
+		        IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+
+		        // Used in the first time step to initalize the scheme
+		        LibUtilities::TimeIntegrationSchemeKey IntKey0(LibUtilities::eIMEXdirk_2_2_2);
+
+		        // Used for all other time steps
+		        LibUtilities::TimeIntegrationSchemeKey IntKey1(m_timeIntMethod);
+		        IntScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+		        IntScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
+
+		        // Initialise the scheme for the actual time integration scheme
+		        u = IntScheme[1]->InitializeScheme(m_timestep,fields,m_time,m_ode);
+		        break;
+		    } 
+		case LibUtilities::eIMEXOrder3:
+		case LibUtilities::eCNAB:
+		case LibUtilities::eMCNAB:                
                 {
                     numMultiSteps = 3;
                     

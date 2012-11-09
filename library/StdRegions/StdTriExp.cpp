@@ -1738,6 +1738,10 @@ namespace Nektar
                         Blas::Dscal(nquad0,0.5*w1[i],outarray.get()+i*nquad0,1);
                     }
                     break;
+                    
+                default:
+                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    break;
             }
         }
     }//end namespace

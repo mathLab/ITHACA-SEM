@@ -765,6 +765,137 @@ namespace Nektar
                                &outarray[0],1);
             }
         }
+        
+        void QuadExp::v_GetEdgeQFactors(
+                const int edge, 
+                Array<OneD, NekDouble> &outarray)
+        {
+            int i;
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            
+            const Array<OneD, const NekDouble>& jac  = m_metricinfo->GetJac();
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            
+            Array<OneD, NekDouble> j (max(nquad0, nquad1), 0.0);
+            Array<OneD, NekDouble> g0(max(nquad0, nquad1), 0.0);
+            Array<OneD, NekDouble> g1(max(nquad0, nquad1), 0.0);
+            Array<OneD, NekDouble> g2(max(nquad0, nquad1), 0.0);
+            Array<OneD, NekDouble> g3(max(nquad0, nquad1), 0.0);
+            
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {   
+                switch (edge)
+                {
+                    case 0:
+                        Vmath::Vcopy(nquad0, &(gmat[1][0]), 1, &(g1[0]), 1);
+                        Vmath::Vcopy(nquad0, &(gmat[3][0]), 1, &(g3[0]), 1);
+                        Vmath::Vcopy(nquad0, &(jac[0]),     1, &(j[0]),  1);
+                        
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = j[i]*sqrt(g1[i]*g1[i] + g3[i]*g3[i]);
+                        }
+                        break;
+                    case 1:
+                        Vmath::Vcopy(nquad1, 
+                                     &(gmat[0][0])+(nquad0-1), nquad0, 
+                                     &(g0[0]), 1);
+                        
+                        Vmath::Vcopy(nquad1, 
+                                     &(gmat[2][0])+(nquad0-1), nquad0, 
+                                     &(g2[0]), 1);
+                        
+                        Vmath::Vcopy(nquad1, 
+                                     &(jac[0])+(nquad0-1), nquad0, 
+                                     &(j[0]), 1);
+                        
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = j[i]*sqrt(g0[i]*g0[i] + g2[i]*g2[i]);
+                        }
+                        break;
+                    case 2:
+                        
+                        Vmath::Vcopy(nquad0, 
+                                     &(gmat[1][0])+(nquad0*nquad1-1), -1, 
+                                     &(g1[0]), 1);
+                        
+                        Vmath::Vcopy(nquad0, 
+                                     &(gmat[3][0])+(nquad0*nquad1-1), -1, 
+                                     &(g3[0]), 1);
+                        
+                        Vmath::Vcopy(nquad0, 
+                                     &(jac[0])+(nquad0*nquad1-1), -1, 
+                                     &(j[0]), 1);
+                        
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = j[i]*sqrt(g1[i]*g1[i] + g3[i]*g3[i]);
+                        }
+                        break;
+                    case 3:
+                        
+                        Vmath::Vcopy(nquad1, 
+                                     &(gmat[0][0])+nquad0*(nquad1-1), -nquad0, 
+                                     &(g0[0]), 1);
+                        
+                        Vmath::Vcopy(nquad1, 
+                                     &(gmat[2][0])+nquad0*(nquad1-1), -nquad0, 
+                                     &(g2[0]), 1);
+                        
+                        Vmath::Vcopy(nquad1, 
+                                     &(jac[0])+nquad0*(nquad1-1), -nquad0, 
+                                     &(j[0]), 1);
+                        
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = j[i]*sqrt(g0[i]*g0[i] + g2[i]*g2[i]);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"edge value (< 3) is out of range");
+                        break;
+                }
+            }
+            else
+            {
+                switch (edge)
+                {
+                    case 0:
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = jac[0]*sqrt(gmat[1][0]*gmat[1][0] + 
+                                                      gmat[3][0]*gmat[3][0]);
+                        }
+                        break;
+                    case 1:
+                        for (i = 0; i < nquad1; ++i)
+                        {
+                            outarray[i] = jac[0]*sqrt(gmat[0][0]*gmat[0][0] + 
+                                                      gmat[2][0]*gmat[2][0]);
+                        }
+                        break;
+                    case 2:
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = jac[0]*sqrt(gmat[1][0]*gmat[1][0] + 
+                                                      gmat[3][0]*gmat[3][0]);
+                        }
+                        break;
+                    case 3:
+                        for (i = 0; i < nquad1; ++i)
+                        {
+                            outarray[i] = jac[0]*sqrt(gmat[0][0]*gmat[0][0] + 
+                                                      gmat[2][0]*gmat[2][0]);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"edge value (< 3) is out of range");
+                        break; 
+                }
+            }
+        }
 
 
         void QuadExp::v_ComputeEdgeNormal(const int edge)
@@ -1003,28 +1134,22 @@ namespace Nektar
                     outfile<<"View.AdaptVisualizationGrid = 1;"<<endl;
                     outfile<<"View \" \" {"<<endl;
                 }
+
                 outfile<<"SQ("<<endl;
                 // write the coordinates of the vertices of the quadrilateral
-                Array<OneD,NekDouble> coordVert1(2);
-                Array<OneD,NekDouble> coordVert2(2);
-                Array<OneD,NekDouble> coordVert3(2);
-                Array<OneD,NekDouble> coordVert4(2);
-                coordVert1[0]=-1.0;
-                coordVert1[1]=-1.0;
-                coordVert2[0]=1.0;
-                coordVert2[1]=-1.0;
-                coordVert3[0]=1.0;
-                coordVert3[1]=1.0;
-                coordVert4[0]=-1.0;
-                coordVert4[1]=1.0;
-                outfile<<m_geom->GetCoord(0,coordVert1)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert1)<<", 0.0,"<<endl;
-                outfile<<m_geom->GetCoord(0,coordVert2)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert2)<<", 0.0,"<<endl;
-                outfile<<m_geom->GetCoord(0,coordVert3)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert3)<<", 0.0,"<<endl;
-                outfile<<m_geom->GetCoord(0,coordVert4)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert4)<<", 0.0"<<endl;
+                unsigned int vCoordDim = m_geom->GetCoordim();
+                unsigned int nVertices = GetNverts();
+                Array<OneD, NekDouble> coordVert(vCoordDim);
+                for (unsigned int i = 0; i < nVertices; ++i)
+                {
+                    m_geom->GetVertex(i)->GetCoords(coordVert);
+                    for (unsigned int j = 0; j < vCoordDim; ++j)
+                    {
+                        outfile << coordVert[j];
+                        outfile << (j < vCoordDim - 1 ? ", " : "");
+                    }
+                    outfile << (i < nVertices - 1 ? "," : "") << endl;
+                }
                 outfile<<")"<<endl;
 
                 // calculate the coefficients (monomial format)
@@ -1344,15 +1469,17 @@ namespace Nektar
 
                         switch(mkey.GetMatrixType())
                         {
-                        case StdRegions::eWeakDeriv0:
-                            dir = 0;
-                            break;
-                        case StdRegions::eWeakDeriv1:
-                            dir = 1;
-                            break;
-                        case StdRegions::eWeakDeriv2:
-                            dir = 2;
-                            break;
+                            case StdRegions::eWeakDeriv0:
+                                dir = 0;
+                                break;
+                            case StdRegions::eWeakDeriv1:
+                                dir = 1;
+                                break;
+                            case StdRegions::eWeakDeriv2:
+                                dir = 2;
+                                break;
+                            default:
+                                break;
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
@@ -1495,15 +1622,17 @@ namespace Nektar
 
                         switch(mkey.GetMatrixType())
                         {
-                        case StdRegions::eIProductWRTDerivBase0:
-                            dir = 0;
-                            break;
-                        case StdRegions::eIProductWRTDerivBase1:
-                            dir = 1;
-                            break;
-                        case StdRegions::eIProductWRTDerivBase2:
-                            dir = 2;
-                            break;
+                            case StdRegions::eIProductWRTDerivBase0:
+                                dir = 0;
+                                break;
+                            case StdRegions::eIProductWRTDerivBase1:
+                                dir = 1;
+                                break;
+                            case StdRegions::eIProductWRTDerivBase2:
+                                dir = 2;
+                                break;
+                            default:
+                                break;
                         }
 
                         MatrixKey iProdDeriv0Key(StdRegions::eIProductWRTDerivBase0,

@@ -1021,7 +1021,24 @@ namespace Nektar
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
+            
+            
+            
+            /**
+             * @brief Extract the metric factors to compute the contravariant 
+             * fluxes along edge \a edge and stores them into \a outarray
+             * following the local edge orientation (i.e. anticlockwise 
+             * convention).
+             */
+            void GetEdgeQFactors(
+                    const int edge,
+                    Array<OneD, NekDouble> &outarray)
+            {
+                v_GetEdgeQFactors(edge, outarray);
+            }
 
+            
+            
             void GetFacePhysVals(
                 const int                                face,
                 const boost::shared_ptr<StdExpansion>   &FaceExp,
@@ -1769,6 +1786,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+            
+            STD_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
+                const int edge,  
+                Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetFacePhysVals(
                 const int                                face,

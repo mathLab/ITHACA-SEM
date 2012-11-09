@@ -4,6 +4,7 @@
 #include <iomanip>
 
 #include <boost/filesystem/path.hpp>
+#include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/DisContField2D.h>
 
 #ifdef NEKTAR_USING_CHUD

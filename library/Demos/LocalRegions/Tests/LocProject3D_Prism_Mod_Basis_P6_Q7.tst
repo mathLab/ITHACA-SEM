@@ -5,7 +5,7 @@
     <parameters>6 4 4 5 6 6 6 7 7 6 0 0 0  1 0 0  1 1 0  0 1 0  0.5 0 1  0.5 1 1</parameters>
     <metrics>
         <metric type="L2" id="1">
-            <value tolerance="1e-12">5.16422e-12</value>
+            <value tolerance="1e-8">5.16422e-12</value>
         </metric>
         <metric type="Linf" id="2">
             <value tolerance="1e-11">2.08524e-11</value>

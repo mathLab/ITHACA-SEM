@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <GEOMETRY DIM="1" SPACE="1">
+
+        <VERTEX>
+            <V ID="0"> 0.0 0.0 0.0 </V>
+            <V ID="1"> 1.1 0.0 0.0 </V>
+            <V ID="2"> 2.0 0.0 0.0 </V>
+            <V ID="3"> 3.2 0.0 0.0 </V>
+            <V ID="4"> 4.0 0.0 0.0 </V>
+            <V ID="5"> 5.0 0.0 0.0 </V>
+        </VERTEX>
+
+        <ELEMENT>
+            <S ID="0"> 0 1 </S>
+            <S ID="1"> 1 2 </S>
+            <S ID="2"> 2 3 </S>
+            <S ID="3"> 3 4 </S>
+            <S ID="4"> 4 5 </S>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> S[0-4] </C>
+            <C ID="1"> V[0]   </C>
+            <C ID="2"> V[5]   </C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="u" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <PARAMETERS>
+            <P> FinTime         = 1                     </P>
+            <P> TimeStep        = 0.0005                 </P>
+            <P> NumSteps        = FinTime/TimeStep      </P>
+            <P> IO_CheckSteps   = 100000                </P>
+            <P> IO_InfoSteps    = 100000                </P>
+        </PARAMETERS>
+        
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyInviscidBurger"  />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"           />
+            <I PROPERTY="AdvectionType"         VALUE="FRDG"                    />
+            <I PROPERTY="UpwindType"            VALUE="Upwind"                  />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"    />
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="2.5" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="100" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="2.5*(1-x/5)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="2.5" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>
+

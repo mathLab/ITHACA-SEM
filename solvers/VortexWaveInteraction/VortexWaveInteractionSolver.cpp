@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
             vwi.SetWaveForceMag(WaveForce + vwi.GetWaveForceMagStep());
             vwi.SetPrevAlpha(vwi.GetAlpha());
             //vwi.SetAlpha(vwi.GetAlpha() + vwi.GetDAlphaDWaveForceMag()*vwi.GetWaveForceMagStep());
-            vwi.SetAlpha(vwi.GetAlpha() + (vwi.GetWaveForceMagStep() > 0)?vwi.GetAlphaStep():(-vwi.GetAlphaStep()));
+            vwi.SetAlpha(vwi.GetAlpha() + (vwi.GetWaveForceMagStep() > 0?vwi.GetAlphaStep():(-vwi.GetAlphaStep())));
             
             // Save data directories. 
             if(vwi.GetVWIIterationType() == eFixedAlphaWaveForcing)

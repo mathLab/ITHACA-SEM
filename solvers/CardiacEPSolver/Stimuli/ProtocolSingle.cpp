@@ -97,7 +97,7 @@ namespace Nektar
     {
         if(time > m_start && time < (m_start+m_dur))
         {
-            return 1.0;
+            return 0.0;
         }
         else
         {

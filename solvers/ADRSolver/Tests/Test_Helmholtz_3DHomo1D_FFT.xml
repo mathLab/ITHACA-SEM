@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <GEOMETRY DIM="2" SPACE="2">
+
+        <VERTEX>
+            <V ID="0">  0.0    0.0    0.0 </V>
+            <V ID="1">  1.0    0.0    0.0 </V>
+            <V ID="2">  1.0    1.0    0.0 </V>
+            <V ID="3">  0.0    1.0    0.0 </V>
+        </VERTEX>
+
+        <EDGE>
+            <E ID="0">   0  1   </E>
+            <E ID="1">   1  2   </E>
+            <E ID="2">   2  3   </E>
+            <E ID="3">   3  0   </E>
+        </EDGE>
+
+        <ELEMENT>
+            <Q ID="0">    0     1     2     3 </Q>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> Q[0]</C>
+            <C ID="1"> E[0]</C>
+            <C ID="2"> E[1]</C>
+            <C ID="3"> E[2]</C>
+            <C ID="4"> E[3]</C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="5" FIELDS="u" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE" VALUE="Helmholtz" />
+            <I PROPERTY="Projection" VALUE="Continuous" />
+            <I PROPERTY="HOMOGENEOUS" VALUE="1D" />
+            <I PROPERTY="USEFFT" VALUE="FFTW" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> Lambda    = 1.0 </P>
+            <P> HomModesZ = 4 </P>
+            <P> LZ        = 5 </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+            </REGION>
+            <REGION REF="1">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+            </REGION>
+            <REGION REF="3">
+                <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="Forcing">
+            <E VAR="u"
+                VALUE="-(Lambda + 2*PI*PI + 4*PI*PI/(LZ*LZ))*sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)*sin(2*PI*z/LZ)" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+    <GLOBALOPTIMIZATIONPARAMETERS>
+
+        <BwdTrans>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="0" QUAD="0" />
+        </BwdTrans>
+
+        <IProductWRTBase>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="0" QUAD="0"/>
+        </IProductWRTBase>
+
+        <MassMatrixOp>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="1" QUAD="1" />
+        </MassMatrixOp>
+
+        <HelmholtzMatrixOp>
+            <DO_GLOBAL_MAT_OP VALUE="0" />
+            <DO_BLOCK_MAT_OP TRI="1" QUAD="1" />
+        </HelmholtzMatrixOp>
+
+    </GLOBALOPTIMIZATIONPARAMETERS>
+
+</NEKTAR>

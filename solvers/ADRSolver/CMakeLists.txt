@@ -38,3 +38,18 @@ ADD_NEKTAR_TEST(Test_InviscidBurger1D_FRHU_MODIFIED)
 ADD_NEKTAR_TEST(Test_InviscidBurger1D_WeakDG_GLL_LAGRANGE)
 ADD_NEKTAR_TEST(Test_InviscidBurger1D_WeakDG_MODIFIED)
 
+
+ADD_NEKTAR_TEST(Test_Helmholtz2D_modal_DG)
+ADD_NEKTAR_TEST(Test_Helmholtz2D_modal)
+ADD_NEKTAR_TEST(Test_Helmholtz2D_nodal)
+ADD_NEKTAR_TEST(Test_Helmholtz_3DHomo1D_FFT)
+ADD_NEKTAR_TEST(Test_Helmholtz_3DHomo1D_MVM)
+ADD_NEKTAR_TEST(Test_Helmholtz_3DHomo2D_FFT)
+ADD_NEKTAR_TEST(Test_Helmholtz_3DHomo2D_MVM)
+ADD_NEKTAR_TEST(Test_Helmholtz3D_modal)
+ADD_NEKTAR_TEST(Test_Helmholtz3D_nodal)
+ADD_NEKTAR_TEST(Test_ImDiffusion_m12)
+ADD_NEKTAR_TEST(Test_ImDiffusion_m6)
+ADD_NEKTAR_TEST(Test_ImDiffusion_VarCoeff)
+
+

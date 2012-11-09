@@ -215,7 +215,7 @@ void RunL2RegressionTest(std::string Demo, std::string input, std::string info, 
 	    }
 	}
 
-    if(fail = Test.TestL2()) // test failed
+    if((fail = Test.TestL2()))
     {
         if (!quiet)
         {
@@ -287,7 +287,7 @@ void MakeOkFile(std::string Demo, std::string input,				std::string info, unsign
         }
     }
 
-    if(fail = Test.MakeOkFile())
+    if((fail = Test.MakeOkFile()))
     {
         std::cout << "Failed to make OK file\n";
         // Explain cause of error if available

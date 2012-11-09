@@ -2025,8 +2025,8 @@ namespace Nektar
                     case MultiRegions::eGalerkin:
                     {
                         out << "\tProjection Type : Continuous Galerkin" <<endl;
-                    }
                         break;
+                    }
                         
                     case MultiRegions::eDiscontinuous:
                     {
@@ -2049,7 +2049,20 @@ namespace Nektar
                         {
                             out << "\tProjection Type : Flux Reconstruction HU" <<endl;
                         }
+                        else if (AdvectionType == "FRc")
+                        {
+                            out << "\tProjection Type : Flux Reconstruction C" <<endl;
+                        }
+                        break;
                     }
+                    
+                    case MultiRegions::eMixed_CG_Discontinuous:
+                    {
+                        out << "\tProjection Type : Mixed CG/DG" << endl;
+                        break;
+                    }
+                    
+                    default:
                         break;
                 }
             }

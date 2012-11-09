@@ -252,4 +252,88 @@ Test_Advection1D_FRHU_GLL_LAGRANGE_SEM.xml
 L 2 error (variable u) : 0.0372516
 L inf error (variable u) : 0.0641954
 ----------------------------------------
+Dirichlet_deformed_GLL_LAGRANGE_10x10.xml
+L 2 error (variable u) : 0.000376742
+L inf error (variable u) : 0.00303025
+----------------------------------------
+Dirichlet_deformed_MODIFIED_10x10.xml
+L 2 error (variable u) : 0.000376742
+L inf error (variable u) : 0.00303025
+----------------------------------------
+Dirichlet_deformed_GLL_LAGRANGE_SEM_10x10.xml
+L 2 error (variable u) : 0.000607221
+L inf error (variable u) : 0.00729005
+----------------------------------------
+Dirichlet_regular_GLL_LAGRANGE_10x10.xml
+L 2 error (variable u) : 0.000138477
+L inf error (variable u) : 0.000632761
+----------------------------------------
+Dirichlet_regular_MODIFIED_10x10.xml
+L 2 error (variable u) : 0.000138477
+L inf error (variable u) : 0.000632761
+----------------------------------------
+Dirichlet_regular_GLL_LAGRANGE_SEM_10x10.xml
+L 2 error (variable u) : 9.78284e-05
+L inf error (variable u) : 0.000337141
+----------------------------------------
+ISO_deformed_GLL_LAGRANGE_3x3.xml
+L 2 error (variable u) : 0.0276735
+L inf error (variable u) : 0.229419
+----------------------------------------
+ISO_deformed_MODIFIED_3x3.xml
+L 2 error (variable u) : 5.32101
+L inf error (variable u) : 78.4942
+----------------------------------------
+ISO_deformed_GLL_LAGRANGE_SEM_3x3.xml
+L 2 error (variable u) : 0.0313807
+L inf error (variable u) : 0.129515
+----------------------------------------
+ISO_regular_GLL_LAGRANGE_3x3.xml
+L 2 error (variable u) : 0.00332013
+L inf error (variable u) : 0.0418033
+----------------------------------------
+ISO_regular_MODIFIED_3x3.xml
+L 2 error (variable u) : 0.00332013
+L inf error (variable u) : 0.0418033
+----------------------------------------
+ISO_regular_GLL_LAGRANGE_SEM_3x3.xml
+L 2 error (variable u) : 0.0013102
+L inf error (variable u) : 0.00692982
+----------------------------------------
+Periodic_deformed_GLL_LAGRANGE_2x2.xml
+L 2 error (variable u) : 0.198102
+L inf error (variable u) : 0.91548
+----------------------------------------
+Periodic_deformed_MODIFIED_2x2.xml
+L 2 error (variable u) : 0.198102
+L inf error (variable u) : 0.91548
+----------------------------------------
+Periodic_deformed_GLL_LAGRANGE_SEM_2x2.xml
+L 2 error (variable u) : 0.198108
+L inf error (variable u) : 0.952041
+----------------------------------------
+Periodic_regular_GLL_LAGRANGE_2x2.xml
+L 2 error (variable u) : 0.198161
+L inf error (variable u) : 0.933494
+----------------------------------------
+Periodic_regular_MODIFIED_2x2.xml
+L 2 error (variable u) : 0.198161
+L inf error (variable u) : 0.933494
+----------------------------------------
+Periodic_regular_GLL_LAGRANGE_SEM_2x2.xml
+L 2 error (variable u) : 0.198161
+L inf error (variable u) : 0.943078
+----------------------------------------
+Periodic_deformed_GLL_LAGRANGE_10x10.xml
+L 2 error (variable u) : 0.000174876
+L inf error (variable u) : 0.00369469
+----------------------------------------
+Periodic_deformed_MODIFIED_10x10.xml
+L 2 error (variable u) : 0.000174876
+L inf error (variable u) : 0.00369469
+----------------------------------------
+Periodic_deformed_GLL_LAGRANGE_SEM_10x10.xml
+L 2 error (variable u) : 0.000122947
+L inf error (variable u) : 0.00121201
+----------------------------------------
 ./ru    

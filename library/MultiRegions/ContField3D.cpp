@@ -431,6 +431,18 @@ namespace Nektar
           }
       }          
 
+      void ContField3D::v_LocalToGlobal(void)
+      {
+          m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs);
+      }
+
+      void ContField3D::v_GlobalToLocal(void)
+      {
+          m_locToGloMap->GlobalToLocal(m_coeffs, m_coeffs);
+      }
+      
+
+
       void ContField3D::v_HelmSolve(
                                     const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD,       NekDouble> &outarray,
@@ -478,12 +490,11 @@ namespace Nektar
           
           if(flags.isSet(eUseGlobal))
           {
-              //Vmath::Zero(contNcoeffs,outarray,1);
               GlobalSolve(key,wsp,outarray,dirForcing);
           }
           else
           {
-              Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
+              Array<OneD,NekDouble> tmp(contNcoeffs);
               LocalToGlobal(outarray,tmp);// use outarray as initial guess
               GlobalSolve(key,wsp,tmp,dirForcing);
               GlobalToLocal(tmp,outarray);

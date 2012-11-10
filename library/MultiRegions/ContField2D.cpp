@@ -587,24 +587,6 @@ namespace Nektar
         /**
          *
          */
-        void  ContField2D::v_LocalToGlobal(void)
-        {
-            return ContField2D::LocalToGlobal();
-        };
-
-
-        /**
-         *
-         */
-        void  ContField2D::v_GlobalToLocal(void)
-        {
-            return ContField2D::GlobalToLocal();
-        };
-
-
-        /**
-         *
-         */
         void ContField2D::v_BwdTrans(
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,       NekDouble> &outarray,
@@ -651,6 +633,66 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * This operation is evaluated as:
+         * \f{tabbing}
+         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
+         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
+         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+         * \> \> continue \\
+         * \> continue
+         * \f}
+         * where \a map\f$[e][i]\f$ is the mapping array and \a
+         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+         * correct modal connectivity between the different elements (both
+         * these arrays are contained in the data member #m_locToGloMap). This
+         * operation is equivalent to the scatter operation
+         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$,
+         * where \f$\mathcal{A}\f$ is the
+         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+         *
+         * @note The array #m_coeffs should be filled with the global
+         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ and that the resulting
+         * local coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in
+         * #m_coeffs.
+         */
+        void ContField2D::v_GlobalToLocal(void)
+        {
+            m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
+        }
+
+
+
+        /**
+         * This operation is evaluated as:
+         * \f{tabbing}
+         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
+         * \> \> \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] =
+         * \mbox{sign}[e][i] \cdot \boldsymbol{\hat{u}}^{e}[i]$\\
+         * \> \> continue\\
+         * \> continue
+         * \f}
+         * where \a map\f$[e][i]\f$ is the mapping array and \a
+         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+         * correct modal connectivity between the different elements (both
+         * these arrays are contained in the data member #m_locToGloMap). This
+         * operation is equivalent to the gather operation
+         * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{-1}\boldsymbol{\hat{u}}_l\f$,
+         * where \f$\mathcal{A}\f$ is the
+         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+         *
+         * @note    The array #m_coeffs should be filled with the local
+         *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the
+         *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
+         *          will be stored in #m_coeffs.
+         */
+        void ContField2D::v_LocalToGlobal(void)
+        {
+            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
+        }
 
         /**
          *

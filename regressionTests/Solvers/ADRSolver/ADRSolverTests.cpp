@@ -181,7 +181,6 @@ int main(int argc, char* argv[])
     
     Execute("ADRSolver","Test_InviscidBurger1D_FRHU_GLL_LAGRANGE_SEM.xml","1D unsteady FRHU inviscidBurger GLL_LAGRANGE_SEM, P=10");
     
-    
     // Test linear advection equation in 1D for DG and FR
     Execute("ADRSolver","Test_Advection1D_WeakDG_GLL_LAGRANGE.xml","1D unsteady WeakDG advection GLL_LAGRANGE, P=3");
     

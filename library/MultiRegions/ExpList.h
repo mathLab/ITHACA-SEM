@@ -1028,9 +1028,9 @@ namespace Nektar
             // wrapper functions about virtual functions
             virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
-            virtual void v_LocalToGlobal();
+            virtual void v_LocalToGlobal(void);
 
-            virtual void v_GlobalToLocal();
+            virtual void v_GlobalToLocal(void);
 
             virtual void v_BwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
@@ -1638,12 +1638,12 @@ namespace Nektar
             v_ImposeDirichletConditions(outarray);
         }
 
-        inline void ExpList::LocalToGlobal()
+        inline void ExpList::LocalToGlobal(void)
         {
             v_LocalToGlobal();
         }
         
-        inline void ExpList::GlobalToLocal()
+        inline void ExpList::GlobalToLocal(void)
         {
             v_GlobalToLocal();
         }

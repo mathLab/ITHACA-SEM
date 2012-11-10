@@ -327,6 +327,7 @@ namespace Nektar
          * + \frac {1 + \eta_2} {1 - \eta_3} \frac \partial {\partial \eta_2}
          * + \frac \partial {\partial \eta_3} \end{Bmatrix}\f$
          **/
+#if 1
         void StdTetExp::v_PhysDeriv(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& out_dxi1,
@@ -370,6 +371,113 @@ namespace Nektar
                 }
             }
         }
+#else
+        void StdTetExp::v_PhysDeriv(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& out_dxi0,
+                  Array<OneD,       NekDouble>& out_dxi1,
+                  Array<OneD,       NekDouble>& out_dxi2 )
+        {
+            int    Q0 = m_base[0]->GetNumPoints();
+            int    Q1 = m_base[1]->GetNumPoints();
+            int    Q2 = m_base[2]->GetNumPoints();
+            int    Qtot = Q0*Q1*Q2;
+
+            // Compute the physical derivative
+            Array<OneD, NekDouble> out_dEta0(3*Qtot,0.0);
+            Array<OneD, NekDouble> out_dEta1 = out_dEta0 + Qtot;
+            Array<OneD, NekDouble> out_dEta2 = out_dEta1 + Qtot;
+
+            bool Do_2 = (out_dxi2.num_elements() > 0)? true:false;
+            bool Do_1 = (out_dxi1.num_elements() > 0)? true:false;
+            
+            if(Do_2) // Need all local derivatives
+            {
+                PhysTensorDeriv(inarray, out_dEta0, out_dEta1, out_dEta2);
+            }
+            else if (Do_1) // Need 0 and 1 derivatives 
+            {
+                PhysTensorDeriv(inarray, out_dEta0, out_dEta1, NullNekDouble1DArray);
+            }
+            else // Only need Eta0 derivaitve 
+            {
+                PhysTensorDeriv(inarray, out_dEta0, NullNekDouble1DArray,
+                                NullNekDouble1DArray);
+            }
+
+            Array<OneD, const NekDouble> eta_0, eta_1, eta_2;
+            eta_0 = m_base[0]->GetZ();
+            eta_1 = m_base[1]->GetZ();
+            eta_2 = m_base[2]->GetZ();
+            
+            // calculate 2.0/((1-eta_1)(1-eta_2)) Out_dEta0
+            
+            NekDouble *dEta0 = &out_dEta0[0];
+            NekDouble fac;
+            for(int k=0; k< Q2; ++k)
+            {
+                for(int j=0; j<Q1; ++j,dEta0+=Q0)
+                {
+                    Vmath::Smul(Q0,2.0/(1.0-eta_1[j]),dEta0,1,dEta0,1);
+                }
+                fac = 1.0/(1.0-eta_2[k]);
+                Vmath::Smul(Q0*Q1,fac,&out_dEta0[0]+k*Q0*Q1,1,&out_dEta0[0]+k*Q0*Q1,1);
+            }
+            
+            if (out_dxi0.num_elements() > 0)
+            {
+                // out_dxi1 = 4.0/((1-eta_1)(1-eta_2)) Out_dEta0
+                Vmath::Smul(Qtot,2.0,out_dEta0,1,out_dxi0,1);
+            }
+
+            if (Do_1||Do_2)
+            {
+                Array<OneD, NekDouble> Fac0(Q0);
+                Vmath::Sadd(Q0,1.0,eta_0,1,Fac0,1);
+                
+                
+                // calculate 2.0*(1+eta_0)/((1-eta_1)(1-eta_2)) Out_dEta0
+                for(int k = 0; k < Q1*Q2; ++k)
+                {
+                    Vmath::Vmul(Q0,&Fac0[0],1,&out_dEta0[0]+k*Q0,1,&out_dEta0[0]+k*Q0,1);
+                }
+                // calculate 2/(1.0-eta_2) out_dEta1
+                for(int k = 0; k < Q2; ++k)
+                {
+                    Vmath::Smul(Q0*Q1,2.0/(1.0-eta_2[k]),&out_dEta1[0]+k*Q0*Q1,1,
+                                &out_dEta1[0]+k*Q0*Q1,1);
+                }
+
+                if(Do_1)
+                {
+                    // calculate out_dxi1 = 2.0(1+eta_0)/((1-eta_1)(1-eta_2)) Out_dEta0
+                    // + 2/(1.0-eta_2) out_dEta1
+                    Vmath::Vadd(Qtot,out_dEta0,1,out_dEta1,1,out_dxi1,1);
+                }
+                
+                
+                if(Do_2)
+                {
+                    // calculate (1 + eta_1)/(1 -eta_2)*out_dEta1
+                    NekDouble *dEta1 = &out_dEta1[0];
+                    for(int k=0; k< Q2; ++k)
+                    {
+                        for(int j=0; j<Q1; ++j,dEta1+=Q0)
+                        {
+                            Vmath::Smul(Q0,(1.0+eta_1[j])/2.0,dEta1,1,dEta1,1);
+                        }
+                    }
+                    
+                    // calculate out_dxi1 =
+                    // 2.0(1+eta_0)/((1-eta_1)(1-eta_2)) Out_dEta0 +
+                    // (1 + eta_1)/(1 -eta_2)*out_dEta1 + out_dEta2
+                    Vmath::Vadd(Qtot,out_dEta0,1,out_dEta1,1,out_dxi2,1); 
+                    Vmath::Vadd(Qtot,out_dEta2,1,out_dxi2 ,1,out_dxi2,1);        
+                    
+                }
+            }
+        }
+#endif
 
         /**
          * @param   dir         Direction in which to compute derivative.

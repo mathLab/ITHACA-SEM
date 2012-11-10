@@ -297,7 +297,7 @@ namespace Nektar
                     {
                         fMultVector[i]=1/fMultVector[i];
                     }
-
+                    
                     F_GlobBnd=F_GlobBnd*fMultVector;
                     pLocToGloMap->GlobalToLocalBnd(F_GlobBnd,F_LocBnd);
                     F_LocBnd=R*F_LocBnd;
@@ -312,8 +312,8 @@ namespace Nektar
 
                     Timer t;
                     t.Start();
-
-                    // Solve for difference from initial solution given in out;
+                    
+                    // Solve for difference from initial solution given inout;
                     SolveLinearSystem(nGlobBndDofs, F, F, pLocToGloMap, nDirBndDofs);
                     // Add homogenoous solution to original vector 
                     V_GlobHomBnd = V_GlobHomBnd + F_HomBnd;

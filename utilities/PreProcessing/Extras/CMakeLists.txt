@@ -1,6 +1,9 @@
 SET(EnsiteToXmlSources EnsiteToXml.cpp)
 ADD_UTILITIES_EXECUTABLE(EnsiteToXml util-extra ${EnsiteToXmlSources})
 
+SET(CheckXmlFileSources CheckXmlFile.cpp)
+ADD_UTILITIES_EXECUTABLE(CheckXmlFile util-extra ${CheckXmlFileSources})
+
 IF (NEKTAR_USE_VTK)
     SET(VtkToFldSources VtkToFld.cpp)
     SET(VtkStripsToPolysSources VtkStripsToPolys.cpp)

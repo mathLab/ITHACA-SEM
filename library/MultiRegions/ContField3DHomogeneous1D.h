@@ -70,6 +70,8 @@ namespace Nektar
         protected:
 
         private:
+
+            virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
             /// Template method virtual forwarded for LocalToGlobal()
             virtual void v_LocalToGlobal();
 

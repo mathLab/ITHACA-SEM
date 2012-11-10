@@ -740,16 +740,16 @@ namespace Nektar
         
         Array<OneD, NekDouble> Pvals;
         
-        int maxpts = 0,cnt;
+        int cnt;
         int elmtid,nq,offset, boundary;
 	
         Array<OneD, const NekDouble> U,V,Nu,Nv;
         // Elemental tempspace: call once adn set others as offset 
         Array<OneD, NekDouble> Uy(5*m_pressureBCsMaxPts); 
-        Array<OneD, NekDouble> Vx = Uy + maxpts; 
-        Array<OneD, NekDouble> Qx = Vx + maxpts;
-        Array<OneD, NekDouble> Qy = Qx + maxpts; 
-        Array<OneD, NekDouble> Q  = Qy + maxpts;
+        Array<OneD, NekDouble> Vx = Uy + m_pressureBCsMaxPts; 
+        Array<OneD, NekDouble> Qx = Vx + m_pressureBCsMaxPts;
+        Array<OneD, NekDouble> Qy = Qx + m_pressureBCsMaxPts; 
+        Array<OneD, NekDouble> Q  = Qy + m_pressureBCsMaxPts;
 
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {            
@@ -835,7 +835,6 @@ namespace Nektar
         PBndExp   = m_pressure->GetBndCondExpansions();
         
         int elmtid,nq,offset, boundary,cnt,n;
-        int maxpts = 0;
         int phystot = m_fields[0]->GetTotPoints();
         
         Array<OneD, NekDouble> Pvals;

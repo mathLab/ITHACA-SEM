@@ -577,7 +577,10 @@
             
             <PROTOCOL TYPE = "ProtocolSingle">
                 <START> 0.0  </START>
-                <DURATION>  10.0 </DURATION>
+                <DURATION>  2.0 </DURATION>
+                <S1CYCLELENGTH> 250 </S1CYCLELENGTH>
+                <NUM_S1> 2 </NUM_S1>
+                <S2CYCLELENGTH>0 </S2CYCLELENGTH>
              </PROTOCOL>
         </STIMULUS>
     </STIMULI>

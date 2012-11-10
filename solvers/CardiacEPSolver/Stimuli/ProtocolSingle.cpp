@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CellModel.cpp
+// File ProtocolSingle.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -43,16 +43,14 @@ namespace Nektar
                             ProtocolSingle::create,
                             "Single stimulus protocol.");
     /**
-     * @class ProtocolSingle
+     * @class Protocol
      *
-     * The CellModel class and derived classes implement a range of cell model
-     * ODE systems. A cell model comprises a system of ion concentration
-     * variables and zero or more gating variables. Gating variables are
-     * time-integrated using the Rush-Larsen method and for each variable y,
-     * the corresponding y_inf and tau_y value is computed by Update(). The tau
-     * values are stored in separate storage to inarray/outarray, #m_gates_tau.
+     * The Stimuli class and derived classes implement a range of stimuli.
+     * The stimulus contains input stimuli that can be applied throughout the
+     * domain, on specified regions determined by the derived classes of Stimulus,
+     * at specified frequencies determined by the derived classes of Protocol.
+     *
      */
-    
     /**
      * Protocol base class constructor.
      */
@@ -97,7 +95,7 @@ namespace Nektar
     {
         if(time > m_start && time < (m_start+m_dur))
         {
-            return 0.0;
+            return 1.0;
         }
         else
         {

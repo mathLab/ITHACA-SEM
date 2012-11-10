@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CellModel.h
+// File ProtocolSingle.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,13 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Cell model base class.
+// Description: Protocol Single stimulus.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_CELLMODELS_CELLMODEL
-#define NEKTAR_SOLVERS_ADRSOLVER_CELLMODELS_CELLMODEL
-
+#ifndef NEKTAR_SOLVERS_CARDIACEPSOLVER_STIMULI_PROTOCOLSINGLE
+#define NEKTAR_SOLVERS_CARDIACEPSOLVER_STIMULI_PROTOCOLSINGLE
 #include <CardiacEPSolver/Stimuli/Protocol.h>
 
 namespace Nektar
@@ -43,7 +42,7 @@ namespace Nektar
     // Forward declaration
     class ProtocolSingle;
     
-    /// Cell model base class.
+    /// Protocol base class.
     class ProtocolSingle : public Protocol
     {
     public:
@@ -81,4 +80,4 @@ namespace Nektar
     
 }
 
-#endif /* CELLMODEL_H_ */
+#endif /* PROTOCOLSINGLE_H_ */

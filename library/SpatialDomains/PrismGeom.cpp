@@ -177,6 +177,33 @@ namespace Nektar
             return 9;
         }
 
+        
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry.
+         */
+        bool PrismGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        {
+            // Validation checks
+            ASSERTL1(gloCoord.num_elements() == 3,
+                     "Three dimensional geometry expects three coordinates.");
+            
+            // Convert to the local (eta) coordinates.
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            v_GetLocCoords(gloCoord, locCoord);
+            
+            // Check local coordinate is within [-1,1]^3 bounds.
+            if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
+                locCoord[2] >= -(1+tol) && locCoord[1] <=  (1+tol) &&
+                locCoord[0] + locCoord[2] <= tol)
+            {
+                return true;
+            }
+            
+            return false;
+        }
+
         void PrismGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)

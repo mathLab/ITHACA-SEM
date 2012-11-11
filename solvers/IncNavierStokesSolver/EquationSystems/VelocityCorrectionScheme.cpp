@@ -1219,7 +1219,7 @@ namespace Nektar
                     Blas::Dscal(nq,1.0/Aii_Dt,&ubc[0],1);
                     Blas::Dscal(nq,1.0/Aii_Dt,&vbc[0],1);
 
-                    // subtrace off du/dt derivative 
+                    // subtract off du/dt derivative 
                     Pbc->NormVectorIProductWRTBase(ubc,vbc,Pvals); 
 
                     Vmath::Vsub(ncoeffs,Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1, Pvals,1, Ptmp = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i),1);

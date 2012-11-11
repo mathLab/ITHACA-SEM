@@ -124,22 +124,48 @@ namespace Nektar
     void StimulusRect::v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                           const NekDouble time)
     {
-        //Code to get co ordinates
+        if (m_field->GetNumElmts() == 0)
+        {
+            return;
+        }
+
+        // Get the dimension of the expansion
+        int dim = m_field->GetCoordim(0);
+
+        // Retrieve coordinates of quadrature points
         int nq = m_field->GetNpoints();
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);
-        NekDouble v_amp = m_Protocol->GetAmplitude(time);
-        
-        // get the coordinates
         m_field->GetCoords(x0,x1,x2);
-        for(int j=0; j<nq; j++)
-            {   
-                outarray[0][j]= outarray[0][j] + m_strength * v_amp *
-                                (-tanh( (m_pis * x0[j] - m_px1) * (m_pis * x0[j] - m_px2)) / 2.0 + 0.5) *
-                                (-tanh( (m_pis * x1[j] - m_py1) * (m_pis * x1[j] - m_py2)) / 2.0 + 0.5) *
-                                (-tanh( (m_pis * x2[j] - m_pz1) * (m_pis * x2[j] - m_pz2)) / 2.0 + 0.5);
+
+        // Get the protocol amplitude
+        NekDouble v_amp = m_Protocol->GetAmplitude(time) * m_strength;
+        
+        switch (dim)
+        {
+        case 1:
+            for(int j=0; j<nq; j++)
+            {
+                outarray[0][j] += v_amp*(((tanh(m_pis*(x0[j] - m_px1)) - tanh(m_pis*(x0[j] - m_px2))))/2.0 + 0.5);
             }
+            break;
+        case 2:
+            for(int j=0; j<nq; j++)
+            {
+                outarray[0][j] += v_amp*(((tanh(m_pis*(x0[j] - m_px1)) - tanh(m_pis*(x0[j] - m_px2)))
+                                  *(tanh(m_pis*(x1[j] - m_py1)) - tanh(m_pis*(x1[j] - m_py2))))/2.0 + 0.5);
+            }
+            break;
+        case 3:
+            for(int j=0; j<nq; j++)
+            {   
+                outarray[0][j] += v_amp*(((tanh(m_pis*(x0[j] - m_px1)) - tanh(m_pis*(x0[j] - m_px2)))
+                                  *(tanh(m_pis*(x1[j] - m_py1)) - tanh(m_pis*(x1[j] - m_py2)))
+                                  *(tanh(m_pis*(x2[j] - m_pz1)) - tanh(m_pis*(x2[j] - m_pz2))))/2.0 + 0.5);
+            }
+            break;
+        }
     }
     
     void StimulusRect::v_PrintSummary(std::ostream &out)

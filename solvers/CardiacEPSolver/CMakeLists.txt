@@ -18,8 +18,8 @@ SET(CardiacEPSolverSource
        ./Stimuli/StimulusRect.cpp
        ./Stimuli/Protocol.cpp
        ./Stimuli/ProtocolSingle.cpp
-#       ./Stimuli/ProtocolS1.cpp
-#       ./Stimuli/ProtocolS1S2.cpp
+       ./Stimuli/ProtocolS1.cpp
+       ./Stimuli/ProtocolS1S2.cpp
 )
 
 ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 

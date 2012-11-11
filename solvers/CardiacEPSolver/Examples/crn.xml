@@ -575,7 +575,7 @@
             <p_is> 1.0</p_is>
             <p_strength> 5.0 </p_strength>
             
-            <PROTOCOL TYPE = "ProtocolSingle">
+            <PROTOCOL TYPE = "ProtocolS1">
                 <START> 0.0  </START>
                 <DURATION>  2.0 </DURATION>
                 <S1CYCLELENGTH> 250 </S1CYCLELENGTH>

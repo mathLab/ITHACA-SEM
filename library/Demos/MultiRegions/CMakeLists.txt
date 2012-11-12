@@ -113,8 +113,8 @@ ADD_NEKTAR_TEST(Helmholtz3D_Tet_CG)
 ADD_NEKTAR_TEST(Helmholtz3D_Prism_CG)
 ADD_NEKTAR_TEST(Helmholtz3D_Prism_deformed_CG)
 
-
-
-
-
+ADD_NEKTAR_TEST(Helmholtz3D_Homo1D_CG)
+ADD_NEKTAR_TEST(Helmholtz3D_Homo1D_HDG)
+ADD_NEKTAR_TEST(Deriv3D_Homo1D)
+ADD_NEKTAR_TEST(Deriv3D_Homo2D)
 

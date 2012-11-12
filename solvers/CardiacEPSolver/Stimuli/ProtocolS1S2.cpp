@@ -78,7 +78,7 @@ namespace Nektar
         
         pXmlparameter = pXml->FirstChildElement("S1CYCLELENGTH");
         m_s1cyclelength = atof(pXmlparameter->GetText());
-
+        
         pXmlparameter = pXml->FirstChildElement("NUM_S1");
         m_num_s1 = atof(pXmlparameter->GetText());
 
@@ -102,12 +102,13 @@ namespace Nektar
     NekDouble ProtocolS1S2::v_GetAmplitude(
                                          const NekDouble time)
     {
-        if( (time % m_s1cyclelength) > m_start && time < (m_s1cyclelength * m_num_s1) && (time % m_s1cyclelength) < (m_start+m_dur))
+        time1 = time - floor(time/m_s1cyclelength)*m_s1cyclelength;
+        if( time1 > m_start && time < (m_s1cyclelength * m_num_s1) && time1  < (m_start+m_dur))
         {
             return 1.0;
         }
         else if (time > (m_s2start) && (time < (m_s2start+m_dur)))
-        {
+        {   
             return 1.0;
         }
         else

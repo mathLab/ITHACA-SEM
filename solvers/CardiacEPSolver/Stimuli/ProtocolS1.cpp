@@ -98,8 +98,8 @@ namespace Nektar
     
     NekDouble ProtocolS1::v_GetAmplitude(
                                              const NekDouble time)
-    {
-        if( (time % m_s1cyclelength) > m_start && time < (m_s1cyclelength * m_num_s1) && (time % m_s1cyclelength) < (m_start+m_dur))
+    {   time1 = time - floor(time/m_s1cyclelength)*m_s1cyclelength;
+        if( time1 > m_start && time < (m_s1cyclelength * m_num_s1) && time1  < (m_start+m_dur))
         {
             return 1.0;
         }

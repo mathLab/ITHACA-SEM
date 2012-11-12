@@ -71,6 +71,7 @@ namespace Nektar
         NekDouble m_dur;
         NekDouble m_num_s1;
         NekDouble m_s1cyclelength;
+        NekDouble time1;
         
         virtual NekDouble v_GetAmplitude(
                                          const NekDouble time);

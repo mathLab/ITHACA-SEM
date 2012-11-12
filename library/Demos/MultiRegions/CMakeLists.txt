@@ -94,3 +94,27 @@ ADD_NEKTAR_TEST(Helmholtz1D_CG_P8_RBC)
 
 ADD_NEKTAR_TEST(Helmholtz1D_HDG_P8)
 ADD_NEKTAR_TEST(Helmholtz1D_HDG_P8_RBC)
+
+
+ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes)
+ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Nodes)
+ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_mlsc)
+ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_sc)
+ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_full)
+ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_iter_ml)
+ADD_NEKTAR_TEST(Helmholtz2D_CG_P9_Modes_varcoeff)
+ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_curved_quad)
+ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_curved_tri)
+ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes)
+ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes_AllBCs)
+ADD_NEKTAR_TEST(LinearAdvDiffReact2D_P7_Modes)
+ADD_NEKTAR_TEST(Helmholtz3D_Hex_CG)
+ADD_NEKTAR_TEST(Helmholtz3D_Tet_CG)
+ADD_NEKTAR_TEST(Helmholtz3D_Prism_CG)
+ADD_NEKTAR_TEST(Helmholtz3D_Prism_deformed_CG)
+
+
+
+
+
+

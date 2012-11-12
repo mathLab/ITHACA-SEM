@@ -59,10 +59,13 @@ ADD_NEKTAR_TEST(Test_Advection2D_periodic_deformed_GLL_LAGRANGE_10x10)
 ADD_NEKTAR_TEST(Test_Advection2D_periodic_deformed_GLL_LAGRANGE_SEM_10x10)
 ADD_NEKTAR_TEST(Test_Advection2D_periodic_deformed_MODIFIED_10x10)
 
-
-
-
-
+ADD_NEKTAR_TEST(SteadyAdvDiffReact2D_modal)
+ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_3DHomo1D_MVM)
+ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_3DHomo2D_MVM)
+ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_Order1_0001)
+ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_Order1_001)
+ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_Order2_0001)
+ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_Order2_001)
 
 ADD_NEKTAR_TEST(Test_Helmholtz2D_modal_DG)
 ADD_NEKTAR_TEST(Test_Helmholtz2D_modal)
@@ -77,4 +80,7 @@ ADD_NEKTAR_TEST(Test_ImDiffusion_m12)
 ADD_NEKTAR_TEST(Test_ImDiffusion_m6)
 ADD_NEKTAR_TEST(Test_ImDiffusion_VarCoeff)
 
-
+IF (NEKTAR_USE_FFTW)
+    ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_3DHomo1D_FFT)
+    ADD_NEKTAR_TEST(UnsteadyAdvectionDiffusion_3DHomo2D_FFT)
+ENDIF (NEKTAR_USE_FFTW)

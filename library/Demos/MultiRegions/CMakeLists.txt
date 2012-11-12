@@ -107,6 +107,11 @@ ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_curved_quad)
 ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_curved_tri)
 ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes)
 ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes_AllBCs)
+ADD_NEKTAR_TEST(LinearAdvDiffReact2D_P7_Modes)
+ADD_NEKTAR_TEST(Helmholtz3D_Hex_CG)
+ADD_NEKTAR_TEST(Helmholtz3D_Tet_CG)
+ADD_NEKTAR_TEST(Helmholtz3D_Prism_CG)
+ADD_NEKTAR_TEST(Helmholtz3D_Prism_deformed_CG)
 
 
 

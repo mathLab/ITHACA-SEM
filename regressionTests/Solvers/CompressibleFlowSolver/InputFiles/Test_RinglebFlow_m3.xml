@@ -333,14 +333,14 @@
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> TimeStep = 0        </P>
-            <P> NumSteps = 10        </P>
-            <P> FinTime = 0.0      </P>
-            <P> IO_CheckSteps = 10000    </P>
-            <P> IO_InfoSteps = 100      </P>
-            <P> IO_CheckTime = 100      </P>
-            <P> Gamma = 1.4      </P>
-            <P> CFLParameter = 1.0       </P>
+            <P> TimeStep        = 0        </P>
+            <P> NumSteps        = 10       </P>
+            <P> FinTime         = 0.0      </P>
+            <P> IO_CheckSteps   = 10000    </P>
+            <P> IO_InfoSteps    = 100      </P>
+            <P> IO_CheckTime    = 100      </P>
+            <P> Gamma           = 1.4      </P>
+            <P> CFL             = 1.0      </P>
         </PARAMETERS>
 
         <SOLVERINFO>

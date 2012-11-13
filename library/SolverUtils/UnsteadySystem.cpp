@@ -171,8 +171,9 @@ namespace Nektar
         void UnsteadySystem::v_DoSolve()
         {
             int i, n, nchk = 1;
-            int ncoeffs = m_fields[0]->GetNcoeffs();
-            int npoints = m_fields[0]->GetNpoints();
+            
+            int ncoeffs    = m_fields[0]->GetNcoeffs();
+            int npoints    = m_fields[0]->GetNpoints();
             int nvariables = 0;
 
             if (m_intVariables.empty())
@@ -385,8 +386,8 @@ namespace Nektar
             // CFL control
             if(m_cflSafetyFactor > 0.0)
             {
-                const Array<OneD,int> ExpOrder = GetNumExpModesPerExp();
-                NekDouble TimeStability = MaxTimeStepEstimator();
+                //const Array<OneD,int> ExpOrder = GetNumExpModesPerExp();
+                //NekDouble TimeStability = MaxTimeStepEstimator();
 		
                 NekDouble CheckpointTime = 0.0;
                 NekDouble QuarterOfLoop  = 0.25;
@@ -406,31 +407,28 @@ namespace Nektar
                 CheckpointTime += QuarterOfLoop;
                 checkpoints_cnt++;
 		
-                // This function is implemented for the CFLTester only
-                m_timestep = GetTimeStep(ExpOrder[0], 
-                                         m_cflSafetyFactor, 
-                                         TimeStability);
+                // This function gets the proper time step with CFL restrictions
+                m_timestep = GetTimeStep();
 		
                 NekDouble CFLtimestep = m_timestep;
-		
-			
+					
                 int step = 0;
                 
                 // Time loop with CFL control
-                while(m_time < m_fintime)
+                while (m_time < m_fintime)
                 {
                     // Starting timer
                     Timer timer;
                     timer.Start();
                     
                     // Increment time
-                    if(m_time + m_timestep > m_fintime && m_fintime > 0.0)
+                    if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
                     {
                         m_timestep = m_fintime - m_time;
                     }
 
                     // Integrate over timestep
-                    if( step < numMultiSteps-1)
+                    if (step < numMultiSteps-1)
                     {
                         // Use initialisation schemes if time step is
                         // less than the number of steps in the scheme
@@ -476,7 +474,13 @@ namespace Nektar
                 // Store final solution at the end of time integration
                 for (i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->UpdatePhys() = fields[i];
+                    if(m_fields[m_intVariables[i]]->GetPhysState() == false)
+                    {
+                        m_fields[m_intVariables[i]]->BwdTrans(
+                                    m_fields[m_intVariables[i]]->GetCoeffs(), 
+                                    m_fields[m_intVariables[i]]->UpdatePhys());
+                    }
+                    m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
                 }
 		
                 cout <<"\nCFL safety factor : " 
@@ -930,187 +934,37 @@ namespace Nektar
             }
         }
 	
-	/**
-	 *  This function calculate the proper time-step to keep the
-	 *  problem stable.  It has been implemented to deal with an
-	 *  explict treatment of the advection term.  In case of an
-	 *  explicit treatment of the diffusion term a
-	 *  re-implementation is required.  The actual implementation
-	 *  can be found inside each equation class.
-	 *
-	 * @param ExpOrder          the expansion order we are using (P)
-	 * @param CFL               the CFL number we want to impose (<1)
-	 @ @param timeCFL           the stability coefficient, a combination of the spatial/temporal discretisation stability region
-        */
-	NekDouble UnsteadySystem::GetTimeStep(const Array<OneD,int> ExpOrder, 
-                                              const Array<OneD,NekDouble> CFL, 
-                                              NekDouble timeCFL)
-	{
-            NekDouble TimeStep = v_GetTimeStep(ExpOrder, CFL, timeCFL);
-		
-            return TimeStep;
-	}
-	
-	/**
-	*  This function calculate the proper time-step to keep the problem stable.
-	*  It has been implemented to deal with an explict treatment of the advection term.
-	*  In case of an explicit treatment of the diffusion term a re-implementation is required.
-	*  The actual implementation can be found inside each equation class.
-	*
-	* @param ExpOrder          the expansion order we are using (P)
-	* @param CFL               the CFL number we want to impose (<1)
-	@ @param timeCFL           the stability coefficient of the time-integration scheme
-	*/
-	NekDouble UnsteadySystem::GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
-	{
-		NekDouble TimeStep = v_GetTimeStep(ExpOrder,CFL,TimeStability);
-		
-		return TimeStep;
-	}
-	
-	/**
-	 * See GetTimeStep. 
-	 * This is the virtual fuction to redirect the implementation to the proper class.
-	 */
-	NekDouble UnsteadySystem::v_GetTimeStep(const Array<OneD,int> ExpOrder, 
-                                                const Array<OneD,NekDouble> CFL, NekDouble timeCFL)
+        /**
+         * This function calculate the proper time-step to keep the problem 
+         * stable. It has been implemented to deal with an explict treatment 
+         * of the advection term. In case of an explicit treatment of the 
+         * diffusion term a re-implementation is required. The actual 
+         * implementation can be found inside each equation class.
+         */
+        NekDouble UnsteadySystem::GetTimeStep()
         {
-            ASSERTL0(false, "v_GetTimeStep is not implemented in the base class" 
-                     " (UnsteadySystem). Check if your equation class has its "
-                     "own implementation");
-            
-            return 0.0;
+            return v_GetTimeStep();
+        }
+        
+        /**
+         * See GetTimeStep. 
+         * This is the virtual fuction to redirect the implementation
+         * to the proper class.
+         */
+        NekDouble UnsteadySystem::v_GetTimeStep()
+        {
+            ASSERTL0(false, "Not defined for this class");
         }
 	
-	/**
-	 * See GetTimeStep. 
-	 * This is the virtual fuction to redirect the implementation to the proper class.
-	 */
-	NekDouble UnsteadySystem::v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
-	{
-		ASSERTL0(false, "v_GetTimeStep is not implemented in the base class "
-                 "(UnsteadySystem). Check if your equation class has its own "
-                 "implementation");
-                
-		return 0.0;
-	}
 	
-    /*    
-	Array<OneD,NekDouble> UnsteadySystem::GetStdVelocity(const Array<OneD, Array<OneD,NekDouble> > inarray)
-	{
-            // Checking if the problem is 2D
-            ASSERTL0(m_expdim>=2,"Method not implemented for 1D");
-	
-            int nTotQuadPoints  = GetTotPoints();
-            int n_element  = m_fields[0]->GetExpSize();       // number of element in the mesh
-            int nvel = inarray.num_elements();
-            int npts = 0;
-            
-            NekDouble pntVelocity;
-            
-            // Getting the standard velocity vector on the 2D normal space
-            Array<OneD, Array<OneD, NekDouble> > stdVelocity(nvel);
-		
-            Array<OneD, NekDouble> stdV(n_element,0.0);
-            for (int i = 0; i < nvel; ++i)
-            {
-                stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints);
-            }
-		
-            if(nvel == 2)
-            {
-                for(int el = 0; el < n_element; ++el)
-                { 
-                    
-                    int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
-                    
-                    Array<OneD, const NekDouble> jac  = m_fields[0]->GetExp(el)->GetGeom2D()->GetJac();
-                    Array<TwoD, const NekDouble> gmat = m_fields[0]->GetExp(el)->GetGeom2D()->GetGmat();
-
-                    if(m_fields[0]->GetExp(el)->GetGeom2D()->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        for(int i=0; i<n_points; i++)
-                        {
-                            stdVelocity[0][i] = gmat[0][i]*inarray[0][i] + gmat[2][i]*inarray[1][i];
-                            stdVelocity[1][i] = gmat[1][i]*inarray[0][i] + gmat[3][i]*inarray[1][i];
-                        }
-                    }
-                    else
-                    {
-                        for(int i=0; i<n_points; i++)
-                        {
-                            stdVelocity[0][i] = gmat[0][0]*inarray[0][i] + gmat[2][0]*inarray[1][i];
-                            stdVelocity[1][i] = gmat[1][0]*inarray[0][i] + gmat[3][0]*inarray[1][i];
-                        }
-                    }
-                    
-
-                    for(int i=0; i<n_points; i++)
-                    {
-                        pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i] + stdVelocity[1][i]*stdVelocity[1][i]);
-                        if(pntVelocity>stdV[el])
-                        {
-                            stdV[el] = pntVelocity;
-                        }
-                        
-                    }
-                }
-            }
-            else
-            {
-                for(int el = 0; el < n_element; ++el)
-                { 
-                    
-                    int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
-                    
-                    Array<OneD, const NekDouble> jac  = m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
-                    Array<TwoD, const NekDouble> gmat = m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
-
-                    if(m_fields[0]->GetExp(el)->GetGeom3D()->GetGtype() == SpatialDomains::eDeformed)
-                    {
-                        for(int i=0; i<n_points; i++)
-                        {
-                            stdVelocity[0][i] = gmat[0][i]*inarray[0][i] + gmat[3][i]*inarray[1][i] + gmat[6][i]*inarray[2][i];
-                            stdVelocity[1][i] = gmat[1][i]*inarray[0][i] + gmat[4][i]*inarray[1][i] + gmat[7][i]*inarray[2][i];
-                            stdVelocity[2][i] = gmat[2][i]*inarray[0][i] + gmat[5][i]*inarray[1][i] + gmat[8][i]*inarray[2][i];
-                        }
-                    }
-                    else
-                    {
-                        Array<OneD, const NekDouble> jac  = m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
-                        Array<TwoD, const NekDouble> gmat = m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
-
-                        for(int i=0; i<n_points; i++)
-                        {
-                            stdVelocity[0][i] = gmat[0][0]*inarray[0][i] + gmat[3][0]*inarray[1][i] + gmat[6][0]*inarray[2][i];
-                            stdVelocity[1][i] = gmat[1][0]*inarray[0][i] + gmat[4][0]*inarray[1][i] + gmat[7][0]*inarray[2][i];
-                            stdVelocity[2][i] = gmat[2][0]*inarray[0][i] + gmat[5][0]*inarray[1][i] + gmat[8][0]*inarray[2][i];
-                        }
-                    }
-                    
-                    for(int i=0; i<n_points; i++)
-                    {
-                        pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i] + stdVelocity[1][i]*stdVelocity[1][i] + stdVelocity[2][i]*stdVelocity[2][i]);
-                        if(pntVelocity>stdV[el])
-                        {
-                            stdV[el] = pntVelocity;
-                        }
-                    }
-                }
-            }
-		
-            return stdV;
-	}
-     */
-	
-	NekDouble UnsteadySystem::GetStabilityLimit(int n)
-	{
+        NekDouble UnsteadySystem::GetStabilityLimit(int n)
+        {
             if(n>20)
-	    {
+            {
                 ASSERTL0(false,"Illegal modes dimension for CFL calculation (P has to be less then 20)");
             }
 		
-            NekDouble CFLDG[21] = {2,6,11.8424,19.1569,27.8419,37.8247,49.0518,61.4815,75.0797,89.8181,105.67,122.62,140.64,159.73,179.85,201.01,223.18,246.36,270.53,295.69,321.83}; //CFLDG 1D [0-20]
+            NekDouble CFLDG[21] = {2, 6, 11.8424,19.1569,27.8419,37.8247,49.0518,61.4815,75.0797,89.8181,105.67,122.62,140.64,159.73,179.85,201.01,223.18,246.36,270.53,295.69,321.83}; //CFLDG 1D [0-20]
             NekDouble CFLCG[2]  = {1.0,1.0};
             NekDouble CFL;
 		
@@ -1124,10 +978,10 @@ namespace Nektar
             }
 		
             return CFL;
-	}
+        }
 	
-	Array<OneD,NekDouble> UnsteadySystem::GetStabilityLimitVector(const Array<OneD,int> &ExpOrder)
-	{
+        Array<OneD,NekDouble> UnsteadySystem::GetStabilityLimitVector(const Array<OneD,int> &ExpOrder)
+        {
             int i;
             Array<OneD,NekDouble> returnval(m_fields[0]->GetExpSize(),0.0);
             for(i =0; i<m_fields[0]->GetExpSize(); i++)
@@ -1135,6 +989,6 @@ namespace Nektar
                 returnval[i] = GetStabilityLimit(ExpOrder[i]);
             }
             return returnval;
-	}
+        }
     }
 }

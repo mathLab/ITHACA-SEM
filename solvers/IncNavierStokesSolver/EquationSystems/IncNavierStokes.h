@@ -117,12 +117,14 @@ namespace Nektar
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
                                      Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-        virtual NekDouble v_GetTimeStep(const Array<OneD,int> ExpOrder, 
+        virtual NekDouble v_GetTimeStep(/*const Array<OneD,int> ExpOrder, 
                                         const Array<OneD,NekDouble> CFL, 
-                                        NekDouble timeCFL);
+                                        NekDouble timeCFL*/);
         
+        /*
         virtual NekDouble v_GetTimeStep(int ExpOrder, NekDouble CFL,
                                         NekDouble TimeStability);
+        */
         
         // Mapping of the real convective field on the standard element.
         // This function gives back the convective filed in the standard

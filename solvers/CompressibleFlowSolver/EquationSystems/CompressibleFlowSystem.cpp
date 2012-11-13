@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/QuadExp.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
@@ -64,6 +66,12 @@ namespace Nektar
         {
             m_velLoc[i] = i+1;
         }
+        
+        // Get gamma parameter from session file.
+        ASSERTL0(m_session->DefinesParameter("Gamma"),
+                 "Compressible flow sessions must define a Gamma parameter.");
+        m_session->LoadParameter("Gamma", m_gamma, 1.4);
+        m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
 
         // Create Riemann solver instance, depending on the UPWINDTYPE specified
         // in the session file. Bind gamma, velLoc and the trace normals.
@@ -382,7 +390,7 @@ namespace Nektar
     {
         for (int i = 0; i < m_fields[0]->GetTotPoints(); ++i)
         {
-            temperature[i] = pressure[i]/(physfield[0][i]*m_GasConstant);
+            temperature[i] = pressure[i]/(physfield[0][i]*m_gasConstant);
         }
     }
     
@@ -429,6 +437,72 @@ namespace Nektar
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vdiv(npts, mach, 1, soundspeed,   1, mach, 1);
     }
+    
+    
+    
+    /**
+     * @brief Calculate the maximum timestep subject to CFL restrictions.
+     */
+    NekDouble CompressibleFlowSystem::v_GetTimeStep()
+    { 
+        int i, n;
+        int nvariables     = m_fields.num_elements();
+        int nTotQuadPoints = GetTotPoints();
+        int nElements      = m_fields[0]->GetExpSize(); 
+        const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
+        
+        // Set up wrapper to fields data storage.
+        Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
+        Array<OneD, Array<OneD, NekDouble> >   fieldsOld(nvariables);
+        Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
+        
+        for(i = 0; i < nvariables; ++i)
+        {
+            m_fields[i]->SetPhysState(false);
+            fields[i]  = m_fields[i]->UpdatePhys();
+        }
+        
+        Array<OneD, NekDouble> tstep      (nElements, 0.0);
+        Array<OneD, NekDouble> stdVelocity(nElements);
+        
+        // Get standard velocity to compute the time-step limit
+        GetStdVelocity(fields, stdVelocity);
+        
+        // Factors to compute the time-step limit
+        NekDouble minLength;        
+        NekDouble alpha   = MaxTimeStepEstimator();
+        NekDouble cLambda = 0.2; // Spencer book-317
+        
+        // Loop over elements to compute the time-step limit for each element
+        for(n = 0; n < nElements; ++n)
+        {
+            int npoints = m_fields[0]->GetExp(n)->GetTotPoints();
+            Array<OneD, NekDouble> one2D(npoints, 1.0);
+            NekDouble Area = m_fields[0]->GetExp(n)->Integral(one2D);
+            
+            if (boost::dynamic_pointer_cast<LocalRegions::TriExp>(
+                                                    m_fields[0]->GetExp(n)))
+            {
+                minLength = 2.0 * sqrt(Area);
+            }
+            
+            else if (boost::dynamic_pointer_cast<LocalRegions::QuadExp>(
+                                                    m_fields[0]->GetExp(n)))
+            {
+                minLength = sqrt(Area);
+            }
+            
+            tstep[n] = alpha * minLength 
+            / (stdVelocity[n] * cLambda 
+               * (ExpOrder[n] - 1) * (ExpOrder[n] - 1));
+        }
+        
+        // Get the minimum time-step limit and return the time-step
+        NekDouble TimeStep = Vmath::Vmin(nElements, tstep, 1);
+        m_comm->AllReduce(TimeStep, LibUtilities::ReduceMin);
+        return TimeStep;
+    }
+
 
     /**
      * @brief Calculate the maximum timestep subject to CFL restrictions.
@@ -438,7 +512,7 @@ namespace Nektar
      * @param CFL        CFL number for each element in the mesh.
      * @param timeCFL    ?
      */
-    NekDouble CompressibleFlowSystem::v_GetTimeStep(
+/*    NekDouble CompressibleFlowSystem::v_GetTimeStep(
         const Array<OneD, Array<OneD,NekDouble> > physarray, 
         const Array<OneD, int>                    ExpOrder, 
         const Array<OneD, NekDouble>              CFL,
@@ -448,22 +522,22 @@ namespace Nektar
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize(); 
         
-        Array<OneD, NekDouble> tstep      (n_element,0.0);
-        Array<OneD, NekDouble> stdVelocity(n_element);
+        Array<OneD, NekDouble> tstep      (n_element, 0.0);
+        Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
         GetStdVelocity(physarray, stdVelocity);
         
         // TODO: This should be implemented as a virtual function inside
         // StdExpansion.
-        map<StdRegions::ExpansionType,double> minLengths;
+        map<StdRegions::ExpansionType, double> minLengths;
         
         minLengths[StdRegions::eTriangle     ] = 0.5 / sqrt(2.0);
         minLengths[StdRegions::eQuadrilateral] = 0.5;
         minLengths[StdRegions::eHexahedron   ] = 0.25;
         
-        for(int el = 0; el < n_element; ++el)
+        for (int el = 0; el < n_element; ++el)
         {
             //tstep[el] = CFL[el]/stdVelocity[el];
-            tstep[el] = CFL[el]*minLengths[
+            tstep[el] = CFL[el] * minLengths[
                 m_fields[0]->GetExp(el)->DetExpansionType()]/stdVelocity[el];
         }
         
@@ -471,7 +545,7 @@ namespace Nektar
         m_comm->AllReduce(minDt, LibUtilities::ReduceMin);
         return minDt;
     }
-    
+*/    
     void CompressibleFlowSystem::GetStdVelocity(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,                   NekDouble>   &stdV)
@@ -486,7 +560,7 @@ namespace Nektar
         Array<OneD, NekDouble>               pressure   (nTotQuadPoints);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         
-        // Zero output array.
+        // Zero output array
         Vmath::Zero(stdV.num_elements(), stdV, 1);
         
         for (int i = 0; i < m_expdim; ++i)

@@ -458,28 +458,36 @@ namespace Nektar
     void IncNavierStokes::SubStepAdvance(const int nstep)
     {
         int n;
+        int nsubsteps, minsubsteps;
+
         NekDouble dt; 
-        int nsubsteps,minsubsteps;
         NekDouble time = m_time;
-        Array<OneD, Array<OneD, NekDouble> > fields,velfields;
+
+        Array<OneD, Array<OneD, NekDouble> > fields, velfields;
+        
         static int ncalls = 1;
-        int  nint    = min(ncalls++,m_intSteps);
-        Array<OneD, NekDouble> CFL(m_fields[0]->GetExpSize(),m_cflSafetyFactor);
-        dt = GetTimeStep(m_fields[0]->EvalBasisNumModesMaxPerExp(),CFL,0.0);
+        int  nint         = min(ncalls++, m_intSteps);
+        
+        Array<OneD, NekDouble> CFL(m_fields[0]->GetExpSize(), 
+                                   m_cflSafetyFactor);
+        
+        // Get the proper time step with CFL control
+        dt = GetTimeStep();
 
         nsubsteps = (m_timestep > dt)? ((int)(m_timestep/dt)+1):1; 
-        m_session->LoadParameter("MinSubSteps",minsubsteps,0);
-        nsubsteps = max(minsubsteps,nsubsteps);
+        m_session->LoadParameter("MinSubSteps", minsubsteps,0);
+        nsubsteps = max(minsubsteps, nsubsteps);
 
         dt = m_timestep/nsubsteps;
         
-        if(m_infosteps && !((nstep+1)%m_infosteps) && m_comm->GetRank() == 0)
+        if (m_infosteps && !((nstep+1)%m_infosteps) && m_comm->GetRank() == 0)
         {
-            cout << "Sub-integrating using "<< nsubsteps << " steps over Dt = " 
-                 << m_timestep << " (SubStep CFL=" << m_cflSafetyFactor << ")"<< endl;
+            cout << "Sub-integrating using "<< nsubsteps 
+                 << " steps over Dt = "     << m_timestep 
+                 << " (SubStep CFL="        << m_cflSafetyFactor << ")"<< endl;
         }
 
-        for(int m = 0; m < nint; ++m)
+        for (int m = 0; m < nint; ++m)
         {
             // We need to update the fields held by the m_integrationSoln
             fields = m_integrationSoln->UpdateSolutionVector()[m];
@@ -488,11 +496,14 @@ namespace Nektar
             // with calls to EvaluateAdvection_SetPressureBCs and
             // SolveUnsteadyStokesSystem
             LibUtilities::TimeIntegrationSolutionSharedPtr 
-                SubIntegrationSoln = m_subStepIntegrationScheme->InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
+                SubIntegrationSoln = m_subStepIntegrationScheme->
+                    InitializeScheme(dt, fields, time, m_subStepIntegrationOps);
             
             for(n = 0; n < nsubsteps; ++n)
             {
-                fields = m_subStepIntegrationScheme->TimeIntegrate(dt, SubIntegrationSoln, m_subStepIntegrationOps);
+                fields = m_subStepIntegrationScheme->
+                    TimeIntegrate(
+                            dt, SubIntegrationSoln, m_subStepIntegrationOps);
             }
             
             // Reset time integrated solution in m_integrationSoln 
@@ -504,7 +515,10 @@ namespace Nektar
     /** 
      * Explicit Advection terms used by SubStepAdvance time integration
      */
-    void IncNavierStokes::SubStepAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  Array<OneD, Array<OneD, NekDouble> > &outarray, const NekDouble time)
+    void IncNavierStokes::SubStepAdvection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
+              Array<OneD, Array<OneD,       NekDouble> > &outarray, 
+        const NekDouble time)
     {
         int i;
         int nVariables     = inarray.num_elements();
@@ -823,12 +837,15 @@ namespace Nektar
     }
     
     
-    NekDouble IncNavierStokes::v_GetTimeStep(const Array<OneD,int> ExpOrder, const Array<OneD,NekDouble> CFL, NekDouble timeCFL)
+    NekDouble IncNavierStokes::v_GetTimeStep()
     { 
         
-        int nvariables      = m_fields.num_elements();
-        int nTotQuadPoints  = GetTotPoints();
-        int n_element       = m_fields[0]->GetExpSize(); 
+        int nvariables                  = m_fields.num_elements();
+        int nTotQuadPoints              = GetTotPoints();
+        int n_element                   = m_fields[0]->GetExpSize(); 
+        
+        const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
+        Array<OneD, int> ExpOrderList (n_element, ExpOrder);
         
         const NekDouble minLengthStdTri  = 1.414213;
         const NekDouble minLengthStdQuad = 2.0;
@@ -837,7 +854,7 @@ namespace Nektar
         Array<OneD, NekDouble> tstep      (n_element, 0.0);
         Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
         Array<OneD, Array<OneD, NekDouble> > velfields(
-                                                       m_velocity.num_elements());
+                                                    m_velocity.num_elements());
         
         for(int i = 0; i < m_velocity.num_elements(); ++i)
         {
@@ -849,27 +866,21 @@ namespace Nektar
         {
             int npoints = m_fields[0]->GetExp(el)->GetTotPoints();
             
-            tstep[el] =  CFL[el]/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
+            tstep[el] = m_cflSafetyFactor / 
+                       (stdVelocity[el] * cLambda * 
+                       (ExpOrder[el]-1) * (ExpOrder[el]-1));
         }
         
-        NekDouble TimeStep = Vmath::Vmin(n_element,tstep,1);
-        
+        NekDouble TimeStep = Vmath::Vmin(n_element, tstep, 1);
         return TimeStep;
     }
     
-    NekDouble IncNavierStokes::v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
-    {
-        Array<OneD, int> ExpOrderList(m_fields[0]->GetExpSize(),ExpOrder);
-        Array<OneD, NekDouble> CFLList(m_fields[0]->GetExpSize(),CFL);
-        
-        return v_GetTimeStep(ExpOrderList,CFLList,TimeStability);
-    }
     
     Array<OneD, NekDouble> IncNavierStokes::GetStdVelocity(
         const Array<OneD, Array<OneD,NekDouble> > inarray)
 	{
         // Checking if the problem is 2D
-        ASSERTL0(m_expdim>=2,"Method not implemented for 1D");
+        ASSERTL0(m_expdim >= 2, "Method not implemented for 1D");
         
         int nTotQuadPoints  = GetTotPoints();
         int n_element       = m_fields[0]->GetExpSize();       

@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 #define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_EQUATIONSYSTEMS_COMPRESSIBLEFLOWSYSTEM_H
 
-#include <CompressibleFlowSolver/EquationSystems/UnsteadySystem.h>
+#include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/Advection.h>
 
@@ -56,100 +56,99 @@
 
 namespace Nektar
 {  
-  /**
-   * 
-   */
-  class CompressibleFlowSystem: public UnsteadySystem
-  {
-  public:
+    /**
+     * 
+     */
+    class CompressibleFlowSystem: public SolverUtils::UnsteadySystem
+    {
+    public:
 
-      friend class MemoryManager<CompressibleFlowSystem>;
+        friend class MemoryManager<CompressibleFlowSystem>;
 
-      /// Creates an instance of this class
-      static SolverUtils::EquationSystemSharedPtr create(
-          const LibUtilities::SessionReaderSharedPtr& pSession)
-      {
-          return MemoryManager<CompressibleFlowSystem>::AllocateSharedPtr(pSession);
-      }
-      /// Name of class
-      static std::string className;
+        /// Creates an instance of this class
+        static SolverUtils::EquationSystemSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
+        {
+            return MemoryManager<CompressibleFlowSystem>::AllocateSharedPtr(pSession);
+        }
+        /// Name of class
+        static std::string className;
       
-      virtual ~CompressibleFlowSystem();
+        virtual ~CompressibleFlowSystem();
       
-  protected:
-      SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
-      SolverUtils::AdvectionSharedPtr     m_advection;
-      Array<OneD, NekDouble>              m_velLoc;
+    protected:
+        SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
+        SolverUtils::AdvectionSharedPtr     m_advection;
+        Array<OneD, NekDouble>              m_velLoc;
+        NekDouble                           m_gamma;
+        NekDouble                           m_gasConstant;
       
-      CompressibleFlowSystem(
-          const LibUtilities::SessionReaderSharedPtr& pSession);
+        CompressibleFlowSystem(
+            const LibUtilities::SessionReaderSharedPtr& pSession);
 
-      virtual void v_InitObject();
+        virtual void v_InitObject();
       
-      /// Print a summary of time stepping parameters.
-      virtual void v_PrintSummary(std::ostream &out);
+        /// Print a summary of time stepping parameters.
+        virtual void v_PrintSummary(std::ostream &out);
 
-      void GetFluxVector(
-          const int                                   i, 
-          const Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                Array<OneD, Array<OneD, NekDouble> > &flux);
-      void WallBoundary(
-          int                                   bcRegion,
-          int                                   cnt,
-          Array<OneD, Array<OneD, NekDouble> > &physarray);
-      void SymmetryBoundary(
-          int                                   bcRegion,
-          int                                   cnt,
-          Array<OneD, Array<OneD, NekDouble> > &physarray);
-      void GetVelocityVector(
-          const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD, Array<OneD, NekDouble> > &velocity);
-      void GetSoundSpeed(
-          const Array<OneD, Array<OneD, NekDouble> > &physfield,
-                Array<OneD,             NekDouble>   &pressure,
-                Array<OneD,             NekDouble>   &soundspeed);
-      void GetMach(
-          Array<OneD, Array<OneD, NekDouble> > &physfield,
-          Array<OneD,             NekDouble>   &soundspeed,
-          Array<OneD,             NekDouble>   &mach);
-      void GetTemperature(
-          Array<OneD, Array<OneD, NekDouble> > &physfield,
-          Array<OneD,             NekDouble>   &pressure,
-          Array<OneD,             NekDouble>   &temperature);
+        void GetFluxVector(
+            const int                                         i, 
+            const Array<OneD, Array<OneD, NekDouble> >       &physfield, 
+                  Array<OneD, Array<OneD, NekDouble> >       &flux);
+        void WallBoundary(
+            int                                               bcRegion,
+            int                                               cnt,
+            Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void SymmetryBoundary(
+            int                                               bcRegion,
+            int                                               cnt,
+            Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void GetVelocityVector(
+            const Array<OneD, Array<OneD,       NekDouble> > &physfield,
+                  Array<OneD, Array<OneD,       NekDouble> > &velocity);
+        void GetSoundSpeed(
+            const Array<OneD, Array<OneD,       NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &pressure,
+                  Array<OneD,                   NekDouble>   &soundspeed);
+        void GetMach(
+                  Array<OneD, Array<OneD,       NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &soundspeed,
+                  Array<OneD,                   NekDouble>   &mach);
+        void GetTemperature(
+                  Array<OneD, Array<OneD,       NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &pressure,
+                  Array<OneD,                   NekDouble>   &temperature);
+        void GetStdVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,                   NekDouble>   &stdV);
       
-      virtual NekDouble v_GetTimeStep(
-          const Array<OneD, Array<OneD,NekDouble> > physarray, 
-          const Array<OneD, int>                    ExpOrder, 
-          const Array<OneD, NekDouble>              CFLDG, 
-          NekDouble                                 timeCFL);
+        virtual NekDouble v_GetTimeStep();
 
-      virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
-                                          bool dumpInitialConditions = true)
-      {
-      }
+        virtual void v_SetInitialConditions(
+            NekDouble initialtime = 0.0,
+            bool dumpInitialConditions = true)
+        {
+        }
 
-      NekDouble GetGamma()
-      {
-          return m_gamma;
-      }
+        NekDouble GetGamma()
+        {
+            return m_gamma;
+        }
       
-      const Array<OneD, NekDouble> &GetVelLoc()
-      {
-          return m_velLoc;
-      }
+        const Array<OneD, NekDouble> &GetVelLoc()
+        {
+            return m_velLoc;
+        }
       
-      const Array<OneD, const Array<OneD, NekDouble> > &GetNormals()
-      {
-          return m_traceNormals;
-      }
+        const Array<OneD, const Array<OneD, NekDouble> > &GetNormals()
+        {
+            return m_traceNormals;
+        }
       
-  private:
-      void GetPressure(
-          const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                Array<OneD,                   NekDouble>   &pressure); 
-      void GetStdVelocity(
-          const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                Array<OneD,                   NekDouble>   &stdV);
-  };
+    private:
+        void GetPressure(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble>   &pressure);
+    };
 }
 #endif

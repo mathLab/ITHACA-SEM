@@ -121,7 +121,7 @@ namespace Nektar
         }
         
         /**
-         * Destructor
+         * Destructor for the class UnsteadyAdvection.
          */
         UnsteadySystem::~UnsteadySystem()
         {
@@ -382,7 +382,116 @@ namespace Nektar
                 (*x)->Initialise(m_fields, m_time);
             }
             
+            // =================================================================
+            // Implementation which gives some problems with IsentropicTest
+            // =================================================================
+            // Step initialization
+            n = 0;
+            
+            // Time loop
+            while(m_time < m_fintime)
+            {
+                Timer timer;
+                timer.Start();
+                
+                // Redefine m_timestep in case of CFL control
+                if (m_cflSafetyFactor > 0.0)
+                {
+                    m_timestep = GetTimeStep();
+                }
+                
+                // Integrate over timestep
+                if (n < numMultiSteps-1)
+                {
+                    // Use initialisation schemes if time step is 
+                    // less than the number of steps in the scheme
+                    fields = IntScheme[n]->TimeIntegrate(
+                                                    m_timestep,
+                                                    u, m_ode);
+                }
+                else
+                {
+                    fields = IntScheme[numMultiSteps-1]->TimeIntegrate(
+                                                                m_timestep,
+                                                                u, m_ode);
+                }
+				
+                m_time += m_timestep;
+				
+                timer.Stop();
+                IntegrationTime += timer.TimePerTest(1);
+				
+                // Write out status information
+                if (m_session->GetComm()->GetRank() == 0 
+                    && !((n+1)%m_infosteps))
+                {
+                    cout<< "Steps: "           << n+1
+                    << "\t Time: "         << m_time
+                    << "\t Time-step: "    << m_timestep << "\t" << endl;
+                }
+                
+                // Transform data into coefficient space
+                for (i = 0; i < m_intVariables.size(); ++i)
+                {
+                    m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
+                                fields[i],
+                                m_fields[m_intVariables[i]]->UpdateCoeffs());
+                    
+                    //Vmath::Vcopy(npoints, 
+                    //             fields[i], 1, 
+                    //             m_fields[m_intVariables[i]]->
+                    //             UpdatePhys(), 1);
+                    
+                    m_fields[m_intVariables[i]]->SetPhysState(false);
+                }
+                
+                std::vector<FilterSharedPtr>::iterator x;
+                for (x = m_filters.begin(); x != m_filters.end(); ++x)
+                {
+                    (*x)->Update(m_fields, m_time);
+                }
+                
+                // Write out checkpoint files.
+                if(m_checksteps&&n&&(!((n+1)%m_checksteps)))
+                {
+                    Checkpoint_Output(nchk++);
+                }
+                // Step advance
+                ++n;
+            }
+            // End of the time loop
+            
+            cout <<"\nCFL number              : " 
+                << m_cflSafetyFactor << endl;
+            cout <<"Time-integration timing : " 
+                << IntegrationTime << " s" << endl << endl;
+            
+            // At the end of the time integration, store final solution
+            for(i = 0; i < m_intVariables.size(); ++i)
+            {
+                if(m_fields[m_intVariables[i]]->GetPhysState() == false)
+                {
+                    m_fields[m_intVariables[i]]->BwdTrans(
+                                m_fields[m_intVariables[i]]->GetCoeffs(), 
+                                m_fields[m_intVariables[i]]->UpdatePhys());
+                }
+                
+                m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
+            }
+            
+            for (x = m_filters.begin(); x != m_filters.end(); ++x)
+            {
+                (*x)->Finalise(m_fields, m_time);
+            }
+            // =================================================================
+            // End implementation which gives some problems with ADRSolver
+            // =================================================================
 
+            // =================================================================
+            // Implementation which gives some problems with IsentropicTest
+            // =================================================================
+            
+            /*    
             // CFL control
             if(m_cflSafetyFactor > 0.0)
             {
@@ -474,13 +583,7 @@ namespace Nektar
                 // Store final solution at the end of time integration
                 for (i = 0; i < nvariables; ++i)
                 {
-                    if(m_fields[m_intVariables[i]]->GetPhysState() == false)
-                    {
-                        m_fields[m_intVariables[i]]->BwdTrans(
-                                    m_fields[m_intVariables[i]]->GetCoeffs(), 
-                                    m_fields[m_intVariables[i]]->UpdatePhys());
-                    }
-                    m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
+                    m_fields[i]->UpdatePhys() = fields[i];
                 }
 		
                 cout <<"\nCFL safety factor : " 
@@ -591,6 +694,10 @@ namespace Nektar
                 }
             }
             // end else-statement without cfl control
+            // =================================================================
+            // End implementation which gives some problems with IsentropicTest
+            // =================================================================
+*/ 
             
             // Print for 1D problems
             if(m_spacedim == 1)

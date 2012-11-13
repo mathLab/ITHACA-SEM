@@ -46,7 +46,7 @@ namespace Nektar
             "CompressibleFlowSystem", 
             CompressibleFlowSystem::create, 
             "Auxiliary functions for the compressible flow system.");
-  
+    
     CompressibleFlowSystem::CompressibleFlowSystem(
         const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession)
@@ -57,9 +57,9 @@ namespace Nektar
     {
         UnsteadySystem::v_InitObject();
         
-	ASSERTL0(m_session->DefinesSolverInfo("UPWINDTYPE"),
-		 "No UPWINDTYPE defined in session.");
-
+        ASSERTL0(m_session->DefinesSolverInfo("UPWINDTYPE"),
+                 "No UPWINDTYPE defined in session.");
+        
         // Set up locations of velocity vector.
         m_velLoc = Array<OneD, NekDouble>(m_expdim);
         for (int i = 0; i < m_expdim; ++i)
@@ -72,11 +72,11 @@ namespace Nektar
                  "Compressible flow sessions must define a Gamma parameter.");
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
         m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
-
+        
         // Create Riemann solver instance, depending on the UPWINDTYPE specified
         // in the session file. Bind gamma, velLoc and the trace normals.
         m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-            CreateInstance(m_session->GetSolverInfo("UPWINDTYPE"));
+        CreateInstance(m_session->GetSolverInfo("UPWINDTYPE"));
         m_riemannSolver->AddParam ("gamma",  
                                    &CompressibleFlowSystem::GetGamma,   this);
         m_riemannSolver->AddScalar("velLoc", 
@@ -88,9 +88,9 @@ namespace Nektar
         // eventually this choice will be defined by the user, with a default
         // being set in UnsteadySystem. Bind flux vector and the Riemann solver.
         m_advection = SolverUtils::GetAdvectionFactory().
-            CreateInstance("WeakDG", "WeakDG");
+        CreateInstance("WeakDG", "WeakDG");
         m_advection->SetFluxVector(
-            &CompressibleFlowSystem::GetFluxVector, this);
+                                   &CompressibleFlowSystem::GetFluxVector, this);
         m_advection->SetRiemannSolver(m_riemannSolver);
     }
     
@@ -130,48 +130,71 @@ namespace Nektar
         for(e = 0; e < m_fields[0]->GetBndCondExpansions()[b]->GetExpSize();++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[b]->
-                GetExp(e)->GetNumPoints(0);
+            GetExp(e)->GetNumPoints(0);
             id1  = m_fields[0]->GetBndCondExpansions()[b]->
-                GetPhys_Offset(e);
+            GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
-                m_fields[0]->GetTraceMap()->
-                GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+                        m_fields[0]->GetTraceMap()->
+                                    GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             
             switch(m_expdim)
             {
-                // Special case for 2D.
+                    // Special case for 2D
                 case 2:
                 {
                     Array<OneD, NekDouble> tmp_n(npts);
                     Array<OneD, NekDouble> tmp_t(npts);
                     
-                    Vmath::Vmul (npts,&Fwd[1][id2],1,&m_traceNormals[0][id2],1,
-                                 &tmp_n[0],1);
-                    Vmath::Vvtvp(npts,&Fwd[2][id2],1,&m_traceNormals[1][id2],1,
-                                 &tmp_n[0],1,&tmp_n[0],1);
-	      
-                    Vmath::Vmul (npts,&Fwd[1][id2],1,&m_traceNormals[1][id2],1,
-                                 &tmp_t[0],1);
-                    Vmath::Vvtvm(npts,&Fwd[2][id2],1,&m_traceNormals[0][id2],1,
-                                 &tmp_t[0],1,&tmp_t[0],1);
+                    Vmath::Vmul (npts, 
+                                 &Fwd[1][id2], 1, 
+                                 &m_traceNormals[0][id2], 1,
+                                 &tmp_n[0], 1);
+                    
+                    Vmath::Vvtvp(npts, 
+                                 &Fwd[2][id2], 1, 
+                                 &m_traceNormals[1][id2], 1,
+                                 &tmp_n[0], 1, 
+                                 &tmp_n[0], 1);
+                    
+                    Vmath::Vmul (npts, 
+                                 &Fwd[1][id2], 1, 
+                                 &m_traceNormals[1][id2], 1,
+                                 &tmp_t[0], 1);
+                    
+                    Vmath::Vvtvm(npts, 
+                                 &Fwd[2][id2], 1, 
+                                 &m_traceNormals[0][id2], 1,
+                                 &tmp_t[0], 1, &tmp_t[0], 1);
                     
                     // negate the normal flux
-                    Vmath::Neg  (npts,tmp_n,1);		      
+                    Vmath::Neg  (npts, tmp_n, 1);		      
                     
                     // rotate back to Cartesian
-                    Vmath::Vmul (npts,&tmp_t[0],1,&m_traceNormals[1][id2],1,
-                                 &Fwd[1][id2],1);
-                    Vmath::Vvtvm(npts,&tmp_n[0],1,&m_traceNormals[0][id2],1,
-                                 &Fwd[1][id2],1,&Fwd[1][id2],1);
-	      
-                    Vmath::Vmul (npts,&tmp_t[0],1,&m_traceNormals[0][id2],1,
-                                 &Fwd[2][id2],1);
-                    Vmath::Vvtvp(npts,&tmp_n[0],1,&m_traceNormals[1][id2],1,
-                                 &Fwd[2][id2],1,&Fwd[2][id2],1);
+                    Vmath::Vmul (npts,
+                                 &tmp_t[0], 1, 
+                                 &m_traceNormals[1][id2], 1,
+                                 &Fwd[1][id2], 1);
+                    
+                    Vmath::Vvtvm(npts, 
+                                 &tmp_n[0], 1, 
+                                 &m_traceNormals[0][id2], 1,
+                                 &Fwd[1][id2], 1, 
+                                 &Fwd[1][id2], 1);
+                    
+                    Vmath::Vmul (npts, 
+                                 &tmp_t[0], 1,
+                                 &m_traceNormals[0][id2], 1,
+                                 &Fwd[2][id2], 1);
+                    
+                    Vmath::Vvtvp(npts, 
+                                 &tmp_n[0], 1,
+                                 &m_traceNormals[1][id2], 1,
+                                 &Fwd[2][id2], 1,
+                                 &Fwd[2][id2], 1);
                     break;
                 }
-                
-                // For 1D/3D, define: v* = v - (v.n)n so that v*.n = 0
+                    
+                    // For 1D/3D, define: v* = v - (v.n)n so that v*.n = 0
                 case 1:
                 case 3:
                 {
@@ -181,17 +204,23 @@ namespace Nektar
                     for (i = 0; i < m_expdim; ++i)
                     {
                         Vmath::Vvtvp(npts,
-                                     &Fwd[1+i][id2],1,&m_traceNormals[i][id2],1,
-                                     &tmp[0],1,&tmp[0],1);
+                                     &Fwd[1+i][id2], 1, 
+                                     &m_traceNormals[i][id2], 1,
+                                     &tmp[0], 1,
+                                     &tmp[0], 1);
                     }
                     
                     for (i = 0; i < m_expdim; ++i)
                     {
-                        Vmath::Vvtvm(npts,&tmp[0],1,&m_traceNormals[i][id2],1,
-                                     &Fwd[1+i][id2],1,&Fwd[1+i][id2],1);
-                        Vmath::Neg  (npts,&Fwd[1+i][id2],1);
+                        Vmath::Vvtvm(npts, 
+                                     &tmp[0], 1,
+                                     &m_traceNormals[i][id2], 1,
+                                     &Fwd[1+i][id2], 1,
+                                     &Fwd[1+i][id2], 1);
+                        
+                        Vmath::Neg  (npts, &Fwd[1+i][id2], 1);
                     }
-
+                    
                     break;
                 }
                 default:
@@ -201,13 +230,16 @@ namespace Nektar
             // copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nvariables; ++i)
             {
-                Vmath::Vcopy(npts,&Fwd[i][id2],1,&(m_fields[i]->
-                    GetBndCondExpansions()[b]->UpdatePhys())[id1],1);
+                Vmath::Vcopy(npts, &Fwd[i][id2], 1, &(m_fields[i]->
+                            GetBndCondExpansions()[b]->UpdatePhys())[id1], 1);
             }
         }
     }
-  
-    void CompressibleFlowSystem::SymmetryBoundary(int bcRegion, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray)
+    
+    void CompressibleFlowSystem::SymmetryBoundary(
+        int                                      bcRegion, 
+        int                                      cnt, 
+        Array<OneD, Array<OneD, NekDouble> >    &physarray)
     {  
         int i;
         int nTraceNumPoints = GetTraceTotPoints();
@@ -218,43 +250,71 @@ namespace Nektar
         for (i = 0; i < nvariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-            m_fields[i]->ExtractTracePhys(physarray[i],Fwd[i]);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
         
         int e, id1, id2, npts;
         
         for(e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
         {
-            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
-            id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e) ;
-            id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            GetExp(e)->GetNumPoints(0);
+            id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            GetPhys_Offset(e);
+            id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->
+                    GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             
             switch(m_expdim)
             {
                 case 1:
                 {
-                    ASSERTL0(false,"1D not yet implemented for the Compressible Flow Equations");
+                    ASSERTL0(false,
+                             "1D not yet implemented for Compressible Flow Equations");
                 }
-                break;
+                    break;
                 case 2:
                 {
                     Array<OneD, NekDouble> tmp_t(npts);
                     
-                    Vmath::Vmul(npts,&Fwd[1][id2],1,&m_traceNormals[1][id2],1,&tmp_t[0],1);
-                    Vmath::Vvtvm(npts,&Fwd[2][id2],1,&m_traceNormals[0][id2],1,&tmp_t[0],1,&tmp_t[0],1);
+                    Vmath::Vmul(npts, 
+                                &Fwd[1][id2], 1, 
+                                &m_traceNormals[1][id2], 1, 
+                                &tmp_t[0], 1);
                     
-                    Array<OneD, NekDouble> tmp_n(npts,0.0);
+                    Vmath::Vvtvm(npts, 
+                                 &Fwd[2][id2], 1, 
+                                 &m_traceNormals[0][id2], 1, 
+                                 &tmp_t[0], 1, 
+                                 &tmp_t[0], 1);
+                    
+                    Array<OneD, NekDouble> tmp_n(npts, 0.0);
                     
                     // rotate back to Cartesian
-                    Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[1][id2],1,&Fwd[1][id2],1);
-                    Vmath::Vvtvm(npts,&tmp_n[0],1,&m_traceNormals[0][id2],1,&Fwd[1][id2],1,&Fwd[1][id2],1);
+                    Vmath::Vmul(npts, 
+                                &tmp_t[0], 1, 
+                                &m_traceNormals[1][id2], 1, 
+                                &Fwd[1][id2], 1);
                     
-                    Vmath::Vmul(npts,&tmp_t[0],1,&m_traceNormals[0][id2],1,&Fwd[2][id2],1);
-                    Vmath::Vvtvp(npts,&tmp_n[0],1,&m_traceNormals[1][id2],1,&Fwd[2][id2],1,&Fwd[2][id2],1);
+                    Vmath::Vvtvm(npts, 
+                                 &tmp_n[0], 1,
+                                 &m_traceNormals[0][id2], 1, 
+                                 &Fwd[1][id2], 1, 
+                                 &Fwd[1][id2], 1);
+                    
+                    Vmath::Vmul(npts, 
+                                &tmp_t[0], 1, 
+                                &m_traceNormals[0][id2], 1,
+                                &Fwd[2][id2], 1);
+                    Vmath::Vvtvp(npts, 
+                                 &tmp_n[0], 1, 
+                                 &m_traceNormals[1][id2], 1, 
+                                 &Fwd[2][id2], 1, 
+                                 &Fwd[2][id2], 1);
                 }
-                break;
+                    break;
                 case 3:
-                    ASSERTL0(false,"3D not implemented for the Compressible Flow Equations");
+                    ASSERTL0(false,
+                             "3D not yet implemented for Compressible Flow Equations");
                     break;
                 default:
                     ASSERTL0(false,"Illegal expansion dimension");
@@ -263,11 +323,14 @@ namespace Nektar
             // copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nvariables; ++i)
             {
-                Vmath::Vcopy(npts,&Fwd[i][id2], 1,&(m_fields[i]->GetBndCondExpansions()[bcRegion]->UpdatePhys())[id1],1);	
+                Vmath::Vcopy(npts, 
+                             &Fwd[i][id2], 1, 
+                             &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
+                               UpdatePhys())[id1], 1);	
             }
         }
     }
-
+    
     /**
      * @brief Return the flux vector for the compressible Euler equations.
      * 
@@ -323,7 +386,7 @@ namespace Nektar
             ASSERTL0(false, "Invalid vector index.");
         }
     }
-    
+
     /**
      * @brief Calculate the pressure field \f$ p =
      * (\gamma-1)(E-\frac{1}{2}\rho\| \mathbf{v} \|^2) \f$ assuming an ideal gas
@@ -438,8 +501,6 @@ namespace Nektar
         Vmath::Vdiv(npts, mach, 1, soundspeed,   1, mach, 1);
     }
     
-    
-    
     /**
      * @brief Calculate the maximum timestep subject to CFL restrictions.
      */
@@ -502,50 +563,7 @@ namespace Nektar
         m_comm->AllReduce(TimeStep, LibUtilities::ReduceMin);
         return TimeStep;
     }
-
-
-    /**
-     * @brief Calculate the maximum timestep subject to CFL restrictions.
-     * 
-     * @param physarray  Physical field.
-     * @param ExpOrder   Polynomial order of each element in the mesh.
-     * @param CFL        CFL number for each element in the mesh.
-     * @param timeCFL    ?
-     */
-/*    NekDouble CompressibleFlowSystem::v_GetTimeStep(
-        const Array<OneD, Array<OneD,NekDouble> > physarray, 
-        const Array<OneD, int>                    ExpOrder, 
-        const Array<OneD, NekDouble>              CFL,
-        NekDouble                                 timeCFL)
-    { 
-        int nvariables     = m_fields.num_elements();
-        int nTotQuadPoints = GetTotPoints();
-        int n_element      = m_fields[0]->GetExpSize(); 
-        
-        Array<OneD, NekDouble> tstep      (n_element, 0.0);
-        Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
-        GetStdVelocity(physarray, stdVelocity);
-        
-        // TODO: This should be implemented as a virtual function inside
-        // StdExpansion.
-        map<StdRegions::ExpansionType, double> minLengths;
-        
-        minLengths[StdRegions::eTriangle     ] = 0.5 / sqrt(2.0);
-        minLengths[StdRegions::eQuadrilateral] = 0.5;
-        minLengths[StdRegions::eHexahedron   ] = 0.25;
-        
-        for (int el = 0; el < n_element; ++el)
-        {
-            //tstep[el] = CFL[el]/stdVelocity[el];
-            tstep[el] = CFL[el] * minLengths[
-                m_fields[0]->GetExp(el)->DetExpansionType()]/stdVelocity[el];
-        }
-        
-        double minDt = Vmath::Vmin(n_element, tstep, 1);
-        m_comm->AllReduce(minDt, LibUtilities::ReduceMin);
-        return minDt;
-    }
-*/    
+   
     void CompressibleFlowSystem::GetStdVelocity(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,                   NekDouble>   &stdV)

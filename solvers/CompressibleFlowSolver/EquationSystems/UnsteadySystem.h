@@ -152,7 +152,7 @@ namespace Nektar
   private:
 
     ///< CFL parameter selection
-    NekDouble m_cfl;
+    NekDouble m_cflSafetyFactor;
 
     inline NekDouble GetStabilityLimit(int n)
     {

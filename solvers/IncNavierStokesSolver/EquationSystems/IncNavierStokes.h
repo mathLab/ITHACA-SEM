@@ -123,6 +123,13 @@ namespace Nektar
         
         virtual NekDouble v_GetTimeStep(int ExpOrder, NekDouble CFL,
                                         NekDouble TimeStability);
+        
+        // Mapping of the real convective field on the standard element.
+        // This function gives back the convective filed in the standard
+        // element to calculate the stability region of the problem in a
+        // unique way.
+        Array<OneD,NekDouble> GetStdVelocity(
+            const Array<OneD, Array<OneD,NekDouble> > inarray);
 
 
         // Sub-stepping related methods

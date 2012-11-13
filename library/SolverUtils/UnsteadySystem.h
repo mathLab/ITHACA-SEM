@@ -64,8 +64,8 @@ namespace Nektar
                 NekDouble CFL, 
                 NekDouble TimeStability);
 		
-            /// CFL number
-            NekDouble m_cfl;
+            /// CFL safety factor (comprise between 0 to 1)
+            NekDouble m_cflSafetyFactor;
 		
             // Mapping of the real convective field on the standard element.
             // This function gives back the convective filed in the standard
@@ -104,9 +104,14 @@ namespace Nektar
             std::vector<FilterSharedPtr>                    m_filters;
 
             /// Initialises UnsteadySystem class members.
-            SOLVER_UTILS_EXPORT UnsteadySystem(const LibUtilities::SessionReaderSharedPtr& pSession);
+            SOLVER_UTILS_EXPORT UnsteadySystem(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
+            /// Init object for UnsteadySystem class.
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
+            
+            /// Get the maximum timestep estimator for cfl control.
+            SOLVER_UTILS_EXPORT NekDouble MaxTimeStepEstimator();
 
             /// Solves an unsteady problem.
             SOLVER_UTILS_EXPORT virtual void v_DoSolve();
@@ -118,7 +123,8 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
             
             /// Print the solution at each solution point in a txt file
-            SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(Array<OneD, Array<OneD, NekDouble> > &solution1D);
+            SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(
+                Array<OneD, Array<OneD, NekDouble> > &solution1D);
 
             ///
             SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(

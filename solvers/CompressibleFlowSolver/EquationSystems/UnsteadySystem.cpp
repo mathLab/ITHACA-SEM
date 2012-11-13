@@ -120,7 +120,7 @@ namespace Nektar
     
     m_session->LoadParameter("Gamma",m_gamma,1.4);
     m_session->LoadParameter("GasConstant",m_GasConstant,287.058);
-    m_session->LoadParameter("CFLParameter",m_cfl,0.0);
+    m_session->LoadParameter("CFLParameter",m_cflSafetyFactor,0.0);
     
     // Load generic input parameters
     m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
@@ -196,7 +196,7 @@ namespace Nektar
 	  numMultiSteps = 1;
 
  	  // save it somewhere in the integration class
- 	  RKStability = 2.784*m_cfl;
+ 	  RKStability = 2.784*m_cflSafetyFactor;
 	  Vmath::Sdiv(n_elements,RKStability,DGStability,1,CFL,1);
 
 	  IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
@@ -212,7 +212,7 @@ namespace Nektar
 	  numMultiSteps = 2;
 
  	  // save it somewhere in the integration class
- 	  RKStability = m_cfl;
+ 	  RKStability = m_cflSafetyFactor;
  	  Vmath::Sdiv(n_elements,RKStability,DGStability,1,CFL,1);
 	  
 	  IntScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>(numMultiSteps);
@@ -244,7 +244,7 @@ namespace Nektar
     if(m_fintime>0.0 && m_steps>0)
       ASSERTL0(false,"Final condition not unique: fintime>0.0 & Nsteps>0");
     // Check Timestep condition
-    if(m_timestep>0.0 && m_cfl>0.0)
+    if(m_timestep>0.0 && m_cflSafetyFactor>0.0)
       ASSERTL0(false,"Timestep not unique: timestep>0.0 & CFL>0.0");
 
     // Perform integration in time.
@@ -255,7 +255,7 @@ namespace Nektar
         for(i = 0; i < nvariables; ++i)
 	  Vmath::Vcopy(nq,fields[i],1,fieldsOld[i],1);
  
-	if(m_cfl>0.0)
+	if(m_cflSafetyFactor>0.0)
 	  m_timestep = GetTimeStep(fields, ExpOrder, CFL, RKStability);
 	
 	// Integrate over timestep.
@@ -327,18 +327,18 @@ namespace Nektar
   void UnsteadySystem::v_PrintSummary(std::ostream &out)
   {
     EquationSystem::v_PrintSummary(out);
-    out << "\tUpwind Type     : " << UpwindTypeMap[m_upwindType] << endl;
-    out << "\tAdvection       : " << (m_explicitAdvection ? "explicit" : "implicit") << endl;
+    out << "\tUpwind Type       : " << UpwindTypeMap[m_upwindType] << endl;
+    out << "\tAdvection         : " << (m_explicitAdvection ? "explicit" : "implicit") << endl;
     out << "\tIntegration Type: " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
-    out << "\tTime Step       : " << m_timestep << endl;
-    out << "\tNo. of Steps    : " << m_steps << endl;
-    out << "\tFinal Time      : " << m_fintime << endl;
-    out << "\tCFL parameter   : " << m_cfl << endl;
-    out << "\tCheckpoints     : " << m_checksteps << " steps" << endl;
-    out << "\tVariables       : rho      should be in field[0]" <<endl;
-    out << "\t                  rhou     should be in field[1]" <<endl;
-    out << "\t                  rhov     should be in field[2]" <<endl;
-    out << "\t                  E (rhoe) should be in field[3]" <<endl;
+    out << "\tTime Step         : " << m_timestep << endl;
+    out << "\tNo. of Steps      : " << m_steps << endl;
+    out << "\tFinal Time        : " << m_fintime << endl;
+    out << "\tCFL safety factor : " << m_cflSafetyFactor << endl;
+    out << "\tCheckpoints       : " << m_checksteps << " steps" << endl;
+    out << "\tVariables         : rho      should be in field[0]" <<endl;
+    out << "\t                    rhou     should be in field[1]" <<endl;
+    out << "\t                    rhov     should be in field[2]" <<endl;
+    out << "\t                    E (rhoe) should be in field[3]" <<endl;
   }
 
   /**

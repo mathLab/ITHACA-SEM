@@ -302,4 +302,110 @@ namespace Nektar
 		
 		return TimeStep;
 	}
+    
+    Array<OneD,NekDouble> UnsteadySystem::GetStdVelocity(const Array<OneD, Array<OneD,NekDouble> > inarray)
+	{
+        // Checking if the problem is 2D
+        ASSERTL0(m_expdim>=2,"Method not implemented for 1D");
+        
+        int nTotQuadPoints  = GetTotPoints();
+        int n_element  = m_fields[0]->GetExpSize();       // number of element in the mesh
+        int nvel = inarray.num_elements();
+        int npts = 0;
+        
+        NekDouble pntVelocity;
+        
+        // Getting the standard velocity vector on the 2D normal space
+        Array<OneD, Array<OneD, NekDouble> > stdVelocity(nvel);
+		
+        Array<OneD, NekDouble> stdV(n_element,0.0);
+        for (int i = 0; i < nvel; ++i)
+        {
+            stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints);
+        }
+		
+        if(nvel == 2)
+        {
+            for(int el = 0; el < n_element; ++el)
+            { 
+                
+                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+                
+                Array<OneD, const NekDouble> jac  = m_fields[0]->GetExp(el)->GetGeom2D()->GetJac();
+                Array<TwoD, const NekDouble> gmat = m_fields[0]->GetExp(el)->GetGeom2D()->GetGmat();
+                
+                if(m_fields[0]->GetExp(el)->GetGeom2D()->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    for(int i=0; i<n_points; i++)
+                    {
+                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i] + gmat[2][i]*inarray[1][i];
+                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i] + gmat[3][i]*inarray[1][i];
+                    }
+                }
+                else
+                {
+                    for(int i=0; i<n_points; i++)
+                    {
+                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i] + gmat[2][0]*inarray[1][i];
+                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i] + gmat[3][0]*inarray[1][i];
+                    }
+                }
+                
+                
+                for(int i=0; i<n_points; i++)
+                {
+                    pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i] + stdVelocity[1][i]*stdVelocity[1][i]);
+                    if(pntVelocity>stdV[el])
+                    {
+                        stdV[el] = pntVelocity;
+                    }
+                    
+                }
+            }
+        }
+        else
+        {
+            for(int el = 0; el < n_element; ++el)
+            { 
+                
+                int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
+                
+                Array<OneD, const NekDouble> jac  = m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
+                Array<TwoD, const NekDouble> gmat = m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
+                
+                if(m_fields[0]->GetExp(el)->GetGeom3D()->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    for(int i=0; i<n_points; i++)
+                    {
+                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i] + gmat[3][i]*inarray[1][i] + gmat[6][i]*inarray[2][i];
+                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i] + gmat[4][i]*inarray[1][i] + gmat[7][i]*inarray[2][i];
+                        stdVelocity[2][i] = gmat[2][i]*inarray[0][i] + gmat[5][i]*inarray[1][i] + gmat[8][i]*inarray[2][i];
+                    }
+                }
+                else
+                {
+                    Array<OneD, const NekDouble> jac  = m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
+                    Array<TwoD, const NekDouble> gmat = m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
+                    
+                    for(int i=0; i<n_points; i++)
+                    {
+                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i] + gmat[3][0]*inarray[1][i] + gmat[6][0]*inarray[2][i];
+                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i] + gmat[4][0]*inarray[1][i] + gmat[7][0]*inarray[2][i];
+                        stdVelocity[2][i] = gmat[2][0]*inarray[0][i] + gmat[5][0]*inarray[1][i] + gmat[8][0]*inarray[2][i];
+                    }
+                }
+                
+                for(int i=0; i<n_points; i++)
+                {
+                    pntVelocity = sqrt(stdVelocity[0][i]*stdVelocity[0][i] + stdVelocity[1][i]*stdVelocity[1][i] + stdVelocity[2][i]*stdVelocity[2][i]);
+                    if(pntVelocity>stdV[el])
+                    {
+                        stdV[el] = pntVelocity;
+                    }
+                }
+            }
+        }
+		
+        return stdV;
+	}
 }

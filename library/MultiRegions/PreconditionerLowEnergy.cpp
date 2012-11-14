@@ -352,10 +352,9 @@ namespace Nektar
             {
                 //Get statically condensed matrix
                 loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
-		
-                //Extract boundary block
-                bnd_mat=loc_mat->GetBlock(0,0);
 
+                bnd_mat=loc_mat->GetBlock(0,0);
+		
                 //offset by number of rows
                 offset = bnd_mat->GetRows();
 		

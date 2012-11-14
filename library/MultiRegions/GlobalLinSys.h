@@ -42,7 +42,6 @@
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
-
 namespace Nektar
 {
     namespace MultiRegions
@@ -72,11 +71,10 @@ namespace Nektar
         {
         public:
             /// Constructor for full direct matrix solve.
-            MULTI_REGIONS_EXPORT
-            GlobalLinSys(const GlobalLinSysKey &pKey,
-                    const boost::weak_ptr<ExpList> &pExpList,
-                    const boost::shared_ptr<AssemblyMap>
-                                                           &pLocToGloMap);
+            MULTI_REGIONS_EXPORT GlobalLinSys(
+                const GlobalLinSysKey                &pKey,
+                const boost::weak_ptr<ExpList>       &pExpList,
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
             virtual ~GlobalLinSys() {}
@@ -95,11 +93,11 @@ namespace Nektar
             /// using a specified local to global map.
             MULTI_REGIONS_EXPORT
             inline void Solve(
-                    const Array<OneD, const NekDouble> &in,
-                          Array<OneD,       NekDouble> &out,
-                    const AssemblyMapSharedPtr &locToGloMap,
-                    const Array<OneD, const NekDouble> &dirForcing
-                                                = NullNekDouble1DArray);
+                const Array<OneD, const NekDouble> &in,
+                      Array<OneD,       NekDouble> &out,
+                const AssemblyMapSharedPtr         &locToGloMap,
+                const Array<OneD, const NekDouble> &dirForcing
+                    = NullNekDouble1DArray);
 
             /// Returns a shared pointer to the current object.
 	    boost::shared_ptr<GlobalLinSys> GetSharedThisPtr()
@@ -107,49 +105,48 @@ namespace Nektar
 	        return shared_from_this();
 	    }
 
-            inline int GetNumBlocks();
-            inline DNekScalMatSharedPtr GetBlock(unsigned int n);
+            inline int                     GetNumBlocks      ();
+            inline DNekScalMatSharedPtr    GetBlock          (unsigned int n);
             inline DNekScalBlkMatSharedPtr GetStaticCondBlock(unsigned int n);
 
         protected:
             /// Key associated with this linear system.
-            const GlobalLinSysKey                   m_linSysKey;
+            const GlobalLinSysKey                m_linSysKey;
             /// Local Matrix System
-            const boost::weak_ptr<ExpList>          m_expList;
+            const boost::weak_ptr<ExpList>       m_expList;
             /// Robin boundary info
-            const map<int, RobinBCInfoSharedPtr>    m_robinBCInfo;
+            const map<int, RobinBCInfoSharedPtr> m_robinBCInfo;
 
             /// Solve the linear system for given input and output vectors.
             inline void SolveLinearSystem(
-                    const int pNumRows,
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput,
-                    const AssemblyMapSharedPtr &locToGloMap,
-                    const int pNumDir = 0);
+                const int                          pNumRows,
+                const Array<OneD,const NekDouble> &pInput,
+                      Array<OneD,      NekDouble> &pOutput,
+                const AssemblyMapSharedPtr        &locToGloMap,
+                const int                          pNumDir = 0);
             
-            virtual int v_GetNumBlocks();
-            virtual DNekScalMatSharedPtr v_GetBlock(unsigned int n);
+            virtual int                     v_GetNumBlocks      ();
+            virtual DNekScalMatSharedPtr    v_GetBlock          (unsigned int n);
             virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
 
         private:
             /// Solve a linear system based on mapping.
             virtual void v_Solve(
-                        const Array<OneD, const NekDouble> &in,
-                              Array<OneD,       NekDouble> &out,
-                        const AssemblyMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble> &dirForcing
-                                                = NullNekDouble1DArray) = 0;
+                const Array<OneD, const NekDouble> &in,
+                      Array<OneD,       NekDouble> &out,
+                const AssemblyMapSharedPtr         &locToGloMap,
+                const Array<OneD, const NekDouble> &dirForcing
+                    = NullNekDouble1DArray) = 0;
 
             /// Solve a basic matrix system.
             virtual void v_SolveLinearSystem(
-                    const int pNumRows,
-                    const Array<OneD,const NekDouble> &pInput,
-                          Array<OneD,      NekDouble> &pOutput,
-                    const AssemblyMapSharedPtr &locToGloMap,
-                    const int pNumDir)=0;
+                const int                          pNumRows,
+                const Array<OneD,const NekDouble> &pInput,
+                      Array<OneD,      NekDouble> &pOutput,
+                const AssemblyMapSharedPtr        &locToGloMap,
+                const int                          pNumDir) = 0;
 
             virtual const DNekMatSharedPtr& v_GetGmat(void) const;
-
 	    virtual void v_InitObject();
 
             static std::string lookupIds[];

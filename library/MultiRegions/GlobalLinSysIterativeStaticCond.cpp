@@ -370,12 +370,28 @@ namespace Nektar
                 // decide whether to assemble schur complement globally
                 // based on global optimisation parameter to the
                 // full system matrix (current operator)
-                bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->DoGlobalMatOp(
-                                                        m_linSysKey.GetMatrixType());
+                bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
+                    DoGlobalMatOp(m_linSysKey.GetMatrixType());
 
                 if(doGlobalOp)
                 {
                     AssembleSchurComplement(pLocToGloMap);
+                }
+                
+                int nbdry, nblks;
+                unsigned int esize[1];
+                int nBlk          = m_schurCompl->GetNumberOfBlockRows();
+                m_schurComplBlock = Array<OneD, DNekScalBlkMatSharedPtr>(nBlk);
+                
+                for (int i = 0; i < nBlk; ++i)
+                {
+                    nbdry                = m_schurCompl->GetBlock(i,i)->GetRows();
+                    nblks                = 1;
+                    esize[0]             = nbdry;
+                    m_schurComplBlock[i] = MemoryManager<DNekScalBlkMat>
+                        ::AllocateSharedPtr(nblks, nblks, esize, esize);
+                    m_schurComplBlock[i]->SetBlock(
+                        0, 0, m_schurCompl->GetBlock(i,i));
                 }
             }
             else
@@ -390,15 +406,10 @@ namespace Nektar
             return m_schurCompl->GetNumberOfBlockRows();
         }
         
-        DNekScalBlkMatSharedPtr GlobalLinSysIterativeStaticCond::v_GetStaticCondBlock(unsigned int n)
+        DNekScalBlkMatSharedPtr GlobalLinSysIterativeStaticCond::
+            v_GetStaticCondBlock(unsigned int n)
         {
-            // Hacky hack
-            int nbdry = m_schurCompl->GetBlock(n,n)->GetRows();
-            unsigned int exp_size[] = {nbdry};
-            int nblks = 1;
-            DNekScalBlkMatSharedPtr returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
-            returnval->SetBlock(0,0, m_schurCompl->GetBlock(n,n));
-            return returnval;
+            return m_schurComplBlock[n];
         }
 
         /**

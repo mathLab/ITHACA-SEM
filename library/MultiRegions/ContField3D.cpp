@@ -506,10 +506,11 @@ namespace Nektar
           }
       }
       
-      void ContField3D::v_GeneralMatrixOp(const GlobalMatrixKey             &gkey,
-                                          const Array<OneD,const NekDouble> &inarray,
-                                          Array<OneD,      NekDouble> &outarray,
-                                          CoeffState coeffstate)
+      void ContField3D::v_GeneralMatrixOp(
+          const GlobalMatrixKey             &gkey,
+          const Array<OneD,const NekDouble> &inarray,
+                Array<OneD,      NekDouble> &outarray,
+          CoeffState                         coeffstate)
       {
           if(coeffstate == eGlobal)
           {

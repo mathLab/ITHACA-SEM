@@ -223,11 +223,13 @@ namespace Nektar
                     pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
                                               nDirBndDofs);
                     F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
-                      
+                    
                     // For parallel multi-level static condensation some
                     // processors may have different levels to others. This
-                    // routine receives contributions to partition vertices
-                    // from those lower levels.
+                    // routine receives contributions to partition vertices from
+                    // those lower levels, whilst not sending anything to the
+                    // other partitions, and includes them in the modified right
+                    // hand side vector.
                     int scLevel = pLocToGloMap->GetStaticCondLevel();
                     int lcLevel = pLocToGloMap->GetLowestStaticCondLevel();
                     if (atLastLevel && scLevel < lcLevel)
@@ -237,8 +239,8 @@ namespace Nektar
                         {
                             Vmath::Fill(nGlobBndDofs, 0.0, tmp, 1);
                             pLocToGloMap->UniversalAssembleBnd(tmp);
-                            Vmath::Vcopy(nGlobHomBndDofs, 
-                                         tmp.get()+nDirBndDofs,          1, 
+                            Vmath::Vcopy(nGlobHomBndDofs,
+                                         tmp.get()+nDirBndDofs,          1,
                                          V_GlobHomBndTmp.GetPtr().get(), 1);
                             F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
                         }

@@ -346,14 +346,12 @@ namespace Nektar
             // Check if preconditioner has been computed and compute if needed.
             if (!m_precon)
             {
-            MultiRegions::PreconditionerType pType = plocToGloMap->GetPreconType();
-
-            std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
-
-            v_UniqueMap();
-	    m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),plocToGloMap);
-	    //m_precon = MemoryManager<Preconditioner>::AllocateSharedPtr(
-            //                                GetSharedThisPtr(),plocToGloMap);
+                MultiRegions::PreconditionerType pType = plocToGloMap->GetPreconType();
+                
+                std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
+                
+                v_UniqueMap();
+                m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),plocToGloMap);
             }
             
             // Get the communicator for performing data exchanges
@@ -389,7 +387,7 @@ namespace Nektar
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
             v_DoMatrixMultiply(w_A, s_A);
             k = 0;
-            
+
             vExchange[0] = Vmath::Dot2(nNonDir,
                                        r_A,
                                        w_A + nDir,
@@ -427,13 +425,6 @@ namespace Nektar
             {
                 ASSERTL0(k < 20000,
                          "Exceeded maximum number of iterations (20000)");
-
-                /*
-                ASSERTL0(eps*bb_inv <= 1.0 || k < 10,
-                         "Conjugate gradient diverged. Tolerance too small?"
-                         "Minimum residual achieved: "
-                         + boost::lexical_cast<std::string>(sqrt(min_resid)));
-                */
 
                 // Compute new search direction p_k, q_k
                 p   = w   + beta  * p;
@@ -523,7 +514,7 @@ namespace Nektar
 
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
-
+            
             // Allocate array storage
             Array<OneD, NekDouble> d_A    (nGlobal, 0.0);
             Array<OneD, NekDouble> p_A    (nGlobal, 0.0);

@@ -96,6 +96,7 @@ namespace Nektar
                 // calculate the dirichlet forcing
                 int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
                 Array<OneD, NekDouble> tmp(nGlobDofs);
+                Array<OneD, NekDouble> tmp2(nGlobDofs);
                 if(dirForcCalculated)
                 {
                     Vmath::Vsub(nGlobDofs, pInput.get(), 1,
@@ -117,7 +118,10 @@ namespace Nektar
                                             tmp.get(),   1);
                 }
 
-                SolveLinearSystem(nGlobDofs, tmp, pOutput, pLocToGloMap);
+                SolveLinearSystem(nGlobDofs, tmp, tmp2, pLocToGloMap);
+
+                // Put back the Dirichlet boundary conditions
+                Vmath::Vadd(nGlobDofs, pOutput.get(), 1, tmp2.get(), 1, pOutput.get(), 1);
             }
             else
             {
@@ -197,6 +201,7 @@ namespace Nektar
                             m_Ai[k] = iCount + i;
                             m_Aj[k] = iCount + j;
                             m_Ar[k] = (*loc_mat)(i,j);
+                            //m_Ar[k] /= m_locToGloSignMult[cnt+i]*m_locToGloSignMult[cnt+j];
                             if (doSign)
                             {
                                 m_Ar[k] *= vMapSign[cnt+i]*vMapSign[cnt+j];
@@ -205,7 +210,10 @@ namespace Nektar
                     if (gid1 < numDirBnd)
                         vId[iCount + i] = 0;
                     else
+                    {
+                        //vId[iCount + i] = pLocToGloMap->GetGlobalToUniversalMap(gid1);
                         vId[iCount + i] = gid1;
+                    }
                 }
                 cnt   += nRows;
                 iCount += vSizes[n];
@@ -214,6 +222,7 @@ namespace Nektar
 
             LibUtilities::CommSharedPtr vComm = pLocToGloMap->GetComm();
             m_crsData = Xxt::Init(nLocal, vId, m_Ai, m_Aj, m_Ar, vComm);
+            Xxt::nektar_crs_stats(m_crsData);
         }
     }
 }

@@ -19,7 +19,8 @@ IF( NEKTAR_USE_MPI )
             URL_MD5 "f2c1f7695f361c6d87365e2ea63aece1"
             DOWNLOAD_DIR ${TPSRC}
             CONFIGURE_COMMAND 
-                ${CMAKE_COMMAND} 
+                ${CMAKE_COMMAND}
+                -DCMAKE_BUILD_TYPE:STRING=Debug 
                 -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist 
                 ${TPSRC}/src/gsmpi-1.1
         )

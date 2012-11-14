@@ -164,7 +164,7 @@ namespace Xxt
         LibUtilities::CommMpiSharedPtr vCommMpi = boost::dynamic_pointer_cast<LibUtilities::CommMpi> (pComm);
         ASSERTL1(vCommMpi, "Failed to cast MPI Comm object.");
         comm vComm;
-        vComm.c  = vCommMpi->GetComm();
+        MPI_Comm_dup(vCommMpi->GetComm(), &vComm.c);
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
         return nektar_crs_setup(pRank, &pId[0], nz, &pAi[0], &pAj[0], &pAr[0], 0, &vComm);

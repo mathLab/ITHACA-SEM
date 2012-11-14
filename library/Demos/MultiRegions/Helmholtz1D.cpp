@@ -99,7 +99,9 @@ int main(int argc, char *argv[])
         //----------------------------------------------
 
         //----------------------------------------------
-        // Helmholtz solution taking physical forcing
+        //Helmholtz solution taking physical forcing after setting
+        //initial condition to zero
+        Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
         Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
         //----------------------------------------------
 

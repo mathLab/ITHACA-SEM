@@ -373,6 +373,8 @@ namespace Vmath
     }
 
     template  LIB_UTILITIES_EXPORT void Zero(int n, Nektar::NekDouble *x, const int incx);
+    template  LIB_UTILITIES_EXPORT void Zero(int n, int *x, const int incx);
+    template  LIB_UTILITIES_EXPORT void Zero(int n, long *x, const int incx);
 
     /// \brief Negate x = -x
     template<class T>  void Neg( int n, T *x, const int incx)

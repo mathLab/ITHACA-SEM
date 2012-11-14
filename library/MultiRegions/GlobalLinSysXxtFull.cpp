@@ -120,29 +120,40 @@ namespace Nektar
 
                 SolveLinearSystem(nGlobDofs, tmp, tmp2, pLocToGloMap);
 
-                // Put back the Dirichlet boundary conditions
-                Vmath::Vadd(nGlobDofs, pOutput.get(), 1, tmp2.get(), 1, pOutput.get(), 1);
+                // Enforce the Dirichlet boundary conditions after solve
+                Vmath::Vadd(nGlobDofs, pOutput.get(), 1,
+                                       tmp2.get(),    1,
+                                       pOutput.get(), 1);
             }
             else
             {
-                SolveLinearSystem(pLocToGloMap->GetNumGlobalCoeffs(), pInput,pOutput, pLocToGloMap);
+                SolveLinearSystem(pLocToGloMap->GetNumGlobalCoeffs(),
+                        pInput,pOutput, pLocToGloMap);
             }
         }
 
 
-        void GlobalLinSysXxtFull::CreateMap(const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
+        void GlobalLinSysXxtFull::CreateMap(
+                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
         {
-            const Array<OneD, const int> &vMap = pLocToGloMap->GetLocalToGlobalMap();
-            unsigned int nGloBnd = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            const Array<OneD, const int> &vMap
+                                    = pLocToGloMap->GetLocalToGlobalMap();
+            unsigned int nGloBnd    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            unsigned int nGlo       = pLocToGloMap->GetNumGlobalCoeffs();
+            unsigned int nEntries   = pLocToGloMap->GetNumLocalCoeffs();
             unsigned int i,j;
-            unsigned int nEntries = pLocToGloMap->GetNumLocalCoeffs();
 
-            Array<OneD, int> vCounts(pLocToGloMap->GetNumGlobalCoeffs(), 0);
+            // Count the multiplicity of each global DOF on this process
+            Array<OneD, NekDouble> vCounts(nGlo, 0.0);
             for (i = 0; i < nEntries; ++i)
             {
-                vCounts[vMap[i]]++;
+                vCounts[vMap[i]] += 1.0;
             }
 
+            // Get universal multiplicity by globally assembling counts
+            pLocToGloMap->UniversalAssemble(vCounts);
+
+            // Construct a map of 1/multiplicity for use in XXT solve
             m_locToGloSignMult = Array<OneD, NekDouble>(nEntries);
             for (i = 0; i < nEntries; ++i)
             {
@@ -206,14 +217,18 @@ namespace Nektar
                                 m_Ar[k] *= vMapSign[cnt+i]*vMapSign[cnt+j];
                             }
                     }
+
                     if (gid1 < numDirBnd)
+                    {
                         vId[iCount + i] = 0;
+                    }
                     else
                     {
-                        vId[iCount + i] = pLocToGloMap->GetGlobalToUniversalMap(gid1);
+                        vId[iCount + i]
+                            = pLocToGloMap->GetGlobalToUniversalMap(gid1);
                     }
                 }
-                cnt   += nRows;
+                cnt    += nRows;
                 iCount += vSizes[n];
                 rCount += vSizes[n]*vSizes[n];
             }

@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="7" FIELDS="u,v" TYPE="MODIFIED" />
+        <E COMPOSITE="C[1]" NUMMODES="7" FIELDS="u,v" TYPE="MODIFIED" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+        <SOLVERINFO>
+            <I PROPERTY="SolverType" VALUE="CoupledLinearisedNS" />
+            <I PROPERTY="EQTYPE" VALUE="SteadyOseen" />
+            <I PROPERTY="Projection" VALUE="Galerkin" />
+        </SOLVERINFO>
+
+        <PARAMETERS>
+            <P> Kinvis    = 0.025        </P>
+            <P> LAMBDA   =  0.9637405441957 </P>
+        </PARAMETERS>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+            <V ID="1"> v </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[2] </B>
+            <B ID="1"> C[3] </B>
+            <B ID="2"> C[4] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" VALUE="1 - exp(-LAMBDA*x)*cos(2*PI*y)" />
+                <D VAR="v" VALUE="-LAMBDA*exp(-LAMBDA*x)*sin(2*PI*y)/(2*PI)" />
+            </REGION>
+            <REGION REF="1">
+                <N VAR="u"
+                    VALUE="-0.427242862585425+ Kinvis*LAMBDA*exp(-LAMBDA*x)*cos(2*PI*y)" />
+                <D VAR="v" VALUE="-LAMBDA*exp(-LAMBDA*x)*sin(2*PI*y)/(2*PI)" />
+            </REGION>
+            <REGION REF="2">
+                <D VAR="u" VALUE="1 - exp(-LAMBDA*x)*cos(2*PI*y)" />
+                <D VAR="v" VALUE="-LAMBDA*exp(-LAMBDA*x)*sin(2*PI*y)/(2*PI)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="0" />
+            <E VAR="v" VALUE="0" />
+        </FUNCTION>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="1 - exp(-LAMBDA*x)*cos(2*PI*y)" />
+            <E VAR="v" VALUE="-LAMBDA*exp(-LAMBDA*x)*sin(2*PI*y)/(2*PI)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="AdvectionVelocity">
+            <E VAR="u" VALUE="1 - exp(-LAMBDA*x)*cos(2*PI*y)" />
+            <E VAR="v" VALUE="-LAMBDA*exp(-LAMBDA*x)*sin(2*PI*y)/(2*PI)" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+    <GEOMETRY DIM="2" SPACE="2">
+
+        <VERTEX>
+            <V ID="0">-9.000e-01 -5.000e-01 0.000e+00</V>
+            <V ID="1">0.000e+00 -5.000e-01  0.000e+00</V>
+            <V ID="2">1.000e+00 -5.000e-01  0.000e+00</V>
+            <V ID="3">-9.000e-01 0.000      0.000e+00</V>
+            <V ID="4">0.000e+00  0.000      0.000e+00</V>
+            <V ID="5">1.000e+00  0.000      0.000e+00</V>
+            <V ID="6">-9.000e-01 0.500      0.000e+00</V>
+            <V ID="7">0.000e+00  0.500      0.000e+00</V>
+            <V ID="8">1.000e+00  0.500      0.000e+00</V>
+            <V ID="9"> -9.000e-01 1.000      0.000e+00</V>
+            <V ID="10">0.000e+00  1.000      0.000e+00</V>
+            <V ID="11"> 1.000e+00  1.000      0.000e+00</V>
+            <V ID="12"> -9.000e-01 1.500      0.000e+00</V>
+            <V ID="13">0.000e+00  1.500      0.000e+00</V>
+            <V ID="14"> 1.000e+00  1.500      0.000e+00</V>
+        </VERTEX>
+
+        <EDGE>
+            <E ID="0">    0  1   </E>
+            <E ID="1">    1  2   </E>
+            <E ID="2">    0  3   </E>
+            <E ID="3">    1  4   </E>
+            <E ID="4">    2  5   </E>
+            <E ID="5">    3  4   </E>
+            <E ID="6">    4  5   </E>
+            <E ID="7">    3  6   </E>
+            <E ID="8">    4  7   </E>
+            <E ID="9">    5  8   </E>
+            <E ID="10">   6  7   </E>
+            <E ID="11">   7  8   </E>
+            <E ID="12">   6  9   </E>
+            <E ID="13">   7  10   </E>
+            <E ID="14">   8  11   </E>
+            <E ID="15">   9  10   </E>
+            <E ID="16">   10  11   </E>
+            <E ID="17">   9   12   </E>
+            <E ID="18">   10  13   </E>
+            <E ID="19">   11  14   </E>
+            <E ID="20">   12  13   </E>
+            <E ID="21">   13  14   </E>
+            <E ID="22">   9  13   </E>
+            <E ID="23">   10  14   </E>
+        </EDGE>
+
+        <ELEMENT>
+            <Q ID="0">    2     0     3     5 </Q>
+            <Q ID="1">    1     4     6     3 </Q>
+            <Q ID="2">    5     8     10    7 </Q>
+            <Q ID="3">    6     9     11    8 </Q>
+            <Q ID="4">   10    13    15    12 </Q>
+            <Q ID="5">   11    14    16    13 </Q>
+            <T ID="6">   15    18    22    </T>
+            <T ID="7">   20    17    22    </T>
+            <T ID="8">   16    19    23    </T>
+            <T ID="9">   21    18    23    </T>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> T[6-9]       </C>    <!-- Domain -->
+            <C ID="1"> Q[0-5]       </C>    <!-- Domain -->    
+            <C ID="2"> E[2,7,12,17] </C>    <!-- Inflow -->
+            <C ID="3"> E[4,9,14,19] </C>    <!-- Outflow -->
+            <C ID="4"> E[0,1,20,21] </C>    <!-- Top & Bottom -->
+        </COMPOSITE>
+
+        <DOMAIN> C[0,1] </DOMAIN>
+
+    </GEOMETRY>
+
+</NEKTAR>

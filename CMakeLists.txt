@@ -89,6 +89,8 @@ SET(ExpressionTemplateDefault OFF)
 SET(NEKTAR_USE_EXPRESSION_TEMPLATES ${ExpressionTemplateDefault} CACHE BOOL "")
 MARK_AS_ADVANCED(NEKTAR_USE_EXPRESSION_TEMPLATES)
 
+SET(NEKTAR_USE_OPENBLAS OFF CACHE BOOL 
+    "Use OpenBLAS library as a substitute to native BLAS." )
 SET(NEKTAR_USE_ACML OFF CACHE BOOL 
     "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." )
 SET(NEKTAR_USE_MEMORY_POOLS ON CACHE BOOL 
@@ -173,6 +175,11 @@ IF( NEKTAR_USE_MKL )
     SET(NEKTAR_USING_LAPACK TRUE)
     SET(NEKTAR_USING_MKL TRUE)
 ENDIF( NEKTAR_USE_MKL )
+
+IF( NEKTAR_USE_OPENBLAS )
+    INCLUDE (FindOpenBlas)
+    SET(NEKTAR_USING_OPENBLAS TRUE)
+ENDIF( NEKTAR_USE_OPENBLAS )
 
 IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
     INCLUDE (FindAccelerateFramework)
@@ -276,6 +283,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindACML.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindArpack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNistSparseBlas.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindOpenBlas.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake

@@ -1554,6 +1554,14 @@ namespace Nektar
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
+        
+            void StdExpansion::v_GetEdgeQFactors(
+                    const int edge,  
+                    Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library");
+            }
 
             void StdExpansion::v_GetFacePhysVals(
                 const int                                face,

@@ -111,12 +111,6 @@ namespace Nektar
                 case eLegendre:
                 case eChebyshev:
                 case eMonomial:
-                case eDG_DG_Left:
-                case eDG_DG_Right:
-                case eDG_SD_Left:
-                case eDG_SD_Right:
-                case eDG_HU_Left:
-                case eDG_HU_Right:
 				case eFourierSingleMode:
 				case eFourierHalfModeRe:
 				case eFourierHalfModeIm:

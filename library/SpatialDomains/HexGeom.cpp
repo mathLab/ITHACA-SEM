@@ -227,7 +227,7 @@ namespace Nektar
                 }
             }
 
-            // check to see if all angles are 90 degrees
+            // check to see if all faces are parallelograms 
             if(Gtype == eRegular)
             {
                 const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
@@ -240,28 +240,6 @@ namespace Nektar
 
                 for(f = 0; f < kNfaces; f++)
                 {
-                    // This condition ensures each angle is a right-angle.
-                    // It is a stronger condition than necessary.
-                    /*
-                    for(i = 0; i < 3; ++i)
-                    {
-                        dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                        dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                        dz1 = m_verts[ faceVerts[f][i+1] ]->z() - m_verts[ faceVerts[f][i] ]->z();
-
-                        dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                        dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                        dz2 = m_verts[ faceVerts[f][((i+3)%4)] ]->z() - m_verts[ faceVerts[f][i] ]->z();
-
-                        if(fabs(dx1*dx2 + dy1*dy2 + dz1*dz2) > sqrt((dx1*dx1 + dy1*dy1 + dz1*dz1)*(dx2*dx2 + dy2*dy2 + dz2*dz2))
-                           * NekConstants::kGeomRightAngleTol)
-                        {
-                            Gtype = eDeformed;
-                            break;
-                        }
-                    }
-                    */
-                    
                     // Ensure each face is a parallelogram? Check this.
                     for (i = 0; i < m_coordim; i++)
                     {

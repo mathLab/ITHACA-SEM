@@ -53,6 +53,9 @@ namespace Nektar
     {
     }
     
+    /**
+     * Initialization object for CompressibleFlowSystem class.
+     */
     void CompressibleFlowSystem::v_InitObject()
     {
         UnsteadySystem::v_InitObject();
@@ -94,18 +97,25 @@ namespace Nektar
         m_advection->SetRiemannSolver(m_riemannSolver);
     }
     
+    /**
+     * Destructor for CompressibleFlowSystem class.
+     */
     CompressibleFlowSystem::~CompressibleFlowSystem()
     {
         
     }
     
+    /**
+     * Print out a summary with some relevant information.
+     */
     void CompressibleFlowSystem::v_PrintSummary(std::ostream &out)
     {
         UnsteadySystem::v_PrintSummary(out);
     }
     
-    //----------------------------------------------------
-    
+    /**
+     * Wall boundary conditions for compressible flow problems.
+     */
     void CompressibleFlowSystem::WallBoundary(
         int                                   b,
         int                                   cnt, 
@@ -127,7 +137,8 @@ namespace Nektar
         // user defined boundaries into account
         int e, id1, id2, npts;
         
-        for(e = 0; e < m_fields[0]->GetBndCondExpansions()[b]->GetExpSize();++e)
+        for(e = 0; e < m_fields[0]->
+            GetBndCondExpansions()[b]->GetExpSize(); ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[b]->
             GetExp(e)->GetNumPoints(0);
@@ -139,7 +150,7 @@ namespace Nektar
             
             switch(m_expdim)
             {
-                    // Special case for 2D
+                // Special case for 2D
                 case 2:
                 {
                     Array<OneD, NekDouble> tmp_n(npts);
@@ -194,7 +205,7 @@ namespace Nektar
                     break;
                 }
                     
-                    // For 1D/3D, define: v* = v - (v.n)n so that v*.n = 0
+                // For 1D/3D, define: v* = v - (v.n)n so that v*.n = 0
                 case 1:
                 case 3:
                 {
@@ -225,17 +236,21 @@ namespace Nektar
                 }
                 default:
                     ASSERTL0(false,"Illegal expansion dimension");
+                    break;
             }
             
             // copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nvariables; ++i)
             {
                 Vmath::Vcopy(npts, &Fwd[i][id2], 1, &(m_fields[i]->
-                            GetBndCondExpansions()[b]->UpdatePhys())[id1], 1);
+                             GetBndCondExpansions()[b]->UpdatePhys())[id1], 1);
             }
         }
     }
     
+    /**
+     * Wall boundary conditions for compressible flow problems.
+     */
     void CompressibleFlowSystem::SymmetryBoundary(
         int                                      bcRegion, 
         int                                      cnt, 
@@ -255,7 +270,8 @@ namespace Nektar
         
         int e, id1, id2, npts;
         
-        for(e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+        for(e = 0; e < m_fields[0]->
+            GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
             GetExp(e)->GetNumPoints(0);
@@ -269,7 +285,8 @@ namespace Nektar
                 case 1:
                 {
                     ASSERTL0(false,
-                             "1D not yet implemented for Compressible Flow Equations");
+                             "1D not yet implemented for Compressible " 
+                             "Flow Equations");
                 }
                     break;
                 case 2:
@@ -314,10 +331,11 @@ namespace Nektar
                     break;
                 case 3:
                     ASSERTL0(false,
-                             "3D not yet implemented for Compressible Flow Equations");
+                             "3D not yet implemented for Compressible "
+                             "Flow Equations");
                     break;
                 default:
-                    ASSERTL0(false,"Illegal expansion dimension");
+                    ASSERTL0(false, "Illegal expansion dimension");
             }
             
             // copy boundary adjusted values into the boundary expansion
@@ -389,8 +407,8 @@ namespace Nektar
 
     /**
      * @brief Calculate the pressure field \f$ p =
-     * (\gamma-1)(E-\frac{1}{2}\rho\| \mathbf{v} \|^2) \f$ assuming an ideal gas
-     * law.
+     * (\gamma-1)(E-\frac{1}{2}\rho\| \mathbf{v} \|^2) \f$ assuming an ideal 
+     * gas law.
      * 
      * @param physfield  Input momentum.
      * @param pressure   Computed pressure field.
@@ -553,9 +571,9 @@ namespace Nektar
                 minLength = sqrt(Area);
             }
             
-            tstep[n] = alpha * minLength 
-            / (stdVelocity[n] * cLambda 
-               * (ExpOrder[n] - 1) * (ExpOrder[n] - 1));
+            tstep[n] = m_cflSafetyFactor * alpha * minLength 
+                     / (stdVelocity[n] * cLambda 
+                        * (ExpOrder[n] - 1) * (ExpOrder[n] - 1));
         }
         
         // Get the minimum time-step limit and return the time-step
@@ -563,7 +581,14 @@ namespace Nektar
         m_comm->AllReduce(TimeStep, LibUtilities::ReduceMin);
         return TimeStep;
     }
-   
+    
+    /**
+     * @brief Compute the advection velocity in the standard space 
+     * for each element of the expansion.
+     * 
+     * @param inarray    Momentum field.
+     * @param stdV       Standard velocity field.
+     */
     void CompressibleFlowSystem::GetStdVelocity(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,                   NekDouble>   &stdV)
@@ -586,9 +611,9 @@ namespace Nektar
             velocity   [i] = Array<OneD, NekDouble>(nTotQuadPoints);
             stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
         }
-        GetVelocityVector(inarray,velocity);
-        GetPressure      (inarray,pressure);
-        GetSoundSpeed    (inarray,pressure,soundspeed);
+        GetVelocityVector(inarray, velocity);
+        GetPressure      (inarray, pressure);
+        GetSoundSpeed    (inarray, pressure, soundspeed);
         
         for(int el = 0; el < n_element; ++el)
         { 
@@ -641,5 +666,64 @@ namespace Nektar
                 npts++;
             }
         }
+    }
+    
+    /**
+     * @brief Set the denominator to compute the time step when a cfl  
+     * control is employed. This function is no longer used but is still 
+     * here for being utilised in the future.
+     *
+     * @param n   Order of expansion element by element.
+     */
+    NekDouble CompressibleFlowSystem::GetStabilityLimit(int n)
+    {
+        if (n > 20)
+        {
+            ASSERTL0(false,
+                     "Illegal modes dimension for CFL calculation "
+                     "(P has to be less then 20)");
+        }
+		
+        NekDouble CFLDG[21] = {  2.0000,   6.0000,  11.8424,  19.1569, 
+                                27.8419,  37.8247,  49.0518,  61.4815, 
+                                75.0797,  89.8181, 105.6700, 122.6200,
+                               140.6400, 159.7300, 179.8500, 201.0100,
+                               223.1800, 246.3600, 270.5300, 295.6900,
+                               321.8300}; //CFLDG 1D [0-20]
+        
+        NekDouble CFLCG[2]  = {1.0, 1.0};
+        NekDouble CFL;
+		
+        if (m_projectionType == MultiRegions::eDiscontinuous)
+        {
+            CFL = CFLDG[n];
+        }
+        else 
+        {
+            ASSERTL0(false,
+                     "Continuos Galerkin stability coefficients "
+                     "not introduced yet.");
+        }
+		
+        return CFL;
+    }
+	
+    /**
+     * @brief Compute the vector of denominators to compute the time step  
+     * when a cfl control is employed. This function is no longer used but 
+     * is still here for being utilised in the future.
+     *
+     * @param ExpOrder   Order of expansion element by element.
+     */
+    Array<OneD, NekDouble> CompressibleFlowSystem::GetStabilityLimitVector(
+        const Array<OneD,int> &ExpOrder)
+    {
+        int i;
+        Array<OneD,NekDouble> returnval(m_fields[0]->GetExpSize(), 0.0);
+        for (i =0; i<m_fields[0]->GetExpSize(); i++)
+        {
+            returnval[i] = GetStabilityLimit(ExpOrder[i]);
+        }
+        return returnval;
     }
 }

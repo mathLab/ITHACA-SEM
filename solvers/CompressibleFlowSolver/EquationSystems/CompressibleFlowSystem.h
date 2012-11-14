@@ -75,6 +75,14 @@ namespace Nektar
         static std::string className;
       
         virtual ~CompressibleFlowSystem();
+        
+        /// Function to calculate the stability limit for DG/CG.
+        NekDouble GetStabilityLimit(int n);
+        
+        /// Function to calculate the stability limit for DG/CG 
+        /// (a vector of them).
+        Array<OneD, NekDouble> GetStabilityLimitVector(
+            const Array<OneD,int> &ExpOrder);
       
     protected:
         SolverUtils::RiemannSolverSharedPtr m_riemannSolver;

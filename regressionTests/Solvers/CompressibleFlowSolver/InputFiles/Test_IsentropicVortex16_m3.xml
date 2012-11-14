@@ -1119,14 +1119,14 @@
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> TimeStep       = 0.0        </P>
-            <P> NumSteps       = 10         </P>
-            <P> FinTime        = 0          </P>
-            <P> IO_CheckSteps  = 10000      </P>
-            <P> IO_InfoSteps   = 100        </P>
-            <P> Gamma          = 1.4        </P>
-            <P> CFL            = 1.0        </P>
-            <P> IO_CheckTime   = 100        </P>
+            <P> FinTime         = 0                     </P>
+            <P> TimeStep        = 0                     </P>
+            <P> NumSteps        = 10                    </P>
+            <P> IO_CheckSteps   = 1000                  </P>
+            <P> IO_InfoSteps    = 100                   </P>
+            <P> IO_CheckTime    = 100                   </P>
+            <P> Gamma           = 1.4                   </P>
+            <P> CFL             = 0.02                  </P>
         </PARAMETERS>
 
         <SOLVERINFO>
@@ -1151,18 +1151,18 @@
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="rho" USERDEFINEDTYPE="IsentropicVortex" VALUE="0" />
-                <D VAR="rhou" USERDEFINEDTYPE="IsentropicVortex" VALUE="0" />
-                <D VAR="rhov" USERDEFINEDTYPE="IsentropicVortex" VALUE="0" />
-                <D VAR="E" USERDEFINEDTYPE="IsentropicVortex" VALUE="0" />
+                <D VAR="rho"    USERDEFINEDTYPE="IsentropicVortex" VALUE="0"/>
+                <D VAR="rhou"   USERDEFINEDTYPE="IsentropicVortex" VALUE="0"/>
+                <D VAR="rhov"   USERDEFINEDTYPE="IsentropicVortex" VALUE="0"/>
+                <D VAR="E"      USERDEFINEDTYPE="IsentropicVortex" VALUE="0"/>
             </REGION>
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="InitialConditions">
-            <E VAR="rho" VALUE="1" />
-            <E VAR="rhou" VALUE="1" />
-            <E VAR="rhov" VALUE="1" />
-            <E VAR="E" VALUE="1" />
+            <E VAR="rho"    VALUE="1"/>
+            <E VAR="rhou"   VALUE="1"/>
+            <E VAR="rhov"   VALUE="1"/>
+            <E VAR="E"      VALUE="1"/>
         </FUNCTION>
 
     </CONDITIONS>

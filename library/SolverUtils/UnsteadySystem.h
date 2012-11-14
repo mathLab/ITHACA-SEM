@@ -56,16 +56,7 @@ namespace Nektar
 		
             /// CFL safety factor (comprise between 0 to 1).
             NekDouble m_cflSafetyFactor;
-		            
-            /// Function to calculate the stability limit for DG/CG.
-            SOLVER_UTILS_EXPORT NekDouble GetStabilityLimit(int n);
-            
-	        /// Function to calculate the stability limit for DG/CG (a vector
-	        /// of them).
-            SOLVER_UTILS_EXPORT Array<OneD,NekDouble> 
-                GetStabilityLimitVector(
-                    const Array<OneD,int> &ExpOrder);
-            
+		                        
         protected:
             /// Number of time steps between outputting status information.
             int                                             m_infosteps;

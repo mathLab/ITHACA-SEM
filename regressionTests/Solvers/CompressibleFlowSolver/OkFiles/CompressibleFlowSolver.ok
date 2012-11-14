@@ -1,24 +1,24 @@
 CompressibleFlowSolver
 ==========================================
 Test_IsentropicVortex16_m3.xml
-L 2 error (variable rho): 0.137274
-L inf error (variable rho): 0.130329
-L 2 error (variable rhou): 0.222511
-L inf error (variable rhou): 0.153607
-L 2 error (variable rhov): 0.303939
-L inf error (variable rhov): 0.229933
-L 2 error (variable E): 0.39357
-L inf error (variable E): 0.431074
+L 2 error (variable rho): 0.00868368
+L inf error (variable rho): 0.0155196
+L 2 error (variable rhou): 0.00702714
+L inf error (variable rhou): 0.0167377
+L 2 error (variable rhov): 0.181591
+L inf error (variable rhov): 0.114085
+L 2 error (variable E): 0.104563
+L inf error (variable E): 0.143785
 ----------------------------------------
 Test_IsentropicVortex16_m8.xml
-L 2 error (variable rho): 0.0351889
-L inf error (variable rho): 0.0315969
-L 2 error (variable rhou): 0.0569376
-L inf error (variable rhou): 0.0362279
-L 2 error (variable rhov): 0.0775479
-L inf error (variable rhov): 0.0547527
-L 2 error (variable E): 0.100569
-L inf error (variable E): 0.0964763
+L 2 error (variable rho): 8.8147e-05
+L inf error (variable rho): 0.00103674
+L 2 error (variable rhou): 0.000249094
+L inf error (variable rhou): 0.00319355
+L 2 error (variable rhov): 0.0148193
+L inf error (variable rhov): 0.00836934
+L 2 error (variable E): 0.00829906
+L inf error (variable E): 0.011468
 ----------------------------------------
 Test_CylinderSubsonic_m3.xml
 L 2 error (variable rho): 42.8519
@@ -44,29 +44,29 @@ Test_CylinderSubsonicMix.xml
 L 2 error (variable rho): 42.8519
 L inf error (variable rho): 1.32074
 L 2 error (variable rhou): 4.28832
-L inf error (variable rhou): 0.198898
-L 2 error (variable rhov): 0.0808749
-L inf error (variable rhov): 0.114009
+L inf error (variable rhou): 0.200515
+L 2 error (variable rhov): 0.0812541
+L inf error (variable rhov): 0.358852
 L 2 error (variable E): 5.24313
 L inf error (variable E): 0.159723
 ----------------------------------------
 Test_RinglebFlow_m3.xml
-L 2 error (variable rho): 0.000570422
-L inf error (variable rho): 0.00546563
+L 2 error (variable rho): 0.000570417
+L inf error (variable rho): 0.00546575
 L 2 error (variable rhou): 0.00113894
-L inf error (variable rhou): 0.0171894
-L 2 error (variable rhov): 0.000469775
+L inf error (variable rhou): 0.0171896
+L 2 error (variable rhov): 0.000469772
 L inf error (variable rhov): 0.00163612
-L 2 error (variable E): 0.000999988
-L inf error (variable E): 0.00892634
+L 2 error (variable E): 0.000999995
+L inf error (variable E): 0.0089269
 ----------------------------------------
 Test_RinglebFlow_m8.xml
-L 2 error (variable rho): 0.000990993
-L inf error (variable rho): 0.0204555
-L 2 error (variable rhou): 0.003264
-L inf error (variable rhou): 0.040774
-L 2 error (variable rhov): 0.000278132
-L inf error (variable rhov): 0.00525138
-L 2 error (variable E): 0.0016556
-L inf error (variable E): 0.0324037
+L 2 error (variable rho): 0.000991036
+L inf error (variable rho): 0.0204617
+L 2 error (variable rhou): 0.00326397
+L inf error (variable rhou): 0.0407716
+L 2 error (variable rhov): 0.000278189
+L inf error (variable rhov): 0.00526011
+L 2 error (variable E): 0.00165554
+L inf error (variable E): 0.0324235
 ----------------------------------------

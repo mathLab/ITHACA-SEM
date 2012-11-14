@@ -334,13 +334,13 @@
 
         <PARAMETERS>
             <P> TimeStep        = 0        </P>
-            <P> NumSteps        = 10       </P>
             <P> FinTime         = 0.0      </P>
+            <P> NumSteps        = 10       </P>
             <P> IO_CheckSteps   = 10000    </P>
             <P> IO_InfoSteps    = 100      </P>
             <P> IO_CheckTime    = 100      </P>
             <P> Gamma           = 1.4      </P>
-            <P> CFL             = 1.0      </P>
+            <P> CFL             = 0.02     </P>
         </PARAMETERS>
 
         <SOLVERINFO>
@@ -368,28 +368,28 @@
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="rho" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="rhou" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="rhov" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="E" USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="rho"    USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="rhou"   USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="rhov"   USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="E"      USERDEFINEDTYPE="Wall" VALUE="0" />
             </REGION>
             <REGION REF="1">
-                <D VAR="rho" USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
-                <D VAR="rhou" USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
-                <D VAR="rhov" USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
-                <D VAR="E" USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
+                <D VAR="rho"    USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
+                <D VAR="rhou"   USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
+                <D VAR="rhov"   USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
+                <D VAR="E"      USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
             </REGION>
             <REGION REF="2">
-                <D VAR="rho" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="rhou" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="rhov" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="E" USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="rho"    USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="rhou"   USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="rhov"   USERDEFINEDTYPE="Wall" VALUE="0" />
+                <D VAR="E"      USERDEFINEDTYPE="Wall" VALUE="0" />
             </REGION>
             <REGION REF="3">
-                <D VAR="rho" USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
-                <D VAR="rhou" USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
-                <D VAR="rhov" USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
-                <D VAR="E" USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
+                <D VAR="rho"    USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
+                <D VAR="rhou"   USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
+                <D VAR="rhov"   USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
+                <D VAR="E"      USERDEFINEDTYPE="RinglebFlow" VALUE="0" />
             </REGION>
         </BOUNDARYCONDITIONS>
 

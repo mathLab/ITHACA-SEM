@@ -246,7 +246,8 @@ namespace Nektar
                         TimeIntegrationSchemeManager()[IntKey];
                     
                     u = IntScheme[0]->InitializeScheme(
-                                        m_timestep, fields, m_time, m_ode);
+                        m_timestep, fields, m_time, m_ode);
+                    
                     break;
                 }
                 case LibUtilities::eAdamsBashforthOrder2:
@@ -273,10 +274,9 @@ namespace Nektar
                         TimeIntegrationSchemeManager()[IntKey1];
                     
                     // Initialise the scheme for actual time integration scheme
-                    u = IntScheme[1]->InitializeScheme(m_timestep, 
-                                                       fields, 
-                                                       m_time, 
-                                                       m_ode);
+                    u = IntScheme[1]->InitializeScheme(
+                        m_timestep, fields, m_time, m_ode);
+                    
                     break;
                 }
                 case LibUtilities::eIMEXOrder2: 
@@ -301,10 +301,9 @@ namespace Nektar
                         TimeIntegrationSchemeManager()[IntKey1];
                     
                     // Initialise the scheme for actual time integration scheme
-                    u = IntScheme[1]->InitializeScheme(m_timestep,
-                                                       fields,
-                                                       m_time,
-                                                       m_ode);
+                    u = IntScheme[1]->InitializeScheme(
+                        m_timestep, fields, m_time, m_ode);
+                    
                     break;
                 }    
                 case LibUtilities::eIMEXGear:	  
@@ -328,10 +327,9 @@ namespace Nektar
                         TimeIntegrationSchemeManager()[IntKey1];
 
                     // Initialise the scheme for actual time integration scheme
-                    u = IntScheme[1]->InitializeScheme(m_timestep,
-                                                       fields,
-                                                       m_time,
-                                                       m_ode);
+                    u = IntScheme[1]->InitializeScheme(
+                        m_timestep, fields, m_time, m_ode);
+                    
                     break;
                 } 
                 case LibUtilities::eIMEXOrder3:
@@ -362,17 +360,15 @@ namespace Nektar
                         TimeIntegrationSchemeManager()[IntKey2];
 
                     // Initialise the scheme for actual time integration scheme
-                    u = IntScheme[2]->InitializeScheme(m_timestep,
-                                                       fields,
-                                                       m_time,
-                                                       m_ode);
+                    u = IntScheme[2]->InitializeScheme(
+                        m_timestep, fields, m_time, m_ode);
+                    
                     break;
                 }
                 default:
                 {
-                    ASSERTL0(
-                        false,
-                        "populate switch statement for integration scheme");
+                    ASSERTL0(false, "populate switch statement for "
+                                    "integration scheme");
                 }
             }
 
@@ -381,229 +377,94 @@ namespace Nektar
             {
                 (*x)->Initialise(m_fields, m_time);
             }
-            
-                
-            // CFL control
+
             if(m_cflSafetyFactor > 0.0)
-            {                
+            {
                 // Check final condition
                 if (m_fintime > 0.0 && m_steps > 0)
                 {
-                    ASSERTL0(false,
-                             "Final condition not unique: "
-                             "fintime > 0.0 & Nsteps > 0");
+                    ASSERTL0(false, "Final condition not unique: "
+                                    "fintime > 0.0 & Nsteps > 0");
                 }
                 
                 // Check Timestep condition
-                if(m_timestep>0.0 && m_cflSafetyFactor>0.0)
+                if(m_timestep > 0.0 && m_cflSafetyFactor > 0.0)
                 {
-                    ASSERTL0(false,
-                             "Timestep not unique: "
-                             "timestep > 0.0 & CFL > 0.0");
+                    ASSERTL0(false, "Timestep not unique: "
+                                    "timestep > 0.0 & CFL > 0.0");
                 }
-                
-                NekDouble CheckpointTime = 0.0;
-                NekDouble QuarterOfLoop  = 0.25;
-		
-                int number_of_checkpoints = ceil(m_fintime/QuarterOfLoop)+1;
-			
-                Array<OneD, NekDouble>   L2errors(number_of_checkpoints);
-                Array<OneD, NekDouble>   LIerrors(number_of_checkpoints);
-                Array<OneD, NekDouble>   TimeLevels(number_of_checkpoints);
-		
-                int checkpoints_cnt = 0;
-		
-                L2errors[checkpoints_cnt]         = L2Error(0);
-                LIerrors[checkpoints_cnt]         = LinfError(0);
-                TimeLevels[checkpoints_cnt]       = m_time;
-                
-                CheckpointTime += QuarterOfLoop;
-                checkpoints_cnt++;
-                NekDouble CFLtimestep;
-		
-                int step = 0;
-                
-                // Time loop with CFL control
-                while (step < m_steps || m_time < m_fintime)
-                {
-                    // Starting timer
-                    Timer timer;
-                    timer.Start();
-                    
-                    // This function gets the proper time step with CFL 
-                    // restrictions
-                    m_timestep = GetTimeStep();
-                    CFLtimestep = m_timestep;
-
-                    
-                    // Increment time
-                    if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
-                    {
-                        m_timestep = m_fintime - m_time;
-                    }
-                    
-                    // Integrate over timestep
-                    if (step < numMultiSteps-1)
-                    {
-                        // Use initialisation schemes if time step is
-                        // less than the number of steps in the scheme
-                        fields = IntScheme[step]->TimeIntegrate(
-                                                    m_timestep,
-                                                    u, m_ode);
-                    }
-                    else
-                    {
-                        fields = IntScheme[numMultiSteps-1]->TimeIntegrate(
-                                                                m_timestep,
-                                                                u, m_ode);
-                    }
-                    
-                    // Increment timestep
-                    m_time += m_timestep;
-                    
-                    // Step advance
-                    ++step;
-				
-                    // Stopping timer
-                    timer.Stop();
-                    
-                    // Computing CPU time step by step
-                    IntegrationTime += timer.TimePerTest(1);
-                    
-                    /*
-                    // Write out status information
-                    if (m_time <= CheckpointTime 
-                        && (m_time + m_timestep) > CheckpointTime)
-                    {
-                        m_fields[0]->FwdTrans(fields[0],
-                                              m_fields[0]->UpdateCoeffs());
-                        
-                        m_fields[0]->UpdatePhys()   = fields[0];
-                        L2errors[checkpoints_cnt]   = L2Error(0);
-                        LIerrors[checkpoints_cnt]   = LinfError(0);
-                        TimeLevels[checkpoints_cnt] = CheckpointTime;
-                        CheckpointTime += QuarterOfLoop;
-                        checkpoints_cnt++;
-                    }
-                     */
-                }
-                // end time loop with CFL control
-
-                // Store final solution at the end of time integration
-                for (i = 0; i < nvariables; ++i)
-                {
-                    m_fields[i]->UpdatePhys() = fields[i];
-                }
-		
-                cout <<"\nCFL safety factor : " 
-                    << m_cflSafetyFactor       << endl;
-                cout <<"\nCFL time-step    : " 
-                    << CFLtimestep             << endl;
-                cout <<"\nTime-integration : " 
-                    << IntegrationTime << " s" << endl;
-                /*
-                for(i = 0; i < number_of_checkpoints; i++)
-                {
-                    cout <<"Time : "<< TimeLevels[i] << "\tL2 error : " 
-                    << L2errors[i] << "\tLI error : "  << LIerrors[i] << endl;
-                }
-                */
             }
-            // end if-statement with cfl control
-            
-            // No CFL control
-            else
+
+            Timer     timer;
+            int       step    = 0;
+            NekDouble intTime = 0.0;
+
+            while (step < m_steps || m_time < m_fintime - 1e-10)
             {
-                // Time loop no cfl control
-                for (n = 0; n < m_steps; ++n)
+                if (m_cflSafetyFactor > 0.0)
                 {
-                    Timer timer;
-                    timer.Start();
-                    
-                    // Integrate over timestep
-                    if (n < numMultiSteps-1)
-                    {
-                        // Use initialisation schemes if time step is 
-                        // less than the number of steps in the scheme
-                        fields = IntScheme[n]->TimeIntegrate(m_timestep, 
-                                                             u, m_ode);
-                    }
-                    else
-                    {
-                        fields = IntScheme[numMultiSteps-1]->TimeIntegrate(
-                                                                m_timestep,
-                                                                u, m_ode);
-                    }
-				
-                    m_time += m_timestep;
-				
-                    timer.Stop();
-                    IntegrationTime += timer.TimePerTest(1);
-				
-                    // Write out status information
-                    if (m_session->GetComm()->GetRank() == 0
-                        && !((n+1)%m_infosteps))
-                    {
-                        cout << "Steps: "           << n+1
-                             << "\t Time: "         << m_time
-                             << "\t Time-step: "    << m_timestep << "\t" 
-                             << endl;
-                    }
-
-                    // Transform data into coefficient space
-                    for (i = 0; i < m_intVariables.size(); ++i)
-                    {
-                        m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
-                            fields[i],                                                                    
-                            m_fields[m_intVariables[i]]->UpdateCoeffs());
-                        
-                        //Vmath::Vcopy(npoints, 
-                        //             fields[i], 1, 
-                        //             m_fields[m_intVariables[i]]->
-                        //             UpdatePhys(), 1);
-                        
-                        m_fields[m_intVariables[i]]->SetPhysState(false);
-                    }
-
-                    std::vector<FilterSharedPtr>::iterator x;
-                    for (x = m_filters.begin(); x != m_filters.end(); ++x)
-                    {
-                        (*x)->Update(m_fields, m_time);
-                    }
-
-                    // Write out checkpoint files
-                    if (m_checksteps && n && (!((n+1)%m_checksteps)))
-                    {
-                        Checkpoint_Output(nchk++);
-                    }
-                    // Step advance
-                }
-                // end time loop without cfl control
-			
-                cout <<"\nCFL safety factor     : " 
-                     << m_cflSafetyFactor << endl;
-                cout <<"Time-integration timing : " 
-                     << IntegrationTime << " s" << endl << endl;
-
-                // Store final solution at the end of time integration
-                for(i = 0; i < m_intVariables.size(); ++i)
-                {
-	            if(m_fields[m_intVariables[i]]->GetPhysState() == false)
-	            {
-	                m_fields[m_intVariables[i]]->BwdTrans(
-                        m_fields[m_intVariables[i]]->GetCoeffs(),
-                        m_fields[m_intVariables[i]]->UpdatePhys());
-	            }
-                    m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
+                    m_timestep = GetTimeStep();
                 }
 
+                timer.Start();
+                fields = IntScheme[min(step, numMultiSteps-1)]->TimeIntegrate(
+                    m_timestep, u, m_ode);
+                timer.Stop();
+                
+                m_time  += m_timestep;
+                intTime += timer.TimePerTest(1);
+		
+                // Write out status information
+                if (m_session->GetComm()->GetRank() == 0 && 
+                    !((step+1) % m_infosteps))
+                {
+                    cout << "Steps: "     << setw(8)  << left << step+1
+                         << "Time: "      << setw(12) << left << m_time
+                         << "Time-step: " << setw(12) << left << m_timestep
+                         << endl;
+                }
+                
+                // Transform data into coefficient space
+                for (i = 0; i < m_intVariables.size(); ++i)
+                {
+                    m_fields[m_intVariables[i]]->FwdTrans_IterPerExp(
+                        fields[i],
+                        m_fields[m_intVariables[i]]->UpdateCoeffs());
+                    m_fields[m_intVariables[i]]->SetPhysState(false);
+                }
+                
                 std::vector<FilterSharedPtr>::iterator x;
                 for (x = m_filters.begin(); x != m_filters.end(); ++x)
                 {
-                    (*x)->Finalise(m_fields, m_time);
+                    (*x)->Update(m_fields, m_time);
                 }
+                
+                // Write out checkpoint files
+                if (m_checksteps && step && (!((step+1)%m_checksteps)))
+                {
+                    Checkpoint_Output(nchk++);
+                }
+                
+                // Step advance
+                ++step;
             }
-            // end else-statement without cfl control
+            
+            // Store final solution at the end of time integration
+            for(i = 0; i < m_intVariables.size(); ++i)
+            {
+                if(m_fields[m_intVariables[i]]->GetPhysState() == false)
+                {
+                    m_fields[m_intVariables[i]]->BwdTrans(
+                        m_fields[m_intVariables[i]]->GetCoeffs(),
+                        m_fields[m_intVariables[i]]->UpdatePhys());
+                }
+                m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
+            }
+
+            for (x = m_filters.begin(); x != m_filters.end(); ++x)
+            {
+                (*x)->Finalise(m_fields, m_time);
+            }
             
             // Print for 1D problems
             if(m_spacedim == 1)
@@ -1043,6 +904,7 @@ namespace Nektar
         NekDouble UnsteadySystem::v_GetTimeStep()
         {
             ASSERTL0(false, "Not defined for this class");
+            return 0.0;
         }
     }
 }

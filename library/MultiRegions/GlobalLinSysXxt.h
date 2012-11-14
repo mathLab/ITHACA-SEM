@@ -46,6 +46,8 @@ namespace Nektar
 
             Array<OneD, NekDouble>      m_locToGloSignMult;
 
+            Array<OneD, int>            m_map;
+
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
             virtual void v_Solve(
@@ -63,14 +65,10 @@ namespace Nektar
                     const int pNumDir = 0);
 
             void GlobalToLocalNoSign(const Array<OneD, const NekDouble> &global,
-                                           Array<OneD, NekDouble> &local,
-                                   const boost::shared_ptr<AssemblyMap>
-                                                          &pLocToGloMap);
+                                           Array<OneD, NekDouble> &local);
 
             void LocalToGlobalNoSign(const Array<OneD, const NekDouble> &local,
-                                           Array<OneD, NekDouble> &global,
-                                   const boost::shared_ptr<AssemblyMap>
-                                                          &pLocToGloMap);
+                                           Array<OneD, NekDouble> &global);
 
         };
     }

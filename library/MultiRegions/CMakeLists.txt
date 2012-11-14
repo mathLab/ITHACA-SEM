@@ -30,6 +30,7 @@ GlobalLinSysIterativeFull.cpp
 GlobalLinSysIterativeStaticCond.cpp
 GlobalLinSysXxt.cpp
 GlobalLinSysXxtFull.cpp
+GlobalLinSysXxtStaticCond.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
 

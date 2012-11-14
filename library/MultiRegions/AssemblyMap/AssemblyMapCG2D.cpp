@@ -430,13 +430,14 @@ namespace Nektar
 
 
             ASSERTL0(!(m_comm->GetRowComm()->GetSize() > 1 && m_solnType == eIterativeMultiLevelStaticCond),
-                     "Parallel Multi-Level Static Condensation not yet supported.");
+                     "Parallel iterative Multi-Level Static Condensation not yet supported.");
             SetUpUniversalC0ContMap(locExp);
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
             if ((m_solnType == eDirectMultiLevelStaticCond
-                    || m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts)
+                    || m_solnType == eIterativeMultiLevelStaticCond
+                    || m_solnType == eXxtMultiLevelStaticCond) && nGraphVerts)
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1)&&
                    (m_staticCondLevel < m_maxStaticCondLevel))
@@ -1039,7 +1040,6 @@ namespace Nektar
                 case eIterativeStaticCond:
                 case eXxtFullMatrix:
                 case eXxtStaticCond:
-                case eXxtMultiLevelStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                     }
@@ -1051,6 +1051,7 @@ namespace Nektar
                     break;
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
+                case eXxtMultiLevelStaticCond:
                     {
                         MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph, mdswitch);
                     }

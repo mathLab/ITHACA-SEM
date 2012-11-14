@@ -118,18 +118,19 @@ namespace Nektar
                                             tmp.get(),   1);
                 }
 
-                SolveLinearSystem(nGlobDofs, tmp, tmp2, pLocToGloMap);
+                SolveLinearSystem(pLocToGloMap->GetNumLocalCoeffs(),
+                                    tmp, tmp2, pLocToGloMap);
 
                 // Enforce the Dirichlet boundary conditions on the solution
                 // array.
-                Vmath::Vadd(nGlobDofs, pOutput.get(), 1,
-                                       tmp2.get(),    1,
-                                       pOutput.get(), 1);
+                Vmath::Vadd(nGlobDofs, pOutput, 1,
+                                       tmp2,    1,
+                                       pOutput, 1);
             }
             else
             {
-                SolveLinearSystem(pLocToGloMap->GetNumGlobalCoeffs(),
-                        pInput,pOutput, pLocToGloMap);
+                SolveLinearSystem(pLocToGloMap->GetNumLocalCoeffs(),
+                                    pInput,pOutput, pLocToGloMap);
             }
         }
 
@@ -164,6 +165,8 @@ namespace Nektar
             {
                 m_locToGloSignMult[i] = 1.0/vCounts[vMap[i]];
             }
+
+            m_map = pLocToGloMap->GetLocalToGlobalMap();
         }
 
 

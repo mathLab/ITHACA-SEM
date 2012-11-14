@@ -201,7 +201,6 @@ namespace Nektar
                             m_Ai[k] = iCount + i;
                             m_Aj[k] = iCount + j;
                             m_Ar[k] = (*loc_mat)(i,j);
-                            //m_Ar[k] /= m_locToGloSignMult[cnt+i]*m_locToGloSignMult[cnt+j];
                             if (doSign)
                             {
                                 m_Ar[k] *= vMapSign[cnt+i]*vMapSign[cnt+j];
@@ -211,8 +210,7 @@ namespace Nektar
                         vId[iCount + i] = 0;
                     else
                     {
-                        //vId[iCount + i] = pLocToGloMap->GetGlobalToUniversalMap(gid1);
-                        vId[iCount + i] = gid1;
+                        vId[iCount + i] = pLocToGloMap->GetGlobalToUniversalMap(gid1);
                     }
                 }
                 cnt   += nRows;

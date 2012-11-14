@@ -74,19 +74,7 @@ namespace Nektar
             Array<OneD, NekDouble> vLocalOut(nLocal, 0.0);
             Array<OneD, NekDouble> vTmpLocal(pLocToGloMap->GetNumLocalCoeffs());
             GlobalToLocalNoSign(pInput, vLocalIn, pLocToGloMap);
-            //pLocToGloMap->GlobalToLocal(pInput, vLocalIn);
             Xxt::Solve(vLocalOut, m_crsData, vLocalIn);
-//            cout << "Local" << endl;
-//            for (int i = 0; i < nLocal; ++i)
-//            {
-//                cout << i << ": " << vLocalOut[i] << endl;
-//            }
-            //pLocToGloMap->Assemble(vLocalOut, pOutput);
-//            cout << "Global" << endl;
-//            for (int i = 0; i < pLocToGloMap->GetNumGlobalCoeffs(); ++i)
-//            {
-//                cout << i << ": " << pOutput[i] << endl;
-//            }
             LocalToGlobalNoSign(vLocalOut, pOutput, pLocToGloMap);
         }
 

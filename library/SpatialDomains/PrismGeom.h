@@ -65,6 +65,8 @@ namespace Nektar
 
         protected:
 
+            virtual void v_GenGeomFactors(
+                 const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
             virtual void v_GetLocCoords(
                 const Array<OneD, const NekDouble> &coords,
                       Array<OneD,       NekDouble> &Lcoords);

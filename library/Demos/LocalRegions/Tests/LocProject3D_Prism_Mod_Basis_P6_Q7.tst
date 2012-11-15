@@ -8,7 +8,7 @@
             <value tolerance="1e-8">5.16422e-12</value>
         </metric>
         <metric type="Linf" id="2">
-            <value tolerance="1e-11">2.08524e-11</value>
+            <value tolerance="1e-8">2.08524e-11</value>
         </metric>
     </metrics>
 </test>

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Tester.cpp
+// File: TestData.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -46,7 +46,11 @@ namespace Nektar
     TestData::TestData(const fs::path& pFilename)
     {
         // Process test file format.
+#if BOOST_VERSION > 104200
         m_doc = new TiXmlDocument(pFilename.c_str());
+#else
+        m_doc = new TiXmlDocument(pFilename.file_string().c_str());
+#endif
         bool loadOkay = m_doc->LoadFile();
 
         ASSERTL0(loadOkay, "Failed to load test definition file: "

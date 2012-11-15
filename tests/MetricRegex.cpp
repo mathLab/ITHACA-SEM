@@ -129,9 +129,22 @@ namespace Nektar
                     
                     if (okValues[i-1].m_useTolerance)
                     {
-                        double val = fabs(boost::lexical_cast<double>(
-                                                        okValues[i-1].m_value)
-                                          - boost::lexical_cast<double>(match));
+                        double val;
+                        try 
+                        {
+                            val = fabs(boost::lexical_cast<double>(
+                                           okValues[i-1].m_value))
+                                - fabs(boost::lexical_cast<double>(match));
+                        }
+                        catch(boost::bad_lexical_cast &e)
+                        {
+                            cerr << "Could not convert one of " << match 
+                                 << " (match) or " << okValues[i-1].m_value
+                                 << " (comparison value) to double" << endl;
+                            success = false;
+                            continue;
+                        }
+                        
                         // If the okValues are not within tolerance, failed the
                         // test.
                         if (val > okValues[i-1].m_tolerance)

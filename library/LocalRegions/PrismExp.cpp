@@ -2300,8 +2300,7 @@ namespace Nektar
                     nmodes=MatFaceLocation[fid].num_elements();
                     Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 
                                  1, &facemodearray[offset], 1);
-                    offset+=nmodes;
-                    
+                    offset+=nmodes;                    
                 }
 
                 DNekMatSharedPtr m_vertexedgefacetransformmatrix = 
@@ -2457,6 +2456,8 @@ namespace Nektar
             //specific edge and the two attached faces.
             for (cnt=eid=0; eid<nEdges; ++eid)
             {
+
+
                 //row and column size of the vertex-edge/face matrix
                 efCol=GetFaceIntNcoeffs(m_geom->GetEdgeFaceMap(eid,0))+
                     GetFaceIntNcoeffs(m_geom->GetEdgeFaceMap(eid,1));
@@ -2480,8 +2481,9 @@ namespace Nektar
                     (efRow, efCol, zero, storage);
                 DNekMat &Meft = (*m_edgefacetransformmatrix);
 
-                int nfacemodesconnected=nConnectedFaces * (
-                    GetFaceIntNcoeffs(m_geom->GetEdgeFaceMap(eid,0)));
+                int nfacemodesconnected =
+                    GetFaceIntNcoeffs(m_geom->GetEdgeFaceMap(eid,0)) +
+                    GetFaceIntNcoeffs(m_geom->GetEdgeFaceMap(eid,1));
                 Array<OneD, unsigned int> 
                     facemodearray(nfacemodesconnected);
 
@@ -2491,14 +2493,16 @@ namespace Nektar
                 Vmath::Vcopy(nedgemodes, &edgeModeLocation[eid][0], 
                              1, &edgemodearray[0], 1);
 
+                int offset=0;
                 //create array of face modes
                 for(fid=0; fid < nConnectedFaces; ++fid)
                 {
-                    MatFaceLocation[fid]=faceModeLocation[
-                        m_geom->GetEdgeFaceMap(eid,fid)];
+                    MatFaceLocation[fid]=
+                        faceModeLocation[m_geom->GetEdgeFaceMap(eid,fid)];
                     nmodes=MatFaceLocation[fid].num_elements();
-                    Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 1, 
-                                 &facemodearray[fid*nmodes], 1);
+                    Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 
+                                 1, &facemodearray[offset], 1);
+                    offset+=nmodes;
                 }
 
                 //edge-face coupling

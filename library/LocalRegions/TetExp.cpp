@@ -2314,14 +2314,17 @@ namespace Nektar
                     GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,2)) 
                     - 6;
 
-                int nedgemodesconnected=nConnectedEdges * 
-                    (GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,0))-2);
+                int nedgemodesconnected=
+                    GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,0)) +
+                    GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,1)) +
+                    GetEdgeNcoeffs(m_geom->GetVertexEdgeMap(vid,2))-6;
                 Array<OneD, unsigned int> edgemodearray(nedgemodesconnected);
 
-                int nfacemodesconnected=nConnectedFaces * 
-                    (GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,0)));
+                int nfacemodesconnected=
+                    GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,0)) +
+                    GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,1)) +
+                    GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,2));                   
                 Array<OneD, unsigned int> facemodearray(nfacemodesconnected);
-
 
                 //create array of edge modes
                 for(eid=0; eid < nConnectedEdges; ++eid)
@@ -2435,6 +2438,16 @@ namespace Nektar
                         Sefef.SetValue(nedgemodesconnected+m,n,FaceFaceValue);
                     }
                 }                
+                cout<<endl;
+                for (i=0; i<efRow; ++i)
+                {
+                    for(j=0; j<efRow; ++j)
+                    {
+                        cout<<Sefef(i,j)<<" ";
+                    }
+                    cout<<endl;
+                }
+
 
                 // Invert edge-face coupling matrix
                 Sefef.Invert();

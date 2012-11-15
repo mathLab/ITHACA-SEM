@@ -2279,7 +2279,7 @@ namespace Nektar
                     GetFaceIntNcoeffs(m_geom->GetVertexFaceMap(vid,2));                   
                 Array<OneD, unsigned int> facemodearray(nfacemodesconnected);
 
-
+                int offset=0;
                 //create array of edge modes
                 for(eid=0; eid < nConnectedEdges; ++eid)
                 {
@@ -2287,9 +2287,11 @@ namespace Nektar
                         edgeModeLocation[m_geom->GetVertexEdgeMap(vid,eid)];
                     nmodes=MatEdgeLocation[eid].num_elements();
                     Vmath::Vcopy(nmodes, &MatEdgeLocation[eid][0], 
-                                 1, &edgemodearray[eid*nmodes], 1);
+                                 1, &edgemodearray[offset], 1);
+                    offset+=nmodes;
                 }
 
+                offset=0;
                 //create array of face modes
                 for(fid=0; fid < nConnectedFaces; ++fid)
                 {
@@ -2297,9 +2299,11 @@ namespace Nektar
                         faceModeLocation[m_geom->GetVertexFaceMap(vid,fid)];
                     nmodes=MatFaceLocation[fid].num_elements();
                     Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 
-                                 1, &facemodearray[fid*nmodes], 1);
+                                 1, &facemodearray[offset], 1);
+                    offset+=nmodes;
+                    
                 }
-                
+
                 DNekMatSharedPtr m_vertexedgefacetransformmatrix = 
                     MemoryManager<DNekMat>::AllocateSharedPtr
                     (1, efRow, zero, storage);
@@ -2369,7 +2373,6 @@ namespace Nektar
                         //Matrix value for each coefficient location
                         FaceFaceValue=(*r_bnd)(facemodearray[n],
                                                facemodearray[m]);
-
                         //Set the value in the vertex edge/face matrix
                         Sefef.SetValue(nedgemodesconnected+n,
                                        nedgemodesconnected+m,FaceFaceValue);
@@ -2392,6 +2395,7 @@ namespace Nektar
                         Sefef.SetValue(nedgemodesconnected+m,n,FaceFaceValue);
                     }
                 }                
+
 
                 // Invert edge-face coupling matrix
                 Sefef.Invert();
@@ -2447,9 +2451,6 @@ namespace Nektar
                 (nEdges);
             MatFaceLocation = Array<OneD, Array<OneD, unsigned int> > 
                 (nConnectedFaces);
-
-            FaceTotNCoeffs=GetTotalFaceIntNcoeffs();
-            EdgeTotNCoeffs=GetTotalEdgeIntNcoeffs();
 
             //Build the edge/face transform matrix: This matrix is constructed
             //from the submatrices corresponding to the couping between a

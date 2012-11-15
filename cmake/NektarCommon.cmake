@@ -248,5 +248,12 @@ MACRO(ADD_NEKTAR_LIBRARY name component type)
 
 ENDMACRO(ADD_NEKTAR_LIBRARY name component type)
 
-
-
+# Adds a test with a given name.
+# The Test Definition File should be in a subdirectory called Tests relative
+# to the CMakeLists.txt file calling this macros. The test file should be called
+# NAME.tst, where NAME is given as a parameter to this macro.
+MACRO(ADD_NEKTAR_TEST name)
+    GET_FILENAME_COMPONENT(dir ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+    ADD_TEST(NAME ${dir}_${name}
+         COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
+ENDMACRO(ADD_NEKTAR_TEST)

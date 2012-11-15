@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 #if BOOST_VERSION > 104200
     string specFileStem = specFile.stem().string();
 #else
-    string specFileStem = specFile.stem().file_string();
+    string specFileStem = specFile.stem();
 #endif
 
     // Temporary directory to create and in which to conduct test

@@ -2,7 +2,7 @@
 <test>
     <description>Kovasnay solution using sub-stepping</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>Test_KovaFlow_Substep_2order.xml</parameters>
+    <parameters>Test_KovaFlow_SubStep_2order.xml</parameters>
     <files>
         <file description="Session File">Test_KovaFlow_SubStep_2order.xml</file>
     </files>

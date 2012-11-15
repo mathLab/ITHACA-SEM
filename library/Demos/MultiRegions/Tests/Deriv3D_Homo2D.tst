@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
     <description>Testing 3D homogeneous 2D derivatives</description>
-    <executable>Deriv3DHomo1D</executable>
+    <executable>Deriv3DHomo2D</executable>
     <parameters>derivatives3Dhomo2D.xml</parameters>
     <files>
         <file description="Session File">derivatives3Dhomo2D.xml</file>
@@ -9,10 +9,14 @@
 
     <metrics>
         <metric type="L2" id="1">
-            <value tolerance="1e-7">1.75249e-15</value>
+            <value variable="dudx" tolerance="1e-7">3.05768e-14</value>
+            <value variable="dvdy" tolerance="1e-7">0</value>
+            <value variable="dwdz" tolerance="1e-7">0</value>
         </metric>
         <metric type="Linf" id="2">
-            <value tolerance="1e-6">3.33067e-16</value>
+            <value variable="dudx" tolerance="1e-7">1.42109e-14</value>
+            <value variable="dvdy" tolerance="1e-7">1.11022e-16</value>
+            <value variable="dwdz" tolerance="1e-7">1.11022e-16</value>
         </metric>
     </metrics>
 </test>

@@ -45,12 +45,12 @@ namespace ErrorUtil
 {
     static boost::optional<std::ostream&> outStream;
 
-    LIB_UTILITIES_EXPORT static void SetErrorStream(std::ostream& o)
+    static void SetErrorStream(std::ostream& o)
     {
         outStream = o;
     }
 
-    LIB_UTILITIES_EXPORT static bool HasCustomErrorStream()
+    static bool HasCustomErrorStream()
     {
         return outStream;
     }
@@ -67,7 +67,7 @@ namespace ErrorUtil
             NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
-    LIB_UTILITIES_EXPORT static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
+    static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
     {
         // The user of outStream is primarily for the unit tests.
         // The unit tests often generate errors on purpose to make sure
@@ -112,18 +112,15 @@ namespace ErrorUtil
         }
     }
 
-    LIB_UTILITIES_EXPORT static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
+    static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
     {
         Error(type, routine, lineNumber, msg.c_str(), level);
-
     }
 
-    LIB_UTILITIES_EXPORT static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
+    static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
     {
         Error(type, routine, lineNumber, msg, 0);
-
     }
-    
 } // end of namespace
 
 /// Assert Level 0 -- Fundamental assert which

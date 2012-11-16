@@ -52,7 +52,8 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual ~UnsteadySystem();
 		            
             /// Calculate the larger time-step mantaining the problem stable.
-            SOLVER_UTILS_EXPORT NekDouble GetTimeStep();
+            SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
+                const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 		
             /// CFL safety factor (comprise between 0 to 1).
             NekDouble m_cflSafetyFactor;
@@ -130,8 +131,8 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> > &physfield,
                       Array<OneD, Array<OneD, NekDouble> > &flux);
 		            
-            /// Virtual function to get the time step
-			SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep();
+            SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
+                const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
         private:
             ///

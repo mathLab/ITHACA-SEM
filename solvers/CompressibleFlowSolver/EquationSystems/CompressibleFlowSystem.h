@@ -130,7 +130,8 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &stdV);
       
-        virtual NekDouble v_GetTimeStep();
+        virtual NekDouble v_GetTimeStep(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
         virtual void v_SetInitialConditions(
             NekDouble initialtime = 0.0,

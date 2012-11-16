@@ -337,7 +337,6 @@
             <P> FinTime        = 0        </P>
             <P> IO_CheckSteps  = 10000    </P>
             <P> IO_InfoSteps   = 100      </P>
-            <P> IO_CheckTime   = 100      </P>
             <P> Gamma          = 1.4      </P>
             <P> CFL            = 0.4      </P>
         </PARAMETERS>

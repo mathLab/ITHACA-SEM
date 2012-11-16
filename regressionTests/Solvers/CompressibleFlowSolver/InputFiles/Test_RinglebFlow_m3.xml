@@ -338,7 +338,6 @@
             <P> NumSteps        = 10       </P>
             <P> IO_CheckSteps   = 10000    </P>
             <P> IO_InfoSteps    = 100      </P>
-            <P> IO_CheckTime    = 100      </P>
             <P> Gamma           = 1.4      </P>
             <P> CFL             = 0.02     </P>
         </PARAMETERS>

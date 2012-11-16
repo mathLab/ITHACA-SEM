@@ -472,7 +472,7 @@ namespace Nektar
                                    m_cflSafetyFactor);
         
         // Get the proper time step with CFL control
-        dt = GetTimeStep();
+        dt = GetSubstepTimeStep();
 
         nsubsteps = (m_timestep > dt)? ((int)(m_timestep/dt)+1):1; 
         m_session->LoadParameter("MinSubSteps", minsubsteps,0);
@@ -837,12 +837,11 @@ namespace Nektar
     }
     
     
-    NekDouble IncNavierStokes::v_GetTimeStep()
+    NekDouble IncNavierStokes::GetSubstepTimeStep()
     { 
-        
-        int nvariables                  = m_fields.num_elements();
-        int nTotQuadPoints              = GetTotPoints();
-        int n_element                   = m_fields[0]->GetExpSize(); 
+        int nvariables     = m_fields.num_elements();
+        int nTotQuadPoints = GetTotPoints();
+        int n_element      = m_fields[0]->GetExpSize(); 
         
         const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
         Array<OneD, int> ExpOrderList (n_element, ExpOrder);

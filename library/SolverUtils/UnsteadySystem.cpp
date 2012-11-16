@@ -44,7 +44,6 @@ namespace Nektar
 {	
     namespace SolverUtils
     {
-        NekDouble IntegrationTime = 0.0;
         /**
          * @class UnsteadySystem
          *
@@ -171,7 +170,6 @@ namespace Nektar
         void UnsteadySystem::v_DoSolve()
         {
             int i, n, nchk = 1;
-            
             int ncoeffs    = m_fields[0]->GetNcoeffs();
             int npoints    = m_fields[0]->GetNpoints();
             int nvariables = 0;
@@ -190,15 +188,16 @@ namespace Nektar
             }
 
             // Set up wrapper to fields data storage.
-            Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
-            Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
-		
+            Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
+            Array<OneD, Array<OneD, NekDouble> > tmp   (nvariables);
+            
+            // Reorder storage to list time-integrated fields first.
             for(i = 0; i < nvariables; ++i)
             {
-                fields[i]  = m_fields[m_intVariables[i]]->UpdatePhys();
+                fields[i] = m_fields[m_intVariables[i]]->UpdatePhys();
                 m_fields[m_intVariables[i]]->SetPhysState(false);
             }
-		
+            
             // Declare an array of TimeIntegrationSchemes For multi-stage
             // methods, this array will have just one entry containing the
             // actual multi-stage method...
@@ -210,11 +209,11 @@ namespace Nektar
             //  - ...
             //  - the last scheme will be used for all other time-steps
             //    (this will be the actual scheme)
-
+            
             Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> IntScheme;
             LibUtilities::TimeIntegrationSolutionSharedPtr u;
             int numMultiSteps;
-		
+            
             switch(m_timeIntMethod)
             {
                 case LibUtilities::eIMEXdirk_1_1_1:
@@ -378,34 +377,54 @@ namespace Nektar
                 (*x)->Initialise(m_fields, m_time);
             }
 
+            // Ensure that there is no conflict of parameters.
             if(m_cflSafetyFactor > 0.0)
             {
                 // Check final condition
-                if (m_fintime > 0.0 && m_steps > 0)
-                {
-                    ASSERTL0(false, "Final condition not unique: "
-                                    "fintime > 0.0 & Nsteps > 0");
-                }
+                ASSERTL0(m_fintime == 0.0 || m_steps == 0,
+                         "Final condition not unique: "
+                         "fintime > 0.0 and Nsteps > 0");
                 
-                // Check Timestep condition
-                if(m_timestep > 0.0 && m_cflSafetyFactor > 0.0)
-                {
-                    ASSERTL0(false, "Timestep not unique: "
-                                    "timestep > 0.0 & CFL > 0.0");
-                }
+                // Check timestep condition
+                ASSERTL0(m_timestep == 0.0, 
+                         "Timestep not unique: timestep > 0.0 & CFL > 0.0");
             }
 
+            // Check uniqueness of checkpoint output.
+            ASSERTL0(m_checktime == 0.0 && m_checksteps == 0 ||
+                     m_checktime >  0.0 && m_checksteps == 0 || 
+                     m_checktime == 0.0 && m_checksteps >  0,
+                     "Only one of IO_CheckTime and IO_CheckSteps "
+                     "should be set!");
+
             Timer     timer;
-            int       step    = 0;
-            NekDouble intTime = 0.0;
-
-            while (step < m_steps || m_time < m_fintime - 1e-10)
+            bool      doCheckTime   = false;
+            int       step          = 0;
+            NekDouble intTime       = 0.0;
+            NekDouble lastCheckTime = 0.0;
+            
+            while (step   < m_steps ||
+                   m_time < m_fintime - NekConstants::kNekZeroTol)
             {
-                if (m_cflSafetyFactor > 0.0)
+                if (m_cflSafetyFactor)
                 {
-                    m_timestep = GetTimeStep();
+                    m_timestep = GetTimeStep(fields);
+                    
+                    // Ensure that the final timestep finishes at the final
+                    // time, or at a prescribed IO_CheckTime.
+                    if (m_time + m_timestep > m_fintime && m_fintime > 0.0)
+                    {
+                        m_timestep = m_fintime - m_time;
+                    }
+                    else if (m_checktime && 
+                             m_time + m_timestep - lastCheckTime >= m_checktime)
+                    {
+                        lastCheckTime += m_checktime;
+                        m_timestep     = lastCheckTime - m_time;
+                        doCheckTime    = true;
+                    }
                 }
-
+                
                 timer.Start();
                 fields = IntScheme[min(step, numMultiSteps-1)]->TimeIntegrate(
                     m_timestep, u, m_ode);
@@ -418,11 +437,16 @@ namespace Nektar
                 if (m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_infosteps))
                 {
-                    cout << "Steps: "     << setw(8)  << left << step+1
-                         << "Time: "      << setw(12) << left << m_time
-                         << "Time-step: " << setw(12) << left << m_timestep
-                         << endl;
+                    cout << "Steps: "     << setw(8)  << left << step+1 << " "
+                         << "Time: "      << setw(12) << left << m_time << " ";
                 }
+                
+                if (m_cflSafetyFactor)
+                {
+                    cout << "Time-step: " << setw(12) << left << m_timestep;
+                }
+                
+                cout << endl;
                 
                 // Transform data into coefficient space
                 for (i = 0; i < m_intVariables.size(); ++i)
@@ -440,9 +464,11 @@ namespace Nektar
                 }
                 
                 // Write out checkpoint files
-                if (m_checksteps && step && (!((step+1)%m_checksteps)))
+                if ((m_checksteps && step && !((step + 1) % m_checksteps)) ||
+                    doCheckTime)
                 {
                     Checkpoint_Output(nchk++);
+                    doCheckTime = false;
                 }
                 
                 // Step advance
@@ -460,7 +486,14 @@ namespace Nektar
                 }
                 m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
             }
-
+            
+            if (m_cflSafetyFactor > 0.0)
+            {
+                cout << "CFL safety factor : " << m_cflSafetyFactor << endl
+                     << "CFL time-step     : " << m_timestep        << endl
+                     << "Time-integration  : " << intTime  << "s"   << endl;
+            }
+            
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
                 (*x)->Finalise(m_fields, m_time);
@@ -528,19 +561,12 @@ namespace Nektar
             outfile.open("solution1D.txt");
             for(int i = 0; i < GetNpoints(); i++)
             {
-                outfile << scientific 
-                << setw (17) 
-                << setprecision(16) 
-                << x[i]
-                << "  " 
-                << solution1D[0][i] 
-                << endl;
+                outfile << scientific << setw (17) << setprecision(16) << x[i]
+                        << "  " << solution1D[0][i] << endl;
             }
             outfile << endl << endl;
             outfile.close();
         }
-
-        
 
         void UnsteadySystem::v_NumericalFlux(
             Array<OneD, Array<OneD, NekDouble> > &physfield,
@@ -885,23 +911,27 @@ namespace Nektar
         }
 	
         /**
-         * @brief This function calculate the proper time-step to keep the  
-         * problem stable. It has been implemented to deal with an explict  
-         * treatment of the advection term. In case of an explicit treatment  
-         * of the diffusion term a re-implementation is required. The actual 
-         * implementation can be found inside each equation class.
+         * @brief Return the timestep to be used for the next step in the
+         * time-marching loop.
+         *
+         * This function can be overloaded to facilitate solver which utilise a
+         * CFL (or other) parameter to determine a maximum timestep under which
+         * the problem remains stable.
          */
-        NekDouble UnsteadySystem::GetTimeStep()
+        NekDouble UnsteadySystem::GetTimeStep(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray)
         {
-            return v_GetTimeStep();
+            return v_GetTimeStep(inarray);
         }
         
         /**
-         * @brief See GetTimeStep. 
-         * This is the virtual fuction to redirect the implementation
-         * to the proper class.
+         * @brief Return the timestep to be used for the next step in the
+         * time-marching loop.
+         *
+         * @see UnsteadySystem::GetTimeStep
          */
-        NekDouble UnsteadySystem::v_GetTimeStep()
+        NekDouble UnsteadySystem::v_GetTimeStep(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray)
         {
             ASSERTL0(false, "Not defined for this class");
             return 0.0;

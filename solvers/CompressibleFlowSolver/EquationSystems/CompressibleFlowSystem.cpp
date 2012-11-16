@@ -522,7 +522,8 @@ namespace Nektar
     /**
      * @brief Calculate the maximum timestep subject to CFL restrictions.
      */
-    NekDouble CompressibleFlowSystem::v_GetTimeStep()
+    NekDouble CompressibleFlowSystem::v_GetTimeStep(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray)
     { 
         int i, n;
         int nvariables     = m_fields.num_elements();
@@ -530,22 +531,11 @@ namespace Nektar
         int nElements      = m_fields[0]->GetExpSize(); 
         const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
         
-        // Set up wrapper to fields data storage.
-        Array<OneD, Array<OneD, NekDouble> >   fields(nvariables);
-        Array<OneD, Array<OneD, NekDouble> >   fieldsOld(nvariables);
-        Array<OneD, Array<OneD, NekDouble> >   tmp(nvariables);
-        
-        for(i = 0; i < nvariables; ++i)
-        {
-            m_fields[i]->SetPhysState(false);
-            fields[i]  = m_fields[i]->UpdatePhys();
-        }
-        
         Array<OneD, NekDouble> tstep      (nElements, 0.0);
         Array<OneD, NekDouble> stdVelocity(nElements);
         
         // Get standard velocity to compute the time-step limit
-        GetStdVelocity(fields, stdVelocity);
+        GetStdVelocity(inarray, stdVelocity);
         
         // Factors to compute the time-step limit
         NekDouble minLength;        
@@ -560,13 +550,13 @@ namespace Nektar
             NekDouble Area = m_fields[0]->GetExp(n)->Integral(one2D);
             
             if (boost::dynamic_pointer_cast<LocalRegions::TriExp>(
-                                                    m_fields[0]->GetExp(n)))
+                    m_fields[0]->GetExp(n)))
             {
                 minLength = 2.0 * sqrt(Area);
             }
             
             else if (boost::dynamic_pointer_cast<LocalRegions::QuadExp>(
-                                                    m_fields[0]->GetExp(n)))
+                         m_fields[0]->GetExp(n)))
             {
                 minLength = sqrt(Area);
             }

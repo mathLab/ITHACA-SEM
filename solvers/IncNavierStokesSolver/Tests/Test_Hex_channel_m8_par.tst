@@ -3,6 +3,7 @@
     <description>3D channel flow, Hex elements, par(2), P=8</description>
     <executable>IncNavierStokesSolver</executable>
     <parameters>Test_Hex_channel_m8_par.xml</parameters>
+    <processes>2</processes>
     <files>
         <file description="Session File">Test_Hex_channel_m8_par.xml</file>
     </files>

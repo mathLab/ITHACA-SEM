@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 1D HDG with P=8</description>
     <executable>HDGHelmholtz1D</executable>
-    <parameters>helmholtz1D_8modes.xml</parameters>
+    <parameters>Helmholtz1D_P8.xml</parameters>
     <files>
-        <file description="Session File">helmholtz1D_8modes.xml</file>
+        <file description="Session File">Helmholtz1D_P8.xml</file>
     </files>
 
     <metrics>

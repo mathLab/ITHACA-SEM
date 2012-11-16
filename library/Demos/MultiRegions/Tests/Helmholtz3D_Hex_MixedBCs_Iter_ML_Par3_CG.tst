@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 3D CG, hexes, mixed BCs, iterative ML</description>
     <executable>Helmholtz3D</executable>
-    <parameters>helmholtz3D_Hex_MixedBCs_Iter_ML_CG.xml</parameters>
+    <parameters>Helmholtz3D_Hex_MixedBCs_Iter_ML_CG.xml</parameters>
     <processes>3</processes>
     <files>
         <file description="Session File">Helmholtz3D_Hex_MixedBCs_Iter_ML_CG.xml</file>

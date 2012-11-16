@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 3D CG, prisms, Neumann BCs, iterative ML</description>
     <executable>Helmholtz3D</executable>
-    <parameters>helmholtz3D_Prism_Iter_ML_CG.xml</parameters>
+    <parameters>Helmholtz3D_Prism_Iter_ML_CG.xml</parameters>
     <files>
         <file description="Session File">Helmholtz3D_Prism_Iter_ML_CG.xml</file>
     </files>

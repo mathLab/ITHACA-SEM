@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 3D CG, hexes, mixed BCs</description>
     <executable>Helmholtz3D</executable>
-    <parameters>helmholtz3D_Hex_MixedBCs_CG.xml</parameters>
+    <parameters>Helmholtz3D_Hex_MixedBCs_CG.xml</parameters>
     <files>
         <file description="Session File">Helmholtz3D_Hex_MixedBCs_CG.xml</file>
     </files>

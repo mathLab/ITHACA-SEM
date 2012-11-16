@@ -5,6 +5,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ContField3D.h>
+#include <SpatialDomains/MeshGraph3D.h>
 
 using namespace Nektar;
 
@@ -39,7 +40,7 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Print summary of solution details
-        flags.set(eUseContCoeff, true);
+        flags.set(eUseGlobal, true);
         factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
@@ -93,12 +94,12 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Helmholtz solution taking physical forcing
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors);
         //----------------------------------------------
 
         //----------------------------------------------
         // Backward Transform Solution to get solved values at
-        Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), MultiRegions::eGlobal);
         //----------------------------------------------
 
         //----------------------------------------------
@@ -118,7 +119,7 @@ int main(int argc, char *argv[])
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-        Exp->GlobalToLocal(Exp->GetContCoeffs(),Exp->UpdateCoeffs());
+        Exp->GlobalToLocal(Exp->GetCoeffs(),Exp->UpdateCoeffs());
         for(i = 0; i < FieldDef.size(); ++i)
         {
             FieldDef[i]->m_fields.push_back("u");

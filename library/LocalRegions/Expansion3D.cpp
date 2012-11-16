@@ -34,7 +34,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
 #include <SpatialDomains/Geometry3D.h>
+#include <LocalRegions/MatrixKey.h>
 
 namespace Nektar
 {
@@ -300,7 +302,6 @@ namespace Nektar
 
 			ASSERTL1(map1.num_elements() == map2.num_elements(), "There is an error with the GetFaceToElementMap");
 
-			//if(dir1 != dir2) cout << "face " << face << endl;
 			for(j = 0; j < map1.num_elements(); ++j)//index in the standard orientation
 				for(k = 0; k < map2.num_elements(); ++k)//index in the actual orientation
 				{
@@ -469,38 +470,82 @@ namespace Nektar
                     Array<OneD,unsigned int> fmap;
                     Array<OneD,int> sign;
                     
-					// Set up face segment expansions from local geom info
-                    for(i = 0; i < nfaces; ++i)
-                    {
-                        FaceExp[i] = GetFaceExp(i);
-                    }
-                    
-                    // for each degree of freedom of the lambda space
-                    // calculate Umat entry 
-                    // Generate Lambda to U_lambda matrix 
-                    for(j = 0; j < nbndry; ++j)
-                    {
-                        // standard basis vectors e_j
-                        Vmath::Zero(nbndry,&lambda[0],1);
-                        Vmath::Zero(ncoeffs,&f[0],1);
-                        lambda[j] = 1.0;
-                        
-						//cout << Lambda;
-                        SetTraceToGeomOrientation(lambda);
-						//cout << Lambda << endl;
-                        
-                        // Compute F = [I   D_1 M^{-1}   D_2 M^{-1}] C e_j
-                        AddHDGHelmholtzTraceTerms(tau, lambda, FaceExp, mkey.GetVarCoeffs(), f);
-                        
-                        // Compute U^e_j
-                        Ulam = invHmat*F; // generate Ulam from lambda
-                        
-                        // fill column of matrix
-                        for(k = 0; k < ncoeffs; ++k)
-                        {
-                            Umat(k,j) = Ulam[k]; 
-                        }
-                    }
+					//alternative way to add boundary terms contribution
+					int bndry_cnt = 0;
+					for(i = 0; i < nfaces; ++i)
+					{
+						FaceExp[i] = GetFaceExp(i);//temporary, need to rewrite AddHDGHelmholtzFaceTerms
+						int nface = GetFaceNcoeffs(i);
+						Array<OneD, NekDouble> face_lambda(nface);
+			
+						const Array<OneD, const Array<OneD, NekDouble> > normals
+							= GetFaceNormal(i);
+
+						//cout << endl << "face #" << i;
+						//cout << endl << "nquad_f " << FaceExp[i]->GetNumPoints(0)*FaceExp[i]->GetNumPoints(1);
+						//cout << endl << "normals[0] " <<  normals[0].num_elements();
+						//cout << endl << "normals[1] " <<  normals[1].num_elements();
+						//cout << endl << "normals[2] " <<  normals[2].num_elements();
+
+						for(j = 0; j < nface; ++j)
+						{
+							Vmath::Zero(nface,&face_lambda[0],1);
+							Vmath::Zero(ncoeffs,&f[0],1);
+							face_lambda[j] = 1.0;
+
+							SetFaceToGeomOrientation(i, face_lambda);
+							
+							Vmath::Vcopy(nface, face_lambda, 1, FaceExp[i]->UpdateCoeffs(), 1);
+
+							FaceExp[i]->BwdTrans(FaceExp[i]->GetCoeffs(), FaceExp[i]->UpdatePhys());
+
+							AddHDGHelmholtzFaceTerms(tau, i, FaceExp, mkey.GetVarCoeffs(), f);
+							
+							Ulam = invHmat*F; // generate Ulam from lambda
+
+							// fill column of matrix
+							for(k = 0; k < ncoeffs; ++k)
+							{
+								Umat(k,bndry_cnt) = Ulam[k]; 
+							}
+							
+							++bndry_cnt;
+
+						}
+					}
+
+					//// Set up face expansions from local geom info
+                    //for(i = 0; i < nfaces; ++i)
+                    //{
+                    //    FaceExp[i] = GetFaceExp(i);
+                    //}
+                    //
+                    //// for each degree of freedom of the lambda space
+                    //// calculate Umat entry 
+                    //// Generate Lambda to U_lambda matrix 
+                    //for(j = 0; j < nbndry; ++j)
+                    //{
+                    //    // standard basis vectors e_j
+                    //    Vmath::Zero(nbndry,&lambda[0],1);
+                    //    Vmath::Zero(ncoeffs,&f[0],1);
+                    //    lambda[j] = 1.0;
+                    //    
+					//	//cout << Lambda;
+                    //    SetTraceToGeomOrientation(lambda);
+					//	//cout << Lambda << endl;
+                    //    
+                    //    // Compute F = [I   D_1 M^{-1}   D_2 M^{-1}] C e_j
+                    //    AddHDGHelmholtzTraceTerms(tau, lambda, FaceExp, mkey.GetVarCoeffs(), f);
+                    //    
+                    //    // Compute U^e_j
+                    //    Ulam = invHmat*F; // generate Ulam from lambda
+                    //    
+                    //    // fill column of matrix
+                    //    for(k = 0; k < ncoeffs; ++k)
+                    //    {
+                    //        Umat(k,j) = Ulam[k]; 
+                    //    }
+                    //}
                 }
                 break;
             // Q_0, Q_1, Q_2 matrices (P23)

@@ -5,6 +5,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
+#include <SpatialDomains/MeshGraph1D.h>
 
 using namespace Nektar;
 
@@ -47,40 +48,40 @@ int main(int argc, char *argv[])
 
     vSession->LoadParameter("HomModesY", nypoints);
     vSession->LoadParameter("HomModesZ", nzpoints);
-	vSession->LoadParameter("LY",        ly);
-	vSession->LoadParameter("LZ",        lz);
-	vSession->LoadParameter("USEFFT",    FFT);
-	
-	bool useFFT = false;
-	bool deal = false;
-	if(FFT==1){useFFT = true;}
+    vSession->LoadParameter("LY",        ly);
+    vSession->LoadParameter("LZ",        lz);
+    vSession->LoadParameter("USEFFT",    FFT);
+    
+    bool useFFT = false;
+    bool deal = false;
+    if(FFT==1){useFFT = true;}
 		
     
-	const LibUtilities::PointsKey PkeyY(nypoints,LibUtilities::eFourierEvenlySpaced);
+    const LibUtilities::PointsKey PkeyY(nypoints,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey  BkeyY(LibUtilities::eFourier,nypoints,PkeyY);
-	
-	const LibUtilities::PointsKey PkeyZ(nzpoints,LibUtilities::eFourierEvenlySpaced);
+    
+    const LibUtilities::PointsKey PkeyZ(nzpoints,LibUtilities::eFourierEvenlySpaced);
     const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,nzpoints,PkeyZ);
     
-	Exp = MemoryManager<MultiRegions::ContField3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,deal,graph1D,vSession->GetVariable(0));
+    Exp = MemoryManager<MultiRegions::ContField3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,deal,graph1D,vSession->GetVariable(0));
     //----------------------------------------------
-
+    
     //----------------------------------------------
     // Print summary of solution details
-    flags.set(eUseContCoeff, true);
-	factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
-	
+    flags.set(eUseGlobal, true);
+    factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
+    
     const SpatialDomains::ExpansionMap &expansions = graph1D->GetExpansions();
-	
+    
     LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
     
-	cout << "Solving 3D Helmholtz (Homogeneous in yz-plane):"  << endl;
+    cout << "Solving 3D Helmholtz (Homogeneous in yz-plane):"  << endl;
     cout << "         Lambda          : " << factors[StdRegions::eFactorLambda] << endl;
-	cout << "         Ly              : " << ly << endl;
-	cout << "         Lz              : " << lz << endl;
+    cout << "         Ly              : " << ly << endl;
+    cout << "         Lz              : " << lz << endl;
     cout << "         N.modes         : " << bkey0.GetNumModes() << endl;
     cout << "         N.Y homo modes  : " << BkeyY.GetNumModes() << endl;
-	cout << "         N.Z homo modes  : " << BkeyZ.GetNumModes() << endl;
+    cout << "         N.Z homo modes  : " << BkeyZ.GetNumModes() << endl;
     cout << endl;
     //----------------------------------------------
 
@@ -115,13 +116,13 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
     //Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), lambda);
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors);
      //----------------------------------------------
 
     //----------------------------------------------
     // Backward Transform Solution to get solved values at
     //Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
-    Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(),true);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),MultiRegions::eGlobal);
     //----------------------------------------------
 
     //----------------------------------------------

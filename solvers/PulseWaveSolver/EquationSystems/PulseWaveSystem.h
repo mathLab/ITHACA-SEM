@@ -37,7 +37,6 @@
 #define NEKTAR_SOLVERS_PULSEWAVESOLVER_EQUATIONSYSTEMS_PULSEWAVESYSTEM_H
 
 #include <SolverUtils/UnsteadySystem.h>
-#include <time.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -84,6 +83,10 @@ namespace Nektar
 		NekDouble                                       m_nue;
 		
 		NekDouble                                       m_h0;
+		
+		NekDouble m_C;
+		NekDouble m_RT;
+		NekDouble m_pout;
 		
 		Array<OneD, Array<OneD, NekDouble> >			m_A_0global;
 		

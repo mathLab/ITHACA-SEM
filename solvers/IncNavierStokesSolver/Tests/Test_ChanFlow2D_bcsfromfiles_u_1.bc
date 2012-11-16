@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <ELEMENTS FIELDS="u" SHAPE="Segment" BASIS="Modified_A" NUMMODESPERDIR="UNIORDER:6" ID="2,7">eJxjYEAGlg4w+sa23NtqXly2//6DwPs9Bbe35e6+wLAXVR0DAyOU36/iOWkKK4stRJTHdn3u7W29idy2AHMwGGEA</ELEMENTS>
+</NEKTAR>

@@ -34,12 +34,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYS_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <boost/enable_shared_from_this.hpp>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+
 
 namespace Nektar
 {
@@ -86,6 +88,8 @@ namespace Nektar
             const inline boost::weak_ptr<ExpList> &GetLocMat(void) const;
 
             const inline DNekMatSharedPtr &GetGmat(void) const;
+
+	    inline void InitObject();
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
@@ -140,6 +144,8 @@ namespace Nektar
                     const int pNumDir)=0;
 
             virtual const DNekMatSharedPtr& v_GetGmat(void) const;
+
+	    virtual void v_InitObject();
 
             static std::string lookupIds[];
             static std::string def;
@@ -197,6 +203,10 @@ namespace Nektar
 	  return v_GetGmat();
         }
 
+        inline void GlobalLinSys::InitObject()
+        {
+            v_InitObject();
+        }
     } //end of namespace
 } //end of namespace
 

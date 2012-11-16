@@ -36,11 +36,9 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3DHOMO1D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3DHOMO1D_H
-#include <MultiRegions/MultiRegionsDeclspec.h>
-#include <LibUtilities/Communication/Comm.h>
 
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
-#include <MultiRegions/ContField2D.h>
 
 namespace Nektar
 {
@@ -70,17 +68,6 @@ namespace Nektar
         protected:
 
         private:
-            int m_contNcoeffs;
-            Array<OneD, NekDouble> m_contCoeffs;
-
-            void SetCoeffPhys(void);
-
-            // virtual functions
-
-            virtual Array<OneD, NekDouble> &v_UpdateContCoeffs(void);
-
-            virtual const Array<OneD, const NekDouble> &v_GetContCoeffs(void) const;
-
             /// Template method virtual forwarded for LocalToGlobal()
             virtual void v_LocalToGlobal();
 

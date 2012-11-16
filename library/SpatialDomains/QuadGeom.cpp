@@ -33,9 +33,15 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
 
 #include <SpatialDomains/QuadGeom.h>
+#include <LibUtilities/Foundations/Interp.h>
+
+#include <StdRegions/StdQuadExp.h>
+#include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/Curve.hpp>
+#include <SpatialDomains/GeomFactors2D.h>
+
 
 namespace Nektar
 {

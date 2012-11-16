@@ -36,15 +36,9 @@
 #ifndef NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
-//#include <SolverUtils/EquationSystem.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
-#include <IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.h>
-#include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
-#include <IncNavierStokesSolver/AdvectionTerms/AdjointAdvection.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
-#include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar
 {     
@@ -59,7 +53,6 @@ namespace Nektar
         eUnsteadyLinearisedNS,
         eUnsteadyNavierStokes,
         eSteadyNavierStokes,
-		eSteadyNavierStokesBySFD,
         eEquationTypeSize
     };
     
@@ -73,8 +66,7 @@ namespace Nektar
         "UnsteadyStokes",
         "UnsteadyLinearisedNS",
         "UnsteadyNavierStokes",
-	"SteadyNavierStokes",
-	"SteadyNavierStokesBySFD"
+	    "SteadyNavierStokes",
     };
 
 
@@ -86,6 +78,7 @@ namespace Nektar
         eLinearised,
         eAdjoint,
         eSkewSymmetric,
+		eNoAdvection,
         eAdvectionFormSize
     };
     
@@ -98,6 +91,7 @@ namespace Nektar
         "Linearised",
         "Adjoint",
         "SkewSymmetric"
+		"NoAdvection"
     };
 	
     /**
@@ -132,7 +126,8 @@ namespace Nektar
 
 
         // Sub-stepping related methods
-        void SubStepAdvection (const Array<OneD, const Array<OneD, NekDouble> > &inarray,                               Array<OneD, Array<OneD, NekDouble> > &outarray, 
+        void SubStepAdvection (const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+							   Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                const NekDouble time);
 
         void SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
@@ -242,8 +237,6 @@ namespace Nektar
             ASSERTL0(false,"This method is not defined in this class");
         }
 		
-				
-        
     private: 
     };
     

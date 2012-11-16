@@ -34,9 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <iomanip>
 
-#include <LibUtilities/TimeIntegration/TimeIntegrationScheme.h>
 #include <CompressibleFlowSolver/EquationSystems/UnsteadySystem.h>
 
 namespace Nektar
@@ -284,7 +282,7 @@ namespace Nektar
         }
 	
 	// Write out checkpoint files.
-	if(n&&(!((n+1)%m_checksteps)) || (n==m_steps && m_steps!=0) || (m_time>=m_fintime && m_fintime>0.0))
+	if((n && (!((n+1)%m_checksteps))) || (n==m_steps && m_steps!=0) || (m_time>=m_fintime && m_fintime>0.0))
 	  {
 	    
 	    // update m_fields

@@ -72,6 +72,12 @@ namespace Nektar
         
         typedef boost::shared_ptr<HOSurf> HOSurfSharedPtr;
 
+        enum NekCurve
+        {
+            eFile,
+            eRecon
+        };
+        
         /**
          * Hash class for high-order surfaces.
          */
@@ -122,7 +128,7 @@ namespace Nektar
             /**
              * Maps a curve tag to a filename containing surface information.
              */
-            std::map<string, string> curveTags;
+            std::map<string, pair<NekCurve, string> > curveTags;
 
             /**
              * Maps a curve tag to the high-order surface data for that tag.

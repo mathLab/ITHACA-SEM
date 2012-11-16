@@ -36,7 +36,6 @@
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG2D.h>
 #include <MultiRegions/ExpList.h>
-#include <LocalRegions/PointExp.h>
 #include <LocalRegions/SegExp.h>
 
 #include <boost/config.hpp>
@@ -435,27 +434,40 @@ namespace Nektar
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation
-            if ((m_solnType == eDirectMultiLevelStaticCond
-                    || m_solnType == eIterativeMultiLevelStaticCond
-                    || m_solnType == eXxtMultiLevelStaticCond) && nGraphVerts)
+            if ((m_solnType == eDirectMultiLevelStaticCond ||
+                 m_solnType == eIterativeMultiLevelStaticCond ||
+                 m_solnType == eXxtMultiLevelStaticCond) && nGraphVerts)
             {
-                if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1)&&
-                   (m_staticCondLevel < m_maxStaticCondLevel))
+                if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1) &&
+                    m_staticCondLevel < m_maxStaticCondLevel)
                 {
-                    Array<OneD, int> vwgts_perm(Dofs[0].size()+Dofs[1].size()+-firstNonDirGraphVertId);
-                    for(i = 0; i < Dofs[0].size(); ++i)
+                    Array<OneD, int> vwgts_perm(
+                        Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
+                    for(i = 0; i < locExpVector.size(); ++i)
                     {
-                        if(ReorderedGraphVertId[0][i] >= firstNonDirGraphVertId)
+                        int eid = locExp.GetOffset_Elmt_Id(i);
+                        locExpansion = boost::dynamic_pointer_cast<
+                            StdRegions::StdExpansion2D>(locExpVector[eid]);
+                        for(j = 0; j < locExpansion->GetNverts(); ++j)
                         {
-                            vwgts_perm[ReorderedGraphVertId[0][i]-firstNonDirGraphVertId] = Dofs[0][i];
-                        }
-                    }
-                        
-                    for(i = 0; i < Dofs[1].size(); ++i)
-                    {
-                        if(ReorderedGraphVertId[1][i] >= firstNonDirGraphVertId)
-                        {
-                            vwgts_perm[ReorderedGraphVertId[1][i]-firstNonDirGraphVertId] = Dofs[1][i];
+                            meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
+                            meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
+                            
+                            if(ReorderedGraphVertId[0][meshVertId] >= 
+                                   firstNonDirGraphVertId)
+                            {
+                                vwgts_perm[ReorderedGraphVertId[0][meshVertId]-
+                                           firstNonDirGraphVertId] = 
+                                    Dofs[0][meshVertId];
+                            }
+                            
+                            if(ReorderedGraphVertId[1][meshEdgeId] >= 
+                                   firstNonDirGraphVertId)
+                            {
+                                vwgts_perm[ReorderedGraphVertId[1][meshEdgeId]-
+                                           firstNonDirGraphVertId] = 
+                                    Dofs[1][meshEdgeId];
+                            }
                         }
                     }
 
@@ -465,7 +477,9 @@ namespace Nektar
                         AllocateSharedPtr(this,bottomUpGraph);
                 }
             }
-            m_hash = boost::hash_range(m_localToGlobalMap.begin(), m_localToGlobalMap.end());
+            
+            m_hash = boost::hash_range(
+                m_localToGlobalMap.begin(), m_localToGlobalMap.end());
         }
 
 
@@ -811,8 +825,8 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 elmtid = locExp.GetOffset_Elmt_Id(i);
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
-                                                                    locExpVector[elmtid]))
+                if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
+                        locExpVector[elmtid])))
                 {
                     m_numLocalBndCoeffs += locExpansion->NumBndryCoeffs();
 
@@ -830,8 +844,8 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 elmtid = locExp.GetOffset_Elmt_Id(i);
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
-                                                                    locExpVector[elmtid]))
+                if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
+                        locExpVector[elmtid])))
                 {
                     vertCnt = 0;
                     nVerts = locExpansion->GetNverts();
@@ -860,8 +874,8 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 elmtid = locExp.GetOffset_Elmt_Id(i);
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
-                                                                    locExpVector[elmtid]))
+                if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
+                        locExpVector[elmtid])))
                 {
                     edgeCnt = 0;
                     nVerts = locExpansion->GetNverts();
@@ -889,8 +903,8 @@ namespace Nektar
                 for(i = 0; i < locExpVector.size(); ++i)
                 {
                     elmtid = locExp.GetOffset_Elmt_Id(i);
-                    if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
-                                                                        locExpVector[elmtid]))
+                    if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
+                            locExpVector[elmtid])))
                     {
 
                         boost::add_vertex(boostGraphObj);
@@ -904,8 +918,8 @@ namespace Nektar
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 elmtid = locExp.GetOffset_Elmt_Id(i);
-                if(locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
-                                                                    locExpVector[elmtid]))
+                if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(
+                        locExpVector[elmtid])))
                 {
                     nVerts = locExpansion->GetNverts();
                     // Now loop over all local edges and vertices

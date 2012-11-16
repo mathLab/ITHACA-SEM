@@ -32,7 +32,7 @@
 // Description: NodalTetExp routines
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/LocalRegions.h>
+
 #include <LocalRegions/NodalTetExp.h>
 
 namespace Nektar

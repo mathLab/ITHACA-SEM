@@ -35,10 +35,11 @@
 
 #ifndef MULTIREGIONS_ASSEMBLYMAPCG2D_H
 #define MULTIREGIONS_ASSEMBLYMAPCG2D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <MultiRegions/ExpList0D.h>
+#include <MultiRegions/ExpList.h>
 
 
 namespace Nektar
@@ -49,6 +50,7 @@ namespace Nektar
         class ExpList;
         class AssemblyMapCG2D;
         typedef boost::shared_ptr<AssemblyMapCG2D>  AssemblyMapCG2DSharedPtr;
+        typedef boost::shared_ptr<ExpList>  ExpListSharedPtr;
 
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class AssemblyMapCG2D: public AssemblyMapCG
@@ -85,8 +87,8 @@ namespace Nektar
 
 
             /** Construct optimal ordering a two-dimensional expansion
-            /*  given a vector of boundary condition information
-            */
+             *  given a vector of boundary condition information
+             */
             MULTI_REGIONS_EXPORT int SetUp2DGraphC0ContMap(
                                        const ExpList  &locExp,
                                        const Array<OneD, const MultiRegions::ExpListSharedPtr>  &bndCondExp,

@@ -279,6 +279,10 @@ namespace Nektar
                 case LibUtilities::eGaussRadauMAlpha1Beta0: 
                 Vmath::Smul( Qy, 0.5, (NekDouble *)wy.get(), 1, wy_hat.get(), 1 );
                 break;
+                
+                default:
+                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    break;
             }
 
             // Convert wz into wz_hat, which includes the 1/4 scale factor.
@@ -301,7 +305,11 @@ namespace Nektar
                 case LibUtilities::eGaussRadauMAlpha2Beta0: 
                     Vmath::Smul(Qz, 0.25, (NekDouble *)wz.get(), 1, 
                                 wz_hat.get(), 1 );
-                break;
+                    break;
+                
+                default:
+                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    break;
             }
 
             return Integral3D(inarray, wx, wy_hat, wz_hat);
@@ -1309,6 +1317,35 @@ namespace Nektar
             
             return nmodes;
         }
+        
+        const LibUtilities::BasisKey StdTetExp::v_DetFaceBasisKey(
+            const int i, const int k) const
+        {
+            ASSERTL2(i >= 0 && i <= 4, "face id is out of range");
+            ASSERTL2(k == 0 || k == 1, "face direction out of range");
+            int nummodes = GetBasis(0)->GetNumModes(); 
+            //temporary solution, need to add conditions based on face id
+            //also need to add check of the points type
+            switch (k)
+            {
+                case 0:
+                {
+                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
+                }
+                break;
+                case 1:
+                {
+                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0);
+                    //const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                    return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
+                }
+                break;
+            }
+
+            // Should not get here.
+            return LibUtilities::NullBasisKey;
+        }
 
         LibUtilities::BasisType StdTetExp::v_GetEdgeBasisType(const int i) const
         {
@@ -2025,52 +2062,60 @@ namespace Nektar
             
             switch(m_base[1]->GetPointsType())
             {
-            // Legendre inner product.
-            case LibUtilities::eGaussLobattoLegendre:
+                // Legendre inner product.
+                case LibUtilities::eGaussLobattoLegendre:
 
-                for(j = 0; j < nquad2; ++j)
-                {
-                    for(i = 0; i < nquad1; ++i)
+                    for(j = 0; j < nquad2; ++j)
                     {
-                        Blas::Dscal(nquad0,
-                                    0.5*(1-z1[i])*w1[i],
-                                    &outarray[0]+i*nquad0 + j*nquad0*nquad1,
-                                    1 );
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,
+                                        0.5*(1-z1[i])*w1[i],
+                                        &outarray[0]+i*nquad0 + j*nquad0*nquad1,
+                                        1 );
+                        }
                     }
-                }
-                break;
+                    break;
 
-            // (1,0) Jacobi Inner product.
-            case LibUtilities::eGaussRadauMAlpha1Beta0:
-                for(j = 0; j < nquad2; ++j)
-                {
-                    for(i = 0; i < nquad1; ++i)
+                // (1,0) Jacobi Inner product.
+                case LibUtilities::eGaussRadauMAlpha1Beta0:
+                    for(j = 0; j < nquad2; ++j)
                     {
-                        Blas::Dscal(nquad0,0.5*w1[i], &outarray[0]+i*nquad0 +
-                                    j*nquad0*nquad1,1);
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,0.5*w1[i], &outarray[0]+i*nquad0+
+                                        j*nquad0*nquad1,1);
+                        }
                     }
-                }
-                break;
+                    break;
+                
+                default:
+                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    break;
             }
 
             switch(m_base[2]->GetPointsType())
             {
-            // Legendre inner product.
-            case LibUtilities::eGaussLobattoLegendre:
-                for(i = 0; i < nquad2; ++i)
-                {
-                    Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
-                                &outarray[0]+i*nquad0*nquad1,1);
-                }
-                break;
-            // (2,0) Jacobi inner product.
-            case LibUtilities::eGaussRadauMAlpha2Beta0:
-                for(i = 0; i < nquad2; ++i)
-                {
-                    Blas::Dscal(nquad0*nquad1, 0.25*w2[i],
-                                &outarray[0]+i*nquad0*nquad1, 1);
-                }
-                break;
+                // Legendre inner product.
+                case LibUtilities::eGaussLobattoLegendre:
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*(1-z2[i])*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1,1);
+                    }
+                    break;
+                // (2,0) Jacobi inner product.
+                case LibUtilities::eGaussRadauMAlpha2Beta0:
+                    for(i = 0; i < nquad2; ++i)
+                    {
+                        Blas::Dscal(nquad0*nquad1, 0.25*w2[i],
+                                    &outarray[0]+i*nquad0*nquad1, 1);
+                    }
+                    break;
+
+                default:
+                    ASSERTL0(false, "Unsupported quadrature points type.");
+                    break;
             }
         }
     }//end namespace

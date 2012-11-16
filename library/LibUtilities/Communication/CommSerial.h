@@ -37,8 +37,8 @@
 
 #include <string>
 
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar

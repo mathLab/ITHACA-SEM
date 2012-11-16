@@ -3,7 +3,8 @@
 #include <sys/time.h>
 #include <iomanip>
 
-#include "boost/filesystem/path.hpp"
+#include <boost/filesystem/path.hpp>
+#include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ContField2D.h>
 
 #ifdef NEKTAR_USING_CHUD
@@ -211,15 +212,16 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Helmholtz solution taking physical forcing
     FlagList flags;
-    flags.set(eUseContCoeff, true);
+    flags.set(eUseGlobal, true);
     StdRegions::ConstFactorMap factors;
     factors[StdRegions::eFactorLambda] = lambda;
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),flags,factors);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
     //----------------------------------------------
 
     //----------------------------------------------
     // Backward Transform Solution to get solved values at 
-    Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(),true);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),
+                  MultiRegions::eGlobal);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -289,7 +291,7 @@ int main(int argc, char *argv[])
     
     // calcualte spectral/hp approximation on the quad points of this new
     // expansion basis
-    Exp->GlobalToLocal(Exp->GetContCoeffs(),ErrorExp->UpdateCoeffs());
+    Exp->GlobalToLocal(Exp->GetCoeffs(),ErrorExp->UpdateCoeffs());
     ErrorExp->BwdTrans_IterPerExp(ErrorExp->GetCoeffs(),ErrorExp->UpdatePhys());
     
     NekDouble L2ErrorBis    = ErrorExp->L2  (ErrorSol);
@@ -310,8 +312,9 @@ int main(int argc, char *argv[])
     // We first do a single run in order to estimate the number of calls 
     // we are going to make
     gettimeofday(&timer1, NULL);
-    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),flags,factors);
-    Exp->BwdTrans (Exp->GetContCoeffs(),Exp->UpdatePhys(),true);
+    Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
+    Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),
+                   MultiRegions::eGlobal);
     gettimeofday(&timer2, NULL);
     time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
     time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
@@ -336,8 +339,9 @@ int main(int argc, char *argv[])
     gettimeofday(&timer1, NULL);
     for(i = 0; i < NumCalls; ++i)
     {
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(),flags,factors);
-        Exp->BwdTrans (Exp->GetContCoeffs(),Exp->UpdatePhys(),true);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(),flags,factors);
+        Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),
+                       MultiRegions::eGlobal);
     }
     gettimeofday(&timer2, NULL);
 
@@ -352,8 +356,8 @@ int main(int argc, char *argv[])
     time2 = timer2.tv_sec*1000000.0+(timer2.tv_usec);
     exeTime = (time2-time1);
 
-    int nLocCoeffs     = Exp->GetNcoeffs();
-    int nGlobCoeffs    = Exp->GetContNcoeffs();
+    int nLocCoeffs     = Exp->GetLocalToGlobalMap()->GetNumLocalCoeffs();
+    int nGlobCoeffs    = Exp->GetLocalToGlobalMap()->GetNumGlobalCoeffs();
     int nLocBndCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalBndCoeffs();
     int nGlobBndCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalBndCoeffs();
     int nLocDirCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalDirBndCoeffs();

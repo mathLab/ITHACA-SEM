@@ -36,14 +36,14 @@
 #ifndef NODALPRISMEVENLYSPACED_H
 #define NODALPRISMEVENLYSPACED_H
 
-#include <iostream>
-
-#include <math.h>
-#include <boost/shared_ptr.hpp>
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <boost/shared_ptr.hpp>
+
+//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for SharedArray, ErrorUtils
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
@@ -54,7 +54,6 @@ namespace Nektar
         class NodalPrismEvenlySpaced: public Points<NekDouble>
         {
         public:
-            typedef Points<NekDouble> PointsBaseType;
 
             virtual ~NodalPrismEvenlySpaced()
             {

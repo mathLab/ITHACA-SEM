@@ -36,8 +36,6 @@
 #ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
 #define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
 
-#include <tinyxml/tinyxml.h>
-#include <boost/unordered_map.hpp>
 
 #include "Module.h"
 
@@ -62,10 +60,14 @@ namespace Nektar
             virtual void Process();
             
         protected:
-            double CrossProdMag (Node &a, Node &b);
-            void   UnitCrossProd(Node &a, Node &b, Node &c);
-            double Blend(double r);
-            void   SuperBlend(Node &r, vector<Node> &Q, Node &P, Node &blend);
+            void   GenerateNormals(vector<ElementSharedPtr> &el);
+            double CrossProdMag   (Node &a, Node &b);
+            void   UnitCrossProd  (Node &a, Node &b, Node &c);
+            double Blend          (double r);
+            void   SuperBlend     (vector<double> &r, 
+                                   vector<Node>   &Q, 
+                                   Node           &P, 
+                                   vector<double> &blend);
         };
     }
 }

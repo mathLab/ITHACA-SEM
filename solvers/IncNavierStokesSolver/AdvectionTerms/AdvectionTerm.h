@@ -37,23 +37,11 @@
 #define NEKTAR_SOLVERS_ADVECTIONTERM_H
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <SpatialDomains/MeshComponents.h>
+#include <LibUtilities/FFT/NektarFFT.h>  // for NektarFFTSharedPtr
+#include <SpatialDomains/MeshGraph.h>   // for MeshGraphSharedPtr
+#include <MultiRegions/ExpList.h>       // for ExpListSharedPtr
 
-#include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
-
-#include <MultiRegions/DisContField1D.h>
-#include <MultiRegions/DisContField2D.h>
-
-#include <MultiRegions/ContField3DHomogeneous1D.h>
-#include <MultiRegions/DisContField3DHomogeneous1D.h>
-#include <MultiRegions/ContField3DHomogeneous2D.h>
-#include <MultiRegions/DisContField3DHomogeneous2D.h>
-
-//#include <SolverUtils/EquationSystem.h>
 
 namespace Nektar
 {
@@ -102,10 +90,11 @@ namespace Nektar
         SpatialDomains::MeshGraphSharedPtr          m_graph;
 		
         bool m_dealiasing;           ///< flag to determine if use dealising or not
-        bool m_UseContCoeff;
-        bool                         m_SingleMode;               ///< Flag to determine if use single mode or not
-        bool                         m_HalfMode;                 ///< Flag to determine if use half mode or not
+        bool m_SingleMode;               ///< Flag to determine if use single mode or not
+        bool m_HalfMode;                 ///< Flag to determine if use half mode or not
         
+        MultiRegions::CoeffState m_CoeffState;
+
         /// Type of projection, i.e. Galerkin or DG.
         enum MultiRegions::ProjectionType m_projectionType;
         
@@ -128,8 +117,7 @@ namespace Nektar
         bool											    m_useFFTW;
 	
         /// Constructor
-        AdvectionTerm(
-                      const LibUtilities::SessionReaderSharedPtr&        pSession,
+        AdvectionTerm(const LibUtilities::SessionReaderSharedPtr&        pSession,
                       const SpatialDomains::MeshGraphSharedPtr&          pGraph);
         
         virtual void v_InitObject();

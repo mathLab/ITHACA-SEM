@@ -1,7 +1,5 @@
-#include <cstdio>
 #include <cstdlib>
 
-#include <LocalRegions/LocalRegions.hpp>
 #include <LocalRegions/SegExp.h>
 #include <SpatialDomains/SegGeom.h>
 

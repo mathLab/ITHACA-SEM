@@ -38,23 +38,27 @@
 
 #include <boost/graph/subgraph.hpp>
 #include <boost/graph/adjacency_list.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
+
+class TiXmlElement;
 
 namespace Nektar
 {
     namespace LibUtilities
     {
+        class SessionReader;
 
         class MeshPartition
         {
+        typedef boost::shared_ptr<SessionReader> SessionReaderSharedPtr;
+
         public:
-            LIB_UTILITIES_EXPORT MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession);
+            LIB_UTILITIES_EXPORT MeshPartition(const SessionReaderSharedPtr& pSession);
             LIB_UTILITIES_EXPORT ~MeshPartition();
 
             LIB_UTILITIES_EXPORT void PartitionMesh();
             LIB_UTILITIES_EXPORT void WriteLocalPartition(
-                    LibUtilities::SessionReaderSharedPtr& pSession);
+                    SessionReaderSharedPtr& pSession);
 
         private:
             struct MeshEntity
@@ -171,11 +175,11 @@ namespace Nektar
 
             CommSharedPtr              m_comm;
 
-            void ReadMesh(const LibUtilities::SessionReaderSharedPtr& pSession);
+            void ReadMesh(const SessionReaderSharedPtr& pSession);
             void CreateGraph(BoostSubGraph& pGraph);
             void PartitionGraph(BoostSubGraph& pGraph,
                                 BoostSubGraph& pLocalPartition);
-            void OutputPartition(LibUtilities::SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
+            void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
         };
 
         typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

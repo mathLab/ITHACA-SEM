@@ -34,8 +34,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSys.h>
-//#include <MultiRegions/AssemblyMapCG.h>
+#include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/Expansion.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -310,6 +315,12 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             return NullDNekMatSharedPtr;
         }
+
+        void GlobalLinSys::v_InitObject()
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
+	}
+
 
     } //end of namespace
 } //end of namespace

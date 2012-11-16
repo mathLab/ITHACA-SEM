@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField3DHomogeneous2D.h>
+#include <MultiRegions/ContField1D.h>
 
 namespace Nektar
 {
@@ -116,39 +117,6 @@ namespace Nektar
         }
 
 
-        void ContField3DHomogeneous2D::SetCoeffPhys(void)
-        {
-            int n,cnt;
-            int contncoeffs_per_line = m_lines[0]->GetContNcoeffs();
-            int nyzlines = m_lines.num_elements();
-
-            ExpList3DHomogeneous2D::SetCoeffPhys();
-
-            // Set total coefficients and points
-            m_contNcoeffs = contncoeffs_per_line*nyzlines;
-            
-            m_contCoeffs = Array<OneD, NekDouble> (m_contNcoeffs);
-
-            Array<OneD, NekDouble> tmparray;
-
-            for(cnt  = n = 0; n < nyzlines; ++n)
-            {
-                m_lines[n]->SetContCoeffsArray(tmparray= m_contCoeffs + contncoeffs_per_line*n);
-            }
-        }
-
-        const Array<OneD, const NekDouble> &ContField3DHomogeneous2D::v_GetContCoeffs(void) const
-        {
-            return m_contCoeffs;
-        }
-       
-
-        Array<OneD, NekDouble> &ContField3DHomogeneous2D::v_UpdateContCoeffs(void)
-        {
-            return m_contCoeffs;
-        }
-       
- 
         /**
          * 
          */
@@ -201,36 +169,30 @@ namespace Nektar
 			else 
 			{
 				// Fourier transform forcing function
-				HomogeneousFwdTrans(inarray,fce,flags.isSet(eUseContCoeff));
+                            HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
 			}
 
             for(n = 0; n < nhom_modes_z; ++n)
             {
-				for(m = 0; m < nhom_modes_y; ++m)
-				{
-					beta_z = 2*M_PI*(n/2)/m_lhom_z;
-					beta_y = 2*M_PI*(m/2)/m_lhom_y;
+                for(m = 0; m < nhom_modes_y; ++m)
+                {
+                    beta_z = 2*M_PI*(n/2)/m_lhom_z;
+                    beta_y = 2*M_PI*(m/2)/m_lhom_y;
                     beta = beta_y*beta_y + beta_z*beta_z;
                     new_factors = factors;
-					new_factors[StdRegions::eFactorLambda] += beta;
-					
-					m_lines[n]->HelmSolve(fce + cnt,
-										  e_out = outarray + cnt1,
-										  flags, new_factors, varcoeff, dirForcing);
-                
-					cnt  += m_lines[n]->GetTotPoints();
-					if(flags.isSet(eUseContCoeff))
-					{
-					    cnt1 += m_lines[n]->GetContNcoeffs();
-					}
-					else
-					{
-					    cnt1 += m_lines[n]->GetNcoeffs();
-					}
-				}
-			}
+                    new_factors[StdRegions::eFactorLambda] += beta;
+                    
+                    m_lines[n]->HelmSolve(fce + cnt,
+                                          e_out = outarray + cnt1,
+                                          flags, new_factors, varcoeff, dirForcing);
+                    
+                    cnt  += m_lines[n]->GetTotPoints();
+                    
+                    cnt1 += m_lines[n]->GetNcoeffs();
+                    
+                }
+            }
         }
-
         
     } // end of namespace
 } //end of namespace

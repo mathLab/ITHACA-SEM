@@ -38,23 +38,16 @@
 
 #include <string>
 #include <map>
-#include <iostream>
-#include <sstream>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/BasicUtils/Equation.h>
 #include <SpatialDomains/MeshGraph.h>
-//#include <LibUtilities/BasicUtils/Equation.h>
-//#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
-class TiXmlElement;
-class TiXmlDocument;
-
-class SpatialDomainsDeclspec;
-class Equation;
 
 namespace Nektar
 {
+    struct OneD;
+
     namespace SpatialDomains
     {
         enum BoundaryConditionType
@@ -63,9 +56,9 @@ namespace Nektar
             eNeumann,
             eRobin,
             ePeriodic,
-			eJunction,
-			eBifurcation,
-			eMerging
+            eJunction,
+            eBifurcation,
+            eMerging
         };
 
         enum BndUserDefinedType
@@ -81,7 +74,10 @@ namespace Nektar
             eIsentropicVortex,
             eCalcBC,
             eQinflow,
-			eTerminal,
+            eTerminal,
+            eRterminal,
+            eCRterminal,
+            eRCRterminal,
             eNoUserDefined
         };
 
@@ -98,7 +94,10 @@ namespace Nektar
                 known_type["MG"] = eMG;
                 known_type["Wall"] = eWall;
                 known_type["Q-inflow"] = eQinflow;
-				known_type["Terminal"] = eTerminal;
+                known_type["Terminal"] = eTerminal;
+                known_type["R-terminal"] = eRterminal;
+                known_type["CR-terminal"] = eCRterminal;
+                known_type["RCR-terminal"] = eRCRterminal;
                 known_type["WALL"] = eWALL;
                 known_type["CalcBC"] = eCalcBC;
                 known_type["RinglebFlow"] = eRinglebFlow;

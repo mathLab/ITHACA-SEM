@@ -31,12 +31,13 @@
 // Description: Expasion for triangular elements.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/LocalRegions.h>
-#include <LocalRegions/LocalRegions.hpp>
-#include <stdio.h>
+
 #include <LocalRegions/TriExp.h>
-#include <StdRegions/StdNodalTriExp.h>
+#include <LocalRegions/SegExp.h>
 #include <LocalRegions/Expansion3D.h>
+#include <StdRegions/StdNodalTriExp.h>
+#include <LibUtilities/Foundations/Interp.h>
+
 
 namespace Nektar
 {
@@ -522,26 +523,31 @@ namespace Nektar
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
 
         }
-
+        
         void TriExp::v_NormVectorIProductWRTBase(
-                const Array<OneD, const NekDouble> &Fx,
-                const Array<OneD, const NekDouble> &Fy,
-                const Array<OneD, const NekDouble> &Fz,
-                Array< OneD, NekDouble> &outarray)
+            const Array<OneD, const NekDouble> &Fx,
+            const Array<OneD, const NekDouble> &Fy,
+            const Array<OneD, const NekDouble> &Fz,
+                  Array<OneD,       NekDouble> &outarray)
         {
- 
             int nq = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             Array<OneD, NekDouble > Fn(nq);
 
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = GetLeftAdjacentElementExp()->GetFaceNormal(GetLeftAdjacentElementFace());
-
-            //Vmath::Vmul (nq,&Fx[0],1,normals[0][0], 1,&Fn[0],1);
-            //Vmath::Vvtvp(nq,&Fy[0],1,&normals[1][0],1,&Fn[0],1,&Fn[0],1);
-            //Vmath::Vvtvp(nq,&Fz[0],1,&normals[2][0],1,&Fn[0],1,&Fn[0],1);
-
-            for (int i=0; i<nq; ++i)
+            const Array<OneD, const Array<OneD, NekDouble> > &normals = 
+                GetLeftAdjacentElementExp()->GetFaceNormal(
+                    GetLeftAdjacentElementFace());
+            
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Fn[i]=Fx[i]*normals[0][0]+Fy[i]*normals[1][0]+Fz[i]*normals[2][0];
+                Vmath::Vmul   (nq,&normals[0][0],1,&Fx[0],1,&Fn[0],1);
+                Vmath::Vvtvvtp(nq,&normals[1][0],1,&Fy[0],1,
+                                  &normals[2][0],1,&Fz[0],1,&Fn[0],1);
+            }
+            else
+            {
+                Vmath::Smul   (nq,normals[0][0],&Fx[0],1,&Fn[0],1);
+                Vmath::Svtsvtp(nq,normals[1][0],&Fy[0],1,
+                                  normals[2][0],&Fz[0],1,&Fn[0],1);
             }
 
             IProductWRTBase(Fn,outarray);
@@ -703,6 +709,15 @@ namespace Nektar
                                &outarray[0],1);
             }
 
+        }
+        
+        
+        void TriExp::v_GetEdgeQFactors(
+                const int edge, 
+                Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false, 
+                     "Routine not implemented for triangular elements");
         }
 
 
@@ -928,22 +943,20 @@ namespace Nektar
                 }
 
                 outfile<<"ST("<<endl;
-                // write the coordinates of the vertices of the triangle
-                Array<OneD,NekDouble> coordVert1(2);
-                Array<OneD,NekDouble> coordVert2(2);
-                Array<OneD,NekDouble> coordVert3(2);
-                coordVert1[0]=-1.0;
-                coordVert1[1]=-1.0;
-                coordVert2[0]=1.0;
-                coordVert2[1]=-1.0;
-                coordVert3[0]=-1.0;
-                coordVert3[1]=1.0;
-                outfile<<m_geom->GetCoord(0,coordVert1)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert1)<<", 0.0,"<<endl;
-                outfile<<m_geom->GetCoord(0,coordVert2)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert2)<<", 0.0,"<<endl;
-                outfile<<m_geom->GetCoord(0,coordVert3)<<", ";
-                outfile<<m_geom->GetCoord(1,coordVert3)<<", 0.0"<<endl;
+                // write the coordinates of the vertices of the quadrilateral
+                unsigned int vCoordDim = m_geom->GetCoordim();
+                unsigned int nVertices = GetNverts();
+                Array<OneD, NekDouble> coordVert(vCoordDim);
+                for (unsigned int i = 0; i < nVertices; ++i)
+                {
+                    m_geom->GetVertex(i)->GetCoords(coordVert);
+                    for (unsigned int j = 0; j < vCoordDim; ++j)
+                    {
+                        outfile << coordVert[j];
+                        outfile << (j < vCoordDim - 1 ? ", " : "");
+                    }
+                    outfile << (i < nVertices - 1 ? "," : "") << endl;
+                }
                 outfile<<")"<<endl;
 
                 // calculate the coefficients (monomial format)
@@ -1280,15 +1293,17 @@ namespace Nektar
                         Array<OneD, NekDouble> &varcoeffs = NullNekDouble1DArray;
                         switch(mkey.GetMatrixType())
                         {
-                        case StdRegions::eWeakDeriv0:
-                            dir = 0;
-                            break;
-                        case StdRegions::eWeakDeriv1:
-                            dir = 1;
-                            break;
-                        case StdRegions::eWeakDeriv2:
-                            dir = 2;
-                            break;
+                            case StdRegions::eWeakDeriv0:
+                                dir = 0;
+                                break;
+                            case StdRegions::eWeakDeriv1:
+                                dir = 1;
+                                break;
+                            case StdRegions::eWeakDeriv2:
+                                dir = 2;
+                                break;
+                            default:
+                                break;
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
@@ -1432,15 +1447,17 @@ namespace Nektar
 
                         switch(mkey.GetMatrixType())
                         {
-                        case StdRegions::eIProductWRTDerivBase0:
-                            dir = 0;
-                            break;
-                        case StdRegions::eIProductWRTDerivBase1:
-                            dir = 1;
-                            break;
-                        case StdRegions::eIProductWRTDerivBase2:
-                            dir = 2;
-                            break;
+                            case StdRegions::eIProductWRTDerivBase0:
+                                dir = 0;
+                                break;
+                            case StdRegions::eIProductWRTDerivBase1:
+                                dir = 1;
+                                break;
+                            case StdRegions::eIProductWRTDerivBase2:
+                                dir = 2;
+                                break;
+                            default:
+                                break;
                         }
 
                         MatrixKey iProdDeriv0Key(StdRegions::eIProductWRTDerivBase0,
@@ -2128,18 +2145,23 @@ namespace Nektar
 
                 switch(m_base[1]->GetPointsType())
                 {
-                case LibUtilities::eGaussLobattoLegendre:  // Legendre inner product
-                    for(i = 0; i < nquad1; ++i)
-                    {
-                        Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
-                    }
-                    break;
-                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
-                    for(i = 0; i < nquad1; ++i)
-                    {
-                        Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);
-                    }
-                    break;
+                    // Legendre inner product
+                    case LibUtilities::eGaussLobattoLegendre:
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
+                        }
+                        break;
+                    // (1,0) Jacobi Inner product
+                    case LibUtilities::eGaussRadauMAlpha1Beta0: 
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false, "Unsupported quadrature points type.");
+                        break;
                 }
             }
         }

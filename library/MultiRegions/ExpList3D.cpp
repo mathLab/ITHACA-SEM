@@ -33,8 +33,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/ExpList3D.h>
 #include <iomanip>
+#include <MultiRegions/ExpList3D.h>
+
+#include <LocalRegions/HexExp.h>
+#include <LocalRegions/PrismExp.h>
+#include <LocalRegions/PyrExp.h>
+#include <LocalRegions/TetExp.h>
 
 namespace Nektar
 {
@@ -81,7 +86,7 @@ namespace Nektar
                 SpatialDomains::PrismGeomSharedPtr PrismGeom;
                 SpatialDomains::PyrGeomSharedPtr PyrGeom;
 
-                if(TetGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>(expIt->second->m_geomShPtr)) // Tetrahedron
+                if((TetGeom = boost::dynamic_pointer_cast<SpatialDomains::TetGeom>(expIt->second->m_geomShPtr)))
                 {
                     if(TetNb < LibUtilities::SIZE_PointsType)
                     {
@@ -95,10 +100,11 @@ namespace Nektar
                     }
 
                     m_ncoeffs += StdRegions::StdTetData::getNumberOfCoefficients(TBa.GetNumModes(), TBb.GetNumModes(), TBc.GetNumModes());
-
-                       m_npoints += TBa.GetNumPoints()*TBb.GetNumPoints()*TBc.GetNumPoints();
+                    
+                    m_npoints += TBa.GetNumPoints()*TBb.GetNumPoints()*TBc.GetNumPoints();
                 }
-/*                else if(PrismGeom = boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(expansions[i]->m_geomShPtr)) // Prism
+/*
+                else if((PrismGeom = boost::dynamic_pointer_cast<SpatialDomains::PrismGeom>(expansions[i]->m_geomShPtr)))
                 {
                       prism = MemoryManager<LocalRegions::PrismExp>::AllocateSharedPtr(Ba,Bb,Bc,PrismGeom);
                       (*m_exp).push_back(prism);
@@ -107,7 +113,7 @@ namespace Nektar
                       m_npoints +=  Ba.GetNumPoints()*Bb.GetNumPoints()*Bc.GetNumPoints();
 
                 }
-                else if(PyrGeom = boost::dynamic_pointer_cast<SpatialDomains::PyrGeom>(expansions[i]->m_geomShPtr)) // Pyramid
+                else if((PyrGeom = boost::dynamic_pointer_cast<SpatialDomains::PyrGeom>(expansions[i]->m_geomShPtr)))
                 {
                      pyramid = MemoryManager<LocalRegions::PyrExp>::AllocateSharedPtr(Ba,Bb,Bc,PyrGeom);
                      (*m_exp).push_back(pyramid);
@@ -116,7 +122,8 @@ namespace Nektar
                       m_npoints +=  Ba.GetNumPoints()*Bb.GetNumPoints()*Bc.GetNumPoints();
 
                 }
-*/                else if(HexGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(expIt->second->m_geomShPtr)) // Hexahedron
+*/
+                else if((HexGeom = boost::dynamic_pointer_cast<SpatialDomains::HexGeom>(expIt->second->m_geomShPtr)))
                 {
                     hex = MemoryManager<LocalRegions::HexExp>::AllocateSharedPtr(HBa,HBb,HBc, HexGeom);
                     (*m_exp).push_back(hex);
@@ -173,8 +180,8 @@ namespace Nektar
                 SpatialDomains::PrismGeomSharedPtr PrismGeom;
                 SpatialDomains::PyrGeomSharedPtr PyrGeom;
 
-                if(TetGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::TetGeom>(expIt->second->m_geomShPtr))
+                if((TetGeom = boost::dynamic_pointer_cast<
+                        SpatialDomains::TetGeom>(expIt->second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TetBa
                                         = expIt->second->m_basisKeyVector[0];
@@ -196,8 +203,8 @@ namespace Nektar
                         (*m_exp).push_back(tet);
                     }
                 }
-                else if(PrismGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::PrismGeom>(expIt->second->m_geomShPtr))
+                else if((PrismGeom = boost::dynamic_pointer_cast<SpatialDomains
+                             ::PrismGeom>(expIt->second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey PrismBa
                                         = expIt->second->m_basisKeyVector[0];
@@ -211,8 +218,8 @@ namespace Nektar
                                                             PrismBc,PrismGeom);
                     (*m_exp).push_back(prism);
                 }
-                else if(PyrGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::PyrGeom>(expIt->second->m_geomShPtr))
+                else if((PyrGeom = boost::dynamic_pointer_cast<
+                         SpatialDomains::PyrGeom>(expIt->second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey PyrBa
                                         = expIt->second->m_basisKeyVector[0];
@@ -226,8 +233,8 @@ namespace Nektar
                                                             PyrGeom);
                     (*m_exp).push_back(pyramid);
                 }
-                else if(HexGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::HexGeom>(expIt->second->m_geomShPtr))
+                else if((HexGeom = boost::dynamic_pointer_cast<
+                         SpatialDomains::HexGeom>(expIt->second->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey HexBa
                                         = expIt->second->m_basisKeyVector[0];
@@ -292,8 +299,8 @@ namespace Nektar
                 ASSERTL1(expmap != expansions.end(), "Unable to find expansion.");
                 const SpatialDomains::ExpansionShPtr exp = expmap->second;
 
-                if(TetGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::TetGeom>(exp->m_geomShPtr))
+                if((TetGeom = boost::dynamic_pointer_cast<
+                        SpatialDomains::TetGeom>(exp->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey TetBa
                                         = exp->m_basisKeyVector[0];
@@ -315,8 +322,8 @@ namespace Nektar
                         (*m_exp).push_back(tet);
                     }
                 }
-                else if(PrismGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::PrismGeom>(exp->m_geomShPtr))
+                else if((PrismGeom = boost::dynamic_pointer_cast<
+                         SpatialDomains::PrismGeom>(exp->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey PrismBa
                                         = exp->m_basisKeyVector[0];
@@ -330,8 +337,8 @@ namespace Nektar
                                                             PrismBc,PrismGeom);
                     (*m_exp).push_back(prism);
                 }
-                else if(PyrGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::PyrGeom>(exp->m_geomShPtr))
+                else if((PyrGeom = boost::dynamic_pointer_cast<
+                         SpatialDomains::PyrGeom>(exp->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey PyrBa
                                         = exp->m_basisKeyVector[0];
@@ -345,8 +352,8 @@ namespace Nektar
                                                             PyrGeom);
                     (*m_exp).push_back(pyramid);
                 }
-                else if(HexGeom = boost::dynamic_pointer_cast<
-                        SpatialDomains::HexGeom>(exp->m_geomShPtr))
+                else if((HexGeom = boost::dynamic_pointer_cast<
+                         SpatialDomains::HexGeom>(exp->m_geomShPtr)))
                 {
                     LibUtilities::BasisKey HexBa
                                         = exp->m_basisKeyVector[0];
@@ -420,10 +427,13 @@ namespace Nektar
             {
                 switch ((*m_exp)[i]->DetExpansionType())
                 {
-                case StdRegions::eTetrahedron:  NumShape[0]++; break;
-                case StdRegions::ePyramid:      NumShape[1]++; break;
-                case StdRegions::ePrism:        NumShape[2]++; break;
-                case StdRegions::eHexahedron:   NumShape[3]++; break;
+                    case StdRegions::eTetrahedron:  NumShape[0]++; break;
+                    case StdRegions::ePyramid:      NumShape[1]++; break;
+                    case StdRegions::ePrism:        NumShape[2]++; break;
+                    case StdRegions::eHexahedron:   NumShape[3]++; break;
+                    default:
+                        ASSERTL0(false, "Unknown expansion type.");
+                        break;
                 }
             }
 

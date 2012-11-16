@@ -38,10 +38,9 @@
 
 #include <LibUtilities/FFT/NektarFFT.h>
 
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/NekManager.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/VmathArray.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
@@ -49,6 +48,9 @@
 
 namespace Nektar
 {
+    template <typename Dim, typename DataType>
+    class Array;
+
 	namespace LibUtilities
 	{
 		class NekFFTW;

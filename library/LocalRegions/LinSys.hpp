@@ -67,13 +67,3 @@ namespace Nektar
 
 #endif //LINSYSKEY_HPP
 
-/**
-* $Log: LinSys.hpp,v $
-* Revision 1.2  2007/07/20 00:45:50  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.1  2007/03/04 20:42:14  sherwin
-* Keys for matrix managers
-*
-*
-***/

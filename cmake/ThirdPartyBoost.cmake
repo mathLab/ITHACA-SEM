@@ -7,7 +7,8 @@ IF (THIRDPARTY_BUILD_BOOST)
     IF (NOT WIN32)
         # Only build the libraries we need
         SET(BOOST_LIB_LIST --with-system --with-iostreams --with-filesystem 
-                           --with-program_options --with-date_time --with-thread)
+                           --with-program_options --with-date_time --with-thread
+                           --with-regex)
                            
         # We need -fPIC for 64-bit builds
         IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
@@ -37,7 +38,12 @@ IF (THIRDPARTY_BUILD_BOOST)
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1
         )
-        
+
+        # If building ThirdParty zlib, force zlib build before boost
+        IF (THIRDPARTY_BUILD_ZLIB)
+            ADD_DEPENDENCIES(boost zlib)
+        ENDIF(THIRDPARTY_BUILD_ZLIB)
+
         # Set up CMake variables
         SET(Boost_DATE_TIME_LIBRARY boost_date_time)
         SET(Boost_DATE_TIME_LIBRARY_DEBUG boost_date_time)
@@ -51,6 +57,9 @@ IF (THIRDPARTY_BUILD_BOOST)
         SET(Boost_PROGRAM_OPTIONS_LIBRARY boost_program_options)
         SET(Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG boost_program_options)
         SET(Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE boost_program_options)
+        SET(Boost_REGEX_LIBRARY boost_regex)
+        SET(Boost_REGEX_LIBRARY_DEBUG boost_regex)
+        SET(Boost_REGEX_LIBRARY_RELEASE boost_regex)
         SET(Boost_SYSTEM_LIBRARY boost_system)
         SET(Boost_SYSTEM_LIBRARY_DEBUG boost_system)
         SET(Boost_SYSTEM_LIBRARY_RELEASE boost_system)
@@ -75,20 +84,21 @@ IF (THIRDPARTY_BUILD_BOOST)
         )
     ENDIF ()
 ELSE (THIRDPARTY_BUILD_BOOST)
+    SET(Boost_DEBUG 1)
     SET(Boost_USE_MULTITHREAD ON)
-    SET(Boost_ADDITIONAL_VERSIONS "1.48" "1.48.0" "1.47.0" "1.47" "1.46" "1.46. 1" "1.40" "1.40.0" "1.35.0" "1.35")
+    SET(Boost_ADDITIONAL_VERSIONS "1.49" "1.49.0" "1.48" "1.48.0" "1.47.0" "1.47" "1.46" "1.46. 1" "1.40" "1.40.0" "1.35.0" "1.35")
     SET(Boost_NO_BOOST_CMAKE ON)
 
     IF( NOT BOOST_ROOT )
         #If the user has not set BOOST_ROOT, look in a couple common places first.
         SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
-        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options)
+        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
         SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
-        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options)
+        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
         SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/dist)
-        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options)
+        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
     ELSE()
-        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options)
+        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
     ENDIF()
 ENDIF (THIRDPARTY_BUILD_BOOST)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})

@@ -37,8 +37,6 @@
 #ifndef NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_VECTORDISTMATH_HPP
 #define NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_VECTORDISTMATH_HPP
 
-#include <string>
-#include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/Communication/Comm.h>
 
 namespace VDmath

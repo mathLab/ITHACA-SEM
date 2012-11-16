@@ -36,14 +36,6 @@
 #ifndef NEKTAR_SPATIALDOMAINS_SPATIALDOMAINS_H
 #define NEKTAR_SPATIALDOMAINS_SPATIALDOMAINS_H
 
-#include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Foundations/Graph.h>
-
-#include <LibUtilities/Foundations/Interp.h>
-#include <LibUtilities/Foundations/InterpCoeff.h>
 
 namespace Nektar
 {

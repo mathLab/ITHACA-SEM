@@ -32,8 +32,10 @@
 // Description:  PyrExp routines
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/LocalRegions.h>
+
 #include <LocalRegions/PyrExp.h>
+#include <LibUtilities/Foundations/Interp.h>
+
 
 namespace Nektar 
 {

@@ -33,15 +33,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <cstdio>
-#include <cstdlib>
-
-#include <boost/math/constants/constants.hpp>
-
+#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 
 namespace Nektar
 {
@@ -178,7 +172,8 @@ namespace Nektar
                     // Calculate (v.n)
                     for (i = 0; i < m_expdim; ++i)
                     {
-                        Vmath::Vvtvp(npts,&Fwd[1+i][id2],1,&m_traceNormals[i][id2],1,
+                        Vmath::Vvtvp(npts,
+                                     &Fwd[1+i][id2],1,&m_traceNormals[i][id2],1,
                                      &tmp[0],1,&tmp[0],1);
                     }
                     

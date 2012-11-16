@@ -36,16 +36,13 @@
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALLINSYSITERATIVESTATICCOND_H
 
 #include <MultiRegions/GlobalMatrix.h>
-#include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/GlobalLinSysIterative.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
         // Forward declarations
-        class AssemblyMapCG;
         class ExpList;
         class GlobalLinSysIterativeStaticCond;
 
@@ -63,8 +60,9 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-                return MemoryManager<GlobalLinSysIterativeStaticCond>
-                    ::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
+            GlobalLinSysSharedPtr p = MemoryManager<GlobalLinSysIterativeStaticCond>::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
+            p->InitObject();
+            return p;
             }
 
             /// Name of class
@@ -101,6 +99,11 @@ namespace Nektar
             DNekScalBlkMatSharedPtr m_C;
             DNekScalBlkMatSharedPtr m_invD;
 
+	    // Block matrices for low energy
+            DNekScalBlkMatSharedPtr m_RBlk;
+            DNekScalBlkMatSharedPtr m_RTBlk;
+            DNekScalBlkMatSharedPtr m_S1Blk;
+
             /// Globally assembled Schur complement matrix at this level
             GlobalMatrixSharedPtr m_globalSchurCompl;
 
@@ -109,6 +112,8 @@ namespace Nektar
 
             // Workspace array for matrix multiplication
             Array<OneD, NekDouble> m_wsp;
+
+	    PreconditionerSharedPtr  m_precon;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
@@ -119,6 +124,8 @@ namespace Nektar
                         const Array<OneD, const NekDouble>  &dirForcing
                                                         = NullNekDouble1DArray);
 
+            virtual void v_InitObject();
+
             /// Initialise this object
             void Initialise(
                     const boost::shared_ptr<AssemblyMap>& locToGloMap);
@@ -126,6 +133,9 @@ namespace Nektar
             /// Set up the storage for the Schur complement or the top level
             /// of the multi-level Schur complement.
             void SetupTopLevel(
+                    const boost::shared_ptr<AssemblyMap>& locToGloMap);
+
+            void SetupLowEnergyTopLevel(
                     const boost::shared_ptr<AssemblyMap>& locToGloMap);
 
             /// Assemble the Schur complement matrix.
@@ -136,17 +146,10 @@ namespace Nektar
             void ConstructNextLevelCondensedSystem(
                     const boost::shared_ptr<AssemblyMap>& locToGloMap);
 
-            /// Compute a diagonal preconditioner of the Shur-complement matrix.
-            void ComputeDiagonalPreconditioner(
-                    const boost::shared_ptr<AssemblyMap> &pLocToGloMap);
-
             /// Perform a Shur-complement matrix multiply operation.
             virtual void v_DoMatrixMultiply(
                     const Array<OneD, NekDouble>& pInput,
                           Array<OneD, NekDouble>& pOutput);
-
-            /// Compute the preconditioner for the Shur-complement matrix.
-            virtual void v_ComputePreconditioner();
 
             virtual void v_UniqueMap();
 

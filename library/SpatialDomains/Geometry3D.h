@@ -37,17 +37,34 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY3D_H
 
 #include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/SpatialDomains.hpp>
+#include <StdRegions/StdExpansion3D.h>  // for StdExpansion3DSharedPtr, etc
 
 #include <SpatialDomains/Geometry.h>
-#include <SpatialDomains/Geometry2D.h>
-#include <SpatialDomains/GeomFactors3D.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        class Geometry2D;
+        class Geometry3D;
+        class CompToElmt;
+        typedef boost::shared_ptr<Geometry3D> Geometry3DSharedPtr;
+        typedef boost::shared_ptr<Geometry2D> Geometry2DSharedPtr;
+        typedef std::vector<Geometry3DSharedPtr> Geometry3DVector;
+        typedef std::vector<Geometry2DSharedPtr> Geometry2DVector;
+        typedef std::vector<Geometry3DSharedPtr>::iterator Geometry3DVectorIter;
+
+        class VertexComponent;
+        typedef boost::shared_ptr<VertexComponent> VertexComponentSharedPtr;
+        typedef std::vector<VertexComponentSharedPtr> VertexComponentVector;
+
+        class SegGeom;
+        typedef boost::shared_ptr<SegGeom>    SegGeomSharedPtr;
+        typedef std::vector<SegGeomSharedPtr> SegGeomVector;
+
+
+
         /// 3D geometry information
         class Geometry3D : public Geometry
         {
@@ -121,9 +138,6 @@ namespace Nektar
             virtual void v_SetOwnData();
         };
 
-        typedef boost::shared_ptr<Geometry3D> Geometry3DSharedPtr;
-        typedef std::vector<Geometry3DSharedPtr> Geometry3DVector;
-        typedef std::vector<Geometry3DSharedPtr>::iterator Geometry3DVectorIter;
     }; //end of namespace
 }; //end of namespace
 

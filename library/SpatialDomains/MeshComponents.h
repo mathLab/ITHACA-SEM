@@ -37,11 +37,10 @@
 #define NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
 
 #include <SpatialDomains/Geometry.h>
-#include <SpatialDomains/SpatialDomains.hpp>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <set>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar
 {

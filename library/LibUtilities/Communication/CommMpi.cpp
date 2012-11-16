@@ -33,15 +33,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-using namespace std;
-
 #include <LibUtilities/Communication/CommMpi.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
     namespace LibUtilities
     {
-        string CommMpi::className
+        std::string CommMpi::className
             = GetCommFactory().RegisterCreatorFunction(
                 "ParallelMPI",
                 CommMpi::create,

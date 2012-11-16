@@ -1,25 +1,25 @@
 #include <cstdio>
 #include <cstdlib>
-#include <math.h>
+#include <cmath>
 
-#include "StdRegions/StdExpansion2D.h"
-#include "StdRegions/StdHexExp.h"
-#include "StdRegions/StdPrismExp.h"
-#include "StdRegions/StdTetExp.h"
+#include <StdRegions/StdHexExp.h>
+#include <StdRegions/StdPrismExp.h>
+#include <StdRegions/StdTetExp.h>
 
-#include "StdRegions/StdRegions.hpp"
-#include "LibUtilities/Foundations/Foundations.hpp"
+#include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
+using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::StdRegions;
 
 /// Defines a solution which excites all modes in a Tet expansion.
 NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
-                    int order1, int order2, int order3);
+                  int order1, int order2, int order3);
 
 /// Derivative of solution on Tet expansion.
 NekDouble Tet_Dsol(NekDouble x, NekDouble y, NekDouble z,
-                    int order1, int order2, int order3);
+                   int order1, int order2, int order3);
 
 /// Defines a solution which excites all modes in a prismatic expansion.
 NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
@@ -31,22 +31,22 @@ NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
 
 /// Defines a solution which excites all modes in a Hex expansion.
 NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
-                    int order1, int order2, int order3,
-                    LibUtilities::BasisType btype1,
-                    LibUtilities::BasisType btype2,
-                    LibUtilities::BasisType btype3);
+                  int order1, int order2, int order3,
+                  LibUtilities::BasisType btype1,
+                  LibUtilities::BasisType btype2,
+                  LibUtilities::BasisType btype3);
 
 /// Derivative of solution on a Hex expansion.
 NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z,
-                    int order1, int order2, int order3,
-                    LibUtilities::BasisType btype1,
-                    LibUtilities::BasisType btype2,
-                    LibUtilities::BasisType btype3);
+                   int order1, int order2, int order3,
+                   LibUtilities::BasisType btype1,
+                   LibUtilities::BasisType btype2,
+                   LibUtilities::BasisType btype3);
 
 /// modification to deal with exact solution. Return 1 if integer < 0
 static double  pow_loc(const double val, const int i)
 {
-  return (i < 0)? 1.0: pow(val,i);
+    return (i < 0)? 1.0: pow(val,i);
 }
 
 
@@ -121,63 +121,66 @@ int main(int argc, char *argv[]){
     // Check to see that correct Expansions are used
     switch(regionshape)
     {
-    case StdRegions::eTetrahedron:
-        if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
-                || (btype1 == eModified_B) || (btype1 == eModified_C))
-        {
-            NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B, "
-                                        "Ortho_C, Modified_B or Modified_C");
-        }
-        if((btype2 == eOrtho_A) || (btype2 == eOrtho_C)
-                || (btype2 == eModified_A) || (btype2 == eModified_C))
-        {
-            NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_A, "
-                                        "Ortho_C, Modified_A or Modified_C");
-        }
-        if((btype3 == eOrtho_A) || (btype3 == eOrtho_B)
-                || (btype3 == eModified_A) || (btype3 == eModified_B))
-        {
-            NEKERROR(ErrorUtil::efatal, "Basis 3 cannot be of type Ortho_A, "
-                                        "Ortho_B, Modified_A or Modified_B");
-        }
-        break;
-    case StdRegions::ePrism:
-        if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
-                || (btype1 == eModified_B) || (btype1 == eModified_C))
-        {
-            NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B, "
-                                        "Ortho_C, Modified_B or Modified_C");
-        }
-        if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
-                || (btype2 == eModified_B) || (btype2 == eModified_C))
-        {
-            NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_B, "
-                                        "Ortho_C, Modified_B or Modified_C");
-        }
-        if((btype3 == eOrtho_A) || (btype3 == eOrtho_C)
-                || (btype3 == eModified_A) || (btype3 == eModified_C))
-        {
-            NEKERROR(ErrorUtil::efatal, "Basis 3 cannot be of type Ortho_A, "
-                                        "Ortho_C, Modified_A or Modified_C");
-        }
-        break;
-    case StdRegions::eHexahedron:
-        if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
-                || (btype1 == eModified_B) || (btype1 == eModified_C))
-        {
-            NEKERROR(ErrorUtil::efatal, "Basis 1 is for 2 or 3D expansions");
-        }
-        if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
-                || (btype2 == eModified_B) || (btype2 == eModified_C))
-        {
-            NEKERROR(ErrorUtil::efatal, "Basis 2 is for 2 or 3D expansions");
-        }
-        if((btype3 == eOrtho_B) || (btype3 == eOrtho_C)
-                || (btype3 == eModified_B) || (btype3 == eModified_C))
-        {
-            NEKERROR(ErrorUtil::efatal, "Basis 3 is for 2 or 3D expansions");
-        }
-        break;
+        case StdRegions::eTetrahedron:
+            if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
+               || (btype1 == eModified_B) || (btype1 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B, "
+                         "Ortho_C, Modified_B or Modified_C");
+            }
+            if((btype2 == eOrtho_A) || (btype2 == eOrtho_C)
+               || (btype2 == eModified_A) || (btype2 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_A, "
+                         "Ortho_C, Modified_A or Modified_C");
+            }
+            if((btype3 == eOrtho_A) || (btype3 == eOrtho_B)
+               || (btype3 == eModified_A) || (btype3 == eModified_B))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 3 cannot be of type Ortho_A, "
+                         "Ortho_B, Modified_A or Modified_B");
+            }
+            break;
+        case StdRegions::ePrism:
+            if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
+               || (btype1 == eModified_B) || (btype1 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B, "
+                         "Ortho_C, Modified_B or Modified_C");
+            }
+            if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
+               || (btype2 == eModified_B) || (btype2 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_B, "
+                         "Ortho_C, Modified_B or Modified_C");
+            }
+            if((btype3 == eOrtho_A) || (btype3 == eOrtho_C)
+               || (btype3 == eModified_A) || (btype3 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 3 cannot be of type Ortho_A, "
+                         "Ortho_C, Modified_A or Modified_C");
+            }
+            break;
+        case StdRegions::eHexahedron:
+            if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
+               || (btype1 == eModified_B) || (btype1 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 1 is for 2 or 3D expansions");
+            }
+            if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
+               || (btype2 == eModified_B) || (btype2 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 2 is for 2 or 3D expansions");
+            }
+            if((btype3 == eOrtho_B) || (btype3 == eOrtho_C)
+               || (btype3 == eModified_B) || (btype3 == eModified_C))
+            {
+                NEKERROR(ErrorUtil::efatal, "Basis 3 is for 2 or 3D expansions");
+            }
+            break;
+        default:
+            ASSERTL0(false, "Not a 3D expansion.");
+            break;
     }
 
     order1 =   atoi(argv[5]);
@@ -244,7 +247,7 @@ int main(int argc, char *argv[]){
 
     switch(regionshape)
     {
-    case StdRegions::eTetrahedron:
+        case StdRegions::eTetrahedron:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -265,7 +268,7 @@ int main(int argc, char *argv[]){
             //----------------------------------------------
         }
         break;
-    case StdRegions::ePrism:
+        case StdRegions::ePrism:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -286,7 +289,7 @@ int main(int argc, char *argv[]){
             //----------------------------------------------
         }
         break;
-    case StdRegions::eHexahedron:
+        case StdRegions::eHexahedron:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -308,6 +311,9 @@ int main(int argc, char *argv[]){
             //---------------------------------------------
         }
         break;
+        default:
+            ASSERTL0(false, "Not a 3D expansion.");
+            break;
     }
 
     //---------------------------------------------
@@ -331,7 +337,7 @@ int main(int argc, char *argv[]){
     // Define exact solution of differential
     switch(regionshape)
     {
-    case StdRegions::eTetrahedron:
+        case StdRegions::eTetrahedron:
         {
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
@@ -339,7 +345,7 @@ int main(int argc, char *argv[]){
             }
         }
         break;
-    case StdRegions::ePrism:
+        case StdRegions::ePrism:
         {
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
@@ -347,7 +353,7 @@ int main(int argc, char *argv[]){
             }
         }
         break;
-    case StdRegions::eHexahedron:
+        case StdRegions::eHexahedron:
         {
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
@@ -356,6 +362,9 @@ int main(int argc, char *argv[]){
             }
         }
         break;
+        default:
+            ASSERTL0(false, "Not a 3D expansion.");
+            break;
     }
 
     //--------------------------------------------
@@ -369,7 +378,7 @@ int main(int argc, char *argv[]){
 
 
 NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
-                    int order1, int order2, int order3)
+                  int order1, int order2, int order3)
 {
     int    l,k,m;
     NekDouble sol = 0;
@@ -409,10 +418,10 @@ NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
 }
 
 NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
-                    int order1, int order2, int order3,
-                    LibUtilities::BasisType btype1,
-                    LibUtilities::BasisType btype2,
-                    LibUtilities::BasisType btype3)
+                  int order1, int order2, int order3,
+                  LibUtilities::BasisType btype1,
+                  LibUtilities::BasisType btype2,
+                  LibUtilities::BasisType btype3)
 {
     int i,j,k;
     NekDouble sol = 0.0;
@@ -443,7 +452,7 @@ NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
 
 
 NekDouble Tet_Dsol(NekDouble x, NekDouble y, NekDouble z,
-                    int order1, int order2, int order3)
+                   int order1, int order2, int order3)
 {
     int    l,k,m;
     NekDouble sol = 0;
@@ -485,10 +494,10 @@ NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
 }
 
 NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z,
-                    int order1, int order2, int order3,
-                    LibUtilities::BasisType btype1,
-                    LibUtilities::BasisType btype2,
-                    LibUtilities::BasisType btype3)
+                   int order1, int order2, int order3,
+                   LibUtilities::BasisType btype1,
+                   LibUtilities::BasisType btype2,
+                   LibUtilities::BasisType btype3)
 {
     int i,j,k;
     NekDouble sol = 0.0;

@@ -33,10 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <boost/lexical_cast.hpp>
-
 #include <SpatialDomains/GeomFactors3D.h>
-#include <SpatialDomains/Geometry.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
 {

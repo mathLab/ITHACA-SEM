@@ -84,33 +84,3 @@ namespace Nektar
 
 #endif //LOCALREGIONS_H
 
-/** 
-*    $Log: LocalRegions.hpp,v $
-*    Revision 1.6  2009/11/11 14:56:12  cantwell
-*    Moved detailed connectivity documentation out of code.
-*    Updated MultiRegions documentation.
-*
-*    Revision 1.5  2008/09/09 15:05:09  sherwin
-*    Updates related to cuved geometries. Normals have been removed from m_metricinfo and replaced with a direct evaluation call. Interp methods have been moved to LibUtilities
-*
-*    Revision 1.4  2008/06/05 15:06:42  pvos
-*    Added documentation
-*
-*    Revision 1.3  2007/04/08 03:33:30  jfrazier
-*    Minor reformatting and fixing SharedArray usage.
-*
-*    Revision 1.2  2006/05/06 20:36:16  sherwin
-*    Modifications to get LocalRegions/Project1D working
-*
-*    Revision 1.1  2006/05/04 18:58:45  kirby
-*    *** empty log message ***
-*
-*    Revision 1.2  2006/03/13 11:17:03  sherwin
-*
-*    First compiing version of Demos in SpatialDomains and LocalRegions. However they do not currently seem to execute properly
-*
-*    Revision 1.1  2006/03/12 07:43:31  sherwin
-*
-*    First revision to meet coding standard. Needs to be compiled
-*
-**/

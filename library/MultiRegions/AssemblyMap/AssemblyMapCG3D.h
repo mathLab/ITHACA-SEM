@@ -35,12 +35,10 @@
 
 #ifndef MULTIREGIONS_ASSEMBLYMAPCG3D_H
 #define MULTIREGIONS_ASSEMBLYMAPCG3D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <MultiRegions/ExpList.h>
-//#include <MultiRegions/ExpList1D.h>
-//#include <MultiRegions/ExpList2D.h>
 
 
 namespace Nektar

@@ -36,17 +36,13 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD2D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <LocalRegions/SegExp.h>
-#include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/Conditions.h>
-#include <SpatialDomains/SegGeom.h>
 
 namespace Nektar
 {
@@ -167,7 +163,7 @@ namespace Nektar
             virtual void v_AddFwdBwdTraceIntegral(
                 const Array<OneD, const NekDouble> &Fwd, 
                 const Array<OneD, const NekDouble> &Bwd, 
-                Array<OneD,       NekDouble> &outarray);
+                      Array<OneD,       NekDouble> &outarray);
             virtual void v_ExtractTracePhys(
                 const Array<OneD, const NekDouble> &inarray, 
                       Array<OneD,       NekDouble> &outarray);
@@ -177,14 +173,14 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                 const FlagList &flags,
-                const StdRegions::ConstFactorMap &factors,
-                const StdRegions::VarCoeffMap &varcoeff,
+                const StdRegions::ConstFactorMap   &factors,
+                const StdRegions::VarCoeffMap      &varcoeff,
                 const Array<OneD, const NekDouble> &dirForcing);
             virtual void v_GeneralMatrixOp(
-                   const GlobalMatrixKey             &gkey,
-                   const Array<OneD,const NekDouble> &inarray,
-                   Array<OneD,      NekDouble> &outarray,
-                   bool UseContCoeffs = false);
+                const GlobalMatrixKey             &gkey,
+                const Array<OneD,const NekDouble> &inarray,
+                      Array<OneD,      NekDouble> &outarray,
+                CoeffState                         coeffstate = eLocal);
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
                 Array<OneD, int> &EdgeID);

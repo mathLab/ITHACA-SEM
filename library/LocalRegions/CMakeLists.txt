@@ -25,7 +25,7 @@ Expansion2D.h
 Expansion3D.h
 HexExp.h
 LinSys.hpp
-LocalRegions.h
+#LocalRegions.h
 LocalRegions.hpp
 LocalRegionsDeclspec.h
 MatrixKey.h
@@ -41,8 +41,6 @@ TriExp.h
 )
 
 
-SET(PrecompiledHeaderName LocalRegions/LocalRegions.h)
-
 ADD_DEFINITIONS(-DLOCAL_REGIONS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(LocalRegions lib ${NEKTAR_LIBRARY_TYPE} ${LOCAL_REGIONS_SOURCES} ${LOCAL_REGIONS_HEADERS})
@@ -55,7 +53,5 @@ TARGET_LINK_LIBRARIES(LocalRegions
 		${Boost_DATE_TIME_LIBRARY}
 	)
 SET_LAPACK_LINK_LIBRARIES(LocalRegions)
-
-SETUP_PRECOMPILED_HEADERS(LOCAL_REGIONS_SOURCES PrecompiledHeaderName)
 
 INSTALL(FILES ${LOCAL_REGIONS_HEADERS} DESTINATION ${NEKTAR_INCLUDE_DIR}/LocalRegions COMPONENT dev)

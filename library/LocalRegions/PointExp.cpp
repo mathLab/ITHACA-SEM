@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/LocalRegions/PointExp.cpp,v $
+// File PointExp.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -32,10 +32,7 @@
 // Description: Definition of a Point expansion 
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/LocalRegions.h>
-#include <LocalRegions/LocalRegions.hpp>
-#include <LocalRegions/Expansion1D.h>
-#include <LocalRegions/Expansion0D.h>
+
 #include <LocalRegions/PointExp.h>
 
 namespace Nektar

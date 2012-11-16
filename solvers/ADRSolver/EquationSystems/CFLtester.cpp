@@ -34,9 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <iostream>
-#include <complex>
 
 #include <ADRSolver/EquationSystems/CFLtester.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/QuadExp.h>
 
 namespace Nektar
 {
@@ -155,7 +156,7 @@ namespace Nektar
 
                 for(j = 0; j < nvariables; ++j)
                 {
-                    m_fields[j]->FwdTrans(inarray[j],coeffs,false);
+                    m_fields[j]->FwdTrans(inarray[j],coeffs);
                     m_fields[j]->BwdTrans_IterPerExp(coeffs,outarray[j]);
                 }
                 break;

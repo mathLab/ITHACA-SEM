@@ -36,6 +36,7 @@
 
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/DisContField3DHomogeneous1D.h>
+#include <MultiRegions/DisContField2D.h>
 
 namespace Nektar
 {
@@ -199,7 +200,7 @@ namespace Nektar
 
             for(n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n]->EvaluateBoundaryConditions(time,0.5*m_lhom*(1.0+local_z[n]));
+					m_planes[n]->EvaluateBoundaryConditions(time,0.5*m_lhom*(1.0+local_z[n]));
             }
             
             // Fourier transform coefficient space boundary values
@@ -238,12 +239,15 @@ namespace Nektar
 
             for(n = 0; n < m_planes.num_elements(); ++n)
             {
-                beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
-                new_factors = factors;
-                new_factors[StdRegions::eFactorLambda] += beta*beta;
-                m_planes[n]->HelmSolve(fce + cnt,
-                                         e_out = outarray + cnt1,
-                                         flags, new_factors, varcoeff, dirForcing);
+				if(n != 1 || m_transposition->GetK(n) != 0)
+				{
+					beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
+					new_factors = factors;
+					new_factors[StdRegions::eFactorLambda] += beta*beta;
+					m_planes[n]->HelmSolve(fce + cnt,
+										   e_out = outarray + cnt1,
+										   flags, new_factors, varcoeff, dirForcing);
+				}
                 
                 cnt  += m_planes[n]->GetTotPoints();
                 cnt1 += m_planes[n]->GetNcoeffs();

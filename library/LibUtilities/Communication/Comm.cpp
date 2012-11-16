@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Communication/Comm.h>
+#include <loki/Singleton.h>             // for CreateUsingNew, NoDestroy, etc
 
 namespace Nektar
 {

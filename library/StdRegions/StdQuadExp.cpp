@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdSegExp.h>       // for StdSegExp, etc
 
 namespace Nektar
 {
@@ -105,12 +106,12 @@ namespace Nektar
             {
             case 0:
                 {
-                    PhysDeriv(inarray, outarray, NullNekDouble1DArray);   
+                    PhysTensorDeriv(inarray, outarray, NullNekDouble1DArray);   
                 }
                 break;
             case 1:
                 {
-                    PhysDeriv(inarray, NullNekDouble1DArray, outarray);   
+                    PhysTensorDeriv(inarray, NullNekDouble1DArray, outarray);   
                 }
                 break;
             default:
@@ -126,6 +127,7 @@ namespace Nektar
                             Array<OneD, NekDouble> &out_d1,
                             Array<OneD, NekDouble> &out_d2)
         {
+            //PhysTensorDeriv(inarray, out_d0, out_d1);            
             StdQuadExp::v_PhysDeriv(inarray, out_d0, out_d1);            
         }
 
@@ -133,6 +135,7 @@ namespace Nektar
                             const Array<OneD, const NekDouble>& inarray, 
                             Array<OneD, NekDouble> &outarray)
         {
+            //PhysTensorDeriv(inarray, outarray);            
             StdQuadExp::v_PhysDeriv(dir,inarray,outarray);
         }
 
@@ -769,7 +772,19 @@ namespace Nektar
         {
             NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
         }    
+        
+        
+        
+        void StdQuadExp::v_GetEdgeQFactors(
+                const int edge,  
+                Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Method does not exist for this shape or library" );
+        }
 
+        
+        
         //////////////
         // Mappings //
         //////////////

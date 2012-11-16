@@ -32,14 +32,12 @@
 // Description: 1D Evenly-Spaced Points
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
-#include <iostream>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Foundations.hpp>
 
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/Foundations/PolyEPoints.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
 namespace Nektar
 {

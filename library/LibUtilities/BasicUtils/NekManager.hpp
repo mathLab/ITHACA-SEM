@@ -36,7 +36,6 @@
 #ifndef NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_MANAGER_HPP
 #define NEKTAR_LIB_UTILITIES_BASIC_UTILS_NEK_MANAGER_HPP
 
-#include <algorithm>
 #include <map>
 
 #include <boost/function.hpp>

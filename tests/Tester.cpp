@@ -265,6 +265,8 @@ int main(int argc, char *argv[])
                 status = 1;
             }
         }
+        vStdout.close();
+        vStderr.close();
 
         // Change back to the original path and delete temporary directory
         fs::current_path(startDir);

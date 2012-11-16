@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>3D channel flow, Tet elements, par(2), P=8</description>
+    <description>3D channel flow, Tet elements, par(3), P=8</description>
     <executable>IncNavierStokesSolver</executable>
-    <parameters>Test_Tet_channel_m8_par.xml</parameters>
-    <processes>2</processes>
+    <parameters>Test_Tet_channel_m8_iter_ml_par.xml</parameters>
+    <processes>3</processes>
     <files>
-        <file description="Session File">Test_Tet_channel_m8_par.xml</file>
+        <file description="Session File">Test_Tet_channel_m8_iter_ml_par.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

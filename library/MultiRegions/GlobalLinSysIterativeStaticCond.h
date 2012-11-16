@@ -47,7 +47,7 @@ namespace Nektar
         class GlobalLinSysIterativeStaticCond;
 
         typedef boost::shared_ptr<GlobalLinSysIterativeStaticCond>
-                                        GlobalLinSysIterativeStaticCondSharedPtr;
+            GlobalLinSysIterativeStaticCondSharedPtr;
 
         /// A global linear system.
         class GlobalLinSysIterativeStaticCond : public GlobalLinSysIterative
@@ -55,14 +55,15 @@ namespace Nektar
         public:
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
-                        const GlobalLinSysKey &pLinSysKey,
-                        const boost::weak_ptr<ExpList> &pExpList,
-                        const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                const GlobalLinSysKey                &pLinSysKey,
+                const boost::weak_ptr<ExpList>       &pExpList,
+                const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
             {
-            GlobalLinSysSharedPtr p = MemoryManager<GlobalLinSysIterativeStaticCond>::AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
-            p->InitObject();
-            return p;
+                GlobalLinSysSharedPtr p = MemoryManager<
+                    GlobalLinSysIterativeStaticCond>::
+                    AllocateSharedPtr(pLinSysKey, pExpList, pLocToGloMap);
+                p->InitObject();
+                return p;
             }
 
             /// Name of class
@@ -71,58 +72,60 @@ namespace Nektar
 
             /// Constructor for full direct matrix solve.
             GlobalLinSysIterativeStaticCond(
-                        const GlobalLinSysKey &mkey,
-                        const boost::weak_ptr<ExpList> &pExpList,
-                        const boost::shared_ptr<AssemblyMap>
-                                                                &locToGloMap);
+                const GlobalLinSysKey                &mkey,
+                const boost::weak_ptr<ExpList>       &pExpList,
+                const boost::shared_ptr<AssemblyMap> &locToGloMap);
 
             /// Constructor for full direct matrix solve.
             GlobalLinSysIterativeStaticCond(
-                        const GlobalLinSysKey &mkey,
-                        const boost::weak_ptr<ExpList> &pExpList,
-                        const DNekScalBlkMatSharedPtr pSchurCompl,
-                        const DNekScalBlkMatSharedPtr pBinvD,
-                        const DNekScalBlkMatSharedPtr pC,
-                        const DNekScalBlkMatSharedPtr pInvD,
-                        const boost::shared_ptr<AssemblyMap>
-                                                                &locToGloMap);
+                const GlobalLinSysKey                &mkey,
+                const boost::weak_ptr<ExpList>       &pExpList,
+                const DNekScalBlkMatSharedPtr         pSchurCompl,
+                const DNekScalBlkMatSharedPtr         pBinvD,
+                const DNekScalBlkMatSharedPtr         pC,
+                const DNekScalBlkMatSharedPtr         pInvD,
+                const boost::shared_ptr<AssemblyMap> &locToGloMap);
 
             virtual ~GlobalLinSysIterativeStaticCond();
+
+        protected:
+            virtual int v_GetNumBlocks();
+            virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
 
         private:
             /// Schur complement for Direct Static Condensation.
             GlobalLinSysIterativeStaticCondSharedPtr m_recursiveSchurCompl;
-
-            /// Block matrices at this level
-            DNekScalBlkMatSharedPtr m_schurCompl;
-            DNekScalBlkMatSharedPtr m_BinvD;
-            DNekScalBlkMatSharedPtr m_C;
-            DNekScalBlkMatSharedPtr m_invD;
-
+            /// Block Schur complement matrix.
+            DNekScalBlkMatSharedPtr                  m_schurCompl;
+            /// Block \f$ BD^{-1} \f$ matrix.
+            DNekScalBlkMatSharedPtr                  m_BinvD;
+            /// Block \f$ C \f$ matrix.
+            DNekScalBlkMatSharedPtr                  m_C;
+            /// Block \f$ D^{-1} \f$ matrix.
+            DNekScalBlkMatSharedPtr                  m_invD;
 	    // Block matrices for low energy
-            DNekScalBlkMatSharedPtr m_RBlk;
-            DNekScalBlkMatSharedPtr m_RTBlk;
-            DNekScalBlkMatSharedPtr m_S1Blk;
-
+            DNekScalBlkMatSharedPtr                  m_RBlk;
+            DNekScalBlkMatSharedPtr                  m_RTBlk;
+            DNekScalBlkMatSharedPtr                  m_S1Blk;
             /// Globally assembled Schur complement matrix at this level
-            GlobalMatrixSharedPtr m_globalSchurCompl;
-
-            // Local to global map.
-            boost::shared_ptr<AssemblyMap>     m_locToGloMap;
-
-            // Workspace array for matrix multiplication
-            Array<OneD, NekDouble> m_wsp;
-
-	    PreconditionerSharedPtr  m_precon;
+            GlobalMatrixSharedPtr                    m_globalSchurCompl;
+            /// Local to global map.
+            boost::shared_ptr<AssemblyMap>           m_locToGloMap;
+            /// Workspace array for matrix multiplication
+            Array<OneD, NekDouble>                   m_wsp;
+            /// Preconditioner object.
+            PreconditionerSharedPtr                  m_precon;
+            /// Wrapper for block matrices.
+            Array<OneD, DNekScalBlkMatSharedPtr>     m_schurComplBlock;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.
             virtual void v_Solve(
-                        const Array<OneD, const NekDouble>  &in,
-                              Array<OneD,       NekDouble>  &out,
-                        const AssemblyMapSharedPtr &locToGloMap,
-                        const Array<OneD, const NekDouble>  &dirForcing
-                                                        = NullNekDouble1DArray);
+                const Array<OneD, const NekDouble> &in,
+                      Array<OneD,       NekDouble> &out,
+                const AssemblyMapSharedPtr         &locToGloMap,
+                const Array<OneD, const NekDouble>  &dirForcing
+                    = NullNekDouble1DArray);
 
             virtual void v_InitObject();
 
@@ -152,8 +155,7 @@ namespace Nektar
                           Array<OneD, NekDouble>& pOutput);
 
             virtual void v_UniqueMap();
-
-         };
+        };
     }
 }
 

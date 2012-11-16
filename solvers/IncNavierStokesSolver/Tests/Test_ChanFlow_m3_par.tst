@@ -3,6 +3,7 @@
     <description>3D channel flow, 2D, par(2), P=8</description>
     <executable>IncNavierStokesSolver</executable>
     <parameters>Test_ChanFlow_m3_par.xml</parameters>
+    <processes>2</processes>
     <files>
         <file description="Session File">Test_ChanFlow_m3_par.xml</file>
     </files>

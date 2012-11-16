@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 1D HDG with P=8 and Robin BCs</description>
     <executable>HDGHelmholtz1D</executable>
-    <parameters>helmholtz1D_8modes_RBC.xml</parameters>
+    <parameters>Helmholtz1D_P8_RBC.xml</parameters>
     <files>
-        <file description="Session File">helmholtz1D_8modes_RBC.xml</file>
+        <file description="Session File">Helmholtz1D_P8_RBC.xml</file>
     </files>
 
     <metrics>

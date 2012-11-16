@@ -105,10 +105,12 @@ namespace Nektar
         time1 = time - floor(time/m_s1cyclelength)*m_s1cyclelength;
         if( time1 > m_start && time < (m_s1cyclelength * m_num_s1) && time1  < (m_start+m_dur))
         {
+            cout<<" stim s1" << endl;
             return 1.0;
         }
         else if (time > (m_s2start) && (time < (m_s2start+m_dur)))
-        {   
+        {
+            cout<<"stim s2" << endl;
             return 1.0;
         }
         else

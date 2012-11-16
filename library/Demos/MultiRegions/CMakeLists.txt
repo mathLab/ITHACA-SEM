@@ -118,3 +118,7 @@ ADD_NEKTAR_TEST(Helmholtz3D_Homo1D_HDG)
 ADD_NEKTAR_TEST(Deriv3D_Homo1D)
 ADD_NEKTAR_TEST(Deriv3D_Homo2D)
 
+IF (NEKTAR_USE_MPI)
+    ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_xxt_full)
+    ADD_NEKTAR_TEST(Helmholtz2D_CG_P7_Modes_AllBCs_xxt_sc)
+ENDIF(NEKTAR_USE_MPI)

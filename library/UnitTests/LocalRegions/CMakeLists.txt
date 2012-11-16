@@ -22,4 +22,4 @@ TARGET_LINK_LIBRARIES(${ProjectName}
 )
 
 SET_LAPACK_LINK_LIBRARIES(${ProjectName})
-ADD_TEST(NAME LocalRegions COMMAND ${ProjectName} --detect_memory_leaks=0)
+#ADD_TEST(NAME LocalRegions COMMAND ${ProjectName} --detect_memory_leaks=0)

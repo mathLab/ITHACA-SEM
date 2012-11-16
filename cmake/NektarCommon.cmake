@@ -174,10 +174,10 @@ MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
 
     IF( NEKTAR_USE_MPI )
         TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
-        SET_PROPERTY(TARGET ${name} 
-                     APPEND PROPERTY COMPILE_FLAGS ${MPI_COMPILE_FLAGS})
-        SET_PROPERTY(TARGET ${name}
-                     APPEND PROPERTY LINK_FLAGS ${MPI_LINK_FLAGS})
+        SET_TARGET_PROPERTIES(${name}
+            PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS}")
+        SET_TARGET_PROPERTIES(${name}
+            PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} ${MPI_LINK_FLAGS}")
     ENDIF( NEKTAR_USE_MPI )
 
     IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
@@ -248,5 +248,12 @@ MACRO(ADD_NEKTAR_LIBRARY name component type)
 
 ENDMACRO(ADD_NEKTAR_LIBRARY name component type)
 
-
-
+# Adds a test with a given name.
+# The Test Definition File should be in a subdirectory called Tests relative
+# to the CMakeLists.txt file calling this macros. The test file should be called
+# NAME.tst, where NAME is given as a parameter to this macro.
+MACRO(ADD_NEKTAR_TEST name)
+    GET_FILENAME_COMPONENT(dir ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+    ADD_TEST(NAME ${dir}_${name}
+         COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
+ENDMACRO(ADD_NEKTAR_TEST)

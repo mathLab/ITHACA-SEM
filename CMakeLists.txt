@@ -63,8 +63,8 @@ SET(NEKTAR_BUILD_UTILITIES   ON CACHE BOOL
     "Build utilities for pre-processing and post-processing Nektar++ files.")
 SET(NEKTAR_BUILD_UNIT_TESTS  ON CACHE BOOL
     "Build unit tests.")
-SET(NEKTAR_BUILD_REGRESSION_TESTS ON CACHE BOOL
-    "Build regression tests for checking the correctness of the code.")
+SET(NEKTAR_BUILD_TESTS       ON CACHE BOOL
+    "Build tests for checking the correctness of the code.")
 SET(NEKTAR_BUILD_TIMINGS     OFF CACHE BOOL 
     "Build benchmark timing codes.")
 
@@ -268,10 +268,10 @@ IF (NEKTAR_BUILD_UTILITIES)
     ADD_SUBDIRECTORY(utilities)
 ENDIF (NEKTAR_BUILD_UTILITIES)
 
-IF (NEKTAR_BUILD_REGRESSION_TESTS)
-    INCLUDE_DIRECTORIES(regressionTests)
-    ADD_SUBDIRECTORY(regressionTests)
-ENDIF (NEKTAR_BUILD_REGRESSION_TESTS)
+IF (NEKTAR_BUILD_TESTS)
+    INCLUDE_DIRECTORIES(tests)
+    ADD_SUBDIRECTORY(tests)
+ENDIF (NEKTAR_BUILD_TESTS)
 
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in 
                ${CMAKE_BINARY_DIR}/Nektar++Config.cmake @ONLY)
@@ -287,7 +287,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
-	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/NektarCommon.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake

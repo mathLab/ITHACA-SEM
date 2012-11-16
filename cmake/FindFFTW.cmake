@@ -5,9 +5,10 @@ SET(FFTW_SEARCH_PATHS
 	${CMAKE_SOURCE_DIR}/../ThirdParty/fftw-3.2.2/
 	${CMAKE_SOURCE_DIR}/../ThirdParty/fftw-3.2.2/lib/
     ${CMAKE_SOURCE_DIR}/ThirdParty/build/dist/lib
-    ${CMAKE_SOURCE_DIR}/../ThirdParty/build/dist/lib )
+    ${CMAKE_SOURCE_DIR}/../ThirdParty/build/dist/lib
+    $ENV{LD_LIBRARY_PATH} $ENV{FFTW_HOME}/lib )
 
-FIND_LIBRARY(FFTW_LIB NAMES fftw3 PATHS ${FFTW_SEARCH_PATHS} ENV LD_LIBRARY_PATH)
+FIND_LIBRARY(FFTW_LIB NAMES fftw3 fftw3f PATHS ${FFTW_SEARCH_PATHS})
 
 SET(FFTW_FOUND FALSE)
 IF (FFTW_LIB)

@@ -1344,10 +1344,11 @@ namespace Nektar
             {
                 ASSERTL0 (m_solverInfo["GLOBALSYSSOLN"] == "IterativeFull"
                     || m_solverInfo["GLOBALSYSSOLN"] == "IterativeStaticCond"
+                    || m_solverInfo["GLOBALSYSSOLN"] == "IterativeMultiLevelStaticCond"
                     || m_solverInfo["GLOBALSYSSOLN"] == "XxtFull"
                     || m_solverInfo["GLOBALSYSSOLN"] == "XxtStaticCond"
                     || m_solverInfo["GLOBALSYSSOLN"] == "XxtMultiLevelStaticCond",
-                    "An parallel solver must be used when run in parallel.");
+                    "A parallel solver must be used when run in parallel.");
             }
             
             if (m_verbose && m_solverInfo.size() > 0 && m_comm)

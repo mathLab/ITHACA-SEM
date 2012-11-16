@@ -607,11 +607,7 @@ namespace Nektar
                 DNekScalMatSharedPtr schurComplSubMat;
                 int       schurComplSubMatnRows;
                 Array<OneD, const int>       patchId, dofId;
-#if 0 
-                Array<OneD, const bool>      isBndDof;
-#else
                 Array<OneD, const unsigned int>      isBndDof;
-#endif
                 Array<OneD, const NekDouble> sign;
                 NekDouble scale;
 

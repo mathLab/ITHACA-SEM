@@ -236,7 +236,7 @@
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond" />
+            <I PROPERTY="GlobalSysSoln" VALUE="IterativeMultiLevelStaticCond" />
         </SOLVERINFO>
 
         <VARIABLES>

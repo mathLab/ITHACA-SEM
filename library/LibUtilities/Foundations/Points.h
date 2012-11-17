@@ -291,7 +291,7 @@ namespace Nektar
                 return returnval;
             }
 			
-   		    virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x)
+            virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x)
             {
                 ASSERTL0(false, "Method not implemented");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());

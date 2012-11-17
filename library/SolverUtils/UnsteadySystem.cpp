@@ -438,15 +438,10 @@ namespace Nektar
                     !((step+1) % m_infosteps))
                 {
                     cout << "Steps: "     << setw(8)  << left << step+1 << " "
-                         << "Time: "      << setw(12) << left << m_time << " ";
+                         << "Time: "      << setw(12) << left << m_time << " "
+                         << "Time-step: " << setw(12) << left << m_timestep;
+                    cout << endl;
                 }
-                
-                if (m_cflSafetyFactor)
-                {
-                    cout << "Time-step: " << setw(12) << left << m_timestep;
-                }
-                
-                cout << endl;
                 
                 // Transform data into coefficient space
                 for (i = 0; i < m_intVariables.size(); ++i)

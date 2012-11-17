@@ -1,24 +1,24 @@
 CompressibleFlowSolver
 ==========================================
 Test_IsentropicVortex16_m3.xml
-L 2 error (variable rho): 0.00868368
-L inf error (variable rho): 0.0155196
-L 2 error (variable rhou): 0.00702714
-L inf error (variable rhou): 0.0167377
-L 2 error (variable rhov): 0.181591
-L inf error (variable rhov): 0.114085
-L 2 error (variable E): 0.104563
-L inf error (variable E): 0.143785
+L 2 error (variable rho): 0.00266419
+L inf error (variable rho): 0.00555232
+L 2 error (variable rhou): 0.00361032
+L inf error (variable rhou): 0.00814604
+L 2 error (variable rhov): 0.181602
+L inf error (variable rhov): 0.113819
+L 2 error (variable E): 0.102132
+L inf error (variable E): 0.12761
 ----------------------------------------
 Test_IsentropicVortex16_m8.xml
-L 2 error (variable rho): 8.8147e-05
-L inf error (variable rho): 0.00103674
-L 2 error (variable rhou): 0.000249094
-L inf error (variable rhou): 0.00319355
-L 2 error (variable rhov): 0.0148193
-L inf error (variable rhov): 0.00836934
-L 2 error (variable E): 0.00829906
-L inf error (variable E): 0.011468
+L 2 error (variable rho): 6.341e-05
+L inf error (variable rho): 0.00057786
+L 2 error (variable rhou): 0.000156986
+L inf error (variable rhou): 0.00181699
+L 2 error (variable rhov): 0.0148192
+L inf error (variable rhov): 0.00817004
+L 2 error (variable E): 0.0082784
+L inf error (variable E): 0.0093858
 ----------------------------------------
 Test_CylinderSubsonic_m3.xml
 L 2 error (variable rho): 42.8519

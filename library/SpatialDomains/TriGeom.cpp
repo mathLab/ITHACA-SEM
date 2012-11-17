@@ -654,39 +654,63 @@ namespace Nektar
 
             // calculate local coordinate for coord
             if(GetGtype() == eRegular)
-            { // can assume it is right angled rectangle
+            { 
+                NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
                 VertexComponent dv1, dv2, norm, orth1, orth2;
-                VertexComponent *xin;
+                VertexComponent xin(m_coordim,0,coords[0],coords[1],coords2);
 
-                switch(m_coordim)
-                {
-                case 2:
-                    xin = new VertexComponent (m_coordim,0,coords[0], coords[1], 0.0);
-                    break;
-                case 3:
-                    xin = new VertexComponent (m_coordim,0,coords[0], coords[1], coords[2]);
-                    break;
-                }
-
+                // Calculate edge vectors from 0-1 and 0-2 edges. 
                 dv1.Sub(*m_verts[1],*m_verts[0]);
                 dv2.Sub(*m_verts[2],*m_verts[0]);
 
+                // Obtain normal to plane in which dv1 and dv2 lie
                 norm.Mult(dv1,dv2);
-
+                
+                // Obtain vector which are proportional to normal of dv1 and dv2. 
                 orth1.Mult(norm,dv1);
                 orth2.Mult(norm,dv2);
+                
+                // Start with vector of desired points minus vertex_0
+                xin -= *m_verts[0];
 
-                xin[0] *= 2.0;
-                xin[0] -= *m_verts[1];
-                xin[0] -= *m_verts[2];
-
-                Lcoords[0] = xin->dot(orth2)/dv1.dot(orth2);
-                Lcoords[1] = xin->dot(orth1)/dv2.dot(orth1);
-
-                delete xin;
+                // Calculate length using L/|dv1| = (x-v0).n1/(dv1.n1) for coordiante 1
+                // Then rescale to [-1,1]. 
+                Lcoords[0] = xin.dot(orth2)/dv1.dot(orth2);
+                Lcoords[0] = 2*Lcoords[0]-1;
+                Lcoords[1] = xin.dot(orth1)/dv2.dot(orth1);
+                Lcoords[1] = 2*Lcoords[1]-1;
             }
             else
             {
+                // Determine nearest point of coords  to values in m_xmap
+                Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
+                Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
+                int npts = ptsx.num_elements();
+                Array<OneD, NekDouble> tmpx(npts), tmpy(npts);
+                const Array<OneD, const NekDouble> za = m_xmap[0]->GetPoints(0);
+                const Array<OneD, const NekDouble> zb = m_xmap[0]->GetPoints(1);
+                
+                
+                //guess the first local coords based on nearest point
+                Vmath::Sadd(npts, -coords[0], ptsx,1,tmpx,1);
+                Vmath::Sadd(npts, -coords[1], ptsy,1,tmpy,1);
+                Vmath::Vmul (npts, tmpx,1,tmpx,1,tmpx,1);
+                Vmath::Vvtvp(npts, tmpy,1,tmpy,1,tmpx,1,tmpx,1);
+                          
+                int min_i = Vmath::Imin(npts,tmpx,1);
+                
+                Lcoords[0] = za[min_i%za.num_elements()];
+                Lcoords[1] = zb[min_i/za.num_elements()];
+
+                // recover cartesian coordinate from collapsed coordinate. 
+                Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[1])/2 -1.0;
+
+                // Perform newton iteration to find local coordinates 
+                NewtonIterationForLocCoord(coords,Lcoords);
+
+                
+#if 0 // Original verion
+
                 //NEKERROR(ErrorUtil::efatal,
                 //        "inverse mapping must be set up to use this call");
 
@@ -719,12 +743,10 @@ namespace Nektar
                 m_xmap[0]->StdPhysDeriv(ptsx, derx_1, derx_2);                  
                 m_xmap[1]->StdPhysDeriv(ptsy, dery_1, dery_2);    
 
-
                 //guess the first local coords
                 //Lcoords[0]=0.0;
                 //Lcoords[1]=0.0; 
-
-
+                
                 boost::shared_ptr<StdRegions::StdTriExp> trimap0 = 
                         boost::dynamic_pointer_cast<StdRegions::StdTriExp>(m_xmap[0]);
                 boost::shared_ptr<StdRegions::StdTriExp> trimap1 = 
@@ -751,15 +773,12 @@ namespace Nektar
 
                 Lcoords[0] = ltrix[ic];
                 Lcoords[1] = ltriy[ic];
-               
-	 
-
+               	 
                 //int offset=0;              
                 //determine y
                 int cnt=0;
                 while( abs(F2) > 0.00001 || abs(F1)> 0.00001        )
                 {
-
 
                     //calculate the gradient tensor at Lcoords
                     derx_1k = m_xmap[0]->PhysEvaluate(Lcoords, derx_1);
@@ -771,10 +790,10 @@ namespace Nektar
 
 
                     //invert matrix:
-                    invderx_1k = dery_2k/jac;
+                    invderx_1k =  dery_2k/jac;
                     invderx_2k = -derx_2k/jac;
                     invdery_1k = -dery_1k/jac;
-                    invdery_2k = derx_1k/jac;
+                    invdery_2k =  derx_1k/jac;
 
                     //calculate the global point corresponding to Lcoords
                     xmap = trimap0->PhysEvaluate(Lcoords, ptsx);
@@ -792,21 +811,17 @@ namespace Nektar
                              Lcoords[0] = Lcoords[1] = 2.0;    
                              break;
                     }
-                  
-		 }
-
+                }
+                //cout<<"it finished"<<endl;
+                if(Lcoords[1]>1.01 && Lcoords[0]>1.01)
+                {
+                    Lcoords[0] = Lcoords[1] = 2.0;    
+                }
+                
+                //cout<<elmtid<<"Locx="<<Lcoords[0]<<"  Locy="<<Lcoords[1]<<endl;
+#endif
             }
-
-
-
-//cout<<"it finished"<<endl;
-            if(Lcoords[1]>1.01 && Lcoords[0]>1.01)
-            {
-  	        Lcoords[0] = Lcoords[1] = 2.0;    
-            }
-
-
-//cout<<elmtid<<"Locx="<<Lcoords[0]<<"  Locy="<<Lcoords[1]<<endl;
+            
         }
 
 

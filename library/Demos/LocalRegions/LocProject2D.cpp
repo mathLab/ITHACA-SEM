@@ -328,8 +328,7 @@ int main(int argc, char *argv[])
       sol[0] = Quad_sol(x[0],x[1],order1,order2,btype1,btype2);
   }
 
-  Array<OneD,NekDouble> lcoord(2,0.0);
-  NekDouble nsol = E->PhysEvaluate(lcoord);
+  NekDouble nsol = E->PhysEvaluate(x);
   cout << "error at x = (" <<x[0] <<","<<x[1] <<"): " << nsol - sol[0] << endl;
 
   return 0;

@@ -247,11 +247,11 @@ int main(int argc, char *argv[])
     //--------------------------------------------
     
     //-------------------------------------------
-    // Evaulate solution at x = y = z = 0  and print error
+    // Evaulate solution at mid point  and print error
     Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
-     t[0] = -0.39;
-     t[1] = -0.25;
-     t[2] = -0.50;
+    t[0] = 0.5;
+    t[1] = 0.5;
+    t[2] = 0.2;
     
     if( regionShape == StdRegions::ePrism ) {
         solution[0] = Prism_sol( t[0], t[1], t[2], P, Q, R, bType_x, bType_y, bType_z );

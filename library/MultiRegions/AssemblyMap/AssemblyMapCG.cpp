@@ -250,9 +250,6 @@ namespace Nektar
             }
         }
 
-
-
-
         /**
          * The bandwidth calculated here corresponds to what is referred to as
          * half-bandwidth.  If the elements of the matrix are designated as

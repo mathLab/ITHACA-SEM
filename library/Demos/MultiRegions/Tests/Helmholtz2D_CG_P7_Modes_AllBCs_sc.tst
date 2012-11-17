@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>Helmholtz 2D CG with P=7</description>
+    <description>Helmholtz 2D CG with P=7, direct sc</description>
     <executable>Helmholtz2D</executable>
     <parameters>helmholtz2D_7modes_AllBCs_sc.xml</parameters>
     <files>

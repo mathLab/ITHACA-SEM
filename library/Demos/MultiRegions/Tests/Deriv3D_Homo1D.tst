@@ -2,9 +2,9 @@
 <test>
     <description>Testing 3D homogeneous 1D derivatives</description>
     <executable>Deriv3DHomo1D</executable>
-    <parameters>derivatives3Dhomo1D.xml</parameters>
+    <parameters>Deriv3D_Homo1D.xml</parameters>
     <files>
-        <file description="Session File">derivatives3Dhomo1D.xml</file>
+        <file description="Session File">Deriv3D_Homo1D.xml</file>
     </files>
 
     <metrics>

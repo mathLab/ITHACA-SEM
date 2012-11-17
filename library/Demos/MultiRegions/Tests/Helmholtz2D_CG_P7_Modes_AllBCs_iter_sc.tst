@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>Helmholtz 2D CG with P=7, direct full</description>
+    <description>Helmholtz 2D CG with P=7, all BCs, iterative sc</description>
     <executable>Helmholtz2D</executable>
-    <parameters>helmholtz2D_7modes_AllBCs.xml</parameters>
+    <parameters>helmholtz2D_7modes_AllBCs_iter_sc.xml</parameters>
     <files>
-        <file description="Session File">helmholtz2D_7modes_AllBCs.xml</file>
+        <file description="Session File">helmholtz2D_7modes_AllBCs_iter_sc.xml</file>
     </files>
 
     <metrics>

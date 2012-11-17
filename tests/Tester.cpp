@@ -131,9 +131,15 @@ int main(int argc, char *argv[])
         specPath = fs::current_path();
     }
 
+#if BOOST_VERSION > 104200
+    string specFileStem = specFile.stem().string();
+#else
+    string specFileStem = specFile.stem();
+#endif
+
     // Temporary directory to create and in which to conduct test
     const fs::path tmpDir = fs::current_path()
-                            / fs::path("tmp_" + specFile.stem().string());
+        / fs::path("tmp_" + specFileStem);
 
     // The current directory
     const fs::path startDir = fs::current_path();
@@ -259,6 +265,8 @@ int main(int argc, char *argv[])
                 status = 1;
             }
         }
+        vStdout.close();
+        vStderr.close();
 
         // Change back to the original path and delete temporary directory
         fs::current_path(startDir);

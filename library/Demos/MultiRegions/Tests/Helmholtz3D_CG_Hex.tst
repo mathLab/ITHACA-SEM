@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 3D CG for Hex</description>
     <executable>Helmholtz3D</executable>
-    <parameters>Helmholtz3D_Hex_CG.xml</parameters>
+    <parameters>Helmholtz3D_Hex_P6.xml</parameters>
     <files>
-        <file description="Session File">Helmholtz3D_Hex_CG.xml</file>
+        <file description="Session File">Helmholtz3D_Hex_P6.xml</file>
     </files>
 
     <metrics>

@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 3D CG, prisms, Neumann BCs, iterative ML</description>
     <executable>Helmholtz3D</executable>
-    <parameters>Helmholtz3D_Prism_Iter_ML_CG.xml</parameters>
+    <parameters>-I GlobalSysSoln=IterativeMultiLevelStaticCond Helmholtz3D_Prism.xml</parameters>
     <files>
-        <file description="Session File">Helmholtz3D_Prism_Iter_ML_CG.xml</file>
+        <file description="Session File">Helmholtz3D_Prism.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

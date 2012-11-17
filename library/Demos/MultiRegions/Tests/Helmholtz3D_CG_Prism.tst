@@ -2,7 +2,7 @@
 <test>
     <description>Helmholtz 3D CG for Prism</description>
     <executable>Helmholtz3D</executable>
-    <parameters>helmholtz3D_Prism.xml</parameters>
+    <parameters>Helmholtz3D_Prism.xml</parameters>
     <files>
         <file description="Session File">Helmholtz3D_Prism.xml</file>
     </files>

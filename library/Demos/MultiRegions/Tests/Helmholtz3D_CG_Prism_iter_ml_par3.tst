@@ -2,10 +2,10 @@
 <test>
     <description>Helmholtz 3D CG, prisms, Neumann BCs, iterative ML, Par(3)</description>
     <executable>Helmholtz3D</executable>
-    <parameters>Helmholtz3D_Prism_Iter_ML_CG.xml</parameters>
+    <parameters>Helmholtz3D_Prism.xml</parameters>
     <processes>3</processes>
     <files>
-        <file description="Session File">Helmholtz3D_Prism_Iter_ML_CG.xml</file>
+        <file description="Session File">Helmholtz3D_Prism.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

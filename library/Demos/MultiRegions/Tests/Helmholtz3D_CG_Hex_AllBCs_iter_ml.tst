@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 3D CG, hexes, mixed BCs, iterative ML</description>
     <executable>Helmholtz3D</executable>
-    <parameters>Helmholtz3D_Hex_MixedBCs_Iter_ML_CG.xml</parameters>
+    <parameters>-I GlobalSysSoln=IterativeMultiLevelStaticCond Helmholtz3D_Hex_AllBCs_P6.xml</parameters>
     <files>
-        <file description="Session File">Helmholtz3D_Hex_MixedBCs_Iter_ML_CG.xml</file>
+        <file description="Session File">Helmholtz3D_Hex_AllBCs_P6.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

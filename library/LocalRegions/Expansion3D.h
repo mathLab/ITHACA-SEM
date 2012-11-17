@@ -63,13 +63,13 @@ namespace Nektar
             
 			inline void AddHDGHelmholtzFaceTerms(const NekDouble tau,
                                           const int edge,
-                                          Array <OneD, StdRegions::StdExpansionSharedPtr > &EdgeExp,
+                                          StdRegions::StdExpansionSharedPtr FaceExp,
                                           const StdRegions::VarCoeffMap &dirForcing,
                                           Array <OneD,NekDouble > &outarray);
 
             inline void AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                            const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,
+                                           Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
                                            const StdRegions::VarCoeffMap &dirForcing,
                                            Array<OneD,NekDouble> &outarray);
             
@@ -99,7 +99,7 @@ namespace Nektar
             
 			virtual void v_AddHDGHelmholtzFaceTerms(const NekDouble tau,
                                           const int face,
-                                          Array <OneD, StdRegions::StdExpansionSharedPtr > &FaceExp,
+                                          StdRegions::StdExpansionSharedPtr FaceExp,
                                           const StdRegions::VarCoeffMap &dirForcing,
                                           Array <OneD,NekDouble > &outarray);
                 
@@ -135,7 +135,7 @@ namespace Nektar
         
 		inline void Expansion3D::AddHDGHelmholtzFaceTerms(const NekDouble tau,
                                       const int face,
-                                      Array <OneD, StdRegions::StdExpansionSharedPtr > &FaceExp,
+                                      StdRegions::StdExpansionSharedPtr FaceExp,
                                       const StdRegions::VarCoeffMap &dirForcing,
                                       Array <OneD,NekDouble > &outarray)
         {

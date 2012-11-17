@@ -21,13 +21,14 @@
             </REGION>
         </BOUNDARYCONDITIONS>
 
-        <FORCING>
-            <F VAR="u" VALUE="-(Lambda + 3*w*w*PI*PI)*sin(w*PI*x)*sin(w*PI*y)* sin(w*PI*z)" />
-        </FORCING>
+        <FUNCTION NAME="Forcing">
+            <E VAR="u" VALUE="-(Lambda + 3*w*w*PI*PI)*sin(w*PI*x)*sin(w*PI*y)* sin(w*PI*z)" />
+        </FUNCTION>
 
-        <EXACTSOLUTION>
-            <F VAR="u" VALUE="sin(w*PI*x)*sin(w*PI*y)*sin(w*PI*z)" />
-        </EXACTSOLUTION>
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="sin(w*PI*x)*sin(w*PI*y)*sin(w*PI*z)" />
+        </FUNCTION>
+
 
   </CONDITIONS>
 </NEKTAR>

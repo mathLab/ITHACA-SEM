@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 3D CG for Tet</description>
     <executable>Helmholtz3D</executable>
-    <parameters>helmholtz3D_tet.xml</parameters>
+    <parameters>Helmholtz3D_Tet.xml</parameters>
     <files>
-        <file description="Session File">helmholtz3D_tet.xml</file>
+        <file description="Session File">Helmholtz3D_Tet.xml</file>
     </files>
 
     <metrics>

@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 2D CG with P=9</description>
     <executable>Helmholtz2D</executable>
-    <parameters>helmholtz2D_9modes_varcoeff.xml</parameters>
+    <parameters>Helmholtz2D_CG_P9_Modes_varcoeff.xml</parameters>
     <files>
-        <file description="Session File">helmholtz2D_9modes_varcoeff.xml</file>
+        <file description="Session File">Helmholtz2D_CG_P9_Modes_varcoeff.xml</file>
     </files>
 
     <metrics>

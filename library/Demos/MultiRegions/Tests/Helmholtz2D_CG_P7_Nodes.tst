@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 2D CG with P=7</description>
     <executable>Helmholtz2D</executable>
-    <parameters>helmholtz2D_7nodes.xml</parameters>
+    <parameters>Helmholtz2D_CG_P7_Nodes.xml</parameters>
     <files>
-        <file description="Session File">helmholtz2D_7nodes.xml</file>
+        <file description="Session File">Helmholtz2D_CG_P7_Nodes.xml</file>
     </files>
 
     <metrics>

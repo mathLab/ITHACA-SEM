@@ -2,9 +2,9 @@
 <test>
     <description>HDG Helmholtz3D Homogeneous 1D</description>
     <executable>HDGHelmholtz3DHomo1D</executable>
-    <parameters>helmholtz3D_homo1D_7modes_8nz.xml</parameters>
+    <parameters>Helmholtz3D_Homo1D.xml</parameters>
     <files>
-        <file description="Session File">helmholtz3D_homo1D_7modes_8nz.xml</file>
+        <file description="Session File">Helmholtz3D_Homo1D.xml</file>
     </files>
 
     <metrics>

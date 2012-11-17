@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 3D CG for deformed Prism</description>
     <executable>Helmholtz3D</executable>
-    <parameters>helmholtz3D_prism_deformed.xml</parameters>
+    <parameters>Helmholtz3D_Prism_Deformed.xml</parameters>
     <files>
-        <file description="Session File">helmholtz3D_prism_deformed.xml</file>
+        <file description="Session File">Helmholtz3D_Prism_Deformed.xml</file>
     </files>
 
     <metrics>

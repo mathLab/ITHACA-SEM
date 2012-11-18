@@ -1154,7 +1154,7 @@ namespace Nektar
                     for(k = 0; k < order_e; ++k)
                     {
                         m_localToGlobalBndMap [k+cnt] = gid + orientMap[k];
-                        m_localToGlobalBndSign[k+cnt] = elmSign1[orientMap[k]];
+                        m_localToGlobalBndSign[k+cnt] = elmSign2[orientMap[k]];
                     }
 
                     cnt += order_e;

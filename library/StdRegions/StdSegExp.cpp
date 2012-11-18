@@ -464,8 +464,10 @@ namespace Nektar
             return  StdExpansion1D::v_PhysEvaluate(coords, physvals);
         }
 
-        void StdSegExp::v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray)
+        void StdSegExp::v_LaplacianMatrixOp(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
 
@@ -481,9 +483,9 @@ namespace Nektar
 
 
         void StdSegExp::v_HelmholtzMatrixOp(
-                const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray,
-                const double lambda)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
 
@@ -499,7 +501,7 @@ namespace Nektar
             // Laplacian matrix operation
             v_PhysDeriv(physValues,dPhysValuesdx);
             v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
-            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
+            Blas::Daxpy(m_ncoeffs, mkey.GetConstFactor(eFactorLambda), wsp.get(), 1, outarray.get(), 1);
         }
 
 

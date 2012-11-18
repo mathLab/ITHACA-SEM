@@ -143,14 +143,6 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
-            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                    const Array<OneD, const NekDouble>& bx,
-                    const Array<OneD, const NekDouble>& by,
-                    const Array<OneD, const NekDouble>& bz,
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> & outarray,
-                    int coll_check);
-
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_MatOp(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);

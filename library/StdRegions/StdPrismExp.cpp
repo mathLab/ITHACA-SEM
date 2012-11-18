@@ -273,7 +273,6 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray)
         {
             // Using implementation from page 146 of Spencer Sherwin's book.
-            int Qy = m_base[1]->GetNumPoints();
             int Qz = m_base[2]->GetNumPoints();
 
             // Get the point distributions:
@@ -476,13 +475,10 @@ namespace Nektar
         void StdPrismExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                                   Array<OneD,       NekDouble>& outarray)
         {
-            int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
-
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
             
             Array<OneD, NekDouble> wsp(nquad2*order1*order0 +
                                        nquad1*nquad2*order0);
@@ -1924,7 +1920,6 @@ namespace Nektar
          */
         int StdPrismExp::GetMode(int p, int q, int r)
         {
-            int P = m_base[0]->GetNumModes() - 1;
             int Q = m_base[1]->GetNumModes() - 1;
             int R = m_base[2]->GetNumModes() - 1;
             

@@ -566,18 +566,6 @@ namespace Nektar
             }
         }
 
-
-        void StdHexExp::v_IProductWRTBase(
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD, NekDouble> &outarray)
-        {
-            StdHexExp::v_IProductWRTBase(m_base[0]->GetBdata(),
-                            m_base[1]->GetBdata(),
-                            m_base[2]->GetBdata(),
-                            inarray,outarray,1);
-        }
-
-
         /**
          * \f$
          * \begin{array}{rcl}
@@ -612,12 +600,8 @@ namespace Nektar
          * @param   outarray    ?
          */
         void StdHexExp::v_IProductWRTBase(
-                    const Array<OneD, const NekDouble>& bx,
-                    const Array<OneD, const NekDouble>& by,
-                    const Array<OneD, const NekDouble>& bz,
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> & outarray,
-                    int coll_check)
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD, NekDouble> &outarray)
         {
             if(m_base[0]->Collocation() && m_base[1]->Collocation())
             {
@@ -1910,8 +1894,6 @@ namespace Nektar
                 }
             }
 
-            bool signChange = false;
-
             int IdxRange [3][2];
             int Incr[3];
 
@@ -2529,7 +2511,6 @@ namespace Nektar
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
-            int    nqtot  = nquad0*nquad1*nquad2;
 
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();

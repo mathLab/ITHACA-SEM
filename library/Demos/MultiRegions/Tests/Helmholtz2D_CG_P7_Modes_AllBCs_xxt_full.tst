@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 2D CG with P=7 XXT Full</description>
     <executable>Helmholtz2D</executable>
-    <parameters>helmholtz2D_7modes_AllBCs_xxt_full.xml</parameters>
+    <parameters>Helmholtz2D_CG_P7_Modes_AllBCs_xxt_full.xml</parameters>
     <files>
-        <file description="Session File">helmholtz2D_7modes_AllBCs_xxt_full.xml</file>
+        <file description="Session File">Helmholtz2D_CG_P7_Modes_AllBCs_xxt_full.xml</file>
     </files>
 
     <metrics>

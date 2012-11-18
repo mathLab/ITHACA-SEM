@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 2D CG with P=7 XXT Static Cond</description>
     <executable>Helmholtz2D</executable>
-    <parameters>helmholtz2D_7modes_AllBCs_xxt_sc.xml</parameters>
+    <parameters>Helmholtz2D_CG_P7_Modes_AllBCs_xxt_sc.xml</parameters>
     <files>
-        <file description="Session File">helmholtz2D_7modes_AllBCs_xxt_sc.xml</file>
+        <file description="Session File">Helmholtz2D_CG_P7_Modes_AllBCs_xxt_sc.xml</file>
     </files>
 
     <metrics>

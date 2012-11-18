@@ -42,6 +42,7 @@ using namespace std;
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
+#include <LibUtilities/Communication/Comm.h>
 #ifdef NEKTAR_USE_MPI
 #include <LibUtilities/Communication/CommMpi.h>
 #endif
@@ -160,6 +161,7 @@ namespace Xxt
                             const Nektar::Array<OneD, NekDouble> pAr,
                             const LibUtilities::CommSharedPtr& pComm)
     {
+#ifdef NEKTAR_USE_MPI
         unsigned int nz = pAr.num_elements();
         LibUtilities::CommMpiSharedPtr vCommMpi = boost::dynamic_pointer_cast<LibUtilities::CommMpi> (pComm);
         ASSERTL1(vCommMpi, "Failed to cast MPI Comm object.");
@@ -168,6 +170,9 @@ namespace Xxt
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
         return nektar_crs_setup(pRank, &pId[0], nz, &pAi[0], &pAj[0], &pAr[0], 0, &vComm);
+#else
+        return 0;
+#endif
     }
 
 
@@ -178,10 +183,12 @@ namespace Xxt
                  struct crs_data* pCrs,
                  Nektar::Array<OneD, NekDouble> pB )
     {
+#ifdef NETAR_USE_MPI
         if (!pCrs) {
             return;
         }
         nektar_crs_solve(&pX[0], pCrs, &pB[0]);
+#endif
     }
 
 
@@ -190,10 +197,12 @@ namespace Xxt
      */
     static void Finalise (crs_data* pCrs)
     {
+#ifdef NEKTAR_USE_MPI
         if (pCrs)
         {
             //nektar_crs_free(pCrs);
         }
+#endif
     }
 }
 

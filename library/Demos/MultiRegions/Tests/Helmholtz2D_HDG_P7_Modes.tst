@@ -2,9 +2,9 @@
 <test>
     <description>HDG Helmholtz 2D CG with P=7</description>
     <executable>HDGHelmholtz2D</executable>
-    <parameters>helmholtz2D_7modes.xml</parameters>
+    <parameters>Helmholtz2D_P7.xml</parameters>
     <files>
-        <file description="Session File">helmholtz2D_7modes.xml</file>
+        <file description="Session File">Helmholtz2D_P7.xml</file>
     </files>
 
     <metrics>

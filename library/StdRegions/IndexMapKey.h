@@ -38,13 +38,14 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdRegionsDeclspec.h>
+#include <ostream>
+#include <boost/shared_ptr.hpp>
+
 
 namespace Nektar
 {
     namespace StdRegions
     {
-        class StdExpansion;
-		
 		struct IndexValue
 		{
 			unsigned short index;

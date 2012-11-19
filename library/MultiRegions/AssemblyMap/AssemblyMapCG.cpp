@@ -33,11 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <MultiRegions/ExpList.h>
-#include <LocalRegions/PointExp.h>
-#include <LocalRegions/SegExp.h>
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -252,9 +249,6 @@ namespace Nektar
                 m_globalToUniversalBndMapUnique[i] = (tmp2[i] >= 0 ? 1 : 0);
             }
         }
-
-
-
 
         /**
          * The bandwidth calculated here corresponds to what is referred to as

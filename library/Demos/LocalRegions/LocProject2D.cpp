@@ -1,27 +1,24 @@
-#include <cstdio>
 #include <cstdlib>
 #include <math.h>
 
-#include "StdRegions/StdExpansion2D.h"
-#include "LocalRegions/QuadExp.h"
-#include "LocalRegions/TriExp.h"
-#include "LocalRegions/NodalTriExp.h"
+#include <StdRegions/StdExpansion2D.h>
+#include <LocalRegions/QuadExp.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/NodalTriExp.h>
 
-#include "LocalRegions/LocalRegions.hpp"
-#include "LibUtilities/Foundations/Foundations.hpp"
+#include <LibUtilities/Foundations/Foundations.hpp>
 
 using namespace Nektar;
 
 NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2);
 NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
-           LibUtilities::BasisType btype1, LibUtilities::BasisType btype2);
+                   LibUtilities::BasisType btype1, LibUtilities::BasisType btype2);
 
 // This routine projects a polynomial or trigonmetric functions which
 // has energy in all mdoes of the expansions and reports and error
 
 int main(int argc, char *argv[])
 {
-
   int           i;
 
   int           order1,order2, nq1,nq2,NodalTri = 0;
@@ -167,7 +164,7 @@ int main(int argc, char *argv[])
   {
   case StdRegions::eTriangle:
       {
-
+          
           coords[0]    =   atof(argv[8]);
           coords[1]    =   atof(argv[9]);
           coords[2]    =   atof(argv[10]);
@@ -341,26 +338,26 @@ NekDouble Tri_sol(NekDouble x, NekDouble y, int order1, int order2){
 
     for(k = 0; k < order1; ++k)
     {
-    for(l = 0; l < order2-k; ++l)
-    {
-        sol += pow(x,k)*pow(y,l);
-    }
+        for(l = 0; l < order2-k; ++l)
+        {
+            sol += pow(x,k)*pow(y,l);
+        }
     }
 
     return sol;
 }
 
 NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
-           LibUtilities::BasisType btype1,
-           LibUtilities::BasisType btype2)
+                   LibUtilities::BasisType btype1,
+                   LibUtilities::BasisType btype2)
 {
     int k,l;
     NekDouble sol = 0.0;
 
     if(btype1 != LibUtilities::eFourier)
     {
-    if(btype2 != LibUtilities::eFourier)
-    {
+        if(btype2 != LibUtilities::eFourier)
+        {
             for(k = 0; k < order1; ++k)
             {
                 for(l = 0; l < order2; ++l)
@@ -368,43 +365,43 @@ NekDouble Quad_sol(NekDouble x, NekDouble y, int order1, int order2,
                     sol += pow(x,k)*pow(y,l);
                 }
             }
-    }
-    else
-    {
-        for(k = 0; k < order1; ++k)
-        {
-        for(l = 0; l < order2/2; ++l)
-        {
-            sol += pow(x,k)*sin(M_PI*l*y) + pow(x,k)*cos(M_PI*l*y);
         }
-        }
-    }
-    }
-    else
-    {
-    if(btype2 != LibUtilities::eFourier)
-    {
-        for(k = 0; k < order1/2; ++k)
+        else
         {
-        for(l = 0; l < order2; ++l)
-        {
-            sol += sin(M_PI*k*x)*pow(y,l) + cos(M_PI*k*x)*pow(y,l);
-        }
+            for(k = 0; k < order1; ++k)
+            {
+                for(l = 0; l < order2/2; ++l)
+                {
+                    sol += pow(x,k)*sin(M_PI*l*y) + pow(x,k)*cos(M_PI*l*y);
+                }
+            }
         }
     }
     else
     {
-        for(k = 0; k < order1/2; ++k)
+        if(btype2 != LibUtilities::eFourier)
         {
-        for(l = 0; l < order2/2; ++l)
+            for(k = 0; k < order1/2; ++k)
+            {
+                for(l = 0; l < order2; ++l)
+                {
+                    sol += sin(M_PI*k*x)*pow(y,l) + cos(M_PI*k*x)*pow(y,l);
+                }
+            }
+        }
+        else
         {
-            sol += sin(M_PI*k*x)*sin(M_PI*l*y)
-            + sin(M_PI*k*x)*cos(M_PI*l*y)
-            + cos(M_PI*k*x)*sin(M_PI*l*y)
-            + cos(M_PI*k*x)*cos(M_PI*l*y);
+            for(k = 0; k < order1/2; ++k)
+            {
+                for(l = 0; l < order2/2; ++l)
+                {
+                    sol += sin(M_PI*k*x)*sin(M_PI*l*y)
+                        + sin(M_PI*k*x)*cos(M_PI*l*y)
+                        + cos(M_PI*k*x)*sin(M_PI*l*y)
+                        + cos(M_PI*k*x)*cos(M_PI*l*y);
+                }
+            }
         }
-        }
-    }
     }
 
     return sol;

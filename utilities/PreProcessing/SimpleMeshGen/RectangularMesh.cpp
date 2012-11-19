@@ -1,11 +1,7 @@
-#include <cmath>
 #include <cstdlib>
 #include <cstdio>
-#include <string>
 #include <iomanip>
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <vector>
 
 #include<LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -17,7 +13,6 @@
 
 #include <tinyxml/tinyxml.h>
 
-class TiXmlDocument;
 
 void Header(FILE *, int nel);
 void Middle(FILE *);

@@ -35,18 +35,14 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3D_H
-#include <MultiRegions/MultiRegionsDeclspec.h>
-#include <LibUtilities/Communication/Comm.h>
 
+#include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/DisContField3D.h>
-#include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG3D.h>
 #include <MultiRegions/GlobalLinSys.h>
-
-#include <SpatialDomains/MeshGraph3D.h>
-#include <SpatialDomains/Conditions.h>
+#include <MultiRegions/GlobalMatrix.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 namespace Nektar
 {

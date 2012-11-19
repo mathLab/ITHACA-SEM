@@ -33,8 +33,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "pchSpatialDomains.h"
 #include <SpatialDomains/HexGeom.h>
+#include <SpatialDomains/Geometry1D.h>
+#include <StdRegions/StdHexExp.h>
+#include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/GeomFactors3D.h>
 
 namespace Nektar
 {

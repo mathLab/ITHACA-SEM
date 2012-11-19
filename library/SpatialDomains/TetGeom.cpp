@@ -33,8 +33,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "pchSpatialDomains.h"
 #include <SpatialDomains/TetGeom.h>
+
+#include <SpatialDomains/Geometry1D.h>
+#include <StdRegions/StdTetExp.h>
+#include <SpatialDomains/SegGeom.h>
+
 
 namespace Nektar
 {

@@ -37,19 +37,21 @@
 #define TIXML_USE_STL
 #endif
 
+#include <LibUtilities/BasicUtils/SessionReader.h>
+
 #include <iostream>
 #include <string>
 using namespace std;
 
 #include <boost/algorithm/string.hpp>
-//#include <boost/algorithm/string/regex.hpp>
 #include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/Equation.h>
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+
+#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 
@@ -1011,9 +1013,8 @@ namespace Nektar
             TiXmlHandle docHandle(m_xmlDoc);
             TiXmlElement* e;
             e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
-            ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
 
-            // Read the various sections of the document
+            // Read the various sections of the CONDITIONS block
             ReadParameters(e);
             ReadSolverInfo(e);
             ReadExpressions(e);
@@ -1044,11 +1045,11 @@ namespace Nektar
                 TiXmlHandle docHandle(m_xmlDoc);
                 TiXmlElement* e;
                 e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
-                ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
+
                 ReadSolverInfo(e);
 
                 string vCommModule("Serial");
-                if (DefinesSolverInfo("Communication"))
+                if (e && DefinesSolverInfo("Communication"))
                 {
                     vCommModule = GetSolverInfo("Communication");
                 }
@@ -1118,10 +1119,10 @@ namespace Nektar
             TiXmlHandle docHandle(m_xmlDoc);
             TiXmlElement* e;
             e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
-            ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
+
             ReadParameters(e);
 			
-            if (m_comm->GetSize() > 1)
+            if (e && m_comm->GetSize() > 1)
             {
                 int nProcZ = 1;
 				int nProcY = 1;
@@ -1167,6 +1168,11 @@ namespace Nektar
         void SessionReader::ReadParameters(TiXmlElement *conditions)
         {
             m_parameters.clear();
+
+            if (!conditions)
+            {
+                return;
+            }
 
             TiXmlElement *parametersElement = conditions->FirstChildElement("PARAMETERS");
 
@@ -1280,6 +1286,11 @@ namespace Nektar
             m_solverInfo.clear();
             m_solverInfo = m_solverInfoDefaults;
 
+            if (!conditions)
+            {
+                return;
+            }
+
             TiXmlElement *solverInfoElement = conditions->FirstChildElement("SOLVERINFO");
 
             if (solverInfoElement)
@@ -1331,9 +1342,10 @@ namespace Nektar
             }
             if (m_comm && m_comm->GetRowComm()->GetSize() > 1)
             {
-                ASSERTL0 (m_solverInfo["GLOBALSYSSOLN"] == "IterativeFull"
-                    || m_solverInfo["GLOBALSYSSOLN"] == "IterativeStaticCond",
-                    "An iterative solver must be used when run in parallel.");
+                ASSERTL0 (m_solverInfo["GLOBALSYSSOLN"] == "IterativeFull" ||
+                          m_solverInfo["GLOBALSYSSOLN"] == "IterativeStaticCond" ||
+                          m_solverInfo["GLOBALSYSSOLN"] == "IterativeMultiLevelStaticCond",
+                          "An iterative solver must be used when run in parallel.");
             }
             
             if (m_verbose && m_solverInfo.size() > 0 && m_comm)
@@ -1420,6 +1432,11 @@ namespace Nektar
         {
             m_expressions.clear();
 
+            if (!conditions)
+            {
+                return;
+            }
+
             TiXmlElement *expressionsElement = conditions->FirstChildElement("EXPRESSIONS");
 
             if (expressionsElement)
@@ -1467,6 +1484,11 @@ namespace Nektar
         void SessionReader::ReadVariables(TiXmlElement *conditions)
         {
             m_variables.clear();
+
+            if (!conditions)
+            {
+                return;
+            }
 
             TiXmlElement *variablesElement = conditions->FirstChildElement("VARIABLES");
 
@@ -1540,6 +1562,11 @@ namespace Nektar
         void SessionReader::ReadFunctions(TiXmlElement *conditions)
         {
             m_functions.clear();
+
+            if (!conditions)
+            {
+                return;
+            }
 
             // Scan through conditions section looking for functions.
             TiXmlElement *function = conditions->FirstChildElement("FUNCTION");

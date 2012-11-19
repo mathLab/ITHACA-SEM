@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField3D.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG3D.h>
 
 namespace Nektar
 {
@@ -337,10 +338,11 @@ namespace Nektar
 
 
       // Note inout contains initial guess and final output.
-      void ContField3D::GlobalSolve(const GlobalLinSysKey &key,
-                                    const Array<OneD, const NekDouble>& rhs,
-                                    Array<OneD,       NekDouble>& inout,
-                                    const Array<OneD, const NekDouble>& dirForcing)
+      void ContField3D::GlobalSolve(
+          const GlobalLinSysKey              &key,
+          const Array<OneD, const NekDouble> &rhs,
+                Array<OneD,       NekDouble> &inout,
+          const Array<OneD, const NekDouble> &dirForcing)
       {
           int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
           int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
@@ -501,10 +503,11 @@ namespace Nektar
           }
       }
       
-      void ContField3D::v_GeneralMatrixOp(const GlobalMatrixKey             &gkey,
-                                          const Array<OneD,const NekDouble> &inarray,
-                                          Array<OneD,      NekDouble> &outarray,
-                                          CoeffState coeffstate)
+      void ContField3D::v_GeneralMatrixOp(
+          const GlobalMatrixKey             &gkey,
+          const Array<OneD,const NekDouble> &inarray,
+                Array<OneD,      NekDouble> &outarray,
+          CoeffState                         coeffstate)
       {
           if(coeffstate == eGlobal)
           {

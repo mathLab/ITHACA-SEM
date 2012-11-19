@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SpatialDomains/GeomFactors2D.h>
-#include <SpatialDomains/Geometry.h>
 #include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
@@ -525,6 +524,11 @@ namespace Nektar
                         output[0][i] = ydis/radius;
                         output[1][i] = -1.0*xdis/radius;
                     }
+                }
+                default:
+                {
+                    ASSERTL0(false, "Unsupported tangent direction.");
+                    break;
                 }
             }
         }

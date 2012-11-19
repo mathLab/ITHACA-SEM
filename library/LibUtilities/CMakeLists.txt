@@ -50,6 +50,7 @@ SET(LinearAlgebraHeaders
 SET(FoundationHeaders
     ./Foundations/Graph.h
     ./Foundations/Basis.h
+    ./Foundations/BasisType.h
     ./Foundations/Foundations.hpp
     ./Foundations/FourierPoints.h
     ./Foundations/FourierSingleModePoints.h
@@ -62,6 +63,7 @@ SET(FoundationHeaders
     ./Foundations/NodalTriElec.h
     ./Foundations/NodalTriFekete.h
     ./Foundations/Points.h
+    ./Foundations/PointsType.h
     ./Foundations/PolyEPoints.h
     ./Foundations/NodalUtil.h
     ./Foundations/NodalTriEvenlySpaced.h
@@ -113,7 +115,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/Equation.h
     ./BasicUtils/ErrorUtil.hpp
-    ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
@@ -136,7 +137,7 @@ SET(BasicUtilsSources
     ./BasicUtils/Equation.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
-    ./BasicUtils/VMath.cpp
+    ./BasicUtils/Vmath.cpp
 )
 
 SET(Memory

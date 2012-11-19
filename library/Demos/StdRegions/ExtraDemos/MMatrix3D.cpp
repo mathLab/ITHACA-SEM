@@ -1,12 +1,12 @@
 #include <cstdio>
 #include <cstdlib>
-#include "StdRegions/StdExpansion.h"
-#include "StdRegions/StdHexExp.h"
-#include "StdRegions/StdTetExp.h"
-#include "StdRegions/StdPrismExp.h"
-#include "StdRegions/StdPyrExp.h"
+#include <StdRegions/StdExpansion.h>
+#include <StdRegions/StdHexExp.h>
+#include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdPrismExp.h>
+#include <StdRegions/StdPyrExp.h>
 
-#include "StdRegions/StdRegions.hpp"
+#include <StdRegions/StdRegions.hpp>
 
 using namespace Nektar;
 using namespace StdRegions; 

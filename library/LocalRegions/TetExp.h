@@ -36,14 +36,10 @@
 #ifndef TETEXP_H
 #define TETEXP_H
 
-#include <LocalRegions/LocalRegions.hpp>
-
 #include <StdRegions/StdTetExp.h>
 #include <SpatialDomains/TetGeom.h>
-
-#include <SpatialDomains/GeomFactors3D.h>
 #include <LocalRegions/MatrixKey.h>
-
+#include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 

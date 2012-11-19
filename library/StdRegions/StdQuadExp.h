@@ -39,7 +39,6 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
-#include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
@@ -47,8 +46,12 @@ namespace Nektar
     namespace StdRegions
     {
 
-    class StdQuadExp: virtual public StdExpansion2D
+        class StdExpansion1D;
+
+        class StdQuadExp: virtual public StdExpansion2D
         {
+
+        typedef boost::shared_ptr<StdExpansion1D> StdExpansion1DSharedPtr;
 
         public:
             STD_REGIONS_EXPORT StdQuadExp();
@@ -183,10 +186,13 @@ namespace Nektar
                 Array<OneD, NekDouble> &coords_0,
                 Array<OneD, NekDouble> &coords_1,
                 Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray);            
-	    STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  
+            STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  
                     StdExpansion1DSharedPtr &EdgeExp, 
                     const Array<OneD, const NekDouble> &inarray, 
                     Array<OneD,NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
+                    const int edge,  
+                    Array<OneD, NekDouble> &outarray);
             STD_REGIONS_EXPORT void v_WriteToFile(std::ofstream &outfile, 
                     OutputFormat format, 
                     const bool dumpVar = true, 

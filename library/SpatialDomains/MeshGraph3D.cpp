@@ -33,10 +33,11 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
 
 #include <SpatialDomains/MeshGraph3D.h>
+#include <SpatialDomains/TriGeom.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <tinyxml/tinyxml.h>
 
 namespace Nektar
 {

@@ -3,9 +3,10 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ContField3D.h>
+#include <SpatialDomains/MeshGraph3D.h>
+
 using namespace Nektar;
 
 // This routine projects a polynomial which has energy in all mdoes of

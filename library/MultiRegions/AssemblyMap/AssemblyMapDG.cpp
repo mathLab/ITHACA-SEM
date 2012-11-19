@@ -34,6 +34,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <MultiRegions/ExpList.h>
+#include <LocalRegions/SegExp.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/QuadExp.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
@@ -120,7 +124,7 @@ namespace Nektar
             cnt = 0;
             for(i = 0; i < exp1D->size(); ++i)
             {
-                if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>((*exp1D)[i]))
+                if((locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>((*exp1D)[i])))
                 {
                     locSegExp->GetBoundaryMap(vmap);
 
@@ -201,7 +205,7 @@ namespace Nektar
             // determine mapping from geometry edges to trace
             for(i = 0; i < ntrace_exp; ++i)
             {
-                if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(trace->GetExp(i)))
+                if((locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(trace->GetExp(i))))
                 {
                     id = (locSegExp->GetGeom1D())->GetEid();
 
@@ -245,7 +249,7 @@ namespace Nektar
             {
                 m_elmtToTrace[i] = edgemap + cnt;
 
-                if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i]))
+                if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i])))
                 {
                     for(j = 0; j < locQuadExp->GetNedges(); ++j)
                     {
@@ -264,7 +268,7 @@ namespace Nektar
                         }
                     }
                 }
-                else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i]))
+                else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i])))
                 {
                     for(j = 0; j < locTriExp->GetNedges(); ++j)
                     {
@@ -309,7 +313,7 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-                    if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j)))
+                    if((locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j))))
                     {
                         SegGeom = locSegExp->GetGeom1D();
                         id = SegGeom->GetEid();
@@ -459,7 +463,7 @@ namespace Nektar
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
                     {
-                        MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph);
+                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph);
                     }
                     break;
                 default:
@@ -560,7 +564,7 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-                    if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j)))
+                    if((locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j))))
                     {
                         nbndexp++;
                         SegGeom = locSegExp->GetGeom1D();
@@ -610,7 +614,7 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-                    if(locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j)))
+                    if((locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j))))
                     {
                         SegGeom = locSegExp->GetGeom1D();
                         id = SegGeom->GetEid();
@@ -678,12 +682,12 @@ namespace Nektar
             for(i = 0; i < ntrace_exp; ++i)
             {
                 //quad face
-                if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(trace->GetExp(i)))
+                if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(trace->GetExp(i))))
                 {
                     id = (locQuadExp->GetGeom2D())->GetFid();
                 }
                 //tri face
-                else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(trace->GetExp(i)))
+                else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(trace->GetExp(i))))
                 {
                     id = (locTriExp->GetGeom2D())->GetFid();
                 }
@@ -728,7 +732,7 @@ namespace Nektar
                 m_elmtToTrace[i] = facemap + cnt;
                 
                 //if Hex expansion
-                if(locHexExp = boost::dynamic_pointer_cast<LocalRegions::HexExp>((*exp3D)[i]))
+                if((locHexExp = boost::dynamic_pointer_cast<LocalRegions::HexExp>((*exp3D)[i])))
                 {
                     for(j = 0; j < locHexExp->GetNfaces(); ++j)
                     {
@@ -758,7 +762,7 @@ namespace Nektar
                     }
                 }
                 //else if Tet expansion
-                else if(locTetExp = boost::dynamic_pointer_cast<LocalRegions::TetExp>((*exp3D)[i]))
+                else if((locTetExp = boost::dynamic_pointer_cast<LocalRegions::TetExp>((*exp3D)[i])))
                 {
                     for(j = 0; j < locTetExp->GetNfaces(); ++j)
                     {
@@ -788,7 +792,7 @@ namespace Nektar
                     }
                 }
                 //else if Pyramid expansion
-                else if(locPyrExp = boost::dynamic_pointer_cast<LocalRegions::PyrExp>((*exp3D)[i]))
+                else if((locPyrExp = boost::dynamic_pointer_cast<LocalRegions::PyrExp>((*exp3D)[i])))
                 {
                     for(j = 0; j < locPyrExp->GetNfaces(); ++j)
                     {
@@ -818,7 +822,7 @@ namespace Nektar
                     }
                 }
                 //else if Prism expansion
-                else if(locPrismExp = boost::dynamic_pointer_cast<LocalRegions::PrismExp>((*exp3D)[i]))
+                else if((locPrismExp = boost::dynamic_pointer_cast<LocalRegions::PrismExp>((*exp3D)[i])))
                 {
                     for(j = 0; j < locPrismExp->GetNfaces(); ++j)
                     {
@@ -873,7 +877,7 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     //if face is quad
-                    if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j)))
+                    if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j))))
                     {
                         FaceGeom = locQuadExp->GetGeom2D();
                         id = FaceGeom->GetFid();
@@ -897,7 +901,7 @@ namespace Nektar
                         }
                     }
                     //else if face is triangle
-                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j)))
+                    else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j))))
                     {
                         FaceGeom = locTriExp->GetGeom2D();
                         id = FaceGeom->GetFid();
@@ -992,12 +996,12 @@ namespace Nektar
                 for(j = 0; j < (*exp3D)[eid]->GetNfaces(); ++j)
                 {
                     //if face is quad
-                    if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][j]))
+                    if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][j])))
                     {
                         FaceGeom = locQuadExp->GetGeom2D();
                     }
                     //else if face is triangle
-                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][j]))
+                    else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][j])))
                     {
                         FaceGeom = locTriExp->GetGeom2D();
                     }
@@ -1014,12 +1018,12 @@ namespace Nektar
                         for(k = j+1; k < (*exp3D)[eid]->GetNfaces(); ++k)
                         {
                             //if face is quad
-                            if(locQuadExp1 = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][k]))
+                            if((locQuadExp1 = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][k])))
                             {
                                 FaceGeom = locQuadExp1->GetGeom2D();
                             }
                             //else if face is triangle
-                            else if(locTriExp1 = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][k]))
+                            else if((locTriExp1 = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][k])))
                             {
                                 FaceGeom = locTriExp1->GetGeom2D();
                             }
@@ -1067,7 +1071,7 @@ namespace Nektar
                     break;
                 case eDirectMultiLevelStaticCond:
                     {
-                        MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph);
+                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph);
                     }
                     break;
                 default:
@@ -1097,12 +1101,12 @@ namespace Nektar
                 for(j = 0; j < (*exp3D)[eid]->GetNfaces(); ++j)
                 {
                     //if face is quad
-                    if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][j]))
+                    if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][j])))
                     {
                         FaceGeom = locQuadExp->GetGeom2D();
                     }
                     //else if face is triangle
-                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][j]))
+                    else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][j])))
                     {
                         FaceGeom = locTriExp->GetGeom2D();
                     }
@@ -1173,7 +1177,7 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     //if face is quad
-                    if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j)))
+                    if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j))))
                     {
                         nbndexp++;
                         FaceGeom = locQuadExp->GetGeom2D();
@@ -1191,7 +1195,7 @@ namespace Nektar
                         }
                     }
                     //else if face is triangle
-                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j)))
+                    else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j))))
                     {
                         nbndexp++;
                         FaceGeom = locTriExp->GetGeom2D();
@@ -1246,14 +1250,14 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
                     //if face is quad
-                    if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j)))
+                    if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j))))
                     {
                         FaceGeom = locQuadExp->GetGeom2D();
                         id      = FaceGeom->GetFid();
                         m_bndCondTraceToGlobalTraceMap[cnt++] = MeshFaceId.find(id)->second;
                     }
                     //else if face is triangle
-                    else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j)))
+                    else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j))))
                     {
                         FaceGeom = locTriExp->GetGeom2D();
                         id      = FaceGeom->GetFid();

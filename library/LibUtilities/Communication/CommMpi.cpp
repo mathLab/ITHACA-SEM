@@ -33,15 +33,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-using namespace std;
-
 #include <LibUtilities/Communication/CommMpi.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 namespace Nektar
 {
     namespace LibUtilities
     {
-        string CommMpi::className
+        std::string CommMpi::className
             = GetCommFactory().RegisterCreatorFunction(
                 "ParallelMPI",
                 CommMpi::create,
@@ -210,8 +209,8 @@ namespace Nektar
                       m_comm,
                       &status);
 
-            ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
-                     "MPI error receiving data.");
+            //ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
+            //         "MPI error receiving data.");
         }
 
 

@@ -36,8 +36,6 @@
 #ifndef NEKTAR_LIBS_MULTIREGIONS_GLOBALMATRIXKEY_H
 #define NEKTAR_LIBS_MULTIREGIONS_GLOBALMATRIXKEY_H
 
-#include <MultiRegions/MultiRegions.hpp>
-//#include <MultiRegions/AssemblyMap.h>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 #include <StdRegions/StdRegions.hpp>
 

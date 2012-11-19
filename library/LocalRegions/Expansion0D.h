@@ -36,8 +36,8 @@
 #ifndef EXPANSION0D_H
 #define EXPANSION0D_H
 
-#include <SpatialDomains/Geometry.h>
 #include <LocalRegions/Expansion.h>
+#include <StdRegions/StdExpansion0D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <LocalRegions/Expansion1D.h>
 
@@ -118,5 +118,4 @@ namespace Nektar
     } //end of namespace
 } //end of namespace
 
-#define EXPANSION0D_H
 #endif

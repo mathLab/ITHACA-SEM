@@ -35,14 +35,10 @@
 
 #ifndef EXPLIST2D_H
 #define EXPLIST2D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
-#include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList1D.h>
-#include <SpatialDomains/MeshGraph2D.h>
-#include <SpatialDomains/MeshGraph3D.h>
 #include <SpatialDomains/Conditions.h>
 
 namespace Nektar
@@ -150,74 +146,4 @@ namespace Nektar
 } //end of namespace
 
 #endif//EXPLIST2D_H
-
-/**
-* $Log: ExpList2D.h,v $
-* Revision 1.24  2009/12/15 18:09:03  cantwell
-* Split GeomFactors into 1D, 2D and 3D
-* Added generation of tangential basis into GeomFactors
-* Updated ADR2DManifold solver to use GeomFactors for tangents
-* Added <GEOMINFO> XML session section support in MeshGraph
-* Fixed const-correctness in VmathArray
-* Cleaned up LocalRegions code to generate GeomFactors
-* Removed GenSegExp
-* Temporary fix to SubStructuredGraph
-* Documentation for GlobalLinSys and GlobalMatrix classes
-*
-* Revision 1.23  2009/11/25 14:51:29  pvos
-* Updates for added Timings directory
-*
-* Revision 1.22  2009/11/19 23:30:36  cantwell
-* Documentation for ExpList2D and GlobalMatrixKey
-* Updated doxygen pages.
-*
-* Revision 1.21  2009/11/02 19:15:43  cantwell
-* Moved ContField1D to inherit from DisContField1D.
-* Moved ContField3D to inherit from DisContField3D.
-* Incorporated GenExpList1D functionality into ExpList1D.
-* Tidied up and added documentation to various classes.
-* Moved Namespace documentation and introductions to separate files along with
-* doxygen configuration.
-* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
-* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
-* Updated Linux compiling instructions.
-* Updated regDemo to use Helmholtz2D-g when built as debug.
-*
-* Revision 1.20  2009/09/06 22:28:45  sherwin
-* Updates for Navier-Stokes solver
-*
-* Revision 1.19  2009/05/10 23:17:12  sherwin
-* Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
-*
-* Revision 1.18  2009/03/04 14:17:38  pvos
-* Removed all methods that take and Expansion as argument
-*
-* Revision 1.17  2008/10/04 20:04:26  sherwin
-* Modifications for solver access
-*
-* Revision 1.16  2008/09/23 18:21:00  pvos
-* Updates for working ProjectContField3D demo
-*
-* Revision 1.15  2008/09/17 13:46:40  pvos
-* Added AssemblyMapCG for 3D expansions
-*
-* Revision 1.14  2008/08/14 22:15:51  sherwin
-* Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
-*
-* Revision 1.13  2008/06/05 15:06:58  pvos
-* Added documentation
-*
-* Revision 1.12  2007/12/06 22:52:30  pvos
-* 2D Helmholtz solver updates
-*
-* Revision 1.11  2007/07/22 23:04:21  bnelson
-* Backed out Nektar::ptr.
-*
-* Revision 1.10  2007/07/20 02:04:12  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.9  2007/06/05 16:36:55  pvos
-* Updated Explist2D ContExpList2D and corresponding demo-codes
-*
-**/
 

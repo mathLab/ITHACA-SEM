@@ -33,12 +33,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-using namespace std;
-
 #include "MeshElements.h"
 #include "OutputGmsh.h"
 #include "InputGmsh.h"
+
+#include <map>
+#include <vector>
+#include <string>
+using namespace std;
 
 namespace Nektar
 {
@@ -109,8 +111,8 @@ namespace Nektar
                 for (int i = 0; i < m->element[d].size(); ++i)
                 {
                     ElementSharedPtr e = m->element[d][i];
-                    if (e->GetConf().order <= 1        && maxOrder > 1 ||
-                        e->GetConf().order == maxOrder && e->GetConf().faceNodes == false)
+                    if ((e->GetConf().order <= 1        && maxOrder > 1) ||
+                        (e->GetConf().order == maxOrder && e->GetConf().faceNodes == false))
                     {
                         toComplete.push_back(e);
                     }

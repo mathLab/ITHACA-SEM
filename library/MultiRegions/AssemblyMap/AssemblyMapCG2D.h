@@ -35,11 +35,11 @@
 
 #ifndef MULTIREGIONS_ASSEMBLYMAPCG2D_H
 #define MULTIREGIONS_ASSEMBLYMAPCG2D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <MultiRegions/ExpList0D.h>
-
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
@@ -49,6 +49,7 @@ namespace Nektar
         class ExpList;
         class AssemblyMapCG2D;
         typedef boost::shared_ptr<AssemblyMapCG2D>  AssemblyMapCG2DSharedPtr;
+        typedef boost::shared_ptr<ExpList>  ExpListSharedPtr;
 
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class AssemblyMapCG2D: public AssemblyMapCG
@@ -116,7 +117,6 @@ namespace Nektar
                                            const vector<map<int,int> >& periodicVerticesId = NullVecIntIntMap,
                                            const map<int,int>& periodicEdgesId = NullIntIntMap,
                                            const bool checkIfSystemSingular = false);
-
         };
 
 

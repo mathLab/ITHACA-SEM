@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////////
-//  File:  $Source: /usr/sci/projects/Nektar/cvs/Nektar++/library/SpatialDomains/MeshGraph2D.cpp,v $
+//  File:  MeshGraph2D.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -32,11 +32,12 @@
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
 
 #include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/TriGeom.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <tinyxml/tinyxml.h>
 
 namespace Nektar
 {
@@ -200,6 +201,14 @@ namespace Nektar
 
             ASSERTL0(field, "Unable to find ELEMENT tag in file.");
 
+            // Set up curve map for curved elements on an embedded manifold.
+            map<int, int> faceCurves;
+            map<int,int>::iterator x;
+            for (int i = 0; i < m_curvedFaces.size(); ++i)
+            {
+                faceCurves[m_curvedFaces[i]->m_curveID] = i;
+            }
+
             int nextElementNumber = -1;
 
             /// All elements are of the form: "<? ID="#"> ... </?>", with
@@ -267,7 +276,22 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[2], *edges[0])
                         };
 
-                            TriGeomSharedPtr trigeom(MemoryManager<TriGeom>::AllocateSharedPtr(indx,edges,edgeorient));
+                            TriGeomSharedPtr trigeom;
+                            if ((x = faceCurves.find(indx)) == faceCurves.end())
+                            {
+                                trigeom = MemoryManager<TriGeom>
+                                            ::AllocateSharedPtr(indx,
+                                                    edges,
+                                                    edgeorient);
+                            }
+                            else
+                            {
+                                trigeom = MemoryManager<TriGeom>
+                                            ::AllocateSharedPtr(indx,
+                                                    edges,
+                                                    edgeorient,
+                                                    m_curvedFaces[x->second]);
+                            }
                             trigeom->SetGlobalID(indx);
 
                             m_triGeoms[indx] = trigeom;
@@ -305,8 +329,22 @@ namespace Nektar
                             SegGeom::GetEdgeOrientation(*edges[3], *edges[0])
                         };
 
-                            //QuadGeomSharedPtr quadgeom(new QuadGeom(edges, edgeorient));
-                            QuadGeomSharedPtr quadgeom  = MemoryManager<QuadGeom>::AllocateSharedPtr(indx, edges, edgeorient);
+                            QuadGeomSharedPtr quadgeom;
+                            if ((x = faceCurves.find(indx)) == faceCurves.end())
+                            {
+                                quadgeom = MemoryManager<QuadGeom>
+                                            ::AllocateSharedPtr(indx,
+                                                    edges,
+                                                    edgeorient);
+                            }
+                            else
+                            {
+                                quadgeom = MemoryManager<QuadGeom>
+                                            ::AllocateSharedPtr(indx,
+                                                    edges,
+                                                    edgeorient,
+                                                    m_curvedFaces[x->second]);
+                            }
                             quadgeom->SetGlobalID(indx);
 
                             m_quadGeoms[indx] = quadgeom;

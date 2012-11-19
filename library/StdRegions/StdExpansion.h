@@ -38,17 +38,15 @@
 #define NEKTAR_LIB_STDREGIONS_STANDARDEXPANSION_H
 
 #include <fstream>
-#include <vector> 
+#include <vector>
 
 #include <StdRegions/StdRegions.hpp>
+#include <StdRegions/StdRegionsDeclspec.h>
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
-#include <StdRegions/LocalRegionsDeclarations.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
-#include <StdRegions/StdLinSysKey.hpp>
-#include <StdRegions/StdRegionsDeclspec.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
-#include <LibUtilities/Foundations/ManagerAccess.h>
+namespace Nektar { namespace LocalRegions { class MatrixKey; } }
 
 
 namespace Nektar
@@ -1023,7 +1021,24 @@ namespace Nektar
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
+            
+            
+            
+            /**
+             * @brief Extract the metric factors to compute the contravariant 
+             * fluxes along edge \a edge and stores them into \a outarray
+             * following the local edge orientation (i.e. anticlockwise 
+             * convention).
+             */
+            void GetEdgeQFactors(
+                    const int edge,
+                    Array<OneD, NekDouble> &outarray)
+            {
+                v_GetEdgeQFactors(edge, outarray);
+            }
 
+            
+            
             void GetFacePhysVals(
                 const int                                face,
                 const boost::shared_ptr<StdExpansion>   &FaceExp,
@@ -1771,6 +1786,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+            
+            STD_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
+                const int edge,  
+                Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetFacePhysVals(
                 const int                                face,

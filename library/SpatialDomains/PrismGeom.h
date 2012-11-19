@@ -36,12 +36,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_PRISMGEOM_H
 #define NEKTAR_SPATIALDOMAINS_PRISMGEOM_H
 
-#include <StdRegions/StdPrismExp.h>
-#include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/Geometry3D.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/GeomFactors3D.h>
+#include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar
 {

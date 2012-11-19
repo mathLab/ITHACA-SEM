@@ -39,13 +39,14 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion3D.h>
-#include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
     namespace StdRegions
     {
+        class StdMatrixKey;
+
         namespace StdTetData
         {
             /**

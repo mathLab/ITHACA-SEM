@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField3DHomogeneous1D.h>
+#include <MultiRegions/ContField2D.h>
 
 namespace Nektar
 {

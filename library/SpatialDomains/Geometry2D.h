@@ -37,19 +37,25 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY2D_H
 
 #include <StdRegions/StdRegions.hpp>
-//#include <SpatialDomains/SpatialDomains.hpp>
+#include <StdRegions/StdExpansion2D.h>  // for StdExpansion2DSharedPtr, etc
 
 #include <SpatialDomains/Geometry.h>
-#include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        class Geometry1D;
         class Geometry2D;
+        class VertexComponent;
+        class SegGeom;
 
         // shorthand for boost pointer
+        typedef boost::shared_ptr<VertexComponent> VertexComponentSharedPtr;
+        typedef boost::shared_ptr<Geometry1D> Geometry1DSharedPtr;
         typedef boost::shared_ptr<Geometry2D> Geometry2DSharedPtr;
+        typedef boost::shared_ptr<SegGeom>    SegGeomSharedPtr;
         typedef std::vector< Geometry2DSharedPtr > Geometry2DVector;
         typedef std::vector< Geometry2DSharedPtr >::iterator Geometry2DVectorIter;
 

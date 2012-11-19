@@ -216,13 +216,16 @@ namespace Nektar
              */
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                // Check to see if any value on face has Dirichlet value.
+                cnt = 0;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
-                    bndCondFaceExp = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
-                    if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
+                    bndCondFaceExp = boost::dynamic_pointer_cast<
+                        StdRegions::StdExpansion2D>(
+                            bndCondExp[i]->GetExp(j));
+                    if (bndConditions[i]->GetBoundaryConditionType() == 
+                        SpatialDomains::eDirichlet)
                     {
-                        meshFaceId = (bndCondFaceExp->GetGeom2D())->GetFid();
-                        faceReorderedGraphVertId[meshFaceId] = graphVertId++;
                         for(k = 0; k < bndCondFaceExp->GetNverts(); k++)
                         {
                             meshVertId = (bndCondFaceExp->GetGeom2D())->GetVid(k);
@@ -240,53 +243,280 @@ namespace Nektar
                                 edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;
                             }
                         }
+                        meshFaceId = (bndCondFaceExp->GetGeom2D())->GetFid();
+                        faceReorderedGraphVertId[meshFaceId] = graphVertId++;
                         nLocDirBndCondDofs += bndCondFaceExp->GetNcoeffs();
                     }
-                    if (bndConditions[i]->GetBoundaryConditionType() != SpatialDomains::eNeumann)
+                    if (bndConditions[i]->GetBoundaryConditionType() !=
+                        SpatialDomains::eNeumann)
                     {
                         systemSingular = false;
                     }
                     nLocBndCondDofs += bndCondFaceExp->GetNcoeffs();
                 }
             }
-            m_numLocalDirBndCoeffs = nLocDirBndCondDofs;
-            firstNonDirGraphVertId = graphVertId;
 
+            /**
+             * STEP 1.5: Exchange Dirichlet mesh vertices between processes and
+             * check for singular problems.
+             */
+            
+            // Collate information on Dirichlet vertices from all processes
+            int n = m_comm->GetSize();
+            int p = m_comm->GetRank();
+
+            Array<OneD, int> vertcounts (n, 0);
+            Array<OneD, int> vertoffsets(n, 0);
+            Array<OneD, int> edgecounts (n, 0);
+            Array<OneD, int> edgeoffsets(n, 0);
+            vertcounts[p] = vertReorderedGraphVertId.size();
+            edgecounts[p] = edgeReorderedGraphVertId.size();
+            m_comm->AllReduce(vertcounts, LibUtilities::ReduceSum);
+            m_comm->AllReduce(edgecounts, LibUtilities::ReduceSum);
+
+            for (i = 1; i < n; ++i)
+            {
+                vertoffsets[i] = vertoffsets[i-1] + vertcounts[i-1];
+                edgeoffsets[i] = edgeoffsets[i-1] + edgecounts[i-1];
+            }
+
+            int nTotVerts = Vmath::Vsum(n,vertcounts,1);
+            int nTotEdges = Vmath::Vsum(n,edgecounts,1);
+            
+            Array<OneD, int> vertlist(nTotVerts, 0);
+            Array<OneD, int> edgelist(nTotEdges, 0);
+            std::map<int, int>::iterator it;
+            for (it  = vertReorderedGraphVertId.begin(), i = 0;
+                 it != vertReorderedGraphVertId.end();
+                 ++it, ++i)
+            {
+                vertlist[vertoffsets[p] + i] = it->first;
+            }
+            
+            for (it  = edgeReorderedGraphVertId.begin(), i = 0;
+                 it != edgeReorderedGraphVertId.end();
+                 ++it, ++i)
+            {
+                edgelist[edgeoffsets[p] + i] = it->first;
+            }
+            m_comm->AllReduce(vertlist, LibUtilities::ReduceSum);
+            m_comm->AllReduce(edgelist, LibUtilities::ReduceSum);
+            
+            int nExtraDirichlet = 0;
+            map<int, int> extraDirVertIds, extraDirEdgeIds;
+            
+            // Ensure Dirchlet vertices are consistently recorded between
+            // processes (e.g. Dirichlet region meets Neumann region across a
+            // partition boundary requires vertex on partition to be Dirichlet).
+            for (i = 0; i < n; ++i)
+            {
+                if (i == p)
+                {
+                    continue;
+                }
+
+                for(j = 0; j < locExpVector.size(); j++)
+                {
+                    locExpansion = boost::dynamic_pointer_cast<
+                        StdRegions::StdExpansion3D>(
+                            locExpVector[locExp.GetOffset_Elmt_Id(j)]);
+                    
+                    for(k = 0; k < locExpansion->GetNverts(); k++)
+                    {
+                        meshVertId = locExpansion->GetGeom3D()->GetVid(k);
+                        if(vertReorderedGraphVertId.count(meshVertId) == 0)
+                        {
+                            for (l = 0; l < vertcounts[i]; ++l)
+                            {
+                                if (vertlist[vertoffsets[i]+l] == meshVertId)
+                                {
+                                    extraDirVertIds[meshVertId] = i;
+                                    vertReorderedGraphVertId[meshVertId] = graphVertId++;
+                                    nExtraDirichlet++;
+                                }
+                            }
+                        }
+                    }
+                    
+                    for(k = 0; k < locExpansion->GetNedges(); k++)
+                    {
+                        meshEdgeId = locExpansion->GetGeom3D()->GetEid(k);
+                        if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)
+                        {
+                            for (l = 0; l < edgecounts[i]; ++l)
+                            {
+                                if (edgelist[edgeoffsets[i]+l] == meshEdgeId)
+                                {
+                                    extraDirEdgeIds[meshEdgeId] = i;
+                                    edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;
+                                    nExtraDirichlet += locExpansion->GetEdgeNcoeffs(k) - 2;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            for (i = 0; i < n; ++i)
+            {
+                vertcounts [i] = 0;
+                vertoffsets[i] = 0;
+                edgecounts [i] = 0;
+                edgeoffsets[i] = 0;
+            }
+            
+            vertcounts[p] = extraDirVertIds.size();
+            edgecounts[p] = extraDirEdgeIds.size();
+            m_comm->AllReduce(vertcounts, LibUtilities::ReduceSum);
+            m_comm->AllReduce(edgecounts, LibUtilities::ReduceSum);
+            nTotVerts = Vmath::Vsum(n, vertcounts, 1);
+            nTotEdges = Vmath::Vsum(n, edgecounts, 1);
+            
+            vertoffsets[0] = edgeoffsets[0] = 0;
+            
+            for (i = 1; i < n; ++i)
+            {
+                vertoffsets[i] = vertoffsets[i-1] + vertcounts[i-1];
+                edgeoffsets[i] = edgeoffsets[i-1] + edgecounts[i-1];
+            }
+
+            Array<OneD, int> vertids  (nTotVerts, 0);
+            Array<OneD, int> edgeids  (nTotEdges, 0);
+            Array<OneD, int> vertprocs(nTotVerts, 0);
+            Array<OneD, int> edgeprocs(nTotEdges, 0);
+            
+            for (it  = extraDirVertIds.begin(), i = 0; 
+                 it != extraDirVertIds.end(); ++it, ++i)
+            {
+                vertids  [vertoffsets[p]+i] = it->first;
+                vertprocs[vertoffsets[p]+i] = it->second;
+            }
+
+            for (it  = extraDirEdgeIds.begin(), i = 0; 
+                 it != extraDirEdgeIds.end(); ++it, ++i)
+            {
+                edgeids  [edgeoffsets[p]+i] = it->first;
+                edgeprocs[edgeoffsets[p]+i] = it->second;
+            }
+
+            m_comm->AllReduce(vertids,   LibUtilities::ReduceSum);
+            m_comm->AllReduce(vertprocs, LibUtilities::ReduceSum);
+            m_comm->AllReduce(edgeids,   LibUtilities::ReduceSum);
+            m_comm->AllReduce(edgeprocs, LibUtilities::ReduceSum);
+            
+            set<int> extraDirVerts;
+            set<int> extraDirEdges;
+
+            for (i = 0; i < nTotVerts; ++i)
+            {
+                if (m_comm->GetRank() != vertprocs[i])
+                {
+                    continue;
+                }
+                
+                extraDirVerts.insert(vertids[i]);
+            }
+            
+            for (i = 0; i < nTotEdges; ++i)
+            {
+                if (m_comm->GetRank() != edgeprocs[i])
+                {
+                    continue;
+                }
+                
+                extraDirEdges.insert(edgeids[i]);
+            }
+
+            /*            
+            // Check between processes if the whole system is singular
+            int s = (systemSingular ? 1 : 0);
+            m_comm->AllReduce(s, LibUtilities::ReduceMin);
+            systemSingular = (s == 1 ? true : false);
+
+            // Count the number of boundary regions on each process
+            Array<OneD, int> bccounts(n, 0);
+            bccounts[p] = bndCondExp.num_elements();
+            m_comm->AllReduce(bccounts, LibUtilities::ReduceSum);
+
+            // Find the process rank with the maximum number of boundary regions
+            int maxBCIdx = Vmath::Imax(n, bccounts, 1);
+
+            // If the system is singular, the process with the maximum number of
+            // BCs will set a Dirichlet vertex to make system non-singular.
+            // Note: we find the process with maximum boundary regions to ensure
+            // we do not try to set a Dirichlet vertex on a partition with no
+            // intersection with the boundary.
+            if(systemSingular == true && maxBCIdx == p)
+            {
+                if(m_session->DefinesParameter("SingularElement"))
+                {
+                    int s_eid;
+                    m_session->LoadParameter("SingularElement", s_eid);
+
+                    ASSERTL1(s_eid < locExpVector.size(),
+                             "SingularElement Parameter is too large");
+                    
+                    meshVertId = locExpVector[s_eid]->GetGeom2D()->GetVid(0);
+                }
+                else
+                {
+                    //last region i and j=0 edge
+                    bndCondFaceExp = boost::dynamic_pointer_cast<
+                        StdRegions::StdExpansion2D>(
+                            bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
+                    
+                    //first vertex 0 of the edge
+                    meshVertId = bndCondFaceExp->GetGeom2D()->GetVid(0);
+                }
+
+                if(vertReorderedGraphVertId.count(meshVertId) == 0)
+                {
+                    vertReorderedGraphVertId[meshVertId] = graphVertId++;
+                }
+            }
+            */
+
+            m_numLocalDirBndCoeffs = nLocDirBndCondDofs + nExtraDirichlet;
+            firstNonDirGraphVertId = graphVertId;
 
             /**
              * STEP 2: Now order all other vertices and edges in the graph and
              * create a temporary numbering of domain-interior vertices and
              * edges.
              */
-            typedef boost::adjacency_list<boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
-            typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
+            typedef boost::adjacency_list<
+                boost::setS, boost::vecS, boost::undirectedS> BoostGraph;
+            typedef boost::graph_traits<
+                BoostGraph>::vertex_descriptor BoostVertex;
             BoostGraph boostGraphObj;
 
+            map<int, int>    vertTempGraphVertId;
+            map<int, int>    edgeTempGraphVertId;
+            map<int, int>    faceTempGraphVertId;
+            map<int, int>    vwgts_map;
+            Array<OneD, int> localVerts;
+            Array<OneD, int> localEdges;
+            Array<OneD, int> localFaces;
+
             int tempGraphVertId = 0;
+            int localVertOffset = 0;
+            int localEdgeOffset = 0;
+            int localFaceOffset = 0;
+            int nTotalVerts     = 0;
+            int nTotalEdges     = 0;
+            int nTotalFaces     = 0;
             int nVerts;
             int nEdges;
             int nFaces;
-            int nTotalVerts=0;
-            int nTotalEdges=0;
-            int nTotalFaces=0;
             int vertCnt;
             int edgeCnt;
             int faceCnt;
-            int localVertOffset=0;
-            int localEdgeOffset=0;
-            int localFaceOffset=0;
-            map<int, int>          vertTempGraphVertId;
-            map<int, int>          edgeTempGraphVertId;
-            map<int, int>          faceTempGraphVertId;
-            map<int, int>          vwgts_map;
-            Array<OneD, int>       localVerts;
-            Array<OneD, int>       localEdges;
-            Array<OneD, int>       localFaces;
 
             m_numLocalBndCoeffs = 0;
 
             /// - Periodic vertices
-            for(mapConstIt = periodicVerticesId.begin(); mapConstIt != periodicVerticesId.end(); mapConstIt++)
+            for(mapConstIt  = periodicVerticesId.begin(); 
+                mapConstIt != periodicVerticesId.end(); mapConstIt++)
             {
                 meshVertId  = mapConstIt->first;
                 meshVertId2 = mapConstIt->second;
@@ -728,7 +958,121 @@ namespace Nektar
                 localFaceOffset+=nFaces;
             }
 
+            // Container to store vertices of the graph which correspond to
+            // degrees of freedom along the boundary.
+            set<int> partVerts;
+            
+            if (m_solnType == eIterativeMultiLevelStaticCond)
+            {
+                vector<long> procVerts,  procEdges,  procFaces;
+                set   <int>  foundVerts, foundEdges, foundFaces;
+                
+                // Loop over element and construct the procVerts and procEdges
+                // vectors, which store the geometry IDs of mesh vertices and
+                // edges respectively which are local to this process.
+                for(i = cnt = 0; i < locExpVector.size(); ++i)
+                {
+                    int elmtid = locExp.GetOffset_Elmt_Id(i);
+                    if((locExpansion = boost::dynamic_pointer_cast<
+                            StdRegions::StdExpansion3D>(locExpVector[elmtid])))
+                    {
+                        for (j = 0; j < locExpansion->GetNverts(); ++j)
+                        {
+                            int vid = locExpansion->GetGeom3D()->GetVid(j)+1;
+                            
+                            if (foundVerts.count(vid) == 0)
+                            {
+                                procVerts.push_back(vid);
+                                foundVerts.insert(vid);
+                            }
+                        }
 
+                        for (j = 0; j < locExpansion->GetNedges(); ++j)
+                        {
+                            int eid = locExpansion->GetGeom3D()->GetEid(j)+1;
+
+                            if (foundEdges.count(eid) == 0)
+                            {
+                                procEdges.push_back(eid);
+                                foundEdges.insert(eid);
+                            }
+                        }
+
+                        for (j = 0; j < locExpansion->GetNfaces(); ++j)
+                        {
+                            int fid = locExpansion->GetGeom3D()->GetFid(j)+1;
+                            
+                            if (foundFaces.count(fid) == 0)
+                            {
+                                procFaces.push_back(fid);
+                                foundFaces.insert(fid);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ASSERTL0(false,
+                                 "dynamic cast to a local 3D expansion failed");
+                    }
+                }
+
+                int unique_verts = foundVerts.size();
+                int unique_edges = foundEdges.size();
+                int unique_faces = foundFaces.size();
+
+                // Now construct temporary GS objects. These will be used to
+                // populate the arrays tmp3 and tmp4 with the multiplicity of
+                // the vertices and edges respectively to identify those
+                // vertices and edges which are located on partition boundary.
+                Array<OneD, long> vertArray(unique_verts, &procVerts[0]);
+                Array<OneD, long> edgeArray(unique_edges, &procEdges[0]);
+                Array<OneD, long> faceArray(unique_faces, &procFaces[0]);
+                Gs::gs_data *tmp1 = Gs::Init(vertArray, m_comm);
+                Gs::gs_data *tmp2 = Gs::Init(edgeArray, m_comm);
+                Gs::gs_data *tmp3 = Gs::Init(faceArray, m_comm);
+                Array<OneD, NekDouble> tmp4(unique_verts, 1.0);
+                Array<OneD, NekDouble> tmp5(unique_edges, 1.0);
+                Array<OneD, NekDouble> tmp6(unique_faces, 1.0);
+                Gs::Gather(tmp4, Gs::gs_add, tmp1);
+                Gs::Gather(tmp5, Gs::gs_add, tmp2);
+                Gs::Gather(tmp6, Gs::gs_add, tmp3);
+
+                // Finally, fill the partVerts set with all non-Dirichlet
+                // vertices which lie on a partition boundary.
+                for (i = 0; i < unique_verts; ++i)
+                {
+                    if (tmp4[i] > 1.0)
+                    {
+                        if (vertReorderedGraphVertId.count(procVerts[i]-1) == 0)
+                        {
+                            partVerts.insert(vertTempGraphVertId[procVerts[i]-1]);
+                        }
+                    }
+                }
+            
+                for (i = 0; i < unique_edges; ++i)
+                {
+                    if (tmp5[i] > 1.0)
+                    {
+                        if (edgeReorderedGraphVertId.count(procEdges[i]-1) == 0)
+                        {
+                            partVerts.insert(edgeTempGraphVertId[procEdges[i]-1]);
+                        }
+                    }
+                }
+
+                for (i = 0; i < unique_faces; ++i)
+                {
+                    if (tmp6[i] > 1.0)
+                    {
+                        if (faceReorderedGraphVertId.count(procFaces[i]-1) == 0)
+                        {
+                            partVerts.insert(faceTempGraphVertId[procFaces[i]-1]);
+                        }
+                    }
+                }
+            }
+            
             /**
              * STEP 3: Reorder graph for optimisation.
              */
@@ -762,7 +1106,8 @@ namespace Nektar
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
                     {
-                        MultiLevelBisectionReordering(boostGraphObj,vwgts,perm,iperm,bottomUpGraph);
+                        int mdswitch = 1;
+                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph,mdswitch,partVerts);
                     }
                     break;
                 default:
@@ -772,6 +1117,18 @@ namespace Nektar
                 }
             }
 
+            // For parallel multi-level static condensation determine the lowest
+            // static condensation level amongst processors.
+            if (m_solnType == eIterativeMultiLevelStaticCond)
+            {
+                m_lowestStaticCondLevel = bottomUpGraph->GetNlevels()-1;
+                m_comm->AllReduce(m_lowestStaticCondLevel, 
+                                  LibUtilities::ReduceMax);
+            }
+            else
+            {
+                m_lowestStaticCondLevel = 0;
+            }
 
             /**
              * STEP 4: Fill the #vertReorderedGraphVertId and
@@ -845,7 +1202,7 @@ namespace Nektar
             {
                 graphVertOffset[i] += graphVertOffset[i-1];
             }
-
+            
             // Allocate the proper amount of space for the class-data
             m_numLocalCoeffs                 = numLocalCoeffs;
             m_numGlobalDirBndCoeffs          = graphVertOffset[firstNonDirGraphVertId];
@@ -866,10 +1223,12 @@ namespace Nektar
             m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(m_numPatches);
             for(i = 0; i < m_numPatches; ++i)
             {
-                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
-                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() - locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                m_numLocalBndCoeffsPerPatch[i] = (unsigned int) 
+                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
+                m_numLocalIntCoeffsPerPatch[i] = (unsigned int) 
+                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->GetNcoeffs() - 
+                    locExpVector[locExp.GetOffset_Elmt_Id(i)]->NumBndryCoeffs();
             }
-
 
             /**
              * STEP 6: Now, all ingredients are ready to set up the actual
@@ -960,6 +1319,7 @@ namespace Nektar
             int offset = 0;
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                set<int> foundExtraVerts, foundExtraEdges;
                 for(j = 0; j < bndCondExp[i]->GetNumElmts(); j++)
                 {
                     bndCondFaceExp  = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(bndCondExp[i]->GetExp(j));
@@ -968,6 +1328,24 @@ namespace Nektar
                     {
                         meshVertId = (bndCondFaceExp->GetGeom2D())->GetVid(k);
                         m_bndCondCoeffsToGlobalCoeffsMap[cnt+bndCondFaceExp->GetVertexMap(k)] = graphVertOffset[vertReorderedGraphVertId[meshVertId]];
+
+                        if (bndConditions[i]->GetBoundaryConditionType() != 
+                                SpatialDomains::eDirichlet)
+                        {
+                            continue;
+                        }
+                        
+                        set<int>::iterator iter = extraDirVerts.find(meshVertId);
+                        if (iter != extraDirVerts.end() && 
+                            foundExtraVerts.count(meshVertId) == 0)
+                        {
+                            int loc = bndCondExp[i]->GetCoeff_Offset(j) + 
+                                bndCondFaceExp->GetVertexMap(k);
+                            int gid = graphVertOffset[
+                                vertReorderedGraphVertId[meshVertId]];
+                            m_extraDirDofs[i].push_back(make_pair(loc,gid));
+                            foundExtraVerts.insert(meshVertId);
+                        }
                     }
 
                     for(k = 0; k < bndCondFaceExp->GetNedges(); k++)
@@ -976,7 +1354,8 @@ namespace Nektar
                         edgeOrient          = (bndCondFaceExp->GetGeom2D())->GetEorient(k);
                         meshEdgeId          = (bndCondFaceExp->GetGeom2D())->GetEid(k);
 
-                        bndCondFaceExp->GetEdgeInteriorMap(k,edgeOrient,edgeInteriorMap,edgeInteriorSign);
+                        bndCondFaceExp->GetEdgeInteriorMap(
+                            k,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
                         for(l = 0; l < nEdgeInteriorCoeffs; ++l)
                         {
@@ -991,6 +1370,28 @@ namespace Nektar
                             {
                                 m_bndCondCoeffsToGlobalCoeffsSign[cnt+edgeInteriorMap[l]] = (NekDouble) edgeInteriorSign[l];
                             }
+                        }
+                        
+                        if (bndConditions[i]->GetBoundaryConditionType() != 
+                                SpatialDomains::eDirichlet)
+                        {
+                            continue;
+                        }
+                        
+                        set<int>::iterator iter = extraDirEdges.find(meshEdgeId);
+                        if (iter != extraDirEdges.end()            && 
+                            foundExtraEdges.count(meshEdgeId) == 0 &&
+                            nEdgeInteriorCoeffs > 0)
+                        {
+                            for(l = 0; l < nEdgeInteriorCoeffs; ++l)
+                            {
+                                int loc = bndCondExp[i]->GetCoeff_Offset(j) + 
+                                    edgeInteriorMap[l];
+                                int gid = graphVertOffset[
+                                    edgeReorderedGraphVertId[meshEdgeId]]+l;
+                                m_extraDirDofs[i].push_back(make_pair(loc,gid));
+                            }
+                            foundExtraEdges.insert(meshEdgeId);
                         }
                     }
 
@@ -1041,9 +1442,9 @@ namespace Nektar
             // Set up the local to global map for the next level when using
             // multi-level static condensation
             if ((m_solnType == eDirectMultiLevelStaticCond ||
-                m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts )
+                 m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts)
             {
-                if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
+                if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
                     Array<OneD, int> vwgts_perm(nGraphVerts);
                     for(i = 0; i < nGraphVerts; ++i)

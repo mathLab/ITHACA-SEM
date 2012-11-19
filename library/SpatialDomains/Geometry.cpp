@@ -182,6 +182,10 @@ namespace Nektar
             return v_GetEid(i);
         }
 
+        int Geometry::GetFid(int i) const
+        {
+            return v_GetFid(i);
+        }
 
         int Geometry::GetNumVerts() const
         {
@@ -321,20 +325,19 @@ namespace Nektar
             return 0;
         }
 
-        void Geometry::v_GenGeomFactors(
-                    const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                "This function is only valid for shape type geometries");
-        }
-
-        int Geometry::v_GetVid(int i) const
+        int Geometry::v_GetFid(int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
             return 0;
         }
 
+        void Geometry::v_GenGeomFactors(
+                    const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                "This function is only valid for shape type geometries");
+        }
 
         int Geometry::v_GetNumVerts() const
         {

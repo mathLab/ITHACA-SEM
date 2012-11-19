@@ -88,14 +88,6 @@ namespace Nektar
           return v_GetFaceOrient(i);
       }
 
-      /**
-       * @brief Return the ID of face i in this element.
-       */
-      int Geometry3D::GetFid(int i) const
-      {
-          return v_GetFid(i);
-      }
-
 
       //---------------------------------------
       // 3D Geometry Methods
@@ -167,8 +159,7 @@ namespace Nektar
       void Geometry3D::v_GenGeomFactors(
           const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
       {
-            GeomType      Gtype  = eRegular;
-            GeomShapeType GSType = eQuadrilateral;
+            GeomType Gtype = eRegular;
 
             v_FillGeom();
 

@@ -79,7 +79,6 @@ namespace Nektar
             MeshGraph::ReadGeometry(doc);
             TiXmlHandle docHandle(&doc);
 
-            TiXmlNode* node = NULL;
             TiXmlElement* mesh = NULL;
 
             /// Look for all geometry related data in GEOMETRY block.
@@ -119,7 +118,6 @@ namespace Nektar
             /// with missing element numbers due to the text block format.
             std::string edgeStr;
             int i,indx;
-            int err = 0;
             int nextEdgeNumber = -1;
 
             // Curved Edges

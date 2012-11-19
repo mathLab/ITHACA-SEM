@@ -134,14 +134,6 @@ namespace Nektar
                 int m_vid;
                 int m_coordim;
                 std::list<CompToElmt> m_elmtMap;
-
-            private:
-
-                virtual int v_GetVid(void)
-                {
-                    return GetVid();
-                }
-
         };
 
         // -----------------------------------------------------------------------

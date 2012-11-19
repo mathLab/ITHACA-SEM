@@ -1076,10 +1076,6 @@ namespace Nektar
             m_laplacianMetricIsZero = Array<OneD, bool>(3, false);
             m_isUsingLaplMetrics  = true;
 
-            // Get hold of the quadrature weights
-            const Array<OneD, const NekDouble>& w0 = tbasis[0]->GetW();
-            const Array<OneD, const NekDouble>& w1 = tbasis[1]->GetW();
-
             switch(shape)
             {
             case StdRegions::eQuadrilateral:

@@ -703,8 +703,6 @@ namespace Nektar
                 
                 
 
-                int elmtid = m_fid;
-                int offset=0;              
                 //determine y
                 int cnt=0;
                 while( abs(F2) > 0.00001 || abs(F1)> 0.00001)

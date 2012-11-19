@@ -52,7 +52,7 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT MeshGraph1D(const LibUtilities::SessionReaderSharedPtr &pSession);
             SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph1D();
 
-            SPATIAL_DOMAINS_EXPORT void ReadGeometry(std::string &infilename);
+            SPATIAL_DOMAINS_EXPORT void ReadGeometry(const std::string &infilename);
             SPATIAL_DOMAINS_EXPORT void ReadGeometry(TiXmlDocument &doc);
             SPATIAL_DOMAINS_EXPORT void ReadElements(TiXmlDocument &doc);
             SPATIAL_DOMAINS_EXPORT void ReadComposites(TiXmlDocument &doc);

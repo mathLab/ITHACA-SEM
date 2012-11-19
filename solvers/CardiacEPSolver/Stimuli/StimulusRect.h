@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Stimulus.h
+// File StimulusRect.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -30,7 +30,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Stimulus class.
+// Description: Rectangular stimulus header file
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -72,7 +72,7 @@ namespace Nektar
         
         virtual ~StimulusRect() {}
         
-        /// Initialise the cell model storage and set initial conditions
+        /// Initialise the stimulus storage and set initial conditions
         void Initialise();
         
     protected:

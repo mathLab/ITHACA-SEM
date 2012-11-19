@@ -30,7 +30,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Stimulus class.
+// Description: Stimulus base class header.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -74,17 +74,17 @@ namespace Nektar
         
         virtual ~Stimulus() {}
         
-        /// Initialise the cell model storage and set initial conditions
+        /// Initialise the stimulus storage and set initial conditions
         void Initialise();
         
-        /// Compute the derivatives of cell model variables
+        /// Updates RHS of outarray by adding a stimulus to it
         void Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                     const NekDouble time)
         {
             v_Update(outarray, time);
         }
         
-        /// Print a summary of the cell model
+        /// Print a summary of the outarray
         void PrintSummary(std::ostream &out)
         {
             v_PrintSummary(out);

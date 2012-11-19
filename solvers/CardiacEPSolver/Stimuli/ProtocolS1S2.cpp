@@ -104,12 +104,10 @@ namespace Nektar
         time1 = time - floor((time-m_start)/m_s1cyclelength)*m_s1cyclelength - m_start;
         if( time1 > 0 && time < (m_s1cyclelength * (m_num_s1) + m_start) && time1  < (m_dur))
         {
-//            cout << "s1s2 - s1" <<endl;
             return 1.0;
         }
         if (time > (m_s2start) && (time < (m_s2start+m_dur)))
         {
-//            cout<<"s1s2 - s2" << endl;
             return 1.0;
         }
         

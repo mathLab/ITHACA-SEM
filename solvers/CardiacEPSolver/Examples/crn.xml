@@ -510,11 +510,11 @@
     <CONDITIONS>
         <PARAMETERS>
             <P> TimeStep       = 0.02  </P>
-            <P> FinTime        = 50 </P>
+            <P> FinTime        = 200 </P>
             <P> NumSteps       = FinTime/TimeStep            </P>
             <P> IO_CheckSteps  = 0.1/TimeStep      </P>
             <P> IO_InfoSteps   = 1              </P>
-            <P> StimulusDuration = 2.0 </P> <!-- ms -->
+<!--            <P> StimulusDuration = 2.0 </P> <!-- ms --
             <P> StimulusStrength = 3 </P>
             <P> ix = 1.0 </P>
             <P> iy = 0.5 </P>
@@ -522,7 +522,7 @@
             <P> ir = 0.05 </P>
             <P> is = 1 </P>
             <P> C = StimulusStrength </P>
-            <P> D = StimulusDuration/4.0 </P>
+            <P> D = StimulusDuration/4.0 </P>-->
             <P> IterativeSolverTolerance = 1e-05 </P>
             <P> Chi = 28 </P>   <!-- larger: wavefront moves slower -->
             <P> Cm = 0.125 </P> <!-- smaller: higher peak mag. of act. -->
@@ -535,7 +535,7 @@
             <I PROPERTY="Projection" VALUE="Continuous"/>
             <I PROPERTY="DiffusionAdvancement" VALUE="Implicit"/>
             <I PROPERTY="TimeIntegrationMethod" VALUE="IMEXdirk_3_4_3"/>
-            <I PROPERTY="GlobalSysSoln" VALUE="DirectStaticCond" />
+            <I PROPERTY="GlobalSysSoln" VALUE="IterativeStaticCond" />
         </SOLVERINFO>
         
         <VARIABLES>
@@ -571,32 +571,29 @@
             <p_x2> 0.7</p_x2>
             <p_y2> 0.7</p_y2>
             <p_z2> 0.0</p_z2>
-            <!--<p_r1> 0.1</p_r1>> -->
+            <!--<p_r1> 0.1</p_r1>-->
             <p_is> 1.0</p_is>
             <p_strength> 3.0 </p_strength>
             
             <PROTOCOL TYPE = "ProtocolS1S2">
-                <START> 0.0  </START>
+                <START> 2.0  </START>
                 <DURATION>  2.0 </DURATION>
-                <S1CYCLELENGTH> 20.0 </S1CYCLELENGTH>
+                <S1CYCLELENGTH> 300.0 </S1CYCLELENGTH>
                 <NUM_S1> 2.0 </NUM_S1>
-                <S2CYCLELENGTH>10.0 </S2CYCLELENGTH>
+                <S2CYCLELENGTH>100.0 </S2CYCLELENGTH>
              </PROTOCOL>
         </STIMULUS>
-        <STIMULUS ID="1" TYPE = "StimulusCirc">
+        <STIMULUS ID="0" TYPE = "StimulusCirc">
             <p_x1> 9.8</p_x1>
             <p_y1> 0.5</p_y1>
             <p_z1> 0.0</p_z1>
             <p_r1> 0.1</p_r1>
             <p_is> 1.0</p_is>
-            <p_strength> 3.0 </p_strength>
+            <p_strength> 5.0 </p_strength>
             
             <PROTOCOL TYPE = "ProtocolSingle">
-                <START> 10.0  </START>
+                <START> 280.0  </START>
                 <DURATION>  2.0 </DURATION>
-<!--                <S1CYCLELENGTH> 300.0 </S1CYCLELENGTH>
-                <NUM_S1> 1.0 </NUM_S1>
-                <S2CYCLELENGTH>10.0 </S2CYCLELENGTH>-->
             </PROTOCOL>
         </STIMULUS>
     </STIMULI>

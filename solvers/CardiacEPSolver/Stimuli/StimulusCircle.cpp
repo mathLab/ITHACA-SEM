@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Stimulus.cpp
+// File StimulusCircle.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Stimulus base class.
+// Description: Circular stimulus file.
 //
 ///////////////////////////////////////////////////////////////////////////////
 #include <iostream>
@@ -118,7 +118,11 @@ namespace Nektar
     void StimulusCirc::v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                                 const NekDouble time)
     {
-        //Code to get co ordinates
+        
+        // Get the dimension of the expansion
+        int dim = m_field->GetCoordim(0);
+        
+        //Retrieve coodrinates of quadrature points
         int nq = m_field->GetNpoints();
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
@@ -129,13 +133,34 @@ namespace Nektar
         
         // get the coordinates
         m_field->GetCoords(x0,x1,x2);
-        for(int j=0; j<nq; j++)
+        
+        switch (dim)
         {
-            outarray[0][j]= outarray[0][j] + v_amp *
-            (-tanh( (m_pis * x0[j] - m_px1+m_pr1) * (m_pis * x0[j] - m_px1-m_pr1) +
-                    (m_pis * x1[j] - m_py1+m_pr1) * (m_pis * x1[j] - m_py1-m_pr1) +
-                    (m_pis * x2[j] - m_pz1+m_pr1) * (m_pis * x2[j] - m_pz1-m_pr1))  / 2.0 + 0.5);
+            case 1:
+                for(int j=0; j<nq; j++)
+                {
+                    outarray[0][j] += v_amp*(-tanh((m_pis * x0[j] - m_px1+m_pr1) * (m_pis * x0[j] - m_px1-m_pr1))/2.0 + 0.5);
+                    
+                }
+                break;
+            case 2:
+                for(int j=0; j<nq; j++)
+                {
+                    outarray[0][j] += v_amp*(-tanh((m_pis * x0[j] - m_px1+m_pr1) * (m_pis * x0[j] - m_px1-m_pr1) +
+                                              (m_pis * x1[j] - m_py1+m_pr1) * (m_pis * x1[j] - m_py1-m_pr1))/2.0 + 0.5);
+                }
+                break;
+            case 3:
+                for(int j=0; j<nq; j++)
+                {
+                    outarray[0][j] += v_amp*(-tanh((m_pis * x0[j] - m_px1+m_pr1) * (m_pis * x0[j] - m_px1-m_pr1) +
+                                              (m_pis * x1[j] - m_py1+m_pr1) * (m_pis * x1[j] - m_py1-m_pr1) +
+                                              (m_pis * x2[j] - m_pz1+m_pr1) * (m_pis * x2[j] - m_pz1-m_pr1))/2.0 + 0.5);
+                }
+                break;
         }
+        
+
     }
     
     void StimulusCirc::v_PrintSummary(std::ostream &out)

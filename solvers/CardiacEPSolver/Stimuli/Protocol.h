@@ -69,7 +69,7 @@ namespace Nektar
         /// Initialise the protocol storage and set initial conditions
         void Initialise();
         
-        /// Compute the derivatives of cell model variables
+        /// Returns amplitude of stimulus (1 or 0) at given time
         NekDouble GetAmplitude(
                                const NekDouble time)
         {

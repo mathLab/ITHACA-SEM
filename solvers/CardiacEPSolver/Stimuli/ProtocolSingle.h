@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Protocol Single stimulus.
+// Description: Protocol Single stimulus header.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -63,7 +63,7 @@ namespace Nektar
         
         virtual ~ProtocolSingle() {}
         
-        /// Initialise the cell model storage and set initial conditions
+        /// Initialise the protocol storage and set initial conditions
         void Initialise();
         
     protected:

@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Protocol S1 stimulus.
+// Description: Protocol S1 stimulus header.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -42,7 +42,7 @@ namespace Nektar
     // Forward declaration
     class ProtocolS1;
     
-    /// Cell model base class.
+    /// Protocol base class.
     class ProtocolS1 : public Protocol
     {
     public:
@@ -63,7 +63,7 @@ namespace Nektar
         
         virtual ~ProtocolS1() {}
         
-        /// Initialise the cell model storage and set initial conditions
+        /// Initialise the protocol storage and set initial conditions
         void Initialise();
         
     protected:

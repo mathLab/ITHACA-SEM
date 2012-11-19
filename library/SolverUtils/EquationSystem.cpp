@@ -2019,6 +2019,20 @@ namespace Nektar
                 out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
             }
             
+            if (m_session->DefinesSolverInfo("UpwindType"))
+            {
+                std::string UpwindType;
+                UpwindType = m_session->GetSolverInfo("UpwindType");
+                if (UpwindType == "Exact")
+                {
+                    out << "\tRiemann Solver : Exact"   <<endl;
+                }
+                else if (UpwindType == "Average")
+                {
+                    out << "\tRiemann Solver : Average" <<endl;
+                }
+            }
+            
             if (m_session->DefinesSolverInfo("AdvectionType"))
             {
                 std::string AdvectionType;
@@ -2035,26 +2049,27 @@ namespace Nektar
                     {
                         if (AdvectionType == "WeakDG")
                         {
-                            out << "\tProjection Type : Weak Discontinuous Galerkin" <<endl;
+                            out << "\tProjection Type : Weak Discontinuous Galerkin"        <<endl;
                         }
-                        
                         else if (AdvectionType == "FRDG")
                         {
-                            out << "\tProjection Type : Flux Reconstruction DG" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction DG"             <<endl;
                         }
-                        
                         else if (AdvectionType == "FRSD")
                         {
-                            out << "\tProjection Type : Flux Reconstruction SD" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction SD"             <<endl;
                         }
-                        
                         else if (AdvectionType == "FRHU")
                         {
-                            out << "\tProjection Type : Flux Reconstruction HU" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction HU"             <<endl;
                         }
                         else if (AdvectionType == "FRc")
                         {
-                            out << "\tProjection Type : Flux Reconstruction C" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction c = c-min"      <<endl;
+                        }
+                        else if (AdvectionType == "FRc")
+                        {
+                            out << "\tProjection Type : Flux Reconstruction c = c-infinity" <<endl;
                         }
                         break;
                     }

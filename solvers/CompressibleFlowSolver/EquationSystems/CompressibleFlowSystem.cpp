@@ -249,7 +249,7 @@ namespace Nektar
     }
     
     /**
-     * Wall boundary conditions for compressible flow problems.
+     * Simmetry boundary conditions for compressible flow problems.
      */
     void CompressibleFlowSystem::SymmetryBoundary(
         int                                      bcRegion, 

@@ -85,6 +85,7 @@ SET(CommunicationHeaders
     ./Communication/CommSerial.h
     ./Communication/GsLib.hpp
     ./Communication/Transposition.h
+    ./Communication/Xxt.hpp
 )
 
 SET(ExpressionTemplates

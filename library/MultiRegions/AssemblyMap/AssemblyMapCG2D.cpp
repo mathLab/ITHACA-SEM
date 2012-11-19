@@ -442,7 +442,8 @@ namespace Nektar
             // Set up the local to global map for the next level when using
             // multi-level static condensation
             if ((m_solnType == eDirectMultiLevelStaticCond ||
-                 m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts)
+                 m_solnType == eIterativeMultiLevelStaticCond ||
+                 m_solnType == eXxtMultiLevelStaticCond) && nGraphVerts)
             {
                 if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1) &&
                     m_staticCondLevel < m_maxStaticCondLevel)
@@ -1123,6 +1124,8 @@ namespace Nektar
                 case eDirectFullMatrix:
                 case eIterativeFull:
                 case eIterativeStaticCond:
+                case eXxtFullMatrix:
+                case eXxtStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                     }
@@ -1134,6 +1137,7 @@ namespace Nektar
                     break;
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
+                case eXxtMultiLevelStaticCond:
                     {
                         MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph,mdswitch,partVerts);
                     }

@@ -64,7 +64,6 @@ namespace Nektar
             return;
         }
         
-        
         const TiXmlElement *pXmlparameter; //Declaring variable called pxml...
         // See if we have parameters defined.  They are optional so we go on if not.
         
@@ -98,15 +97,15 @@ namespace Nektar
     
     NekDouble ProtocolS1::v_GetAmplitude(
                                              const NekDouble time)
-    {   time1 = time - floor(time/m_s1cyclelength)*m_s1cyclelength;
-        if( time1 > m_start && time < (m_s1cyclelength * m_num_s1) && time1  < (m_start+m_dur))
+    {
+        time1 = time - floor((time-m_start)/m_s1cyclelength)*m_s1cyclelength - m_start;
+        if( time1 > 0 && (m_s1cyclelength * (m_num_s1) + m_start) && time1  < (m_dur))
         {
+//            cout << "s1" <<endl;
             return 1.0;
         }
-        else
-        {
+
             return 0.0;
-        }
         
     }
     

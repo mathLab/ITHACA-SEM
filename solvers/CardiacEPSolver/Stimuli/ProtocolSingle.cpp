@@ -95,7 +95,7 @@ namespace Nektar
     {
         if(time > m_start && time < (m_start+m_dur))
         {
-            cout<<" single stim" << endl;
+//                     cout << "single" <<endl;   
             return 1.0;
         }
         else

@@ -74,7 +74,6 @@ namespace Nektar
         m_field = pField;
         m_nq = pField->GetTotPoints();
         
-        
         if (!pXml)
         {
             return;

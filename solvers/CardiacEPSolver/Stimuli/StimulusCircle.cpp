@@ -74,7 +74,6 @@ namespace Nektar
         m_field = pField;
         m_nq = pField->GetTotPoints();
         
-        
         if (!pXml)
         {
             return;
@@ -125,11 +124,14 @@ namespace Nektar
         Array<OneD,NekDouble> x1(nq);
         Array<OneD,NekDouble> x2(nq);
         
+        // Get the protocol amplitude
+        NekDouble v_amp = m_Protocol->GetAmplitude(time) * m_strength;
+        
         // get the coordinates
         m_field->GetCoords(x0,x1,x2);
         for(int j=0; j<nq; j++)
         {
-            outarray[0][j]= outarray[0][j] + m_strength *
+            outarray[0][j]= outarray[0][j] + v_amp *
             (-tanh( (m_pis * x0[j] - m_px1+m_pr1) * (m_pis * x0[j] - m_px1-m_pr1) +
                     (m_pis * x1[j] - m_py1+m_pr1) * (m_pis * x1[j] - m_py1-m_pr1) +
                     (m_pis * x2[j] - m_pz1+m_pr1) * (m_pis * x2[j] - m_pz1-m_pr1))  / 2.0 + 0.5);

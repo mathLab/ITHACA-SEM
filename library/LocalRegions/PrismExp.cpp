@@ -49,12 +49,12 @@ namespace Nektar
             StdExpansion  (StdRegions::StdPrismData::getNumberOfCoefficients(
                                Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
                            3, Ba, Bb, Bc),
-            Expansion     (),
             StdExpansion3D(StdRegions::StdPrismData::getNumberOfCoefficients(
                                Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), 
                            Ba, Bb, Bc),
-            Expansion3D   (),
             StdPrismExp   (Ba, Bb, Bc),
+            Expansion     (),
+            Expansion3D   (),
             m_geom        (geom),
             m_metricinfo  (m_geom->GetGeomFactors(m_base)),
             m_matrixManager(
@@ -68,10 +68,10 @@ namespace Nektar
 
         PrismExp::PrismExp(const PrismExp &T):
             StdExpansion(T),
-            Expansion(T),
             StdExpansion3D(T),
-            Expansion3D(T),
             StdRegions::StdPrismExp(T),
+            Expansion(T),
+            Expansion3D(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
@@ -1149,7 +1149,7 @@ namespace Nektar
         {
             if(format==eTecplot)
             {
-                int i,j,k;
+                int i,j;
                 int nquad0 = m_base[0]->GetNumPoints();
                 int nquad1 = m_base[1]->GetNumPoints();
                 int nquad2 = m_base[2]->GetNumPoints();
@@ -1842,9 +1842,6 @@ namespace Nektar
             int nquad1  = m_base[1]->GetNumPoints();
             int nquad2  = m_base[2]->GetNumPoints();
             int nqtot   = nquad0*nquad1*nquad2;
-            int nmodes0 = m_base[0]->GetNumModes();
-            int nmodes1 = m_base[1]->GetNumModes();
-            int nmodes2 = m_base[2]->GetNumModes();
             int i;
             
             // Set up temporary storage.
@@ -1882,7 +1879,6 @@ namespace Nektar
 
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
             const Array<OneD, const NekDouble>& z0   = m_base[0]->GetZ();
-            const Array<OneD, const NekDouble>& z1   = m_base[1]->GetZ();
             const Array<OneD, const NekDouble>& z2   = m_base[2]->GetZ();
             
             // Step 2. Calculate the metric terms of the collapsed

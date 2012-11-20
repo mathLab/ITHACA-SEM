@@ -140,13 +140,6 @@ namespace Nektar
         }
 
 
-        void StdQuadExp::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
-                                                const Array<OneD, const NekDouble>& direction,
-                                                Array<OneD, NekDouble> &outarray)
-        {
-            ASSERTL0(false,"This method is not defined or valid for this class type");
-        }
-
         ////////////////
         // Transforms //
         ////////////////

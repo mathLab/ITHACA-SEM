@@ -89,10 +89,6 @@ namespace Nektar
                     const int dir, 
                     const Array<OneD, const NekDouble>& inarray, 
                     Array<OneD, NekDouble> &outarray);
-            STD_REGIONS_EXPORT virtual void v_PhysDirectionalDeriv(
-                    const Array<OneD, const NekDouble>& inarray,
-                    const Array<OneD, const NekDouble>& direction,
-                    Array<OneD, NekDouble> &outarray);
 
             //---------------------------------------
             // Transforms

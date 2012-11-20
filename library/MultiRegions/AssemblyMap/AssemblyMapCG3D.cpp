@@ -172,7 +172,7 @@ namespace Nektar
             const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId)
         {
             int i,j,k,l;
-            int cnt = 0,cnt1=0;
+            int cnt = 0;
             int intDofCnt;
             int meshVertId;
             int meshVertId2;

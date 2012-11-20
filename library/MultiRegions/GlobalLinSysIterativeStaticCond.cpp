@@ -599,8 +599,6 @@ namespace Nektar
                         const AssemblyMapSharedPtr& pLocToGloMap)
         {
             int i,j,n,cnt;
-            NekDouble one  = 1.0;
-            NekDouble zero = 0.0;
             DNekScalBlkMatSharedPtr blkMatrices[4];
 
             // Create temporary matrices within an inner-local scope to ensure
@@ -822,7 +820,7 @@ namespace Nektar
                 {
                     for(j = 0; j < 4; j++)
                     {
-                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,substructuredMat[j][i]);
+                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,substructuredMat[j][i]);
                         blkMatrices[j]->SetBlock(i,i,tmpscalmat);
                     }
                 }
@@ -847,9 +845,7 @@ namespace Nektar
                       Array<OneD, NekDouble>& pOutput)
         {
             int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nNonDir = nGlobal - nDir;
 
             if (m_globalSchurCompl)
             {

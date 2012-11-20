@@ -127,8 +127,6 @@ namespace Nektar
                 {
                     // Calculate the dirichlet forcing and substract it
                     // from the rhs
-                    int nLocDofs = pLocToGloMap->GetNumLocalCoeffs();
-
                     m_expList.lock()->GeneralMatrixOp(
                             m_linSysKey,
                             pOutput, tmp, eGlobal);

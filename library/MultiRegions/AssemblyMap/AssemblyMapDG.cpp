@@ -1370,7 +1370,7 @@ namespace Nektar
                         LocalRegions::PointExpSharedPtr locPointExp = 
                             boost::dynamic_pointer_cast<
                                 LocalRegions::PointExp>(m_elmtToTrace[eid][j]);
-                        id = locPointExp->GetGeom()->GetEid();
+                        id = locPointExp->GetGeom()->GetVid();
                         vGlobalId = m_localToGlobalBndMap[cnt+j];
                         m_globalToUniversalBndMap[vGlobalId]
                             = id * maxDof + j + 1;
@@ -1423,7 +1423,7 @@ namespace Nektar
                                                         const ExpListSharedPtr trace)
         {
             StdRegions::StdExpansionSharedPtr locExpansion;
-            int i,j,k;
+            int i;
             int maxQuad = 0, quad = 0, nDim = 0, eid = 0, offset = 0;
 
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());

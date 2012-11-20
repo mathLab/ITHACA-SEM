@@ -69,8 +69,8 @@ namespace Nektar
          * @param   key         Existing key to duplicate.
          */
         GlobalLinSysKey::GlobalLinSysKey(const GlobalLinSysKey &key):
-            m_solnType(key.m_solnType),
-            GlobalMatrixKey(key)
+            GlobalMatrixKey(key),
+            m_solnType(key.m_solnType)
         {
         }
 

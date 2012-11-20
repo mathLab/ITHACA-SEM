@@ -69,9 +69,9 @@ namespace Nektar
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap)
            : Preconditioner(plinsys, pLocToGloMap),
-	   m_linsys(plinsys),
-           m_locToGloMap(pLocToGloMap),
-           m_preconType(pLocToGloMap->GetPreconType())
+             m_linsys(plinsys),
+             m_preconType(pLocToGloMap->GetPreconType()),
+             m_locToGloMap(pLocToGloMap)
          {
 	 }
 
@@ -106,8 +106,6 @@ namespace Nektar
              boost::shared_ptr<MultiRegions::ExpList> expList = 
                  ((m_linsys.lock())->GetLocMat()).lock();
 
-             const StdRegions::StdExpansionVector &locExpVector = 
-                 *(expList->GetExp());
              StdRegions::StdExpansionSharedPtr locExpansion;
 
              int i,j,n,cnt,gid1,gid2;
@@ -115,8 +113,6 @@ namespace Nektar
              int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
              int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
              int nInt    = nGlobal - nDir;
-
-             NekDouble zero = 0.0;
 
              // fill global matrix
              DNekScalMatSharedPtr loc_mat;

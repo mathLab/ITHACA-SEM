@@ -127,7 +127,6 @@ namespace Nektar
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
-            int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
 
             int nDirTotal = nDirDofs;
             expList->GetComm()->AllReduce(nDirTotal, LibUtilities::ReduceSum);

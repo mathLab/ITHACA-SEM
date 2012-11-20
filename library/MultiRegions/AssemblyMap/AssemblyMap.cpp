@@ -78,11 +78,11 @@ namespace Nektar
             m_session(),
             m_comm(),
             m_hash(0),
-            m_solnType(eNoSolnType),
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
             m_numGlobalDirBndCoeffs(0),
+            m_solnType(eNoSolnType),
             m_bndSystemBandWidth(0),
             m_gsh(0),
             m_bndGsh(0)
@@ -93,13 +93,13 @@ namespace Nektar
             m_session(pSession),
             m_comm(pSession->GetComm()),
             m_hash(0),
-            m_solnType(pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln")),
-            m_preconType(pSession->GetSolverInfoAsEnum<PreconditionerType>("Preconditioner")),
             m_numLocalBndCoeffs(0),
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
             m_numGlobalDirBndCoeffs(0),
+            m_solnType(pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln")),
             m_bndSystemBandWidth(0),
+            m_preconType(pSession->GetSolverInfoAsEnum<PreconditionerType>("Preconditioner")),
             m_gsh(0),
             m_bndGsh(0)
         {
@@ -116,12 +116,12 @@ namespace Nektar
             m_session(oldLevelMap->m_session),
             m_comm(oldLevelMap->GetComm()),
             m_hash(0),
-            m_solnType(oldLevelMap->m_solnType),
             m_globalToUniversalBndMap(oldLevelMap->GetGlobalToUniversalBndMap()),
             m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),
+            m_solnType(oldLevelMap->m_solnType),
+            m_preconType(oldLevelMap->m_preconType),
             m_gsh(oldLevelMap->m_gsh),
             m_bndGsh(oldLevelMap->m_bndGsh),
-            m_preconType(oldLevelMap->m_preconType),
             m_lowestStaticCondLevel(oldLevelMap->m_lowestStaticCondLevel)
         {
             int i;
@@ -132,7 +132,6 @@ namespace Nektar
             // -- Extract information from the input argument
             int numGlobalBndCoeffsOld    = oldLevelMap->GetNumGlobalBndCoeffs();
             int numGlobalDirBndCoeffsOld = oldLevelMap->GetNumGlobalDirBndCoeffs();
-            int numGlobalHomBndCoeffsOld = numGlobalBndCoeffsOld - numGlobalDirBndCoeffsOld;
             int numLocalBndCoeffsOld     = oldLevelMap->GetNumLocalBndCoeffs();
             int numLocalDirBndCoeffsOld  = oldLevelMap->GetNumLocalDirBndCoeffs();
             bool signChangeOld           = oldLevelMap->GetSignChange();

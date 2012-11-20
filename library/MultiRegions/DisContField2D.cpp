@@ -64,9 +64,9 @@ namespace Nektar
             m_globalBndMat       (In.m_globalBndMat),
             m_trace              (In.m_trace),
             m_traceMap           (In.m_traceMap),
+            m_boundaryEdges      (In.m_boundaryEdges),
             m_periodicEdges      (In.m_periodicEdges),
             m_periodicVertices   (In.m_periodicVertices),
-            m_boundaryEdges      (In.m_boundaryEdges),
             m_perEdgeToExpMap    (In.m_perEdgeToExpMap)
         {
         }
@@ -793,8 +793,7 @@ namespace Nektar
         {
             // Loop over elements and collect forward expansion
             int nexp = GetExpSize();
-            StdRegions::Orientation edgedir;
-            int nquad_e,cnt,n,e,npts,offset, phys_offset;
+            int cnt, n, e, npts, phys_offset;
             Array<OneD,NekDouble> e_tmp;
             map<int,int>::iterator it2;
             boost::unordered_map<int,pair<int,int> >::iterator it3;
@@ -1105,8 +1104,8 @@ namespace Nektar
             Array<OneD, int> &EdgeID)
         {
             map<int, int> globalIdMap;
-            int i,n,id;
-            int bid,cnt,Eid;
+            int i,n;
+            int cnt;
             int nbcs = 0;
 
             SpatialDomains::MeshGraph2DSharedPtr graph2D =
@@ -1540,7 +1539,7 @@ namespace Nektar
                                                           const NekDouble x2_in,
                                                           const NekDouble x3_in)
         {
-            int i,j;
+            int i;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();
 

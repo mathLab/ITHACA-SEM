@@ -894,9 +894,6 @@ namespace Nektar
             int i,j,e_npoints,offset;
             Array<OneD,NekDouble> normals;
 
-            // Assume whole array is of same coordimate dimention
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
-
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
@@ -1054,7 +1051,6 @@ namespace Nektar
         void ExpList1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int ntot = nquad0;
             int ntotminus = (nquad0-1);

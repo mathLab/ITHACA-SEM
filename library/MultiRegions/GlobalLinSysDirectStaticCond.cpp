@@ -499,8 +499,6 @@ namespace Nektar
                         const AssemblyMapSharedPtr& pLocToGloMap)
         {
             int i,j,n,cnt;
-            NekDouble one  = 1.0;
-            NekDouble zero = 0.0;
             DNekScalBlkMatSharedPtr blkMatrices[4];
 
             
@@ -727,7 +725,7 @@ namespace Nektar
                 {
                     for(j = 0; j < 4; j++)
                     {
-                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,substructuredMat[j][i]);
+                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,substructuredMat[j][i]);
                         blkMatrices[j]->SetBlock(i,i,tmpscalmat);
                     }
                 }

@@ -307,7 +307,6 @@ namespace Nektar
         void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j,k;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
             int nquad2 = m_planes.num_elements();
@@ -429,9 +428,6 @@ namespace Nektar
 		
         Array<OneD, NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
         {
-            int cnt = 0, cnt1 = 0;
-            int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
-
             Array<OneD, NekDouble> energy(m_planes.num_elements()/2);
             double area = 0.0;
 

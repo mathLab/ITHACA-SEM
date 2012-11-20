@@ -54,10 +54,10 @@ namespace Nektar
         ExpListHomogeneous1D::ExpListHomogeneous1D(const LibUtilities::SessionReaderSharedPtr
                 &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, const bool useFFT, const bool dealiasing):
             ExpList(pSession),
-            m_lhom(lhom),
             m_useFFT(useFFT),
-		    m_dealiasing(dealiasing),
-            m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr())
+            m_lhom(lhom),
+            m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
+            m_dealiasing(dealiasing)
         {
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,"Homogeneous Basis is a null basis");
             
@@ -85,18 +85,18 @@ namespace Nektar
          */
         ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpListHomogeneous1D &In):
             ExpList(In,false),
-            m_homogeneousBasis(In.m_homogeneousBasis),
-            m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
-            m_lhom(In.m_lhom),
+            m_transposition(In.m_transposition),
             m_useFFT(In.m_useFFT),
-		    m_FFT(In.m_FFT),
-		    m_dealiasing(In.m_dealiasing),
-		    m_padsize(In.m_padsize),
-            MatBwdPAD(In.MatBwdPAD),
-		    MatFwdPAD(In.MatFwdPAD),
+            m_FFT(In.m_FFT),
             m_tmpIN(In.m_tmpIN),
             m_tmpOUT(In.m_tmpOUT),
-		    m_transposition(In.m_transposition)
+            m_homogeneousBasis(In.m_homogeneousBasis),
+            m_lhom(In.m_lhom), 
+            m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
+            m_dealiasing(In.m_dealiasing),
+            m_padsize(In.m_padsize),
+            MatFwdPAD(In.MatFwdPAD),
+            MatBwdPAD(In.MatBwdPAD)
         {
             m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
         }
@@ -737,11 +737,9 @@ namespace Nektar
         //Extract the data in fielddata into the m_coeff list (for 2D files into 3D cases)
         void ExpListHomogeneous1D::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D)
         {
-            int i,n;
+            int i;
             int offset = 0;
-            int nzmodes = m_homogeneousBasis->GetNumModes();
             int datalen = fielddata.size()/fielddef->m_fields.size();
-            int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
 			
             // Find data location according to field definition
             for(i = 0; i < fielddef->m_fields.size(); ++i)

@@ -368,8 +368,6 @@ namespace Nektar
             Array<OneD, NekDouble> tmp_V2;
             Array<OneD, NekDouble> tmp_outarray;
             
-            bool NegateNormals;
-            
             int cnt = 0;
             int exp_size, exp_size_per_plane, elmtID, boundaryID, Phys_offset, Coef_offset;
             

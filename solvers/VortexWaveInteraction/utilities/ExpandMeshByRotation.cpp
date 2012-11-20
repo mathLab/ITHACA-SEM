@@ -83,9 +83,11 @@ int main(int argc, char *argv[])
     int compsize = composite->size();
     for(i = 0; i < compsize; ++i)
     {
-        jointEdges[(*composite)[i]->GetEid() ] = (*composite)[compsize-1-i]->GetEid();
-        jointVerts[(*composite)[i]->GetVid(0)] = (*composite)[compsize-1-i]->GetVid(1);
-        jointVerts[(*composite)[i]->GetVid(1)] = (*composite)[compsize-1-i]->GetVid(0);
+        SpatialDomains::Geometry1DSharedPtr tmp1 = boost::dynamic_pointer_cast<SpatialDomains::Geometry1D>((*composite)[i]);
+        SpatialDomains::Geometry1DSharedPtr tmp2 = boost::dynamic_pointer_cast<SpatialDomains::Geometry1D>((*composite)[compsize-1-i]);
+        jointEdges[tmp1->GetEid() ] = tmp2->GetEid();
+        jointVerts[tmp1->GetVid(0)] = tmp2->GetVid(1);
+        jointVerts[tmp1->GetVid(1)] = tmp2->GetVid(0);
     }
 
 

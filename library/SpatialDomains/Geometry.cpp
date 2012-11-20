@@ -318,6 +318,13 @@ namespace Nektar
             return false;
         }
 
+        int Geometry::v_GetVid(int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return 0;
+        }
+
         int Geometry::v_GetEid(int i) const
         {
             NEKERROR(ErrorUtil::efatal,

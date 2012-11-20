@@ -234,9 +234,7 @@ namespace Nektar
 			{
 			  // cout << "R boundary condition found" << endl;
 			        NekDouble RT = m_RT;
-				NekDouble R_t;
 				NekDouble pout = m_pout;
-				NekDouble rho = m_rho;
 
 				// Get the values of all variables needed for the Riemann problem
 				A_l = m_fields[0]->GetCoeffs()[1];
@@ -292,7 +290,6 @@ namespace Nektar
 			        NekDouble RT = m_RT;
 				NekDouble R1;
 				NekDouble R2;
-				NekDouble R_t;
 				NekDouble pout = m_pout;
 				NekDouble rho = m_rho;
 
@@ -376,8 +373,6 @@ namespace Nektar
 		NekDouble pext = m_pext; 
 		NekDouble p = 0.0;
 		NekDouble p_t = 0.0;
-		NekDouble h0 = m_h0; 
-		NekDouble nue = m_nue; 
 		
         switch (i)
 		{
@@ -418,11 +413,6 @@ namespace Nektar
         int i;
 		int nTraceNumPoints = GetTraceTotPoints();
 		int nvariables      = 2; //(A,u)
-		int nq = m_fields[0]->GetNpoints();		
-		NekDouble rho = m_rho; 
-		NekDouble pext = m_pext; 
-		NekDouble h0 = m_h0; 
-		NekDouble nue = m_nue; 
 		
 		Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
 		Array<OneD, Array<OneD, NekDouble> > Bwd(nvariables);
@@ -483,7 +473,6 @@ namespace Nektar
 												   NekDouble &Aflux, NekDouble &uflux, int i, NekDouble A_0, NekDouble beta)
 	{
 		int nvariables      = 2;
-		int nq = m_fields[0]->GetNpoints();
 		Array<OneD, NekDouble> characteristic(4);
 		Array<OneD, NekDouble> W(2);
 		Array<OneD, NekDouble> lambda(nvariables);
@@ -496,8 +485,6 @@ namespace Nektar
 		NekDouble pext = m_pext; 
 		NekDouble p = 0.0;
 		NekDouble p_t = 0.0;
-		NekDouble h0 = m_h0; 
-		NekDouble nue = m_nue; 
 		
 		// Compute the wave speeds
 		cL = sqrt(beta*sqrt(AL)/(2*rho));
@@ -557,9 +544,6 @@ namespace Nektar
 		NekDouble fa = 0.0;
 		NekDouble dfa = 0.0;
 		NekDouble delta_A_calc = 0.0;
-		NekDouble p = 0.0;
-		NekDouble pext = 0.0;
-		NekDouble p_t = 0.0;
 		NekDouble rho = m_rho; 
 	 
 		int proceed = 1;
@@ -605,18 +589,14 @@ namespace Nektar
 													 NekDouble &A_u,NekDouble &u_u)
 	{		
 		NekDouble W1 = 0.0;
-		NekDouble Wf = 0.0;
 		NekDouble c_l = 0.0;
 		NekDouble c_0 = 0.0;
-		NekDouble p = 0.0;
 		NekDouble pext = m_pext;
-		NekDouble p_t = 0.0;
 		NekDouble A_calc = 0.0;
 		NekDouble fa = 0.0;
 		NekDouble dfa = 0.0;
 		NekDouble delta_A_calc = 0.0;
 		NekDouble rho = m_rho;
-		NekDouble delta_t = m_timestep;
 
 		int proceed = 1;
 		int iter = 0;
@@ -667,11 +647,8 @@ namespace Nektar
 													 NekDouble &A_u,NekDouble &u_u)
 	{		
 	  //cout << "Entering CR_RiemannSolver" << endl;
-		NekDouble W1 = 0.0;
 		NekDouble c_l = 0.0;
-		NekDouble p = 0.0;
 		NekDouble pext = m_pext;
-		NekDouble p_t = 0.0;
 		NekDouble rho = m_rho;
 		NekDouble A_calc = 0.0;
 		// to modify

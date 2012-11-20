@@ -127,7 +127,6 @@ namespace Nektar
 	
         int i;
         int nvariables = m_session->GetVariables().size();
-        bool DeclareCoeffPhysArrays = true;
 	
         m_fields   = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
         m_spacedim = m_graph->GetSpaceDimension()+m_HomoDirec;
@@ -346,7 +345,6 @@ namespace Nektar
 		if (m_graph->GetDomain().size() > 1)
 		{
 			NekDouble initialtime = 0.0;
-			bool dumpInitialConditions = true;
 		
 			if (m_session->GetComm()->GetRank() == 0)
 			{
@@ -369,7 +367,7 @@ namespace Nektar
 					cout << "Subdomain = " <<omega<<endl;
 				}
 				
-				std:stringstream os;
+				std::stringstream os;
 				std::string omega_str;
 				os << omega;
 				omega_str = os.str();			
@@ -737,13 +735,10 @@ namespace Nektar
 		Array<OneD, NekDouble> uu(3);
 		Array<OneD, NekDouble> beta(3);
 		Array<OneD, NekDouble> A_0(3);
-		int in_BCExp = 0;
-		NekDouble Q, A_r, u_r;
 		
 		int nel_p = 0;
 		int nel_d1 = 0;
 		int nel_d2 = 0;
-		int p = 0;
 		int d1 = 0;
 		int d2 = 0;
 		int p_BCExp = 0;
@@ -932,7 +927,6 @@ namespace Nektar
 		
 		// Tolerances for the algorithm
 		NekDouble Tol = 1.0e-10;
-		NekDouble Small = 1.0e-200;
 		
 		// Newton Iteration
 		while ((proceed) && (iter < MAX_ITER))
@@ -1204,7 +1198,6 @@ namespace Nektar
 		
 		// Tolerances for the algorithm
 		NekDouble Tol = 1.0e-10;
-		NekDouble Small = 1.0e-200;
 		
 		// Newton Iteration
 		while ((proceed) && (iter < MAX_ITER))
@@ -1347,7 +1340,7 @@ namespace Nektar
 			std::string velStr[1];
 			std::string root("A_0[");
 			std::string close("]");
-			std:stringstream os;
+			std::stringstream os;
 			std::string omega_str;
 			
 			os << omega;
@@ -1394,7 +1387,7 @@ namespace Nektar
 			{
 				std::string root("beta[");
 				std::string close("]");
-				std:stringstream os;
+				std::stringstream os;
 				std::string omega_str;
 				
 				os << omega;

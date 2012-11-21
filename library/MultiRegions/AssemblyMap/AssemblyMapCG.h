@@ -72,7 +72,11 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
-
+            MULTI_REGIONS_EXPORT map<int, vector<pair<int, int> > > 
+                &GetExtraDirDofs()
+            {
+                return m_extraDirDofs;
+            }
 
         protected:
             /// Integer map of local coeffs to global space
@@ -91,14 +95,10 @@ namespace Nektar
             int m_numNonDirEdgeModes;
             /// Number of non Dirichlet face modes
             int m_numNonDirFaceModes;
-
+            /// Maximum static condensation level.
             int m_maxStaticCondLevel;
-
-
-
-
-
-
+            map<int, vector<pair<int, int> > > m_extraDirDofs;
+            
             void SetUpUniversalC0ContMap(const ExpList &locExp);
 
             /// Calculate the bandwith of the full matrix system.

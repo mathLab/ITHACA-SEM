@@ -209,8 +209,8 @@ namespace Nektar
                       m_comm,
                       &status);
 
-            ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
-                     "MPI error receiving data.");
+            //ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
+            //         "MPI error receiving data.");
         }
 
 

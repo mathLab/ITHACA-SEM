@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     // Backward Transform Solution to get solved values at 
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //----------------------------------------------
-    Timing("Backard Transform ..");
+    Timing("Backward Transform ..");
     
     //-----------------------------------------------
     // Write solution to file

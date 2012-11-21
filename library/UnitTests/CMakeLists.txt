@@ -48,5 +48,5 @@ TARGET_LINK_LIBRARIES(UnitTests
 
 SET_LAPACK_LINK_LIBRARIES(UnitTests)
 
-ADD_TEST(NAME UnitTests COMMAND UnitTests --detect_memory_leaks=0)
+#ADD_TEST(NAME UnitTests COMMAND UnitTests --detect_memory_leaks=0)
 SUBDIRS(LibUtilities LocalRegions)

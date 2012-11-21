@@ -96,20 +96,22 @@ namespace Nektar
 
         /**
          * \brief Get the transformation matrix \f$\mathbf{R}\f$
-         */
-        const DNekScalMatSharedPtr& Preconditioner::v_GetTransformationMatrix() const
+         */ 
+        const Array<OneD, const DNekScalMatSharedPtr>& Preconditioner::v_GetTransformationMatrix() const
 	{
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-            return NullDNekScalMatSharedPtr;
+            static Array<OneD,DNekScalMatSharedPtr> result;
+            return result;
 	}
 
         /**
          * \brief Get the transposed transformation matrix \f$\mathbf{R}^{T}\f$
          */
-        const DNekScalMatSharedPtr& Preconditioner::v_GetTransposedTransformationMatrix() const
+        const Array<OneD, const DNekScalMatSharedPtr>& Preconditioner::v_GetTransposedTransformationMatrix() const
 	{
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-            return NullDNekScalMatSharedPtr;
+            static Array<OneD,DNekScalMatSharedPtr> result;
+            return result;
 	}
 
         /**

@@ -205,7 +205,7 @@ namespace Nektar
                 Array<OneD, int > vma,
                 Array<OneD, Array<OneD, unsigned int> > ema,
                 Array<OneD, Array<OneD, unsigned int> > fma);
-
+            
             LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
                 const DNekMatSharedPtr &r_bnd, 
                 const StdRegions::MatrixType matrixType);

@@ -1441,12 +1441,12 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
-            void GetModeMappings(const Array<OneD, int > vma,
+            STD_REGIONS_EXPORT void GetModeMappings(const Array<OneD, int > vma,
 				 const Array<OneD, Array<OneD, unsigned int> > ema,
 				 const Array<OneD, Array<OneD, unsigned int> > fma)
-	    {
-	        v_GetModeMappings(vma,ema,fma);
-	    }
+            {
+                v_GetModeMappings(vma,ema,fma);
+            }
 
 
         protected:
@@ -1893,9 +1893,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
 
-            STD_REGIONS_EXPORT virtual void v_GetModeMappings(Array<OneD, int > vma,
-				                        Array<OneD, Array<OneD, unsigned int> > ema,
-				                        Array<OneD, Array<OneD, unsigned int> > fma);
+            STD_REGIONS_EXPORT virtual void v_GetModeMappings(
+                Array<OneD, int > vma,
+                Array<OneD, Array<OneD, unsigned int> > ema,
+                Array<OneD, Array<OneD, unsigned int> > fma);
         };
 
 

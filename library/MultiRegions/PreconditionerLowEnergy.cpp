@@ -94,6 +94,7 @@ namespace Nektar
 		    {
                         ASSERTL0(0,"Solver type not valid");
 		    }
+                    SetUpReferenceElements();
                     LowEnergyPreconditioner();
 		}
 		break;
@@ -429,6 +430,321 @@ namespace Nektar
             }
         }
 
+        /**
+         *\brief Sets up the reference prismatic element needed to construct
+         *a low energy basis
+         */
+        SpatialDomains::PrismGeomSharedPtr PreconditionerLowEnergy::CreateRefPrismGeom()
+        {
+            //////////////////////////
+            // Set up Prism element //
+            //////////////////////////
+            
+	    const int three=3;
+            const int nVerts = 6;
+            const double point[][3] = {
+                {-1,-1,0}, {1,-1,0}, {1,1,0}, 
+                {-1,1,0}, {0,-1,sqrt(double(3))}, {0,1,sqrt(double(3))},
+            };
+            
+            //boost::shared_ptr<SpatialDomains::VertexComponent> verts[6];
+            SpatialDomains::VertexComponentSharedPtr verts[6];
+            for(int i=0; i < nVerts; ++i)
+            {
+                verts[i] =  MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr
+                    ( three, i, point[i][0], point[i][1], point[i][2] );
+            }
+            const int nEdges = 9;
+            const int vertexConnectivity[][2] = {
+                {0,1}, {1,2}, {3,2}, {0,3}, {0,4}, 
+                {1,4}, {2,5}, {3,5}, {4,5}
+            };
+            
+            // Populate the list of edges
+            SpatialDomains::SegGeomSharedPtr edges[nEdges]; 
+            for(int i=0; i < nEdges; ++i){
+                SpatialDomains::VertexComponentSharedPtr vertsArray[2];
+                for(int j=0; j<2; ++j)
+                {
+                    vertsArray[j] = verts[vertexConnectivity[i][j]];
+                }
+                edges[i] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(i, three, vertsArray);
+            }
+            
+            ////////////////////////
+            // Set up Prism faces //
+            ////////////////////////
+            
+            const int nFaces = 5;
+            //quad-edge connectivity base-face0, vertical-quadface2, vertical-quadface4
+            const int quadEdgeConnectivity[][4] = { {0,1,2,3}, {1,6,8,5}, {3,7,8,4} }; 
+            const bool   isQuadEdgeFlipped[][4] = { {0,0,1,1}, {0,0,1,1}, {0,0,1,1} };
+            // QuadId ordered as 0, 1, 2, otherwise return false
+            const int                  quadId[] = { 0,-1,1,-1,2 }; 
+            
+            //triangle-edge connectivity side-triface-1, side triface-3 
+            const int  triEdgeConnectivity[][3] = { {0,5,4}, {2,6,7} };
+            const bool    isTriEdgeFlipped[][3] = { {0,0,1}, {0,0,1} };
+            // TriId ordered as 0, 1, otherwise return false
+            const int                   triId[] = { -1,0,-1,1,-1 }; 
+            
+            // Populate the list of faces  
+            SpatialDomains::Geometry2DSharedPtr faces[nFaces]; 
+            for(int f = 0; f < nFaces; ++f){
+                if(f == 1 || f == 3) {
+                    int i = triId[f];
+                    SpatialDomains::SegGeomSharedPtr edgeArray[3];
+		    StdRegions::Orientation eorientArray[3];
+                    for(int j = 0; j < 3; ++j){
+                        edgeArray[j] = edges[triEdgeConnectivity[i][j]];
+                        eorientArray[j] = isTriEdgeFlipped[i][j] ? StdRegions::eBackwards : StdRegions::eForwards;
+                    }
+                    faces[f] = MemoryManager<SpatialDomains::TriGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
+                }            
+                else {
+                    int i = quadId[f];
+                    SpatialDomains::SegGeomSharedPtr edgeArray[4];
+		    StdRegions::Orientation eorientArray[4]; 
+                    for(int j=0; j < 4; ++j){
+                        edgeArray[j] = edges[quadEdgeConnectivity[i][j]];
+                        eorientArray[j] = isQuadEdgeFlipped[i][j] ? StdRegions::eBackwards : StdRegions::eForwards;
+                    }
+                    faces[f] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(f, edgeArray, eorientArray);
+                }
+            } 
+            
+            SpatialDomains::PrismGeomSharedPtr geom = MemoryManager<SpatialDomains::PrismGeom>::AllocateSharedPtr(faces);
+
+            geom->SetOwnData();
+
+            return geom;
+        }
+
+        /**
+         *\brief Sets up the reference tretrahedral element needed to construct
+         *a low energy basis
+         */
+        SpatialDomains::TetGeomSharedPtr PreconditionerLowEnergy::CreateRefTetGeom()
+        {
+            /////////////////////////
+            // Set up Tetrahedron  //
+            /////////////////////////
+
+	    int i,j;
+	    const int three=3;
+            const int nVerts = 4;
+            const double point[][3] = {
+                {-1,-1/sqrt(double(3)),-1/sqrt(double(6))},
+                {1,-1/sqrt(double(3)),-1/sqrt(double(6))},
+                {0,2/sqrt(double(3)),-1/sqrt(double(6))},
+                {0,0,3/sqrt(double(6))}};
+            
+            boost::shared_ptr<SpatialDomains::VertexComponent> verts[4];
+	    for(i=0; i < nVerts; ++i)
+	    {
+	        verts[i] =  
+                    MemoryManager<SpatialDomains::VertexComponent>::
+                    AllocateSharedPtr
+                    ( three, i, point[i][0], point[i][1], point[i][2] );
+	    }
+            
+            //////////////////////////////
+            // Set up Tetrahedron Edges //
+            //////////////////////////////
+            
+            // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
+            const int nEdges = 6;
+            const int vertexConnectivity[][2] = {
+                {0,1},{1,2},{0,2},{0,3},{1,3},{2,3}
+            };
+            
+            // Populate the list of edges
+            SpatialDomains::SegGeomSharedPtr edges[nEdges];
+            for(i=0; i < nEdges; ++i)
+            {
+                boost::shared_ptr<SpatialDomains::VertexComponent> 
+                    vertsArray[2];
+                for(j=0; j<2; ++j)
+                {
+                    vertsArray[j] = verts[vertexConnectivity[i][j]];
+                }
+                
+               edges[i] = MemoryManager<SpatialDomains::SegGeom>
+                   ::AllocateSharedPtr(i, three, vertsArray);
+            }
+            
+            //////////////////////////////
+            // Set up Tetrahedron faces //
+            //////////////////////////////
+            
+            const int nFaces = 4;
+            const int edgeConnectivity[][3] = {
+                {0,1,2}, {0,4,3}, {1,5,4}, {2,5,3}
+            };
+            const bool isEdgeFlipped[][3] = {
+                {0,0,1}, {0,0,1}, {0,0,1}, {0,0,1}
+            };
+            
+            // Populate the list of faces
+            SpatialDomains::TriGeomSharedPtr faces[nFaces];
+            for(i=0; i < nFaces; ++i)
+            {
+                SpatialDomains::SegGeomSharedPtr edgeArray[3];
+                StdRegions::Orientation eorientArray[3];
+                for(j=0; j < 3; ++j)
+                {
+                    edgeArray[j] = edges[edgeConnectivity[i][j]];
+                    eorientArray[j] = isEdgeFlipped[i][j] ? 
+                        StdRegions::eBackwards : StdRegions::eForwards;
+                }
+                
+                
+                faces[i] = MemoryManager<SpatialDomains::TriGeom>
+                    ::AllocateSharedPtr(i, edgeArray, eorientArray);
+            }
+            
+            SpatialDomains::TetGeomSharedPtr geom =
+                MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr
+                (faces);
+            
+            geom->SetOwnData();
+
+            return geom;
+        }
+
+        /**
+	 * \brief Sets up the reference elements needed by the preconditioner
+	 *
+         * Sets up reference elements which are used to preconditioning the
+         * corresponding matrices. Currently we support tetrahedral, prismatic
+         * and hexahedral elements
+	 */         
+
+        void PreconditionerLowEnergy::SetUpReferenceElements()
+        {
+            int cnt;
+            boost::shared_ptr<MultiRegions::ExpList> 
+                expList=((m_linsys.lock())->GetLocMat()).lock();
+            const StdRegions::StdExpansionVector &locExpVector = 
+                *(expList->GetExp());
+            GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
+            StdRegions::VarCoeffMap vVarCoeffMap;
+            StdRegions::StdExpansionSharedPtr locExpansion;
+            locExpansion = expList->GetExp(0);
+
+            DNekScalBlkMatSharedPtr r_mat;
+            DNekScalBlkMatSharedPtr rt_mat;
+
+            /*
+             * Set up a Tetrahral & prismatic element which comprises
+             * equilateral triangles as all faces for the tet and the end faces
+             * for the prism. Using these elements a new expansion is created
+             * (which is the same as the expansion specified in the input
+             * file).*/
+
+            SpatialDomains::TetGeomSharedPtr tetgeom=CreateRefTetGeom();
+            SpatialDomains::PrismGeomSharedPtr prismgeom=CreateRefPrismGeom();
+
+            //Expansion as specified in the input file
+            int nummodes=locExpansion->GetBasisNumModes(0);
+
+            //Bases for Tetrahedral element
+            const LibUtilities::BasisKey TetBa(
+                LibUtilities::eModified_A, nummodes,
+                LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey TetBb(
+                LibUtilities::eModified_B, nummodes,
+                LibUtilities::PointsKey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0));
+            const LibUtilities::BasisKey TetBc(
+                LibUtilities::eModified_C, nummodes,
+                LibUtilities::PointsKey(nummodes,LibUtilities::eGaussRadauMAlpha2Beta0));
+
+            //Create reference tetrahedral expansion
+            LocalRegions::TetExpSharedPtr TetExp;
+
+            TetExp = MemoryManager<LocalRegions::TetExp>
+                ::AllocateSharedPtr(TetBa,TetBb,TetBc,
+                                    tetgeom);
+
+            //Bases for prismatic element
+            const LibUtilities::BasisKey PrismBa(
+                LibUtilities::eModified_A, nummodes,
+                LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey PrismBb(
+                LibUtilities::eModified_A, nummodes,
+                LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey PrismBc(
+                LibUtilities::eModified_B, nummodes,
+                LibUtilities::PointsKey(nummodes,LibUtilities::eGaussRadauMAlpha1Beta0));
+
+            //Create reference prismatic expansion
+            LocalRegions::PrismExpSharedPtr PrismExp;
+
+            PrismExp = MemoryManager<LocalRegions::PrismExp>
+                ::AllocateSharedPtr(PrismBa,PrismBb,PrismBc,
+                                    prismgeom);
+
+
+            // retrieve variable coefficient
+            if(m_linSysKey.GetNVarCoeffs() > 0)
+            {
+                StdRegions::VarCoeffMap::const_iterator x;
+                cnt = expList->GetPhys_Offset(0);
+                for (x = m_linSysKey.GetVarCoeffs().begin(); 
+                     x != m_linSysKey.GetVarCoeffs().end(); ++x)
+                {
+                    vVarCoeffMap[x->first] = x->second + cnt;
+                }
+            }
+
+            //Matrix keys for tetrahedral element transformation matrices
+            LocalRegions::MatrixKey TetR
+                (StdRegions::ePreconR,
+                 StdRegions::eTetrahedron,
+                 *TetExp,
+                 m_linSysKey.GetConstFactors(),
+                 vVarCoeffMap);
+                
+            LocalRegions::MatrixKey TetRT
+                (StdRegions::ePreconRT,
+                 StdRegions::eTetrahedron,
+                 *TetExp,
+                 m_linSysKey.GetConstFactors(),
+                 vVarCoeffMap);
+
+            //Arrays to store the transformation matrices for each element type;
+            m_transformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
+            m_transposedTransformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
+
+            int elmtType=0;
+            //Get a LocalRegions static condensed matrix
+            r_mat = TetExp->GetLocStaticCondMatrix(TetR);
+            rt_mat = TetExp->GetLocStaticCondMatrix(TetRT);
+            m_transformationMatrix[elmtType]=r_mat->GetBlock(0,0);
+            m_transposedTransformationMatrix[elmtType]=rt_mat->GetBlock(0,0);
+
+            //Matrix keys for Prism element transformation matrices
+            LocalRegions::MatrixKey PrismR
+                (StdRegions::ePreconR,
+                 StdRegions::ePrism,
+                 *PrismExp,
+                 m_linSysKey.GetConstFactors(),
+                 vVarCoeffMap);
+                
+            LocalRegions::MatrixKey PrismRT
+                (StdRegions::ePreconRT,
+                 StdRegions::ePrism,
+                 *PrismExp,
+                 m_linSysKey.GetConstFactors(),
+                 vVarCoeffMap);
+            elmtType++;
+            //Get a LocalRegions static condensed matrix
+            r_mat = PrismExp->GetLocStaticCondMatrix(PrismR);
+            rt_mat = PrismExp->GetLocStaticCondMatrix(PrismRT);
+            m_transformationMatrix[elmtType]=r_mat->GetBlock(0,0);
+            m_transposedTransformationMatrix[elmtType]=rt_mat->GetBlock(0,0);
+        }
+
 
        /**
 	 * \brief Construct the low energy preconditioner from
@@ -456,7 +772,7 @@ namespace Nektar
             StdRegions::StdExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
-            
+
             int nRow, i, j, nmodes, ntotaledgemodes, ntotalfacemodes, nel;
             int nVerts, nEdges,nFaces; 
             int eid, fid, eid2, fid2, n, cnt, nedgemodes, nfacemodes;
@@ -475,8 +791,6 @@ namespace Nektar
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
 
-            DNekScalBlkMatSharedPtr r_mat;
-            DNekScalBlkMatSharedPtr rt_mat;
 
             DNekMatSharedPtr    m_RS;
             DNekMatSharedPtr    m_RSRT;
@@ -486,9 +800,6 @@ namespace Nektar
             DNekMat RS;
             DNekMat RSRT;
             
-            //DNekScalMatSharedPtr m_transformationmatrix;
-            //DNekScalMatSharedPtr m_transposedtransformationmatrix;
-
             DNekMatSharedPtr m_VertBlk;
             DNekMatSharedPtr m_EdgeBlk;
             DNekMatSharedPtr m_FaceBlk;
@@ -521,74 +832,33 @@ namespace Nektar
             DNekMatSharedPtr FaceBlk = MemoryManager<DNekMat>::
                 AllocateSharedPtr(nNonDirFaces,nNonDirFaces,zero,storage);
 
+            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transmatrixmap;
+            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transposedtransmatrixmap;
+            transmatrixmap[StdRegions::eTetrahedron]=m_transformationMatrix[0];
+            transmatrixmap[StdRegions::ePrism]=m_transformationMatrix[1];
+            transposedtransmatrixmap[StdRegions::eTetrahedron]=m_transposedTransformationMatrix[0];
+            transposedtransmatrixmap[StdRegions::ePrism]=m_transposedTransformationMatrix[1];
             
             for(cnt=n=0; n < expList->GetNumElmts(); ++n)
             {
 
                 nel = expList->GetOffset_Elmt_Id(n);
-
+                
                 locExpansion = expList->GetExp(nel);
                 nCoeffs=locExpansion->NumBndryCoeffs();
-
                 StdRegions::ExpansionType eType=
                     locExpansion->DetExpansionType();
-
-                //if(eType==StdRegions::eTetrahedron && !m_transformationmatrix)
-                    //if(eType==StdRegions::ePrism && !m_transformationmatrix)
-                //{
-                    // retrieve variable coefficient
-                    if(m_linSysKey.GetNVarCoeffs() > 0)
-                    {
-                        StdRegions::VarCoeffMap::const_iterator x;
-                        cnt = expList->GetPhys_Offset(nel);
-                        for (x = m_linSysKey.GetVarCoeffs().begin(); 
-                             x != m_linSysKey.GetVarCoeffs().end(); ++x)
-                        {
-                            vVarCoeffMap[x->first] = x->second + cnt;
-                        }
-                    }
-
-                    LocalRegions::MatrixKey r_matkey
-                        (StdRegions::ePreconR,
-                         eType,
-                         *locExpansion,
-                         m_linSysKey.GetConstFactors(),
-                         vVarCoeffMap);
-                    
-                    LocalRegions::MatrixKey rt_matkey
-                        (StdRegions::ePreconRT,
-                         eType,
-                         *locExpansion,
-                         m_linSysKey.GetConstFactors(),
-                         vVarCoeffMap);
-                    
-                    //Get a LocalRegions static condensed matrix
-                    r_mat = locExpansion->GetLocStaticCondMatrix(r_matkey);
-                    rt_mat = locExpansion->GetLocStaticCondMatrix(rt_matkey);
-                    
-                    m_transformationmatrix=r_mat->GetBlock(0,0);
-                    m_transposedtransformationmatrix=rt_mat->GetBlock(0,0);
-                    
-                    R=(*m_transformationmatrix);
-                    RT=(*m_transposedtransformationmatrix);
-
-                    m_RS = MemoryManager<DNekMat>::AllocateSharedPtr
-                        (nCoeffs, nCoeffs, zero, storage);
-                    RS = (*m_RS);
-                    m_RSRT = MemoryManager<DNekMat>::AllocateSharedPtr
-                        (nCoeffs, nCoeffs, zero, storage);
-                    RSRT = (*m_RSRT);
-
-                    //number of rows=columns of the schur complement
-                    bnd_rows=m_transformationmatrix->GetRows();
-                    //}
-                /*else if(eType==StdRegions::ePrism && !m_transformationmatrix)
-                {
-                }
-                else
-                {
-                }*/
-
+             
+                R=(*(transmatrixmap[eType]));
+                RT=(*(transposedtransmatrixmap[eType]));
+ 
+                m_RS = MemoryManager<DNekMat>::AllocateSharedPtr
+                    (nCoeffs, nCoeffs, zero, storage);
+                RS = (*m_RS);
+                m_RSRT = MemoryManager<DNekMat>::AllocateSharedPtr
+                    (nCoeffs, nCoeffs, zero, storage);
+                RSRT = (*m_RSRT);
+                
                 nVerts=locExpansion->GetGeom()->GetNumVerts();
                 nEdges=locExpansion->GetGeom()->GetNumEdges();
                 nFaces=locExpansion->GetGeom()->GetNumFaces();
@@ -630,13 +900,13 @@ namespace Nektar
                     //Get vertex map
                     globalrow = m_locToGloMap->
                         GetLocalToGlobalBndMap(cnt+vMap1)-nDirBnd;
-
+                    
                     if(globalrow >= 0)
                     {
                         for (m=0; m<nVerts; ++m)
                         {
                             vMap2=vertModeLocation[m];
-
+                            
                             //global matrix location (without offset due to
                             //dirichlet values)
                             globalcol = m_locToGloMap->
@@ -771,28 +1041,11 @@ namespace Nektar
 
             if (nNonDirEdges != 0)
             {
-                for(i=0; i<EdgeBlk->GetRows(); ++i)
-                {
-                    for (j=0; j<EdgeBlk->GetRows(); ++j)
-                    {
-                        cout<<(*EdgeBlk)(i,j)<<" ";
-                    }
-                    cout<<endl;
-                }
                 EdgeBlk->Invert();
             }
 
             if (nNonDirFaces != 0)
             {
-                for(i=0; i<FaceBlk->GetRows(); ++i)
-                {
-                    for (j=0; j<FaceBlk->GetRows(); ++j)
-                    {
-                        cout<<(*FaceBlk)(i,j)<<" ";
-                    }
-                    cout<<endl;
-                }
-
                 FaceBlk->Invert();
             }
 
@@ -1152,21 +1405,22 @@ namespace Nektar
 	}
 
         /**
-         * \brief Get the transformation matrix \f$\mathbf{R}\f$
+         * \brief Get the tetrahedral transformation matrix \f$\mathbf{R}\f$
          */
-        const DNekScalMatSharedPtr& PreconditionerLowEnergy::v_GetTransformationMatrix() const
+        const Array<OneD,const DNekScalMatSharedPtr>& PreconditionerLowEnergy::
+        v_GetTransformationMatrix() const
 	{
-	    return m_transformationmatrix;
+	    return m_transformationMatrix;
 	}
 
         /**
          * \brief Get the transposed transformation matrix \f$\mathbf{R}^{T}\f$
          */
-        const DNekScalMatSharedPtr& PreconditionerLowEnergy::v_GetTransposedTransformationMatrix() const
+        const Array<OneD,const DNekScalMatSharedPtr>& PreconditionerLowEnergy::
+        v_GetTransposedTransformationMatrix() const
 	{
-	    return m_transposedtransformationmatrix;
+	    return m_transposedTransformationMatrix;
 	}
-
     }
 }
 

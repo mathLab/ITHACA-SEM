@@ -132,19 +132,16 @@ namespace Nektar
 
         void GlobalLinSysIterativeStaticCond::v_InitObject()
         {
-
-
             // Allocate memory for top-level structure
+            SetupTopLevel(m_locToGloMap);
+            
+            // Construct this level
+            Initialise(m_locToGloMap);
+            
             if (m_locToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
             {
                 SetupLowEnergyTopLevel(m_locToGloMap);
             }
-            else
-            {
-                SetupTopLevel(m_locToGloMap);
-            }
-            // Construct this level
-            Initialise(m_locToGloMap);
         }
 
         /**
@@ -463,8 +460,15 @@ namespace Nektar
             m_S1Blk      = MemoryManager<DNekScalBlkMat>
                     ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
 
-            DNekScalMatSharedPtr m_R = m_precon->GetTransformationMatrix();
-            DNekScalMatSharedPtr m_RT = m_precon->GetTransposedTransformationMatrix();
+            Array<OneD, const DNekScalMatSharedPtr> m_R = m_precon->GetTransformationMatrix();
+            Array<OneD, const DNekScalMatSharedPtr> m_RT = m_precon->GetTransposedTransformationMatrix();
+
+            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transmatrixmap;
+            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transposedtransmatrixmap;
+            transmatrixmap[StdRegions::eTetrahedron]=m_R[0];
+            transmatrixmap[StdRegions::ePrism]=m_R[1];
+            transposedtransmatrixmap[StdRegions::eTetrahedron]=m_RT[0];
+            transposedtransmatrixmap[StdRegions::ePrism]=m_RT[1];
 
             for(n = 0; n < n_exp; ++n)
             {
@@ -481,9 +485,12 @@ namespace Nektar
                 DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
                 DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
 
+                StdRegions::ExpansionType eType=
+                    (m_expList.lock()->GetExp(n))->DetExpansionType();
+
                 //transformation matrices
-                DNekScalMat &R = (*m_R);
-                DNekScalMat &RT = (*m_RT);
+                DNekScalMat &R = (*(transmatrixmap[eType]));
+                DNekScalMat &RT = (*(transposedtransmatrixmap[eType]));
 
                 //create low energy matrix
                 DNekMat &RS1 = (*m_RS1);
@@ -498,8 +505,8 @@ namespace Nektar
                 m_C         ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
                 m_invD      ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
                 m_S1Blk->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
-                m_RBlk->SetBlock(n,n, m_R);
-                m_RTBlk->SetBlock(n,n, m_RT);
+                m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
+                m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
 	    }
         }
 

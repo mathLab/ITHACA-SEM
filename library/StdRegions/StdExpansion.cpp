@@ -1003,7 +1003,6 @@ namespace Nektar
             outfile << std::endl;
         }
 
-
         // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
             void StdExpansion::SetUpPhysNormals(const int edge)
             {
@@ -1786,13 +1785,13 @@ namespace Nektar
             static NormalVector result;
             return result;
         }
-        
+
         void StdExpansion::v_GetModeMappings(
             Array<OneD, int > vma,
             Array<OneD, Array<OneD, unsigned int> > ema,
             Array<OneD, Array<OneD, unsigned int> > fma)
         {
-            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            ASSERTL0(false, "Not implemented.");
         }
 
     }//end namespace

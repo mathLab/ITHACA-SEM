@@ -476,6 +476,7 @@ namespace Nektar
                 // test if norm is within tolerance
                 if (eps*bb_inv < m_tolerance * m_tolerance)
                 {
+                    cout<<"iterations: "<<k<<endl;
                     break;
                 }
                 min_resid = min(min_resid, eps);
@@ -484,7 +485,6 @@ namespace Nektar
                 beta  = rho_new/rho;
                 alpha = rho_new/(mu - rho_new*beta/alpha);
                 rho   = rho_new;
-
                 k++;
                 m_totalIterations++;
             }

@@ -38,6 +38,8 @@
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+#include <LocalRegions/TetExp.h>
+#include <LocalRegions/PrismExp.h>
 
 
 namespace Nektar
@@ -85,8 +87,10 @@ namespace Nektar
 
             DNekScalMatSharedPtr                        bnd_mat;
 
-	    DNekScalMatSharedPtr                        m_transformationmatrix;
-	    DNekScalMatSharedPtr                        m_transposedtransformationmatrix;
+	    DNekScalMatSharedPtr                        m_TetR;
+	    DNekScalMatSharedPtr                        m_TetRT;
+	    DNekScalMatSharedPtr                        m_PrismR;
+	    DNekScalMatSharedPtr                        m_PrismRT;
 
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
@@ -96,6 +100,10 @@ namespace Nektar
 
             Array<OneD, Array<OneD, unsigned int> >     MatEdgeLocation;
             Array<OneD, Array<OneD, unsigned int> >     MatFaceLocation;
+
+            Array<OneD,DNekScalMatSharedPtr> m_transformationMatrix;
+            Array<OneD,DNekScalMatSharedPtr> m_transposedTransformationMatrix;
+
 
 	private:
 
@@ -111,15 +119,22 @@ namespace Nektar
 
 	    void BlockPreconditioner(void);
 
+            void SetUpReferenceElements(void);
+
+            SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
+            SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
+
             virtual void v_InitObject();
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
-	    virtual const DNekScalMatSharedPtr& v_GetTransformationMatrix() const;
+	    virtual const Array<OneD,const DNekScalMatSharedPtr>& 
+                v_GetTransformationMatrix() const;
             
-	    virtual const DNekScalMatSharedPtr& v_GetTransposedTransformationMatrix() const;
+	    virtual const Array<OneD,const DNekScalMatSharedPtr>& 
+                v_GetTransposedTransformationMatrix() const;
 	};
     }
 }

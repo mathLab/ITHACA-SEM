@@ -105,6 +105,16 @@ namespace Nektar
             m_cst3=m_dt/m_Delta;
             m_cst4=m_cst2*m_cst3;
             m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+
+            //----- Convergence History Parameters ------
+	    m_Growing=false;
+            m_Shrinking=false;
+            
+            m_MinNormDiff_q_qBar = 9999;
+            m_MaxNormDiff_q_qBar = 0;
+            m_First_MinNormDiff_q_qBar = 0;
+            m_Oscillation = 0;
+	    //-------------------------------------------
             
             cout << "------------------ SFD Parameters ------------------" << endl;
             cout << "\tDelta = " << m_Delta << endl;
@@ -197,14 +207,6 @@ namespace Nektar
         {
             //This routine evaluates |q-qBar|L2 and save the value in "ConvergenceHistory.txt"
             //Moreover, a procedure to change the parameters Delta and X after 25 oscillations of |q-qBar| is implemented
-            
-            m_Growing=false;
-            m_Shrinking=false;
-            
-            m_MinNormDiff_q_qBar = 9999;
-            m_MaxNormDiff_q_qBar = 0;
-            m_First_MinNormDiff_q_qBar = 0;
-            m_Oscillation = 0;
             
             for(int i = 0; i < 1; ++i)
             {

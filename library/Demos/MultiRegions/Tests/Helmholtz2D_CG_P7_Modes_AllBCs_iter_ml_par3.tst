@@ -2,10 +2,10 @@
 <test>
     <description>Helmholtz 2D CG with P=7, all BCs, iterative ML, par(3)</description>
     <executable>Helmholtz2D</executable>
-    <parameters>helmholtz2D_7modes_AllBCs_iter_ml.xml</parameters>
+    <parameters>-I GlobalSysSoln=IterativeMultiLevelStaticCond Helmholtz2D_P7_AllBCs.xml</parameters>
     <processes>3</processes>
     <files>
-        <file description="Session File">helmholtz2D_7modes_AllBCs_iter_ml.xml</file>
+        <file description="Session File">Helmholtz2D_P7_AllBCs.xml</file>
     </files>
 
     <metrics>

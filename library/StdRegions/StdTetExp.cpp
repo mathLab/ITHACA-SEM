@@ -2006,6 +2006,13 @@ namespace Nektar
             int Q = m_base[1]->GetNumModes();
             int R = m_base[2]->GetNumModes();
 
+            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
+
+            if(outarray.num_elements() != nIntCoeffs)
+            {
+                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+            }
+
             int idx = 0;
             for (int i = 2; i < P-2; ++i)
             {

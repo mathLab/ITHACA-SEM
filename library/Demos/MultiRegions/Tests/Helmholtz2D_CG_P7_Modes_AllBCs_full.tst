@@ -2,9 +2,9 @@
 <test>
     <description>Helmholtz 2D CG with P=7, direct full</description>
     <executable>Helmholtz2D</executable>
-    <parameters>helmholtz2D_7modes_AllBCs.xml</parameters>
+    <parameters>-I GlobalSysSoln=DirectFull Helmholtz2D_P7_AllBCs.xml</parameters>
     <files>
-        <file description="Session File">helmholtz2D_7modes_AllBCs.xml</file>
+        <file description="Session File">Helmholtz2D_P7_AllBCs.xml</file>
     </files>
 
     <metrics>

@@ -115,6 +115,64 @@ namespace Nektar
 	}
 
         /**
+         * \brief Get block elemental transformed schur complement matrix
+         * \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{t}\f$
+         */
+        const DNekScalBlkMatSharedPtr& Preconditioner::
+        v_GetBlockTransformedSchurCompl() const
+	{
+	    return NullDNekScalBlkMatSharedPtr;
+	}
+
+        /**
+         * \brief Get block elemental \f$ C \f$ matrix.
+         */
+        const DNekScalBlkMatSharedPtr& Preconditioner::
+        v_GetBlockCMatrix() const
+	{
+	    return NullDNekScalBlkMatSharedPtr;
+	}
+        
+        /**
+         * \brief Get Block elemental \f$ D^{-1} \f$ matrix.
+         */
+        const DNekScalBlkMatSharedPtr& Preconditioner::
+        v_GetBlockInvDMatrix() const
+	{
+	    return NullDNekScalBlkMatSharedPtr;
+	}
+
+        
+        /**
+         * \brief Get block elemental (non-transformed) schur complement matrix
+         * \f$\mathbf{S}_{1}\f$
+         */
+        const DNekScalBlkMatSharedPtr& Preconditioner::
+        v_GetBlockSchurCompl() const
+	{
+	    return NullDNekScalBlkMatSharedPtr;
+	}
+
+        /**
+         * \brief Get block elemental transformation matrix \f$\mathbf{R}\f$
+         */
+        const DNekScalBlkMatSharedPtr& Preconditioner::
+        v_GetBlockTransformationMatrix() const
+	{
+	    return NullDNekScalBlkMatSharedPtr;
+        }
+
+        /**
+         * \brief Get block elemental transposed transformation matrix
+         * \f$\mathbf{R}^{T}\f$
+         */
+        const DNekScalBlkMatSharedPtr& Preconditioner::
+        v_GetBlockTransposedTransformationMatrix() const
+	{
+	    return NullDNekScalBlkMatSharedPtr;
+	}
+
+        /**
          *  Performs global assembly of diagonal entries
          *  to global schur complement matrix.
          */

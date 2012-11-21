@@ -133,7 +133,14 @@ namespace Nektar
             
             if (m_locToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
             {
+                MultiRegions::PreconditionerType pType = m_locToGloMap->GetPreconType();
+
+                std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
+                
+                v_UniqueMap();
+                m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),m_locToGloMap);
                 SetupLowEnergyTopLevel(m_locToGloMap);
+
             }
         }
 
@@ -469,13 +476,6 @@ namespace Nektar
                     = pLocToGloMap->GetNumLocalBndCoeffsPerPatch();
             const Array<OneD,const unsigned int>& nint_size
                     = pLocToGloMap->GetNumLocalIntCoeffsPerPatch();
-
-            MultiRegions::PreconditionerType pType = pLocToGloMap->GetPreconType();
-
-            std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
-
-            v_UniqueMap();
-	    m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),pLocToGloMap);
 
             // Setup Block Matrix systems
             MatrixStorage blkmatStorage = eDIAGONAL;

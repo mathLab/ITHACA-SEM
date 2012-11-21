@@ -92,6 +92,15 @@ namespace Nektar
 	    DNekScalMatSharedPtr                        m_PrismR;
 	    DNekScalMatSharedPtr                        m_PrismRT;
 
+            DNekScalBlkMatSharedPtr                     m_schurCompl;
+            DNekScalBlkMatSharedPtr                     m_BinvD;
+            DNekScalBlkMatSharedPtr                     m_C;
+            DNekScalBlkMatSharedPtr                     m_invD;
+
+            DNekScalBlkMatSharedPtr                     m_RBlk;
+            DNekScalBlkMatSharedPtr                     m_RTBlk;
+            DNekScalBlkMatSharedPtr                     m_S1Blk;
+
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
             Array<OneD, int>                            vertModeLocation;
@@ -121,6 +130,8 @@ namespace Nektar
 
             void SetUpReferenceElements(void);
 
+            void SetupLowEnergyTopLevel(void);
+
             SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
 
@@ -135,7 +146,25 @@ namespace Nektar
             
 	    virtual const Array<OneD,const DNekScalMatSharedPtr>& 
                 v_GetTransposedTransformationMatrix() const;
-	};
+
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockTransformedSchurCompl() const;
+            
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockCMatrix() const;
+            
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockInvDMatrix() const;
+            
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockSchurCompl() const;
+        
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockTransformationMatrix() const;
+            
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockTransposedTransformationMatrix() const;
+        };
     }
 }
 

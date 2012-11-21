@@ -75,9 +75,29 @@ namespace Nektar
 
             Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
 
-            const inline Array<OneD, const DNekScalMatSharedPtr> &GetTransformationMatrix(void) const;
-
-            const inline Array<OneD, const DNekScalMatSharedPtr> &GetTransposedTransformationMatrix(void) const;
+            const inline Array<OneD, const DNekScalMatSharedPtr> 
+                &GetTransformationMatrix(void) const;
+            
+            const inline Array<OneD, const DNekScalMatSharedPtr> 
+                &GetTransposedTransformationMatrix(void) const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockTransformedSchurCompl() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockCMatrix() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockInvDMatrix() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockSchurCompl() const;
+        
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockTransformationMatrix() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockTransposedTransformationMatrix() const;
 
 	protected:
 
@@ -103,6 +123,24 @@ namespace Nektar
 
             virtual const Array<OneD, const DNekScalMatSharedPtr>& v_GetTransposedTransformationMatrix(void) const;
 
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockTransformedSchurCompl() const;
+            
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockCMatrix() const;
+            
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockInvDMatrix() const;
+            
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockSchurCompl() const;
+        
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockTransformationMatrix() const;
+            
+            virtual const DNekScalBlkMatSharedPtr&
+                v_GetBlockTransposedTransformationMatrix() const;
+
             static std::string lookupIds[];
             static std::string def;
 	};
@@ -121,7 +159,7 @@ namespace Nektar
          */
         inline const Array<OneD,const DNekScalMatSharedPtr>& Preconditioner::GetTransformationMatrix() const
         {
-	  return v_GetTransformationMatrix();
+            return v_GetTransformationMatrix();
         }
 
         /**
@@ -129,7 +167,55 @@ namespace Nektar
          */
         inline const Array<OneD,const DNekScalMatSharedPtr>& Preconditioner::GetTransposedTransformationMatrix() const
         {
-	  return v_GetTransposedTransformationMatrix();
+            return v_GetTransposedTransformationMatrix();
+        }
+
+        /**
+         *
+         */
+        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockTransformedSchurCompl() const
+        {
+            return v_GetBlockTransformedSchurCompl();
+        }
+           
+        /**
+         *
+         */ 
+        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockCMatrix() const
+        {
+            return v_GetBlockCMatrix();
+        }
+           
+        /**
+         *
+         */ 
+        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockInvDMatrix() const
+        {
+            return v_GetBlockInvDMatrix();
+        }
+           
+        /**
+         *
+         */ 
+        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockSchurCompl() const
+        {
+            return v_GetBlockSchurCompl();
+        }
+        
+        /**
+         *
+         */
+        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockTransformationMatrix() const
+        {
+            return v_GetBlockTransformationMatrix();
+        }
+
+        /**
+         *
+         */ 
+        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockTransposedTransformationMatrix() const
+        {
+            return v_GetBlockTransposedTransformationMatrix();
         }
 
         /**

@@ -377,7 +377,7 @@ namespace Nektar
                 (*x)->Initialise(m_fields, m_time);
             }
 
-            // Ensure that there is no conflict of parameters.
+            // Ensure that there is no conflict of parameters
             if(m_cflSafetyFactor > 0.0)
             {
                 // Check final condition
@@ -390,7 +390,7 @@ namespace Nektar
                          "Timestep not unique: timestep > 0.0 & CFL > 0.0");
             }
 
-            // Check uniqueness of checkpoint output.
+            // Check uniqueness of checkpoint output
             ASSERTL0(m_checktime == 0.0 && m_checksteps == 0 ||
                      m_checktime >  0.0 && m_checksteps == 0 || 
                      m_checktime == 0.0 && m_checksteps >  0,

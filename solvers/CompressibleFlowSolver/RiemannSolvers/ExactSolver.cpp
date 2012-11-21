@@ -82,7 +82,7 @@ namespace Nektar
 
         NekDouble pratio,z;
         NekDouble u_ncr,u_rcn,u_scn,u_ncs;
-        NekDouble u_rcvr = uL +(f2*cL)+(f2*cR);
+        NekDouble u_rcvr = uL + (f2*cL) + (f2*cR);
         int pattern = -1;
     
         if(uR<u_rcvr)

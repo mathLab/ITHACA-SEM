@@ -816,7 +816,7 @@ namespace Nektar
                 // Get the ith component of the flux vector in standard space
                 m_fluxVector(i, inarray, fluxvector);
             }
-            
+               
             // Store forwards/backwards space along trace space.
             Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
@@ -866,9 +866,9 @@ namespace Nektar
                     // Computation of the advection term
                     for (n = 0; n < nElements; n++) 
                     {
-                        nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
+                        nLocalSolutionPts = fields[0]->
+                        GetExp(n)->GetTotPoints();
                         phys_offset = fields[0]->GetPhys_Offset(n);
-                        //Array<OneD, const NekDouble> &jac = ;
                         jac = fields[0]->GetExp(n)->GetGeom1D()->GetJac();
                         
                         Vmath::Smul(nLocalSolutionPts, 

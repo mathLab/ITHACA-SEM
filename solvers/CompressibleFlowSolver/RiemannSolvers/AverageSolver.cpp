@@ -74,13 +74,13 @@ namespace Nektar
                 tmp2   += Ubwd[i]*Bwd[i+1][j];
             }
             
-            NekDouble pL = (gamma - 1.0) * (Fwd[expDim+1][j] - 0.5 * tmp1);
-            NekDouble pR = (gamma - 1.0) * (Bwd[expDim+1][j] - 0.5 * tmp2);
+            NekDouble Pfwd = (gamma - 1.0) * (Fwd[expDim+1][j] - 0.5 * tmp1);
+            NekDouble Pbwd = (gamma - 1.0) * (Bwd[expDim+1][j] - 0.5 * tmp2);
             
             // Compute the average flux
             flux[0][j] = 0.5 * (Fwd[1][j] + Bwd[1][j]);
-            flux[expDim+1][j] = 0.5 * (Ufwd[0] * (Fwd[expDim+1][j] + pL) + 
-                                       Ubwd[0] * (Bwd[expDim+1][j]+pR));
+            flux[expDim+1][j] = 0.5 * (Ufwd[0] * (Fwd[expDim+1][j] + Pfwd) + 
+                                       Ubwd[0] * (Bwd[expDim+1][j] + Pbwd));
             
             for (int i = 0; i < expDim; ++i)
             {
@@ -89,7 +89,7 @@ namespace Nektar
             }
 
             // Add in pressure contribution to u field
-            flux[1][j] += 0.5 * (pL + pR);
+            flux[1][j] += 0.5 * (Pfwd + Pbwd);
         }
     }
 }

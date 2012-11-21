@@ -2025,11 +2025,11 @@ namespace Nektar
                 UpwindType = m_session->GetSolverInfo("UpwindType");
                 if (UpwindType == "Exact")
                 {
-                    out << "\tRiemann Solver : Exact"   <<endl;
+                    out << "\tRiemann Solver  : Exact"   <<endl;
                 }
                 else if (UpwindType == "Average")
                 {
-                    out << "\tRiemann Solver : Average" <<endl;
+                    out << "\tRiemann Solver  : Average" <<endl;
                 }
             }
             

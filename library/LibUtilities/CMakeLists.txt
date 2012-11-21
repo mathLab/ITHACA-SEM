@@ -85,6 +85,7 @@ SET(CommunicationHeaders
     ./Communication/CommSerial.h
     ./Communication/GsLib.hpp
     ./Communication/Transposition.h
+    ./Communication/Xxt.hpp
 )
 
 SET(ExpressionTemplates
@@ -115,7 +116,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/Equation.h
     ./BasicUtils/ErrorUtil.hpp
-    ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp

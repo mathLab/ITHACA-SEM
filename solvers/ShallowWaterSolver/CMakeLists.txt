@@ -6,3 +6,8 @@ SET(ShallowWaterSolverSource
 
 ADD_SOLVER_EXECUTABLE(ShallowWaterSolver solvers 
 			${ShallowWaterSolverSource})
+
+ADD_NEKTAR_TEST(StandingWave_CG_P4)
+ADD_NEKTAR_TEST(StandingWave_CG_P8)
+ADD_NEKTAR_TEST(StandingWave_DG_P4)
+ADD_NEKTAR_TEST(StandingWave_DG_P8)

@@ -2180,7 +2180,7 @@ namespace Nektar
 
             int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
 
-            if(outarray.num_elements()!=nIntCoeffs)
+            if(outarray.num_elements() != nIntCoeffs)
             {
                 outarray = Array<OneD, unsigned int>(nIntCoeffs);
             }

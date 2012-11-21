@@ -51,13 +51,11 @@ namespace Nektar
          *
          */
 
-
         /// Rounds a double precision number to an integer.
         int RoundNekDoubleToInt(NekDouble x)
         {
             return int(x > 0.0 ? x + 0.5 : x - 0.5);
         }
-
 
         /// Rounds an array of double precision numbers to integers.
         void RoundNekDoubleToInt(const Array<OneD,const NekDouble> inarray, Array<OneD,int> outarray)
@@ -72,7 +70,6 @@ namespace Nektar
                 outarray[i] =  int(x > 0.0 ? x + 0.5 : x - 0.5);
             }
         }
-
 
         /**
          * Initialises an empty mapping.
@@ -109,9 +106,9 @@ namespace Nektar
         }
 
 
-        /** Create a new level of mapping using the information in
-         *  multiLevelGraph and performing the following steps:
-         *
+        /** 
+         * Create a new level of mapping using the information in
+         * multiLevelGraph and performing the following steps:
          */
         AssemblyMap::AssemblyMap(
                     AssemblyMap* oldLevelMap,
@@ -123,7 +120,9 @@ namespace Nektar
             m_globalToUniversalBndMap(oldLevelMap->GetGlobalToUniversalBndMap()),
             m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),
             m_gsh(oldLevelMap->m_gsh),
-            m_bndGsh(oldLevelMap->m_bndGsh)
+            m_bndGsh(oldLevelMap->m_bndGsh),
+            m_preconType(oldLevelMap->m_preconType),
+            m_lowestStaticCondLevel(oldLevelMap->m_lowestStaticCondLevel)
         {
             int i;
             int j;
@@ -161,17 +160,20 @@ namespace Nektar
             Array<OneD, int>       locPatchMask          (numLocalBndCoeffsOld);
 
             // Fill the array globPatchMask as follows:
-            // - The first part (i.e. the glob bnd dofs) is filled with the value -1
+            // - The first part (i.e. the glob bnd dofs) is filled with the
+            //   value -1
             // - The second part (i.e. the glob interior dofs) is numbered
-            //   according to the patch it belongs to (i.e. dofs in first
-            //   block all are numbered 0, the second block numbered are 1, etc...)
+            //   according to the patch it belongs to (i.e. dofs in first block
+            //   all are numbered 0, the second block numbered are 1, etc...)
             multiLevelGraph->MaskPatches(newLevel,globHomPatchMask);
+            
             // Map from Global Dofs to Local Dofs
             // As a result, we know for each local dof whether
             // it is mapped to the boundary of the next level, or to which
             // patch. Based upon this, we can than later associate every patch
             // of the current level with a patch in the next level.
             oldLevelMap->GlobalToLocalBndWithoutSign(globPatchMask,locPatchMask_NekDouble);
+
             // Convert the result to an array of integers rather than doubles
             RoundNekDoubleToInt(locPatchMask_NekDouble,locPatchMask);
 
@@ -184,9 +186,9 @@ namespace Nektar
             // Retrieve the number of patches at the next level
             int numPatchesWithIntNew = multiLevelGraph->GetNpatchesWithInterior(newLevel);
             int numPatchesNew        = numPatchesWithIntNew;
-
-            // Allocate memory to store the number of local dofs associated to each
-            // of elemental boundaries of these patches
+            
+            // Allocate memory to store the number of local dofs associated to
+            // each of elemental boundaries of these patches
             map<int, int> numLocalBndCoeffsPerPatchNew;
             for(int i = 0; i < numPatchesNew; i++)
             {
@@ -198,21 +200,23 @@ namespace Nektar
             int curPatch;
             for(i = cnt = 0; i < numPatchesOld; i++)
             {
-                // For every patch at the current level, the mask array locPatchMask
-                // should be filled with
-                // - the same (positive) number for each entry
-                //   (which will correspond to the patch at the next level it belongs to)
-                // - the same (positive) number for each entry, except some entries that are -1
-                //   (the enties correspond to -1, will be mapped to the local boundary of the
-                //    next level patch given by the positive number)
-                // - -1 for all entries. In this case, we will make an additional patch only
-                //   consisting of boundaries at the next level
+                // For every patch at the current level, the mask array
+                // locPatchMask should be filled with
+                // - the same (positive) number for each entry (which will
+                //   correspond to the patch at the next level it belongs to)
+                // - the same (positive) number for each entry, except some
+                //   entries that are -1 (the enties correspond to -1, will be
+                //   mapped to the local boundary of the next level patch given
+                //   by the positive number)
+                // - -1 for all entries. In this case, we will make an
+                //   additional patch only consisting of boundaries at the next
+                //   level
                 minval = *min_element(&locPatchMask[cnt],
                                       &locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
                 maxval = *max_element(&locPatchMask[cnt],
                                       &locPatchMask[cnt]+numLocalBndCoeffsPerPatchOld[i]);
                 ASSERTL0((minval==maxval)||(minval==-1),"These values should never be the same");
-
+                
                 if(maxval == -1)
                 {
                     curPatch = numPatchesNew;
@@ -223,7 +227,7 @@ namespace Nektar
                 {
                     curPatch = maxval;
                 }
-
+                
                 for(j = 0; j < numLocalBndCoeffsPerPatchOld[i]; j++ )
                 {
                     ASSERTL0((locPatchMask[cnt]==maxval)||(locPatchMask[cnt]==minval),
@@ -251,7 +255,9 @@ namespace Nektar
 
             // Also initialise some more data members
             m_solnType              = solnTypeOld;
-            ASSERTL1(m_solnType==eDirectMultiLevelStaticCond||m_solnType==eIterativeMultiLevelStaticCond,
+            ASSERTL1(m_solnType==eDirectMultiLevelStaticCond
+                    ||m_solnType==eIterativeMultiLevelStaticCond
+                    ||m_solnType==eXxtMultiLevelStaticCond,
                      "This method should only be called for in "
                      "case of multi-level static condensation.");
             m_staticCondLevel       = newLevel;
@@ -267,7 +273,7 @@ namespace Nektar
             {
                 m_localToGlobalBndSign    = Array<OneD,NekDouble>(m_numLocalBndCoeffs);
             }
-
+            
             m_patchMapFromPrevLevel = MemoryManager<PatchMap>::AllocateSharedPtr(numLocalBndCoeffsOld);
 
             // Set up an offset array that denotes the offset of the local
@@ -860,7 +866,7 @@ namespace Nektar
             // offset input data by length "offset" for Dirichlet boundary conditions.
             Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
 
-        if(m_signChange)
+            if(m_signChange)
             {
                 Vmath::Scatr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
@@ -934,7 +940,7 @@ namespace Nektar
                       Array<OneD,     NekDouble>& pGlobal) const
         {
             ASSERTL1(pGlobal.num_elements() == m_numGlobalBndCoeffs,
-                    "Wrong size.");
+                     "Wrong size.");
             Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
         }
 
@@ -1012,7 +1018,5 @@ namespace Nektar
 
             Vmath::Gathr(m_numLocalBndCoeffs, global.get(), m_localToGlobalBndMap.get(), loc.get());
         }
-
-
     } // namespace
 } // namespace

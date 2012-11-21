@@ -241,7 +241,7 @@ namespace Nektar
                         
                         // for weird cases make sure normalisation
                         // is not less than 1e-6
-                        m_bb_inv = (vExchange[0] < 10e-6)? 1.0:1.0/vExchange[0];
+                        m_bb_inv = (vExchange[0] > 10e6)? 1.0:1.0/vExchange[0];
                     }
                     
                     F_HomBnd = F_HomBnd - V_GlobHomBndTmp;

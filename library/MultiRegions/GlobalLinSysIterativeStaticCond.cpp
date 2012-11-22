@@ -88,7 +88,7 @@ namespace Nektar
                 : GlobalLinSysIterative(pKey, pExpList, pLocToGloMap),
                   m_locToGloMap (pLocToGloMap)
         {
-	    ASSERTL1((pKey.GetGlobalSysSolnType()==eIterativeStaticCond)||
+            ASSERTL1((pKey.GetGlobalSysSolnType()==eIterativeStaticCond)||
                      (pKey.GetGlobalSysSolnType()==eIterativeMultiLevelStaticCond),
                      "This constructor is only valid when using static "
                      "condensation");
@@ -134,6 +134,7 @@ namespace Nektar
             {
                 SetupTopLevel(m_locToGloMap);
             }
+
             // Construct this level
             Initialise(m_locToGloMap);
         }
@@ -193,8 +194,8 @@ namespace Nektar
 
             if(nGlobHomBndDofs)
             {
-	        if(pLocToGloMap->GetPreconType() != MultiRegions::eLowEnergy)
-	        {
+                if(pLocToGloMap->GetPreconType() != MultiRegions::eLowEnergy)
+                {
                     // construct boundary forcing
                     if( nIntDofs  && ((nDirBndDofs) && (!dirForcCalculated)
                                       && (atLastLevel)) )
@@ -311,7 +312,7 @@ namespace Nektar
                 }
                 else
                 {
-		    DNekScalBlkMat &S1 = *m_S1Blk;
+                    DNekScalBlkMat &S1 = *m_S1Blk;
                     DNekScalBlkMat &R = *m_RBlk;
                     DNekScalBlkMat &BinvD = *m_BinvD;
 
@@ -373,7 +374,7 @@ namespace Nektar
                     //transform back to original basis
                     if(pLocToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
                     {
-		        DNekScalBlkMat &RT = *m_RTBlk;
+                        DNekScalBlkMat &RT = *m_RTBlk;
 
                         pLocToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
  
@@ -529,7 +530,7 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::SetupLowEnergyTopLevel(
                 const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
-	    int n;
+            int n;
             int n_exp = m_expList.lock()->GetNumElmts();
 
             const Array<OneD,const unsigned int>& nbdry_size
@@ -542,7 +543,7 @@ namespace Nektar
             std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
 
             v_UniqueMap();
-	    m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),pLocToGloMap);
+            m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),pLocToGloMap);
 
             // Setup Block Matrix systems
             MatrixStorage blkmatStorage = eDIAGONAL;

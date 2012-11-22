@@ -76,25 +76,54 @@ namespace Nektar
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
         m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
         
-        // Create Riemann solver instance, depending on the UPWINDTYPE specified
-        // in the session file. Bind gamma, velLoc and the trace normals.
-        m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-        CreateInstance(m_session->GetSolverInfo("UPWINDTYPE"));
-        m_riemannSolver->AddParam ("gamma",  
-                                   &CompressibleFlowSystem::GetGamma,   this);
-        m_riemannSolver->AddScalar("velLoc", 
-                                   &CompressibleFlowSystem::GetVelLoc,  this);
-        m_riemannSolver->AddVector("N",
-                                   &CompressibleFlowSystem::GetNormals, this);
-        
-        // Create an advection object. For now, weak DG is hard-coded but
-        // eventually this choice will be defined by the user, with a default
-        // being set in UnsteadySystem. Bind flux vector and the Riemann solver.
-        m_advection = SolverUtils::GetAdvectionFactory().
-        CreateInstance("WeakDG", "WeakDG");
-        m_advection->SetFluxVector(
-                                   &CompressibleFlowSystem::GetFluxVector, this);
-        m_advection->SetRiemannSolver(m_riemannSolver);
+        // Type of advection class to be used
+        switch(m_projectionType)
+        {
+            // Continuous field 
+            case MultiRegions::eGalerkin:
+            {
+                ASSERTL0(false, "Continuous field not supported.");
+                break;
+            }
+            // Discontinuous field 
+            case MultiRegions::eDiscontinuous:
+            {
+                string advName;
+                string riemName;
+                
+                m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+                
+                m_advection = SolverUtils::GetAdvectionFactory()
+                                            .CreateInstance(advName, advName);
+                
+                m_advection->SetFluxVector(&CompressibleFlowSystem::
+                                                         GetFluxVector, this);
+                
+                m_session->LoadSolverInfo("UpwindType", riemName, "Exact");
+                
+                m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
+                                                    .CreateInstance(riemName);
+
+                m_riemannSolver->AddParam (
+                                    "gamma",  
+                                    &CompressibleFlowSystem::GetGamma,   this);
+                m_riemannSolver->AddScalar(
+                                    "velLoc", 
+                                    &CompressibleFlowSystem::GetVelLoc,  this);
+                m_riemannSolver->AddVector(
+                                    "N",
+                                    &CompressibleFlowSystem::GetNormals, this);
+                
+                m_advection->SetRiemannSolver(m_riemannSolver);
+                m_advection->InitObject      (m_session, m_fields);
+                break;
+            }
+            default:
+            {
+                ASSERTL0(false, "Unsupported projection type.");
+                break;
+            }
+        }
     }
     
     /**
@@ -375,7 +404,7 @@ namespace Nektar
         {
             // Flux vector for the velocity fields.
             Array<OneD, NekDouble> pressure(nq);
-            GetPressure(physfield,pressure);
+            GetPressure(physfield, pressure);
             
             for (j = 0; j < m_expdim; ++j)
             {

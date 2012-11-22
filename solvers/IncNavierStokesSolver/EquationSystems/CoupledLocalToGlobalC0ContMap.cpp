@@ -262,13 +262,14 @@ namespace Nektar
             }
         }
         
+        set<int> extraDir;
         SetUp2DGraphC0ContMap(*fields[0],
                               bndCondExp,
                               bndConditionsVec,
                               periodicVertices,       periodicEdges,
                               Dofs,                   ReorderedGraphVertId,
                               firstNonDirGraphVertId, nExtraDirichlet,
-                              bottomUpGraph,  false,  4);
+                              bottomUpGraph, extraDir,  false,  4);
         
 #if 0
         bottomUpGraph->Dump();

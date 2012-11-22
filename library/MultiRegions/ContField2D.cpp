@@ -522,7 +522,7 @@ namespace Nektar
             v_ImposeDirichletConditions(inout);
 
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
-            if(contNcoeffs - NumDirBcs > 0)
+            if(contNcoeffs - nDir > 0)
             {
                 GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
                 LinSys->Solve(rhs,inout,m_locToGloMap,dirForcing);
@@ -612,19 +612,45 @@ namespace Nektar
         {
             int i,j;
             int bndcnt=0;
+          
+            // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE IN THE SOLUTION
+            // ARRAY
+            NekDouble sign;
+            const Array<OneD,const int> &bndMap = 
+                m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+          
+            Array<OneD, NekDouble> tmp(
+                m_locToGloMap->GetNumGlobalBndCoeffs(), 0.0);
 
-            const Array<OneD,const int>& map
-                        = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-
-            for(i = 0; i < m_bndConditions.num_elements(); ++i)
+            // Fill in Dirichlet coefficients that are to be sent to other
+            // processors.
+            map<int, vector<pair<int, int> > > &extraDirDofs = 
+                m_locToGloMap->GetExtraDirDofs();
+            map<int, vector<pair<int, int> > >::iterator it;
+            for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                for (i = 0; i < it->second.size(); ++i)
                 {
-                    const Array<OneD,const NekDouble>& coeffs
-                        = m_bndCondExpansions[i]->GetCoeffs();
+                    tmp[it->second.at(i).second] = 
+                        m_bndCondExpansions[it->first]->GetCoeffs()[
+                            it->second.at(i).first];
+                }
+            }
+            m_locToGloMap->UniversalAssembleBnd(tmp);
+          
+            // Now fill in all other Dirichlet coefficients.
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                   SpatialDomains::eDirichlet)
+                {
+                    const Array<OneD,const NekDouble>& coeffs = 
+                        m_bndCondExpansions[i]->GetCoeffs();
                     for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                     {
-                        outarray[map[bndcnt++]] = coeffs[j];
+                        sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(
+                            bndcnt);
+                        tmp[bndMap[bndcnt++]] = sign * coeffs[j];
                     }
                 }
                 else
@@ -632,6 +658,8 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
+          
+            Vmath::Vcopy(nDir, tmp, 1, inout, 1);
         }
 
 

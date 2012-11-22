@@ -522,7 +522,7 @@ namespace Nektar
             v_ImposeDirichletConditions(inout);
 
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
-            if(contNcoeffs - nDir > 0)
+            if(contNcoeffs - NumDirBcs > 0)
             {
                 GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
                 LinSys->Solve(rhs,inout,m_locToGloMap,dirForcing);
@@ -612,7 +612,8 @@ namespace Nektar
         {
             int i,j;
             int bndcnt=0;
-          
+            int nDir        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE IN THE SOLUTION
             // ARRAY
             NekDouble sign;
@@ -659,7 +660,7 @@ namespace Nektar
                 }
             }
           
-            Vmath::Vcopy(nDir, tmp, 1, inout, 1);
+            Vmath::Vcopy(nDir, tmp, 1, outarray, 1);
         }
 
 

@@ -73,6 +73,10 @@ namespace Nektar
     {
     }
 
+
+    /**
+     *
+     */
     void Monodomain::v_InitObject()
     {
         UnsteadySystem::v_InitObject();
@@ -85,7 +89,8 @@ namespace Nektar
 
         ASSERTL0(vCellModel != "", "Cell Model not specified.");
 
-        m_cell = GetCellModelFactory().CreateInstance(vCellModel, m_session, m_fields[0]);
+        m_cell = GetCellModelFactory().CreateInstance(
+                                        vCellModel, m_session, m_fields[0]);
 
         m_intVariables.push_back(0);
 
@@ -139,7 +144,9 @@ namespace Nektar
                     NekDouble f_range = f_max - f_min;
                     NekDouble o_min = m_session->GetParameter("o_min");
                     NekDouble o_max = m_session->GetParameter("o_max");
-                    Vmath::Sadd(nq, -f_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                    Vmath::Sadd(nq, -f_min, 
+                                    m_vardiff[varCoeffEnum[i]], 1,
+                                    m_vardiff[varCoeffEnum[i]], 1);
                     for (int j = 0; j < nq; ++j)
                     {
                         if (m_vardiff[varCoeffEnum[i]][j] < 0)
@@ -151,10 +158,18 @@ namespace Nektar
                             m_vardiff[varCoeffEnum[i]][j] = f_range;
                         }
                     }
-                    Vmath::Smul(nq, -1.0/f_range, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
-                    Vmath::Sadd(nq, 1.0, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
-                    Vmath::Smul(nq, o_max-o_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
-                    Vmath::Sadd(nq, o_min, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                    Vmath::Smul(nq, -1.0/f_range, 
+                                    m_vardiff[varCoeffEnum[i]], 1,
+                                    m_vardiff[varCoeffEnum[i]], 1);
+                    Vmath::Sadd(nq, 1.0, 
+                                    m_vardiff[varCoeffEnum[i]], 1,
+                                    m_vardiff[varCoeffEnum[i]], 1);
+                    Vmath::Smul(nq, o_max-o_min, 
+                                    m_vardiff[varCoeffEnum[i]], 1,
+                                    m_vardiff[varCoeffEnum[i]], 1);
+                    Vmath::Sadd(nq, o_min, 
+                                    m_vardiff[varCoeffEnum[i]], 1,
+                                    m_vardiff[varCoeffEnum[i]], 1);
                 }
 
                 // Transform variable coefficient and write out to file.
@@ -170,17 +185,6 @@ namespace Nektar
                 WriteFld(filename.str());
             }
         }
-//
-//        if (m_session->DefinesParameter("StimulusDuration"))
-//        {
-//            ASSERTL0(m_session->DefinesFunction("Stimulus", "u"),
-//                    "Stimulus function not defined.");
-//            m_session->LoadParameter("StimulusDuration", m_stimDuration);
-//        }
-//        else
-//        {
-//            m_stimDuration = 0;
-//        }
 
         // Search through the loaded filters and pass the cell model to any
         // CheckpointCellModel filters loaded.
@@ -263,6 +267,9 @@ namespace Nektar
     }
 
 
+    /**
+     *
+     */
     void Monodomain::DoOdeRhs(
             const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
                   Array<OneD,        Array<OneD, NekDouble> >&outarray,
@@ -282,10 +289,14 @@ namespace Nektar
     }
 
 
+    /**
+     *
+     */
     void Monodomain::v_SetInitialConditions(NekDouble initialtime,
                         bool dumpInitialConditions)
     {
-        EquationSystem::v_SetInitialConditions(initialtime, dumpInitialConditions);
+        EquationSystem::v_SetInitialConditions(initialtime,
+                                               dumpInitialConditions);
         m_cell->Initialise();
     }
 
@@ -297,21 +308,24 @@ namespace Nektar
     {
         UnsteadySystem::v_PrintSummary(out);
         if (m_session->DefinesFunction("d00") &&
-            m_session->GetFunctionType("d00", "intensity") == LibUtilities::eFunctionTypeExpression)
+            m_session->GetFunctionType("d00", "intensity") 
+                    == LibUtilities::eFunctionTypeExpression)
         {
             out << "\tDiffusivity-x   : "
                 << m_session->GetFunction("d00", "intensity")->GetExpression()
                 << endl;
         }
         if (m_session->DefinesFunction("d11") &&
-            m_session->GetFunctionType("d11", "intensity") == LibUtilities::eFunctionTypeExpression)
+            m_session->GetFunctionType("d11", "intensity") 
+                    == LibUtilities::eFunctionTypeExpression)
         {
             out << "\tDiffusivity-x   : "
                 << m_session->GetFunction("d11", "intensity")->GetExpression()
                 << endl;
         }
         if (m_session->DefinesFunction("d22") &&
-            m_session->GetFunctionType("d22", "intensity") == LibUtilities::eFunctionTypeExpression)
+            m_session->GetFunctionType("d22", "intensity") 
+                    == LibUtilities::eFunctionTypeExpression)
         {
             out << "\tDiffusivity-x   : "
                 << m_session->GetFunction("d22", "intensity")->GetExpression()
@@ -319,6 +333,4 @@ namespace Nektar
         }
         m_cell->PrintSummary(out);
     }
-
-
 }

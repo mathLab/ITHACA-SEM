@@ -37,10 +37,6 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-//#include <SpatialDomains/SpatialData.h>
-#include <MultiRegions/ExpList.h>
-#include <StdRegions/StdNodalTriExp.h>
-#include <StdRegions/StdNodalTetExp.h>
 
 namespace Nektar
 {
@@ -49,11 +45,13 @@ namespace Nektar
     
     /// A shared pointer to an EquationSystem object
     typedef boost::shared_ptr<Protocol> ProtocolSharedPtr;
+
     /// Datatype of the NekFactory used to instantiate classes derived from
     /// the EquationSystem class.
     typedef LibUtilities::NekFactory< std::string, Protocol,
                 const LibUtilities::SessionReaderSharedPtr&,
                 const TiXmlElement*> ProtocolFactory;
+
     ProtocolFactory& GetProtocolFactory();
 
     
@@ -70,8 +68,7 @@ namespace Nektar
         void Initialise();
         
         /// Returns amplitude of stimulus (1 or 0) at given time
-        NekDouble GetAmplitude(
-                               const NekDouble time)
+        NekDouble GetAmplitude(const NekDouble time)
         {
             return v_GetAmplitude(time);
         }
@@ -85,10 +82,8 @@ namespace Nektar
     protected:
         /// Session
         LibUtilities::SessionReaderSharedPtr m_session;
-        /// Transmembrane potential field from PDE system
-        
-        virtual NekDouble v_GetAmplitude(
-                              const NekDouble time) = 0;
+
+        virtual NekDouble v_GetAmplitude(const NekDouble time) = 0;
         
         virtual void v_PrintSummary(std::ostream &out) = 0;
         

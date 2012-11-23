@@ -38,9 +38,6 @@
 
 #include <CardiacEPSolver/Stimuli/Stimulus.h>
 
-#include <StdRegions/StdNodalTriExp.h>
-//#include <LibUtilities/LinearAlgebra/Blas.hpp>
-
 namespace Nektar
 {
     StimulusFactory& GetStimulusFactory()
@@ -56,8 +53,9 @@ namespace Nektar
      *
      * The Stimulus class and derived classes implement a range of stimuli.
      * The stimulus contains input stimuli that can be applied throughout the 
-     * domain, on specified regions determined by the derived classes of Stimulus, 
-     * at specified frequencies determined by the derived classes of Protocol.
+     * domain, on specified regions determined by the derived classes of
+     * Stimulus, at specified frequencies determined by the derived classes of
+     * Protocol.
      *
      */
     
@@ -65,8 +63,8 @@ namespace Nektar
      * Stimulus base class constructor.
      */
     Stimulus::Stimulus(const LibUtilities::SessionReaderSharedPtr& pSession,
-                         const MultiRegions::ExpListSharedPtr& pField,
-                        const TiXmlElement* pXml)
+                       const MultiRegions::ExpListSharedPtr& pField,
+                       const TiXmlElement* pXml)
     {
         m_session = pSession;
         m_field = pField;
@@ -91,6 +89,9 @@ namespace Nektar
     }
     
     
+    /**
+     *
+     */
     vector<StimulusSharedPtr> Stimulus::LoadStimuli(
                         const LibUtilities::SessionReaderSharedPtr& pSession,
                         const MultiRegions::ExpListSharedPtr& pField)
@@ -118,5 +119,4 @@ namespace Nektar
         }
         return vStimList;
     }
-
 }

@@ -35,19 +35,12 @@
 #include <iostream>
 #include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
-
-#include <StdRegions/StdNodalTriExp.h>
-
 #include <CardiacEPSolver/Stimuli/StimulusCircle.h>
-
-
-
-//#include <LibUtilities/LinearAlgebra/Blas.hpp>
 
 namespace Nektar
 {
     std::string StimulusCirc::className
-    = GetStimulusFactory().RegisterCreatorFunction(
+            = GetStimulusFactory().RegisterCreatorFunction(
                                                    "StimulusCirc",
                                                    StimulusCirc::create,
                                                    "Circular stimulus.");
@@ -57,18 +50,19 @@ namespace Nektar
      *
      * The Stimulus class and derived classes implement a range of stimuli.
      * The stimulus contains input stimuli that can be applied throughout the
-     * domain, on specified regions determined by the derived classes of Stimulus,
-     * at specified frequencies determined by the derived classes of Protocol.
-     *
+     * domain, on specified regions determined by the derived classes of
+     * Stimulus, at specified frequencies determined by the derived classes of
+     * Protocol.
      */
     
     /**
      * Stimulus base class constructor.
      */
-    StimulusCirc::StimulusCirc(const LibUtilities::SessionReaderSharedPtr& pSession,
-                               const MultiRegions::ExpListSharedPtr& pField,
-                               const TiXmlElement* pXml)
-    : Stimulus(pSession, pField, pXml)
+    StimulusCirc::StimulusCirc(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const MultiRegions::ExpListSharedPtr& pField,
+            const TiXmlElement* pXml)
+            : Stimulus(pSession, pField, pXml)
     {
         m_session = pSession;
         m_field = pField;
@@ -79,15 +73,10 @@ namespace Nektar
             return;
         }
         
-        
-        const TiXmlElement *pXmlparameter; //Declaring variable called pxml...
-        // See if we have parameters defined.  They are optional so we go on if not.
-        
-        
-        //member variables m_p defined in StimulusCirc.h
+        const TiXmlElement *pXmlparameter;
         
         pXmlparameter = pXml->FirstChildElement("p_x1");
-        m_px1 = atof(pXmlparameter->GetText()); //text value within px1, convert to a floating pt and save in m_px1
+        m_px1 = atof(pXmlparameter->GetText());
         
         pXmlparameter = pXml->FirstChildElement("p_y1");
         m_py1 = atof(pXmlparameter->GetText());
@@ -98,7 +87,6 @@ namespace Nektar
         pXmlparameter = pXml->FirstChildElement("p_r1");
         m_pr1 = atof(pXmlparameter->GetText());
     
-        
         pXmlparameter = pXml->FirstChildElement("p_is");
         m_pis = atof(pXmlparameter->GetText());
         
@@ -106,15 +94,19 @@ namespace Nektar
         m_strength = atof(pXmlparameter->GetText());
     }
     
+
     /**
      * Initialise the stimulus. Allocate workspace and variable storage.
      */
     void StimulusCirc::Initialise()
     {
         
-        
     }
     
+
+    /**
+     *
+     */
     void StimulusCirc::v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                                 const NekDouble time)
     {
@@ -139,23 +131,34 @@ namespace Nektar
             case 1:
                 for(int j=0; j<nq; j++)
                 {
-                    outarray[0][j] += v_amp*(-tanh((m_pis * x0[j] - m_px1+m_pr1) * (m_pis * x0[j] - m_px1-m_pr1))/2.0 + 0.5);
-                    
+                    outarray[0][j] += v_amp 
+                                    * ( -tanh( (m_pis * x0[j] - m_px1 + m_pr1) 
+                                             * (m_pis * x0[j] - m_px1 - m_pr1)
+                                             ) / 2.0 + 0.5 );
                 }
                 break;
             case 2:
                 for(int j=0; j<nq; j++)
                 {
-                    outarray[0][j] += v_amp*(-tanh((m_pis * x0[j] - m_px1+m_pr1) * (m_pis * x0[j] - m_px1-m_pr1) +
-                                              (m_pis * x1[j] - m_py1+m_pr1) * (m_pis * x1[j] - m_py1-m_pr1))/2.0 + 0.5);
+                    outarray[0][j] += v_amp
+                                    * ( -tanh( (m_pis * x0[j] - m_px1+m_pr1) 
+                                             * (m_pis * x0[j] - m_px1-m_pr1) 
+                                             + (m_pis * x1[j] - m_py1+m_pr1) 
+                                             * (m_pis * x1[j] - m_py1-m_pr1)
+                                             ) / 2.0 + 0.5 );
                 }
                 break;
             case 3:
                 for(int j=0; j<nq; j++)
                 {
-                    outarray[0][j] += v_amp*(-tanh((m_pis * x0[j] - m_px1+m_pr1) * (m_pis * x0[j] - m_px1-m_pr1) +
-                                              (m_pis * x1[j] - m_py1+m_pr1) * (m_pis * x1[j] - m_py1-m_pr1) +
-                                              (m_pis * x2[j] - m_pz1+m_pr1) * (m_pis * x2[j] - m_pz1-m_pr1))/2.0 + 0.5);
+                    outarray[0][j] += v_amp
+                                    * ( -tanh( (m_pis * x0[j] - m_px1+m_pr1) 
+                                             * (m_pis * x0[j] - m_px1-m_pr1) 
+                                             + (m_pis * x1[j] - m_py1+m_pr1) 
+                                             * (m_pis * x1[j] - m_py1-m_pr1) 
+                                             + (m_pis * x2[j] - m_pz1+m_pr1) 
+                                             * (m_pis * x2[j] - m_pz1-m_pr1)
+                                             ) / 2.0 + 0.5 );
                 }
                 break;
         }
@@ -163,10 +166,12 @@ namespace Nektar
 
     }
     
+
+    /**
+     *
+     */
     void StimulusCirc::v_PrintSummary(std::ostream &out)
     {
         
-        
     }
-    
 }

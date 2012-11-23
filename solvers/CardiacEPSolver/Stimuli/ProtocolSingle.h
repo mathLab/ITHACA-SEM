@@ -35,6 +35,7 @@
 
 #ifndef NEKTAR_SOLVERS_CARDIACEPSOLVER_STIMULI_PROTOCOLSINGLE
 #define NEKTAR_SOLVERS_CARDIACEPSOLVER_STIMULI_PROTOCOLSINGLE
+
 #include <CardiacEPSolver/Stimuli/Protocol.h>
 
 namespace Nektar
@@ -48,18 +49,18 @@ namespace Nektar
     public:
         /// Creates an instance of this class
         static ProtocolSharedPtr create(
-                                        const LibUtilities::SessionReaderSharedPtr& pSession,
-                                        const TiXmlElement* pXml)
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const TiXmlElement* pXml)
         {
             return MemoryManager<ProtocolSingle>
-            ::AllocateSharedPtr(pSession, pXml);
+                    ::AllocateSharedPtr(pSession, pXml);
         }
         
         /// Name of class
         static std::string className;
         
         ProtocolSingle(const LibUtilities::SessionReaderSharedPtr& pSession,
-                  const TiXmlElement* pXml);
+                       const TiXmlElement* pXml);
         
         virtual ~ProtocolSingle() {}
         
@@ -70,8 +71,7 @@ namespace Nektar
         NekDouble m_start;
         NekDouble m_dur;
         
-        virtual NekDouble v_GetAmplitude(
-                              const NekDouble time);
+        virtual NekDouble v_GetAmplitude(const NekDouble time);
         
         virtual void v_PrintSummary(std::ostream &out);
         
@@ -80,4 +80,4 @@ namespace Nektar
     
 }
 
-#endif /* PROTOCOLSINGLE_H_ */
+#endif

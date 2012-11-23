@@ -36,13 +36,7 @@
 #include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 
-#include <StdRegions/StdNodalTriExp.h>
-
 #include <CardiacEPSolver/Stimuli/StimulusRect.h>
-
-
-
-//#include <LibUtilities/LinearAlgebra/Blas.hpp>
 
 namespace Nektar
 {
@@ -57,17 +51,18 @@ namespace Nektar
      *
      * The Stimulus class and derived classes implement a range of stimuli.
      * The stimulus contains input stimuli that can be applied throughout the
-     * domain, on specified regions determined by the derived classes of Stimulus,
-     * at specified frequencies determined by the derived classes of Protocol.
-     *
+     * domain, on specified regions determined by the derived classes of
+     * Stimulus, at specified frequencies determined by the derived classes of
+     * Protocol.
      */
     
     /**
      * Stimulus base class constructor.
      */
-    StimulusRect::StimulusRect(const LibUtilities::SessionReaderSharedPtr& pSession,
-                       const MultiRegions::ExpListSharedPtr& pField, 
-                       const TiXmlElement* pXml)
+    StimulusRect::StimulusRect(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const MultiRegions::ExpListSharedPtr& pField, 
+            const TiXmlElement* pXml)
             : Stimulus(pSession, pField, pXml)
     {
         m_session = pSession;
@@ -80,14 +75,10 @@ namespace Nektar
         }
         
 
-        const TiXmlElement *pXmlparameter; //Declaring variable called pxml...
-        // See if we have parameters defined.  They are optional so we go on if not.
-    
-        
-        //member variables m_p defined in StimulusRect.h
+        const TiXmlElement *pXmlparameter; 
         
         pXmlparameter = pXml->FirstChildElement("p_x1");
-        m_px1 = atof(pXmlparameter->GetText()); //text value within px1, convert to a floating pt and save in m_px1
+        m_px1 = atof(pXmlparameter->GetText());
         
         pXmlparameter = pXml->FirstChildElement("p_y1");
         m_py1 = atof(pXmlparameter->GetText());
@@ -110,7 +101,8 @@ namespace Nektar
         pXmlparameter = pXml->FirstChildElement("p_strength");
         m_strength = atof(pXmlparameter->GetText());
     }
-    
+   
+
     /**
      * Initialise the stimulus. Allocate workspace and variable storage.
      */
@@ -119,9 +111,13 @@ namespace Nektar
 
         
     }
-    
-    void StimulusRect::v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
-                          const NekDouble time)
+   
+    /**
+     *
+     */
+    void StimulusRect::v_Update(
+            Array<OneD, Array<OneD, NekDouble> >&outarray,
+            const NekDouble time)
     {
         if (m_field->GetNumElmts() == 0)
         {
@@ -146,31 +142,43 @@ namespace Nektar
         case 1:
             for(int j=0; j<nq; j++)
             {
-                outarray[0][j] += v_amp*(((tanh(m_pis*(x0[j] - m_px1)) - tanh(m_pis*(x0[j] - m_px2))))/2.0 + 0.5);
+                outarray[0][j] += v_amp * ( ( tanh(m_pis*(x0[j] - m_px1)) 
+                                              - tanh(m_pis*(x0[j] - m_px2)) 
+                                            ) / 2.0 + 0.5 );
             }
             break;
         case 2:
             for(int j=0; j<nq; j++)
             {
-                outarray[0][j] += v_amp*(((tanh(m_pis*(x0[j] - m_px1)) - tanh(m_pis*(x0[j] - m_px2)))
-                                  *(tanh(m_pis*(x1[j] - m_py1)) - tanh(m_pis*(x1[j] - m_py2))))/2.0 + 0.5);
+                outarray[0][j] += v_amp * ( ( (tanh(m_pis*(x0[j] - m_px1)) 
+                                               - tanh(m_pis*(x0[j] - m_px2)))
+                                            * (tanh(m_pis*(x1[j] - m_py1)) 
+                                               - tanh(m_pis*(x1[j] - m_py2)))
+                                            ) / 2.0 + 0.5 );
             }
             break;
         case 3:
             for(int j=0; j<nq; j++)
             {   
-                outarray[0][j] += v_amp*(((tanh(m_pis*(x0[j] - m_px1)) - tanh(m_pis*(x0[j] - m_px2)))
-                                  *(tanh(m_pis*(x1[j] - m_py1)) - tanh(m_pis*(x1[j] - m_py2)))
-                                  *(tanh(m_pis*(x2[j] - m_pz1)) - tanh(m_pis*(x2[j] - m_pz2))))/2.0 + 0.5);
+                outarray[0][j] += v_amp * ( ( (tanh(m_pis*(x0[j] - m_px1)) 
+                                               - tanh(m_pis*(x0[j] - m_px2)))
+                                            * (tanh(m_pis*(x1[j] - m_py1)) 
+                                               - tanh(m_pis*(x1[j] - m_py2)))
+                                            * (tanh(m_pis*(x2[j] - m_pz1)) 
+                                               - tanh(m_pis*(x2[j] - m_pz2)))
+                                            ) / 2.0 + 0.5 );
             }
             break;
         }
     }
     
+
+    /**
+     *
+     */
     void StimulusRect::v_PrintSummary(std::ostream &out)
     {
 
 
     }
-
 }

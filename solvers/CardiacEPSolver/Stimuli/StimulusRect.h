@@ -40,10 +40,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-//#include <SpatialDomains/SpatialData.h>
 #include <MultiRegions/ExpList.h>
-#include <StdRegions/StdNodalTriExp.h>
-#include <StdRegions/StdNodalTetExp.h>
 #include <CardiacEPSolver/Stimuli/Stimulus.h>
 
 namespace Nektar
@@ -60,15 +57,15 @@ namespace Nektar
                 const TiXmlElement* pXml)
         {
             return MemoryManager<StimulusRect>
-                                    ::AllocateSharedPtr(pSession, pField, pXml);
+                    ::AllocateSharedPtr(pSession, pField, pXml);
         }
 
         /// Name of class
         static std::string className;
 
         StimulusRect(const LibUtilities::SessionReaderSharedPtr& pSession,
-                 const MultiRegions::ExpListSharedPtr& pField,
-                 const TiXmlElement* pXml);
+                     const MultiRegions::ExpListSharedPtr& pField,
+                     const TiXmlElement* pXml);
         
         virtual ~StimulusRect() {}
         
@@ -84,13 +81,13 @@ namespace Nektar
         NekDouble m_pz2;
         NekDouble m_pis;
         NekDouble m_strength;
+
         virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
                               const NekDouble time);
         
         virtual void v_PrintSummary(std::ostream &out);
         
     };
-    
 }
 
 #endif 

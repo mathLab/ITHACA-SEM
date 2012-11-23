@@ -37,25 +37,31 @@
 #include <CardiacEPSolver/Stimuli/ProtocolSingle.h>
 
 namespace Nektar
-{   std::string ProtocolSingle::className
-    = GetProtocolFactory().RegisterCreatorFunction(
+{   
+    std::string ProtocolSingle::className
+            = GetProtocolFactory().RegisterCreatorFunction(
                             "ProtocolSingle",
                             ProtocolSingle::create,
                             "Single stimulus protocol.");
+
     /**
      * @class Protocol
      *
      * The Stimuli class and derived classes implement a range of stimuli.
      * The stimulus contains input stimuli that can be applied throughout the
-     * domain, on specified regions determined by the derived classes of Stimulus,
-     * at specified frequencies determined by the derived classes of Protocol.
+     * domain, on specified regions determined by the derived classes of
+     * Stimulus, at specified frequencies determined by the derived classes of
+     * Protocol.
      *
      */
+    
     /**
      * Protocol base class constructor.
      */
-    ProtocolSingle::ProtocolSingle(const LibUtilities::SessionReaderSharedPtr& pSession,const TiXmlElement* pXml)
-        : Protocol(pSession, pXml)
+    ProtocolSingle::ProtocolSingle(
+            const LibUtilities::SessionReaderSharedPtr& pSession,
+            const TiXmlElement* pXml)
+            : Protocol(pSession, pXml)
     {
         m_session = pSession;
         
@@ -65,20 +71,14 @@ namespace Nektar
         }
         
         
-        const TiXmlElement *pXmlparameter; //Declaring variable called pxml...
-        // See if we have parameters defined.  They are optional so we go on if not.
-        
-        //member variables m_* defined in ProtocolSingle.h
+        const TiXmlElement *pXmlparameter;
         
         pXmlparameter = pXml->FirstChildElement("START");
-        m_start = atof(pXmlparameter->GetText()); //text value within px1, convert to a floating pt and save in m_px1
+        m_start = atof(pXmlparameter->GetText()); 
         
         pXmlparameter = pXml->FirstChildElement("DURATION");
         m_dur = atof(pXmlparameter->GetText());
-        
-        
     }
-    
     
     
     /**
@@ -90,6 +90,9 @@ namespace Nektar
     }
 
     
+    /**
+     *
+     */
     NekDouble ProtocolSingle::v_GetAmplitude(
                           const NekDouble time)
     {
@@ -104,11 +107,19 @@ namespace Nektar
         
     }
 
+
+    /**
+     *
+     */
     void ProtocolSingle::v_PrintSummary(std::ostream &out)
     {
 
     }
 
+
+    /**
+     *
+     */
     void ProtocolSingle::v_SetInitialConditions()
     {
 

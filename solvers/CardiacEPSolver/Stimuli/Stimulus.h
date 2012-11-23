@@ -40,10 +40,7 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-//#include <SpatialDomains/SpatialData.h>
 #include <MultiRegions/ExpList.h>
-#include <StdRegions/StdNodalTriExp.h>
-#include <StdRegions/StdNodalTetExp.h>
 #include <CardiacEPSolver/Stimuli/Protocol.h>
 
 namespace Nektar
@@ -109,7 +106,6 @@ namespace Nektar
         virtual void v_PrintSummary(std::ostream &out) = 0;
         
     };
-    
 }
 
-#endif /*STIMULUS_H_ */
+#endif 

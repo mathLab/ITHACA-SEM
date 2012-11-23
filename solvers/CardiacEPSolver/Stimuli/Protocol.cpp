@@ -33,12 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/VmathArray.hpp>
-
 #include <CardiacEPSolver/Stimuli/Protocol.h>
-
-#include <StdRegions/StdNodalTriExp.h>
-//#include <LibUtilities/LinearAlgebra/Blas.hpp>
 
 namespace Nektar
 {
@@ -55,9 +50,9 @@ namespace Nektar
      *
      * The Stimuli class and derived classes implement a range of stimuli.
      * The stimulus contains input stimuli that can be applied throughout the
-     * domain, on specified regions determined by the derived classes of Stimulus,
-     * at specified frequencies determined by the derived classes of Protocol.
-     *
+     * domain, on specified regions determined by the derived classes of
+     * Stimulus, at specified frequencies determined by the derived classes of
+     * Protocol.
      */
     
     /**

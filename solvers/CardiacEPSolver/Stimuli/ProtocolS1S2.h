@@ -48,18 +48,18 @@ namespace Nektar
     public:
         /// Creates an instance of this class
         static ProtocolSharedPtr create(
-                                        const LibUtilities::SessionReaderSharedPtr& pSession,
-                                        const TiXmlElement* pXml)
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const TiXmlElement* pXml)
         {
             return MemoryManager<ProtocolS1S2>
-            ::AllocateSharedPtr(pSession, pXml);
+                    ::AllocateSharedPtr(pSession, pXml);
         }
         
         /// Name of class
         static std::string className;
         
         ProtocolS1S2(const LibUtilities::SessionReaderSharedPtr& pSession,
-                   const TiXmlElement* pXml);
+                     const TiXmlElement* pXml);
         
         virtual ~ProtocolS1S2() {}
         
@@ -75,8 +75,7 @@ namespace Nektar
         NekDouble m_s2start;
         NekDouble time1;
         
-        virtual NekDouble v_GetAmplitude(
-                                         const NekDouble time);
+        virtual NekDouble v_GetAmplitude(const NekDouble time);
         
         virtual void v_PrintSummary(std::ostream &out);
         
@@ -85,4 +84,4 @@ namespace Nektar
     
 }
 
-#endif /* ProtocolS1S2_H_ */
+#endif

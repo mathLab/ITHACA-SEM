@@ -129,7 +129,7 @@ namespace Nektar
             {
                 if(m_root)
                 {
-                    std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (bb_inv = " << m_bb_inv << ")"<< std::endl;
+                    std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (sqrt(bb_inv) = " << sqrt(m_bb_inv) << ")"<< std::endl;
                 }
             }
         }
@@ -443,8 +443,8 @@ namespace Nektar
             // Continue until convergence
             while (true)
             {
-                ASSERTL0(k < 20000,
-                         "Exceeded maximum number of iterations (20000)");
+                ASSERTL0(k < 5000,
+                         "Exceeded maximum number of iterations (5000)");
 
                 // Compute new search direction p_k, q_k
                 p   = w   + beta  * p;

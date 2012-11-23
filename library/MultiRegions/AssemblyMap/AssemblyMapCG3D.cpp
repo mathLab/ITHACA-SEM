@@ -314,11 +314,11 @@ namespace Nektar
                 {
                     continue;
                 }
-
+                
                 for(j = 0; j < locExpVector.size(); j++)
                 {
                     locExpansion = boost::dynamic_pointer_cast<
-                        StdRegions::StdExpansion3D>(
+                    StdRegions::StdExpansion3D>(
                             locExpVector[locExp.GetOffset_Elmt_Id(j)]);
                     
                     for(k = 0; k < locExpansion->GetNverts(); k++)
@@ -427,7 +427,6 @@ namespace Nektar
                 extraDirEdges.insert(edgeids[i]);
             }
 
-            /*            
             // Check between processes if the whole system is singular
             int s = (systemSingular ? 1 : 0);
             m_comm->AllReduce(s, LibUtilities::ReduceMin);
@@ -474,7 +473,7 @@ namespace Nektar
                     vertReorderedGraphVertId[meshVertId] = graphVertId++;
                 }
             }
-            */
+            
 
             m_numLocalDirBndCoeffs = nLocDirBndCondDofs + nExtraDirichlet;
             firstNonDirGraphVertId = graphVertId;

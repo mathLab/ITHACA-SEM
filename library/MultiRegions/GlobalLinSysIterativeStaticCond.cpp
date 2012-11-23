@@ -253,8 +253,8 @@ namespace Nektar
                                                Nektar::LibUtilities::ReduceSum);
 
                             // for weird cases make sure normalisation
-                            // is not less than 1e-6
-                            m_bb_inv = (vExchange[0] > 10e6)
+                            // is not less than 1e-12
+                            m_bb_inv = (vExchange[0] > 10e12)
                                      ? 1.0
                                      : 1.0/vExchange[0];
                         }

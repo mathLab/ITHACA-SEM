@@ -485,9 +485,10 @@ namespace Nektar
             if (m_cflSafetyFactor > 0.0)
             {
                 cout << "CFL safety factor : " << m_cflSafetyFactor << endl
-                     << "CFL time-step     : " << m_timestep        << endl
-                     << "Time-integration  : " << intTime  << "s"   << endl;
+                     << "CFL time-step     : " << m_timestep        << endl;
             }
+            cout << "Time-integration  : " << intTime  << "s"   << endl;
+
             
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {

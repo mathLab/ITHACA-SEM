@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     time(&endtime);
     
     // Compute the computational time in hours
-    CPUtime = (1.0 / 60.0 / 60.0) * difftime(endtime, starttime);
+    CPUtime = difftime(endtime, starttime);
 
     // Write output to .fld file
     equ->Output();
@@ -85,8 +85,10 @@ int main(int argc, char *argv[])
     // Evaluate and output computation time and solution accuracy
     if (session->GetComm()->GetRank() == 0)
     {
-        cout << "-------------------------------------------" << endl;
-        cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+        cout << "-------------------------------------------"   << endl;
+        cout << "Total Computation Time = " << CPUtime << "s" << endl;
+        cout << "-------------------------------------------"   << endl;
+
     }
     
     for(int i = 0; i < equ->GetNvariables(); ++i)

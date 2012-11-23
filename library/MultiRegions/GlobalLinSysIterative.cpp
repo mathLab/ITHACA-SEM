@@ -124,14 +124,6 @@ namespace Nektar
                 // applying plain Conjugate Gradient
                 DoConjugateGradient(nGlobal, pInput, pOutput, plocToGloMap, nDir);
             }
-            
-            if(m_verbose)
-            {
-                if(m_root)
-                {
-                    std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (eps = " << sqrt(eps) << " bb_inv = " << m_bb_inv << ")"<< std::endl;
-                }
-            }
         }
 
 
@@ -489,6 +481,13 @@ namespace Nektar
                 // test if norm is within tolerance
                 if (eps*bb_inv < m_tolerance * m_tolerance)
                 {
+                    if(m_verbose)
+                    {
+                        if(m_root)
+                        {
+                            std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (eps = " << sqrt(eps) << " bb_inv = " << m_bb_inv << ")"<< std::endl;
+                        }
+                    }
                     break;
                 }
                 min_resid = min(min_resid, eps);

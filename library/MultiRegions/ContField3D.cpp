@@ -408,22 +408,46 @@ namespace Nektar
       void ContField3D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
       {
           int i,j;
-          int bndcnt=0;
+          int bndcnt      = 0;
+          int nDir        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+          int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
           
-          // SET THE DIRICHLET DOFS TO THE RIGHT VALUE
-          //         IN inarray
-          const Array<OneD,const int>& map  = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
           NekDouble sign;
+          const Array<OneD,const int> &bndMap = 
+              m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
           
+          Array<OneD, NekDouble> tmp(
+              m_locToGloMap->GetNumGlobalBndCoeffs(), 0.0);
+
+          // Fill in Dirichlet coefficients that are to be sent to other
+          // processors.
+          map<int, vector<pair<int, int> > > &extraDirDofs = 
+              m_locToGloMap->GetExtraDirDofs();
+          map<int, vector<pair<int, int> > >::iterator it;
+          for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
+          {
+              for (i = 0; i < it->second.size(); ++i)
+              {
+                  tmp[it->second.at(i).second] = 
+                      m_bndCondExpansions[it->first]->GetCoeffs()[
+                          it->second.at(i).first];
+              }
+          }
+          m_locToGloMap->UniversalAssembleBnd(tmp);
+          
+          // Now fill in all other Dirichlet coefficients.
           for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
           {
-              if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+              if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                     SpatialDomains::eDirichlet)
               {
-                  const Array<OneD,const NekDouble>& coeffs = m_bndCondExpansions[i]->GetCoeffs();
+                  const Array<OneD,const NekDouble>& coeffs = 
+                      m_bndCondExpansions[i]->GetCoeffs();
                   for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
                   {
-                      sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(bndcnt);
-                      outarray[map[bndcnt++]] = sign * coeffs[j];
+                      sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(
+                          bndcnt);
+                      tmp[bndMap[bndcnt++]] = sign * coeffs[j];
                   }
               }
               else
@@ -431,6 +455,8 @@ namespace Nektar
                   bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
               }
           }
+          
+          Vmath::Vcopy(nDir, tmp, 1, outarray, 1);
       }          
 
       void ContField3D::v_LocalToGlobal(void)

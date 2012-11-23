@@ -129,7 +129,7 @@ namespace Nektar
             {
                 if(m_root)
                 {
-                    std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (sqrt(bb_inv) = " << sqrt(m_bb_inv) << ")"<< std::endl;
+                    std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (eps = " << sqrt(eps) << " bb_inv = " << m_bb_inv << ")"<< std::endl;
                 }
             }
         }

@@ -260,7 +260,7 @@ namespace Nektar
           {
               Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
               GlobalSolve(key,wsp,tmp);
-                GlobalToLocal(tmp,outarray);
+              GlobalToLocal(tmp,outarray);
           }
       }
       

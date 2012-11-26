@@ -91,7 +91,7 @@ namespace DBUtils
         {
             ASSERTL1(stop <= in.num_elements(), "Stop value is outside array range ");
             
-            for(i = start; i < in.num_elements(); ++i)
+            for(i = start; i < stop; ++i)
             {
                 ofile << in[i] << endl;
             }
@@ -119,7 +119,7 @@ namespace DBUtils
         {
             ASSERTL1(stop <= in.num_elements(), "Stop value is outside array range ");
             
-            for(i = start; i < in.num_elements(); ++i)
+            for(i = start; i < stop; ++i)
             {
                 ofile << in[i] << endl;
             }

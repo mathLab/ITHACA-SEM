@@ -127,5 +127,32 @@ namespace DBUtils
 
     }
 
+    template<class T> void Output1DArray(const NekVector<T> &in, ofstream &ofile, 
+                                         const int start = 0,
+                                         const int stop = StopDefault)
+    {
+        int i;
+        
+        ASSERTL1(start < in.GetDimension(), "Start value is outside array range ");
+
+        if(stop == StopDefault)
+        {
+
+            for(i = start; i < in.GetDimension(); ++i)
+            {
+                ofile << in[i] << endl;
+            }
+        }
+        else
+        {
+            ASSERTL1(stop <= in.GetDimension(), "Stop value is outside array range ");
+            
+            for(i = start; i < stop; ++i)
+            {
+                ofile << in[i] << endl;
+            }
+        }
+    }
+
 }
 #endif

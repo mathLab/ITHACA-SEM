@@ -43,7 +43,7 @@ namespace DBUtils
     using namespace Nektar;
     const int StopDefault = -99;
 
-    template<class T> void Output1DArray(Array<OneD, const T> &in, const int start = 0,
+    template<class T> void Output1DArray(const Array<OneD, const T> &in, const int start = 0,
                                          const int stop = StopDefault)
     {
         int i;
@@ -69,7 +69,7 @@ namespace DBUtils
         }
     }
 
-    template<class T> void Output1DArray(Array<OneD, const T> &in, std::string outfile, 
+    template<class T> void Output1DArray(const Array<OneD, const T> &in, std::string outfile, 
                                          const int start = 0,
                                          const int stop = StopDefault)
     {
@@ -98,5 +98,34 @@ namespace DBUtils
         }
 
     }
+
+    template<class T> void Output1DArray(const Array<OneD, const T> &in, ofstream &ofile, 
+                                         const int start = 0,
+                                         const int stop = StopDefault)
+    {
+        int i;
+        
+        ASSERTL1(start < in.num_elements(), "Start value is outside array range ");
+
+        if(stop == StopDefault)
+        {
+
+            for(i = start; i < in.num_elements(); ++i)
+            {
+                ofile << in[i] << endl;
+            }
+        }
+        else
+        {
+            ASSERTL1(stop <= in.num_elements(), "Stop value is outside array range ");
+            
+            for(i = start; i < in.num_elements(); ++i)
+            {
+                ofile << in[i] << endl;
+            }
+        }
+
+    }
+
 }
 #endif

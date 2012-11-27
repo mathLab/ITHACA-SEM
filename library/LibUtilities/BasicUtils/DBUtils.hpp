@@ -154,5 +154,17 @@ namespace DBUtils
         }
     }
 
+    template<class T> void NormGlobalVector(
+            const int n,
+            Array<OneD, const T> &in,
+            std::ostream &out,
+            MultiRegions::AssemblyMapSharedPtr &map)
+    {
+        Array<OneD, NekDouble> vExchange(1);
+        Array<OneD, int> m_map = map->GetGlobalToUniversalMapUnique();
+        vExchange[0] = Vmath::Dot2(n, in, in, m_map);
+        map->GetComm()->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
+        out << "Norm: " << vExchange[0] << endl;
+    }
 }
 #endif

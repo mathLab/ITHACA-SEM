@@ -197,8 +197,7 @@ namespace Nektar
                 if(pLocToGloMap->GetPreconType() != MultiRegions::eLowEnergy)
                 {
                     // construct boundary forcing
-                    if( nIntDofs  && ((nDirBndDofs) && (!dirForcCalculated)
-                                      && (atLastLevel)) )
+                    if( nIntDofs  && ((!dirForcCalculated) && (atLastLevel)) )
                     {
                         DNekScalBlkMat &BinvD      = *m_BinvD;
                         DNekScalBlkMat &SchurCompl = *m_schurCompl;
@@ -208,15 +207,14 @@ namespace Nektar
                         V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
                         
                     }
-                    else if((nDirBndDofs) && (!dirForcCalculated)
-                            && (atLastLevel))
+                    else if((!dirForcCalculated) && (atLastLevel))
                     {
                         //include dirichlet boundary forcing
                         DNekScalBlkMat &SchurCompl = *m_schurCompl;
                         pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
                         V_LocBnd = SchurCompl*V_LocBnd;
                     }
-                    else 
+                    else
                     {
                         DNekScalBlkMat &BinvD      = *m_BinvD;
                         V_LocBnd = BinvD*F_Int;
@@ -316,14 +314,12 @@ namespace Nektar
                     DNekScalBlkMat &R = *m_RBlk;
                     DNekScalBlkMat &BinvD = *m_BinvD;
 
-                    if( nIntDofs  && ((nDirBndDofs) && (!dirForcCalculated)
-                                                        && (atLastLevel)) )
+                    if( nIntDofs  && ((!dirForcCalculated) && (atLastLevel)) )
                     {
                         pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
                         V_LocBnd = BinvD*F_Int+ S1*V_LocBnd;
                     }
-                    else if((nDirBndDofs) && (!dirForcCalculated)
-                                                && (atLastLevel))
+                    else if((!dirForcCalculated) && (atLastLevel))
                     {
                         pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
                         V_LocBnd = S1*V_LocBnd;

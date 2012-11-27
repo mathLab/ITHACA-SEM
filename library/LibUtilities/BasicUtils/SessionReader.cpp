@@ -50,6 +50,7 @@ using namespace std;
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/MeshPartition.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/Thread.h>
 
 namespace po = boost::program_options;
 
@@ -206,6 +207,9 @@ namespace Nektar
 
             // Parse the XML data in #m_xmlDoc
             ParseDocument();
+
+            // Start threads
+            StartThreads();
         }
 
 
@@ -1120,43 +1124,43 @@ namespace Nektar
             e = docHandle.FirstChildElement("NEKTAR").FirstChildElement("CONDITIONS").Element();
             ASSERTL0(e, "Unable to find CONDITIONS tag in file.");
             ReadParameters(e);
-			
+            
             if (m_comm->GetSize() > 1)
             {
                 int nProcZ = 1;
-				int nProcY = 1;
-				int nProcX = 1;
-				
-				if(DefinesParameter("PROC_Z"))
-				{
-					LoadParameter("PROC_Z", nProcZ, 1);
-				}
-				if(DefinesParameter("PROC_Y"))
-				{
-					LoadParameter("PROC_Y", nProcY, 1);
-				}
-				if(DefinesParameter("PROC_X"))
-				{
-					LoadParameter("PROC_X", nProcX, 1);
-				}
+                int nProcY = 1;
+                int nProcX = 1;
+                
+                if(DefinesParameter("PROC_Z"))
+                {
+                    LoadParameter("PROC_Z", nProcZ, 1);
+                }
+                if(DefinesParameter("PROC_Y"))
+                {
+                    LoadParameter("PROC_Y", nProcY, 1);
+                }
+                if(DefinesParameter("PROC_X"))
+                {
+                    LoadParameter("PROC_X", nProcX, 1);
+                }
 
                 ASSERTL0(m_comm->GetSize() % (nProcZ*nProcY*nProcX) == 0, "Cannot exactly partition using PROC_Z value.");
-				
-				ASSERTL0(nProcZ % nProcY == 0, "Cannot exactly partition using PROC_Y value.");
-				
-				ASSERTL0(nProcY % nProcX == 0, "Cannot exactly partition using PROC_X value.");
                 
-				// number of precesses associated with the spectral method
-				int nProcSm = nProcZ*nProcY*nProcX;
-				
-				// number of precesses associated with the spectral element method
-				int nProcSem = m_comm->GetSize() / nProcSm;
+                ASSERTL0(nProcZ % nProcY == 0, "Cannot exactly partition using PROC_Y value.");
                 
-				m_comm->SplitComm(nProcSm,nProcSem);
-				
-				m_comm->GetColumnComm()->SplitComm((nProcY*nProcX),nProcZ);
-				
-				m_comm->GetColumnComm()->GetColumnComm()->SplitComm(nProcX,nProcY);
+                ASSERTL0(nProcY % nProcX == 0, "Cannot exactly partition using PROC_X value.");
+                
+                // number of precesses associated with the spectral method
+                int nProcSm = nProcZ*nProcY*nProcX;
+                
+                // number of precesses associated with the spectral element method
+                int nProcSem = m_comm->GetSize() / nProcSm;
+                
+                m_comm->SplitComm(nProcSm,nProcSem);
+                
+                m_comm->GetColumnComm()->SplitComm((nProcY*nProcX),nProcZ);
+                
+                m_comm->GetColumnComm()->GetColumnComm()->SplitComm(nProcX,nProcY);
             }
         }
 
@@ -1733,6 +1737,18 @@ namespace Nektar
             }
 
             return (size1 < size2) ? -1 : 1;
+        }
+
+        /**
+         *
+         */
+        void SessionReader::StartThreads()
+        {
+            //void SessionReader::LoadParameter(const std::string &pName, int &pVar, const int &pDefault) const
+            int nthreads;
+            LoadParameter("NThreads", nthreads, 1);
+            cerr << "Number of threads will be: " << nthreads << endl;
+            m_threadManager = Nektar::Thread::ThreadManager::createThreadManager(nthreads, 4);
         }
     }
 }

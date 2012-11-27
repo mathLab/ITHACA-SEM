@@ -125,6 +125,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SessionReader.h
     ./BasicUtils/SharedArray.hpp
+    ./BasicUtils/Thread.h
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
@@ -136,6 +137,7 @@ SET(BasicUtilsSources
     ./BasicUtils/Equation.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
+    ./BasicUtils/Thread.cpp
     ./BasicUtils/VMath.cpp
 )
 

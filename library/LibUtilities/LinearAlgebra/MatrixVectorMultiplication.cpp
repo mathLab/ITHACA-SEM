@@ -53,6 +53,7 @@
 #include <LibUtilities/LinearAlgebra/NekVectorFwd.hpp>
 #include <LibUtilities/BasicUtils/OperatorGenerators.hpp>
 #include <LibUtilities/LinearAlgebra/MatrixOperations.hpp>
+#include <LibUtilities/BasicUtils/Thread.h>
 
 
 
@@ -189,20 +190,76 @@ namespace Nektar
         }
     }
 
+template<typename LhsInnerMatrixType>
+class MultiplyJob : public Nektar::Thread::ThreadJob
+{
+    private:
+    NekVector<double> &result;
+    unsigned int blockRowSt;
+    unsigned int blockRowEnd;
+    const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs;
+    const NekVector<double>& rhs;
+
+    public:
+    MultiplyJob(NekVector<double> &res, unsigned int blckRowSt, unsigned int blckRowEnd,
+        const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhsin,
+        const NekVector<double>& rhsin) :
+            result(res), blockRowSt(blckRowSt), blockRowEnd(blckRowEnd),
+            lhs(lhsin), rhs(rhsin)
+    {
+    }
+
+    void run()
+    {
+        DiagonalBlockMatrixMultiplyImpl(result, blockRowSt, blockRowEnd,
+                                        lhs, rhs);
+    }
+
+};
+
     template<typename LhsInnerMatrixType>
     void DiagonalBlockMatrixMultiply(NekVector<double>& result,
                      const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs,
                      const NekVector<double>& rhs)
     {
         unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
+        std::fill(result.begin(), result.end(), 0.0);
+
+        Nektar::Thread::ThreadManager *tm = Nektar::Thread::ThreadManager::getInstance();
+        unsigned int nt = tm->getMaxNumWorkers();
+        tm->setNumWorkers(nt-1);
+        tm->setSchedType(Nektar::Thread::e_static);
+        tm->setChunkSize(1);
+
+        unsigned int numPerThread = numberOfBlockRows / nt;
+        unsigned int blockRow = 0;
+        if (nt > 1 && numPerThread > 1 )
+        {
+            for(unsigned int thrd = 1; thrd < nt; thrd++)
+            {
+                tm->queueJob(new MultiplyJob<LhsInnerMatrixType>(result, blockRow,
+                     blockRow+numPerThread, lhs, rhs));
+                blockRow += numPerThread;
+            }
+        }
+
+        DiagonalBlockMatrixMultiplyImpl(result, blockRow, numberOfBlockRows,
+                                        lhs, rhs);
+
+        tm->wait();
+    }
+
+    template<typename LhsInnerMatrixType>
+    void DiagonalBlockMatrixMultiplyImpl(NekVector<double> &result, unsigned int blockRowSt,
+            unsigned int blockRowEnd,
+            const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs,
+            const NekVector<double>& rhs)
+    {
         double* result_ptr = result.GetRawPtr();
         const double* rhs_ptr = rhs.GetRawPtr();
-        
-        std::fill(result.begin(), result.end(), 0.0);
-        
         unsigned int curResultRow = 0;
         unsigned int curWrapperRow = 0;
-        for(unsigned int blockRow = 0; blockRow < numberOfBlockRows; ++blockRow)
+        for(unsigned int blockRow = 0 ; blockRow < blockRowEnd; ++blockRow)
         {
 
             if( blockRow != 0 )
@@ -214,6 +271,11 @@ namespace Nektar
             if( blockColumn != 0 )
             {
                 curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
+            }
+
+            if( blockRow < blockRowSt )
+            {
+                continue;
             }
 
             unsigned int rowsInBlock = lhs.GetNumberOfRowsInBlockRow(blockRow);
@@ -236,8 +298,12 @@ namespace Nektar
 
             double* resultWrapper = result_ptr + curResultRow;            
             const double* rhsWrapper = rhs_ptr + curWrapperRow;
-            Multiply(resultWrapper, *block, rhsWrapper);
-            //resultWrapper = (*block)*rhsWrapper;
+            //unsigned int i = 1000;
+            //while (i > 0)
+            //{
+                Multiply(resultWrapper, *block, rhsWrapper);
+            //    i--;
+            //}
         }
     }
 

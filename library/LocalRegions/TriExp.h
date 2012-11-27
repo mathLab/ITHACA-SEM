@@ -36,16 +36,10 @@
 #ifndef TRIEXP_H
 #define TRIEXP_H
 
-#include <LocalRegions/LocalRegions.hpp>
-
 #include <StdRegions/StdTriExp.h>
 #include <SpatialDomains/TriGeom.h>
-
 #include <SpatialDomains/GeomFactors.h>
-
 #include <LocalRegions/MatrixKey.h>
-#include <LocalRegions/SegExp.h>
-
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 
@@ -162,6 +156,9 @@ namespace Nektar
                             const StdRegions::StdExpansionSharedPtr &EdgeExp,
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
+                            const int edge,
+                            Array<OneD, NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(
                             const int edge);
 

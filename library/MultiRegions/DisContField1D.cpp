@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/DisContField1D.h>
-#include <LocalRegions/SegExp.h>
+#include <StdRegions/StdSegExp.h>
 
 
 namespace Nektar
@@ -498,9 +498,9 @@ namespace Nektar
                     {
                         for(k = 0; k < bregionIt->second->size(); k++)
                         {
-                            if(vert = boost::dynamic_pointer_cast
+                            if((vert = boost::dynamic_pointer_cast
                                     <SpatialDomains::VertexComponent>(
-                                        (*bregionIt->second)[k]))
+                                         (*bregionIt->second)[k])))
                             {
                                 locPointExp
                                     = MemoryManager<MultiRegions::ExpList0D>
@@ -533,9 +533,9 @@ namespace Nektar
                         {
                             for(k = 0; k < bregionIt->second->size(); k++)
                             {
-                                if(vert = boost::dynamic_pointer_cast
-                                   <SpatialDomains::VertexComponent>(
-                                        (*bregionIt->second)[k]))
+                                if((vert = boost::dynamic_pointer_cast
+                                        <SpatialDomains::VertexComponent>(
+                                            (*bregionIt->second)[k])))
                                 {
                                     locPointExp
                                         = MemoryManager<MultiRegions::ExpList0D>
@@ -616,7 +616,7 @@ namespace Nektar
                     {
                         for(k = 0; k < bregionIt->second->size(); k++)
                         {
-                            if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*bregionIt->second)[k]))
+                            if((vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*bregionIt->second)[k])))
                             {
                                 locPointExp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
                                 bndCondExpansions[cnt]  = locPointExp;
@@ -646,8 +646,9 @@ namespace Nektar
                         {
                             for(k = 0; k < bregionIt->second->size(); k++)
                             {
-                                if(vert = boost::dynamic_pointer_cast
-                                   <SpatialDomains::VertexComponent>((*bregionIt->second)[k]))
+                                if((vert = boost::dynamic_pointer_cast<
+                                        SpatialDomains::VertexComponent>(
+                                            (*bregionIt->second)[k])))
                                 {
                                     locPointExp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
                                     bndCondExpansions[cnt]  = locPointExp;

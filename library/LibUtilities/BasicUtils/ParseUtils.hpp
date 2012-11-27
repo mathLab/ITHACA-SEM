@@ -37,6 +37,7 @@
 #ifndef NEKTAR_LIBUTILITIES_PARSEUTILS_HPP
 #define NEKTAR_LIBUTILITIES_PARSEUTILS_HPP
 
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <vector>
 
 #include <boost/version.hpp>

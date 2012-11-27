@@ -5,3 +5,6 @@ SET(APESolverSource
 
 ADD_SOLVER_EXECUTABLE(APESolver solvers 
 			${APESolverSource})
+
+ADD_NEKTAR_TEST(Channel)
+ADD_NEKTAR_TEST(Pulse)

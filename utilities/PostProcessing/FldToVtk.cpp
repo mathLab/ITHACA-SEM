@@ -2,13 +2,11 @@
 #include <cstdlib>
 
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList0D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList1DHomogeneous2D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 using namespace Nektar;
 
@@ -39,19 +37,28 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);//->GetFilename(), false);
+    SpatialDomains::MeshGraphSharedPtr graphShPt
+                                    = SpatialDomains::MeshGraph::Read(vSession);
     //----------------------------------------------
 
-    for (int n = 2; n < argc; ++n)
+    for (int n = 1; n < argc; ++n)
     {
         string fname = std::string(argv[n]);
         int fdot = fname.find_last_of('.');
         if (fdot != std::string::npos)
         {
             string ending = fname.substr(fdot);
+
+            // If .chk or .fld we exchange the extension in the output file.
+            // For all other files (e.g. .bse) we append the extension to avoid
+            // conflicts.
             if (ending == ".chk" || ending == ".fld")
             {
                 fname = fname.substr(0,fdot);
+            }
+            else if (ending == ".xml")
+            {
+                continue;
             }
         }
         fname = fname + ".vtu";

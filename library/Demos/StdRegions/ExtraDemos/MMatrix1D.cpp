@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <cstdlib>
-#include "StdRegions/StdSegExp.h"
+#include <StdRegions/StdSegExp.h>
 
-#include "StdRegions/StdRegions.hpp"
+#include <StdRegions/StdRegions.hpp>
 
 using namespace Nektar; 
 using namespace StdRegions; 

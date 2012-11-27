@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 // File GlobalLinSys.cpp
@@ -35,20 +34,47 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSys.h>
-//#include <MultiRegions/AssemblyMapCG.h>
+#include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/Expansion.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+
 namespace Nektar
 {
     namespace MultiRegions
     {
-        std::string GlobalLinSys::lookupIds[5] = {
-                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectFull",MultiRegions::eDirectFullMatrix),
-                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectStaticCond",MultiRegions::eDirectStaticCond),
-                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","DirectMultiLevelStaticCond",MultiRegions::eDirectMultiLevelStaticCond),
-                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeFull",MultiRegions::eIterativeFull),
-                LibUtilities::SessionReader::RegisterEnumValue("GlobalSysSoln","IterativeStaticCond",MultiRegions::eIterativeStaticCond)
+        std::string GlobalLinSys::lookupIds[8] = {
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "DirectFull",
+                MultiRegions::eDirectFullMatrix),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "DirectStaticCond",
+                MultiRegions::eDirectStaticCond),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "DirectMultiLevelStaticCond",
+                MultiRegions::eDirectMultiLevelStaticCond),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "IterativeFull",
+                MultiRegions::eIterativeFull),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "IterativeStaticCond",
+                MultiRegions::eIterativeStaticCond),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "IterativeMultiLevelStaticCond",
+                MultiRegions::eIterativeMultiLevelStaticCond),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "XxtFull",
+                MultiRegions::eXxtFullMatrix),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "XxtStaticCond",
+                MultiRegions::eXxtStaticCond)
         };
-        std::string GlobalLinSys::def = LibUtilities::SessionReader::RegisterDefaultSolverInfo("GlobalSysSoln","DirectMultiLevelStaticCond");
+
+        std::string GlobalLinSys::def = LibUtilities::SessionReader::
+            RegisterDefaultSolverInfo("GlobalSysSoln",
+                                      "DirectMultiLevelStaticCond");
 
         /**
          * @class GlobalLinSys
@@ -140,7 +166,6 @@ namespace Nektar
          * function.
          */
 
-
         /**
          * Given a block matrix, construct a global matrix system according to
          * a local to global mapping. #m_linSys is constructed by
@@ -159,7 +184,6 @@ namespace Nektar
         {
         }
 
-
         /**
          *
          */
@@ -171,20 +195,33 @@ namespace Nektar
             return Type::Instance();
         }
 
+        /**
+         * @brief Get the number of blocks in this system. 
+         *
+         * At the top level this corresponds to the number of elements in the
+         * expansion list.
+         */
+        int GlobalLinSys::v_GetNumBlocks()
+        {
+            return m_expList.lock()->GetExpSize();
+        }
 
         /**
-         * Retrieves  the block matrix from n'th expansion using the matrix
-         * key provided by the #m_linSysKey.
+         * @brief Retrieves the block matrix from n-th expansion using the
+         * matrix key provided by the #m_linSysKey.
+         *
          * @param   n           Number of the expansion.
-         * @returns             Block matrix for the specified expansion.
+         * @return              Block matrix for the specified expansion.
          */
-        DNekScalMatSharedPtr GlobalLinSys::GetBlock(unsigned int n)
+        DNekScalMatSharedPtr GlobalLinSys::v_GetBlock(unsigned int n)
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int cnt = 0;
             DNekScalMatSharedPtr loc_mat;
 
-            LocalRegions::ExpansionSharedPtr vExp = boost::dynamic_pointer_cast<LocalRegions::Expansion>(expList->GetExp(n));
+            LocalRegions::ExpansionSharedPtr vExp = 
+                boost::dynamic_pointer_cast<LocalRegions::Expansion>(
+                    expList->GetExp(n));
 
             // need to be initialised with zero size for non variable
             // coefficient case
@@ -218,33 +255,36 @@ namespace Nektar
                 int rows = loc_mat->GetRows();
                 int cols = loc_mat->GetColumns();
                 const NekDouble *dat = loc_mat->GetRawPtr();
-                DNekMatSharedPtr new_mat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,dat);
+                DNekMatSharedPtr new_mat = MemoryManager<DNekMat>::
+                    AllocateSharedPtr(rows,cols,dat);
                 Blas::Dscal(rows*cols,loc_mat->Scale(),new_mat->GetRawPtr(),1);
 
                 // add local matrix contribution
                 for(rBC = m_robinBCInfo.find(n)->second;rBC; rBC = rBC->next)
                 {
-                    vExp->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
+                    vExp->AddRobinMassMatrix(
+                        rBC->m_robinID, rBC->m_robinPrimitiveCoeffs, new_mat);
                 }
 
-                NekDouble one = 1.0;
                 // redeclare loc_mat to point to new_mat plus the scalar.
-                loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
+                loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                    1.0, new_mat);
             }
 
             // finally return the matrix.
             return loc_mat;
         }
 
-
         /**
-         * Retrieves a the static condensation block matrices from n'th
+         * @brief Retrieves a the static condensation block matrices from n-th
          * expansion using the matrix key provided by the #m_linSysKey.
+         * 
          * @param   n           Number of the expansion
-         * @returns             2x2 Block matrix holding the static condensation
-         *                      matrices for the n'th expansion.
+         * @return              2x2 Block matrix holding the static condensation
+         *                      matrices for the n-th expansion.
          */
-        DNekScalBlkMatSharedPtr GlobalLinSys::GetStaticCondBlock(unsigned int n)
+        DNekScalBlkMatSharedPtr GlobalLinSys::v_GetStaticCondBlock(
+            unsigned int n)
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             int cnt = 0;
@@ -262,17 +302,18 @@ namespace Nektar
             {
                 StdRegions::VarCoeffMap::const_iterator x;
                 cnt = expList->GetPhys_Offset(n);
-                for (x = m_linSysKey.GetVarCoeffs().begin(); x != m_linSysKey.GetVarCoeffs().end(); ++x)
+                for (x  = m_linSysKey.GetVarCoeffs().begin(); 
+                     x != m_linSysKey.GetVarCoeffs().end  (); ++x)
                 {
                     vVarCoeffMap[x->first] = x->second + cnt;
                 }
             }
 
-            LocalRegions::MatrixKey matkey( m_linSysKey.GetMatrixType(),
-                                            vExp->DetExpansionType(),
-                                            *vExp,
-                                            m_linSysKey.GetConstFactors(),
-                                            vVarCoeffMap);
+            LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
+                                           vExp->DetExpansionType(),
+                                           *vExp,
+                                           m_linSysKey.GetConstFactors(),
+                                           vVarCoeffMap);
 
             loc_mat = vExp->GetLocStaticCondMatrix(matkey);
 
@@ -286,18 +327,20 @@ namespace Nektar
                 int rows = tmp_mat->GetRows();
                 int cols = tmp_mat->GetColumns();
                 const NekDouble *dat = tmp_mat->GetRawPtr();
-                DNekMatSharedPtr new_mat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols,dat);
+                DNekMatSharedPtr new_mat = MemoryManager<DNekMat>::
+                    AllocateSharedPtr(rows, cols, dat);
                 Blas::Dscal(rows*cols,tmp_mat->Scale(),new_mat->GetRawPtr(),1);
 
                 // add local matrix contribution
                 for(rBC = m_robinBCInfo.find(n)->second;rBC; rBC = rBC->next)
                 {
-                    vExp->AddRobinMassMatrix(rBC->m_robinID,rBC->m_robinPrimitiveCoeffs,new_mat);
+                    vExp->AddRobinMassMatrix(
+                        rBC->m_robinID, rBC->m_robinPrimitiveCoeffs, new_mat);
                 }
 
-                NekDouble one = 1.0;
                 // redeclare loc_mat to point to new_mat plus the scalar.
-                tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,new_mat);
+                tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(
+                    1.0, new_mat);
                 loc_mat->SetBlock(0,0,tmp_mat);
             }
 
@@ -306,16 +349,14 @@ namespace Nektar
 
         const DNekMatSharedPtr& GlobalLinSys::v_GetGmat(void) const
         {
-            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
+            NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
             return NullDNekMatSharedPtr;
         }
 
         void GlobalLinSys::v_InitObject()
         {
-            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
+            NEKERROR(ErrorUtil::efatal, "Method does not exist" );
 	}
-
-
     } //end of namespace
 } //end of namespace
 

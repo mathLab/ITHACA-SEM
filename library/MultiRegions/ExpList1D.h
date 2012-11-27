@@ -35,20 +35,10 @@
 
 #ifndef NEKTAR_LIB_MULTIREGIONS_EXPLIST1D_H
 #define NEKTAR_LIB_MULTIREGIONS_EXPLIST1D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <vector>
-#include <fstream>
-
-#include <LibUtilities/Communication/Comm.h>
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList.h>
-#include <LocalRegions/SegExp.h>
-//#include <LocalRegions/GenSegExp.h>
-#include <LocalRegions/TriExp.h>
-#include <LocalRegions/QuadExp.h>
-#include <LocalRegions/PointExp.h>
-#include <SpatialDomains/MeshGraph1D.h>
-#include <SpatialDomains/MeshGraph2D.h>
 #include <LibUtilities/Kernel/kernel.h>
 
 namespace Nektar
@@ -194,44 +184,3 @@ namespace Nektar
 
 #endif//NEKTAR_LIB_MULTIREGIONS_EXPLIST1D_H
 
-/**
- * Revision 1.23  2008/09/16 13:36:06  pvos
- * Restructured the LocalToGlobalMap classes
- *
- * Revision 1.22  2008/08/14 22:15:51  sherwin
- * Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
- *
- * Revision 1.21  2008/07/29 22:27:33  sherwin
- * Updates for DG solvers, including using GenSegExp, fixed forcing function on UDG HelmSolve and started to tidy up the mapping arrays to be 1D rather than 2D
- *
- * Revision 1.20  2008/06/23 14:21:01  pvos
- * updates for 1D ExpLists
- *
- * Revision 1.19  2008/05/10 18:27:33  sherwin
- * Modifications necessary for QuadExp Unified DG Solver
- *
- * Revision 1.18  2007/12/06 22:52:30  pvos
- * 2D Helmholtz solver updates
- *
- * Revision 1.17  2007/09/25 14:25:29  pvos
- * Update for helmholtz1D with different expansion orders
- *
- * Revision 1.16  2007/09/03 19:58:31  jfrazier
- * Formatting.
- *
- * Revision 1.15  2007/07/22 23:04:20  bnelson
- * Backed out Nektar::ptr.
- *
- * Revision 1.14  2007/07/20 02:04:12  bnelson
- * Replaced boost::shared_ptr with Nektar::ptr
- *
- * Revision 1.13  2007/07/10 08:54:30  pvos
- * Updated ContField1D constructor
- *
- * Revision 1.12  2007/07/06 18:39:34  pvos
- * ContField1D constructor updates
- *
- * Revision 1.11  2007/06/05 16:36:55  pvos
- * Updated Explist2D ContExpList2D and corresponding demo-codes
- *
- **/

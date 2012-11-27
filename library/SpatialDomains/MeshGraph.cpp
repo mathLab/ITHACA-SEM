@@ -32,12 +32,15 @@
 //  Description:
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "pchSpatialDomains.h"
 
-#include <boost/foreach.hpp>
 
 #include <SpatialDomains/MeshGraph.h>
 #include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/BasicUtils/Equation.h>
+#include <StdRegions/StdTriExp.h>
+#include <StdRegions/StdTetExp.h>
+#include <StdRegions/StdPyrExp.h>
+#include <StdRegions/StdPrismExp.h>
 
 // Use the stl version, primarily for string.
 #ifndef TIXML_USE_STL
@@ -47,11 +50,6 @@
 #include <tinyxml/tinyxml.h>
 #include <cstring>
 #include <sstream>
-#if defined(__INTEL_COMPILER)
-#include <mathimf.h>
-#else
-#include <cmath>
-#endif
 
 #include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/MeshGraph2D.h>
@@ -1964,30 +1962,33 @@ namespace Nektar
             // Determine nummodes vector lists are correct length
             switch(fielddefs->m_shapeType)
             {
-            case eSegment:
-                numbasis = 1;
-                if(fielddefs->m_numHomogeneousDir)
-                {
-                    numbasis += fielddefs->m_numHomogeneousDir;
-                }
+                case eSegment:
+                    numbasis = 1;
+                    if(fielddefs->m_numHomogeneousDir)
+                    {
+                        numbasis += fielddefs->m_numHomogeneousDir;
+                    }
 
-                break;
-            case eTriangle:  case eQuadrilateral:
-                if(fielddefs->m_numHomogeneousDir)
-                {
+                    break;
+                case eTriangle:  case eQuadrilateral:
+                    if(fielddefs->m_numHomogeneousDir)
+                    {
+                        numbasis = 3;
+                    }
+                    else
+                    {
+                        numbasis = 2;
+                    }
+                    break;
+                case eTetrahedron:
+                case ePyramid:
+                case ePrism:
+                case eHexahedron:
                     numbasis = 3;
-                }
-                else
-                {
-                    numbasis = 2;
-                }
-                break;
-            case eTetrahedron:
-            case ePyramid:
-            case ePrism:
-            case eHexahedron:
-                numbasis = 3;
-                break;
+                    break;
+                default:
+                    ASSERTL0(false, "Unsupported shape type.");
+                    break;
             }
 
             unsigned int datasize = 0;
@@ -2073,6 +2074,9 @@ namespace Nektar
                     fielddefs->m_numModes[cnt++]*
                     fielddefs->m_numModes[cnt++];
                     break;
+                default:
+                    ASSERTL0(false, "Unsupported shape type.");
+                    break;
                 }
 
                 datasize *= fielddefs->m_elementIDs.size();
@@ -2127,6 +2131,9 @@ namespace Nektar
                         datasize += fielddefs->m_numModes[cnt++]*
                         fielddefs->m_numModes[cnt++]*
                         fielddefs->m_numModes[cnt++];
+                        break;
+                    default:
+                        ASSERTL0(false, "Unsupported shape type.");
                         break;
                     }
                 }

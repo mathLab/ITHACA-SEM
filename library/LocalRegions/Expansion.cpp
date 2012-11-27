@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LocalRegions/Expansion.h>
+#include <LocalRegions/MatrixKey.h>
+
 
 namespace Nektar
 {
@@ -43,16 +45,31 @@ namespace Nektar
         {
         }
         
+
+        Expansion::~Expansion()
+        {
+        }
+
+        DNekScalMatSharedPtr Expansion::GetLocMatrix(const LocalRegions::MatrixKey &mkey)
+        {
+            return v_GetLocMatrix(mkey);
+        }
+
+        DNekScalMatSharedPtr Expansion::GetLocMatrix(const StdRegions::MatrixType mtype,
+                    const StdRegions::ConstFactorMap &factors,
+                    const StdRegions::VarCoeffMap &varcoeffs)
+        {
+            MatrixKey mkey(mtype, DetExpansionType(), *this, factors, varcoeffs);
+            return GetLocMatrix(mkey);
+        }
+
+        DNekScalMatSharedPtr Expansion::v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+            return NullDNekScalMatSharedPtr;
+        }
+
+
     } //end of namespace
 } //end of namespace
 
-/** 
- *    $Log: Expansion.cpp,v $
- *    Revision 1.2  2008/08/18 08:30:32  sherwin
- *    Updates for HDG 1D work
- *
- *    Revision 1.1  2008/08/14 22:12:56  sherwin
- *    Introduced Expansion classes and used them to define HDG routines, has required quite a number of virtual functions to be added
- *
- *
- **/

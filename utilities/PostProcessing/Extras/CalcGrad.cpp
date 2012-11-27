@@ -7,13 +7,11 @@
 #include <cstdlib>
 
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList0D.h>
 #include <MultiRegions/ExpList1D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <MultiRegions/ExpList3D.h>
 #include <MultiRegions/ExpList2DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList1DHomogeneous2D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
 using namespace Nektar;

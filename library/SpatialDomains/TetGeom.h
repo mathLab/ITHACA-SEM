@@ -36,8 +36,6 @@
 #ifndef NEKTAR_SPATIALDOMAINS_TETGEOM
 #define NEKTAR_SPATIALDOMAINS_TETGEOM
 
-#include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdTetExp.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/TriGeom.h>

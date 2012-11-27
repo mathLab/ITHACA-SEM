@@ -364,6 +364,8 @@ void GetNewVertexLocation(TiXmlElement *doc,
                     }
                 }
                 break;
+            default:
+                break;
             }
             Verts[vid0].solve = eNoSolve;
         }

@@ -4,8 +4,8 @@
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
-//#include <SpatialDomains/MeshPartition.h>
 #include <MultiRegions/DisContField3D.h>
+#include <SpatialDomains/MeshGraph3D.h>
 
 #define TIMING
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
     // Backward Transform Solution to get solved values at 
     Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys());
     //----------------------------------------------
-    Timing("Backard Transform ..");
+    Timing("Backward Transform ..");
     
     //-----------------------------------------------
     // Write solution to file

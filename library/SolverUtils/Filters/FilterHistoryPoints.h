@@ -36,7 +36,6 @@
 #ifndef NEKTAR_SOLVERUTILS_FILTERS_FILTERHISTORYPOINTS_H
 #define NEKTAR_SOLVERUTILS_FILTERS_FILTERHISTORYPOINTS_H
 
-#include <SpatialDomains/MeshGraph.h>
 #include <SolverUtils/Filters/Filter.h>
 
 namespace Nektar

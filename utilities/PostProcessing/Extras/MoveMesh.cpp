@@ -2,32 +2,18 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
-#include <sstream>
 #include <MultiRegions/ExpList.h>
-#include <MultiRegions/ExpList0D.h>
-#include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/ExpList2D.h>
-#include <MultiRegions/ExpList3D.h>
-#include <MultiRegions/ExpList2DHomogeneous1D.h>
-#include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList1DHomogeneous2D.h>
-#include <MultiRegions/ExpList3DHomogeneous2D.h>
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
-#include <MultiRegions/ContField3DHomogeneous1D.h>
-#include <MultiRegions/ContField3DHomogeneous2D.h>
-//#include </PreProcessing/MeshConvert/Convert.h>
+#include <LocalRegions/SegExp.h>
+#include <LocalRegions/TriExp.h>
+#include <LocalRegions/QuadExp.h>
 #include <LibUtilities/LinearAlgebra/Lapack.hpp>
-//#include <LibUtilities/LinearAlgebra/alglib.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
-#include <LibUtilities/Foundations/GaussPoints.h>
 #include <boost/lexical_cast.hpp>
 #include <tinyxml/tinyxml.h>
 
-//#include "stdafx.h"
-//#include <math.h>
-//#include "interpolation.h"
 
 using namespace Nektar;
 
@@ -2883,7 +2869,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
             Array<OneD, int> V2tmp(4*nel, 10000);
             for(int i=0; i<nel; i++)
             { 
-                if(locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i]))
+                if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>((*exp2D)[i])))
                 {
                      for(int j = 0; j < locQuadExp->GetNedges(); ++j)
                      {
@@ -2899,7 +2885,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
                 }
                 //in the future the tri edges may be not necessary (if the nedges is known)
 
-                else if(locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i]))
+                else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>((*exp2D)[i])))
                 {
                      for(int j = 0; j < locTriExp->GetNedges(); ++j)
                      {

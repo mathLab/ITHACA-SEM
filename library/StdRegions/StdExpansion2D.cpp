@@ -36,7 +36,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdExpansion2D.h>
-#include <SpatialDomains/Geometry2D.h>
 
 #ifdef max
 #undef max

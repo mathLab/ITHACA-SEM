@@ -79,7 +79,7 @@ namespace Nektar
         class ThreadSpecificPool
         {
             public:
-                ThreadSpecificPool(unsigned int ByteSize) :
+                ThreadSpecificPool(size_t ByteSize) :
                     m_pool(),
                     m_blockSize(ByteSize),
                     m_mutex()
@@ -134,7 +134,7 @@ namespace Nektar
             private:
                 //boost::thread_specific_ptr<boost::pool<> > m_pool;
                 boost::pool<>* m_pool;
-                unsigned int m_blockSize;
+                size_t m_blockSize;
                 boost::mutex m_mutex;
         };
     }
@@ -142,7 +142,7 @@ namespace Nektar
     class MemPool
     {
         public:
-            typedef std::map<unsigned int, boost::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
+            typedef std::map<size_t, boost::shared_ptr<detail::ThreadSpecificPool> > PoolMapType;
             
         public:
             MemPool() :
@@ -180,7 +180,7 @@ namespace Nektar
             /// Important: All memory allocated from this method must be returned to the pool
             /// via the Deallocate method.  Deleting pointers allocated from the memory pool with the 
             /// delete operator will result in undefined behavior.
-            void* Allocate(unsigned int bytes)
+            void* Allocate(size_t bytes)
             {
                 if( bytes <= 4 )
                 {
@@ -204,7 +204,7 @@ namespace Nektar
             ///
             /// \attention It is an error to deallocate memory not allocated
             /// from this pool.  Doing this will result in undefined behavior.
-            void Deallocate(void* p, unsigned int bytes)
+            void Deallocate(void* p, size_t bytes)
             {
                 if( bytes <= 4 )
                 {
@@ -226,8 +226,8 @@ namespace Nektar
             
         private:
             detail::ThreadSpecificPool m_fourBytePool;
-            std::map<unsigned int, boost::shared_ptr<detail::ThreadSpecificPool> > m_pools;
-            unsigned int m_upperBound;
+            std::map<size_t, boost::shared_ptr<detail::ThreadSpecificPool> > m_pools;
+            size_t m_upperBound;
     };
 
     LIB_UTILITIES_EXPORT MemPool& GetMemoryPool();
@@ -237,38 +237,4 @@ namespace Nektar
 
 
 #endif //NEKATAR_LIB_UTILITES_THREAD_SPECIFIC_POOL_HPP
-
-/**
-    $Log: ThreadSpecificPool.hpp,v $
-    Revision 1.8  2008/06/27 23:17:43  ehan
-    Included <cstring> in order to compile for GCC 4.3.1.
-
-    Revision 1.7  2008/06/10 06:00:37  bnelson
-    Updated documentation.
-
-    Revision 1.6  2008/05/23 03:39:57  bnelson
-    Fixed the shutdown crash.
-
-    Revision 1.5  2008/05/21 01:38:27  bnelson
-    Added a debug feature to clear memory being allocated.
-
-    Revision 1.4  2008/05/16 05:43:22  bnelson
-    Updated the memory manager so it is faster choosing the allocator to use, doesn't use the pools for anything larger than 1024 bytes, and doesn't issue a warning for large allocations.
-
-    Revision 1.3  2007/05/14 23:49:55  bnelson
-    Updated pool using Singletons to correctly allocate static Arrays.
-
-    Revision 1.2  2007/04/06 04:36:22  bnelson
-    Updated for const-correctness.
-
-    Revision 1.1  2006/06/01 09:17:24  kirby
-    *** empty log message ***
-
-    Revision 1.1  2006/05/04 18:57:44  kirby
-    *** empty log message ***
-
-    Revision 1.1  2006/02/23 07:53:23  bnelson
-    *** empty log message ***
-
-**/
 

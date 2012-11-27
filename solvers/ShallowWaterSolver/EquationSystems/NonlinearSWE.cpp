@@ -34,10 +34,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <cstdio>
-#include <cstdlib>
-
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <ShallowWaterSolver/EquationSystems/NonlinearSWE.h>
 

@@ -35,10 +35,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <ADR2DManifoldSolver/ADR2DManifold.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <boost/math/special_functions/spherical_harmonic.hpp>
 
-#include <cstdio>
-#include <cstdlib>
 #if defined(__INTEL_COMPILER)
     #include <mathimf.h>
 #else
@@ -524,6 +523,9 @@ namespace Nektar
                 Vmath::Svtvp(ncoeffs,m_epsilon[1],&outarray[1][0],1,&Reaction2[0],1,&outarray[1][0],1);
                 break;
             }
+            default:
+                ASSERTL0(false, "Unknown equation type.");
+                break;
             }
             break;
         }
@@ -2289,8 +2291,8 @@ namespace Nektar
         // phi is in [0, 2*pi]
         phi = atan2( x1j, x0j ) + pi;
 
-        varphi0 = (0.0,0.0);
-        varphi1 = (0.0,0.0);
+        varphi0 = std::complex<double>(0.0,0.0);
+        varphi1 = std::complex<double>(0.0,0.0);
         for (n = 0; n < Maxn; ++n)
         {
             // Set up parameters
@@ -2564,6 +2566,9 @@ namespace Nektar
             }
             out << "\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
             EquationSystem::TimeParamSummary(out);
+            break;
+        default:
+            ASSERTL0(false, "Unsupported equation type.");
             break;
         }
         cout << "=======================================================================" << endl;

@@ -37,18 +37,26 @@
 #define NEKTAR_SPATIALDOMAINS_TRIGEOM_H
 
 #include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdTriExp.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include <SpatialDomains/GeomFactors2D.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/SegGeom.h>
+
+#include <SpatialDomains/GeomFactors2D.h>
+#include <StdRegions/StdTriExp.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
         class TriGeom;
+        class SegGeom;
+        class Curve;
+
+        typedef boost::shared_ptr<Curve> CurveSharedPtr;
+        typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;
         typedef boost::shared_ptr<TriGeom> TriGeomSharedPtr;
+        typedef std::vector< SegGeomSharedPtr > SegGeomVector;
         typedef std::vector< TriGeomSharedPtr > TriGeomVector;
         typedef std::vector< TriGeomSharedPtr >::iterator TriGeomVectorIter;
         typedef std::map<int, TriGeomSharedPtr> TriGeomMap;
@@ -97,7 +105,7 @@ namespace Nektar
             protected:
                 VertexComponentVector           m_verts;
                 SegGeomVector                   m_edges;
-                StdRegions::Orientation     m_eorient [kNedges];
+                StdRegions::Orientation         m_eorient [kNedges];
                 int				                m_fid;
                 bool				            m_ownVerts;
                 std::list<CompToElmt>		    m_elmtMap;

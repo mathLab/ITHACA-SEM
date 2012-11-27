@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-//#include <SpatialDomains/GeomFactors2D.h>
 #include <SpatialDomains/Geometry2D.h>
 
 #include <SpatialDomains/GeomFactors1D.h>

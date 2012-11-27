@@ -33,10 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <cstdio>
-#include <cstdlib>
-
 #include <CompressibleFlowSolver/EquationSystems/NavierStokesCFE.h>
 
 namespace Nektar

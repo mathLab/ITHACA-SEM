@@ -35,6 +35,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include <IncNavierStokesSolver/EquationSystems/CoupledLocalToGlobalC0ContMap.h>
 #include <SpatialDomains/MeshGraph.h>
+#include <LocalRegions/SegExp.h>
+#include <LocalRegions/Expansion2D.h>
+#include <MultiRegions/GlobalLinSysDirectStaticCond.h>
 
 namespace Nektar
 {    
@@ -259,13 +262,14 @@ namespace Nektar
             }
         }
         
+        set<int> extraDir;
         SetUp2DGraphC0ContMap(*fields[0],
                               bndCondExp,
                               bndConditionsVec,
                               periodicVertices,       periodicEdges,
                               Dofs,                   ReorderedGraphVertId,
                               firstNonDirGraphVertId, nExtraDirichlet,
-                              bottomUpGraph,  false,  4);
+                              bottomUpGraph, extraDir,  false,  4);
         
 #if 0
         bottomUpGraph->Dump();
@@ -712,30 +716,40 @@ namespace Nektar
         // multi-level static condensation
         if( m_session->MatchSolverInfoAsEnum("GlobalSysSoln", MultiRegions::eDirectMultiLevelStaticCond) )
         {
-            if(staticCondLevel < (bottomUpGraph->GetNlevels()-1))
+            if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
             {
-                Array<OneD, int> vwgts_perm(Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
-
-                for(i = 0; i < Dofs[0].size(); ++i)
+                Array<OneD, int> vwgts_perm(
+                    Dofs[0].size()+Dofs[1].size()-firstNonDirGraphVertId);
+                for(i = 0; i < locExpVector.size(); ++i)
                 {
-                    if(ReorderedGraphVertId[0][i] >= firstNonDirGraphVertId)
+                    int eid = fields[0]->GetOffset_Elmt_Id(i);
+                    locExpansion = boost::dynamic_pointer_cast<
+                        StdRegions::StdExpansion2D>(locExpVector[eid]);
+                    for(j = 0; j < locExpansion->GetNverts(); ++j)
                     {
-                        vwgts_perm[ReorderedGraphVertId[0][i]-firstNonDirGraphVertId] = Dofs[0][i];
+                        meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
+                        meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
+                            
+                        if(ReorderedGraphVertId[0][meshVertId] >= 
+                           firstNonDirGraphVertId)
+                        {
+                            vwgts_perm[ReorderedGraphVertId[0][meshVertId]-
+                                       firstNonDirGraphVertId] = 
+                                Dofs[0][meshVertId];
+                        }
+                            
+                        if(ReorderedGraphVertId[1][meshEdgeId] >= 
+                           firstNonDirGraphVertId)
+                        {
+                            vwgts_perm[ReorderedGraphVertId[1][meshEdgeId]-
+                                       firstNonDirGraphVertId] = 
+                                Dofs[1][meshEdgeId];
+                        }
                     }
                 }
 
-                for(i = 0; i < Dofs[1].size(); ++i)
-                {
-                    if(ReorderedGraphVertId[1][i] >= firstNonDirGraphVertId)
-                    {
-                        vwgts_perm[ReorderedGraphVertId[1][i]-firstNonDirGraphVertId] = Dofs[1][i];
-                    }
-                }
-        
-                //bottomUpGraph->Dump();
                 bottomUpGraph->ExpandGraphWithVertexWeights(vwgts_perm);
-                // bottomUpGraph->Dump();
-
+                    
                 m_nextLevelLocalToGlobalMap = MemoryManager<AssemblyMap>::
                     AllocateSharedPtr(this,bottomUpGraph);
             }

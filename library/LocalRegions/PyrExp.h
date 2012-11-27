@@ -36,15 +36,11 @@
 #ifndef PYREXP_H
 #define PYREXP_H
 
-#include <LocalRegions/LocalRegions.hpp>
-
 #include <StdRegions/StdPyrExp.h>
 #include <SpatialDomains/PyrGeom.h>
-
-#include <SpatialDomains/GeomFactors3D.h>
 #include <LocalRegions/MatrixKey.h>
-
 #include <LocalRegions/Expansion3D.h>
+#include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar

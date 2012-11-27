@@ -1,10 +1,10 @@
 #include <cstdio>
 #include <cstdlib>
-#include "StdRegions/StdExpansion2D.h"
-#include "StdRegions/StdNodalTriExp.h"
-#include "StdRegions/NodalBasisManager.h"
+#include <StdRegions/StdExpansion2D.h>
+#include <StdRegions/StdNodalTriExp.h>
+#include <StdRegions/NodalBasisManager.h>
 
-#include "StdRegions/StdRegions.hpp"
+#include <StdRegions/StdRegions.hpp>
 
 using namespace Nektar;
 using namespace StdRegions; 

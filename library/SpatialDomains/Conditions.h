@@ -38,23 +38,16 @@
 
 #include <string>
 #include <map>
-#include <iostream>
-#include <sstream>
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/BasicUtils/Equation.h>
 #include <SpatialDomains/MeshGraph.h>
-//#include <LibUtilities/BasicUtils/Equation.h>
-//#include <SpatialDomains/SpatialDomainsDeclspec.h>
 
-class TiXmlElement;
-class TiXmlDocument;
-
-class SpatialDomainsDeclspec;
-class Equation;
 
 namespace Nektar
 {
+    struct OneD;
+
     namespace SpatialDomains
     {
         enum BoundaryConditionType

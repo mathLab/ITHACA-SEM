@@ -33,9 +33,21 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ExpList.h>
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/GlobalLinSys.h>
+
+#include <LocalRegions/MatrixKey.h>     // for MatrixKey
+#include <LocalRegions/Expansion.h>     // for Expansion
+
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>  // for AssemblyMapCG, etc
+#include <MultiRegions/GlobalLinSysKey.h>  // for GlobalLinSysKey
+#include <MultiRegions/GlobalMatrix.h>  // for GlobalMatrix, etc
+#include <MultiRegions/GlobalMatrixKey.h>  // for GlobalMatrixKey
+
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+
 
 namespace Nektar
 {
@@ -530,7 +542,7 @@ namespace Nektar
                 (*m_exp)[i]->PhysDeriv(inarray+m_phys_offset[i],e_out_d0,e_out_d1,e_out_d2);
             }
         }
-		
+
         void ExpList::v_PhysDeriv(const int dir,
                                   const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD, NekDouble> &out_d)
@@ -1275,10 +1287,11 @@ namespace Nektar
         }
 
 
-        /** @todo need a smarter search here that first just looks at bounding 
-        /* vertices - suggest first seeing if point is within 10% of
-        /* region defined by vertices. The do point search. 
-        **/
+        /** 
+         * @todo need a smarter search here that first just looks at bounding
+         * vertices - suggest first seeing if point is within 10% of
+         * region defined by vertices. The do point search. 
+         */
         int ExpList::GetExpIndex(
                                  const Array<OneD, const NekDouble> &gloCoord,
                                  NekDouble tol)

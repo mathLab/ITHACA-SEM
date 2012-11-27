@@ -33,7 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LocalRegions/LocalRegions.hpp>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/SegExp.h>
 #include <LibUtilities/Foundations/Interp.h>
@@ -1332,7 +1331,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             case StdRegions::eWeakDeriv1:
             case StdRegions::eWeakDeriv2:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed || mkey.GetNVarCoeff())
+                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed || 
+                       mkey.GetNVarCoeff())
                     {
                         fac = 1.0; 
                         goto UseLocRegionsMatrix;
@@ -1342,19 +1342,25 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         int dir;
                         switch(mkey.GetMatrixType())
                         {
-                        case StdRegions::eWeakDeriv0:
-                            dir = 0;
-                            break;
-                        case StdRegions::eWeakDeriv1:
-                            ASSERTL1(m_geom->GetCoordim() >= 2,
-                                "Cannot call eWeakDeriv2 in a coordinate system which is not at least two-dimensional");
-                            dir = 1;
-                            break;
-                        case StdRegions::eWeakDeriv2:
-                            ASSERTL1(m_geom->GetCoordim() == 3,
-                                "Cannot call eWeakDeriv2 in a coordinate system which is not three-dimensional");
-                            dir = 2;
-                            break;
+                            case StdRegions::eWeakDeriv0:
+                                dir = 0;
+                                break;
+                            case StdRegions::eWeakDeriv1:
+                                ASSERTL1(m_geom->GetCoordim() >= 2,
+                                         "Cannot call eWeakDeriv2 in a "
+                                         "coordinate system which is not at "
+                                         "least two-dimensional");
+                                dir = 1;
+                                break;
+                            case StdRegions::eWeakDeriv2:
+                                ASSERTL1(m_geom->GetCoordim() == 3,
+                                         "Cannot call eWeakDeriv2 in a "
+                                         "coordinate system which is not "
+                                         "three-dimensional");
+                                dir = 2;
+                                break;
+                            default:
+                                break;
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,

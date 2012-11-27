@@ -34,15 +34,21 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef EXPANSION3D_H
+#define EXPANSION3D_H
 
 #include <LocalRegions/Expansion.h>
-#include <LocalRegions/Expansion2D.h>
+#include <StdRegions/StdExpansion3D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 
 namespace Nektar
 {
     namespace LocalRegions 
     {
+
+        class Expansion2D;
+        typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
+        typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
+
         class Expansion3D: virtual public Expansion, 
                            virtual public StdRegions::StdExpansion3D
         {
@@ -57,13 +63,13 @@ namespace Nektar
             
 			inline void AddHDGHelmholtzFaceTerms(const NekDouble tau,
                                           const int edge,
-                                          Array <OneD, StdRegions::StdExpansionSharedPtr > &EdgeExp,
+                                          StdRegions::StdExpansionSharedPtr FaceExp,
                                           const StdRegions::VarCoeffMap &dirForcing,
                                           Array <OneD,NekDouble > &outarray);
 
             inline void AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                            const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,
+                                           Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
                                            const StdRegions::VarCoeffMap &dirForcing,
                                            Array<OneD,NekDouble> &outarray);
             
@@ -93,7 +99,7 @@ namespace Nektar
             
 			virtual void v_AddHDGHelmholtzFaceTerms(const NekDouble tau,
                                           const int face,
-                                          Array <OneD, StdRegions::StdExpansionSharedPtr > &FaceExp,
+                                          StdRegions::StdExpansionSharedPtr FaceExp,
                                           const StdRegions::VarCoeffMap &dirForcing,
                                           Array <OneD,NekDouble > &outarray);
                 
@@ -129,7 +135,7 @@ namespace Nektar
         
 		inline void Expansion3D::AddHDGHelmholtzFaceTerms(const NekDouble tau,
                                       const int face,
-                                      Array <OneD, StdRegions::StdExpansionSharedPtr > &FaceExp,
+                                      StdRegions::StdExpansionSharedPtr FaceExp,
                                       const StdRegions::VarCoeffMap &dirForcing,
                                       Array <OneD,NekDouble > &outarray)
         {
@@ -164,5 +170,4 @@ namespace Nektar
     } //end of namespace
 } //end of namespace
 
-#define EXPANSION3D_H
 #endif

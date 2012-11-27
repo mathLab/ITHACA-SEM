@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysDirect.h>
-//#include <MultiRegions/AssemblyMapCG.h>
 
 namespace Nektar
 {

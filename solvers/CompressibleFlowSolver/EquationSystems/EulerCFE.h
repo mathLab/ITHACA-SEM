@@ -56,16 +56,12 @@ namespace Nektar
       "RinglebFlow"
     };
   
-  /**
-   * 
-   * 
-   **/
   class EulerCFE : public CompressibleFlowSystem
   {
   public:
       friend class MemoryManager<EulerCFE>;
 
-    /// Creates an instance of this class
+    /// Creates an instance of this class.
     static SolverUtils::EquationSystemSharedPtr create(
             const LibUtilities::SessionReaderSharedPtr& pSession)
     {
@@ -73,13 +69,13 @@ namespace Nektar
       p->InitObject();
       return p;
     }
-    /// Name of class
+    /// Name of class.
     static std::string className;
     
     virtual ~EulerCFE();
 
     ///< problem type selector
-    ProblemType                                     m_problemType;   
+    ProblemType     m_problemType;   
     
   protected:
 
@@ -90,35 +86,51 @@ namespace Nektar
     /// Print a summary of time stepping parameters.
     virtual void v_PrintSummary(std::ostream &out);
 
-    void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-		  Array<OneD,  Array<OneD, NekDouble> > &outarray,
-		  const NekDouble time);
-    
-    void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-			 Array<OneD,  Array<OneD, NekDouble> > &outarray,
-			 const NekDouble time);
+    void DoOdeRhs(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time);
+    void DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+			  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time);
+    virtual void v_SetInitialConditions(
+        NekDouble               initialtime = 0.0,
+        bool                    dumpInitialConditions = true);
+    virtual void v_EvaluateExactSolution(
+        unsigned int            field,
+        Array<OneD, NekDouble> &outfield,
+        const NekDouble         time = 0.0);
+      
+  private:
 
-    virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
-					bool dumpInitialConditions = true);
+    void SetBoundaryConditions(
+        Array<OneD, Array<OneD, NekDouble> >            &physarray, 
+        NekDouble                                        time);
 
-    virtual void v_EvaluateExactSolution(unsigned int field,
-    					 Array<OneD, NekDouble> &outfield,
-					 const NekDouble time=0.0);
-    
-    private:
+    /// Isentropic Vortex Test Case.
+    void GetExactIsentropicVortex(
+        int                                              field, 
+        Array<OneD, NekDouble>                          &outarray, 
+        NekDouble                                        time);
+    void SetInitialIsentropicVortex(
+        NekDouble                                        initialtime);
+    void SetBoundaryIsentropicVortex(
+        int                                              bcRegion, 
+        NekDouble                                        time, 
+        int cnt, Array<OneD, Array<OneD, NekDouble> >   &physarray);
 
-    void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
-
-    // Isentropic Vortex Test Case
-    void SetIsenTropicVortex(NekDouble initialtime);
-    void SetBoundaryIsentropicVortex(int bcRegion, NekDouble time, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
-    void GetExactIsenTropicVortex(int field, Array<OneD, NekDouble> &outarray, NekDouble time);
-
-    // Ringleb Flow Test Case
-    void SetInitialRinglebFlow(void);
-    void SetBoundaryRinglebFlow(int bcRegion, NekDouble time, int cnt, Array<OneD, Array<OneD, NekDouble> > &physarray);
-    void GetExactRinglebFlow(int field, Array<OneD, NekDouble> &outarray);
-    
+    /// Ringleb Flow Test Case.
+    void GetExactRinglebFlow(
+        int                                             field, 
+        Array<OneD, NekDouble>                         &outarray);
+    void SetInitialRinglebFlow(
+        void);
+    void SetBoundaryRinglebFlow(
+        int                                              bcRegion, 
+        NekDouble                                        time, 
+        int                                              cnt, 
+        Array<OneD, Array<OneD, NekDouble> >            &physarray);
   };
 }
 #endif

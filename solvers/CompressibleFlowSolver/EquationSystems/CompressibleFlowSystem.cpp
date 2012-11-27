@@ -54,7 +54,7 @@ namespace Nektar
     }
     
     /**
-     * Initialization object for CompressibleFlowSystem class.
+     * @brief Initialization object for CompressibleFlowSystem class.
      */
     void CompressibleFlowSystem::v_InitObject()
     {
@@ -127,7 +127,7 @@ namespace Nektar
     }
     
     /**
-     * Destructor for CompressibleFlowSystem class.
+     * @brief Destructor for CompressibleFlowSystem class.
      */
     CompressibleFlowSystem::~CompressibleFlowSystem()
     {
@@ -135,7 +135,7 @@ namespace Nektar
     }
     
     /**
-     * Print out a summary with some relevant information.
+     * @brief Print out a summary with some relevant information.
      */
     void CompressibleFlowSystem::v_PrintSummary(std::ostream &out)
     {
@@ -143,7 +143,7 @@ namespace Nektar
     }
     
     /**
-     * Wall boundary conditions for compressible flow problems.
+     * @brief Wall boundary conditions for compressible flow problems.
      */
     void CompressibleFlowSystem::WallBoundary(
         int                                   b,
@@ -278,7 +278,7 @@ namespace Nektar
     }
     
     /**
-     * Simmetry boundary conditions for compressible flow problems.
+     * @brief Simmetry boundary conditions for compressible flow problems.
      */
     void CompressibleFlowSystem::SymmetryBoundary(
         int                                      bcRegion, 

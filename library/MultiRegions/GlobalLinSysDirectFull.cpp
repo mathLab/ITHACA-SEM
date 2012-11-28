@@ -119,9 +119,10 @@ namespace Nektar
                 // calculate the dirichlet forcing
                 if(dirForcCalculated)
                 {
-                    Vmath::Vsub(nGlobDofs, pInput.get(), 1,
+                    Vmath::Vsub(nGlobDofs,
+                                pInput.get(),      1,
                                 pDirForcing.get(), 1,
-                                tmp.get(), 1);
+                                tmp.get(),         1);
                 }
                 else
                 {
@@ -147,7 +148,9 @@ namespace Nektar
                 Vmath::Vcopy(nGlobDofs, pInput, 1, tmp, 1);
                 SolveLinearSystem(nDirDofs, tmp, tmp, pLocToGloMap);
             }
-            Vmath::Vadd(nGlobDofs, tmp + nDirDofs, 1, pOutput + nDirDofs, 1,
+            Vmath::Vadd(nGlobDofs - nDirDofs, 
+                        tmp + nDirDofs,            1,
+                        pOutput + nDirDofs,        1,
                         tmp2 = pOutput + nDirDofs, 1);
         }
 

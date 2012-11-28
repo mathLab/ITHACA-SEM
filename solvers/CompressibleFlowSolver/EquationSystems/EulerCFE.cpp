@@ -85,17 +85,26 @@ namespace Nektar
         }
     }
     
+    /**
+     * @brief Destructor for EulerCFE class.
+     */
     EulerCFE::~EulerCFE()
     {
 
     }
 
+    /**
+     * @brief Print out a summary with some relevant information.
+     */
     void EulerCFE::v_PrintSummary(std::ostream &out)
     {
         CompressibleFlowSystem::v_PrintSummary(out);
         out << "\tProblem Type    : " << ProblemTypeMap[m_problemType] << endl;
     }
 
+    /**
+     * @brief Set the initial conditions.
+     */
     void EulerCFE::v_SetInitialConditions(
         NekDouble   initialtime, 
         bool        dumpInitialConditions)
@@ -122,6 +131,9 @@ namespace Nektar
         }
     }
 
+    /**
+     * @brief Compute the right-hand side.
+     */
     void EulerCFE::DoOdeRhs(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
@@ -141,6 +153,10 @@ namespace Nektar
         }
     }
     
+    /**
+     * @brief Compute the projection and call the method for imposing the 
+     * boundary conditions in case of discontinuous projection.
+     */
     void EulerCFE::DoOdeProjection(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
@@ -444,12 +460,11 @@ namespace Nektar
             NekDouble u0    = 1.0;
             NekDouble v0    = 0.0;
             NekDouble gamma = m_gamma;
-            //NekDouble time  = m_time;
             NekDouble r;
 
             for(int i = 0; i < npoints; i++)
             {
-                int kk = id2+i;
+                int kk      = id2 + i;
                 r           = sqrt((x[i] - u0 * time - x0) * 
                                    (x[i] - u0 * time - x0) + 
                                    (y[i] - v0 * time - y0) * 
@@ -680,7 +695,6 @@ namespace Nektar
             // Loop on all the points of that edge
             for (int j = 0; j < npoints; j++)
             {
-
                 while ((abs(errV) > toll) || (abs(errTheta) > toll))
                 {
 

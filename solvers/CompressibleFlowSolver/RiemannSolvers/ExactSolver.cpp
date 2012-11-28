@@ -249,9 +249,9 @@ namespace Nektar
                 u_int     = u_int - ((p_intL - p_intR) /
                                     (derp_intL - derp_intR));
                 ++iter;
-                ASSERTL1(iter == max_iter, 
+                ASSERTL0(iter != max_iter, 
                          "Exact Riemann solver exceeds maximum numer of "
-                         "iterations (1000) in pattern 1 (RCS)")
+                         "iterations (10000000000) in pattern 1 (RCS)")
             }
             
             p_int  = (p_intL + p_intR) / 2.0;
@@ -349,9 +349,9 @@ namespace Nektar
                                      (derp_intL - derp_intR));
                 
                 ++iter;
-                ASSERTL1(iter == max_iter, 
+                ASSERTL0(iter != max_iter, 
                          "Exact Riemann solver exceeds maximum numer of "
-                         "iterations (1000) in pattern 2 (SCR)")
+                         "iterations (10000000000) in pattern 2 (SCR)")
             }
             
             p_int  = (p_intL + p_intR) / 2.0;
@@ -434,15 +434,18 @@ namespace Nektar
                             sqrt(1.0 + (f4 * ((u_int - uL) / cL)) * 
                                         (f4 * ((u_int - uL) / cL)));
                 
-                p_intL    = pL + (aL*wL2*(u_int-uL));
-                derp_intL = (2.0*aL*pow(wL2,3.0))/(1.0+(wL2*wL2));
-                wR2       = f4*((u_int-uR)/cR)+sqrt(1.0+(f4*((u_int-uR)/cR))*(f4*((u_int-uR)/cR)));
-                p_intR    = pR+(aR*wR2*(u_int-uR));
-                derp_intR = (2.0*aR*pow(wR2,3.0))/(1.0+(wR2*wR2));
-                u_int     = u_int-((p_intL-p_intR)/(derp_intL-derp_intR));
+                p_intL    = pL + (aL * wL2 * (u_int - uL));
+                derp_intL = (2.0 * aL * pow(wL2, 3.0)) / (1.0 + (wL2 * wL2));
+                wR2       = f4 * ((u_int - uR) / cR) + 
+                            sqrt(1.0 + (f4 * ((u_int - uR) / cR)) * 
+                                        (f4 * ((u_int - uR) / cR)));
                 
+                p_intR    = pR + (aR * wR2 * (u_int - uR));
+                derp_intR = (2.0 * aR * pow(wR2, 3.0)) / (1.0 + (wR2 * wR2));
+                u_int     = u_int - ((p_intL - p_intR) / 
+                                     (derp_intL - derp_intR));
                 ++iter;
-                ASSERTL1(iter == max_iter, 
+                ASSERTL0(iter != max_iter, 
                          "Exact Riemann solver exceeds maximum numer of "
                          "iterations (1000) in pattern 3 (SCS)")
             }
@@ -528,10 +531,11 @@ namespace Nektar
                                      (derp_intL - derp_intR));
                 
                 ++iter;
-                ASSERTL1(iter == max_iter, 
+                ASSERTL0(iter != max_iter, 
                          "Exact Riemann solver exceeds maximum numer of "
                          "iterations (1000) in pattern 4 (RCR)")
             }
+
             p_int  = (p_intL + p_intR) / 2.0;
             c_intL = cL - ((u_int - uL) / f2);
             c_intR = cR + ((u_int - uR) / f2);

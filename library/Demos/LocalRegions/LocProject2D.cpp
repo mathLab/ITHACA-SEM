@@ -122,6 +122,8 @@ int main(int argc, char *argv[])
                      "Basis 2 is for 2 or 3D expansions");
         }
         break;
+    default:
+        NEKERROR(ErrorUtil::efatal, "Not a valid 2D expansion.");
     }
     
     
@@ -284,6 +286,8 @@ int main(int argc, char *argv[])
         }
         
         break;
+    default:
+        NEKERROR(ErrorUtil::efatal, "Not a valid 2D expansion.");
     }
 
     //---------------------------------------------

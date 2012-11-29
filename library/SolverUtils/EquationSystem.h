@@ -137,6 +137,11 @@ namespace Nektar
                 const std::string& pFunctionName,
                 const NekDouble& pTime = 0.0);
             
+            // Describe a function.
+            SOLVER_UTILS_EXPORT std::string DescribeFunction(
+                std::string pFieldName,
+                const std::string &pFunctionName);
+            
             /// Perform initialisation of the base flow.
             SOLVER_UTILS_EXPORT void InitialiseBaseFlow(
                 Array<OneD, Array<OneD, NekDouble> > &base);

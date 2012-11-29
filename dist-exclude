@@ -13,6 +13,7 @@ solvers/CardiacEPSolver
 solvers/FluxReconstruction
 solvers/VortexWaveInteraction
 solvers/ImageWarpingSolver
+solvers/PulseWaveSolver
 docs/*.doc
 docs/arch
 docs/emacs

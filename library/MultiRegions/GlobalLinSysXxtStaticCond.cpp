@@ -185,8 +185,7 @@ namespace Nektar
             if(nGlobHomBndDofs)
             {
                 // construct boundary forcing
-                if( nIntDofs  && ((nDirBndDofs) && (!dirForcCalculated)
-                                                && (atLastLevel)) )
+                if( nIntDofs  && ((!dirForcCalculated) && (atLastLevel)) )
                 {
                     //include dirichlet boundary forcing
                     DNekScalBlkMat &BinvD      = *m_BinvD;
@@ -194,8 +193,7 @@ namespace Nektar
                     pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
                     V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
                 }
-                else if((nDirBndDofs) && (!dirForcCalculated)
-                                      && (atLastLevel))
+                else if((!dirForcCalculated) && (atLastLevel))
                 {
                     //include dirichlet boundary forcing
                     DNekScalBlkMat &SchurCompl = *m_schurCompl;

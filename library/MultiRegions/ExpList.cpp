@@ -2327,6 +2327,12 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 	
+        void ExpList::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
         void ExpList::v_LocalToGlobal(void)
         {
             ASSERTL0(false,

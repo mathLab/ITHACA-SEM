@@ -66,7 +66,7 @@ namespace Nektar
         "UnsteadyStokes",
         "UnsteadyLinearisedNS",
         "UnsteadyNavierStokes",
-	    "SteadyNavierStokes",
+        "SteadyNavierStokes",
     };
 
 

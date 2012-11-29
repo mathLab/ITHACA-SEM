@@ -175,7 +175,7 @@ namespace Vmath
                                     const T* x, int incx,
                                     const T* y, int incy,
                                           T* z, int incz);
-    /// \brief  vvtvvtp (scalar times vector plus scalar times vector): 
+    /// \brief  Svtsvtp (scalar times vector plus scalar times vector): 
     // z = alpha*x + beta*y
     template<class T> LIB_UTILITIES_EXPORT void Svtsvtp (int n,
                                     const T alpha,

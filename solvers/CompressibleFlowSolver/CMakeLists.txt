@@ -8,7 +8,6 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/EulerCFE.cpp
        ./EquationSystems/EulerArtificialDiffusionCFE.cpp
        ./EquationSystems/NavierStokesCFE.cpp
-       ./EquationSystems/UnsteadySystem.cpp
        ./RiemannSolvers/CompressibleSolver.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/ExactSolver.cpp)

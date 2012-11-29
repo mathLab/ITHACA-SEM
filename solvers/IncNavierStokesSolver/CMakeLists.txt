@@ -3,7 +3,6 @@ SET(NEKTAR_SOLVER_INCNAVIERSTOKES ON CACHE BOOL
 
 IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     SET(IncNavierStokesSolverSource 
-       ./EquationSystems/CFLtester.cpp
        ./EquationSystems/CoupledLinearNS.cpp
        ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ./EquationSystems/IncNavierStokes.cpp

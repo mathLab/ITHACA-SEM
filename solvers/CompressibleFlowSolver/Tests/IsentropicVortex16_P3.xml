@@ -1119,13 +1119,17 @@
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> FinTime         = 0                     </P>
-            <P> TimeStep        = 0                     </P>
-            <P> NumSteps        = 10                    </P>
-            <P> IO_CheckSteps   = 1000                  </P>
-            <P> IO_InfoSteps    = 100                   </P>
-            <P> Gamma           = 1.4                   </P>
-            <P> CFL             = 0.02                  </P>
+            <P> FinTime        = 0          </P>
+            <P> TimeStep       = 0          </P>
+            <P> NumSteps       = 10         </P>
+            <P> IO_CheckSteps  = 1000       </P>
+            <P> IO_InfoSteps   = 100        </P>
+            <P> Gamma          = 1.4        </P>
+            <P> rho0           = 1.225      </P>
+            <P> rhou0          = 0.1225     </P>
+            <P> rhov0          = 0.0        </P>
+            <P> E0             = 0.149875   </P>
+            <P> CFL            = 0.02       </P>
         </PARAMETERS>
 
         <SOLVERINFO>

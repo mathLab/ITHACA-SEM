@@ -222,7 +222,7 @@ namespace Nektar
         NekDouble uaux, aaux, paux;
         NekDouble chi = 0.0;
         NekDouble EPSILON = 1.0e-6;
-        unsigned int iter, max_iter = 1000;
+        unsigned int iter, max_iter = 1000000;
     
         /* Configuration (pattern) 1. 
          * ------------------------------------------------------
@@ -251,7 +251,7 @@ namespace Nektar
                 ++iter;
                 ASSERTL0(iter != max_iter, 
                          "Exact Riemann solver exceeds maximum numer of "
-                         "iterations (10000000000) in pattern 1 (RCS)")
+                         "iterations (1000000) in pattern 1 (RCS)")
             }
             
             p_int  = (p_intL + p_intR) / 2.0;
@@ -351,7 +351,7 @@ namespace Nektar
                 ++iter;
                 ASSERTL0(iter != max_iter, 
                          "Exact Riemann solver exceeds maximum numer of "
-                         "iterations (10000000000) in pattern 2 (SCR)")
+                         "iterations (1000000) in pattern 2 (SCR)")
             }
             
             p_int  = (p_intL + p_intR) / 2.0;
@@ -447,7 +447,7 @@ namespace Nektar
                 ++iter;
                 ASSERTL0(iter != max_iter, 
                          "Exact Riemann solver exceeds maximum numer of "
-                         "iterations (1000) in pattern 3 (SCS)")
+                         "iterations (1000000) in pattern 3 (SCS)")
             }
             
             p_int  = (p_intL + p_intR) / 2.0;
@@ -533,7 +533,7 @@ namespace Nektar
                 ++iter;
                 ASSERTL0(iter != max_iter, 
                          "Exact Riemann solver exceeds maximum numer of "
-                         "iterations (1000) in pattern 4 (RCR)")
+                         "iterations (1000000) in pattern 4 (RCR)")
             }
 
             p_int  = (p_intL + p_intR) / 2.0;

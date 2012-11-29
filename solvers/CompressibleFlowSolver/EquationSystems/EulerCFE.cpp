@@ -90,7 +90,6 @@ namespace Nektar
      */
     EulerCFE::~EulerCFE()
     {
-
     }
 
     /**
@@ -235,6 +234,26 @@ namespace Nektar
                 for (int i = 0; i < nvariables; ++i)
                 {
                     m_fields[i]->EvaluateBoundaryConditions(time);
+                }
+            }
+            
+            // Inflow boundary condition based on characteristics
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::eInflowCFE)
+            {
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    InflowCFE(n, cnt, inarray);
+                }
+            }
+            
+            // Outflow boundary condition based on characteristics
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::eOutflowCFE)
+            {
+                for (int i = 0; i < nvariables; ++i)
+                {
+                    OutflowCFE(n, cnt, inarray);
                 }
             }
 

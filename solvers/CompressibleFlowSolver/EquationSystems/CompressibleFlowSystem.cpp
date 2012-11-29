@@ -74,6 +74,38 @@ namespace Nektar
         ASSERTL0(m_session->DefinesParameter("Gamma"),
                  "Compressible flow sessions must define a Gamma parameter.");
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
+        
+        // Get rho0 parameter from session file.
+        ASSERTL0(m_session->DefinesParameter("rho0"),
+                 "Compressible flow sessions must define a rho0 parameter.");
+        m_session->LoadParameter("rho0", m_rho0, 1.225);
+        
+        // Get rhou0 parameter from session file.
+        ASSERTL0(m_session->DefinesParameter("rhou0"),
+                 "Compressible flow sessions must define a rhou0 parameter.");
+        m_session->LoadParameter("rhou0", m_rhou0, 0.1225);
+        
+        // Get rhov0 parameter from session file.
+        if (m_expdim == 2 || m_expdim == 3)
+        {
+            ASSERTL0(m_session->DefinesParameter("rhov0"),
+                 "Compressible flow sessions must define a rhov0 parameter.");        
+            m_session->LoadParameter("rhov0", m_rhov0, 0.0);
+        }
+        
+        // Get rhow0 parameter from session file.
+        if (m_expdim == 3)
+        {
+            ASSERTL0(m_session->DefinesParameter("rhow0"),
+                 "Compressible flow sessions must define a rhow0 parameter.");
+            m_session->LoadParameter("rhow0", m_rhow0, 0.0);
+        }
+        
+        // Get E0 parameter from session file.
+        ASSERTL0(m_session->DefinesParameter("E0"),
+                 "Compressible flow sessions must define a E0 parameter.");
+        m_session->LoadParameter("E0", m_E0, 0.149875);
+        
         m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
         
         // Type of advection class to be used
@@ -146,7 +178,7 @@ namespace Nektar
      * @brief Wall boundary conditions for compressible flow problems.
      */
     void CompressibleFlowSystem::WallBoundary(
-        int                                   b,
+        int                                   bcRegion,
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     { 
@@ -167,12 +199,12 @@ namespace Nektar
         int e, id1, id2, npts;
         
         for(e = 0; e < m_fields[0]->
-            GetBndCondExpansions()[b]->GetExpSize(); ++e)
+            GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
         {
-            npts = m_fields[0]->GetBndCondExpansions()[b]->
-            GetExp(e)->GetNumPoints(0);
-            id1  = m_fields[0]->GetBndCondExpansions()[b]->
-            GetPhys_Offset(e);
+            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                GetExp(e)->GetNumPoints(0);
+            id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
@@ -271,8 +303,9 @@ namespace Nektar
             // copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nvariables; ++i)
             {
-                Vmath::Vcopy(npts, &Fwd[i][id2], 1, &(m_fields[i]->
-                             GetBndCondExpansions()[b]->UpdatePhys())[id1], 1);
+                Vmath::Vcopy(npts, &Fwd[i][id2], 1, 
+                             &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1], 1);
             }
         }
     }
@@ -316,8 +349,8 @@ namespace Nektar
                     ASSERTL0(false,
                              "1D not yet implemented for Compressible " 
                              "Flow Equations");
-                }
                     break;
+                }
                 case 2:
                 {
                     Array<OneD, NekDouble> tmp_t(npts);
@@ -356,15 +389,19 @@ namespace Nektar
                                  &m_traceNormals[1][id2], 1, 
                                  &Fwd[2][id2], 1, 
                                  &Fwd[2][id2], 1);
-                }
                     break;
+                }
                 case 3:
+                {
                     ASSERTL0(false,
                              "3D not yet implemented for Compressible "
                              "Flow Equations");
                     break;
+                }
                 default:
+                {
                     ASSERTL0(false, "Illegal expansion dimension");
+                }
             }
             
             // copy boundary adjusted values into the boundary expansion
@@ -378,6 +415,449 @@ namespace Nektar
         }
     }
     
+    /**
+     * @brief Inflow boundary conditions for compressible flow problems based
+     * on the eigenvalues of inviscid term of the compressible Euler equation.
+     */
+    void CompressibleFlowSystem::InflowCFE(
+        int                                   bcRegion,
+        int                                   cnt, 
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
+    { 
+        int i, e;
+        int id1, id2;
+        int npts, pnt;
+        
+        int nTraceNumPoints = GetTraceTotPoints();
+        int nvariables      = physarray.num_elements();
+        
+        NekDouble cPlus, cMinus;
+        NekDouble rPlus, rMinus;
+        NekDouble Vnorm, Vdelta;
+        NekDouble soundSpeedCorrection;
+        NekDouble uCorrection;
+        NekDouble vCorrection;
+        NekDouble pressureCorrection;
+        NekDouble entropyCorrection;
+        
+        NekDouble rhoFinalCorrection;
+        NekDouble rhouFinalCorrection;
+        NekDouble rhovFinalCorrection;
+        NekDouble energyFinalCorrection;
+        
+        // Forward trace arrays
+        Array<OneD, NekDouble > pressurefwd  (nTraceNumPoints, 0.0);
+        Array<OneD, NekDouble > soundSpeedfwd(nTraceNumPoints, 0.0);
+        Array<OneD, NekDouble > Machfwd      (nTraceNumPoints, 0.0);
+        Array<OneD, NekDouble > Velfwd       (nTraceNumPoints, 0.0);
+        Array<OneD, NekDouble > Vnfwd        (nTraceNumPoints, 0.0);
+        
+        // Boundary values
+        NekDouble pressureB;
+        NekDouble soundSpeedB;
+        NekDouble MachB;
+        NekDouble VelB;
+        NekDouble VnB;
+
+        // Get physical values of the forward trace
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+                
+        // Switch on the dimensions of the problem
+        switch(m_expdim)
+        {
+            // 1D case 
+            case 1:
+            {
+                ASSERTL0(false, "1D InflowCFE boundary condition" 
+                                "not implemented yet")
+                break;
+            }
+            // 2D case
+            case 2:
+            {
+                // Get forward trace variables
+                for(i = 0; i < nTraceNumPoints; i++)
+                {
+                    // Forward trace normal velocity
+                    Vnfwd[i] = Fwd[1][i] / Fwd[0][i] * m_traceNormals[0][i] + 
+                               Fwd[2][i] / Fwd[0][i] * m_traceNormals[1][i];
+                    
+                    // Forward trace pressure
+                    pressurefwd[i] = (m_gamma - 1) * (Fwd[3][i] - 
+                                    0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] + 
+                                           Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
+                        
+                    // Forward trace speed of sound
+                    soundSpeedfwd[i] = sqrt(m_gamma * pressurefwd[i] / 
+                                            Fwd[0][i]);
+                }
+                
+                // Boundary normal velocity
+                VnB = sqrt((m_rhou0 * m_rhou0) / (m_rho0 * m_rho0) + 
+                           (m_rhov0 * m_rhov0) / (m_rho0 * m_rho0));
+                
+                // Boundary pressure
+                pressureB = (m_gamma - 1) * (m_E0 - 0.5 * 
+                                             ((m_rhou0 * m_rhou0) / (m_rho0) +  
+                                              (m_rhov0 * m_rhov0) / (m_rho0)));
+                
+                // Boundary speed of sound
+                soundSpeedB   = sqrt(m_gamma * pressureB / m_rho0);
+                 
+                // Forward trace Mach number
+                Vmath::Vdiv(nTraceNumPoints, Velfwd, 1, 
+                            soundSpeedfwd, 1, Machfwd, 1);
+                
+                // Boundary Mach number
+                MachB = VnB / soundSpeedB;
+                
+                // Loop on bcRegions
+                for(e = 0; e < m_fields[0]->
+                    GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+                {
+                    npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                        GetExp(e)->GetNumPoints(0);
+                    
+                    id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                        GetPhys_Offset(e) ;
+                    
+                    id2  = m_fields[0]->GetTrace()->
+                        GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                                       GetBndCondTraceToGlobalTraceMap(cnt++));
+                                            
+                    // Loop on the points of the bcRegion
+                    for (i = 0; i < npts; i++)
+                    {
+                        pnt = id2 + i;
+                        if (Machfwd[pnt] < 0.99)
+                        {
+                            // + Characteristic from boundary
+                            cPlus = sqrt(m_gamma * pressureB / m_rho0);
+                            rPlus = VnB + 2.0 * cPlus / (m_gamma - 1);
+                            
+                            // - Characteristic from inside
+                            cMinus = sqrt(m_gamma * pressurefwd[pnt] / 
+                                     Fwd[0][pnt]);
+                            rMinus = Vnfwd[pnt] - 2.0 * cMinus / (m_gamma - 1);
+                            
+                            // Corrections for the boundary coditions
+                            Vnorm  = 0.5 * (rPlus + rMinus);
+                            Vdelta = Vnorm - VnB;
+                            
+                            // Speed of sound correction
+                            soundSpeedCorrection = 0.25 * (m_gamma - 1) * 
+                                                          (rPlus - rMinus);
+                            
+                            // Velocity corrections
+                            uCorrection = (VnB + Vdelta)*m_traceNormals[0][pnt];
+                            vCorrection = (VnB + Vdelta)*m_traceNormals[1][pnt];
+                            
+                            // Entropy correction
+                            entropyCorrection = pressureB / 
+                                                (pow(m_rho0, m_gamma));
+                            
+                            // rho final correction
+                            rhoFinalCorrection = pow((soundSpeedCorrection * 
+                                                      soundSpeedCorrection) / 
+                                                     (m_gamma * 
+                                                      entropyCorrection), 
+                                                      1.0 / (m_gamma - 1));
+                            
+                            // Pressure correction
+                            pressureCorrection = rhoFinalCorrection * 
+                                                 soundSpeedCorrection * 
+                                                 soundSpeedCorrection / m_gamma;
+                            
+                            // rhou final correction
+                            rhouFinalCorrection = rhoFinalCorrection * 
+                                                    uCorrection;
+                            
+                            // rhov final correction
+                            rhovFinalCorrection = rhoFinalCorrection * 
+                                                    vCorrection;
+                            
+                            energyFinalCorrection = pressureCorrection / 
+                                                    (m_gamma - 1) + 0.5 * 
+                                                    (rhouFinalCorrection * 
+                                                     uCorrection + 
+                                                     rhovFinalCorrection * 
+                                                     vCorrection);
+                            
+                            // Imposing characteristic farfield bcs
+                            (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = 
+                                2.0 * rhoFinalCorrection - Fwd[0][pnt];
+                            (m_fields[1]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = 
+                                2.0 * rhouFinalCorrection - Fwd[1][pnt];
+                            (m_fields[2]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = 
+                                2.0 * rhovFinalCorrection - Fwd[2][pnt];
+                            (m_fields[3]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = 
+                                2.0 * energyFinalCorrection - Fwd[3][pnt];
+                        }
+                        else
+                        {
+                            (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = m_rho0;
+                            (m_fields[1]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = m_rho0 * VnB;
+                            (m_fields[2]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = m_rho0 * VnB;
+                            (m_fields[3]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = 
+                                pressureB / (m_gamma - 1.0) + 
+                                0.5 * m_rhou0 * m_rhou0 / m_rho0;
+                        }
+                    }
+                }
+                break;
+            }
+            // 3D case
+            case 3:
+            {
+                ASSERTL0(false, "3D InflowCFE boundary condition" 
+                                "not implemented yet")
+                break;
+            }
+            default:
+            {
+                ASSERTL0(false, "Illegal expansion dimension");
+                break;
+            }
+        }
+    }
+
+    /**
+     * @brief Outflow boundary conditions for compressible flow problems based
+     * on the eigenvalues of inviscid term of the compressible Euler equation.
+     */
+    void CompressibleFlowSystem::OutflowCFE(
+        int                                   bcRegion,
+        int                                   cnt, 
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
+    { 
+        int i, e;
+        int id1, id2;
+        int npts, pnt;
+        
+        int nTraceNumPoints = GetTraceTotPoints();
+        int nvariables      = physarray.num_elements();
+        
+        NekDouble cPlus, cMinus;
+        NekDouble rPlus, rMinus;
+        NekDouble Vnorm, Vdelta;
+        NekDouble soundSpeedCorrection;
+        NekDouble uCorrection;
+        NekDouble vCorrection;
+        NekDouble pressureCorrection;
+        NekDouble entropyCorrection;
+        
+        NekDouble rhoFinalCorrection;
+        NekDouble rhouFinalCorrection;
+        NekDouble rhovFinalCorrection;
+        NekDouble energyFinalCorrection;
+        
+        // Forward trace arrays
+        Array<OneD, NekDouble > pressurefwd  (nTraceNumPoints, 0.0);
+        Array<OneD, NekDouble > soundSpeedfwd(nTraceNumPoints, 0.0);
+        Array<OneD, NekDouble > Machfwd      (nTraceNumPoints, 0.0);
+        Array<OneD, NekDouble > Velfwd       (nTraceNumPoints, 0.0);
+        Array<OneD, NekDouble > Vnfwd        (nTraceNumPoints, 0.0);
+        
+        // Boundary values
+        NekDouble pressureB;
+        NekDouble soundSpeedB;
+        NekDouble MachB;
+        NekDouble VelB;
+        NekDouble VnB;
+        
+        // Get physical values of the forward trace
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+        
+        // Switch on the dimensions of the problem
+        switch(m_expdim)
+        {
+            // 1D case 
+            case 1:
+            {
+                ASSERTL0(false, "1D InflowCFE boundary condition" 
+                         "not implemented yet")
+                break;
+            }
+            // 2D case
+            case 2:
+            {
+                // Get forward trace variables
+                for(i = 0; i < nTraceNumPoints; i++)
+                {
+                    // Forward trace normal velocity
+                    Vnfwd[i] = Fwd[1][i] / Fwd[0][i] * m_traceNormals[0][i] + 
+                    Fwd[2][i] / Fwd[0][i] * m_traceNormals[1][i];
+                    
+                    // Forward trace pressure
+                    pressurefwd[i] = 
+                        (m_gamma - 1) * (Fwd[3][i] - 
+                                    0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] + 
+                                           Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
+                    
+                    // Forward trace speed of sound
+                    soundSpeedfwd[i] = sqrt(m_gamma * pressurefwd[i] / 
+                                            Fwd[0][i]);
+                }
+                
+                // Boundary normal velocity
+                VnB = sqrt((m_rhou0 * m_rhou0) / (m_rho0 * m_rho0) + 
+                           (m_rhov0 * m_rhov0) / (m_rho0 * m_rho0));
+                
+                // Boundary pressure
+                pressureB = (m_gamma - 1) * (m_E0 - 0.5 * 
+                                             ((m_rhou0 * m_rhou0) / (m_rho0) +  
+                                              (m_rhov0 * m_rhov0) / (m_rho0)));
+                
+                // Boundary speed of sound
+                soundSpeedB   = sqrt(m_gamma * pressureB / m_rho0);
+                
+                // Forward trace Mach number
+                Vmath::Vdiv(nTraceNumPoints, Velfwd, 1, 
+                            soundSpeedfwd, 1, Machfwd, 1);
+                
+                // Boundary Mach number
+                MachB = VnB / soundSpeedB;
+                
+                // Loop on bcRegions
+                for(e = 0; e < m_fields[0]->
+                    GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+                {
+                    npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                    GetExp(e)->GetNumPoints(0);
+                    
+                    id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                    GetPhys_Offset(e) ;
+                    
+                    id2  = m_fields[0]->GetTrace()->
+                    GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                                   GetBndCondTraceToGlobalTraceMap(cnt++));
+                    
+                    // Loop on the points of the bcRegion
+                    for (i = 0; i < npts; i++)
+                    {
+                        pnt = id2 + i;
+                        
+                        // Subsonic flow charcteristic bcs
+                        if (Machfwd[pnt] < 0.99)
+                        {
+                            // + Characteristic from boundary
+                            cPlus = sqrt(m_gamma * pressurefwd[pnt] / 
+                                    Fwd[0][pnt]);
+                            rPlus = Vnfwd[pnt] + 2.0 * cPlus / (m_gamma - 1);
+                            
+                            // - Characteristic from inside
+                            cMinus = sqrt(m_gamma * pressureB / m_rho0);
+                            rMinus = VnB - 2.0 * cMinus / (m_gamma - 1);
+                            
+                            // Corrections for the boundary coditions
+                            Vnorm   = 0.5 * (rPlus + rMinus);
+                            Vdelta  = Vnorm - Vnfwd[pnt];
+
+                            // Speed of sound correction
+                            soundSpeedCorrection = 0.25 * (m_gamma - 1) * 
+                            (rPlus - rMinus);
+                            
+                            // Velocity corrections
+                            uCorrection = Fwd[1][pnt]/Fwd[0][pnt] + 
+                            Vdelta * m_traceNormals[0][pnt];
+                            vCorrection = Fwd[2][pnt]/Fwd[0][pnt] + 
+                            Vdelta * m_traceNormals[1][pnt];
+                            
+                            // Entropy correction
+                            entropyCorrection = pressurefwd[pnt] / 
+                            (pow(Fwd[0][pnt], m_gamma));
+                            
+                            // Eq.1) Rho final correction
+                            rhoFinalCorrection = pow((soundSpeedCorrection * 
+                                                      soundSpeedCorrection) / 
+                                                     (m_gamma * 
+                                                      entropyCorrection), 
+                                                     1.0 / (m_gamma - 1));
+                            
+                            // Pressure correction
+                            pressureCorrection = rhoFinalCorrection * 
+                            soundSpeedCorrection * 
+                            soundSpeedCorrection / m_gamma;
+                            
+                            // Eq.2) Rhou final correction
+                            rhouFinalCorrection = rhoFinalCorrection * 
+                            uCorrection;
+                            
+                            // Eq.3) Rhov final correction
+                            rhovFinalCorrection = rhoFinalCorrection * 
+                            vCorrection;
+                            
+                            // Eq.4) E final correction
+                            energyFinalCorrection = pressureCorrection / 
+                            (m_gamma - 1) + 0.5 * 
+                            (rhouFinalCorrection * 
+                             uCorrection + 
+                             rhovFinalCorrection * 
+                             vCorrection);
+                            
+                            // Imposing characteristic farfield bcs
+                            (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = 
+                            2.0 * rhoFinalCorrection - Fwd[0][pnt];
+                            (m_fields[1]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = 
+                            2.0 * rhouFinalCorrection - Fwd[1][pnt];
+                            (m_fields[2]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = 
+                            2.0 * rhovFinalCorrection - Fwd[2][pnt];
+                            (m_fields[3]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = 
+                            2.0 * energyFinalCorrection - Fwd[3][pnt];
+                        }
+                        // Supersonic flow characteristic bcs
+                        else
+                        {
+                            (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = Fwd[0][pnt];
+                            (m_fields[1]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = Fwd[1][pnt];
+                            (m_fields[2]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = Fwd[2][pnt];
+                            (m_fields[3]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1+i] = Fwd[3][pnt];
+                        }
+                    }
+                }
+                break;
+            }
+                // 3D case
+            case 3:
+            {
+                ASSERTL0(false, "3D InflowCFE boundary condition" 
+                         "not implemented yet")
+                break;
+            }
+            default:
+            {
+                ASSERTL0(false, "Illegal expansion dimension");
+                break;
+            }
+        }
+    }
+
     /**
      * @brief Return the flux vector for the compressible Euler equations.
      * 
@@ -446,7 +926,6 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD,                   NekDouble>   &pressure)
     {
-        NekDouble gamma = m_gamma;
         int       npts  = m_fields[0]->GetTotPoints();
         double    alpha = -0.5;
         

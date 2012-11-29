@@ -728,6 +728,10 @@
             <P> IO_CheckSteps  = 10000      </P>
             <P> IO_InfoSteps   = 100        </P>
             <P> Gamma          = 1.4        </P>
+            <P> rho0           = 1.225      </P>
+            <P> rhou0          = 0.1225     </P>
+            <P> rhov0          = 0.0        </P>
+            <P> E0             = 0.149875   </P>
             <P> CFL            = 1.0        </P>
         </PARAMETERS>
 
@@ -755,16 +759,16 @@
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="rho"    VALUE="1.225"   />
-                <D VAR="rhou"   VALUE="0.1225"  />
-                <D VAR="rhov"   VALUE="0.0"     />
-                <D VAR="E"      VALUE="0.149875"/>
+                <D VAR="rho"    VALUE="rho0"    />
+                <D VAR="rhou"   VALUE="rhou0"   />
+                <D VAR="rhov"   VALUE="rhov0"   />
+                <D VAR="E"      VALUE="E0"      />
             </REGION>
             <REGION REF="1">
-                <D VAR="rho"    VALUE="1.225"   />
-                <D VAR="rhou"   VALUE="0.1225"  />
-                <D VAR="rhov"   VALUE="0.0"     />
-                <D VAR="E"      VALUE="0.149875"/>
+                <D VAR="rho"    VALUE="rho0"    />
+                <D VAR="rhou"   VALUE="rhou0"   />
+                <D VAR="rhov"   VALUE="rhov0"   />
+                <D VAR="E"      VALUE="E0"      />
             </REGION>
             <REGION REF="2">
                 <D VAR="rho"    USERDEFINEDTYPE="Wall" VALUE="0"/>

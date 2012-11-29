@@ -692,8 +692,10 @@ namespace Nektar
 				
 			}//end of timeintegration
 			
-			cout <<"\nCFL number              : " << m_cfl << endl;
-			cout <<"Time-integration timing : " << IntegrationTime << " s" << endl << endl;
+			cout <<"\nCFL safety factor     : " 
+                << m_cflSafetyFactor << endl;
+			cout <<"Time-integration timing : " 
+                << IntegrationTime << " s" << endl << endl;
 			
 			
 			// At the end of the time integration, store final solution.

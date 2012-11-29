@@ -1,5 +1,4 @@
 SET(IncNavierStokesSolverSource 
-       ./EquationSystems/CFLtester.cpp
        ./EquationSystems/CoupledLinearNS.cpp
        ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ./EquationSystems/IncNavierStokes.cpp

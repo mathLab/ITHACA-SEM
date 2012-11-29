@@ -100,7 +100,7 @@ namespace Nektar
             
             ASSERTL0(m_projectionType == MultiRegions::eMixed_CG_Discontinuous,"Projection must be set to Mixed_CG_Discontinuous for substepping");
             
-            m_session->LoadParameter("SubStepCFL", m_cfl,0.5);
+            m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.5);
             
             // Set to 1 for first step and it will then be increased in
             // time advance routines

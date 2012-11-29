@@ -68,6 +68,9 @@ namespace Nektar
             /// Tolerance of iterative solver.
             NekDouble                                   m_tolerance;
 
+            /// Normalisation factor on local tolerance
+            NekDouble                                   m_bb_inv;
+
             PreconditionerSharedPtr                     m_precon;
 
             MultiRegions::PreconditionerType            m_precontype;
@@ -77,6 +80,10 @@ namespace Nektar
 
             /// Whether to apply projection technique
             bool                                        m_useProjection;
+
+            /// Provide verbose output and root if parallel. 
+            bool                                        m_root;
+            bool                                        m_verbose;
 
             /// Storage for solutions to previous linear problems
             boost::circular_buffer<Array<OneD, NekDouble> > m_prevLinSol;

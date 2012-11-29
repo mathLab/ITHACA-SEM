@@ -164,60 +164,60 @@ namespace Nektar
                        Array<OneD,NekDouble> &out_d1,
                        Array<OneD,NekDouble> &out_d2)
         {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nquad2 = m_base[2]->GetNumPoints();
+            int  TotPts = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*
+                m_base[2]->GetNumPoints();
+            
             Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
-            Array<OneD,NekDouble> Diff0 = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            Array<OneD,NekDouble> Diff1 = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-            Array<OneD,NekDouble> Diff2 = Array<OneD,NekDouble>(nquad0*nquad1*nquad2);
-
+            Array<OneD,NekDouble> Diff0 = Array<OneD,NekDouble>(3*TotPts);
+            Array<OneD,NekDouble> Diff1 = Diff0 + TotPts;
+            Array<OneD,NekDouble> Diff2 = Diff1 + TotPts;
+            
             StdTetExp::v_PhysDeriv(inarray, Diff0, Diff1, Diff2);
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Vmul  (nquad0*nquad1*nquad2,&gmat[0][0],1,&Diff0[0],1, &out_d0[0], 1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[1][0],1,&Diff1[0],1, &out_d0[0], 1,&out_d0[0],1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[2][0],1,&Diff2[0],1, &out_d0[0], 1,&out_d0[0],1);
+                    Vmath::Vmul  (TotPts,&gmat[0][0],1,&Diff0[0],1, &out_d0[0], 1);
+                    Vmath::Vvtvp (TotPts,&gmat[1][0],1,&Diff1[0],1, &out_d0[0], 1,&out_d0[0],1);
+                    Vmath::Vvtvp (TotPts,&gmat[2][0],1,&Diff2[0],1, &out_d0[0], 1,&out_d0[0],1);
                 }
 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Vmul  (nquad0*nquad1*nquad2,&gmat[3][0],1,&Diff0[0],1, &out_d1[0], 1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[4][0],1,&Diff1[0],1, &out_d1[0], 1,&out_d1[0],1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[5][0],1,&Diff2[0],1, &out_d1[0], 1,&out_d1[0],1);
+                    Vmath::Vmul  (TotPts,&gmat[3][0],1,&Diff0[0],1, &out_d1[0], 1);
+                    Vmath::Vvtvp (TotPts,&gmat[4][0],1,&Diff1[0],1, &out_d1[0], 1,&out_d1[0],1);
+                    Vmath::Vvtvp (TotPts,&gmat[5][0],1,&Diff2[0],1, &out_d1[0], 1,&out_d1[0],1);
                 }
 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Vmul  (nquad0*nquad1*nquad2,&gmat[6][0],1,&Diff0[0],1, &out_d2[0], 1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[7][0],1,&Diff1[0],1, &out_d2[0], 1, &out_d2[0],1);
-                    Vmath::Vvtvp (nquad0*nquad1*nquad2,&gmat[8][0],1,&Diff2[0],1, &out_d2[0], 1, &out_d2[0],1);
+                    Vmath::Vmul  (TotPts,&gmat[6][0],1,&Diff0[0],1, &out_d2[0], 1);
+                    Vmath::Vvtvp (TotPts,&gmat[7][0],1,&Diff1[0],1, &out_d2[0], 1, &out_d2[0],1);
+                    Vmath::Vvtvp (TotPts,&gmat[8][0],1,&Diff2[0],1, &out_d2[0], 1, &out_d2[0],1);
                 }
             }
             else // regular geometry
             {
                 if(out_d0.num_elements())
                 {
-                    Vmath::Smul (nquad0*nquad1*nquad2,gmat[0][0],&Diff0[0],1, &out_d0[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[1][0],&Diff1[0],1, &out_d0[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[2][0],&Diff2[0],1, &out_d0[0], 1);
+                    Vmath::Smul (TotPts,gmat[0][0],&Diff0[0],1, &out_d0[0], 1);
+                    Blas::Daxpy (TotPts,gmat[1][0],&Diff1[0],1, &out_d0[0], 1);
+                    Blas::Daxpy (TotPts,gmat[2][0],&Diff2[0],1, &out_d0[0], 1);
                 }
 
                 if(out_d1.num_elements())
                 {
-                    Vmath::Smul (nquad0*nquad1*nquad2,gmat[3][0],&Diff0[0],1, &out_d1[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[4][0],&Diff1[0],1, &out_d1[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[5][0],&Diff2[0],1, &out_d1[0], 1);
+                    Vmath::Smul (TotPts,gmat[3][0],&Diff0[0],1, &out_d1[0], 1);
+                    Blas::Daxpy (TotPts,gmat[4][0],&Diff1[0],1, &out_d1[0], 1);
+                    Blas::Daxpy (TotPts,gmat[5][0],&Diff2[0],1, &out_d1[0], 1);
                 }
 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Smul (nquad0*nquad1*nquad2,gmat[6][0],&Diff0[0],1, &out_d2[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[7][0],&Diff1[0],1, &out_d2[0], 1);
-                    Blas::Daxpy (nquad0*nquad1*nquad2,gmat[8][0],&Diff2[0],1, &out_d2[0], 1);
+                    Vmath::Smul (TotPts,gmat[6][0],&Diff0[0],1, &out_d2[0], 1);
+                    Blas::Daxpy (TotPts,gmat[7][0],&Diff1[0],1, &out_d2[0], 1);
+                    Blas::Daxpy (TotPts,gmat[8][0],&Diff2[0],1, &out_d2[0], 1);
                 }
             }
         }

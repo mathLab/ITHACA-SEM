@@ -128,37 +128,36 @@ namespace Nektar
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
-
             int nDirTotal = nDirDofs;
+            
             expList->GetComm()->AllReduce(nDirTotal, LibUtilities::ReduceSum);
+            
+            Array<OneD, NekDouble> tmp(nGlobDofs);
 
             if(nDirTotal)
             {
                 // calculate the Dirichlet forcing
-                Array<OneD, NekDouble> global_tmp(nGlobDofs);
-                Array<OneD, NekDouble> offsetarray;
-
                 if(dirForcCalculated)
                 {
                     Vmath::Vsub(nGlobDofs, pInput.get(), 1,
                                 pDirForcing.get(), 1,
-                                global_tmp.get(), 1);
+                                tmp.get(), 1);
                 }
                 else
                 {
                     // Calculate the dirichlet forcing B_b (== X_b) and
                     // substract it from the rhs
                     expList->GeneralMatrixOp(
-                                    m_linSysKey,
-                                    pOutput, global_tmp, eGlobal);
+                        m_linSysKey, pOutput, tmp, eGlobal);
 
-                    Vmath::Vsub(nGlobDofs,  pInput.get(), 1,
-                                            global_tmp.get(), 1,
-                                            global_tmp.get(), 1);
+                    Vmath::Vsub(nGlobDofs, pInput.get(), 1,
+                                           tmp.get(),    1,
+                                           tmp.get(),    1);
                 }
                 if (vCG)
                 {
-                    SolveLinearSystem(nGlobDofs, global_tmp, pOutput, pLocToGloMap, nDirDofs);
+                    SolveLinearSystem(
+                        nGlobDofs, tmp, tmp, pLocToGloMap, nDirDofs);
                 }
                 else
                 {
@@ -167,8 +166,12 @@ namespace Nektar
             }
             else
             {
-	      SolveLinearSystem(nGlobDofs, pInput, pOutput, pLocToGloMap);
+                SolveLinearSystem(nGlobDofs, tmp, tmp, pLocToGloMap);
             }
+            
+            Array<OneD, NekDouble> tmp2 = pOutput + nDirDofs;
+            Vmath::Vadd(nGlobDofs - nDirDofs, 
+                        tmp + nDirDofs, 1, tmp2, 1, tmp2, 1);
         }
 
 

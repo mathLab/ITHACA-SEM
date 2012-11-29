@@ -73,11 +73,13 @@ namespace Nektar
 
             // virtual functions
 
+            virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
+
             /// Template method virtual forwarded for LocalToGlobal()
-            virtual void v_LocalToGlobal();
+            virtual void v_LocalToGlobal(void);
 
             /// Template method virtual forwarded for GlobalToLocal()
-            virtual void v_GlobalToLocal();
+            virtual void v_GlobalToLocal(void);
 
             /// Solves the three-dimensional Helmholtz equation, subject to the
             /// boundary conditions specified.

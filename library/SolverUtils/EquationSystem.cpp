@@ -696,7 +696,6 @@ namespace Nektar
             const std::string& pFunctionName,
             const NekDouble& pTime)
         {
-		
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
 
@@ -720,14 +719,6 @@ namespace Nektar
                 LibUtilities::EquationSharedPtr ffunc
                     = m_session->GetFunction(pFunctionName, pFieldName);
 
-                /*
-                if (m_comm->GetRank() == 0)
-                {
-                    cout << "- Field " << pFieldName << ": " 
-                         << ffunc->GetExpression() << endl;
-                }
-                */
-
                 ffunc->Evaluate(x0,x1,x2,pTime,pArray);
             }
             else if (vType == LibUtilities::eFunctionTypeFile)
@@ -735,11 +726,6 @@ namespace Nektar
                 std::string filename
                     = m_session->GetFunctionFilename(pFunctionName, pFieldName);
                 
-                if (m_comm->GetRank() == 0)
-                {
-                    cout << "- Field " << pFieldName << ": " 
-                         << "from file " << filename << endl;
-                }
 #if 0 
                 ImportFld(filename,m_fields);
 #else
@@ -781,6 +767,39 @@ namespace Nektar
                 m_fields[0]->BwdTrans(vCoeffs, pArray);
 #endif
             }
+        }
+
+        /**
+         * @brief Provide a description of a function for a given field name.
+         *
+         * @param pFieldName     Field name.
+         * @param pFunctionName  Function name.
+         */
+        std::string EquationSystem::DescribeFunction(
+            std::string pFieldName,
+            const std::string &pFunctionName)
+        {
+            ASSERTL0(m_session->DefinesFunction(pFunctionName),
+                     "Function '" + pFunctionName + "' does not exist.");
+            
+            std::string retVal;
+            LibUtilities::FunctionType vType;
+            
+            vType = m_session->GetFunctionType(pFunctionName, pFieldName);
+            if (vType == LibUtilities::eFunctionTypeExpression)
+            {
+                LibUtilities::EquationSharedPtr ffunc
+                    = m_session->GetFunction(pFunctionName, pFieldName);
+                retVal = ffunc->GetExpression();
+            }
+            else if (vType == LibUtilities::eFunctionTypeFile)
+            {
+                std::string filename
+                    = m_session->GetFunctionFilename(pFunctionName, pFieldName);
+                retVal = "from file " + filename;
+            }
+            
+            return retVal;
         }
         
         /**
@@ -984,6 +1003,17 @@ namespace Nektar
             {
                 EvaluateFunction(m_session->GetVariables(), m_fields, 
                                  "InitialConditions");
+                
+                if (m_session->GetComm()->GetRank() == 0)
+                {
+                    for (int i = 0; i < m_fields.num_elements(); ++i)
+                    {
+                        std::string varName = m_session->GetVariable(i);
+                        cout << "  - Field " << varName << ": "
+                             << DescribeFunction(varName, "InitialConditions")
+                             << endl;
+                    }
+                }
             }
             else
             {
@@ -997,7 +1027,7 @@ namespace Nektar
 
                     if (m_session->GetComm()->GetRank() == 0)
                     {
-                        cout << "\tField "      << m_session->GetVariable(i)
+                        cout << "  - Field "    << m_session->GetVariable(i)
                              << ": 0 (default)" << endl;
                     }
                 }

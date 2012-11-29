@@ -84,13 +84,13 @@ namespace Nektar
                     Array<OneD, NekDouble> &inout,
                     Array<OneD, NekDouble> &outarray);
 
-            inline void GlobalToLocal();
-
             inline void GlobalToLocal(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,NekDouble> &outarray);
 
-            inline void LocalToGlobal();
+            inline void LocalToGlobal(
+                          const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,NekDouble> &outarray);
 
             inline void Assemble();
 
@@ -137,6 +137,7 @@ namespace Nektar
                     Array<OneD,       NekDouble> &outarray,
                     CoeffState coeffstate);
 
+            
         private:
             GlobalLinSysSharedPtr GetGlobalLinSys(const GlobalLinSysKey &mkey);
 
@@ -151,6 +152,15 @@ namespace Nektar
                           Array<OneD,       NekDouble> &inout,
                     const Array<OneD, const NekDouble> &dirForcing
                                                      = NullNekDouble1DArray);
+
+            /// Impose the Dirichlet Boundary Conditions on outarray 
+            virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
+
+            virtual void v_LocalToGlobal(void);
+
+
+            virtual void v_GlobalToLocal(void);
+
 
             virtual void v_MultiplyByInvMassMatrix(
                     const Array<OneD, const NekDouble> &inarray,
@@ -182,10 +192,6 @@ namespace Nektar
         }
 
 
-        inline void ContField3D::GlobalToLocal()
-        {
-            m_locToGloMap->GlobalToLocal(m_coeffs, m_coeffs);
-        }
 
         inline void ContField3D::GlobalToLocal(
                 const Array<OneD, const NekDouble> &inarray,
@@ -194,9 +200,12 @@ namespace Nektar
             m_locToGloMap->GlobalToLocal(inarray, outarray);
         }
 
-        inline void ContField3D::LocalToGlobal()
+
+        inline void ContField3D::LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,NekDouble> &outarray)
         {
-            m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs);
+            m_locToGloMap->LocalToGlobal(inarray, outarray);
         }
 
         inline void ContField3D::Assemble()

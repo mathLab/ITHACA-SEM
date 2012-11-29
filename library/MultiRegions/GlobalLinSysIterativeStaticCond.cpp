@@ -457,6 +457,7 @@ namespace Nektar
                 else
                 {
                     DNekScalBlkMatSharedPtr loc_mat = GlobalLinSys::v_GetStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
+                    //loc_mat = m_precon->TransformSchurCompl(m_expList.lock()->GetOffset_Elmt_Id(n));
                     DNekScalMatSharedPtr tmp_mat;
                     m_schurCompl->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
                     m_BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));

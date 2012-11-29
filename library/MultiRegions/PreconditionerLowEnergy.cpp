@@ -839,10 +839,141 @@ namespace Nektar
             transmatrixmap[StdRegions::ePrism]=m_transformationMatrix[1];
             transposedtransmatrixmap[StdRegions::eTetrahedron]=m_transposedTransformationMatrix[0];
             transposedtransmatrixmap[StdRegions::ePrism]=m_transposedTransformationMatrix[1];
-            
-            for(cnt=n=0; n < expList->GetNumElmts(); ++n)
-            {
 
+            int n_exp = expList->GetNumElmts();
+            cout<<"first loop"<<endl;
+            int tmpcnt=0;
+            map<int,int> blockLocationMap;
+            for(cnt=n=0; n < n_exp; ++n)
+            {
+                nel = expList->GetOffset_Elmt_Id(n);
+                
+                locExpansion = expList->GetExp(nel);
+
+                loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
+		
+                //Extract boundary block (elemental S1)
+                bnd_mat=loc_mat->GetBlock(0,0);
+
+                //offset by number of rows
+                offset = bnd_mat->GetRows();
+
+                nVerts=locExpansion->GetGeom()->GetNumVerts();
+                nEdges=locExpansion->GetGeom()->GetNumEdges();
+                nFaces=locExpansion->GetGeom()->GetNumFaces();
+                Array<OneD, int> 
+                    vertModeLocation(nVerts);
+                Array<OneD, Array<OneD, unsigned int> > 
+                    edgeModeLocation(nEdges);
+                Array<OneD, Array<OneD, unsigned int> > 
+                    faceModeLocation(nFaces);
+
+                //Change this to array of arrays
+                locExpansion->GetModeMappings
+                    (vertModeLocation,edgeModeLocation,faceModeLocation);
+            
+                for (eid=0; eid<nEdges; ++eid)
+                {
+                    nedgemodes=edgeModeLocation[eid].num_elements();
+
+                    for (v=0; v<nedgemodes; ++v)
+                    {
+                        eMap1=edgeModeLocation[eid][v];
+
+                        globalrow = m_locToGloMap->
+                            GetLocalToGlobalBndMap(cnt+eMap1)
+                            -nDirBnd-nNonDirVerts;
+
+                        if(globalrow >= 0)
+                        {
+                            cout<<globalrow<<endl;
+                            if(blockLocationMap.count(globalrow) == 0)
+                            {
+                                //cout<<"entered"<<endl;
+                                //here we need to account for nedgemodes
+                                for (i=0; i<nedgemodes; ++i)
+                                {
+                                    blockLocationMap[globalrow+i]=tmpcnt;
+                                    //cout<<"row: "<<globalrow+i<<" counter: "<<tmpcnt<<endl;
+                                }
+                                tmpcnt++;
+                            }
+                        }
+                    }
+                }
+                cnt +=offset;
+            }
+
+            for(cnt=n=0; n < n_exp; ++n)
+            {
+                nel = expList->GetOffset_Elmt_Id(n);
+                
+                locExpansion = expList->GetExp(nel);
+
+                loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
+		
+                //Extract boundary block (elemental S1)
+                bnd_mat=loc_mat->GetBlock(0,0);
+
+                //offset by number of rows
+                offset = bnd_mat->GetRows();
+
+                nVerts=locExpansion->GetGeom()->GetNumVerts();
+                nEdges=locExpansion->GetGeom()->GetNumEdges();
+                nFaces=locExpansion->GetGeom()->GetNumFaces();
+                Array<OneD, int> 
+                    vertModeLocation(nVerts);
+                Array<OneD, Array<OneD, unsigned int> > 
+                    edgeModeLocation(nEdges);
+                Array<OneD, Array<OneD, unsigned int> > 
+                    faceModeLocation(nFaces);
+
+                //Change this to array of arrays
+                locExpansion->GetModeMappings
+                    (vertModeLocation,edgeModeLocation,faceModeLocation);
+
+                for (fid=0; fid<nFaces; ++fid)
+                {
+                    nfacemodes=faceModeLocation[fid].num_elements();
+
+                    for (v=0; v<nfacemodes; ++v)
+                    {
+                        fMap1=faceModeLocation[fid][v];
+
+                        globalrow = m_locToGloMap->
+                            GetLocalToGlobalBndMap(cnt+fMap1)
+                            -nDirBnd-nNonDirVerts;
+
+                        if(globalrow >= 0)
+                        {
+                            cout<<globalrow<<endl;
+                            if(blockLocationMap.count(globalrow) == 0)
+                            {
+                                //cout<<"entered"<<endl;
+                                //here we need to account for nedgemodes
+                                for (i=0; i<nfacemodes; ++i)
+                                {
+                                    blockLocationMap[globalrow+i]=tmpcnt;
+                                    //cout<<"row: "<<globalrow+i<<" counter: "<<tmpcnt<<endl;
+                                }
+                                tmpcnt++;
+                            }
+                        }
+                    }
+                }
+
+                cnt +=offset;
+            }
+
+            //Get number of each type of element, get the number of coeffs
+
+            const Array<OneD,const unsigned int> n_blks(tmpcnt);
+            
+            DNekBlkMatSharedPtr BlkMat = MemoryManager<DNekBlkMat>
+                    ::AllocateSharedPtr(n_blks, n_blks, blkmatStorage);
+            cout<<"second loop"<<endl;
+            for(cnt=n=0; n < n_exp; ++n)
+            {
                 nel = expList->GetOffset_Elmt_Id(n);
                 
                 locExpansion = expList->GetExp(nel);
@@ -896,6 +1027,11 @@ namespace Nektar
                 //for each vertex
                 for (v=0; v<nVerts; ++v)
                 {
+                    DNekScalMatSharedPtr tmp_mat;
+                    DNekMatSharedPtr m_locMat = 
+                        MemoryManager<DNekMat>::AllocateSharedPtr
+                        (nVerts,nVerts,zero,storage);
+
                     vMap1=vertModeLocation[v];
                     
                     //Get vertex map
@@ -936,22 +1072,33 @@ namespace Nektar
                     }
                 }
                 
+
+                int loc=nVerts;
+                int elmt_offset;
+                NekDouble one = 1.0;
                 //loop over edges of the element and return the edge map
                 for (eid=0; eid<nEdges; ++eid)
                 {
+                    cout<<endl;
+                    cout<<"edge"<<endl;
                     nedgemodes=edgeModeLocation[eid].num_elements();
-            
+                    int row_offset=0;
+                    DNekMatSharedPtr m_locMat = 
+                        MemoryManager<DNekMat>::AllocateSharedPtr
+                        (nedgemodes,nedgemodes,zero,storage);
+
                     for (v=0; v<nedgemodes; ++v)
                     {
-                        
                         eMap1=edgeModeLocation[eid][v];
 
                         globalrow = m_locToGloMap->
                             GetLocalToGlobalBndMap(cnt+eMap1)
                             -nDirBnd-nNonDirVerts;
-                        
+
                         if(globalrow >= 0)
                         {
+                            //cout<<globalrow<<endl;
+                            int col_offset=0;
                             for (m=0; m<nedgemodes; ++m)
                             {
                                 eMap2=edgeModeLocation[eid][m];
@@ -961,7 +1108,7 @@ namespace Nektar
                                 globalcol = m_locToGloMap->
                                     GetLocalToGlobalBndMap(cnt+eMap2)
                                     -nDirBnd-nNonDirVerts;
-                                
+
                                 //offset for dirichlet conditions
                                 if (globalcol >= 0)
                                 {
@@ -975,21 +1122,59 @@ namespace Nektar
                                         GetValue(globalrow,globalcol)
                                         + sign1*sign2*RSRT(eMap1,eMap2);
 
-                                    //build matrix containing the linear finite
-                                    //element space
+                                    NekDouble globalEdgeValue = sign1*sign2*RSRT(eMap1,eMap2);
                                     EdgeBlk->SetValue
                                         (globalrow,globalcol,globalMatrixValue);
+
+                                    m_locMat->SetValue(row_offset,col_offset,globalEdgeValue);
+                                    cout<<globalMatrixValue<<" ";
                                 }
+                                col_offset++;
                             }
+                            row_offset++;
                         }
+                        cout<<endl;
+                    }
+
+                    if(globalrow >= 0)
+                    {
+                        DNekMatSharedPtr tmp_mat = 
+                            MemoryManager<DNekMat>::AllocateSharedPtr
+                            (nedgemodes,nedgemodes,zero,storage);
+                        int loc = blockLocationMap[globalrow];
+
+                        //the returned value is wrong?
+                        tmp_mat=BlkMat->GetBlock(loc,loc);
+                        if(tmp_mat != NullDNekMatSharedPtr)
+                        {
+                            (*m_locMat)=(*tmp_mat)+(*m_locMat);
+                        }
+
+                        cout<<endl;
+                        for(j=0; j<m_locMat->GetRows(); ++j)
+                        {
+                            for(int k=0; k<m_locMat->GetRows(); ++k)
+                            {
+                                cout<<(*m_locMat)(j,k)<<" ";
+                            }
+                            cout<<endl;
+                        }
+
+                        BlkMat->SetBlock(loc,loc, m_locMat); //tmp_mat = MemoryManager<DNekMat>::AllocateSharedPtr(one,m_locMat));
                     }
                 }
-                
+
                  //loop over faces of the element and return the face map
                 for (fid=0; fid<nFaces; ++fid)
                 {
+                    cout<<endl;
+                    cout<<"face"<<endl;
                     nfacemodes=faceModeLocation[fid].num_elements();
-            
+                    int row_offset=0;
+                    DNekMatSharedPtr m_locMat = 
+                        MemoryManager<DNekMat>::AllocateSharedPtr
+                        (nfacemodes,nfacemodes,zero,storage);
+
                     for (v=0; v<nfacemodes; ++v)
                     {
                         fMap1=faceModeLocation[fid][v];
@@ -1000,6 +1185,10 @@ namespace Nektar
                         
                         if(globalrow >= 0)
                         {
+                            //cout<<globalrow<<endl;
+                            int loc = blockLocationMap[globalrow];
+                            //cout<<"check loc value: "<<loc<<" row: "<<globalrow<<endl;
+                            int col_offset=0;
                             for (m=0; m<nfacemodes; ++m)
                             {
                                 fMap2=faceModeLocation[fid][m];
@@ -1009,7 +1198,7 @@ namespace Nektar
                                 globalcol = m_locToGloMap->
                                     GetLocalToGlobalBndMap(cnt+fMap2)
                                     -nDirBnd-nNonDirVerts-nNonDirEdges;
-
+                                //cout<<"col: "<<globalcol<<endl;
                                 //offset for dirichlet conditions
                                 if (globalcol >= 0)
                                 {
@@ -1022,27 +1211,99 @@ namespace Nektar
                                     globalMatrixValue = FaceBlk->
                                         GetValue(globalrow,globalcol)
                                         + sign1*sign2*RSRT(fMap1,fMap2);
-                                    
+
+                                    NekDouble globalFaceValue = sign1*sign2*RSRT(fMap1,fMap2);
                                     //build matrix containing the linear finite
                                     //element space
                                     FaceBlk->SetValue
                                         (globalrow,globalcol,globalMatrixValue);
+                                    m_locMat->SetValue(row_offset,col_offset,globalFaceValue);
+                                    cout<<globalMatrixValue<<" ";
+                                    //cout<<"row: "<<globalrow<<" Map value: "<<blockLocationMap[globalrow]<<endl;
                                 }
+                                col_offset++;
                             }
+                            row_offset++;
                         }
                     }
+                    cout<<endl;
+                    if(globalrow >= 0)
+                    {
+                        DNekMatSharedPtr tmp_mat = 
+                            MemoryManager<DNekMat>::AllocateSharedPtr
+                            (nfacemodes,nfacemodes,zero,storage);
+                        int loc = blockLocationMap[globalrow+nNonDirEdges];
+                        //cout<<loc<<endl;
+                        tmp_mat=BlkMat->GetBlock(loc,loc);
+                        if(tmp_mat != NullDNekMatSharedPtr)
+                        {
+                            (*m_locMat)=(*tmp_mat)+(*m_locMat);
+                        }
+
+                        for(j=0; j<m_locMat->GetRows(); ++j)
+                        {
+                            for(int k=0; k<m_locMat->GetRows(); ++k)
+                            {
+                                cout<<(*m_locMat)(j,k)<<" ";
+                            }
+                            cout<<endl;
+                        }
+
+                        BlkMat->SetBlock(loc,loc, m_locMat); //tmp_mat = MemoryManager<DNekMat>::AllocateSharedPtr(one,m_locMat));
+                    }
                 }
+                //offset for the expansion
                 cnt+=offset;
             }
+
+            for (i=0; i< tmpcnt-1; ++i)
+            {
+                DNekMatSharedPtr tmp_mat = 
+                    MemoryManager<DNekMat>::AllocateSharedPtr
+                    (nedgemodes,nedgemodes,zero,storage);
+
+                tmp_mat=BlkMat->GetBlock(i,i);
+                cout<<"block: "<<i<<endl;
+                for(j=0; j<tmp_mat->GetRows(); ++j)
+                {
+                    for(int k=0; k<tmp_mat->GetRows(); ++k)
+                    {
+                        cout<<(*tmp_mat)(j,k)<<" ";
+                    }
+                    cout<<endl;
+                }
+                cout<<endl;
+                cout<<endl;
+            }
+
 
             if (nNonDirVerts != 0)
             {
                 VertBlk->Invert();
             }
 
+            for(j=0; j<EdgeBlk->GetRows(); ++j)
+            {
+                for(int k=0; k<EdgeBlk->GetRows(); ++k)
+                {
+                    cout<<(*EdgeBlk)(j,k)<<" ";
+                }
+                cout<<endl;
+            }
+
             if (nNonDirEdges != 0)
             {
                 EdgeBlk->Invert();
+            }
+            cout<<endl;
+            cout<<"face"<<endl;
+            for(j=0; j<FaceBlk->GetRows(); ++j)
+            {
+                for(int k=0; k<FaceBlk->GetRows(); ++k)
+                {
+                    cout<<(*FaceBlk)(j,k)<<" ";
+                }
+                cout<<endl;
             }
 
             if (nNonDirFaces != 0)
@@ -1189,7 +1450,7 @@ namespace Nektar
                                 globalMatrixValue = VertBlk->
                                     GetValue(globalrow,globalcol)
                                     + sign1*sign2*S(vMap1,vMap2);
-                                
+
                                 //build matrix containing the linear finite
                                 //element space
                                 VertBlk->SetValue

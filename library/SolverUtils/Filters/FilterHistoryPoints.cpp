@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
-
+#include <iomanip>
 #include <SolverUtils/Filters/FilterHistoryPoints.h>
 
 namespace Nektar
@@ -256,11 +256,11 @@ namespace Nektar
                 for (k = 0; k < m_historyPoints.size(); ++k)
                 {
                     m_outputStream.width(8);
-                    m_outputStream << time;
+                    m_outputStream << setprecision(6) << time;
                     for (int j = 0; j < numFields; ++j)
                     {
-                        m_outputStream.width(14);
-                        m_outputStream << data[k*numFields+j];
+                        m_outputStream.width(25);
+                        m_outputStream << setprecision(16) << data[k*numFields+j];
                     }
                     m_outputStream << endl;
                 }

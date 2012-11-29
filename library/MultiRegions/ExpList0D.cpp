@@ -56,26 +56,20 @@ namespace Nektar
         {
         }
 		
-		ExpList0D::ExpList0D(const SpatialDomains::VertexComponentSharedPtr &m_geom):
-		ExpList()
+        ExpList0D::ExpList0D(const SpatialDomains::VertexComponentSharedPtr &m_geom):
+            ExpList()
         {
-			m_point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(m_geom);
-			
-			m_ncoeffs = 1;
-			m_npoints = 1;
-			
-			// Set up m_coeffs, m_phys.
-			m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
-			m_phys   = Array<OneD, NekDouble>(m_npoints);
-			
-			m_coeffs[0] = m_point->GetCoeff(0);
-			m_phys[0]  = m_point->GetPhys(0);
-			
-			m_coeffs = m_point->UpdateCoeffs();
-			m_phys   = m_point->UpdatePhys();
+            m_point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(m_geom);
+            
+            m_ncoeffs = 1;
+            m_npoints = 1;
+            
+            // Set up m_coeffs, m_phys.
+            m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
+            m_phys   = Array<OneD, NekDouble>(m_npoints);
         }
 
-		/**
+        /**
          * Store expansions for the trace space expansions used in
          * DisContField1D.
          *
@@ -92,20 +86,20 @@ namespace Nektar
          *                      instead of just normal segment expansions.
          */
         ExpList0D::ExpList0D(
-							 const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
-							 const Array<OneD, const SpatialDomains
-							 ::BoundaryConditionShPtr>  &bndCond,
-							 const StdRegions::StdExpansionVector &locexp,
-							 const SpatialDomains::MeshGraphSharedPtr &graph1D,
-							 const map<int,int> &periodicVertices,
-							 const bool DeclareCoeffPhysArrays):
-		ExpList()
+            const Array<OneD, const ExpListSharedPtr> &bndConstraint,
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> 
+                                                      &bndCond,
+            const StdRegions::StdExpansionVector      &locexp,
+            const SpatialDomains::MeshGraphSharedPtr  &graph1D,
+            const map<int,int>                        &periodicVertices,
+            const bool                                 DeclareCoeffPhysArrays)
+            : ExpList()
         {
             int i,j,cnt,id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
-			SpatialDomains::VertexComponentSharedPtr PointGeom;
+            SpatialDomains::VertexComponentSharedPtr PointGeom;
             LocalRegions::PointExpSharedPtr Point;
 			
             // First loop over boundary conditions to renumber Dirichlet boundaries
@@ -221,35 +215,35 @@ namespace Nektar
         {
         }
 		
-		void ExpList0D::v_GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
+        void ExpList0D::v_GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
         {
-			m_point->GetCoords(x,y,z);
-		}
+            m_point->GetCoords(x,y,z);
+        }
 		
-		void ExpList0D::v_GetCoord(Array<OneD,NekDouble> &coords)
+        void ExpList0D::v_GetCoord(Array<OneD,NekDouble> &coords)
         {
-			m_point->GetCoords(coords);
-		}
+            m_point->GetCoords(coords);
+        }
 		
-		void ExpList0D::v_SetCoeff(NekDouble val)
+        void ExpList0D::v_SetCoeff(NekDouble val)
         {
-			m_point->SetCoeff(val);
-		}
+            m_coeffs[0] = val;
+        }
 		
-		void ExpList0D::v_SetPhys(NekDouble val)
+        void ExpList0D::v_SetPhys(NekDouble val)
         {
-			m_point->SetPhys(val);
-		}
+            m_phys[0] = val;
+        }
 		
-		const SpatialDomains::VertexComponentSharedPtr &ExpList0D::v_GetGeom(void) const
-		{
-			return m_point->GetGeom();
-		}
+        const SpatialDomains::VertexComponentSharedPtr &ExpList0D::v_GetGeom(void) const
+        {
+            return m_point->GetGeom();
+        }
 		
-		const SpatialDomains::VertexComponentSharedPtr &ExpList0D::v_GetVertex(void) const
-		{
-			return m_point->GetVertex();
-		}
+        const SpatialDomains::VertexComponentSharedPtr &ExpList0D::v_GetVertex(void) const
+        {
+            return m_point->GetVertex();
+        }
 		
         /**
          * For each local element, copy the normals stored in the element list

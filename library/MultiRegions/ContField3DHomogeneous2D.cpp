@@ -117,6 +117,19 @@ namespace Nektar
         }
 
 
+        void ContField3DHomogeneous2D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+        {
+            Array<OneD, NekDouble> tmp; 
+            int ncoeffs = m_lines[0]->GetNcoeffs();
+
+            for(int n = 0; n < m_lines.num_elements(); ++n)
+            {
+                m_lines[n]->ImposeDirichletConditions(tmp = outarray + 
+                                                       n*ncoeffs);
+            }
+        }
+
+
         /**
          * 
          */

@@ -1816,6 +1816,14 @@ namespace Nektar
             int P   = m_base[0]->GetNumModes() - 1, p;
             int Q   = m_base[1]->GetNumModes() - 1, q;
             int R   = m_base[2]->GetNumModes() - 1, r;
+
+            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
+
+            if(outarray.num_elements()!=nIntCoeffs)
+            {
+                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+            }
+
             int idx = 0;
             
             // Loop over all interior modes.

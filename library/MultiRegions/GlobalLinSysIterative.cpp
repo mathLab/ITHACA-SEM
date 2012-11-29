@@ -54,13 +54,19 @@ namespace Nektar
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
                   m_totalIterations(0),
                   m_useProjection(false),
-                  m_numPrevSols(0)
+                  m_numPrevSols(0),
+                  m_bb_inv(NekConstants::kNekUnsetDouble)
         {
             LibUtilities::SessionReaderSharedPtr vSession
                                             = pExpList.lock()->GetSession();
             vSession->LoadParameter("IterativeSolverTolerance",
                                     m_tolerance,
                                     NekConstants::kNekIterativeTol);
+
+            LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
+            m_root = (vComm->GetRank())? false : true;
+
+            m_verbose = (vSession->DefinesCmdLineArgument("verbose"))? true :false;
 
             std::string successiveRhs;
             vSession->LoadSolverInfo("SuccessiveRHS",  successiveRhs );
@@ -118,7 +124,6 @@ namespace Nektar
                 // applying plain Conjugate Gradient
                 DoConjugateGradient(nGlobal, pInput, pOutput, plocToGloMap, nDir);
             }
-            //std::cout << "CG iterations made = " << m_totalIterations << std::endl << std::endl;
         }
 
 
@@ -346,16 +351,14 @@ namespace Nektar
             // Check if preconditioner has been computed and compute if needed.
             if (!m_precon)
             {
-            MultiRegions::PreconditionerType pType = plocToGloMap->GetPreconType();
-
-            std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
-
-            v_UniqueMap();
-	    m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),plocToGloMap);
-	    //m_precon = MemoryManager<Preconditioner>::AllocateSharedPtr(
-            //                                GetSharedThisPtr(),plocToGloMap);
+                MultiRegions::PreconditionerType pType = plocToGloMap->GetPreconType();
+                
+                std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
+                
+                v_UniqueMap();
+                m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),plocToGloMap);
             }
-
+            
             // Get the communicator for performing data exchanges
             LibUtilities::CommSharedPtr vComm
                                 = m_expList.lock()->GetComm()->GetRowComm();
@@ -384,8 +387,13 @@ namespace Nektar
             NekDouble alpha, beta, rho, rho_new, mu, eps, bb_inv, min_resid;
             Array<OneD, NekDouble> vExchange(3);
 
-            // Initialise with zero as the initial guess.
+            // Initialise with input initial guess.
             r = in;
+            // zero homogeneous out array ready for solution updates
+            // Should not be earlier in case input vector is same as
+            // output and above copy has been peformed
+            Vmath::Zero(nNonDir,tmp = pOutput + nDir,1);
+
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
             v_DoMatrixMultiply(w_A, s_A);
             k = 0;
@@ -407,6 +415,7 @@ namespace Nektar
 
             vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
 
+            m_totalIterations = 0;
             // If input vector is zero, set zero output and skip solve.
             if (vExchange[0] < NekConstants::kNekZeroTol)
             {
@@ -419,19 +428,15 @@ namespace Nektar
             beta      = 0.0;
             alpha     = rho/mu;
             eps       = 0.0;
-            bb_inv    = 1.0/vExchange[2];
+            bb_inv    = (m_bb_inv == NekConstants::kNekUnsetDouble)? 1.0/vExchange[2]: m_bb_inv;
             min_resid = bb_inv;
+
 
             // Continue until convergence
             while (true)
             {
-                ASSERTL0(k < 20000,
-                         "Exceeded maximum number of iterations (20000)");
-
-                ASSERTL0(eps*bb_inv <= 1.0 || k < 10,
-                         "Conjugate gradient diverged. Tolerance too small?"
-                         "Minimum residual achieved: "
-                         + boost::lexical_cast<std::string>(sqrt(min_resid)));
+                ASSERTL0(k < 5000,
+                         "Exceeded maximum number of iterations (5000)");
 
                 // Compute new search direction p_k, q_k
                 p   = w   + beta  * p;
@@ -451,20 +456,20 @@ namespace Nektar
 
                 // <r_{k+1}, w_{k+1}>
                 vExchange[0] = Vmath::Dot2(nNonDir,
-                                        r_A,
-                                        w_A + nDir,
-                                        m_map + nDir);
+                                           r_A,
+                                           w_A + nDir,
+                                           m_map + nDir);
                 // <s_{k+1}, w_{k+1}>
                 vExchange[1] = Vmath::Dot2(nNonDir,
-                                        s_A + nDir,
-                                        w_A + nDir,
-                                        m_map + nDir);
+                                           s_A + nDir,
+                                           w_A + nDir,
+                                           m_map + nDir);
 
                 // <r_{k+1}, r_{k+1}>
                 vExchange[2] = Vmath::Dot2(nNonDir,
-                                        r_A,
-                                        r_A,
-                                        m_map + nDir);
+                                           r_A,
+                                           r_A,
+                                           m_map + nDir);
 
                 // Perform inner-product exchanges
                 vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
@@ -476,6 +481,13 @@ namespace Nektar
                 // test if norm is within tolerance
                 if (eps*bb_inv < m_tolerance * m_tolerance)
                 {
+                    if(m_verbose)
+                    {
+                        if(m_root)
+                        {
+                            std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (eps = " << sqrt(eps) << " bb_inv = " << m_bb_inv << ")"<< std::endl;
+                        }
+                    }
                     break;
                 }
                 min_resid = min(min_resid, eps);
@@ -521,7 +533,7 @@ namespace Nektar
 
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
-
+            
             // Allocate array storage
             Array<OneD, NekDouble> d_A    (nGlobal, 0.0);
             Array<OneD, NekDouble> p_A    (nGlobal, 0.0);

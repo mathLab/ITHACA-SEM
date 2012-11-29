@@ -1,3 +1,38 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: Helmholtz3D.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: 3D Helmholtz solver demo.
+//
+///////////////////////////////////////////////////////////////////////////////
+
 #include <cstdio>
 #include <cstdlib>
 
@@ -8,8 +43,6 @@
 #include <SpatialDomains/MeshGraph3D.h>
 
 using namespace Nektar;
-
-int NoCaseStringCompare(const string & s1, const string& s2);
 
 int main(int argc, char *argv[])
 {
@@ -35,25 +68,41 @@ int main(int argc, char *argv[])
     {
         //----------------------------------------------
         // Read in mesh from input file
-        SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
+        SpatialDomains::MeshGraphSharedPtr graph3D = 
+            SpatialDomains::MeshGraph::Read(vSession);
         //----------------------------------------------
 
         //----------------------------------------------
         // Print summary of solution details
         flags.set(eUseGlobal, true);
-        factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
-        const SpatialDomains::ExpansionMap &expansions = graph3D->GetExpansions();
-        LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
-        cout << "Solving 3D Helmholtz:"  << endl;
-        cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
-        cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
-        cout << endl;
+        factors[StdRegions::eFactorLambda]             = 
+            vSession->GetParameter("Lambda");
+        const SpatialDomains::ExpansionMap &expansions = 
+            graph3D->GetExpansions();
+        LibUtilities::BasisKey              bkey0      = 
+            expansions.begin()->second->m_basisKeyVector[0];
+        
+        if (vSession->GetComm()->GetRank() == 0)
+        {
+            cout << "Solving 3D Helmholtz:"  << endl;
+            cout << "  - Communication: " 
+                 << vSession->GetComm()->GetType() << " (" 
+                 << vSession->GetComm()->GetSize() 
+                 << " processes)" << endl;
+            cout << "  - Solver type  : " 
+                 << vSession->GetSolverInfo("GlobalSysSoln") << endl;
+            cout << "  - Lambda       : " 
+                 << factors[StdRegions::eFactorLambda] << endl;
+            cout << "  - No. modes    : " 
+                 << bkey0.GetNumModes() << endl;
+            cout << endl;
+        }
         //----------------------------------------------
 
         //----------------------------------------------
         // Define Expansion
         Exp = MemoryManager<MultiRegions::ContField3D>
-                        ::AllocateSharedPtr(vSession,graph3D,vSession->GetVariable(0));
+            ::AllocateSharedPtr(vSession, graph3D, vSession->GetVariable(0));
         //----------------------------------------------
 
         //----------------------------------------------
@@ -61,29 +110,28 @@ int main(int argc, char *argv[])
         coordim = Exp->GetCoordim(0);
         nq      = Exp->GetTotPoints();
 
-        xc0 = Array<OneD,NekDouble>(nq,0.0);
-        xc1 = Array<OneD,NekDouble>(nq,0.0);
-        xc2 = Array<OneD,NekDouble>(nq,0.0);
+        xc0 = Array<OneD, NekDouble>(nq, 0.0);
+        xc1 = Array<OneD, NekDouble>(nq, 0.0);
+        xc2 = Array<OneD, NekDouble>(nq, 0.0);
 
         switch(coordim)
         {
-        case 3:
-            Exp->GetCoords(xc0,xc1,xc2);
-            break;
-        default:
-            ASSERTL0(false,"Coordim not valid");
-            break;
+            case 3:
+                Exp->GetCoords(xc0,xc1,xc2);
+                break;
+            default:
+                ASSERTL0(false,"Coordim not valid");
+                break;
         }
         //----------------------------------------------
 
         //----------------------------------------------
         // Define forcing function for first variable defined in file
         fce = Array<OneD,NekDouble>(nq);
-        LibUtilities::EquationSharedPtr ffunc
-                                    = vSession->GetFunction("Forcing", 0);
+        LibUtilities::EquationSharedPtr ffunc =
+            vSession->GetFunction("Forcing", 0);
 
         ffunc->Evaluate(xc0, xc1, xc2, fce);
-
         //----------------------------------------------
 
         //----------------------------------------------
@@ -92,31 +140,35 @@ int main(int argc, char *argv[])
         Fce->SetPhys(fce);
         //----------------------------------------------
 
-        //----------------------------------------------
-        // Helmholtz solution taking physical forcing
+        //---------------------------------------------- 
+        //Helmholtz solution taking physical forcing after setting
+        //initial condition to zero
+        Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
         Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors);
         //----------------------------------------------
 
         //----------------------------------------------
         // Backward Transform Solution to get solved values at
-        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), MultiRegions::eGlobal);
+        Exp->BwdTrans(
+            Exp->GetCoeffs(), Exp->UpdatePhys(), MultiRegions::eGlobal);
         //----------------------------------------------
 
         //----------------------------------------------
         // See if there is an exact solution, if so
         // evaluate and plot errors
-        LibUtilities::EquationSharedPtr ex_sol
-                                    = vSession->GetFunction("ExactSolution", 0);
+        LibUtilities::EquationSharedPtr ex_sol =
+            vSession->GetFunction("ExactSolution", 0);
 
         //-----------------------------------------------
         // Write solution to file
-        string   out(vSession->GetSessionName() + ".fld");
+        string out = vSession->GetSessionName();
         if (vComm->GetSize() > 1)
         {
-            out += "." + boost::lexical_cast<string>(vComm->GetRank());
+            out += "_P" + boost::lexical_cast<string>(vComm->GetRank());
         }
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
-                                                    = Exp->GetFieldDefinitions();
+        out += ".fld";
+        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef =
+            Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
         Exp->GlobalToLocal(Exp->GetCoeffs(),Exp->UpdateCoeffs());
@@ -132,7 +184,6 @@ int main(int argc, char *argv[])
         {
             //----------------------------------------------
             // evaluate exact solution
-
             ex_sol->Evaluate(xc0, xc1, xc2, fce);
 
             //----------------------------------------------
@@ -141,7 +192,6 @@ int main(int argc, char *argv[])
             // Calculate L_inf error
             Fce->SetPhys(fce);
             Fce->SetPhysState(true);
-
 
             //--------------------------------------------
             // Calculate errors
@@ -153,7 +203,6 @@ int main(int argc, char *argv[])
                 cout << "L infinity error: " << vLinfError << endl;
                 cout << "L 2 error:        " << vL2Error << endl;
                 cout << "H 1 error:        " << vH1Error << endl;
-
                 cout << "Time in ExpEval:  " << ex_sol->GetTime() << endl;
             }
             //--------------------------------------------
@@ -170,44 +219,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-
-
-
-/**
- * Performs a case-insensitive string comparison (from web).
- * @param   s1          First string to compare.
- * @param   s2          Second string to compare.
- * @returns             0 if the strings match.
- */
-int NoCaseStringCompare(const string & s1, const string& s2)
-{
-    string::const_iterator it1=s1.begin();
-    string::const_iterator it2=s2.begin();
-
-    //stop when either string's end has been reached
-    while ( (it1!=s1.end()) && (it2!=s2.end()) )
-    {
-        if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
-        {
-            // return -1 to indicate smaller than, 1 otherwise
-            return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
-        }
-
-        //proceed to the next character in each string
-        ++it1;
-        ++it2;
-    }
-
-    size_t size1=s1.size();
-    size_t size2=s2.size();// cache lengths
-
-    //return -1,0 or 1 according to strings' lengths
-    if (size1==size2)
-    {
-        return 0;
-    }
-
-    return (size1 < size2) ? -1 : 1;
-}
-

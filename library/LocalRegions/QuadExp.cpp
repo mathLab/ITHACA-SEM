@@ -523,15 +523,15 @@ namespace Nektar
             
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul   (nq,&normals[0][0],1,&Fx[0],1,&Fn[0],1);
-                Vmath::Vvtvvtp(nq,&normals[1][0],1,&Fy[0],1,
-                                  &normals[2][0],1,&Fz[0],1,&Fn[0],1);
+                Vmath::Vvtvvtp(nq,&normals[0][0],1,&Fx[0],1,
+                                  &normals[1][0],1,&Fy[0],1,&Fn[0],1);
+                Vmath::Vvtvp  (nq,&normals[2][0],1,&Fz[0],1,&Fn[0],1,&Fn[0],1);
             }
             else
             {
-                Vmath::Smul   (nq,normals[0][0],&Fx[0],1,&Fn[0],1);
-                Vmath::Svtsvtp(nq,normals[1][0],&Fy[0],1,
-                                  normals[2][0],&Fz[0],1,&Fn[0],1);
+                Vmath::Svtsvtp(nq,normals[0][0],&Fx[0],1,
+                                  normals[1][0],&Fy[0],1,&Fn[0],1);
+                Vmath::Svtvp  (nq,normals[2][0],&Fz[0],1,&Fn[0],1,&Fn[0],1);
             }
 
             IProductWRTBase(Fn,outarray);
@@ -763,6 +763,137 @@ namespace Nektar
             {
                 Vmath::Reverse(EdgeExp->GetNumPoints(0),&outarray[0],1,
                                &outarray[0],1);
+            }
+        }
+        
+        void QuadExp::v_GetEdgeQFactors(
+                const int edge, 
+                Array<OneD, NekDouble> &outarray)
+        {
+            int i;
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            
+            const Array<OneD, const NekDouble>& jac  = m_metricinfo->GetJac();
+            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            
+            Array<OneD, NekDouble> j (max(nquad0, nquad1), 0.0);
+            Array<OneD, NekDouble> g0(max(nquad0, nquad1), 0.0);
+            Array<OneD, NekDouble> g1(max(nquad0, nquad1), 0.0);
+            Array<OneD, NekDouble> g2(max(nquad0, nquad1), 0.0);
+            Array<OneD, NekDouble> g3(max(nquad0, nquad1), 0.0);
+            
+            if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {   
+                switch (edge)
+                {
+                    case 0:
+                        Vmath::Vcopy(nquad0, &(gmat[1][0]), 1, &(g1[0]), 1);
+                        Vmath::Vcopy(nquad0, &(gmat[3][0]), 1, &(g3[0]), 1);
+                        Vmath::Vcopy(nquad0, &(jac[0]),     1, &(j[0]),  1);
+                        
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = j[i]*sqrt(g1[i]*g1[i] + g3[i]*g3[i]);
+                        }
+                        break;
+                    case 1:
+                        Vmath::Vcopy(nquad1, 
+                                     &(gmat[0][0])+(nquad0-1), nquad0, 
+                                     &(g0[0]), 1);
+                        
+                        Vmath::Vcopy(nquad1, 
+                                     &(gmat[2][0])+(nquad0-1), nquad0, 
+                                     &(g2[0]), 1);
+                        
+                        Vmath::Vcopy(nquad1, 
+                                     &(jac[0])+(nquad0-1), nquad0, 
+                                     &(j[0]), 1);
+                        
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = j[i]*sqrt(g0[i]*g0[i] + g2[i]*g2[i]);
+                        }
+                        break;
+                    case 2:
+                        
+                        Vmath::Vcopy(nquad0, 
+                                     &(gmat[1][0])+(nquad0*nquad1-1), -1, 
+                                     &(g1[0]), 1);
+                        
+                        Vmath::Vcopy(nquad0, 
+                                     &(gmat[3][0])+(nquad0*nquad1-1), -1, 
+                                     &(g3[0]), 1);
+                        
+                        Vmath::Vcopy(nquad0, 
+                                     &(jac[0])+(nquad0*nquad1-1), -1, 
+                                     &(j[0]), 1);
+                        
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = j[i]*sqrt(g1[i]*g1[i] + g3[i]*g3[i]);
+                        }
+                        break;
+                    case 3:
+                        
+                        Vmath::Vcopy(nquad1, 
+                                     &(gmat[0][0])+nquad0*(nquad1-1), -nquad0, 
+                                     &(g0[0]), 1);
+                        
+                        Vmath::Vcopy(nquad1, 
+                                     &(gmat[2][0])+nquad0*(nquad1-1), -nquad0, 
+                                     &(g2[0]), 1);
+                        
+                        Vmath::Vcopy(nquad1, 
+                                     &(jac[0])+nquad0*(nquad1-1), -nquad0, 
+                                     &(j[0]), 1);
+                        
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = j[i]*sqrt(g0[i]*g0[i] + g2[i]*g2[i]);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"edge value (< 3) is out of range");
+                        break;
+                }
+            }
+            else
+            {
+                switch (edge)
+                {
+                    case 0:
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = jac[0]*sqrt(gmat[1][0]*gmat[1][0] + 
+                                                      gmat[3][0]*gmat[3][0]);
+                        }
+                        break;
+                    case 1:
+                        for (i = 0; i < nquad1; ++i)
+                        {
+                            outarray[i] = jac[0]*sqrt(gmat[0][0]*gmat[0][0] + 
+                                                      gmat[2][0]*gmat[2][0]);
+                        }
+                        break;
+                    case 2:
+                        for (i = 0; i < nquad0; ++i)
+                        {
+                            outarray[i] = jac[0]*sqrt(gmat[1][0]*gmat[1][0] + 
+                                                      gmat[3][0]*gmat[3][0]);
+                        }
+                        break;
+                    case 3:
+                        for (i = 0; i < nquad1; ++i)
+                        {
+                            outarray[i] = jac[0]*sqrt(gmat[0][0]*gmat[0][0] + 
+                                                      gmat[2][0]*gmat[2][0]);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"edge value (< 3) is out of range");
+                        break; 
+                }
             }
         }
 

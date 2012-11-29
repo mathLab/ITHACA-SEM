@@ -156,6 +156,9 @@ namespace Nektar
                             const StdRegions::StdExpansionSharedPtr &EdgeExp,
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
+                            const int edge,
+                            Array<OneD, NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(
                             const int edge);
 

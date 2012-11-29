@@ -66,7 +66,7 @@ namespace Nektar
         "UnsteadyStokes",
         "UnsteadyLinearisedNS",
         "UnsteadyNavierStokes",
-	    "SteadyNavierStokes",
+        "SteadyNavierStokes",
     };
 
 
@@ -117,12 +117,14 @@ namespace Nektar
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
                                      Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-        virtual NekDouble v_GetTimeStep(const Array<OneD,int> ExpOrder, 
-                                        const Array<OneD,NekDouble> CFL, 
-                                        NekDouble timeCFL);
+        NekDouble GetSubstepTimeStep();
         
-        virtual NekDouble v_GetTimeStep(int ExpOrder, NekDouble CFL,
-                                        NekDouble TimeStability);
+        // Mapping of the real convective field on the standard element.
+        // This function gives back the convective filed in the standard
+        // element to calculate the stability region of the problem in a
+        // unique way.
+        Array<OneD,NekDouble> GetStdVelocity(
+            const Array<OneD, Array<OneD,NekDouble> > inarray);
 
 
         // Sub-stepping related methods

@@ -120,7 +120,6 @@ int main(int argc, char *argv[])
 
 
     boost::filesystem::path MeshFilePath = basePath / 
-        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Geometry") /
         boost::filesystem::path(MeshFileDirectory.str()) /  
@@ -128,21 +127,18 @@ int main(int argc, char *argv[])
     vFilenames.push_back(PortablePath(MeshFilePath));
 
     boost::filesystem::path BCfilePath = basePath / 
-        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Conditions") /
         boost::filesystem::path(BCfileName.str());
     vFilenames.push_back(PortablePath(BCfilePath));
 
     boost::filesystem::path ExpansionsFilePath = basePath / 
-        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Expansions") /
         boost::filesystem::path(ExpansionsFileName.str());
     vFilenames.push_back(PortablePath(ExpansionsFilePath));
 
     boost::filesystem::path GlobOptFilePath = basePath / 
-        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Optimisation") /
         boost::filesystem::path(GlobOptFileName.str());

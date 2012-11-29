@@ -147,9 +147,7 @@ namespace Nektar
         
         void EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
                                Array<OneD, Array<OneD, NekDouble> > &outarray);
-        
-        void PressureReconstruction(void);
-        
+                
         void InfNorm(Array<OneD, Array<OneD, NekDouble> > &inarray,
                      Array<OneD, NekDouble> &outarray);
         

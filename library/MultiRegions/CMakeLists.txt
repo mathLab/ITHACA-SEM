@@ -95,6 +95,20 @@ SET(ASSEMBLY_MAP_HEADERS
 ./AssemblyMap/AssemblyMapCG2D.h
 ./AssemblyMap/AssemblyMapCG3D.h
 )
+
+IF(NEKTAR_USE_MPI)
+    SET(MULTI_REGIONS_HEADERS ${MULTI_REGIONS_HEADERS}
+        GlobalLinSysXxt.h
+        GlobalLinSysXxtFull.h
+        GlobalLinSysXxtStaticCond.h
+    )
+    SET(MULTI_REGIONS_SOURCES ${MULTI_REGIONS_SOURCES}
+        GlobalLinSysXxt.cpp
+        GlobalLinSysXxtFull.cpp
+        GlobalLinSysXxtStaticCond.cpp
+    )
+ENDIF(NEKTAR_USE_MPI)
+
 ADD_DEFINITIONS(-DMULTI_REGIONS_EXPORTS)
 
 ADD_NEKTAR_LIBRARY(MultiRegions lib ${NEKTAR_LIBRARY_TYPE} ${MULTI_REGIONS_SOURCES} ${MULTI_REGIONS_HEADERS} ${ASSEMBLY_MAP_HEADERS})

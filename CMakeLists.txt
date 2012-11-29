@@ -5,6 +5,9 @@ RelWithDebInfo MinSizeRel.")
 
 PROJECT(Nektar++)
 
+# Helps organize projects in IDEs.
+SET_PROPERTY(GLOBAL PROPERTY USE_FOLDERS ON)
+
 SET(NEKTAR_VERSION_MAJOR 3)
 SET(NEKTAR_VERSION_MINOR 2)
 SET(NEKTAR_VERSION_PATCH 0)
@@ -60,8 +63,8 @@ SET(NEKTAR_BUILD_UTILITIES   ON CACHE BOOL
     "Build utilities for pre-processing and post-processing Nektar++ files.")
 SET(NEKTAR_BUILD_UNIT_TESTS  ON CACHE BOOL
     "Build unit tests.")
-SET(NEKTAR_BUILD_REGRESSION_TESTS ON CACHE BOOL
-    "Build regression tests for checking the correctness of the code.")
+SET(NEKTAR_BUILD_TESTS       ON CACHE BOOL
+    "Build tests for checking the correctness of the code.")
 SET(NEKTAR_BUILD_TIMINGS     OFF CACHE BOOL 
     "Build benchmark timing codes.")
 
@@ -86,6 +89,8 @@ SET(ExpressionTemplateDefault OFF)
 SET(NEKTAR_USE_EXPRESSION_TEMPLATES ${ExpressionTemplateDefault} CACHE BOOL "")
 MARK_AS_ADVANCED(NEKTAR_USE_EXPRESSION_TEMPLATES)
 
+SET(NEKTAR_USE_OPENBLAS OFF CACHE BOOL 
+    "Use OpenBLAS library as a substitute to native BLAS." )
 SET(NEKTAR_USE_ACML OFF CACHE BOOL 
     "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." )
 SET(NEKTAR_USE_MEMORY_POOLS ON CACHE BOOL 
@@ -111,8 +116,14 @@ ENDIF(APPLE)
 
 # Turn on NEKTAR_USE_WIN32_LAPACK if we are in Windows and the libraries exist.
 IF( WIN32 )
+    IF( CMAKE_CL_64 )
+        FIND_LIBRARY( WIN32_BLAS NAMES libblas64 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
+        FIND_LIBRARY( WIN32_LAPACK NAMES liblapack64 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
+    ELSE()
 	FIND_LIBRARY( WIN32_BLAS NAMES blas_win32 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
 	FIND_LIBRARY( WIN32_LAPACK NAMES lapack_win32 PATHS ${CMAKE_SOURCE_DIR}/ThirdParty ${CMAKE_SOURCE_DIR}/../ThirdParty )
+    ENDIF()
+    
 	IF( WIN32_BLAS AND WIN32_LAPACK )
 		SET(Win32LapackDefault ON)
     ELSE(WIN32_BLAS AND WIN32_LAPACK)
@@ -164,6 +175,11 @@ IF( NEKTAR_USE_MKL )
     SET(NEKTAR_USING_LAPACK TRUE)
     SET(NEKTAR_USING_MKL TRUE)
 ENDIF( NEKTAR_USE_MKL )
+
+IF( NEKTAR_USE_OPENBLAS )
+    INCLUDE (FindOpenBlas)
+    SET(NEKTAR_USING_OPENBLAS TRUE)
+ENDIF( NEKTAR_USE_OPENBLAS )
 
 IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
     INCLUDE (FindAccelerateFramework)
@@ -252,10 +268,10 @@ IF (NEKTAR_BUILD_UTILITIES)
     ADD_SUBDIRECTORY(utilities)
 ENDIF (NEKTAR_BUILD_UTILITIES)
 
-IF (NEKTAR_BUILD_REGRESSION_TESTS)
-    INCLUDE_DIRECTORIES(regressionTests)
-    ADD_SUBDIRECTORY(regressionTests)
-ENDIF (NEKTAR_BUILD_REGRESSION_TESTS)
+IF (NEKTAR_BUILD_TESTS)
+    INCLUDE_DIRECTORIES(tests)
+    ADD_SUBDIRECTORY(tests)
+ENDIF (NEKTAR_BUILD_TESTS)
 
 CONFIGURE_FILE(${CMAKE_SOURCE_DIR}/cmake/Nektar++Config.cmake.in 
                ${CMAKE_BINARY_DIR}/Nektar++Config.cmake @ONLY)
@@ -267,6 +283,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindACML.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindArpack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNistSparseBlas.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindOpenBlas.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
@@ -275,6 +292,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/NektarCommon.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindGSMPI.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindXXT.cmake
               DESTINATION ${CMAKE_INSTALL_PREFIX}) 
 
 INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR})

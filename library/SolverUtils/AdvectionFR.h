@@ -52,18 +52,22 @@ namespace Nektar
                 return AdvectionSharedPtr(new AdvectionFR(advType));
             }
             
-            static std::string                              type[];
+            static std::string                   type[];
             
-            Array<OneD, Array<OneD, NekDouble> >            m_dGL_xi1;                  
-            Array<OneD, Array<OneD, NekDouble> >            m_dGR_xi1;
-            Array<OneD, Array<OneD, NekDouble> >            m_dGL_xi2;                  
-            Array<OneD, Array<OneD, NekDouble> >            m_dGR_xi2;
-            Array<OneD, Array<OneD, NekDouble> >            m_dGL_xi3;                  
-            Array<OneD, Array<OneD, NekDouble> >            m_dGR_xi3;
-            DNekMatSharedPtr                                m_Ixm;
-            DNekMatSharedPtr                                m_Ixp;
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e0; 
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e1; 
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e2; 
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e3; 
             
-            
+            Array<OneD, Array<OneD, NekDouble> > m_dGL_xi1;                  
+            Array<OneD, Array<OneD, NekDouble> > m_dGR_xi1;
+            Array<OneD, Array<OneD, NekDouble> > m_dGL_xi2;                  
+            Array<OneD, Array<OneD, NekDouble> > m_dGR_xi2;
+            Array<OneD, Array<OneD, NekDouble> > m_dGL_xi3;                  
+            Array<OneD, Array<OneD, NekDouble> > m_dGR_xi3;
+            DNekMatSharedPtr                     m_Ixm;
+            DNekMatSharedPtr                     m_Ixp;
+
         protected:
             AdvectionFR(std::string advType);
             
@@ -72,22 +76,51 @@ namespace Nektar
             std::string m_advType;
             
             virtual void v_InitObject(
-                                      LibUtilities::SessionReaderSharedPtr              pSession,
-                                      Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+            
+            virtual void v_SetupMetrics(
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+            
+            virtual void v_SetupCFunctions(
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+            
+            virtual void v_SetupInterpolationMatrices(
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
             
             virtual void v_Advect(
-                                  const int                                          nConvectiveFields,
-                                  const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                  const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-                                  const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                                  Array<OneD, Array<OneD, NekDouble> >        &outarray);            
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray);            
             
-            virtual void v_divCorrFlux(
-                                       const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                                       const Array<OneD, const NekDouble> &fluxX, 
-                                       const Array<OneD, const NekDouble> &fluxY, 
-                                       const Array<OneD, const NekDouble> &numericalFlux,
-                                       Array<OneD,       NekDouble> &divCFlux);
+            virtual void v_DivCFlux_1D(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, const NekDouble> &fluxX1,  
+                const Array<OneD, const NekDouble> &numericalFlux,
+                      Array<OneD,       NekDouble> &divCFlux);
+            
+            virtual void v_DivCFlux_2D(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, const NekDouble> &fluxX1, 
+                const Array<OneD, const NekDouble> &fluxX2, 
+                const Array<OneD, const NekDouble> &numericalFlux,
+                      Array<OneD,       NekDouble> &divCFlux);
+            
+            virtual void v_DivCFlux_3D(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, const NekDouble> &fluxX1, 
+                const Array<OneD, const NekDouble> &fluxX2,
+                const Array<OneD, const NekDouble> &fluxX3, 
+                const Array<OneD, const NekDouble> &numericalFlux,
+                      Array<OneD,       NekDouble> &divCFlux);
         }; 
     }
 }

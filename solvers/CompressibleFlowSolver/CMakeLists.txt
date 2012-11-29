@@ -4,10 +4,17 @@ SET(CompressibleFlowSolverSource
        ./EquationSystems/EulerCFE.cpp
        ./EquationSystems/EulerArtificialDiffusionCFE.cpp
        ./EquationSystems/NavierStokesCFE.cpp
-       ./EquationSystems/UnsteadySystem.cpp
        ./RiemannSolvers/CompressibleSolver.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/ExactSolver.cpp)
 
 ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver solvers 
 			${CompressibleFlowSolverSource})
+
+ADD_NEKTAR_TEST(CylinderSubsonicMix)
+ADD_NEKTAR_TEST(CylinderSubsonic_P3)
+ADD_NEKTAR_TEST(CylinderSubsonic_P8)
+ADD_NEKTAR_TEST(IsentropicVortex16_P3)
+ADD_NEKTAR_TEST(IsentropicVortex16_P8)
+ADD_NEKTAR_TEST(RinglebFlow_P3)
+ADD_NEKTAR_TEST(RinglebFlow_P8)

@@ -542,7 +542,7 @@ namespace Nektar
                 (*m_exp)[i]->PhysDeriv(inarray+m_phys_offset[i],e_out_d0,e_out_d1,e_out_d2);
             }
         }
-		
+
         void ExpList::v_PhysDeriv(const int dir,
                                   const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD, NekDouble> &out_d)
@@ -2327,6 +2327,12 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 	
+        void ExpList::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+
         void ExpList::v_LocalToGlobal(void)
         {
             ASSERTL0(false,

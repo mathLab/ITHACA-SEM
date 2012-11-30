@@ -79,15 +79,12 @@ namespace Nektar
             m_equ[0]->DoInitialise();
             
             // - SFD Routine -
-            int NumElmVelocity(0);
             NumElmVelocity = m_equ[0]->GetNumElmVelocity();
             
             Array<OneD, Array<OneD, NekDouble> > q0(NumElmVelocity);
             Array<OneD, Array<OneD, NekDouble> > q1(NumElmVelocity);
             Array<OneD, Array<OneD, NekDouble> > qBar0(NumElmVelocity);
             Array<OneD, Array<OneD, NekDouble> > qBar1(NumElmVelocity);
-            Array<OneD, NekDouble > NormDiff_q_qBar(NumElmVelocity, 1.0);
-            Array<OneD, Array<OneD, NekDouble> > Diff_q_qBar(NumElmVelocity);
             
             NekDouble TOL(0);
             m_n=0;
@@ -130,7 +127,9 @@ namespace Nektar
                 qBar0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
             }
             
-            while (NormDiff_q_qBar[0] > TOL)
+            MaxNormDiff_q_qBar = 1.0;
+            
+            while (MaxNormDiff_q_qBar > TOL)
             {
                 m_equ[0]->DoSolve();
                 
@@ -144,7 +143,7 @@ namespace Nektar
                 
                 if(m_infosteps && !((m_n+1)%m_infosteps))
                 {
-                    ConvergenceHistory(q1, qBar1, Diff_q_qBar, NormDiff_q_qBar);
+                    ConvergenceHistory(q1, qBar1, MaxNormDiff_q_qBar);
                 }
                 
                 if(m_checksteps && m_n&&(!((m_n+1)%m_checksteps)))
@@ -202,39 +201,108 @@ namespace Nektar
         
         void DriverSteadyState::ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &q1, 
                                                    const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
-                                                   Array<OneD, Array<OneD, NekDouble> > &Diff_q_qBar,
-                                                   Array<OneD, NekDouble > &NormDiff_q_qBar)
+                                                   NekDouble &MaxNormDiff_q_qBar)
         {
             //This routine evaluates |q-qBar|L2 and save the value in "ConvergenceHistory.txt"
             //Moreover, a procedure to change the parameters Delta and X after 25 oscillations of |q-qBar| is implemented
             
-            for(int i = 0; i < 1; ++i)
+            Array<OneD, NekDouble > NormDiff_q_qBar(NumElmVelocity, 1.0);
+            
+            /*for(int i = 0; i < 1; ++i)
             {
                 Diff_q_qBar[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
             }
             
             Vmath::Vsub(Diff_q_qBar[0].num_elements(), q1[0], 1, qBar1[0], 1, Diff_q_qBar[0], 1);
-            Vmath::Smul(Diff_q_qBar[0].num_elements(), m_cst1, Diff_q_qBar[0], 1, Diff_q_qBar[0], 1);
+            Vmath::Smul(Diff_q_qBar[0].num_elements(), m_cst1, Diff_q_qBar[0], 1, Diff_q_qBar[0], 1);*/
+            
+            MaxNormDiff_q_qBar=0.0;
             
             //Norm Calculation
-            for(int i = 0; i < 1; ++i)
+            for(int i = 0; i < NumElmVelocity; ++i)
             {
-                NormDiff_q_qBar[i] = 0.0;
-                for(int j = 0; j < Diff_q_qBar[i].num_elements(); ++j)
+                NormDiff_q_qBar[i] = m_equ[0]->L2Error(i, qBar1[i], false);
+
+                if (MaxNormDiff_q_qBar < NormDiff_q_qBar[i])
                 {
-                    NormDiff_q_qBar[i] += Diff_q_qBar[i][j]*Diff_q_qBar[i][j];
+                    MaxNormDiff_q_qBar = m_cst1*NormDiff_q_qBar[i];
                 }
-                NormDiff_q_qBar[i]=sqrt(NormDiff_q_qBar[i]);
-            }					
-            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << NormDiff_q_qBar[0] <<endl;
+            }
+            
+            
+            
+            #if NEKTAR_USE_MPI   
+            MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
+            if (MPIrank==0)
+            {
+                cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
+                
+                std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
+                m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
+                m_file.close();
+                
+                if (m_Shrinking==false && MaxNormDiff_q_qBar > m_MaxNormDiff_q_qBar)
+                {
+                    m_MaxNormDiff_q_qBar=MaxNormDiff_q_qBar;
+                    m_Growing=true;
+                    if (m_MaxNormDiff_q_qBar < m_First_MinNormDiff_q_qBar)
+                    {
+                        m_Oscillation = 0;
+                        m_First_MinNormDiff_q_qBar=0;
+                    }
+                }
+                if (MaxNormDiff_q_qBar < m_MaxNormDiff_q_qBar && m_Growing==true)
+                {
+                    m_Growing=false;
+                    m_MaxNormDiff_q_qBar=0;
+                }
+                if (m_Growing==false && MaxNormDiff_q_qBar < m_MinNormDiff_q_qBar)
+                {
+                    m_MinNormDiff_q_qBar=MaxNormDiff_q_qBar;
+                    m_Shrinking=true;
+                    if (m_Oscillation==0)
+                    {
+                        m_First_MinNormDiff_q_qBar=m_MinNormDiff_q_qBar;
+                    }
+                }
+                if (MaxNormDiff_q_qBar > m_MinNormDiff_q_qBar && m_Shrinking==true)
+                {
+                    m_Shrinking=false;
+                    m_MinNormDiff_q_qBar=1000;
+                    m_Oscillation=m_Oscillation+1;
+                }
+                
+                if (m_Oscillation==25)
+                {                   
+                    m_Delta = m_Delta + 0.25;
+                    m_X = 0.99*(1.0/m_Delta);
+                    
+                    m_cst1=m_X*m_dt;
+                    m_cst2=1.0/(1.0 + m_cst1);
+                    m_cst3=m_dt/m_Delta;
+                    m_cst4=m_cst2*m_cst3;
+                    m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+                    
+                    cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
+                    
+                    m_Oscillation=0;
+                    m_equ[0]->DoInitialise();
+                }
+            }
+            
+            
+            #else
+            
+            
+            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
             
             std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
-            m_file << m_n+1 << "\t" << NormDiff_q_qBar[0] << endl;
+            m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
             m_file.close();
             
-            if (m_Shrinking==false && NormDiff_q_qBar[0] > m_MaxNormDiff_q_qBar)
+            if (m_Shrinking==false && MaxNormDiff_q_qBar > m_MaxNormDiff_q_qBar)
             {
-                m_MaxNormDiff_q_qBar=NormDiff_q_qBar[0];
+                m_MaxNormDiff_q_qBar=MaxNormDiff_q_qBar;
                 m_Growing=true;
                 if (m_MaxNormDiff_q_qBar < m_First_MinNormDiff_q_qBar)
                 {
@@ -242,21 +310,21 @@ namespace Nektar
                     m_First_MinNormDiff_q_qBar=0;
                 }
             }
-            if (NormDiff_q_qBar[0] < m_MaxNormDiff_q_qBar && m_Growing==true)
+            if (MaxNormDiff_q_qBar < m_MaxNormDiff_q_qBar && m_Growing==true)
             {
                 m_Growing=false;
                 m_MaxNormDiff_q_qBar=0;
             }
-            if (m_Growing==false && NormDiff_q_qBar[0] < m_MinNormDiff_q_qBar)
+            if (m_Growing==false && MaxNormDiff_q_qBar < m_MinNormDiff_q_qBar)
             {
-                m_MinNormDiff_q_qBar=NormDiff_q_qBar[0];
+                m_MinNormDiff_q_qBar=MaxNormDiff_q_qBar;
                 m_Shrinking=true;
                 if (m_Oscillation==0)
                 {
                     m_First_MinNormDiff_q_qBar=m_MinNormDiff_q_qBar;
                 }
             }
-            if (NormDiff_q_qBar[0] > m_MinNormDiff_q_qBar && m_Shrinking==true)
+            if (MaxNormDiff_q_qBar > m_MinNormDiff_q_qBar && m_Shrinking==true)
             {
                 m_Shrinking=false;
                 m_MinNormDiff_q_qBar=1000;
@@ -264,7 +332,7 @@ namespace Nektar
             }
             
             if (m_Oscillation==25)
-            {					
+            {                   
                 m_Delta = m_Delta + 0.25;
                 m_X = 0.99*(1.0/m_Delta);
                 
@@ -279,6 +347,8 @@ namespace Nektar
                 m_Oscillation=0;
                 m_equ[0]->DoInitialise();
             }
+            
+            #endif            
         }
     }
 }

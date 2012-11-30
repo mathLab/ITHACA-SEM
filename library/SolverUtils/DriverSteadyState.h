@@ -60,8 +60,7 @@ namespace Nektar
             
             void ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &q1, 
                                     const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
-                                    Array<OneD, Array<OneD, NekDouble> > &Diff_q_qBar,
-                                    Array<OneD, NekDouble > &NormDiff_q_qBar);
+                                    NekDouble &MaxNormDiff_q_qBar);
             
             void EvaluateNextSFDVariables(const int i,
                                           const Array<OneD, const Array<OneD, NekDouble> > &q0,
@@ -109,6 +108,12 @@ namespace Nektar
             NekDouble m_First_MinNormDiff_q_qBar;
             int m_Oscillation;
             
+            int NumElmVelocity;
+            
+            int MPIrank;
+            
+            NekDouble MaxNormDiff_q_qBar;
+                        
             std::ofstream m_file;
         };
     }	

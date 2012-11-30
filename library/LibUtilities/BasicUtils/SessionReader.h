@@ -42,6 +42,7 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/enable_shared_from_this.hpp>

@@ -140,7 +140,7 @@ SET(BasicUtilsSources
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
     ./BasicUtils/Thread.cpp
-    ./BasicUtils/VMath.cpp
+    ./BasicUtils/Vmath.cpp
 )
 
 SET(Memory

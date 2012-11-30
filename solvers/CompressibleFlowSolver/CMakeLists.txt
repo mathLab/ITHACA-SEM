@@ -1,4 +1,8 @@
-SET(CompressibleFlowSolverSource 
+SET(NEKTAR_SOLVER_COMPRESSIBLE_FLOW ON CACHE BOOL
+    "Build the Compressible Flow Solver.")
+
+IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
+    SET(CompressibleFlowSolverSource 
        ./CompressibleFlowSolver.cpp 
        ./EquationSystems/CompressibleFlowSystem.cpp
        ./EquationSystems/EulerCFE.cpp
@@ -8,13 +12,14 @@ SET(CompressibleFlowSolverSource
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/ExactSolver.cpp)
 
-ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver solvers 
+    ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver solvers 
 			${CompressibleFlowSolverSource})
 
-ADD_NEKTAR_TEST(CylinderSubsonicMix)
-ADD_NEKTAR_TEST(CylinderSubsonic_P3)
-ADD_NEKTAR_TEST(CylinderSubsonic_P8)
-ADD_NEKTAR_TEST(IsentropicVortex16_P3)
-ADD_NEKTAR_TEST(IsentropicVortex16_P8)
-ADD_NEKTAR_TEST(RinglebFlow_P3)
-ADD_NEKTAR_TEST(RinglebFlow_P8)
+    ADD_NEKTAR_TEST(CylinderSubsonicMix)
+    ADD_NEKTAR_TEST(CylinderSubsonic_P3)
+    ADD_NEKTAR_TEST(CylinderSubsonic_P8)
+    ADD_NEKTAR_TEST(IsentropicVortex16_P3)
+    ADD_NEKTAR_TEST(IsentropicVortex16_P8)
+    ADD_NEKTAR_TEST(RinglebFlow_P3)
+    ADD_NEKTAR_TEST(RinglebFlow_P8)
+ENDIF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )

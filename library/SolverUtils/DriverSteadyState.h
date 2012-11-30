@@ -58,8 +58,7 @@ namespace Nektar
             ///Name of the class
             static std::string className;
             
-            void ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &q1, 
-                                    const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
+            void ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
                                     NekDouble &MaxNormDiff_q_qBar);
             
             void EvaluateNextSFDVariables(const int i,

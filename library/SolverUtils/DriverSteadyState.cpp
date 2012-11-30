@@ -143,7 +143,7 @@ namespace Nektar
                 
                 if(m_infosteps && !((m_n+1)%m_infosteps))
                 {
-                    ConvergenceHistory(q1, qBar1, MaxNormDiff_q_qBar);
+                    ConvergenceHistory(qBar1, MaxNormDiff_q_qBar);
                 }
                 
                 if(m_checksteps && m_n&&(!((m_n+1)%m_checksteps)))
@@ -199,22 +199,13 @@ namespace Nektar
         }
         
         
-        void DriverSteadyState::ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &q1, 
-                                                   const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
+        void DriverSteadyState::ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
                                                    NekDouble &MaxNormDiff_q_qBar)
         {
             //This routine evaluates |q-qBar|L2 and save the value in "ConvergenceHistory.txt"
             //Moreover, a procedure to change the parameters Delta and X after 25 oscillations of |q-qBar| is implemented
             
             Array<OneD, NekDouble > NormDiff_q_qBar(NumElmVelocity, 1.0);
-            
-            /*for(int i = 0; i < 1; ++i)
-            {
-                Diff_q_qBar[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
-            }
-            
-            Vmath::Vsub(Diff_q_qBar[0].num_elements(), q1[0], 1, qBar1[0], 1, Diff_q_qBar[0], 1);
-            Vmath::Smul(Diff_q_qBar[0].num_elements(), m_cst1, Diff_q_qBar[0], 1, Diff_q_qBar[0], 1);*/
             
             MaxNormDiff_q_qBar=0.0;
             
@@ -272,6 +263,7 @@ namespace Nektar
                     m_Oscillation=m_Oscillation+1;
                 }
                 
+                // ================================= Possibly a problem with MPI with this algo for initialisation ================================
                 if (m_Oscillation==25)
                 {                   
                     m_Delta = m_Delta + 0.25;

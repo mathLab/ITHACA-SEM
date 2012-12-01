@@ -66,7 +66,7 @@ namespace Nektar
         StdExpansion3D::~StdExpansion3D()
         {
         }
-#if 0    
+#if 0
         void StdExpansion3D::PhysTensorDeriv(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &out_dx,
@@ -85,9 +85,9 @@ namespace Nektar
             DNekMatSharedPtr D0 = m_base[0]->GetD();
             DNekMatSharedPtr D1 = m_base[1]->GetD();
             DNekMatSharedPtr D2 = m_base[2]->GetD();
-            double          *Dx = &(D0->GetPtr())[0];
-            double          *Dy = &(D1->GetPtr())[0];
-            double          *Dz = &(D2->GetPtr())[0];
+            NekDouble          *Dx = &(D0->GetPtr())[0];
+            NekDouble          *Dy = &(D1->GetPtr())[0];
+            NekDouble          *Dz = &(D2->GetPtr())[0];
 
             if (out_dx.num_elements() > 0)
             {
@@ -143,6 +143,11 @@ namespace Nektar
             {
                 NekDouble  *D0 = &((m_base[0]->GetD())->GetPtr())[0];
 
+#if 1 
+                Blas::Dgemm('N','N', nquad0,nquad1*nquad2,nquad0,1.0,
+                            D0,nquad0,&wsp[0],nquad0,0.0,&out_dx[0],nquad0);
+#else               
+
                 for (int i = 0; i < nquad2; ++i)
                 {
                     Blas::Dgemm('N', 'N', nquad0, nquad1,      nquad0,
@@ -150,6 +155,7 @@ namespace Nektar
                                      &wsp   [i*nquad0*nquad1], nquad0, 
                                 0.0, &out_dx[i*nquad0*nquad1], nquad0);
                 }
+#endif
             }
 
             if (out_dy.num_elements() > 0) 
@@ -168,6 +174,12 @@ namespace Nektar
             {
                 NekDouble     *D2 = &((m_base[2]->GetD())->GetPtr())[0];
 
+#if 1
+                Blas::Dgemm('N','T',nquad0*nquad1,nquad2,nquad2,1.0,
+                            &wsp[0],nquad0*nquad1,D2,nquad2,0.0,&out_dz[0],
+                            nquad0*nquad1);
+                
+#else
                 for (int k = 0; k < nquad0*nquad1; ++k)
                 {
                     Blas::Dgemv('N', nquad2,       nquad2,
@@ -175,6 +187,7 @@ namespace Nektar
                                      &wsp[0]+k,    nquad0*nquad1,
                                 0.0, &out_dz[0]+k, nquad0*nquad1);
                 }
+#endif
             }
         }
 #endif

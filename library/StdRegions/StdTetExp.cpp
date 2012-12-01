@@ -335,7 +335,7 @@ namespace Nektar
          * + \frac {1 + \eta_2} {1 - \eta_3} \frac \partial {\partial \eta_2}
          * + \frac \partial {\partial \eta_3} \end{Bmatrix}\f$
          **/
-#if 1
+#if 0
         void StdTetExp::v_PhysDeriv(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& out_dxi1,

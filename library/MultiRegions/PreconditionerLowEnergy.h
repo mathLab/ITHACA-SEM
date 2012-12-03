@@ -84,6 +84,7 @@ namespace Nektar
 
             DNekMatSharedPtr                            m_preconditioner;
 	    DNekScalBlkMatSharedPtr                     GloBlkMat;
+	    DNekBlkMatSharedPtr                         BlkMat;
 
             DNekScalMatSharedPtr                        bnd_mat;
 

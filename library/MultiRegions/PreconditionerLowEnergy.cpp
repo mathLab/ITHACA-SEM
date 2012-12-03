@@ -841,9 +841,11 @@ namespace Nektar
             transposedtransmatrixmap[StdRegions::ePrism]=m_transposedTransformationMatrix[1];
 
             int n_exp = expList->GetNumElmts();
-            cout<<"first loop"<<endl;
             int tmpcnt=0;
             map<int,int> blockLocationMap;
+            map<int,int> matrixelements;
+            matrixelements[tmpcnt++]=nNonDirVerts;
+
             for(cnt=n=0; n < n_exp; ++n)
             {
                 nel = expList->GetOffset_Elmt_Id(n);
@@ -886,21 +888,19 @@ namespace Nektar
 
                         if(globalrow >= 0)
                         {
-                            cout<<globalrow<<endl;
                             if(blockLocationMap.count(globalrow) == 0)
                             {
-                                //cout<<"entered"<<endl;
                                 //here we need to account for nedgemodes
                                 for (i=0; i<nedgemodes; ++i)
                                 {
                                     blockLocationMap[globalrow+i]=tmpcnt;
-                                    //cout<<"row: "<<globalrow+i<<" counter: "<<tmpcnt<<endl;
                                 }
+                                matrixelements[tmpcnt]=nedgemodes;
                                 tmpcnt++;
                             }
                         }
                     }
-                }
+                }//end of edge loop
                 cnt +=offset;
             }
 
@@ -946,16 +946,14 @@ namespace Nektar
 
                         if(globalrow >= 0)
                         {
-                            cout<<globalrow<<endl;
                             if(blockLocationMap.count(globalrow) == 0)
                             {
-                                //cout<<"entered"<<endl;
                                 //here we need to account for nedgemodes
                                 for (i=0; i<nfacemodes; ++i)
                                 {
                                     blockLocationMap[globalrow+i]=tmpcnt;
-                                    //cout<<"row: "<<globalrow+i<<" counter: "<<tmpcnt<<endl;
                                 }
+                                matrixelements[tmpcnt]=nfacemodes;
                                 tmpcnt++;
                             }
                         }
@@ -967,11 +965,16 @@ namespace Nektar
 
             //Get number of each type of element, get the number of coeffs
 
-            const Array<OneD,const unsigned int> n_blks(tmpcnt);
+            Array<OneD,unsigned int> n_blks(tmpcnt);
             
-            DNekBlkMatSharedPtr BlkMat = MemoryManager<DNekBlkMat>
+            for(i=0; i<tmpcnt; ++i)
+            {
+                n_blks[i]=matrixelements[i];
+            }
+
+            BlkMat = MemoryManager<DNekBlkMat>
                     ::AllocateSharedPtr(n_blks, n_blks, blkmatStorage);
-            cout<<"second loop"<<endl;
+
             for(cnt=n=0; n < n_exp; ++n)
             {
                 nel = expList->GetOffset_Elmt_Id(n);
@@ -1027,6 +1030,7 @@ namespace Nektar
                 //for each vertex
                 for (v=0; v<nVerts; ++v)
                 {
+
                     DNekScalMatSharedPtr tmp_mat;
                     DNekMatSharedPtr m_locMat = 
                         MemoryManager<DNekMat>::AllocateSharedPtr
@@ -1079,8 +1083,6 @@ namespace Nektar
                 //loop over edges of the element and return the edge map
                 for (eid=0; eid<nEdges; ++eid)
                 {
-                    cout<<endl;
-                    cout<<"edge"<<endl;
                     nedgemodes=edgeModeLocation[eid].num_elements();
                     int row_offset=0;
                     DNekMatSharedPtr m_locMat = 
@@ -1097,7 +1099,6 @@ namespace Nektar
 
                         if(globalrow >= 0)
                         {
-                            //cout<<globalrow<<endl;
                             int col_offset=0;
                             for (m=0; m<nedgemodes; ++m)
                             {
@@ -1127,13 +1128,11 @@ namespace Nektar
                                         (globalrow,globalcol,globalMatrixValue);
 
                                     m_locMat->SetValue(row_offset,col_offset,globalEdgeValue);
-                                    cout<<globalMatrixValue<<" ";
                                 }
                                 col_offset++;
                             }
                             row_offset++;
                         }
-                        cout<<endl;
                     }
 
                     if(globalrow >= 0)
@@ -1149,26 +1148,13 @@ namespace Nektar
                         {
                             (*m_locMat)=(*tmp_mat)+(*m_locMat);
                         }
-
-                        cout<<endl;
-                        for(j=0; j<m_locMat->GetRows(); ++j)
-                        {
-                            for(int k=0; k<m_locMat->GetRows(); ++k)
-                            {
-                                cout<<(*m_locMat)(j,k)<<" ";
-                            }
-                            cout<<endl;
-                        }
-
                         BlkMat->SetBlock(loc,loc, m_locMat); //tmp_mat = MemoryManager<DNekMat>::AllocateSharedPtr(one,m_locMat));
                     }
                 }
-
-                 //loop over faces of the element and return the face map
+                
+                //loop over faces of the element and return the face map
                 for (fid=0; fid<nFaces; ++fid)
                 {
-                    cout<<endl;
-                    cout<<"face"<<endl;
                     nfacemodes=faceModeLocation[fid].num_elements();
                     int row_offset=0;
                     DNekMatSharedPtr m_locMat = 
@@ -1185,9 +1171,7 @@ namespace Nektar
                         
                         if(globalrow >= 0)
                         {
-                            //cout<<globalrow<<endl;
                             int loc = blockLocationMap[globalrow];
-                            //cout<<"check loc value: "<<loc<<" row: "<<globalrow<<endl;
                             int col_offset=0;
                             for (m=0; m<nfacemodes; ++m)
                             {
@@ -1198,7 +1182,7 @@ namespace Nektar
                                 globalcol = m_locToGloMap->
                                     GetLocalToGlobalBndMap(cnt+fMap2)
                                     -nDirBnd-nNonDirVerts-nNonDirEdges;
-                                //cout<<"col: "<<globalcol<<endl;
+
                                 //offset for dirichlet conditions
                                 if (globalcol >= 0)
                                 {
@@ -1218,35 +1202,24 @@ namespace Nektar
                                     FaceBlk->SetValue
                                         (globalrow,globalcol,globalMatrixValue);
                                     m_locMat->SetValue(row_offset,col_offset,globalFaceValue);
-                                    cout<<globalMatrixValue<<" ";
-                                    //cout<<"row: "<<globalrow<<" Map value: "<<blockLocationMap[globalrow]<<endl;
                                 }
                                 col_offset++;
                             }
                             row_offset++;
                         }
                     }
-                    cout<<endl;
+
                     if(globalrow >= 0)
                     {
                         DNekMatSharedPtr tmp_mat = 
                             MemoryManager<DNekMat>::AllocateSharedPtr
                             (nfacemodes,nfacemodes,zero,storage);
                         int loc = blockLocationMap[globalrow+nNonDirEdges];
-                        //cout<<loc<<endl;
+
                         tmp_mat=BlkMat->GetBlock(loc,loc);
                         if(tmp_mat != NullDNekMatSharedPtr)
                         {
                             (*m_locMat)=(*tmp_mat)+(*m_locMat);
-                        }
-
-                        for(j=0; j<m_locMat->GetRows(); ++j)
-                        {
-                            for(int k=0; k<m_locMat->GetRows(); ++k)
-                            {
-                                cout<<(*m_locMat)(j,k)<<" ";
-                            }
-                            cout<<endl;
                         }
 
                         BlkMat->SetBlock(loc,loc, m_locMat); //tmp_mat = MemoryManager<DNekMat>::AllocateSharedPtr(one,m_locMat));
@@ -1256,24 +1229,20 @@ namespace Nektar
                 cnt+=offset;
             }
 
-            for (i=0; i< tmpcnt-1; ++i)
+            BlkMat->SetBlock(0,0, VertBlk); //tmp_mat = MemoryManager<DNekMat>::AllocateSharedPtr(one,m_locMat));
+            
+            int totblks=BlkMat->GetNumberOfBlockRows();
+
+            for (i=0; i< totblks; ++i)
             {
+                unsigned int nmodes=BlkMat->GetNumberOfRowsInBlockRow(i);
                 DNekMatSharedPtr tmp_mat = 
                     MemoryManager<DNekMat>::AllocateSharedPtr
-                    (nedgemodes,nedgemodes,zero,storage);
+                    (nmodes,nmodes,zero,storage);
 
                 tmp_mat=BlkMat->GetBlock(i,i);
-                cout<<"block: "<<i<<endl;
-                for(j=0; j<tmp_mat->GetRows(); ++j)
-                {
-                    for(int k=0; k<tmp_mat->GetRows(); ++k)
-                    {
-                        cout<<(*tmp_mat)(j,k)<<" ";
-                    }
-                    cout<<endl;
-                }
-                cout<<endl;
-                cout<<endl;
+                tmp_mat->Invert();
+                BlkMat->SetBlock(i,i,tmp_mat);
             }
 
 
@@ -1282,28 +1251,9 @@ namespace Nektar
                 VertBlk->Invert();
             }
 
-            for(j=0; j<EdgeBlk->GetRows(); ++j)
-            {
-                for(int k=0; k<EdgeBlk->GetRows(); ++k)
-                {
-                    cout<<(*EdgeBlk)(j,k)<<" ";
-                }
-                cout<<endl;
-            }
-
             if (nNonDirEdges != 0)
             {
                 EdgeBlk->Invert();
-            }
-            cout<<endl;
-            cout<<"face"<<endl;
-            for(j=0; j<FaceBlk->GetRows(); ++j)
-            {
-                for(int k=0; k<FaceBlk->GetRows(); ++k)
-                {
-                    cout<<(*FaceBlk)(j,k)<<" ";
-                }
-                cout<<endl;
             }
 
             if (nNonDirFaces != 0)
@@ -1314,7 +1264,7 @@ namespace Nektar
             DNekScalMatSharedPtr     Blktmp;
             NekDouble                one = 1.0;
 
-            GloBlkMat->SetBlock(0,0,Blktmp = 
+            /*GloBlkMat->SetBlock(0,0,Blktmp = 
                                 MemoryManager<DNekScalMat>::AllocateSharedPtr
                                 (one,VertBlk));
             GloBlkMat->SetBlock(1,1,Blktmp = 
@@ -1322,7 +1272,7 @@ namespace Nektar
                                 (one,EdgeBlk));
             GloBlkMat->SetBlock(2,2,Blktmp = 
                                 MemoryManager<DNekScalMat>::AllocateSharedPtr
-                                (one,FaceBlk));
+                                (one,FaceBlk));*/
         }
 
         /**
@@ -1735,7 +1685,7 @@ namespace Nektar
                         int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                         int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
                         int nNonDir = nGlobal-nDir;
-                        DNekScalBlkMat &M = (*GloBlkMat);
+                        DNekBlkMat &M = (*BlkMat);
 
                         NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
                         NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);

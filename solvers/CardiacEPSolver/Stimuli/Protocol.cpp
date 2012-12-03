@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CLFtester.cpp
+// File Protocol.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,51 +29,50 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: CFL tester solve routines
+// Description: Protocol base class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
+#include <CardiacEPSolver/Stimuli/Protocol.h>
 
 namespace Nektar
 {
-	
-    NekDouble IncNavierStokes::v_GetTimeStep(const Array<OneD,int> ExpOrder, const Array<OneD,NekDouble> CFL, NekDouble timeCFL)
-    { 
-        
-        int nvariables = m_fields.num_elements();   // Number of variables in the mesh
-        int nTotQuadPoints  = GetTotPoints();
-        int n_element  = m_fields[0]->GetExpSize(); 
-        Array<OneD, NekDouble> tstep(n_element,0.0);
-        const NekDouble minLengthStdTri  = 1.414213;
-        const NekDouble minLengthStdQuad = 2.0;
-        const NekDouble cLambda = 0.2; // Spencer book pag. 317
-        Array<OneD, NekDouble> stdVelocity(n_element,0.0);
-        Array<OneD, Array<OneD, NekDouble> > velfields(m_velocity.num_elements());
-
-        for(int i = 0; i < m_velocity.num_elements(); ++i)
-        {
-            velfields[i] = m_fields[m_velocity[i]]->UpdatePhys();
-        }        
-        stdVelocity = GetStdVelocity(velfields);
-	
-        for(int el = 0; el < n_element; ++el)
-        {
-            int npoints = m_fields[0]->GetExp(el)->GetTotPoints();
-            
-            tstep[el] =  CFL[el]/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
-        }
-	
-        NekDouble TimeStep = Vmath::Vmin(n_element,tstep,1);
-	
-        return TimeStep;
+    ProtocolFactory& GetProtocolFactory()
+    {
+        typedef Loki::SingletonHolder<ProtocolFactory,
+        Loki::CreateUsingNew,
+        Loki::NoDestroy > Type;
+        return Type::Instance();
     }
     
-    NekDouble IncNavierStokes::v_GetTimeStep(int ExpOrder, NekDouble CFL, NekDouble TimeStability)
+    /**
+     * @class Protocol
+     *
+     * The Stimuli class and derived classes implement a range of stimuli.
+     * The stimulus contains input stimuli that can be applied throughout the
+     * domain, on specified regions determined by the derived classes of
+     * Stimulus, at specified frequencies determined by the derived classes of
+     * Protocol.
+     */
+    
+    /**
+     * Protocol base class constructor.
+     */
+    Protocol::Protocol(const LibUtilities::SessionReaderSharedPtr& pSession,
+                       const TiXmlElement* pXml)
     {
-        Array<OneD, int> ExpOrderList(m_fields[0]->GetExpSize(),ExpOrder);
-        Array<OneD, NekDouble> CFLList(m_fields[0]->GetExpSize(),CFL);
-        
-        return v_GetTimeStep(ExpOrderList,CFLList,TimeStability);
+        m_session = pSession;
     }
+    
+    
+    /**
+     * Initialise the protocol. Allocate workspace and variable storage.
+     */
+    void Protocol::Initialise()
+    {
+        
+        
+    }
+    
+    
 }

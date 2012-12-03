@@ -40,6 +40,8 @@
 #include <StdRegions/StdPrismExp.h>
 #include <SpatialDomains/SegGeom.h>
 #include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/GeomFactors3D.h>
+
 
 namespace Nektar
 {
@@ -184,17 +186,93 @@ namespace Nektar
         {
             return 5;
         }
+        
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry.
+         */
+        bool PrismGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        {
+            // Validation checks
+            ASSERTL1(gloCoord.num_elements() == 3,
+                     "Three dimensional geometry expects three coordinates.");
+            
+            // Convert to the local (eta) coordinates.
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            v_GetLocCoords(gloCoord, locCoord);
+            
+            // Check local coordinate is within [-1,1]^3 bounds.
+            if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
+                locCoord[2] >= -(1+tol) && locCoord[1] <=  (1+tol) &&
+                locCoord[0] + locCoord[2] <= tol)
+            {
+                return true;
+            }
+            
+            return false;
+        }
+
+        void PrismGeom::v_GenGeomFactors(
+            const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        {
+            int i,f;
+            GeomType Gtype = eRegular;
+
+            v_FillGeom();
+
+            // check to see if expansions are linear
+            for(i = 0; i < m_coordim; ++i)
+            {
+                if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
+                    m_xmap[i]->GetBasisNumModes(1) != 2 ||
+                    m_xmap[i]->GetBasisNumModes(2) != 2 )
+                {
+                    Gtype = eDeformed;
+                }
+            }
+
+            // check to see if all quadrilateral faces are parallelograms
+            if(Gtype == eRegular)
+            {
+                // Vertex ids of quad faces 
+                const unsigned int faceVerts[3][4] =
+                    { {0,1,2,3} ,
+                      {1,2,4,5} ,
+                      {0,3,4,5} };
+
+                for(f = 0; f < 3; f++)
+                {
+                    // Ensure each face is a parallelogram? Check this.
+                    for (i = 0; i < m_coordim; i++)
+                    {
+                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) +
+                                (*m_verts[ faceVerts[f][2] ])(i) - (*m_verts[ faceVerts[f][3] ])(i) ) > NekConstants::kNekZeroTol )
+                        {
+                            Gtype = eDeformed;
+                            break;
+                        }
+                    }
+                    
+                    if (Gtype == eDeformed)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                Gtype, m_coordim, m_xmap, tbasis);
+        }
+
 
         void PrismGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble> &coords, 
                   Array<OneD,       NekDouble> &Lcoords)
         {
-            v_FillGeom();
-
             // calculate local coordinate for coord
             if(GetGtype() == eRegular)
-            {   // Based on Spen's book, page 99
-
+            {
                 // Point inside tetrahedron
                 VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
 
@@ -223,11 +301,46 @@ namespace Nektar
                 Lcoords[0] = 2.0*beta  - 1.0;
                 Lcoords[1] = 2.0*gamma - 1.0;
                 Lcoords[2] = 2.0*delta - 1.0;
+
             }
             else
             {
-                NEKERROR(ErrorUtil::efatal,
-                         "inverse mapping must be set up to use this call");
+                v_FillGeom();
+            
+                // Determine nearest point of coords  to values in m_xmap
+                Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
+                Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
+                Array<OneD, NekDouble> ptsz = m_xmap[2]->GetPhys();
+                int npts = ptsx.num_elements();
+                Array<OneD, NekDouble> tmp1(npts), tmp2(npts);
+                const Array<OneD, const NekDouble> za = m_xmap[0]->GetPoints(0);
+                const Array<OneD, const NekDouble> zb = m_xmap[0]->GetPoints(1);
+                const Array<OneD, const NekDouble> zc = m_xmap[0]->GetPoints(2);
+                
+                //guess the first local coords based on nearest point
+                Vmath::Sadd(npts, -coords[0], ptsx,1,tmp1,1);
+                Vmath::Vmul (npts, tmp1,1,tmp1,1,tmp1,1);
+                Vmath::Sadd(npts, -coords[1], ptsy,1,tmp2,1);
+                Vmath::Vvtvp(npts, tmp2,1,tmp2,1,tmp1,1,tmp1,1);
+                Vmath::Sadd(npts, -coords[2], ptsz,1,tmp2,1);
+                Vmath::Vvtvp(npts, tmp2,1,tmp2,1,tmp1,1,tmp1,1);
+                          
+                int min_i = Vmath::Imin(npts,tmp1,1);
+                
+                // Get collapsed coordinate
+                int qa = za.num_elements(), qb = zb.num_elements();
+                Lcoords[2] = zc[min_i/(qa*qb)];
+                min_i = min_i%(qa*qb);
+                Lcoords[1] = zb[min_i/qa];
+                Lcoords[0] = za[min_i%qa];
+
+                // recover cartesian coordinate from collapsed coordinate. 
+                Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 -1.0;            
+                Lcoords[1] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 -1.0;
+
+
+                // Perform newton iteration to find local coordinates 
+                NewtonIterationForLocCoord(coords,Lcoords);
             }
         }
         

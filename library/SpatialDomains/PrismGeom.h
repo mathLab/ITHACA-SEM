@@ -62,9 +62,14 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
 
         protected:
+
+            virtual void v_GenGeomFactors(
+                 const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
             virtual void v_GetLocCoords(
                 const Array<OneD, const NekDouble> &coords,
                       Array<OneD,       NekDouble> &Lcoords);
+            virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
+                                         NekDouble tol);
             virtual int v_GetNumVerts() const;
             virtual int v_GetNumEdges() const;
             virtual int v_GetNumFaces() const;
@@ -74,7 +79,7 @@ namespace Nektar
                 const int i, const int j) const;
 	    virtual int v_GetEdgeFaceMap(
                 const int i, const int j) const;
-            
+
         private:
             void SetUpLocalEdges();
             void SetUpLocalVertices();

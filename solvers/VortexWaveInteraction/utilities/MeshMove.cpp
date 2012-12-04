@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
         vSession->DefinesSolverInfo("INTERFACE")
         && vSession->GetSolverInfo("INTERFACE")=="phase" )
     {
-        cr = boost::lexical_cast<double>(argv[argc-1]);
+        cr = boost::lexical_cast<NekDouble>(argv[argc-1]);
         argc=5;
     }
 
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
       
     //store the value of alpha
     string charalp (argv[argc-1]);
-    //NekDouble alpha = boost::lexical_cast<double>(charalp);
+    //NekDouble alpha = boost::lexical_cast<NekDouble>(charalp);
     cout<<"read alpha="<<charalp<<endl;
 
     //---------------------------------------------

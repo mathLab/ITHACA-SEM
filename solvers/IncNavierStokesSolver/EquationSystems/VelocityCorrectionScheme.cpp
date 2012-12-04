@@ -1373,7 +1373,7 @@ namespace Nektar
                             }
                             else
                             {
-                                m_wavenumber[j] = 2*M_PI*sign*(double(K))/m_LhomZ;       
+                                m_wavenumber[j] = 2*M_PI*sign*(NekDouble(K))/m_LhomZ;       
                                 m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
                             }
                             sign = -1.0*sign;

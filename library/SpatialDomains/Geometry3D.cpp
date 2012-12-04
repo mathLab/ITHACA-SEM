@@ -218,7 +218,7 @@ namespace Nektar
 
                   for(k = 0; k < nFaceCoeffs; k++)
                   {
-                      double v = signArray[k] * coeffs[k];
+                      NekDouble v = signArray[k] * coeffs[k];
                       (m_xmap[j]->UpdateCoeffs())[mapArray[k]] = v;
                   }
               }

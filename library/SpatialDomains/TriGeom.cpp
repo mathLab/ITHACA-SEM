@@ -248,7 +248,7 @@ namespace Nektar
                 if (pdim == 2)
                 {
                     int N = curve->m_points.size();
-                    int nEdgePts = (-1+(int)sqrt(static_cast<double>(8*N+1)))/2;
+                    int nEdgePts = (-1+(int)sqrt(static_cast<NekDouble>(8*N+1)))/2;
                     
                     ASSERTL0(nEdgePts*(nEdgePts+1)/2 == N,
                              "NUMPOINTS must be a triangle number for 2D basis.");
@@ -292,7 +292,7 @@ namespace Nektar
                 else if (pdim == 1)
                 {
                     int npts = curve->m_points.size();
-                    int nEdgePts = (int)sqrt(static_cast<double>(npts));
+                    int nEdgePts = (int)sqrt(static_cast<NekDouble>(npts));
                     Array<OneD,NekDouble> tmp(npts);
                     LibUtilities::PointsKey curveKey(nEdgePts, curve->m_ptype);
                     
@@ -389,7 +389,7 @@ namespace Nektar
             StdRegions::Orientation returnval;
             
             int i, j, map[3] = {-1,-1,-1};
-            double x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
+            NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
            
             // For periodic faces, we calculate the vector between the centre
             // points of the two faces. (For connected faces this will be

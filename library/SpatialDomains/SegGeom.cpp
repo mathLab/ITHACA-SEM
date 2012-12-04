@@ -385,7 +385,7 @@ namespace Nektar
 
             int i,j;
             int  nquad = m_xmap[0]->GetNumPoints(0);
-            double *coords[3];
+            NekDouble *coords[3];
 
             SegGeom::v_FillGeom();
 

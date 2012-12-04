@@ -186,7 +186,7 @@ namespace Nektar
             for(int i = 0; i < m_coordim; ++i)
             {
                 int npts = curve->m_points.size();
-                int nEdgePts = (int)sqrt(static_cast<double>(npts));
+                int nEdgePts = (int)sqrt(static_cast<NekDouble>(npts));
                 Array<OneD,NekDouble> tmp(npts);
                 LibUtilities::PointsKey curveKey(nEdgePts, curve->m_ptype);
 
@@ -341,7 +341,7 @@ namespace Nektar
                StdRegions::eDir1FwdDir1_Dir2FwdDir2;
 
            int i, j, map[4] = {-1,-1,-1,-1};
-           double x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
+           NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
            
            // For periodic faces, we calculate the vector between the centre
            // points of the two faces. (For connected faces this will be

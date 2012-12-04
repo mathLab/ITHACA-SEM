@@ -128,6 +128,7 @@ SET(BasicUtilsHeaders
     ./BasicUtils/SessionReader.h
     ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Thread.h
+    ./BasicUtils/ThreadBoost.h
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
@@ -140,6 +141,7 @@ SET(BasicUtilsSources
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
     ./BasicUtils/Thread.cpp
+    ./BasicUtils/ThreadBoost.cpp
     ./BasicUtils/Vmath.cpp
 )
 

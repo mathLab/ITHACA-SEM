@@ -43,6 +43,7 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
+#include <LibUtilities/BasicUtils/Thread.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -54,11 +55,6 @@ class TiXmlDocument;
 
 namespace Nektar
 {
-    namespace Thread
-    {
-    class ThreadManager;
-    }
-
     namespace LibUtilities
     {
         typedef std::map<std::string, std::string>  SolverInfoMap;
@@ -394,8 +390,8 @@ namespace Nektar
             FilterMap                                 m_filters;
             /// Be verbose
             bool                        m_verbose;
-	    /// Thread Manager
-	    Nektar::Thread::ThreadManager      *m_threadManager;
+            /// Thread Manager
+            Nektar::Thread::ThreadManagerSharedPtr      m_threadManager;
 
             /// String to enumeration map for Solver Info parameters.
             LIB_UTILITIES_EXPORT static EnumMapList   m_enums;

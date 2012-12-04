@@ -13,28 +13,33 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/thread.hpp>
 
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/Memory/NekMemoryManager.hpp>
+
 namespace Nektar
 {
     namespace Thread
     {
-        enum SchedType
-        {
-            e_guided,
-            e_static
-        };
 
-        typedef boost::unique_lock<boost::mutex> Lock;
-        
-        class ThreadWorker;
-        
+    	enum SchedType
+    	{
+    		e_guided,
+    		e_dynamic
+    	};
+
+    	class ThreadManager;
+    	typedef boost::shared_ptr<ThreadManager> ThreadManagerSharedPtr;
+    	typedef LibUtilities::NekFactory< std::string, ThreadManager, unsigned int> ThreadManagerFactory;
+    	LIB_UTILITIES_EXPORT ThreadManagerFactory& GetThreadManager();
+
+        //typedef boost::unique_lock<boost::mutex> Lock;
+
         /**
          * Base class for tasks to be sent to the ThreadManager
          * to run.  Override the run() method with the desired task.
          */
         class ThreadJob {
-        
-        friend class ThreadWorker;
-        
+
         public:
             /**
              * Base constructor
@@ -49,6 +54,8 @@ namespace Nektar
              * onto a worker thread and is ready to run.
              */
         	virtual void run() = 0;
+
+        	void setWorkerNum(unsigned int num);
         
         protected:
             /**
@@ -59,10 +66,8 @@ namespace Nektar
             unsigned int getWorkerNum();
         
         private:
-        	void setWorkerNum(unsigned int num);
-        
-        	// Member variables
-        	unsigned int m_workerNum;
+            unsigned int m_workerNum;
+
         };
         
         /**
@@ -88,142 +93,132 @@ namespace Nektar
          * to no fewer than m_chunkSize as the queue empties.
          *
          */ 
-        class ThreadManager
+        class ThreadManager : public boost::enable_shared_from_this<ThreadManager>
         {
-        
-        friend class ThreadWorker;
-        
+
         public:
-        	~ThreadManager();
-            /**
-             * Copy jobs into the master queue.
-             * The ThreadJob pointers are copied into the master queue.
-             * After jobs are run they are destructed.
-             */
-        	void queueJobs(std::vector<ThreadJob *> &joblist);
-            /**
-             * Copy a job into the master queue.
-             * The ThreadJob pointer is copied into the master queue.
-             * After jobs are run they are destructed.
-             */
-        	void queueJob(ThreadJob *job);
-            /**
-             * Returns the number of currently active workers.
-             */
-        	unsigned int getNumWorkers();
-            /**
-             * Sets the number of currently active workers.
-             */
-        	void setNumWorkers(const unsigned int num);
-            /**
-             * Sets the number of currently active workers to the maximum.
-             */
-        	void setNumWorkers();
-            /**
-             * Gets the maximum number of workers.
-             */
-        	unsigned int getMaxNumWorkers();
-            /**
-             * The calling thread (which should be the master thread) blocks
-             * until all jobs submitted have finished.  This means on return
-             * the queue will be empty and all workers idle.
-             *
-             * Currently this will deadlock if called when there are no active
-             * workers.
-             */
-        	void wait();
-            /**
-             * Sets the m_chunkSize.
-             * This is used by the scheduling type to determine how many jobs
-             * are loaded onto each worker at once.
-             */
-            void setChunkSize(unsigned int chnk);
-            /**
-             * Sets the scheduling type
-             */
-            void setSchedType(SchedType s);
-            /**
-             * Creates the ThreadManager instance.
-             * If called more than once, the parameters are ignored and
-             * a pointer to the original instance is returned.
-             *
-             * @param numT The number of worker threads to create
-             * @param chnksz The initial m_chunkSize.
-             */
-        	static ThreadManager *createThreadManager(unsigned int numT,
-        			unsigned int chnksz=1)
+        	virtual ~ThreadManager();
+        	virtual void queueJobs(std::vector<ThreadJob*>& joblist) = 0;
+        	virtual void queueJob(ThreadJob* job) = 0;
+        	virtual unsigned int getNumWorkers() = 0;
+        	virtual void setNumWorkers(const unsigned int num) = 0;
+        	virtual void setNumWorkers() = 0;
+        	virtual unsigned int getMaxNumWorkers() = 0;
+        	virtual void wait() = 0;
+        	virtual void setChunkSize(unsigned int chnk) = 0;
+        	virtual void setSchedType(SchedType s) = 0;
+
+/*
+        	static ThreadManager* createThreadManager(unsigned int numT,
+        			unsigned int chnksz = 1)
         	{
-                if (instance == 0)
-                {
-                    instance = new ThreadManager(numT, chnksz);
-                }
+        		if (instance == 0)
+        		{
+        			instance = new ThreadManager(numT, chnksz);
+        		}
         		return instance;
         	}
-            /**
-             * Returns a pointer to the ThreadManager
-             */
-            static ThreadManager *getInstance()
-            {
-                return instance;
-            }
+*/
 
-        
-        
-        private:
-        	// Member functions
-        	ThreadManager(unsigned int numWorkers, unsigned int chnk);
-        	ThreadManager(const ThreadManager &); //not defined
-        	ThreadManager(); // not defined
-        	bool isWorking();
-        
-        	// Member variables (NB remember constructor)
-        	const unsigned int m_numThreads;
-        	unsigned int m_numWorkers;
-        	std::queue<ThreadJob *> m_masterQueue;
-        	boost::mutex m_masterQueueMutex;
-        	boost::mutex m_masterActiveMutex;
-        	boost::condition_variable m_masterQueueCondVar;
-        	boost::condition_variable m_masterActiveCondVar;
-        	ThreadWorker **m_threadList;
-        	boost::thread **m_threadThreadList;
-        	bool *m_threadBusyList;
-        	bool *m_threadActiveList;
-        	unsigned int m_chunkSize;
-        	SchedType m_schedType;
-        
-        	// Static Member variables
-        	static ThreadManager *instance;
-        
+        	static ThreadManagerSharedPtr getInstance()
+        	{
+        		return instance;
+        	}
+
+        protected:
+        	static ThreadManagerSharedPtr instance;
+
         };
-        
-        
-        class ThreadWorker {
-        
-        public:
-        	ThreadWorker(ThreadManager *threadManager, int workerNum);
-        	virtual ~ThreadWorker();
-        	void operator()() { mainLoop(); };
-        	unsigned int getWorkerNum() { return m_threadNum; };
-        	void stop() { m_keepgoing = false;} ;
-        
-        private:
-        	ThreadWorker();
-        	ThreadWorker(const ThreadWorker &);
-        	void mainLoop();
-        	void loadJobs();
-            inline unsigned int getNumToLoad();
-        	void waitForActive();
-        	void runJobs();
-        
-        	// Member variables
-        	ThreadManager *m_threadManager;
-        	std::queue<ThreadJob *> m_workerQueue;
-        	bool m_keepgoing;
-        	unsigned int m_threadNum;
-        
-        };
-        
-        
+
+
+        class ThreadHandle : public ThreadManager
+        	{
+        	public:
+        		ThreadHandle(SchedType sched=e_dynamic);
+        		ThreadHandle(SchedType sched, unsigned int chnk=1);
+        		~ThreadHandle();
+
+        		/**
+        		 * Copy jobs into the master queue.
+        		 * The ThreadJob pointers are copied into the master queue.
+        		 * After jobs are run they are destructed.
+        		 */
+        		void queueJobs(std::vector<ThreadJob *> &joblist)
+        		{
+        			tm->queueJobs(joblist);
+        		}
+        		/**
+        		 * Copy a job into the master queue.
+        		 * The ThreadJob pointer is copied into the master queue.
+        		 * After jobs are run they are destructed.
+        		 */
+        		void queueJob(ThreadJob *job)
+        		{
+        			tm->queueJob(job);
+        		}
+        		/**
+        		 * Returns the number of currently active workers.
+        		 */
+        		unsigned int getNumWorkers()
+        		{
+        			return tm->getNumWorkers();
+        		}
+        		/**
+        		 * Sets the number of currently active workers.
+        		 */
+        		void setNumWorkers(const unsigned int num)
+        		{
+        			tm->setNumWorkers(num);
+        		}
+        		/**
+        		 * Sets the number of currently active workers to the maximum.
+        		 */
+        		void setNumWorkers()
+        		{
+        			tm->setNumWorkers();
+        		}
+        		/**
+        		 * Gets the maximum number of workers.
+        		 */
+        		unsigned int getMaxNumWorkers()
+        		{
+        			return tm->getMaxNumWorkers();
+        		}
+        		/**
+        		 * The calling thread (which should be the master thread) blocks
+        		 * until all jobs submitted have finished.  This means on return
+        		 * the queue will be empty and all workers idle.
+        		 *
+        		 * Currently this will deadlock if called when there are no active
+        		 * workers.
+        		 */
+        		void wait()
+        		{
+        			tm->wait();
+        		}
+        		/**
+        		 * Sets the m_chunkSize.
+        		 * This is used by the scheduling type to determine how many jobs
+        		 * are loaded onto each worker at once.
+        		 */
+        		void setChunkSize(unsigned int chnk)
+        		{
+        			tm->setChunkSize(chnk);
+        		}
+        		/**
+        		 * Sets the scheduling type
+        		 */
+        		void setSchedType(SchedType sched)
+        		{
+        			tm->setSchedType(sched);
+        		}
+
+        	private:
+        		ThreadManagerSharedPtr tm;
+
+        		void setup(SchedType sched, unsigned int chnk);
+
+        	};
     }
 }
 #endif /* THREAD_H_ */

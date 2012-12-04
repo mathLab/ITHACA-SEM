@@ -1912,7 +1912,9 @@ namespace Nektar
             int nthreads;
             LoadParameter("NThreads", nthreads, 1);
             cerr << "Number of threads will be: " << nthreads << endl;
-            m_threadManager = Nektar::Thread::ThreadManager::createThreadManager(nthreads, 4);
+            //m_threadManager = Nektar::Thread::ThreadManager::createThreadManager(nthreads, 4);
+                    m_threadManager = Thread::GetThreadManager().CreateInstance("ThreadManagerBoost", nthreads);
+
         }
     }
 }

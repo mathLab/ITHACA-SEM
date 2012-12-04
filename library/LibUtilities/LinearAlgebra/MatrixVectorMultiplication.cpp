@@ -225,11 +225,8 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
         unsigned int numberOfBlockRows = lhs.GetNumberOfBlockRows();
         std::fill(result.begin(), result.end(), 0.0);
 
-        Nektar::Thread::ThreadManager *tm = Nektar::Thread::ThreadManager::getInstance();
-        unsigned int nt = tm->getMaxNumWorkers();
-        tm->setNumWorkers(nt-1);
-        tm->setSchedType(Nektar::Thread::e_static);
-        tm->setChunkSize(1);
+        Thread::ThreadHandle THandle;
+        unsigned int nt = THandle.getMaxNumWorkers();
 
         unsigned int numPerThread = numberOfBlockRows / nt;
         unsigned int blockRow = 0;
@@ -237,7 +234,7 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
         {
             for(unsigned int thrd = 1; thrd < nt; thrd++)
             {
-                tm->queueJob(new MultiplyJob<LhsInnerMatrixType>(result, blockRow,
+                THandle.queueJob(new MultiplyJob<LhsInnerMatrixType>(result, blockRow,
                      blockRow+numPerThread, lhs, rhs));
                 blockRow += numPerThread;
             }
@@ -246,7 +243,7 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
         DiagonalBlockMatrixMultiplyImpl(result, blockRow, numberOfBlockRows,
                                         lhs, rhs);
 
-        tm->wait();
+        //THandle.wait();
     }
 
     template<typename LhsInnerMatrixType>

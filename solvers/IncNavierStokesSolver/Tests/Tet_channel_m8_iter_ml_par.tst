@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description>3D channel flow, Tet elements, par(3), P=8</description>
     <executable>IncNavierStokesSolver</executable>
@@ -9,16 +9,16 @@
     </files>
     <metrics>
         <metric type="L2" id="1">
-            <value variable="u" tolerance="1e-12">0</value>
-            <value variable="v" tolerance="1e-12">0</value>
-            <value variable="w" tolerance="1e-12">5.26988e-16</value>
-	    <value variable="p" tolerance="1e-12">1.36862e-14</value>
+            <value variable="u" tolerance="1e-12">1.98811e-14</value>
+            <value variable="v" tolerance="1e-12">2.10102e-14</value>
+            <value variable="w" tolerance="1e-12">1.09623e-13</value>
+            <value variable="p" tolerance="1e-12">1.64394e-12</value>
         </metric>
         <metric type="Linf" id="2">
-            <value variable="u" tolerance="1e-12">1.45672e-15</value>
-            <value variable="v" tolerance="1e-12">1.4546e-15</value>
-            <value variable="w" tolerance="1e-12">3.01703e-14</value>
-	    <value variable="p" tolerance="1e-12">4.72511e-13</value>
+            <value variable="u" tolerance="1e-12">8.3757e-14</value>
+            <value variable="v" tolerance="1e-12">9.56528e-14</value>
+            <value variable="w" tolerance="1e-12">7.71383e-13</value>
+            <value variable="p" tolerance="1e-12">7.46558e-12</value>
         </metric>
     </metrics>
 </test>

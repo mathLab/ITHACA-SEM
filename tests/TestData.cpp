@@ -74,7 +74,9 @@ namespace Nektar
     const std::string TestData::GetExecutable() const
     {
         std::string execname = m_executable;
-    #if !defined(NDEBUG)
+    #if defined(RELWITHDEBINFO)
+        execname += "-rg";
+    #elif !defined(NDEBUG)
         execname += "-g";
     #endif
         return execname;

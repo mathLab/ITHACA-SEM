@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <test>
     <description>3D channel flow, Hex elements, par(2), P=8</description>
     <executable>IncNavierStokesSolver</executable>
@@ -9,16 +9,16 @@
     </files>
     <metrics>
         <metric type="L2" id="1">
-            <value variable="u" tolerance="1e-12">8.0442e-16</value>
-            <value variable="v" tolerance="1e-12">6.74106e-16</value>
-            <value variable="w" tolerance="1e-12">2.86244e-15</value>
-	    <value variable="p" tolerance="1e-12">6.48523e-14</value>
+            <value variable="u" tolerance="1e-12">3.20512e-13</value>
+            <value variable="v" tolerance="1e-12">2.4627e-13</value>
+            <value variable="w" tolerance="1e-12">3.0802e-12</value>
+            <value variable="p" tolerance="1e-8">2.60141e-11</value>
         </metric>
         <metric type="Linf" id="2">
-            <value variable="u" tolerance="1e-12">5.23153e-15</value>
-            <value variable="v" tolerance="1e-12">3.86119e-15</value>
-            <value variable="w" tolerance="1e-12">4.83391e-13</value>
-	    <value variable="p" tolerance="1e-12">6.32827e-13</value>
+            <value variable="u" tolerance="1e-12">1.17002e-12</value>
+            <value variable="v" tolerance="1e-12">8.49471e-13</value>
+            <value variable="w" tolerance="1e-12">1.74388e-11</value>
+            <value variable="p" tolerance="1e-8">9.24516e-11</value>
         </metric>
     </metrics>
 </test>

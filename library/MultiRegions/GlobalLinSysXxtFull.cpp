@@ -90,13 +90,15 @@ namespace Nektar
         {
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
+
+            Array<OneD, NekDouble> tmp(nGlobDofs);
+            Array<OneD, NekDouble> tmp2(nGlobDofs);
+            Array<OneD, NekDouble> tmp3 = pOutput + nDirDofs;
 
             if(nDirDofs)
             {
                 // calculate the dirichlet forcing
-                int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
-                Array<OneD, NekDouble> tmp(nGlobDofs);
-                Array<OneD, NekDouble> tmp2(nGlobDofs);
                 if(dirForcCalculated)
                 {
                     Vmath::Vsub(nGlobDofs, pInput.get(), 1,
@@ -107,7 +109,7 @@ namespace Nektar
                 {
                     // Calculate the dirichlet forcing and substract it
                     // from the rhs
-                    int nLocDofs = pLocToGloMap->GetNumLocalCoeffs();
+                    //int nLocDofs = pLocToGloMap->GetNumLocalCoeffs();
 
                     m_expList.lock()->GeneralMatrixOp(
                             m_linSysKey,
@@ -122,16 +124,22 @@ namespace Nektar
                                     tmp, tmp2, pLocToGloMap);
 
                 // Enforce the Dirichlet boundary conditions on the solution
-                // array.
-                Vmath::Vadd(nGlobDofs, pOutput, 1,
-                                       tmp2,    1,
-                                       pOutput, 1);
+                // array as XXT discards them.
+                Vmath::Vcopy(nDirDofs, pOutput, 1,
+                                       tmp2,    1);
             }
             else
             {
+                Vmath::Vcopy(nGlobDofs, pInput, 1, tmp, 1);
                 SolveLinearSystem(pLocToGloMap->GetNumLocalCoeffs(),
-                                    pInput,pOutput, pLocToGloMap);
+                                    tmp,tmp2, pLocToGloMap);
             }
+
+            // Perturb the output array (previous solution) by the result of
+            // this solve to get full solution.
+            Vmath::Vadd(nGlobDofs - nDirDofs,
+                        tmp2 + nDirDofs, 1, tmp3, 1, tmp3, 1);
+
         }
 
 

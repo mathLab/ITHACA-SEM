@@ -85,9 +85,9 @@ namespace Nektar
             DNekMatSharedPtr D0 = m_base[0]->GetD();
             DNekMatSharedPtr D1 = m_base[1]->GetD();
             DNekMatSharedPtr D2 = m_base[2]->GetD();
-            double          *Dx = &(D0->GetPtr())[0];
-            double          *Dy = &(D1->GetPtr())[0];
-            double          *Dz = &(D2->GetPtr())[0];
+            NekDouble          *Dx = &(D0->GetPtr())[0];
+            NekDouble          *Dy = &(D1->GetPtr())[0];
+            NekDouble          *Dz = &(D2->GetPtr())[0];
 
             if (out_dx.num_elements() > 0)
             {
@@ -206,7 +206,7 @@ namespace Nektar
             
             // Lagrangian interpolation matrix
             DNekMatSharedPtr I;
-            double *interpolatingNodes = 0;
+            NekDouble *interpolatingNodes = 0;
             
             // Interpolate first coordinate direction
             I = m_base[0]->GetI(coords);

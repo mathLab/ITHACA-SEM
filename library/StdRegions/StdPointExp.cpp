@@ -105,7 +105,7 @@ namespace Nektar
 				
                 NekVector<NekDouble> in(m_ncoeffs,inarray,eWrapper);
                 NekVector<NekDouble> out(nquad,outarray,eWrapper);
-                NekMatrix<double> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
+                NekMatrix<NekDouble> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
                 out = B * in;
 				
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS 

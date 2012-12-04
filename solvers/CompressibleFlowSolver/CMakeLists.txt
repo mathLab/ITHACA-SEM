@@ -15,10 +15,13 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver solvers 
 			${CompressibleFlowSolverSource})
 
+    ADD_NEKTAR_TEST(CylinderSubsonic_FRDG_SEM)
     ADD_NEKTAR_TEST(CylinderSubsonicMix)
     ADD_NEKTAR_TEST(CylinderSubsonic_P3)
     ADD_NEKTAR_TEST(CylinderSubsonic_P8)
     ADD_NEKTAR_TEST(IsentropicVortex_FRDG_SEM)
+    ADD_NEKTAR_TEST(IsentropicVortex_FRSD_SEM)
+    ADD_NEKTAR_TEST(IsentropicVortex_FRHU_SEM)
     ADD_NEKTAR_TEST(IsentropicVortex16_P3)
     ADD_NEKTAR_TEST(IsentropicVortex16_P8)
     ADD_NEKTAR_TEST(RinglebFlow_P3)

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AdvectionNonConservative.h
+// File: AdvectionWeakDG.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,34 +29,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Non-conservative advection class.
+// Description: Weak DG advection class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_ADVECTIONNONCONSERVATIVE
-#define NEKTAR_SOLVERUTILS_ADVECTIONNONCONSERVATIVE
+#ifndef NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
+#define NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
 
-#include <SolverUtils/Advection.h>
+#include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
 {
     namespace SolverUtils
     {
-        class AdvectionNonConservative : public Advection
+        class AdvectionWeakDG : public Advection
         {
         public:
             static AdvectionSharedPtr create(std::string advType)
             {
-                return AdvectionSharedPtr(new AdvectionNonConservative());
+                return AdvectionSharedPtr(new AdvectionWeakDG());
             }
             
             static std::string type;
             
         protected:
-            AdvectionNonConservative();
+            AdvectionWeakDG();
+            
+            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
             
             virtual void v_Advect(
-                const int                                          nConvectiveFields,
+                const int                                          nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,

@@ -582,8 +582,8 @@ namespace Nektar
         }
 
         void UnsteadySystem::v_NumFluxforScalar(
-            Array<OneD, Array<OneD,             NekDouble> >   &ufield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+            const Array<OneD, Array<OneD, NekDouble> >               &ufield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             int i, j;
             int nTraceNumPoints = GetTraceNpoints();
@@ -652,9 +652,9 @@ namespace Nektar
         
         
         void UnsteadySystem::v_NumFluxforVector(
-            Array<OneD, Array<OneD,             NekDouble> >    &ufield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-            Array<OneD, Array<OneD,             NekDouble> >    &qflux)
+            const Array<OneD, Array<OneD, NekDouble> >               &ufield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                  Array<OneD, Array<OneD, NekDouble> >               &qflux)
         {
             int nTraceNumPoints = GetTraceNpoints();
             int nvariables = m_fields.num_elements();
@@ -739,22 +739,6 @@ namespace Nektar
             }
         }
 
-        
-        
-        void UnsteadySystem::v_GetFluxVector(
-            const int i, const int j,
-            Array<OneD, Array<OneD, NekDouble> > &physfield,
-            Array<OneD, Array<OneD, NekDouble> > &flux)
-        {
-            for(int k = 0; k < flux.num_elements(); ++k)
-            {
-                Vmath::Zero(GetNpoints(),flux[k],1);
-            }
-            Vmath::Vcopy(GetNpoints(),physfield[i],1,flux[j],1);
-        }
-
-        
-        
         void UnsteadySystem::WeakPenaltyforScalar(
             const int var,
             const Array<OneD, const NekDouble> &physfield,

@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/AdvectionNonConservative.h>
+#include <SolverUtils/Advection/AdvectionNonConservative.h>
 
 namespace Nektar
 {

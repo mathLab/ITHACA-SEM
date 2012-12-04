@@ -2236,7 +2236,7 @@ namespace Nektar
         }
 
         void EquationSystem::v_NumFluxforScalar(
-            Array<OneD, Array<OneD, NekDouble> > &ufield,
+            const Array<OneD, Array<OneD, NekDouble> >         &ufield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             ASSERTL0(false, "v_NumFluxforScalar: This function is not valid "
@@ -2244,9 +2244,9 @@ namespace Nektar
         }
 
         void EquationSystem::v_NumFluxforVector(
-            Array<OneD, Array<OneD, NekDouble> > &ufield,
+            const Array<OneD, Array<OneD, NekDouble> >   &ufield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-            Array<OneD, Array<OneD, NekDouble > > &qflux)
+            Array<OneD, Array<OneD, NekDouble > >              &qflux)
         {
             ASSERTL0(false, "v_NumFluxforVector: This function is not valid "
                      "for the Base class");

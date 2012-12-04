@@ -78,7 +78,7 @@ namespace Nektar
             {
                 string diffName;
         
-                m_session->LoadSolverInfo("DiffusionType", diffName, "WeakDG");
+                m_session->LoadSolverInfo("DiffusionType", diffName, "LDG");
                 m_diffusion = SolverUtils::GetDiffusionFactory().CreateInstance(diffName, diffName);
                 m_diffusion->SetFluxVector(&UnsteadyDiffusion::GetFluxVector, this);
                 m_diffusion->InitObject(m_session);

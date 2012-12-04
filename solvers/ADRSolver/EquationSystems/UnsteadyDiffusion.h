@@ -37,7 +37,6 @@
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYDIFFUSION_H
 
 #include <SolverUtils/UnsteadySystem.h>
-#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
 using namespace Nektar::SolverUtils;

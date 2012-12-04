@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: DiffusionWeakDG.h
+// File: DiffusionLDG.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -42,18 +42,18 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        class DiffusionWeakDG : public Diffusion
+        class DiffusionLDG : public Diffusion
         {
         public:
             static DiffusionSharedPtr create(std::string diffType)
             {
-                return DiffusionSharedPtr(new DiffusionWeakDG());
+                return DiffusionSharedPtr(new DiffusionLDG());
             }
             
             static std::string type;
             
         protected:
-            DiffusionWeakDG();
+            DiffusionLDG();
             
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;

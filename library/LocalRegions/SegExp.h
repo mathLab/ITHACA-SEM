@@ -222,7 +222,7 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,NekDouble> &outarray,
-                    const double lambda);
+                    const NekDouble lambda);
 
             //-----------------------------
             // Matrix creation functions

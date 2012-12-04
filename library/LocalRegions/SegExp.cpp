@@ -1172,7 +1172,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         void SegExp::v_HelmholtzMatrixOp(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,NekDouble> &outarray,
-                    const double lambda)
+                    const NekDouble lambda)
         {
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();

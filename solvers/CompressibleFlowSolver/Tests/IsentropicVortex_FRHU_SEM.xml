@@ -49,17 +49,17 @@
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> FinTime         = 0.6                  </P>
-            <P> TimeStep        = 0.01                 </P>
-            <P> NumSteps        = 0                    </P>
-            <P> IO_CheckSteps   = 100                  </P>
-            <P> IO_InfoSteps    = 100                  </P>
-            <P> Gamma           = 1.4                  </P>
-            <P> rho0            = 1.225                </P>
-            <P> rhou0           = 0.1225               </P>
-            <P> rhov0           = 0.0                  </P>
-            <P> E0              = 0.14                 </P>
-            <P> CFL             = 0                    </P>
+            <P> FinTime         = 0.6       </P>
+            <P> TimeStep        = 0.01      </P>
+            <P> NumSteps        = 0         </P>
+            <P> IO_CheckSteps   = 100       </P>
+            <P> IO_InfoSteps    = 100       </P>
+            <P> Gamma           = 1.4       </P>
+            <P> pInf            = 101325    </P>
+            <P> rhoInf          = 1.225     </P>
+            <P> uInf            = 0.1       </P>
+            <P> vInf            = 0.0       </P>
+            <P> CFL             = 0         </P>
         </PARAMETERS>
 
         <SOLVERINFO>
@@ -123,5 +123,6 @@
             <E VAR="rhov"   VALUE="1"/>
             <E VAR="E"      VALUE="1"/>
         </FUNCTION-->
+        
     </CONDITIONS>
 </NEKTAR>

@@ -166,6 +166,7 @@ namespace Nektar
             }
             else
             {
+                Vmath::Vcopy(nGlobDofs, pInput, 1, tmp, 1);
                 SolveLinearSystem(nGlobDofs, tmp, tmp, pLocToGloMap);
             }
             

@@ -90,11 +90,13 @@ namespace Nektar
             m_n=0;
             m_Check=0;			
             
-            m_session->LoadParameter("FilterWidth", m_Delta, 1);
+            m_session->LoadParameter("FilterWidth", m_Delta0, 1);
             m_session->LoadParameter("ControlCoeff",m_X, 1);
             m_session->LoadParameter("TOL", TOL, 1.0e-08);
             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1000);
             m_session->LoadParameter("IO_CheckSteps", m_checksteps, 100000);
+            
+            m_Delta = m_Delta0;
             
             m_dt = m_equ[0]->GetTimeStep();
             m_cst1=m_X*m_dt;
@@ -128,13 +130,18 @@ namespace Nektar
             }
             
             MaxNormDiff_q_qBar = 1.0;
+            Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;
+            
+            //m_LIM0 = 1.0e-04;
+            m_LIM0 = 1.0e-03;
+            m_LIM = m_LIM0;
             
             while (MaxNormDiff_q_qBar > TOL)
             {
                 m_equ[0]->DoSolve();
                 
                 for(int i = 0; i < NumElmVelocity; ++i)
-                {						
+                {
                     m_equ[0]->CopyFromPhysField(i, q0[i]);
                     EvaluateNextSFDVariables(i, q0, qBar0, q1, qBar1);
                     qBar0[i] = qBar1[i];
@@ -212,87 +219,33 @@ namespace Nektar
             //Norm Calculation
             for(int i = 0; i < NumElmVelocity; ++i)
             {
-                NormDiff_q_qBar[i] = m_equ[0]->L2Error(i, qBar1[i], false);
+                //NormDiff_q_qBar[i] = m_equ[0]->L2Error(i, qBar1[i], false);
+                NormDiff_q_qBar[i] = m_equ[0]->LinfError(i, qBar1[i]);
 
                 if (MaxNormDiff_q_qBar < NormDiff_q_qBar[i])
                 {
                     MaxNormDiff_q_qBar = m_cst1*NormDiff_q_qBar[i];
                 }
             }
-            
-            
-            
+                        
             #if NEKTAR_USE_MPI   
             MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
             if (MPIrank==0)
             {
-                cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
-                
+                //cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
+                cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<endl;
                 std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
                 m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
                 m_file.close();
-                
-                if (m_Shrinking==false && MaxNormDiff_q_qBar > m_MaxNormDiff_q_qBar)
-                {
-                    m_MaxNormDiff_q_qBar=MaxNormDiff_q_qBar;
-                    m_Growing=true;
-                    if (m_MaxNormDiff_q_qBar < m_First_MinNormDiff_q_qBar)
-                    {
-                        m_Oscillation = 0;
-                        m_First_MinNormDiff_q_qBar=0;
-                    }
-                }
-                if (MaxNormDiff_q_qBar < m_MaxNormDiff_q_qBar && m_Growing==true)
-                {
-                    m_Growing=false;
-                    m_MaxNormDiff_q_qBar=0;
-                }
-                if (m_Growing==false && MaxNormDiff_q_qBar < m_MinNormDiff_q_qBar)
-                {
-                    m_MinNormDiff_q_qBar=MaxNormDiff_q_qBar;
-                    m_Shrinking=true;
-                    if (m_Oscillation==0)
-                    {
-                        m_First_MinNormDiff_q_qBar=m_MinNormDiff_q_qBar;
-                    }
-                }
-                if (MaxNormDiff_q_qBar > m_MinNormDiff_q_qBar && m_Shrinking==true)
-                {
-                    m_Shrinking=false;
-                    m_MinNormDiff_q_qBar=1000;
-                    m_Oscillation=m_Oscillation+1;
-                }
-                
-                // ================================= Possibly a problem with MPI with this algo for initialisation ================================
-                if (m_Oscillation==25)
-                {                   
-                    m_Delta = m_Delta + 0.25;
-                    m_X = 0.99*(1.0/m_Delta);
-                    
-                    m_cst1=m_X*m_dt;
-                    m_cst2=1.0/(1.0 + m_cst1);
-                    m_cst3=m_dt/m_Delta;
-                    m_cst4=m_cst2*m_cst3;
-                    m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
-                    
-                    cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
-                    
-                    m_Oscillation=0;
-                    m_equ[0]->DoInitialise();
-                }
             }
-            
-            
             #else
-            
-            
             cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
-            
             std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
             m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
             m_file.close();
-            
-            if (m_Shrinking==false && MaxNormDiff_q_qBar > m_MaxNormDiff_q_qBar)
+            #endif  
+                
+            /*if (m_Shrinking==false && MaxNormDiff_q_qBar > m_MaxNormDiff_q_qBar)
             {
                 m_MaxNormDiff_q_qBar=MaxNormDiff_q_qBar;
                 m_Growing=true;
@@ -338,9 +291,51 @@ namespace Nektar
                 
                 m_Oscillation=0;
                 m_equ[0]->DoInitialise();
+            }*/
+            
+            
+            if (MaxNormDiff_q_qBar < Min_MaxNormDiff_q_qBar)
+            {
+                Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;
             }
             
-            #endif            
+            if (MaxNormDiff_q_qBar < m_LIM)
+            {                   
+                m_Delta = m_Delta + 0.5;
+                m_X = 0.99*(1.0/m_Delta);
+                
+                m_cst1=m_X*m_dt;
+                m_cst2=1.0/(1.0 + m_cst1);
+                m_cst3=m_dt/m_Delta;
+                m_cst4=m_cst2*m_cst3;
+                m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+                
+                cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
+                
+                //m_LIM = m_LIM/10.0;
+                m_LIM = m_LIM/2.0;
+            }
+            
+            if (MaxNormDiff_q_qBar > 2.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
+            {        
+                Min_MaxNormDiff_q_qBar = 1.0;
+                
+                m_Delta0 = m_Delta0 + 0.5;
+                m_Delta = m_Delta0;
+                m_X = 0.99*(1.0/m_Delta);
+                
+                m_cst1=m_X*m_dt;
+                m_cst2=1.0/(1.0 + m_cst1);
+                m_cst3=m_dt/m_Delta;
+                m_cst4=m_cst2*m_cst3;
+                m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+                
+                cout << "\nThe problem is reinitialized: New Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
+                
+                m_LIM = m_LIM0;
+                
+                m_equ[0]->DoInitialise(); 
+            }                      
         }
     }
 }

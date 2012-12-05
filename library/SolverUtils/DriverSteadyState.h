@@ -85,6 +85,7 @@ namespace Nektar
         private:
             //Definition of the SFD parameters:
             NekDouble m_Delta;
+            NekDouble m_Delta0;
             NekDouble m_X;
             NekDouble m_dt;
             NekDouble m_cst1;
@@ -112,6 +113,10 @@ namespace Nektar
             int MPIrank;
             
             NekDouble MaxNormDiff_q_qBar;
+            NekDouble Min_MaxNormDiff_q_qBar;
+            
+            NekDouble m_LIM;
+            NekDouble m_LIM0;
                         
             std::ofstream m_file;
         };

@@ -20,16 +20,16 @@ namespace Nektar
         {
             // This is an immediate teardown.  We attempt to kill everything.
             // we daren't lock anything as we may cause a deadlock
-            std::cerr << "exiting threadmanager" << std::endl;
             for (unsigned int i=0; i<m_numThreads; i++)
             {
                 m_threadList[i]->stop();
             }
-        
+
+            m_masterQueueCondVar.notify_all();
+            m_masterActiveCondVar.notify_all();
             for (unsigned int i=0; i<m_numThreads; i++)
             {
                 m_threadThreadList[i]->join();
-                std::cerr << "joined " << i << std::endl;
                 delete m_threadThreadList[i];
                 delete m_threadList[i];
             }

@@ -75,37 +75,39 @@ namespace Nektar
                  "Compressible flow sessions must define a Gamma parameter.");
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
         
-        // Get rho0 parameter from session file.
-        ASSERTL0(m_session->DefinesParameter("rho0"),
-                 "Compressible flow sessions must define a rho0 parameter.");
-        m_session->LoadParameter("rho0", m_rho0, 1.225);
+        // Get E0 parameter from session file.
+        ASSERTL0(m_session->DefinesParameter("pInf"),
+                 "Compressible flow sessions must define a pInf parameter.");
+        m_session->LoadParameter("pInf", m_pInf, 101325);
         
-        // Get rhou0 parameter from session file.
-        ASSERTL0(m_session->DefinesParameter("rhou0"),
-                 "Compressible flow sessions must define a rhou0 parameter.");
-        m_session->LoadParameter("rhou0", m_rhou0, 0.1225);
+        // Get rhoInf parameter from session file.
+        ASSERTL0(m_session->DefinesParameter("rhoInf"),
+                 "Compressible flow sessions must define a rhoInf parameter.");
+        m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
         
-        // Get rhov0 parameter from session file.
+        // Get uInf parameter from session file.
+        ASSERTL0(m_session->DefinesParameter("uInf"),
+                 "Compressible flow sessions must define a uInf parameter.");
+        m_session->LoadParameter("uInf", m_uInf, 0.1);
+        
+        // Get vInf parameter from session file.
         if (m_expdim == 2 || m_expdim == 3)
         {
-            ASSERTL0(m_session->DefinesParameter("rhov0"),
-                 "Compressible flow sessions must define a rhov0 parameter.");        
-            m_session->LoadParameter("rhov0", m_rhov0, 0.0);
+            ASSERTL0(m_session->DefinesParameter("vInf"),
+                     "Compressible flow sessions must define a vInf parameter"
+                     "for 2D/3D problems.");
+            m_session->LoadParameter("vInf", m_vInf, 0.0);
         }
         
-        // Get rhow0 parameter from session file.
+        // Get wInf parameter from session file.
         if (m_expdim == 3)
         {
-            ASSERTL0(m_session->DefinesParameter("rhow0"),
-                 "Compressible flow sessions must define a rhow0 parameter.");
-            m_session->LoadParameter("rhow0", m_rhow0, 0.0);
+            ASSERTL0(m_session->DefinesParameter("wInf"),
+                     "Compressible flow sessions must define a wInf parameter"
+                     "for 3D problems.");
+            m_session->LoadParameter("wInf", m_wInf, 0.0);
         }
-        
-        // Get E0 parameter from session file.
-        ASSERTL0(m_session->DefinesParameter("E0"),
-                 "Compressible flow sessions must define a E0 parameter.");
-        m_session->LoadParameter("E0", m_E0, 0.149875);
-        
+                
         m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
         
         // Type of advection class to be used
@@ -498,16 +500,14 @@ namespace Nektar
                 }
                 
                 // Boundary normal velocity
-                VnB = sqrt((m_rhou0 * m_rhou0) / (m_rho0 * m_rho0) + 
-                           (m_rhov0 * m_rhov0) / (m_rho0 * m_rho0));
+                VnB = sqrt((m_rhoInf * m_uInf * m_rhoInf * m_uInf) / (m_rhoInf * m_rhoInf) + 
+                           (m_rhoInf * m_vInf * m_rhoInf * m_vInf) / (m_rhoInf * m_rhoInf));
                 
                 // Boundary pressure
-                pressureB = (m_gamma - 1) * (m_E0 - 0.5 * 
-                                             ((m_rhou0 * m_rhou0) / (m_rho0) +  
-                                              (m_rhov0 * m_rhov0) / (m_rho0)));
+                pressureB = m_pInf;
                 
                 // Boundary speed of sound
-                soundSpeedB   = sqrt(m_gamma * pressureB / m_rho0);
+                soundSpeedB   = sqrt(m_gamma * pressureB / m_rhoInf);
                  
                 // Forward trace Mach number
                 Vmath::Vdiv(nTraceNumPoints, Velfwd, 1, 
@@ -537,7 +537,7 @@ namespace Nektar
                         if (Machfwd[pnt] < 0.99)
                         {
                             // + Characteristic from boundary
-                            cPlus = sqrt(m_gamma * pressureB / m_rho0);
+                            cPlus = sqrt(m_gamma * pressureB / m_rhoInf);
                             rPlus = VnB + 2.0 * cPlus / (m_gamma - 1);
                             
                             // - Characteristic from inside
@@ -559,7 +559,7 @@ namespace Nektar
                             
                             // Entropy correction
                             entropyCorrection = pressureB / 
-                                                (pow(m_rho0, m_gamma));
+                                                (pow(m_rhoInf, m_gamma));
                             
                             // rho final correction
                             rhoFinalCorrection = pow((soundSpeedCorrection * 
@@ -605,15 +605,15 @@ namespace Nektar
                         else
                         {
                             (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = m_rho0;
+                             UpdatePhys())[id1+i] = m_rhoInf;
                             (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = m_rho0 * VnB;
+                             UpdatePhys())[id1+i] = m_rhoInf * VnB;
                             (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = m_rho0 * VnB;
+                             UpdatePhys())[id1+i] = m_rhoInf * VnB;
                             (m_fields[3]->GetBndCondExpansions()[bcRegion]->
                              UpdatePhys())[id1+i] = 
-                                pressureB / (m_gamma - 1.0) + 
-                                0.5 * m_rhou0 * m_rhou0 / m_rho0;
+                                pressureB / (m_gamma - 1.0) + 0.5 * m_rhoInf * 
+                                m_uInf * m_rhoInf * m_uInf / m_rhoInf;
                         }
                     }
                 }
@@ -718,16 +718,16 @@ namespace Nektar
                 }
                 
                 // Boundary normal velocity
-                VnB = sqrt((m_rhou0 * m_rhou0) / (m_rho0 * m_rho0) + 
-                           (m_rhov0 * m_rhov0) / (m_rho0 * m_rho0));
+                VnB = sqrt((m_rhoInf * m_uInf * m_rhoInf * m_uInf) / 
+                           (m_rhoInf * m_rhoInf) + 
+                           (m_rhoInf * m_vInf * m_rhoInf * m_vInf) / 
+                           (m_rhoInf * m_rhoInf));
                 
                 // Boundary pressure
-                pressureB = (m_gamma - 1) * (m_E0 - 0.5 * 
-                                             ((m_rhou0 * m_rhou0) / (m_rho0) +  
-                                              (m_rhov0 * m_rhov0) / (m_rho0)));
+                pressureB = m_pInf;
                 
                 // Boundary speed of sound
-                soundSpeedB   = sqrt(m_gamma * pressureB / m_rho0);
+                soundSpeedB   = sqrt(m_gamma * pressureB / m_rhoInf);
                 
                 // Forward trace Mach number
                 Vmath::Vdiv(nTraceNumPoints, Velfwd, 1, 
@@ -764,7 +764,7 @@ namespace Nektar
                             rPlus = Vnfwd[pnt] + 2.0 * cPlus / (m_gamma - 1);
                             
                             // - Characteristic from inside
-                            cMinus = sqrt(m_gamma * pressureB / m_rho0);
+                            cMinus = sqrt(m_gamma * pressureB / m_rhoInf);
                             rMinus = VnB - 2.0 * cMinus / (m_gamma - 1);
                             
                             // Corrections for the boundary coditions

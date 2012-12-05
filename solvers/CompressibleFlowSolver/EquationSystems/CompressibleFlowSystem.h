@@ -89,11 +89,11 @@ namespace Nektar
         SolverUtils::AdvectionSharedPtr     m_advection;
         Array<OneD, NekDouble>              m_velLoc;
         NekDouble                           m_gamma;
-        NekDouble                           m_rho0;
-        NekDouble                           m_rhou0;
-        NekDouble                           m_rhov0;
-        NekDouble                           m_rhow0;
-        NekDouble                           m_E0;
+        NekDouble                           m_pInf;
+        NekDouble                           m_rhoInf;
+        NekDouble                           m_uInf;
+        NekDouble                           m_vInf;
+        NekDouble                           m_wInf;
         NekDouble                           m_gasConstant;
       
         CompressibleFlowSystem(

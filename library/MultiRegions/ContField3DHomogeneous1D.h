@@ -64,6 +64,8 @@ namespace Nektar
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ContField3DHomogeneous1D();
+			
+			MULTI_REGIONS_EXPORT virtual void v_SmoothField(Array<OneD,NekDouble> &field);
             
         protected:
 

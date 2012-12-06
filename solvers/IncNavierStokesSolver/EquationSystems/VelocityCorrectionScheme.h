@@ -41,9 +41,15 @@
 namespace Nektar
 {     
     
-    static NekDouble kHighOrderBCsExtrapolation[][3] = {{ 1.0,  0.0, 0.0},
-    { 2.0, -1.0, 0.0},
-    { 3.0, -3.0, 1.0}};
+    static NekDouble StifflyStable_Betaq_Coeffs[][3] = {{ 1.0,  0.0, 0.0},
+		                                                { 2.0, -1.0, 0.0},
+		                                                { 3.0, -3.0, 1.0}};
+	
+	static NekDouble StifflyStable_Alpha_Coeffs[][3] = {{ 1.0,  0.0, 0.0},
+		                                                { 2.0, -0.5, 0.0},
+		                                                { 3.0, -1.5, 0.333333333333333}};
+	
+	static NekDouble StifflyStable_Gamma0_Coeffs[3] = {1.0,  1.5, 1.833333333333333};
     
     /**
      * \brief This class is the base class for the Velocity Correction Scheme
@@ -108,10 +114,12 @@ namespace Nektar
         Array<OneD, int> m_pressureBCtoTraceID; // Id of edge (2D) or face (3D) to which pressure boundary condition belongs
         
         Array<OneD, Array<OneD, NekDouble> >  m_pressureHBCs; //< Storage for current and previous levels of high order pressure boundary conditions. 
+		Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
         
         Array<OneD, Array<OneD, int> > m_HBC;  //data structure to old all the information regarding High order pressure BCs
         
         int m_HBCnumber;                       // number of elemental expansion where a boundary is of High order type
+		int m_HBCsize;                         // number of coefficients for HOPBCs
         
         StdRegions::StdExpansionSharedPtr m_elmt; // general standard element used to deaal with HOPBC calculations
         
@@ -140,6 +148,8 @@ namespace Nektar
         void CalcPressureBCs3D(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N);
         
         void FillHOPBCMap(const int HOPBCnumber);
+		
+		void Roll(Array<OneD, Array<OneD, NekDouble> > &input);
         
         // Virtual functions 
         virtual void v_PrintSummary(std::ostream &out);

@@ -94,6 +94,8 @@ namespace Nektar
         m_session->MatchSolverInfo("SubSteppingScheme","True",m_subSteppingScheme,false);
 
         m_session->MatchSolverInfo("ShowTimings","True",m_showTimings,false);
+		
+		m_session->MatchSolverInfo("SmoothAdvection","True",m_SmoothAdvection,false);
 
         if(m_subSteppingScheme)
         {
@@ -234,6 +236,7 @@ namespace Nektar
 
         // Storage array for high order pressure BCs
         m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
+		m_acceleration = Array<OneD, Array<OneD, NekDouble> > (m_intSteps+1);
         
         m_HBCnumber = 0;
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
@@ -248,11 +251,15 @@ namespace Nektar
         
         if (m_HBCnumber > 0) 
         {
-            for(n = 0; n < m_intSteps; ++n)
+            m_acceleration[0] = Array<OneD, NekDouble>(cnt,0.0);
+            
+			for(n = 0; n < m_intSteps; ++n)
             {
-                m_pressureHBCs[n] = Array<OneD, NekDouble>(cnt);
+                m_pressureHBCs[n] = Array<OneD, NekDouble>(cnt,0.0);
+				m_acceleration[n+1] = Array<OneD, NekDouble>(cnt,0.0);
             }
         }
+		m_HBCsize = cnt;
         
         // creating a Map to store the information regarding
         // High-Order pressure BCs to improve efficiency
@@ -410,6 +417,14 @@ namespace Nektar
         {
             cout << "\t Adv. eval Time   : "<< timer.TimePerTest(1) << endl;
         }
+		
+		if(m_SmoothAdvection && m_pressureCalls > 1)
+		{
+			for(int i = 0; i < m_nConvectiveFields; ++i)
+			{
+				m_pressure->SmoothField(outarray[i]);
+			}
+		}
 
         //add the force
         if(m_session->DefinesFunction("BodyForce"))
@@ -551,7 +566,7 @@ namespace Nektar
     
     void VelocityCorrectionScheme::EvaluatePressureBCs(const Array<OneD, const Array<OneD, NekDouble> >  &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N, const NekDouble Aii_Dt)
     {		
-        Array<OneD, NekDouble> tmp;
+        Array<OneD, NekDouble> tmp,accelerationTerm;
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds;
         Array<OneD, MultiRegions::ExpListSharedPtr>  PBndExp;
         int  n,cnt;
@@ -560,14 +575,15 @@ namespace Nektar
         
         PBndConds   = m_pressure->GetBndConditions();
         PBndExp     = m_pressure->GetBndCondExpansions();
+		
+		int acc_order = 0;
+		accelerationTerm = Array<OneD, NekDouble>(m_HBCsize,0.0);
         
-        // Reshuffle Bc Storage vector
-        tmp = m_pressureHBCs[nlevels-1];
-        for(n = nlevels-1; n > 0; --n)
-        {
-            m_pressureHBCs[n] = m_pressureHBCs[n-1];
-        }
-        m_pressureHBCs[0] = tmp;
+		// Roll HOPBCs storage
+        Roll(m_pressureHBCs);
+		
+		// Roll acceleration term
+		Roll(m_acceleration);
         
         // Calculate BCs at current level
         CalcPressureBCs(fields,N);
@@ -583,18 +599,39 @@ namespace Nektar
                 cnt += nq;
             }
         }
+		
+		//Calculate acceleration term at level n based on previous steps
+		if (m_pressureCalls > 2)
+		{
+			acc_order = min(m_pressureCalls-2,m_intSteps);
+			Vmath::Smul(cnt,StifflyStable_Gamma0_Coeffs[acc_order-1],
+						m_acceleration[0],1,
+						accelerationTerm,1);
+			
+			for(int i = 0; i < acc_order; i++)
+			{
+				Vmath::Svtvp(cnt,-1*StifflyStable_Alpha_Coeffs[acc_order-1][i],m_acceleration[i+1],1,
+							 accelerationTerm,1,accelerationTerm,1);
+			}
+		}
+		
+		// Adding acceleration term to HOPBCs
+	    Vmath::Svtvp(cnt,-1.0/m_timestep,accelerationTerm,1,m_pressureHBCs[0],1,m_pressureHBCs[0],1);
+		
+		
         
         // Extrapolate to n+1
-        Vmath::Smul(cnt,kHighOrderBCsExtrapolation[nint-1][nint-1],
+        Vmath::Smul(cnt,StifflyStable_Betaq_Coeffs[nint-1][nint-1],
                     m_pressureHBCs[nint-1],1,m_pressureHBCs[nlevels-1],1);
         for(n = 0; n < nint-1; ++n)
         {
-            Vmath::Svtvp(cnt,kHighOrderBCsExtrapolation[nint-1][n],
+            Vmath::Svtvp(cnt,StifflyStable_Betaq_Coeffs[nint-1][n],
                          m_pressureHBCs[n],1,m_pressureHBCs[nlevels-1],1,
                          m_pressureHBCs[nlevels-1],1);
         }
         
-        // Reset Values into Pressure BCs
+        // Copy values of [dP/dn]^{n+1} in the pressure bcs storage. 
+		// m_pressureHBCS[nlevels-1] will be cancelled at next time step
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {
             // High order boundary condition;
@@ -611,6 +648,21 @@ namespace Nektar
             AddDuDt(N,Aii_Dt);
         }
     }
+	
+	void VelocityCorrectionScheme::Roll(Array<OneD, Array<OneD, NekDouble> > &input)
+	{
+		int  nlevels = input.num_elements();
+		Array<OneD, NekDouble> tmp;
+		
+		tmp = input[nlevels-1];
+		
+		for(int n = nlevels-1; n > 0; --n)
+        {
+            input[n] = input[n-1];
+        }
+		
+		input[0] = tmp;
+	}
 
 
     void VelocityCorrectionScheme::CalcPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &fields, const Array<OneD, const Array<OneD, NekDouble> >  &N)
@@ -745,6 +797,7 @@ namespace Nektar
         int phystot = m_fields[0]->GetTotPoints();
         
         Array<OneD, NekDouble> Pvals;
+		Array<OneD, NekDouble> Uvals;
         Array<OneD, const NekDouble> U,V,W,Nu,Nv,Nw;
 
         Array<OneD, NekDouble> Uy(9*m_pressureBCsMaxPts);
@@ -767,7 +820,10 @@ namespace Nektar
             Array<OneD, NekDouble> Uzz = Uyy + m_pressureBCsMaxPts; 
             Array<OneD, NekDouble> Uxy = Uzz + m_pressureBCsMaxPts; 
             Array<OneD, NekDouble> Wxz = Uxy + m_pressureBCsMaxPts; 
-            Array<OneD, NekDouble> Wyz = Wxz + m_pressureBCsMaxPts; 
+            Array<OneD, NekDouble> Wyz = Wxz + m_pressureBCsMaxPts;
+			
+			Array<OneD, NekDouble> Ub(m_pressureBCsMaxPts);
+			Array<OneD, NekDouble> Vb(m_pressureBCsMaxPts);
             
             StdRegions::StdExpansion1DSharedPtr Pbc;
             
@@ -846,7 +902,12 @@ namespace Nektar
                 Pvals = PBndExp[m_HBC[5][j]]->UpdateCoeffs()+PBndExp[m_HBC[5][j]]->GetCoeff_Offset(m_HBC[3][j]);
                 
                 Pbc->NormVectorIProductWRTBase(Vx,Uy,Pvals);
-                //cout <<"====================================================="<<endl;
+				
+				//update values for the acceleration term
+				m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,U,Ub);
+				m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,V,Vb);
+				Uvals = (m_acceleration[0]) + m_HBC[9][j];
+				Pbc->NormVectorIProductWRTBase(Ub,Vb,Uvals);
             }
         }
         else if(m_HomogeneousType == eHomogeneous2D)
@@ -1317,8 +1378,10 @@ namespace Nektar
             // m_HBC[5][j] contains the pressure bc ID
             // m_HBC[6][j] contains the elment ids of the assocuated plane k_c (ex. k=0 k_c=1; k=1 k_c=0; k=3 k_c=4)
             // m_HBC[7][j] contains the associated elments physical offset (k and k_c are the real and the complex plane)
+			// m_HBC[8][j] contains the plane number
+			// m_HBC[9][j] coefficients offset used to locate the acceleration term in the general m_pressureHBC
             
-            int num_data = 8;
+            int num_data = 10;
             
             Array<OneD, unsigned int> planes;
             
@@ -1336,6 +1399,14 @@ namespace Nektar
             
             m_wavenumber = Array<OneD, NekDouble>(m_HBCnumber);
             m_beta       = Array<OneD, NekDouble>(m_HBCnumber);
+			
+			Array<OneD,int> coeffs_offset(PBndConds.num_elements(),0);
+			Array<OneD,int> coeff_count(PBndConds.num_elements(),0);
+			
+			for(int n = 1 ; n < PBndConds.num_elements(); ++n)
+			{
+				coeffs_offset[n] = coeffs_offset[n-1] + PBndExp[n-1]->GetNcoeffs();
+			}
             
             int exp_size, exp_size_per_plane;
             int j=0;
@@ -1360,6 +1431,9 @@ namespace Nektar
                             m_HBC[3][j] = i+k*exp_size_per_plane;                    
                             m_HBC[4][j] = m_pressureBCtoTraceID[cnt];                
                             m_HBC[5][j] = n;
+							m_HBC[8][j] = k;
+							m_HBC[9][j] = coeffs_offset[n] + coeff_count[n];
+							coeff_count[n] = coeff_count[n] + m_elmt->GetEdgeNcoeffs(m_HBC[4][j]);
                             
                             if(m_SingleMode)
                             {
@@ -1376,7 +1450,6 @@ namespace Nektar
                                 m_wavenumber[j] = 2*M_PI*sign*(double(K))/m_LhomZ;       
                                 m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
                             }
-                            sign = -1.0*sign;
                             
                             if(k%2==0)
                             {
@@ -1405,6 +1478,7 @@ namespace Nektar
                         cnt += exp_size_per_plane;
                     }
                 }
+				sign = -1.0*sign;
             }
         }
         ////////////////////////////////////////////////////////////////////////////

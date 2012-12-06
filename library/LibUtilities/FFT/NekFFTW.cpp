@@ -57,10 +57,10 @@ namespace Nektar
             m_FFTW_w_inv = Array<OneD,NekDouble>(m_N);
 			
 			m_FFTW_w[0] = 1.0/(double)m_N;
-			m_FFTW_w[1] = m_FFTW_w[0];
+			m_FFTW_w[1] = 0.0;
 
 			m_FFTW_w_inv[0] = m_N;
-            m_FFTW_w_inv[1] = m_FFTW_w_inv[0];
+            m_FFTW_w_inv[1] = 0.0;
 			
 			for(int i=2;i<m_N;i++)
 			{

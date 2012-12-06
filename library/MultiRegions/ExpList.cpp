@@ -659,6 +659,27 @@ namespace Nektar
                                                      e_outarray = outarray+m_coeff_offset[i]);
             }
         }
+		
+		/**
+         * This function smooth a field after some calculaitons which have
+		* been done elementally. 
+         *
+         * @param   field     An array containing the field in physical space
+         *
+         */
+		void ExpList::v_SmoothField(Array<OneD, NekDouble> &field)
+		{
+			// Do nothing unless the method is implemented in the appropriate class, i.e. ContField1D,ContField2D, etc.
+			
+			// So far it has been implemented just for ContField2D and ContField3DHomogeneous1D
+			
+			// Block in case users try the smoothing with a modal expansion.
+			// Maybe a different techique for the smoothing require implementation for modal basis.
+			
+			ASSERTL0((*m_exp)[0]->GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+					 "Smoothing is currently not allowed unless you are using a nodal base for efficiency reasons." 
+					 "The implemented smoothing technique requires the mass matrix inversion which is trivial just for GLL_LAGRANGE_SEM expansions.");
+		}
 
         /**
          * This function assembles the block diagonal matrix

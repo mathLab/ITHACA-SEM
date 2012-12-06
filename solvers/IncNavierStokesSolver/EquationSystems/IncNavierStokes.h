@@ -146,6 +146,7 @@ namespace Nektar
         LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
 
         bool m_subSteppingScheme; // bool to identify if using a substepping scheme
+		bool m_SmoothAdvection; // bool to identify if advection term smoothing is requested 
         LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
 

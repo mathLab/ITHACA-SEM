@@ -36,9 +36,9 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3DHOMO2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD3DHOMO2D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/DisContField3DHomogeneous2D.h>
-#include <MultiRegions/ContField1D.h>
 
 namespace Nektar
 {
@@ -71,19 +71,15 @@ namespace Nektar
             int m_contNcoeffs;
             Array<OneD, NekDouble> m_contCoeffs;
 
-            void SetCoeffPhys(void);
-
             // virtual functions
 
-            virtual Array<OneD, NekDouble> &v_UpdateContCoeffs(void);
-
-            virtual const Array<OneD, const NekDouble> &v_GetContCoeffs(void) const;
+            virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
             /// Template method virtual forwarded for LocalToGlobal()
-            virtual void v_LocalToGlobal();
+            virtual void v_LocalToGlobal(void);
 
             /// Template method virtual forwarded for GlobalToLocal()
-            virtual void v_GlobalToLocal();
+            virtual void v_GlobalToLocal(void);
 
             /// Solves the three-dimensional Helmholtz equation, subject to the
             /// boundary conditions specified.

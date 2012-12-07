@@ -36,13 +36,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_HEXGEOM_H
 #define NEKTAR_SPATIALDOMAINS_HEXGEOM_H
 
-#include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdHexExp.h>
-
 #include <SpatialDomains/Geometry3D.h>
 #include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 
 namespace Nektar

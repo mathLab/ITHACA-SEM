@@ -66,7 +66,7 @@ namespace Nektar
         StdExpansion3D::~StdExpansion3D()
         {
         }
-        
+#if 0    
         void StdExpansion3D::PhysTensorDeriv(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &out_dx,
@@ -123,6 +123,61 @@ namespace Nektar
                 }
             }
         }
+#else
+        void StdExpansion3D::PhysTensorDeriv(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &out_dx,
+                  Array<OneD,       NekDouble> &out_dy,
+                  Array<OneD,       NekDouble> &out_dz)
+        {
+            const int nquad0 = m_base[0]->GetNumPoints();
+            const int nquad1 = m_base[1]->GetNumPoints();
+            const int nquad2 = m_base[2]->GetNumPoints();
+
+            Array<OneD, NekDouble> wsp(nquad0*nquad1*nquad2);
+            
+            // copy inarray to wsp in case inarray is used as outarray
+            Vmath::Vcopy(nquad0*nquad1*nquad2, &inarray[0], 1, &wsp[0], 1);
+            
+            if (out_dx.num_elements() > 0)
+            {
+                NekDouble  *D0 = &((m_base[0]->GetD())->GetPtr())[0];
+
+                for (int i = 0; i < nquad2; ++i)
+                {
+                    Blas::Dgemm('N', 'N', nquad0, nquad1,      nquad0,
+                                1.0, D0,                       nquad0, 
+                                     &wsp   [i*nquad0*nquad1], nquad0, 
+                                0.0, &out_dx[i*nquad0*nquad1], nquad0);
+                }
+            }
+
+            if (out_dy.num_elements() > 0) 
+            {
+                NekDouble   *D1 = &((m_base[1]->GetD())->GetPtr())[0];
+                for (int j = 0; j < nquad2; ++j)
+                {
+                    Blas::Dgemm('N', 'T', nquad0, nquad1,      nquad1,
+                                1.0, &wsp[j*nquad0*nquad1],    nquad0,
+                                D1,                            nquad1,
+                                0.0, &out_dy[j*nquad0*nquad1], nquad0);
+                }
+            }
+
+            if (out_dz.num_elements() > 0) 
+            {
+                NekDouble     *D2 = &((m_base[2]->GetD())->GetPtr())[0];
+
+                for (int k = 0; k < nquad0*nquad1; ++k)
+                {
+                    Blas::Dgemv('N', nquad2,       nquad2,
+                                1.0, D2,           nquad2,
+                                     &wsp[0]+k,    nquad0*nquad1,
+                                0.0, &out_dz[0]+k, nquad0*nquad1);
+                }
+            }
+        }
+#endif
 
         NekDouble StdExpansion3D::v_PhysEvaluate(
             const Array<OneD, const NekDouble> &coords)
@@ -199,6 +254,16 @@ namespace Nektar
             ASSERTL0 (x != m_faceNormals.end(),
                       "face normal not computed.");
             return x->second;
+        }
+
+        void StdExpansion3D::v_NegateFaceNormal(const int face)
+        {
+            m_negatedNormals[face] = true;
+            for (int i = 0; i < GetCoordim(); ++i)
+            {
+                Vmath::Neg(m_faceNormals[face][i].num_elements(), 
+                           m_faceNormals[face][i], 1);
+            }
         }
     }//end namespace
 }//end namespace

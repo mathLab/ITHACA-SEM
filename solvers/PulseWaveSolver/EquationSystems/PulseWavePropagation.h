@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERS_PULSEWAVESOLVER_EQUATIONSYSTEMS_PULSEWAVEPROPAGATION_H
 #define NEKTAR_SOLVERS_PULSEWAVESOLVER_EQUATIONSYSTEMS_PULSEWAVEPROPAGATION_H
 
-#include <SolverUtils/UnsteadySystem.h>
+//#include <SolverUtils/UnsteadySystem.h>
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
 
 using namespace Nektar::SolverUtils;
@@ -89,8 +89,16 @@ namespace Nektar
 		
 		/// Q_inflow Riemann solver
 		void Q_inflowRiemannSolver(NekDouble Q, NekDouble A_r, NekDouble u_r, NekDouble A_0, NekDouble beta, 
-								   NekDouble &Au,NekDouble &uu);
-		
+								   NekDouble &A_u,NekDouble &u_u);
+
+		/// R Riemann solver
+		void R_RiemannSolver(NekDouble R, NekDouble A_l, NekDouble u_l, NekDouble A_0, NekDouble beta, NekDouble pout,
+								   NekDouble &A_u,NekDouble &u_u);
+
+		/// CR Riemann solver
+		void CR_RiemannSolver(NekDouble C, NekDouble R, NekDouble A_l, NekDouble u_l, NekDouble A_0, NekDouble beta, NekDouble pout,
+								   NekDouble &A_u,NekDouble &u_u);
+		NekDouble pc;
         /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
     };

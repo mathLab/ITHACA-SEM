@@ -38,20 +38,25 @@
 
 #include <boost/unordered_set.hpp>
 
-#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/Basis.h>
 #include <SpatialDomains/SpatialDomains.hpp>
-#include <StdRegions/StdExpansion1D.h>
-#include <StdRegions/StdExpansion2D.h>
-#include <StdRegions/StdExpansion3D.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
+#include <StdRegions/StdExpansion.h>    // for StdExpansionSharedPtr
+#include <StdRegions/StdRegions.hpp>
+
 
 namespace Nektar
 {
+    namespace LibUtilities
+    {
+        class PointsKey;
+    }
+
     namespace SpatialDomains
     {
         // Forward declarations and useful typedefs
         class GeomFactors;
-        class GeomFactors2D;
+        class Geometry;
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
 
         SPATIAL_DOMAINS_EXPORT bool operator==(const GeomFactors &lhs, const GeomFactors &rhs);
@@ -210,7 +215,7 @@ namespace Nektar
             const size_t GetHash() const
             {
                 size_t hash = 0;
-                boost::hash_combine(hash, m_type);
+                boost::hash_combine(hash, (int)m_type);
                 boost::hash_combine(hash, m_expDim);
                 boost::hash_combine(hash, m_coordDim);
                 boost::hash_combine(hash, m_isUsingQuadMetrics);

@@ -34,10 +34,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-#include <cstdio>
-#include <cstdlib>
-
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <ShallowWaterSolver/EquationSystems/LinearSWE.h>
 
@@ -252,10 +248,10 @@ namespace Nektar
 	  Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
 	  
 	  for(i = 0; i < nvariables; ++i)
-	    {
-	      m_fields[i]->FwdTrans(inarray[i],coeffs,false);
-	      m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
-	    }
+          {
+              m_fields[i]->FwdTrans(inarray[i],coeffs);
+              m_fields[i]->BwdTrans_IterPerExp(coeffs,outarray[i]);
+          }
 	  break;
 	}
       default:

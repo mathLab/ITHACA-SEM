@@ -97,7 +97,14 @@ namespace Nektar
         /// Cell model.
         CellModelSharedPtr m_cell;
 
-        NekDouble m_uinit, m_vinit, m_beta, m_chi, m_cm, m_sigmai, m_sigmae; 
+        NekDouble m_chi, m_capMembrane, m_sigmaix, m_sigmaiy, m_sigmaiz, m_sigmaex, m_sigmaey, m_sigmaez; 
+
+        StdRegions::VarCoeffMap m_vardiffi;
+       	StdRegions::VarCoeffMap m_vardiffie;
+
+	Array<OneD, Array<OneD, NekDouble> > tmp1;
+	Array<OneD, Array<OneD, NekDouble> > tmp2;
+	Array<OneD, Array<OneD, NekDouble> > tmp3;
 
         /// Stimulus current
         NekDouble m_stimDuration;

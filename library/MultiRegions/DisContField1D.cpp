@@ -35,7 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/DisContField1D.h>
-#include <LocalRegions/SegExp.h>
+#include <StdRegions/StdSegExp.h>
 
 
 namespace Nektar
@@ -498,9 +498,9 @@ namespace Nektar
                     {
                         for(k = 0; k < bregionIt->second->size(); k++)
                         {
-                            if(vert = boost::dynamic_pointer_cast
+                            if((vert = boost::dynamic_pointer_cast
                                     <SpatialDomains::VertexComponent>(
-                                        (*bregionIt->second)[k]))
+                                         (*bregionIt->second)[k])))
                             {
                                 locPointExp
                                     = MemoryManager<MultiRegions::ExpList0D>
@@ -533,9 +533,9 @@ namespace Nektar
                         {
                             for(k = 0; k < bregionIt->second->size(); k++)
                             {
-                                if(vert = boost::dynamic_pointer_cast
-                                   <SpatialDomains::VertexComponent>(
-                                        (*bregionIt->second)[k]))
+                                if((vert = boost::dynamic_pointer_cast
+                                        <SpatialDomains::VertexComponent>(
+                                            (*bregionIt->second)[k])))
                                 {
                                     locPointExp
                                         = MemoryManager<MultiRegions::ExpList0D>
@@ -616,7 +616,7 @@ namespace Nektar
                     {
                         for(k = 0; k < bregionIt->second->size(); k++)
                         {
-                            if(vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*bregionIt->second)[k]))
+                            if((vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*bregionIt->second)[k])))
                             {
                                 locPointExp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
                                 bndCondExpansions[cnt]  = locPointExp;
@@ -646,8 +646,9 @@ namespace Nektar
                         {
                             for(k = 0; k < bregionIt->second->size(); k++)
                             {
-                                if(vert = boost::dynamic_pointer_cast
-                                   <SpatialDomains::VertexComponent>((*bregionIt->second)[k]))
+                                if((vert = boost::dynamic_pointer_cast<
+                                        SpatialDomains::VertexComponent>(
+                                            (*bregionIt->second)[k])))
                                 {
                                     locPointExp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
                                     bndCondExpansions[cnt]  = locPointExp;
@@ -728,45 +729,60 @@ namespace Nektar
          * @param   Bwd     Backward state.
          */
         void DisContField1D::v_GetFwdBwdTracePhys(const Array<OneD, const NekDouble> &field,
-                                                        Array<OneD,       NekDouble> &Fwd,
-                                                        Array<OneD,       NekDouble> &Bwd)
+                                                  Array<OneD,       NekDouble> &Fwd,
+                                                  Array<OneD,       NekDouble> &Bwd)
         {
-            /// Counter variables
+            // Counter variables
             int  n, p, i;
             
-            /// Number of elements
+            // Number of elements
             int nElements = GetExpSize();
             
-            /// Number of quadrature points of each element
-            int nLocalQuadraturePts;
+            // Number of solution points of each element
+            int nLocalSolutionPts;
             
-            /// Initial index of each element
+            // Initial index of each element
             int phys_offset;
             
-            /// Index of each interface between adjacent elements
+            // Index of each interface between adjacent elements
             int interface_offset;
             
-            /// Index in case of subdomains
+            // Index in case of subdomains
             int subdomain_offset;
             
-            /// Coordinate of each standard element (-1, 1)
+            // Coordinate of each standard element (-1, 1)
             NekDouble vertex_coord;
             
-            /// Set forward and backard state to zero
+            // Basis shared pointer
+            LibUtilities::BasisSharedPtr Basis;
+
+            // Set forward and backard state to zero
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 			
-            /// Loop on the elements
-            for(n = 0; n < nElements; ++n)
+            // Loop on the elements
+            for (n = 0; n < nElements; ++n)
             {
-                /// Set the offset of each element
+                // Set the offset of each element
                 phys_offset = GetPhys_Offset(n);
                 
-                /// Set the number of quadrature points of each element
-                nLocalQuadraturePts = (*m_exp)[n]->GetNumPoints(0);
+                // Set the number of solution points of each element
+                nLocalSolutionPts = (*m_exp)[n]->GetNumPoints(0);
                 
-                for(p = 0; p < 2; ++p)
+                // Temporary vector for interpolation routine
+                Array<OneD, NekDouble> tmp(nLocalSolutionPts, 0.0);
+                
+                // Partition the field vector in local vectors
+                tmp = field + (n * nLocalSolutionPts);
+                
+                // Basis definition on each element
+                Basis = (*m_exp)[n]->GetBasis(0);
+
+                for (p = 0; p < 2; ++p)
                 {
+                    // Coordinate vector for interpolation routine
+                    Array<OneD, NekDouble> interface_coord(3, 0.0);
+                    
                     vertex_coord       = 0.0;
                     interface_offset   = (*m_exp)[n]->GetGeom1D()->GetVid(p);
                     subdomain_offset   = (*m_exp)[0]->GetGeom1D()->GetVid(0);
@@ -777,25 +793,51 @@ namespace Nektar
                         vertex_coord += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
                     }
                     
-                    if(vertex_coord >= 0.0)
+                    // Set the x-coordinate of the standard interface point
+                    interface_coord[0] = vertex_coord;
+                    
+                    // Implementation for every points except Gauss points
+                    if (Basis->GetPointsType() != LibUtilities::eGaussGaussLegendre)
                     {
-                        Fwd[interface_offset] = field[phys_offset+nLocalQuadraturePts-1];
-                    }					 
-                    if(vertex_coord < 0.0) 
+                        if(vertex_coord >= 0.0)
+                        {
+                            Fwd[interface_offset] = field[phys_offset+nLocalSolutionPts-1];
+                        }			 
+                        if(vertex_coord < 0.0) 
+                        {
+                            Bwd[interface_offset] = field[phys_offset];
+                        }
+                    }
+                    // Implementation for Gauss points 
+                    // (it doesn't work for WeakDG)
+                    else
                     {
-                        Bwd[interface_offset] = field[phys_offset];
+                        StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
+                     
+                        if(vertex_coord >= 0.0)
+                        {
+                            Fwd[interface_offset] = 
+                            //(*m_exp)[n]->PhysEvaluate(interface_coord, tmp);
+                            StdSeg.PhysEvaluate(interface_coord, tmp);
+                        }					 
+                        if(vertex_coord < 0.0) 
+                        {
+                            Bwd[interface_offset] = 
+                            //(*m_exp)[n]->PhysEvaluate(interface_coord, tmp);
+                            StdSeg.PhysEvaluate(interface_coord, tmp);
+                        }
                     }
                 }
             }
             
-            /// Fill boundary conditions into the missing elements
+            // Fill boundary conditions into the missing elements
             int id1         = 0;
             int id2         = 0;
             int firstVertex = (*m_exp)[0]->GetGeom1D()->GetVid(0);
             int lastVertex  = (*m_exp)[nElements-1]->GetGeom1D()->GetVid(1);
             Array<OneD, NekDouble>  processed(m_bndCondExpansions.num_elements()+1, -1.0);
             
-            /// Bug temporary fixed for Periodic boundary conditions
+            // Bug temporary fixed for Periodic boundary conditions
             if(SpatialDomains::ePeriodic)
             {
                 int nTracePts      = Fwd.num_elements();
@@ -805,7 +847,7 @@ namespace Nektar
             
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {		
-                /// Check if the current boundary condition belongs to the current subdomain
+                // Check if the current boundary condition belongs to the current subdomain
                 if((m_bndCondExpansions[n]->GetVertex()->GetVid() >= firstVertex) 
                    && (m_bndCondExpansions[n]->GetVertex()->GetVid() <= lastVertex) 
                    && (processed[n] != m_bndCondExpansions[n]->GetVertex()->GetVid()))

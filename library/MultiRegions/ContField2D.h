@@ -35,21 +35,15 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_CONTFIELD2D_H
 #define NEKTAR_LIBS_MULTIREGIONS_CONTFIELD2D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <LibUtilities/Communication/Comm.h>
-
-#include <SpatialDomains/MeshGraph2D.h>
 #include <SpatialDomains/Conditions.h>
-
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/DisContField2D.h>
-#include <MultiRegions/ExpList1D.h>
-
-//#include <MultiRegions/AssemblyMapCG.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapCG2D.h>
-
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 
 namespace Nektar
@@ -89,25 +83,6 @@ namespace Nektar
             /// The default destructor.
             MULTI_REGIONS_EXPORT virtual ~ContField2D();
 
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
-            /// (implemented as #m_contCoeffs) containing all global expansion
-            /// coefficients.
-            inline Array<OneD, NekDouble> &UpdateContCoeffs();
-
-            /// Returns (a reference to) the array \f$\boldsymbol{\hat{u}}_g\f$
-            /// (implemented as #m_contCoeffs) containing all global expansion
-            /// coefficients.
-            inline const Array<OneD, const NekDouble> &GetContCoeffs() const;
-
-            /// Returns the total number of global degrees of freedom
-            /// \f$N_{\mathrm{dof}}\f$.
-            inline int GetContNcoeffs();
-
-            /// Scatters from the global coefficients
-            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
-            /// \f$\boldsymbol{\hat{u}}_l\f$.
-            inline void GlobalToLocal();
-
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
@@ -120,10 +95,6 @@ namespace Nektar
             inline const void GlobalToLocal(
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray) const;
-
-            /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
-            /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
-            inline void LocalToGlobal();
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
@@ -146,27 +117,27 @@ namespace Nektar
             inline void IProductWRTBase(
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD, NekDouble> &outarray,
-                                  bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             /// Performs the global forward transformation of a function
             /// \f$f(\boldsymbol{x})\f$, subject to the boundary conditions
             /// specified.
             MULTI_REGIONS_EXPORT void FwdTrans(const Array<OneD, const NekDouble> &inarray,
                                 Array<OneD,      NekDouble> &outarray,
-                          bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             /// Performs the backward transformation of the spectral/hp
             /// element expansion.
             inline void BwdTrans(
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray,
-                                  bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             /// Multiply a solution by the inverse mass matrix.
             MULTI_REGIONS_EXPORT void MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,  NekDouble> &outarray,
-                                bool  UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
             /// Solves the two-dimensional Laplace equation, subject to the
             /// boundary conditions specified.
@@ -177,7 +148,7 @@ namespace Nektar
                               const Array<OneD,       Array<OneD,NekDouble> >&
                                     variablecoeffs = NullNekDoubleArrayofArray,
                               NekDouble time = 0.0,
-                              bool UseContCoeffs = false);
+                                CoeffState coeffstate = eLocal);
 
 
             /// Compute the eigenvalues of the linear advection operator.
@@ -206,14 +177,6 @@ namespace Nektar
             /// global degrees of freedom.
             AssemblyMapCGSharedPtr m_locToGloMap;
 
-            /// The total number of global degrees of freedom.
-            /// #m_contNcoeffs\f$=N_{\mathrm{dof}}\f$
-            int                             m_contNcoeffs;
-
-            /// The array of length #m_ncoeffs\f$=N_{\mathrm{dof}}\f$
-            /// containing the global expansion coefficients.
-            Array<OneD, NekDouble>          m_contCoeffs;
-
             /// (A shared pointer to) a list which collects all the global
             /// matrices being assembled, such that they should be constructed
             /// only once.
@@ -239,39 +202,38 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
 
-            MULTI_REGIONS_EXPORT virtual int v_GetContNcoeffs() const;
+            /// Impose the Dirichlet Boundary Conditions on outarray 
+            MULTI_REGIONS_EXPORT virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
-            MULTI_REGIONS_EXPORT virtual void v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray);
 
-            /// Template method virtual forwarded for UpdateContCoeffs()
-            MULTI_REGIONS_EXPORT virtual Array<OneD, NekDouble> &v_UpdateContCoeffs();
+            /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
+            /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(void);
+            
 
-            /// Template method virtual forwarded for GetContCoeffs()
-            MULTI_REGIONS_EXPORT virtual const Array<OneD, const NekDouble> &v_GetContCoeffs() const;
-
-            /// Template method virtual forwarded for LocalToGlobal()
-            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal();
-
-            /// Template method virtual forwarded for GlobalToLocal()
-            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal();
+            /// Scatters from the global coefficients
+            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
+            /// \f$\boldsymbol{\hat{u}}_l\f$.
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(void);
 
             /// Template method virtual forwarder for FwdTrans().
             MULTI_REGIONS_EXPORT virtual void v_BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs);
+                                CoeffState coeffstate);
+
 
             /// Template method virtual forwarder for FwdTrans().
             MULTI_REGIONS_EXPORT virtual void v_FwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs);
+                                CoeffState coeffstate);
 
             /// Template method virtual forwarder for MultiplyByInvMassMatrix().
             MULTI_REGIONS_EXPORT virtual void v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs);
+                                CoeffState coeffstate);
 
             /// Solves the two-dimensional Helmholtz equation, subject to the
             /// boundary conditions specified.
@@ -290,25 +252,25 @@ namespace Nektar
                    const GlobalMatrixKey             &gkey,
                    const Array<OneD,const NekDouble> &inarray,
                    Array<OneD,      NekDouble> &outarray,
-                   bool  UseContCoeffs);
+                   CoeffState coeffstate);
 
-            // Solve the linear advection problem assuming that m_contCoeff
+            // Solve the linear advection problem assuming that m_coeffs
             // vector contains an intial estimate for solution
             MULTI_REGIONS_EXPORT virtual void v_LinearAdvectionDiffusionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                               const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD, NekDouble> &outarray,
                                               const NekDouble lambda,
-                                              bool  UseContCoeffs = false,
+                                              CoeffState coeffstate = eLocal,
                                               const Array<OneD, const NekDouble>&
                                               dirForcing = NullNekDouble1DArray);
 
-            // Solve the linear advection problem assuming that m_contCoeff
+            // Solve the linear advection problem assuming that m_coeff
             // vector contains an intial estimate for solution
             MULTI_REGIONS_EXPORT void v_LinearAdvectionReactionSolve(const Array<OneD, Array<OneD, NekDouble> > &velocity,
                                               const Array<OneD, const NekDouble> &inarray,
                                               Array<OneD, NekDouble> &outarray,
                                               const NekDouble lambda,
-                                              bool  UseContCoeffs = false,
+                                              CoeffState coeffstate = eLocal,
                                               const Array<OneD, const NekDouble>&
                                               dirForcing = NullNekDouble1DArray);
 
@@ -320,69 +282,6 @@ namespace Nektar
         typedef boost::shared_ptr<ContField2D>      ContField2DSharedPtr;
 
 
-        /**
-         * If one wants to get hold of the underlying data without modifying
-         * them, rather use the function #GetContCoeffs instead.
-         *
-         * @return  (A reference to) the array #m_contCoeffs.
-         */
-        inline Array<OneD, NekDouble> &ContField2D::UpdateContCoeffs()
-        {
-            m_transState = eContinuous;
-            return m_contCoeffs;
-        }
-
-        /**
-         * As the function returns a constant reference to a
-         * <em>const Array</em>, it is not possible to modify the underlying
-         * data of the array #m_contCoeffs. In order to do so, use the function
-         * #UpdateContCoeffs instead.
-         *
-         * \return (A reference to) the array #m_contCoeffs.
-         */
-        inline const Array<OneD, const NekDouble>
-                                            &ContField2D::GetContCoeffs() const
-        {
-            return m_contCoeffs;
-        }
-
-        /**
-         * @return  #m_contNcoeffs, the total number of global degrees of
-         * freedom.
-         */
-        inline int ContField2D::GetContNcoeffs()
-        {
-            return m_contNcoeffs;
-        }
-
-        /**
-         * This operation is evaluated as:
-         * \f{tabbing}
-         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
-         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
-         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
-         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
-         * \> \> continue \\
-         * \> continue
-         * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and \a
-         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
-         * correct modal connectivity between the different elements (both
-         * these arrays are contained in the data member #m_locToGloMap). This
-         * operation is equivalent to the scatter operation
-         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$,
-         * where \f$\mathcal{A}\f$ is the
-         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
-         *
-         * @note The array #m_contCoeffs should be filled with the global
-         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ and that the resulting
-         * local coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in
-         * #m_coeffs.
-         */
-        inline void ContField2D::GlobalToLocal()
-        {
-            m_locToGloMap->GlobalToLocal(m_contCoeffs,m_coeffs);
-        }
 
         /**
          * This operation is evaluated as:
@@ -410,7 +309,7 @@ namespace Nektar
         inline const void ContField2D::GlobalToLocal(
                                 Array<OneD,NekDouble> &outarray) const
         {
-            m_locToGloMap->GlobalToLocal(m_contCoeffs,outarray);
+            m_locToGloMap->GlobalToLocal(m_coeffs,outarray);
         }
 
 
@@ -453,35 +352,6 @@ namespace Nektar
          * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
          * \> \> Do \= $i=$  $0,N_m^e-1$ \\
          * \> \> \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] =
-         * \mbox{sign}[e][i] \cdot \boldsymbol{\hat{u}}^{e}[i]$\\
-         * \> \> continue\\
-         * \> continue
-         * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and \a
-         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
-         * correct modal connectivity between the different elements (both
-         * these arrays are contained in the data member #m_locToGloMap). This
-         * operation is equivalent to the gather operation
-         * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{-1}\boldsymbol{\hat{u}}_l\f$,
-         * where \f$\mathcal{A}\f$ is the
-         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
-         *
-         * @note    The array #m_coeffs should be filled with the local
-         *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the
-         *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
-         *          will be stored in #m_contCoeffs.
-         */
-        inline void ContField2D::LocalToGlobal()
-        {
-            m_locToGloMap->LocalToGlobal(m_coeffs,m_contCoeffs);
-        }
-
-        /**
-         * This operation is evaluated as:
-         * \f{tabbing}
-         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
-         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
-         * \> \> \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] =
          * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]+\mbox{sign}[e][i] \cdot
          * \boldsymbol{\hat{u}}^{e}[i]$\\
          * \> \> continue\\
@@ -499,11 +369,11 @@ namespace Nektar
          * @note    The array #m_coeffs should be filled with the local
          *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the
          *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
-         *          will be stored in #m_contCoeffs.
+         *          will be stored in #m_coeffs.
          */
         inline void ContField2D::Assemble()
         {
-            m_locToGloMap->Assemble(m_coeffs,m_contCoeffs);
+            m_locToGloMap->Assemble(m_coeffs,m_coeffs);
         }
 
         /**
@@ -542,7 +412,7 @@ namespace Nektar
 
 
         inline const AssemblyMapCGSharedPtr&
-                                        ContField2D::GetLocalToGlobalMap() const
+            ContField2D::GetLocalToGlobalMap() const
         {
             return  m_locToGloMap;
         }
@@ -557,7 +427,7 @@ namespace Nektar
          * The values of the function \f$f(\boldsymbol{x})\f$ evaluated at the
          * quadrature points \f$\boldsymbol{x}_i\f$ should be contained in the
          * variable #m_phys of the ExpList object \a in. The result is stored
-         * in the array #m_contCoeffs.
+         * in the array #m_coeffs.
          *
          * @param   In          An ExpList, containing the discrete evaluation
          *                      of \f$f(\boldsymbol{x})\f$ at the quadrature
@@ -566,9 +436,10 @@ namespace Nektar
         inline void ContField2D::IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD, NekDouble> &outarray,
-                                bool  UseContCoeffs)
+                                CoeffState coeffstate)
+
         {
-            if(UseContCoeffs)
+            if(coeffstate == eGlobal)
             {
                 bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
                                                 StdRegions::eIProductWRTBase);
@@ -610,9 +481,9 @@ namespace Nektar
         inline void ContField2D::BwdTrans(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
+                                CoeffState coeffstate)
         {
-            if(UseContCoeffs)
+            if(coeffstate == eGlobal)
             {
                 bool doGlobalOp = m_globalOptParam->DoGlobalMatOp(
                                                         StdRegions::eBwdTrans);

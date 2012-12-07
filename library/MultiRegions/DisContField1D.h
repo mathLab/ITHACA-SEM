@@ -36,16 +36,12 @@
 
 #ifndef NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD1D_H
 #define NEKTAR_LIBS_MULTIREGIONS_DISCONTFIELD1D_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ExpList1D.h>
-#include <MultiRegions/ExpList0D.h>
-#include <LocalRegions/PointExp.h>
-#include <SpatialDomains/MeshGraph1D.h>
 #include <SpatialDomains/Conditions.h>
 #include <MultiRegions/GlobalLinSys.h>
-//#include <MultiRegions/AssemblyMapDG.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 

@@ -38,14 +38,15 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion2D.h>
-#include <StdRegions/StdMatrixKey.h>
-#include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdRegionsDeclspec.h>
+
 
 namespace Nektar
 {
     namespace StdRegions
     {
+        class StdMatrixKey;
+
         namespace StdTriData
         {
             inline int getNumberOfCoefficients(int Na, int Nb)

@@ -36,7 +36,6 @@
 #include <LibUtilities/Foundations/Interp.h>
 #include <LibUtilities/BasicUtils/Vmath.hpp>
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>

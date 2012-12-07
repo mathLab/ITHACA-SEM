@@ -34,7 +34,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <string>
-#include <fstream>
 #include <iostream>
 using namespace std;
 
@@ -62,12 +61,6 @@ namespace Nektar
 
 
         /**
-         * Gmsh file contains a list of nodes and their coordinates, along with
-         * a list of elements and those nodes which define them. We read in and
-         * store the list of nodes in #m_node and store the list of elements in
-         * #m_element. Each new element is supplied with a list of entries from
-         * #m_node which defines the element. Finally some mesh statistics are
-         * printed.
          *
          * @param   pFilename           Filename of Gmsh file to read.
          */
@@ -82,9 +75,12 @@ namespace Nektar
             int nEntities = 0;
             int nElements = 0;
             int nBoundaryElements = 0;
+            int nProperties = 0;
             ElementType elType = eTriangle;
+            map<string, int> propMap;
 
             cout << "Start reading InputPly..." << endl;
+            
             while (!mshFile.eof())
             {
                 getline(mshFile, line);
@@ -104,17 +100,29 @@ namespace Nektar
                     }
                     continue;
                 }
+                else if (word == "property")
+                {
+                    s >> word >> word;
+                    propMap[word] = nProperties++;
+                }
                 else if (word == "end_header")
                 {
                     // Read nodes
-                    int id = 0;
+                    vector<double> data(nProperties);
                     for (int i = 0; i < nVertices; ++i)
                     {
                         getline(mshFile, line);
                         stringstream st(line);
-                        double x = 0, y = 0, z = 0;
-                        st >> x >> y >> z;
-
+                        
+                        for (int j = 0; j < nProperties; ++j)
+                        {
+                            st >> data[j];
+                        }
+                        
+                        double x = data[propMap["x"]];
+                        double y = data[propMap["y"]];
+                        double z = data[propMap["z"]];
+                        
                         if ((y * y) > 0.000001 && m->spaceDim != 3)
                         {
                             m->spaceDim = 2;
@@ -123,13 +131,20 @@ namespace Nektar
                         {
                             m->spaceDim = 3;
                         }
-                        id -= 1; // counter starts at 0
-                        m->node.push_back(boost::shared_ptr<Node>(new Node(id, x, y, z)));
-                        id++;
+                        m->node.push_back(
+                            boost::shared_ptr<Node>(new Node(i, x, y, z)));
+                        
+                        // Read vertex normals.
+                        if (propMap.count("nx") > 0)
+                        {
+                            double nx = data[propMap["nx"]];
+                            double ny = data[propMap["ny"]];
+                            double nz = data[propMap["nz"]];
+                            m->vertexNormals[i] = Node(0, nx, ny, nz);
+                        }
                     }
 
                     // Read elements
-                    int zeroDid = 0, oneDid = 0, twoDid = 0, threeDid = 0;
                     for (int i = 0; i < nEntities; ++i)
                     {
                         getline(mshFile, line);
@@ -139,8 +154,7 @@ namespace Nektar
                         // Create element tags
                         vector<int> tags;
                         tags.push_back(0); // composite
-                        tags.push_back(eTriangle); // element type
-
+                        
                         // Read element node list
                         st >> id;
                         vector<NodeSharedPtr> nodeList;
@@ -150,14 +164,15 @@ namespace Nektar
                             st >> node;
                             nodeList.push_back(m->node[node]);
                         }
-
+                        
                         // Create element
                         ElmtConfig conf(elType,1,false,false);
                         ElementSharedPtr E = GetElementFactory().
                             CreateInstance(elType,conf,nodeList,tags);
 
                         // Determine mesh expansion dimension
-                        if (E->GetDim() > m->expDim) {
+                        if (E->GetDim() > m->expDim) 
+                        {
                             m->expDim = E->GetDim();
                         }
                         m->element[E->GetDim()].push_back(E);

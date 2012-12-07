@@ -34,11 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <map>
-
-#include <LibUtilities/BasicUtils/VDmathArray.hpp>
 #include <MultiRegions/GlobalLinSysIterativeFull.h>
-//#include <MultiRegions/AssemblyMapCG.h>
-//#include <MultiRegions/AssemblyMapDG.h>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 
 namespace Nektar
 {
@@ -116,14 +113,13 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             bool vCG;
-            if (m_locToGloMap
-                = boost::dynamic_pointer_cast<AssemblyMapCG>(
-                                                                pLocToGloMap))
+            if ((m_locToGloMap = boost::dynamic_pointer_cast<AssemblyMapCG>(
+                     pLocToGloMap)))
             {
                 vCG = true;
             }
-            else if (m_locToGloMap
-                = boost::dynamic_pointer_cast<AssemblyMapDG>(pLocToGloMap))
+            else if ((m_locToGloMap = boost::dynamic_pointer_cast<
+                          AssemblyMapDG>(pLocToGloMap)))
             {
                 vCG = false;
             }
@@ -132,37 +128,36 @@ namespace Nektar
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
             int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
-
             int nDirTotal = nDirDofs;
+            
             expList->GetComm()->AllReduce(nDirTotal, LibUtilities::ReduceSum);
+            
+            Array<OneD, NekDouble> tmp(nGlobDofs);
 
             if(nDirTotal)
             {
                 // calculate the Dirichlet forcing
-                Array<OneD, NekDouble> global_tmp(nGlobDofs);
-                Array<OneD, NekDouble> offsetarray;
-
                 if(dirForcCalculated)
                 {
                     Vmath::Vsub(nGlobDofs, pInput.get(), 1,
                                 pDirForcing.get(), 1,
-                                global_tmp.get(), 1);
+                                tmp.get(), 1);
                 }
                 else
                 {
                     // Calculate the dirichlet forcing B_b (== X_b) and
                     // substract it from the rhs
                     expList->GeneralMatrixOp(
-                                    m_linSysKey,
-                                    pOutput, global_tmp, true);
+                        m_linSysKey, pOutput, tmp, eGlobal);
 
-                    Vmath::Vsub(nGlobDofs,  pInput.get(), 1,
-                                            global_tmp.get(), 1,
-                                            global_tmp.get(), 1);
+                    Vmath::Vsub(nGlobDofs, pInput.get(), 1,
+                                           tmp.get(),    1,
+                                           tmp.get(),    1);
                 }
                 if (vCG)
                 {
-                    SolveLinearSystem(nGlobDofs, global_tmp, pOutput, pLocToGloMap, nDirDofs);
+                    SolveLinearSystem(
+                        nGlobDofs, tmp, tmp, pLocToGloMap, nDirDofs);
                 }
                 else
                 {
@@ -171,130 +166,13 @@ namespace Nektar
             }
             else
             {
-	      SolveLinearSystem(nGlobDofs, pInput, pOutput, pLocToGloMap);
+                Vmath::Vcopy(nGlobDofs, pInput, 1, tmp, 1);
+                SolveLinearSystem(nGlobDofs, tmp, tmp, pLocToGloMap);
             }
-        }
-
-
-        /**
-         * Populates preconditioner with the identity to apply no
-         * preconditioning.
-         * @param   pLocToGloMap    Local to Global mapping.
-         */
-        void GlobalLinSysIterativeFull::ComputeNullPreconditioner(
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
-        {
-            int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
-            int nDir    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            int nInt = nGlobal - nDir;
-            MatrixStorage storage = eDIAGONAL;
-            m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nInt, storage);
-            DNekMat &M = (*m_preconditioner);
-
-            for (unsigned int i = 0; i < nInt; ++i)
-            {
-                M.SetValue(i,i,1.0);
-            }
-        }
-
-
-        /**
-         * Diagonal preconditioner computed by evaluating the local matrix
-         * acting on each basis vector (0,...,0,1,0,...,0). (deprecated)
-         * @param   pLocToGloMap    Local to global mapping.
-         */
-        void GlobalLinSysIterativeFull::ComputeDiagonalPreconditioner(
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
-        {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
-            int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
-            int nLocal  = pLocToGloMap->GetNumLocalCoeffs();
-            int nDir    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            int nInt = nGlobal - nDir;
-            MatrixStorage storage = eDIAGONAL;
-            m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nInt, storage);
-            DNekMat &M = (*m_preconditioner);
-
-            Array<OneD, int> vMap = pLocToGloMap->GetLocalToGlobalMap();
-
-            for (unsigned int i = 0; i < nInt; ++i)
-            {
-                Array<OneD, NekDouble> test(nGlobal, 0.0);
-                Array<OneD, NekDouble> test_local(nLocal, 0.0);
-                test[i+nDir] = 1.0;
-                expList->GeneralMatrixOp(m_linSysKey, test, test, true);
-
-                M.SetValue(i,i,1.0/test[i+nDir]);
-            }
-        }
-
-
-        /**
-         * Diagonal preconditioner computed by summing the relevant elements of
-         * the local matrix system.
-         * @param   pLocToGloMap    Local to global mapping.
-         */
-        void GlobalLinSysIterativeFull::ComputeDiagonalPreconditionerSum(
-                const boost::shared_ptr<AssemblyMap> &pLocToGloMap)
-        {
-            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
-            int i,j,n,cnt,gid1,gid2;
-            NekDouble sign1,sign2,value;
-            int nGlobal = pLocToGloMap->GetNumGlobalCoeffs();
-            int nDir    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-            int nInt    = nGlobal - nDir;
-
-            NekDouble zero = 0.0;
-
-            // fill global matrix
-            DNekScalMatSharedPtr loc_mat;
-            Array<OneD, NekDouble> vOutput(nGlobal,0.0);
-            MatrixStorage storage = eDIAGONAL;
-            m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nInt, storage);
-            DNekMat &M = (*m_preconditioner);
-
-            int loc_lda;
-            for(n = cnt = 0; n < expList->GetNumElmts(); ++n)
-            {
-                //loc_mat = vBlkMat->GetBlock(n,n);
-                loc_mat = GetBlock(expList->GetOffset_Elmt_Id(n));
-                loc_lda = loc_mat->GetRows();
-
-                for(i = 0; i < loc_lda; ++i)
-                {
-                    gid1 = pLocToGloMap->GetLocalToGlobalMap(cnt + i) - nDir;
-                    sign1 =  pLocToGloMap->GetLocalToGlobalSign(cnt + i);
-                    if(gid1 >= 0)
-                    {
-                        for(j = 0; j < loc_lda; ++j)
-                        {
-                            gid2 = pLocToGloMap->GetLocalToGlobalMap(cnt + j)
-                                                                    - nDir;
-                            sign2 = pLocToGloMap->GetLocalToGlobalSign(cnt + j);
-                            if(gid2 == gid1)
-                            {
-                                // When global matrix is symmetric,
-                                // only add the value for the upper
-                                // triangular part in order to avoid
-                                // entries to be entered twice
-                                value = vOutput[gid1 + nDir]
-                                            + sign1*sign2*(*loc_mat)(i,j);
-                                vOutput[gid1 + nDir] = value;
-                            }
-                        }
-                    }
-                }
-                cnt   += loc_lda;
-            }
-
-            // Assemble diagonal contributions across processes
-            pLocToGloMap->UniversalAssemble(vOutput);
-
-            // Populate preconditioner with reciprocal of diagonal elements
-            for (unsigned int i = 0; i < nInt; ++i)
-            {
-                M.SetValue(i,i,1.0/vOutput[i + nDir]);
-            }
+            
+            Array<OneD, NekDouble> tmp2 = pOutput + nDirDofs;
+            Vmath::Vadd(nGlobDofs - nDirDofs, 
+                        tmp + nDirDofs, 1, tmp2, 1, tmp2, 1);
         }
 
 
@@ -308,7 +186,7 @@ namespace Nektar
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             // Perform matrix-vector operation A*d_i
             expList->GeneralMatrixOp(m_linSysKey,
-                                        pInput, pOutput, true);
+                                     pInput, pOutput, eGlobal);
 
             // retrieve robin boundary condition information and apply robin
             // boundary conditions to the solution.
@@ -362,19 +240,6 @@ namespace Nektar
                 Vmath::Vadd(nGlobal, pOutput, 1, robin_A, 1, pOutput, 1);
             }
 
-        }
-
-
-        /**
-         *
-         */
-        void GlobalLinSysIterativeFull::v_ComputePreconditioner()
-        {
-            ASSERTL1(!m_preconditioner.get(),
-                     "Preconditioner has already been defined.");
-
-            ComputeDiagonalPreconditionerSum(m_locToGloMap);
-            m_map = m_locToGloMap->GetGlobalToUniversalMapUnique();
         }
 
         /**

@@ -50,6 +50,7 @@ SET(LinearAlgebraHeaders
 SET(FoundationHeaders
     ./Foundations/Graph.h
     ./Foundations/Basis.h
+    ./Foundations/BasisType.h
     ./Foundations/Foundations.hpp
     ./Foundations/FourierPoints.h
     ./Foundations/FourierSingleModePoints.h
@@ -62,6 +63,7 @@ SET(FoundationHeaders
     ./Foundations/NodalTriElec.h
     ./Foundations/NodalTriFekete.h
     ./Foundations/Points.h
+    ./Foundations/PointsType.h
     ./Foundations/PolyEPoints.h
     ./Foundations/NodalUtil.h
     ./Foundations/NodalTriEvenlySpaced.h
@@ -83,6 +85,7 @@ SET(CommunicationHeaders
     ./Communication/CommSerial.h
     ./Communication/GsLib.hpp
     ./Communication/Transposition.h
+    ./Communication/Xxt.hpp
 )
 
 SET(ExpressionTemplates
@@ -113,7 +116,6 @@ SET(BasicUtilsHeaders
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/Equation.h
     ./BasicUtils/ErrorUtil.hpp
-    ./BasicUtils/ErrorUtil.cpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
     ./BasicUtils/NekFactory.hpp
@@ -136,7 +138,7 @@ SET(BasicUtilsSources
     ./BasicUtils/Equation.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
-    ./BasicUtils/VMath.cpp
+    ./BasicUtils/Vmath.cpp
 )
 
 SET(Memory
@@ -201,10 +203,6 @@ SET(LinearAlgebraSources
 #	./LinearAlgebra/lapack.cpp
 )
 
-SET(PrecompiledHeaders
-	LibUtilities.h
-)
-
 SET(KernelHeaders
 	./Kernel/kernel.h
 )
@@ -259,8 +257,6 @@ SOURCE_GROUP("Interpreter Sources" FILES ${InterpreterSources})
 SOURCE_GROUP("Communication Headers" FILES ${CommunicationHeaders})
 SOURCE_GROUP("Communication Sources" FILES ${CommunicationSources})
 
-SOURCE_GROUP("Precompiled Headers" FILES ${PrecompiledHeaders})
-
 SOURCE_GROUP("Kernel Headers" FILES ${KernelHeaders})
 SOURCE_GROUP("Kernel Sources" FILES ${KernelSources})
 
@@ -282,7 +278,6 @@ SET(LibUtilityHeaders
 	${LinearAlgebraHeaders}
 	${BasicConstHeaders}
 	${InterpreterHeaders}
-	${PrecompiledHeaders}
 	${KernelHeaders}
         ${TimeIntegrationHeaders}
         ${FFTHeaders}
@@ -312,8 +307,6 @@ TARGET_LINK_LIBRARIES(LibUtilities
 	${TINYXML_LIB}
 )
 SET_LAPACK_LINK_LIBRARIES(LibUtilities)
-SET(PrecompiledHeaderName LibUtilities/LibUtilities.h)
-SETUP_PRECOMPILED_HEADERS(LibUtilitySources PrecompiledHeaderName)
 
 # This doesn't preserve the BasicUtils, Memory, etc. Find a way to fix this.
 INSTALL(FILES ${BasicConstHeaders} DESTINATION ${NEKTAR_INCLUDE_DIR}/LibUtilities/BasicConst COMPONENT dev)

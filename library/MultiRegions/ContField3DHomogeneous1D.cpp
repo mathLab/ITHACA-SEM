@@ -35,6 +35,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/ContField3DHomogeneous1D.h>
+#include <MultiRegions/ContField2D.h>
 
 namespace Nektar
 {
@@ -112,39 +113,18 @@ namespace Nektar
         }
 
 
-        void ContField3DHomogeneous1D::SetCoeffPhys(void)
+        void ContField3DHomogeneous1D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
-            int n,cnt;
-            int contncoeffs_per_plane = m_planes[0]->GetContNcoeffs();
-            int nzplanes = m_planes.num_elements();
+            Array<OneD, NekDouble> tmp; 
+            int ncoeffs = m_planes[0]->GetNcoeffs();
 
-            ExpList3DHomogeneous1D::SetCoeffPhys();
-
-            // Set total coefficients and points
-            m_contNcoeffs = contncoeffs_per_plane*nzplanes;
-            
-            m_contCoeffs = Array<OneD, NekDouble> (m_contNcoeffs);
-
-            Array<OneD, NekDouble> tmparray;
-
-            for(cnt  = n = 0; n < nzplanes; ++n)
+            for(int n = 0; n < m_planes.num_elements(); ++n)
             {
-                m_planes[n]->SetContCoeffsArray(tmparray= m_contCoeffs + contncoeffs_per_plane*n);
+                m_planes[n]->ImposeDirichletConditions(tmp = outarray + 
+                                                       n*ncoeffs);
             }
         }
 
-        const Array<OneD, const NekDouble> &ContField3DHomogeneous1D::v_GetContCoeffs(void) const
-        {
-            return m_contCoeffs;
-        }
-       
-
-        Array<OneD, NekDouble> &ContField3DHomogeneous1D::v_UpdateContCoeffs(void)
-        {
-            return m_contCoeffs;
-        }
-       
- 
         /**
          * 
          */
@@ -188,34 +168,38 @@ namespace Nektar
             Array<OneD, NekDouble> fce(inarray.num_elements());
 
             // Fourier transform forcing function
-			if(m_WaveSpace)
+            if(m_WaveSpace)
+            {
+                fce = inarray;
+            }
+            else 
+            {
+                HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
+            }
+			
+			bool smode = false;
+			
+			if (m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe ||
+				m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm )
 			{
-				fce = inarray;
+				smode = true;
 			}
-			else 
-			{
-				HomogeneousFwdTrans(inarray,fce,flags.isSet(eUseContCoeff));
-			}
-
+            
             for(n = 0; n < m_planes.num_elements(); ++n)
             {
-				beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
-				new_factors = factors;
-				new_factors[StdRegions::eFactorLambda] += beta*beta;
-
-                m_planes[n]->HelmSolve(fce + cnt,
+				if(n != 1 || m_transposition->GetK(n) != 0 || smode)
+				{
+					beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
+					new_factors = factors;
+					new_factors[StdRegions::eFactorLambda] += beta*beta;
+                
+					m_planes[n]->HelmSolve(fce + cnt,
                                        e_out = outarray + cnt1,
                                        flags, new_factors, varcoeff, dirForcing);
+				}
                 
                 cnt  += m_planes[n]->GetTotPoints();
-                if(flags.isSet(eUseContCoeff))
-                {
-                    cnt1 += m_planes[n]->GetContNcoeffs();
-                }
-                else
-                {
-                    cnt1 += m_planes[n]->GetNcoeffs();
-                }
+                cnt1 += m_planes[n]->GetNcoeffs();
             }
         }
     } // end of namespace

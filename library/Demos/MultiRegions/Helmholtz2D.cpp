@@ -5,6 +5,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ContField2D.h>
+#include <SpatialDomains/MeshGraph2D.h>
 
 using namespace Nektar;
 
@@ -34,6 +35,7 @@ int main(int argc, char *argv[])
     StdRegions::VarCoeffMap varcoeffs;
     FlagList flags;
     NekDouble    cps = (double)CLOCKS_PER_SEC;
+    NekDouble    st;
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
     {
@@ -50,7 +52,7 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Print summary of solution details
-        flags.set(eUseContCoeff, true);
+        flags.set(eUseGlobal, true);
         factors[StdRegions::eFactorLambda] = vSession->GetParameter("Lambda");
         const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
         LibUtilities::BasisKey bkey0 = expansions.begin()->second->m_basisKeyVector[0];
@@ -126,16 +128,18 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         Timing("Define forcing ..");
 
-        //----------------------------------------------
-        // Helmholtz solution taking physical forcing
-        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors, varcoeffs);
+        //---------------------------------------------- 
+        //Helmholtz solution taking physical forcing after setting
+        //initial condition to zero
+        Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
+        Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors, varcoeffs);
         //----------------------------------------------
         Timing("Helmholtz Solve ..");
 
 #ifdef TIMING
         for(i = 0; i < 1000; ++i)
         {
-            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateContCoeffs(), flags, factors, varcoeffs);
+            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors, varcoeffs);
         }
 
         Timing("1000 Helmholtz Solves:... ");
@@ -143,7 +147,7 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Backward Transform Solution to get solved values
-        Exp->BwdTrans(Exp->GetContCoeffs(), Exp->UpdatePhys(), true);
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), MultiRegions::eGlobal);
         //----------------------------------------------
 
         //-----------------------------------------------
@@ -157,7 +161,7 @@ int main(int argc, char *argv[])
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
-        Exp->GlobalToLocal(Exp->GetContCoeffs(),Exp->UpdateCoeffs());
+        Exp->GlobalToLocal(Exp->GetCoeffs(),Exp->UpdateCoeffs());
         for(i = 0; i < FieldDef.size(); ++i)
         {
             FieldDef[i]->m_fields.push_back("u");

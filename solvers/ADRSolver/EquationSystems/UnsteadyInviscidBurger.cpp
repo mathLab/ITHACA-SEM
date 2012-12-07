@@ -33,8 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <iostream>
-
 #include <ADRSolver/EquationSystems/UnsteadyInviscidBurger.h>
 
 namespace Nektar
@@ -89,6 +87,11 @@ namespace Nektar
                 
                 m_advection->SetRiemannSolver(m_riemannSolver);
                 m_advection->InitObject      (m_session, m_fields);
+                break;
+            }
+            default:
+            {
+                ASSERTL0(false, "Unsupported projection type.");
                 break;
             }
         }
@@ -245,7 +248,7 @@ namespace Nektar
                 
                 for(i = 0; i < nVariables; ++i)
                 {
-                    m_fields[i]->FwdTrans(inarray[i], coeffs, false);
+                    m_fields[i]->FwdTrans(inarray[i], coeffs);
                     m_fields[i]->BwdTrans_IterPerExp(coeffs, outarray[i]);
                 }
                 break;

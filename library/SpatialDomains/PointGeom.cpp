@@ -40,8 +40,6 @@
 
 
 #include <StdRegions/StdRegions.hpp>
-#include <StdRegions/StdPointExp.h>
-#include <StdRegions/StdSegExp.h>
 
 
 #include <fstream>

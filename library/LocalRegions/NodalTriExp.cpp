@@ -32,11 +32,9 @@
 // Description: NodalTriExp routines
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LocalRegions/LocalRegions.h>
-#include <LocalRegions/LocalRegions.hpp>
-#include <stdio.h>
 
 #include <LocalRegions/NodalTriExp.h>
+#include <LibUtilities/Foundations/Interp.h>
 
 
 namespace Nektar
@@ -164,18 +162,25 @@ namespace Nektar
 
                 switch(m_base[1]->GetPointsType())
                 {
-                case LibUtilities::eGaussLobattoLegendre: // Legendre inner product 
-                    for(i = 0; i < nquad1; ++i)
-                    {
-                        Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
-                    }
-                    break;
-                case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product 
-                    for(i = 0; i < nquad1; ++i)
-                    {
-                        Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);      
-                    }
-                    break;
+                    // Legendre inner product 
+                    case LibUtilities::eGaussLobattoLegendre:
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], 
+                                        outarray.get()+i*nquad0,1);
+                        }
+                        break;
+                    // (1,0) Jacobi Inner product
+                    case LibUtilities::eGaussRadauMAlpha1Beta0:
+                        for(i = 0; i < nquad1; ++i)
+                        {
+                            Blas::Dscal(nquad0,0.5*w1[i], 
+                                        outarray.get()+i*nquad0,1);
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false, "Unsupported quadrature points type.");
+                        break;
                 }
             }
         }        

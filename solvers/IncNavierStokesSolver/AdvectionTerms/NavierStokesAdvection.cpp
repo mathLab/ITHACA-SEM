@@ -34,8 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/AdvectionTerms/NavierStokesAdvection.h>
-#include <cstdio>
-#include <cstdlib>
 
 namespace Nektar
 {
@@ -105,9 +103,9 @@ namespace Nektar
             
             if(m_dealiasing == true && pFields[0]->GetWaveSpace() == false)
             {
-                pFields[0]->DealiasedProd(pV[0],grad0,grad0,m_UseContCoeff);
-                pFields[0]->DealiasedProd(pV[1],grad1,grad1,m_UseContCoeff);
-                pFields[0]->DealiasedProd(pV[2],grad2,grad2,m_UseContCoeff);
+                pFields[0]->DealiasedProd(pV[0],grad0,grad0,m_CoeffState);
+                pFields[0]->DealiasedProd(pV[1],grad1,grad1,m_CoeffState);
+                pFields[0]->DealiasedProd(pV[2],grad2,grad2,m_CoeffState);
                 Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
                 Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
             }

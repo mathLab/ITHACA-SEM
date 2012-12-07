@@ -33,11 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <MultiRegions/ExpList.h>
-#include <LocalRegions/PointExp.h>
-#include <LocalRegions/SegExp.h>
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -110,12 +107,14 @@ namespace Nektar
             int nFace = 0;
             int maxEdgeDof = 0;
             int maxFaceDof = 0;
+            int maxIntDof = 0;
             int dof = 0;
             int cnt;
             int i,j,k;
             int meshVertId;
             int meshEdgeId;
             int meshFaceId;
+            int elementId;
             int vGlobalId;
             int maxBndGlobalId = 0;
             StdRegions::Orientation         edgeOrient;
@@ -124,6 +123,7 @@ namespace Nektar
             Array<OneD, int>                    edgeInteriorSign;
             Array<OneD, unsigned int>           faceInteriorMap;
             Array<OneD, int>                    faceInteriorSign;
+            Array<OneD, unsigned int>           interiorMap;
 
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
@@ -151,6 +151,9 @@ namespace Nektar
                     dof = locExpansion->GetFaceIntNcoeffs(j);
                     maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
                 }
+                locExpansion->GetInteriorMap(interiorMap);
+                dof = interiorMap.num_elements();
+                maxIntDof = (dof > maxIntDof ? dof : maxIntDof);
             }
 
             // Tell other processes about how many dof we have
@@ -159,6 +162,7 @@ namespace Nektar
             vCommRow->AllReduce(nFace, LibUtilities::ReduceSum);
             vCommRow->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
             vCommRow->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
+            vCommRow->AllReduce(maxIntDof, LibUtilities::ReduceMax);
 
             // Assemble global to universal mapping for this process
             for(i = 0; i < locExpVector.size(); ++i)
@@ -224,22 +228,30 @@ namespace Nektar
                     }
                 }
 
+                // Add interior DOFs to complete universal numbering
+                locExpansion->GetInteriorMap(interiorMap);
+                dof = interiorMap.num_elements();
+                elementId = (locExpansion->GetGeom())->GetGlobalID();
+                for (k = 0; k < dof; ++k)
+                {
+                    vGlobalId = m_localToGlobalMap[cnt+interiorMap[k]];
+                    m_globalToUniversalMap[vGlobalId]
+                           = nVert + nEdge*maxEdgeDof + nFace*maxFaceDof + elementId*maxIntDof + k + 1;
+                }
             }
 
-            // Finally, internal DOF do not participate in any data
-            // exchange, so we set these to the special GSLib id=0 so
+            // Set up the GSLib universal assemble mapping
+            // Internal DOF do not participate in any data
+            // exchange, so we keep these set to the special GSLib id=0 so
             // they are ignored.
-            for (k = maxBndGlobalId + 1; k < m_globalToUniversalMap.num_elements(); ++k)
-            {
-                m_globalToUniversalMap[k] = 0;
-            }
-
             Nektar::Array<OneD, long> tmp(m_numGlobalCoeffs);
+            Vmath::Zero(m_numGlobalCoeffs, tmp, 1);
             Nektar::Array<OneD, long> tmp2(m_numGlobalBndCoeffs, tmp);
-            for (unsigned int i = 0; i < m_numGlobalCoeffs; ++i)
+            for (unsigned int i = 0; i < m_numGlobalBndCoeffs; ++i)
             {
                 tmp[i] = m_globalToUniversalMap[i];
             }
+
             m_gsh = Gs::Init(tmp, vCommRow);
             m_bndGsh = Gs::Init(tmp2, vCommRow);
             Gs::Unique(tmp, vCommRow);
@@ -252,9 +264,6 @@ namespace Nektar
                 m_globalToUniversalBndMapUnique[i] = (tmp2[i] >= 0 ? 1 : 0);
             }
         }
-
-
-
 
         /**
          * The bandwidth calculated here corresponds to what is referred to as
@@ -361,13 +370,24 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const
         {
-            if(m_signChange)
+            Array<OneD, const NekDouble> local;
+            if(global.data() == loc.data())
             {
-                Vmath::Scatr(m_numLocalCoeffs, m_localToGlobalSign.get(), loc.get(), m_localToGlobalMap.get(), global.get());
+                local = Array<OneD, NekDouble>(loc.num_elements(),loc.data());
             }
             else
             {
-                Vmath::Scatr(m_numLocalCoeffs, loc.get(), m_localToGlobalMap.get(), global.get());
+                local = loc; // create reference
+            }
+
+
+            if(m_signChange)
+            {
+                Vmath::Scatr(m_numLocalCoeffs, m_localToGlobalSign.get(), local.get(), m_localToGlobalMap.get(), global.get());
+            }
+            else
+            {
+                Vmath::Scatr(m_numLocalCoeffs, local.get(), m_localToGlobalMap.get(), global.get());
             }
         }
 
@@ -382,13 +402,24 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const
         {
-            if(m_signChange)
+            Array<OneD, const NekDouble> glo;
+            if(global.data() == loc.data())
             {
-                Vmath::Gathr(m_numLocalCoeffs, m_localToGlobalSign.get(), global.get(), m_localToGlobalMap.get(), loc.get());
+                glo = Array<OneD, NekDouble>(global.num_elements(),global.data());
             }
             else
             {
-                Vmath::Gathr(m_numLocalCoeffs, global.get(), m_localToGlobalMap.get(), loc.get());
+                glo = global; // create reference
+            }
+            
+                
+            if(m_signChange)
+            {
+                Vmath::Gathr(m_numLocalCoeffs, m_localToGlobalSign.get(), glo.get(), m_localToGlobalMap.get(), loc.get());
+            }
+            else
+            {
+                Vmath::Gathr(m_numLocalCoeffs, glo.get(), m_localToGlobalMap.get(), loc.get());
             }
         }
 
@@ -403,17 +434,26 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const
         {
-            ASSERTL1(loc.get() != global.get(),"Local and Global Arrays cannot be the same");
+            Array<OneD, const NekDouble> local;
+            if(global.data() == loc.data())
+            {
+                local = Array<OneD, NekDouble>(local.num_elements(),local.data());
+            }
+            else
+            {
+                local = loc; // create reference
+            }
+            //ASSERTL1(loc.get() != global.get(),"Local and Global Arrays cannot be the same");
 
             Vmath::Zero(m_numGlobalCoeffs, global.get(), 1);
 
             if(m_signChange)
             {
-                Vmath::Assmb(m_numLocalCoeffs, m_localToGlobalSign.get(), loc.get(), m_localToGlobalMap.get(), global.get());
+                Vmath::Assmb(m_numLocalCoeffs, m_localToGlobalSign.get(), local.get(), m_localToGlobalMap.get(), global.get());
             }
             else
             {
-                Vmath::Assmb(m_numLocalCoeffs, loc.get(), m_localToGlobalMap.get(), global.get());
+                Vmath::Assmb(m_numLocalCoeffs, local.get(), m_localToGlobalMap.get(), global.get());
             }
             UniversalAssemble(global);
         }

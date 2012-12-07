@@ -219,10 +219,41 @@ namespace Nektar
                     e->SetAttribute("EDGEID",    (*it)->id);
                     e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
                     e->SetAttribute("TYPE", 
-                                    LibUtilities::kPointsTypeStr[(*it)->curveType]);
+                        LibUtilities::kPointsTypeStr[(*it)->curveType]);
                     TiXmlText * t0 = new TiXmlText((*it)->GetXmlCurveString());
                     e->LinkEndChild(t0);
                     curved->LinkEndChild(e);
+                }
+            }
+
+            // 2D elements in 3-space, output face curvature information
+            if (m->expDim == 2 && m->spaceDim == 3)
+            {
+                vector<ElementSharedPtr>::iterator it;
+                for (it = m->element[m->expDim].begin(); it != m->element[m->expDim].end(); ++it)
+                {
+                    // Only generate face curve if there are volume nodes
+                    if ((*it)->GetVolumeNodes().size() > 0)
+                    {
+                        TiXmlElement * e = new TiXmlElement( "F" );
+                        e->SetAttribute("ID",        facecnt++);
+                        e->SetAttribute("FACEID",    (*it)->GetId());
+                        e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
+
+                        // Quad use PolyEvenlySpaced points, tri uses
+                        // NodalTriEvenlySpaced points
+                        if ((*it)->GetVertexCount() == 4)
+                        {
+                            e->SetAttribute("TYPE", "PolyEvenlySpaced");
+                        }
+                        else
+                        {
+                            e->SetAttribute("TYPE", "NodalTriEvenlySpaced");
+                        }
+                        TiXmlText * t0 = new TiXmlText((*it)->GetXmlCurveString());
+                        e->LinkEndChild(t0);
+                        curved->LinkEndChild(e);
+                    }
                 }
             }
 
@@ -239,7 +270,7 @@ namespace Nektar
                     f->SetAttribute("FACEID",   (*it2)->id);
                     f->SetAttribute("NUMPOINTS",(*it2)->GetNodeCount());
                     f->SetAttribute("TYPE",
-                                    LibUtilities::kPointsTypeStr[(*it2)->curveType]);
+                        LibUtilities::kPointsTypeStr[(*it2)->curveType]);
                     TiXmlText * t0 = new TiXmlText((*it2)->GetXmlCurveString());
                     f->LinkEndChild(t0);
                     curved->LinkEndChild(f);
@@ -253,25 +284,52 @@ namespace Nektar
         {
             TiXmlElement* verTag = new TiXmlElement("COMPOSITE");
             CompositeMap::iterator it;
+            ConditionMap::iterator it2;
+            int j = 0;
 
-            for (it = m->composite.begin(); it != m->composite.end(); ++it)
+            for (it = m->composite.begin(); it != m->composite.end(); ++it, ++j)
             {
                 if (it->second->items.size() > 0) 
                 {
                     TiXmlElement *comp_tag = new TiXmlElement("C"); // Composite
                     TiXmlElement *elm_tag;
+                    bool doSort = true;
+                    
+                    // Ensure that this composite is not used for periodic BCs!
+                    for (it2  = m->condition.begin(); 
+                         it2 != m->condition.end(); ++it2)
+                    {
+                        ConditionSharedPtr c = it2->second;
+                        
+                        // Ignore non-periodic boundary conditions.
+                        if (find(c->type.begin(), c->type.end(), ePeriodic) ==
+                            c->type.end())
+                        {
+                            continue;
+                        }
+
+                        for (int i = 0; i < c->composite.size(); ++i)
+                        {
+                            if (c->composite[i] == j)
+                            {
+                                doSort = false;
+                            }
+                        }
+                    }
                     
                     comp_tag->SetAttribute("ID", it->second->id);
-                    comp_tag->LinkEndChild( new TiXmlText(it->second->GetXmlString()) );
+                    comp_tag->LinkEndChild(
+                        new TiXmlText(it->second->GetXmlString(doSort)));
                     verTag->LinkEndChild(comp_tag);
                 }
                 else
                 {
-                    cout << "Composite " << it->second->id << " contains nothing." << endl;
+                    cout << "Composite " << it->second->id << " "
+                         << "contains nothing." << endl;
                 }
             }
 
-            pRoot->LinkEndChild( verTag );
+            pRoot->LinkEndChild(verTag);
         }
 
         void OutputNekpp::WriteXmlDomain(TiXmlElement * pRoot)
@@ -336,12 +394,15 @@ namespace Nektar
         
         void OutputNekpp::WriteXmlConditions(TiXmlElement * pRoot)
         {
-            TiXmlElement *conditions = new TiXmlElement ("CONDITIONS");
+            TiXmlElement *conditions = 
+                new TiXmlElement("CONDITIONS");
+            TiXmlElement *boundaryregions = 
+                new TiXmlElement("BOUNDARYREGIONS");
+            TiXmlElement *boundaryconditions = 
+                new TiXmlElement("BOUNDARYCONDITIONS");
+            TiXmlElement *variables = 
+                new TiXmlElement("VARIABLES");
             ConditionMap::iterator it;
-
-            TiXmlElement *boundaryregions = new TiXmlElement("BOUNDARYREGIONS");
-            TiXmlElement *boundaryconditions = new TiXmlElement("BOUNDARYCONDITIONS");
-            TiXmlElement *variables = new TiXmlElement("VARIABLES");
             
             for (it = m->condition.begin(); it != m->condition.end(); ++it)
             {
@@ -364,7 +425,8 @@ namespace Nektar
                 boundaryregions->LinkEndChild(b);
                 
                 TiXmlElement *region = new TiXmlElement("REGION");
-                region->SetAttribute("REF", boost::lexical_cast<string>(it->first));
+                region->SetAttribute(
+                    "REF", boost::lexical_cast<string>(it->first));
                 
                 for (int i = 0; i < c->type.size(); ++i)
                 {
@@ -376,6 +438,7 @@ namespace Nektar
                         case eNeumann:      tagId = "N"; break;
                         case ePeriodic:     tagId = "P"; break;
                         case eHOPCondition: tagId = "N"; break;
+                        default:                         break;
                     }
                     
                     TiXmlElement *tag = new TiXmlElement(tagId);

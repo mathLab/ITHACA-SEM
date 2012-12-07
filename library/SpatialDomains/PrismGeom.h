@@ -36,12 +36,8 @@
 #ifndef NEKTAR_SPATIALDOMAINS_PRISMGEOM_H
 #define NEKTAR_SPATIALDOMAINS_PRISMGEOM_H
 
-#include <StdRegions/StdPrismExp.h>
-#include <StdRegions/StdRegions.hpp>
 #include <SpatialDomains/Geometry3D.h>
-#include <SpatialDomains/TriGeom.h>
-#include <SpatialDomains/QuadGeom.h>
-#include <SpatialDomains/GeomFactors3D.h>
+#include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar
 {
@@ -64,12 +60,17 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
 
         protected:
+
+            virtual void v_GenGeomFactors(
+                 const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
             virtual void v_GetLocCoords(
                 const Array<OneD, const NekDouble> &coords,
                       Array<OneD,       NekDouble> &Lcoords);
+            virtual bool v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
+                                         NekDouble tol);
             virtual int v_GetNumVerts() const;
             virtual int v_GetNumEdges() const;
-            
+
         private:
             void SetUpLocalEdges();
             void SetUpLocalVertices();

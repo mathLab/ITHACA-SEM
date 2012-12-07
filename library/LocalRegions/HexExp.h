@@ -36,24 +36,30 @@
 #ifndef HEXEXP_H
 #define HEXEXP_H
 
-#include <LocalRegions/LocalRegionsDeclspec.h>
-#include <LocalRegions/LocalRegions.hpp>
+#include <LibUtilities/BasicUtils/NekManager.hpp>  // for NekManager
 
+#include <LocalRegions/LocalRegionsDeclspec.h>
+#include <LocalRegions/MatrixKey.h>
+#include <LocalRegions/Expansion3D.h>
 #include <StdRegions/StdHexExp.h>
 #include <SpatialDomains/HexGeom.h>
-#include <LocalRegions/QuadExp.h>
-
-#include <SpatialDomains/GeomFactors3D.h>
-
-#include <LocalRegions/MatrixKey.h>
-
-#include <LocalRegions/Expansion3D.h>
 
 namespace Nektar
 {
+    namespace SpatialDomains
+    {
+        class HexGeom;
+        typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;
+    }
+
     namespace LocalRegions 
     {
+        class HexExp;
 
+        // type defines for use of HexExp in a boost vector
+        typedef boost::shared_ptr<HexExp> HexExpSharedPtr;
+        typedef std::vector< HexExpSharedPtr > HexExpVector;
+        typedef std::vector< HexExpSharedPtr >::iterator HexExpVectorIter;
  
         class HexExp: virtual public StdRegions::StdHexExp, virtual public Expansion3D
         {
@@ -291,10 +297,6 @@ namespace Nektar
                       Array<OneD,       NekDouble> &wsp);
         };
 
-        // type defines for use of HexExp in a boost vector
-        typedef boost::shared_ptr<HexExp> HexExpSharedPtr;
-        typedef std::vector< HexExpSharedPtr > HexExpVector;
-        typedef std::vector< HexExpSharedPtr >::iterator HexExpVectorIter;
     } //end of namespace
 } //end of namespace
 

@@ -36,7 +36,6 @@
 #ifndef NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_VECTORMATH_HPP
 #define NEKTAR_LIB_LIBUTILITIES_BASSICUTILS_VECTORMATH_HPP
 
-#include <string>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
@@ -176,7 +175,7 @@ namespace Vmath
                                     const T* x, int incx,
                                     const T* y, int incy,
                                           T* z, int incz);
-    /// \brief  vvtvvtp (scalar times vector plus scalar times vector): 
+    /// \brief  Svtsvtp (scalar times vector plus scalar times vector): 
     // z = alpha*x + beta*y
     template<class T> LIB_UTILITIES_EXPORT void Svtsvtp (int n,
                                     const T alpha,
@@ -303,92 +302,3 @@ namespace Vmath
 }
 #endif //VECTORMATH_HPP
 
-/***
-$Log: Vmath.hpp,v $
-Revision 1.21  2009/05/15 14:38:41  pvos
-Changed check for regular quads so that it also includes parallellograms
-
-Revision 1.20  2009/03/10 23:44:15  claes
-Made y in z = x/y a constant in the parameter list.
-
-Revision 1.19  2009/01/21 16:57:26  pvos
-Added additional geometric factors to improve efficiency
-
-Revision 1.18  2008/12/17 16:56:46  pvos
-Performance updates
-
-Revision 1.17  2008/09/09 14:00:55  sherwin
-Fixed error in Sdiv definition
-
-Revision 1.16  2008/08/09 19:26:08  sherwin
-Corrected big in Reverse
-
-Revision 1.15  2008/07/19 21:09:21  sherwin
-Added Reverse function
-
-Revision 1.14  2008/05/10 18:27:32  sherwin
-Modifications necessary for QuadExp Unified DG Solver
-
-Revision 1.13  2008/04/06 05:47:03  bnelson
-Fixed gcc compiler warnings.
-
-Revision 1.12  2008/03/06 04:39:55  ehan
-Removed the include file <VmathArray.hpp>.
-
-Revision 1.11  2008/02/28 09:55:57  sherwin
-Added Array version of math routines
-
-Revision 1.10  2008/01/27 09:13:04  sherwin
-Added Svtvp routine
-
-Revision 1.9  2007/12/06 22:43:57  pvos
-2D Helmholtz solver updates
-
-Revision 1.8  2007/07/26 08:32:57  sherwin
-Made second vector argument to Vsub a constant
-
-Revision 1.7  2007/07/20 00:39:37  bnelson
-Replaced boost::shared_ptr with Nektar::ptr
-
-Revision 1.6  2007/04/08 03:30:25  jfrazier
-Made y in z = x*y a constant in the parameter list.
-
-Revision 1.5  2007/04/03 03:51:44  bnelson
-Moved Lapack.hpp, Blas.hpp, Transf77.hpp to LinearAlgebra
-
-Revision 1.4  2007/01/18 20:59:26  sherwin
-Before new configuration
-
-Revision 1.3  2006/07/02 17:16:16  sherwin
-
-Modifications to make MultiRegions work for a connected domain in 2D (Tris)
-
-Revision 1.2  2006/06/01 13:44:28  kirby
-*** empty log message ***
-
-Revision 1.1  2006/06/01 11:07:52  kirby
-*** empty log message ***
-
-Revision 1.1  2006/05/04 18:57:44  kirby
-*** empty log message ***
-
-Revision 1.5  2006/03/01 08:25:03  sherwin
-
-First compiling version of StdRegions
-
-Revision 1.4  2006/02/26 21:13:45  bnelson
-Fixed a variety of compiler errors caused by updates to the coding standard.
-
-Revision 1.3  2006/02/15 08:07:15  sherwin
-
-Put codes into standard although have not yet been compiled
-
-Revision 1.2  2006/02/12 21:51:42  sherwin
-
-Added licence
-
-Revision 1.1  2006/02/12 15:06:12  sherwin
-
-Changed .h files to .hpp
-
-**/

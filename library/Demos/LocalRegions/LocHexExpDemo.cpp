@@ -1,16 +1,14 @@
-#include "StdRegions/StdExpansion3D.h"
-#include "LocalRegions/HexExp.h"
-#include "LocalRegions/LocalRegions.hpp"
+#include <StdRegions/StdExpansion3D.h>
+#include <LocalRegions/HexExp.h>
 
-#include "LibUtilities/Foundations/Foundations.hpp"
-#include "LibUtilities/Foundations/Basis.h"
+#include <LibUtilities/Foundations/Foundations.hpp>
+#include <LibUtilities/Foundations/Basis.h>
 
-#include "SpatialDomains/MeshComponents.h"
+#include <SpatialDomains/MeshComponents.h>
+#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 
 #include <algorithm>
 #include <iostream>
-#include <limits>
-#include <cstdio>
 #include <cstdlib>
 #include <cmath>
 #include <iomanip>
@@ -18,6 +16,7 @@
 
 using namespace std;
 using namespace boost;
+using namespace Nektar;
 using namespace Nektar::LibUtilities;
 using namespace Nektar::LocalRegions;
 using namespace Nektar::StdRegions;
@@ -259,8 +258,8 @@ int main(int argc, char *argv[])
     //-------------------------------------------
     // Evaulate solution at x = y = z = 0  and print error
     Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
-    t[0] = -0.39;
-    t[1] = -0.25;
+    t[0] =  0.5;
+    t[1] =  0.5;
     t[2] =  0.5;
 
     NekDouble numericSolution = lhe->PhysEvaluate(t);

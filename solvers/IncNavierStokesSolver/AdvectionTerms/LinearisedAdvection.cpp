@@ -34,9 +34,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <IncNavierStokesSolver/AdvectionTerms/LinearisedAdvection.h>
-#include <cstdio>
-#include <cstdlib>
-#include <stdio.h>
+#include <StdRegions/StdSegExp.h>
+
+#include <MultiRegions/ContField3DHomogeneous1D.h>
+#include <MultiRegions/ContField3DHomogeneous2D.h>
+#include <MultiRegions/ContField1D.h>
+#include <MultiRegions/ContField2D.h>
+#include <MultiRegions/ContField3D.h>
+#include <MultiRegions/DisContField1D.h>
+#include <MultiRegions/DisContField2D.h>
+#include <MultiRegions/DisContField3DHomogeneous1D.h>
+#include <MultiRegions/DisContField3DHomogeneous2D.h>
+
 
 namespace Nektar
 {
@@ -474,7 +483,7 @@ namespace Nektar
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
-                if((m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"|| m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))& nvar==3)
+                if((m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"|| m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))&& nvar==3)
                 {
                     
                     // w-component must be ignored and set to zero.
@@ -699,20 +708,20 @@ namespace Nektar
                 if(m_dealiasing)
                 {
                     //U du'/dx
-                    pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
                     
                     //V du'/dy
-                    pFields[0]->DealiasedProd(m_base[1]->GetPhys(),grad1,grad1,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(m_base[1]->GetPhys(),grad1,grad1,m_CoeffState);
                     
                     //W du'/dx
-                    pFields[0]->DealiasedProd(m_base[2]->GetPhys(),grad2,grad2,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(m_base[2]->GetPhys(),grad2,grad2,m_CoeffState);
                     
                     // u' dU/dx
-                    pFields[0]->DealiasedProd(pVelocity[0],grad_base_u0,grad_base_u0,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(pVelocity[0],grad_base_u0,grad_base_u0,m_CoeffState);
                     // v' dU/dy
-                    pFields[0]->DealiasedProd(pVelocity[1],grad_base_u1,grad_base_u1,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(pVelocity[1],grad_base_u1,grad_base_u1,m_CoeffState);
                     // w' dU/dz
-                    pFields[0]->DealiasedProd(pVelocity[2],grad_base_u2,grad_base_u2,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(pVelocity[2],grad_base_u2,grad_base_u2,m_CoeffState);
                     
                     Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
                     Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
@@ -741,17 +750,17 @@ namespace Nektar
                 if(m_dealiasing)
                 {
                     //U dv'/dx
-                    pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
                     //V dv'/dy
-                    pFields[0]->DealiasedProd(m_base[1]->GetPhys(),grad1,grad1,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(m_base[1]->GetPhys(),grad1,grad1,m_CoeffState);
                     //W dv'/dx
-                    pFields[0]->DealiasedProd(m_base[2]->GetPhys(),grad2,grad2,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(m_base[2]->GetPhys(),grad2,grad2,m_CoeffState);
                     // u' dV/dx
-                    pFields[0]->DealiasedProd(pVelocity[0],grad_base_v0,grad_base_v0,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(pVelocity[0],grad_base_v0,grad_base_v0,m_CoeffState);
                     // v' dV/dy
-                    pFields[0]->DealiasedProd(pVelocity[1],grad_base_v1,grad_base_v1,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(pVelocity[1],grad_base_v1,grad_base_v1,m_CoeffState);
                     // w' dV/dz
-                    pFields[0]->DealiasedProd(pVelocity[2],grad_base_v2,grad_base_v2,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(pVelocity[2],grad_base_v2,grad_base_v2,m_CoeffState);
                     
                     Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
                     Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
@@ -781,17 +790,17 @@ namespace Nektar
                 if(m_dealiasing)
                 {
                     //U dw'/dx
-                    pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
                     //V dw'/dy
-                    pFields[0]->DealiasedProd(m_base[1]->GetPhys(),grad1,grad1,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(m_base[1]->GetPhys(),grad1,grad1,m_CoeffState);
                     //W dw'/dx
-                    pFields[0]->DealiasedProd(m_base[2]->GetPhys(),grad2,grad2,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(m_base[2]->GetPhys(),grad2,grad2,m_CoeffState);
                     // u' dW/dx
-                    pFields[0]->DealiasedProd(pVelocity[0],grad_base_w0,grad_base_w0,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(pVelocity[0],grad_base_w0,grad_base_w0,m_CoeffState);
                     // v' dW/dy
-                    pFields[0]->DealiasedProd(pVelocity[1],grad_base_w1,grad_base_w1,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(pVelocity[1],grad_base_w1,grad_base_w1,m_CoeffState);
                     // w' dW/dz
-                    pFields[0]->DealiasedProd(pVelocity[2],grad_base_w2,grad_base_w2,m_UseContCoeff);
+                    pFields[0]->DealiasedProd(pVelocity[2],grad_base_w2,grad_base_w2,m_CoeffState);
                     
                     Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
                     Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);

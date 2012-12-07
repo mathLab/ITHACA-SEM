@@ -33,9 +33,21 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/ExpList.h>
+#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/GlobalLinSys.h>
+
+#include <LocalRegions/MatrixKey.h>     // for MatrixKey
+#include <LocalRegions/Expansion.h>     // for Expansion
+
+#include <MultiRegions/AssemblyMap/AssemblyMapCG.h>  // for AssemblyMapCG, etc
+#include <MultiRegions/GlobalLinSysKey.h>  // for GlobalLinSysKey
+#include <MultiRegions/GlobalMatrix.h>  // for GlobalMatrix, etc
+#include <MultiRegions/GlobalMatrixKey.h>  // for GlobalMatrixKey
+
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
+
 
 namespace Nektar
 {
@@ -76,7 +88,6 @@ namespace Nektar
             m_coeff_offset(),
             m_phys_offset(),
             m_offset_elmt_id(),
-            m_transState(eNotSet),
             m_physState(false),
 		    m_WaveSpace(false),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>
@@ -103,7 +114,6 @@ namespace Nektar
             m_coeff_offset(),
             m_phys_offset(),
             m_offset_elmt_id(),
-            m_transState(eNotSet),
             m_physState(false),
             m_WaveSpace(false),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>
@@ -131,7 +141,6 @@ namespace Nektar
             m_coeff_offset(),
             m_phys_offset(),
             m_offset_elmt_id(),
-            m_transState(eNotSet),
             m_physState(false),
 		    m_WaveSpace(false),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>
@@ -151,7 +160,6 @@ namespace Nektar
             m_graph(in.m_graph),
             m_ncoeffs(in.m_ncoeffs),
             m_npoints(in.m_npoints),
-            m_transState(eNotSet),
             m_physState(false),
 		    m_WaveSpace(false),
             m_exp(in.m_exp),
@@ -169,7 +177,7 @@ namespace Nektar
         }
 
 
-		//boost::shared_ptr<ExpList> do_clone(void) const = 0; {}
+        //boost::shared_ptr<ExpList> do_clone(void) const = 0; {}
 		
         /**
          * For each element, copy the coefficients from \a m_coeffs into their
@@ -445,7 +453,6 @@ namespace Nektar
                     }
                 }
             }
-            m_transState = eLocal;
         }
 
         /**
@@ -474,7 +481,6 @@ namespace Nektar
                 (*m_exp)[i]->IProductWRTDerivBase(dir,inarray+m_phys_offset[i],
                                                   e_outarray = outarray+m_coeff_offset[i]);
             }
-            m_transState = eLocal;
         }
 
         /**
@@ -512,9 +518,9 @@ namespace Nektar
          *                          calculated.
          */
         void ExpList::v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-                                Array<OneD, NekDouble> &out_d0,
-                                Array<OneD, NekDouble> &out_d1,
-                                Array<OneD, NekDouble> &out_d2, bool UseContCoeffs)
+                                  Array<OneD, NekDouble> &out_d0,
+                                  Array<OneD, NekDouble> &out_d1,
+                                  Array<OneD, NekDouble> &out_d2)
         {
             int  i;
             Array<OneD, NekDouble> e_out_d0;
@@ -536,17 +542,17 @@ namespace Nektar
                 (*m_exp)[i]->PhysDeriv(inarray+m_phys_offset[i],e_out_d0,e_out_d1,e_out_d2);
             }
         }
-		
+
         void ExpList::v_PhysDeriv(const int dir,
                                   const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD, NekDouble> &out_d, bool UseContCoeffs)
+                                  Array<OneD, NekDouble> &out_d)
         {
             Direction edir = DirCartesianMap[dir];
-            v_PhysDeriv(edir, inarray,out_d, UseContCoeffs);
+            v_PhysDeriv(edir, inarray,out_d);
         }
         
         void ExpList::v_PhysDeriv(Direction edir, const Array<OneD, const NekDouble> &inarray,
-                Array<OneD, NekDouble> &out_d, bool boolUseContCoeffs)
+                Array<OneD, NekDouble> &out_d)
         {
             int i;
             if(edir==MultiRegions::eS)
@@ -1281,10 +1287,11 @@ namespace Nektar
         }
 
 
-        /** @todo need a smarter search here that first just looks at bounding 
-        /* vertices - suggest first seeing if point is within 10% of
-        /* region defined by vertices. The do point search. 
-        **/
+        /** 
+         * @todo need a smarter search here that first just looks at bounding
+         * vertices - suggest first seeing if point is within 10% of
+         * region defined by vertices. The do point search. 
+         */
         int ExpList::GetExpIndex(
                                  const Array<OneD, const NekDouble> &gloCoord,
                                  NekDouble tol)
@@ -1989,21 +1996,6 @@ namespace Nektar
         //
         // Virtual functions
         //
-        int ExpList::v_GetContNcoeffs() const
-        {
-
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            return 0;
-        }
-
-
-        void ExpList::v_SetContCoeffsArray(Array<OneD, NekDouble> &inarray)
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-        }
-
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpList::v_GetFieldDefinitions()
         {
             std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
@@ -2249,8 +2241,8 @@ namespace Nektar
 
         void ExpList::v_MultiplyByInvMassMatrix(
                                 const Array<OneD,const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs)
+                                Array<OneD,      NekDouble> &outarray,
+                                CoeffState coeffstate)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2272,7 +2264,7 @@ namespace Nektar
                        const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray,
                        const NekDouble lambda,
-                       bool  UseContCoeffs,
+                       CoeffState coeffstate,
                        const Array<OneD, const NekDouble>&  dirForcing)
         {
             ASSERTL0(false,
@@ -2284,44 +2276,48 @@ namespace Nektar
                        const Array<OneD, const NekDouble> &inarray,
                        Array<OneD, NekDouble> &outarray,
                        const NekDouble lambda,
-                       bool  UseContCoeffs,
+                       CoeffState coeffstate,
                        const Array<OneD, const NekDouble>&  dirForcing)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 		
-		void ExpList::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-											  Array<OneD, NekDouble> &outarray, 
-											  bool UseContCoeffs)
-		{
-			ASSERTL0(false,
+        void ExpList::v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                            Array<OneD, NekDouble> &outarray, 
+                                            CoeffState coeffstate,
+                                            bool Shuff,
+                                            bool UnShuff)
+        {
+            ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-		}
-		
-		void ExpList::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-											  Array<OneD, NekDouble> &outarray, 
-											  bool UseContCoeffs)
-		{
-			ASSERTL0(false,
+        }
+	
+        void ExpList::v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                            Array<OneD, NekDouble> &outarray, 
+                                            CoeffState coeffstate,
+                                            bool Shuff,
+                                            bool UnShuff)
+        {
+            ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-		}
-		
-		void ExpList::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,const Array<OneD, NekDouble> &inarray2,Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
-		{
-			ASSERTL0(false,
+        }
+	
+        void ExpList::v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,const Array<OneD, NekDouble> &inarray2,Array<OneD, NekDouble> &outarray,CoeffState coeffstate)
+        {
+            ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-		}
-		
-		
-		void ExpList::v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
-									const Array<OneD, NekDouble> &TotField, 
-									int BndID)
-		{
-			ASSERTL0(false,
+        }
+	
+	
+        void ExpList::v_GetBCValues(Array<OneD, NekDouble> &BndVals, 
+                                    const Array<OneD, NekDouble> &TotField, 
+                                    int BndID)
+        {
+            ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-		}
-		
+        }
+	
         void ExpList::v_NormVectorIProductWRTBase(Array<OneD, const NekDouble> &V1,
                                                   Array<OneD, const NekDouble> &V2,
                                                   Array<OneD, NekDouble> &outarray,
@@ -2331,20 +2327,10 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 	
-        // wrapper functions about virtual functions
-        Array<OneD, NekDouble> &ExpList::v_UpdateContCoeffs()
+        void ExpList::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            return NullNekDouble1DArray;
-        }
-
-
-        const Array<OneD, const NekDouble> &ExpList::v_GetContCoeffs()  const
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            return NullNekDouble1DArray;
         }
 
         void ExpList::v_LocalToGlobal(void)
@@ -2361,32 +2347,32 @@ namespace Nektar
 
 
         void ExpList::v_BwdTrans(const Array<OneD, const NekDouble> &inarray,
-								 Array<OneD,       NekDouble> &outarray,
-								 bool  UseContCoeffs)
+                                 Array<OneD,       NekDouble> &outarray,
+                                 CoeffState coeffstate)			     
         {
             v_BwdTrans_IterPerExp(inarray,outarray);
         }
-
+        
         void ExpList::v_FwdTrans(const Array<OneD, const NekDouble> &inarray,
-								 Array<OneD,       NekDouble> &outarray,
-								 bool  UseContCoeffs)
+                                 Array<OneD,       NekDouble> &outarray,
+                                 CoeffState coeffstate)			     
         {
             v_FwdTrans_IterPerExp(inarray,outarray);
         }
 
         void ExpList::v_IProductWRTBase(
                                 const Array<OneD, const NekDouble> &inarray,
-                                      Array<OneD,       NekDouble> &outarray,
-                                bool  UseContCoeffs)
+                                Array<OneD,       NekDouble> &outarray,
+                                CoeffState coeffstate)	   
         {
             v_IProductWRTBase_IterPerExp(inarray,outarray);
         }
-
+        
         void ExpList::v_GeneralMatrixOp(
-                                const GlobalMatrixKey             &gkey,
-                                const Array<OneD,const NekDouble> &inarray,
-                                      Array<OneD,      NekDouble> &outarray,
-                                bool  UseContCoeffs)
+                                        const GlobalMatrixKey             &gkey,
+                                        const Array<OneD,const NekDouble> &inarray,
+                                        Array<OneD,      NekDouble> &outarray,
+                                        CoeffState coeffstate)	 
         {
             GeneralMatrixOp_IterPerExp(gkey,inarray,outarray);
         }

@@ -42,8 +42,6 @@
 #include <boost/type_traits.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
-#include <iostream>
-
 namespace Nektar
 {    
     template<typename DataType>
@@ -82,19 +80,3 @@ namespace Nektar
     
 #endif //NEKTAR_LIB_UTILITIES_BASIC_UTILS_CONSISTENT_ACCESS_OBJECT_HPP
 
-/**
-    $Log: ConsistentObjectAccess.hpp,v $
-    Revision 1.4  2007/07/22 23:03:25  bnelson
-    Backed out Nektar::ptr.
-
-    Revision 1.3  2007/07/20 00:39:36  bnelson
-    Replaced boost::shared_ptr with Nektar::ptr
-
-    Revision 1.2  2007/01/29 01:35:17  bnelson
-    Removed memory manager requirements.
-
-    Revision 1.1  2006/11/06 17:06:20  bnelson
-    *** empty log message ***
-
- **/
- 

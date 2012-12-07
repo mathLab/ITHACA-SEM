@@ -34,7 +34,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdPrismExp.h>
-#include <iomanip>
 
 namespace Nektar
 {
@@ -306,6 +305,10 @@ namespace Nektar
                     {
                         wz_hat[k] = 0.5*(1.0 - z[k]) * wz[k];
                     }
+                    break;
+                    
+                default:
+                    ASSERTL0(false, "Unsupported quadrature points type.");
                     break;
             }
 
@@ -1813,6 +1816,14 @@ namespace Nektar
             int P   = m_base[0]->GetNumModes() - 1, p;
             int Q   = m_base[1]->GetNumModes() - 1, q;
             int R   = m_base[2]->GetNumModes() - 1, r;
+
+            int nIntCoeffs = m_ncoeffs - NumBndryCoeffs();
+
+            if(outarray.num_elements()!=nIntCoeffs)
+            {
+                outarray = Array<OneD, unsigned int>(nIntCoeffs);
+            }
+
             int idx = 0;
             
             // Loop over all interior modes.

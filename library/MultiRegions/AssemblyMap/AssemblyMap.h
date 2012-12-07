@@ -35,11 +35,11 @@
 
 #ifndef MULTIREGIONS_ASSEMBLY_MAP_H
 #define MULTIREGIONS_ASSEMBLY_MAP_H
+
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/SubStructuredGraph.h>
 #include <vector>
-#include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/Communication/GsLib.hpp>
 
@@ -256,6 +256,11 @@ namespace Nektar
             MULTI_REGIONS_EXPORT const GlobalSysSolnType  GetGlobalSysSolnType() const;
             MULTI_REGIONS_EXPORT const PreconditionerType  GetPreconType() const;
 
+            MULTI_REGIONS_EXPORT const int GetLowestStaticCondLevel() const
+            {
+                return m_lowestStaticCondLevel;
+            }
+
         protected:
             /// Session object
             LibUtilities::SessionReaderSharedPtr m_session;
@@ -341,7 +346,9 @@ namespace Nektar
 
             /// The local to global mapping of the next level of recursion
             AssemblyMapSharedPtr m_nextLevelLocalToGlobalMap;
-
+            /// Lowest static condensation level.
+            int m_lowestStaticCondLevel;
+            
             /// Calculates the bandwidth of the boundary system.
             void CalculateBndSystemBandWidth();
 

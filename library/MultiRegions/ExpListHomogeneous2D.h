@@ -86,179 +86,185 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT ExpListHomogeneous2D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                                       const LibUtilities::BasisKey &HomoBasis_y,
-													  const LibUtilities::BasisKey &HomoBasis_z,
-													  const NekDouble ly,
-													  const NekDouble lz,
-													  const bool useFFT,
-													  const bool dealiasing);
-
+                                                      const LibUtilities::BasisKey &HomoBasis_z,
+                                                      const NekDouble ly,
+                                                      const NekDouble lz,
+                                                      const bool useFFT,
+                                                      const bool dealiasing);
+            
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpListHomogeneous2D(const ExpListHomogeneous2D &In);
-
+            
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpListHomogeneous2D();
-
-            MULTI_REGIONS_EXPORT void Homogeneous2DTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool IsForwards, bool UseContCoeffs = false);
-
-            inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
-
-            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs = false);
-			
-			inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
-									  const Array<OneD, NekDouble> &inarray2,
-									  Array<OneD, NekDouble> &outarray, 
-									  bool UseContCoeffs = false);
-
-            MULTI_REGIONS_EXPORT void ShuffleIntoHomogeneous2DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD, NekDouble> &outarray,
-                              bool UseNumModes = false);
-
-            MULTI_REGIONS_EXPORT void UnshuffleFromHomogeneous2DClosePacked(
-                              const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD, NekDouble> &outarray,
-                              bool UseNumModes = false);
-			
-			MULTI_REGIONS_EXPORT void SetPaddingBase(void);
-			
-			MULTI_REGIONS_EXPORT void Transpose(const Array<OneD, const NekDouble> &inarray,
-												Array<OneD, NekDouble> &outarray,
-												bool XtoZ);
-			
-			MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-								                Array<OneD, NekDouble> &out_d0,
-								                Array<OneD, NekDouble> &out_d1, 
-								                Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
-			
-			MULTI_REGIONS_EXPORT void PhysDeriv(Direction edir,
-								                const Array<OneD, const NekDouble> &inarray,
-								                Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
-			
-			/// FFT variables
-			bool                                     m_useFFT;
-			LibUtilities::NektarFFTSharedPtr        m_FFT_y;
-			LibUtilities::NektarFFTSharedPtr        m_FFT_z;
-			Array<OneD,NekDouble>                   m_tmpIN;
-			Array<OneD,NekDouble>                   m_tmpOUT;
-			
-			LibUtilities::TranspositionSharedPtr      m_transposition;
-			LibUtilities::CommSharedPtr               m_Ycomm;
-			LibUtilities::CommSharedPtr               m_Zcomm;
-
+            
+            MULTI_REGIONS_EXPORT void Homogeneous2DTrans(const Array<OneD, const NekDouble> &inarray, 
+                                                         Array<OneD, NekDouble> &outarray, 
+                                                         bool IsForwards, 
+                                                         CoeffState coeffstate = eLocal,
+                                                         bool Shuff = true,
+                                                         bool UnShuff = true);
+            
+            inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                            Array<OneD, NekDouble> &outarray, 
+                                            CoeffState coeffstate = eLocal,
+                                            bool Shuff = true,
+                                            bool UnShuff = true);
+            
+            inline void HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                            Array<OneD, NekDouble> &outarray, 
+                                            CoeffState coeffstate = eLocal,
+                                            bool Shuff = true,
+                                            bool UnShuff = true);
+            
+            inline void DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+                                      const Array<OneD, NekDouble> &inarray2,
+                                      Array<OneD, NekDouble> &outarray, 
+                                      CoeffState coeffstate = eLocal);
+            
+            MULTI_REGIONS_EXPORT void SetPaddingBase(void);
+            
+            MULTI_REGIONS_EXPORT void PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                                                Array<OneD, NekDouble> &out_d0,
+                                                Array<OneD, NekDouble> &out_d1, 
+                                                Array<OneD, NekDouble> &out_d2);
+            
+            MULTI_REGIONS_EXPORT void PhysDeriv(Direction edir,
+                                                const Array<OneD, const NekDouble> &inarray,
+                                                Array<OneD, NekDouble> &out_d);
+            
+            /// FFT variables
+            bool                                     m_useFFT;
+            LibUtilities::NektarFFTSharedPtr        m_FFT_y;
+            LibUtilities::NektarFFTSharedPtr        m_FFT_z;
+            Array<OneD,NekDouble>                   m_tmpIN;
+            Array<OneD,NekDouble>                   m_tmpOUT;
+            
+            LibUtilities::TranspositionSharedPtr      m_transposition;
+            LibUtilities::CommSharedPtr               m_Ycomm;
+            LibUtilities::CommSharedPtr               m_Zcomm;
+            
         protected:
-
+            
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
             LibUtilities::BasisSharedPtr    m_homogeneousBasis_y;       ///< Base expansion in y direction
-			LibUtilities::BasisSharedPtr    m_homogeneousBasis_z;       ///< Base expansion in z direction
-			LibUtilities::BasisSharedPtr    m_paddingBasis_y;       ///< Base expansion in y direction
-			LibUtilities::BasisSharedPtr    m_paddingBasis_z;       ///< Base expansion in z direction
+            LibUtilities::BasisSharedPtr    m_homogeneousBasis_z;       ///< Base expansion in z direction
+            LibUtilities::BasisSharedPtr    m_paddingBasis_y;       ///< Base expansion in y direction
+            LibUtilities::BasisSharedPtr    m_paddingBasis_z;       ///< Base expansion in z direction
             NekDouble                       m_lhom_y;                   ///< Width of homogeneous direction y
-			NekDouble                       m_lhom_z;                   ///< Width of homogeneous direction z
+            NekDouble                       m_lhom_z;                   ///< Width of homogeneous direction z
             Homo2DBlockMatrixMapShPtr       m_homogeneous2DBlockMat;
             Array<OneD, ExpListSharedPtr>   m_lines;                    ///< Vector of ExpList, will be filled with ExpList1D
-			int                             m_ny;                       ///< Number of modes = number of poitns in y direction
-			int                             m_nz;                       ///< Number of modes = number of poitns in z direction
+            int                             m_ny;                       ///< Number of modes = number of poitns in y direction
+            int                             m_nz;                       ///< Number of modes = number of poitns in z direction
+            
+            DNekBlkMatSharedPtr GenHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype, CoeffState coeffstate = eLocal) const;
 
-            DNekBlkMatSharedPtr GenHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype, bool UseContCoeffs = false) const;
-
-            DNekBlkMatSharedPtr GetHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype, bool UseContCoeffs = false) const;
-
+            DNekBlkMatSharedPtr GetHomogeneous2DBlockMatrix(Homogeneous2DMatType mattype, CoeffState coeffstate = eLocal) const;
+            
             //  virtual functions
             virtual int v_GetNumElmts(void)
             {
                 return m_lines[0]->GetExpSize();
             }
-
+            
             virtual void v_FwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
-                                    bool  UseContCoeffs);
-			
-			virtual void v_FwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
-                                               Array<OneD,      NekDouble> &outarray);
-
+                                    CoeffState coeffstate);
+            
+            virtual void v_FwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray, Array<OneD,      NekDouble> &outarray);
+            
             virtual void v_BwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
-                                    bool  UseContCoeffs);
-			
-		
-            virtual void v_BwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray,
-											   Array<OneD,      NekDouble> &outarray);
-			
-            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, 
-										   Array<OneD, NekDouble> &outarray, 
-										   bool UseContCoeffs);
-			
-			virtual void v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
-													  Array<OneD, NekDouble> &outarray);
-
+                                    CoeffState coeffstate);
+            
+            
+            virtual void v_BwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray, Array<OneD,      NekDouble> &outarray);
+            
+            virtual void v_IProductWRTBase(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, CoeffState coeffstate);
+            
+            virtual void v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+            
             virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
-
+            
             virtual void v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
-
+            
             virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
-			
-			virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
-
+            
+            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
+            
             virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field);
-
+            
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,std::string var = "v");
-
+            
             virtual void v_WriteTecplotField(std::ofstream &outfile,int expansion);
-
+            
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion, std::string var);
+            
+            virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                               Array<OneD, NekDouble> &outarray, 
+                                               CoeffState coeffstate = eLocal,
+                                               bool Shuff = true,
+                                               bool UnShuff = true);
+            
+            virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                               Array<OneD, NekDouble> &outarray, 
+                                               CoeffState coeffstate = eLocal,
+                                               bool Shuff = true,
+                                               bool UnShuff = true);
+            
+            virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+                                         const Array<OneD, NekDouble> &inarray2,
+                                         Array<OneD, NekDouble> &outarray, 
+                                         CoeffState coeffstate = eLocal);
 			
-			virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs = false);
-			
-			virtual void v_HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
-												 Array<OneD, NekDouble> &outarray, 
-												 bool UseContCoeffs = false);
-			
-			virtual void v_DealiasedProd(const Array<OneD, NekDouble> &inarray1,
-										 const Array<OneD, NekDouble> &inarray2,
-										 Array<OneD, NekDouble> &outarray, 
-										 bool UseContCoeffs = false);
-			
-			virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
-									 Array<OneD, NekDouble> &out_d0,
-									 Array<OneD, NekDouble> &out_d1, 
-									 Array<OneD, NekDouble> &out_d2, bool UseContCoeffs);
-			
-			virtual void v_PhysDeriv(Direction edir,
-									 const Array<OneD, const NekDouble> &inarray,
-									 Array<OneD, NekDouble> &out_d, bool UseContCoeffs);
-
+            virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD, NekDouble> &out_d0,
+                                     Array<OneD, NekDouble> &out_d1, 
+                                     Array<OneD, NekDouble> &out_d2);
+            
+            virtual void v_PhysDeriv(Direction edir,
+                                     const Array<OneD, const NekDouble> &inarray,
+                                     Array<OneD, NekDouble> &out_d);
+            
         private:
-			
-			//Padding operations variables
-			bool m_dealiasing;
-			int m_padsize_y;
-			int m_padsize_z;
-			DNekMatSharedPtr    MatFwdPAD;
-			DNekMatSharedPtr    MatBwdPAD;
+            
+            //Padding operations variables
+            bool m_dealiasing;
+            int m_padsize_y;
+            int m_padsize_z;
+            DNekMatSharedPtr    MatFwdPAD;
+            DNekMatSharedPtr    MatBwdPAD;
         };
-
-        inline void ExpListHomogeneous2D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        
+        inline void ExpListHomogeneous2D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                                              Array<OneD, NekDouble> &outarray, 
+                                                              CoeffState coeffstate,
+                                                              bool Shuff,
+                                                              bool UnShuff)
         {
-			v_HomogeneousFwdTrans(inarray,outarray,UseContCoeffs);
+            v_HomogeneousFwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
 		
-        inline void ExpListHomogeneous2D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, Array<OneD, NekDouble> &outarray, bool UseContCoeffs)
+        inline void ExpListHomogeneous2D::HomogeneousBwdTrans(const Array<OneD, const NekDouble> &inarray, 
+                                                              Array<OneD, NekDouble> &outarray, 
+                                                              CoeffState coeffstate,
+                                                              bool Shuff,
+                                                              bool UnShuff)
         {
-            v_HomogeneousBwdTrans(inarray,outarray,UseContCoeffs);
+            v_HomogeneousBwdTrans(inarray,outarray,coeffstate,Shuff,UnShuff);
         }
-		
-		inline void ExpListHomogeneous2D::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
-														const Array<OneD, NekDouble> &inarray2,
-														Array<OneD, NekDouble> &outarray, 
-														bool UseContCoeffs)
-		{
-			v_DealiasedProd(inarray1,inarray2,outarray,UseContCoeffs);
-		}
-
+	
+        inline void ExpListHomogeneous2D::DealiasedProd(const Array<OneD, NekDouble> &inarray1,
+                                                        const Array<OneD, NekDouble> &inarray2,
+                                                        Array<OneD, NekDouble> &outarray, 
+                                                        CoeffState coeffstate)
+        {
+            v_DealiasedProd(inarray1,inarray2,outarray,coeffstate);
+        }
+        
     } //end of namespace
 } //end of namespace
 

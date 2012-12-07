@@ -3,9 +3,10 @@
 
 #include <LibUtilities/Memory/NekMemoryManager.hpp>
 #include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/Communication/Comm.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <MultiRegions/ContField3D.h>
+#include <SpatialDomains/MeshGraph3D.h>
+
 using namespace Nektar;
 
 // This routine projects a polynomial which has energy in all mdoes of
@@ -103,12 +104,12 @@ int main(int argc, char *argv[])
 
     //---------------------------------------------
     // Project onto Expansion
-    Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs(), true);    
+    Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs(), MultiRegions::eGlobal);    
     //---------------------------------------------
 
     //-------------------------------------------
     // Backward Transform Solution to get projected values
-    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), true);
+    Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), MultiRegions::eGlobal);
     //-------------------------------------------
 
     //----------------------------------------------

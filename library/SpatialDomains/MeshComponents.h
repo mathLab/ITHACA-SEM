@@ -37,11 +37,10 @@
 #define NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
 
 #include <SpatialDomains/Geometry.h>
-#include <SpatialDomains/SpatialDomains.hpp>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <set>
-#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LibUtilities/Foundations/Graph.h>
 
 namespace Nektar
 {
@@ -87,7 +86,7 @@ namespace Nektar
         /// Vertex Component
         class VertexComponent: public Geometry, public NekPoint <NekDouble>
         {
-            public:
+        public:
                 SPATIAL_DOMAINS_EXPORT VertexComponent(const int coordim, const int vid,
                     double x, double y, double z);
                 SPATIAL_DOMAINS_EXPORT VertexComponent(){}

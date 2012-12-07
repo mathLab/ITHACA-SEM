@@ -222,13 +222,13 @@ int main(int argc, char* argv[])
             
             if (tmp2.size() == 1)
             {
-                mod->RegisterConfig(tmp2[0], "true");
+                mod->RegisterConfig(tmp2[0], "1");
             }
             else if (tmp2.size() == 2)
             {
                 mod->RegisterConfig(tmp2[0], tmp2[1]);
             }
-            if (tmp2.size() != 2)
+            else
             {
                 cerr << "ERROR: Invalid module configuration: format is "
                      << "either :arg or :arg=val" << endl;

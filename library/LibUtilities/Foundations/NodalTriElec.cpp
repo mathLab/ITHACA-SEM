@@ -32,23 +32,13 @@
 // Description: 2D Nodal Triangle Fekete Point Definitions
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <LibUtilities/LibUtilities.h>
-#include <iostream>
-#include <algorithm>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Foundations/Foundations.hpp>
-
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
-#include <LibUtilities/Polylib/Polylib.h>
-#include <LibUtilities/Foundations/NodalTriElecData.h>
-
-#include <LibUtilities/LinearAlgebra/NekMatrixFwd.hpp>
-#include <LibUtilities/LinearAlgebra/Lapack.hpp>
-#include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #include <LibUtilities/Foundations/NodalTriElec.h>
+#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <LibUtilities/Foundations/NodalTriElecData.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/Foundations/NodalUtil.h>
 
 namespace Nektar
@@ -192,9 +182,9 @@ namespace Nektar
          }
 
 
-        boost::shared_ptr<NodalTriElec::PointsBaseType> NodalTriElec::Create(const PointsKey &key)
+        boost::shared_ptr<PointsBaseType> NodalTriElec::Create(const PointsKey &key)
         {
-            boost::shared_ptr<NodalTriElec::PointsBaseType> returnval(MemoryManager<NodalTriElec>::AllocateSharedPtr(key));
+            boost::shared_ptr<PointsBaseType> returnval(MemoryManager<NodalTriElec>::AllocateSharedPtr(key));
             returnval->Initialize();
             return returnval;
         }
@@ -296,45 +286,3 @@ namespace Nektar
 } // end of namespace stdregion
 
 
-/**
-* $Log: NodalTriElec.cpp,v $
-* Revision 1.18  2008/11/01 22:36:06  bnelson
-* Removed uneeded files.
-*
-* Revision 1.17  2008/04/06 05:54:08  bnelson
-* Changed ConstArray to Array<const>
-*
-* Revision 1.16  2008/04/02 21:12:35  pvos
-* Update of the 2D local to global map
-*
-* Revision 1.15  2008/03/18 14:11:50  pvos
-* Update for nodal triangular helmholtz solver
-*
-* Revision 1.14  2007/10/03 03:00:13  bnelson
-* Added precompiled headers.
-*
-* Revision 1.13  2007/08/15 01:48:39  ehan
-* *** empty log message ***
-*
-* Revision 1.12  2007/08/06 05:41:25  ehan
-* Fixed derivative matrix
-*
-* Revision 1.11  2007/07/31 18:17:21  ehan
-* Conform to Coding Style Standard
-*
-* Revision 1.10  2007/07/26 22:54:40  ehan
-* completed testing and implementation of integration, interpolation, and derivation
-*
-* Revision 1.9  2007/07/22 23:03:26  bnelson
-* Backed out Nektar::ptr.
-*
-* Revision 1.8  2007/07/20 00:28:26  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.7  2007/05/15 03:37:24  bnelson
-* Updated to use the new Array object.
-*
-* Revision 1.6  2007/04/30 23:29:10  jfrazier
-* More conversion to multi_array.
-*
-*/

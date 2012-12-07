@@ -39,13 +39,14 @@
 
 #include <StdRegions/StdRegions.hpp>
 #include <StdRegions/StdExpansion3D.h>
-#include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/StdRegionsDeclspec.h>
 
 namespace Nektar
 {
     namespace StdRegions
     {
+        class StdMatrixKey;
+
         namespace StdTetData
         {
             /**
@@ -256,6 +257,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_CalcNumberOfCoefficients(
                     const std::vector<unsigned int> &nummodes,
                           int                       &modes_offset);
+            STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey 
+                    v_DetFaceBasisKey(const int i, const int k) const;
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(
                     const int i) const;
             STD_REGIONS_EXPORT virtual void v_WriteToFile(

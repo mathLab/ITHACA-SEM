@@ -33,11 +33,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <sstream>
 #include <iostream>
-#include <iomanip>
 #include <vector>
-#include <sstream>
 #include <loki/Singleton.h>
 
 #include <StdRegions/StdNodalTriExp.h>
@@ -47,6 +44,11 @@
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
+#include <SpatialDomains/SegGeom.h>
+#include <SpatialDomains/TetGeom.h>
+#include <SpatialDomains/PyrGeom.h>
+#include <SpatialDomains/PrismGeom.h>
+#include <SpatialDomains/HexGeom.h>
 
 #include "MeshElements.h"
 using namespace std;
@@ -318,10 +320,13 @@ namespace Nektar
          * The list of composites may include individual element IDs or ranges
          * of element IDs.
          */
-        string Composite::GetXmlString()
+        string Composite::GetXmlString(bool doSort)
         {
-            element_id_less_than sortOperator;
-            sort(items.begin(), items.end(), sortOperator);
+            if (doSort)
+            {
+                element_id_less_than sortOperator;
+                sort(items.begin(), items.end(), sortOperator);
+            }
 
             stringstream st;
             vector<ElementSharedPtr>::iterator it;
@@ -510,6 +515,14 @@ namespace Nektar
                                                       edgeNodes,
                                                       m_conf.edgeCurveType)));
             }
+
+            if (m_conf.faceNodes)
+            {
+                volumeNodes.insert(volumeNodes.begin(),
+                                   pNodeList.begin()+3*m_conf.order,
+                                   pNodeList.end());
+            }
+
         }
 
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
@@ -685,7 +698,7 @@ namespace Nektar
                                                       edgeNodes,
                                                       m_conf.edgeCurveType)));
             }
-            
+
             if (m_conf.faceNodes)
             {
                 volumeNodes.insert(volumeNodes.begin(), 
@@ -1127,7 +1140,6 @@ namespace Nektar
             // point. Place second highest global vertex at base degenerate
             // point.
             sort(vertex.begin(), vertex.end());
-            //reverse(vertex.begin(), vertex.end());
             
             // Calculate a.(b x c) to determine tet volume; if negative,
             // reverse order of non-degenerate points to correctly orientate
@@ -1153,7 +1165,7 @@ namespace Nektar
             {
                 swap(vertex[0], vertex[1]);
             }
-
+            
             TetOrientSet::iterator it;
             
             // Search for the face in the original set of face nodes. Then use
@@ -1247,13 +1259,13 @@ namespace Nektar
                 vector<NodeSharedPtr> faceVertices;
                 vector<EdgeSharedPtr> faceEdges;
                 vector<NodeSharedPtr> faceNodes;
-                for (int k = 0; k < 4; ++k)
+                int nEdge = 3 - (j % 2 - 1);
+                
+                for (int k = 0; k < nEdge; ++k)
                 {
-                    if (face_ids[j][k] == -1)
-                        break;
                     faceVertices.push_back(vertex[face_ids[j][k]]);
                     NodeSharedPtr a = vertex[face_ids[j][k]];
-                    NodeSharedPtr b = vertex[face_ids[j][(k+1)%(j%2==0?4:3)]];
+                    NodeSharedPtr b = vertex[face_ids[j][(k+1) % nEdge]];
                     for (unsigned int i = 0; i < edge.size(); ++i)
                     {
                         if ((edge[i]->n1 == a && edge[i]->n2 == b) || 
@@ -1279,7 +1291,7 @@ namespace Nektar
                 face.push_back(FaceSharedPtr(
                     new Face(faceVertices, faceNodes, faceEdges, m_conf.faceCurveType)));
             }
-
+            
             // Re-order edge array to be consistent with Nektar++ ordering.
             vector<EdgeSharedPtr> tmp(9);
             tmp[0] = edge[face_edges[0][0]];
@@ -1459,12 +1471,12 @@ namespace Nektar
          * - 2 if the prism is rotated counter-clockwise.
          * 
          * This is necessary for some input modules (e.g. #InputNek) which add
-         * high-order information to faces.
+         * high-order information or bounary conditions to faces.
          */
         void Prism::OrientPrism()
         {
             int lid[6], gid[6];
-
+            
             // Re-order vertices.
             for (int i = 0; i < 6; ++i)
             {

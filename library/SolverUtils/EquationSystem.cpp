@@ -33,18 +33,25 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <string>
-using std::string;
+#include <SolverUtils/EquationSystem.h>
 
+#include <LocalRegions/MatrixKey.h>
 #include <LibUtilities/BasicUtils/Equation.h>
-#include <iomanip>
 #include <MultiRegions/ContField1D.h>
 #include <MultiRegions/ContField2D.h>
 #include <MultiRegions/ContField3D.h>
 #include <MultiRegions/ContField3DHomogeneous1D.h>
 #include <MultiRegions/ContField3DHomogeneous2D.h>
 
-#include <SolverUtils/EquationSystem.h>
+#include <MultiRegions/ExpList2D.h>     // for ExpList2D, etc
+#include <MultiRegions/ExpList3D.h>     // for ExpList3D
+#include <MultiRegions/ExpList3DHomogeneous1D.h>
+#include <MultiRegions/ExpList3DHomogeneous2D.h>
+
+#include <string>
+
+
+using std::string;
 
 namespace Nektar
 {
@@ -53,15 +60,16 @@ namespace Nektar
         /**
          * @class EquationSystem
          *
-         * This class is a base class for all solver implementations. It provides
-         * the underlying generic functionality and interface for solving equations.
+         * This class is a base class for all solver implementations. It
+         * provides the underlying generic functionality and interface for
+         * solving equations.
          *
-         * To solve a steady-state equation, create a derived class from this class
-         * and reimplement the virtual functions to provide custom implementation
-         * for the problem.
+         * To solve a steady-state equation, create a derived class from this
+         * class and reimplement the virtual functions to provide custom
+         * implementation for the problem.
          *
-         * To solve unsteady problems, derive from the UnsteadySystem class instead
-         * which provides general time integration.
+         * To solve unsteady problems, derive from the UnsteadySystem class
+         * instead which provides general time integration.
          */
         EquationSystemFactory& GetEquationSystemFactory()
         {
@@ -294,15 +302,10 @@ namespace Nektar
                                     m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
                                         ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT, m_dealiasing, 
                                                             m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
-								
-                                    // necessary to perform to HomoBwdTrans for the fields 
-                                    // (are complex differently from the base flow)
-                                    //m_fields[i]->SetWaveSpace(false);
-
                                 }
-							}
+                            }
                             // Half mode stability analysis
-							else if(m_HalfMode)
+			                else if(m_HalfMode)
                             {
                                 const LibUtilities::PointsKey PkeyZ(m_npointsZ, LibUtilities::eFourierSingleModeSpaced);
 									
@@ -321,10 +324,6 @@ namespace Nektar
                                     m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
                                         ::AllocateSharedPtr(m_session, BkeyZR, m_LhomZ, m_useFFT, m_dealiasing,
                                                             m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
-										
-                                    // necessary to perform to HomoBwdTrans for the fields 
-                                    // (are complex differently from the base flow)
-                                    //m_fields[i]->SetWaveSpace(false);
                                 }
                             }
                             // Normal homogeneous 1D
@@ -338,11 +337,6 @@ namespace Nektar
                                     m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
                                         ::AllocateSharedPtr(m_session, BkeyZ, m_LhomZ, m_useFFT, m_dealiasing,
                                                             m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
-
-									//if(m_MultipleModes)
-                                    //{
-                                    //    m_fields[i]->SetWaveSpace(false);
-                                    //}
                                 }
                             }
                         }
@@ -379,12 +373,6 @@ namespace Nektar
                     }
                     case 3:
                     {
-                        //if(m_HomogeneousType == eHomogeneous3D)
-                        //{
-                        //    ASSERTL0(false,"3D fully periodic problems not implemented yet");
-                        //}
-                        //else
-                        //{
                         i = 0;
                         MultiRegions::ContField3DSharedPtr firstfield =
                             MemoryManager<MultiRegions::ContField3D>
@@ -398,7 +386,18 @@ namespace Nektar
                                 ::AllocateSharedPtr(*firstfield, m_graph, 
                                                     m_session->GetVariable(i));
                         }
-                        //}
+                        
+                        if(m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
+                        {
+                            /// Setting up the normals
+                            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
+                            for(i = 0; i < m_spacedim; ++i)
+                            {
+                                m_traceNormals[i] = Array<OneD, NekDouble> (GetTraceNpoints());
+                            }
+                            
+                            m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
+                        }
                         break;
                     }
                     default:
@@ -498,12 +497,14 @@ namespace Nektar
             }
 
             // Set Default Parameter
-            m_session->LoadParameter("Time",                m_time,                 0.0);
-            m_session->LoadParameter("TimeStep",            m_timestep,             0.01);
-            m_session->LoadParameter("NumSteps",            m_steps,                0);
-            m_session->LoadParameter("IO_CheckSteps",       m_checksteps,           0);
-            m_session->LoadParameter("FinTime",             m_fintime,              0);
-            m_session->LoadParameter("NumQuadPointsError",  m_NumQuadPointsError,   0);
+            m_session->LoadParameter("Time",          m_time,       0.0);
+            m_session->LoadParameter("TimeStep",      m_timestep,   0.01);
+            m_session->LoadParameter("NumSteps",      m_steps,      0);
+            m_session->LoadParameter("IO_CheckSteps", m_checksteps, 0);
+            m_session->LoadParameter("IO_CheckTime",  m_checktime,  0.0);
+            m_session->LoadParameter("FinTime",       m_fintime,    0);
+            m_session->LoadParameter("NumQuadPointsError",
+                                     m_NumQuadPointsError, 0);
 
             // Read in spatial data
             int nq = m_fields[0]->GetNpoints();
@@ -698,7 +699,6 @@ namespace Nektar
             const std::string& pFunctionName,
             const NekDouble& pTime)
         {
-		
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
 
@@ -722,14 +722,6 @@ namespace Nektar
                 LibUtilities::EquationSharedPtr ffunc
                     = m_session->GetFunction(pFunctionName, pFieldName);
 
-                /*
-                if (m_comm->GetRank() == 0)
-                {
-                    cout << "- Field " << pFieldName << ": " 
-                         << ffunc->GetExpression() << endl;
-                }
-                */
-
                 ffunc->Evaluate(x0,x1,x2,pTime,pArray);
             }
             else if (vType == LibUtilities::eFunctionTypeFile)
@@ -737,11 +729,6 @@ namespace Nektar
                 std::string filename
                     = m_session->GetFunctionFilename(pFunctionName, pFieldName);
                 
-                if (m_comm->GetRank() == 0)
-                {
-                    cout << "- Field " << pFieldName << ": " 
-                         << "from file " << filename << endl;
-                }
 #if 0 
                 ImportFld(filename,m_fields);
 #else
@@ -783,6 +770,39 @@ namespace Nektar
                 m_fields[0]->BwdTrans(vCoeffs, pArray);
 #endif
             }
+        }
+
+        /**
+         * @brief Provide a description of a function for a given field name.
+         *
+         * @param pFieldName     Field name.
+         * @param pFunctionName  Function name.
+         */
+        std::string EquationSystem::DescribeFunction(
+            std::string pFieldName,
+            const std::string &pFunctionName)
+        {
+            ASSERTL0(m_session->DefinesFunction(pFunctionName),
+                     "Function '" + pFunctionName + "' does not exist.");
+            
+            std::string retVal;
+            LibUtilities::FunctionType vType;
+            
+            vType = m_session->GetFunctionType(pFunctionName, pFieldName);
+            if (vType == LibUtilities::eFunctionTypeExpression)
+            {
+                LibUtilities::EquationSharedPtr ffunc
+                    = m_session->GetFunction(pFunctionName, pFieldName);
+                retVal = ffunc->GetExpression();
+            }
+            else if (vType == LibUtilities::eFunctionTypeFile)
+            {
+                std::string filename
+                    = m_session->GetFunctionFilename(pFunctionName, pFieldName);
+                retVal = "from file " + filename;
+            }
+            
+            return retVal;
         }
         
         /**
@@ -986,6 +1006,17 @@ namespace Nektar
             {
                 EvaluateFunction(m_session->GetVariables(), m_fields, 
                                  "InitialConditions");
+                
+                if (m_session->GetComm()->GetRank() == 0)
+                {
+                    for (int i = 0; i < m_fields.num_elements(); ++i)
+                    {
+                        std::string varName = m_session->GetVariable(i);
+                        cout << "  - Field " << varName << ": "
+                             << DescribeFunction(varName, "InitialConditions")
+                             << endl;
+                    }
+                }
             }
             else
             {
@@ -999,7 +1030,7 @@ namespace Nektar
 
                     if (m_session->GetComm()->GetRank() == 0)
                     {
-                        cout << "\tField "      << m_session->GetVariable(i)
+                        cout << "  - Field "    << m_session->GetVariable(i)
                              << ": 0 (default)" << endl;
                     }
                 }
@@ -1222,7 +1253,7 @@ namespace Nektar
                 outname += "_P"+boost::lexical_cast<std::string>(m_comm->GetRank());
             }
             outname += ".fld";
-            WriteFld(outname);                 
+            WriteFld(outname); 
         }
 
         /**
@@ -1327,7 +1358,7 @@ namespace Nektar
 		
             if(UseContCoeffs)
             {
-                m_fields[0]->IProductWRTBase(tmp, outarray,UseContCoeffs);
+                m_fields[0]->IProductWRTBase(tmp, outarray,MultiRegions::eGlobal);
             }
             else
             {
@@ -1383,7 +1414,7 @@ namespace Nektar
                 case 3:
                     grad1 = Array<OneD, NekDouble> (nPointsTot);
                     grad2 = Array<OneD, NekDouble> (nPointsTot);
-                    m_fields[0]->PhysDeriv(u,grad0,grad1,grad2,m_UseContCoeff);
+                    m_fields[0]->PhysDeriv(u,grad0,grad1,grad2);
                     Vmath::Vmul (nPointsTot, grad0, 1, V[0], 1, outarray, 1);
                     Vmath::Vvtvp(nPointsTot, grad1, 1, V[1], 1, outarray, 1, outarray, 1);
                     Vmath::Vvtvp(nPointsTot, grad2, 1, V[2], 1, outarray, 1, outarray, 1);
@@ -2018,6 +2049,20 @@ namespace Nektar
                 out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
             }
             
+            if (m_session->DefinesSolverInfo("UpwindType"))
+            {
+                std::string UpwindType;
+                UpwindType = m_session->GetSolverInfo("UpwindType");
+                if (UpwindType == "Exact")
+                {
+                    out << "\tRiemann Solver  : Exact"   <<endl;
+                }
+                else if (UpwindType == "Average")
+                {
+                    out << "\tRiemann Solver  : Average" <<endl;
+                }
+            }
+            
             if (m_session->DefinesSolverInfo("AdvectionType"))
             {
                 std::string AdvectionType;
@@ -2027,31 +2072,45 @@ namespace Nektar
                     case MultiRegions::eGalerkin:
                     {
                         out << "\tProjection Type : Continuous Galerkin" <<endl;
-                    }
                         break;
+                    }
                         
                     case MultiRegions::eDiscontinuous:
                     {
                         if (AdvectionType == "WeakDG")
                         {
-                            out << "\tProjection Type : Weak Discontinuous Galerkin" <<endl;
+                            out << "\tProjection Type : Weak Discontinuous Galerkin"        <<endl;
                         }
-                        
                         else if (AdvectionType == "FRDG")
                         {
-                            out << "\tProjection Type : Flux Reconstruction DG" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction DG"             <<endl;
                         }
-                        
                         else if (AdvectionType == "FRSD")
                         {
-                            out << "\tProjection Type : Flux Reconstruction SD" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction SD"             <<endl;
                         }
-                        
                         else if (AdvectionType == "FRHU")
                         {
-                            out << "\tProjection Type : Flux Reconstruction HU" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction HU"             <<endl;
                         }
+                        else if (AdvectionType == "FRc")
+                        {
+                            out << "\tProjection Type : Flux Reconstruction c = c-min"      <<endl;
+                        }
+                        else if (AdvectionType == "FRc")
+                        {
+                            out << "\tProjection Type : Flux Reconstruction c = c-infinity" <<endl;
+                        }
+                        break;
                     }
+                    
+                    case MultiRegions::eMixed_CG_Discontinuous:
+                    {
+                        out << "\tProjection Type : Mixed CG/DG" << endl;
+                        break;
+                    }
+                    
+                    default:
                         break;
                 }
             }

@@ -38,15 +38,16 @@
 #define NEKTAR_LIB_STDREGIONS_STANDARDEXPANSION_H
 
 #include <fstream>
-#include <vector> 
+#include <vector>
 
 #include <StdRegions/StdRegions.hpp>
+#include <StdRegions/StdRegionsDeclspec.h>
 #include <StdRegions/SpatialDomainsDeclarations.hpp>
-#include <StdRegions/LocalRegionsDeclarations.hpp>
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
-#include <StdRegions/StdLinSysKey.hpp>
-#include <StdRegions/StdRegionsDeclspec.h>
+#include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+namespace Nektar { namespace LocalRegions { class MatrixKey; } }
+
 
 namespace Nektar
 {
@@ -468,6 +469,10 @@ namespace Nektar
                 return v_DetEdgeBasisKey(i);
             }
 
+            const LibUtilities::BasisKey DetFaceBasisKey(const int i, const int k) const
+            {
+                return v_DetFaceBasisKey(i, k);
+            }
             /** 
              * \brief This function returns the number of quadrature points
              * belonging to the \a i-th face.
@@ -1016,7 +1021,24 @@ namespace Nektar
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
+            
+            
+            
+            /**
+             * @brief Extract the metric factors to compute the contravariant 
+             * fluxes along edge \a edge and stores them into \a outarray
+             * following the local edge orientation (i.e. anticlockwise 
+             * convention).
+             */
+            void GetEdgeQFactors(
+                    const int edge,
+                    Array<OneD, NekDouble> &outarray)
+            {
+                v_GetEdgeQFactors(edge, outarray);
+            }
 
+            
+            
             void GetFacePhysVals(
                 const int                                face,
                 const boost::shared_ptr<StdExpansion>   &FaceExp,
@@ -1391,8 +1413,13 @@ namespace Nektar
             {
                 v_ComputeFaceNormal(face);
             }
-			
-			void ComputeVertexNormal(const int vertex)
+            
+            void NegateFaceNormal(const int face)
+            {
+                v_NegateFaceNormal(face);
+            }
+
+            void ComputeVertexNormal(const int vertex)
             {
                 v_ComputeVertexNormal(vertex);
             }
@@ -1614,6 +1641,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_DetCartesianDirOfEdge(const int edge);
 
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetEdgeBasisKey(const int i) const;
+            
+			STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey v_DetFaceBasisKey(const int i, const int k) const;
 
             STD_REGIONS_EXPORT virtual int v_GetFaceNumPoints(const int i) const;
 
@@ -1757,6 +1786,10 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+            
+            STD_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
+                const int edge,  
+                Array<OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetFacePhysVals(
                 const int                                face,
@@ -1842,9 +1875,11 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
 
-			STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
-
-			STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
+            STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(const int face);
+            
+            STD_REGIONS_EXPORT virtual const NormalVector & v_GetVertexNormal(const int vertex) const;
+            
+            STD_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
 			
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;

@@ -38,12 +38,22 @@
 #include <iostream>
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
+#include <boost/optional.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace ErrorUtil
 {
-    LIB_UTILITIES_EXPORT void SetErrorStream(std::ostream& o);
-    LIB_UTILITIES_EXPORT bool HasCustomErrorStream();
+    static boost::optional<std::ostream&> outStream;
+
+    static void SetErrorStream(std::ostream& o)
+    {
+        outStream = o;
+    }
+
+    static bool HasCustomErrorStream()
+    {
+        return outStream;
+    }
 
     enum ErrType
     {
@@ -57,11 +67,60 @@ namespace ErrorUtil
             NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
-    LIB_UTILITIES_EXPORT void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level);
-    LIB_UTILITIES_EXPORT void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level);
-    LIB_UTILITIES_EXPORT void Error(ErrType type, const char *routine, int lineNumber, const char *msg);
-    
-    
+    static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
+    {
+        // The user of outStream is primarily for the unit tests.
+        // The unit tests often generate errors on purpose to make sure
+        // invalid usage is flagged appropriately.  Printing the error
+        // messages to cerr made the unit test output hard to parse.
+
+        std::string baseMsg = std::string("Level ") +
+            boost::lexical_cast<std::string>(level) +
+            std::string(" assertion violation\n") +
+#if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
+            std::string("Where   : ") + boost::lexical_cast<std::string>(routine) +  std::string("[") +  boost::lexical_cast<std::string>(lineNumber) +  std::string("]\n") + std::string("Message : ") +
+#endif
+            msg;
+
+        switch(type)
+        {
+            case efatal:
+                if( outStream )
+                {
+                    (*outStream) << "Fatal   : " << baseMsg << std::endl;
+                }
+                else
+                {
+                    std::cerr << std::endl << "Fatal   : " << baseMsg << std::endl;
+                }
+                throw NekError(baseMsg);
+                break;
+
+            case ewarning:
+                if( outStream )
+                {
+                    (*outStream) << "Warning: " << baseMsg << std::endl;
+                }
+                else
+                {
+                    std::cerr << "Warning: " << baseMsg << std::endl;
+                }
+                break;
+
+            default:
+                std::cerr << "Unknown warning type: " << baseMsg << std::endl;
+        }
+    }
+
+    static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
+    {
+        Error(type, routine, lineNumber, msg.c_str(), level);
+    }
+
+    static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
+    {
+        Error(type, routine, lineNumber, msg, 0);
+    }
 } // end of namespace
 
 /// Assert Level 0 -- Fundamental assert which
@@ -113,51 +172,3 @@ namespace ErrorUtil
 
 #endif //ERRORUTIL_HPP
 
-/***
-$Log: ErrorUtil.hpp,v $
-Revision 1.9  2008/01/20 04:02:49  bnelson
-Fixed compiler warnings.
-
-Revision 1.8  2007/07/10 22:22:19  jfrazier
-Added an additional indicator of the error severity (fatal or warning).
-
-Revision 1.7  2007/06/10 23:36:59  bnelson
-A previous change to ErrorUtil::Error added an additional level parameter, breaking code which called it directly outside of ErrorUtil.  A new method without this parameter was added.
-
-Revision 1.6  2007/06/06 04:57:21  bnelson
-Removed all printing to the console when error reporting is done via exceptions.  This makes it easier to see errors in the UnitTests.
-
-Revision 1.5  2007/05/27 18:28:23  bnelson
-*** empty log message ***
-
-Revision 1.4  2007/05/22 02:02:35  bnelson
-Changed Array::size to Array::num_elements.
-
-Fixed some compiler errors in assertions.
-
-Revision 1.3  2007/05/14 23:22:38  bnelson
-Errors throw a new exception type NekError.
-
-Revision 1.2  2006/08/14 02:18:02  bnelson
-Added the option to throw exceptions when an error is encountered.
-
-Revision 1.1  2006/06/01 11:07:52  kirby
-*** empty log message ***
-
-Revision 1.4  2006/05/16 20:40:44  jfrazier
-Renamed ERROR to NEKERROR to prevent conflict in Visual Studio.
-
-Revision 1.3  2006/05/09 16:40:57  jfrazier
-Added ERROR macro definition.
-
-Revision 1.2  2006/05/07 18:51:05  bnelson
-Format changes for coding standard.
-
-Revision 1.1  2006/05/04 18:57:41  kirby
-*** empty log message ***
-
-Revision 1.7  2006/04/14 14:51:17  jfrazier
-Fixed a problem which is most likely a preprocessor problem.  The file and line
-number were inconsistent between release and debug builds.
-
-**/

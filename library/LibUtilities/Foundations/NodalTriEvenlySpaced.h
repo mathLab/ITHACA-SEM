@@ -36,14 +36,11 @@
 #ifndef NODALTRIEVENLYSPACED_H
 #define NODALTRIEVENLYSPACED_H
 
-#include <iostream>
-
-#include <math.h>
-#include <boost/shared_ptr.hpp>
-#include <LibUtilities/Foundations/Foundations.hpp>
-#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/Foundations/Points.h>
+#include <LibUtilities/Foundations/FoundationsFwd.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
+#include <boost/shared_ptr.hpp>
+//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
@@ -55,8 +52,6 @@ namespace Nektar
         class NodalTriEvenlySpaced: public Points<NekDouble>
         {
         public:
-            typedef Points<NekDouble> PointsBaseType;
-
             virtual ~NodalTriEvenlySpaced()
             {
                             

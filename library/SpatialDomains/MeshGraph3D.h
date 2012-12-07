@@ -37,8 +37,8 @@
 #define NEKTAR_SPATIALDOMAINS_MESHGRAPH3D_H
 
 #include <SpatialDomains/MeshGraph.h>
+#include <SpatialDomains/TriGeom.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include <list>
 #include <boost/unordered_map.hpp>
 
 namespace Nektar
@@ -46,7 +46,6 @@ namespace Nektar
     namespace SpatialDomains
     {
         class SegGeom;
-        class TriGeom;
         class QuadGeom;
         class TetGeom;
         class PyrGeom;

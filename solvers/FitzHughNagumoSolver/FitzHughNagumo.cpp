@@ -35,8 +35,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <FitzHughNagumoSolver/FitzHughNagumo.h>
-#include <cstdio>
-#include <cstdlib>
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+
 namespace Nektar
 {
     /**
@@ -971,7 +971,7 @@ namespace Nektar
                 {
 		  m_fields[i]->SetPhysState(false);
 
-                  m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i],false);
+                  m_fields[i]->MultiplyByInvMassMatrix(fields[i],tmp[i]);
 		  fields[i] = tmp[i];	   		    
                 }
             }
@@ -1326,7 +1326,7 @@ namespace Nektar
        {
 	 if(direction == -1)
 	   {
-	     m_fields[0]->MultiplyByInvMassMatrix(inarray,outarray,false);
+               m_fields[0]->MultiplyByInvMassMatrix(inarray,outarray);
 	   }
 	 else if(direction == 1)
 	   {

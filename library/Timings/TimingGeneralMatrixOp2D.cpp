@@ -3,7 +3,8 @@
 #include <sys/time.h>
 #include <iomanip>
 
-#include "boost/filesystem/path.hpp"
+#include <boost/filesystem/path.hpp>
+#include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ContField2D.h>
 
 #ifdef NEKTAR_USING_CHUD
@@ -130,7 +131,6 @@ int main(int argc, char *argv[])
 
 
     boost::filesystem::path MeshFilePath = basePath / 
-        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Geometry") /
         boost::filesystem::path(MeshFileDirectory.str()) /  
@@ -138,21 +138,18 @@ int main(int argc, char *argv[])
     vFilenames.push_back(PortablePath(MeshFilePath));
 
     boost::filesystem::path BCfilePath = basePath / 
-        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Conditions") /
         boost::filesystem::path(BCfileName.str());
     vFilenames.push_back(PortablePath(BCfilePath));
 
     boost::filesystem::path ExpansionsFilePath = basePath / 
-        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Expansions") /
         boost::filesystem::path(ExpansionsFileName.str());
     vFilenames.push_back(PortablePath(ExpansionsFilePath));
 
     boost::filesystem::path GlobOptFilePath = basePath / 
-        boost::filesystem::path("Timings") / 
         boost::filesystem::path("InputFiles") /
         boost::filesystem::path("Optimisation") /
         boost::filesystem::path(GlobOptFileName.str());
@@ -265,7 +262,7 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Helmholtz solution taking physical forcing 
         FlagList flags;
-        flags.set(eUseContCoeff, true);
+        flags.set(eUseGlobal, true);
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = lambda;
 
@@ -274,18 +271,21 @@ int main(int argc, char *argv[])
 
         //----------------------------------------------
         // Backward Transform Solution to get solved values at 
-        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), true);
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),
+                      MultiRegions::eGlobal);
         //----------------------------------------------
         L2Error    = Exp->L2  (Sol->GetPhys());
         LinfError  = Exp->Linf(Sol->GetPhys()); 
     }
     else
     {
-        Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs(), true);
+        Exp->FwdTrans(Fce->GetPhys(), Exp->UpdateCoeffs(),
+                      MultiRegions::eGlobal);
         
         //----------------------------------------------
         // Backward Transform Solution to get solved values at 
-        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), true);
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),
+                      MultiRegions::eGlobal);
         //----------------------------------------------
         L2Error    = Exp->L2  (Fce->GetPhys());
         LinfError  = Exp->Linf(Fce->GetPhys()); 
@@ -356,8 +356,8 @@ int main(int argc, char *argv[])
 
     exeTime = TimeMatrixOp(type, Exp, Fce, NumCalls, lambda);
     
-    int nLocCoeffs     = Exp->GetNcoeffs();
-    int nGlobCoeffs    = Exp->GetContNcoeffs();
+    int nLocCoeffs     = Exp->GetLocalToGlobalMap()->GetNumLocalCoeffs();
+    int nGlobCoeffs    = Exp->GetLocalToGlobalMap()->GetNumGlobalCoeffs();
     int nLocBndCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalBndCoeffs();
     int nGlobBndCoeffs = Exp->GetLocalToGlobalMap()->GetNumGlobalBndCoeffs();
     int nLocDirCoeffs  = Exp->GetLocalToGlobalMap()->GetNumLocalDirBndCoeffs();
@@ -418,18 +418,21 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     //Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),true);
     if (type == StdRegions::eBwdTrans)
     {
-        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(), true);
+        Exp->BwdTrans(Exp->GetCoeffs(), Exp->UpdatePhys(),
+                      MultiRegions::eGlobal);
     }
     else if (type == StdRegions::eIProductWRTBase)
     {
-        Exp->IProductWRTBase(Exp->GetPhys(), Exp->UpdateCoeffs(), true);
+        Exp->IProductWRTBase(Exp->GetPhys(), Exp->UpdateCoeffs(),
+                             MultiRegions::eGlobal);
     }
     else
     {
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = lambda;
         MultiRegions::GlobalMatrixKey key(type, Exp->GetLocalToGlobalMap(), factors);
-        Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys(), true);
+        Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys(),
+                              MultiRegions::eGlobal);
     }
     gettimeofday(&timer2, NULL);
     time1 = timer1.tv_sec*1000000.0+(timer1.tv_usec);
@@ -457,14 +460,16 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
     {
         for(i = 0; i < NumCalls; ++i)
         {
-            Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(), true);
+            Exp->BwdTrans (Exp->GetCoeffs(),Exp->UpdatePhys(),
+                           MultiRegions::eGlobal);
         }
     }
     else if (type == StdRegions::eIProductWRTBase)
     {
         for(i = 0; i < NumCalls; ++i)
         {
-            Exp->IProductWRTBase (Exp->GetPhys(),Exp->UpdateCoeffs(), true);
+            Exp->IProductWRTBase (Exp->GetPhys(),Exp->UpdateCoeffs(),
+                                  MultiRegions::eGlobal);
         }
     }
     else
@@ -475,7 +480,8 @@ NekDouble TimeMatrixOp(StdRegions::MatrixType &type,
         MultiRegions::GlobalMatrixKey key(type, Exp->GetLocalToGlobalMap(), factors);
         for(i = 0; i < NumCalls; ++i)
         {
-            Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys(), true);
+            Exp->GeneralMatrixOp (key, Exp->GetCoeffs(),Exp->UpdatePhys(),
+                                  MultiRegions::eGlobal);
         }
     }
     gettimeofday(&timer2, NULL);

@@ -132,9 +132,10 @@ namespace Nektar
                         double val;
                         try 
                         {
-                            val = fabs(boost::lexical_cast<double>(
+                            val = fabs(fabs(boost::lexical_cast<double>(
                                            okValues[i-1].m_value))
-                                - fabs(boost::lexical_cast<double>(match));
+                                     - fabs(boost::lexical_cast<double>(match))
+                                      );
                         }
                         catch(boost::bad_lexical_cast &e)
                         {

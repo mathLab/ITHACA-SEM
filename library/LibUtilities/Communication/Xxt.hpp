@@ -183,7 +183,7 @@ namespace Xxt
                  struct crs_data* pCrs,
                  Nektar::Array<OneD, NekDouble> pB )
     {
-#ifdef NETAR_USE_MPI
+#ifdef NEKTAR_USE_MPI
         if (!pCrs) {
             return;
         }

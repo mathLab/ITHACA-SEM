@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AUSMSolver.cpp
+// File: AUSM0Solver.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,27 +29,27 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: AUSM Riemann solver.
+// Description: AUSM0 Riemann solver.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <CompressibleFlowSolver/RiemannSolvers/AUSMSolver.h>
+#include <CompressibleFlowSolver/RiemannSolvers/AUSM0Solver.h>
 
 namespace Nektar
 {
-    std::string AUSMSolver::solverName =
+    std::string AUSM0Solver::solverName =
         SolverUtils::GetRiemannSolverFactory().RegisterCreatorFunction(
-            "AUSM",
-            AUSMSolver::create,
-            "AUSM Riemann solver");
+            "AUSM0",
+            AUSM0Solver::create,
+            "AUSM0 Riemann solver");
 
-    AUSMSolver::AUSMSolver() : CompressibleSolver()
+    AUSM0Solver::AUSM0Solver() : CompressibleSolver()
     {
 
     }
 
     /**
-     * @brief AUSM Riemann solver
+     * @brief AUSM0 Riemann solver
      *
      * @param rhoL      Density left state.
      * @param rhoR      Density right state.  
@@ -71,7 +71,7 @@ namespace Nektar
      * @param Ef        Riemann flux for energy (i.e. fifth equation).  
      *
      */
-    void AUSMSolver::v_PointSolve(
+    void AUSM0Solver::v_PointSolve(
         double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
         double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
         double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
@@ -102,12 +102,11 @@ namespace Nektar
         NekDouble MR = uR / cA;
         
         // Parameters for specify the upwinding
-        NekDouble Mbar, pbar;
-        
         NekDouble beta  = 0.0;
         NekDouble alpha = 0.0;
-        Mbar = M4Function(0, beta, ML) + M4Function(1, beta, MR);
-        pbar = pL * P5Function(0, alpha, ML) + pR * P5Function(1, alpha, MR);
+        NekDouble Mbar  = M4Function(0, beta, ML) + M4Function(1, beta, MR);
+        NekDouble pbar  = pL * P5Function(0, alpha, ML) + 
+                          pR * P5Function(1, alpha, MR);
         
         if (Mbar >= 0.0)
         {
@@ -127,7 +126,7 @@ namespace Nektar
         }
     }
     
-    double AUSMSolver::M1Function(int A, double M)
+    double AUSM0Solver::M1Function(int A, double M)
     {
         double out;
         
@@ -143,7 +142,7 @@ namespace Nektar
         return out; 
     }
     
-    double AUSMSolver::M2Function(int A, double M)
+    double AUSM0Solver::M2Function(int A, double M)
     {
         double out;
         
@@ -159,7 +158,7 @@ namespace Nektar
         return out;
     }
     
-    double AUSMSolver::M4Function(int A, double beta, double M)
+    double AUSM0Solver::M4Function(int A, double beta, double M)
     {
         double out;
         
@@ -184,7 +183,7 @@ namespace Nektar
         return out;
     }
     
-    double AUSMSolver::P5Function(int A, double alpha, double M)
+    double AUSM0Solver::P5Function(int A, double alpha, double M)
     {
         double out;
         

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AUSMSolver.h
+// File: AUSM0Solver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,30 +29,30 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: AUSM Riemann solver.
+// Description: AUSM0 Riemann solver.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_AUSMSOLVER
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_AUSMSOLVER
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_AUSM0SOLVER
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_AUSM0SOLVER
 
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
 
 namespace Nektar
 {
-    class AUSMSolver : public CompressibleSolver
+    class AUSM0Solver : public CompressibleSolver
     {
     public:
         static RiemannSolverSharedPtr create()
         {
             return RiemannSolverSharedPtr(
-                new AUSMSolver());
+                new AUSM0Solver());
         }
         
         static std::string solverName;
         
     protected:
-        AUSMSolver();
+        AUSM0Solver();
         
         virtual void v_PointSolve(
             double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,

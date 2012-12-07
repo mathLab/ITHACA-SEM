@@ -2053,13 +2053,41 @@ namespace Nektar
             {
                 std::string UpwindType;
                 UpwindType = m_session->GetSolverInfo("UpwindType");
-                if (UpwindType == "Exact")
+                if (UpwindType == "Average")
+                {
+                    out << "\tRiemann Solver  : Average" <<endl;
+                }
+                else if (UpwindType == "AUSM0")
+                {
+                    out << "\tRiemann Solver  : AUSM0"   <<endl;
+                }
+                else if (UpwindType == "AUSM1")
+                {
+                    out << "\tRiemann Solver  : AUSM1"   <<endl;
+                }
+                else if (UpwindType == "AUSM2")
+                {
+                    out << "\tRiemann Solver  : AUSM2"   <<endl;
+                }
+                else if (UpwindType == "AUSM3")
+                {
+                    out << "\tRiemann Solver  : AUSM3"   <<endl;
+                }
+                else if (UpwindType == "Exact")
                 {
                     out << "\tRiemann Solver  : Exact"   <<endl;
                 }
-                else if (UpwindType == "Average")
+                else if (UpwindType == "HLL")
                 {
-                    out << "\tRiemann Solver  : Average" <<endl;
+                    out << "\tRiemann Solver  : HLL"   <<endl;
+                }
+                else if (UpwindType == "HLLC")
+                {
+                    out << "\tRiemann Solver  : HLLC"   <<endl;
+                }
+                else if (UpwindType == "LaxFriedrichs")
+                {
+                    out << "\tRiemann Solver  : Lax-Friedrichs"   <<endl;
                 }
             }
             

@@ -256,19 +256,19 @@ namespace Nektar
                 GlobalToLocal(tmp,outarray);
             }
         }
-		
-		/**
+
+        /**
          *
          */
         void ContField2D::v_SmoothField(Array<OneD,NekDouble> &field)
         {
-			int gloNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
-			Array<OneD,NekDouble> tmp1(gloNcoeffs);
-			Array<OneD,NekDouble> tmp2(gloNcoeffs);
-			
-			IProductWRTBase(field,tmp1,eGlobal);
-			MultiplyByInvMassMatrix(tmp1,tmp2,eGlobal);
-			BwdTrans(tmp2,field,eGlobal);
+            int gloNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            Array<OneD,NekDouble> tmp1(gloNcoeffs);
+            Array<OneD,NekDouble> tmp2(gloNcoeffs);
+
+            IProductWRTBase(field,tmp1,eGlobal);
+            MultiplyByInvMassMatrix(tmp1,tmp2,eGlobal);
+            BwdTrans(tmp2,field,eGlobal);
         }
 
 

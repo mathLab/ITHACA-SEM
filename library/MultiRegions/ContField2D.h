@@ -228,8 +228,10 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                 CoeffState coeffstate);
-			
-			MULTI_REGIONS_EXPORT virtual void v_SmoothField(Array<OneD,NekDouble> &field);
+
+            /// Template method virtual forwarded for SmoothField().
+            MULTI_REGIONS_EXPORT virtual void v_SmoothField(
+                                      Array<OneD,NekDouble> &field);
 
             /// Template method virtual forwarder for MultiplyByInvMassMatrix().
             MULTI_REGIONS_EXPORT virtual void v_MultiplyByInvMassMatrix(

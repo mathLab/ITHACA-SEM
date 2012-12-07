@@ -10,7 +10,11 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/NavierStokesCFE.cpp
        ./RiemannSolvers/CompressibleSolver.cpp
        ./RiemannSolvers/AverageSolver.cpp
-       ./RiemannSolvers/ExactSolver.cpp)
+       ./RiemannSolvers/ExactSolver.cpp
+       ./RiemannSolvers/LaxFriedrichsSolver.cpp
+       ./RiemannSolvers/HLLSolver.cpp
+       ./RiemannSolvers/HLLCSolver.cpp
+       ./RiemannSolvers/AUSMSolver.cpp)
 
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver solvers 
 			${CompressibleFlowSolverSource})

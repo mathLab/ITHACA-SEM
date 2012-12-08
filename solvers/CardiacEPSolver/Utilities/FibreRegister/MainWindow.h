@@ -17,12 +17,16 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkPointData.h>
 #include <vtkActor.h>
+#include <vtkActor2D.h>
 #include <vtkProperty.h>
 #include <vtkSmoothPolyDataFilter.h>
 #include <vtkDepthSortPolyData.h>
 #include <vtkGlyph3D.h>
 #include <vtkSphereSource.h>
 #include <vtkWorldPointPicker.h>
+#include <vtkIdFilter.h>
+#include <vtkSelectVisiblePoints.h>
+#include <vtkLabeledDataMapper.h>
 //#include <vtkLookupTable.h>
 //#include <vtkColorTransferFunction.h>
 //#include <vtkScalarBarActor.h>
@@ -50,6 +54,7 @@ class MainWindow : public QMainWindow
         void CreateTargetPoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
 
         void ExportTargetPoints();
+        void UndoLastPoint();
 
     private:
         // GUI widgets
@@ -67,6 +72,7 @@ class MainWindow : public QMainWindow
         QPushButton* mFileTargetBrowse;
         QPushButton* mFileLoadButton;
         QPushButton* mFileExportLandmarksButton;
+        QPushButton* mUndoButton;
         QVTKWidget* mSourceVtk;
         QVTKWidget* mTargetVtk;
 
@@ -94,12 +100,24 @@ class MainWindow : public QMainWindow
         vtkPolyDataMapper* mSourcePointsMapper;
         vtkActor* mSourcePointsActor;
 
+        // Source Points Labels pipeline
+        vtkIdFilter* mSourcePointsIds;
+        vtkSelectVisiblePoints* mSourcePointsVisible;
+        vtkLabeledDataMapper* mSourcePointsLabelMapper;
+        vtkActor2D* mSourcePointsLabelActor;
+
         // Target Points pipeline
         vtkPolyData* mTargetPointsData;
         vtkSphereSource* mTargetSphere;
         vtkGlyph3D* mTargetFilterGlyph;
         vtkPolyDataMapper* mTargetPointsMapper;
         vtkActor* mTargetPointsActor;
+
+        // Target Points Labels pipeline
+        vtkIdFilter* mTargetPointsIds;
+        vtkSelectVisiblePoints* mTargetPointsVisible;
+        vtkLabeledDataMapper* mTargetPointsLabelMapper;
+        vtkActor2D* mTargetPointsLabelActor;
 
         vtkEventQtSlotConnect* Connections;
 

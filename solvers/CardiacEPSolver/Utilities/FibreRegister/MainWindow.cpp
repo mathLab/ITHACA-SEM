@@ -73,6 +73,18 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourcePointsActor = vtkActor::New();
     mSourcePointsActor->SetMapper(mSourcePointsMapper);
     mSourcePointsActor->GetProperty()->SetColor(1.0,0.0,0.0);
+    mSourcePointsIds = vtkIdFilter::New();
+    mSourcePointsIds->SetInput(mSourcePointsData);
+    mSourcePointsIds->PointIdsOn();
+    mSourcePointsVisible = vtkSelectVisiblePoints::New();
+    mSourcePointsVisible->SetInputConnection(mSourcePointsIds->GetOutputPort());
+    mSourcePointsVisible->SetRenderer(mSourceRenderer);
+    mSourcePointsLabelMapper = vtkLabeledDataMapper::New();
+    mSourcePointsLabelMapper->SetInputConnection(mSourcePointsVisible->GetOutputPort());
+    mSourcePointsLabelMapper->SetLabelModeToLabelFieldData();
+    mSourcePointsLabelActor = vtkActor2D::New();
+    mSourcePointsLabelActor->SetMapper(mSourcePointsLabelMapper);
+
     mTargetPointsData = vtkPolyData::New();
     mTargetSphere = vtkSphereSource::New();
     mTargetFilterGlyph = vtkGlyph3D::New();
@@ -84,14 +96,27 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mTargetPointsActor = vtkActor::New();
     mTargetPointsActor->SetMapper(mTargetPointsMapper);
     mTargetPointsActor->GetProperty()->SetColor(1.0,0.0,0.0);
+    mTargetPointsIds = vtkIdFilter::New();
+    mTargetPointsIds->SetInput(mTargetPointsData);
+    mTargetPointsIds->PointIdsOn();
+    mTargetPointsVisible = vtkSelectVisiblePoints::New();
+    mTargetPointsVisible->SetInputConnection(mTargetPointsIds->GetOutputPort());
+    mTargetPointsVisible->SetRenderer(mTargetRenderer);
+    mTargetPointsLabelMapper = vtkLabeledDataMapper::New();
+    mTargetPointsLabelMapper->SetInputConnection(mTargetPointsVisible->GetOutputPort());
+    mTargetPointsLabelMapper->SetLabelModeToLabelFieldData();
+    mTargetPointsLabelActor = vtkActor2D::New();
+    mTargetPointsLabelActor->SetMapper(mTargetPointsLabelMapper);
 
     mSourceRenderer->AddActor(mSourceActor);
     mSourceRenderer->AddActor(mSourcePointsActor);
+    mSourceRenderer->AddActor(mSourcePointsLabelActor);
     mSourceRenderer->ResetCamera();
     mSourceVtk->GetRenderWindow()->AddRenderer(mSourceRenderer);
 
     mTargetRenderer->AddActor(mTargetActor);
     mTargetRenderer->AddActor(mTargetPointsActor);
+    mTargetRenderer->AddActor(mTargetPointsLabelActor);
     mTargetRenderer->ResetCamera();
     mTargetVtk->GetRenderWindow()->AddRenderer(mTargetRenderer);
 
@@ -150,8 +175,12 @@ void MainWindow::Draw() {
     mFileBox->setLayout(mFileGrid);
     mFileBox->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
 
+    mUndoButton = new QPushButton(tr("Undo last point"));
+    connect(mUndoButton, SIGNAL(clicked()), this, SLOT(UndoLastPoint()));
+
     mSettingsGrid = new QVBoxLayout;
     mSettingsGrid->addWidget(mFileBox);
+    mSettingsGrid->addWidget(mUndoButton);
     mSettingsGrid->addStretch();
 
     mSettingsBox = new QGroupBox(tr("Settings"));
@@ -209,9 +238,11 @@ void MainWindow::Load() {
     vSourceLandmarks->Update();
     mSourcePointsData = vSourceLandmarks->GetOutput();
     mSourceFilterGlyph->SetInput(mSourcePointsData);
+    mSourcePointsIds->SetInput(mSourcePointsData);
 
     vtkPoints* vTargetPoints = vtkPoints::New();
     mTargetPointsData->SetPoints(vTargetPoints);
+    mTargetPointsIds->SetInput(mTargetPointsData);
 
     mSourceRenderer->ResetCamera(mSourceActor->GetBounds());
     mTargetRenderer->ResetCamera(mTargetActor->GetBounds());
@@ -267,4 +298,20 @@ void MainWindow::ExportTargetPoints() {
     writer->SetInput(mTargetPointsData);
     writer->SetFileName(pointsFile.toStdString().c_str());
     writer->Write();
+}
+
+void MainWindow::UndoLastPoint() {
+    if (mTargetPointsData->GetPoints()->GetNumberOfPoints() > 0)
+    {
+        double * p = new double[3];
+        vtkPoints* vTargetPoints = vtkPoints::New();
+        for (unsigned int i = 0; i < mTargetPointsData->GetPoints()->GetNumberOfPoints() - 1; ++i)
+        {
+            p = mTargetPointsData->GetPoint(i);
+            vTargetPoints->InsertNextPoint(p);
+        }
+        mTargetPointsData->SetPoints(vTargetPoints);
+        delete[] p;
+        Update();
+    }
 }

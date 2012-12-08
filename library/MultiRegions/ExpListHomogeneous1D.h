@@ -113,7 +113,7 @@ namespace Nektar
                                       const Array<OneD, NekDouble> &inarray2,
                                       Array<OneD, NekDouble> &outarray, 
                                       CoeffState coeffstate = eLocal);
-                        
+
             LibUtilities::BasisSharedPtr  GetHomogeneousBasis(void)
             {
                 return m_homogeneousBasis;
@@ -140,9 +140,9 @@ namespace Nektar
             /// FFT variables
             bool                                    m_useFFT;
             LibUtilities::NektarFFTSharedPtr        m_FFT;
-			
-			LibUtilities::NektarFFTSharedPtr        m_FFT_deal;
-			
+
+            LibUtilities::NektarFFTSharedPtr        m_FFT_deal;
+
             Array<OneD,NekDouble>                   m_tmpIN;
             Array<OneD,NekDouble>                   m_tmpOUT;
             

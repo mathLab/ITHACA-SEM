@@ -181,7 +181,9 @@ namespace Nektar
 			}
 			else 
 			{
-				ASSERTL0(false,"Dealiasing is not allowed in combination with the Skew-Symmetric advection form for efficiency reasons.");	
+                ASSERTL0(false, "Dealiasing is not allowed in combination "
+                                "with the Skew-Symmetric advection form for "
+                                "efficiency reasons.");	
 			}
             break;
         default:

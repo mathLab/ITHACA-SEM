@@ -71,21 +71,23 @@ namespace Nektar
             {
                 m_FFT = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_homogeneousBasis->GetNumPoints());
             }
-			
-			if(m_dealiasing)
-			{
-				if(m_useFFT)
-				{
-					NekDouble size = 1.5*m_homogeneousBasis->GetNumPoints();
-					m_padsize = int(size);
-					m_FFT_deal = LibUtilities::GetNektarFFTFactory().CreateInstance("NekFFTW", m_padsize);
-				}
-				else
-				{
-					ASSERTL0(false,"Dealiasing available just in combiation with FFTW");
-				}
-			}
-		}
+
+            if(m_dealiasing)
+            {
+                if(m_useFFT)
+                {
+                    NekDouble size = 1.5*m_homogeneousBasis->GetNumPoints();
+                    m_padsize = int(size);
+                    m_FFT_deal = LibUtilities::GetNektarFFTFactory()
+                                    .CreateInstance("NekFFTW", m_padsize);
+                }
+                else
+                {
+                    ASSERTL0(false, "Dealiasing available just in combination "
+                                    "with FFTW");
+                }
+            }
+        }
 
 
         /**
@@ -97,13 +99,13 @@ namespace Nektar
             m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
             m_lhom(In.m_lhom),
             m_useFFT(In.m_useFFT),
-		    m_FFT(In.m_FFT),
-		    m_FFT_deal(In.m_FFT_deal),
-		    m_dealiasing(In.m_dealiasing),
-		    m_padsize(In.m_padsize),
+            m_FFT(In.m_FFT),
+            m_FFT_deal(In.m_FFT_deal),
+            m_dealiasing(In.m_dealiasing),
+            m_padsize(In.m_padsize),
             m_tmpIN(In.m_tmpIN),
             m_tmpOUT(In.m_tmpOUT),
-		    m_transposition(In.m_transposition)
+            m_transposition(In.m_transposition)
         {
             m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
         }
@@ -146,63 +148,73 @@ namespace Nektar
             // inarray1 = first term of the product in full physical space
             // inarray2 = second term of the product in full physical space
             // dealiased product stored in outarray
-			
-			int num_dofs = inarray1.num_elements();
-			
-			int N = m_homogeneousBasis->GetNumPoints();
-			
+
+            int num_dofs = inarray1.num_elements();
+
+            int N = m_homogeneousBasis->GetNumPoints();
+
             Array<OneD, NekDouble> V1(num_dofs);
             Array<OneD, NekDouble> V2(num_dofs);
-			Array<OneD, NekDouble> V1V2(num_dofs);
-			
-			HomogeneousFwdTrans(inarray1,V1,coeffstate);
-			HomogeneousFwdTrans(inarray2,V2,coeffstate);
-            
-			int num_points_per_plane = num_dofs/m_planes.num_elements();
-			int num_dfts_per_proc    = num_points_per_plane/m_comm->GetColumnComm()->GetSize() + (num_points_per_plane%m_comm->GetColumnComm()->GetSize() > 0);
-			
-			Array<OneD, NekDouble> ShufV1(num_dfts_per_proc*N,0.0);
-			Array<OneD, NekDouble> ShufV2(num_dfts_per_proc*N,0.0);
-			Array<OneD, NekDouble> ShufV1V2(num_dfts_per_proc*N,0.0);
-			
-			Array<OneD, NekDouble> ShufV1_PAD_coef(m_padsize,0.0);
-			Array<OneD, NekDouble> ShufV2_PAD_coef(m_padsize,0.0);
-			Array<OneD, NekDouble> ShufV1_PAD_phys(m_padsize,0.0);
-			Array<OneD, NekDouble> ShufV2_PAD_phys(m_padsize,0.0);
-			
-			Array<OneD, NekDouble> ShufV1V2_PAD_coef(m_padsize,0.0);
-			Array<OneD, NekDouble> ShufV1V2_PAD_phys(m_padsize,0.0);
-			
-			m_transposition->Transpose(V1,ShufV1,false,LibUtilities::eXYtoZ);
-            m_transposition->Transpose(V2,ShufV2,false,LibUtilities::eXYtoZ);
-			
-			//Looping on the pencils
+            Array<OneD, NekDouble> V1V2(num_dofs);
+
+            HomogeneousFwdTrans(inarray1,V1,coeffstate);
+            HomogeneousFwdTrans(inarray2,V2,coeffstate);
+
+            int num_points_per_plane = num_dofs/m_planes.num_elements();
+            int num_proc             = m_comm->GetColumnComm()->GetSize();
+            int num_dfts_per_proc    = num_points_per_plane / num_proc
+                                        + (num_points_per_plane % num_proc > 0);
+
+            Array<OneD, NekDouble> ShufV1(num_dfts_per_proc*N,0.0);
+            Array<OneD, NekDouble> ShufV2(num_dfts_per_proc*N,0.0);
+            Array<OneD, NekDouble> ShufV1V2(num_dfts_per_proc*N,0.0);
+
+            Array<OneD, NekDouble> ShufV1_PAD_coef(m_padsize,0.0);
+            Array<OneD, NekDouble> ShufV2_PAD_coef(m_padsize,0.0);
+            Array<OneD, NekDouble> ShufV1_PAD_phys(m_padsize,0.0);
+            Array<OneD, NekDouble> ShufV2_PAD_phys(m_padsize,0.0);
+
+            Array<OneD, NekDouble> ShufV1V2_PAD_coef(m_padsize,0.0);
+            Array<OneD, NekDouble> ShufV1V2_PAD_phys(m_padsize,0.0);
+
+            m_transposition->Transpose(V1, ShufV1, false, LibUtilities::eXYtoZ);
+            m_transposition->Transpose(V2, ShufV2, false, LibUtilities::eXYtoZ);
+
+            // Looping on the pencils
             for(int i = 0 ; i < num_dfts_per_proc ; i++)
             {
-                //Copying the i-th pencil pf lenght N into a bigger
-                //pencil of lenght 2N We are in Fourier space
-                Vmath::Vcopy(N,&(ShufV1[i*N]),1,&(ShufV1_PAD_coef[0]),1);
-                Vmath::Vcopy(N,&(ShufV2[i*N]),1,&(ShufV2_PAD_coef[0]),1);
-                //Moving to physical space using the padded system
-				m_FFT_deal->FFTBwdTrans(ShufV1_PAD_coef,ShufV1_PAD_phys);
-				m_FFT_deal->FFTBwdTrans(ShufV2_PAD_coef,ShufV2_PAD_phys);
-				
-                //Perfroming the vectors multiplication in physical space on the padded system
-                Vmath::Vmul(m_padsize,ShufV1_PAD_phys,1,ShufV2_PAD_phys,1,ShufV1V2_PAD_phys,1);
-                
-                //Moving back the result (V1*V2)_phys in Fourier space, padded system
-				m_FFT_deal->FFTFwdTrans(ShufV1V2_PAD_phys,ShufV1V2_PAD_coef);
-                
-                //Copying the first half of the padded pencil in the full vector (Fourier space)
-                Vmath::Vcopy(N,&(ShufV1V2_PAD_coef[0]),1,&(ShufV1V2[i*N]),1);
+                // Copying the i-th pencil pf lenght N into a bigger
+                // pencil of lenght 2N We are in Fourier space
+                Vmath::Vcopy(N, &(ShufV1[i*N]), 1, &(ShufV1_PAD_coef[0]), 1);
+                Vmath::Vcopy(N, &(ShufV2[i*N]), 1, &(ShufV2_PAD_coef[0]), 1);
+
+                // Moving to physical space using the padded system
+                m_FFT_deal->FFTBwdTrans(ShufV1_PAD_coef, ShufV1_PAD_phys);
+                m_FFT_deal->FFTBwdTrans(ShufV2_PAD_coef, ShufV2_PAD_phys);
+
+                // Perfroming the vectors multiplication in physical space on
+                // the padded system
+                Vmath::Vmul(m_padsize, ShufV1_PAD_phys,   1,
+                                       ShufV2_PAD_phys,   1,
+                                       ShufV1V2_PAD_phys, 1);
+
+                // Moving back the result (V1*V2)_phys in Fourier space, padded
+                // system
+                m_FFT_deal->FFTFwdTrans(ShufV1V2_PAD_phys, ShufV1V2_PAD_coef);
+
+                // Copying the first half of the padded pencil in the full
+                // vector (Fourier space)
+                Vmath::Vcopy(N, &(ShufV1V2_PAD_coef[0]), 1,
+                                &(ShufV1V2[i*N]),        1);
             }
-			
-			m_transposition->Transpose(ShufV1V2,V1V2,false,LibUtilities::eZtoXY);
-			
-			//Moving the results in physical space for the output
-			HomogeneousBwdTrans(V1V2,outarray,coeffstate);
+
+            m_transposition->Transpose(ShufV1V2, V1V2, false,
+                                       LibUtilities::eZtoXY);
+
+            // Moving the results in physical space for the output
+            HomogeneousBwdTrans(V1V2, outarray, coeffstate);
         }
-	
+
         /**
          * Forward transform
          */

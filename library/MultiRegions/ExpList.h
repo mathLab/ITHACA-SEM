@@ -245,6 +245,9 @@ namespace Nektar
                                       Array<OneD,      NekDouble> &outarray,
                                 CoeffState coeffstate = eLocal);
 
+            /// Smooth a field across elements
+            inline void SmoothField(Array<OneD,NekDouble> &field);
+
             /// Solve helmholtz problem
             inline void HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
@@ -1037,9 +1040,12 @@ namespace Nektar
             virtual void v_FwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
                                     CoeffState coeffstate);
-            
-            virtual void v_FwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray, Array<OneD,      NekDouble> &outarray);
 
+            virtual void v_FwdTrans_IterPerExp(
+                                    const Array<OneD,const NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray);
+
+            virtual void v_SmoothField(Array<OneD,NekDouble> &field);
 
             virtual void v_IProductWRTBase(const Array<OneD,const NekDouble> &inarray,Array<OneD,      NekDouble> &outarray, CoeffState coeffstate);
 			
@@ -1365,8 +1371,16 @@ namespace Nektar
         {
             v_FwdTrans_IterPerExp(inarray,outarray);
         }
-		
-		/**
+
+        /**
+         *
+         */
+        inline void ExpList::SmoothField(Array<OneD,NekDouble> &field)
+        {
+            v_SmoothField(field);
+        }
+
+        /**
          *
          */
         inline void ExpList::BwdTrans (const Array<OneD, const NekDouble> &inarray,

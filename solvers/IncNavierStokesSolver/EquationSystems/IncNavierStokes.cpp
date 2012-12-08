@@ -55,7 +55,8 @@ namespace Nektar
         //EquationSystem(pSession),
         UnsteadySystem(pSession),
         m_steadyStateSteps(0),
-        m_subSteppingScheme(false)
+        m_subSteppingScheme(false),
+        m_SmoothAdvection(false)
     {
     }
 

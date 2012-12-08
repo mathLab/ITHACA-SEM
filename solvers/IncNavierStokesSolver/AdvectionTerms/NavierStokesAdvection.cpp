@@ -130,9 +130,29 @@ namespace Nektar
                 Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
                 Vmath::Vvtvp(nPointsTot,grad2,1,pV[2],1,pOutarray,1,pOutarray,1);
             }
+            else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == true) 
+            {
+                pFields[0]->HomogeneousBwdTrans(grad0, pOutarray);
+                pFields[0]->DealiasedProd(pV[0], pOutarray, grad0, 
+                                          m_CoeffState);
+
+                pFields[0]->HomogeneousBwdTrans(grad1,pOutarray);
+                pFields[0]->DealiasedProd(pV[1], pOutarray, grad1,
+                                          m_CoeffState);
+
+                pFields[0]->HomogeneousBwdTrans(grad2,pOutarray);
+                pFields[0]->DealiasedProd(pV[2], pOutarray, grad2,
+                                          m_CoeffState);
+
+                Vmath::Vadd(nPointsTot, grad0, 1, grad1, 1, grad0, 1);
+                Vmath::Vadd(nPointsTot, grad0, 1, grad2, 1, grad0, 1);
+
+                pFields[0]->HomogeneousFwdTrans(grad0,pOutarray);
+            }
             else 
             {
-                ASSERTL0(false,"Dealiasing can't be used in combination with Wave-Space time-integration ");	
+                ASSERTL0(false, "Advection term calculation not implented or "
+                                "possible with the current problem set up");
             }
             break;
         default:

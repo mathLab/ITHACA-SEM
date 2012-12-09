@@ -978,8 +978,9 @@ namespace Nektar
             Array<OneD,          int> sign;
             
             StdRegions::VarCoeffMap varcoeffs;
-            varcoeffs[StdRegions::eVarCoeffPrimative] = primCoeffs;
-
+            //varcoeffs[StdRegions::eVarCoeffPrimative] = primCoeffs;
+            varcoeffs[StdRegions::eVarCoeffMass] = primCoeffs;
+            
             StdRegions::ExpansionType expType = 
                 faceExp->DetExpansionType();
 

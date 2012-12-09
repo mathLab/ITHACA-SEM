@@ -1297,7 +1297,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             {
             case StdRegions::eMass:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
+                       (mkey.GetNVarCoeff()))
                     {
                         fac = 1.0;
                         goto UseLocRegionsMatrix;
@@ -1311,7 +1312,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 break;
             case StdRegions::eInvMass:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
+                       (mkey.GetNVarCoeff()))
                     {
                         NekDouble one = 1.0;
                         StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),

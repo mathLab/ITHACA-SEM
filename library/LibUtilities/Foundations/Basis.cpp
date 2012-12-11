@@ -692,14 +692,17 @@ namespace Nektar
         }
 
         /** \brief Determine if basis has collocation property,
-        *  i.e. GLL_Lagrange with Lobatto integration of appropriate order.
-        */
+         *  i.e. GLL_Lagrange with Lobatto integration of appropriate order,
+         *  Gauss_Lagrange with Gauss integration of appropriate order.
+         */
         bool BasisKey::Collocation() const
         {
-            return (m_basistype     == eGLL_Lagrange &&
-                    GetPointsType() == eGaussLobattoLegendre &&
-                    GetNumModes()   == GetNumPoints()) || 
-                    m_basistype     == eGauss_Lagrange;
+            return ((m_basistype     == eGLL_Lagrange         &&
+                     GetPointsType() == eGaussLobattoLegendre &&
+                     GetNumModes()   == GetNumPoints())       || 
+                    (m_basistype     == eGauss_Lagrange       &&
+                     GetPointsType() == eGaussGaussLegendre   &&
+                     GetNumModes()   == GetNumPoints()));
         }
 
         // BasisKey compared to BasisKey

@@ -85,12 +85,24 @@ IF (THIRDPARTY_BUILD_BOOST)
     ENDIF ()
 ELSE (THIRDPARTY_BUILD_BOOST)
     SET(Boost_DEBUG 1)
-    SET(Boost_USE_MULTITHREADED OFF)
     SET(Boost_ADDITIONAL_VERSIONS "1.51" "1.51.0" "1.50" "1.50.0" "1.49" "1.49.0" "1.48" "1.48.0" "1.47.0" "1.47" "1.46" "1.46. 1" "1.40" "1.40.0" "1.35.0" "1.35")
     SET(Boost_NO_BOOST_CMAKE ON)
 
     IF( NOT BOOST_ROOT )
         #If the user has not set BOOST_ROOT, look in a couple common places first.
+        SET(BOOST_ROOT $ENV{BOOST_HOME})
+        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time
+                filesystem system program_options regex )
+        SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
+        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
+        SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
+        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
+        SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/dist)
+        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
+
+        # In case we have not found the threaded version, look for the
+        # non-threaded version of the libraries.        
+        SET(Boost_USE_MULTITHREADED OFF)
         SET(BOOST_ROOT $ENV{BOOST_HOME})
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
         SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
@@ -99,11 +111,6 @@ ELSE (THIRDPARTY_BUILD_BOOST)
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
         SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/dist)
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
-        # Hack for odd distributions which do not symlink for non -mt thread lib
-        IF( NOT BOOST_THREAD_FOUND )
-            SET( Boost_USE_MULTITHREADED ON)
-            FIND_PACKAGE( Boost COMPONENTS thread )
-        ENDIF()
     ELSE()
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
     ENDIF()

@@ -1,5 +1,8 @@
 SET(THIRDPARTY_BUILD_BOOST OFF CACHE BOOL
     "Build Boost libraries")
+SET(Boost_USE_MULTITHREADED ON CACHE BOOL
+    "Search for multithreaded boost libraries")
+MARK_AS_ADVANCED(Boost_USE_MULTITHREADED)
 
 IF (THIRDPARTY_BUILD_BOOST)
     INCLUDE(ExternalProject)
@@ -93,18 +96,6 @@ ELSE (THIRDPARTY_BUILD_BOOST)
         SET(BOOST_ROOT $ENV{BOOST_HOME})
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time
                 filesystem system program_options regex )
-        SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
-        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
-        SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
-        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
-        SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/dist)
-        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
-
-        # In case we have not found the threaded version, look for the
-        # non-threaded version of the libraries.        
-        SET(Boost_USE_MULTITHREADED OFF)
-        SET(BOOST_ROOT $ENV{BOOST_HOME})
-        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
         SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
         SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)

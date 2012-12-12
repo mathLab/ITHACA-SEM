@@ -61,6 +61,11 @@ namespace Nektar
         
         void OutputNekpp::Process()
         {
+            if (m->verbose)
+            {
+                cout << "OutputNekpp: Writing file..." << endl;
+            }
+
             TiXmlDocument doc;
             TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "utf-8", "");
             doc.LinkEndChild( decl );

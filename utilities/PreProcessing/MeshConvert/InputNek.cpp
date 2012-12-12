@@ -104,7 +104,10 @@ namespace Nektar
             m->expDim   = 0;
             m->spaceDim = 0;
             
-            cerr << "Start reading InputNek..." << endl;
+            if (m->verbose)
+            {
+                cout << "InputNek: Start reading file..." << endl;
+            }
             
             // -- Read in parameters.
 

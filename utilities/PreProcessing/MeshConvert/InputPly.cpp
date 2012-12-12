@@ -79,7 +79,10 @@ namespace Nektar
             ElementType elType = eTriangle;
             map<string, int> propMap;
 
-            cout << "Start reading InputPly..." << endl;
+            if (m->verbose)
+            {
+                cout << "InputPly: Start reading file..." << endl;
+            }
             
             while (!mshFile.eof())
             {

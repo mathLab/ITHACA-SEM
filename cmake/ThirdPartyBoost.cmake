@@ -1,5 +1,4 @@
-SET(THIRDPARTY_BUILD_BOOST OFF CACHE BOOL
-    "Build Boost libraries")
+OPTION(THIRDPARTY_BUILD_BOOST "Build Boost libraries" OFF)
 
 IF (THIRDPARTY_BUILD_BOOST)
     INCLUDE(ExternalProject)

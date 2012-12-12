@@ -1,5 +1,6 @@
-SET(NEKTAR_SOLVER_IMAGE_WARPING ON CACHE BOOL
-    "Build the Image Warping solver.")
+CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_IMAGE_WARPING
+    "Build the Image Warping solver." ON
+    "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_IMAGE_WARPING )
     SET(ImageWarpingSolverSource 

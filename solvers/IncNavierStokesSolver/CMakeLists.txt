@@ -1,5 +1,6 @@
-SET(NEKTAR_SOLVER_INCNAVIERSTOKES ON CACHE BOOL
-    "Build the Incompressible Navier-Stokes solver.")
+CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_INCNAVIERSTOKES
+    "Build the Incompressible Navier-Stokes solver." ON
+    "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     SET(IncNavierStokesSolverSource 

@@ -101,13 +101,6 @@ namespace Nektar
             // inline
             MULTI_REGIONS_EXPORT const Array<OneD,const SpatialDomains
                                 ::BoundaryConditionShPtr>& GetBndConditions();
-
-            /// Scatters from the global coefficients
-            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
-            /// \f$\boldsymbol{\hat{u}}_l\f$.
-            // inline
-            MULTI_REGIONS_EXPORT void GlobalToLocal();
-
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
@@ -194,6 +187,21 @@ namespace Nektar
                                       Array<OneD,       NekDouble> &outarray,
                                 CoeffState coeffstate);
 
+            /// Impose the Dirichlet Boundary Conditions on outarray 
+            MULTI_REGIONS_EXPORT virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
+
+            /// Scatters from the global coefficients
+            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
+            /// \f$\boldsymbol{\hat{u}}_l\f$.
+            // inline
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(void);
+            
+
+            /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
+            /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
+            // inline
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(void);
+
             virtual void v_HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &outarray,
@@ -251,31 +259,6 @@ namespace Nektar
          * \> \> continue \\
          * \> continue
          * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and
-         * \a sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
-         * correct modal connectivity between the different elements (both
-         * these arrays are contained in the data member #m_locToGloMap). This
-         * operation is equivalent to the scatter operation
-         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$, where
-         * \f$\mathcal{A}\f$ is the
-         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
-         *
-         */
-        inline void ContField1D::GlobalToLocal()
-        {
-            m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
-        }
-
-        /**
-         * This operation is evaluated as:
-         * \f{tabbing}
-         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
-         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
-         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
-         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
-         * \> \> continue \\
-         * \> continue
-         * \f}
          * where \a map\f$[e][i]\f$ is the mapping array and \a
          * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
          * correct modal connectivity between the different elements (both
@@ -299,30 +282,6 @@ namespace Nektar
             m_locToGloMap->GlobalToLocal(inarray,outarray);
         }
 
-        /**
-         * This operation is evaluated as:
-         * \f{tabbing}
-         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
-         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
-         * \> \> \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] =
-         * \mbox{sign}[e][i] \cdot \boldsymbol{\hat{u}}^{e}[i]$\\
-         * \> \> continue\\
-         * \> continue
-         * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and \a
-         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
-         * correct modal connectivity between the different elements (both
-         * these arrays are contained in the data member #m_locToGloMap). This
-         * operation is equivalent to the gather operation
-         * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{-1}\boldsymbol{\hat{u}}_l\f$,
-         * where \f$\mathcal{A}\f$ is the
-         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
-         *
-         */
-        inline void ContField1D::LocalToGlobal()
-        {
-            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
-        }
 
         /**
          * This operation is evaluated as:

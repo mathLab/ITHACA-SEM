@@ -175,6 +175,7 @@ namespace Nektar
                                                                 - nGlobBndDofs;
 
             Array<OneD, NekDouble> F(nGlobDofs);
+
             if(nDirBndDofs && dirForcCalculated)
             {
                 Vmath::Vsub(nGlobDofs,in.get(),1,dirForcing.get(),1,F.get(),1);
@@ -234,7 +235,8 @@ namespace Nektar
                 // solve boundary system
                 if(atLastLevel)
                 {
-                    m_linSys->Solve(F_HomBnd,V_GlobHomBnd);
+                    m_linSys->Solve(F_HomBnd,F_HomBnd);
+                    V_GlobHomBnd = V_GlobHomBnd + F_HomBnd;
                 }
                 else
                 {

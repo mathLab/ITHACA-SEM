@@ -257,6 +257,20 @@ namespace Nektar
             }
         }
 
+        /**
+         *
+         */
+        void ContField2D::v_SmoothField(Array<OneD,NekDouble> &field)
+        {
+            int gloNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            Array<OneD,NekDouble> tmp1(gloNcoeffs);
+            Array<OneD,NekDouble> tmp2(gloNcoeffs);
+
+            IProductWRTBase(field,tmp1,eGlobal);
+            MultiplyByInvMassMatrix(tmp1,tmp2,eGlobal);
+            BwdTrans(tmp2,field,eGlobal);
+        }
+
 
         /**
          * Computes the matrix vector product
@@ -455,6 +469,8 @@ namespace Nektar
         }
 
 
+
+        
         /**
          * Given a linear system specified by the key \a key,
          * \f[\boldsymbol{M}\boldsymbol{\hat{u}}_g=\boldsymbol{\hat{f}},\f]
@@ -512,32 +528,12 @@ namespace Nektar
                                       Array<OneD,       NekDouble>& inout,
                                 const Array<OneD, const NekDouble>& dirForcing)
         {
-            int i,j;
-            int bndcnt=0;
             int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
 
             // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
             //         IN THE SOLUTION ARRAY
-            const Array<OneD,const int>& map
-                        = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
-
-            for(i = 0; i < m_bndConditions.num_elements(); ++i)
-            {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                {
-                    const Array<OneD,const NekDouble>& coeffs
-                        = m_bndCondExpansions[i]->GetCoeffs();
-                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
-                    {
-                        inout[map[bndcnt++]] = coeffs[j];
-                    }
-                }
-                else
-                {
-                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
-                }
-            }
+            v_ImposeDirichletConditions(inout);
 
             // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
             if(contNcoeffs - NumDirBcs > 0)
@@ -606,24 +602,6 @@ namespace Nektar
         /**
          *
          */
-        void  ContField2D::v_LocalToGlobal(void)
-        {
-            return ContField2D::LocalToGlobal();
-        };
-
-
-        /**
-         *
-         */
-        void  ContField2D::v_GlobalToLocal(void)
-        {
-            return ContField2D::GlobalToLocal();
-        };
-
-
-        /**
-         *
-         */
         void ContField2D::v_BwdTrans(
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,       NekDouble> &outarray,
@@ -644,6 +622,121 @@ namespace Nektar
             FwdTrans(inarray,outarray,coeffstate);
         }
 
+        void ContField2D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+        {
+            int i,j;
+            int bndcnt=0;
+            int nDir        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+
+            // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE IN THE SOLUTION
+            // ARRAY
+            NekDouble sign;
+            const Array<OneD,const int> &bndMap = 
+                m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+          
+            Array<OneD, NekDouble> tmp(
+                m_locToGloMap->GetNumGlobalBndCoeffs(), 0.0);
+
+            // Fill in Dirichlet coefficients that are to be sent to other
+            // processors.
+            map<int, vector<pair<int, int> > > &extraDirDofs = 
+                m_locToGloMap->GetExtraDirDofs();
+            map<int, vector<pair<int, int> > >::iterator it;
+            for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
+            {
+                for (i = 0; i < it->second.size(); ++i)
+                {
+                    tmp[it->second.at(i).second] = 
+                        m_bndCondExpansions[it->first]->GetCoeffs()[
+                            it->second.at(i).first];
+                }
+            }
+            m_locToGloMap->UniversalAssembleBnd(tmp);
+          
+            // Now fill in all other Dirichlet coefficients.
+            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            {
+                if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                   SpatialDomains::eDirichlet)
+                {
+                    const Array<OneD,const NekDouble>& coeffs = 
+                        m_bndCondExpansions[i]->GetCoeffs();
+                    for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                    {
+                        sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(
+                            bndcnt);
+                        tmp[bndMap[bndcnt++]] = sign * coeffs[j];
+                    }
+                }
+                else
+                {
+                    bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
+                }
+            }
+          
+            Vmath::Vcopy(nDir, tmp, 1, outarray, 1);
+        }
+
+
+        /**
+         * This operation is evaluated as:
+         * \f{tabbing}
+         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
+         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
+         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
+         * \> \> continue \\
+         * \> continue
+         * \f}
+         * where \a map\f$[e][i]\f$ is the mapping array and \a
+         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+         * correct modal connectivity between the different elements (both
+         * these arrays are contained in the data member #m_locToGloMap). This
+         * operation is equivalent to the scatter operation
+         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$,
+         * where \f$\mathcal{A}\f$ is the
+         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+         *
+         * @note The array #m_coeffs should be filled with the global
+         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ and that the resulting
+         * local coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in
+         * #m_coeffs.
+         */
+        void ContField2D::v_GlobalToLocal(void)
+        {
+            m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
+        }
+
+
+
+        /**
+         * This operation is evaluated as:
+         * \f{tabbing}
+         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
+         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
+         * \> \> \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] =
+         * \mbox{sign}[e][i] \cdot \boldsymbol{\hat{u}}^{e}[i]$\\
+         * \> \> continue\\
+         * \> continue
+         * \f}
+         * where \a map\f$[e][i]\f$ is the mapping array and \a
+         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
+         * correct modal connectivity between the different elements (both
+         * these arrays are contained in the data member #m_locToGloMap). This
+         * operation is equivalent to the gather operation
+         * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{-1}\boldsymbol{\hat{u}}_l\f$,
+         * where \f$\mathcal{A}\f$ is the
+         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
+         *
+         * @note    The array #m_coeffs should be filled with the local
+         *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the
+         *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
+         *          will be stored in #m_coeffs.
+         */
+        void ContField2D::v_LocalToGlobal(void)
+        {
+            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
+        }
 
         /**
          *

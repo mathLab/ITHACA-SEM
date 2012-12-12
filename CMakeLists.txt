@@ -288,11 +288,12 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMetis.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
+	          ${CMAKE_SOURCE_DIR}/cmake/FindFFTW.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindWin32Lapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/NektarCommon.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindGSMPI.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindXXT.cmake
               DESTINATION ${CMAKE_INSTALL_PREFIX}) 
 
 INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR})

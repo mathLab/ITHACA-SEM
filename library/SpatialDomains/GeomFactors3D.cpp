@@ -127,7 +127,7 @@ namespace Nektar
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),Coords[i]->UpdatePhys());
                 // Take the derivative (calculated at the points as specified   in 'Coords')
                 Coords[i]->StdPhysDeriv(Coords[i]->GetPhys(),d1_map[i],d2_map[i],d3_map[i]);
-
+              
                 // Interpolate the derivatives:
                 // - from the points as defined in the mapping ('Coords')
                 // - to the points we at which we want to know the metrics      ('tbasis')
@@ -195,6 +195,7 @@ namespace Nektar
                 m_jac     = Array<OneD, NekDouble>(1,0.0);
                 m_gmat    = Array<TwoD, NekDouble>(3*m_coordDim,1,0.0);
 
+
                 m_jac[0] =  d1[0][0]*(d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])
                            -d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
                            +d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
@@ -211,6 +212,7 @@ namespace Nektar
                 m_gmat[6][0] =  (d2[0][0]*d3[1][0] - d3[0][0]*d2[1][0])/m_jac[0];  // d xi_1/d x_3
                 m_gmat[7][0] = -(d1[0][0]*d3[1][0] - d3[0][0]*d1[1][0])/m_jac[0];  // d xi_2/d x_3
                 m_gmat[8][0] =  (d1[0][0]*d2[1][0] - d2[0][0]*d1[1][0])/m_jac[0];  // d xi_3/d x_3
+
             }
             else // Deformed case
             {

@@ -45,7 +45,7 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        std::string GlobalLinSys::lookupIds[6] = {
+        std::string GlobalLinSys::lookupIds[8] = {
             LibUtilities::SessionReader::RegisterEnumValue(
                 "GlobalSysSoln", "DirectFull",
                 MultiRegions::eDirectFullMatrix),
@@ -63,7 +63,13 @@ namespace Nektar
                 MultiRegions::eIterativeStaticCond),
             LibUtilities::SessionReader::RegisterEnumValue(
                 "GlobalSysSoln", "IterativeMultiLevelStaticCond",
-                MultiRegions::eIterativeMultiLevelStaticCond)
+                MultiRegions::eIterativeMultiLevelStaticCond),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "XxtFull",
+                MultiRegions::eXxtFullMatrix),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalSysSoln", "XxtStaticCond",
+                MultiRegions::eXxtStaticCond)
         };
 
         std::string GlobalLinSys::def = LibUtilities::SessionReader::

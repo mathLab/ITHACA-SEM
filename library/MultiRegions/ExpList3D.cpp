@@ -164,10 +164,10 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph3D) :
             ExpList(pSession,graph3D)
         {
-            LocalRegions::TetExpSharedPtr tet;
-            LocalRegions::HexExpSharedPtr hex;
+            LocalRegions::TetExpSharedPtr   tet;
+            LocalRegions::HexExpSharedPtr   hex;
             LocalRegions::PrismExpSharedPtr prism;
-            LocalRegions::PyrExpSharedPtr pyramid;
+            LocalRegions::PyrExpSharedPtr   pyramid;
 
             const SpatialDomains::ExpansionMap &expansions
                                         = graph3D->GetExpansions();
@@ -175,10 +175,10 @@ namespace Nektar
             SpatialDomains::ExpansionMap::const_iterator expIt;
             for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
             {
-                SpatialDomains::TetGeomSharedPtr TetGeom;
-                SpatialDomains::HexGeomSharedPtr HexGeom;
+                SpatialDomains::TetGeomSharedPtr   TetGeom;
+                SpatialDomains::HexGeomSharedPtr   HexGeom;
                 SpatialDomains::PrismGeomSharedPtr PrismGeom;
-                SpatialDomains::PyrGeomSharedPtr PyrGeom;
+                SpatialDomains::PyrGeomSharedPtr   PyrGeom;
 
                 if((TetGeom = boost::dynamic_pointer_cast<
                         SpatialDomains::TetGeom>(expIt->second->m_geomShPtr)))

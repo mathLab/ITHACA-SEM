@@ -83,12 +83,6 @@ namespace Nektar
             /// The default destructor.
             MULTI_REGIONS_EXPORT virtual ~ContField2D();
 
-
-            /// Scatters from the global coefficients
-            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
-            /// \f$\boldsymbol{\hat{u}}_l\f$.
-            inline void GlobalToLocal();
-
             /// Scatters from the global coefficients
             /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
             /// \f$\boldsymbol{\hat{u}}_l\f$.
@@ -101,10 +95,6 @@ namespace Nektar
             inline const void GlobalToLocal(
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray) const;
-
-            /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
-            /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
-            inline void LocalToGlobal();
 
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
@@ -212,11 +202,19 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT GlobalLinSysSharedPtr GenGlobalLinSys(const GlobalLinSysKey &mkey);
 
-            /// Template method virtual forwarded for LocalToGlobal()
-            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal();
+            /// Impose the Dirichlet Boundary Conditions on outarray 
+            MULTI_REGIONS_EXPORT virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
-            /// Template method virtual forwarded for GlobalToLocal()
-            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal();
+
+            /// Gathers the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
+            /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(void);
+            
+
+            /// Scatters from the global coefficients
+            /// \f$\boldsymbol{\hat{u}}_g\f$ to the local coefficients
+            /// \f$\boldsymbol{\hat{u}}_l\f$.
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(void);
 
             /// Template method virtual forwarder for FwdTrans().
             MULTI_REGIONS_EXPORT virtual void v_BwdTrans(
@@ -230,6 +228,10 @@ namespace Nektar
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray,
                                 CoeffState coeffstate);
+
+            /// Template method virtual forwarded for SmoothField().
+            MULTI_REGIONS_EXPORT virtual void v_SmoothField(
+                                      Array<OneD,NekDouble> &field);
 
             /// Template method virtual forwarder for MultiplyByInvMassMatrix().
             MULTI_REGIONS_EXPORT virtual void v_MultiplyByInvMassMatrix(
@@ -304,35 +306,6 @@ namespace Nektar
          * where \f$\mathcal{A}\f$ is the
          * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
          *
-         * @note The array #m_coeffs should be filled with the global
-         * coefficients \f$\boldsymbol{\hat{u}}_g\f$ and that the resulting
-         * local coefficients \f$\boldsymbol{\hat{u}}_l\f$ will be stored in
-         * #m_coeffs.
-         */
-        inline void ContField2D::GlobalToLocal()
-        {
-            m_locToGloMap->GlobalToLocal(m_coeffs,m_coeffs);
-        }
-
-        /**
-         * This operation is evaluated as:
-         * \f{tabbing}
-         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
-         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
-         * \> \> \> $\boldsymbol{\hat{u}}^{e}[i] = \mbox{sign}[e][i] \cdot
-         * \boldsymbol{\hat{u}}_g[\mbox{map}[e][i]]$ \\
-         * \> \> continue \\
-         * \> continue
-         * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and \a
-         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
-         * correct modal connectivity between the different elements (both
-         * these arrays are contained in the data member #m_locToGloMap). This
-         * operation is equivalent to the scatter operation
-         * \f$\boldsymbol{\hat{u}}_l=\mathcal{A}\boldsymbol{\hat{u}}_g\f$,
-         * where \f$\mathcal{A}\f$ is the
-         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
-         *
          * @param   outarray    The resulting local degrees of freedom
          *                      \f$\boldsymbol{x}_l\f$ will be stored in this
          *                      array of size \f$N_\mathrm{eof}\f$.
@@ -375,35 +348,6 @@ namespace Nektar
                                   Array<OneD,       NekDouble> &outarray) const
         {
             m_locToGloMap->GlobalToLocal(inarray,outarray);
-        }
-
-        /**
-         * This operation is evaluated as:
-         * \f{tabbing}
-         * \hspace{1cm}  \= Do \= $e=$  $1, N_{\mathrm{el}}$ \\
-         * \> \> Do \= $i=$  $0,N_m^e-1$ \\
-         * \> \> \> $\boldsymbol{\hat{u}}_g[\mbox{map}[e][i]] =
-         * \mbox{sign}[e][i] \cdot \boldsymbol{\hat{u}}^{e}[i]$\\
-         * \> \> continue\\
-         * \> continue
-         * \f}
-         * where \a map\f$[e][i]\f$ is the mapping array and \a
-         * sign\f$[e][i]\f$ is an array of similar dimensions ensuring the
-         * correct modal connectivity between the different elements (both
-         * these arrays are contained in the data member #m_locToGloMap). This
-         * operation is equivalent to the gather operation
-         * \f$\boldsymbol{\hat{u}}_g=\mathcal{A}^{-1}\boldsymbol{\hat{u}}_l\f$,
-         * where \f$\mathcal{A}\f$ is the
-         * \f$N_{\mathrm{eof}}\times N_{\mathrm{dof}}\f$ permutation matrix.
-         *
-         * @note    The array #m_coeffs should be filled with the local
-         *          coefficients \f$\boldsymbol{\hat{u}}_l\f$ and that the
-         *          resulting global coefficients \f$\boldsymbol{\hat{u}}_g\f$
-         *          will be stored in #m_coeffs.
-         */
-        inline void ContField2D::LocalToGlobal()
-        {
-            m_locToGloMap->LocalToGlobal(m_coeffs,m_coeffs);
         }
 
         /**

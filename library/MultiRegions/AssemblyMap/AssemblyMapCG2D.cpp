@@ -169,7 +169,8 @@ namespace Nektar
             Array<OneD, map<int,int> > ReorderedGraphVertId(2);
             Array<OneD, map<int,int> > Dofs(2);
             BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
-
+            set<int> extraDirVerts;
+            
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
@@ -197,6 +198,7 @@ namespace Nektar
                                                 firstNonDirGraphVertId,
                                                 nExtraDirichlet,
                                                 bottomUpGraph,
+                                                extraDirVerts,
                                                 checkIfSystemSingular);
 
             /**
@@ -386,6 +388,7 @@ namespace Nektar
             offset = cnt = 0;
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
+                set<int> foundExtraVerts;
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
                 {
                     bndSegExp  = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
@@ -395,6 +398,18 @@ namespace Nektar
                     {
                         meshVertId = (bndSegExp->GetGeom1D())->GetVid(k);
                         m_bndCondCoeffsToGlobalCoeffsMap[cnt+bndSegExp->GetVertexMap(k)] = graphVertOffset[ReorderedGraphVertId[0][meshVertId]];
+
+                        set<int>::iterator iter = extraDirVerts.find(meshVertId);
+                        if (iter != extraDirVerts.end() && 
+                            foundExtraVerts.count(meshVertId) == 0)
+                        {
+                            int loc = bndCondExp[i]->GetCoeff_Offset(j) + 
+                                bndSegExp->GetVertexMap(k);
+                            int gid = graphVertOffset[
+                                ReorderedGraphVertId[0][meshVertId]];
+                            m_extraDirDofs[i].push_back(make_pair(loc,gid));
+                            foundExtraVerts.insert(meshVertId);
+                        }
                     }
 
                     meshEdgeId = (bndSegExp->GetGeom1D())->GetEid();
@@ -442,7 +457,8 @@ namespace Nektar
             // Set up the local to global map for the next level when using
             // multi-level static condensation
             if ((m_solnType == eDirectMultiLevelStaticCond ||
-                 m_solnType == eIterativeMultiLevelStaticCond) && nGraphVerts)
+                 m_solnType == eIterativeMultiLevelStaticCond ||
+                 m_solnType == eXxtMultiLevelStaticCond) && nGraphVerts)
             {
                 if (m_staticCondLevel < (bottomUpGraph->GetNlevels()-1) &&
                     m_staticCondLevel < m_maxStaticCondLevel)
@@ -531,6 +547,7 @@ namespace Nektar
                 int          &firstNonDirGraphVertId,
                 int          &nExtraDirichlet,
                 BottomUpSubStructuredGraphSharedPtr &bottomUpGraph, 
+                set<int> &extraDirVerts,
                 const bool checkIfSystemSingular,
                 int mdswitch, 
                 bool doInteriorMap)
@@ -617,6 +634,8 @@ namespace Nektar
             }
             vCommRow->AllReduce(vertexlist, LibUtilities::ReduceSum);
 
+            map<int, int> extraDirVertIds;
+
             // Ensure Dirchlet vertices are consistently recorded between
             // processes (e.g. Dirichlet region meets Neumann region across a
             // partition boundary requires vertex on partition to be Dirichlet).
@@ -641,6 +660,7 @@ namespace Nektar
                                 {
                                     if (vertexlist[offsets[i]+m] == meshVertId)
                                     {
+                                        extraDirVertIds[meshVertId] = i;
                                         ReorderedGraphVertId[0][meshVertId] = graphVertId++;
                                         nExtraDirichlet++;
                                     }
@@ -649,6 +669,46 @@ namespace Nektar
                         }
                     }
                 }
+            }
+
+            for (i = 0; i < n; ++i)
+            {
+                counts [i] = 0;
+                offsets[i] = 0;
+            }
+
+            counts[p] = extraDirVertIds.size();
+            m_comm->AllReduce(counts, LibUtilities::ReduceSum);
+            nTot = Vmath::Vsum(n, counts, 1);
+            
+            offsets[0] = 0;
+            
+            for (i = 1; i < n; ++i)
+            {
+                offsets[i] = offsets[i-1] + counts[i-1];
+            }
+
+            Array<OneD, int> vertids  (nTot, 0);
+            Array<OneD, int> vertprocs(nTot, 0);
+            
+            for (it  = extraDirVertIds.begin(), i = 0; 
+                 it != extraDirVertIds.end(); ++it, ++i)
+            {
+                vertids  [offsets[p]+i] = it->first;
+                vertprocs[offsets[p]+i] = it->second;
+            }
+
+            m_comm->AllReduce(vertids,   LibUtilities::ReduceSum);
+            m_comm->AllReduce(vertprocs, LibUtilities::ReduceSum);
+            
+            for (i = 0; i < nTot; ++i)
+            {
+                if (m_comm->GetRank() != vertprocs[i])
+                {
+                    continue;
+                }
+                
+                extraDirVerts.insert(vertids[i]);
             }
 
             // Check between processes if the whole system is singular
@@ -1121,6 +1181,8 @@ namespace Nektar
                 case eDirectFullMatrix:
                 case eIterativeFull:
                 case eIterativeStaticCond:
+                case eXxtFullMatrix:
+                case eXxtStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
                     }
@@ -1132,6 +1194,7 @@ namespace Nektar
                     break;
                 case eDirectMultiLevelStaticCond:
                 case eIterativeMultiLevelStaticCond:
+                case eXxtMultiLevelStaticCond:
                     {
                         MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph,mdswitch,partVerts);
                     }

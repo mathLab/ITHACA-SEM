@@ -254,7 +254,9 @@ namespace Nektar
 
             // Also initialise some more data members
             m_solnType              = solnTypeOld;
-            ASSERTL1(m_solnType==eDirectMultiLevelStaticCond||m_solnType==eIterativeMultiLevelStaticCond,
+            ASSERTL1(m_solnType==eDirectMultiLevelStaticCond
+                    ||m_solnType==eIterativeMultiLevelStaticCond
+                    ||m_solnType==eXxtMultiLevelStaticCond,
                      "This method should only be called for in "
                      "case of multi-level static condensation.");
             m_staticCondLevel       = newLevel;
@@ -863,7 +865,7 @@ namespace Nektar
             // offset input data by length "offset" for Dirichlet boundary conditions.
             Array<OneD,NekDouble> tmp(m_numGlobalBndCoeffs,0.0);
 
-        if(m_signChange)
+            if(m_signChange)
             {
                 Vmath::Scatr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }

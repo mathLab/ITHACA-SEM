@@ -2,9 +2,9 @@
 <test>
     <description>Steady ADR 2D problem with CG P=7</description>
     <executable>SteadyAdvectionDiffusionReaction2D</executable>
-    <parameters>linearadvdiffreact2D_7modes.xml</parameters>
+    <parameters>LinearAdvDiffReact2D_P7_Modes.xml</parameters>
     <files>
-        <file description="Session File">linearadvdiffreact2D_7modes.xml</file>
+        <file description="Session File">LinearAdvDiffReact2D_P7_Modes.xml</file>
     </files>
 
     <metrics>

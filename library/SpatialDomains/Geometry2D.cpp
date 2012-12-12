@@ -122,6 +122,63 @@ namespace Nektar
             return m_xmap[0]; //should never be reached
         }
 
+
+        void Geometry2D::NewtonIterationForLocCoord
+                         (const Array<OneD, const NekDouble> &coords, 
+                          Array<OneD,NekDouble> &Lcoords)
+        {
+            
+            Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
+            Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
+            NekDouble xmap,ymap, F1,F2;
+            NekDouble der1_x, der2_x, der1_y, der2_y ;
+            const Array<TwoD, const NekDouble> &gmat = GetGmat();
+            
+            // Unfortunately need the points in an Array to interpolate
+            Array<OneD, NekDouble> D1Dx(ptsx.num_elements(),&gmat[0][0]);
+            Array<OneD, NekDouble> D1Dy(ptsx.num_elements(),&gmat[1][0]);
+            Array<OneD, NekDouble> D2Dx(ptsx.num_elements(),&gmat[2][0]);
+            Array<OneD, NekDouble> D2Dy(ptsx.num_elements(),&gmat[3][0]);
+            
+            int cnt=0; 
+            int MaxIterations = 40;
+            NekDouble Tol = 1e-12; // This is error*error; 
+                
+            F1 = F2 = 2000; // Starting value of Function
+            
+            while(cnt++ < MaxIterations)
+            {
+                //calculate the global point `corresponding to Lcoords
+                xmap = m_xmap[0]->PhysEvaluate(Lcoords, ptsx);
+                ymap = m_xmap[1]->PhysEvaluate(Lcoords, ptsy);
+                
+                F1 = coords[0] - xmap;
+                F2 = coords[1] - ymap;
+
+                // stopping criterion
+                if(F1*F1 + F2*F2 < Tol)
+                {
+                    break;
+                }
+                
+                //Interpolate derivative metric at Lcoords
+                der1_x = m_xmap[0]->PhysEvaluate(Lcoords, D1Dx);
+                der2_x = m_xmap[0]->PhysEvaluate(Lcoords, D1Dy);
+                der1_y = m_xmap[1]->PhysEvaluate(Lcoords, D2Dx);
+                der2_y = m_xmap[1]->PhysEvaluate(Lcoords, D2Dy);                  
+                
+                Lcoords[0] = Lcoords[0] + der1_x*(coords[0]-xmap) + 
+                    der1_y*(coords[1]-ymap);
+                Lcoords[1] = Lcoords[1] + der2_x*(coords[0]-xmap) + 
+                    der2_y*(coords[1]-ymap);
+            }
+            
+            if(cnt >= 40)
+            {
+                Lcoords[0] = Lcoords[1] = 2.0;    
+            }                        
+        }
+
         int Geometry2D::v_GetFid() const 
         {
             NEKERROR(ErrorUtil::efatal,

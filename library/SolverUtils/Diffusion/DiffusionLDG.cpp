@@ -77,8 +77,10 @@ namespace Nektar
             
             for (j = 0; j < nqvar; ++j)
             {
-                qfield[j] = Array<OneD, Array<OneD, NekDouble> >(nqvar);
-                flux[j]   = Array<OneD, Array<OneD, NekDouble> >(nqvar);
+                qfield[j] = 
+                    Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+                flux[j]   = 
+                    Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
                 
                 for (i = 0; i < nConvectiveFields; ++i)
                 {
@@ -197,7 +199,7 @@ namespace Nektar
             int nvariables      = fields.num_elements();
             int nqvar           = uflux.num_elements();
             int nDimensions     = fields[0]->GetCoordim(0);
-            NekDouble time = 0.0;
+            NekDouble time      = 0.0;
             
             Array<OneD, NekDouble > Fwd     (nTracePointsTot);
             Array<OneD, NekDouble > Bwd     (nTracePointsTot);

@@ -39,6 +39,8 @@
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/Diffusion/Diffusion.h>
+
 
 #define EPSILON 0.000001
 
@@ -87,6 +89,7 @@ namespace Nektar
     protected:
         SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
         SolverUtils::AdvectionSharedPtr     m_advection;
+        SolverUtils::DiffusionSharedPtr     m_diffusion;
         Array<OneD, NekDouble>              m_velLoc;
         NekDouble                           m_gamma;
         NekDouble                           m_pInf;
@@ -108,19 +111,20 @@ namespace Nektar
             const int                                         i, 
             const Array<OneD, Array<OneD, NekDouble> >       &physfield, 
                   Array<OneD, Array<OneD, NekDouble> >       &flux);
+        void GetFluxVectorViscous(
+            const int                                         i,
+            const int                                         j, 
+            const Array<OneD, Array<OneD, NekDouble> >       &physfield, 
+                  Array<OneD, Array<OneD, NekDouble> >       &flux);
         void WallBoundary(
             int                                               bcRegion,
             int                                               cnt,
             Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void WallBoundaryViscous(
+            int                                               bcRegion,
+            int                                               cnt,
+            Array<OneD, Array<OneD, NekDouble> >             &physarray);
         void SymmetryBoundary(
-            int                                               bcRegion,
-            int                                               cnt,
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void InflowCFE(
-            int                                               bcRegion,
-            int                                               cnt,
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void OutflowCFE(
             int                                               bcRegion,
             int                                               cnt,
             Array<OneD, Array<OneD, NekDouble> >             &physarray);

@@ -3,6 +3,7 @@
     <description>3D homogeneous 1D Channel Flow, HOM parallelisation (2 proc)</description>
     <executable>IncNavierStokesSolver</executable>
     <parameters>ChanFlow_3DH1D_Parallel_mode2.xml</parameters>
+    <processes>2</processes>
     <files>
         <file description="Session File">ChanFlow_3DH1D_Parallel_mode2.xml</file>
     </files>

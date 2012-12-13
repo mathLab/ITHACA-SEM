@@ -85,6 +85,12 @@ namespace Nektar
         
         void ProcessBL::Process()
         {
+            if (m->verbose)
+            {
+                cout << "ProcessBL: Refining prismatic boundary layer..."
+                     << endl;
+            }
+
 	    // Initialisation of parameters and settings.
 
             // Physical problem parameters.

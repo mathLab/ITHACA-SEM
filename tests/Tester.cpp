@@ -44,6 +44,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 #include <boost/program_options.hpp>
+#include <boost/thread.hpp>
 
 using namespace std;
 using namespace Nektar;
@@ -311,7 +312,8 @@ int main(int argc, char *argv[])
             }
             catch (const fs::filesystem_error& e)
             {
-                usleep(1000);
+                //usleep(1000);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
                 i--;
                 if (i > 0)
                 {

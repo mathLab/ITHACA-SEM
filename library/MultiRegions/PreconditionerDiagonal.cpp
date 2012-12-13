@@ -179,9 +179,9 @@ namespace Nektar
             int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int rows = nGlobalBnd - nDirBnd;
 
-            MatrixStorage storage = eDIAGONAL;
-            m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(rows, rows, storage);
-            DNekMat &M = (*m_preconditioner);
+            //MatrixStorage storage = eDIAGONAL;
+            //m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(rows, rows, storage);
+            //DNekMat &M = (*m_preconditioner);
 
             Array<OneD, NekDouble> vOutput(nGlobalBnd,0.0);
 
@@ -195,10 +195,13 @@ namespace Nektar
             // Assemble diagonal contributions across processes
             m_locToGloMap->UniversalAssembleBnd(vOutput);
 
+            m_diagonals = Array<OneD, NekDouble> (rows);
+
             // Populate preconditioner matrix
             for (unsigned int i = 0; i < rows; ++i)
             {
-                M.SetValue(i,i,1.0/vOutput[nDirBnd + i]);
+                //M.SetValue(i,i,1.0/vOutput[nDirBnd + i]);
+                m_diagonals[i] = 1.0/vOutput[nDirBnd + i];
             }
         }
 
@@ -220,11 +223,12 @@ namespace Nektar
                         m_locToGloMap->GetNumGlobalBndCoeffs();
                     int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                     int nNonDir = nGlobal-nDir;
-                    DNekMat &M = (*m_preconditioner);
+                    //DNekMat &M = (*m_preconditioner);
                     
                     NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
                     NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
-                    z = M * r;
+                    //z = M * r;
+                    Vmath::Vmul(nNonDir, &pInput[0], 1, &m_diagonals[0], 1, &pOutput[0], 1);
                     
                     break;
                 }

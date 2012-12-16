@@ -75,14 +75,52 @@ namespace Nektar
     {
         // use dimension of Velocity vector to dictate dimension of operation
         int ndim       = pV.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > AdvVel   (pV.num_elements());
+        Array<OneD, NekDouble> Outarray;
         
-        // ToDo: here we should add a check that V has right dimension
 	
         int nPointsTot = pFields[0]->GetNpoints();
-        Array<OneD, NekDouble> grad0,grad1,grad2;
+        Array<OneD, NekDouble> grad0,grad1,grad2,wkSp;
 		
+        NekDouble OneDptscale = 1.5; // factor to rescale 1d points in dealiasing 
+
+        if(m_dealiasing)
+        {
+            // Get number of points to dealias a quadratic non-linearity
+            nPointsTot = pFields[0]->Get1DScaledTotPoints(OneDptscale);
+        }
+
         grad0 = Array<OneD, NekDouble> (nPointsTot);
-		
+
+        // interpolate Advection velocity
+        int nadv = pV.num_elements();
+        if(m_dealiasing) // interpolate advection field to higher space. 
+        {
+            AdvVel[0] = Array<OneD, NekDouble> (nPointsTot*(nadv+2));
+            for(int i = 0; i < nadv; ++i)
+            {
+                if(i)
+                {
+                    AdvVel[i] = AdvVel[i-1]+nPointsTot;
+                }
+                // interpolate infield to 3/2 dimension
+                pFields[0]->PhysInterp1DScaled(OneDptscale,pV[i],AdvVel[i]);
+            }
+            
+            Outarray = AdvVel[nadv-1] + nPointsTot;
+            wkSp = Outarray + nPointsTot;
+        }
+        else
+        {
+            for(int i = 0; i < nadv; ++i)
+            {
+                AdvVel[i] = pV[i];
+            }
+
+            Outarray = pOutarray;
+        }
+
+
         // Evaluate V\cdot Grad(u)
         switch(ndim)
         {
@@ -91,10 +129,27 @@ namespace Nektar
             Vmath::Vmul(nPointsTot,grad0,1,pV[0],1,pOutarray,1);
             break;
         case 2:
-            grad1 = Array<OneD, NekDouble> (nPointsTot);
-            pFields[0]->PhysDeriv(pU,grad0,grad1);
-            Vmath::Vmul (nPointsTot,grad0,1,pV[0],1,pOutarray,1);
-            Vmath::Vvtvp(nPointsTot,grad1,1,pV[1],1,pOutarray,1,pOutarray,1);
+            {
+                grad1 = Array<OneD, NekDouble> (nPointsTot);
+                pFields[0]->PhysDeriv(pU,grad0,grad1);
+
+                if(m_dealiasing)  // interpolate gradient field 
+                {
+                    pFields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
+                    Vmath::Vcopy(nPointsTot,wkSp,1,grad0,1);
+                    pFields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
+                    Vmath::Vcopy(nPointsTot,wkSp,1,grad1,1);
+                }
+                
+                Vmath::Vmul (nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
+                Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,Outarray,1);
+
+                if(m_dealiasing) // Galerkin project solution back to origianl space 
+                {
+                    pFields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,pOutarray); 
+                }
+                
+            }
             break;	 
         case 3:
             grad1 = Array<OneD, NekDouble> (nPointsTot);

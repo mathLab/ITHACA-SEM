@@ -291,7 +291,7 @@ namespace Nektar
                 return returnval;
             }
 			
-   		    virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x)
+            virtual const MatrixSharedPtrType GetI(const Array<OneD, const DataType>& x)
             {
                 ASSERTL0(false, "Method not implemented");
                 boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
@@ -320,13 +320,20 @@ namespace Nektar
                 return returnval;
             }
 
+            virtual const MatrixSharedPtrType GetGalerkinProjection(const PointsKey &pkey)
+            {
+                ASSERTL0(false, "Method not implemented ");
+                boost::shared_ptr<NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr());
+                return returnval;
+            }
 
         protected:
-            PointsKey m_pointsKey;
+            PointsKey             m_pointsKey;
             Array<OneD, DataType> m_points[3];
             Array<OneD, DataType> m_weights;
-            MatrixSharedPtrType m_derivmatrix[3];
+            MatrixSharedPtrType   m_derivmatrix[3];
             NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_InterpManager;
+            NekManager<PointsKey, NekMatrix<DataType>, PointsKey::opLess> m_GalerkinProjectionManager;
             
             virtual void CalculatePoints()
             {

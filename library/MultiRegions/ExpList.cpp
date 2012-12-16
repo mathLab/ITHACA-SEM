@@ -89,7 +89,7 @@ namespace Nektar
             m_phys_offset(),
             m_offset_elmt_id(),
             m_physState(false),
-		    m_WaveSpace(false),
+            m_WaveSpace(false),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>
                                                         ::AllocateSharedPtr()),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
@@ -175,8 +175,8 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
         }
-
-
+        
+        
         //boost::shared_ptr<ExpList> do_clone(void) const = 0; {}
 		
         /**
@@ -1893,6 +1893,18 @@ namespace Nektar
             Array<OneD, unsigned int> NoModes(1);
 			
             return NoModes;
+        }
+
+
+        void ExpList::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
+        void ExpList::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
         }
 		
 

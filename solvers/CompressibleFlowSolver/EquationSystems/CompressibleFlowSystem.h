@@ -111,7 +111,7 @@ namespace Nektar
             const int                                         i, 
             const Array<OneD, Array<OneD, NekDouble> >       &physfield, 
                   Array<OneD, Array<OneD, NekDouble> >       &flux);
-        void GetFluxVectorViscous(
+        void GetQViscousFluxVector(
             const int                                         i,
             const int                                         j, 
             const Array<OneD, Array<OneD, NekDouble> >       &physfield, 
@@ -140,9 +140,9 @@ namespace Nektar
                   Array<OneD,                   NekDouble>   &soundspeed,
                   Array<OneD,                   NekDouble>   &mach);
         void GetTemperature(
-                  Array<OneD, Array<OneD,       NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &temperature);
+                  const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                         NekDouble>   &pressure,
+                  Array<OneD,                         NekDouble>   &temperature);
         void GetStdVelocity(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,                   NekDouble>   &stdV);
@@ -175,6 +175,9 @@ namespace Nektar
         void GetPressure(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                   NekDouble>   &pressure);
+        void GetDynamicViscosity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                   NekDouble  > &mu);
     };
 }
 #endif

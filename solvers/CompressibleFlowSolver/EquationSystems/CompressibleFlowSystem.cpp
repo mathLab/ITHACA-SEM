@@ -138,15 +138,15 @@ namespace Nektar
                                             .CreateInstance(diffName, diffName);
 
                 m_advection->SetFluxVector(&CompressibleFlowSystem::
-                                                    GetFluxVector, this);
+                                            GetFluxVector, this);
                 
                 m_diffusion->SetFluxVector(&CompressibleFlowSystem::
-                                                    GetFluxVectorViscous, this);
+                                            GetQViscousFluxVector, this);
                 
                 m_session->LoadSolverInfo("UpwindType", riemName, "Exact");
                 
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
-                                                    .CreateInstance(riemName);
+                                            .CreateInstance(riemName);
 
                 m_riemannSolver->AddParam (
                                     "gamma",  
@@ -602,19 +602,64 @@ namespace Nektar
     }
     
     /** 
-     * @brief Return the flux vector for the unsteady diffusion problem.
+     * @brief Return the flux vector for the LDG diffusion problem.
+     * \todo Complete the viscous flux vector
      */
-    void CompressibleFlowSystem::GetFluxVectorViscous(
+    void CompressibleFlowSystem::GetQViscousFluxVector(
         const int i, 
         const int j,
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
               Array<OneD, Array<OneD, NekDouble> > &flux)
     {
-        for(int k = 0; k < flux.num_elements(); ++k)
+        /*
+        int k;
+        int nq = m_fields[0]->GetTotPoints();
+        NekDouble lambda = -0.66666;
+        Array<OneD, NekDouble> pressure(nq);
+        Array<OneD, NekDouble> mu(nq);
+        Array<OneD, NekDouble> tmp_mu(nq);
+
+        if (i == 0)
         {
-            Vmath::Zero(GetNpoints(), flux[k], 1);
+            // Viscous qflux vector for the rho equation.
+            for (k = 0; k < m_expdim; ++k)
+            {
+                Vmath::Zero(nq, flux[k], 1);
+            }
+        } 
+        else if (i >= 1 && i <= m_expdim)
+        {
+            // Flux vector for the velocity fields.
+            GetPressure(physfield, pressure);
+            GetDynamicViscosity(physfield, mu);
+
+            Vmath::Sadd(nq, lambda, mu, 1, tmp_mu, 1);
+            
+            for (k = 0; k < m_expdim; ++k)
+            {
+                Vmath::Vdiv(nq, physfield[k+1], 1, physfield[0], 1, flux[k], 1);
+            }
+            
+            // Add pressure to appropriate field
+            Vmath::Vmul(nq, flux[i-1], 1, tmp_mu, 1, flux[i-1], 1);
         }
-        Vmath::Vcopy(GetNpoints(), physfield[i], 1, flux[j], 1);
+        else if (i == m_expdim+1) 
+        {
+            // Flux vector for the total energy field.
+            GetPressure(physfield, pressure);
+            Vmath::Vadd(nq, physfield[m_expdim+1], 1, pressure, 1, pressure, 1);
+            
+            for (k = 0; k < m_expdim; ++k)
+            {
+                Vmath::Vdiv(nq, physfield[k+1], 1, physfield[0], 1, flux[k], 1);
+                Vmath::Vmul(nq, flux[k], 1, pressure, 1, flux[k], 1);
+            }
+        }
+        else
+        {
+            ASSERTL0(false, "Invalid vector index.");
+        }
+        */
     }
 
     /**
@@ -676,13 +721,13 @@ namespace Nektar
      * @param temperature  The resulting temperature \f$ T \f$.
      */
     void CompressibleFlowSystem::GetTemperature(
-        Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD,             NekDouble  > &pressure,
-        Array<OneD,             NekDouble  > &temperature)
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+        Array<OneD,                         NekDouble  > &pressure,
+        Array<OneD,                         NekDouble  > &temperature)
     {
         for (int i = 0; i < m_fields[0]->GetTotPoints(); ++i)
         {
-            temperature[i] = pressure[i]/(physfield[0][i]*m_gasConstant);
+            temperature[i] = pressure[i] / (physfield[0][i] * m_gasConstant);
         }
     }
     
@@ -700,7 +745,7 @@ namespace Nektar
     {
         for (int i = 0; i < m_fields[0]->GetTotPoints(); ++i)
         {
-            soundspeed[i] = sqrt(m_gamma*pressure[i]/physfield[0][i]);
+            soundspeed[i] = sqrt(m_gamma * pressure[i] / physfield[0][i]);
         }
     }
     
@@ -728,6 +773,37 @@ namespace Nektar
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vdiv(npts, mach, 1, soundspeed,   1, mach, 1);
+    }
+    
+    /**
+     * @brief Compute the dynamic viscosity using the Sutherland's law 
+     * \f$ \mu = \mu_star * (T / T_star)^3/2 * (T_star + 110) / (T + 110) \f$,
+     * where:   \mu_star = 1.7894 * 10^-5 Kg / (m * s)
+     *          T_star   = 288.15 K
+     * 
+     * @param physfield    Input physical field.
+     * @param mu           The resulting dynamic viscosity.
+     */
+    void CompressibleFlowSystem::GetDynamicViscosity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+             Array<OneD,                    NekDouble  > &mu)
+    {
+        const int npts    = m_fields[0]->GetTotPoints();
+        const int mu_star = 0.00001794;
+        const int T_star  = 288.15;
+        Vmath::Zero(npts, mu, 1);
+        
+        Array<OneD, NekDouble > pressure   (npts, 0.0);
+        Array<OneD, NekDouble > temperature(npts, 0.0);
+        
+        GetPressure(physfield, pressure);
+        GetTemperature(physfield, pressure, temperature);
+        
+        for (int i = 0; i < npts; ++i)
+        {
+            mu[i] = mu_star * pow((temperature[i] / T_star), 1.5) * 
+                    (T_star + 110) / (temperature[i] + 110);
+        }
     }
     
     /**

@@ -316,7 +316,7 @@ namespace Nektar
                 m_LIM = m_LIM/2.0;
             }
             
-            if (MaxNormDiff_q_qBar > 2.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
+            if (MaxNormDiff_q_qBar > 5.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
             {        
                 Min_MaxNormDiff_q_qBar = 1.0;
                 

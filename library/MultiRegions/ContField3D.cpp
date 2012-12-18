@@ -260,7 +260,7 @@ namespace Nektar
           {
               Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
               GlobalSolve(key,wsp,tmp);
-                GlobalToLocal(tmp,outarray);
+              GlobalToLocal(tmp,outarray);
           }
       }
       
@@ -335,6 +335,8 @@ namespace Nektar
           GeneralMatrixOp(key,inout,outarray,eGlobal);
       }
       
+
+
       // Note inout contains initial guess and final output.
       void ContField3D::GlobalSolve(
           const GlobalLinSysKey              &key,
@@ -342,61 +344,16 @@ namespace Nektar
                 Array<OneD,       NekDouble> &inout,
           const Array<OneD, const NekDouble> &dirForcing)
       {
-          int i,j;
-          int bndcnt      = 0;
-          int nDir        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+          int NumDirBcs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
           int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
           
-          // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE IN THE SOLUTION
-          // ARRAY
-          NekDouble sign;
-          const Array<OneD,const int> &bndMap = 
-              m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+          // STEP 1: SET THE DIRICHLET DOFS TO THE RIGHT VALUE
+          //         IN THE SOLUTION ARRAY
+          v_ImposeDirichletConditions(inout);
           
-          Array<OneD, NekDouble> tmp(
-              m_locToGloMap->GetNumGlobalBndCoeffs(), 0.0);
-
-          // Fill in Dirichlet coefficients that are to be sent to other
-          // processors.
-          map<int, vector<pair<int, int> > > &extraDirDofs = 
-              m_locToGloMap->GetExtraDirDofs();
-          map<int, vector<pair<int, int> > >::iterator it;
-          for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
-          {
-              for (i = 0; i < it->second.size(); ++i)
-              {
-                  tmp[it->second.at(i).second] = 
-                      m_bndCondExpansions[it->first]->GetCoeffs()[
-                          it->second.at(i).first];
-              }
-          }
-          m_locToGloMap->UniversalAssembleBnd(tmp);
-          
-          // Now fill in all other Dirichlet coefficients.
-          for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
-          {
-              if(m_bndConditions[i]->GetBoundaryConditionType() == 
-                     SpatialDomains::eDirichlet)
-              {
-                  const Array<OneD,const NekDouble>& coeffs = 
-                      m_bndCondExpansions[i]->GetCoeffs();
-                  for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
-                  {
-                      sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(
-                          bndcnt);
-                      tmp[bndMap[bndcnt++]] = sign * coeffs[j];
-                  }
-              }
-              else
-              {
-                  bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
-              }
-          }
-          
-          Vmath::Vcopy(nDir, tmp, 1, inout, 1);
           
           // STEP 2: CALCULATE THE HOMOGENEOUS COEFFICIENTS
-          if(contNcoeffs - nDir > 0)
+          if(contNcoeffs - NumDirBcs > 0)
           {
               GlobalLinSysSharedPtr LinSys = GetGlobalLinSys(key);
               LinSys->Solve(rhs,inout,m_locToGloMap,dirForcing);
@@ -448,6 +405,72 @@ namespace Nektar
       }
       
       
+      void ContField3D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+      {
+          int i,j;
+          int bndcnt      = 0;
+          int nDir        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+          int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+          
+          NekDouble sign;
+          const Array<OneD,const int> &bndMap = 
+              m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsMap();
+          
+          Array<OneD, NekDouble> tmp(
+              m_locToGloMap->GetNumGlobalBndCoeffs(), 0.0);
+
+          // Fill in Dirichlet coefficients that are to be sent to other
+          // processors.
+          map<int, vector<pair<int, int> > > &extraDirDofs = 
+              m_locToGloMap->GetExtraDirDofs();
+          map<int, vector<pair<int, int> > >::iterator it;
+          for (it = extraDirDofs.begin(); it != extraDirDofs.end(); ++it)
+          {
+              for (i = 0; i < it->second.size(); ++i)
+              {
+                  tmp[it->second.at(i).second] = 
+                      m_bndCondExpansions[it->first]->GetCoeffs()[
+                          it->second.at(i).first];
+              }
+          }
+          m_locToGloMap->UniversalAssembleBnd(tmp);
+          
+          // Now fill in all other Dirichlet coefficients.
+          for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+          {
+              if(m_bndConditions[i]->GetBoundaryConditionType() == 
+                     SpatialDomains::eDirichlet)
+              {
+                  const Array<OneD,const NekDouble>& coeffs = 
+                      m_bndCondExpansions[i]->GetCoeffs();
+                  for(j = 0; j < (m_bndCondExpansions[i])->GetNcoeffs(); ++j)
+                  {
+                      sign = m_locToGloMap->GetBndCondCoeffsToGlobalCoeffsSign(
+                          bndcnt);
+                      tmp[bndMap[bndcnt++]] = sign * coeffs[j];
+                  }
+              }
+              else
+              {
+                  bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
+              }
+          }
+          
+          Vmath::Vcopy(nDir, tmp, 1, outarray, 1);
+      }          
+
+      void ContField3D::v_LocalToGlobal(void)
+      {
+          m_locToGloMap->LocalToGlobal(m_coeffs, m_coeffs);
+      }
+
+      void ContField3D::v_GlobalToLocal(void)
+      {
+          m_locToGloMap->GlobalToLocal(m_coeffs, m_coeffs);
+      }
+      
+
+
       void ContField3D::v_HelmSolve(
                                     const Array<OneD, const NekDouble> &inarray,
                                     Array<OneD,       NekDouble> &outarray,
@@ -495,12 +518,11 @@ namespace Nektar
           
           if(flags.isSet(eUseGlobal))
           {
-              Vmath::Zero(contNcoeffs,outarray,1);
               GlobalSolve(key,wsp,outarray,dirForcing);
           }
           else
           {
-              Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
+              Array<OneD,NekDouble> tmp(contNcoeffs, 0.0);
               GlobalSolve(key,wsp,tmp,dirForcing);
               GlobalToLocal(tmp,outarray);
           }

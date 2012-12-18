@@ -1,4 +1,8 @@
-SET(CardiacEPSolverSource 
+SET(NEKTAR_SOLVER_CARDIAC_EP ON CACHE BOOL
+    "Build the Cardiac electrophysiology solver.")
+
+IF( NEKTAR_SOLVER_CARDIAC_EP )
+    SET(CardiacEPSolverSource 
        ./CardiacEPSolver.cpp
        ./EquationSystems/Monodomain.cpp
        ./EquationSystems/Bidomain.cpp
@@ -13,7 +17,15 @@ SET(CardiacEPSolverSource
        ./CellModels/TenTusscher06M.cpp
        ./CellModels/TenTusscher06Endo.cpp
        ./Filters/FilterCheckpointCellModel.cpp
-)
+       ./Stimuli/Stimulus.cpp
+       ./Stimuli/StimulusCircle.cpp
+       ./Stimuli/StimulusRect.cpp
+       ./Stimuli/Protocol.cpp
+       ./Stimuli/ProtocolSingle.cpp
+       ./Stimuli/ProtocolS1.cpp
+       ./Stimuli/ProtocolS1S2.cpp
+    )
 
-ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 
+    ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 
 			${CardiacEPSolverSource})
+ENDIF( NEKTAR_SOLVER_CARDIAC_EP )

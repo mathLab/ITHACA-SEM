@@ -80,6 +80,11 @@ namespace Nektar
          */
         void OutputGmsh::Process()
         {
+            if (m->verbose)
+            {
+                cout << "OutputGmsh: Writing file..." << endl;
+            }
+
             // Open the file stream.
             OpenStream();
             

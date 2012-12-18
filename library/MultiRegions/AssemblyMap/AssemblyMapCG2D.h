@@ -100,6 +100,7 @@ namespace Nektar
                                        int          &firstNonDirGraphVertID,
                                        int          &nExtraDirichlet,
                                        BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
+                                       set<int> &extraDirVerts,
                                        const bool checkIfSystemSingular = false,
                                        int mdswitch = 1,
                                        bool doInteriorMap = false);

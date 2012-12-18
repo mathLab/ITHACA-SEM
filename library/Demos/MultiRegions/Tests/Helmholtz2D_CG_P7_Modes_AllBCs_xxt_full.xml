@@ -244,22 +244,22 @@
         </VARIABLES>
 
         <BOUNDARYREGIONS>
-            <B ID="0"> C[2] </B>
-            <B ID="1"> C[3] </B>
+            <B ID="0"> C[2-10] </B>
+            <!--<B ID="1"> C[3] </B>
             <B ID="2"> C[4] </B>
             <B ID="3"> C[5] </B>
             <B ID="4"> C[6] </B>
             <B ID="5"> C[7] </B>
             <B ID="6"> C[8] </B>
             <B ID="7"> C[9] </B>
-            <B ID="8"> C[10] </B>
+            <B ID="8"> C[10] </B>-->
         </BOUNDARYREGIONS>
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
                 <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
             </REGION>
-            <REGION REF="1">
+            <!--<REGION REF="1">
                 <R VAR="u" VALUE="sin(PI*x)*sin(PI*y)-PI*sin(PI*x)*cos(PI*y)"
                     PRIMCOEFF="1" />
             </REGION>
@@ -286,7 +286,7 @@
             </REGION>
             <REGION REF="8">
                 <D VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
-            </REGION>
+            </REGION>-->
         </BOUNDARYCONDITIONS>
 
         <FUNCTION NAME="Forcing">

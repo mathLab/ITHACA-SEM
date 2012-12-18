@@ -511,8 +511,8 @@
     <CONDITIONS>
 
         <PARAMETERS>
-			<P> TimeStep       = 1e-4               </P> 
-            <P> FinTime        = 0.025                </P>
+	  <P> TimeStep       = 1e-4               </P> 
+          <P> FinTime        = 0.025                </P>
             <P> NumSteps       = FinTime/TimeStep   </P>
             <P> IO_CheckSteps  = NumSteps*50        </P>
             <P> IO_InfoSteps   = 500                </P>
@@ -520,6 +520,7 @@
             <P> omega          = 2*PI/T             </P>
             <P> rho            = 1.021E-03          </P>
             <P> pext           = 0.0                </P> 
+
             <P> A1             = 5.983              </P> 
             <P> A2             = 5.147              </P> 
             <P> A3             = 1.219              </P> 
@@ -1569,7 +1570,7 @@
             <E VAR="beta[31]" VALUE="1567" />
             <E VAR="beta[32]" VALUE="806" />
             <E VAR="beta[33]" VALUE="569" />
-            <E VAR="beta[34]" VALUE="227" />
+            <E VAR="beta[34]" LINEARVARYING VALUE="227" />
             <E VAR="beta[35]" VALUE="566" />
             <E VAR="beta[36]" VALUE="278" />
             <E VAR="beta[37]" VALUE="1181" />

@@ -67,6 +67,11 @@ namespace Nektar
             vector<int> tmp, tets;
             vector<double> pts;
 
+            if (m->verbose)
+            {
+                cout << "InputSwan: Start reading file..." << endl;
+            }
+
             m->expDim = 3;
             m->spaceDim = 3;
             

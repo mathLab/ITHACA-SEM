@@ -571,7 +571,12 @@ namespace Nektar
          */
         inline VertexComponentSharedPtr MeshGraph::GetVertex(int id)
         {
-            return m_vertSet[id];
+            VertexComponentSharedPtr returnval;
+            VertexMap::iterator x = m_vertSet.find(id);
+            ASSERTL0(x != m_vertSet.end(),
+                     "Vertex " + boost::lexical_cast<string>(id)
+                     + " not found.");
+            return x->second;
         }
 
 

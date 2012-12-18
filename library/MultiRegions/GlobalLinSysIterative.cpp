@@ -62,6 +62,11 @@ namespace Nektar
                                     m_tolerance,
                                     NekConstants::kNekIterativeTol);
 
+            LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
+            m_root = (vComm->GetRank())? false : true;
+
+            m_verbose = (vSession->DefinesCmdLineArgument("verbose"))? true :false;
+
             std::string successiveRhs;
             vSession->LoadSolverInfo("SuccessiveRHS",  successiveRhs );
             try
@@ -118,7 +123,6 @@ namespace Nektar
                 // applying plain Conjugate Gradient
                 DoConjugateGradient(nGlobal, pInput, pOutput, plocToGloMap, nDir);
             }
-            //std::cout << "CG iterations made = " << m_totalIterations << std::endl << std::endl;
         }
 
 
@@ -382,8 +386,13 @@ namespace Nektar
             NekDouble alpha, beta, rho, rho_new, mu, eps, bb_inv, min_resid;
             Array<OneD, NekDouble> vExchange(3);
 
-            // Initialise with zero as the initial guess.
+            // Initialise with input initial guess.
             r = in;
+            // zero homogeneous out array ready for solution updates
+            // Should not be earlier in case input vector is same as
+            // output and above copy has been peformed
+            Vmath::Zero(nNonDir,tmp = pOutput + nDir,1);
+
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
             v_DoMatrixMultiply(w_A, s_A);
             k = 0;
@@ -405,6 +414,7 @@ namespace Nektar
 
             vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
 
+            m_totalIterations = 0;
             // If input vector is zero, set zero output and skip solve.
             if (vExchange[0] < NekConstants::kNekZeroTol)
             {
@@ -420,11 +430,12 @@ namespace Nektar
             bb_inv    = 1.0/vExchange[2];
             min_resid = bb_inv;
 
+
             // Continue until convergence
             while (true)
             {
-                ASSERTL0(k < 20000,
-                         "Exceeded maximum number of iterations (20000)");
+                ASSERTL0(k < 5000,
+                         "Exceeded maximum number of iterations (5000)");
 
                 // Compute new search direction p_k, q_k
                 p   = w   + beta  * p;
@@ -469,6 +480,13 @@ namespace Nektar
                 // test if norm is within tolerance
                 if (eps*bb_inv < m_tolerance * m_tolerance)
                 {
+                    if(m_verbose)
+                    {
+                        if(m_root)
+                        {
+                            std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (eps = " << sqrt(eps) << ")"<< std::endl;
+                        }
+                    }
                     break;
                 }
                 min_resid = min(min_resid, eps);

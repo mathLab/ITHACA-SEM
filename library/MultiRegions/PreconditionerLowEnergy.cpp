@@ -792,7 +792,6 @@ namespace Nektar
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
 
-
             DNekMatSharedPtr    m_RS;
             DNekMatSharedPtr    m_RSRT;
 
@@ -1778,6 +1777,73 @@ namespace Nektar
 	{
 	    return m_RTBlk;
 	}
+
+        /**
+         * \brief Set up the transformed block  matrix system
+         *
+         * Sets up a block elemental matrix in which each of the block matrix is
+         * the low energy equivalent
+         * i.e. \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{T}\f$
+         */     
+        DNekScalBlkMatSharedPtr& PreconditionerLowEnergy::
+        v_TransformationSchurCompl(int offset)
+	{
+            boost::shared_ptr<MultiRegions::ExpList> 
+                expList=((m_linsys.lock())->GetLocMat()).lock();
+         
+            StdRegions::StdExpansionSharedPtr locExpansion;                
+            locExpansion = expList->GetExp(offset);
+            int nbdry=locExpansion->NumBndryCoeffs();   
+            int m_coeffs=locExpansion->GetNcoeffs();
+            int nint=m_coeffs-nbdry;
+
+            DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
+            DNekScalMatSharedPtr m_S1=loc_mat->GetBlock(0,0);
+
+            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transmatrixmap;
+            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transposedtransmatrixmap;
+            transmatrixmap[StdRegions::eTetrahedron]=m_transformationMatrix[0];
+            transmatrixmap[StdRegions::ePrism]=m_transformationMatrix[1];
+            transposedtransmatrixmap[StdRegions::eTetrahedron]=m_transposedTransformationMatrix[0];
+            transposedtransmatrixmap[StdRegions::ePrism]=m_transposedTransformationMatrix[1];
+
+            DNekScalMat &S1 = (*m_S1);
+            
+            int nRow=S1.GetRows();
+            NekDouble zero = 0.0;
+            NekDouble one  = 1.0;
+            MatrixStorage storage = eFULL;
+            
+            DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
+            DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
+            
+            StdRegions::ExpansionType eType=
+                (expList->GetExp(offset))->DetExpansionType();
+            
+            //transformation matrices
+            DNekScalMat &R = (*(transmatrixmap[eType]));
+            DNekScalMat &RT = (*(transposedtransmatrixmap[eType]));
+            
+            //create low energy matrix
+            DNekMat &RS1 = (*m_RS1);
+            DNekMat &S2 = (*m_S2);
+                
+            //setup S2
+            RS1=R*S1;
+            S2=RS1*RT;
+
+            DNekScalBlkMatSharedPtr returnval;
+            unsigned int exp_size[] = {nbdry, nint};
+            int nblks = 2;
+            returnval = MemoryManager<DNekScalBlkMat>::
+                AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
+            NekDouble factor = 1.0;
+
+	    return returnval;
+	}
+
+
+
 
     }
 }

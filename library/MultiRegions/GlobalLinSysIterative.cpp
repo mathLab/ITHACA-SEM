@@ -481,6 +481,7 @@ namespace Nektar
                 // test if norm is within tolerance
                 if (eps*bb_inv < m_tolerance * m_tolerance)
                 {
+                    cout<<"iteration: "<<k<<endl;
                     if(m_verbose)
                     {
                         if(m_root)

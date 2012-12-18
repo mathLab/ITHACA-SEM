@@ -321,8 +321,9 @@ namespace Nektar
 
                     if( nIntDofs  && ((!dirForcCalculated) && (atLastLevel)) )
                     {
+                        //perform and additional multiplicity multiply?
                         pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
-                        V_LocBnd = BinvD*F_Int+ S1*V_LocBnd;
+                        V_LocBnd = BinvD*F_Int+S1*V_LocBnd;
                     }
                     else if((!dirForcCalculated) && (atLastLevel))
                     {
@@ -341,7 +342,7 @@ namespace Nektar
                     F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
 
                     NekVector<NekDouble> fml(nLocBndDofs,0.0);
-                    NekVector<NekDouble> fMultVector(nGlobBndDofs,1.0);
+                    NekVector<NekDouble> fMultVector(nGlobBndDofs,0.0);
 
                     pLocToGloMap->GlobalToLocalBnd(fMultVector,fml);
                     pLocToGloMap->AssembleBnd(fml,fMultVector);

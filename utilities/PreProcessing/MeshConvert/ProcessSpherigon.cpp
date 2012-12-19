@@ -87,6 +87,8 @@ namespace Nektar
         {
             config["N"] = ConfigOption(false, "8",
                 "Number of points to add to face edges.");
+            config["surf"] = ConfigOption(false, "-1",
+                "Tag identifying surface to process.");
         }
       
         /**
@@ -195,7 +197,8 @@ namespace Nektar
 
         /**
          * @brief Generate a set of approximate vertex normals to a surface
-         * represented as a hybrid triangular/quadrilateral mesh.
+         * represented by line segments in 2D and a hybrid
+         * triangular/quadrilateral mesh in 3D.
          * 
          * This routine approximates the true vertex normals to a surface by
          * averaging the normals of all edges/faces which connect to the
@@ -215,10 +218,11 @@ namespace Nektar
             {
                 ElementSharedPtr e = el[i];
                 
-                // Ensure that element is either a triangle or quad.
-                ASSERTL0(e->GetConf().e == eTriangle || 
+                // Ensure that element is a line, triangle or quad.
+                ASSERTL0(e->GetConf().e == eLine         ||
+                         e->GetConf().e == eTriangle     || 
                          e->GetConf().e == eQuadrilateral,
-                         "Spherigon expansions must be either triangles or "
+                         "Spherigon expansions must be lines, triangles or "
                          "quadrilaterals.");
                 
                 // Calculate normal for this element.
@@ -227,10 +231,24 @@ namespace Nektar
                     e->GetVertex(e->GetConf().e == eQuadrilateral ? 3 : 2)
                 };
                 
-                Node v1 = *(node[1]) - *(node[0]);
-                Node v2 = *(node[2]) - *(node[0]);
                 Node n;
-                UnitCrossProd(v1, v2, n);
+
+                if (m->spaceDim == 3)
+                {
+                    // Create two tangent vectors and take unit cross product.
+                    Node v1 = *(node[1]) - *(node[0]);
+                    Node v2 = *(node[2]) - *(node[0]);
+                    UnitCrossProd(v1, v2, n);
+                }
+                else
+                {
+                    // Calculate gradient vector and invert.
+                    Node dx  = *(node[1]) - *(node[0]);
+                    dx      /= sqrt(dx.abs2());
+                    n.x      = -dx.y;
+                    n.y      = dx.x;
+                    n.z      = 0;
+                }
                 
                 // Insert face normal into vertex normal list or add to existing
                 // value.
@@ -249,7 +267,8 @@ namespace Nektar
             }
             
             // Normalize resulting vectors.
-            for (nIt = m->vertexNormals.begin(); nIt != m->vertexNormals.end(); ++nIt)
+            for (nIt  = m->vertexNormals.begin();
+                 nIt != m->vertexNormals.end  (); ++nIt)
             {
                 Node &n = m->vertexNormals[nIt->first];
                 n /= sqrt(n.abs2());
@@ -288,6 +307,34 @@ namespace Nektar
                 vector<int> t;
                 t.push_back(0);
                 
+                // Construct list of spherigon edges/faces from a tag.
+                int surfTag = config["surf"].as<int>();
+                if (surfTag != -1)
+                {
+                    m->spherigonFaces.clear();
+                    for (int i = 0; i < m->element[m->expDim].size(); ++i)
+                    {
+                        ElementSharedPtr el = m->element[m->expDim][i];
+                        for (int j = 0; j < el->GetFaceCount(); ++j)
+                        {
+                            int bl = el->GetBoundaryLink(j);
+                            if (bl == -1)
+                            {
+                                continue;
+                            }
+                            
+                            ElementSharedPtr bEl  = m->element[m->expDim-1][bl];
+                            vector<int>      tags = bEl->GetTagList();
+
+                            if (find(tags.begin(), tags.end(), surfTag) !=
+                                tags.end())
+                            {
+                                m->spherigonFaces.insert(make_pair(i, j));
+                            }
+                        }
+                    }
+                }
+                
                 if (m->spherigonFaces.size() == 0)
                 {
                     cerr << "WARNING: Spherigon faces have not been defined -- "
@@ -295,13 +342,12 @@ namespace Nektar
                 }
                 
                 for (it  = m->spherigonFaces.begin();
-                     it != m->spherigonFaces.end(); ++it)
+                     it != m->spherigonFaces.end  (); ++it)
                 {
                     FaceSharedPtr f = m->element[m->expDim][it->first]->GetFace(
                         it->second);
                     vector<NodeSharedPtr> nodes = f->vertexList;
-                    ElementType eType = 
-                        nodes.size() == 3 ? eTriangle : eQuadrilateral;
+                    ElementType eType = (ElementType)(nodes.size()-1);
                     ElmtConfig conf(eType, 1, false, false);
                     
                     // Create 2D element.

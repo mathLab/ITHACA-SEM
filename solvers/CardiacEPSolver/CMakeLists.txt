@@ -20,6 +20,7 @@ IF( NEKTAR_SOLVER_CARDIAC_EP )
        ./Stimuli/Stimulus.cpp
        ./Stimuli/StimulusCircle.cpp
        ./Stimuli/StimulusRect.cpp
+       ./Stimuli/StimulusPoint.cpp
        ./Stimuli/Protocol.cpp
        ./Stimuli/ProtocolSingle.cpp
        ./Stimuli/ProtocolS1.cpp
@@ -28,4 +29,6 @@ IF( NEKTAR_SOLVER_CARDIAC_EP )
 
     ADD_SOLVER_EXECUTABLE(CardiacEPSolver solvers-extra 
 			${CardiacEPSolverSource})
+
+    ADD_SUBDIRECTORY(Utilities)
 ENDIF( NEKTAR_SOLVER_CARDIAC_EP )

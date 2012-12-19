@@ -1434,6 +1434,11 @@ namespace Nektar
         {
             m_geometricInfo.clear();
 
+            if (!geometry)
+            {
+                return;
+            }
+
             TiXmlElement *geometricInfoElement = 
                 geometry->FirstChildElement("GEOMINFO");
 

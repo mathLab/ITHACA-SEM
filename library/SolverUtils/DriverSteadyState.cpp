@@ -313,10 +313,10 @@ namespace Nektar
                 cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
                 
                 //m_LIM = m_LIM/10.0;
-                m_LIM = m_LIM/2.0;
+                m_LIM = m_LIM/5.0;
             }
             
-            if (MaxNormDiff_q_qBar > 5.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
+            if (MaxNormDiff_q_qBar > 2.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
             {        
                 Min_MaxNormDiff_q_qBar = 1.0;
                 

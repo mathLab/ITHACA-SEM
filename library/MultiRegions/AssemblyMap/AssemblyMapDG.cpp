@@ -515,33 +515,45 @@ namespace Nektar
                     {
                         switch(locSegExp->GetBasisType(0))
                         {
-                        case LibUtilities::eModified_A:
-                            // reverse vertex order
-                            m_localToGlobalBndMap[cnt] = gid + 1;
-                            m_localToGlobalBndMap[cnt+1] = gid;
-                            for(k = 2; k < order_e; ++k)
+                            case LibUtilities::eModified_A:
                             {
-                                m_localToGlobalBndMap[k+cnt] = gid + k;
-                            }
+                                // reverse vertex order
+                                m_localToGlobalBndMap[cnt]   = gid + 1;
+                                m_localToGlobalBndMap[cnt+1] = gid;
+                                for (k = 2; k < order_e; ++k)
+                                {
+                                    m_localToGlobalBndMap[k+cnt] = gid + k;
+                                }
 
-                            // negate odd modes
-                            for(k = 3; k < order_e; k+=2)
+                                // negate odd modes
+                                for(k = 3; k < order_e; k+=2)
+                                {
+                                    m_localToGlobalBndSign[cnt+k] = -1.0;
+                                }
+                                break;
+                            }
+                            case LibUtilities::eGLL_Lagrange:
                             {
-                                m_localToGlobalBndSign[cnt+k] = -1.0;
-                            }
-
-
-                            break;
-                        case LibUtilities::eGLL_Lagrange:
-                            // reverse  order
-                            for(k = 0; k < order_e; ++k)
+                                // reverse  order
+                                for(k = 0; k < order_e; ++k)
+                                {
+                                    m_localToGlobalBndMap[cnt+order_e-k-1] = gid + k;
+                                }
+                                break;
+                            }   
+                            case LibUtilities::eGauss_Lagrange:
                             {
-                                m_localToGlobalBndMap[cnt+order_e-k-1] = gid + k;
+                                // reverse  order
+                                for(k = 0; k < order_e; ++k)
+                                {
+                                    m_localToGlobalBndMap[cnt+order_e-k-1] = gid + k;
+                                }
+                                break;
                             }
-                            break;
-                        default:
-                            ASSERTL0(false,"Boundary type not permitted");
-
+                            default:
+                            {
+                                ASSERTL0(false,"Boundary type not permitted");
+                            }
                         }
                     }
                     

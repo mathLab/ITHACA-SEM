@@ -679,12 +679,15 @@ namespace Nektar
             // Maybe a different techique for the smoothing require
             // implementation for modal basis.
 
-            ASSERTL0((*m_exp)[0]->GetBasisType(0)
-                            == LibUtilities::eGLL_Lagrange,
+            ASSERTL0((*m_exp)[0]->GetBasisType(0) 
+                     == LibUtilities::eGLL_Lagrange ||
+                     (*m_exp)[0]->GetBasisType(0) 
+                     == LibUtilities::eGauss_Lagrange,
                      "Smoothing is currently not allowed unless you are using "
                      "a nodal base for efficiency reasons. The implemented "
                      "smoothing technique requires the mass matrix inversion "
-                     "which is trivial just for GLL_LAGRANGE_SEM expansions.");
+                     "which is trivial just for GLL_LAGRANGE_SEM and "
+                     "GAUSS_LAGRANGE_SEMexpansions.");
         }
 
 

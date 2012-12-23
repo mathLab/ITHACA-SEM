@@ -55,13 +55,13 @@ namespace Nektar
             "Modified_C",
             "Fourier",
             "GLL_Lagrange",
+            "Gauss_Lagrange",
             "Legendre",
             "Chebyshev",
             "Monomial",
             "FourierSingleMode",
             "FourierHalfModeRe",
-            "FourierHalfModeIm",
-            "Gauss_Lagrange"
+            "FourierHalfModeIm"
         };
 
 

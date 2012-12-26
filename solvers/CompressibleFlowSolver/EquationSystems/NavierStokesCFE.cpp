@@ -119,10 +119,12 @@ namespace Nektar
         
         Array<OneD, Array<OneD, NekDouble> > advVel;
         Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
-        
+        Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables);
+
         for (i = 0; i < nvariables; ++i)
         {
-            outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);;
+            outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            inarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
         
         // Advection term in physical rhs form
@@ -133,8 +135,21 @@ namespace Nektar
             Vmath::Neg(npoints, outarrayAdv[i], 1);
         }
         
+        Array<OneD, NekDouble > pressure   (npoints, 0.0);
+        Array<OneD, NekDouble > temperature(npoints, 0.0);
+        
+        GetPressure(inarray, pressure);
+        GetTemperature(inarray, pressure, temperature);
+        
+        for (i = 0; i < nvariables-1; ++i)
+        {
+            Vmath::Vcopy(npoints, inarray[i], 1, inarrayDiff[i], 1);
+        }
+        Vmath::Vcopy(npoints, temperature, 1, inarrayDiff[nvariables-1], 1);
+
+        
         // Diffusion term in physical rhs form
-        m_diffusion->Diffuse(nvariables, m_fields, inarray, outarray);
+        m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarray);
         
         for (i = 0; i < nvariables; ++i)
         {

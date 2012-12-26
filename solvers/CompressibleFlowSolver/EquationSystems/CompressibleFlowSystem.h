@@ -129,23 +129,29 @@ namespace Nektar
             int                                               cnt,
             Array<OneD, Array<OneD, NekDouble> >             &physarray);
         void GetVelocityVector(
-            const Array<OneD, Array<OneD,       NekDouble> > &physfield,
-                  Array<OneD, Array<OneD,       NekDouble> > &velocity);
+            const Array<OneD,       Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,       Array<OneD,       NekDouble> >&velocity);
         void GetSoundSpeed(
-            const Array<OneD, Array<OneD,       NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &soundspeed);
+            const Array<OneD,       Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble>  &pressure,
+                  Array<OneD,                         NekDouble>  &soundspeed);
         void GetMach(
-                  Array<OneD, Array<OneD,       NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &soundspeed,
-                  Array<OneD,                   NekDouble>   &mach);
+                  Array<OneD,       Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble>  &soundspeed,
+                  Array<OneD,                         NekDouble>  &mach);
         void GetTemperature(
-                  const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                         NekDouble>   &pressure,
-                  Array<OneD,                         NekDouble>   &temperature);
+            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble>  &pressure,
+                  Array<OneD,                         NekDouble>  &temperature);
+        void GetPressure(
+            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble>  &pressure);
+        void GetDynamicViscosity(
+            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble  >&mu);
         void GetStdVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,                   NekDouble>   &stdV);
+            const Array<OneD, const Array<OneD,       NekDouble> >&inarray,
+                  Array<OneD,                         NekDouble>  &stdV);
       
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
@@ -172,12 +178,7 @@ namespace Nektar
         }
       
     private:
-        void GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure);
-        void GetDynamicViscosity(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble  > &mu);
+
     };
 }
 #endif

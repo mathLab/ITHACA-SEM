@@ -129,7 +129,7 @@ namespace Nektar
                 string riemName;
                 
                 m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-                m_session->LoadSolverInfo("DiffusionType", diffName, "LDG");
+                m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 
                 m_advection = SolverUtils::GetAdvectionFactory()
                                             .CreateInstance(advName, advName);

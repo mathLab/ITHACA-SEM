@@ -5,6 +5,7 @@ SET(SOLVER_UTILS_SOURCES
   Advection/AdvectionWeakDG.cpp
   Diffusion/Diffusion.cpp
   Diffusion/DiffusionLDG.cpp
+  Diffusion/DiffusionLDGNS.cpp
   Driver.cpp
   DriverArnoldi.cpp
   DriverModifiedArnoldi.cpp
@@ -27,6 +28,7 @@ SET(SOLVER_UTILS_HEADERS
   Advection/AdvectionWeakDG.h
   Diffusion/Diffusion.h
   Diffusion/DiffusionLDG.h
+  Diffusion/DiffusionLDGNS.h
   Driver.h
   DriverArnoldi.h
   DriverModifiedArnoldi.h

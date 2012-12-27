@@ -119,11 +119,13 @@ namespace Nektar
         
         Array<OneD, Array<OneD, NekDouble> > advVel;
         Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
+        Array<OneD, Array<OneD, NekDouble> > inarrayTemp(nvariables);
         Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables);
 
         for (i = 0; i < nvariables; ++i)
         {
             outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            inarrayTemp[i] = Array<OneD, NekDouble>(npoints, 0.0);
             inarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
         
@@ -141,12 +143,20 @@ namespace Nektar
         GetPressure(inarray, pressure);
         GetTemperature(inarray, pressure, temperature);
         
-        for (i = 0; i < nvariables-1; ++i)
+        for (i = 1; i < nvariables-1; ++i)
         {
-            Vmath::Vcopy(npoints, inarray[i], 1, inarrayDiff[i], 1);
+            Vmath::Vdiv(npoints, 
+                        inarray[i], 1, 
+                        inarray[0], 1, 
+                        inarrayTemp[i], 1);
+        }
+        
+        Vmath::Vcopy(npoints, inarray[0], 1, inarrayDiff[0], 1);
+        for (i = 1; i < nvariables-1; ++i)
+        {
+            Vmath::Vcopy(npoints, inarrayTemp[i], 1, inarrayDiff[i], 1);
         }
         Vmath::Vcopy(npoints, temperature, 1, inarrayDiff[nvariables-1], 1);
-
         
         // Diffusion term in physical rhs form
         m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarray);

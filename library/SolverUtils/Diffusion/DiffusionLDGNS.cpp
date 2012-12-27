@@ -58,23 +58,20 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int i, j, k;
-            int nDimensions     = fields[0]->GetCoordim(0);
-            int nPointsTot      = fields[0]->GetTotPoints();
-            int nCoeffs         = fields[0]->GetNcoeffs();
-            int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
+            int i, j;
+            int nDimensions  = fields[0]->GetCoordim(0);
+            int nPoints      = fields[0]->GetTotPoints();
+            int nCoeffs      = fields[0]->GetNcoeffs();
+            int nTracePoints = fields[0]->GetTrace()->GetTotPoints();
             
-            Array<OneD, NekDouble>  qcoeffs(nCoeffs);
-            Array<OneD, NekDouble>  temp   (nCoeffs);
-            
+            Array<OneD, NekDouble>               qcoeffs(nCoeffs);            
+            Array<OneD, Array<OneD, NekDouble> > tmp_out(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nDimensions);
-            Array<OneD, Array<OneD, NekDouble> > 
-                                        temp_outarray(nConvectiveFields);
-            
+
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                                                            flux(nDimensions);
+                                                flux(nDimensions);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                                                            qfield(nDimensions);
+                                                qfield(nDimensions);            
             
             for (j = 0; j < nDimensions; ++j)
             {
@@ -85,25 +82,19 @@ namespace Nektar
                 
                 for (i = 0; i < nConvectiveFields; ++i)
                 {
-                    qfield[j][i] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                    flux[j][i]   = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                    qfield[j][i] = Array<OneD, NekDouble>(nPoints, 0.0);
+                    flux[j][i]   = Array<OneD, NekDouble>(nTracePoints, 0.0);
                 }
-                
-                fluxvector[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                fluxvector[j] = Array<OneD, NekDouble>(nPoints, 0.0);
             }
             
-            // Compute q_{\eta} and q_{\xi}
-            // Obtain numerical fluxes
+            // Compute scalar derivatives through a weak formulation
             v_NumFluxforScalar(fields, inarray, flux);
             
             for (j = 0; j < nDimensions; ++j)
             {
                 for (i = 0; i < nConvectiveFields; ++i)
-                {
-                    // Get the ith component of the  flux vector in the 
-                    // physical space
-                    //m_fluxVector(i, j, inarray, fluxvector);                    
-                    
+                {                    
                     // Calculate the i^th value of (\grad_i \phi, F)
                     v_WeakAdvectionGreensDivergenceForm(fields, 
                                                         inarray, 
@@ -113,42 +104,37 @@ namespace Nektar
                     fields[i]->AddTraceIntegral(flux[j][i], qcoeffs);
                     fields[i]->SetPhysState(false);
                     fields[i]->MultiplyByElmtInvMass(qcoeffs, qcoeffs);
-                    fields[i]->BwdTrans(qcoeffs, qfield[j][i]);
+                    fields[i]->BwdTrans(qcoeffs, qfield[j][i]);  
                     
-                    m_fluxVector(i, j, qfield[i], fluxvector);                    
+                    m_fluxVector(i, j, inarray, qfield[j], fluxvector);                    
                 }
+                
+                // Compute u from q_{\eta} and q_{\xi}
+                v_NumFluxforVector(fields, inarray, qfield, flux[j]);
             }
-            
-            
-            // Compute u from q_{\eta} and q_{\xi}
-            // Obtain numerical fluxes
-            v_NumFluxforVector(fields, inarray, qfield, flux[0]);
             
             for (i = 0; i < nConvectiveFields; ++i)
             {
                 // L = L(tan_eta) q_eta + L(tan_xi) q_xi
-                temp_outarray[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
-                temp             = Array<OneD, NekDouble>(nCoeffs, 0.0);
+                tmp_out[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
 
-
-                for (k = 0; k < nDimensions; ++k)
+                for (j = 0; j < nDimensions; ++j)
                 {
-                    Vmath::Vcopy(nPointsTot, 
-                                 qfield[k][i], 1, 
-                                 fluxvector[k], 1);
+                    Vmath::Vcopy(nPoints, 
+                                 qfield[j][i], 1, 
+                                 fluxvector[j], 1);
                 }
                     
                 v_WeakAdvectionGreensDivergenceForm(fields, 
                                                     fluxvector, 
-                                                    temp_outarray[i]);
+                                                    tmp_out[i]);
                 
                 // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
-                Vmath::Neg                      (nCoeffs, temp_outarray[i], 1);
-                fields[i]->AddTraceIntegral     (flux[0][i], temp_outarray[i]);
+                Vmath::Neg                      (nCoeffs, tmp_out[i], 1);
+                fields[i]->AddTraceIntegral     (flux[0][i], tmp_out[i]);
                 fields[i]->SetPhysState(false);
-                fields[i]->MultiplyByElmtInvMass(temp_outarray[i], 
-                                                 temp_outarray[i]);
-                fields[i]->BwdTrans             (temp_outarray[i], outarray[i]);
+                fields[i]->MultiplyByElmtInvMass(tmp_out[i], tmp_out[i]);
+                fields[i]->BwdTrans             (tmp_out[i], outarray[i]);
             }
         }
         
@@ -158,21 +144,21 @@ namespace Nektar
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             int i, j;
-            int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
+            int nTracePoints = fields[0]->GetTrace()->GetTotPoints();
             int nvariables      = fields.num_elements();
             int nDimensions     = fields[0]->GetCoordim(0);
             NekDouble time      = 0.0;
             
-            Array<OneD, NekDouble > Fwd     (nTracePointsTot);
-            Array<OneD, NekDouble > Bwd     (nTracePointsTot);
-            Array<OneD, NekDouble > Vn      (nTracePointsTot, 0.0);
-            Array<OneD, NekDouble > fluxtemp(nTracePointsTot, 0.0);
+            Array<OneD, NekDouble > Fwd     (nTracePoints);
+            Array<OneD, NekDouble > Bwd     (nTracePoints);
+            Array<OneD, NekDouble > Vn      (nTracePoints, 0.0);
+            Array<OneD, NekDouble > fluxtemp(nTracePoints, 0.0);
             
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
             for(i = 0; i < nDimensions; ++i)
             {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePointsTot);
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePoints);
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
             
@@ -223,7 +209,7 @@ namespace Nektar
                     // edge::eForward, uBwd \(\tan_{\xi}^Fwd \cdot \vec{n})
                     // edge::eBackward, uBwd \(\tan_{\xi}^Bwd \cdot \vec{n})
                     
-                    Vmath::Vmul(nTracePointsTot, 
+                    Vmath::Vmul(nTracePoints, 
                                 m_traceNormals[j], 1, 
                                 fluxtemp, 1, 
                                 uflux[j][i], 1);
@@ -246,9 +232,9 @@ namespace Nektar
             int nbnd = fields[var]->GetBndCondExpansions().num_elements();
             int Nfps, numBDEdge;
             int nDimensions     = fields[0]->GetCoordim(0);
-            int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
+            int nTracePoints = fields[0]->GetTrace()->GetTotPoints();
             
-            Array<OneD, NekDouble > uplus(nTracePointsTot);
+            Array<OneD, NekDouble > uplus(nTracePoints);
             
             fields[var]->ExtractTracePhys(physfield, uplus);
             for (i = 0; i < nbnd; ++i)
@@ -315,27 +301,27 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >               &qflux)
         {
             int i, j;
-            int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
+            int nTracePoints = fields[0]->GetTrace()->GetTotPoints();
             int nvariables      = fields.num_elements();
             int nDimensions     = fields[0]->GetCoordim(0);
             NekDouble time      = 0.0;
             
             NekDouble C11 = 1.0;
-            Array<OneD, NekDouble > Fwd(nTracePointsTot);
-            Array<OneD, NekDouble > Bwd(nTracePointsTot);
-            Array<OneD, NekDouble > Vn (nTracePointsTot, 0.0);
+            Array<OneD, NekDouble > Fwd(nTracePoints);
+            Array<OneD, NekDouble > Bwd(nTracePoints);
+            Array<OneD, NekDouble > Vn (nTracePoints, 0.0);
             
-            Array<OneD, NekDouble > qFwd     (nTracePointsTot);
-            Array<OneD, NekDouble > qBwd     (nTracePointsTot);
-            Array<OneD, NekDouble > qfluxtemp(nTracePointsTot, 0.0);
+            Array<OneD, NekDouble > qFwd     (nTracePoints);
+            Array<OneD, NekDouble > qBwd     (nTracePoints);
+            Array<OneD, NekDouble > qfluxtemp(nTracePoints, 0.0);
             
-            Array<OneD, NekDouble > uterm(nTracePointsTot);
+            Array<OneD, NekDouble > uterm(nTracePoints);
             
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
             for(i = 0; i < nDimensions; ++i)
             {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePointsTot);
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePoints);
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
             
@@ -343,11 +329,11 @@ namespace Nektar
             // qflux = \hat{q} \cdot u = q \cdot n - C_(11)*(u^+ - u^-)
             for (i = 0; i < nvariables; ++i)
             {
-                qflux[i] = Array<OneD, NekDouble> (nTracePointsTot, 0.0);
+                qflux[i] = Array<OneD, NekDouble> (nTracePoints, 0.0);
                 for (j = 0; j < nDimensions; ++j)
                 {
                     //  Compute Fwd and Bwd value of ufield of jth direction
-                    fields[i]->GetFwdBwdTracePhys(qfield[j][i],qFwd,qBwd);
+                    fields[i]->GetFwdBwdTracePhys(qfield[j][i], qFwd, qBwd);
                     
                     // if Vn >= 0, flux = uFwd, i.e.,
                     // edge::eForward, if V*n>=0 <=> V*n_F>=0, pick 
@@ -365,7 +351,7 @@ namespace Nektar
                                                   qBwd, qFwd, 
                                                   qfluxtemp);
                     
-                    Vmath::Vmul(nTracePointsTot, 
+                    Vmath::Vmul(nTracePoints, 
                                 m_traceNormals[j], 1, 
                                 qfluxtemp, 1, 
                                 qfluxtemp, 1);
@@ -373,16 +359,16 @@ namespace Nektar
                     // Generate Stability term = - C11 ( u- - u+ )
                     fields[i]->GetFwdBwdTracePhys(ufield[i], Fwd, Bwd);
                     
-                    Vmath::Vsub(nTracePointsTot, 
+                    Vmath::Vsub(nTracePoints, 
                                 Fwd, 1, Bwd, 1, 
                                 uterm, 1);
                     
-                    Vmath::Smul(nTracePointsTot, 
+                    Vmath::Smul(nTracePoints, 
                                 -1.0 * C11, uterm, 1, 
                                 uterm, 1);
                     
                     // Flux = {Fwd, Bwd} * (nx, ny, nz) + uterm * (nx, ny)
-                    Vmath::Vadd(nTracePointsTot, 
+                    Vmath::Vadd(nTracePoints, 
                                 uterm, 1, 
                                 qfluxtemp, 1, 
                                 qfluxtemp, 1);
@@ -390,8 +376,8 @@ namespace Nektar
                     // Imposing weak boundary condition with flux
                     if (fields[0]->GetBndCondExpansions().num_elements())
                     {
-                        WeakPenaltyforVector(fields, 
-                                             i, j, 
+                        WeakPenaltyforVector(fields,
+                                             i, j,
                                              qfield[j][i], 
                                              qfluxtemp, 
                                              C11,
@@ -401,7 +387,7 @@ namespace Nektar
                     // q_hat \cdot n = (q_xi \cdot n_xi) or (q_eta \cdot n_eta)
                     // n_xi = n_x * tan_xi_x + n_y * tan_xi_y + n_z * tan_xi_z
                     // n_xi = n_x * tan_eta_x + n_y * tan_eta_y + n_z*tan_eta_z
-                    Vmath::Vadd(nTracePointsTot, 
+                    Vmath::Vadd(nTracePoints, 
                                 qfluxtemp, 1, 
                                 qflux[i], 1, 
                                 qflux[i], 1);
@@ -425,21 +411,21 @@ namespace Nektar
             NekDouble                                          C11,
             NekDouble                                          time)
         {
+            int numBDEdge, Nfps;
             int i, j, e, npoints, id1, id2;
             int nbnd = fields[var]->GetBndCondExpansions().num_elements();
-            int numBDEdge, Nfps;
-            int nDimensions     = fields[0]->GetCoordim(0);
-            int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
+            int nDimensions  = fields[0]->GetCoordim(0);
+            int nTracePoints = fields[0]->GetTrace()->GetTotPoints();
             
-            Array<OneD, NekDouble > uterm(nTracePointsTot);
-            Array<OneD, NekDouble > qtemp(nTracePointsTot);
+            Array<OneD, NekDouble > uterm(nTracePoints);
+            Array<OneD, NekDouble > qtemp(nTracePoints);
             int cnt = 0;
             
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
             for(i = 0; i < nDimensions; ++i)
             {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePointsTot);
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePoints);
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
             

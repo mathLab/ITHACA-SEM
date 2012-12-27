@@ -114,7 +114,8 @@ namespace Nektar
         void GetQViscousFluxVector(
             const int                                         i,
             const int                                         j, 
-            const Array<OneD, Array<OneD, NekDouble> >       &physfield, 
+            const Array<OneD, Array<OneD, NekDouble> >       &physfield,
+                  Array<OneD, Array<OneD, NekDouble> >       &derivatives,
                   Array<OneD, Array<OneD, NekDouble> >       &flux);
         void WallBoundary(
             int                                               bcRegion,

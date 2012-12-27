@@ -54,7 +54,8 @@ namespace Nektar
             const int, 
             const int, 
             const Array<OneD, Array<OneD, NekDouble> >&,
-            Array<OneD, Array<OneD, NekDouble> >&)> DiffusionFluxVecCB;
+                  Array<OneD, Array<OneD, NekDouble> >&,
+                  Array<OneD, Array<OneD, NekDouble> >&)> DiffusionFluxVecCB;
         
         class Diffusion
         {
@@ -103,9 +104,9 @@ namespace Nektar
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
             {
-                m_fluxVector = boost::bind(func, obj, _1, _2, _3, _4);
+                m_fluxVector = boost::bind(func, obj, _1, _2, _3, _4, _5);
             }
-            
+                        
             inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
             {
                 m_riemann = riemann;

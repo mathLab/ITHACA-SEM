@@ -119,7 +119,7 @@ namespace Nektar
                     {
                         // Get the ith component of the  flux vector in the 
                         // physical space
-                        m_fluxVector(i, j, inarray, fluxvector);                    
+                        m_fluxVector(i, j, inarray, fluxvector, fluxvector);                    
                     }
                     
                     // Calculate the i^th value of (\grad_i \phi, F)

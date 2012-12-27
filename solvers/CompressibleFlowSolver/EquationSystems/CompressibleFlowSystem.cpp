@@ -609,9 +609,9 @@ namespace Nektar
         const int i, 
         const int j,
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> > &derivatives,
               Array<OneD, Array<OneD, NekDouble> > &flux)
     {
-        /*
         int k;
         int nq = m_fields[0]->GetTotPoints();
         NekDouble lambda = -0.66666;
@@ -633,6 +633,7 @@ namespace Nektar
             GetPressure(physfield, pressure);
             GetDynamicViscosity(physfield, mu);
 
+            Vmath::Smul(nq, 2.0, mu, 1, mu, 1);
             Vmath::Sadd(nq, lambda, mu, 1, tmp_mu, 1);
             
             for (k = 0; k < m_expdim; ++k)
@@ -659,7 +660,6 @@ namespace Nektar
         {
             ASSERTL0(false, "Invalid vector index.");
         }
-        */
     }
 
     /**

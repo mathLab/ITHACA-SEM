@@ -618,7 +618,7 @@ namespace Nektar
                                   accelerationTerm,    1);
             }
         }
-
+        
         // Adding acceleration term to HOPBCs
         Vmath::Svtvp(cnt, -1.0/m_timestep,
                           accelerationTerm,  1,
@@ -871,12 +871,12 @@ namespace Nektar
                 
                 // buinding up the curl of V adding the components
                 Vmath::Vsub(m_HBC[1][j],Vxy,1,Uyy,1,Qx,1);
-                Vmath::Vsub(m_HBC[1][j],Qx,1,Uzz,1,Qx,1);
-                Vmath::Vadd(m_HBC[1][j],Qx,1,Wxz,1,Qx,1);
+                Vmath::Vsub(m_HBC[1][j],Qx ,1,Uzz,1,Qx,1);
+                Vmath::Vadd(m_HBC[1][j],Qx ,1,Wxz,1,Qx,1);
                 
                 Vmath::Vsub(m_HBC[1][j],Wyz,1,Vzz,1,Qy,1);
-                Vmath::Vsub(m_HBC[1][j],Qy,1,Vxx,1,Qy,1);
-                Vmath::Vadd(m_HBC[1][j],Qy,1,Uxy,1,Qy,1);
+                Vmath::Vsub(m_HBC[1][j],Qy ,1,Vxx,1,Qy,1);
+                Vmath::Vadd(m_HBC[1][j],Qy ,1,Uxy,1,Qy,1);
 		
                 // getting the advective term
                 Nu = N[0] + m_HBC[2][j];
@@ -1385,7 +1385,7 @@ namespace Nektar
             // m_HBC[3][j] contains the element offset in the boundary expansion
             // m_HBC[4][j] contains the trace ID on the element j
             // m_HBC[5][j] contains the pressure bc ID
-            // m_HBC[6][j] contains the elment ids of the assocuated plane k_c (ex. k=0 k_c=1; k=1 k_c=0; k=3 k_c=4)
+            // m_HBC[6][j] contains the elment ids of the associated plane k_c (ex. k=0 k_c=1; k=1 k_c=0; k=3 k_c=4)
             // m_HBC[7][j] contains the associated elments physical offset (k and k_c are the real and the complex plane)
             // m_HBC[8][j] contains the plane number
             // m_HBC[9][j] coefficients offset used to locate the acceleration
@@ -1435,17 +1435,17 @@ namespace Nektar
                     {
                         for(int i = 0; i < exp_size_per_plane; ++i,cnt++)
                         {
-                            m_HBC[0][j] = m_pressureBCtoElmtID[cnt];                 
+                            m_HBC[0][j] = m_pressureBCtoElmtID[cnt];   
                             m_elmt      = m_fields[0]->GetExp(m_HBC[0][j]);
-                            m_HBC[1][j] = m_elmt->GetTotPoints();                    
-                            m_HBC[2][j] = m_fields[0]->GetPhys_Offset(m_HBC[0][j]);  
-                            m_HBC[3][j] = i+k*exp_size_per_plane;                    
-                            m_HBC[4][j] = m_pressureBCtoTraceID[cnt];                
+                            m_HBC[1][j] = m_elmt->GetTotPoints();         
+                            m_HBC[2][j] = m_fields[0]->GetPhys_Offset(m_HBC[0][j]);
+                            m_HBC[3][j] = i+k*exp_size_per_plane;       
+                            m_HBC[4][j] = m_pressureBCtoTraceID[cnt];      
                             m_HBC[5][j] = n;
                             m_HBC[8][j] = k;
-                            m_HBC[9][j] = coeffs_offset[n] + coeff_count[n];
-                            coeff_count[n] = coeff_count[n] 
-                                          + m_elmt->GetEdgeNcoeffs(m_HBC[4][j]);
+                            //m_HBC[9][j] = coeffs_offset[n] + coeff_count[n];
+                            m_HBC[9][j] = coeff_count[n];
+                            coeff_count[n] += m_elmt->GetEdgeNcoeffs(m_HBC[4][j]);
                             
                             if(m_SingleMode)
                             {

@@ -2067,25 +2067,19 @@ namespace Nektar
             }
 
         }
+        
+        /// Extract the data in fielddata into the coeffs
+        void ExpList::ExtractDataToCoeffs(
+                                   SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                   std::vector<NekDouble> &fielddata,
+                                   std::string &field,
+                                   Array<OneD, NekDouble> &coeffs)
+        {
+            v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
+        }
 
-        //Extract the data in fielddata into the m_coeff list
-        void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
-        {
-            v_ExtractDataToCoeffs(fielddef,fielddata,field,m_coeffs);
-        }
-		
-        //3D-Base Flow (implementation in the homogeneous classes)
-        void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D)
-        {
-            ASSERTL0(false, "This method is not defined or valid for this class type");
-        }
-        
+
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
-        {
-            ExtractElmtDataToCoeffs(fielddef,fielddata,field,coeffs);
-        }
-        
-        void ExpList::ExtractElmtDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {     	
             int i;
             int offset = 0;

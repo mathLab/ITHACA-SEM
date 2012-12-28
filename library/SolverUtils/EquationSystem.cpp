@@ -752,20 +752,11 @@ namespace Nektar
                         }
                     }
                     ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
-                    if(FieldDef[i]->m_numHomogeneousDir)
-                    {
-                        m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                         FieldDef[i]->m_fields[idx],
-                                                         vCoeffs);
-                    }
-                    // Force nonhomgeneous extraction if base flow is not homogeneous
-                    else
-                    {
-                        m_fields[0]->ExtractElmtDataToCoeffs(FieldDef[i], 
-                                                             FieldData[i],
-                                                             FieldDef[i]->m_fields[idx],
-                                                             vCoeffs);
-                    }
+
+                    
+                    m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                                                     FieldDef[i]->m_fields[idx],
+                                                     vCoeffs);
                 }
                 m_fields[0]->BwdTrans(vCoeffs, pArray);
 #endif
@@ -1201,7 +1192,8 @@ namespace Nektar
                                                   "m_boundaryconditions differs")).c_str()); 
 #endif  
                     m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i], 
-                                                   FieldDef[i]->m_fields[j]);
+                                                   FieldDef[i]->m_fields[j],
+                                                   m_base[j]->UpdateCoeffs());
                 }
     	    	m_base[j]->BwdTrans(m_base[j]->GetCoeffs(), 
                                     m_base[j]->UpdatePhys());    
@@ -1816,7 +1808,8 @@ namespace Nektar
                                            "m_boundaryconditions differs"));
 
                     pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                    FieldDef[i]->m_fields[j]);
+                                                    FieldDef[i]->m_fields[j],
+                                                    pFields[j]->UpdateCoeffs());
                 }
                 pFields[j]->BwdTrans(pFields[j]->GetCoeffs(),
                                      pFields[j]->UpdatePhys());
@@ -1852,7 +1845,8 @@ namespace Nektar
                 ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
 
                 pField->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                            FieldDef[i]->m_fields[idx]);
+                                            FieldDef[i]->m_fields[idx],
+                                            pField->UpdateCoeffs());
             }
             pField->BwdTrans(pField->GetCoeffs(), pField->UpdatePhys());
         }

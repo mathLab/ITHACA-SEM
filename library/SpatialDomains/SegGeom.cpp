@@ -310,23 +310,23 @@ namespace Nektar
         void SegGeom::v_GenGeomFactors(
                 const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
         {
-            if (m_geomFactors.get())
+            if (m_geomFactorsState != ePtsFilled)
             {
-                return;
+                SpatialDomains::GeomType gType = eRegular;
+                const SpatialDomains::GeomType kDeformedType = eDeformed;
+
+                SegGeom::v_FillGeom();
+
+                if(m_xmap[0]->GetBasisNumModes(0)!=2)
+                {
+                    gType = eDeformed;
+                }
+
+                m_geomFactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(gType,
+                                                             m_coordim, m_xmap, tbasis);
+
+                m_geomFactorsState = ePtsFilled;
             }
-
-            SpatialDomains::GeomType gType = eRegular;
-            const SpatialDomains::GeomType kDeformedType = eDeformed;
-
-            SegGeom::v_FillGeom();
-
-            if(m_xmap[0]->GetBasisNumModes(0)!=2)
-            {
-                gType = eDeformed;
-            }
-
-            m_geomFactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(gType,
-                                                         m_coordim, m_xmap, tbasis);
         }
 
 

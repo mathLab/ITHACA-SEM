@@ -310,6 +310,11 @@ namespace Nektar
         void SegGeom::v_GenGeomFactors(
                 const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
         {
+            if (m_geomFactors.get())
+            {
+                return;
+            }
+
             SpatialDomains::GeomType gType = eRegular;
             const SpatialDomains::GeomType kDeformedType = eDeformed;
 

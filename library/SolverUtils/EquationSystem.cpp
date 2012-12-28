@@ -735,7 +735,8 @@ namespace Nektar
                 std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
-
+                Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
+                
                 m_graph->Import(filename,FieldDef,FieldData);
                 
                 int idx = -1;
@@ -1180,6 +1181,8 @@ namespace Nektar
       	    // Copy data to m_velocity
     	    for(int j = 0; j < nvar; ++j)
     	    {
+                Vmath::Zero(m_base[j]->GetNcoeffs(), m_base[j]->UpdateCoeffs(),1);
+
                 for(int i=0; i<FieldDef.size(); ++i)
                 {
 // turned off so it can be used in DiffusionReaction solver where need 
@@ -1800,6 +1803,8 @@ namespace Nektar
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
             {
+                Vmath::Zero(pFields[j]->GetNcoeffs(),pFields[j]->UpdateCoeffs(),1);
+                
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     ASSERTL1(FieldDef[i]->m_fields[j] == m_session->GetVariable(j),
@@ -1831,6 +1836,8 @@ namespace Nektar
 
             m_graph->Import(infile,FieldDef,FieldData);
             int idx = -1;
+
+            Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
 
             for(int i = 0; i < FieldDef.size(); ++i)
             {
@@ -1871,7 +1878,8 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
         
             m_graph->Import(infile,FieldDef,FieldData);
-        
+            Vmath::Zero(coeffs.num_elements(),coeffs,1);
+
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)
             {

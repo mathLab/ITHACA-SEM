@@ -433,9 +433,6 @@ int main(int argc, char *argv[])
 
                 Exp1[j]->BwdTrans(Exp1[j]->GetCoeffs(),Exp1[j]->UpdatePhys());
 
-
-
-
             }
             else if(HalfModePlot)
             {

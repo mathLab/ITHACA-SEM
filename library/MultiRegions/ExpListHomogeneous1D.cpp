@@ -657,10 +657,6 @@ namespace Nektar
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
             std::vector<unsigned int> fieldDefHomoZids;
             
-            
-            // Zero field initially 
-            Vmath::Zero(coeffs.num_elements(),coeffs,1);
-
             // Build map of plane IDs lying on this processor.
             std::map<int,int> homoZids;
             for (i = 0; i < m_planes.num_elements(); ++i)
@@ -698,20 +694,20 @@ namespace Nektar
                 offset += datalen;
             }
 
+            
+            // Determine mapping from element ids to location in expansion list.
+            map<int, int> ElmtID_to_ExpID;
+            for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
+            {
+                ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+            }
+
             if(i == fielddef->m_fields.size())
             {
-                cout << "Field "<< field<< "not found in data file. Setting to zero" 
-                     << endl;
-
+                cout << "Field "<< field<< "not found in data file. "  << endl;
             }
             else
             {
-                // Determine mapping from element ids to location in expansion list.
-                map<int, int> ElmtID_to_ExpID;
-                for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
-                {
-                    ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
-                }
                 
                 int modes_offset = 0;
                 int planes_offset = 0;
@@ -730,20 +726,21 @@ namespace Nektar
                     
                     for(n = 0; n < nzmodes; ++n, offset += datalen)
                     {
+
                         std::map<int,int>::iterator it = homoZids.find(
-                        fieldDefHomoZids[n]);
-                    
+                                            fieldDefHomoZids[n]);
+                            
                         // Check to make sure this mode number lies in this field.
                         if (it == homoZids.end())
                         {
                             continue;
-                        }
-                    
+                        } 
+                        
                         planes_offset = it->second;
                         if(datalen == (*m_exp)[eid]->GetNcoeffs())
                         {
                             Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid]+planes_offset*ncoeffs_per_plane],1);
-                    }
+                        }
                         else // unpack data to new order
                         {
                             (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = coeffs + m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane);

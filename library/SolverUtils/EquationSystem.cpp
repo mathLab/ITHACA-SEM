@@ -1878,11 +1878,11 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
         
             m_graph->Import(infile,FieldDef,FieldData);
-            Vmath::Zero(coeffs.num_elements(),coeffs,1);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)
             {
+                Vmath::Zero(coeffs[j].num_elements(),coeffs[j],1);
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],

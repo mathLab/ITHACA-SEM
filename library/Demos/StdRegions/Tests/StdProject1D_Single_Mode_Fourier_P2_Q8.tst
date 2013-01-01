@@ -2,7 +2,7 @@
 <test>
     <description>StdProject1D Segment single mode Fourier basis P=2 Q=8</description>
     <executable>StdProject1D</executable>
-    <parameters>12 2 2</parameters>
+    <parameters>12 2 8</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-12">0</value>

@@ -526,8 +526,7 @@ namespace Nektar
 
                 }//end scope
                 break;
-                    
-			case eGauss_Lagrange:
+            case eGauss_Lagrange:
                 {
                     mode = m_bdata.data();
                     boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussGaussLegendre)];
@@ -537,7 +536,7 @@ namespace Nektar
                     {
                         for(q = 0; q < numPoints; ++q)
                         {
-                            mode[q] = Polylib::hglj(p, z[q], zp.data(), numModes, 0.0, 0.0);
+                            mode[q] = Polylib::hgj(p, z[q], zp.data(), numModes, 0.0, 0.0);
                         }
                     }
 					
@@ -547,8 +546,7 @@ namespace Nektar
 								m_dbdata.data(), numPoints);
 					
                 }//end scope
-				break;
-                    
+                break;
             case eFourier:
 
                 ASSERTL0(numModes%2==0, "Fourier modes should be a factor of 2");

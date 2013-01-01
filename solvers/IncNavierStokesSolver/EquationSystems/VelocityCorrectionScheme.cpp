@@ -111,7 +111,6 @@ namespace Nektar
             {
             case LibUtilities::eBackwardEuler:
             case LibUtilities::eBDFImplicitOrder1: 
-    
                 {
                     m_intSteps = 1;
                     m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
@@ -453,7 +452,7 @@ namespace Nektar
             }
         }
         
-        if(m_pressureHBCs.num_elements() > 0)
+        if(m_pressureHBCs[0].num_elements() > 0)
         {
             // Set pressure BCs
             timer.Start();
@@ -553,7 +552,7 @@ namespace Nektar
     void VelocityCorrectionScheme::SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, const NekDouble Aii_DT)
     {
         
-        if(m_pressureHBCs.num_elements() > 0)
+        if(m_pressureHBCs[0].num_elements() > 0)
         {
             Array<OneD, Array<OneD, NekDouble> > velfields(m_velocity.num_elements());
             
@@ -852,12 +851,12 @@ namespace Nektar
                 // Derivatives to build up the curl curl of the velocity
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_wavenumber,W,1,Wz,1);
+                Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_wavenumber[j],W,1,Wz,1);
                 
                 // x-components of vorticity curl
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vx,Vxy);
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Uy,Uyy);
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq,U,1,Uzz,1);
+                Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],U,1,Uzz,1);
                     
                 //x-component coming from the other plane
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Wz,Wxz);
@@ -865,7 +864,7 @@ namespace Nektar
                 // y-components of vorticity curl
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vx,Vxx);
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Uy,Uxy);
-                Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq,V,1,Vzz,1);
+                Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],V,1,Vzz,1);
                 
                 //y-component coming from the other plane
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Wz,Wyz);
@@ -1388,6 +1387,9 @@ namespace Nektar
             
             m_HBCdata = Array<OneD, HBCInfo>(HOPBCnumber);
             
+            m_wavenumber      = Array<OneD, NekDouble>(HOPBCnumber);
+            m_negWavenumberSq = Array<OneD, NekDouble>(HOPBCnumber);
+
             Array<OneD,int> coeffs_offset(PBndConds.num_elements(),0);
             Array<OneD,int> coeff_count(PBndConds.num_elements(),0);
 
@@ -1426,18 +1428,18 @@ namespace Nektar
                             
                             if(m_SingleMode)
                             {
-                                m_wavenumber      = -2*M_PI/m_LhomZ;       
-                                m_negWavenumberSq = -1.0*m_wavenumber*m_wavenumber;
+                                m_wavenumber[j]      = -2*M_PI/m_LhomZ;       
+                                m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
                             }
                             else if(m_HalfMode || m_MultipleModes)
                             {
-                                m_wavenumber      = 2*M_PI/m_LhomZ;       
-                                m_negWavenumberSq = -1.0*m_wavenumber*m_wavenumber;
+                                m_wavenumber[j]      = 2*M_PI/m_LhomZ;       
+                                m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
                             }
                             else
                             {
-                                m_wavenumber     = 2*M_PI*sign*(double(K))/m_LhomZ; 
-                                m_negWavenumberSq = -1.0*m_wavenumber*m_wavenumber;
+                                m_wavenumber[j]     = 2*M_PI*sign*(double(K))/m_LhomZ; 
+                                m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
                             }
                             
                             int assElmtID;

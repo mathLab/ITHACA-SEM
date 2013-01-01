@@ -690,6 +690,7 @@ namespace Nektar
                 EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(), pFunctionName);
                 pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(), pFields[i]->UpdateCoeffs());
             }
+
         }
 
 
@@ -752,14 +753,20 @@ namespace Nektar
                             idx = j;
                         }
                     }
-                    ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
 
-                    
-                    m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                     FieldDef[i]->m_fields[idx],
-                                                     vCoeffs);
+                    if(idx >= 0 )
+                    {
+                        m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                                                         FieldDef[i]->m_fields[idx],
+                                                         vCoeffs);
+                    }
+                    else
+                    {
+                        cout << "Field " + pFieldName + " not found." << endl;
+                    }
                 }
-                m_fields[0]->BwdTrans(vCoeffs, pArray);
+
+                m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
 #endif
             }
         }
@@ -1001,6 +1008,7 @@ namespace Nektar
                 
                 if (m_session->GetComm()->GetRank() == 0)
                 {
+                    
                     for (int i = 0; i < m_fields.num_elements(); ++i)
                     {
                         std::string varName = m_session->GetVariable(i);
@@ -1017,9 +1025,8 @@ namespace Nektar
                 {
                     Vmath::Zero(nq, m_fields[i]->UpdatePhys(), 1);
                     m_fields[i]->SetPhysState(true);
-                    m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
-                                                     m_fields[i]->UpdateCoeffs());
-
+                    Vmath::Zero(m_fields[i]->GetNcoeffs(), 
+                                m_fields[i]->UpdateCoeffs(), 1);
                     if (m_session->GetComm()->GetRank() == 0)
                     {
                         cout << "  - Field "    << m_session->GetVariable(i)

@@ -131,8 +131,8 @@ namespace Nektar
         
         StdRegions::StdExpansionSharedPtr m_elmt; // general standard element used to deaal with HOPBC calculations
         
-        NekDouble  m_wavenumber;                // wave number 2 pi /Lz
-        NekDouble  m_negWavenumberSq;          // minus Square of wavenumber
+        Array<OneD, NekDouble>  m_wavenumber;            // wave number 2 pi k /Lz
+        Array<OneD, NekDouble>  m_negWavenumberSq;      // minus Square of wavenumber
         
         /**  \brief This function evaluates the normal Neumann pressure
          *  boundary condition for the velocity correction scheme at the

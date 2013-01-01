@@ -245,11 +245,10 @@ namespace Nektar
             int cnt = 0, cnt1 = 0;
             Array<OneD, NekDouble> tmparray;
             
-			//spectral element FwdTrans plane by plane
+            //spectral element FwdTrans plane by plane
             for(int n = 0; n < m_planes.num_elements(); ++n)
             {
                 m_planes[n]->FwdTrans_IterPerExp(inarray+cnt, tmparray = outarray + cnt1);
-
                 cnt   += m_planes[n]->GetTotPoints();
                 cnt1  += m_planes[n]->GetNcoeffs();
             }
@@ -361,7 +360,7 @@ namespace Nektar
                 int num_points_per_plane = num_dofs/m_planes.num_elements();
                 int num_dfts_per_proc    = num_points_per_plane/m_comm->GetColumnComm()->GetSize() + (num_points_per_plane%m_comm->GetColumnComm()->GetSize() > 0);
                 
-                Array<OneD, NekDouble> fft_in(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),0.0);
+                Array<OneD, NekDouble> fft_in (num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),0.0);
                 Array<OneD, NekDouble> fft_out(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),0.0);
 		
                 if(Shuff)
@@ -735,6 +734,10 @@ namespace Nektar
                         {
                             continue;
                         } 
+                        if(m_comm->GetRank() == 1)
+                        {
+                            cout << "filling element " << eid << "on proc 1" << endl;
+                        }
                         
                         planes_offset = it->second;
                         if(datalen == (*m_exp)[eid]->GetNcoeffs())
@@ -944,30 +947,30 @@ namespace Nektar
                     NekDouble beta;
                     
                     //HalfMode
-					if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
-					{
-						beta = 2*M_PI*(m_transposition->GetK(0))/m_lhom;
-						
-						Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
-					}
-					else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
-					{
-						beta = -2*M_PI*(m_transposition->GetK(0))/m_lhom;
-						
-						Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
-					}
-					//Fully complex
-					else
-					{
-						for(int i = 0; i < m_planes.num_elements(); i++)
-						{
-							beta = -sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
-							
-							Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
-							
-							sign = -1.0*sign;
-						}
-					}
+                    if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
+                    {
+                        beta = 2*M_PI*(m_transposition->GetK(0))/m_lhom;
+			
+                        Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
+                    }
+                    else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
+                    {
+                        beta = -2*M_PI*(m_transposition->GetK(0))/m_lhom;
+			
+                        Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
+                    }
+                    //Fully complex
+                    else
+                    {
+                        for(int i = 0; i < m_planes.num_elements(); i++)
+                        {
+                            beta = -sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
+                            
+                            Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
+                            
+                            sign = -1.0*sign;
+                        }
+                    }
                     if(m_WaveSpace)
                     {
                         out_d = outarray;

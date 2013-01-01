@@ -2107,9 +2107,9 @@ namespace Nektar
                 // expansion list
                 map<int, int> ElmtID_to_ExpID;
                 // loop in reverse order so that in case where using
-                // and Homogeneous expansion it sets geometry ids to
+                // a Homogeneous expansion it sets geometry ids to
                 // first part of m_exp list. Otherwise will set to
-                // second (complex) expansiosn
+                // second (complex) expansion
                 for(i = (*m_exp).size()-1; i >=0; --i)
                 {
                     ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;

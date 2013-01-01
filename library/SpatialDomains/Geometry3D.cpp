@@ -345,7 +345,7 @@ namespace Nektar
        */
       const Geometry2DSharedPtr Geometry3D::v_GetFace(int i) const
       {
-          ASSERTL2((i >=0) && (i <= 4),"Edge id must be between 0 and 4");
+          ASSERTL2((i >=0) && (i <= 5),"Edge id must be between 0 and 4");
           return m_faces[i];
       }
 

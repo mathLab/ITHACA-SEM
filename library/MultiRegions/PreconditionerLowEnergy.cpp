@@ -1240,6 +1240,7 @@ namespace Nektar
                     (nmodes,nmodes,zero,storage);
 
                 tmp_mat=BlkMat->GetBlock(i,i);
+
                 tmp_mat->Invert();
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
@@ -1249,7 +1250,7 @@ namespace Nektar
             {
                 VertBlk->Invert();
             }
-
+            
             if (nNonDirEdges != 0)
             {
                 EdgeBlk->Invert();
@@ -1535,93 +1536,6 @@ namespace Nektar
             GloBlkMat->SetBlock
                 (2,2,Blktmp = MemoryManager<DNekScalMat>::AllocateSharedPtr
                  (one,FaceBlk));
-        }
-        
-        /**
-         * \brief Set up the transformed block  matrix system
-         *
-         * Sets up a block elemental matrix in which each of the block matrix is
-         * the low energy equivalent
-         * i.e. \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{T}\f$
-         */     
-        void PreconditionerLowEnergy::SetupLowEnergyTopLevel()
-        {
-            boost::shared_ptr<MultiRegions::ExpList> 
-                expList=((m_linsys.lock())->GetLocMat()).lock();
-
-	    int n;
-            int n_exp = expList->GetNumElmts();
-
-            const Array<OneD,const unsigned int>& nbdry_size
-                    = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
-            const Array<OneD,const unsigned int>& nint_size
-                    = m_locToGloMap->GetNumLocalIntCoeffsPerPatch();
-
-            // Setup Block Matrix systems
-            MatrixStorage blkmatStorage = eDIAGONAL;
-
-            m_schurCompl = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
-            m_BinvD      = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nint_size , blkmatStorage);
-            m_C          = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nint_size , nbdry_size, blkmatStorage);
-            m_invD       = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nint_size , nint_size , blkmatStorage);
-
-            //Variants of R matrices required for low energy preconditioning
-            m_RBlk      = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-            m_RTBlk      = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-            m_S1Blk      = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-
-            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transmatrixmap;
-            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transposedtransmatrixmap;
-            transmatrixmap[StdRegions::eTetrahedron]=m_transformationMatrix[0];
-            transmatrixmap[StdRegions::ePrism]=m_transformationMatrix[1];
-            transposedtransmatrixmap[StdRegions::eTetrahedron]=m_transposedTransformationMatrix[0];
-            transposedtransmatrixmap[StdRegions::ePrism]=m_transposedTransformationMatrix[1];
-
-            for(n = 0; n < n_exp; ++n)
-            {
-                DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
-                DNekScalMatSharedPtr tmp_mat;
-                DNekScalMatSharedPtr m_S1=loc_mat->GetBlock(0,0);
-                DNekScalMat &S1 = (*m_S1);
-
-                int nRow=S1.GetRows();
-                NekDouble zero = 0.0;
-                NekDouble one  = 1.0;
-                MatrixStorage storage = eFULL;
-
-                DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
-                DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
-
-                StdRegions::ExpansionType eType=
-                    (expList->GetExp(n))->DetExpansionType();
-
-                //transformation matrices
-                DNekScalMat &R = (*(transmatrixmap[eType]));
-                DNekScalMat &RT = (*(transposedtransmatrixmap[eType]));
-
-                //create low energy matrix
-                DNekMat &RS1 = (*m_RS1);
-                DNekMat &S2 = (*m_S2);
-
-                //setup S2
-                RS1=R*S1;
-                S2=RS1*RT;
-
-                m_schurCompl->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_S2));
-                m_BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
-                m_C         ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
-                m_invD      ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
-                m_S1Blk->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
-                m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
-                m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
-	    }
         }
 
   

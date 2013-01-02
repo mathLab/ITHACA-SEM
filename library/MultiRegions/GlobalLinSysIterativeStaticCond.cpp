@@ -283,7 +283,7 @@ namespace Nektar
                     F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
 
                     NekVector<NekDouble> fml(nLocBndDofs,0.0);
-                    NekVector<NekDouble> fMultVector(nGlobBndDofs,0.0);
+                    NekVector<NekDouble> fMultVector(nGlobBndDofs,1.0);
 
                     pLocToGloMap->GlobalToLocalBnd(fMultVector,fml);
                     pLocToGloMap->AssembleBnd(fml,fMultVector);
@@ -291,11 +291,20 @@ namespace Nektar
                     {
                         fMultVector[i]=1/fMultVector[i];
                     }
-                    
+
                     F_GlobBnd=F_GlobBnd*fMultVector;
+                    for(int i=0; i<nGlobBndDofs; ++i)
+                    {
+                        cout<<F_GlobBnd[i]<<endl;
+                    }
+
                     pLocToGloMap->GlobalToLocalBnd(F_GlobBnd,F_LocBnd);
+
                     F_LocBnd=R*F_LocBnd;
+
                     pLocToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
+
+
                 }
 		
       

@@ -173,6 +173,24 @@ namespace Nektar
 	}
 
         /**
+         * \brief Get block elemental transposed transformation matrix
+         * \f$\mathbf{R}^{T}\f$
+         */
+        DNekScalBlkMatSharedPtr Preconditioner::
+        v_TransformedSchurCompl(int offset)
+	{
+            boost::shared_ptr<MultiRegions::ExpList> 
+                expList=((m_linsys.lock())->GetLocMat()).lock();
+         
+            StdRegions::StdExpansionSharedPtr locExpansion;                
+            locExpansion = expList->GetExp(offset);
+
+            DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
+	    return loc_mat;
+	}
+
+
+        /**
          *  Performs global assembly of diagonal entries
          *  to global schur complement matrix.
          */

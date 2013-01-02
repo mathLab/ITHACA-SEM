@@ -367,9 +367,9 @@ namespace Nektar
                     t.Start();
                     
                     // Solve for difference from initial solution given inout;
-                    SolveLinearSystem(nGlobBndDofs, F, F, pLocToGloMap, nDirBndDofs);
+                    SolveLinearSystem(nGlobBndDofs, F, out, pLocToGloMap, nDirBndDofs);
                     // Add homogenoous solution to original vector 
-                    V_GlobHomBnd = V_GlobHomBnd + F_HomBnd;
+                    //V_GlobHomBnd = V_GlobHomBnd + F_HomBnd;
                     
                     t.Stop();
 

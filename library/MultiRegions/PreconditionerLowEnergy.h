@@ -166,8 +166,8 @@ namespace Nektar
             virtual const DNekScalBlkMatSharedPtr&
                 v_GetBlockTransposedTransformationMatrix() const;
 
-            virtual DNekScalBlkMatSharedPtr&
-                v_TransformationSchurCompl(int offset);
+            virtual DNekScalBlkMatSharedPtr
+                v_TransformedSchurCompl(int offset);
         };
     }
 }

@@ -1785,17 +1785,17 @@ namespace Nektar
          * the low energy equivalent
          * i.e. \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{T}\f$
          */     
-        DNekScalBlkMatSharedPtr& PreconditionerLowEnergy::
-        v_TransformationSchurCompl(int offset)
+        DNekScalBlkMatSharedPtr PreconditionerLowEnergy::
+        v_TransformedSchurCompl(int offset)
 	{
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
          
             StdRegions::StdExpansionSharedPtr locExpansion;                
             locExpansion = expList->GetExp(offset);
-            int nbdry=locExpansion->NumBndryCoeffs();   
-            int m_coeffs=locExpansion->GetNcoeffs();
-            int nint=m_coeffs-nbdry;
+            int nbnd=locExpansion->NumBndryCoeffs();   
+            int ncoeffs=locExpansion->GetNcoeffs();
+            int nint=ncoeffs-nbnd;
 
             DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
             DNekScalMatSharedPtr m_S1=loc_mat->GetBlock(0,0);
@@ -1809,13 +1809,12 @@ namespace Nektar
 
             DNekScalMat &S1 = (*m_S1);
             
-            int nRow=S1.GetRows();
             NekDouble zero = 0.0;
             NekDouble one  = 1.0;
             MatrixStorage storage = eFULL;
             
-            DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
-            DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
+            DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nbnd,nbnd,zero,storage);
+            DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nbnd,nbnd,zero,storage);
             
             StdRegions::ExpansionType eType=
                 (expList->GetExp(offset))->DetExpansionType();
@@ -1833,18 +1832,19 @@ namespace Nektar
             S2=RS1*RT;
 
             DNekScalBlkMatSharedPtr returnval;
-            unsigned int exp_size[] = {nbdry, nint};
+            DNekScalMatSharedPtr tmp_mat;
+            unsigned int exp_size[] = {nbnd, nint};
             int nblks = 2;
             returnval = MemoryManager<DNekScalBlkMat>::
                 AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
-            NekDouble factor = 1.0;
+
+            returnval->SetBlock(0,0,tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_S2));
+            returnval->SetBlock(0,1,tmp_mat = loc_mat->GetBlock(0,1));
+            returnval->SetBlock(1,0,tmp_mat = loc_mat->GetBlock(1,0));
+            returnval->SetBlock(1,1,tmp_mat = loc_mat->GetBlock(1,1));
 
 	    return returnval;
 	}
-
-
-
-
     }
 }
 

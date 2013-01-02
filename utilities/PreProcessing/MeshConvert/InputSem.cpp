@@ -77,10 +77,13 @@ namespace Nektar
          */
         void InputSem::Process()
         {
-            cerr << "Start reading InputSem..." << endl;
-            
             // Open the file stream.
             OpenStream();
+
+            if (m->verbose)
+            {
+                cout << "InputSem: Start reading file..." << endl;
+            }
 
             // Read through input file and populate the section map.
             map<string,streampos>::iterator it;

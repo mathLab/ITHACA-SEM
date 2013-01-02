@@ -660,11 +660,6 @@ namespace Nektar
 
             pNektar->LinkEndChild(vElmtGeometry);
 
-            // Write expansions data
-            if (pSession->DefinesElement("Nektar/Expansions"))
-            {
-                pNektar->LinkEndChild(new TiXmlElement(*pSession->GetElement("Nektar/Expansions")));
-            }
             if (pSession->DefinesElement("Nektar/Conditions"))
             {
                 std::map<int, int> vBndRegionIdList;
@@ -735,20 +730,19 @@ namespace Nektar
                 }
                 pNektar->LinkEndChild(vConditions);
             }
-            if (pSession->DefinesElement("Nektar/Filters"))
-            {
-                pNektar->LinkEndChild(new TiXmlElement(*pSession->GetElement("Nektar/Filters")));
-            }
-            // @todo: Extract subset of history points within this partition.
-            if (pSession->DefinesElement("Nektar/History"))
-            {
-                pNektar->LinkEndChild(new TiXmlElement(*pSession->GetElement("Nektar/History")));
-            }
-            if (pSession->DefinesElement("Nektar/GlobalOptimizationParameters"))
-            {
-                pNektar->LinkEndChild(new TiXmlElement(*pSession->GetElement("Nektar/GlobalOptimizationParameters")));
-            }
 
+            // Distribute other sections of the XML to each process as is.
+            TiXmlElement* vSrc = pSession->GetElement("Nektar")
+                                                    ->FirstChildElement();
+            while (vSrc)
+            {
+                std::string vName = boost::to_upper_copy(vSrc->ValueStr());
+                if (vName != "GEOMETRY" && vName != "CONDITIONS")
+                {
+                    pNektar->LinkEndChild(new TiXmlElement(*vSrc));
+                }
+                vSrc = vSrc->NextSiblingElement();
+            }
         }
 
     }

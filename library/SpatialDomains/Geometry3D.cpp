@@ -328,9 +328,9 @@ namespace Nektar
        */
       int Geometry3D::v_GetVid(const int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_verts.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_verts.size() - 1,
                    "Vertex ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_verts.num_elements()-1));
+                   boost::lexical_cast<string>(m_verts.size() - 1));
           return m_verts[i]->GetVid();
       }
 
@@ -339,9 +339,9 @@ namespace Nektar
        */
       const SegGeomSharedPtr Geometry3D::v_GetEdge(int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_edges.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_edges.size() - 1,
                    "Edge ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_edges.num_elements()-1));
+                   boost::lexical_cast<string>(m_edges.size() - 1));
           return m_edges[i];
       }
 
@@ -351,9 +351,9 @@ namespace Nektar
       inline StdRegions::Orientation Geometry3D::v_GetEorient(
           const int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_edges.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_edges.size() - 1,
                    "Edge ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_edges.num_elements()-1));
+                   boost::lexical_cast<string>(m_edges.size() - 1));
           return m_eorient[i];
       }
 
@@ -362,9 +362,9 @@ namespace Nektar
        */
       int Geometry3D::v_GetEid(int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_edges.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_edges.size() - 1,
                    "Edge ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_edges.num_elements()-1));
+                   boost::lexical_cast<string>(m_edges.size() - 1));
           return m_edges[i]->GetEid();
       }
 
@@ -382,9 +382,9 @@ namespace Nektar
        */
       StdRegions::Orientation Geometry3D::v_GetFaceOrient(const int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_faces.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_faces.size() - 1,
                    "Face ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_faces.num_elements()-1));
+                   boost::lexical_cast<string>(m_faces.size() - 1));
           return m_forient[i];
       }
 
@@ -393,9 +393,9 @@ namespace Nektar
        */
       int Geometry3D::v_GetFid(int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_faces.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_faces.size() - 1,
                    "Face ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_faces.num_elements()-1));
+                   boost::lexical_cast<string>(m_faces.size() - 1));
           return m_faces[i]->GetFid();
       }
 

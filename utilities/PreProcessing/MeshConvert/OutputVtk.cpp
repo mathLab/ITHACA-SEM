@@ -66,6 +66,11 @@ namespace Nektar
         
         void OutputVtk::Process()
         {
+            if (m->verbose)
+            {
+                cout << "OutputVtk: Writing file..." << endl;
+            }
+
             vtkPolyData *vtkMesh = vtkPolyData::New();
             vtkPoints *vtkPoints = vtkPoints::New();
             vtkCellArray *vtkPolys = vtkCellArray::New();

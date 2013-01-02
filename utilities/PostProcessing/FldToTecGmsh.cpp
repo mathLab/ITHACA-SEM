@@ -420,7 +420,8 @@ int main(int argc, char *argv[])
             {
 
                 Exp[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],
-                                            fielddef[i]->m_fields[j]);
+                                            fielddef[i]->m_fields[j],
+                                            Exp[j]->UpdateCoeffs());
             }
 
             if(SingleModePlot)
@@ -431,9 +432,6 @@ int main(int argc, char *argv[])
                 Vmath::Vcopy(dim,&Exp[j]->GetCoeffs()[0],1,&Exp1[j]->UpdateCoeffs()[dim],1);
 
                 Exp1[j]->BwdTrans(Exp1[j]->GetCoeffs(),Exp1[j]->UpdatePhys());
-
-
-
 
             }
             else if(HalfModePlot)

@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
         {  
             for(int i = 0; i < fielddata.size(); ++i)
             {
-                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j], fields[j]->UpdateCoeffs());
             } 
 
             //bwd plane 0
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
         {  	    
             for(int i = 0; i < fielddata.size(); ++i)
             {
-                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j], fields[j]->UpdateCoeffs());
             }             
             fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());      
         }

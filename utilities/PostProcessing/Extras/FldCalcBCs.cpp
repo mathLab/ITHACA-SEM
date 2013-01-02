@@ -202,7 +202,7 @@ cout<<"set ppp"<<endl;
 
         for(int i = 0; i < fielddata.size(); ++i)
         {        	
-            fields[0]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[0]->m_fields[0]);
+            fields[0]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[0]->m_fields[0], fields[0]->UpdateCoeffs());
         }        
    
         fields[0]->BwdTrans_IterPerExp(fields[0]->GetCoeffs(),fields[0]->UpdatePhys());
@@ -219,7 +219,7 @@ cout<<"hjhj"<<endl;
 
         for(int i = 0; i < fielddata.size(); ++i)
         {        	
-            fields[lastfield]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
+            fields[lastfield]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0], fields[lastfield]->UpdateCoeffs());
         }             
         fields[lastfield]->BwdTrans_IterPerExp(fields[lastfield]->GetCoeffs(),fields[lastfield]->UpdatePhys());       
 /*
@@ -238,7 +238,7 @@ cout<<"hjhj"<<endl;
         {  	       	    
             for(int i = 0; i < fielddata.size(); ++i)
             {
-                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j], fields[j]->UpdateCoeffs());
             }             
             fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());               
         }
@@ -275,7 +275,7 @@ cout<<"g="<<g<<"  coeff f0="<<fields[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1=
     	       	    
     for(int i = 0; i < streakdata.size(); ++i)
     {        	
-            streak->ExtractDataToCoeffs(streakdef[i],streakdata[i],streakdef[i]->m_fields[0]);
+        streak->ExtractDataToCoeffs(streakdef[i],streakdata[i],streakdef[i]->m_fields[0], streak->UpdateCoeffs());
     }             
     streak->BwdTrans(streak->GetCoeffs(),streak->UpdatePhys());
     int totpoints = fields[0]->GetPlane(0)->GetTotPoints();

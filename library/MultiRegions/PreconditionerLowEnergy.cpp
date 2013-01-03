@@ -124,6 +124,9 @@ namespace Nektar
                 ASSERTL0(0,"Unknown preconditioner");
                 break;
             }
+
+            CreateMultiplicityMap();
+
 	}
 
         /**
@@ -974,6 +977,17 @@ namespace Nektar
             BlkMat = MemoryManager<DNekBlkMat>
                     ::AllocateSharedPtr(n_blks, n_blks, blkmatStorage);
 
+            const Array<OneD,const unsigned int>& nbdry_size
+                    = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+
+            //Variants of R matrices required for low energy preconditioning
+            m_RBlk      = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+            m_RTBlk      = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+            m_S1Blk      = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+
             /* Here we loop over the expansion*/
             for(cnt=n=0; n < n_exp; ++n)
             {
@@ -1228,13 +1242,10 @@ namespace Nektar
                 //offset for the expansion
                 cnt+=offset;
 
-                //Variants of R matrices required for low energy preconditioning
-                /*m_RBlk      = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-                m_RTBlk      = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-                m_S1Blk      = MemoryManager<DNekScalBlkMat>
-                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);*/
+
+                m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
+                m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
+
 
 
 
@@ -1654,10 +1665,30 @@ namespace Nektar
          * energy basis i.e. \f$\overline{\mathbf{x}}=\mathbf{R}\mathbf{x}\f$.
          */
         void PreconditionerLowEnergy::v_DoTransformToLowEnergy(
-                const Array<OneD, NekDouble>& pInput,
-                      Array<OneD, NekDouble>& pOutput)
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
         {
+            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
+            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
 
+            NekVector<NekDouble> F_GlobBnd(nGlobBndDofs,pInput,eWrapper);
+            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,pOutput,
+                                          eWrapper);
+            
+            DNekScalBlkMat &R = *m_RBlk;
+
+            Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
+            NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
+            Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+            
+            Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), pInput.get(), m_map.get(), pLocal.get());
+            
+            F_LocBnd=R*F_LocBnd;
+            
+            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
+            
         }
 
         /**
@@ -1771,6 +1802,8 @@ namespace Nektar
             {
                 m_locToGloSignMult[i] = 1.0/vCounts[vMap[i]];
             }
+
+            //m_map = m_locToGloMap->GetLocalToGlobalBndMap();
 
         }
 

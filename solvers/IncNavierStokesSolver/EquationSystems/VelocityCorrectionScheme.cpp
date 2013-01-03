@@ -1390,20 +1390,13 @@ namespace Nektar
             m_wavenumber      = Array<OneD, NekDouble>(HOPBCnumber);
             m_negWavenumberSq = Array<OneD, NekDouble>(HOPBCnumber);
 
-            Array<OneD,int> coeffs_offset(PBndConds.num_elements(),0);
-            Array<OneD,int> coeff_count(PBndConds.num_elements(),0);
-
-            for(int n = 1 ; n < PBndConds.num_elements(); ++n)
-            {
-                coeffs_offset[n] = coeffs_offset[n-1]
-                                   + PBndExp[n-1]->GetNcoeffs();
-            }
-
+            int coeff_count = 0;
             int exp_size, exp_size_per_plane;
             int j=0;
             int K;
             NekDouble sign = -1.0;
             int cnt = 0;
+
             for(int k = 0; k < num_planes; k++)
             {
                 K = planes[k]/2;
@@ -1422,9 +1415,8 @@ namespace Nektar
                             m_HBCdata[j].m_bndElmtOffset = i+k*exp_size_per_plane;       
                             m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
                             m_HBCdata[j].m_bndryElmtID = n;
-                            //m_HBCdata[j].m_coeffOffset = coeffs_offset[n] + coeff_count[n];
-                            m_HBCdata[j].m_coeffOffset = coeff_count[n];
-                            coeff_count[n] += m_elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
+                            m_HBCdata[j].m_coeffOffset = coeff_count;
+                            coeff_count += m_elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
                             
                             if(m_SingleMode)
                             {

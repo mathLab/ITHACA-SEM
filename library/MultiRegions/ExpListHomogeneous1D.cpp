@@ -734,10 +734,6 @@ namespace Nektar
                         {
                             continue;
                         } 
-                        if(m_comm->GetRank() == 1)
-                        {
-                            cout << "filling element " << eid << "on proc 1" << endl;
-                        }
                         
                         planes_offset = it->second;
                         if(datalen == (*m_exp)[eid]->GetNcoeffs())

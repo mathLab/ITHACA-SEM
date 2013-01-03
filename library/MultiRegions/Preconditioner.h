@@ -71,6 +71,14 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
+	    inline void DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
+
+	    inline void DoTransformFromLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
+
    	    inline void InitObject();
 
             Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
@@ -125,27 +133,19 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
-            virtual const Array<OneD, const DNekScalMatSharedPtr>& v_GetTransformationMatrix(void) const;
+	    virtual void v_DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
 
-            virtual const Array<OneD, const DNekScalMatSharedPtr>& v_GetTransposedTransformationMatrix(void) const;
+	    virtual void v_DoTransformFromLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
 
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockTransformedSchurCompl() const;
-            
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockCMatrix() const;
-            
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockInvDMatrix() const;
-            
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockSchurCompl() const;
-        
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockTransformationMatrix() const;
-            
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockTransposedTransformationMatrix() const;
+            virtual const Array<OneD, const DNekScalMatSharedPtr>& 
+                v_GetTransformationMatrix(void) const;
+
+            virtual const Array<OneD, const DNekScalMatSharedPtr>& 
+                v_GetTransposedTransformationMatrix(void) const;
 
             static std::string lookupIds[];
             static std::string def;
@@ -163,7 +163,8 @@ namespace Nektar
         /**
          *
          */
-        inline const Array<OneD,const DNekScalMatSharedPtr>& Preconditioner::GetTransformationMatrix() const
+        inline const Array<OneD,const DNekScalMatSharedPtr>& 
+            Preconditioner::GetTransformationMatrix() const
         {
             return v_GetTransformationMatrix();
         }
@@ -171,57 +172,10 @@ namespace Nektar
         /**
          *
          */
-        inline const Array<OneD,const DNekScalMatSharedPtr>& Preconditioner::GetTransposedTransformationMatrix() const
+        inline const Array<OneD,const DNekScalMatSharedPtr>& 
+            Preconditioner::GetTransposedTransformationMatrix() const
         {
             return v_GetTransposedTransformationMatrix();
-        }
-
-        /**
-         *
-         */
-        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockTransformedSchurCompl() const
-        {
-            return v_GetBlockTransformedSchurCompl();
-        }
-           
-        /**
-         *
-         */ 
-        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockCMatrix() const
-        {
-            return v_GetBlockCMatrix();
-        }
-           
-        /**
-         *
-         */ 
-        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockInvDMatrix() const
-        {
-            return v_GetBlockInvDMatrix();
-        }
-           
-        /**
-         *
-         */ 
-        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockSchurCompl() const
-        {
-            return v_GetBlockSchurCompl();
-        }
-        
-        /**
-         *
-         */
-        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockTransformationMatrix() const
-        {
-            return v_GetBlockTransformationMatrix();
-        }
-
-        /**
-         *
-         */ 
-        inline const DNekScalBlkMatSharedPtr& Preconditioner::GetBlockTransposedTransformationMatrix() const
-        {
-            return v_GetBlockTransposedTransformationMatrix();
         }
 
         /**
@@ -237,11 +191,32 @@ namespace Nektar
          *
          */
         inline void Preconditioner::DoPreconditioner(
-                const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput)
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
         {
 	    v_DoPreconditioner(pInput,pOutput);
         }
+        
+        /**
+         *
+         */
+        inline void Preconditioner::DoTransformToLowEnergy(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+	    v_DoTransformToLowEnergy(pInput,pOutput);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoTransformFromLowEnergy(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+	    v_DoTransformFromLowEnergy(pInput,pOutput);
+        }
+        
 
     }
 }

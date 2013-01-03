@@ -293,10 +293,6 @@ namespace Nektar
                     }
 
                     F_GlobBnd=F_GlobBnd*fMultVector;
-                    for(int i=0; i<nGlobBndDofs; ++i)
-                    {
-                        cout<<F_GlobBnd[i]<<endl;
-                    }
 
                     pLocToGloMap->GlobalToLocalBnd(F_GlobBnd,F_LocBnd);
 
@@ -468,7 +464,7 @@ namespace Nektar
                 else
                 {
                     DNekScalBlkMatSharedPtr loc_mat = GlobalLinSys::v_GetStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
-                    //loc_mat = m_precon->TransformSchurCompl(m_expList.lock()->GetOffset_Elmt_Id(n));
+
                     DNekScalMatSharedPtr tmp_mat;
                     m_schurCompl->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
                     m_BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
@@ -527,39 +523,18 @@ namespace Nektar
 
             for(n = 0; n < n_exp; ++n)
             {
-                DNekScalBlkMatSharedPtr loc_mat = GlobalLinSys::v_GetStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
-                DNekScalMatSharedPtr tmp_mat;
-                DNekScalMatSharedPtr m_S1=loc_mat->GetBlock(0,0);
-                DNekScalMat &S1 = (*m_S1);
-
-                int nRow=S1.GetRows();
-                NekDouble zero = 0.0;
-                NekDouble one  = 1.0;
-                MatrixStorage storage = eFULL;
-
-                DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
-                DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nRow,nRow,zero,storage);
-
                 StdRegions::ExpansionType eType=
                     (m_expList.lock()->GetExp(n))->DetExpansionType();
 
-                //transformation matrices
-                DNekScalMat &R = (*(transmatrixmap[eType]));
-                DNekScalMat &RT = (*(transposedtransmatrixmap[eType]));
+                DNekScalMatSharedPtr tmp_mat;
+                DNekScalBlkMatSharedPtr loc_S1 = GlobalLinSys::v_GetStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
+                DNekScalBlkMatSharedPtr loc_schur = m_precon->TransformedSchurCompl(m_expList.lock()->GetOffset_Elmt_Id(n));
 
-                //create low energy matrix
-                DNekMat &RS1 = (*m_RS1);
-                DNekMat &S2 = (*m_S2);
-
-                //setup S2
-                RS1=R*S1;
-                S2=RS1*RT;
-
-                m_schurCompl->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_S2));
-                m_BinvD     ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,1));
-                m_C         ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,0));
-                m_invD      ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
-                m_S1Blk->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
+                m_schurCompl->SetBlock(n,n, tmp_mat = loc_schur->GetBlock(0,0));
+                m_BinvD     ->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(0,1));
+                m_C         ->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(1,0));
+                m_invD      ->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(1,1));
+                m_S1Blk->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(0,0));
                 m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
                 m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
 	    }

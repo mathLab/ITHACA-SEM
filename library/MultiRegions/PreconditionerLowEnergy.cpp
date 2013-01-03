@@ -974,6 +974,7 @@ namespace Nektar
             BlkMat = MemoryManager<DNekBlkMat>
                     ::AllocateSharedPtr(n_blks, n_blks, blkmatStorage);
 
+            /* Here we loop over the expansion*/
             for(cnt=n=0; n < n_exp; ++n)
             {
                 nel = expList->GetOffset_Elmt_Id(n);
@@ -1226,9 +1227,20 @@ namespace Nektar
                 }
                 //offset for the expansion
                 cnt+=offset;
+
+                //Variants of R matrices required for low energy preconditioning
+                /*m_RBlk      = MemoryManager<DNekScalBlkMat>
+                    ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+                m_RTBlk      = MemoryManager<DNekScalBlkMat>
+                    ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+                m_S1Blk      = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);*/
+
+
+
             }
 
-            BlkMat->SetBlock(0,0, VertBlk); //tmp_mat = MemoryManager<DNekMat>::AllocateSharedPtr(one,m_locMat));
+            BlkMat->SetBlock(0,0, VertBlk);
             
             int totblks=BlkMat->GetNumberOfBlockRows();
 
@@ -1635,62 +1647,35 @@ namespace Nektar
 	}
 
         /**
-         * \brief Get block elemental transformed schur complement matrix
-         * \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{t}\f$
+         * \brief transform the solution vector vector to low energy
+         *
+         * As the conjugate gradient system is solved for the low energy basis,
+         * the solution vector \f$\mathbf{x}\f$ must be transformed to the low
+         * energy basis i.e. \f$\overline{\mathbf{x}}=\mathbf{R}\mathbf{x}\f$.
          */
-        const DNekScalBlkMatSharedPtr& PreconditionerLowEnergy::
-        v_GetBlockTransformedSchurCompl() const
-	{
-	    return m_schurCompl;
-	}
+        void PreconditionerLowEnergy::v_DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                      Array<OneD, NekDouble>& pOutput)
+        {
+
+        }
 
         /**
-         * \brief Get block elemental \f$ C \f$ matrix.
+         * \brief transform the solution vector from low energy back to the
+         * original basis.
+         *
+         * After the conjugate gradient routine the output vector is in the low
+         * energy basis and must be trasnformed back to the original basis in
+         * order to get the correct solution out. the solution vector
+         * i.e. \f$\mathbf{x}=\mathbf{R^{T}}\mathbf{\overline{x}}\f$.
          */
-        const DNekScalBlkMatSharedPtr& PreconditionerLowEnergy::
-        v_GetBlockCMatrix() const
-	{
-	    return m_C;
-	}
+        void PreconditionerLowEnergy::v_DoTransformFromLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                      Array<OneD, NekDouble>& pOutput)
+        {
 
-        /**
-         * \brief Get Block elemental \f$ D^{-1} \f$ matrix.
-         */
-        const DNekScalBlkMatSharedPtr& PreconditionerLowEnergy::
-        v_GetBlockInvDMatrix() const
-	{
-	    return m_invD;
-	}
+        }
 
-
-        /**
-         * \brief Get block elemental (non-transformed) schur complement matrix
-         * \f$\mathbf{S}_{1}\f$
-         */
-        const DNekScalBlkMatSharedPtr& PreconditionerLowEnergy::
-        v_GetBlockSchurCompl() const
-	{
-	    return m_S1Blk;
-	}
-
-        /**
-         * \brief Get block elemental transformation matrix \f$\mathbf{R}\f$
-         */
-        const DNekScalBlkMatSharedPtr& PreconditionerLowEnergy::
-        v_GetBlockTransformationMatrix() const
-	{
-	    return m_RBlk;
-	}
-
-        /**
-         * \brief Get block elemental transposed transformation matrix
-         * \f$\mathbf{R}^{T}\f$
-         */
-        const DNekScalBlkMatSharedPtr& PreconditionerLowEnergy::
-        v_GetBlockTransposedTransformationMatrix() const
-	{
-	    return m_RTBlk;
-	}
 
         /**
          * \brief Set up the transformed block  matrix system
@@ -1710,10 +1695,12 @@ namespace Nektar
             int nbnd=locExpansion->NumBndryCoeffs();   
             int ncoeffs=locExpansion->GetNcoeffs();
             int nint=ncoeffs-nbnd;
-
+            
+            //This is the SC elemental matrix in the orginal basis (S1)
             DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
             DNekScalMatSharedPtr m_S1=loc_mat->GetBlock(0,0);
 
+            //Transformation matrices 
             map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transmatrixmap;
             map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transposedtransmatrixmap;
             transmatrixmap[StdRegions::eTetrahedron]=m_transformationMatrix[0];
@@ -1748,17 +1735,46 @@ namespace Nektar
             DNekScalBlkMatSharedPtr returnval;
             DNekScalMatSharedPtr tmp_mat;
             unsigned int exp_size[] = {nbnd, nint};
-            int nblks = 2;
+            int nblks = 1;
             returnval = MemoryManager<DNekScalBlkMat>::
                 AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
 
             returnval->SetBlock(0,0,tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_S2));
-            returnval->SetBlock(0,1,tmp_mat = loc_mat->GetBlock(0,1));
-            returnval->SetBlock(1,0,tmp_mat = loc_mat->GetBlock(1,0));
-            returnval->SetBlock(1,1,tmp_mat = loc_mat->GetBlock(1,1));
 
 	    return returnval;
 	}
+
+        /**
+         * Create the inverse multiplicity map.
+         */
+        void PreconditionerLowEnergy::CreateMultiplicityMap(void)
+        {
+            const Array<OneD, const int> &vMap
+                                    = m_locToGloMap->GetLocalToGlobalBndMap();
+            unsigned int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
+            unsigned int nEntries   = m_locToGloMap->GetNumLocalBndCoeffs();
+            unsigned int i,j;
+
+            // Count the multiplicity of each global DOF on this process
+            Array<OneD, NekDouble> vCounts(nGlobalBnd, 0.0);
+            for (i = 0; i < nEntries; ++i)
+            {
+                vCounts[vMap[i]] += 1.0;
+            }
+
+            // Get universal multiplicity by globally assembling counts
+            m_locToGloMap->UniversalAssembleBnd(vCounts);
+
+            // Construct a map of 1/multiplicity
+            m_locToGloSignMult = Array<OneD, NekDouble>(nEntries);
+            for (i = 0; i < nEntries; ++i)
+            {
+                m_locToGloSignMult[i] = 1.0/vCounts[vMap[i]];
+            }
+
+        }
+
+
     }
 }
 

@@ -114,6 +114,7 @@ namespace Nektar
             Array<OneD,DNekScalMatSharedPtr> m_transformationMatrix;
             Array<OneD,DNekScalMatSharedPtr> m_transposedTransformationMatrix;
 
+            Array<OneD, NekDouble>      m_locToGloSignMult;
 
 	private:
 
@@ -133,6 +134,8 @@ namespace Nektar
 
             void SetupLowEnergyTopLevel(void);
 
+            void CreateMultiplicityMap(void);
+
             SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
 
@@ -147,24 +150,14 @@ namespace Nektar
             
 	    virtual const Array<OneD,const DNekScalMatSharedPtr>& 
                 v_GetTransposedTransformationMatrix() const;
+            
+            virtual void v_DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockTransformedSchurCompl() const;
-            
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockCMatrix() const;
-            
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockInvDMatrix() const;
-            
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockSchurCompl() const;
-        
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockTransformationMatrix() const;
-            
-            virtual const DNekScalBlkMatSharedPtr&
-                v_GetBlockTransposedTransformationMatrix() const;
+            virtual void v_DoTransformFromLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
             virtual DNekScalBlkMatSharedPtr
                 v_TransformedSchurCompl(int offset);

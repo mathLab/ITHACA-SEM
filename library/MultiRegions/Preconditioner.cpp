@@ -86,12 +86,34 @@ namespace Nektar
 	}
 
 
-
+        /**
+         * \brief Apply a preconditioner to the conjugate gradient method
+         */ 
         void Preconditioner::v_DoPreconditioner(
                       const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput)
         {
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
+	}
+
+        /**
+         * \brief Transform from original basis to low energy basis
+         */ 
+        void Preconditioner::v_DoTransformToLowEnergy(
+                      const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput)
+        {
+            Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
+	}
+
+        /**
+         * \brief Transform from low energy basis to orignal basis
+         */ 
+        void Preconditioner::v_DoTransformFromLowEnergy(
+                      const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput)
+        {
+            Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
 	}
 
         /**
@@ -112,64 +134,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
             static Array<OneD,DNekScalMatSharedPtr> result;
             return result;
-	}
-
-        /**
-         * \brief Get block elemental transformed schur complement matrix
-         * \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{t}\f$
-         */
-        const DNekScalBlkMatSharedPtr& Preconditioner::
-        v_GetBlockTransformedSchurCompl() const
-	{
-	    return NullDNekScalBlkMatSharedPtr;
-	}
-
-        /**
-         * \brief Get block elemental \f$ C \f$ matrix.
-         */
-        const DNekScalBlkMatSharedPtr& Preconditioner::
-        v_GetBlockCMatrix() const
-	{
-	    return NullDNekScalBlkMatSharedPtr;
-	}
-        
-        /**
-         * \brief Get Block elemental \f$ D^{-1} \f$ matrix.
-         */
-        const DNekScalBlkMatSharedPtr& Preconditioner::
-        v_GetBlockInvDMatrix() const
-	{
-	    return NullDNekScalBlkMatSharedPtr;
-	}
-
-        
-        /**
-         * \brief Get block elemental (non-transformed) schur complement matrix
-         * \f$\mathbf{S}_{1}\f$
-         */
-        const DNekScalBlkMatSharedPtr& Preconditioner::
-        v_GetBlockSchurCompl() const
-	{
-	    return NullDNekScalBlkMatSharedPtr;
-	}
-
-        /**
-         * \brief Get block elemental transformation matrix \f$\mathbf{R}\f$
-         */
-        const DNekScalBlkMatSharedPtr& Preconditioner::
-        v_GetBlockTransformationMatrix() const
-	{
-	    return NullDNekScalBlkMatSharedPtr;
-        }
-
-        /**
-         * \brief Get block elemental transposed transformation matrix
-         * \f$\mathbf{R}^{T}\f$
-         */
-        const DNekScalBlkMatSharedPtr& Preconditioner::
-        v_GetBlockTransposedTransformationMatrix() const
-	{
-	    return NullDNekScalBlkMatSharedPtr;
 	}
 
         /**

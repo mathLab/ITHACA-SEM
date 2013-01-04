@@ -501,7 +501,8 @@ namespace Nektar
 			
                         //extraction of the 2D
                         m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                       FieldDef[i]->m_fields[s],true);
+                                                       FieldDef[i]->m_fields[s],
+                                                       m_base[j]->UpdateCoeffs());
                         
                     }
                     //Put zero on higher modes
@@ -522,7 +523,8 @@ namespace Nektar
                                                   "m_boundaryconditions differs")).c_str());
                     
                     m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                   FieldDef[i]->m_fields[j]);
+                                                   FieldDef[i]->m_fields[j],
+                                                   m_base[j]->UpdateCoeffs());
                 }
             }
             

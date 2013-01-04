@@ -710,50 +710,18 @@ namespace Nektar
                 v_AppendFieldData(fielddef,fielddata,coeffs);
             }
 
-            /// Extract the data in fielddata into the m_coeff list
-            void ExtractDataToCoeffs(
-                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                     std::vector<NekDouble> &fielddata,
-                                     std::string &field)
-            {
-                v_ExtractDataToCoeffs(fielddef,fielddata,field);
-            }
-
-
-            /// Extract the data in fielddata into the coeffs
-            void ExtractDataToCoeffs(
-                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                     std::vector<NekDouble> &fielddata,
-                                     std::string &field,
-                                     Array<OneD, NekDouble> &coeffs)
-            {
-                v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
-            }
-
 
             /** \brief Extract the data in fielddata into the coeffs
              * using the basic ExpList Elemental expansions rather
              * than planes in homogeneous case
              */ 
-            MULTI_REGIONS_EXPORT void ExtractElmtDataToCoeffs(
+            MULTI_REGIONS_EXPORT void ExtractDataToCoeffs(
                                      SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
                                      std::vector<NekDouble> &fielddata,
                                      std::string &field,
                                      Array<OneD, NekDouble> &coeffs);
 
 			
-			
-			//Extract data in fielddata into the m_coeffs_list for the 3D stability analysis (base flow is 2D)
-			void ExtractDataToCoeffs(
-                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                     std::vector<NekDouble> &fielddata,
-                                     std::string &field,
-									 bool BaseFlow3D)
-            {
-                v_ExtractDataToCoeffs(fielddef,fielddata,field,BaseFlow3D);
-            }
-			
-
             /// Returns a shared pointer to the current object.
             boost::shared_ptr<ExpList> GetSharedThisPtr()
             {
@@ -1133,14 +1101,9 @@ namespace Nektar
 
             virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
 
-            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field);
-
             virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field,
                                                Array<OneD, NekDouble> &coeffs);
 			
-            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D);
-            
-            
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,
                                             std::string var = "v");
             virtual void v_WriteTecplotZone(std::ofstream &outfile,

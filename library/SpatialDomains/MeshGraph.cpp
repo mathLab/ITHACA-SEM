@@ -2352,6 +2352,7 @@ namespace Nektar
                             (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_B") == 0) ||
                             (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Modified_C") == 0) ||
                             (strcmp(LibUtilities::BasisTypeMap[basis[j]], "GLL_Lagrange") == 0) ||
+                            (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Gauss_Lagrange") == 0) ||
                             (strcmp(LibUtilities::BasisTypeMap[basis[j]], "Fourier") == 0) ||
 					        (strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierSingleMode") == 0)||
 							(strcmp(LibUtilities::BasisTypeMap[basis[j]], "FourierHalfModeRe") == 0) ||
@@ -2984,7 +2985,7 @@ namespace Nektar
                 break;
                 default:
                 {
-                    ASSERTL0(false,"Expansion not defined in switch  for this shape");
+                    ASSERTL0(false, "Expansion not defined in switch  for this shape");
                 }
                 break;
                 }
@@ -2997,7 +2998,7 @@ namespace Nektar
                 {
                 case eSegment:
                 {
-                    const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussGaussLegendre);
                     LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
                         
                     returnval.push_back(bkey);
@@ -3005,7 +3006,7 @@ namespace Nektar
                 break;
                 case eQuadrilateral:
                 {
-                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussGaussLegendre);
                     LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
                     
                     returnval.push_back(bkey);
@@ -3014,7 +3015,7 @@ namespace Nektar
                 break;
                 case eHexahedron:
                 {
-                    const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussGaussLegendre);
                     LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
                     
                     returnval.push_back(bkey);
@@ -3129,6 +3130,46 @@ namespace Nektar
                 }
             }
             break;
+                    
+            case eGauss_Lagrange_SEM:
+            {
+                switch (shape)
+                {
+                    case eSegment:
+                    {
+                        const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
+                        
+                        returnval.push_back(bkey);
+                    }
+                        break;
+                    case eQuadrilateral:
+                    {
+                        const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
+                        
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                    }
+                        break;
+                    case eHexahedron:
+                    {
+                        const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
+                        LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
+                            
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                        returnval.push_back(bkey);
+                    }
+                        break;
+                    default:
+                    {
+                        ASSERTL0(false, "Expansion not defined in switch  for this shape");
+                    }
+                        break;
+                }
+            }
+                break;
 
             case eFourier:
             {

@@ -211,55 +211,63 @@ namespace Nektar
         }
 
         void PrismGeom::v_GenGeomFactors(
-            const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            int i,f;
-            GeomType Gtype = eRegular;
-
-            v_FillGeom();
-
-            // check to see if expansions are linear
-            for(i = 0; i < m_coordim; ++i)
+            if (m_geomFactorsState != ePtsFilled)
             {
-                if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(1) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(2) != 2 )
-                {
-                    Gtype = eDeformed;
-                }
-            }
+                int i,f;
+                GeomType Gtype = eRegular;
 
-            // check to see if all quadrilateral faces are parallelograms
-            if(Gtype == eRegular)
-            {
-                // Vertex ids of quad faces 
-                const unsigned int faceVerts[3][4] =
-                    { {0,1,2,3} ,
-                      {1,2,4,5} ,
-                      {0,3,4,5} };
+                v_FillGeom();
 
-                for(f = 0; f < 3; f++)
+                // check to see if expansions are linear
+                for(i = 0; i < m_coordim; ++i)
                 {
-                    // Ensure each face is a parallelogram? Check this.
-                    for (i = 0; i < m_coordim; i++)
+                    if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(1) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(2) != 2 )
                     {
-                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) +
-                                (*m_verts[ faceVerts[f][2] ])(i) - (*m_verts[ faceVerts[f][3] ])(i) ) > NekConstants::kNekZeroTol )
+                        Gtype = eDeformed;
+                    }
+                }
+
+                // check to see if all quadrilateral faces are parallelograms
+                if(Gtype == eRegular)
+                {
+                    // Vertex ids of quad faces
+                    const unsigned int faceVerts[3][4] =
+                        { {0,1,2,3} ,
+                          {1,2,4,5} ,
+                          {0,3,4,5} };
+
+                    for(f = 0; f < 3; f++)
+                    {
+                        // Ensure each face is a parallelogram? Check this.
+                        for (i = 0; i < m_coordim; i++)
                         {
-                            Gtype = eDeformed;
+                            if( fabs( (*m_verts[ faceVerts[f][0] ])(i) -
+                                      (*m_verts[ faceVerts[f][1] ])(i) +
+                                      (*m_verts[ faceVerts[f][2] ])(i) -
+                                      (*m_verts[ faceVerts[f][3] ])(i) )
+                                    > NekConstants::kNekZeroTol )
+                            {
+                                Gtype = eDeformed;
+                                break;
+                            }
+                        }
+
+                        if (Gtype == eDeformed)
+                        {
                             break;
                         }
                     }
-                    
-                    if (Gtype == eDeformed)
-                    {
-                        break;
-                    }
                 }
-            }
 
-            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                Gtype, m_coordim, m_xmap, tbasis);
+                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap, tbasis);
+
+                m_geomFactorsState = ePtsFilled;
+            }
         }
 
 

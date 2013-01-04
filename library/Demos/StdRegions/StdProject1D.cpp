@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\t Legendre   = 9\n"); 
     fprintf(stderr,"\t Chebyshev  = 10\n");
     fprintf(stderr,"\t Monomial   = 11\n");
-	fprintf(stderr,"\t FourierSingleMode   = 12\n");
+    fprintf(stderr,"\t FourierSingleMode   = 12\n");
 
  
     fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");

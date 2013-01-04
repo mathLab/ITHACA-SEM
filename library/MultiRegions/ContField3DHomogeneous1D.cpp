@@ -83,6 +83,7 @@ namespace Nektar
             ContField2DSharedPtr plane_two;
 
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
+	    m_graph = graph2D;
 
             // Plane zero (k=0 - cos) - singularaty check required for Poisson
             // problems

@@ -84,10 +84,10 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"\t Modified_C = 6\n");
         fprintf(stderr,"\t Fourier    = 7\n");
         fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Legendre   = 9\n");
-        fprintf(stderr,"\t Chebyshev  = 10\n");
-        fprintf(stderr,"\t Nodal tri (Electro) = 11\n");
-        fprintf(stderr,"\t Nodal tri (Fekete)  = 12\n");
+        fprintf(stderr,"\t Legendre   = 10\n");
+        fprintf(stderr,"\t Chebyshev  = 11\n");
+        fprintf(stderr,"\t Nodal tri (Electro) = 12\n");
+        fprintf(stderr,"\t Nodal tri (Fekete)  = 13\n");
 
         exit(1);
     }
@@ -105,13 +105,13 @@ int main(int argc, char *argv[]){
     int btype1_val = atoi(argv[2]);
     int btype2_val = atoi(argv[3]);
     int btype3_val = atoi(argv[4]);
-    if(( btype1_val <= 10)&&( btype2_val <= 10))
+    if(( btype1_val <= 11)&&( btype2_val <= 11))
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
         btype3 =   (LibUtilities::BasisType) btype3_val;
     }
-    else if(( btype1_val >=11)&&(btype2_val <= 12))
+    else if(( btype1_val >=12)&&(btype2_val <= 13))
     {
         btype1 =   LibUtilities::eOrtho_A;
         btype2 =   LibUtilities::eOrtho_B;

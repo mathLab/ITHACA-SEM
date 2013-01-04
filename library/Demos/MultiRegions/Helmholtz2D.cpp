@@ -9,7 +9,7 @@
 
 using namespace Nektar;
 
-//#define TIMING
+#define TIMING
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
         Timing("Helmholtz Solve ..");
 
 #ifdef TIMING
-        for(i = 0; i < 1000; ++i)
+        for(i = 0; i < 20; ++i)
         {
             Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors, varcoeffs);
         }

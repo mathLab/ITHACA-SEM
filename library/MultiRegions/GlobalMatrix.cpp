@@ -202,6 +202,7 @@ namespace Nektar
             cout << "Global matrix storage type: " 
                     << MatrixStorageTypeMap[storageType] << endl;
             std::cout << "Global matrix memory, bytes = " << matBytes;
+            std::cout << "Sparse storage block size = " << block_size << std::endl;
             if (matBytes/(1024*1024) > 0)
             {
                 std::cout << " ("<< matBytes/(1024*1024) <<" MB)" << std::endl;

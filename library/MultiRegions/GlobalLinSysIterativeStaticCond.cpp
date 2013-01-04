@@ -167,8 +167,10 @@ namespace Nektar
             int nLocBndDofs        = pLocToGloMap->GetNumLocalBndCoeffs();
             int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
                                                                 - nGlobBndDofs;
-            
-            Array<OneD, NekDouble> F = m_wsp + nLocBndDofs;
+
+            Array<OneD, NekDouble> F = m_wsp + m_locWspSize;
+            //Array<OneD, NekDouble> F = m_wsp + nLocBndDofs;
+
             if(nDirBndDofs && dirForcCalculated)
             {
                 Vmath::Vsub(nGlobDofs,in.get(),1,dirForcing.get(),1,F.get(),1);
@@ -386,7 +388,9 @@ namespace Nektar
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-            m_wsp = Array<OneD, NekDouble>(nLocalBnd + nGlobal);
+
+            m_locWspSize = 2*nLocalBnd;
+            m_wsp = Array<OneD, NekDouble>(m_locWspSize + nGlobal);
             
             if(pLocToGloMap->AtLastLevel())
             {
@@ -400,7 +404,11 @@ namespace Nektar
                 {
                     AssembleSchurComplement(pLocToGloMap);
                 }
-                
+                else
+                {
+                    PrepareLocalSchurComplement();
+                }
+
                 int nbdry, nblks;
                 unsigned int esize[1];
                 int nBlk          = m_schurCompl->GetNumberOfBlockRows();
@@ -643,6 +651,50 @@ namespace Nektar
                  << rows << endl;
             cout << "globalSchurCompl: matrix nnzs = " 
                  << gmat_coo.size() << endl;
+        }
+
+        
+        /**
+         * Populates sparse block-diagonal schur complement matrix from
+         * the block matrices stored in #m_blkMatrices.
+         */
+        void GlobalLinSysIterativeStaticCond::PrepareLocalSchurComplement()
+        {
+            int i,j,n,cnt,rows;
+
+            // COO sparse storage to assist in data convertion
+            COOMatType lmat_coo;
+            MatrixStorage matStorage = eFULL;
+
+            DNekScalMatSharedPtr loc_mat;
+            int loc_lda;
+            for(n = rows = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
+            {
+                loc_mat = m_schurCompl->GetBlock(n,n);
+                loc_lda = loc_mat->GetRows();
+
+                // Set up  Matrix;
+                for(i = 0; i < loc_lda; ++i)
+                {
+                    for(j = 0; j < loc_lda; ++j)
+                    {
+                        lmat_coo[std::make_pair(rows + i, rows + j)] = (*loc_mat)(i,j);
+                    }
+                }
+                rows += loc_lda;
+            }
+
+            int cols = rows;
+
+            m_localSchurCompl = MemoryManager<GlobalMatrix>::
+                    AllocateSharedPtr(m_expList.lock()->GetSession(), rows, cols, lmat_coo, matStorage);
+
+            cout << "localSchurCompl: row density = " 
+                 << lmat_coo.size()/cols << endl;
+            cout << "localSchurCompl: matrix rows = " 
+                 << rows << endl;
+            cout << "localSchurCompl: matrix nnzs = "
+                 << lmat_coo.size() << endl;
         }
 
 
@@ -917,10 +969,15 @@ namespace Nektar
             else
             {
                 // Do matrix multiply locally
-                NekVector<NekDouble> loc(nLocal, m_wsp, eWrapper);
+                // NekVector<NekDouble> loc(nLocal, m_wsp, eWrapper);
                 m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
-                loc = (*m_schurCompl)*loc;
-                m_locToGloMap->AssembleBnd(m_wsp, pOutput);
+
+                //loc = (*m_schurCompl)*loc;
+
+                Array<OneD, NekDouble> tmp = m_wsp + nLocal;
+                m_localSchurCompl->Multiply(m_wsp,tmp);
+
+                m_locToGloMap->AssembleBnd(tmp, pOutput);
             }
         }
 

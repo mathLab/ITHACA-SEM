@@ -8,7 +8,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/Arpack.hpp
     ./LinearAlgebra/Blas.hpp
     ./LinearAlgebra/BlasOverrideUtil.hpp
-    ./LinearAlgebra/SparseBlas.hpp
+    ./LinearAlgebra/NistSparseBlas.hpp
     ./LinearAlgebra/BlasArray.hpp
     ./LinearAlgebra/BlockMatrix.hpp
     ./LinearAlgebra/CanGetRawPtr.hpp
@@ -44,7 +44,15 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/Space.h
     ./LinearAlgebra/StandardMatrix.hpp
     ./LinearAlgebra/TransF77.hpp
-    ./LinearAlgebra/SparseStandardMatrix.hpp
+
+    ./LinearAlgebra/StorageBsrUnrolled.hpp
+    ./LinearAlgebra/StorageNistBsr.hpp
+    ./LinearAlgebra/StorageNistCsr.hpp
+    ./LinearAlgebra/NistSparseDescriptors.hpp
+    ./LinearAlgebra/SparseDiagBlkMatrix.hpp
+    ./LinearAlgebra/SparseMatrix.hpp
+    ./LinearAlgebra/SparseMatrixFwd.hpp
+    ./LinearAlgebra/SparseUtils.hpp
 )
 
 SET(FoundationHeaders
@@ -192,15 +200,20 @@ IF(NEKTAR_USE_MPI)
 ENDIF(NEKTAR_USE_MPI)
 
 SET(LinearAlgebraSources
-	./LinearAlgebra/blas.cpp
+        ./LinearAlgebra/blas.cpp
         ./LinearAlgebra/BlockMatrix.cpp
         ./LinearAlgebra/MatrixBase.cpp
-	./LinearAlgebra/MatrixFuncs.cpp
+        ./LinearAlgebra/MatrixFuncs.cpp
         ./LinearAlgebra/MatrixVectorMultiplication.cpp
         ./LinearAlgebra/NekVector.cpp
         ./LinearAlgebra/ScaledMatrix.cpp
         ./LinearAlgebra/StandardMatrix.cpp
-#	./LinearAlgebra/lapack.cpp
+    ./LinearAlgebra/SparseUtils.cpp
+    ./LinearAlgebra/StorageBsrUnrolled.cpp
+    ./LinearAlgebra/StorageNistBsr.cpp
+    ./LinearAlgebra/StorageNistCsr.cpp
+    ./LinearAlgebra/SparseDiagBlkMatrix.cpp
+    ./LinearAlgebra/SparseMatrix.cpp
 )
 
 SET(KernelHeaders

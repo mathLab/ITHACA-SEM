@@ -33,14 +33,33 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/LinearAlgebra/SparseBlas.hpp>
-
 #include <MultiRegions/GlobalMatrix.h>
+#include <LibUtilities/LinearAlgebra/StorageNistCsr.hpp>
+#include <LibUtilities/LinearAlgebra/StorageNistBsr.hpp>
+#include <LibUtilities/LinearAlgebra/StorageBsrUnrolled.hpp>
+#include <LibUtilities/LinearAlgebra/SparseMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
+
+#include <iomanip>
+#include <fstream>
+
 
 namespace Nektar
 {
     namespace MultiRegions
     {
+        std::string GlobalMatrix::def = LibUtilities::SessionReader::
+            RegisterDefaultSolverInfo("GlobalMatrixStorageType","CSR");
+        std::string GlobalMatrix::lookupIds[3] = {
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalMatrixStorageType", "CSR", MultiRegions::eCSR),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalMatrixStorageType", "BSR", MultiRegions::eBSR),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "GlobalMatrixStorageType", "BSRUnrolled", MultiRegions::eBSRUnrolled)
+        };
+
+
         /**
          * @class GlobalMatrix
          * This matrix is essentially a wrapper around a DNekSparseMat.
@@ -52,28 +71,176 @@ namespace Nektar
          * @param   columns     Number of columns in matrix.
          * @param   cooMat      ?
          */
-        GlobalMatrix::GlobalMatrix(unsigned int rows, 
+        GlobalMatrix::GlobalMatrix(
+                                   const LibUtilities::SessionReaderSharedPtr& pSession,
+                                   unsigned int rows, 
                                    unsigned int columns,
-                                   const COOMatType &cooMat):
-            m_matrix(MemoryManager<DNekSparseMat>
-                                        ::AllocateSharedPtr(rows,columns,
-                                                            cooMat))
+                                   const COOMatType &cooMat,
+                                   const MatrixStorage& matStorage):
+            m_csrmatrix(),
+            m_bsrmatrix(),
+            m_bsrunrolledmatrix(),
+            m_mulCallsCounter(0)
         {
+            std::string filename;
+            if (pSession->DefinesSolverInfo("GlobalMatrixSerialise"))
+            {
+                filename = pSession->GetSolverInfo("GlobalMatrixSerialise");
+            }
+
+            MatrixStorageType storageType = pSession->
+                GetSolverInfoAsEnum<MatrixStorageType>("GlobalMatrixStorageType");
+
+            int block_size = 1;
+
+            size_t matBytes;
+            switch(storageType)
+            {
+                case eCSR:
+                    {
+                    // Create CSR sparse storage holder
+                    DNekCsrMat::SparseStorageSharedPtr sparseStorage =
+                            MemoryManager<DNekCsrMat::StorageType>::
+                                    AllocateSharedPtr(
+                                        rows, columns, cooMat, matStorage );
+
+                    // Create sparse matrix
+                    m_csrmatrix = MemoryManager<DNekCsrMat>::
+                                            AllocateSharedPtr( sparseStorage );
+
+                    //m_csrmatrix->serialise(filename);
+                    matBytes = m_csrmatrix->GetMemoryFootprint();
+
+                    }
+                    break;
+
+                case eBSR:
+                    {
+
+                    if(pSession->DefinesParameter("SparseBlockSize"))
+                    {
+                        pSession->LoadParameter("SparseBlockSize", block_size);
+                        ASSERTL1(block_size > 0,"SparseBlockSize parameter must to be positive");
+                    }
+                    else
+                    {
+                        // Size of dense matrix sub-blocks
+                        block_size = 2;
+                    }
+
+
+                    // Size of block matrix associated with original one.
+                    // All matrix blocks are of fixed size, so block matrix
+                    // may be of larger size in order to fit the last few
+                    // rows and columns.
+                    const unsigned int brows = rows / block_size + (rows % block_size > 0);
+                    const unsigned int bcols = columns / block_size + (columns % block_size > 0);
+
+                    BCOMatType bcoMat;
+                    convertCooToBco(brows, bcols, block_size, cooMat, bcoMat);
+
+                    // Create BSR sparse storage holder
+                    DNekBsrMat::SparseStorageSharedPtr sparseStorage =
+                            MemoryManager<DNekBsrMat::StorageType>::
+                                    AllocateSharedPtr(
+                                        brows, bcols, block_size, bcoMat, matStorage );
+
+                    // Create sparse matrix
+                    m_bsrmatrix = MemoryManager<DNekBsrMat>::
+                                            AllocateSharedPtr( sparseStorage );
+
+                    //m_bsrmatrix->serialise(filename);
+                    matBytes = m_bsrmatrix->GetMemoryFootprint();
+
+                    }
+                    break;
+
+                case eBSRUnrolled:
+                    {
+
+                    if(pSession->DefinesParameter("SparseBlockSize"))
+                    {
+                        pSession->LoadParameter("SparseBlockSize", block_size);
+                        ASSERTL1(block_size > 0,"SparseBlockSize parameter must to be positive");
+                    }
+                    else
+                    {
+                        // Size of dense matrix sub-blocks
+                        block_size = 2;
+                    }
+
+                    // Size of block matrix associated with original one.
+                    // All matrix blocks are of fixed size, so block matrix
+                    // may be of larger size in order to fit the last few
+                    // rows and columns.
+                    const unsigned int brows = rows / block_size + (rows % block_size > 0);
+                    const unsigned int bcols = columns / block_size + (columns % block_size > 0);
+
+                    BCOMatType bcoMat;
+                    convertCooToBco(brows, bcols, block_size, cooMat, bcoMat);
+
+                    // Create zero-based unrolled-multiply BSR sparse storage holder
+                    DNekBsrUnrolledMat::SparseStorageSharedPtr sparseStorage =
+                            MemoryManager<DNekBsrUnrolledMat::StorageType>::
+                                    AllocateSharedPtr(
+                                        brows, bcols, block_size, bcoMat, matStorage );
+
+                    // Create sparse matrix
+                    m_bsrunrolledmatrix = MemoryManager<DNekBsrUnrolledMat>::
+                                            AllocateSharedPtr( sparseStorage );
+
+                    //m_bsrnrolledmatrix->serialise(filename);
+                    matBytes = m_bsrunrolledmatrix->GetMemoryFootprint();
+
+                    }
+                    break;
+
+                default:
+                    NEKERROR(ErrorUtil::efatal,"Unsupported sparse storage type chosen");
+            }
+
+            cout << "Global matrix storage type: " 
+                    << MatrixStorageTypeMap[storageType] << endl;
+            std::cout << "Global matrix memory, bytes = " << matBytes;
+            if (matBytes/(1024*1024) > 0)
+            {
+                std::cout << " ("<< matBytes/(1024*1024) <<" MB)" << std::endl;
+            }
+            else
+            {
+                std::cout << " ("<< matBytes/1024 <<" KB)" << std::endl;
+            }
         }
 
-
         /**
-         * Performs a matrix-vector multiply using the Sparse BLAS routine
-         * DCSRMV.
+         * Performs a matrix-vector multiply using the sparse format-specific
+         * multiply routine.
          * @param   in          Input vector.
          * @param   out         Output vector.
          */
         void GlobalMatrix::Multiply(const Array<OneD,const NekDouble> &in, 
                                           Array<OneD,      NekDouble> &out)
         {
-            SparseBlas::Dcsrmv(*m_matrix,in,out);
+            if (m_csrmatrix)          m_csrmatrix->Multiply(in,out);
+            if (m_bsrmatrix)          m_bsrmatrix->Multiply(in,out);
+            if (m_bsrunrolledmatrix)  m_bsrunrolledmatrix->Multiply(in,out);
         }
-	
+
+        const unsigned long GlobalMatrix::GetMulCallsCounter() const 
+        {
+            if (m_csrmatrix)          return m_csrmatrix->GetMulCallsCounter();
+            if (m_bsrmatrix)          return m_bsrmatrix->GetMulCallsCounter();
+            if (m_bsrunrolledmatrix)  return m_bsrunrolledmatrix->GetMulCallsCounter();
+        }
+
+        const unsigned int GlobalMatrix::GetNumNonZeroEntries() const
+        {
+            if (m_csrmatrix)          return m_csrmatrix->GetNumNonZeroEntries();
+            if (m_bsrmatrix)          return m_bsrmatrix->GetNumNonZeroEntries();
+            if (m_bsrunrolledmatrix)  return m_bsrunrolledmatrix->GetNumNonZeroEntries();
+        }
+
+
     } //end of namespace
 } //end of namespace
 

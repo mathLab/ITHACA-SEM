@@ -194,6 +194,9 @@ namespace Nektar
 
             if(nGlobHomBndDofs)
             {
+                Timer t;
+                t.Start();
+
                 if(pLocToGloMap->GetPreconType() != MultiRegions::eLowEnergy)
                 {
                     // construct boundary forcing
@@ -291,8 +294,11 @@ namespace Nektar
                     F_LocBnd=R*F_LocBnd;
                     pLocToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
                 }
-		
-      
+
+                t.Stop();
+                std::cout << "time for preparing boundary system = " << t.TimePerTest(1) << std::endl;
+
+
                 // solve boundary system
                 if(atLastLevel)
                 {
@@ -305,6 +311,15 @@ namespace Nektar
                     SolveLinearSystem(nGlobBndDofs, F, out, pLocToGloMap, nDirBndDofs);
                     
                     t.Stop();
+
+                    std::cout << "time per solveLinearSystem = " << t.TimePerTest(1);// << std::endl;
+                    if (m_globalSchurCompl)
+                    {
+                        std::cout << "  performed " << m_globalSchurCompl->GetMulCallsCounter() << " global matrix multiplies";
+                    }
+                    std::cout << std::endl;
+
+                    t.Start();
 
                     //transform back to original basis
                     if(pLocToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
@@ -329,6 +344,9 @@ namespace Nektar
             // solve interior system
             if(nIntDofs)
             {
+                Timer t;
+                t.Start();
+
                 DNekScalBlkMat &invD  = *m_invD;
 
                 if(nGlobHomBndDofs || nDirBndDofs)
@@ -348,6 +366,9 @@ namespace Nektar
                 }
 
                 V_Int = invD*F_Int;
+
+                t.Stop();
+                std::cout << "time for interior system solve = " << t.TimePerTest(1) << std::endl;
             }
         }
 
@@ -424,6 +445,9 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::SetupTopLevel(
                 const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
+            Timer t;
+            t.Start();
+
             int n;
             int n_exp = m_expList.lock()->GetNumElmts();
 
@@ -460,11 +484,17 @@ namespace Nektar
                     m_invD      ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
                 }
             }
+
+            t.Stop();
+            std::cout << "time for setting up top level = " << t.TimePerTest(1) << std::endl;
         }
 
         void GlobalLinSysIterativeStaticCond::SetupLowEnergyTopLevel(
                 const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
+            Timer t;
+            t.Start();
+
             int n;
             int n_exp = m_expList.lock()->GetNumElmts();
 
@@ -536,7 +566,9 @@ namespace Nektar
                 m_S1Blk->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
                 m_RBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_R));
                 m_RTBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_RT));
-	    }
+            }
+            t.Stop();
+            std::cout << "time for setting up top level = " << t.TimePerTest(1) << std::endl;
         }
 
         /**
@@ -556,7 +588,18 @@ namespace Nektar
             unsigned int cols = nBndDofs - NumDirBCs;
 
             // COO sparse storage to assist in assembly
-            NekSparseMatrix<double>::COOMatType  gmat_coo;
+            COOMatType gmat_coo;
+
+            // Get the matrix storage structure
+            // (whether to store only one triangular part, if symmetric)
+            MatrixStorage matStorage = eFULL;
+/*
+            if (m_expList.lock()->GetSession()->DefinesSolverInfo("GlobalMatrixStructure"))
+            {
+                matStorage = 
+                    m_expList.lock()->GetSession()->GetSolverInfo("GlobalMatrixStructure"));
+            }
+*/
 
             // assemble globally
             DNekScalMatSharedPtr loc_mat;
@@ -581,7 +624,7 @@ namespace Nektar
                                                                  - NumDirBCs;
                             sign2 = pLocToGloMap->GetLocalToGlobalBndSign(cnt+j);
 
-                            if(gid2 >= 0)
+                            if (gid2 >= 0)
                             {
                                 gmat_coo[std::make_pair(gid1,gid2)] += sign1*sign2*(*loc_mat)(i,j);
                             }
@@ -590,7 +633,16 @@ namespace Nektar
                 }
                 cnt += loc_lda;
             }
-            m_globalSchurCompl = MemoryManager<GlobalMatrix>::AllocateSharedPtr(rows,cols,gmat_coo);
+
+            m_globalSchurCompl = MemoryManager<GlobalMatrix>::
+                    AllocateSharedPtr(m_expList.lock()->GetSession(), rows, cols, gmat_coo, matStorage);
+
+            cout << "globalSchurCompl: row density = " 
+                 << gmat_coo.size()/cols << endl;
+            cout << "globalSchurCompl: matrix rows = " 
+                 << rows << endl;
+            cout << "globalSchurCompl: matrix nnzs = " 
+                 << gmat_coo.size() << endl;
         }
 
 

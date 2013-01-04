@@ -36,38 +36,53 @@
 #define NEKTAR_LIB_MULTIREGIONS_GLOBALMATRIX_H
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/GlobalMatrixKey.h>
+#include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 
 namespace Nektar
 {
     namespace MultiRegions
     {
+
         /// Represents a matrix of all degrees of freedom.
         class GlobalMatrix
         {
         public:
-            typedef std::pair<  int,  int> CoordType;
-            typedef std::map< CoordType, NekDouble > COOMatType;
+            typedef NekSparseMatrix<StorageNistCsr<NekDouble> >      DNekCsrMat;
+            typedef NekSparseMatrix<StorageNistBsr<NekDouble> >      DNekBsrMat;
+            typedef NekSparseMatrix<StorageBsrUnrolled<NekDouble> >  DNekBsrUnrolledMat;
+            typedef boost::shared_ptr<DNekCsrMat>                    DNekCsrMatSharedPtr;
+            typedef boost::shared_ptr<DNekBsrMat>                    DNekBsrMatSharedPtr;
+            typedef boost::shared_ptr<DNekBsrUnrolledMat>            DNekBsrUnrolledMatSharedPtr;
 
             /// Construct a new matrix.
-            MULTI_REGIONS_EXPORT GlobalMatrix(unsigned int rows,
+            MULTI_REGIONS_EXPORT GlobalMatrix(
+                         const LibUtilities::SessionReaderSharedPtr& pSession,
+                         unsigned int rows,
                          unsigned int columns,
-                         const COOMatType &cooMat);
+                         const COOMatType &cooMat,
+                         const MatrixStorage& matStorage = eFULL);
 
             MULTI_REGIONS_EXPORT ~GlobalMatrix() {}
 
-            /// Returns a pointer to the DNekSparseMat matrix.
-            const DNekSparseMatSharedPtr GetMatrix(void) const
-            {
-                return m_matrix;
-            }
 
             /// Perform a matrix-vector multiply.
-            MULTI_REGIONS_EXPORT void Multiply(const Array<OneD,const NekDouble> &in,
+            MULTI_REGIONS_EXPORT void Multiply(
+                          const Array<OneD,const NekDouble> &in,
                                 Array<OneD,      NekDouble> &out);
+
+            MULTI_REGIONS_EXPORT const unsigned long GetMulCallsCounter() const;
+            MULTI_REGIONS_EXPORT const unsigned int  GetNumNonZeroEntries() const;
 
         private:
             /// Pointer to a double-precision Nektar++ sparse matrix.
-            DNekSparseMatSharedPtr  m_matrix;
+            DNekCsrMatSharedPtr          m_csrmatrix;
+            DNekBsrMatSharedPtr          m_bsrmatrix;
+            DNekBsrUnrolledMatSharedPtr  m_bsrunrolledmatrix;
+
+            unsigned long                m_mulCallsCounter;
+
+            static std::string           def;
+            static std::string           lookupIds[];
         };
 
         /// Shared pointer to a GlobalMatrix object.

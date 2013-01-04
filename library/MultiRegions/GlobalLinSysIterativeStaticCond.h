@@ -107,12 +107,18 @@ namespace Nektar
             DNekScalBlkMatSharedPtr                  m_RBlk;
             DNekScalBlkMatSharedPtr                  m_RTBlk;
             DNekScalBlkMatSharedPtr                  m_S1Blk;
+
+            /// Sparse representation of Schur complement matrix at this level
+            GlobalMatrixSharedPtr                    m_localSchurCompl;
+
+
             /// Globally assembled Schur complement matrix at this level
             GlobalMatrixSharedPtr                    m_globalSchurCompl;
             /// Local to global map.
             boost::shared_ptr<AssemblyMap>           m_locToGloMap;
             /// Workspace array for matrix multiplication
             Array<OneD, NekDouble>                   m_wsp;
+            int                                      m_locWspSize;
             /// Preconditioner object.
             PreconditionerSharedPtr                  m_precon;
             /// Wrapper for block matrices.
@@ -144,6 +150,10 @@ namespace Nektar
             /// Assemble the Schur complement matrix.
             void AssembleSchurComplement(
                     const boost::shared_ptr<AssemblyMap>& locToGloMap);
+
+            /// Prepares local representation of Schur complement
+            /// stored as a sparse block-diagonal matrix.
+            void PrepareLocalSchurComplement();
 
             ///
             void ConstructNextLevelCondensedSystem(

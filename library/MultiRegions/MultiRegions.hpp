@@ -135,6 +135,20 @@ namespace Nektar
             "LocalLowEnergy"
         };
 
+        enum MatrixStorageType
+        {
+            eCSR,
+            eBSR,
+            eBSRUnrolled
+        };
+
+        const char* const MatrixStorageTypeMap[] =
+        {
+            "CSR",
+            "BSR",
+            "BSRUnrolled"
+        };
+
 
         typedef std::vector<SpatialDomains::BoundaryConditionType>  BndTypesVector;
         typedef std::vector<SpatialDomains::BoundaryConditionType>::iterator BndTypesVectorIter;

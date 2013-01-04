@@ -45,6 +45,7 @@
 #include <MultiRegions/GlobalMatrix.h>  // for GlobalMatrix, etc
 #include <MultiRegions/GlobalMatrixKey.h>  // for GlobalMatrixKey
 
+#include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
@@ -981,8 +982,8 @@ namespace Nektar
                 }
             }
 
-            map< pair< int,  int>, NekDouble > spcoomat;
-            pair<int,int> coord;
+            COOMatType spcoomat;
+            CoordType  coord;
 
             int nvarcoeffs = mkey.GetNVarCoeffs();
             int eid;
@@ -1058,7 +1059,7 @@ namespace Nektar
             }
 
             return MemoryManager<GlobalMatrix>
-                ::AllocateSharedPtr(glob_rows,glob_cols,spcoomat);
+                ::AllocateSharedPtr(m_session,glob_rows,glob_cols,spcoomat);
         }
 
 

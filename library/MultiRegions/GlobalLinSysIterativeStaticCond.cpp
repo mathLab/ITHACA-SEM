@@ -284,7 +284,6 @@ namespace Nektar
 
                     Array<OneD, NekDouble> tmp;
                     m_precon->DoTransformToLowEnergy(F,tmp=F+nDirBndDofs);
-
                 }
 		
       
@@ -302,16 +301,7 @@ namespace Nektar
                     t.Stop();
 
                     //transform back to original basis
-                    if(pLocToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
-                    {
-                        DNekScalBlkMat &RT = *m_RTBlk;
-
-                        pLocToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
- 
-                        V_LocBnd=RT*V_LocBnd;
-
-                        pLocToGloMap->LocalBndToGlobal(V_LocBnd,V_GlobHomBnd, nDirBndDofs);
-                    }
+                    m_precon->DoTransformFromLowEnergy(out,out);
                 }
                 else
                 {

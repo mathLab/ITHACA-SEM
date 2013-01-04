@@ -988,7 +988,9 @@ namespace Nektar
             m_S1Blk      = MemoryManager<DNekScalBlkMat>
                 ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
 
-            /* Here we loop over the expansion*/
+            //Here we loop over the expansion and build the block low energy
+            //preconditioner as well as the block versions of the transformation
+            //matrices.
             for(cnt=n=0; n < n_exp; ++n)
             {
                 nel = expList->GetOffset_Elmt_Id(n);
@@ -1133,13 +1135,7 @@ namespace Nektar
                                     sign2 = m_locToGloMap->
                                         GetLocalToGlobalBndSign(cnt + eMap2);
 
-                                    globalMatrixValue = EdgeBlk->
-                                        GetValue(globalrow,globalcol)
-                                        + sign1*sign2*RSRT(eMap1,eMap2);
-
                                     NekDouble globalEdgeValue = sign1*sign2*RSRT(eMap1,eMap2);
-                                    EdgeBlk->SetValue
-                                        (globalrow,globalcol,globalMatrixValue);
 
                                     m_locMat->SetValue(row_offset,col_offset,globalEdgeValue);
                                 }
@@ -1156,13 +1152,18 @@ namespace Nektar
                             (nedgemodes,nedgemodes,zero,storage);
                         int loc = blockLocationMap[globalrow];
 
-                        //the returned value is wrong?
+                        //Get the current matrix in this location
                         tmp_mat=BlkMat->GetBlock(loc,loc);
+
+                        //if is already a matrix then add this matrix with the
+                        //new one
                         if(tmp_mat != NullDNekMatSharedPtr)
                         {
                             (*m_locMat)=(*tmp_mat)+(*m_locMat);
                         }
-                        BlkMat->SetBlock(loc,loc, m_locMat); //tmp_mat = MemoryManager<DNekMat>::AllocateSharedPtr(one,m_locMat));
+
+                        //Set the matrix block at the correct location
+                        BlkMat->SetBlock(loc,loc, m_locMat); 
                     }
                 }
                 
@@ -1185,7 +1186,6 @@ namespace Nektar
                         
                         if(globalrow >= 0)
                         {
-                            int loc = blockLocationMap[globalrow];
                             int col_offset=0;
                             for (m=0; m<nfacemodes; ++m)
                             {
@@ -1205,16 +1205,12 @@ namespace Nektar
                                         GetLocalToGlobalBndSign(cnt + fMap1);
                                     sign2 = m_locToGloMap->
                                         GetLocalToGlobalBndSign(cnt + fMap2);
-
-                                    globalMatrixValue = FaceBlk->
-                                        GetValue(globalrow,globalcol)
-                                        + sign1*sign2*RSRT(fMap1,fMap2);
-
+                                    
+                                    // Get the face-face value from the low energy matrix (S2)
                                     NekDouble globalFaceValue = sign1*sign2*RSRT(fMap1,fMap2);
-                                    //build matrix containing the linear finite
-                                    //element space
-                                    FaceBlk->SetValue
-                                        (globalrow,globalcol,globalMatrixValue);
+                                    
+                                    //Set this value in the local matrix (which
+                                    //will later form a block of the preconditioner)
                                     m_locMat->SetValue(row_offset,col_offset,globalFaceValue);
                                 }
                                 col_offset++;
@@ -1236,21 +1232,18 @@ namespace Nektar
                             (*m_locMat)=(*tmp_mat)+(*m_locMat);
                         }
 
-                        BlkMat->SetBlock(loc,loc, m_locMat); //tmp_mat = MemoryManager<DNekMat>::AllocateSharedPtr(one,m_locMat));
+                        BlkMat->SetBlock(loc,loc, m_locMat);
                     }
                 }
                 //offset for the expansion
                 cnt+=offset;
 
-
+                //Here we build the block matrices for R and RT
                 m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
                 m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
-
-
-
-
             }
 
+            //Set the first block to be the diagonal of the vertex space
             BlkMat->SetBlock(0,0, VertBlk);
             
             int totblks=BlkMat->GetNumberOfBlockRows();
@@ -1267,35 +1260,6 @@ namespace Nektar
                 tmp_mat->Invert();
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
-
-
-            if (nNonDirVerts != 0)
-            {
-                VertBlk->Invert();
-            }
-            
-            if (nNonDirEdges != 0)
-            {
-                EdgeBlk->Invert();
-            }
-
-            if (nNonDirFaces != 0)
-            {
-                FaceBlk->Invert();
-            }
-
-            DNekScalMatSharedPtr     Blktmp;
-            NekDouble                one = 1.0;
-
-            /*GloBlkMat->SetBlock(0,0,Blktmp = 
-                                MemoryManager<DNekScalMat>::AllocateSharedPtr
-                                (one,VertBlk));
-            GloBlkMat->SetBlock(1,1,Blktmp = 
-                                MemoryManager<DNekScalMat>::AllocateSharedPtr
-                                (one,EdgeBlk));
-            GloBlkMat->SetBlock(2,2,Blktmp = 
-                                MemoryManager<DNekScalMat>::AllocateSharedPtr
-                                (one,FaceBlk));*/
         }
 
         /**
@@ -1684,7 +1648,7 @@ namespace Nektar
             Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
             
             Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), pInput.get(), m_map.get(), pLocal.get());
-            
+                        
             F_LocBnd=R*F_LocBnd;
             
             m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
@@ -1701,10 +1665,28 @@ namespace Nektar
          * i.e. \f$\mathbf{x}=\mathbf{R^{T}}\mathbf{\overline{x}}\f$.
          */
         void PreconditionerLowEnergy::v_DoTransformFromLowEnergy(
-                const Array<OneD, NekDouble>& pInput,
-                      Array<OneD, NekDouble>& pOutput)
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
         {
+            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
+            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
 
+            DNekScalBlkMat &RT = *m_RTBlk;
+            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,pInput+nDirBndDofs,
+                                              eWrapper);
+            NekVector<NekDouble> V_GlobHomBndOut(nGlobHomBndDofs,pOutput+nDirBndDofs,
+                                              eWrapper);
+
+            Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
+            NekVector<NekDouble> V_LocBnd(nLocBndDofs,pLocal,eWrapper);
+
+            m_locToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
+ 
+            V_LocBnd=RT*V_LocBnd;
+            
+            m_locToGloMap->LocalBndToGlobal(V_LocBnd,V_GlobHomBndOut, nDirBndDofs);
         }
 
 
@@ -1782,6 +1764,9 @@ namespace Nektar
         {
             const Array<OneD, const int> &vMap
                                     = m_locToGloMap->GetLocalToGlobalBndMap();
+
+            const Array< OneD, const NekDouble > &sign = m_locToGloMap->GetLocalToGlobalBndSign();
+
             unsigned int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
             unsigned int nEntries   = m_locToGloMap->GetNumLocalBndCoeffs();
             unsigned int i,j;
@@ -1800,13 +1785,9 @@ namespace Nektar
             m_locToGloSignMult = Array<OneD, NekDouble>(nEntries);
             for (i = 0; i < nEntries; ++i)
             {
-                m_locToGloSignMult[i] = 1.0/vCounts[vMap[i]];
+                m_locToGloSignMult[i] = sign[i]*1.0/vCounts[vMap[i]];
             }
-
-            //m_map = m_locToGloMap->GetLocalToGlobalBndMap();
-
         }
-
 
     }
 }

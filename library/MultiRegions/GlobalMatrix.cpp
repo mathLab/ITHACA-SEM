@@ -82,12 +82,6 @@ namespace Nektar
             m_bsrunrolledmatrix(),
             m_mulCallsCounter(0)
         {
-            std::string filename;
-            if (pSession->DefinesSolverInfo("GlobalMatrixSerialise"))
-            {
-                filename = pSession->GetSolverInfo("GlobalMatrixSerialise");
-            }
-
             MatrixStorageType storageType = pSession->
                 GetSolverInfoAsEnum<MatrixStorageType>("GlobalMatrixStorageType");
 
@@ -108,7 +102,6 @@ namespace Nektar
                     m_csrmatrix = MemoryManager<DNekCsrMat>::
                                             AllocateSharedPtr( sparseStorage );
 
-                    //m_csrmatrix->serialise(filename);
                     matBytes = m_csrmatrix->GetMemoryFootprint();
 
                     }
@@ -149,7 +142,6 @@ namespace Nektar
                     m_bsrmatrix = MemoryManager<DNekBsrMat>::
                                             AllocateSharedPtr( sparseStorage );
 
-                    //m_bsrmatrix->serialise(filename);
                     matBytes = m_bsrmatrix->GetMemoryFootprint();
 
                     }
@@ -189,7 +181,6 @@ namespace Nektar
                     m_bsrunrolledmatrix = MemoryManager<DNekBsrUnrolledMat>::
                                             AllocateSharedPtr( sparseStorage );
 
-                    //m_bsrnrolledmatrix->serialise(filename);
                     matBytes = m_bsrunrolledmatrix->GetMemoryFootprint();
 
                     }

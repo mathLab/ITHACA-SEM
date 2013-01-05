@@ -807,6 +807,42 @@ namespace Nektar
             outfile << "        </DataArray>" << endl;
         }
 		
+        void ExpListHomogeneous1D::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+            Array<OneD, NekDouble> tmparray;
+            cnt  = m_planes[0]->GetTotPoints();
+            cnt1 = m_planes[0]->Get1DScaledTotPoints(scale);
+            
+            ASSERTL1(m_planes.num_elements()*cnt1 <= outarray.num_elements(),"size of outarray does not match internal estimage");
+            
+            
+            for(int i = 0; i < m_planes.num_elements(); i++)
+            {
+         
+                m_planes[i]->PhysInterp1DScaled(scale,inarray+i*cnt,
+                                                 tmparray = outarray+i*cnt1);
+            }
+        }
+
+
+        void ExpListHomogeneous1D::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+            Array<OneD, NekDouble> tmparray;
+            cnt  = m_planes[0]->Get1DScaledTotPoints(scale);
+            cnt1 = m_planes[0]->GetTotPoints();
+            
+            ASSERTL1(m_planes.num_elements()*cnt <= inarray.num_elements(),"size of outarray does not match internal estimage");
+            
+            
+            for(int i = 0; i < m_planes.num_elements(); i++)
+            {
+                m_planes[i]->PhysGalerkinProjection1DScaled(scale,inarray+i*cnt,
+                                                 tmparray = outarray+i*cnt1);
+            }
+            
+        }
         void ExpListHomogeneous1D::v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                                Array<OneD, NekDouble> &out_d0,
                                                Array<OneD, NekDouble> &out_d1, 

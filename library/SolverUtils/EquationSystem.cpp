@@ -118,6 +118,7 @@ namespace Nektar
             m_HomoDirec			= 0;
             m_useFFT			= false;
             m_dealiasing		= false;
+            m_specHP_dealiasing		= false;
             m_SingleMode		= false;
             m_HalfMode			= false;
             m_MultipleModes		= false;
@@ -201,6 +202,11 @@ namespace Nektar
                 if(m_session->DefinesSolverInfo("DEALIASING"))
                 {
                     m_dealiasing = true;
+                }
+
+                if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+                {
+                    m_specHP_dealiasing = true;
                 }
             }
             else

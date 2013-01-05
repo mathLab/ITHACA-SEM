@@ -210,6 +210,12 @@ namespace Nektar
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                              std::string var);
 			
+
+            virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+            virtual void v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+
             virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                Array<OneD, NekDouble> &outarray, 
                                                CoeffState coeffstate = eLocal,

@@ -109,6 +109,14 @@ namespace Nektar
         {
             m_dealiasing = true;
         }
+
+
+        m_specHP_dealiasing = false;
+        
+        if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+        {
+            m_specHP_dealiasing = true;
+        }
 		
         m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
         m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);

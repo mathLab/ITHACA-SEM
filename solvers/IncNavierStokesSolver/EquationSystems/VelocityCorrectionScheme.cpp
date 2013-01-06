@@ -313,6 +313,16 @@ namespace Nektar
         {
             cout << "\tSubstepping     : " << LibUtilities::TimeIntegrationMethodMap[m_subStepIntegrationScheme->GetIntegrationMethod()] << endl;
         }
+
+        if(m_dealiasing)
+        {
+            cout << "\tDealiasing      : Homogeneous1D"  << endl;
+        }
+        
+        if(m_specHP_dealiasing)
+        {
+            cout << "\tDealiasing      : Spectral/hp "  << endl;
+        }
     }
     
     void VelocityCorrectionScheme::v_DoInitialise(void)

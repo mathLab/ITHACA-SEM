@@ -345,13 +345,13 @@ namespace Nektar
         {
             int num_dofs;
             
-            if(IsForwards)
+            if(IsForwards) // SJS: I reversed this check on Jan 6th
             {
-                num_dofs = inarray.num_elements();
+                num_dofs = outarray.num_elements();
             }
             else
             {
-                num_dofs = outarray.num_elements();
+                num_dofs = inarray.num_elements();
             }
             
             if(m_useFFT)
@@ -369,8 +369,8 @@ namespace Nektar
                 }
                 else 
                 {
-                    Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),inarray,1,fft_in,1);
-                    //fft_in = inarray;
+                    Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),
+                                 inarray,1,fft_in,1);
                 }
                 
                 if(IsForwards)
@@ -394,8 +394,8 @@ namespace Nektar
                 }
                 else 
                 {
-                    Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),fft_out,1,outarray,1);
-                    //outarray = fft_out;
+                    Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),
+                                 fft_out,1,outarray,1);
                 }
             }
             else 
@@ -438,7 +438,6 @@ namespace Nektar
                 else 
                 {
                     Vmath::Vcopy(ncols,inarray,1,sortedinarray,1);
-                    //sortedinarray = inarray;
                 }
                 
                 // Create NekVectors from the given data arrays
@@ -455,7 +454,6 @@ namespace Nektar
                 else 
                 {
                     Vmath::Vcopy(nrows,sortedinarray,1,outarray,1);
-                    //outarray = sortedinarray;
                 }
                 
             }
@@ -878,31 +876,31 @@ namespace Nektar
                 NekDouble beta;
 		
                 //Half Mode
-				if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
-				{
-					beta = sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
-					
-					Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
-				}
-				else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
-				{
-					beta = -sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
-					
-					Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
-				}
-				
-				//Fully complex
-				else
-				{
-					for(int i = 0; i < m_planes.num_elements(); i++)
-					{
-						beta = -sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
-						
-						Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
-						
-						sign = -1.0*sign;
-					}
-				}
+                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
+                {
+                    beta = sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
+                    
+                    Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
+                }
+                else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
+                {
+                    beta = -sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
+                    
+                    Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
+                }
+		
+                //Fully complex
+                else
+                {
+                    for(int i = 0; i < m_planes.num_elements(); i++)
+                    {
+                        beta = -sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
+			
+                        Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
+			
+                        sign = -1.0*sign;
+                    }
+                }
 		
                 if(m_WaveSpace)
                 {

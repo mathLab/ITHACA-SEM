@@ -170,12 +170,16 @@ namespace Nektar
             }
             else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == false)
             {
-
+#if 0 
                 // Put PU in physical space - In principle could use AdvVel
                 pFields[0]->HomogeneousBwdTrans(pU, pOutarray);
                 
                 // take d/dx, d/dy  gradients in physical Fourier space
                 pFields[0]->PhysDeriv(pOutarray,grad0,grad1);
+#else
+                // take d/dx, d/dy  gradients in physical Fourier space
+                pFields[0]->PhysDeriv(pV[pVelocityComponent],grad0,grad1);
+#endif
                 
                 // Take d/dz derivative using wave space field 
                 pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],pU,

@@ -345,13 +345,13 @@ namespace Nektar
         {
             int num_dofs;
             
-            if(IsForwards) // SJS: I reversed this check on Jan 6th
+            if(IsForwards) 
             {
-                num_dofs = outarray.num_elements();
+                num_dofs = inarray.num_elements();
             }
             else
             {
-                num_dofs = inarray.num_elements();
+                num_dofs = outarray.num_elements();
             }
             
             if(m_useFFT)

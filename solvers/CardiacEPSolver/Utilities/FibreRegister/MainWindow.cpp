@@ -63,6 +63,7 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mTargetActor->SetMapper(mTargetMapper);
     
     mSourcePointsData = vtkPolyData::New();
+    mSourceHeightPointData = vtkPolyData::New();
     mSourceSphere = vtkSphereSource::New();
     mSourceFilterGlyph = vtkGlyph3D::New();
     mSourceFilterGlyph->SetInput(mSourcePointsData);
@@ -251,6 +252,11 @@ void MainWindow::Load() {
     mTargetPointsData->SetPoints(vTargetPoints);
     mTargetPointsIds->SetInput(mTargetPointsData);
     
+    vtkPoints* vSourcePoints = vtkPoints::New();
+    mSourceHeightPointData->SetPoints(vSourcePoints);
+    mSourcePointsIds->SetInput(mSourceHeightPointData);
+
+    
     mSourceRenderer->ResetCamera(mSourceActor->GetBounds());
     mTargetRenderer->ResetCamera(mTargetActor->GetBounds());
     
@@ -326,8 +332,8 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
     // of landmark points.
     if (nearestPointId_source >= 0) {
         mSourceData->GetPoints()->GetPoint(nearestPointId_source, p_s);
-        mSourcePointsData->GetPoints()->InsertNextPoint(p_s);
-        mSourcePointsData->Modified();
+        mSourceHeightPointData->GetPoints()->InsertNextPoint(p_s);
+        mSourceHeightPointData->Modified();
     }
     
     // Update display

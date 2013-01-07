@@ -97,6 +97,7 @@ class MainWindow : public QMainWindow
 
         // Source Points pipeline
         vtkPolyData* mSourcePointsData;
+        vtkPolyData* mSourceHeightPointData;
         vtkSphereSource* mSourceSphere;
         vtkGlyph3D* mSourceFilterGlyph;
         vtkPolyDataMapper* mSourcePointsMapper;

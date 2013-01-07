@@ -305,6 +305,8 @@ namespace Nektar
             std::vector<NodeSharedPtr> edgeNodes;
             /// Distributions of points along edge.
             LibUtilities::PointsType curveType;
+            /// Element(s) which are linked to this edge.
+            vector<pair<ElementSharedPtr, int> > elLink; 
 
         private:
             SpatialDomains::SegGeomSharedPtr m_geom;
@@ -1223,8 +1225,14 @@ namespace Nektar
                 std::vector<NodeSharedPtr> pNodeList,
                 std::vector<int>           pTagList) 
             {
-                return boost::shared_ptr<Element>(
+                ElementSharedPtr e = boost::shared_ptr<Element>(
                     new Triangle(pConf, pNodeList, pTagList));
+                vector<EdgeSharedPtr> edges = e->GetEdgeList();
+                for (int i = 0; i < edges.size(); ++i)
+                {
+                    edges[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                }
+                return e;
             }
             /// Element type
             static ElementType type;
@@ -1253,8 +1261,14 @@ namespace Nektar
                 std::vector<NodeSharedPtr> pNodeList, 
                 std::vector<int>           pTagList) 
             {
-                return boost::shared_ptr<Element>(
+                ElementSharedPtr e = boost::shared_ptr<Element>(
                     new Quadrilateral(pConf, pNodeList, pTagList));
+                vector<EdgeSharedPtr> edges = e->GetEdgeList();
+                for (int i = 0; i < edges.size(); ++i)
+                {
+                    edges[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                }
+                return e;
             }
             /// Element type
             static ElementType type;

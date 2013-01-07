@@ -328,7 +328,7 @@ namespace Nektar
                             {
                                 continue;
                             }
-                            
+
                             ElementSharedPtr bEl  = m->element[m->expDim-1][bl];
                             vector<int>      tags = bEl->GetTagList();
 
@@ -397,7 +397,7 @@ namespace Nektar
                         elmt->SetVertex(0, nodes[0]);
                         elmt->SetVertex(1, nodes[1]);
                         elmt->SetEdge(
-                            it->second, m->element[m->expDim][it->first]->
+                            0, m->element[m->expDim][it->first]->
                                 GetEdge(it->second));
                         el.push_back(elmt);
                     }
@@ -410,9 +410,11 @@ namespace Nektar
             
             // See if vertex normals have been generated. If they have not,
             // approximate them by summing normals of surrounding elements.
+            bool normalsGenerated = false;
             if (m->vertexNormals.size() == 0)
             {
                 GenerateNormals(el);
+                normalsGenerated = true;
             }
 
             // Allocate storage for interior points.
@@ -616,6 +618,11 @@ namespace Nektar
                         visitedEdges.insert(e->GetEdge(edge)->id);
                     }
                 }
+            }
+            
+            if (normalsGenerated)
+            {
+                m->vertexNormals.clear();
             }
         }
     }

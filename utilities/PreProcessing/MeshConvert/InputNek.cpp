@@ -486,7 +486,7 @@ namespace Nektar
                         
                         // Add edge/face to list of faces to apply spherigons
                         // to.
-                        m->spherigonFaces.insert(make_pair(elId, faceId));
+                        m->spherigonSurfs.insert(make_pair(elId, faceId));
                     }
                     else if (it->second.first == eFile)
                     {

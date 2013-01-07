@@ -1117,40 +1117,40 @@ namespace Nektar
             Mesh() : verbose(false) {}
             
             /// Verbose flag
-            bool                       verbose;
+            bool                            verbose;
             /// Dimension of the expansion.
-            unsigned int               expDim;
+            unsigned int                    expDim;
             /// Dimension of the space in which the mesh is defined.
-            unsigned int               spaceDim;
+            unsigned int                    spaceDim;
             /// List of mesh nodes.
-            std::vector<NodeSharedPtr> node;
+            std::vector<NodeSharedPtr>      node;
             /// Set of element vertices.
-            NodeSet                    vertexSet;
+            NodeSet                         vertexSet;
             /// Set of element edges.
-            EdgeSet                    edgeSet;
+            EdgeSet                         edgeSet;
             /// Set of element faces.
-            FaceSet                    faceSet;
+            FaceSet                         faceSet;
             /// Map for elements.
-            ElementMap                 element;
+            ElementMap                      element;
             /// Map for composites.
-            CompositeMap               composite;
+            CompositeMap                    composite;
             /// Boundary conditions maps tag to condition.
-            ConditionMap               condition;
+            ConditionMap                    condition;
             /// List of fields names.
-            std::vector<std::string>   fields;
+            std::vector<std::string>        fields;
             /// Map of vertex normals.
             boost::unordered_map<int, Node> vertexNormals;
-            /// Set of all pairs of element ID and face number on which to apply
-            /// spherigon surface smoothing.
-            set<pair<int,int> > spherigonFaces;
+            /// Set of all pairs of element ID and edge/face number on which to
+            /// apply spherigon surface smoothing.
+            set<pair<int,int> >             spherigonSurfs;
             /// Returns the total number of elements in the mesh with
             /// dimension expDim.
-            unsigned int               GetNumElements();
+            unsigned int                    GetNumElements();
             /// Returns the total number of elements in the mesh with
             /// dimension < expDim.
-            unsigned int               GetNumBndryElements();
+            unsigned int                    GetNumBndryElements();
             /// Returns the total number of entities in the mesh.
-            unsigned int               GetNumEntities();
+            unsigned int                    GetNumEntities();
         };
         /// Shared pointer to a mesh.
         typedef boost::shared_ptr<Mesh> MeshSharedPtr;

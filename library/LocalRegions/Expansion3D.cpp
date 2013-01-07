@@ -982,6 +982,9 @@ namespace Nektar
                 {
                     switch(edgeExp->GetBasis(0)->GetBasisType())
                     {
+                    case LibUtilities::eGauss_Lagrange:
+                        reverse( map.get() , map.get()+order_e);
+                        break;
                     case LibUtilities::eGLL_Lagrange:
                         reverse( map.get() , map.get()+order_e);
                         break;

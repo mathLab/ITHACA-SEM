@@ -1,5 +1,6 @@
-SET(NEKTAR_SOLVER_SHALLOW_WATER ON CACHE BOOL
-    "Build the Shallow Water solver.")
+CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_SHALLOW_WATER
+    "Build the Shallow Water solver." ON
+    "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_SHALLOW_WATER )
     SET(ShallowWaterSolverSource 

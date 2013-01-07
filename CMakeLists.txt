@@ -14,6 +14,7 @@ SET(NEKTAR_VERSION_PATCH 0)
 SET(NEKTAR_VERSION ${NEKTAR_VERSION_MAJOR}.${NEKTAR_VERSION_MINOR}.${NEKTAR_VERSION_PATCH})
 
 INCLUDE(CMakeExportBuildSettings)
+INCLUDE(CMakeDependentOption)
 ENABLE_TESTING()
 
 # Use the CMake 2.4 policy for CMake 2.6
@@ -53,66 +54,58 @@ ENDIF("${isSystemDir}" STREQUAL "-1")
 
 
 # Components of the Nektar++ package to build
-SET(NEKTAR_BUILD_LIBRARY     ON CACHE BOOL
-    "Build main Nektar++ libraries.")
-SET(NEKTAR_BUILD_DEMOS       ON CACHE BOOL
-    "Build demonstration codes.")
-SET(NEKTAR_BUILD_SOLVERS     ON CACHE BOOL
-    "Build example solvers distributed with Nektar++.")
-SET(NEKTAR_BUILD_UTILITIES   ON CACHE BOOL
-    "Build utilities for pre-processing and post-processing Nektar++ files.")
-SET(NEKTAR_BUILD_UNIT_TESTS  ON CACHE BOOL
-    "Build unit tests.")
-SET(NEKTAR_BUILD_TESTS       ON CACHE BOOL
-    "Build tests for checking the correctness of the code.")
-SET(NEKTAR_BUILD_TIMINGS     OFF CACHE BOOL 
-    "Build benchmark timing codes.")
+OPTION(NEKTAR_BUILD_LIBRARY    "Build main Nektar++ libraries." ON)
+OPTION(NEKTAR_BUILD_DEMOS      "Build demonstration codes."     ON)
+OPTION(NEKTAR_BUILD_SOLVERS    "Build example solvers."         ON)
+OPTION(NEKTAR_BUILD_UTILITIES  "Build utilities."               ON)
+OPTION(NEKTAR_BUILD_UNIT_TESTS "Build unit tests."              ON)
+OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
+OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
 
 # Build options
-SET(NEKTAR_USE_DIRECT_BLAS_CALLS OFF CACHE BOOL 
-    "Use direct BLAS calls rather than NekMatrix calls in the StdRegions and LocalRegions sublibrary")
-MARK_AS_ADVANCED(NEKTAR_USE_DIRECT_BLAS_CALLS)
-SET(NEKTAR_FULL_DEBUG  OFF CACHE BOOL 
-    "Enable Full Debugging.")
+OPTION(NEKTAR_FULL_DEBUG "Enable Full Debugging." OFF)
 MARK_AS_ADVANCED(NEKTAR_FULL_DEBUG)
-#SET(NEKTAR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL 
-#    "Enable the use of precompiled headers.")
-#MARK_AS_ADVANCED(NEKTAR_USE_PRECOMPILED_HEADERS)
 
 IF (${CMAKE_COMPILER_IS_GNUCXX}) 
-    SET(NEKTAR_ENABLE_PROFILE OFF CACHE BOOL 
-        "Compiles Nektar++ with the -pg compiler flag")
+    OPTION(NEKTAR_ENABLE_PROFILE "Uses -pg compiler flag" ON)
     MARK_AS_ADVANCED(NEKTAR_ENABLE_PROFILE)
 ENDIF (${CMAKE_COMPILER_IS_GNUCXX}) 
 
 SET(ExpressionTemplateDefault OFF)
-SET(NEKTAR_USE_EXPRESSION_TEMPLATES ${ExpressionTemplateDefault} CACHE BOOL "")
+OPTION(NEKTAR_USE_EXPRESSION_TEMPLATES 
+    "Use Expression templates." ${ExpressionTemplateDefault})
 MARK_AS_ADVANCED(NEKTAR_USE_EXPRESSION_TEMPLATES)
 
-SET(NEKTAR_USE_OPENBLAS OFF CACHE BOOL 
-    "Use OpenBLAS library as a substitute to native BLAS." )
-SET(NEKTAR_USE_ACML OFF CACHE BOOL 
-    "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." )
-SET(NEKTAR_USE_MEMORY_POOLS ON CACHE BOOL 
-    "Use memory pools to accelerate memory allocation.")
-MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)
-SET(NEKTAR_USE_BLAS_LAPACK ON CACHE BOOL 
-    "Use Blas and lapack routines.")
-SET(NEKTAR_USE_MKL OFF CACHE BOOL 
-    "Use the Intel Math Kernel Library (MKL) for BLAS and Lapack support." )
+# BLAS Support
+OPTION(NEKTAR_USE_BLAS_LAPACK "Use Blas and lapack routines." ON)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_OPENBLAS
+    "Use OpenBLAS library as a substitute to native BLAS." OFF
+    "NEKTAR_USE_BLAS_LAPACK" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_ACML
+    "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." OFF
+    "NEKTAR_USE_BLAS_LAPACK" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_MKL
+    "Use the Intel Math Kernel Library (MKL) for BLAS and Lapack support." OFF
+    "NEKTAR_USE_BLAS_LAPACK" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_SYSTEM_BLAS_LAPACK
+    "Use the system provided blas and lapack libraries" ON
+    "NEKTAR_USE_BLAS_LAPACK; UNIX; NOT APPLE" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_ACCELERATE_FRAMEWORK
+    "Use the Mac Accelerate Framework for BLAS and Lapack support." ON
+    "NEKTAR_USE_BLAS_LAPACK; APPLE" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_CHUD_FRAMEWORK
+    "Use the Mac CHUD Framework (for Shark support)." OFF
+    "APPLE" OFF)
+MARK_AS_ADVANCED(NEKTAR_USE_CHUD_FRAMEWORK)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_DIRECT_BLAS_CALLS
+    "Use direct BLAS calls rather than NekMatrix calls in the StdRegions and
+    LocalRegions sublibrary" ON
+    "NEKTAR_USE_BLAS_LAPACK" OFF)
+MARK_AS_ADVANCED(NEKTAR_USE_DIRECT_BLAS_CALLS)
 
-IF( APPLE )
-    SET(NEKTAR_USE_ACCELERATE_FRAMEWORK ON CACHE BOOL 
-        "Use the Mac Accelerate Framework for BLAS and Lapack support." )
-    SET(NEKTAR_USE_CHUD_FRAMEWORK OFF CACHE BOOL 
-        "Use the Mac CHUD Framework (for Shark support)." )
-    MARK_AS_ADVANCED(NEKTAR_USE_CHUD_FRAMEWORK)
-ELSE(APPLE)
-    IF( UNIX )
-        SET(NEKTAR_USE_SYSTEM_BLAS_LAPACK ON CACHE BOOL 
-            "Use the system provided blas and lapack libraries")
-    ENDIF(UNIX)
-ENDIF(APPLE)
+OPTION(NEKTAR_USE_MEMORY_POOLS
+    "Use memory pools to accelerate memory allocation." ON)
+MARK_AS_ADVANCED(NEKTAR_USE_MEMORY_POOLS)
 
 # Turn on NEKTAR_USE_WIN32_LAPACK if we are in Windows and the libraries exist.
 IF( WIN32 )
@@ -143,11 +136,9 @@ IF( MSVC )
 ENDIF( )
 
 
-SET(NEKTAR_USE_WIN32_LAPACK ${Win32LapackDefault} CACHE BOOL 
-    "Use Win32 Lapack provided with the Third Party Distribution.")
-IF( NOT WIN32 )
-    MARK_AS_ADVANCED(NEKTAR_USE_WIN32_LAPACK)
-ENDIF( NOT WIN32 )
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_WIN32_LAPACK
+    "Use Win32 Lapack provided with the Third Party Distribution."
+    ${Win32LapackDefault} "NEKTAR_USE_BLAS_LAPACK; WIN32" OFF)
 
 # Include Nektar++ common macros
 INCLUDE (NektarCommon)
@@ -234,21 +225,17 @@ ENDIF( NEKTAR_USE_MEMORY_POOLS )
 
 SET(Boost_USE_STATIC_LIBS OFF)
 IF( WIN32 )
-    # The auto-linking feature has problems with USE_STATIC_LIBS off, so we use BOOST_ALL_NO_LIB to turn it off.
-    # Several boost libraries headers aren't configured correctly if USE_STATIC_LIBS is off, so we explicitly 
-    # say they are dynamic with the remaining definitions.
+    # The auto-linking feature has problems with USE_STATIC_LIBS off, so we use
+    # BOOST_ALL_NO_LIB to turn it off.
+    # Several boost libraries headers aren't configured correctly if
+    # USE_STATIC_LIBS is off, so we explicitly say they are dynamic with the
+    # remaining definitions.
     ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB -DBOOST_PROGRAM_OPTIONS_DYN_LINK -DBOOST_IOSTREAMS_DYN_LINK -DBOOST_THREAD_DYN_LINK)
 ENDIF( )
 
 
 # Set up include directories
 INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
-
-#IF( NEKTAR_USE_PRECOMPILED_HEADERS )
-#    ADD_DEFINITIONS(-DNEKTAR_USE_PRECOMPILED_HEADERS)
-#ELSE( NEKTAR_USE_PRECOMPILED_HEADERS )
-#    REMOVE_DEFINITIONS(-DNEKTAR_USE_PRECOMPILED_HEADERS)
-#ENDIF( NEKTAR_USE_PRECOMPILED_HEADERS )
 
 # Build active components
 IF (NEKTAR_BUILD_LIBRARY)
@@ -258,10 +245,8 @@ IF (NEKTAR_BUILD_LIBRARY)
     ADD_SUBDIRECTORY(library)
 ENDIF (NEKTAR_BUILD_LIBRARY)
 
-IF (NEKTAR_BUILD_SOLVERS)
-    INCLUDE_DIRECTORIES(solvers)
-    ADD_SUBDIRECTORY(solvers)
-ENDIF (NEKTAR_BUILD_SOLVERS)
+INCLUDE_DIRECTORIES(solvers)
+ADD_SUBDIRECTORY(solvers)
 
 IF (NEKTAR_BUILD_UTILITIES)
     INCLUDE_DIRECTORIES(utilities)

@@ -197,20 +197,15 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
     NekVector<double> &result;
     unsigned int blockRowSt;
     unsigned int blockRowEnd;
-    const unsigned int *const BlockRowCache;
-    const unsigned int *const BlockColCache;
     const NekMatrix<LhsInnerMatrixType, BlockMatrixTag>& lhs;
     const NekVector<double>& rhs;
 
     public:
     MultiplyJob(NekVector<double> &res, unsigned int blckRowSt, unsigned int blckRowEnd,
-            const unsigned int *const BlockRowCache,
-            const unsigned int *const BlockColCache,
     		const NekMatrix<LhsInnerMatrixType,
     		BlockMatrixTag>& lhsin,
     		const NekVector<double>& rhsin) :
             result(res), blockRowSt(blckRowSt), blockRowEnd(blckRowEnd),
-            BlockRowCache(BlockRowCache), BlockColCache(BlockColCache),
             lhs(lhsin), rhs(rhsin)
     {
     }
@@ -218,7 +213,7 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
     void run()
     {
         DiagonalBlockMatrixMultiplyImpl(result, blockRowSt, blockRowEnd,
-        		 BlockRowCache, BlockColCache, lhs, rhs);
+        		 lhs, rhs);
     }
 
 };
@@ -236,24 +231,13 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
         unsigned int numPerThread = numberOfBlockRows / nt;
         numPerThread = 10;
         unsigned int blockRow = 0;
-        unsigned int *BlockRowCache = new unsigned int[numberOfBlockRows];
-        unsigned int *BlockColCache = new unsigned int[numberOfBlockRows];
-        unsigned int RunningRowTot = 0;
-        unsigned int RunningColTot = 0;
-        for (unsigned int i = 0; i < numberOfBlockRows; i++)
-        {
-        	BlockRowCache[i] = RunningRowTot;
-        	BlockColCache[i] = RunningColTot;
-        	RunningRowTot += lhs.GetNumberOfRowsInBlockRow(i);
-        	RunningColTot += lhs.GetNumberOfColumnsInBlockColumn(i);
-        }
         if (nt > 1 && numPerThread > 1 )
         {
             //for(unsigned int thrd = 1; thrd < nt; thrd++)
             while (blockRow+numPerThread < numberOfBlockRows)
             {
                 THandle.queueJob(new MultiplyJob<LhsInnerMatrixType>(result, blockRow,
-                     blockRow+numPerThread, BlockRowCache, BlockColCache, lhs, rhs));
+                     blockRow+numPerThread, lhs, rhs));
                 blockRow += numPerThread;
             }
         }
@@ -261,60 +245,36 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
         //DiagonalBlockMatrixMultiplyImpl(result, blockRow, numberOfBlockRows,
          //                               BlockRowCache, BlockColCache, lhs, rhs);
                 THandle.queueJob(new MultiplyJob<LhsInnerMatrixType>(result, blockRow,
-                     numberOfBlockRows, BlockRowCache, BlockColCache, lhs, rhs));
+                     numberOfBlockRows, lhs, rhs));
 
         THandle.wait();
-
-
-        delete[] BlockRowCache;
-        delete[] BlockColCache;
 
     }
 
     template<typename LhsInnerMatrixType>
     void DiagonalBlockMatrixMultiplyImpl(NekVector<double> &result, unsigned int blockRowSt,
             unsigned int blockRowEnd,
-            const unsigned int *const BlockRowCache,
-            const unsigned int *const BlockColCache,
             const NekMatrix<LhsInnerMatrixType,BlockMatrixTag>& lhs,
             const NekVector<double>& rhs)
     {
         double* result_ptr = result.GetRawPtr();
         const double* rhs_ptr = rhs.GetRawPtr();
-        unsigned int curResultRow = 0;
-        unsigned int curWrapperRow = 0;
         for(unsigned int blockRow = blockRowSt ; blockRow < blockRowEnd; ++blockRow)
         {
-
-//            if( blockRow != 0 )
-//            {
-//                curResultRow += lhs.GetNumberOfRowsInBlockRow(blockRow-1);
-//            }
-        	curResultRow = BlockRowCache[blockRow];
-
             unsigned int blockColumn = blockRow;
-//            if( blockColumn != 0 )
-//            {
-//                curWrapperRow += lhs.GetNumberOfColumnsInBlockColumn(blockColumn-1);
-//            }
-            curWrapperRow = BlockColCache[blockColumn];
-
-//            if( blockRow < blockRowSt )
-//            {
-//                continue;
-//            }
-
             unsigned int rowsInBlock = lhs.GetNumberOfRowsInBlockRow(blockRow);
             if( rowsInBlock == 0 )
             {
                 continue;
             }
-
             unsigned int columnsInBlock = lhs.GetNumberOfColumnsInBlockColumn(blockColumn);
             if( columnsInBlock == 0 )
             {
                 continue;
             }
+
+            unsigned rowIndex = lhs.GetRowIndexFromBlockRow(blockRow);
+            unsigned columnIndex = lhs.GetColumnIndexFromBlockColumn(blockColumn);
 
             const LhsInnerMatrixType* block = lhs.GetBlockPtr(blockRow, blockColumn);
             if( !block )
@@ -322,8 +282,8 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
                 continue;
             }
 
-            double* resultWrapper = result_ptr + curResultRow;            
-            const double* rhsWrapper = rhs_ptr + curWrapperRow;
+            double* resultWrapper = result_ptr + rowIndex;
+            const double* rhsWrapper = rhs_ptr + columnIndex;
             //unsigned int i = 1000;
             //while (i > 0)
             //{

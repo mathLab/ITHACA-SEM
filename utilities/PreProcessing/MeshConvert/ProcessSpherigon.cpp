@@ -430,6 +430,12 @@ namespace Nektar
                 {{0, 1}, {nq-1, nq}, {nq*nq-1,   -1 }, {nq*(nq-1), -nq}} // quad
             };
             
+            int vertMap[3][4][2] = {
+                {{0, 1}, {0, 0}, {0, 0}, {0, 0}}, // seg
+                {{0, 1}, {1, 2}, {2, 3}, {0, 0}}, // tri
+                {{0, 1}, {1, 2}, {2, 3}, {3, 0}}, // quad
+            };
+            
             for (int i = 0; i < el.size(); ++i)
             {
                 // Construct a Nektar++ element to obtain coordinate points
@@ -588,8 +594,11 @@ namespace Nektar
                 for (int edge = 0; edge < e->GetEdgeCount(); ++edge)
                 {
                     eIt = visitedEdges.find(e->GetEdge(edge)->id);
-                    if (eIt == visitedEdges.end() || m->expDim == 3)
+                    if (eIt == visitedEdges.end())
                     {
+                        bool reverseEdge = 
+                            !(v[vertMap[offset][edge][0]] == *(e->GetEdge(edge)->n1));
+                        
                         for (int j = 1; j < nq-1; ++j)
                         {
                             int v = edgeMap[offset][edge][0] + 
@@ -597,53 +606,17 @@ namespace Nektar
                             NodeSharedPtr tmp(new Node(0, x[v], y[v], z[v]));
                             e->GetEdge(edge)->edgeNodes.push_back(tmp);
                         }
+                        
+                        if (reverseEdge)
+                        {
+                            reverse(e->GetEdge(edge)->edgeNodes.begin(),
+                                    e->GetEdge(edge)->edgeNodes.end());
+                        }
+
                         visitedEdges.insert(e->GetEdge(edge)->id);
                     }
                 }
             }
-            
-            /*
-            // Full 3D only: Copy high-order edge nodes back into original
-            // elements.
-            if (m->expDim == m->spaceDim)
-            {
-                if (m->expDim == 3)
-                {
-                    set<pair<int,int> >::iterator       it;
-                    boost::unordered_set<int>::iterator it2;
-                    int elCount = 0;
-                
-                    visitedEdges.clear();
-                
-                    for (it  = m->spherigonFaces.begin();
-                         it != m->spherigonFaces.end(); ++it, ++elCount)
-                    {
-                        FaceSharedPtr f = m->element[m->expDim][it->first]->GetFace(
-                            it->second);
-                        for (int edge = 0; edge < f->edgeList.size(); ++edge)
-                        {
-                            EdgeSharedPtr e = el[elCount]->GetEdge(edge);
-                            bool reverseEdge = e->n1 == f->edgeList[edge]->n2;
-                        
-                            if (visitedEdges.count(f->edgeList[edge]->id) != 0)
-                            {
-                                continue;
-                            }
-                        
-                            f->edgeList[edge]->edgeNodes = e->edgeNodes;
-                        
-                            if (reverseEdge)
-                            {
-                                reverse(f->edgeList[edge]->edgeNodes.begin(),
-                                        f->edgeList[edge]->edgeNodes.end());
-                            }
-                        
-                            visitedEdges.insert(f->edgeList[edge]->id);
-                        }
-                    }
-                }
-            }
-            */
         }
     }
 }

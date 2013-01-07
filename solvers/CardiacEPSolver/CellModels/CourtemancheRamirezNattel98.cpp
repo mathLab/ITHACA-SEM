@@ -569,18 +569,20 @@ namespace Nektar
 
         Nektar::Thread::ThreadHandle Th(Nektar::Thread::e_dynamic, 1);
         unsigned int nt = Th.getNumWorkers();
-        unsigned int numperw = n / nt;
+//        unsigned int numperw = n / nt;
+        unsigned int numperw = 5000;
         unsigned int index = 0;
-        for (unsigned int nthr = 1; nthr < nt; nthr++)
+//        for (unsigned int nthr = 1; nthr < nt; nthr++)
+        while(index+numperw < m_nq)
         {
-        	std::cerr << "UJob queued for " << numperw << " iterations starting at " << index << std::endl;
+//        	std::cerr << "UJob queued for " << numperw << " iterations starting at " << index << std::endl;
         	Th.queueJob(new CourtemancheRamirezNattel98::UpdateJob(*this, inarray, outarray, time, numperw, index));
         	n -= numperw;
         	index += numperw;
         }
-    	std::cerr << "URest is " << numperw << " iterations starting at " << index << std::endl;
+//    	std::cerr << "URest is " << n << " iterations starting at " << index << std::endl;
 
-        UpdateImpl(inarray, outarray, time, n, index);
+        	Th.queueJob(new CourtemancheRamirezNattel98::UpdateJob(*this, inarray, outarray, time, n, index));
 
     }
 

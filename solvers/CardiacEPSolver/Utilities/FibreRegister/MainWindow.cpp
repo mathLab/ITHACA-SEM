@@ -15,26 +15,26 @@
 using namespace std;
 
 MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
-    : QMainWindow( parent, fl ) {
-
+: QMainWindow( parent, fl ) {
+    
     Draw();
-
+    
     // Set up VTK stuff
     mSourceData = vtkPolyData::New();
     mTargetData = vtkPolyData::New();
-
+    
     mSourceRenderer = vtkRenderer::New();
     mSourceRenderer->SetBackground(0.0,0.0,0.0);
     mTargetRenderer = vtkRenderer::New();
     mTargetRenderer->SetBackground(0.0,0.0,0.0);
-
+    
     mSourceFilterSmooth = vtkSmoothPolyDataFilter::New();
     mSourceFilterSmooth->SetNumberOfIterations(200);
     mSourceFilterSmooth->SetInput(mSourceData);
     mTargetFilterSmooth = vtkSmoothPolyDataFilter::New();
     mTargetFilterSmooth->SetNumberOfIterations(200);
     mTargetFilterSmooth->SetInput(mTargetData);
-
+    
     mSourceFilterDepthSort = vtkDepthSortPolyData::New();
     mSourceFilterDepthSort->SetInputConnection(mSourceFilterSmooth->GetOutputPort());
     mSourceFilterDepthSort->SetDirectionToBackToFront();
@@ -47,21 +47,21 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mTargetFilterDepthSort->SetVector(1, 1, 1);
     mTargetFilterDepthSort->SetCamera(mTargetRenderer->GetActiveCamera());
     mTargetFilterDepthSort->SortScalarsOn();
-
+    
     mSourceMapper = vtkPolyDataMapper::New();
     mSourceMapper->SetInputConnection(mSourceFilterDepthSort->GetOutputPort());
     mSourceMapper->ScalarVisibilityOff();
     mTargetMapper = vtkPolyDataMapper::New();
     mTargetMapper->SetInputConnection(mTargetFilterDepthSort->GetOutputPort());
     mTargetMapper->ScalarVisibilityOff();
-
+    
     // VTK Actor
     mSourceActor = vtkActor::New();
     mSourceActor->SetMapper(mSourceMapper);
     mSourceActor->GetProperty()->SetColor(0.9,0.9,0.9);
     mTargetActor = vtkActor::New();
     mTargetActor->SetMapper(mTargetMapper);
-
+    
     mSourcePointsData = vtkPolyData::New();
     mSourceSphere = vtkSphereSource::New();
     mSourceFilterGlyph = vtkGlyph3D::New();
@@ -84,7 +84,7 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourcePointsLabelMapper->SetLabelModeToLabelFieldData();
     mSourcePointsLabelActor = vtkActor2D::New();
     mSourcePointsLabelActor->SetMapper(mSourcePointsLabelMapper);
-
+    
     mTargetPointsData = vtkPolyData::New();
     mTargetSphere = vtkSphereSource::New();
     mTargetFilterGlyph = vtkGlyph3D::New();
@@ -107,42 +107,49 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mTargetPointsLabelMapper->SetLabelModeToLabelFieldData();
     mTargetPointsLabelActor = vtkActor2D::New();
     mTargetPointsLabelActor->SetMapper(mTargetPointsLabelMapper);
-
+    
     mSourceRenderer->AddActor(mSourceActor);
     mSourceRenderer->AddActor(mSourcePointsActor);
     mSourceRenderer->AddActor(mSourcePointsLabelActor);
     mSourceRenderer->ResetCamera();
     mSourceVtk->GetRenderWindow()->AddRenderer(mSourceRenderer);
-
+    
     mTargetRenderer->AddActor(mTargetActor);
     mTargetRenderer->AddActor(mTargetPointsActor);
     mTargetRenderer->AddActor(mTargetPointsLabelActor);
     mTargetRenderer->ResetCamera();
     mTargetVtk->GetRenderWindow()->AddRenderer(mTargetRenderer);
-
+    
     Connections = vtkEventQtSlotConnect::New();
     Connections->Connect(mTargetVtk->GetRenderWindow()->GetInteractor(),
                          vtkCommand::RightButtonPressEvent,
                          this,
                          SLOT(CreateTargetPoint( vtkObject*, unsigned long, void*, void*, vtkCommand*)));
-
+    
+    
+    Connections_s = vtkEventQtSlotConnect::New();
+    Connections_s->Connect(mSourceVtk->GetRenderWindow()->GetInteractor(),
+                         vtkCommand::RightButtonPressEvent,
+                         this,
+                         SLOT(CreateSourcePoint( vtkObject*, unsigned long, void*, void*, vtkCommand*)));
+    
 }
 
 MainWindow::~MainWindow() {
-
+    
 }
 
 
 void MainWindow::Draw() {
     resize(800, 600);
-
+    
     mSourceVtk = new QVTKWidget(this, QFlag(0) );
     mTargetVtk = new QVTKWidget(this, QFlag(0) );
-
+    
     QLabel* vFileSourceLabel = new QLabel(tr("Source:"));
     QLabel* vFilePointsLabel = new QLabel(tr("Landmarks:"));
     QLabel* vFileTargetLabel = new QLabel(tr("Target:"));
-
+    
     mFileSourceEditBox = new QLineEdit(tr(""));
     mFileSourceBrowse = new QPushButton(tr("Browse..."));
     mFileTargetEditBox = new QLineEdit(tr(""));
@@ -152,12 +159,12 @@ void MainWindow::Draw() {
     connect(mFileSourceBrowse, SIGNAL(clicked()), this, SLOT(BrowseSource()));
     connect(mFileTargetBrowse, SIGNAL(clicked()), this, SLOT(BrowseTarget()));
     connect(mFileLandmarksBrowse, SIGNAL(clicked()), this, SLOT(BrowseLandmarks()));
-
+    
     mFileLoadButton = new QPushButton(tr("Load"));
     connect(mFileLoadButton, SIGNAL(clicked()), this, SLOT(Load()));
     mFileExportLandmarksButton = new QPushButton(tr("Export landmarks..."));
     connect(mFileExportLandmarksButton, SIGNAL(clicked()), this, SLOT(ExportTargetPoints()));
-
+    
     mFileGrid = new QGridLayout;
     mFileGrid->addWidget(vFileSourceLabel, 0, 0);
     mFileGrid->addWidget(vFilePointsLabel, 1, 0);
@@ -170,22 +177,22 @@ void MainWindow::Draw() {
     mFileGrid->addWidget(mFileTargetBrowse, 2, 2);
     mFileGrid->addWidget(mFileLoadButton, 3, 1);
     mFileGrid->addWidget(mFileExportLandmarksButton, 4, 1);
-
+    
     mFileBox = new QGroupBox(tr("Files"));
     mFileBox->setLayout(mFileGrid);
     mFileBox->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-
+    
     mUndoButton = new QPushButton(tr("Undo last point"));
     connect(mUndoButton, SIGNAL(clicked()), this, SLOT(UndoLastPoint()));
-
+    
     mSettingsGrid = new QVBoxLayout;
     mSettingsGrid->addWidget(mFileBox);
     mSettingsGrid->addWidget(mUndoButton);
     mSettingsGrid->addStretch();
-
+    
     mSettingsBox = new QGroupBox(tr("Settings"));
     mSettingsBox->setLayout(mSettingsGrid);
-
+    
     mRootGrid = new QGridLayout;
     mRootGrid->setColumnMinimumWidth(0,300);
     mRootGrid->setColumnStretch(1,1);
@@ -193,30 +200,30 @@ void MainWindow::Draw() {
     mRootGrid->addWidget(mSourceVtk, 0, 1);
     mRootGrid->addWidget(mTargetVtk, 0, 2);
     mRootGrid->addWidget(mSettingsBox, 0, 0);
-
+    
     mRootWidget = new QWidget;
     mRootWidget->setLayout(mRootGrid);
-
+    
     setCentralWidget(mRootWidget);
-
+    
 }
 
 
 void MainWindow::BrowseSource() {
     QString geoFile = QFileDialog::getOpenFileName(this,
-            tr("Load Source Geometry"), "", tr("Source Geometry (*.vtk)"));
+                                                   tr("Load Source Geometry"), "", tr("Source Geometry (*.vtk)"));
     mFileSourceEditBox->setText(geoFile);
 }
 
 void MainWindow::BrowseTarget() {
     QString dataFile = QFileDialog::getOpenFileName(this,
-            tr("Load Target Geometry"), "", tr("Target Geometry (*.vtk)"));
+                                                    tr("Load Target Geometry"), "", tr("Target Geometry (*.vtk)"));
     mFileTargetEditBox->setText(dataFile);
 }
 
 void MainWindow::BrowseLandmarks() {
     QString pointsFile = QFileDialog::getOpenFileName(this,
-            tr("Load Source Landmark Points"), "", tr("Landmark Points (*.vtk)"));
+                                                      tr("Load Source Landmark Points"), "", tr("Landmark Points (*.vtk)"));
     mFileLandmarksEditBox->setText(pointsFile);
 }
 
@@ -226,27 +233,27 @@ void MainWindow::Load() {
     vSourceReader->Update();
     mSourceData = vSourceReader->GetOutput();
     mSourceFilterSmooth->SetInput(mSourceData);
-
+    
     vtkPolyDataReader* vTargetReader = vtkPolyDataReader::New();
     vTargetReader->SetFileName(mFileTargetEditBox->text().toStdString().c_str());
     vTargetReader->Update();
     mTargetData = vTargetReader->GetOutput();
     mTargetFilterSmooth->SetInput(mTargetData);
-
+    
     vtkPolyDataReader* vSourceLandmarks = vtkPolyDataReader::New();
     vSourceLandmarks->SetFileName(mFileLandmarksEditBox->text().toStdString().c_str());
     vSourceLandmarks->Update();
     mSourcePointsData = vSourceLandmarks->GetOutput();
     mSourceFilterGlyph->SetInput(mSourcePointsData);
     mSourcePointsIds->SetInput(mSourcePointsData);
-
+    
     vtkPoints* vTargetPoints = vtkPoints::New();
     mTargetPointsData->SetPoints(vTargetPoints);
     mTargetPointsIds->SetInput(mTargetPointsData);
-
+    
     mSourceRenderer->ResetCamera(mSourceActor->GetBounds());
     mTargetRenderer->ResetCamera(mTargetActor->GetBounds());
-
+    
     Update();
 }
 
@@ -258,26 +265,26 @@ void MainWindow::Update() {
 void MainWindow::CreateTargetPoint(vtkObject* caller, unsigned long vtk_event, void* client_data, void* call_data, vtkCommand* command) {
     double p[3];
     double d;
-
+    
     vtkRenderWindowInteractor* iren = vtkRenderWindowInteractor::SafeDownCast(caller);
-
+    
     // consume event so the interactor style doesn't get it
     command->AbortFlagOn();
     int* position = iren->GetEventPosition();
-
+    
     // Use World point picker to find a 3-space point on atrial surface
     // Point will be on camera bound if not on surface
     vtkWorldPointPicker *picker = vtkWorldPointPicker::New();
     picker->Pick(position[0], position[1], position[2], mTargetRenderer);
     picker->GetPickPosition(p);
-
+    
     // Use Point locator to find nearest vertex id on atrial surface within a
     // given radius
     vtkPointLocator* vLocator = vtkPointLocator::New();
     vLocator->SetDataSet(mTargetData);
     vLocator->SetTolerance(0.1);
     int nearestPointId = vLocator->FindClosestPointWithinRadius(5.0, p, d);
-
+    
     // If we are on the surface (i.e. id != -1) then add this vertex to the list
     // of landmark points.
     if (nearestPointId >= 0) {
@@ -285,15 +292,54 @@ void MainWindow::CreateTargetPoint(vtkObject* caller, unsigned long vtk_event, v
         mTargetPointsData->GetPoints()->InsertNextPoint(p);
         mTargetPointsData->Modified();
     }
-
+    
     // Update display
     Update();
 }
 
+//Create Source Point
+
+void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, void* client_data, void* call_data, vtkCommand* command) {
+    double p_s[3];
+    double d_s;
+    
+    vtkRenderWindowInteractor* iren = vtkRenderWindowInteractor::SafeDownCast(caller);
+    
+    // consume event so the interactor style doesn't get it
+    command->AbortFlagOn();
+    int* position_s = iren->GetEventPosition();
+    
+    // Use World point picker to find a 3-space point on atrial surface
+    // Point will be on camera bound if not on surface
+    vtkWorldPointPicker *picker_source = vtkWorldPointPicker::New();
+    picker_source->Pick(position_s[0], position_s[1], position_s[2], mSourceRenderer);
+    picker_source->GetPickPosition(p_s);
+    
+    // Use Point locator to find nearest vertex id on atrial surface within a
+    // given radius
+    vtkPointLocator* vLocator_source = vtkPointLocator::New();
+    vLocator_source->SetDataSet(mSourceData);
+    vLocator_source->SetTolerance(0.1);
+    int nearestPointId_source = vLocator_source->FindClosestPointWithinRadius(5.0, p_s, d_s);
+    
+    // If we are on the surface (i.e. id != -1) then add this vertex to the list
+    // of landmark points.
+    if (nearestPointId_source >= 0) {
+        mSourceData->GetPoints()->GetPoint(nearestPointId_source, p_s);
+        mSourcePointsData->GetPoints()->InsertNextPoint(p_s);
+        mSourcePointsData->Modified();
+    }
+    
+    // Update display
+    Update();
+}
+
+//End Create Source Point
+
 void MainWindow::ExportTargetPoints() {
     QString pointsFile = QFileDialog::getSaveFileName(this,
-            tr("Export Landmark Points"), "", tr("Landmark Points (*.vtk)"));
-
+                                                      tr("Export Landmark Points"), "", tr("Landmark Points (*.vtk)"));
+    
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
     writer->SetInput(mTargetPointsData);
     writer->SetFileName(pointsFile.toStdString().c_str());

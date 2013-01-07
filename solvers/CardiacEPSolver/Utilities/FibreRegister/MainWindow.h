@@ -52,6 +52,8 @@ class MainWindow : public QMainWindow
         void Update();
 
         void CreateTargetPoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
+    
+        void CreateSourcePoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
 
         void ExportTargetPoints();
         void UndoLastPoint();
@@ -120,7 +122,7 @@ class MainWindow : public QMainWindow
         vtkActor2D* mTargetPointsLabelActor;
 
         vtkEventQtSlotConnect* Connections;
-
+        vtkEventQtSlotConnect* Connections_s;
         void Draw();
 
 

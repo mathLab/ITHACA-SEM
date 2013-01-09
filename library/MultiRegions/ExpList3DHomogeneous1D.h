@@ -114,7 +114,7 @@ namespace Nektar
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
-            void             SetCoeffPhys(void);
+            void   SetCoeffPhys(void);
 
             //  virtual functions
             virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,

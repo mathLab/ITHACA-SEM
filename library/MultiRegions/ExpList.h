@@ -47,6 +47,7 @@
 #include <boost/enable_shared_from_this.hpp>
 #include <MultiRegions/AssemblyMap/AssemblyMap.h>
 
+#include <LibUtilities/Communication/Transposition.h>
 
 namespace Nektar
 {
@@ -467,18 +468,27 @@ namespace Nektar
                 return v_L2();
             }
 			
-			/// This function calculates the energy associated with each one of the modes
-			/// of a 3D homogeneous nD expansion
+            /// This function calculates the energy associated with each one of the modes
+            /// of a 3D homogeneous nD expansion
             Array<OneD, NekDouble> HomogeneousEnergy (void)
             {
                 return v_HomogeneousEnergy();
             }
 			
-            /// This function returns a vector containing the wave numbers in z-direction associated
-            /// with the 3D homogenous expansion. Required if a parellelisation is applied in the Fourier direction
+            /// This function returns a vector containing the wave
+            /// numbers in z-direction associated
+            /// with the 3D homogenous expansion. Required if a
+            /// parellelisation is applied in the Fourier direction
             Array<OneD, unsigned int> GetZIDs(void)
             {
                 return v_GetZIDs();
+            }
+
+            /// This function returns the transposition class
+            /// associaed with the homgeneous expansion.
+            LibUtilities::TranspositionSharedPtr GetTransposition(void)
+            {
+                return v_GetTransposition();
             }
             
             /// This function returns a vector containing the wave
@@ -1156,6 +1166,7 @@ namespace Nektar
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
             
             virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
+            virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
             virtual Array<OneD, unsigned int> v_GetZIDs(void);
             virtual Array<OneD, unsigned int> v_GetYIDs(void);
             

@@ -194,19 +194,18 @@ namespace Nektar
                     m_HomoDirec       = 2;
                 }
 
-                if(m_session->DefinesSolverInfo("USEFFT"))
-                {
-                    m_useFFT = true;
-                }
+                m_session->MatchSolverInfo("USEFFT","FFTW",m_useFFT,false);
             
-                if(m_session->DefinesSolverInfo("DEALIASING"))
+                m_session->MatchSolverInfo("DEALIASING","True",m_dealiasing,false);
+                if(m_dealiasing == false)
                 {
-                    m_dealiasing = true;
+                    m_session->MatchSolverInfo("DEALIASING","On",m_dealiasing,false);
                 }
 
-                if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+                m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
+                if(m_specHP_dealiasing == false)
                 {
-                    m_specHP_dealiasing = true;
+                    m_session->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
                 }
             }
             else
@@ -2020,15 +2019,14 @@ namespace Nektar
                 out << "\tHom. length (LZ): " << m_LhomZ                            << endl;
                 if(m_useFFT)
                 {
-                    out << "\tUsing FFTW " << endl;
+                    out << "\tFFT Type        : FFTW" << endl;   
                 }
                 else
                 {
-                    out << "\tUsing MVM "  << endl;
+                    out << "\tFFT Type        : MVM" << endl;               
                 }
 			
-                //if(m_SingleMode==true)
-				if(m_MultipleModes==true)
+                if(m_MultipleModes==true)
                 {
                     out << "\tSelected Mode    : " << m_NumMode << endl;
 
@@ -2046,15 +2044,15 @@ namespace Nektar
                 out << "\tN.Hom. Modes (z): " << m_npointsZ                         << endl;
                 out << "\tHom. length (LY): " << m_LhomY                            << endl;
                 out << "\tHom. length (LZ): " << m_LhomZ                            << endl;
+
                 if(m_useFFT)
                 {
-                    out << "\tUsing FFTW " << endl;
+                    out << "\tFFT Type        : FFTW" << endl;               
                 }
                 else
                 {
-                    out << "\tUsing MVM "  << endl;
+                    out << "\tFFT Type        : MVM" << endl;               
                 }
-
             }
             else
             {

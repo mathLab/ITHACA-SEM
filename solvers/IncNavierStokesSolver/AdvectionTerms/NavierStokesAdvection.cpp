@@ -153,10 +153,10 @@ namespace Nektar
             }
             break;	 
         case 3:
-            grad1 = Array<OneD, NekDouble> (nPointsTot);
-            grad2 = Array<OneD, NekDouble> (nPointsTot);
+            grad1 = Array<OneD, NekDouble> (pFields[0]->GetNpoints());
+            grad2 = Array<OneD, NekDouble> (pFields[0]->GetNpoints());
             
-            if(m_dealiasing == true && pFields[0]->GetWaveSpace() == false)
+            if(pFields[0]->GetWaveSpace() == false && m_dealiasing == true )
             {
                 ASSERTL0(m_specHP_dealiasing == false,"Spectral/hp element dealaising is not set up for this option");
 
@@ -170,16 +170,8 @@ namespace Nektar
             }
             else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == false)
             {
-#if 0 
-                // Put PU in physical space - In principle could use AdvVel
-                pFields[0]->HomogeneousBwdTrans(pU, pOutarray);
-                
-                // take d/dx, d/dy  gradients in physical Fourier space
-                pFields[0]->PhysDeriv(pOutarray,grad0,grad1);
-#else
                 // take d/dx, d/dy  gradients in physical Fourier space
                 pFields[0]->PhysDeriv(pV[pVelocityComponent],grad0,grad1);
-#endif
                 
                 // Take d/dz derivative using wave space field 
                 pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],pU,
@@ -212,8 +204,8 @@ namespace Nektar
                 {
                     pFields[0]->PhysInterp1DScaled(OneDptscale,grad2,wkSp);
                     Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[2],1,Outarray,1,Outarray,1);
-                    pFields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,pOutarray); 
-                    pFields[0]->HomogeneousFwdTrans(pOutarray,pOutarray);
+                    pFields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,grad2); 
+                    pFields[0]->HomogeneousFwdTrans(grad2,pOutarray);
                 }
                 else
                 {

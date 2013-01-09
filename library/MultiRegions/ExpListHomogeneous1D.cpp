@@ -1053,6 +1053,11 @@ namespace Nektar
             v_PhysDeriv(edir,inarray,out_d);
         }
 		
+        LibUtilities::TranspositionSharedPtr ExpListHomogeneous1D::v_GetTransposition(void)
+        {
+            return m_transposition;
+        }
+
         Array<OneD, unsigned int> ExpListHomogeneous1D::v_GetZIDs(void)
         {
             return m_transposition->GetPlanesIDs();

@@ -1877,6 +1877,16 @@ namespace Nektar
             return NoEnergy;
         }
 		
+        LibUtilities::TranspositionSharedPtr ExpList::v_GetTransposition(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            LibUtilities::TranspositionSharedPtr trans;
+			
+            return trans;
+        }
+
+
         Array<OneD, unsigned int> ExpList::v_GetZIDs(void)
         {
             ASSERTL0(false,

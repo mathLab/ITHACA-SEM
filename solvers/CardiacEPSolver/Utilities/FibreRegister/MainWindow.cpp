@@ -1,4 +1,4 @@
-#include <QtGui/QtGui>
+ #include <QtGui/QtGui>
 
 #include <vtkCamera.h>
 #include <vtkDoubleArray.h>
@@ -74,11 +74,16 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourcePointsActor = vtkActor::New();
     mSourcePointsActor->SetMapper(mSourcePointsMapper);
     mSourcePointsActor->GetProperty()->SetColor(1.0,0.0,0.0);
-    mSourcePointsIds = vtkIdFilter::New();
+    //mSourcePointsIds = vtkIdFilter::New();//
+    
+    /*
     mSourcePointsIds->SetInput(mSourcePointsData);
     mSourcePointsIds->PointIdsOn();
+    */
+    
+    
     mSourcePointsVisible = vtkSelectVisiblePoints::New();
-    mSourcePointsVisible->SetInputConnection(mSourcePointsIds->GetOutputPort());
+    mSourcePointsVisible->SetInput(mSourceHeightPointData);
     mSourcePointsVisible->SetRenderer(mSourceRenderer);
     mSourcePointsLabelMapper = vtkLabeledDataMapper::New();
     mSourcePointsLabelMapper->SetInputConnection(mSourcePointsVisible->GetOutputPort());
@@ -150,10 +155,14 @@ void MainWindow::Draw() {
     QLabel* vFileSourceLabel = new QLabel(tr("Source:"));
     QLabel* vFilePointsLabel = new QLabel(tr("Landmarks:"));
     QLabel* vFileTargetLabel = new QLabel(tr("Target:"));
+    QLabel* vFileHeightLabel = new QLabel(tr("Height:")); //Height label
     
     mFileSourceEditBox = new QLineEdit(tr(""));
     mFileSourceBrowse = new QPushButton(tr("Browse..."));
     mFileTargetEditBox = new QLineEdit(tr(""));
+    
+    mFileHeightEditBox = new QLineEdit(tr(""));//Edit box
+    
     mFileTargetBrowse = new QPushButton(tr("Browse..."));
     mFileLandmarksEditBox = new QLineEdit(tr(""));
     mFileLandmarksBrowse = new QPushButton(tr("Browse..."));
@@ -170,14 +179,16 @@ void MainWindow::Draw() {
     mFileGrid->addWidget(vFileSourceLabel, 0, 0);
     mFileGrid->addWidget(vFilePointsLabel, 1, 0);
     mFileGrid->addWidget(vFileTargetLabel, 2, 0);
+    mFileGrid->addWidget(vFileHeightLabel, 3, 0);//Add widget of height label
     mFileGrid->addWidget(mFileSourceEditBox, 0, 1);
     mFileGrid->addWidget(mFileLandmarksEditBox, 1, 1);
     mFileGrid->addWidget(mFileTargetEditBox, 2, 1);
+    mFileGrid->addWidget(mFileHeightEditBox, 3, 1);//Add widget of height edit box
     mFileGrid->addWidget(mFileSourceBrowse, 0, 2);
     mFileGrid->addWidget(mFileLandmarksBrowse, 1, 2);
     mFileGrid->addWidget(mFileTargetBrowse, 2, 2);
-    mFileGrid->addWidget(mFileLoadButton, 3, 1);
-    mFileGrid->addWidget(mFileExportLandmarksButton, 4, 1);
+    mFileGrid->addWidget(mFileLoadButton, 4, 1); //Shifted downwards
+    mFileGrid->addWidget(mFileExportLandmarksButton, 5, 1);//Shifted downward
     
     mFileBox = new QGroupBox(tr("Files"));
     mFileBox->setLayout(mFileGrid);
@@ -244,9 +255,11 @@ void MainWindow::Load() {
     vtkPolyDataReader* vSourceLandmarks = vtkPolyDataReader::New();
     vSourceLandmarks->SetFileName(mFileLandmarksEditBox->text().toStdString().c_str());
     vSourceLandmarks->Update();
+    
     mSourcePointsData = vSourceLandmarks->GetOutput();
     mSourceFilterGlyph->SetInput(mSourcePointsData);
-    mSourcePointsIds->SetInput(mSourcePointsData);
+    //mSourcePointsIds->SetInput(mSourcePointsData);
+    
     
     vtkPoints* vTargetPoints = vtkPoints::New();
     mTargetPointsData->SetPoints(vTargetPoints);
@@ -254,7 +267,14 @@ void MainWindow::Load() {
     
     vtkPoints* vSourcePoints = vtkPoints::New();
     mSourceHeightPointData->SetPoints(vSourcePoints);
-    mSourcePointsIds->SetInput(mSourceHeightPointData);
+    //mSourcePointsIds->SetInput(mSourceHeightPointData);
+    
+    
+    vtkDoubleArray* Heights= vtkDoubleArray::New();
+    Heights->SetName("height"); //setting name of the array
+    mSourceHeightPointData->GetPointData()->AddArray(Heights); //get the points dataa of the mSourcePoints Data, and we are then adding a new scalar array to it.
+    mSourcePointsVisible->SetInput(mSourceHeightPointData);
+
 
     
     mSourceRenderer->ResetCamera(mSourceActor->GetBounds());
@@ -328,11 +348,14 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
     vLocator_source->SetTolerance(0.1);
     int nearestPointId_source = vLocator_source->FindClosestPointWithinRadius(5.0, p_s, d_s);
     
+    double Heights = mFileHeightEditBox->text().toDouble();
+    
     // If we are on the surface (i.e. id != -1) then add this vertex to the list
     // of landmark points.
     if (nearestPointId_source >= 0) {
-        mSourceData->GetPoints()->GetPoint(nearestPointId_source, p_s);
-        mSourceHeightPointData->GetPoints()->InsertNextPoint(p_s);
+        mSourceData->GetPoints()->GetPoint(nearestPointId_source, p_s);//get all vertices in the mesh, get nearest point using the id., put in ps
+        mSourceHeightPointData->GetPoints()->InsertNextPoint(p_s);//list of point which were already clicked on, add point which you have just clicked on. We now want to add the scalar value of the hight to this list.
+        mSourceHeightPointData->GetPointData()->GetScalars("height")-> InsertNextTuple1(Heights);//Tuple is size 1- scalar.
         mSourceHeightPointData->Modified();
     }
     

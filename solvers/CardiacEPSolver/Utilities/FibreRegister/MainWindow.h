@@ -77,6 +77,8 @@ class MainWindow : public QMainWindow
         QPushButton* mUndoButton;
         QVTKWidget* mSourceVtk;
         QVTKWidget* mTargetVtk;
+        QLineEdit* mFileHeightEditBox; //Edit box
+    
 
         // VTK
         // Left Surface pipeline

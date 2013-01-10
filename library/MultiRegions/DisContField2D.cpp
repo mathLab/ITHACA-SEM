@@ -388,7 +388,7 @@ namespace Nektar
                 
             // Set up physical normals
             SetUpPhysNormals();
-                
+            
             // Set up information for parallel jobs.
             for (int i = 0; i < m_trace->GetExpSize(); ++i)
             {

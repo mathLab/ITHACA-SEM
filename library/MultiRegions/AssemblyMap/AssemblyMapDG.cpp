@@ -448,25 +448,24 @@ namespace Nektar
             {
                 switch(m_solnType)
                 {
-                case eDirectFullMatrix:
-                case eIterativeFull:
+                    case eDirectFullMatrix:
+                    case eIterativeFull:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
+                        break;
                     }
-                    break;
-                case eDirectStaticCond:
-                case eIterativeStaticCond:
+                    case eDirectStaticCond:
+                    case eIterativeStaticCond:
                     {
                         CuthillMckeeReordering(boostGraphObj,perm,iperm);
+                        break;
                     }
-                    break;
-                case eDirectMultiLevelStaticCond:
-                case eIterativeMultiLevelStaticCond:
+                    case eDirectMultiLevelStaticCond:
                     {
                         MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph);
+                        break;
                     }
-                    break;
-                default:
+                    default:
                     {
                         ASSERTL0(false,"Unrecognised solution type");
                     }
@@ -647,7 +646,7 @@ namespace Nektar
             {
                 tmp[i] = m_globalToUniversalBndMap[i];
             }
-            m_gsh = Gs::Init(tmp, m_comm);
+            m_bndGsh = m_gsh = Gs::Init(tmp, m_comm);
             Gs::Unique(tmp, m_comm);
             for (unsigned int i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
             {
@@ -1070,23 +1069,24 @@ namespace Nektar
             {
                 switch(m_solnType)
                 {
-                case eDirectFullMatrix:
-                case eIterativeFull:
+                    case eDirectFullMatrix:
+                    case eIterativeFull:
+                    case eIterativeStaticCond:
                     {
                         NoReordering(boostGraphObj,perm,iperm);
+                        break;
                     }
-                    break;
-                case eDirectStaticCond:
+                    case eDirectStaticCond:
                     {
                         CuthillMckeeReordering(boostGraphObj,perm,iperm);
+                        break;
                     }
-                    break;
-                case eDirectMultiLevelStaticCond:
+                    case eDirectMultiLevelStaticCond:
                     {
                         MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph);
+                        break;
                     }
-                    break;
-                default:
+                    default:
                     {
                         ASSERTL0(false,"Unrecognised solution type");
                     }
@@ -1293,7 +1293,7 @@ namespace Nektar
             {
                 tmp[i] = m_globalToUniversalBndMap[i];
             }
-            m_gsh = Gs::Init(tmp, m_comm);
+            m_bndGsh = m_gsh = Gs::Init(tmp, m_comm);
             Gs::Unique(tmp, m_comm);
             for (unsigned int i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
             {
@@ -1314,15 +1314,15 @@ namespace Nektar
         void AssemblyMapDG::SetUpUniversalDGMap(const ExpList &locExp)
         {
             StdRegions::StdExpansionSharedPtr locExpansion;
-            int eid = 0;
-            int cnt = 0;
-            int i,j,k;
-            int id = 0;
-            int order_e = 0;
+            int eid       = 0;
+            int cnt       = 0;
+            int id        = 0;
+            int order_e   = 0;
             int vGlobalId = 0;
-            int maxDof = 0;
-            int dof = 0;
-            int nDim = 0;
+            int maxDof    = 0;
+            int dof       = 0;
+            int nDim      = 0;
+            int i,j,k;
 
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
 
@@ -1398,12 +1398,37 @@ namespace Nektar
 
                         id  = locSegExp->GetGeom1D()->GetEid();
                         order_e = locExpVector[eid]->GetEdgeNcoeffs(j);
+                        
+                        map<int,int> orientMap;
+                        Array<OneD, unsigned int> map1(order_e), map2(order_e);
+                        Array<OneD, int> sign1(order_e), sign2(order_e);
+                        
+                        locExpVector[eid]->GetEdgeToElementMap(j, StdRegions::eForwards, map1, sign1);
+                        locExpVector[eid]->GetEdgeToElementMap(j, locExpVector[eid]->GetEorient(j), map2, sign2);
+                        
+                        for (k = 0; k < map1.num_elements(); ++k)
+                        {
+                            // Find the elemental co-efficient in the original
+                            // mapping.
+                            int idx = -1;
+                            for (int l = 0; l < map2.num_elements(); ++l)
+                            {
+                                if (map1[k] == map2[l])
+                                {
+                                    idx = l;
+                                    break;
+                                }
+                            }
+                            
+                            ASSERTL2(idx != -1, "Problem with face to element map!");
+                            orientMap[k] = idx;
+                        }
 
                         for(k = 0; k < order_e; ++k)
                         {
                             vGlobalId = m_localToGlobalBndMap[k+cnt];
                             m_globalToUniversalBndMap[vGlobalId]
-                                = id * maxDof + k + 1;
+                                = id * maxDof + orientMap[k] + 1;
                         }
                         cnt += order_e;
                     }
@@ -1419,11 +1444,36 @@ namespace Nektar
                         id  = locFaceExp->GetGeom2D()->GetFid();
                         order_e = locExpVector[eid]->GetFaceNcoeffs(j);
 
+                        map<int,int> orientMap;
+                        Array<OneD, unsigned int> map1(order_e), map2(order_e);
+                        Array<OneD, int> sign1(order_e), sign2(order_e);
+                        
+                        locExpVector[eid]->GetFaceToElementMap(j, StdRegions::eDir1FwdDir1_Dir2FwdDir2, map1, sign1);
+                        locExpVector[eid]->GetFaceToElementMap(j, locExpVector[eid]->GetFaceOrient(j), map2, sign2);
+                        
+                        for (k = 0; k < map1.num_elements(); ++k)
+                        {
+                            // Find the elemental co-efficient in the original
+                            // mapping.
+                            int idx = -1;
+                            for (int l = 0; l < map2.num_elements(); ++l)
+                            {
+                                if (map1[k] == map2[l])
+                                {
+                                    idx = l;
+                                    break;
+                                }
+                            }
+                            
+                            ASSERTL2(idx != -1, "Problem with face to element map!");
+                            orientMap[k] = idx;
+                        }
+
                         for(k = 0; k < order_e; ++k)
                         {
                             vGlobalId = m_localToGlobalBndMap[k+cnt];
                             m_globalToUniversalBndMap[vGlobalId]
-                                = id * maxDof + k + 1;
+                                = id * maxDof + orientMap[k] + 1;
                         }
                         cnt += order_e;
                     }
@@ -1498,7 +1548,7 @@ namespace Nektar
             {
                 tmp[i] = m_traceToUniversalMap[i];
             }
-            m_bndGsh = Gs::Init(tmp, m_comm);
+            m_traceGsh = Gs::Init(tmp, m_comm);
             Gs::Unique(tmp, m_comm);
             for (int i = 0; i < nTracePhys; ++i)
             {
@@ -1509,7 +1559,7 @@ namespace Nektar
         void AssemblyMapDG::UniversalTraceAssemble(
             Array<OneD, NekDouble> &pGlobal) const
         {
-            Gs::Gather(pGlobal, Gs::gs_add, m_bndGsh);
+            Gs::Gather(pGlobal, Gs::gs_add, m_traceGsh);
         }
 
         int AssemblyMapDG::v_GetLocalToGlobalMap(const int i) const

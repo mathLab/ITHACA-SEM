@@ -116,6 +116,7 @@ namespace Nektar
             {
                 m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
                 m_session->LoadParameter("IO_EnergySteps", m_energysteps, 0);
+                m_session->LoadParameter("IO_CFLSteps", m_cflsteps, 0);
                 m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
                 m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
             
@@ -267,7 +268,14 @@ namespace Nektar
             {
                 WriteModalEnergy();
             }
-
+            
+            
+            if(m_cflsteps && !((n+1)%m_cflsteps) && m_comm->GetRank() == 0)
+            {
+                int elmtid;
+                NekDouble cfl = GetCFLEstimate(elmtid);
+                cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
+            }
             
             // dump data in m_fields->m_coeffs to file. 
             if(m_checksteps && n&&(!((n+1)%m_checksteps)))
@@ -897,6 +905,58 @@ namespace Nektar
         
         NekDouble TimeStep = Vmath::Vmin(n_element, tstep, 1);
         return TimeStep;
+    }
+    
+
+
+
+    NekDouble IncNavierStokes::GetCFLEstimate(int &elmtid)
+    { 
+        int nvariables     = m_fields.num_elements();
+        int nTotQuadPoints = GetTotPoints();
+        int n_element      = m_fields[0]->GetExpSize(); 
+        
+        const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
+        Array<OneD, int> ExpOrderList (n_element, ExpOrder);
+        
+        const NekDouble minLengthStdTri  = 1.414213;
+        const NekDouble minLengthStdQuad = 2.0;
+        const NekDouble cLambda          = 0.2; // Spencer book pag. 317
+        
+        Array<OneD, NekDouble> cfl        (n_element, 0.0);
+        Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
+        Array<OneD, Array<OneD, NekDouble> > velfields; 
+        
+        if(m_HomogeneousType == eHomogeneous1D) // just do check on 2D info
+        {
+            velfields = Array<OneD, Array<OneD, NekDouble> >(2);
+
+            for(int i = 0; i < 2; ++i)
+            {
+                velfields[i] = m_fields[m_velocity[i]]->UpdatePhys();
+            }        
+        }
+        else
+        {
+            velfields = Array<OneD, Array<OneD, NekDouble> >(m_velocity.num_elements());
+
+            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                velfields[i] = m_fields[m_velocity[i]]->UpdatePhys();
+            }        
+        }
+        stdVelocity = GetStdVelocity(velfields);
+        
+        for(int el = 0; el < n_element; ++el)
+        {
+            cfl[el] =  m_timestep*(stdVelocity[el] * cLambda *
+                                   (ExpOrder[el]-1) * (ExpOrder[el]-1));
+        }
+        
+        elmtid = Vmath::Imax(n_element,cfl,1);
+        NekDouble CFL = cfl[elmtid];
+        
+        return CFL;
     }
     
     

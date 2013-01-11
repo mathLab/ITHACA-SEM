@@ -1,4 +1,4 @@
- #include <QtGui/QtGui>
+#include <QtGui/QtGui>
 
 #include <vtkCamera.h>
 #include <vtkDoubleArray.h>
@@ -74,22 +74,31 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourcePointsActor = vtkActor::New();
     mSourcePointsActor->SetMapper(mSourcePointsMapper);
     mSourcePointsActor->GetProperty()->SetColor(1.0,0.0,0.0);
-    //mSourcePointsIds = vtkIdFilter::New();//
     
-    /*
+    
+    //Set Visibility of the Landmark points
+    mSourcePointsIds = vtkIdFilter::New();
     mSourcePointsIds->SetInput(mSourcePointsData);
     mSourcePointsIds->PointIdsOn();
-    */
-    
-    
     mSourcePointsVisible = vtkSelectVisiblePoints::New();
-    mSourcePointsVisible->SetInput(mSourceHeightPointData);
+    mSourcePointsVisible->SetInputConnection(mSourcePointsIds->GetOutputPort());
     mSourcePointsVisible->SetRenderer(mSourceRenderer);
     mSourcePointsLabelMapper = vtkLabeledDataMapper::New();
     mSourcePointsLabelMapper->SetInputConnection(mSourcePointsVisible->GetOutputPort());
     mSourcePointsLabelMapper->SetLabelModeToLabelFieldData();
     mSourcePointsLabelActor = vtkActor2D::New();
     mSourcePointsLabelActor->SetMapper(mSourcePointsLabelMapper);
+    
+    //Set visibility of heights
+    
+    mSourceHeightPointsVisible = vtkSelectVisiblePoints::New();
+    mSourceHeightPointsVisible->SetInput(mSourceHeightPointData);
+    mSourceHeightPointsVisible->SetRenderer(mSourceRenderer);
+    mSourceHeightPointsLabelMapper = vtkLabeledDataMapper::New();
+    mSourceHeightPointsLabelMapper->SetInputConnection(mSourceHeightPointsVisible->GetOutputPort());
+    mSourceHeightPointsLabelMapper->SetLabelModeToLabelFieldData();
+    mSourceHeightPointsLabelActor = vtkActor2D::New();
+    mSourceHeightPointsLabelActor->SetMapper(mSourceHeightPointsLabelMapper);
     
     mTargetPointsData = vtkPolyData::New();
     mTargetSphere = vtkSphereSource::New();
@@ -117,6 +126,7 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourceRenderer->AddActor(mSourceActor);
     mSourceRenderer->AddActor(mSourcePointsActor);
     mSourceRenderer->AddActor(mSourcePointsLabelActor);
+    mSourceRenderer->AddActor(mSourceHeightPointsLabelActor);
     mSourceRenderer->ResetCamera();
     mSourceVtk->GetRenderWindow()->AddRenderer(mSourceRenderer);
     
@@ -135,9 +145,9 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     
     Connections_s = vtkEventQtSlotConnect::New();
     Connections_s->Connect(mSourceVtk->GetRenderWindow()->GetInteractor(),
-                         vtkCommand::RightButtonPressEvent,
-                         this,
-                         SLOT(CreateSourcePoint( vtkObject*, unsigned long, void*, void*, vtkCommand*)));
+                           vtkCommand::RightButtonPressEvent,
+                           this,
+                           SLOT(CreateSourcePoint( vtkObject*, unsigned long, void*, void*, vtkCommand*)));
     
 }
 
@@ -255,10 +265,9 @@ void MainWindow::Load() {
     vtkPolyDataReader* vSourceLandmarks = vtkPolyDataReader::New();
     vSourceLandmarks->SetFileName(mFileLandmarksEditBox->text().toStdString().c_str());
     vSourceLandmarks->Update();
-    
     mSourcePointsData = vSourceLandmarks->GetOutput();
     mSourceFilterGlyph->SetInput(mSourcePointsData);
-    //mSourcePointsIds->SetInput(mSourcePointsData);
+    mSourcePointsIds->SetInput(mSourcePointsData);
     
     
     vtkPoints* vTargetPoints = vtkPoints::New();
@@ -267,15 +276,13 @@ void MainWindow::Load() {
     
     vtkPoints* vSourcePoints = vtkPoints::New();
     mSourceHeightPointData->SetPoints(vSourcePoints);
-    //mSourcePointsIds->SetInput(mSourceHeightPointData);
-    
     
     vtkDoubleArray* Heights= vtkDoubleArray::New();
     Heights->SetName("height"); //setting name of the array
     mSourceHeightPointData->GetPointData()->AddArray(Heights); //get the points dataa of the mSourcePoints Data, and we are then adding a new scalar array to it.
-    mSourcePointsVisible->SetInput(mSourceHeightPointData);
-
-
+    mSourceHeightPointsVisible->SetInput(mSourceHeightPointData);
+    
+    
     
     mSourceRenderer->ResetCamera(mSourceActor->GetBounds());
     mTargetRenderer->ResetCamera(mTargetActor->GetBounds());

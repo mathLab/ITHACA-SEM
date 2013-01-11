@@ -108,9 +108,12 @@ class MainWindow : public QMainWindow
         // Source Points Labels pipeline
         vtkIdFilter* mSourcePointsIds;
         vtkSelectVisiblePoints* mSourcePointsVisible;
+        vtkSelectVisiblePoints* mSourceHeightPointsVisible;
         vtkLabeledDataMapper* mSourcePointsLabelMapper;
+        vtkLabeledDataMapper* mSourceHeightPointsLabelMapper;
         vtkActor2D* mSourcePointsLabelActor;
-
+        vtkActor2D* mSourceHeightPointsLabelActor;
+    
         // Target Points pipeline
         vtkPolyData* mTargetPointsData;
         vtkSphereSource* mTargetSphere;

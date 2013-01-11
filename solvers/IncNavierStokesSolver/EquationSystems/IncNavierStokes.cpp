@@ -956,6 +956,10 @@ namespace Nektar
         elmtid = Vmath::Imax(n_element,cfl,1);
         NekDouble CFL = cfl[elmtid];
         
+        if(m_HomogeneousType == eHomogeneous1D) // express element id with respect to plane
+        {
+            elmtid = elmtid%m_fields[0]->GetPlane(0)->GetExpSize();
+        }
         return CFL;
     }
     

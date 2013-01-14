@@ -9,6 +9,7 @@
 //#include <vtkTable.h>
 #include "vtkEventQtSlotConnect.h"
 #include "vtkPolyDataWriter.h"
+#include <vtkLookupTable.h>
 
 #include "MainWindow.h"
 
@@ -20,6 +21,8 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     Draw();
     
     // Set up VTK stuff
+    
+    //Source Data contains mesh
     mSourceData = vtkPolyData::New();
     mTargetData = vtkPolyData::New();
     
@@ -48,9 +51,22 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mTargetFilterDepthSort->SetCamera(mTargetRenderer->GetActiveCamera());
     mTargetFilterDepthSort->SortScalarsOn();
     
+   //Look up table
+    vtkLookupTable *Interpvalues=vtkLookupTable::New();
+    Interpvalues->SetTableRange(0,10);
+    Interpvalues->SetNumberOfColors(256);
+    Interpvalues->SetHueRange(0.667,0.0);
+    Interpvalues->SetSaturationRange(1.0,1.0);
+    Interpvalues->SetValueRange(1.0,1.0);
+    Interpvalues->Build();
+    
     mSourceMapper = vtkPolyDataMapper::New();
     mSourceMapper->SetInputConnection(mSourceFilterDepthSort->GetOutputPort());
-    mSourceMapper->ScalarVisibilityOff();
+    mSourceMapper->SetScalarModeToUsePointData();
+    mSourceMapper->SetColorModeToMapScalars();
+    mSourceMapper->SetScalarRange(0,10);
+    mSourceMapper->SetLookupTable(Interpvalues);
+
     mTargetMapper = vtkPolyDataMapper::New();
     mTargetMapper->SetInputConnection(mTargetFilterDepthSort->GetOutputPort());
     mTargetMapper->ScalarVisibilityOff();
@@ -62,6 +78,8 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mTargetActor = vtkActor::New();
     mTargetActor->SetMapper(mTargetMapper);
     
+    
+    //Landmarks
     mSourcePointsData = vtkPolyData::New();
     mSourceHeightPointData = vtkPolyData::New();
     mSourceSphere = vtkSphereSource::New();
@@ -330,6 +348,69 @@ void MainWindow::CreateTargetPoint(vtkObject* caller, unsigned long vtk_event, v
     Update();
 }
 
+//Interp Surface
+
+vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* pSurface, int pInterpDistance) {
+    
+    int nSurfacePoints = pSurface->GetNumberOfPoints();
+    vtkDoubleArray* vPointDataValues = dynamic_cast<vtkDoubleArray*>(pPointData->GetPointData()->GetArray("height"));
+    
+    vtkDoubleArray* vOutput = vtkDoubleArray::New();
+    vOutput->SetNumberOfComponents(1);
+    vOutput->SetName("HeightSurface");
+    vOutput->SetNumberOfValues(nSurfacePoints);
+    
+    if (pPointData->GetNumberOfPoints() < 4) return vOutput;//We check to see if the number of points which we have clicked on is more than 4- since we need the four cloest neighbours.
+    
+     cout << "hi" << endl;
+    
+    vtkPointLocator* vLocator = vtkPointLocator::New();
+    vLocator->SetDataSet(pPointData);
+    
+    
+    //This loops through all the points in the mesh
+    for (int i = 0; i < nSurfacePoints; ++i) {
+        double p[3];
+        vtkIdList* list = vtkIdList::New();
+        
+        pSurface->GetPoint(i, p);//Give co-ordinates of mesh point
+        vLocator->FindClosestNPoints(4, p, list); //Find 4 closest points to p and store in list
+        //int numPoints= min(4, int(list->GetNumberOfIds()));
+        
+        
+        //cout << list->GetNumberOfIds() << endl;
+        
+        //Weighted average of 4 closest points
+        double val = 0;
+        double w = 0;
+        int c = 0;
+        for (int j = 0; j < 4; ++j) {
+            int id = list->GetId(j); 
+            double q[3];
+            pPointData->GetPoint(id, q);
+            
+            double d_pq = sqrt(vtkMath::Distance2BetweenPoints(p, q));
+            
+            if (d_pq <= pInterpDistance) {
+                val += vPointDataValues->GetValue(id) / (d_pq + 1E-10);
+                w   += 1.0 / (d_pq + 1E-10);
+                c   += 1;
+            }
+        }
+        
+        if (c >= 1) {
+            val /= w;
+        }
+        else {
+            val = 0.0;
+        }
+        vOutput->SetValue(i, val);//Sets value of point in mesh as weighted average
+    }
+    return vOutput;
+}
+
+//End Interp surface
+
 //Create Source Point
 
 void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, void* client_data, void* call_data, vtkCommand* command) {
@@ -364,6 +445,12 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
         mSourceHeightPointData->GetPoints()->InsertNextPoint(p_s);//list of point which were already clicked on, add point which you have just clicked on. We now want to add the scalar value of the hight to this list.
         mSourceHeightPointData->GetPointData()->GetScalars("height")-> InsertNextTuple1(Heights);//Tuple is size 1- scalar.
         mSourceHeightPointData->Modified();
+        
+        //Interpolation
+        int vInterpDistance=5;
+        vtkDoubleArray* vSurfaceData=InterpSurface(mSourceHeightPointData, mSourceData, vInterpDistance);
+        mSourceHeightPointData->GetPointData()->RemoveArray("HeightSurface");
+        mSourceHeightPointData->GetPointData()->SetScalars(vSurfaceData);
     }
     
     // Update display

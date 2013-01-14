@@ -33,6 +33,7 @@
 //#include <vtkTextMapper.h>
 //#include <vtkActor2D.h>
 
+
 class vtkEventQtSlotConnect;
 
 
@@ -50,7 +51,7 @@ class MainWindow : public QMainWindow
         void BrowseLandmarks();
         void Load();
         void Update();
-
+        
         void CreateTargetPoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
     
         void CreateSourcePoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
@@ -130,6 +131,9 @@ class MainWindow : public QMainWindow
         vtkEventQtSlotConnect* Connections;
         vtkEventQtSlotConnect* Connections_s;
         void Draw();
+    
+        vtkDoubleArray* InterpSurface(vtkPolyData* pPointData, vtkPolyData* pSurface, int pInterpDistance);
+    
 
 
 };

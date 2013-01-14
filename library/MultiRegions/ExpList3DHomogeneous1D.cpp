@@ -427,7 +427,7 @@ namespace Nektar
             return sqrt(err);
         }
 		
-        Array<OneD, NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
+        Array<OneD, const NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
         {
             int cnt = 0, cnt1 = 0;
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();

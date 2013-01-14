@@ -470,7 +470,7 @@ namespace Nektar
 			
             /// This function calculates the energy associated with each one of the modes
             /// of a 3D homogeneous nD expansion
-            Array<OneD, NekDouble> HomogeneousEnergy (void)
+            Array<OneD, const NekDouble> HomogeneousEnergy (void)
             {
                 return v_HomogeneousEnergy();
             }
@@ -479,7 +479,7 @@ namespace Nektar
             /// numbers in z-direction associated
             /// with the 3D homogenous expansion. Required if a
             /// parellelisation is applied in the Fourier direction
-            Array<OneD, unsigned int> GetZIDs(void)
+            Array<OneD, const unsigned int> GetZIDs(void)
             {
                 return v_GetZIDs();
             }
@@ -495,7 +495,7 @@ namespace Nektar
             /// numbers in y-direction associated
             /// with the 3D homogenous expansion. Required if a
             /// parellelisation is applied in the Fourier direction
-            Array<OneD, unsigned int> GetYIDs(void)
+            Array<OneD, const unsigned int> GetYIDs(void)
             {
                 return v_GetYIDs();
             }
@@ -1165,10 +1165,10 @@ namespace Nektar
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
             
-            virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
+            virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
-            virtual Array<OneD, unsigned int> v_GetZIDs(void);
-            virtual Array<OneD, unsigned int> v_GetYIDs(void);
+            virtual Array<OneD, const unsigned int> v_GetZIDs(void);
+            virtual Array<OneD, const unsigned int> v_GetYIDs(void);
             
             // 1D Scaling and projection
             virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);

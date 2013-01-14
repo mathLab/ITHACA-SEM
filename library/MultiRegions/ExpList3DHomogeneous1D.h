@@ -130,7 +130,7 @@ namespace Nektar
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
 			
-			virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
+            virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
 
             virtual void v_GetPeriodicEdges(
                 vector<map<int,int> > &periodicVertices,

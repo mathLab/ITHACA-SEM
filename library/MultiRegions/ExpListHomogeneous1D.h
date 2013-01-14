@@ -244,7 +244,7 @@ namespace Nektar
             
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
 
-            virtual Array<OneD, unsigned int> v_GetZIDs(void);
+            virtual Array<OneD, const unsigned int> v_GetZIDs(void);
             
             virtual ExpListSharedPtr &v_GetPlane(int n)
             {

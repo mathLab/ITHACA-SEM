@@ -169,7 +169,8 @@ namespace Nektar
             m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
             CalculateBndSystemBandWidth();
 
-            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(), m_localToGlobalBndMap.end());
+            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
+                                       m_localToGlobalBndMap.end());
         }
 
 
@@ -640,49 +641,37 @@ namespace Nektar
             SetUpUniversalDGMap   (locExp);
             SetUpUniversalTraceMap(locExp, tr);
 
-            // Initialise GSlib and populate the unique map.
-            Nektar::Array<OneD, long> tmp(m_globalToUniversalBndMap.num_elements());
-            for (unsigned int i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
-            {
-                tmp[i] = m_globalToUniversalBndMap[i];
-            }
-            m_bndGsh = m_gsh = Gs::Init(tmp, m_comm);
-            Gs::Unique(tmp, m_comm);
-            for (unsigned int i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
-            {
-                m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
-            }
-
-            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(), m_localToGlobalBndMap.end());
+            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
+                                       m_localToGlobalBndMap.end());
         }
 
         /**
          * Constructor for trace map for three-dimensional expansion.
          */
         AssemblyMapDG::AssemblyMapDG(
-            const LibUtilities::SessionReaderSharedPtr &pSession,
-            const SpatialDomains::MeshGraphSharedPtr &graph3D,
-            const ExpList2DSharedPtr &trace,
-            const ExpList &locExp,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &bndCondExp,
+            const LibUtilities::SessionReaderSharedPtr                &pSession,
+            const SpatialDomains::MeshGraphSharedPtr                  &graph3D,
+            const ExpList2DSharedPtr                                  &trace,
+            const ExpList                                             &locExp,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>         &bndCondExp,
             const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
-            const map<int,PeriodicFace> &periodicFaces):
+            const map<int,PeriodicFace>                               &periodicFaces):
             AssemblyMap(pSession)
         {
-
-
             int i,j,k,cnt,eid, id, id1, order_e,gid;
             int ntrace_exp = trace->GetExpSize();
             int nbnd = bndCondExp.num_elements();
-            LocalRegions::QuadExpSharedPtr locQuadExp, locQuadExp1;
-            LocalRegions::TriExpSharedPtr  locTriExp, locTriExp1;
-            LocalRegions::HexExpSharedPtr locHexExp;
-            LocalRegions::PrismExpSharedPtr locPrismExp;
-            LocalRegions::PyrExpSharedPtr locPyrExp;
-            LocalRegions::TetExpSharedPtr locTetExp;
+            LocalRegions::QuadExpSharedPtr      locQuadExp, locQuadExp1;
+            LocalRegions::TriExpSharedPtr       locTriExp, locTriExp1;
+            LocalRegions::HexExpSharedPtr       locHexExp;
+            LocalRegions::PrismExpSharedPtr     locPrismExp;
+            LocalRegions::PyrExpSharedPtr       locPyrExp;
+            LocalRegions::TetExpSharedPtr       locTetExp;
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
+            StdRegions::StdExpansionSharedPtr   locBndExp;
 
-            const boost::shared_ptr<StdRegions::StdExpansionVector> exp3D = locExp.GetExp();
+            const boost::shared_ptr<StdRegions::StdExpansionVector> exp3D = 
+                locExp.GetExp();
             int nel = exp3D->size();
 
             map<int, int> MeshFaceId;
@@ -692,21 +681,7 @@ namespace Nektar
             // determine mapping from geometry edges to trace
             for(i = 0; i < ntrace_exp; ++i)
             {
-                //quad face
-                if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(trace->GetExp(i))))
-                {
-                    id = (locQuadExp->GetGeom2D())->GetFid();
-                }
-                //tri face
-                else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(trace->GetExp(i))))
-                {
-                    id = (locTriExp->GetGeom2D())->GetFid();
-                }
-                else
-                {
-                    ASSERTL0(false,"Dynamic cast to face expansion failed");
-                }
-                
+                id = trace->GetExp(i)->GetGeom2D()->GetFid();
                 /*
                 if(periodicFaces.count(id) > 0)
                 {
@@ -734,7 +709,8 @@ namespace Nektar
             }
 
             Array<OneD, StdRegions::StdExpansionSharedPtr> facemap(cnt);
-            m_elmtToTrace = Array<OneD, Array<OneD,StdRegions::StdExpansionSharedPtr> >(nel);
+            m_elmtToTrace = Array<OneD, 
+                Array<OneD, StdRegions::StdExpansionSharedPtr> >(nel);
 
             // set up face expansions links;
             cnt = 0;
@@ -742,130 +718,21 @@ namespace Nektar
             {
                 m_elmtToTrace[i] = facemap + cnt;
                 
-                //if Hex expansion
-                if((locHexExp = boost::dynamic_pointer_cast<LocalRegions::HexExp>((*exp3D)[i])))
+                for(j = 0; j < (*exp3D)[i]->GetNfaces(); ++j)
                 {
-                    for(j = 0; j < locHexExp->GetNfaces(); ++j)
+                    id = (*exp3D)[i]->GetGeom3D()->GetFid(j);
+                    
+                    if(MeshFaceId.count(id) > 0)
                     {
-                        FaceGeom = (locHexExp->GetGeom3D())->GetFace(j);
+                        m_elmtToTrace[i][j] = 
+                            trace->GetExp(MeshFaceId.find(id)->second);
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"Failed to find face map");
+                    }
+                }
 
-                        id = FaceGeom->GetFid();
-
-                        if(MeshFaceId.count(id) > 0)
-                        {
-                            if(FaceGeom->GetGeomShapeType() == SpatialDomains::eQuadrilateral)
-                            {
-                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
-                            }
-                            else if(FaceGeom->GetGeomShapeType() == SpatialDomains::eTriangle)
-                            {
-                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"Unknown face geometry shape type");
-                            }
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"Failed to find face map");
-                        }
-                    }
-                }
-                //else if Tet expansion
-                else if((locTetExp = boost::dynamic_pointer_cast<LocalRegions::TetExp>((*exp3D)[i])))
-                {
-                    for(j = 0; j < locTetExp->GetNfaces(); ++j)
-                    {
-                        FaceGeom = (locTetExp->GetGeom3D())->GetFace(j);
-                        
-                        id = FaceGeom->GetFid();
-                        
-                        if(MeshFaceId.count(id) > 0)
-                        {
-                            if(FaceGeom->GetGeomShapeType() == SpatialDomains::eQuadrilateral)
-                            {
-                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
-                            }
-                            else if(FaceGeom->GetGeomShapeType() == SpatialDomains::eTriangle)
-                            {
-                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"Unknown face geometry shape type");
-                            }
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"Failed to find face map");
-                        }
-                    }
-                }
-                //else if Pyramid expansion
-                else if((locPyrExp = boost::dynamic_pointer_cast<LocalRegions::PyrExp>((*exp3D)[i])))
-                {
-                    for(j = 0; j < locPyrExp->GetNfaces(); ++j)
-                    {
-                        FaceGeom = (locPyrExp->GetGeom3D())->GetFace(j);
-                        
-                        id = FaceGeom->GetFid();
-                        
-                        if(MeshFaceId.count(id) > 0)
-                        {
-                            if(FaceGeom->GetGeomShapeType() == SpatialDomains::eQuadrilateral)
-                            {
-                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
-                            }
-                            else if(FaceGeom->GetGeomShapeType() == SpatialDomains::eTriangle)
-                            {
-                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"Unknown face geometry shape type");
-                            }
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"Failed to find face map");
-                        }
-                    }
-                }
-                //else if Prism expansion
-                else if((locPrismExp = boost::dynamic_pointer_cast<LocalRegions::PrismExp>((*exp3D)[i])))
-                {
-                    for(j = 0; j < locPrismExp->GetNfaces(); ++j)
-                    {
-                        FaceGeom = (locPrismExp->GetGeom3D())->GetFace(j);
-                        
-                        id = FaceGeom->GetFid();
-                        
-                        if(MeshFaceId.count(id) > 0)
-                        {
-                            if(FaceGeom->GetGeomShapeType() == SpatialDomains::eQuadrilateral)
-                            {
-                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::QuadExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
-                            }
-                            else if(FaceGeom->GetGeomShapeType() == SpatialDomains::eTriangle)
-                            {
-                                m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions::TriExp> ((*trace).GetExp(MeshFaceId.find(id)->second));
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"Unknown face geometry shape type");
-                            }
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"Failed to find face map");
-                        }
-                    }
-                }
-                else
-                {
-                    ASSERTL0(false,"dynamic cast to a local 3D expansion failed");
-                }
                 cnt += (*exp3D)[i]->GetNfaces();
             }
 
@@ -876,9 +743,8 @@ namespace Nektar
                 cnt += bndCondExp[i]->GetExpSize();
             }
 
-#if OLDMAP
-            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
-#endif
+            set<int> dirFaces;
+
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys  = 0;
 
@@ -887,84 +753,43 @@ namespace Nektar
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-                    //if face is quad
-                    if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j))))
-                    {
-                        FaceGeom = locQuadExp->GetGeom2D();
-                        id = FaceGeom->GetFid();
-
-#if OLDMAP
-                        id = FaceGeom->GetFid();
-                        if(MeshFaceId.count(id) > 0)
-                        {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+j] = MeshFaceId.find(id)->second;
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"Failed to find face map");
-                        }
-#endif
-                        
-                        if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                        {
-                            m_numLocalDirBndCoeffs  += locQuadExp->GetNcoeffs();
-                            m_numDirichletBndPhys   += locQuadExp->GetTotPoints();
-                        }
-                    }
-                    //else if face is triangle
-                    else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j))))
-                    {
-                        FaceGeom = locTriExp->GetGeom2D();
-                        id = FaceGeom->GetFid();
-                        
-#if OLDMAP
-                        id = FaceGeom->GetFid();
-                        if(MeshFaceId.count(id) > 0)
-                        {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+j] = MeshFaceId.find(id)->second;
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"Failed to find face map");
-                        }
-#endif
-                        if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                        {
-                            m_numLocalDirBndCoeffs  += locTriExp->GetNcoeffs();
-                            m_numDirichletBndPhys   += locTriExp->GetTotPoints();
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a local face expansion failed");
-                    }
+                    locBndExp = bndCondExp[i]->GetExp(j);
+                    FaceGeom  = locBndExp->GetGeom2D();
+                    id        = FaceGeom->GetFid();
                     
-                    
+                    if(bndCond[i]->GetBoundaryConditionType() == 
+                           SpatialDomains::eDirichlet)
+                    {
+                        m_numLocalDirBndCoeffs += locBndExp->GetNcoeffs();
+                        m_numDirichletBndPhys  += locBndExp->GetTotPoints();
+                        dirFaces.insert(id);
+                    }
                 }
+
                 cnt += j;
             }
 
             // Set up integer mapping array and sign change for each
             // degree of freedom + initialise some more data members
-            m_staticCondLevel = 0;
-            m_numPatches = nel;
-            m_numLocalBndCoeffsPerPatch =  Array<OneD, unsigned int>(nel);
-            m_numLocalIntCoeffsPerPatch =  Array<OneD, unsigned int>(nel);
+            m_staticCondLevel           = 0;
+            m_numPatches                = nel;
+            m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(nel);
+            m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(nel);
+
             int nbndry = 0;
             for(i = 0; i < nel; ++i) // count number of elements in array
             {
-                eid = locExp.GetOffset_Elmt_Id(i);
+                eid     = locExp.GetOffset_Elmt_Id(i);
                 nbndry += (*exp3D)[eid]->NumDGBndryCoeffs();
                 m_numLocalBndCoeffsPerPatch[i] = (unsigned int) (*exp3D)[eid]->NumDGBndryCoeffs();
                 m_numLocalIntCoeffsPerPatch[i] = (unsigned int) 0;
             }
 
             m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
-
-            m_numLocalBndCoeffs = nbndry;
-            m_numLocalCoeffs = nbndry;
-            m_localToGlobalBndMap  = Array<OneD, int > (nbndry);
-            m_localToGlobalBndSign = Array<OneD, NekDouble > (nbndry,1);
+            m_numLocalBndCoeffs     = nbndry;
+            m_numLocalCoeffs        = nbndry;
+            m_localToGlobalBndMap   = Array<OneD, int>       (nbndry);
+            m_localToGlobalBndSign  = Array<OneD, NekDouble> (nbndry,1);
 
             // Set up array for potential mesh optimsation
             Array<OneD,int> FaceElmtGid(ntrace_exp,-1);
@@ -978,13 +803,16 @@ namespace Nektar
             typedef boost::graph_traits<BoostGraph>::vertex_descriptor BoostVertex;
 
             BoostGraph boostGraphObj;
-            int face_id,face_id1;
+            int face_id, face_id1;
+            int dirOffset = 0;
 
             // make trace face renumbering map where first solved
             // face starts at 0 so we can set up graph.
             for(i = 0; i < ntrace_exp; ++i)
             {
-                if(trace->GetCoeff_Offset(i) >= m_numLocalDirBndCoeffs)
+                id = trace->GetExp(i)->GetGeom2D()->GetFid();
+                
+                if (dirFaces.count(id) == 0)
                 {
                     // Initial put in element ordering (starting
                     // from zero) into FaceElmtGid
@@ -994,7 +822,8 @@ namespace Nektar
                 else
                 {
                     // Use existing offset for Dirichlet edges
-                    FaceElmtGid[i] = trace->GetCoeff_Offset(i);
+                    FaceElmtGid[i] = dirOffset;
+                    dirOffset     += trace->GetExp(i)->GetNcoeffs();
                     nDir++;
                 }
             }
@@ -1006,60 +835,36 @@ namespace Nektar
 
                 for(j = 0; j < (*exp3D)[eid]->GetNfaces(); ++j)
                 {
-                    //if face is quad
-                    if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][j])))
-                    {
-                        FaceGeom = locQuadExp->GetGeom2D();
-                    }
-                    //else if face is triangle
-                    else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][j])))
-                    {
-                        FaceGeom = locTriExp->GetGeom2D();
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a local face expansion failed");
-                    }
-                    
                     // Add face to boost graph for non-Dirichlet Boundary
-                    id = FaceGeom->GetFid();
-                    face_id = MeshFaceId.find(id)->second;
-                    if(trace->GetCoeff_Offset(face_id) >= m_numLocalDirBndCoeffs)
+                    FaceGeom = m_elmtToTrace[eid][j]->GetGeom2D();
+                    id       = FaceGeom->GetFid();
+                    face_id  = MeshFaceId.find(id)->second;
+
+                    if(dirFaces.count(id) == 0)
                     {
                         for(k = j+1; k < (*exp3D)[eid]->GetNfaces(); ++k)
                         {
-                            //if face is quad
-                            if((locQuadExp1 = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][k])))
-                            {
-                                FaceGeom = locQuadExp1->GetGeom2D();
-                            }
-                            //else if face is triangle
-                            else if((locTriExp1 = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][k])))
-                            {
-                                FaceGeom = locTriExp1->GetGeom2D();
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"dynamic cast to a local face expansion failed");
-                            }
-                            id1  = FaceGeom->GetFid();
+                            FaceGeom = m_elmtToTrace[eid][k]->GetGeom2D();
+                            id1      = FaceGeom->GetFid();
                             face_id1 = MeshFaceId.find(id1)->second;
-                            if(trace->GetCoeff_Offset(face_id1)
-                               >= m_numLocalDirBndCoeffs)
+                            
+                            if(dirFaces.count(id1) == 0)
                             {
-                                boost::add_edge( (size_t) FaceElmtGid[face_id], (size_t) FaceElmtGid[face_id1], boostGraphObj);
+                                boost::add_edge((size_t) FaceElmtGid[face_id], 
+                                                (size_t) FaceElmtGid[face_id1], 
+                                                boostGraphObj);
                             }
                         }
                     }
                 }
             }
 
-
-            int nGraphVerts = ntrace_exp-nDir;
-            Array<OneD, int> perm(nGraphVerts);
-            Array<OneD, int> iperm(nGraphVerts);
+            int                                 nGraphVerts = ntrace_exp - nDir;
+            Array<OneD, int>                    perm (nGraphVerts);
+            Array<OneD, int>                    iperm(nGraphVerts);
+            Array<OneD, int>                    vwgts(nGraphVerts);
             BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
-            Array<OneD, int> vwgts(nGraphVerts);
+            
             for(i = 0; i < nGraphVerts; ++i)
             {
                 vwgts[i] = trace->GetExp(i+nDir)->GetNcoeffs();
@@ -1083,7 +888,8 @@ namespace Nektar
                     }
                     case eDirectMultiLevelStaticCond:
                     {
-                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph);
+                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,
+                                                      bottomUpGraph);
                         break;
                     }
                     default:
@@ -1093,13 +899,12 @@ namespace Nektar
                 }
             }
 
-            // Recast the permutation so that it can be
-            // used as a map Form old trace face ID to new trace
-            // face ID
+            // Recast the permutation so that it can be used as a map Form old
+            // trace face ID to new trace face ID
             cnt = m_numLocalDirBndCoeffs;
-            for(i = 0; i < ntrace_exp-nDir; ++i)
+            for(i = 0; i < ntrace_exp - nDir; ++i)
             {
-                FaceElmtGid[perm[i]+nDir]=cnt;
+                FaceElmtGid[perm[i]+nDir] = cnt;
                 cnt += trace->GetExp(perm[i]+nDir)->GetNcoeffs();
             }
 
@@ -1112,24 +917,10 @@ namespace Nektar
 
                 for(j = 0; j < (*exp3D)[eid]->GetNfaces(); ++j)
                 {
-                    //if face is quad
-                    if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_elmtToTrace[eid][j])))
-                    {
-                        FaceGeom = locQuadExp->GetGeom2D();
-                    }
-                    //else if face is triangle
-                    else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_elmtToTrace[eid][j])))
-                    {
-                        FaceGeom = locTriExp->GetGeom2D();
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a local face expansion failed");
-                    }
-
-                    id  = FaceGeom->GetFid();
-                    gid = FaceElmtGid[MeshFaceId.find(id)->second];
-                    order_e = (*exp3D)[eid]->GetFaceNcoeffs(j);
+                    FaceGeom = m_elmtToTrace[eid][j]->GetGeom2D();
+                    id       = FaceGeom->GetFid();
+                    gid      = FaceElmtGid[MeshFaceId.find(id)->second];
+                    order_e  = (*exp3D)[eid]->GetFaceNcoeffs(j);
                     
                     std::map<int,int> orientMap;
                     
@@ -1143,7 +934,8 @@ namespace Nektar
                     // Construct mapping which will permute global IDs
                     // according to face orientations. 
                     (*exp3D)[eid]->GetFaceToElementMap(j,fo,elmMap1,elmSign1);
-                    (*exp3D)[eid]->GetFaceToElementMap(j,StdRegions::eDir1FwdDir1_Dir2FwdDir2,elmMap2,elmSign2);
+                    (*exp3D)[eid]->GetFaceToElementMap(
+                        j,StdRegions::eDir1FwdDir1_Dir2FwdDir2,elmMap2,elmSign2);
                     
                     for (k = 0; k < elmMap1.num_elements(); ++k)
                     {
@@ -1180,59 +972,33 @@ namespace Nektar
                 cnt += bndCondExp[i]->GetNcoeffs();
             }
 
-            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
+            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int>(cnt);
 
             // Number of boundary expansions
-            int nbndexp = 0;
+            int nbndexp = 0, bndOffset;
             for(cnt = i = 0; i < nbnd; ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-                    //if face is quad
-                    if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j))))
+                    locBndExp = bndCondExp[i]->GetExp(j);
+                    id        = locBndExp->GetGeom2D()->GetFid();
+                    gid       = FaceElmtGid[MeshFaceId.find(id)->second];
+                    bndOffset = bndCondExp[i]->GetCoeff_Offset(j);
+                        
+                    // Since boundary information is defined to be aligned with
+                    // the geometry just use forward/forward (both coordinate
+                    // directions) defintiion for gid's
+                    for(k = 0; k < locBndExp->GetNcoeffs(); ++k)
                     {
-                        nbndexp++;
-                        FaceGeom = locQuadExp->GetGeom2D();
-                        id      = FaceGeom->GetFid();
-                        gid     = FaceElmtGid[MeshFaceId.find(id)->second];
-                        
-                        order_e = locQuadExp->GetNcoeffs();
-                        
-                        // Since boundary information is defined to be
-                        // aligned with the geometry just use forward/forward
-                        // (both coordinate directions) defintiion for gid's
-                        for(k = 0; k < order_e; ++k)
-                        {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
-                        }
-                    }
-                    //else if face is triangle
-                    else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j))))
-                    {
-                        nbndexp++;
-                        FaceGeom = locTriExp->GetGeom2D();
-                        id      = FaceGeom->GetFid();
-                        gid     = FaceElmtGid[MeshFaceId.find(id)->second];
-                        
-                        order_e = locTriExp->GetNcoeffs();
-                        
-                        // Since boundary information is defined to be
-                        // aligned with the geometry just use forward/forward
-                        // (both coordinate directions) defintiion for gid's
-                        for(k = 0; k < order_e; ++k)
-                        {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt++] = gid + k;
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a local face expansion failed");
+                        m_bndCondCoeffsToGlobalCoeffsMap[bndOffset+k] = gid + k;
                     }
                 }
+
+                nbndexp += bndCondExp[i]->GetExpSize();
             }
             
             m_numGlobalBndCoeffs = trace->GetNcoeffs();
-            m_numGlobalCoeffs = m_numGlobalBndCoeffs;
+            m_numGlobalCoeffs    = m_numGlobalBndCoeffs;
 
             CalculateBndSystemBandWidth();
 
@@ -1240,7 +1006,6 @@ namespace Nektar
             {
                 if(m_staticCondLevel < (bottomUpGraph->GetNlevels()-1))
                 {
-
                     Array<OneD, int> vwgts_perm(nGraphVerts);
                     
                     for(int i = 0; i < nGraphVerts; i++)
@@ -1256,29 +1021,16 @@ namespace Nektar
             }
 
             cnt = 0;
-            m_bndCondTraceToGlobalTraceMap = Array<OneD, int >(nbndexp);
+            m_bndCondTraceToGlobalTraceMap = Array<OneD, int>(nbndexp);
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
                 {
-                    //if face is quad
-                    if((locQuadExp = boost::dynamic_pointer_cast<LocalRegions::QuadExp>(bndCondExp[i]->GetExp(j))))
-                    {
-                        FaceGeom = locQuadExp->GetGeom2D();
-                        id      = FaceGeom->GetFid();
-                        m_bndCondTraceToGlobalTraceMap[cnt++] = MeshFaceId.find(id)->second;
-                    }
-                    //else if face is triangle
-                    else if((locTriExp = boost::dynamic_pointer_cast<LocalRegions::TriExp>(bndCondExp[i]->GetExp(j))))
-                    {
-                        FaceGeom = locTriExp->GetGeom2D();
-                        id      = FaceGeom->GetFid();
-                        m_bndCondTraceToGlobalTraceMap[cnt++] = MeshFaceId.find(id)->second;
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"dynamic cast to a local face expansion failed");
-                    }
+                    locBndExp = bndCondExp[i]->GetExp(j);
+                    FaceGeom  = locBndExp->GetGeom2D();
+                    id        = FaceGeom->GetFid();
+                    m_bndCondTraceToGlobalTraceMap[cnt++] = 
+                        MeshFaceId.find(id)->second;
                 }
             }
 
@@ -1287,20 +1039,8 @@ namespace Nektar
             SetUpUniversalDGMap   (locExp);
             SetUpUniversalTraceMap(locExp, tr);
 
-            // Initialise GSlib and populate the unique map.
-            Nektar::Array<OneD, long> tmp(m_globalToUniversalBndMap.num_elements());
-            for (unsigned int i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
-            {
-                tmp[i] = m_globalToUniversalBndMap[i];
-            }
-            m_bndGsh = m_gsh = Gs::Init(tmp, m_comm);
-            Gs::Unique(tmp, m_comm);
-            for (unsigned int i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
-            {
-                m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
-            }
-
-            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(), m_localToGlobalBndMap.end());
+            m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
+                                       m_localToGlobalBndMap.end());
         }
 
         /**
@@ -1478,6 +1218,19 @@ namespace Nektar
                         cnt += order_e;
                     }
                 }
+            }
+            
+            // Initialise GSlib and populate the unique map.
+            Array<OneD, long> tmp(m_globalToUniversalBndMap.num_elements());
+            for (i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
+            {
+                tmp[i] = m_globalToUniversalBndMap[i];
+            }
+            m_bndGsh = m_gsh = Gs::Init(tmp, m_comm);
+            Gs::Unique(tmp, m_comm);
+            for (i = 0; i < m_globalToUniversalBndMap.num_elements(); ++i)
+            {
+                m_globalToUniversalBndMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
             }
         }
 

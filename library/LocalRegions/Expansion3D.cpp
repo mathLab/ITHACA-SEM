@@ -128,7 +128,7 @@ namespace Nektar
             // Add F = \tau <phi_i,in_phys>
             // Fill face and take inner product
             FaceExp->IProductWRTBase(FaceExp->GetPhys(),
-                                           FaceExp->UpdateCoeffs());
+                                     FaceExp->UpdateCoeffs());
             // add data to out array
             for(i = 0; i < order_f; ++i)
             {

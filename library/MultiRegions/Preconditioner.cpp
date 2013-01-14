@@ -100,8 +100,8 @@ namespace Nektar
          * \brief Transform from original basis to low energy basis
          */ 
         void Preconditioner::v_DoTransformToLowEnergy(
-                      const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput)
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
         {
             Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
 	}
@@ -110,8 +110,8 @@ namespace Nektar
          * \brief Transform from low energy basis to orignal basis
          */ 
         void Preconditioner::v_DoTransformFromLowEnergy(
-                      const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput)
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
         {
             Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
 	}

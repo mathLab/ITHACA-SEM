@@ -95,6 +95,15 @@ namespace Nektar
             int m_numNonDirEdgeModes;
             /// Number of non Dirichlet face modes
             int m_numNonDirFaceModes;
+            /// Number of Dirichlet edges
+            int m_numDirEdges;
+            /// Number of Dirichlet faces
+            int m_numDirFaces;
+            /// Number of Dirichlet edges
+            int m_numNonDirEdges;
+            /// Number of Dirichlet faces
+            int m_numNonDirFaces;
+
             /// Maximum static condensation level.
             int m_maxStaticCondLevel;
             map<int, vector<pair<int, int> > > m_extraDirDofs;
@@ -158,6 +167,13 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaceModes() const;
 
+            MULTI_REGIONS_EXPORT virtual int v_GetNumDirEdges() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumDirFaces() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirEdges() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaces() const;
         };
 
 

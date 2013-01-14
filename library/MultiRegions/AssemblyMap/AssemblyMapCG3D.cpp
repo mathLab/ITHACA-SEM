@@ -256,6 +256,10 @@ namespace Nektar
                 }
             }
 
+            // Number of dirichlet edges and faces
+            m_numDirEdges=edgeReorderedGraphVertId.size();
+            m_numDirFaces=faceReorderedGraphVertId.size();
+
             /**
              * STEP 1.5: Exchange Dirichlet mesh vertices between processes and
              * check for singular problems.
@@ -805,6 +809,10 @@ namespace Nektar
                 }
                 localFaceOffset+=nFaces;
             }
+
+            // Number of dirichlet edges and faces
+            m_numNonDirEdges=edgeTempGraphVertId.size();
+            m_numNonDirFaces=faceTempGraphVertId.size();
 
             localVertOffset=0;
             localEdgeOffset=0;

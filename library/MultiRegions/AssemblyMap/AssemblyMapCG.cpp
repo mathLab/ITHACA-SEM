@@ -497,5 +497,25 @@ namespace Nektar
             return m_numNonDirFaceModes;
         }
 
+        int AssemblyMapCG::v_GetNumDirEdges() const
+        {
+            return m_numDirEdges;
+        }
+
+        int AssemblyMapCG::v_GetNumDirFaces() const
+        {
+            return m_numDirFaces;
+        }
+
+        int AssemblyMapCG::v_GetNumNonDirEdges() const
+        {
+            return m_numNonDirEdges;
+        }
+
+        int AssemblyMapCG::v_GetNumNonDirFaces() const
+        {
+            return m_numNonDirFaces;
+        }
+
     } // namespace
 } // namespace

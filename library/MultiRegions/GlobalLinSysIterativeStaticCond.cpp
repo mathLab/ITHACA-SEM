@@ -131,14 +131,14 @@ namespace Nektar
             // Construct this level
             Initialise(m_locToGloMap);
             
-            if (m_locToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
-            {
                 MultiRegions::PreconditionerType pType = m_locToGloMap->GetPreconType();
 
                 std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
                 
                 v_UniqueMap();
                 m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),m_locToGloMap);
+            if (m_locToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
+            {
                 SetupLowEnergyTopLevel(m_locToGloMap);
 
             }

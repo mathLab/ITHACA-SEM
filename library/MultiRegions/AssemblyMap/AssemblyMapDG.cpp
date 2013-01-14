@@ -975,7 +975,7 @@ namespace Nektar
             m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int>(cnt);
 
             // Number of boundary expansions
-            int nbndexp = 0, bndOffset;
+            int nbndexp = 0, bndOffset, bndTotal = 0;
             for(cnt = i = 0; i < nbnd; ++i)
             {
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); ++j)
@@ -983,7 +983,7 @@ namespace Nektar
                     locBndExp = bndCondExp[i]->GetExp(j);
                     id        = locBndExp->GetGeom2D()->GetFid();
                     gid       = FaceElmtGid[MeshFaceId.find(id)->second];
-                    bndOffset = bndCondExp[i]->GetCoeff_Offset(j);
+                    bndOffset = bndCondExp[i]->GetCoeff_Offset(j) + bndTotal;
                         
                     // Since boundary information is defined to be aligned with
                     // the geometry just use forward/forward (both coordinate
@@ -994,7 +994,8 @@ namespace Nektar
                     }
                 }
 
-                nbndexp += bndCondExp[i]->GetExpSize();
+                nbndexp  += bndCondExp[i]->GetExpSize();
+                bndTotal += bndCondExp[i]->GetNcoeffs();
             }
             
             m_numGlobalBndCoeffs = trace->GetNcoeffs();

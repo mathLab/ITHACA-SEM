@@ -989,7 +989,7 @@ namespace Nektar
                 *faceExp, 
                 StdRegions::NullConstFactorMap, 
                 varcoeffs);
-            
+
             DNekScalMat &facemat = *faceExp->GetLocMatrix(mkey);
 
             // Now need to identify a map which takes the local face
@@ -1031,50 +1031,52 @@ namespace Nektar
                     ASSERTL1(j != nbndry,"Did not find number in map");
                 }
             }
-            // TODO: Implement this for 3D DG.
-            /*
             else if (rows == NumDGBndryCoeffs())
             {
                 // possibly this should be a separate method
                 int cnt = 0; 
-                map  = Array<OneD, unsigned int> (order_e);
-                sign = Array<OneD,          int> (order_e,1);
+                map  = Array<OneD, unsigned int> (order_f);
+                sign = Array<OneD,          int> (order_f,1);
                 
-                for(i = 0; i < edge; ++i)
-                {
-                    cnt += GetEdgeNcoeffs(i);
-                }
+                StdRegions::IndexMapKey ikey1(
+                    StdRegions::eFaceToElement, DetExpansionType(), 
+                    GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                    face, GetFaceOrient(face));
+                StdRegions::IndexMapValuesSharedPtr map1 = 
+                    StdExpansion::GetIndexMap(ikey1);
+                StdRegions::IndexMapKey ikey2(
+                    StdRegions::eFaceToElement, DetExpansionType(), 
+                    GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                    face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
+                StdRegions::IndexMapValuesSharedPtr map2 = 
+                    StdExpansion::GetIndexMap(ikey2);
                 
-                for(i = 0; i < order_e; ++i)
+                ASSERTL1((*map1).num_elements() == (*map2).num_elements(),
+                         "There is an error with the GetFaceToElementMap");
+                
+                for (i = 0; i < face; ++i)
                 {
-                    map[i] = cnt++;
+                    cnt += GetFaceNcoeffs(i);
                 }
-                // check for mapping reversal 
-                if(GetEorient(edge) == StdRegions::eBackwards)
+
+                for(i = 0; i < (*map1).num_elements(); ++i)
                 {
-                    switch(edgeExp->GetBasis(0)->GetBasisType())
+                    int idx = -1;
+
+                    for(j = 0; j < (*map2).num_elements(); ++j)
                     {
-                    case LibUtilities::eGauss_Lagrange:
-                        reverse( map.get() , map.get()+order_e);
-                        break;
-                    case LibUtilities::eGLL_Lagrange:
-                        reverse( map.get() , map.get()+order_e);
-                        break;
-                    case LibUtilities::eModified_A:
+                        if((*map1)[i].index == (*map2)[j].index)
                         {
-                            swap(map[0],map[1]);
-                            for(i = 3; i < order_e; i+=2)
-                            {
-                                sign[i] = -1;
-                            }  
+                            idx = j;
+                            break;
                         }
-                        break;
-                    default:
-                        ASSERTL0(false,"Edge boundary type not valid for this method");
                     }
+                    
+                    ASSERTL2(idx >= 0, "Index not found");
+                    map [i] = idx + cnt;
+                    sign[i] = (*map2)[idx].sign;
                 }
             }
-            */
             else
             {
                 ASSERTL0(false,"Could not identify matrix type from dimension");

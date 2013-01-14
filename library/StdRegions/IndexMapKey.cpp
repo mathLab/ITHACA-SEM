@@ -40,167 +40,167 @@ namespace Nektar
 {
     namespace StdRegions
     {
-        //=======================================================================================
-        IndexMapKey::IndexMapKey(const StdRegions::IndexMapType indexmapType,
-								 const StdRegions::ExpansionType expansionType,
-								 unsigned short &p, unsigned short &q,unsigned short &r,
-								 const unsigned short &entityID,
-								 const StdRegions::Orientation orientation):
-		m_indexMapType(indexmapType),
-		m_expansionType(expansionType),
-		m_p(p),
-		m_q(q),
-		m_r(r),
-		m_entityID(entityID),
-		m_orientation(orientation)
+        IndexMapKey::IndexMapKey(
+            const StdRegions::IndexMapType  indexmapType,
+            const StdRegions::ExpansionType expansionType,
+            const unsigned short            p, 
+            const unsigned short            q,
+            const unsigned short            r,
+            const unsigned short            entityID,
+            const StdRegions::Orientation   orientation)
+            : m_indexMapType(indexmapType),
+              m_expansionType(expansionType),
+              m_p(p),
+              m_q(q),
+              m_r(r),
+              m_entityID(entityID),
+              m_orientation(orientation)
         {
         }
-		//=======================================================================================
+
         IndexMapKey::IndexMapKey(const IndexMapKey& rhs,
-                      const StdRegions::IndexMapType indexmapType):
-		m_indexMapType(indexmapType),
-		m_expansionType(rhs.m_expansionType),
-		m_p(rhs.m_p),
-		m_q(rhs.m_q),
-		m_r(rhs.m_r),
-		m_entityID(rhs.m_entityID),
-		m_orientation(rhs.m_orientation)
+                                 const StdRegions::IndexMapType indexmapType):
+            m_indexMapType (indexmapType),
+            m_expansionType(rhs.m_expansionType),
+            m_p            (rhs.m_p),
+            m_q            (rhs.m_q),
+            m_r            (rhs.m_r),
+            m_entityID     (rhs.m_entityID),
+            m_orientation  (rhs.m_orientation)
         {
         }
-		//=======================================================================================
+
         IndexMapKey::IndexMapKey(const IndexMapKey& rhs):
-		m_indexMapType(rhs.m_indexMapType),
-		m_expansionType(rhs.m_expansionType),
-		m_p(rhs.m_p),
-		m_q(rhs.m_q),
-		m_r(rhs.m_r),
-		m_entityID(rhs.m_entityID),
-		m_orientation(rhs.m_orientation)
+            m_indexMapType (rhs.m_indexMapType),
+            m_expansionType(rhs.m_expansionType),
+            m_p            (rhs.m_p),
+            m_q            (rhs.m_q),
+            m_r            (rhs.m_r),
+            m_entityID     (rhs.m_entityID),
+            m_orientation  (rhs.m_orientation)
         {
-		}
-        //=======================================================================================
-        bool IndexMapKey::opLess::operator()(const IndexMapKey &lhs, const IndexMapKey &rhs) const
+        }
+
+        bool IndexMapKey::opLess::operator()(const IndexMapKey &lhs, 
+                                             const IndexMapKey &rhs) const
         {        
             return (lhs.m_indexMapType < rhs.m_indexMapType);
         }
-		//=======================================================================================
+
         bool operator<(const IndexMapKey &lhs, const IndexMapKey &rhs)
         {   
-			//===========================================================
             if(lhs.m_indexMapType < rhs.m_indexMapType)
             {
                 return true;
             }
-			if(lhs.m_indexMapType > rhs.m_indexMapType)
+
+            if(lhs.m_indexMapType > rhs.m_indexMapType)
             {
                 return false;
             }
-			//===========================================================
-			if(lhs.m_expansionType < rhs.m_expansionType)
+            
+            if(lhs.m_expansionType < rhs.m_expansionType)
             {
                 return true;
             }
-			if(lhs.m_expansionType > rhs.m_expansionType)
+            if(lhs.m_expansionType > rhs.m_expansionType)
             {
                 return false;
             }
-			//===========================================================
-			if(lhs.m_p < rhs.m_p)
-			{
-				return true;
-			}
-			if(lhs.m_p > rhs.m_p)
-			{
-				return false;
-			}
-			//===========================================================
-			if(lhs.m_q < rhs.m_q)
-			{
-				return true;
-			}
-			if(lhs.m_q > rhs.m_q)
-			{
-				return false;
-			}
-			//===========================================================
-			if(lhs.m_r < rhs.m_r)
-			{
-				return true;
-			}
-			if(lhs.m_r > rhs.m_r)
-			{
-				return false;
-			}
-			//===========================================================
-			if(lhs.m_entityID < rhs.m_entityID)
+
+            if(lhs.m_p < rhs.m_p)
             {
                 return true;
             }
-			if(lhs.m_entityID > rhs.m_entityID)
+            if(lhs.m_p > rhs.m_p)
             {
                 return false;
             }
-			//===========================================================
-			if(lhs.m_orientation < rhs.m_orientation)
+
+            if(lhs.m_q < rhs.m_q)
             {
                 return true;
             }
-			if(lhs.m_orientation > rhs.m_orientation)
+            if(lhs.m_q > rhs.m_q)
             {
                 return false;
             }
-			//===========================================================
+
+            if(lhs.m_r < rhs.m_r)
+            {
+                return true;
+            }
+            if(lhs.m_r > rhs.m_r)
+            {
+                return false;
+            }
+
+            if(lhs.m_entityID < rhs.m_entityID)
+            {
+                return true;
+            }
+            if(lhs.m_entityID > rhs.m_entityID)
+            {
+                return false;
+            }
+
+            if(lhs.m_orientation < rhs.m_orientation)
+            {
+                return true;
+            }
+            if(lhs.m_orientation > rhs.m_orientation)
+            {
+                return false;
+            }
+
             return false;
         }
 
         bool operator==(const IndexMapKey &lhs, const IndexMapKey &rhs)
         {
-			//===========================================================
             if(lhs.m_indexMapType != rhs.m_indexMapType)
             {
                 return false;
             }
-			//===========================================================
+
             if(lhs.m_expansionType != rhs.m_expansionType)
             {
                 return false;
             }
-			//===========================================================
-			if(lhs.m_p != rhs.m_p)
-			{
-				return false;
-			}
-			//===========================================================
-			if(lhs.m_q != rhs.m_q)
-			{
-				return false;
-			}
-			//===========================================================
-			if(lhs.m_r != rhs.m_r)
-			{
-				return false;
-			}
-			//===========================================================
-			if(lhs.m_entityID != rhs.m_entityID)
+
+            if(lhs.m_p != rhs.m_p)
             {
                 return false;
             }
-			//===========================================================
-			if(lhs.m_orientation != rhs.m_orientation)
+
+            if(lhs.m_q != rhs.m_q)
             {
                 return false;
             }
-			//===========================================================
+
+            if(lhs.m_r != rhs.m_r)
+            {
+                return false;
+            }
+
+            if(lhs.m_entityID != rhs.m_entityID)
+            {
+                return false;
+            }
+
+            if(lhs.m_orientation != rhs.m_orientation)
+            {
+                return false;
+            }
+
             return true;
         }
-		//=======================================================================================
+
         std::ostream& operator<<(std::ostream& os, const IndexMapKey& rhs)
         {
-			//=======================================================================================
-            os << "IndexMapType: " << IndexMapTypeMap[rhs.GetIndexMapType()] << std::endl;
-			//=======================================================================================
+            os << "IndexMapType: " << IndexMapTypeMap[rhs.GetIndexMapType()] 
+               << std::endl;
             return os;
         }
-		//=======================================================================================
     } // end StdRegion namespace
 } // end Nektar namespace

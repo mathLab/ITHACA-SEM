@@ -82,28 +82,28 @@ namespace Nektar
         {
             int i,j,n;
             int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1); 
-            int order_f = FaceExp->GetNcoeffs();            
+            int order_f = FaceExp->GetNcoeffs();
             int coordim = GetCoordim();
-            int ncoeffs  = GetNcoeffs();
+            int ncoeffs = GetNcoeffs();
 
             Array<OneD, NekDouble> inval   (nquad_f);
             Array<OneD, NekDouble> outcoeff(order_f);
             Array<OneD, NekDouble> tmpcoeff(ncoeffs);
 
-            const Array<OneD, const Array<OneD, NekDouble> > normals
-                                = GetFaceNormal(face);
-
-            Array<OneD,unsigned int> fmap;
-            Array<OneD,int> sign;
+            const Array<OneD, const Array<OneD, NekDouble> > &normals
+                = GetFaceNormal(face);
 
             DNekScalMat &invMass = *GetLocMatrix(StdRegions::eInvMass);
             
-            StdRegions::Orientation facedir = GetFaceOrient(face);
-
             DNekVec Coeffs(ncoeffs,outarray,eWrapper);
             DNekVec Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
-            
-            GetFaceToElementMap(face,facedir,fmap,sign);
+
+            StdRegions::IndexMapKey ikey(
+                StdRegions::eFaceToElement, DetExpansionType(), 
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, GetFaceOrient(face));
+            StdRegions::IndexMapValuesSharedPtr map = 
+                StdExpansion::GetIndexMap(ikey);
 
             StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
                                                    StdRegions::eWeakDeriv1,
@@ -129,12 +129,19 @@ namespace Nektar
             // Fill face and take inner product
             FaceExp->IProductWRTBase(FaceExp->GetPhys(),
                                      FaceExp->UpdateCoeffs());
+
             // add data to out array
+            const Array<OneD, const NekDouble> &faceCoeffs = 
+                FaceExp->GetCoeffs();
+
             for(i = 0; i < order_f; ++i)
             {
-                outarray[fmap[i]] += sign[i]*tau*FaceExp->GetCoeff(i);
+                outarray[(*map)[i].index] += (*map)[i].sign*tau*faceCoeffs[i];
             }
             //================================================================
+
+            NekDouble scale = invMass.Scale();
+            const NekDouble *data = invMass.GetRawPtr();
 
             //===============================================================
             // Add -\sum_i D_i^T M^{-1} G_i + E_i M^{-1} G_i = 
@@ -169,7 +176,7 @@ namespace Nektar
                     tmpcoeff[i] = 0;
                     for(j = 0; j < order_f; ++j)
                     {
-                        tmpcoeff[i] += invMass(i,fmap[j])*sign[j]*outcoeff[j];
+                        tmpcoeff[i] += scale*data[i+(*map)[j].index*ncoeffs]*(*map)[j].sign*outcoeff[j];
                     }
                 }
                 
@@ -264,11 +271,14 @@ namespace Nektar
             int i;
             int order_f = FaceExp->GetNcoeffs();
             int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1);
-            Array<OneD,unsigned int> map;
-            Array<OneD,int> sign;
             Array<OneD, NekDouble> coeff(order_f);
 
-            GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
+            StdRegions::IndexMapKey ikey(
+                StdRegions::eFaceToElement, DetExpansionType(), 
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, GetFaceOrient(face));
+            StdRegions::IndexMapValuesSharedPtr map = 
+                StdExpansion::GetIndexMap(ikey);
 
 //            StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
 //                                                    StdRegions::eVarCoeffD11,
@@ -288,7 +298,7 @@ namespace Nektar
             // add data to out array
             for(i = 0; i < order_f; ++i)
             {
-                outarray[map[i]] += sign[i]*coeff[i];
+                outarray[(*map)[i].index] += (*map)[i].sign*coeff[i];
             }
         }
 
@@ -299,35 +309,39 @@ namespace Nektar
             const int face, Array<OneD, NekDouble> &inout)
         {
             int j,k;
-            StdRegions::Orientation dir2, dir1 = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
-            dir2 = GetFaceOrient(face);
-            
-            Array<OneD, unsigned int> map1, map2;
-            Array<OneD, int> sign1, sign2;
-            
             int nface = GetFaceNcoeffs(face);
             Array<OneD, NekDouble> f_in(nface);
             Vmath::Vcopy(nface,&inout[0],1,&f_in[0],1);
             
             // retreiving face to element map for standard face orientation and
             // for actual face orientation
-            GetFaceToElementMap(face, dir1, map1, sign1); 
-            GetFaceToElementMap(face, dir2, map2, sign2); 
+            StdRegions::IndexMapKey ikey1(
+                StdRegions::eFaceToElement, DetExpansionType(), 
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
+            StdRegions::IndexMapValuesSharedPtr map1 = 
+                StdExpansion::GetIndexMap(ikey1);
+            StdRegions::IndexMapKey ikey2(
+                StdRegions::eFaceToElement, DetExpansionType(), 
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, GetFaceOrient(face));
+            StdRegions::IndexMapValuesSharedPtr map2 = 
+                StdExpansion::GetIndexMap(ikey2);
             
-            ASSERTL1(map1.num_elements() == map2.num_elements(),
+            ASSERTL1((*map1).num_elements() == (*map2).num_elements(),
                      "There is an error with the GetFaceToElementMap");
             
-            for(j = 0; j < map1.num_elements(); ++j)
+            for(j = 0; j < (*map1).num_elements(); ++j)
             {
                 // j = index in the standard orientation
-                for(k = 0; k < map2.num_elements(); ++k)
+                for(k = 0; k < (*map2).num_elements(); ++k)
                 {
                     // k = index in the actual orientation
-                    if(map1[j] == map2[k] && k != j)
+                    if((*map1)[j].index == (*map2)[k].index && k != j)
                     {
                         inout[k] = f_in[j];
                         //checking if sign is changing
-                        if(sign1[j] != sign2[k])
+                        if((*map1)[j].sign != (*map2)[k].sign)
                             inout[k] *= -1.0;
                         break;
                     }
@@ -343,13 +357,13 @@ namespace Nektar
             int i,cnt = 0;
             int nfaces = GetNfaces();
 
-			Array<OneD, NekDouble> f_tmp;
+            Array<OneD, NekDouble> f_tmp;
             
             for(i = 0; i < nfaces; ++i)
-			{
-				SetFaceToGeomOrientation(i, f_tmp = inout + cnt);
+            {
+                SetFaceToGeomOrientation(i, f_tmp = inout + cnt);
                 cnt += GetFaceNcoeffs(i);
-			}
+            }
         }
 
         /**
@@ -431,15 +445,19 @@ namespace Nektar
 
                     // Add Mass Matrix Contribution for Helmholtz problem
                     DNekScalMat  &Mass = *GetLocMatrix(StdRegions::eMass);
-                    Mat = Mat + lambdaval*Mass;                    
+                    Mat = Mat + lambdaval*Mass;
 
                     // Add tau*E_l using elemental mass matrices on each edge
                     for(i = 0; i < nfaces; ++i)
                     {
-                        StdRegions::Orientation facedir = GetFaceOrient(i);
                         FaceExp = GetFaceExp(i);
                         order_f = FaceExp->GetNcoeffs();  
-                        GetFaceToElementMap(i,facedir,fmap,sign);
+                        StdRegions::IndexMapKey ikey(
+                            StdRegions::eFaceToElement, DetExpansionType(), 
+                            GetBasisNumModes(0), GetBasisNumModes(1), 
+                            GetBasisNumModes(2), i, GetFaceOrient(i));
+                        StdRegions::IndexMapValuesSharedPtr map = 
+                            StdExpansion::GetIndexMap(ikey);
 
                         // @TODO: Document
                         /*
@@ -463,7 +481,8 @@ namespace Nektar
                         {
                             for(k = 0; k < order_f; ++k)
                             {
-                                Mat(fmap[j],fmap[k]) = Mat(fmap[j],fmap[k]) + tau*sign[j]*sign[k]*eMass(j,k);
+                                Mat((*map)[j].index,(*map)[k].index) += 
+                                    tau*(*map)[j].sign*(*map)[k].sign*eMass(j,k);
                             }
                         }
                     }
@@ -481,7 +500,7 @@ namespace Nektar
                     NekDouble tau       = mkey.GetConstFactor(StdRegions::eFactorTau);
                     
                     Array<OneD,NekDouble> lambda(nbndry);
-                    DNekVec Lambda(nbndry,lambda,eWrapper);                    
+                    DNekVec Lambda(nbndry,lambda,eWrapper);
                     Array<OneD,NekDouble> ulam(ncoeffs);
                     DNekVec Ulam(ncoeffs,ulam,eWrapper);
                     Array<OneD,NekDouble> f(ncoeffs);
@@ -735,8 +754,12 @@ namespace Nektar
                             work = Array<OneD,NekDouble>(nquad_f);
                             varcoeff_work = Array<OneD, NekDouble>(nquad_f);
 
-                            GetFaceToElementMap(f,facedir,fmap,sign);
-
+                            StdRegions::IndexMapKey ikey(
+                                StdRegions::eFaceToElement, DetExpansionType(), 
+                                GetBasisNumModes(0), GetBasisNumModes(1), 
+                                GetBasisNumModes(2), f, GetFaceOrient(f));
+                            StdRegions::IndexMapValuesSharedPtr map = 
+                                StdExpansion::GetIndexMap(ikey);
 
                             // @TODO Variable coefficients
                             /*
@@ -750,7 +773,7 @@ namespace Nektar
                             // Q0 * n0 (BQ_0 terms)
                             for(j = 0; j < order_f; ++j)
                             {
-                                FaceExp[f]->SetCoeff(j,sign[j]*(*LamToQ[0])(fmap[j],i));
+                                FaceExp[f]->SetCoeff(j,(*map)[j].sign*(*LamToQ[0])((*map)[j].index,i));
                             }
                             
                             FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
@@ -771,7 +794,7 @@ namespace Nektar
                             // Q1 * n1 (BQ_1 terms)
                             for(j = 0; j < order_f; ++j)
                             {
-                                FaceExp[f]->SetCoeff(j,sign[j]*(*LamToQ[1])(fmap[j],i));
+                                FaceExp[f]->SetCoeff(j,(*map)[j].sign*(*LamToQ[1])((*map)[j].index,i));
                             }
                             
                             FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
@@ -794,7 +817,7 @@ namespace Nektar
                             // Q2 * n2 (BQ_2 terms)
                             for(j = 0; j < order_f; ++j)
                             {
-                                FaceExp[f]->SetCoeff(j,sign[j]*(*LamToQ[2])(fmap[j],i));
+                                FaceExp[f]->SetCoeff(j,(*map)[j].sign*(*LamToQ[2])((*map)[j].index,i));
                             }
                             
                             FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
@@ -823,7 +846,7 @@ namespace Nektar
                             // Corresponds to the G and BU terms.
                             for(j = 0; j < order_f; ++j)
                             {
-                                FaceExp[f]->SetCoeff(j,sign[j]*LamToU(fmap[j],i) - lam[cnt+j]);
+                                FaceExp[f]->SetCoeff(j,(*map)[j].sign*LamToU((*map)[j].index,i) - lam[cnt+j]);
                             }
                             
                             FaceExp[f]->BwdTrans(FaceExp[f]->GetCoeffs(),
@@ -887,16 +910,19 @@ namespace Nektar
             const Array<OneD, const NekDouble>  &Fn,
                   Array<OneD,       NekDouble>  &outarray)
         {
-            int                         i;
-            Array<OneD, unsigned int>   map;
-            Array<OneD, int>            sign;
-            StdRegions::Orientation facedir = GetFaceOrient(face);
+            int i;
             
-            GetFaceToElementMap(face,facedir,map,sign);
-            int order_e = map.num_elements(); // Order of the element
-            int n_coeffs = (FaceExp->GetCoeffs()).num_elements(); // Order of the trace
+            StdRegions::IndexMapKey ikey(
+                StdRegions::eFaceToElement, DetExpansionType(), 
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, GetFaceOrient(face));
+            StdRegions::IndexMapValuesSharedPtr map = 
+                StdExpansion::GetIndexMap(ikey);
 
-            if(n_coeffs!=order_e) // Going to orthogonal space
+            int order_e = (*map).num_elements(); // Order of the element
+            int n_coeffs = FaceExp->GetCoeffs().num_elements(); // Order of the trace
+
+            if(n_coeffs != order_e) // Going to orthogonal space
             {
                 ASSERTL0(false, "Variable order not supported in 3D.");
             }
@@ -929,7 +955,7 @@ namespace Nektar
             
             for(i = 0; i < order_e; ++i)
             {
-                outarray[map[i]] += sign[i]*FaceExp->GetCoeff(i);
+                outarray[(*map)[i].index] += (*map)[i].sign*FaceExp->GetCoeff(i);
             }
         }
 

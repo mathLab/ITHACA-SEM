@@ -1,5 +1,6 @@
-SET(NEKTAR_SOLVER_COMPRESSIBLE_FLOW ON CACHE BOOL
-    "Build the Compressible Flow Solver.")
+CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_COMPRESSIBLE_FLOW
+    "Build the Compressible Flow Solver." ON
+    "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     SET(CompressibleFlowSolverSource 

@@ -222,7 +222,8 @@ namespace Nektar
                     
                     pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
                                               nDirBndDofs);
-                    
+                    F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
+
                     // For parallel multi-level static condensation some
                     // processors may have different levels to others. This
                     // routine receives contributions to partition vertices from
@@ -231,81 +232,21 @@ namespace Nektar
                     // hand side vector.
                     int scLevel = pLocToGloMap->GetStaticCondLevel();
                     int lcLevel = pLocToGloMap->GetLowestStaticCondLevel();
-                    if(atLastLevel)
+                    if(atLastLevel && scLevel < lcLevel)
                     {
-                        // Set up normalisation factor for iterative solve.
-                        if (scLevel == lcLevel)
-                        {
-                            v_UniqueMap();
-
-                            Array<OneD, NekDouble> vExchange(1);
-                            // ideally might have included the F_int removal?
-                            vExchange[0] = Vmath::Dot2(
-                                                nGlobBndDofs - nDirBndDofs,
-                                                F + nDirBndDofs,
-                                                F + nDirBndDofs,
-                                                m_map + nDirBndDofs);
-
-                            m_expList.lock()->GetComm()->GetRowComm()
-                                    ->AllReduce(vExchange,
-                                               Nektar::LibUtilities::ReduceSum);
-
-                            // for weird cases make sure normalisation
-                            // is not less than 1e-12
-                            m_bb_inv = (vExchange[0] > 10e12)
-                                     ? 1.0
-                                     : 1.0/vExchange[0];
-                        }
-
-                        F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
-
                         // If this level is not the lowest level across all
                         // processes, we must do dummy communication for the
                         // remaining levels
-                        if (scLevel < lcLevel)
+                        Array<OneD, NekDouble> tmp(nGlobBndDofs);
+                        for (int i = scLevel; i < lcLevel; ++i)
                         {
-                            Array<OneD, NekDouble> tmp(nGlobBndDofs);
-                            for (int i = scLevel; i < lcLevel; ++i)
-                            {
-                                Vmath::Fill(nGlobBndDofs, 0.0, tmp, 1);
-                                pLocToGloMap->UniversalAssembleBnd(tmp);
-                                Vmath::Vcopy(nGlobHomBndDofs,
-                                             tmp.get()+nDirBndDofs,          1,
-                                             V_GlobHomBndTmp.GetPtr().get(), 1);
-
-                                // At the last level do the normalization factor
-                                if (i == lcLevel - 1)
-                                {
-                                    v_UniqueMap();
-
-                                    Array<OneD, NekDouble> vExchange(1);
-
-                                    // ideally might have included the F_int
-                                    // removal?
-                                    vExchange[0] = Vmath::Dot2(
-                                                    nGlobBndDofs - nDirBndDofs,
-                                                    F + nDirBndDofs,
-                                                    F + nDirBndDofs,
-                                                    m_map + nDirBndDofs);
-
-                                    m_expList.lock()->GetComm()->GetRowComm()
-                                            ->AllReduce(vExchange,
-                                               Nektar::LibUtilities::ReduceSum);
-
-                                    // for weird cases make sure normalisation
-                                    // is not less than 1e-6
-                                    m_bb_inv = (vExchange[0] > 10e6)
-                                             ? 1.0
-                                             : 1.0/vExchange[0];
-                                }
-
-                                F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
-                            }
+                            Vmath::Fill(nGlobBndDofs, 0.0, tmp, 1);
+                            pLocToGloMap->UniversalAssembleBnd(tmp);
+                            Vmath::Vcopy(nGlobHomBndDofs,
+                                         tmp.get()+nDirBndDofs,          1,
+                                         V_GlobHomBndTmp.GetPtr().get(), 1);
+                            F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
                         }
-                    }
-                    else
-                    {
-                        F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
                     }
                 }
                 else
@@ -361,9 +302,7 @@ namespace Nektar
                     t.Start();
                     
                     // Solve for difference from initial solution given inout;
-                    SolveLinearSystem(nGlobBndDofs, F, F, pLocToGloMap, nDirBndDofs);
-                    // Add homogenoous solution to original vector 
-                    V_GlobHomBnd = V_GlobHomBnd + F_HomBnd;
+                    SolveLinearSystem(nGlobBndDofs, F, out, pLocToGloMap, nDirBndDofs);
                     
                     t.Stop();
 

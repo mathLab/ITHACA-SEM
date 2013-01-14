@@ -1,5 +1,6 @@
-SET(NEKTAR_SOLVER_PULSEWAVE ON CACHE BOOL
-    "Build the Pulse-wave solver.")
+CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_PULSEWAVE
+    "Build the Pulse-wave solver." ON
+    "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_PULSEWAVE )
     SET(PulseWaveSolverSource 

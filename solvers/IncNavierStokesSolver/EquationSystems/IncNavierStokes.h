@@ -143,6 +143,8 @@ namespace Nektar
                                      Array<OneD, Array<OneD, NekDouble> > &outarray);
         
     protected: 
+        std::ofstream m_mdlFile;  // modal energy file 
+
         LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
 
         bool m_subSteppingScheme; // bool to identify if using a substepping scheme
@@ -202,6 +204,9 @@ namespace Nektar
                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                     Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
 		
+
+        void WriteModalEnergy(void);
+
         //time dependent boundary conditions updating
 	
         void SetBoundaryConditions(NekDouble time);

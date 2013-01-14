@@ -54,8 +54,7 @@ namespace Nektar
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
                   m_totalIterations(0),
                   m_useProjection(false),
-                  m_numPrevSols(0),
-                  m_bb_inv(NekConstants::kNekUnsetDouble)
+                  m_numPrevSols(0)
         {
             LibUtilities::SessionReaderSharedPtr vSession
                                             = pExpList.lock()->GetSession();
@@ -428,7 +427,7 @@ namespace Nektar
             beta      = 0.0;
             alpha     = rho/mu;
             eps       = 0.0;
-            bb_inv    = (m_bb_inv == NekConstants::kNekUnsetDouble)? 1.0/vExchange[2]: m_bb_inv;
+            bb_inv    = 1.0/vExchange[2];
             min_resid = bb_inv;
 
 
@@ -485,7 +484,7 @@ namespace Nektar
                     {
                         if(m_root)
                         {
-                            std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (eps = " << sqrt(eps) << " bb_inv = " << m_bb_inv << ")"<< std::endl;
+                            std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (eps = " << sqrt(eps) << ")"<< std::endl;
                         }
                     }
                     break;

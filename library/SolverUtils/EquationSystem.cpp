@@ -690,6 +690,7 @@ namespace Nektar
                 EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(), pFunctionName);
                 pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(), pFields[i]->UpdateCoeffs());
             }
+
         }
 
 
@@ -735,7 +736,8 @@ namespace Nektar
                 std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
-
+                Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
+                
                 m_graph->Import(filename,FieldDef,FieldData);
                 
                 int idx = -1;
@@ -751,23 +753,20 @@ namespace Nektar
                             idx = j;
                         }
                     }
-                    ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
-                    if(FieldDef[i]->m_numHomogeneousDir)
+
+                    if(idx >= 0 )
                     {
                         m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                          FieldDef[i]->m_fields[idx],
                                                          vCoeffs);
                     }
-                    // Force nonhomgeneous extraction if base flow is not homogeneous
                     else
                     {
-                        m_fields[0]->ExtractElmtDataToCoeffs(FieldDef[i], 
-                                                             FieldData[i],
-                                                             FieldDef[i]->m_fields[idx],
-                                                             vCoeffs);
+                        cout << "Field " + pFieldName + " not found." << endl;
                     }
                 }
-                m_fields[0]->BwdTrans(vCoeffs, pArray);
+
+                m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
 #endif
             }
         }
@@ -1009,6 +1008,7 @@ namespace Nektar
                 
                 if (m_session->GetComm()->GetRank() == 0)
                 {
+                    
                     for (int i = 0; i < m_fields.num_elements(); ++i)
                     {
                         std::string varName = m_session->GetVariable(i);
@@ -1025,9 +1025,8 @@ namespace Nektar
                 {
                     Vmath::Zero(nq, m_fields[i]->UpdatePhys(), 1);
                     m_fields[i]->SetPhysState(true);
-                    m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
-                                                     m_fields[i]->UpdateCoeffs());
-
+                    Vmath::Zero(m_fields[i]->GetNcoeffs(), 
+                                m_fields[i]->UpdateCoeffs(), 1);
                     if (m_session->GetComm()->GetRank() == 0)
                     {
                         cout << "  - Field "    << m_session->GetVariable(i)
@@ -1189,6 +1188,8 @@ namespace Nektar
       	    // Copy data to m_velocity
     	    for(int j = 0; j < nvar; ++j)
     	    {
+                Vmath::Zero(m_base[j]->GetNcoeffs(), m_base[j]->UpdateCoeffs(),1);
+
                 for(int i=0; i<FieldDef.size(); ++i)
                 {
 // turned off so it can be used in DiffusionReaction solver where need 
@@ -1201,7 +1202,8 @@ namespace Nektar
                                                   "m_boundaryconditions differs")).c_str()); 
 #endif  
                     m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i], 
-                                                   FieldDef[i]->m_fields[j]);
+                                                   FieldDef[i]->m_fields[j],
+                                                   m_base[j]->UpdateCoeffs());
                 }
     	    	m_base[j]->BwdTrans(m_base[j]->GetCoeffs(), 
                                     m_base[j]->UpdatePhys());    
@@ -1808,6 +1810,8 @@ namespace Nektar
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
             {
+                Vmath::Zero(pFields[j]->GetNcoeffs(),pFields[j]->UpdateCoeffs(),1);
+                
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     ASSERTL1(FieldDef[i]->m_fields[j] == m_session->GetVariable(j),
@@ -1816,7 +1820,8 @@ namespace Nektar
                                            "m_boundaryconditions differs"));
 
                     pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                    FieldDef[i]->m_fields[j]);
+                                                    FieldDef[i]->m_fields[j],
+                                                    pFields[j]->UpdateCoeffs());
                 }
                 pFields[j]->BwdTrans(pFields[j]->GetCoeffs(),
                                      pFields[j]->UpdatePhys());
@@ -1839,6 +1844,8 @@ namespace Nektar
             m_graph->Import(infile,FieldDef,FieldData);
             int idx = -1;
 
+            Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
+
             for(int i = 0; i < FieldDef.size(); ++i)
             {
                 // find the index of the required field in the file.
@@ -1852,7 +1859,8 @@ namespace Nektar
                 ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
 
                 pField->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                            FieldDef[i]->m_fields[idx]);
+                                            FieldDef[i]->m_fields[idx],
+                                            pField->UpdateCoeffs());
             }
             pField->BwdTrans(pField->GetCoeffs(), pField->UpdatePhys());
         }
@@ -1877,10 +1885,11 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
         
             m_graph->Import(infile,FieldDef,FieldData);
-        
+
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)
             {
+                Vmath::Zero(coeffs[j].num_elements(),coeffs[j],1);
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],

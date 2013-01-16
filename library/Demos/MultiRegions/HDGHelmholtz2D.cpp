@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
         NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
         NekDouble vL2Error   = Exp->L2  (Fce->GetPhys());
         NekDouble vH1Error   = Exp->H1  (Fce->GetPhys());
-        NekDouble vQError[coordim];
+        vector<NekDouble> vQError(coordim);
         
         for (i = 0; i < coordim; ++i)
         {

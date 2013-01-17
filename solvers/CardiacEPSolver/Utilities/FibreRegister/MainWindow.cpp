@@ -351,9 +351,14 @@ void MainWindow::CreateTargetPoint(vtkObject* caller, unsigned long vtk_event, v
 //Interp Surface
 
 vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* pSurface, int pInterpDistance) {
-    
-    int nSurfacePoints = pSurface->GetNumberOfPoints();
+    //p point data:points which have been selected.
+    //psurface: the points on the mesh
+    //Below we set the interp distance as 
+    int nSurfacePoints = pSurface->GetNumberOfPoints();//Return number of points in array
     vtkDoubleArray* vPointDataValues = dynamic_cast<vtkDoubleArray*>(pPointData->GetPointData()->GetArray("height"));
+    
+    
+    //for vtkDoubleArray: you are able to set  number of components, values, name, insert next value,set value etc
     
     vtkDoubleArray* vOutput = vtkDoubleArray::New();
     vOutput->SetNumberOfComponents(1);
@@ -362,19 +367,23 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* 
     
     if (pPointData->GetNumberOfPoints() < 4) return vOutput;//We check to see if the number of points which we have clicked on is more than 4- since we need the four cloest neighbours.
     
-     cout << "hi" << endl;
+     //cout << "hi" << endl;
     
     vtkPointLocator* vLocator = vtkPointLocator::New();
-    vLocator->SetDataSet(pPointData);
+    vLocator->SetDataSet(pPointData);//We set the data set as the poitns which we have selected on the mesh
     
     
-    //This loops through all the points in the mesh
-    for (int i = 0; i < nSurfacePoints; ++i) {
-        double p[3];
-        vtkIdList* list = vtkIdList::New();
+   
+    for (int i = 0; i < nSurfacePoints; ++i) { //For all the points on the mesh
+        double p[3]; //third array of the double p
+        vtkIdList* list = vtkIdList::New(); //we create a list, lists are used to pass id's between objects
         
-        pSurface->GetPoint(i, p);//Give co-ordinates of mesh point
-        vLocator->FindClosestNPoints(4, p, list); //Find 4 closest points to p and store in list
+        pSurface->GetPoint(i, p);//Copy point components (eg co-ordinates) into the array p[3] for each point in the mesh
+        //This basically gives you the co-ordinate of each point from the mesh
+        
+        vLocator->FindClosestNPoints(4, p, list); //Find 4 closest points to p and store in list,
+        //points are sorted from closest to furthest
+        
         //int numPoints= min(4, int(list->GetNumberOfIds()));
         
         
@@ -384,15 +393,26 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* 
         double val = 0;
         double w = 0;
         int c = 0;
-        for (int j = 0; j < 4; ++j) {
-            int id = list->GetId(j); 
+        for (int j = 0; j < 4; ++j) { //We set j to have the values 0,1,2,3
+            int id = list->GetId(j);  //Re: the 4 closest points are stored in the array list- so we get the id of these 4 positions
+            
+            //This follows the procedure which we did above, here we get the co-ordinate of the clicked points
             double q[3];
-            pPointData->GetPoint(id, q);
+            pPointData->GetPoint(id, q); //co-ordinate of the height points
             
             double d_pq = sqrt(vtkMath::Distance2BetweenPoints(p, q));
+            //Gets the squared distance between the two points, i.e. (y2-y1)^2 + (x2-x1)^2: this result is then square-rooted. We basically find length of the line.
+            cout <<d_pq<< endl;
             
-            if (d_pq <= pInterpDistance) {
-                val += vPointDataValues->GetValue(id) / (d_pq + 1E-10);
+            if (d_pq <= pInterpDistance) {//If the distabce between p and q is less than the chosen interp distance
+                val += vPointDataValues->GetValue(id) / (d_pq + 1E-10);//Getvalue gets the "data" at that particular index
+                //1e10: So we dont divide by 10
+                //vPointDataValues represent the height which you input on the screet
+                
+               
+              
+                 
+                
                 w   += 1.0 / (d_pq + 1E-10);
                 c   += 1;
             }
@@ -404,6 +424,7 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* 
         else {
             val = 0.0;
         }
+        cout <<val<< endl;
         vOutput->SetValue(i, val);//Sets value of point in mesh as weighted average
     }
     return vOutput;
@@ -447,7 +468,7 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
         mSourceHeightPointData->Modified();
         
         //Interpolation
-        int vInterpDistance=5;
+        int vInterpDistance=10;
         vtkDoubleArray* vSurfaceData=InterpSurface(mSourceHeightPointData, mSourceData, vInterpDistance);
         mSourceHeightPointData->GetPointData()->RemoveArray("HeightSurface");
         mSourceHeightPointData->GetPointData()->SetScalars(vSurfaceData);

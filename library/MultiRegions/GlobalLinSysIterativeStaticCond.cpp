@@ -862,8 +862,7 @@ namespace Nektar
 
                 m_globalSchurCompl->Multiply(in,out);
 
-                m_locToGloMap->UniversalAssembleBnd(pOutput);
-
+                m_locToGloMap->UniversalAssembleBnd(pOutput, nDir);
             }
             else
             {

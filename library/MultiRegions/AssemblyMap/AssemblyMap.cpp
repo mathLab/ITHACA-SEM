@@ -969,9 +969,9 @@ namespace Nektar
                       int                         offset) const
         {
             Array<OneD, NekDouble> tmp(offset);
-            Vmath::Vcopy(offset, pGlobal, 1, tmp, 1);
+            if (offset > 0)  Vmath::Vcopy(offset, pGlobal, 1, tmp, 1);
             UniversalAssembleBnd(pGlobal);
-            Vmath::Vcopy(offset, tmp, 1, pGlobal, 1);
+            if (offset > 0)  Vmath::Vcopy(offset, tmp, 1, pGlobal, 1);
         }
 
         int AssemblyMap::GetBndSystemBandWidth() const

@@ -117,8 +117,8 @@ namespace Nektar
                 Array<OneD, NekDouble> &pGlobal) const;
 
         protected:
-
-        private:
+            Gs::gs_data * m_traceGsh;
+            
             /// Number of physical dirichlet boundary values in trace
             int m_numDirichletBndPhys;
 

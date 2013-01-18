@@ -46,23 +46,26 @@ namespace Nektar
 {
     namespace StdRegions
     {
-		struct IndexValue
-		{
-			unsigned short index;
-			short sign;
-		};
+        struct IndexValue
+        {
+            unsigned short index;
+            short sign;
+        };
 		
-		typedef Array<OneD, IndexValue> IndexMapValues;
+        typedef Array<OneD, IndexValue> IndexMapValues;
 		
         class IndexMapKey
         {
         public:
-            STD_REGIONS_EXPORT IndexMapKey(const StdRegions::IndexMapType indexmapType,
-										   const StdRegions::ExpansionType expansionType,
-										   unsigned short &p, unsigned short &q,unsigned short &r,
-										   const unsigned short &entityID = 0,
-										   const StdRegions::Orientation orientation = eNoOrientation);
-													   
+            STD_REGIONS_EXPORT IndexMapKey(
+                const StdRegions::IndexMapType  indexmapType,
+                const StdRegions::ExpansionType expansionType,
+                const unsigned short            p, 
+                const unsigned short            q,
+                const unsigned short            r,
+                const unsigned short            entityID    = 0,
+                const StdRegions::Orientation   orientation = eNoOrientation);
+            
             STD_REGIONS_EXPORT IndexMapKey(const IndexMapKey& rhs,const StdRegions::IndexMapType indexmapType);
 
             STD_REGIONS_EXPORT IndexMapKey(const IndexMapKey& rhs);
@@ -87,42 +90,40 @@ namespace Nektar
                 return m_indexMapType;
             }
 			
-			Orientation GetIndexOrientation() const
-			{
-				return m_orientation;
-			}
+            Orientation GetIndexOrientation() const
+            {
+                return m_orientation;
+            }
 			
-			int GetIndexEntity() const
-			{
-				return m_entityID;
-			}
+            int GetIndexEntity() const
+            {
+                return m_entityID;
+            }
 
         protected:
 			
-			IndexMapType  m_indexMapType;
+            IndexMapType  m_indexMapType;
             
-			ExpansionType m_expansionType;
+            ExpansionType m_expansionType;
 			
-			unsigned short m_p;
-			unsigned short m_q;
-			unsigned short m_r;
+            unsigned short m_p;
+            unsigned short m_q;
+            unsigned short m_r;
 			
-			unsigned short m_entityID;
+            unsigned short m_entityID;
 			
-			Orientation m_orientation;
+            Orientation m_orientation;
 			
         private:
 			
             IndexMapKey();
         };
-		//=======================================================================================
+        //=======================================================================================
 
         STD_REGIONS_EXPORT std::ostream& operator<<(std::ostream& os, const IndexMapKey& rhs);
 
         typedef  boost::shared_ptr<IndexMapKey> IndexMapKeySharedPtr;
-		
-		typedef  boost::shared_ptr<IndexMapValues> IndexMapValuesSharedPtr;
-
+        typedef  boost::shared_ptr<IndexMapValues> IndexMapValuesSharedPtr;
     } // end of namespace
 } // end of namespace
 

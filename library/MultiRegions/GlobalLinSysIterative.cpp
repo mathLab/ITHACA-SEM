@@ -413,7 +413,7 @@ namespace Nektar
                                        m_map + nDir);
 
             vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
-
+            
             m_totalIterations = 0;
             // If input vector is zero, set zero output and skip solve.
             if (vExchange[0] < NekConstants::kNekZeroTol)
@@ -480,12 +480,11 @@ namespace Nektar
                 // test if norm is within tolerance
                 if (eps*bb_inv < m_tolerance * m_tolerance)
                 {
-                    if(m_verbose)
+                    if (m_verbose && m_root)
                     {
-                        if(m_root)
-                        {
-                            std::cout << "CG iterations made = " << m_totalIterations << " using tolerance of " << m_tolerance << " (eps = " << sqrt(eps) << ")"<< std::endl;
-                        }
+                        cout << "CG iterations made = " << m_totalIterations 
+                             << " using tolerance of "  << m_tolerance 
+                             << " (eps = " << sqrt(eps) << ")" << endl;
                     }
                     break;
                 }

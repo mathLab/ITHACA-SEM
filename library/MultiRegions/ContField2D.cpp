@@ -819,7 +819,7 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-									
+            
             m_locToGloMap->UniversalAssemble(gamma);
 
             // Add weak boundary conditions to forcing

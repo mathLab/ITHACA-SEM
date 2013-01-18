@@ -225,6 +225,7 @@ namespace Nektar
                                          m_locToGloMap);
                     GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
                     mat->Multiply(inarray,outarray);
+                    m_locToGloMap->UniversalAssemble(outarray);
                 }
                 else
                 {
@@ -542,6 +543,7 @@ namespace Nektar
               {
                   GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
                   mat->Multiply(inarray,outarray);
+                  m_locToGloMap->UniversalAssemble(outarray);
               }
               else
               {

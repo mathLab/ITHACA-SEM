@@ -858,10 +858,10 @@ namespace Nektar
          *                      \f$N_{\mathrm{dof}}\f$.
          */
         void ContField2D::v_GeneralMatrixOp(
-                                       const GlobalMatrixKey             &gkey,
-                                       const Array<OneD,const NekDouble> &inarray,
-                                       Array<OneD,      NekDouble> &outarray,
-                                       CoeffState coeffstate)
+                const GlobalMatrixKey              &gkey,
+                const Array<OneD,const NekDouble>  &inarray,
+                      Array<OneD,      NekDouble>  &outarray,
+                      CoeffState                   coeffstate)
         {
             if(coeffstate == eGlobal)
             {
@@ -870,8 +870,10 @@ namespace Nektar
 
                 if(doGlobalOp)
                 {
+                    int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                     GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
                     mat->Multiply(inarray,outarray);
+                    m_locToGloMap->UniversalAssemble(outarray);
                 }
                 else
                 {

@@ -453,7 +453,9 @@ namespace Nektar
                     GlobalMatrixKey gkey(StdRegions::eIProductWRTBase,
                                          m_locToGloMap);
                     GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                    int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                     mat->Multiply(inarray,outarray);
+                    m_locToGloMap->UniversalAssemble(outarray);
                 }
                 else
                 {

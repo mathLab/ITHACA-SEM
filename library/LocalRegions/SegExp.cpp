@@ -1007,20 +1007,33 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
         /// Unpack data from input file assuming it comes from the same expansion type
         void SegExp::v_ExtractDataToCoeffs(
-                const std::vector<NekDouble> &data, 
-                const int offset,
+                const NekDouble *data, 
                 const std::vector<unsigned int > &nummodes, 
-                const int nmode_offset,
-                      Array<OneD, NekDouble> &coeffs)
+                const int mode_offset,
+                NekDouble *coeffs)
         {
             switch(m_base[0]->GetBasisType())
             { 
             case LibUtilities::eModified_A:
                 {
-                    int fillorder = min((int) nummodes[nmode_offset],m_ncoeffs);
+                    int fillorder = min((int) nummodes[mode_offset],m_ncoeffs);
 
                     Vmath::Zero(m_ncoeffs,coeffs,1);
-                    Vmath::Vcopy(fillorder,&data[offset],1,&coeffs[0],1);
+                    Vmath::Vcopy(fillorder,&data[0],1,&coeffs[0],1);
+                }
+                break;
+            case LibUtilities::eGLL_Lagrange:
+                {
+                    // Assume that input is also Gll_Lagrange but no way to check;
+                    LibUtilities::PointsKey p0(nummodes[mode_offset],LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::Interp1D(p0,data, m_base[0]->GetPointsKey(), coeffs);
+                }
+                break;
+            case LibUtilities::eGauss_Lagrange:
+                {
+                    // Assume that input is also Gauss_Lagrange but no way to check;
+                    LibUtilities::PointsKey p0(nummodes[mode_offset],LibUtilities::eGaussGaussLegendre);
+                    LibUtilities::Interp1D(p0,data, m_base[0]->GetPointsKey(), coeffs);
                 }
                 break;
             default:

@@ -118,6 +118,7 @@ namespace Nektar
             m_HomoDirec			= 0;
             m_useFFT			= false;
             m_dealiasing		= false;
+            m_specHP_dealiasing		= false;
             m_SingleMode		= false;
             m_HalfMode			= false;
             m_MultipleModes		= false;
@@ -201,6 +202,11 @@ namespace Nektar
                 if(m_session->DefinesSolverInfo("DEALIASING"))
                 {
                     m_dealiasing = true;
+                }
+
+                if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+                {
+                    m_specHP_dealiasing = true;
                 }
             }
             else
@@ -311,7 +317,7 @@ namespace Nektar
 									
                                 const LibUtilities::BasisKey  BkeyZR(LibUtilities::eFourierHalfModeRe, m_npointsZ, PkeyZ);
                                 const LibUtilities::BasisKey  BkeyZI(LibUtilities::eFourierHalfModeIm, m_npointsZ, PkeyZ);
-									
+                                
 									
                                 for(i = 0; i < m_fields.num_elements(); i++)
                                 {
@@ -350,9 +356,19 @@ namespace Nektar
                             m_fields[0] = firstfield;
                             for(i = 1; i < m_fields.num_elements(); i++)
                             {
-                                m_fields[i] = MemoryManager<MultiRegions::ContField2D>
-                                    ::AllocateSharedPtr(*firstfield, m_graph,m_session->GetVariable(i),
-                                                        DeclareCoeffPhysArrays, m_checkIfSystemSingular[i]);
+                                if(m_graph->SameExpansions(m_session->GetVariable(0),m_session->GetVariable(i)))
+                                {
+                                    m_fields[i] = MemoryManager<MultiRegions::ContField2D>
+                                        ::AllocateSharedPtr(*firstfield, m_graph,m_session->GetVariable(i),
+                                                            DeclareCoeffPhysArrays, m_checkIfSystemSingular[i]);
+                                }
+                                else
+                                {
+                                    m_fields[i] = MemoryManager<MultiRegions::ContField2D>
+                                        ::AllocateSharedPtr(m_session, m_graph, m_session->GetVariable(i),
+                                                            DeclareCoeffPhysArrays, m_checkIfSystemSingular[0]);
+                                    
+                                }
                             }
 
                             if(m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
@@ -1753,7 +1769,15 @@ namespace Nektar
 
             for(int i = 0; i < m_fields.num_elements(); ++i)
             {
-                fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+                if(m_fields[i]->GetNcoeffs() == m_fields[0]->GetNcoeffs())
+                {
+                    fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+                }
+                else
+                {
+                    fieldcoeffs[i] = Array<OneD,NekDouble>(m_fields[0]->GetNcoeffs());
+                    m_fields[0]->ExtractCoeffsToCoeffs(m_fields[i],m_fields[i]->GetCoeffs(),fieldcoeffs[i]);
+                }
                 variables[i] = m_boundaryConditions->GetVariable(i);
             }
 

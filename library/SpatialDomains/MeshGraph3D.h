@@ -205,7 +205,7 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT ElementFaceVectorSharedPtr GetElementsFromFace(Geometry2DSharedPtr face);
 
             /// \brief Return the BasisKey corresponding to a face of an element
-            SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetFaceBasisKey(Geometry2DSharedPtr face, const int flag);
+            SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetFaceBasisKey(Geometry2DSharedPtr face, const int flag, const std::string variable = "DefaultVar");
 
         protected:
             void ReadEdges    (TiXmlDocument &doc);

@@ -495,7 +495,7 @@ namespace Nektar
                    != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList2D>
-                        ::AllocateSharedPtr(m_session,*(bregions[i]), graph3D);
+                        ::AllocateSharedPtr(m_session,*(bregions[i]), graph3D, variable);
 
                     // Set up normals on non-Dirichlet boundary conditions
                     if(locBCond->GetBoundaryConditionType() != 

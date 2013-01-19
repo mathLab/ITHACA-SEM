@@ -693,14 +693,14 @@ namespace Nektar
                 offset += datalen;
             }
 
-            
+        
             // Determine mapping from element ids to location in expansion list.
             map<int, int> ElmtID_to_ExpID;
             for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
             {
-                ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+            ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
-
+            
             if(i == fielddef->m_fields.size())
             {
                 cout << "Field "<< field<< "not found in data file. "  << endl;
@@ -742,13 +742,27 @@ namespace Nektar
                         }
                         else // unpack data to new order
                         {
-                            (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = coeffs + m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane);
+                            (*m_exp)[eid]->ExtractDataToCoeffs(&fielddata[offset], fielddef->m_numModes,modes_offset,&coeffs[m_coeff_offset[eid] + planes_offset*ncoeffs_per_plane]);
                         }
                     }
                 }
             }
         }
 		
+        //Extract the data in fielddata into the m_coeff list
+        void ExpListHomogeneous1D::v_ExtractCoeffsToCoeffs(
+                                                           const boost::shared_ptr<ExpList> &fromExpList,const  Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+        {
+            int i;
+            int fromNcoeffs_per_plane = fromExpList->GetPlane(0)->GetNcoeffs();
+            Array<OneD, NekDouble> tocoeffs_tmp, fromcoeffs_tmp; 
+            
+            for(i = 0; i < m_planes.num_elements(); ++i)
+            {
+                m_planes[i]->ExtractCoeffsToCoeffs(fromExpList->GetPlane(i),fromcoeffs_tmp =  fromCoeffs + fromNcoeffs_per_plane*i, tocoeffs_tmp = toCoeffs + m_ncoeffs*i);
+            }
+        }
+
         /**
          * Write Tecplot Files Header
          * @param   outfile Output file name.
@@ -807,6 +821,42 @@ namespace Nektar
             outfile << "        </DataArray>" << endl;
         }
 		
+        void ExpListHomogeneous1D::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+            Array<OneD, NekDouble> tmparray;
+            cnt  = m_planes[0]->GetTotPoints();
+            cnt1 = m_planes[0]->Get1DScaledTotPoints(scale);
+            
+            ASSERTL1(m_planes.num_elements()*cnt1 <= outarray.num_elements(),"size of outarray does not match internal estimage");
+            
+            
+            for(int i = 0; i < m_planes.num_elements(); i++)
+            {
+         
+                m_planes[i]->PhysInterp1DScaled(scale,inarray+i*cnt,
+                                                 tmparray = outarray+i*cnt1);
+            }
+        }
+
+
+        void ExpListHomogeneous1D::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+            Array<OneD, NekDouble> tmparray;
+            cnt  = m_planes[0]->Get1DScaledTotPoints(scale);
+            cnt1 = m_planes[0]->GetTotPoints();
+            
+            ASSERTL1(m_planes.num_elements()*cnt <= inarray.num_elements(),"size of outarray does not match internal estimage");
+            
+            
+            for(int i = 0; i < m_planes.num_elements(); i++)
+            {
+                m_planes[i]->PhysGalerkinProjection1DScaled(scale,inarray+i*cnt,
+                                                 tmparray = outarray+i*cnt1);
+            }
+            
+        }
         void ExpListHomogeneous1D::v_PhysDeriv(const Array<OneD, const NekDouble> &inarray,
                                                Array<OneD, NekDouble> &out_d0,
                                                Array<OneD, NekDouble> &out_d1, 

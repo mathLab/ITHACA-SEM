@@ -44,12 +44,12 @@
 namespace ErrorUtil
 {
     static boost::optional<std::ostream&> outStream;
-
+    
     static void SetErrorStream(std::ostream& o)
     {
         outStream = o;
     }
-
+    
     static bool HasCustomErrorStream()
     {
         return outStream;
@@ -63,8 +63,8 @@ namespace ErrorUtil
 
     class NekError : public std::runtime_error
     {
-        public:
-            NekError(const std::string& message) : std::runtime_error(message) {}
+    public:
+        NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
     static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)

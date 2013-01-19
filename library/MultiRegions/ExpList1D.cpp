@@ -240,7 +240,8 @@ namespace Nektar
          */
         ExpList1D::ExpList1D(const SpatialDomains::CompositeMap &domain,
                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                             const bool DeclareCoeffPhysArrays):
+                             const bool DeclareCoeffPhysArrays,
+                             const std::string variable):
             ExpList()
         {
             int j,cnt,id=0;
@@ -264,7 +265,7 @@ namespace Nektar
                     {
                         // Retrieve the basis key from the expansion.
                         LibUtilities::BasisKey bkey
-                                        = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetEdgeBasisKey(SegmentGeom);
+                            = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetEdgeBasisKey(SegmentGeom, variable);
 
                         seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
@@ -411,7 +412,8 @@ namespace Nektar
                     const StdRegions::StdExpansionVector &locexp,
                     const SpatialDomains::MeshGraphSharedPtr &graph2D,
                     const map<int,int> &periodicEdges,
-                    const bool DeclareCoeffPhysArrays):
+                    const bool DeclareCoeffPhysArrays,
+                    const std::string variable):
             ExpList()
         {
             int i,j,cnt,id, elmtid=0;

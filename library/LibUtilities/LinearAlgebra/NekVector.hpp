@@ -135,7 +135,7 @@ namespace Nektar
 
 
             /// \brief Returns the number of dimensions for the point.
-            LIB_UTILITIES_EXPORT unsigned int GetDimension() const;
+            LIB_UTILITIES_EXPORT const unsigned int GetDimension() const;
 
             LIB_UTILITIES_EXPORT unsigned int GetRows() const;
 

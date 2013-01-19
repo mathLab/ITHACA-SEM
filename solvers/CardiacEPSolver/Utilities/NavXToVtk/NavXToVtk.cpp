@@ -23,6 +23,11 @@ std::vector<std::string> Split(std::string& input);
 
 int main(int argc, char* argv[])
 {
+    if (argc != 5)
+    {
+        cout << "Usage: NavXToVtk DxLandmarkGeo.xml DxL_1.csv geometry.vtk points.vtk" << endl;
+        exit(-1);
+    }
     string nxgeo = argv[1];
     string nxdxl = argv[2];
     string outgeo = argv[3];
@@ -152,10 +157,6 @@ vtkPolyData* LoadDataFile(string nxdxl) {
         if (input.length() > 9 && input.substr(0,9) == "rov trace") {
             labels = Split(input);
             for (int i = 1; i < labels.size(); ++i) {
-//                mElectrograms.push_back(new Electrogram(labels[i],
-//                                        atof(values["roving x"][i-1].c_str()),
-//                                        atof(values["roving y"][i-1].c_str()),
-//                                        atof(values["roving z"][i-1].c_str())));
                 vPts->InsertNextPoint(
                                         atof(values["roving x"][i-1].c_str()),
                                         atof(values["roving y"][i-1].c_str()),
@@ -166,23 +167,6 @@ vtkPolyData* LoadDataFile(string nxdxl) {
     }
     mPointsData->SetPoints(vPts);
 
-//    vector<string> data;
-//    while (!f.eof()) {
-//        getline(f, input);
-//        if (input.empty()) {
-//            break;
-//        }
-//        data = Split(input);
-//        for (int i = 1; i < data.size(); ++i)
-//        {
-//            mElectrograms[i-1]->AddValue(atof(data[i].c_str()));
-//        }
-//    }
-//
-//    for (int i = 0; i < data.size() - 1; ++i) {
-//        mElectrograms[i]->SetCFAEMeanScore(atof(values["CFE mean"][i].c_str()));
-//        mElectrograms[i]->SetLAT(100.0*(atof(values["rov LAT"][i].c_str()) - atof(values["ref LAT"][i].c_str()))+100.0);
-//    }
     return mPointsData;
 }
 

@@ -1,0 +1,6 @@
+IF (NEKTAR_USE_VTK)
+    SET(NAVX_SOURCES NavXToVtk.cpp)
+    ADD_EXECUTABLE(NavXToVtk ${NAVX_SOURCES})
+    TARGET_LINK_LIBRARIES(NavXToVtk ${TINYXML_LIB})
+    TARGET_LINK_LIBRARIES(NavXToVtk vtkCommon vtksys vtkViews vtkWidgets vtkRendering vtkIO)
+ENDIF (NEKTAR_USE_VTK)

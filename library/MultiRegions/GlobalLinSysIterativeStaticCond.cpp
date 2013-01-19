@@ -861,6 +861,8 @@ namespace Nektar
                 Array<OneD, NekDouble> out = pOutput+ nDir;
 
                 m_globalSchurCompl->Multiply(in,out);
+
+                m_locToGloMap->UniversalAssembleBnd(pOutput, nDir);
             }
             else
             {

@@ -289,9 +289,16 @@ namespace Nektar
          *   = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})
          *   = {\bf B_1 G} \f$
          */
-         void TetExp::v_IProductWRTBase(
-                 const Array<OneD, const NekDouble>& inarray,
-                       Array<OneD, NekDouble> & outarray)
+        void TetExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            v_IProductWRTBase_SumFac(inarray, outarray);
+        }
+
+        void TetExp::v_IProductWRTBase_SumFac(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();

@@ -251,6 +251,32 @@ namespace Nektar
                 }
                 case LibUtilities::eAdamsBashforthOrder2:
                 case LibUtilities::eAdamsBashforthOrder3:	  
+                {
+                    numMultiSteps = 2;
+
+                    IntScheme = Array<OneD, LibUtilities::
+                        TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+
+                    // Used in the first time step to initalize the scheme
+                    LibUtilities::
+                        TimeIntegrationSchemeKey IntKey0(
+                                                    LibUtilities::
+                                                    eForwardEuler);
+
+                    // Used for all other time steps
+                    LibUtilities::
+                        TimeIntegrationSchemeKey IntKey1(m_timeIntMethod);
+                    IntScheme[0] = LibUtilities::
+                        TimeIntegrationSchemeManager()[IntKey0];
+                    IntScheme[1] = LibUtilities::
+                        TimeIntegrationSchemeManager()[IntKey1];
+
+                    // Initialise the scheme for actual time integration scheme
+                    u = IntScheme[1]->InitializeScheme(
+                        m_timestep, fields, m_time, m_ode);
+
+                    break;
+                }
                 case LibUtilities::eBDFImplicitOrder2:
                 {
                     numMultiSteps = 2;

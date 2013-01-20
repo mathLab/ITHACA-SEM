@@ -191,10 +191,10 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
             Array<OneD, Array<OneD, NekDouble> > tmp   (nvariables);
             
-            // Reorder storage to list time-integrated fields first.
+            // Order storage to list time-integrated fields first.
             for(i = 0; i < nvariables; ++i)
             {
-                fields[i] = m_fields[m_intVariables[i]]->UpdatePhys();
+                fields[i] = m_fields[m_intVariables[i]]->GetPhys();
                 m_fields[m_intVariables[i]]->SetPhysState(false);
             }
             
@@ -262,7 +262,7 @@ namespace Nektar
                     LibUtilities::
                         TimeIntegrationSchemeKey IntKey0(
                                                     LibUtilities::
-                                                    eForwardEuler);
+                                                    eBackwardEuler);
 
                     // Used for all other time steps
                     LibUtilities::

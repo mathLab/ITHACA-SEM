@@ -10,11 +10,12 @@
 #include <vtkDoubleArray.h>
 #include <vtkCellArray.h>
 
-#include "tinyxml.h"
+#include "tinyxml/tinyxml.h"
 
 #include <vector>
 #include <map>
 #include <string>
+#include <sstream>
 using namespace std;
 
 vtkPolyData* LoadGeoFile(string nxgeo);

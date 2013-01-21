@@ -233,31 +233,36 @@ namespace Nektar
           m_state = ePtsFilled;
       }
 
-      /**
-       * Generate the geometry factors for this element.
-       */
-      void Geometry3D::v_GenGeomFactors(
-          const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
-      {
-            GeomType      Gtype  = eRegular;
-            GeomShapeType GSType = eQuadrilateral;
-
-            v_FillGeom();
-
-            // check to see if expansions are linear
-            for(int i = 0; i < m_coordim; ++i)
+        /**
+         * Generate the geometry factors for this element.
+         */
+        void Geometry3D::v_GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        {
+            if (m_geomFactorsState != ePtsFilled)
             {
-                if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(1) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(2) != 2)
-                {
-                    Gtype = eDeformed;
-                }
-            }
+                GeomType      Gtype  = eRegular;
+                GeomShapeType GSType = eQuadrilateral;
 
-            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                Gtype, m_coordim, m_xmap, tbasis);
-      }
+                v_FillGeom();
+
+                // check to see if expansions are linear
+                for(int i = 0; i < m_coordim; ++i)
+                {
+                    if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(1) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(2) != 2)
+                    {
+                        Gtype = eDeformed;
+                    }
+                }
+
+                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap, tbasis);
+
+                m_geomFactorsState = ePtsFilled;
+            }
+        }
 
       /** 
        * @brief Given local collapsed coordinate Lcoord return the value of
@@ -300,9 +305,9 @@ namespace Nektar
        */
       int Geometry3D::v_GetVid(const int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_verts.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_verts.size() - 1,
                    "Vertex ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_verts.num_elements()-1));
+                   boost::lexical_cast<string>(m_verts.size() - 1));
           return m_verts[i]->GetVid();
       }
 
@@ -311,9 +316,9 @@ namespace Nektar
        */
       const SegGeomSharedPtr Geometry3D::v_GetEdge(int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_edges.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_edges.size() - 1,
                    "Edge ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_edges.num_elements()-1));
+                   boost::lexical_cast<string>(m_edges.size() - 1));
           return m_edges[i];
       }
 
@@ -323,9 +328,9 @@ namespace Nektar
       inline StdRegions::Orientation Geometry3D::v_GetEorient(
           const int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_edges.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_edges.size() - 1,
                    "Edge ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_edges.num_elements()-1));
+                   boost::lexical_cast<string>(m_edges.size() - 1));
           return m_eorient[i];
       }
 
@@ -334,9 +339,9 @@ namespace Nektar
        */
       int Geometry3D::v_GetEid(int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_edges.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_edges.size() - 1,
                    "Edge ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_edges.num_elements()-1));
+                   boost::lexical_cast<string>(m_edges.size() - 1));
           return m_edges[i]->GetEid();
       }
 
@@ -345,7 +350,7 @@ namespace Nektar
        */
       const Geometry2DSharedPtr Geometry3D::v_GetFace(int i) const
       {
-          ASSERTL2((i >=0) && (i <= 4),"Edge id must be between 0 and 4");
+          ASSERTL2((i >=0) && (i <= 5),"Edge id must be between 0 and 4");
           return m_faces[i];
       }
 
@@ -354,9 +359,9 @@ namespace Nektar
        */
       StdRegions::Orientation Geometry3D::v_GetFaceOrient(const int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_faces.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_faces.size() - 1,
                    "Face ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_faces.num_elements()-1));
+                   boost::lexical_cast<string>(m_faces.size() - 1));
           return m_forient[i];
       }
 
@@ -365,9 +370,9 @@ namespace Nektar
        */
       int Geometry3D::v_GetFid(int i) const
       {
-          ASSERTL2(i >= 0 && i <= m_faces.num_elements()-1, 
+          ASSERTL2(i >= 0 && i <= m_faces.size() - 1,
                    "Face ID must be between 0 and "+
-                   boost::lexical_cast<string>(m_faces.num_elements()-1));
+                   boost::lexical_cast<string>(m_faces.size() - 1));
           return m_faces[i]->GetFid();
       }
 

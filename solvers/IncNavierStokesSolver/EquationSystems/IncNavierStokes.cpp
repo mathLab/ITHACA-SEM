@@ -55,7 +55,8 @@ namespace Nektar
         //EquationSystem(pSession),
         UnsteadySystem(pSession),
         m_steadyStateSteps(0),
-        m_subSteppingScheme(false)
+        m_subSteppingScheme(false),
+        m_SmoothAdvection(false)
     {
     }
 
@@ -112,25 +113,36 @@ namespace Nektar
             break;
         case eUnsteadyNavierStokes:
         case eUnsteadyStokes:
-            m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
-            m_session->LoadParameter("IO_EnergySteps", m_energysteps, 0);
-            m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
-            m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
+            {
+                m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
+                m_session->LoadParameter("IO_EnergySteps", m_energysteps, 0);
+                m_session->LoadParameter("SteadyStateSteps", m_steadyStateSteps, 0);
+                m_session->LoadParameter("SteadyStateTol", m_steadyStateTol, 1e-6);
             
-            // check to see if any user defined boundary condition is
-            // indeed implemented
-            
-            for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-            {	
-                // Time Dependent Boundary Condition (if no user
-                // defined then this is empty)
-                if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eNoUserDefined)
+                
+                // set up mdl file 
+                std::string   mdlname = m_session->GetSessionName() + ".mdl";
+                
+                if (m_energysteps && m_comm->GetRank() == 0)
                 {
-                    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent)
-                    {                     	     
-                        if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eI)
-                        {  	 	 
-                            ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+                    m_mdlFile.open(mdlname.c_str());
+                }
+                
+                // check to see if any user defined boundary condition is
+                // indeed implemented
+                
+                for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+                {	
+                    // Time Dependent Boundary Condition (if no user
+                    // defined then this is empty)
+                    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eNoUserDefined)
+                    {
+                        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent)
+                        {                     	     
+                            if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eI)
+                            {  	 	 
+                                ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+                            }
                         }
                     }
                 }
@@ -216,21 +228,14 @@ namespace Nektar
         // with calls to EvaluateAdvection_SetPressureBCs and
         // SolveUnsteadyStokesSystem
         m_integrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep, fields, m_time, m_integrationOps);
-		
-        std::string   mdlname = m_session->GetSessionName() + ".mdl";
-        std::ofstream mdlFile;
 
-        if (m_energysteps && m_comm->GetRank() == 0)
-        {
-            mdlFile.open(mdlname.c_str());
-        }
-        
+	               
         std::vector<SolverUtils::FilterSharedPtr>::iterator x;
         for (x = m_filters.begin(); x != m_filters.end(); ++x)
         {
             (*x)->Initialise(m_fields, m_time);
         }
-
+        
         //Time advance
         for(n = 0; n < nsteps; ++n)
         {
@@ -253,83 +258,21 @@ namespace Nektar
             // Write out current time step
             if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
             {
-                cout << "Step: " << n+1 << "  Time: " << m_time << " CPU-Time: " << timer.TimePerTest(1) << " s" << endl;
+                cout << "Step: " << n+1 << "  Time: " << 
+                    m_time << " CPU-Time: " << timer.TimePerTest(1) << " s" << endl;
             }
 
             // Write out energy data to file
             if(m_energysteps && !((n+1)%m_energysteps))
             {
-                if(m_HomogeneousType != eNotHomogeneous)
-                {
-                    if(m_HomogeneousType == eHomogeneous1D)
-                    {
-                        int colrank = m_comm->GetColumnComm()->GetRank();
-                        int nproc   = m_comm->GetColumnComm()->GetSize();
-                        int locsize = m_npointsZ/nproc/2;
-                        int ensize  = m_npointsZ/nproc/2;
-                        
-                        Array<OneD, NekDouble> energy    (locsize,0.0);
-                        Array<OneD, NekDouble> energy_tmp(locsize,0.0);
-                        Array<OneD, NekDouble> tmp;
-			
-                        // Calculate modal energies.
-                        for(i = 0; i < m_nConvectiveFields; ++i)
-                        {
-                            energy_tmp = m_fields[i]->HomogeneousEnergy();
-                            Vmath::Vadd(locsize,energy_tmp,1,energy,1,energy,1);
-                        }
-                        
-                        // Send to root process.
-                        if (colrank == 0)
-                        {
-                            int j, m = 0;
-                            
-                            for (j = 0; j < energy.num_elements(); ++j, ++m)
-                            {
-                                mdlFile << setw(10) << m_time 
-                                        << setw(5)  << m
-                                        << setw(18) << energy[j] << endl;
-                            }
-                            
-                            for (i = 1; i < nproc; ++i)
-                            {
-                                m_comm->GetColumnComm()->Recv(i, energy);
-                                for (j = 0; j < energy.num_elements(); ++j, ++m)
-                                {
-                                    mdlFile << setw(10) << m_time 
-                                            << setw(5)  << m
-                                            << setw(18) << energy[j] << endl;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            m_comm->GetColumnComm()->Send(0, energy);
-                        }
-                    }
-                    else
-                    {
-                        ASSERTL0(false,"3D Homogeneous 2D energy dumping not implemented yet");
-                    }
-                }
-                else
-                {
-                    NekDouble energy = 0.0;
-                    for(i = 0; i < m_nConvectiveFields; ++i)
-                    {
-                        m_fields[i]->SetPhys(fields[i]);
-                        m_fields[i]->SetPhysState(true);
-                        NekDouble norm = L2Error(i, true);
-                        energy += norm*norm;
-                    }
-                    mdlFile << m_time << "   " << 0.5*energy << endl;
-                }
-                
+                WriteModalEnergy();
             }
+
             
             // dump data in m_fields->m_coeffs to file. 
             if(m_checksteps && n&&(!((n+1)%m_checksteps)))
             {
+                //WriteCheckpoint_Ouptput();
                 if(m_HomogeneousType == eHomogeneous1D)
                 {
                     for(i = 0; i< n_fields; i++)
@@ -379,7 +322,7 @@ namespace Nektar
                     m_fields[i]->SetPhysState(false);
                 }
             }
-
+            
             std::vector<SolverUtils::FilterSharedPtr>::iterator x;
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
@@ -393,7 +336,7 @@ namespace Nektar
             for(i = 0 ; i< n_fields ; i++)
             {
                 m_fields[i]->SetWaveSpace(false);
-				m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
+                m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
                 m_fields[i]->SetPhysState(true);
             }
         }
@@ -409,7 +352,7 @@ namespace Nektar
         
         if (m_energysteps)
         {
-            mdlFile.close();
+            m_mdlFile.close();
         }
         
         for (x = m_filters.begin(); x != m_filters.end(); ++x)
@@ -800,6 +743,78 @@ namespace Nektar
                                  m_velocity,inarray,outarray,m_time,Deriv);
     }
     
+
+
+    void IncNavierStokes::WriteModalEnergy(void)
+    {
+        if(m_HomogeneousType != eNotHomogeneous)
+        {
+            if(m_HomogeneousType == eHomogeneous1D)
+            {
+                int colrank = m_comm->GetColumnComm()->GetRank();
+                int nproc   = m_comm->GetColumnComm()->GetSize();
+                int locsize = m_npointsZ/nproc/2;
+                int ensize  = m_npointsZ/nproc/2;
+                
+                Array<OneD, NekDouble> energy    (locsize,0.0);
+                Array<OneD, NekDouble> energy_tmp(locsize,0.0);
+                Array<OneD, NekDouble> tmp;
+			
+                // Calculate modal energies.
+                for(int i = 0; i < m_nConvectiveFields; ++i)
+                {
+                    energy_tmp = m_fields[i]->HomogeneousEnergy();
+                    Vmath::Vadd(locsize,energy_tmp,1,energy,1,energy,1);
+                }
+                
+                // Send to root process.
+                if (colrank == 0)
+                {
+                    int j, m = 0;
+                    
+                    for (j = 0; j < energy.num_elements(); ++j, ++m)
+                    {
+                        m_mdlFile << setw(10) << m_time 
+                                  << setw(5)  << m
+                                  << setw(18) << energy[j] << endl;
+                    }
+                    
+                    for (int i = 1; i < nproc; ++i)
+                    {
+                        m_comm->GetColumnComm()->Recv(i, energy);
+                        for (j = 0; j < energy.num_elements(); ++j, ++m)
+                        {
+                            m_mdlFile << setw(10) << m_time 
+                                      << setw(5)  << m
+                                      << setw(18) << energy[j] << endl;
+                        }
+                    }
+                }
+                else
+                {
+                    m_comm->GetColumnComm()->Send(0, energy);
+                }
+            }
+            else
+            {
+                ASSERTL0(false,"3D Homogeneous 2D energy dumping not implemented yet");
+            }
+        }
+        else
+        {
+            NekDouble energy = 0.0;
+            for(int i = 0; i < m_nConvectiveFields; ++i)
+            {
+                m_fields[i]->SetPhysState(true);
+                NekDouble norm = L2Error(i, true);
+                energy += norm*norm;
+            }
+            m_mdlFile << m_time << "   " << 0.5*energy << endl;
+        }
+        
+    }
+    
+
     //time dependent boundary conditions updating
     
     void IncNavierStokes::SetBoundaryConditions(NekDouble time)
@@ -1025,6 +1040,10 @@ namespace Nektar
 		
         return stdV;
 	}
+
+
+
+
     
 } //end of namespace
 

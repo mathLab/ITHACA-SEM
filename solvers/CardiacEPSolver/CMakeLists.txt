@@ -1,5 +1,6 @@
-SET(NEKTAR_SOLVER_CARDIAC_EP ON CACHE BOOL
-    "Build the Cardiac electrophysiology solver.")
+CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_CARDIAC_EP
+    "Build the Cardiac electrophysiology solver." ON
+    "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_CARDIAC_EP )
     SET(CardiacEPSolverSource 

@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 
     for(int i=0; i<fielddata.size(); i++)
     {
-    	    streak->ExtractDataToCoeffs(fielddef[i], fielddata[i], fielddef[i]->m_fields[0]);
+        streak->ExtractDataToCoeffs(fielddef[i], fielddata[i], fielddef[i]->m_fields[0], streak->UpdateCoeffs());
     }
     streak->BwdTrans_IterPerExp(streak->GetCoeffs(), streak->UpdatePhys());
  

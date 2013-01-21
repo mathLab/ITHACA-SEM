@@ -80,34 +80,58 @@ namespace Nektar
             int i,n,nel;
             bool False = false;
             ContField2DSharedPtr plane_zero;
+            ContField2DSharedPtr plane_two;
+
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
+	    m_graph = graph2D;
 
-            // note that nzplanes can be larger than nzmodes 
-            m_planes[0] = plane_zero = MemoryManager<ContField2D>::AllocateSharedPtr(pSession,graph2D,variable,False,CheckIfSingularSystem);
+            // Plane zero (k=0 - cos) - singularaty check required for Poisson
+            // problems
+            plane_zero = MemoryManager<ContField2D>::AllocateSharedPtr(
+                                        pSession, graph2D, variable, false,
+                                        CheckIfSingularSystem);
 
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>::AllocateSharedPtr();
-            nel = m_planes[0]->GetExpSize();
+            plane_two  = MemoryManager<ContField2D>::AllocateSharedPtr(
+                                        pSession, graph2D, variable, false,
+                                        false);
 
-            for(i = 0; i < nel; ++i)
+            m_exp = MemoryManager<StdRegions::StdExpansionVector>
+                                        ::AllocateSharedPtr();
+
+            for(n = 0; n < m_planes.num_elements(); ++n)
             {
-                (*m_exp).push_back(m_planes[0]->GetExp(i));
-            }
+                // Plane zero and one (k=0 - cos and sin) - singularaty check
+                // required for Poisson problems
+                if(m_transposition->GetK(n) == 0)
+                {
+                    m_planes[n] = MemoryManager<ContField2D>
+                            ::AllocateSharedPtr(*plane_zero, graph2D, variable,
+                                                false, CheckIfSingularSystem);
+                }
+                else
+                {
+                    // For k > 0 singularty check not required anymore -
+                    // creating another ContField2D to avoid Assembly Map copy
+                    // TODO: We may want to deal with it in a more efficient
+                    // way in the future.
+                    m_planes[n] = MemoryManager<ContField2D>
+                            ::AllocateSharedPtr(*plane_two, graph2D, variable,
+                                                false, false);
+                }
 
-            for(n = 1; n < m_planes.num_elements(); ++n)
-            {
-                m_planes[n] = MemoryManager<ContField2D>::AllocateSharedPtr(*plane_zero,graph2D,variable,False,CheckIfSingularSystem);
-                
+                nel = m_planes[n]->GetExpSize();
+
                 for(i = 0; i < nel; ++i)
                 {
-                    (*m_exp).push_back((*m_exp)[i]);
+                    (*m_exp).push_back(m_planes[n]->GetExp(i));
                 }
             }
-			
+
             nel = GetExpSize();
 
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>::AllocateSharedPtr(nel);
-            
-			SetCoeffPhys(); 
+
+            SetCoeffPhys();
 
             SetupBoundaryConditions(HomoBasis,lhom,bcs,variable);
         }
@@ -147,6 +171,24 @@ namespace Nektar
                 m_planes[n]->GlobalToLocal();
             }
         };
+
+
+        /**
+         *
+         */
+        void ContField3DHomogeneous1D::v_SmoothField(
+                Array<OneD,NekDouble> &field)
+        {
+            int cnt = 0;
+            Array<OneD, NekDouble> tmp;
+
+            for(int n = 0; n < m_planes.num_elements(); ++n)
+            {
+                m_planes[n]->SmoothField(tmp = field + cnt);
+
+                cnt  += m_planes[n]->GetTotPoints();
+            }
+        }
 
 
         void ContField3DHomogeneous1D::v_HelmSolve(

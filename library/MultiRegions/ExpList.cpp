@@ -661,6 +661,37 @@ namespace Nektar
         }
 
         /**
+         * This function smooth a field after some calculaitons which have
+         * been done elementally.
+         *
+         * @param   field     An array containing the field in physical space
+         *
+         */
+        void ExpList::v_SmoothField(Array<OneD, NekDouble> &field)
+        {
+            // Do nothing unless the method is implemented in the appropriate
+            // class, i.e. ContField1D,ContField2D, etc.
+
+            // So far it has been implemented just for ContField2D and
+            // ContField3DHomogeneous1D
+
+            // Block in case users try the smoothing with a modal expansion.
+            // Maybe a different techique for the smoothing require
+            // implementation for modal basis.
+
+            ASSERTL0((*m_exp)[0]->GetBasisType(0) 
+                     == LibUtilities::eGLL_Lagrange ||
+                     (*m_exp)[0]->GetBasisType(0) 
+                     == LibUtilities::eGauss_Lagrange,
+                     "Smoothing is currently not allowed unless you are using "
+                     "a nodal base for efficiency reasons. The implemented "
+                     "smoothing technique requires the mass matrix inversion "
+                     "which is trivial just for GLL_LAGRANGE_SEM and "
+                     "GAUSS_LAGRANGE_SEMexpansions.");
+        }
+
+
+        /**
          * This function assembles the block diagonal matrix
          * \f$\underline{\boldsymbol{M}}^e\f$, which is the
          * concatenation of the local matrices
@@ -2036,25 +2067,19 @@ namespace Nektar
             }
 
         }
+        
+        /// Extract the data in fielddata into the coeffs
+        void ExpList::ExtractDataToCoeffs(
+                                   SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                   std::vector<NekDouble> &fielddata,
+                                   std::string &field,
+                                   Array<OneD, NekDouble> &coeffs)
+        {
+            v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
+        }
 
-        //Extract the data in fielddata into the m_coeff list
-        void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
-        {
-            v_ExtractDataToCoeffs(fielddef,fielddata,field,m_coeffs);
-        }
-		
-        //3D-Base Flow (implementation in the homogeneous classes)
-        void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D)
-        {
-            ASSERTL0(false, "This method is not defined or valid for this class type");
-        }
-        
+
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
-        {
-            ExtractElmtDataToCoeffs(fielddef,fielddata,field,coeffs);
-        }
-        
-        void ExpList::ExtractElmtDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {     	
             int i;
             int offset = 0;
@@ -2082,9 +2107,9 @@ namespace Nektar
                 // expansion list
                 map<int, int> ElmtID_to_ExpID;
                 // loop in reverse order so that in case where using
-                // and Homogeneous expansion it sets geometry ids to
+                // a Homogeneous expansion it sets geometry ids to
                 // first part of m_exp list. Otherwise will set to
-                // second (complex) expansiosn
+                // second (complex) expansion
                 for(i = (*m_exp).size()-1; i >=0; --i)
                 {
                     ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;

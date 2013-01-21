@@ -269,7 +269,12 @@ namespace Nektar
 
             // First construct vector of elements to process.
             vector<ElementSharedPtr> el;
-            
+
+            if (m->verbose)
+            {
+                cout << "ProcessSpherigon: Smoothing mesh..." << endl;
+            }
+
             if (m->expDim == 2)
             {
                 // Manifold case - copy expansion dimension.

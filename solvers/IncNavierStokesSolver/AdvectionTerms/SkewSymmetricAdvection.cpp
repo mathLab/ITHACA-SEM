@@ -181,7 +181,9 @@ namespace Nektar
 			}
 			else 
 			{
-				ASSERTL0(false,"Dealiasing can't be used in combination with Wave-Space time-integration ");	
+                ASSERTL0(false, "Dealiasing is not allowed in combination "
+                                "with the Skew-Symmetric advection form for "
+                                "efficiency reasons.");	
 			}
             break;
         default:

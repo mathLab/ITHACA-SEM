@@ -1,5 +1,7 @@
-SET(THIRDPARTY_BUILD_BOOST OFF CACHE BOOL
-    "Build Boost libraries")
+OPTION(THIRDPARTY_BUILD_BOOST "Build Boost libraries" OFF)
+SET(Boost_USE_MULTITHREADED ON CACHE BOOL
+    "Search for multithreaded boost libraries")
+MARK_AS_ADVANCED(Boost_USE_MULTITHREADED)
 
 IF (THIRDPARTY_BUILD_BOOST)
     INCLUDE(ExternalProject)
@@ -85,12 +87,14 @@ IF (THIRDPARTY_BUILD_BOOST)
     ENDIF ()
 ELSE (THIRDPARTY_BUILD_BOOST)
     SET(Boost_DEBUG 1)
-    SET(Boost_USE_MULTITHREAD ON)
-    SET(Boost_ADDITIONAL_VERSIONS "1.49" "1.49.0" "1.48" "1.48.0" "1.47.0" "1.47" "1.46" "1.46. 1" "1.40" "1.40.0" "1.35.0" "1.35")
+    SET(Boost_ADDITIONAL_VERSIONS "1.51" "1.51.0" "1.50" "1.50.0" "1.49" "1.49.0" "1.48" "1.48.0" "1.47.0" "1.47" "1.46" "1.46. 1" "1.40" "1.40.0" "1.35.0" "1.35")
     SET(Boost_NO_BOOST_CMAKE ON)
 
     IF( NOT BOOST_ROOT )
         #If the user has not set BOOST_ROOT, look in a couple common places first.
+        SET(BOOST_ROOT $ENV{BOOST_HOME})
+        FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time
+                filesystem system program_options regex )
         SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
         SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)

@@ -229,6 +229,10 @@ namespace Nektar
                                       Array<OneD,       NekDouble> &outarray,
                                 CoeffState coeffstate);
 
+            /// Template method virtual forwarded for SmoothField().
+            MULTI_REGIONS_EXPORT virtual void v_SmoothField(
+                                      Array<OneD,NekDouble> &field);
+
             /// Template method virtual forwarder for MultiplyByInvMassMatrix().
             MULTI_REGIONS_EXPORT virtual void v_MultiplyByInvMassMatrix(
                                 const Array<OneD, const NekDouble> &inarray,
@@ -449,7 +453,9 @@ namespace Nektar
                     GlobalMatrixKey gkey(StdRegions::eIProductWRTBase,
                                          m_locToGloMap);
                     GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
+                    int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                     mat->Multiply(inarray,outarray);
+                    m_locToGloMap->UniversalAssemble(outarray);
                 }
                 else
                 {

@@ -107,16 +107,16 @@ namespace Nektar
                 case eModified_A:
                 case eFourier:
                 case eGLL_Lagrange:
-				case eGauss_Lagrange:
+                case eGauss_Lagrange:
                 case eLegendre:
                 case eChebyshev:
                 case eMonomial:
-				case eFourierSingleMode:
-				case eFourierHalfModeRe:
-				case eFourierHalfModeIm:
-                        value = m_nummodes;
-                        break;
-                        
+                case eFourierSingleMode:
+                case eFourierHalfModeRe:
+                case eFourierHalfModeIm:
+                    value = m_nummodes;
+                    break;
+                    
                 default:
                     NEKERROR(ErrorUtil::efatal,"Unknown basis being used");
                 }

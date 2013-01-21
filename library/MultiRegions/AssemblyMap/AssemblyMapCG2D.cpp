@@ -678,7 +678,7 @@ namespace Nektar
             }
 
             counts[p] = extraDirVertIds.size();
-            m_comm->AllReduce(counts, LibUtilities::ReduceSum);
+            vCommRow->AllReduce(counts, LibUtilities::ReduceSum);
             nTot = Vmath::Vsum(n, counts, 1);
             
             offsets[0] = 0;
@@ -698,8 +698,8 @@ namespace Nektar
                 vertprocs[offsets[p]+i] = it->second;
             }
 
-            m_comm->AllReduce(vertids,   LibUtilities::ReduceSum);
-            m_comm->AllReduce(vertprocs, LibUtilities::ReduceSum);
+            vCommRow->AllReduce(vertids,   LibUtilities::ReduceSum);
+            vCommRow->AllReduce(vertprocs, LibUtilities::ReduceSum);
             
             for (i = 0; i < nTot; ++i)
             {

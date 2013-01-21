@@ -32,6 +32,7 @@ TARGET_LINK_LIBRARIES(Tester
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_REGEX_LIBRARY}
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${Boost_THREAD_LIBRARY}
   optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
 )
 ADD_DEPENDENCIES(Tester boost tinyxml)

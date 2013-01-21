@@ -773,7 +773,9 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp(nLocalSolutionPts, 0.0);
                 
                 // Partition the field vector in local vectors
-                tmp = field + (n * nLocalSolutionPts);
+                Vmath::Vcopy(nLocalSolutionPts, 
+                             (&field[phys_offset]), 1,
+                             (&tmp[0]), 1);
                 
                 // Basis definition on each element
                 Basis = (*m_exp)[n]->GetBasis(0);
@@ -794,8 +796,8 @@ namespace Nektar
                     }
                     
                     // Set the x-coordinate of the standard interface point
-                    interface_coord[0] = vertex_coord;
-                    
+                    interface_coord[0] = -1.0;
+
                     // Implementation for every points except Gauss points
                     if (Basis->GetPointsType() != LibUtilities::eGaussGaussLegendre)
                     {
@@ -925,35 +927,33 @@ namespace Nektar
             }
         }		 
 	
-        /// Note this routine changes m_trace->m_coeffs space; ; is the same
-        /// for point expansion (croth)
         void DisContField1D::v_AddTraceIntegral(
             const Array<OneD, const NekDouble> &Fn, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            int p,n,offset, t_offset;
-            double vertnorm =0.0;
+            int p, n, offset, t_offset;
+            double vertnorm = 0.0;
             
-            for(n = 0; n < GetExpSize(); ++n)
+            for (n = 0; n < GetExpSize(); ++n)
             {
                 offset = GetCoeff_Offset(n);
 		
                 for(p = 0; p < 2; ++p)
                 {
                     vertnorm = 0.0;
-                    for (int i=0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
+                    for (int i = 0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
                     {
                         vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
                     }
                     
                     t_offset = GetTrace()->GetPhys_Offset(n+p);
                     
-                    if(vertnorm >= 0.0) 
+                    if (vertnorm >= 0.0) 
                     {
                         outarray[offset+(*m_exp)[n]->GetVertexMap(1)] += Fn[t_offset];
                     }
                     
-                    if(vertnorm < 0.0) 
+                    if (vertnorm < 0.0) 
                     {
                         outarray[offset] -= Fn[t_offset];
                     }

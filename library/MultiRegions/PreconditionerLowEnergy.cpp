@@ -866,9 +866,26 @@ namespace Nektar
             int nNonDirEdgeIDs  = m_locToGloMap->GetNumNonDirEdges();
 
             int dof;
-            int maxDof;
+            int maxFaceDof;
+            int maxEdgeDof;
 
             // Loop over all the elements in the domain and compute max edge
+            // DOF. Reduce across all processes to get universal maximum.
+            for(cnt=n=0; n < n_exp; ++n)
+            {
+                nel = expList->GetOffset_Elmt_Id(n);
+                
+                locExpansion = expList->GetExp(nel);
+
+                for (j = 0; j < locExpansion->GetNedges(); ++j)
+                {
+                    dof    = locExpansion->GetEdgeNcoeffs(j);
+                    maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
+                }
+            }
+
+
+            // Loop over all the elements in the domain and compute max face
             // DOF. Reduce across all processes to get universal maximum.
             for(cnt=n=0; n < n_exp; ++n)
             {
@@ -879,9 +896,13 @@ namespace Nektar
                 for (j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
                     dof    = locExpansion->GetFaceNcoeffs(j);
-                    maxDof = (dof > maxDof ? dof : maxDof);
+                    maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
                 }
             }
+
+            //Allocate arrays to store matrices (number of expansions * p^2)
+            Array<OneD, unsigned int> EdgeBlockArray(n_exp*maxEdgeDof*maxEdgeDof);
+            Array<OneD, unsigned int> FaceBlockArray(n_exp*maxFaceDof*maxFaceDof);
 
             //Set up mappings
             map<int,int> uniqueEdgeMap;

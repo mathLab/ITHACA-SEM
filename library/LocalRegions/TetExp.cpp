@@ -2182,15 +2182,6 @@ namespace Nektar
             nEdges=GetNedges();
             nFaces=GetNfaces();
 
-            //Set up map between element vertex, edge or face on the reference
-            //element and modes in the matrix
-            Array<OneD, int > vertModeLocation(nVerts);
-            Array<OneD, Array<OneD, unsigned int> > edgeModeLocation(nEdges);
-            Array<OneD, Array<OneD, unsigned int> > faceModeLocation(nFaces);
-
-            //mapping arrays for vertices, edges and faces
-            GetModeMappings(vertModeLocation,edgeModeLocation,faceModeLocation);
-
             /*************************************/
             /* Vetex-edge & vertex-face matrices */
             /*************************************/
@@ -2271,7 +2262,7 @@ namespace Nektar
                 for(eid=0; eid < nConnectedEdges; ++eid)
                 {
                     MatEdgeLocation[eid]=
-                        edgeModeLocation[m_geom->GetVertexEdgeMap(vid,eid)];
+                        GetEdgeInverseBoundaryMap(m_geom->GetVertexEdgeMap(vid,eid));
                     nmodes=MatEdgeLocation[eid].num_elements();
                     Vmath::Vcopy(nmodes, &MatEdgeLocation[eid][0], 
                                  1, &edgemodearray[offset], 1);
@@ -2283,7 +2274,7 @@ namespace Nektar
                 for(fid=0; fid < nConnectedFaces; ++fid)
                 {
                     MatFaceLocation[fid]=
-                        faceModeLocation[m_geom->GetVertexFaceMap(vid,fid)];
+                        GetFaceInverseBoundaryMap(m_geom->GetVertexFaceMap(vid,fid));
                     nmodes=MatFaceLocation[fid].num_elements();
                     Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 
                                  1, &facemodearray[offset], 1);
@@ -2304,7 +2295,7 @@ namespace Nektar
                 for (n=0; n<nedgemodesconnected; ++n)
                 {
                     //Matrix value for each coefficient location
-                    VertexEdgeFaceValue=(*r_bnd)(vertModeLocation[vid],
+                    VertexEdgeFaceValue=(*r_bnd)(GetVertexMap(vid),
                                                  edgemodearray[n]);
 
                     //Set the value in the vertex edge/face matrix
@@ -2315,7 +2306,7 @@ namespace Nektar
                 for (n=0; n<nfacemodesconnected; ++n)
                 {
                     //Matrix value for each coefficient location
-                    VertexEdgeFaceValue=(*r_bnd)(vertModeLocation[vid],
+                    VertexEdgeFaceValue=(*r_bnd)(GetVertexMap(vid),
                                                  facemodearray[n]);
 
                     //Set the value in the vertex edge/face matrix
@@ -2392,18 +2383,18 @@ namespace Nektar
                 // Populate R with R_{ve} components
                 for(n=0; n<edgemodearray.num_elements(); ++n)
                 {
-                    RT.SetValue(edgemodearray[n], vertModeLocation[vid], 
+                    RT.SetValue(edgemodearray[n], GetVertexMap(vid), 
                                 Sveft(0,n));
-                    R.SetValue(vertModeLocation[vid], edgemodearray[n], 
+                    R.SetValue(GetVertexMap(vid), edgemodearray[n], 
                                Sveft(0,n));
                 }
 
                 // Populate R with R_{vf} components
                 for(n=0; n<facemodearray.num_elements(); ++n)
                 {
-                    RT.SetValue(facemodearray[n], vertModeLocation[vid], 
+                    RT.SetValue(facemodearray[n], GetVertexMap(vid), 
                                 Sveft(0,n+nedgemodesconnected));
-                    R.SetValue(vertModeLocation[vid], facemodearray[n], 
+                    R.SetValue(GetVertexMap(vid), facemodearray[n], 
                                Sveft(0,n+nedgemodesconnected));
                 }
             }
@@ -2475,9 +2466,11 @@ namespace Nektar
                     facemodearray(nfacemodesconnected);
 
                 //create array of edge modes
-                nedgemodes=edgeModeLocation[eid].num_elements();
+                Array<OneD, unsigned int> inedgearray=GetEdgeInverseBoundaryMap(eid);
+                nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
                 Array<OneD, unsigned int> edgemodearray(nedgemodes);
-                Vmath::Vcopy(nedgemodes, &edgeModeLocation[eid][0], 
+
+                Vmath::Vcopy(nedgemodes, &inedgearray[0], 
                              1, &edgemodearray[0], 1);
 
                 int offset=0;
@@ -2485,7 +2478,7 @@ namespace Nektar
                 for(fid=0; fid < nConnectedFaces; ++fid)
                 {
                     MatFaceLocation[fid]=
-                        faceModeLocation[m_geom->GetEdgeFaceMap(eid,fid)];
+                        GetFaceInverseBoundaryMap(m_geom->GetEdgeFaceMap(eid,fid));
                     nmodes=MatFaceLocation[fid].num_elements();
                     Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 
                                  1, &facemodearray[offset], 1);
@@ -2560,89 +2553,84 @@ namespace Nektar
             }
 	}
 
-        void TetExp::v_GetModeMappings(Array<OneD, int > vma,
-				       Array<OneD, Array<OneD, unsigned int> > ema,
-				       Array<OneD, Array<OneD, unsigned int> > fma)
+        
+        Array<OneD, unsigned int>
+        TetExp::v_GetEdgeInverseBoundaryMap(int eid)
         {
-            int nVerts, nEdges, nFaces;
-            int vMap, eid, fid, vid, cnt, n, i, j;
-            int nEdgeCoeffs, nFaceCoeffs;
-
+            int nEdges;
+            int cnt, n, i, j;
+            int nEdgeCoeffs;
+            
             int nBndCoeffs=NumBndryCoeffs();
             int nCoeffs=GetNcoeffs();
-            int nIntCoeffs=nCoeffs-nBndCoeffs;
 
             Array<OneD,unsigned int> bmap(nBndCoeffs);
             GetBoundaryMap(bmap);
 
-            Array<OneD,unsigned int> imap(nIntCoeffs);
-            GetInteriorMap(imap);
-
             //map from full system to statically condensed system
             //i.e reverse GetBoundaryMap
-
             map<int,int> invmap;
-            for(j = 0; j < bmap.num_elements(); ++j)
+            for(j = 0; j < nBndCoeffs; ++j)
             {
                 invmap[bmap[j]] = j;
             }
 
-	    nVerts=vma.num_elements();
-	    nEdges=ema.num_elements();
-	    nFaces=fma.num_elements();
-
-            //loop over vertices and determine the location of vertex
-            //coefficients in the storage array
-            for (vid=0; vid<nVerts; ++vid)
+            //Number of interior edge coefficients
+            nEdgeCoeffs=GetEdgeNcoeffs(eid)-2;
+            
+            Array<OneD,unsigned int> edgemaparray(nEdgeCoeffs);
+            StdRegions::Orientation eOrient=m_geom->GetEorient(eid);
+            Array< OneD, unsigned int > maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
+            Array< OneD, int > signarray = Array<OneD, int>(nEdgeCoeffs,1);
+            
+            //maparray is the location of the edge within the matrix
+            GetEdgeInteriorMap(eid,eOrient,maparray,signarray);
+            
+            for (n=0; n<nEdgeCoeffs; ++n)
             {
-                //location in matrix
-                vMap = GetVertexMap(vid);
-                vma[vid]=vMap;
+                edgemaparray[n]=invmap[maparray[n]];
             }
+            return edgemaparray;
+        }
+            
+        Array<OneD, unsigned int>
+        TetExp::v_GetFaceInverseBoundaryMap(int fid)
+        {
+            int nFaces;
+            int cnt, n, i, j;
+            int nFaceCoeffs;
+            
+            int nBndCoeffs=NumBndryCoeffs();
+            
+            Array<OneD,unsigned int> bmap(nBndCoeffs);
+            GetBoundaryMap(bmap);
 
-            //loop over edges and determine location of edge coefficients in the
-            //storage array
-            for (eid=0; eid<nEdges; ++eid)
+            //map from full system to statically condensed system
+            //i.e reverse GetBoundaryMap
+            map<int,int> reversemap;
+            for(j = 0; j < bmap.num_elements(); ++j)
             {
-                //Number of interior edge coefficients
-                nEdgeCoeffs=GetEdgeNcoeffs(eid)-2;
-
-                StdRegions::Orientation eOrient=m_geom->GetEorient(eid);
-                Array< OneD, unsigned int > maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
-                Array< OneD, int > signarray = Array<OneD, int>(nEdgeCoeffs,1);
-
-                //maparray is the location of the edge within the matrix
-                GetEdgeInteriorMap(eid,eOrient,maparray,signarray);
-
-                for (n=0; n<maparray.num_elements(); ++n)
-                {
-                    maparray[n]=invmap[maparray[n]];
-                }
-                ema[eid]=maparray;
+                reversemap[bmap[j]] = j;
             }
-
-            int nTotFaceCoeffs=GetTotalFaceIntNcoeffs();
-	                
-            //loop over faces and determine location of face coefficients in the storage array
-            for (cnt=fid=0; fid<nFaces; ++fid)
-            {
-                //Number of interior edge coefficients
-                nFaceCoeffs=GetFaceIntNcoeffs(fid);
- 
-                StdRegions::Orientation fOrient=GetFaceOrient(fid);
-                Array< OneD, unsigned int > maparray = Array<OneD, unsigned int>(nFaceCoeffs);
-                Array< OneD, int > signarray = Array<OneD, int>(nFaceCoeffs,1);
-
+            
+            //Number of interior face coefficients
+            nFaceCoeffs=GetFaceIntNcoeffs(fid);
+            
+            Array<OneD,unsigned int> facemaparray(nFaceCoeffs);
+            StdRegions::Orientation fOrient=GetFaceOrient(fid);
+            Array< OneD, unsigned int > maparray = Array<OneD, unsigned int>(nFaceCoeffs);
+            Array< OneD, int > signarray = Array<OneD, int>(nFaceCoeffs,1);
+            
                 //maparray is the location of the face within the matrix
-                GetFaceInteriorMap(fid,fOrient,maparray,signarray);
-
-                for (n=0; n<maparray.num_elements(); ++n)
-                {
-                    maparray[n]=invmap[maparray[n]];
-                }
-                fma[fid]=maparray;
+            GetFaceInteriorMap(fid,fOrient,maparray,signarray);
+            
+            for (n=0; n<nFaceCoeffs; ++n)
+            {
+                facemaparray[n]=reversemap[maparray[n]];
             }
-	}
+
+            return facemaparray;
+        }
 
         /**
 	 * \brief Build inverse and inverse transposed transformation matrix: \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
@@ -2678,32 +2666,36 @@ namespace Nektar
 
             //Set up map between element vertex, edge or face on the reference
             //element and modes in the matrix
-            Array<OneD, int > vertModeLocation(nVerts);
-            Array<OneD, Array<OneD, unsigned int> > edgeModeLocation(nEdges);
-            Array<OneD, Array<OneD, unsigned int> > faceModeLocation(nFaces);
+            //Array<OneD, int > vertModeLocation(nVerts);
+            //Array<OneD, Array<OneD, unsigned int> > edgeModeLocation(nEdges);
+            //Array<OneD, Array<OneD, unsigned int> > faceModeLocation(nFaces);
 
             //mapping arrays for vertices, edges and faces
-            GetModeMappings(vertModeLocation,edgeModeLocation,faceModeLocation);
+            //GetInverseBoundaryMaps(vertModeLocation,edgeModeLocation,faceModeLocation);
 
             int nedgemodes, nfacemodes;
+            nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
+            nfacemodes=GetFaceIntNcoeffs(fid);//edgeModeLocation[eid].num_elements();
 
             Array<OneD, unsigned int> 
-                edgemodearray(nEdges*edgeModeLocation[0].num_elements());
+                edgemodearray(nEdges*nedgemodes);
             Array<OneD, unsigned int> 
-                facemodearray(nFaces*faceModeLocation[0].num_elements());
+                facemodearray(nFaces*nfacemodes);
             
             //create array of edge modes
             for(eid=0; eid < nEdges; ++eid)
             {
-                nedgemodes=edgeModeLocation[eid].num_elements();
-                Vmath::Vcopy(nedgemodes, &edgeModeLocation[eid][0], 1, &edgemodearray[eid*nedgemodes], 1);
+                Array<OneD, unsigned int> edgearray=GetEdgeInverseBoundaryMap(eid);
+                nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
+                Vmath::Vcopy(nedgemodes, &edgearray[0], 1, &edgemodearray[eid*nedgemodes], 1);
             }
 
             //create array of face modes
             for(fid=0; fid < nFaces; ++fid)
             {
-                nfacemodes=faceModeLocation[fid].num_elements();
-                Vmath::Vcopy(nfacemodes, &faceModeLocation[fid][0], 1, &facemodearray[fid*nfacemodes], 1);
+                Array<OneD, unsigned int> facearray=GetEdgeInverseBoundaryMap(eid);
+                nfacemodes=GetFaceIntNcoeffs(fid);//faceModeLocation[fid].num_elements();
+                Vmath::Vcopy(nfacemodes, &facearray[0], 1, &facemodearray[fid*nfacemodes], 1);
             }
             
             int nedgemodestotal=nedgemodes*nEdges;
@@ -2715,30 +2707,30 @@ namespace Nektar
                 for(j=0; j<nedgemodestotal; ++j)
                 {
                     InvR.SetValue(
-                        vertModeLocation[i],edgemodearray[j],
-                        -R(vertModeLocation[i],edgemodearray[j]));
+                        GetVertexMap(i),edgemodearray[j],
+                        -R(GetVertexMap(i),edgemodearray[j]));
                     InvRT.SetValue(
-                        edgemodearray[j],vertModeLocation[i],
-                        -R(vertModeLocation[i],edgemodearray[j]));
+                        edgemodearray[j],GetVertexMap(i),
+                        -R(GetVertexMap(i),edgemodearray[j]));
                 }
                 for(j=0; j<nfacemodestotal; ++j)
                 {
                     InvR.SetValue(
-                        vertModeLocation[i],facemodearray[j],
-                        -R(vertModeLocation[i],facemodearray[j]));
+                        GetVertexMap(i),facemodearray[j],
+                        -R(GetVertexMap(i),facemodearray[j]));
                     InvRT.SetValue(
-                        facemodearray[j],vertModeLocation[i],
-                        -R(vertModeLocation[i],facemodearray[j]));
+                        facemodearray[j],GetVertexMap(i),
+                        -R(GetVertexMap(i),facemodearray[j]));
                     for(n=0; n<nedgemodestotal; ++n)
                     {
                         MatrixValue=InvR.GetValue(
-                            vertModeLocation[i],facemodearray[j])
-                            +R(vertModeLocation[i],edgemodearray[n])
+                            GetVertexMap(i),facemodearray[j])
+                            +R(GetVertexMap(i),edgemodearray[n])
                             *R(edgemodearray[n],facemodearray[j]);
                         InvR.SetValue(
-                            vertModeLocation[i],facemodearray[j],MatrixValue);
+                            GetVertexMap(i),facemodearray[j],MatrixValue);
                         InvRT.SetValue(
-                            facemodearray[j],vertModeLocation[i],MatrixValue);
+                            facemodearray[j],GetVertexMap(i),MatrixValue);
                     }
                 }
             }

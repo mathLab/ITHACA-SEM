@@ -221,10 +221,16 @@ namespace Nektar
             // Low Energy Basis functions
             //-----------------------------
 
-            LOCAL_REGIONS_EXPORT virtual void v_GetModeMappings(
-                Array<OneD, int > vma,
-                Array<OneD, Array<OneD, unsigned int> > ema,
-                Array<OneD, Array<OneD, unsigned int> > fma);
+            /*LOCAL_REGIONS_EXPORT virtual void v_GetInverseBoundaryMaps(
+                Array<OneD, int > vertexmap,
+                Array<OneD, Array<OneD, unsigned int> > edgemap,
+                Array<OneD, Array<OneD, unsigned int> > facemap);*/
+
+            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int> 
+                v_GetEdgeInverseBoundaryMap(int eid);
+
+            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int>
+                v_GetFaceInverseBoundaryMap(int fid);
 
             LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
                 const DNekMatSharedPtr &r_bnd, 

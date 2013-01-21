@@ -1441,13 +1441,24 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
-            STD_REGIONS_EXPORT void GetModeMappings(const Array<OneD, int > vma,
-				 const Array<OneD, Array<OneD, unsigned int> > ema,
-				 const Array<OneD, Array<OneD, unsigned int> > fma)
+            /*STD_REGIONS_EXPORT void GetInverseBoundaryMaps(const Array<OneD, int > vertexmap,
+				 const Array<OneD, Array<OneD, unsigned int> > edgemap,
+				 const Array<OneD, Array<OneD, unsigned int> > facemap)
             {
-                v_GetModeMappings(vma,ema,fma);
-            }
+                v_GetInverseBoundaryMaps(vertexmap,edgemap,facemap);
+                }*/
 
+            STD_REGIONS_EXPORT Array<OneD, unsigned int> 
+                GetEdgeInverseBoundaryMap(int eid)
+            {
+                return v_GetEdgeInverseBoundaryMap(eid);
+            }
+            
+            STD_REGIONS_EXPORT Array<OneD, unsigned int>
+                GetFaceInverseBoundaryMap(int fid)
+            {
+                return v_GetFaceInverseBoundaryMap(fid);
+            }
 
         protected:
 
@@ -1893,10 +1904,17 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
 
-            STD_REGIONS_EXPORT virtual void v_GetModeMappings(
-                Array<OneD, int > vma,
-                Array<OneD, Array<OneD, unsigned int> > ema,
-                Array<OneD, Array<OneD, unsigned int> > fma);
+            /*STD_REGIONS_EXPORT virtual void v_GetInverseBoundaryMaps(
+                Array<OneD, int > vertexmap,
+                Array<OneD, Array<OneD, unsigned int> > edgemap,
+                Array<OneD, Array<OneD, unsigned int> > facemap);*/
+
+            STD_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
+                v_GetEdgeInverseBoundaryMap(int eid);
+
+            STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
+                v_GetFaceInverseBoundaryMap(int fid);
+
         };
 
 

@@ -1786,13 +1786,30 @@ namespace Nektar
             return result;
         }
 
-        void StdExpansion::v_GetModeMappings(
-            Array<OneD, int > vma,
-            Array<OneD, Array<OneD, unsigned int> > ema,
-            Array<OneD, Array<OneD, unsigned int> > fma)
+        /*void StdExpansion::v_GetInverseBoundaryMaps(
+                Array<OneD, int > vertexmap,
+                Array<OneD, Array<OneD, unsigned int> > edgemap,
+                Array<OneD, Array<OneD, unsigned int> > facemap)
         {
             ASSERTL0(false, "Not implemented.");
+            }*/
+
+        Array<OneD, unsigned int>
+        StdExpansion::v_GetEdgeInverseBoundaryMap(int eid)
+        {
+            ASSERTL0(false, "Not implemented.");
+            Array<OneD, unsigned int> noinversemap(1);
+            return noinversemap;
         }
+
+        Array<OneD, unsigned int> 
+        StdExpansion::v_GetFaceInverseBoundaryMap(int fid)
+        {
+            ASSERTL0(false, "Not implemented.");
+            Array<OneD, unsigned int> noinversemap(1);
+            return noinversemap;
+        }
+
 
     }//end namespace
 }//end namespace

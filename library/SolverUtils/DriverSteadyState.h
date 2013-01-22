@@ -117,6 +117,9 @@ namespace Nektar
             
             NekDouble m_LIM;
             NekDouble m_LIM0;
+            
+            NekDouble mult;
+            NekDouble coeff;
                         
             std::ofstream m_file;
         };

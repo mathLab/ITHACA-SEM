@@ -96,9 +96,10 @@ namespace Nektar
             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 1000);
             m_session->LoadParameter("IO_CheckSteps", m_checksteps, 100000);
             
-            m_Delta = m_Delta0;
-            
             m_dt = m_equ[0]->GetTimeStep();
+            
+            m_Delta = m_Delta0;            
+            
             m_cst1=m_X*m_dt;
             m_cst2=1.0/(1.0 + m_cst1);
             m_cst3=m_dt/m_Delta;
@@ -133,8 +134,9 @@ namespace Nektar
             Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;
             
             //m_LIM0 = 1.0e-04;
-            m_LIM0 = 1.0e-03;
+            m_LIM0 = 1.0e-06;
             m_LIM = m_LIM0;
+            
             
             while (MaxNormDiff_q_qBar > TOL)
             {
@@ -276,10 +278,15 @@ namespace Nektar
                 m_Oscillation=m_Oscillation+1;
             }
             
-            if (m_Oscillation==25)
+            if (m_Oscillation==10)
             {                   
-                m_Delta = m_Delta + 0.25;
-                m_X = 0.99*(1.0/m_Delta);
+                //m_Delta = m_Delta + 0.25;
+                //m_X = 0.99*(1.0/m_Delta);
+
+                mult = mult + mult*0.25;
+                
+                m_X = mult*(coeff - 1.0)/m_dt;
+                m_Delta = 100*mult*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
                 
                 m_cst1=m_X*m_dt;
                 m_cst2=1.0/(1.0 + m_cst1);
@@ -290,10 +297,10 @@ namespace Nektar
                 cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
                 
                 m_Oscillation=0;
-                m_equ[0]->DoInitialise();
+                //m_equ[0]->DoInitialise();
             }*/
             
-            
+            //Algo for updating parameters (late 2012)
             if (MaxNormDiff_q_qBar < Min_MaxNormDiff_q_qBar)
             {
                 Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;
@@ -301,8 +308,16 @@ namespace Nektar
             
             if (MaxNormDiff_q_qBar < m_LIM)
             {                   
-                m_Delta = m_Delta + 0.5;
-                m_X = 0.99*(1.0/m_Delta);
+                //m_Delta = m_Delta + 0.5;
+                //m_X = 0.99*(1.0/m_Delta);
+                
+                //coeff = 1.0106;
+                coeff = 1.0132;
+                //mult = 10.0;
+                
+                m_X = 1.1*(coeff - 1.0)/m_dt;
+                m_Delta = 100.0*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
+                m_Delta = max(m_Delta, 1.0);
                 
                 m_cst1=m_X*m_dt;
                 m_cst2=1.0/(1.0 + m_cst1);
@@ -313,10 +328,10 @@ namespace Nektar
                 cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
                 
                 //m_LIM = m_LIM/10.0;
-                m_LIM = m_LIM/5.0;
+                m_LIM = m_LIM/1000.0;
             }
             
-            if (MaxNormDiff_q_qBar > 2.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
+            /*if (MaxNormDiff_q_qBar > 2.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
             {        
                 Min_MaxNormDiff_q_qBar = 1.0;
                 
@@ -335,7 +350,9 @@ namespace Nektar
                 m_LIM = m_LIM0;
                 
                 m_equ[0]->DoInitialise(); 
-            }                      
+            }*/
+            
+            
         }
     }
 }

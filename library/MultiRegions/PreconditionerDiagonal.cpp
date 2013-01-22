@@ -69,8 +69,6 @@ namespace Nektar
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap)
            : Preconditioner(plinsys, pLocToGloMap),
-	   m_linsys(plinsys),
-           m_locToGloMap(pLocToGloMap),
            m_preconType(pLocToGloMap->GetPreconType())
          {
 	 }
@@ -123,7 +121,8 @@ namespace Nektar
              Array<OneD, NekDouble> vOutput(nGlobal,0.0);
 
              int loc_lda;
-             for(n = cnt = 0; n < expList->GetNumElmts(); ++n)
+             int nElmt = expList->GetNumElmts();
+             for(n = cnt = 0; n < nElmt; ++n)
              {
                  loc_mat = (m_linsys.lock())->GetBlock(expList->GetOffset_Elmt_Id(n));
                  loc_lda = loc_mat->GetRows();

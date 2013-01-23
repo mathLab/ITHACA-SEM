@@ -222,101 +222,42 @@ namespace Nektar
                         m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             
-            switch(m_expdim)
+            // For 2D/3D, define: v* = v - 2(v.n)n
+            
+            Array<OneD,NekDouble> tmp(npts,0.0);
+            
+            // Calculate (v.n)
+            for (i = 0; i < m_expdim; ++i)
             {
-                // Special case for 2D
-                case 2:
-                {
-                    Array<OneD, NekDouble> tmp_n(npts);
-                    Array<OneD, NekDouble> tmp_t(npts);
-                    
-                    Vmath::Vmul (npts, 
-                                 &Fwd[1][id2], 1, 
-                                 &m_traceNormals[0][id2], 1,
-                                 &tmp_n[0], 1);
-                    
-                    Vmath::Vvtvp(npts, 
-                                 &Fwd[2][id2], 1, 
-                                 &m_traceNormals[1][id2], 1,
-                                 &tmp_n[0], 1, 
-                                 &tmp_n[0], 1);
-                    
-                    Vmath::Vmul (npts, 
-                                 &Fwd[1][id2], 1, 
-                                 &m_traceNormals[1][id2], 1,
-                                 &tmp_t[0], 1);
-                    
-                    Vmath::Vvtvm(npts, 
-                                 &Fwd[2][id2], 1, 
-                                 &m_traceNormals[0][id2], 1,
-                                 &tmp_t[0], 1, &tmp_t[0], 1);
-                    
-                    // negate the normal flux
-                    Vmath::Neg  (npts, tmp_n, 1);		      
-                    
-                    // rotate back to Cartesian
-                    Vmath::Vmul (npts,
-                                 &tmp_t[0], 1, 
-                                 &m_traceNormals[1][id2], 1,
-                                 &Fwd[1][id2], 1);
-                    
-                    Vmath::Vvtvm(npts, 
-                                 &tmp_n[0], 1, 
-                                 &m_traceNormals[0][id2], 1,
-                                 &Fwd[1][id2], 1, 
-                                 &Fwd[1][id2], 1);
-                    
-                    Vmath::Vmul (npts, 
-                                 &tmp_t[0], 1,
-                                 &m_traceNormals[0][id2], 1,
-                                 &Fwd[2][id2], 1);
-                    
-                    Vmath::Vvtvp(npts, 
-                                 &tmp_n[0], 1,
-                                 &m_traceNormals[1][id2], 1,
-                                 &Fwd[2][id2], 1,
-                                 &Fwd[2][id2], 1);
-                    break;
-                }
-                    
-                // For 1D/3D, define: v* = v - (v.n)n so that v*.n = 0
-                case 1:
-                case 3:
-                {
-                    Array<OneD,NekDouble> tmp(npts);
-                    
-                    // Calculate (v.n)
-                    for (i = 0; i < m_expdim; ++i)
-                    {
-                        Vmath::Vvtvp(npts,
-                                     &Fwd[1+i][id2], 1, 
-                                     &m_traceNormals[i][id2], 1,
-                                     &tmp[0], 1,
-                                     &tmp[0], 1);
-                    }
-                    
-                    for (i = 0; i < m_expdim; ++i)
-                    {
-                        Vmath::Vvtvm(npts, 
-                                     &tmp[0], 1,
-                                     &m_traceNormals[i][id2], 1,
-                                     &Fwd[1+i][id2], 1,
-                                     &Fwd[1+i][id2], 1);
-                        
-                        Vmath::Neg  (npts, &Fwd[1+i][id2], 1);
-                    }
-                    
-                    break;
-                }
-                default:
-                    ASSERTL0(false, "Illegal expansion dimension");
-                    break;
+                Vmath::Vvtvp(npts,
+                             &Fwd[1+i][id2], 1,
+                             &m_traceNormals[i][id2], 1,
+                             &tmp[0], 1,
+                             &tmp[0], 1);
+                
+            }
+            // Calculate 2.0(v.n)
+            Vmath::Smul(npts,
+                        -2.0,
+                        &tmp[0],1,
+                        &tmp[0],1);
+            
+            // Calculate v* = v - 2.0(v.n)n
+            
+            for (i = 0; i < m_expdim; ++i)
+            {
+                Vmath::Vvtvp(npts,
+                             &tmp[0], 1,
+                             &m_traceNormals[i][id2], 1,
+                             &Fwd[1+i][id2], 1,
+                             &Fwd[1+i][id2], 1);
+                
             }
             
             // copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nvariables; ++i)
             {
-                Vmath::Vcopy(npts, &Fwd[i][id2], 1, 
+                Vmath::Vcopy(npts, &Fwd[i][id2], 1,
                              &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
                              UpdatePhys())[id1], 1);
             }

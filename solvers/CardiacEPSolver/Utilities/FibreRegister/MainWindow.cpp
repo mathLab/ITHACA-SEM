@@ -5,8 +5,6 @@
 #include <vtkCellArray.h>
 #include <vtkPointLocator.h>
 #include <vtkMath.h>
-//#include <vtkTextProperty.h>
-//#include <vtkTable.h>
 #include "vtkEventQtSlotConnect.h"
 #include "vtkPolyDataWriter.h"
 #include <vtkLookupTable.h>
@@ -17,26 +15,21 @@ using namespace std;
 
 MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
 : QMainWindow( parent, fl ) {
-    
+
+    // Draw UI components
     Draw();
     
-    // Set up VTK stuff
-    
-    //Source Data contains mesh
+    // -----------------------------------------------
+    // SOURCE
+    // -----------------------------------------------
     mSourceData = vtkPolyData::New();
-    mTargetData = vtkPolyData::New();
     
     mSourceRenderer = vtkRenderer::New();
     mSourceRenderer->SetBackground(0.0,0.0,0.0);
-    mTargetRenderer = vtkRenderer::New();
-    mTargetRenderer->SetBackground(0.0,0.0,0.0);
     
     mSourceFilterSmooth = vtkSmoothPolyDataFilter::New();
     mSourceFilterSmooth->SetNumberOfIterations(200);
     mSourceFilterSmooth->SetInput(mSourceData);
-    mTargetFilterSmooth = vtkSmoothPolyDataFilter::New();
-    mTargetFilterSmooth->SetNumberOfIterations(200);
-    mTargetFilterSmooth->SetInput(mTargetData);
     
     mSourceFilterDepthSort = vtkDepthSortPolyData::New();
     mSourceFilterDepthSort->SetInputConnection(mSourceFilterSmooth->GetOutputPort());
@@ -44,44 +37,27 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourceFilterDepthSort->SetVector(1, 1, 1);
     mSourceFilterDepthSort->SetCamera(mSourceRenderer->GetActiveCamera());
     mSourceFilterDepthSort->SortScalarsOn();
-    mTargetFilterDepthSort = vtkDepthSortPolyData::New();
-    mTargetFilterDepthSort->SetInputConnection(mTargetFilterSmooth->GetOutputPort());
-    mTargetFilterDepthSort->SetDirectionToBackToFront();
-    mTargetFilterDepthSort->SetVector(1, 1, 1);
-    mTargetFilterDepthSort->SetCamera(mTargetRenderer->GetActiveCamera());
-    mTargetFilterDepthSort->SortScalarsOn();
     
-   //Look up table
-    vtkLookupTable *Interpvalues=vtkLookupTable::New();
-    Interpvalues->SetTableRange(0,10);
-    Interpvalues->SetNumberOfColors(256);
-    Interpvalues->SetHueRange(0.667,0.0);
-    Interpvalues->SetSaturationRange(1.0,1.0);
-    Interpvalues->SetValueRange(1.0,1.0);
-    Interpvalues->Build();
+    mSourceLookupTable = vtkLookupTable::New();
+    mSourceLookupTable->SetTableRange(0,10);
+    mSourceLookupTable->SetNumberOfColors(16);
+    mSourceLookupTable->SetHueRange(0.0,0.6667);
+    mSourceLookupTable->Build();
     
     mSourceMapper = vtkPolyDataMapper::New();
     mSourceMapper->SetInputConnection(mSourceFilterDepthSort->GetOutputPort());
+    mSourceMapper->ImmediateModeRenderingOn();
+    mSourceMapper->ScalarVisibilityOn();
     mSourceMapper->SetScalarModeToUsePointData();
-    mSourceMapper->SetColorModeToMapScalars();
-    mSourceMapper->SetScalarRange(0,10);
-    mSourceMapper->SetLookupTable(Interpvalues);
-
-    mTargetMapper = vtkPolyDataMapper::New();
-    mTargetMapper->SetInputConnection(mTargetFilterDepthSort->GetOutputPort());
-    mTargetMapper->ScalarVisibilityOff();
+    //mSourceMapper->SetColorModeToMapScalars();
+    mSourceMapper->SetScalarRange(mSourceData->GetScalarRange());
+    mSourceMapper->SetLookupTable(mSourceLookupTable);
     
-    // VTK Actor
     mSourceActor = vtkActor::New();
     mSourceActor->SetMapper(mSourceMapper);
-    mSourceActor->GetProperty()->SetColor(0.9,0.9,0.9);
-    mTargetActor = vtkActor::New();
-    mTargetActor->SetMapper(mTargetMapper);
     
-    
-    //Landmarks
+    // --- LANDMARK POINTS -----
     mSourcePointsData = vtkPolyData::New();
-    mSourceHeightPointData = vtkPolyData::New();
     mSourceSphere = vtkSphereSource::New();
     mSourceFilterGlyph = vtkGlyph3D::New();
     mSourceFilterGlyph->SetInput(mSourcePointsData);
@@ -91,10 +67,8 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourcePointsMapper->SetInputConnection(mSourceFilterGlyph->GetOutputPort());
     mSourcePointsActor = vtkActor::New();
     mSourcePointsActor->SetMapper(mSourcePointsMapper);
-    mSourcePointsActor->GetProperty()->SetColor(1.0,0.0,0.0);
     
-    
-    //Set Visibility of the Landmark points
+    // ---- LANDMARK LABELS ----
     mSourcePointsIds = vtkIdFilter::New();
     mSourcePointsIds->SetInput(mSourcePointsData);
     mSourcePointsIds->PointIdsOn();
@@ -107,8 +81,8 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourcePointsLabelActor = vtkActor2D::New();
     mSourcePointsLabelActor->SetMapper(mSourcePointsLabelMapper);
     
-    //Set visibility of heights
-    
+    // ---- HEIGHT POINTS -----
+    mSourceHeightPointData = vtkPolyData::New();
     mSourceHeightPointsVisible = vtkSelectVisiblePoints::New();
     mSourceHeightPointsVisible->SetInput(mSourceHeightPointData);
     mSourceHeightPointsVisible->SetRenderer(mSourceRenderer);
@@ -117,7 +91,50 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourceHeightPointsLabelMapper->SetLabelModeToLabelFieldData();
     mSourceHeightPointsLabelActor = vtkActor2D::New();
     mSourceHeightPointsLabelActor->SetMapper(mSourceHeightPointsLabelMapper);
-    
+
+    mSourceRenderer->AddActor(mSourceActor);
+    mSourceRenderer->AddActor(mSourcePointsActor);
+    mSourceRenderer->AddActor(mSourcePointsLabelActor);
+    mSourceRenderer->AddActor(mSourceHeightPointsLabelActor);
+    mSourceRenderer->ResetCamera();
+    mSourceVtk->GetRenderWindow()->AddRenderer(mSourceRenderer);
+
+    Connections_s = vtkEventQtSlotConnect::New();
+    Connections_s->Connect(mSourceVtk->GetRenderWindow()->GetInteractor(),
+                           vtkCommand::RightButtonPressEvent,
+                           this,
+                           SLOT(CreateSourcePoint( vtkObject*, unsigned long, void*, void*, vtkCommand*)));
+
+    // -------------------------------------------
+
+
+    // -------------------------------------------
+    // TARGET
+    // -------------------------------------------
+    mTargetData = vtkPolyData::New();
+
+    mTargetRenderer = vtkRenderer::New();
+    mTargetRenderer->SetBackground(0.0,0.0,0.0);
+
+    mTargetFilterSmooth = vtkSmoothPolyDataFilter::New();
+    mTargetFilterSmooth->SetNumberOfIterations(200);
+    mTargetFilterSmooth->SetInput(mTargetData);
+
+    mTargetFilterDepthSort = vtkDepthSortPolyData::New();
+    mTargetFilterDepthSort->SetInputConnection(mTargetFilterSmooth->GetOutputPort());
+    mTargetFilterDepthSort->SetDirectionToBackToFront();
+    mTargetFilterDepthSort->SetVector(1, 1, 1);
+    mTargetFilterDepthSort->SetCamera(mTargetRenderer->GetActiveCamera());
+    mTargetFilterDepthSort->SortScalarsOn();
+
+    mTargetMapper = vtkPolyDataMapper::New();
+    mTargetMapper->SetInputConnection(mTargetFilterDepthSort->GetOutputPort());
+    mTargetMapper->ScalarVisibilityOff();
+
+    mTargetActor = vtkActor::New();
+    mTargetActor->SetMapper(mTargetMapper);
+
+    // --- LANDMARK POINTS -----
     mTargetPointsData = vtkPolyData::New();
     mTargetSphere = vtkSphereSource::New();
     mTargetFilterGlyph = vtkGlyph3D::New();
@@ -129,6 +146,8 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mTargetPointsActor = vtkActor::New();
     mTargetPointsActor->SetMapper(mTargetPointsMapper);
     mTargetPointsActor->GetProperty()->SetColor(1.0,0.0,0.0);
+
+    // ---- LANDMARK LABELS ----
     mTargetPointsIds = vtkIdFilter::New();
     mTargetPointsIds->SetInput(mTargetPointsData);
     mTargetPointsIds->PointIdsOn();
@@ -141,13 +160,6 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mTargetPointsLabelActor = vtkActor2D::New();
     mTargetPointsLabelActor->SetMapper(mTargetPointsLabelMapper);
     
-    mSourceRenderer->AddActor(mSourceActor);
-    mSourceRenderer->AddActor(mSourcePointsActor);
-    mSourceRenderer->AddActor(mSourcePointsLabelActor);
-    mSourceRenderer->AddActor(mSourceHeightPointsLabelActor);
-    mSourceRenderer->ResetCamera();
-    mSourceVtk->GetRenderWindow()->AddRenderer(mSourceRenderer);
-    
     mTargetRenderer->AddActor(mTargetActor);
     mTargetRenderer->AddActor(mTargetPointsActor);
     mTargetRenderer->AddActor(mTargetPointsLabelActor);
@@ -159,14 +171,7 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
                          vtkCommand::RightButtonPressEvent,
                          this,
                          SLOT(CreateTargetPoint( vtkObject*, unsigned long, void*, void*, vtkCommand*)));
-    
-    
-    Connections_s = vtkEventQtSlotConnect::New();
-    Connections_s->Connect(mSourceVtk->GetRenderWindow()->GetInteractor(),
-                           vtkCommand::RightButtonPressEvent,
-                           this,
-                           SLOT(CreateSourcePoint( vtkObject*, unsigned long, void*, void*, vtkCommand*)));
-    
+
 }
 
 MainWindow::~MainWindow() {
@@ -268,47 +273,86 @@ void MainWindow::BrowseLandmarks() {
 }
 
 void MainWindow::Load() {
+    ResetData();
+
+    LoadSource();
+    LoadSourceLandmarks();
+    LoadTarget();
+
+    Update();
+}
+
+void MainWindow::ResetData() {
+    mSourceData->Reset();
+    mTargetData->Reset();
+    mTargetPointsData->Reset();
+    mSourceHeightPointData->Reset();
+
+    vtkPoints* vTargetPoints = vtkPoints::New();
+    mTargetPointsData->SetPoints(vTargetPoints);
+    mTargetPointsIds->SetInput(mTargetPointsData);
+
+    vtkPoints* vSourcePoints = vtkPoints::New();
+    mSourceHeightPointData->SetPoints(vSourcePoints);
+
+    vtkDoubleArray* Heights= vtkDoubleArray::New();
+    Heights->SetName("height"); //setting name of the array
+    mSourceHeightPointData->GetPointData()->AddArray(Heights); //get the points dataa of the mSourcePoints Data, and we are then adding a new scalar array to it.
+    mSourceHeightPointsVisible->SetInput(mSourceHeightPointData);
+}
+
+
+void MainWindow::LoadSource() {
+    // Load file into temporary poly data
+    vtkPolyData* vTmpData = vtkPolyData::New();
     vtkPolyDataReader* vSourceReader = vtkPolyDataReader::New();
     vSourceReader->SetFileName(mFileSourceEditBox->text().toStdString().c_str());
     vSourceReader->Update();
-    mSourceData = vSourceReader->GetOutput();
-    mSourceFilterSmooth->SetInput(mSourceData);
-    
+    vTmpData = vSourceReader->GetOutput();
+
+    // Populate mSourceData
+    vtkPoints* vPts = vtkPoints::New();
+    vtkCellArray* vCells = vtkCellArray::New();
+    vPts->DeepCopy(vTmpData->GetPoints());
+    vCells->DeepCopy(vTmpData->GetPolys());
+    mSourceData->Reset();
+    mSourceData->SetPoints(vPts);
+    mSourceData->SetPolys(vCells);
+
+    mSourceRenderer->ResetCamera(mSourceActor->GetBounds());
+}
+
+void MainWindow::LoadTarget() {
     vtkPolyDataReader* vTargetReader = vtkPolyDataReader::New();
     vTargetReader->SetFileName(mFileTargetEditBox->text().toStdString().c_str());
     vTargetReader->Update();
     mTargetData = vTargetReader->GetOutput();
     mTargetFilterSmooth->SetInput(mTargetData);
-    
+
+    mTargetRenderer->ResetCamera(mTargetActor->GetBounds());
+}
+
+void MainWindow::LoadSourceLandmarks() {
     vtkPolyDataReader* vSourceLandmarks = vtkPolyDataReader::New();
     vSourceLandmarks->SetFileName(mFileLandmarksEditBox->text().toStdString().c_str());
     vSourceLandmarks->Update();
     mSourcePointsData = vSourceLandmarks->GetOutput();
     mSourceFilterGlyph->SetInput(mSourcePointsData);
     mSourcePointsIds->SetInput(mSourcePointsData);
-    
-    
-    vtkPoints* vTargetPoints = vtkPoints::New();
-    mTargetPointsData->SetPoints(vTargetPoints);
-    mTargetPointsIds->SetInput(mTargetPointsData);
-    
-    vtkPoints* vSourcePoints = vtkPoints::New();
-    mSourceHeightPointData->SetPoints(vSourcePoints);
-    
-    vtkDoubleArray* Heights= vtkDoubleArray::New();
-    Heights->SetName("height"); //setting name of the array
-    mSourceHeightPointData->GetPointData()->AddArray(Heights); //get the points dataa of the mSourcePoints Data, and we are then adding a new scalar array to it.
-    mSourceHeightPointsVisible->SetInput(mSourceHeightPointData);
-    
-    
-    
-    mSourceRenderer->ResetCamera(mSourceActor->GetBounds());
-    mTargetRenderer->ResetCamera(mTargetActor->GetBounds());
-    
-    Update();
 }
 
+
 void MainWindow::Update() {
+    // Height Interpolation
+    int vInterpDistance=10;
+    vtkDoubleArray* vSurfaceData=InterpSurface(mSourceHeightPointData, mSourceData, vInterpDistance);
+    mSourceData->GetPointData()->RemoveArray("HeightSurface");
+    mSourceData->GetPointData()->SetScalars(vSurfaceData);
+    mSourceData->Modified();
+    mSourceLookupTable->SetTableRange(mSourceData->GetScalarRange());
+    mSourceLookupTable->Build();
+    mSourceMapper->SetLookupTable(mSourceLookupTable);
+
     mSourceVtk->update();
     mTargetVtk->update();
 }
@@ -364,10 +408,9 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* 
     vOutput->SetNumberOfComponents(1);
     vOutput->SetName("HeightSurface");
     vOutput->SetNumberOfValues(nSurfacePoints);
+    vOutput->FillComponent(0, 0.0);
     
     if (pPointData->GetNumberOfPoints() < 4) return vOutput;//We check to see if the number of points which we have clicked on is more than 4- since we need the four cloest neighbours.
-    
-     //cout << "hi" << endl;
     
     vtkPointLocator* vLocator = vtkPointLocator::New();
     vLocator->SetDataSet(pPointData);//We set the data set as the poitns which we have selected on the mesh
@@ -402,17 +445,11 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* 
             
             double d_pq = sqrt(vtkMath::Distance2BetweenPoints(p, q));
             //Gets the squared distance between the two points, i.e. (y2-y1)^2 + (x2-x1)^2: this result is then square-rooted. We basically find length of the line.
-            cout <<d_pq<< endl;
             
             if (d_pq <= pInterpDistance) {//If the distabce between p and q is less than the chosen interp distance
                 val += vPointDataValues->GetValue(id) / (d_pq + 1E-10);//Getvalue gets the "data" at that particular index
                 //1e10: So we dont divide by 10
                 //vPointDataValues represent the height which you input on the screet
-                
-               
-              
-                 
-                
                 w   += 1.0 / (d_pq + 1E-10);
                 c   += 1;
             }
@@ -424,7 +461,7 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* 
         else {
             val = 0.0;
         }
-        cout <<val<< endl;
+
         vOutput->SetValue(i, val);//Sets value of point in mesh as weighted average
     }
     return vOutput;
@@ -466,12 +503,6 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
         mSourceHeightPointData->GetPoints()->InsertNextPoint(p_s);//list of point which were already clicked on, add point which you have just clicked on. We now want to add the scalar value of the hight to this list.
         mSourceHeightPointData->GetPointData()->GetScalars("height")-> InsertNextTuple1(Heights);//Tuple is size 1- scalar.
         mSourceHeightPointData->Modified();
-        
-        //Interpolation
-        int vInterpDistance=10;
-        vtkDoubleArray* vSurfaceData=InterpSurface(mSourceHeightPointData, mSourceData, vInterpDistance);
-        mSourceHeightPointData->GetPointData()->RemoveArray("HeightSurface");
-        mSourceHeightPointData->GetPointData()->SetScalars(vSurfaceData);
     }
     
     // Update display

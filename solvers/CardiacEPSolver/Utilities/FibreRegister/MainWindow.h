@@ -84,6 +84,7 @@ class MainWindow : public QMainWindow
         // VTK
         // Left Surface pipeline
         vtkPolyData* mSourceData;
+        vtkLookupTable* mSourceLookupTable;
         vtkSmoothPolyDataFilter* mSourceFilterSmooth;
         vtkDepthSortPolyData* mSourceFilterDepthSort;
         vtkPolyDataMapper* mSourceMapper;
@@ -131,7 +132,12 @@ class MainWindow : public QMainWindow
         vtkEventQtSlotConnect* Connections;
         vtkEventQtSlotConnect* Connections_s;
         void Draw();
-    
+
+        void ResetData();
+        void LoadSource();
+        void LoadSourceLandmarks();
+        void LoadTarget();
+
         vtkDoubleArray* InterpSurface(vtkPolyData* pPointData, vtkPolyData* pSurface, int pInterpDistance);
     
 

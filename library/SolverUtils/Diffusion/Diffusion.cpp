@@ -70,6 +70,16 @@ namespace Nektar
             v_NumFluxforScalar(fields, ufield, uflux);
         }
         
+        void Diffusion::WeakPenaltyforScalar(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const int                                          var,
+            const Array<OneD, const NekDouble>                &ufield,
+                  Array<OneD,       NekDouble>                &penaltyflux,
+            NekDouble                                          time)
+        {
+            v_WeakPenaltyforScalar(fields, var, ufield, penaltyflux, time);
+        }
+        
         void Diffusion::NumFluxforVector(
             const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
             const Array<OneD, Array<OneD, NekDouble> >              &ufield,
@@ -78,36 +88,18 @@ namespace Nektar
         {
             v_NumFluxforVector(fields, ufield, qfield, qflux);
         }
-        
-        void Diffusion::WeakPenaltyforScalar(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const int                                          var,
-            const Array<OneD, const NekDouble>                &physfield,
-                  Array<OneD,       NekDouble>                &penaltyflux,
-            NekDouble                                          time)
-        {
-            v_WeakPenaltyforScalar(fields, var, physfield, penaltyflux, time);
-        }
-        
+                
         void Diffusion::WeakPenaltyforVector(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const int                                          var,
             const int                                          dir,
-            const Array<OneD, const NekDouble>                &physfield,
+            const Array<OneD, const NekDouble>                &qfield,
                   Array<OneD,       NekDouble>                &penaltyflux,
             NekDouble                                          C11,
             NekDouble                                          time)
         {
-            v_WeakPenaltyforVector(fields, var, dir, physfield, 
+            v_WeakPenaltyforVector(fields, var, dir, qfield, 
                                    penaltyflux, C11, time);
-        }
-        
-        void Diffusion::WeakAdvectionGreensDivergenceForm(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> >        &F,
-                  Array<OneD, NekDouble>                      &outarray)
-        {
-            v_WeakAdvectionGreensDivergenceForm(fields, F, outarray);
         }
     }
 }

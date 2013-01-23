@@ -62,8 +62,9 @@ namespace Nektar
         virtual ~UnsteadyDiffusion();
 
     protected:
-        SolverUtils::DiffusionSharedPtr         m_diffusion;
-        
+        SolverUtils::DiffusionSharedPtr         m_diffusion;        
+        SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
+
         UnsteadyDiffusion(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
         

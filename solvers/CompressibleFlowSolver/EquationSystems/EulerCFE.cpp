@@ -36,6 +36,8 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
+#include <iostream>
+#include <iomanip>
 
 namespace Nektar
 {

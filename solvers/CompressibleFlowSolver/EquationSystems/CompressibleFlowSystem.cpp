@@ -140,9 +140,9 @@ namespace Nektar
                 m_advection->SetFluxVector(&CompressibleFlowSystem::
                                             GetFluxVector, this);
                 
-                m_diffusion->SetFluxVector(&CompressibleFlowSystem::
-                                            GetQViscousFluxVector, this);
-                
+                m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
+                                             GetViscousFluxVector, this);
+
                 m_session->LoadSolverInfo("UpwindType", riemName, "Exact");
                 
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
@@ -605,55 +605,207 @@ namespace Nektar
      * @brief Return the flux vector for the LDG diffusion problem.
      * \todo Complete the viscous flux vector
      */
-    void CompressibleFlowSystem::GetQViscousFluxVector(
+    void CompressibleFlowSystem::GetViscousFluxVector(
         const int i, 
-        const int j,
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD, Array<OneD, NekDouble> > &derivatives,
-              Array<OneD, Array<OneD, NekDouble> > &flux)
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
-        int k;
-        int nq = m_fields[0]->GetTotPoints();
-        NekDouble lambda = -0.66666;
-        Array<OneD, NekDouble> pressure(nq);
+        int k, j, d;
+        
+        int nq                       = m_fields[0]->GetTotPoints();
+        NekDouble lambda             = -0.66666;
+        NekDouble thermalDiffusivity = 0.000019;;
+
+        
         Array<OneD, NekDouble> mu(nq);
         Array<OneD, NekDouble> tmp_mu(nq);
-
+        Array<OneD, NekDouble> tmp(nq);
+        
+        Array<OneD, Array<OneD, NekDouble> > velocities(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > du(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > dv(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > dw(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > dT(m_expdim);
+        
+        Array<OneD, NekDouble > pressure   (nq, 0.0);
+        Array<OneD, NekDouble > temperature(nq, 0.0);
+        
+        GetPressure(physfield, pressure);
+        GetTemperature(physfield, pressure, temperature);
+        GetDynamicViscosity(physfield, mu);
+        
+        for (k = 0; k < m_expdim; ++k)
+        {
+            velocities[k] = Array<OneD, NekDouble >(nq, 0.0);
+            du[k] = Array<OneD, NekDouble >(nq, 0.0);
+            dv[k] = Array<OneD, NekDouble >(nq, 0.0);
+            dw[k] = Array<OneD, NekDouble >(nq, 0.0);
+            dT[k] = Array<OneD, NekDouble >(nq, 0.0);
+        }
+        
+        // Building the velocities
+        for (k = 0; k < m_expdim; ++k)
+        {
+            Vmath::Vdiv(nq, physfield[k+1], 1, 
+                        physfield[0], 1, 
+                        velocities[k], 1);
+        }
+         
+        // Building the proper derivatives
+        if (m_expdim == 1)
+        {
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][1], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+        }
+        else if (m_expdim == 2)
+        {
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][1], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[1], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][2], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    dv[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+            
+            // At the moment for 2D only
+            for (d = 0; d < m_expdim; ++d)
+            {
+                for (j = 0; j < nq; ++j)
+                {
+                    dT[d][j] = 1.0 / physfield[0][j] * derivatives[d][3][j] -
+                    (temperature[j]/physfield[0][j]) * derivatives[d][0][j] - 
+                    (0.5 * m_gasConstant / (m_gamma - 1)) * 
+                    (2.0 * velocities[0][j] * derivatives[d][1][j] + 
+                     ((velocities[0][j] * velocities[0][j] +
+                       velocities[1][j] * velocities[1][j]) / 
+                      physfield[0][j]) * derivatives[d][0][j]);
+                }
+            }
+        }
+         
+        else if (m_expdim == 3)
+        {
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][1], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[1], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][2], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    dv[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[2], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][3], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    dw[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+        }
+        
+        // Building the viscous flux vector
         if (i == 0)
         {
-            // Viscous qflux vector for the rho equation.
+            // Viscous flux vector for the rho equation
             for (k = 0; k < m_expdim; ++k)
             {
-                Vmath::Zero(nq, flux[k], 1);
+                Vmath::Zero(nq, viscousTensor[k][i], 1);
             }
-        } 
-        else if (i >= 1 && i <= m_expdim)
-        {
-            // Flux vector for the velocity fields.
-            GetPressure(physfield, pressure);
-            GetDynamicViscosity(physfield, mu);
-
-            Vmath::Smul(nq, 2.0, mu, 1, mu, 1);
-            Vmath::Sadd(nq, lambda, mu, 1, tmp_mu, 1);
-            
-            for (k = 0; k < m_expdim; ++k)
-            {
-                Vmath::Vdiv(nq, physfield[k+1], 1, physfield[0], 1, flux[k], 1);
-            }
-            
-            // Add pressure to appropriate field
-            Vmath::Vmul(nq, flux[i-1], 1, tmp_mu, 1, flux[i-1], 1);
         }
-        else if (i == m_expdim+1) 
+        
+        if (m_expdim == 1)
         {
-            // Flux vector for the total energy field.
-            GetPressure(physfield, pressure);
-            Vmath::Vadd(nq, physfield[m_expdim+1], 1, pressure, 1, pressure, 1);
-            
-            for (k = 0; k < m_expdim; ++k)
+            // to be completed
+        }
+        else if (m_expdim == 2)
+        {
+            if (i == 1)
             {
-                Vmath::Vdiv(nq, physfield[k+1], 1, physfield[0], 1, flux[k], 1);
-                Vmath::Vmul(nq, flux[k], 1, pressure, 1, flux[k], 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    viscousTensor[0][i][j] = 2.0 * mu[j] * du[0][j] 
+                                            + lambda * (du[0][j] + 
+                                                        dv[0][j]);
+                    
+                    viscousTensor[1][i][j] = dv[0][j] + du[1][j];
+                }
+            }
+            else if (i == 2)
+            {
+                for (j = 0; j < nq; ++j)
+                {
+                    viscousTensor[0][i][j] = dv[0][j] + du[1][j];
+                
+                    viscousTensor[1][i][j] = 2.0 * mu[j] * dv[1][j] 
+                                            + lambda * (du[0][j] + 
+                                                        dv[0][j]);
+                }
+            }
+            else if (i == 3)
+            {
+                for (j = 0; j < nq; ++j)
+                {
+                    viscousTensor[0][i][j] = 
+                        velocities[0][j] * viscousTensor[0][0][j] + 
+                        velocities[1][j] * viscousTensor[1][1][j] + 
+                        (thermalDiffusivity / mu[j]) * (dT[0][j]);
+                
+                    viscousTensor[1][i][j] = 
+                        velocities[1][j] * viscousTensor[1][2][j] + 
+                        velocities[0][j] * viscousTensor[1][1][j] + 
+                        (thermalDiffusivity / mu[j]) * (dT[1][j]);
+                }
+            }
+        }
+        else if (m_expdim == 3)
+        {
+            if (i == 1)
+            {
+                // to be completed
+            }
+            else if (i == 2)
+            {
+                // to be completed
+            }
+            else if (i == 3)
+            {
+                // to be completed
             }
         }
         else
@@ -788,21 +940,23 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
              Array<OneD,                    NekDouble  > &mu)
     {
-        const int npts    = m_fields[0]->GetTotPoints();
-        const int mu_star = 0.00001794;
-        const int T_star  = 288.15;
+        const int npts       = m_fields[0]->GetTotPoints();
+        const double mu_star = 0.00001794;
+        const double T_star  = 288.15;
         Vmath::Zero(npts, mu, 1);
         
-        Array<OneD, NekDouble > pressure   (npts, 0.0);
-        Array<OneD, NekDouble > temperature(npts, 0.0);
+        Array<OneD, NekDouble > pressure         (npts, 0.0);
+        Array<OneD, NekDouble > temperature      (npts, 0.0);
+        Array<OneD, NekDouble > temperature_ratio(npts, 0.0);
         
         GetPressure(physfield, pressure);
         GetTemperature(physfield, pressure, temperature);
         
         for (int i = 0; i < npts; ++i)
         {
-            mu[i] = mu_star * pow((temperature[i] / T_star), 1.5) * 
-                    (T_star + 110) / (temperature[i] + 110);
+            temperature_ratio[i] = temperature[i] / T_star;
+            mu[i] = mu_star * pow(temperature_ratio[i], 1.50) * 
+                    (T_star + 110.0) / (temperature[i] + 110.0);
         }
     }
     

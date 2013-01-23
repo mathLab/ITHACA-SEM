@@ -57,6 +57,13 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD, Array<OneD, NekDouble> >&)> DiffusionFluxVecCB;
         
+        typedef boost::function<void (
+            const int, 
+            const Array<OneD, Array<OneD, NekDouble> >&,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)> 
+                                                        DiffusionFluxVecCBNS;
+        
         class Diffusion
         {
         public:
@@ -83,7 +90,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void WeakPenaltyforScalar(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const int                                          var,
-                const Array<OneD, const NekDouble>                &physfield,
+                const Array<OneD, const NekDouble>                &ufield,
                       Array<OneD,       NekDouble>                &penaltyflux,
                 NekDouble                                          time);
             
@@ -91,20 +98,21 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const int                                          var,
                 const int                                          dir,
-                const Array<OneD, const NekDouble>                &physfield,
+                const Array<OneD, const NekDouble>                &qfield,
                       Array<OneD,       NekDouble>                &penaltyflux,
                 NekDouble                                          C11,
                 NekDouble                                          time);
-            
-            SOLVER_UTILS_EXPORT void WeakAdvectionGreensDivergenceForm(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &F,
-                      Array<OneD, NekDouble>                      &outarray);
             
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
             {
                 m_fluxVector = boost::bind(func, obj, _1, _2, _3, _4, _5);
+            }
+            
+            template<typename FuncPointerT, typename ObjectPointerT> 
+            void SetFluxVectorNS(FuncPointerT func, ObjectPointerT obj)
+            {
+                m_fluxVectorNS = boost::bind(func, obj, _1, _2, _3, _4);
             }
                         
             inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
@@ -133,6 +141,16 @@ namespace Nektar
                 
             };
             
+            virtual void v_WeakPenaltyforScalar(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const int                                          var,
+                const Array<OneD, const NekDouble>                &ufield,
+                      Array<OneD,       NekDouble>                &penaltyflux,
+                NekDouble                                          time)
+            {
+                
+            };
+            
             virtual void v_NumFluxforVector(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
                 const Array<OneD, Array<OneD, NekDouble> >              &ufield,
@@ -141,38 +159,21 @@ namespace Nektar
             {
                 
             };
-            
-            virtual void v_WeakPenaltyforScalar(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const Array<OneD, const NekDouble>                &physfield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          time)
-            {
-                
-            };
-            
+                        
             virtual void v_WeakPenaltyforVector(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const int                                          var,
                 const int                                          dir,
-                const Array<OneD, const NekDouble>                &physfield,
+                const Array<OneD, const NekDouble>                &qfield,
                       Array<OneD,       NekDouble>                &penaltyflux,
                 NekDouble                                          C11,
                 NekDouble                                          time)
             {
                 
             };
-            
-            void v_WeakAdvectionGreensDivergenceForm(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &F,
-                      Array<OneD, NekDouble>                      &outarray)
-            {
-                
-            };
-            
+                        
             DiffusionFluxVecCB     m_fluxVector;
+            DiffusionFluxVecCBNS   m_fluxVectorNS;
             RiemannSolverSharedPtr m_riemann;
         }; 
         

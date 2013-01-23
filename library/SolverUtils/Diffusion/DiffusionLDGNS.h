@@ -56,7 +56,6 @@ namespace Nektar
             DiffusionLDGNS();
             
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
-            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
             LibUtilities::SessionReaderSharedPtr              m_session;
             
             virtual void v_InitObject(
@@ -73,32 +72,27 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >              &ufield,
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&uflux);
             
+            virtual void v_WeakPenaltyforScalar(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const int                                          var,
+                const Array<OneD, const NekDouble>                &ufield,
+                      Array<OneD,       NekDouble>                &penaltyflux,
+                NekDouble                                          time);
+            
             virtual void v_NumFluxforVector(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
                 const Array<OneD, Array<OneD, NekDouble> >              &ufield,
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
                       Array<OneD, Array<OneD, NekDouble> >              &qflux);
-            
-            virtual void v_WeakPenaltyforScalar(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const Array<OneD, const NekDouble>                &physfield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          time);
-            
+                        
             virtual void v_WeakPenaltyforVector(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const int                                          var,
                 const int                                          dir,
-                const Array<OneD, const NekDouble>                &physfield,
+                const Array<OneD, const NekDouble>                &qfield,
                       Array<OneD,       NekDouble>                &penaltyflux,
                 NekDouble                                          C11,
                 NekDouble                                          time);
-            
-            virtual void v_WeakAdvectionGreensDivergenceForm(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &F,
-                      Array<OneD, NekDouble>                      &outarray);
         }; 
     }
 }

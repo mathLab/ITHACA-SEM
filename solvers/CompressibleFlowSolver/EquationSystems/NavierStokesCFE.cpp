@@ -159,7 +159,7 @@ namespace Nektar
         Vmath::Vcopy(npoints, temperature, 1, inarrayDiff[nvariables-1], 1);
         
         // Diffusion term in physical rhs form
-        m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarray);
+        m_diffusion->Diffuse(nvariables, m_fields, inarray, outarray);
         
         for (i = 0; i < nvariables; ++i)
         {

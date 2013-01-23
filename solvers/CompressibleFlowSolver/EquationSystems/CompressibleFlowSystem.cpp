@@ -357,7 +357,7 @@ namespace Nektar
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                 m_fields[0]->GetTraceMap()->
                     GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-            
+            /*
             switch(m_expdim)
             {
                 // Special case for 2D
@@ -428,6 +428,12 @@ namespace Nektar
                 default:
                     ASSERTL0(false, "Illegal expansion dimension");
                     break;
+            }
+            */
+            
+            for (i = 0; i < m_expdim ; i++)
+            {
+                Vmath::Neg(npts,&Fwd[i+1][id2],1);
             }
             
             // copy boundary adjusted values into the boundary expansion

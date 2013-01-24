@@ -566,18 +566,6 @@ namespace Nektar
             }
         }
 
-
-        void StdHexExp::v_IProductWRTBase(
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD, NekDouble> &outarray)
-        {
-            StdHexExp::v_IProductWRTBase(m_base[0]->GetBdata(),
-                            m_base[1]->GetBdata(),
-                            m_base[2]->GetBdata(),
-                            inarray,outarray,1);
-        }
-
-
         /**
          * \f$
          * \begin{array}{rcl}
@@ -605,21 +593,16 @@ namespace Nektar
          *  = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k})  g_{q} (\xi_{3k})
          *  = {\bf B_1 G} \f$
          *
-         * @param   bx          ?
-         * @param   by          ?
-         * @param   bz          ?
          * @param   inarray     ?
          * @param   outarray    ?
          */
         void StdHexExp::v_IProductWRTBase(
-                    const Array<OneD, const NekDouble>& bx,
-                    const Array<OneD, const NekDouble>& by,
-                    const Array<OneD, const NekDouble>& bz,
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> & outarray,
-                    int coll_check)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray)
         {
-            if(m_base[0]->Collocation() && m_base[1]->Collocation())
+            if(m_base[0]->Collocation() && 
+               m_base[1]->Collocation() && 
+               m_base[2]->Collocation())
             {
                 MultiplyByQuadratureMetric(inarray,outarray);
             }
@@ -628,7 +611,6 @@ namespace Nektar
                 StdHexExp::v_IProductWRTBase_SumFac(inarray,outarray);
             }
         }
-
 
         /**
          * Implementation of the local matrix inner product operation.
@@ -644,12 +626,12 @@ namespace Nektar
                         m_ncoeffs, inarray.get(), 1, 0.0, outarray.get(), 1);
         }
 
-
         /**
          * Implementation of the sum-factorization inner product operation.
          */
-        void StdHexExp::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
-                                        Array<OneD, NekDouble> &outarray)
+        void StdHexExp::v_IProductWRTBase_SumFac(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD, NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -658,7 +640,8 @@ namespace Nektar
             int    order1 = m_base[1]->GetNumModes();
 
             Array<OneD, NekDouble> tmp(inarray.num_elements());
-            Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) + order0*order1*nquad2);
+            Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) + 
+                                       order0*order1*nquad2);
 
             MultiplyByQuadratureMetric(inarray,tmp);
 

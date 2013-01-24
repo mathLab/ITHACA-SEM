@@ -237,8 +237,8 @@ namespace Nektar
                     // Vertex ids of quad faces
                     const unsigned int faceVerts[3][4] =
                         { {0,1,2,3} ,
-                          {1,2,4,5} ,
-                          {0,3,4,5} };
+                          {1,2,5,4} ,
+                          {0,3,5,4} };
 
                     for(f = 0; f < 3; f++)
                     {

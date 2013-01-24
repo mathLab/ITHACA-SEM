@@ -335,51 +335,6 @@ namespace Nektar
          * + \frac {1 + \eta_2} {1 - \eta_3} \frac \partial {\partial \eta_2}
          * + \frac \partial {\partial \eta_3} \end{Bmatrix}\f$
          **/
-#if 1
-        void StdTetExp::v_PhysDeriv(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& out_dxi1,
-                  Array<OneD,       NekDouble>& out_dxi2,
-                  Array<OneD,       NekDouble>& out_dxi3 )
-        {
-            int    Qx = m_base[0]->GetNumPoints();
-            int    Qy = m_base[1]->GetNumPoints();
-            int    Qz = m_base[2]->GetNumPoints();
-
-            // Compute the physical derivative
-            Array<OneD, NekDouble> out_dEta1(Qx*Qy*Qz,0.0);
-            Array<OneD, NekDouble> out_dEta2(Qx*Qy*Qz,0.0);
-            Array<OneD, NekDouble> out_dEta3(Qx*Qy*Qz,0.0);
-            PhysTensorDeriv(inarray, out_dEta1, out_dEta2, out_dEta3);
-
-            Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
-            eta_x = m_base[0]->GetZ();
-            eta_y = m_base[1]->GetZ();
-            eta_z = m_base[2]->GetZ();
-
-            for(int k=0, n=0; k<Qz; ++k)
-            {
-                for(int j=0; j<Qy; ++j)
-                {
-                    for(int i=0; i<Qx; ++i, ++n)
-                    {
-                        if (out_dxi1.num_elements() > 0)
-                        {
-                            out_dxi1[n] = 4.0 / ((1.0 - eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n];
-                        }
-                        if (out_dxi2.num_elements() > 0)
-                        {
-                            out_dxi2[n] = 2.0*(1.0 + eta_x[i]) / ((1.0-eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n]  +  2.0/(1.0 - eta_z[k])*out_dEta2[n];
-                        }
-                        if (out_dxi3.num_elements() > 0)
-                        {
-                            out_dxi3[n] = 2.0*(1.0 + eta_x[i]) / ((1.0 - eta_y[j])*(1.0 - eta_z[k]))*out_dEta1[n] + (1.0 + eta_y[j]) / (1.0 - eta_z[k])*out_dEta2[n] + out_dEta3[n];
-                        }
-                    }
-                }
-            }
-        }
-#else
         void StdTetExp::v_PhysDeriv(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& out_dxi0,
@@ -485,7 +440,6 @@ namespace Nektar
                 }
             }
         }
-#endif
 
         /**
          * @param   dir         Direction in which to compute derivative.

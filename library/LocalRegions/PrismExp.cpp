@@ -268,8 +268,16 @@ namespace Nektar
          * B_2 F} \f$ \n \f$ (\phi_{pqr}, u)_{\delta} = \sum_{k=0}^{nq_0}
          * \psi_{p}^a (\xi_{3k}) g_{q} (\xi_{3k}) = {\bf B_1 G} \f$
          */
-        void PrismExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                               Array<OneD,       NekDouble>& outarray)
+        void PrismExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
+        {
+            v_IProductWRTBase_SumFac(inarray, outarray);
+        }
+
+        void PrismExp::v_IProductWRTBase_SumFac(
+            const Array<OneD, const NekDouble>& inarray,
+                  Array<OneD,       NekDouble>& outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -1471,17 +1479,25 @@ namespace Nektar
                                             mkey.GetExpansionType(), *this);  
                         MatrixKey deriv1key(StdRegions::eWeakDeriv1,
                                             mkey.GetExpansionType(), *this);
+                        MatrixKey deriv2key(StdRegions::eWeakDeriv2,
+                                            mkey.GetExpansionType(), *this);
 
                         DNekMat &deriv0 = *GetStdMatrix(deriv0key);
                         DNekMat &deriv1 = *GetStdMatrix(deriv1key);
+                        DNekMat &deriv2 = *GetStdMatrix(deriv2key);
                         
                         int rows = deriv0.GetRows();
                         int cols = deriv1.GetColumns();
 
-                        DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
-                        (*WeakDeriv) = gmat[2*dir][0]*deriv0 + gmat[2*dir+1][0]*deriv1;
+                        DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>
+                            ::AllocateSharedPtr(rows,cols);
 
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,WeakDeriv);
+                        (*WeakDeriv) = gmat[3*dir  ][0]*deriv0
+                                     + gmat[3*dir+1][0]*deriv1
+                                     + gmat[3*dir+2][0]*deriv2;
+
+                        returnval = MemoryManager<DNekScalMat>
+                            ::AllocateSharedPtr(jac,WeakDeriv);
                     }
                     break;
                 }

@@ -140,6 +140,8 @@ class MainWindow : public QMainWindow
 
         vtkDoubleArray* InterpSurface(vtkPolyData* pPointData, vtkPolyData* pSurface, int pInterpDistance);
     
+        vtkPoints* AddPoint(vtkPoints* array, double* p);
+        vtkDoubleArray* AddScalar(vtkDataArray* array, double v);
 
 
 };

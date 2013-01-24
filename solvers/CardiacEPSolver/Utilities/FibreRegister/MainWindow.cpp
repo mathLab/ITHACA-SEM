@@ -500,16 +500,56 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
     // of landmark points.
     if (nearestPointId_source >= 0) {
         mSourceData->GetPoints()->GetPoint(nearestPointId_source, p_s);//get all vertices in the mesh, get nearest point using the id., put in ps
-        mSourceHeightPointData->GetPoints()->InsertNextPoint(p_s);//list of point which were already clicked on, add point which you have just clicked on. We now want to add the scalar value of the hight to this list.
-        mSourceHeightPointData->GetPointData()->GetScalars("height")-> InsertNextTuple1(Heights);//Tuple is size 1- scalar.
+        vtkPoints* pointList = AddPoint(mSourceHeightPointData->GetPoints(), p_s);
+        vtkDataArray* pointScalars = AddScalar(mSourceHeightPointData->GetPointData()->GetScalars("height"), Heights);
+        //mSourceHeightPointData->Reset();
+        mSourceHeightPointData->GetPointData()->RemoveArray("height");
+        mSourceHeightPointData->SetPoints(pointList);
+        mSourceHeightPointData->GetPointData()->SetScalars(pointScalars);
+//        mSourceHeightPointData->GetPoints()->InsertNextPoint(p_s);//list of point which were already clicked on, add point which you have just clicked on. We now want to add the scalar value of the hight to this list.
+//        mSourceHeightPointData->GetPointData()->GetScalars("height")-> InsertNextTuple1(Heights);//Tuple is size 1- scalar.
         mSourceHeightPointData->Modified();
+        cout << "Updated points" << endl;
     }
     
     // Update display
     Update();
 }
 
-//End Create Source Point
+vtkPoints* MainWindow::AddPoint(vtkPoints* array, double* p)
+{
+    double q[3];
+    vtkPoints* vPts = vtkPoints::New();
+    int nPts = array->GetNumberOfPoints();
+    vPts->SetNumberOfPoints(nPts+1);
+    for (int i = 0; i < nPts; ++i)
+    {
+        array->GetPoint(i, q);
+        vPts->SetPoint(i, q);
+    }
+    vPts->SetPoint(nPts, p);
+    return vPts;
+}
+
+vtkDoubleArray* MainWindow::AddScalar(vtkDataArray* array, double v)
+{
+    vtkDoubleArray* vVals = vtkDoubleArray::New();
+    vVals->SetName("height");
+    if (!array)
+    {
+        cout << "Null array." << endl;
+        return vVals;
+    }
+
+    int nPts = array->GetNumberOfTuples();
+    vVals->SetNumberOfTuples(nPts+1);
+    for (int i = 0; i < nPts; ++i)
+    {
+        vVals->SetTuple1(i, array->GetTuple1(i));
+    }
+    vVals->SetTuple1(nPts, v);
+    return vVals;
+}
 
 void MainWindow::ExportTargetPoints() {
     QString pointsFile = QFileDialog::getSaveFileName(this,

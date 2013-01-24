@@ -201,12 +201,6 @@ namespace Nektar
                 {
                     m_session->MatchSolverInfo("DEALIASING","On",m_dealiasing,false);
                 }
-
-                m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
-                if(m_specHP_dealiasing == false)
-                {
-                    m_session->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
-                }
             }
             else
             {
@@ -214,7 +208,18 @@ namespace Nektar
                 // (homogeneous) expansions
                 m_npointsZ = 1; 
             }
-
+            
+            m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
+            if(m_specHP_dealiasing == false)
+            {
+                m_session->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
+            }
+            
+            if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+            {
+                m_specHP_dealiasing = true;
+            }
+        
             // Options to determine type of projection from file or directly 
             // from constructor
             if(m_session->DefinesSolverInfo("PROJECTION"))

@@ -68,9 +68,6 @@ namespace Nektar
             /// Tolerance of iterative solver.
             NekDouble                                   m_tolerance;
 
-            /// Normalisation factor on local tolerance
-            NekDouble                                   m_bb_inv;
-
             PreconditionerSharedPtr                     m_precon;
 
             MultiRegions::PreconditionerType            m_precontype;

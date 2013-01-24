@@ -235,8 +235,7 @@ namespace Nektar
                 // solve boundary system
                 if(atLastLevel)
                 {
-                    m_linSys->Solve(F_HomBnd,F_HomBnd);
-                    V_GlobHomBnd = V_GlobHomBnd + F_HomBnd;
+                    m_linSys->Solve(F_HomBnd,V_GlobHomBnd);
                 }
                 else
                 {

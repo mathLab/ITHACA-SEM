@@ -1146,7 +1146,12 @@ namespace Nektar
                     for (unsigned int j = 0; j < vCoordDim; ++j)
                     {
                         outfile << coordVert[j];
-                        outfile << (j < vCoordDim - 1 ? ", " : "");
+                        outfile << (j < 2 ? ", " : "");
+                    }
+                    for (unsigned int j = vCoordDim; j < 3; ++j)
+                    {
+                        outfile << " 0";
+                        outfile << (j < 2 ? ", " : "");
                     }
                     outfile << (i < nVertices - 1 ? "," : "") << endl;
                 }

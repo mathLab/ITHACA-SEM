@@ -152,11 +152,12 @@ int main(int argc, char *argv[])
 
         //-----------------------------------------------
         // Write solution to file
-        string   out(vSession->GetSessionName() + ".fld");
+        string out = vSession->GetSessionName();
         if (vSession->GetComm()->GetSize() > 1)
         {
-            out += "." + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
+            out += "_P" + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
         }
+        out += ".fld";
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());

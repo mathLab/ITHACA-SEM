@@ -108,7 +108,7 @@ int main(int argc, char *argv[])
         {  
             for(int i = 0; i < fielddata.size(); ++i)
             {
-                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j], fields[j]->UpdateCoeffs());
             } 
 
             //bwd plane 0
@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
         {  	    
             for(int i = 0; i < fielddata.size(); ++i)
             {
-                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j], fields[j]->UpdateCoeffs());
             }             
             fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());      
         }
@@ -673,7 +673,7 @@ cout<<"x="<<coords[0]<<"   y="<<coords[1]<<endl;
                    }
                 
 //cout<<r<<"new val="<<field1->UpdatePhys()[r]<<endl;
-                   if( boost::math::isnan(field1->UpdatePhys()[r]) )
+                   if( (boost::math::isnan)(field1->UpdatePhys()[r]) )
                    {            
 cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl;                  
 cout<<"new val="<<field1->UpdatePhys()[r]<<endl;
@@ -704,7 +704,7 @@ cout<<"new val="<<field1->UpdatePhys()[r]<<endl;
                    offset = field0->GetPlane(0)->GetPhys_Offset(elmtid);
                    field1->GetPlane(0)->UpdatePhys()[r] = field0->GetPlane(0)->GetExp(elmtid)->
                            PhysEvaluate(coords, field0->GetPlane(0)->GetPhys() +offset);    
-                   if( boost::math::isnan(field1->GetPlane(0)->UpdatePhys()[r]) )
+                   if( (boost::math::isnan)(field1->GetPlane(0)->UpdatePhys()[r]) )
                    {            
 cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl;                  
 cout<<"new val="<<field1->GetPlane(0)->UpdatePhys()[r]<<endl;
@@ -724,7 +724,7 @@ cout<<"new val="<<field1->GetPlane(0)->UpdatePhys()[r]<<endl;
                    offset = field0->GetPlane(1)->GetPhys_Offset(elmtid);
                    field1->GetPlane(1)->UpdatePhys()[r] = field0->GetPlane(1)->GetExp(elmtid)->
                            PhysEvaluate(coords, field0->GetPlane(1)->GetPhys() +offset);    
-                   if( boost::math::isnan(field1->GetPlane(1)->UpdatePhys()[r]) )
+                   if( (boost::math::isnan)(field1->GetPlane(1)->UpdatePhys()[r]) )
                    {            
 cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl;                  
 cout<<"new val="<<field1->GetPlane(1)->UpdatePhys()[r]<<endl;

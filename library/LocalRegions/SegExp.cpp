@@ -413,6 +413,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
                 switch(m_base[0]->GetBasisType())
                 {
+                case LibUtilities::eGauss_Lagrange:
                 case LibUtilities::eGLL_Lagrange:
                     {
                         offset = 1;

@@ -69,8 +69,6 @@ namespace Nektar
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap)
            : Preconditioner(plinsys, pLocToGloMap),
-	   m_linsys(plinsys),
-           m_locToGloMap(pLocToGloMap),
            m_preconType(pLocToGloMap->GetPreconType())
          {
 	 }
@@ -121,12 +119,10 @@ namespace Nektar
              // fill global matrix
              DNekScalMatSharedPtr loc_mat;
              Array<OneD, NekDouble> vOutput(nGlobal,0.0);
-             MatrixStorage storage = eDIAGONAL;
-             m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(nInt, nInt, storage);
-             DNekMat &M = (*m_preconditioner);
 
              int loc_lda;
-             for(n = cnt = 0; n < expList->GetNumElmts(); ++n)
+             int nElmt = expList->GetNumElmts();
+             for(n = cnt = 0; n < nElmt; ++n)
              {
                  loc_mat = (m_linsys.lock())->GetBlock(expList->GetOffset_Elmt_Id(n));
                  loc_lda = loc_mat->GetRows();
@@ -161,11 +157,8 @@ namespace Nektar
              // Assemble diagonal contributions across processes
              m_locToGloMap->UniversalAssemble(vOutput);
 
-             // Populate preconditioner with reciprocal of diagonal elements
-             for (unsigned int i = 0; i < nInt; ++i)
-             {
-                 M.SetValue(i,i,1.0/vOutput[i + nDir]);
-             }
+             m_diagonals = Array<OneD, NekDouble> (nInt);
+             Vmath::Sdiv(nInt, 1.0, &vOutput[nDir], 1, &m_diagonals[0], 1);
          }
 
         /**
@@ -179,10 +172,6 @@ namespace Nektar
             int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int rows = nGlobalBnd - nDirBnd;
 
-            MatrixStorage storage = eDIAGONAL;
-            m_preconditioner = MemoryManager<DNekMat>::AllocateSharedPtr(rows, rows, storage);
-            DNekMat &M = (*m_preconditioner);
-
             Array<OneD, NekDouble> vOutput(nGlobalBnd,0.0);
 
             // Extract diagonal contributions
@@ -195,11 +184,8 @@ namespace Nektar
             // Assemble diagonal contributions across processes
             m_locToGloMap->UniversalAssembleBnd(vOutput);
 
-            // Populate preconditioner matrix
-            for (unsigned int i = 0; i < rows; ++i)
-            {
-                M.SetValue(i,i,1.0/vOutput[nDirBnd + i]);
-            }
+            m_diagonals = Array<OneD, NekDouble> (rows);
+            Vmath::Sdiv(rows, 1.0, &vOutput[nDirBnd], 1, &m_diagonals[0], 1);
         }
 
         /**
@@ -220,11 +206,8 @@ namespace Nektar
                         m_locToGloMap->GetNumGlobalBndCoeffs();
                     int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                     int nNonDir = nGlobal-nDir;
-                    DNekMat &M = (*m_preconditioner);
                     
-                    NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
-                    NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
-                    z = M * r;
+                    Vmath::Vmul(nNonDir, &pInput[0], 1, &m_diagonals[0], 1, &pOutput[0], 1);
                     
                     break;
                 }

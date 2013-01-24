@@ -715,10 +715,12 @@ namespace Nektar
         int StdQuadExp::v_NumDGBndryCoeffs() const
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange ||
+                     GetBasisType(0) == LibUtilities::eGauss_Lagrange,
                      "BasisType is not a boundary interior form");
             ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange ||
+                     GetBasisType(0) == LibUtilities::eGauss_Lagrange,
                      "BasisType is not a boundary interior form");
 
             return  2*GetBasisNumModes(0) + 2*GetBasisNumModes(1);
@@ -1217,7 +1219,8 @@ namespace Nektar
                     break;
                 }
             }
-            else if(bType == LibUtilities::eGLL_Lagrange)
+            else if(bType == LibUtilities::eGLL_Lagrange ||
+                    bType == LibUtilities::eGauss_Lagrange)
             {
                 switch(eid)
                 {

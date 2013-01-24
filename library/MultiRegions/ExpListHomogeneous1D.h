@@ -113,9 +113,7 @@ namespace Nektar
                                       const Array<OneD, NekDouble> &inarray2,
                                       Array<OneD, NekDouble> &outarray, 
                                       CoeffState coeffstate = eLocal);
-            
-            MULTI_REGIONS_EXPORT void SetPaddingBase(void);
-            
+
             LibUtilities::BasisSharedPtr  GetHomogeneousBasis(void)
             {
                 return m_homogeneousBasis;
@@ -142,6 +140,9 @@ namespace Nektar
             /// FFT variables
             bool                                    m_useFFT;
             LibUtilities::NektarFFTSharedPtr        m_FFT;
+
+            LibUtilities::NektarFFTSharedPtr        m_FFT_deal;
+
             Array<OneD,NekDouble>                   m_tmpIN;
             Array<OneD,NekDouble>                   m_tmpOUT;
             
@@ -149,7 +150,6 @@ namespace Nektar
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
             LibUtilities::BasisSharedPtr    m_homogeneousBasis;
-            LibUtilities::BasisSharedPtr    m_paddingBasis;
             NekDouble                       m_lhom;  ///< Width of homogeneous direction
             Homo1DBlockMatrixMapShPtr       m_homogeneous1DBlockMat;
             Array<OneD, ExpListSharedPtr>   m_planes;
@@ -201,8 +201,6 @@ namespace Nektar
             
             virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs);
             
-            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field,bool BaseFlow3D);
-
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,
                                               std::string var = "v");
             
@@ -250,8 +248,6 @@ namespace Nektar
             //Padding operations variables
             bool m_dealiasing;
             int m_padsize;
-            DNekMatSharedPtr    MatFwdPAD;
-            DNekMatSharedPtr    MatBwdPAD;
         };
         
         inline void ExpListHomogeneous1D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 

@@ -63,6 +63,7 @@ namespace Nektar
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
             eGauss_Lagrange,
+            eGauss_Lagrange_SEM,
 			eFourier,
 			eFourierSingleMode,
 			eFourierHalfModeRe,
@@ -83,7 +84,8 @@ namespace Nektar
             "ORTHOGONAL",
             "GLL_LAGRANGE",
             "GLL_LAGRANGE_SEM",
-            "Gauss_LAGRANGE",
+            "GAUSS_LAGRANGE",
+            "GAUSS_LAGRANGE_SEM",
 			"FOURIER",
 			"FOURIERSINGLEMODE",
 			"FOURIERHALFMODERE",
@@ -571,7 +573,12 @@ namespace Nektar
          */
         inline VertexComponentSharedPtr MeshGraph::GetVertex(int id)
         {
-            return m_vertSet[id];
+            VertexComponentSharedPtr returnval;
+            VertexMap::iterator x = m_vertSet.find(id);
+            ASSERTL0(x != m_vertSet.end(),
+                     "Vertex " + boost::lexical_cast<string>(id)
+                     + " not found.");
+            return x->second;
         }
 
 

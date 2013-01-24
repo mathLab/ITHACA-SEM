@@ -150,6 +150,10 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
+            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
+                Array<OneD,     NekDouble>& pGlobal,
+                int offset) const;
+
             MULTI_REGIONS_EXPORT virtual const int v_GetFullSystemBandWidth() const;
 
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirVertexModes() const;

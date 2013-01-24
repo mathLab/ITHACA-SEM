@@ -525,64 +525,73 @@ namespace Nektar
         /**
          * Set up GeoFac for this geometry using Coord quadrature distribution
          */
-        void QuadGeom::v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void QuadGeom::v_GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            int i;
-            GeomType Gtype = eRegular;
-
-	    QuadGeom::v_FillGeom();
-
-            // We will first check whether we have a regular or deformed geometry.
-            // We will define regular as those cases where the Jacobian and the metric
-            // terms of the derivative are constants (i.e. not coordinate dependent)
-
-            // Check to see if expansions are linear
-            // If not linear => deformed geometry
-            for(i = 0; i < m_coordim; ++i)
+            if (m_geomFactorsState != ePtsFilled)
             {
-                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
-                   (m_xmap[i]->GetBasisNumModes(1) != 2))
+                int i;
+                GeomType Gtype = eRegular;
+
+                QuadGeom::v_FillGeom();
+
+                // We will first check whether we have a regular or deformed
+                // geometry. We will define regular as those cases where the
+                // Jacobian and the metric terms of the derivative are constants
+                // (i.e. not coordinate dependent)
+
+                // Check to see if expansions are linear
+                // If not linear => deformed geometry
+                for(i = 0; i < m_coordim; ++i)
                 {
-                    Gtype = eDeformed;
-                }
-            }
-            
-            // For linear expansions, the mapping from standard to local
-            // element is given by the relation:
-            // x_i = 0.25 * [ ( x_i^A + x_i^B + x_i^C + x_i^D)       +
-            //                (-x_i^A + x_i^B + x_i^C - x_i^D)*xi_1  +
-            //                (-x_i^A - x_i^B + x_i^C + x_i^D)*xi_2  +
-            //                ( x_i^A - x_i^B + x_i^C - x_i^D)*xi_1*xi_2 ]
-            //
-            // The jacobian of the transformation and the metric terms dxi_i/dx_j,
-            // involve only terms of the form dx_i/dxi_j (both for coordim == 2 or 3).
-            // Inspecting the formula above, it can be appreciated that the derivatives
-            // dx_i/dxi_j will be constant, if the coefficient of the non-linear term
-            // is zero.
-            //
-            // That is why for regular geometry, we require
-            //
-            //     x_i^A - x_i^B + x_i^C - x_i^D = 0
-            //
-            // or equivalently
-            //
-            //     x_i^A - x_i^B = x_i^D - x_i^C
-            //
-            // This corresponds to quadrilaterals which are paralellograms.
-            if(Gtype == eRegular)
-            {
-                for(i = 0; i < m_coordim; i++)
-                {
-                    if( fabs( (*m_verts[0])(i) - (*m_verts[1])(i) +
-                              (*m_verts[2])(i) - (*m_verts[3])(i) ) > NekConstants::kNekZeroTol )
+                    if((m_xmap[i]->GetBasisNumModes(0) != 2)||
+                       (m_xmap[i]->GetBasisNumModes(1) != 2))
                     {
                         Gtype = eDeformed;
-                        break;
                     }
                 }
-            }
 
-            m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+                // For linear expansions, the mapping from standard to local
+                // element is given by the relation:
+                // x_i = 0.25 * [ ( x_i^A + x_i^B + x_i^C + x_i^D)       +
+                //                (-x_i^A + x_i^B + x_i^C - x_i^D)*xi_1  +
+                //                (-x_i^A - x_i^B + x_i^C + x_i^D)*xi_2  +
+                //                ( x_i^A - x_i^B + x_i^C - x_i^D)*xi_1*xi_2 ]
+                //
+                // The jacobian of the transformation and the metric terms
+                // dxi_i/dx_j, involve only terms of the form dx_i/dxi_j (both
+                // for coordim == 2 or 3). Inspecting the formula above, it can
+                // be appreciated that the derivatives dx_i/dxi_j will be
+                // constant, if the coefficient of the non-linear term is zero.
+                //
+                // That is why for regular geometry, we require
+                //
+                //     x_i^A - x_i^B + x_i^C - x_i^D = 0
+                //
+                // or equivalently
+                //
+                //     x_i^A - x_i^B = x_i^D - x_i^C
+                //
+                // This corresponds to quadrilaterals which are paralellograms.
+                if(Gtype == eRegular)
+                {
+                    for(i = 0; i < m_coordim; i++)
+                    {
+                        if( fabs( (*m_verts[0])(i) - (*m_verts[1])(i) +
+                                  (*m_verts[2])(i) - (*m_verts[3])(i) )
+                                > NekConstants::kNekZeroTol )
+                        {
+                            Gtype = eDeformed;
+                            break;
+                        }
+                    }
+                }
+
+                m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
+                                            Gtype, m_coordim, m_xmap, tbasis);
+
+                m_geomFactorsState = ePtsFilled;
+            }
         }
 
 

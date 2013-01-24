@@ -257,6 +257,20 @@ namespace Nektar
             }
         }
 
+        /**
+         *
+         */
+        void ContField2D::v_SmoothField(Array<OneD,NekDouble> &field)
+        {
+            int gloNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+            Array<OneD,NekDouble> tmp1(gloNcoeffs);
+            Array<OneD,NekDouble> tmp2(gloNcoeffs);
+
+            IProductWRTBase(field,tmp1,eGlobal);
+            MultiplyByInvMassMatrix(tmp1,tmp2,eGlobal);
+            BwdTrans(tmp2,field,eGlobal);
+        }
+
 
         /**
          * Computes the matrix vector product
@@ -805,7 +819,7 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-									
+            
             m_locToGloMap->UniversalAssemble(gamma);
 
             // Add weak boundary conditions to forcing
@@ -844,10 +858,10 @@ namespace Nektar
          *                      \f$N_{\mathrm{dof}}\f$.
          */
         void ContField2D::v_GeneralMatrixOp(
-                                       const GlobalMatrixKey             &gkey,
-                                       const Array<OneD,const NekDouble> &inarray,
-                                       Array<OneD,      NekDouble> &outarray,
-                                       CoeffState coeffstate)
+                const GlobalMatrixKey              &gkey,
+                const Array<OneD,const NekDouble>  &inarray,
+                      Array<OneD,      NekDouble>  &outarray,
+                      CoeffState                   coeffstate)
         {
             if(coeffstate == eGlobal)
             {
@@ -856,8 +870,10 @@ namespace Nektar
 
                 if(doGlobalOp)
                 {
+                    int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                     GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
                     mat->Multiply(inarray,outarray);
+                    m_locToGloMap->UniversalAssemble(outarray);
                 }
                 else
                 {

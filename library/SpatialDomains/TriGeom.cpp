@@ -573,23 +573,30 @@ namespace Nektar
         /**
          * Set up GeoFac for this geometry using Coord quadrature distribution
          */
-        void TriGeom::v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void TriGeom::v_GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            GeomType Gtype = eRegular;
-
-            TriGeom::v_FillGeom();
-
-            // check to see if expansions are linear
-            for(int i = 0; i < m_coordim; ++i)
+            if (m_geomFactorsState != ePtsFilled)
             {
-                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
-                        (m_xmap[i]->GetBasisNumModes(1) != 2))
-                {
-                    Gtype = eDeformed;
-                }
-            }
+                GeomType Gtype = eRegular;
 
-            m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+                TriGeom::v_FillGeom();
+
+                // check to see if expansions are linear
+                for(int i = 0; i < m_coordim; ++i)
+                {
+                    if((m_xmap[i]->GetBasisNumModes(0) != 2)||
+                            (m_xmap[i]->GetBasisNumModes(1) != 2))
+                    {
+                        Gtype = eDeformed;
+                    }
+                }
+
+                m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
+                                            Gtype, m_coordim, m_xmap, tbasis);
+
+                m_geomFactorsState = ePtsFilled;
+            }
         }
 
 

@@ -1,8 +1,10 @@
 # FFTW
-SET(NEKTAR_USE_FFTW   OFF CACHE BOOL 
-    "Use FFTW routines for performing the Fast Fourier Transform.")
-SET(THIRDPARTY_BUILD_FFTW OFF CACHE BOOL
-    "Build FFTW from ThirdParty")
+OPTION(NEKTAR_USE_FFTW
+    "Use FFTW routines for performing the Fast Fourier Transform." OFF)
+
+CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_FFTW
+    "Build FFTW from ThirdParty" OFF
+    "NEKTAR_USE_FFTW" OFF)
 
 IF( NEKTAR_USE_FFTW )
     IF (THIRDPARTY_BUILD_FFTW)
@@ -17,6 +19,7 @@ IF( NEKTAR_USE_FFTW )
             CONFIGURE_COMMAND ${TPSRC}/src/fftw-3.2.2/configure --prefix=${TPSRC}/dist --quiet --enable-shared --disable-dependency-tracking
         )
         SET(FFTW_LIB fftw3)
+        MARK_AS_ADVANCED(FFTW_LIB)
         INCLUDE_DIRECTORIES(${TPSRC}/dist/include)
     ELSE ()
         INCLUDE (FindFFTW)

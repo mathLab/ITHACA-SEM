@@ -2040,7 +2040,7 @@ cout<<"cr="<<cr_str<<endl;
 
           file += "_u_5.bc"; 
           graphShPt->Import(file,FieldDef_u, FieldData_u);
-          Ilayer->ExtractDataToCoeffs(FieldDef_u[0], FieldData_u[0], FieldDef_u[0]->m_fields[0]);
+          Ilayer->ExtractDataToCoeffs(FieldDef_u[0], FieldData_u[0], FieldDef_u[0]->m_fields[0],Ilayer->UpdateCoeffs());
           Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());
           
           if(cnt==0)
@@ -2092,7 +2092,7 @@ cout<<"cr="<<cr_str<<endl;
           std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef_v;
           std::vector<std::vector<NekDouble> > FieldData_v;
           graphShPt->Import(file,FieldDef_v, FieldData_v);
-          Ilayer->ExtractDataToCoeffs(FieldDef_v[0], FieldData_v[0], FieldDef_v[0]->m_fields[0]);
+          Ilayer->ExtractDataToCoeffs(FieldDef_v[0], FieldData_v[0], FieldDef_v[0]->m_fields[0],Ilayer->UpdateCoeffs());
           Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());
           if(cnt==0)
           {

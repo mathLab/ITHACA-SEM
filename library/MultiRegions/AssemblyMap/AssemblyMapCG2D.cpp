@@ -655,8 +655,6 @@ namespace Nektar
                 }
             }
 
-            firstNonDirGraphVertId = graphVertId;
-
 
             /**
              * STEP 1.5: Exchange Dirichlet mesh vertices between processes and
@@ -761,6 +759,7 @@ namespace Nektar
                 extraDirVerts.insert(vertids[i]);
             }
 
+            firstNonDirGraphVertId = graphVertId;
 
             /**
              * STEP 2: Now order all other vertices and edges in the graph and

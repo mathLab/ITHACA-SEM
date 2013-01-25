@@ -640,6 +640,10 @@ namespace Nektar
 
                     meshVertId = locExpVector[s_eid]->GetGeom2D()->GetVid(0);
                 }
+                else if (m_session->DefinesParameter("SingularVertex"))
+                {
+                    m_session->LoadParameter("SingularVertex", meshVertId);
+                }
                 else
                 {
                     //last region i and j=0 edge

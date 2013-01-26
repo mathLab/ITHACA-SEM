@@ -83,7 +83,6 @@ int main(int argc, char *argv[])
 	else
 	{
             Qtype = LibUtilities::eGaussLobattoLegendre; 
-            //Qtype = LibUtilities::eGaussGaussLegendre; 
 	}
 
 	

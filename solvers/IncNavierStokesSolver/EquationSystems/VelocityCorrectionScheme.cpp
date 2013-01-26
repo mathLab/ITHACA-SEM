@@ -409,34 +409,6 @@ namespace Nektar
         int nqtot        = m_fields[0]->GetTotPoints();
         
         Timer  timer;
-#if 0
-        timer.Start();
-        for(int k = 0; k < 1000; ++k)
-        {
-            m_fields[0]->IProductWRTBase(m_fields[0]->GetPhys(),
-                                         m_fields[0]->UpdateCoeffs());
-
-        }
-        timer.Stop();
-        cout << "\t 1000 Iprods   : "<< timer.TimePerTest(1) << endl;
-#endif
-
-#if 0
-        timer.Start();
-        Array<OneD, NekDouble> out (m_fields[0]->GetTotPoints());
-        Array<OneD, NekDouble> out1(m_fields[0]->GetTotPoints());
-        Array<OneD, NekDouble> out2(m_fields[0]->GetTotPoints());
-        
-        for(int k = 0; k < 10000; ++k)
-        {
-            m_fields[0]->PhysDeriv(out,out1,out2);
-
-        }
-        timer.Stop();
-        cout << "\t 10000 Physderiv   : "<< timer.TimePerTest(1) << endl;
-        exit(1);
-#endif
-
         timer.Start();
         
         // evaluate convection terms
@@ -549,20 +521,6 @@ namespace Nektar
 
         // Solve Helmholtz system and put in Physical space
         timer.Start();
-#if 0
-        Array<OneD, NekDouble> Save(ncoeffs);
-        Vmath::Vcopy(ncoeffs,m_fields[0]->GetCoeffs(),1,Save,1);
-        for(int k = 0; k < 200; ++k)
-        {
-            SetBoundaryConditions(time);
-            
-            m_fields[0]->HelmSolve(F[0], m_fields[0]->UpdateCoeffs(), NullFlagList, factors);            
-            Vmath::Vcopy(ncoeffs,Save,1,m_fields[0]->UpdateCoeffs(),1);
-        }
-        timer.Stop();
-        cout << "\t  200 V_solve   : "<< timer.TimePerTest(1) << endl;
-        exit(1);
-#endif
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);            

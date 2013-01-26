@@ -1681,7 +1681,6 @@ namespace Nektar
             returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
             NekDouble factor = 1.0;
             MatrixStorage AMatStorage = eFULL;
-            //MatrixStorage AMatStorage = eUPPER_TRIANGULAR;
 
             switch(mkey.GetMatrixType())
             {

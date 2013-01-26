@@ -137,7 +137,6 @@ namespace Nektar
     NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>::CreateWrapper(const boost::shared_ptr<NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag> >& rhs)
     {
         return boost::shared_ptr<ThisType>(new ThisType(*rhs));
-        //return boost::shared_ptr<ThisType>(new NekMatrix<NekMatrix< DataType, InnerMatrixType>, ScaledMatrixTag>(*rhs));
     }
 
 

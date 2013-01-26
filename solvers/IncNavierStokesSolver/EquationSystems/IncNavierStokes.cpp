@@ -138,11 +138,11 @@ namespace Nektar
                     if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eNoUserDefined)
                     {
                         if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent)
-                        {                     	     
+                        {
                             if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eRadiation)
                             {
                                 if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eI)
-                                {  	 	 
+                                {
                                     SpatialDomains::BndUserDefinedType btype = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
                                     ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
                                 }

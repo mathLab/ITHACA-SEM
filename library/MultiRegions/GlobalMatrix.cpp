@@ -77,6 +77,8 @@ namespace Nektar
                                    unsigned int columns,
                                    const COOMatType &cooMat,
                                    const MatrixStorage& matStorage):
+            m_rows(rows),
+            m_cols(columns),
             m_csrmatrix(),
             m_bsrmatrix(),
             m_bsrunrolledmatrix(),
@@ -85,7 +87,42 @@ namespace Nektar
             MatrixStorageType storageType = pSession->
                 GetSolverInfoAsEnum<MatrixStorageType>("GlobalMatrixStorageType");
 
+            unsigned int brows, bcols;
+
+            // Size of dense matrix sub-blocks
             int block_size = 1;
+
+            BCOMatType bcoMat;
+
+            if (storageType != eCSR)
+            {
+                if(pSession->DefinesParameter("SparseBlockSize"))
+                {
+                    pSession->LoadParameter("SparseBlockSize", block_size);
+                    ASSERTL1(block_size > 0,"SparseBlockSize parameter must to be positive");
+                }
+                else
+                {
+                    // Size of dense matrix sub-blocks
+                    block_size = 2;
+                }
+
+                cout << "block_size = " << block_size << endl;
+
+                brows = rows / block_size + (rows % block_size > 0);
+                bcols = columns / block_size + (columns % block_size > 0);
+
+                if (rows % block_size > 0)  m_copyOp = true;
+
+                if (m_copyOp)
+                {
+                    m_tmpin  = Array<OneD, NekDouble> (brows*block_size, 0.0);
+                    m_tmpout = Array<OneD, NekDouble> (brows*block_size, 0.0);
+                }
+
+                convertCooToBco(brows, bcols, block_size, cooMat, bcoMat);
+            }
+
 
             size_t matBytes;
             switch(storageType)
@@ -110,28 +147,6 @@ namespace Nektar
                 case eBSR:
                     {
 
-                    if(pSession->DefinesParameter("SparseBlockSize"))
-                    {
-                        pSession->LoadParameter("SparseBlockSize", block_size);
-                        ASSERTL1(block_size > 0,"SparseBlockSize parameter must to be positive");
-                    }
-                    else
-                    {
-                        // Size of dense matrix sub-blocks
-                        block_size = 2;
-                    }
-
-
-                    // Size of block matrix associated with original one.
-                    // All matrix blocks are of fixed size, so block matrix
-                    // may be of larger size in order to fit the last few
-                    // rows and columns.
-                    const unsigned int brows = rows / block_size + (rows % block_size > 0);
-                    const unsigned int bcols = columns / block_size + (columns % block_size > 0);
-
-                    BCOMatType bcoMat;
-                    convertCooToBco(brows, bcols, block_size, cooMat, bcoMat);
-
                     // Create BSR sparse storage holder
                     DNekBsrMat::SparseStorageSharedPtr sparseStorage =
                             MemoryManager<DNekBsrMat::StorageType>::
@@ -149,27 +164,6 @@ namespace Nektar
 
                 case eBSRUnrolled:
                     {
-
-                    if(pSession->DefinesParameter("SparseBlockSize"))
-                    {
-                        pSession->LoadParameter("SparseBlockSize", block_size);
-                        ASSERTL1(block_size > 0,"SparseBlockSize parameter must to be positive");
-                    }
-                    else
-                    {
-                        // Size of dense matrix sub-blocks
-                        block_size = 2;
-                    }
-
-                    // Size of block matrix associated with original one.
-                    // All matrix blocks are of fixed size, so block matrix
-                    // may be of larger size in order to fit the last few
-                    // rows and columns.
-                    const unsigned int brows = rows / block_size + (rows % block_size > 0);
-                    const unsigned int bcols = columns / block_size + (columns % block_size > 0);
-
-                    BCOMatType bcoMat;
-                    convertCooToBco(brows, bcols, block_size, cooMat, bcoMat);
 
                     // Create zero-based unrolled-multiply BSR sparse storage holder
                     DNekBsrUnrolledMat::SparseStorageSharedPtr sparseStorage =
@@ -213,9 +207,24 @@ namespace Nektar
         void GlobalMatrix::Multiply(const Array<OneD,const NekDouble> &in, 
                                           Array<OneD,      NekDouble> &out)
         {
-            if (m_csrmatrix)          m_csrmatrix->Multiply(in,out);
-            if (m_bsrmatrix)          m_bsrmatrix->Multiply(in,out);
-            if (m_bsrunrolledmatrix)  m_bsrunrolledmatrix->Multiply(in,out);
+            if (m_csrmatrix) {        m_csrmatrix->Multiply(in,out); return; }
+
+            if (!m_copyOp)
+            {
+                if (m_bsrmatrix)          m_bsrmatrix->Multiply(in,out);
+                if (m_bsrunrolledmatrix)  m_bsrunrolledmatrix->Multiply(in,out);
+            }
+            else
+            {
+                // if block size makes the last row/column bigger, one needs
+                // using temporary storage for rhs and result vectors.
+                Vmath::Vcopy(m_rows, &in[0], 1, &m_tmpin[0], 1);
+
+                if (m_bsrmatrix)          m_bsrmatrix->Multiply(m_tmpin,m_tmpout);
+                if (m_bsrunrolledmatrix)  m_bsrunrolledmatrix->Multiply(m_tmpin,m_tmpout);
+
+                Vmath::Vcopy(m_rows, &m_tmpout[0], 1, &out[0], 1);
+            }
         }
 
         const unsigned long GlobalMatrix::GetMulCallsCounter() const 

@@ -81,6 +81,13 @@ namespace Nektar
 
             unsigned long                m_mulCallsCounter;
 
+            unsigned int                 m_rows;
+            unsigned int                 m_cols;
+            Array<OneD, NekDouble>       m_tmpin;
+            Array<OneD, NekDouble>       m_tmpout;
+
+            bool                         m_copyOp;
+
             static std::string           def;
             static std::string           lookupIds[];
         };

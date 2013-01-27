@@ -162,6 +162,12 @@ namespace Nektar
             return *p1 < *p2;
         }
 
+        std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n)
+        {
+            os << n->x << " " << n->y << " " << n->z;
+            return os;
+        }
+
         /**
          * @brief Defines equality of two edges (equal if IDs of end nodes
          * match in either ordering).

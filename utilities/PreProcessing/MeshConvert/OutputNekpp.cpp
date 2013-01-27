@@ -261,27 +261,25 @@ namespace Nektar
                     }
                 }
             }
-
-            // This code is commented out until face nodes are fully supported
-            // in Nektar++.
-            /*
-            FaceSet::iterator it2;
-            for (it2 = m->faceSet.begin(); it2 != m->faceSet.end(); ++it2)
+            else if (m->expDim == 3)
             {
-                if ((*it2)->faceNodes.size() > 0)
+                FaceSet::iterator it2;
+                for (it2 = m->faceSet.begin(); it2 != m->faceSet.end(); ++it2)
                 {
-                    TiXmlElement * f = new TiXmlElement( "F" );
-                    f->SetAttribute("ID",       facecnt++);
-                    f->SetAttribute("FACEID",   (*it2)->id);
-                    f->SetAttribute("NUMPOINTS",(*it2)->GetNodeCount());
-                    f->SetAttribute("TYPE",
-                        LibUtilities::kPointsTypeStr[(*it2)->curveType]);
-                    TiXmlText * t0 = new TiXmlText((*it2)->GetXmlCurveString());
-                    f->LinkEndChild(t0);
-                    curved->LinkEndChild(f);
+                    if ((*it2)->faceNodes.size() > 0)
+                    {
+                        TiXmlElement * f = new TiXmlElement( "F" );
+                        f->SetAttribute("ID",       facecnt++);
+                        f->SetAttribute("FACEID",   (*it2)->id);
+                        f->SetAttribute("NUMPOINTS",(*it2)->GetNodeCount());
+                        f->SetAttribute("TYPE",
+                                        LibUtilities::kPointsTypeStr[(*it2)->curveType]);
+                        TiXmlText * t0 = new TiXmlText((*it2)->GetXmlCurveString());
+                        f->LinkEndChild(t0);
+                        curved->LinkEndChild(f);
+                    }
                 }
             }
-            */
             pRoot->LinkEndChild( curved );
         }
 

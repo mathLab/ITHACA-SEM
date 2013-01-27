@@ -561,24 +561,24 @@ namespace Nektar
                         
                         // Prisms may have been rotated by OrientPrism routine
                         // and break curved faces. This block rotates faces
-                        // accordingly.
+                        // accordingly. TODO: Add similar routine for tets.
                         if (el->GetConf().e == ePrism)
                         {
                             boost::shared_ptr<Prism> pr = 
                                 boost::static_pointer_cast<Prism>(el);
                             if (pr->orientation == 1)
                             {
-                                // Prism has been rotated clockwise; rotate
-                                // face, reverse what was the last edge (now
-                                // located at edge 0).
+                                // Prism has been rotated counter-clockwise;
+                                // rotate face, reverse what was the last edge
+                                // (now located at edge 0).
                                 (*hoIt)->Rotate(1);
                                 reverseSide = 0;
                             }
                             else if (pr->orientation == 2)
                             {
-                                // Prism has been rotated counter-clockwise;
-                                // rotate face, reverse what was the last edge
-                                // (now located at edge 1).
+                                // Prism has been rotated clockwise; rotate
+                                // face, reverse what was the last edge (now
+                                // located at edge 1).
                                 (*hoIt)->Rotate(2);
                                 reverseSide = 1;
                             }
@@ -610,8 +610,9 @@ namespace Nektar
                         {
                             edge = f->edgeList[j];
                             
-                            // Skip over edges which have already been populated,
-                            // apart from those which need to be reoriented.
+                            // Skip over edges which have already been
+                            // populated, apart from those which need to be
+                            // reoriented.
                             if (edge->edgeNodes.size() > 0 && reverseSide == 2)
                             {
                                 continue;
@@ -632,11 +633,12 @@ namespace Nektar
                                 reverse(edge->edgeNodes.begin(), 
                                         edge->edgeNodes.end());
                             }
-                            
-                            for (int k = 3+3*(N-2); k < Ntot; ++k)
-                            {
-                                f->faceNodes.push_back((*hoIt)->surfVerts[k]);
-                            }
+                        }
+
+                        f->curveType = LibUtilities::eNodalTriElec;
+                        for (int j = 3+3*(N-2); j < Ntot; ++j)
+                        {
+                            f->faceNodes.push_back((*hoIt)->surfVerts[j]);
                         }
                     }
                 }

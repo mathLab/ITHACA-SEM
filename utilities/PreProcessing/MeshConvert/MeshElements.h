@@ -191,6 +191,7 @@ namespace Nektar
 
         bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
         bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+        std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n);
 
         /**
          * @brief Defines a hash function for nodes.
@@ -401,24 +402,97 @@ namespace Nektar
             {
                 std::stringstream s;
                 std::string str;
-                for (int k = 0; k < vertexList.size(); ++k) {
-                    s << std::scientific << std::setprecision(8) << "    "
-                      <<  vertexList[k]->x << "  " << vertexList[k]->y
-                      << "  " << vertexList[k]->z << "    ";
+                
+                // Treat 2D point distributions differently to 3D.
+                if (curveType == LibUtilities::eNodalTriFekete       || 
+                    curveType == LibUtilities::eNodalTriEvenlySpaced ||
+                    curveType == LibUtilities::eNodalTriElec)
+                {
+                    vector<NodeSharedPtr> tmp;
+                    int n = edgeList[0]->GetNodeCount();
+                    
+                    tmp.insert(tmp.end(), vertexList.begin(), vertexList.end());
+                    for (int k = 0; k < edgeList.size(); ++k) 
+                    {
+                        tmp.insert(tmp.end(), edgeList[k]->edgeNodes.begin(),
+                                   edgeList[k]->edgeNodes.end());
+                        if (edgeList[k]->n1 != vertexList[k])
+                        {
+                            // If edge orientation is reversed relative to node
+                            // ordering, we need to reverse order of nodes.
+                            std::reverse(tmp.begin() + 3 + k*(n-2),
+                                         tmp.begin() + 3 + (k+1)*(n-2));
+                        }
+                    }
+                    tmp.insert(tmp.end(), faceNodes.begin(), faceNodes.end());
+                    
+                    for (int k = 0; k < tmp.size(); ++k) {
+                        s << std::scientific << std::setprecision(8) << "    "
+                          <<  tmp[k]->x << "  " << tmp[k]->y
+                          << "  " << tmp[k]->z << "    ";
+                    }
+                    
+                    return s.str();
                 }
-                for (int k = 0; k < edgeList.size(); ++k) {
-                    for (int i = 0; i < edgeList[k]->edgeNodes.size(); ++i)
-                    s << std::scientific << std::setprecision(8) << "    "
-                      << edgeList[k]->edgeNodes[i]->x << "  "
-                      << edgeList[k]->edgeNodes[i]->y << "  "
-                      << edgeList[k]->edgeNodes[i]->z << "    ";
+                else
+                {
+                    // Write out in 2D tensor product order.
+                    ASSERTL0(vertexList.size() == 3, 
+                             "Face nodes of tensor product only supported "
+                             "for quadrilaterals.");
+                    
+                    int n = (int)sqrt((double)GetNodeCount());
+                    vector<NodeSharedPtr> tmp(n*n);
+                    
+                    ASSERTL0(n*n == GetNodeCount(), "Wrong number of modes?");
+                    
+                    // Write vertices
+                    tmp[0]       = vertexList[0];
+                    tmp[n-1]     = vertexList[1];
+                    tmp[n*n-1]   = vertexList[2];
+                    tmp[n*(n-1)] = vertexList[3];
+                    
+                    // Write edge-interior
+                    int skips[4][2] = {{0,1}, {n-1,n}, {n*(n-1),1}, {0,n}};
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        bool reverseEdge = edgeList[i]->n1 == vertexList[i];
+                        
+                        if (reverseEdge)
+                        {
+                            for (int j = n-2; j > 0; --j)
+                            {
+                                tmp[skips[i][0] + j*skips[i][1]] = 
+                                    edgeList[i]->edgeNodes[j];
+                            }
+                        }
+                        else
+                        {
+                            for (int j = 1; j < n-1; ++j)
+                            {
+                                tmp[skips[i][0] + j*skips[i][1]] = 
+                                    edgeList[i]->edgeNodes[j];
+                            }
+                        }
+                    }
+                    
+                    // Write interior
+                    for (int i = 1; i < n-1; ++i)
+                    {
+                        for (int j = 1; j < n-1; ++j)
+                        {
+                            tmp[i*n+j] = faceNodes[(i-2)*(n-2)+(j-2)];
+                        }
+                    }
+
+                    for (int k = 0; k < tmp.size(); ++k) {
+                        s << std::scientific << std::setprecision(8) << "    "
+                          <<  tmp[k]->x << "  " << tmp[k]->y
+                          << "  " << tmp[k]->z << "    ";
+                    }
+                    
+                    return s.str();
                 }
-                for (int k = 0; k < faceNodes.size(); ++k) {
-                    s << std::scientific << std::setprecision(8) << "    "
-                      <<  faceNodes[k]->x << "  " << faceNodes[k]->y
-                      << "  " << faceNodes[k]->z << "    ";
-                }
-                return s.str();
             }
 
             /// Generate either SpatialDomains::TriGeom or
@@ -608,6 +682,9 @@ namespace Nektar
             /// Access the list of volume nodes.
             std::vector<NodeSharedPtr> GetVolumeNodes() const {
                 return volumeNodes;
+            }
+            void SetVolumeNodes(std::vector<NodeSharedPtr> &nodes) {
+                volumeNodes = nodes;
             }
             /// Returns the total number of nodes (vertices, edge nodes and
             /// face nodes and volume nodes).

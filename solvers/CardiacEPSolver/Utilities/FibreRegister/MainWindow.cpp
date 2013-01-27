@@ -13,6 +13,8 @@
 
 using namespace std;
 
+#define HEIGHT_MAX 99
+
 MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
 : QMainWindow( parent, fl ) {
 
@@ -39,9 +41,10 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourceFilterDepthSort->SortScalarsOn();
     
     mSourceLookupTable = vtkLookupTable::New();
-    mSourceLookupTable->SetTableRange(0,10);
-    mSourceLookupTable->SetNumberOfColors(16);
-    mSourceLookupTable->SetHueRange(0.0,0.6667);
+    mSourceLookupTable->SetTableRange(0,HEIGHT_MAX);
+    mSourceLookupTable->SetHueRange(0.6,0.6);
+    mSourceLookupTable->SetSaturationRange(0,1);
+    mSourceLookupTable->SetValueRange(1,1);
     mSourceLookupTable->Build();
     
     mSourceMapper = vtkPolyDataMapper::New();
@@ -50,7 +53,7 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourceMapper->ScalarVisibilityOn();
     mSourceMapper->SetScalarModeToUsePointData();
     //mSourceMapper->SetColorModeToMapScalars();
-    mSourceMapper->SetScalarRange(mSourceData->GetScalarRange());
+    mSourceMapper->SetScalarRange(0, HEIGHT_MAX);
     mSourceMapper->SetLookupTable(mSourceLookupTable);
     
     mSourceActor = vtkActor::New();
@@ -89,13 +92,36 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourceHeightPointsLabelMapper = vtkLabeledDataMapper::New();
     mSourceHeightPointsLabelMapper->SetInputConnection(mSourceHeightPointsVisible->GetOutputPort());
     mSourceHeightPointsLabelMapper->SetLabelModeToLabelFieldData();
+    mSourceHeightPointsLabelMapper->SetLabelFormat("%2.0f");
     mSourceHeightPointsLabelActor = vtkActor2D::New();
     mSourceHeightPointsLabelActor->SetMapper(mSourceHeightPointsLabelMapper);
+
+    mSourceHeightGlyph = vtkGlyph3D::New();
+    mSourceHeightGlyph->SetInput(mSourceHeightPointData);
+    mSourceHeightGlyph->SetScaleModeToDataScalingOff();
+    mSourceHeightGlyph->SetSourceConnection(mSourceSphere->GetOutputPort());
+    mSourceHeightPointsMapper = vtkPolyDataMapper::New();
+    mSourceHeightPointsMapper->SetInputConnection(mSourceHeightGlyph->GetOutputPort());
+    mSourceHeightPointsMapper->SetScalarRange(0.0, HEIGHT_MAX);
+    mSourceHeightPointsMapper->SetLookupTable(mSourceLookupTable);
+    mSourceHeightPointsActor = vtkActor::New();
+    mSourceHeightPointsActor->SetMapper(mSourceHeightPointsMapper);
+
+    mSourceHeightContours = vtkContourFilter::New();
+    mSourceHeightContours->SetInput(mSourceData);
+    mSourceHeightContours->GenerateValues(10, 0.0, HEIGHT_MAX);
+    mSourceHeightContourMapper = vtkPolyDataMapper::New();
+    mSourceHeightContourMapper->SetInput(mSourceHeightContours->GetOutput());
+    mSourceHeightContourMapper->SetScalarRange(0.0, HEIGHT_MAX);
+    mSourceHeightContourActor = vtkActor::New();
+    mSourceHeightContourActor->SetMapper(mSourceHeightContourMapper);
 
     mSourceRenderer->AddActor(mSourceActor);
     mSourceRenderer->AddActor(mSourcePointsActor);
     mSourceRenderer->AddActor(mSourcePointsLabelActor);
     mSourceRenderer->AddActor(mSourceHeightPointsLabelActor);
+    mSourceRenderer->AddActor(mSourceHeightPointsActor);
+    mSourceRenderer->AddActor(mSourceHeightContourActor);
     mSourceRenderer->ResetCamera();
     mSourceVtk->GetRenderWindow()->AddRenderer(mSourceRenderer);
 
@@ -185,54 +211,91 @@ void MainWindow::Draw() {
     mSourceVtk = new QVTKWidget(this, QFlag(0) );
     mTargetVtk = new QVTKWidget(this, QFlag(0) );
     
+    // File box
     QLabel* vFileSourceLabel = new QLabel(tr("Source:"));
     QLabel* vFilePointsLabel = new QLabel(tr("Landmarks:"));
     QLabel* vFileTargetLabel = new QLabel(tr("Target:"));
-    QLabel* vFileHeightLabel = new QLabel(tr("Height:")); //Height label
     
     mFileSourceEditBox = new QLineEdit(tr(""));
     mFileSourceBrowse = new QPushButton(tr("Browse..."));
     mFileTargetEditBox = new QLineEdit(tr(""));
     
-    mFileHeightEditBox = new QLineEdit(tr(""));//Edit box
-    
     mFileTargetBrowse = new QPushButton(tr("Browse..."));
-    mFileLandmarksEditBox = new QLineEdit(tr(""));
-    mFileLandmarksBrowse = new QPushButton(tr("Browse..."));
     connect(mFileSourceBrowse, SIGNAL(clicked()), this, SLOT(BrowseSource()));
     connect(mFileTargetBrowse, SIGNAL(clicked()), this, SLOT(BrowseTarget()));
-    connect(mFileLandmarksBrowse, SIGNAL(clicked()), this, SLOT(BrowseLandmarks()));
     
     mFileLoadButton = new QPushButton(tr("Load"));
     connect(mFileLoadButton, SIGNAL(clicked()), this, SLOT(Load()));
-    mFileExportLandmarksButton = new QPushButton(tr("Export landmarks..."));
-    connect(mFileExportLandmarksButton, SIGNAL(clicked()), this, SLOT(ExportTargetPoints()));
     
     mFileGrid = new QGridLayout;
     mFileGrid->addWidget(vFileSourceLabel, 0, 0);
-    mFileGrid->addWidget(vFilePointsLabel, 1, 0);
-    mFileGrid->addWidget(vFileTargetLabel, 2, 0);
-    mFileGrid->addWidget(vFileHeightLabel, 3, 0);//Add widget of height label
+    mFileGrid->addWidget(vFileTargetLabel, 1, 0);
     mFileGrid->addWidget(mFileSourceEditBox, 0, 1);
-    mFileGrid->addWidget(mFileLandmarksEditBox, 1, 1);
-    mFileGrid->addWidget(mFileTargetEditBox, 2, 1);
-    mFileGrid->addWidget(mFileHeightEditBox, 3, 1);//Add widget of height edit box
+    mFileGrid->addWidget(mFileTargetEditBox, 1, 1);
     mFileGrid->addWidget(mFileSourceBrowse, 0, 2);
-    mFileGrid->addWidget(mFileLandmarksBrowse, 1, 2);
-    mFileGrid->addWidget(mFileTargetBrowse, 2, 2);
-    mFileGrid->addWidget(mFileLoadButton, 4, 1); //Shifted downwards
-    mFileGrid->addWidget(mFileExportLandmarksButton, 5, 1);//Shifted downward
+    mFileGrid->addWidget(mFileTargetBrowse, 1, 2);
+    mFileGrid->addWidget(mFileLoadButton, 2, 1); //Shifted downwards
     
     mFileBox = new QGroupBox(tr("Files"));
     mFileBox->setLayout(mFileGrid);
     mFileBox->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-    
-    mUndoButton = new QPushButton(tr("Undo last point"));
-    connect(mUndoButton, SIGNAL(clicked()), this, SLOT(UndoLastPoint()));
-    
+
+    // Landmark Box
+    mLandmarksLoadButton = new QPushButton(tr("Load landmark points."));
+    connect(mLandmarksLoadButton, SIGNAL(clicked()), this, SLOT(LoadSourceLandmarks()));
+    mUndoLandmarkButton = new QPushButton(tr("Undo last landmark point"));
+    connect(mUndoLandmarkButton, SIGNAL(clicked()), this, SLOT(UndoLastLandmarkPoint()));
+    mLandmarksExportButton = new QPushButton(tr("Export landmarks..."));
+    connect(mLandmarksExportButton, SIGNAL(clicked()), this, SLOT(ExportTargetPoints()));
+
+    mLandmarkGrid = new QGridLayout;
+    mLandmarkGrid->addWidget(mLandmarksLoadButton, 0, 0);
+    mLandmarkGrid->addWidget(mUndoLandmarkButton, 1, 0);
+    mLandmarkGrid->addWidget(mLandmarksExportButton, 2, 0);//Shifted downward
+
+    mLandmarkBox = new QGroupBox(tr("Landmarks"));
+    mLandmarkBox->setLayout(mLandmarkGrid);
+    mLandmarkBox->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
+    // Height box
+    mLoadHeightButton = new QPushButton(tr("Load height points."));
+    connect(mLoadHeightButton, SIGNAL(clicked()), this, SLOT(LoadHeightPoints()));
+    QLabel* vFileHeightLabel = new QLabel(tr("Height:")); //Height label
+    mHeightSlider = new QSlider;
+    mHeightSlider->setRange(0, HEIGHT_MAX);
+    mHeightSlider->setOrientation(Qt::Horizontal);
+    QLabel* vHeightInterpLabel = new QLabel(tr("Interp Range"));
+    mHeightInterpRange = new QSlider;
+    mHeightInterpRange->setRange(0, 30);
+    mHeightInterpRange->setOrientation(Qt::Horizontal);
+    connect(mHeightInterpRange, SIGNAL(sliderMoved(int)), this, SLOT(HeightInterpChanged(int)));
+    mUndoHeightButton = new QPushButton(tr("Undo last point"));
+    connect(mUndoHeightButton, SIGNAL(clicked()), this, SLOT(UndoLastHeightPoint()));
+    mHeightExport = new QPushButton(tr("Export height points."));
+    connect(mHeightExport, SIGNAL(clicked()), this, SLOT(ExportHeightPoints()));
+    mHeightShowLabels = new QCheckBox(tr("Show height points"));
+    mHeightShowLabels->setChecked(true);
+    connect(mHeightShowLabels, SIGNAL(clicked(bool)), this, SLOT(HeightLabelsSelect(bool)));
+
+    mHeightGrid = new QGridLayout;
+    mHeightGrid->addWidget(mLoadHeightButton, 0, 1);
+    mHeightGrid->addWidget(vFileHeightLabel, 1, 0);
+    mHeightGrid->addWidget(mHeightSlider, 1, 1);//Add widget of height edit box
+    mHeightGrid->addWidget(mUndoHeightButton, 2, 1);
+    mHeightGrid->addWidget(vHeightInterpLabel, 3, 0);
+    mHeightGrid->addWidget(mHeightInterpRange, 3, 1);
+    mHeightGrid->addWidget(mHeightExport, 4, 1);
+    mHeightGrid->addWidget(mHeightShowLabels, 5, 1);
+
+    mHeightBox = new QGroupBox(tr("Height function"));
+    mHeightBox->setLayout(mHeightGrid);
+    mHeightBox->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+
+
     mSettingsGrid = new QVBoxLayout;
     mSettingsGrid->addWidget(mFileBox);
-    mSettingsGrid->addWidget(mUndoButton);
+    mSettingsGrid->addWidget(mLandmarkBox);
+    mSettingsGrid->addWidget(mHeightBox);
     mSettingsGrid->addStretch();
     
     mSettingsBox = new QGroupBox(tr("Settings"));
@@ -267,16 +330,12 @@ void MainWindow::BrowseTarget() {
 }
 
 void MainWindow::BrowseLandmarks() {
-    QString pointsFile = QFileDialog::getOpenFileName(this,
-                                                      tr("Load Source Landmark Points"), "", tr("Landmark Points (*.vtk)"));
-    mFileLandmarksEditBox->setText(pointsFile);
 }
 
 void MainWindow::Load() {
     ResetData();
 
     LoadSource();
-    LoadSourceLandmarks();
     LoadTarget();
 
     Update();
@@ -319,6 +378,13 @@ void MainWindow::LoadSource() {
     mSourceData->SetPoints(vPts);
     mSourceData->SetPolys(vCells);
 
+    if (vTmpData->GetPointData()->HasArray("height"))
+    {
+        vtkDoubleArray* vData = vtkDoubleArray::New();
+        vData->DeepCopy(vTmpData->GetPointData()->GetScalars("height"));
+        mSourceData->GetPointData()->SetScalars(vData);
+    }
+
     mSourceRenderer->ResetCamera(mSourceActor->GetBounds());
 }
 
@@ -333,24 +399,73 @@ void MainWindow::LoadTarget() {
 }
 
 void MainWindow::LoadSourceLandmarks() {
+    QString pointsFile = QFileDialog::getOpenFileName(this,
+                                                      tr("Load Source Landmark Points"), "", tr("Landmark Points (*.vtk)"));
+
     vtkPolyDataReader* vSourceLandmarks = vtkPolyDataReader::New();
-    vSourceLandmarks->SetFileName(mFileLandmarksEditBox->text().toStdString().c_str());
+    vSourceLandmarks->SetFileName(pointsFile.toStdString().c_str());
     vSourceLandmarks->Update();
     mSourcePointsData = vSourceLandmarks->GetOutput();
     mSourceFilterGlyph->SetInput(mSourcePointsData);
     mSourcePointsIds->SetInput(mSourcePointsData);
+
+    Update();
+}
+
+void MainWindow::LoadHeightPoints() {
+    QString pointsFile = QFileDialog::getOpenFileName(this,
+                                                      tr("Load Height Points"), "", tr("Landmark Points (*.vtk)"));
+
+    vtkPolyDataReader* vPointReader = vtkPolyDataReader::New();
+    vPointReader->SetFileName(pointsFile.toStdString().c_str());
+    vPointReader->Update();
+    vtkPolyData* vTmp = vPointReader->GetOutput();
+    unsigned int nPts = vTmp->GetNumberOfPoints();
+
+    vtkPoints* pointList = vtkPoints::New();
+    pointList->DeepCopy(vTmp->GetPoints());
+    vtkDoubleArray* pointScalars = vtkDoubleArray::New();
+    pointScalars->SetNumberOfTuples(nPts);
+    pointScalars->SetName("height");
+    pointScalars->DeepCopy(vTmp->GetPointData()->GetScalars("height"));
+
+    mSourceHeightPointData->Reset();
+    mSourceHeightPointData->SetPoints(pointList);
+    mSourceHeightPointData->GetPointData()->SetScalars(pointScalars);
+    mSourceHeightPointData->Modified();
+
+    Update();
 }
 
 
+void MainWindow::HeightInterpChanged(int value)
+{
+    Update();
+}
+
+void MainWindow::HeightLabelsSelect(bool value)
+{
+    if (value) {
+        mSourceHeightPointsLabelActor->VisibilityOn();
+        mSourceHeightPointsActor->VisibilityOn();
+    }
+    else {
+        mSourceHeightPointsLabelActor->VisibilityOff();
+        mSourceHeightPointsActor->VisibilityOff();
+    }
+    Update();
+}
+
 void MainWindow::Update() {
     // Height Interpolation
-    int vInterpDistance=10;
+    int vInterpDistance = mHeightInterpRange->value();
     vtkDoubleArray* vSurfaceData=InterpSurface(mSourceHeightPointData, mSourceData, vInterpDistance);
     mSourceData->GetPointData()->RemoveArray("HeightSurface");
     mSourceData->GetPointData()->SetScalars(vSurfaceData);
     mSourceData->Modified();
-    mSourceLookupTable->SetTableRange(mSourceData->GetScalarRange());
+    mSourceLookupTable->SetTableRange(0, HEIGHT_MAX);
     mSourceLookupTable->Build();
+    mSourceMapper->SetScalarRange(0, HEIGHT_MAX);
     mSourceMapper->SetLookupTable(mSourceLookupTable);
 
     mSourceVtk->update();
@@ -399,7 +514,7 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* 
     //psurface: the points on the mesh
     //Below we set the interp distance as 
     int nSurfacePoints = pSurface->GetNumberOfPoints();//Return number of points in array
-    vtkDoubleArray* vPointDataValues = dynamic_cast<vtkDoubleArray*>(pPointData->GetPointData()->GetArray("height"));
+    vtkDoubleArray* vPointDataValues = dynamic_cast<vtkDoubleArray*>(pPointData->GetPointData()->GetScalars("height"));
     
     
     //for vtkDoubleArray: you are able to set  number of components, values, name, insert next value,set value etc
@@ -494,7 +609,7 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
     vLocator_source->SetTolerance(0.1);
     int nearestPointId_source = vLocator_source->FindClosestPointWithinRadius(5.0, p_s, d_s);
     
-    double Heights = mFileHeightEditBox->text().toDouble();
+    double Heights = double(mHeightSlider->value());
     
     // If we are on the surface (i.e. id != -1) then add this vertex to the list
     // of landmark points.
@@ -506,10 +621,7 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
         mSourceHeightPointData->GetPointData()->RemoveArray("height");
         mSourceHeightPointData->SetPoints(pointList);
         mSourceHeightPointData->GetPointData()->SetScalars(pointScalars);
-//        mSourceHeightPointData->GetPoints()->InsertNextPoint(p_s);//list of point which were already clicked on, add point which you have just clicked on. We now want to add the scalar value of the hight to this list.
-//        mSourceHeightPointData->GetPointData()->GetScalars("height")-> InsertNextTuple1(Heights);//Tuple is size 1- scalar.
         mSourceHeightPointData->Modified();
-        cout << "Updated points" << endl;
     }
     
     // Update display
@@ -537,7 +649,7 @@ vtkDoubleArray* MainWindow::AddScalar(vtkDataArray* array, double v)
     vVals->SetName("height");
     if (!array)
     {
-        cout << "Null array." << endl;
+        cout << "WARNING: Null array given when adding scalar." << endl;
         return vVals;
     }
 
@@ -561,7 +673,17 @@ void MainWindow::ExportTargetPoints() {
     writer->Write();
 }
 
-void MainWindow::UndoLastPoint() {
+void MainWindow::ExportHeightPoints() {
+    QString pointsFile = QFileDialog::getSaveFileName(this,
+                                                      tr("Export Height Points"), "", tr("Height Points (*.vtk)"));
+
+    vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+    writer->SetInput(mSourceHeightPointData);
+    writer->SetFileName(pointsFile.toStdString().c_str());
+    writer->Write();
+}
+
+void MainWindow::UndoLastLandmarkPoint() {
     if (mTargetPointsData->GetPoints()->GetNumberOfPoints() > 0)
     {
         double * p = new double[3];
@@ -572,6 +694,29 @@ void MainWindow::UndoLastPoint() {
             vTargetPoints->InsertNextPoint(p);
         }
         mTargetPointsData->SetPoints(vTargetPoints);
+        delete[] p;
+        Update();
+    }
+}
+
+void MainWindow::UndoLastHeightPoint() {
+    if (mSourceHeightPointData->GetPoints()->GetNumberOfPoints() > 0)
+    {
+        int n = mSourceHeightPointData->GetPoints()->GetNumberOfPoints() - 1;
+        double * p = new double[3];
+        vtkPoints* vPts = vtkPoints::New();
+        vtkDataArray* vData = vtkDoubleArray::New();
+        vData->SetName("height");
+        vData->SetNumberOfTuples(n);
+        for (unsigned int i = 0; i < n; ++i)
+        {
+            p = mSourceHeightPointData->GetPoint(i);
+            vPts->InsertNextPoint(p);
+            vData->SetTuple1(i, mSourceHeightPointData->GetPointData()->GetScalars("height")->GetTuple1(i));
+        }
+        mSourceHeightPointData->GetPointData()->RemoveArray("height");
+        mSourceHeightPointData->SetPoints(vPts);
+        mSourceHeightPointData->GetPointData()->SetScalars(vData);
         delete[] p;
         Update();
     }

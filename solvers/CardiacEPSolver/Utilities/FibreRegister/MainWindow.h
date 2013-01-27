@@ -27,6 +27,7 @@
 #include <vtkIdFilter.h>
 #include <vtkSelectVisiblePoints.h>
 #include <vtkLabeledDataMapper.h>
+#include <vtkContourFilter.h>
 //#include <vtkLookupTable.h>
 //#include <vtkColorTransferFunction.h>
 //#include <vtkScalarBarActor.h>
@@ -49,7 +50,17 @@ class MainWindow : public QMainWindow
         void BrowseSource();
         void BrowseTarget();
         void BrowseLandmarks();
+
+        void ResetData();
         void Load();
+        void LoadSource();
+        void LoadSourceLandmarks();
+        void LoadHeightPoints();
+        void LoadTarget();
+
+        void HeightInterpChanged(int value);
+        void HeightLabelsSelect(bool value);
+
         void Update();
         
         void CreateTargetPoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
@@ -57,7 +68,9 @@ class MainWindow : public QMainWindow
         void CreateSourcePoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
 
         void ExportTargetPoints();
-        void UndoLastPoint();
+        void ExportHeightPoints();
+        void UndoLastLandmarkPoint();
+        void UndoLastHeightPoint();
 
     private:
         // GUI widgets
@@ -69,16 +82,27 @@ class MainWindow : public QMainWindow
         QGridLayout* mFileGrid;
         QLineEdit* mFileSourceEditBox;
         QPushButton* mFileSourceBrowse;
-        QLineEdit* mFileLandmarksEditBox;
-        QPushButton* mFileLandmarksBrowse;
         QLineEdit* mFileTargetEditBox;
         QPushButton* mFileTargetBrowse;
         QPushButton* mFileLoadButton;
-        QPushButton* mFileExportLandmarksButton;
-        QPushButton* mUndoButton;
+
+        QGroupBox* mLandmarkBox;
+        QGridLayout* mLandmarkGrid;
+        QPushButton* mLandmarksLoadButton;
+        QPushButton* mUndoLandmarkButton;
+        QPushButton* mLandmarksExportButton;
+
+        QGroupBox* mHeightBox;
+        QGridLayout* mHeightGrid;
+        QPushButton* mLoadHeightButton;
+        QPushButton* mUndoHeightButton;
+        QSlider* mHeightSlider;
+        QSlider* mHeightInterpRange;
+        QCheckBox* mHeightShowLabels;
+        QPushButton* mHeightExport;
+
         QVTKWidget* mSourceVtk;
         QVTKWidget* mTargetVtk;
-        QLineEdit* mFileHeightEditBox; //Edit box
     
 
         // VTK
@@ -116,6 +140,15 @@ class MainWindow : public QMainWindow
         vtkActor2D* mSourcePointsLabelActor;
         vtkActor2D* mSourceHeightPointsLabelActor;
     
+        vtkGlyph3D* mSourceHeightGlyph;
+        vtkPolyDataMapper* mSourceHeightPointsMapper;
+        vtkActor* mSourceHeightPointsActor;
+
+        // Source height contours
+        vtkContourFilter* mSourceHeightContours;
+        vtkPolyDataMapper* mSourceHeightContourMapper;
+        vtkActor* mSourceHeightContourActor;
+
         // Target Points pipeline
         vtkPolyData* mTargetPointsData;
         vtkSphereSource* mTargetSphere;
@@ -132,11 +165,6 @@ class MainWindow : public QMainWindow
         vtkEventQtSlotConnect* Connections;
         vtkEventQtSlotConnect* Connections_s;
         void Draw();
-
-        void ResetData();
-        void LoadSource();
-        void LoadSourceLandmarks();
-        void LoadTarget();
 
         vtkDoubleArray* InterpSurface(vtkPolyData* pPointData, vtkPolyData* pSurface, int pInterpDistance);
     

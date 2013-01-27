@@ -235,7 +235,8 @@ namespace Nektar
             if (m->expDim == 2 && m->spaceDim == 3)
             {
                 vector<ElementSharedPtr>::iterator it;
-                for (it = m->element[m->expDim].begin(); it != m->element[m->expDim].end(); ++it)
+                for (it  = m->element[m->expDim].begin();
+                     it != m->element[m->expDim].end(); ++it)
                 {
                     // Only generate face curve if there are volume nodes
                     if ((*it)->GetVolumeNodes().size() > 0)
@@ -244,17 +245,9 @@ namespace Nektar
                         e->SetAttribute("ID",        facecnt++);
                         e->SetAttribute("FACEID",    (*it)->GetId());
                         e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
+                        e->SetAttribute("TYPE",
+                           LibUtilities::kPointsTypeStr[(*it)->GetCurveType()]);
 
-                        // Quad use PolyEvenlySpaced points, tri uses
-                        // NodalTriEvenlySpaced points
-                        if ((*it)->GetVertexCount() == 4)
-                        {
-                            e->SetAttribute("TYPE", "PolyEvenlySpaced");
-                        }
-                        else
-                        {
-                            e->SetAttribute("TYPE", "NodalTriEvenlySpaced");
-                        }
                         TiXmlText * t0 = new TiXmlText((*it)->GetXmlCurveString());
                         e->LinkEndChild(t0);
                         curved->LinkEndChild(e);

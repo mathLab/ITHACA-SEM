@@ -437,7 +437,7 @@ namespace Nektar
                 else
                 {
                     // Write out in 2D tensor product order.
-                    ASSERTL0(vertexList.size() == 3, 
+                    ASSERTL0(vertexList.size() == 4,
                              "Face nodes of tensor product only supported "
                              "for quadrilaterals.");
                     
@@ -685,6 +685,12 @@ namespace Nektar
             }
             void SetVolumeNodes(std::vector<NodeSharedPtr> &nodes) {
                 volumeNodes = nodes;
+            }
+            LibUtilities::PointsType GetCurveType() const {
+                return curveType;
+            }
+            void SetCurveType(LibUtilities::PointsType cT) {
+                curveType = cT;
             }
             /// Returns the total number of nodes (vertices, edge nodes and
             /// face nodes and volume nodes).
@@ -1088,6 +1094,8 @@ namespace Nektar
             std::vector<FaceSharedPtr> face;
             /// List of element volume nodes.
             std::vector<NodeSharedPtr> volumeNodes;
+            /// Volume curve type
+            LibUtilities::PointsType curveType;
             /// Pointer to the corresponding edge if element is a 2D boundary.
             EdgeSharedPtr m_edgeLink;
             /// Pointer to the corresponding face if element is a 3D boundary.

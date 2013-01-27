@@ -68,7 +68,8 @@ namespace Nektar
         Element::Element(ElmtConfig   pConf,
                          unsigned int pNumNodes,
                          unsigned int pGotNodes) 
-            : m_conf(pConf), m_geom()
+            : m_conf(pConf), m_geom(),
+              curveType(LibUtilities::ePolyEvenlySpaced)
         {
             if (pNumNodes != pGotNodes)
             {
@@ -491,6 +492,7 @@ namespace Nektar
             m_tag     = "T";
             m_dim     = 2;
             m_taglist = pTagList;
+            curveType = LibUtilities::eNodalTriEvenlySpaced;
             int n     = m_conf.order-1;
 
             // Create a map to relate edge nodes to a pair of vertices

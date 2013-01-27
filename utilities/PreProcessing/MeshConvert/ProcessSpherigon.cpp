@@ -42,6 +42,7 @@ using namespace std;
 #include <LocalRegions/SegExp.h>
 #include <LocalRegions/QuadExp.h>
 #include <LocalRegions/TriExp.h>
+#include <LocalRegions/NodalTriExp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
 #define TOL_BLEND 1.0e-8
@@ -427,6 +428,21 @@ namespace Nektar
             
             ASSERTL0(nq > 2, "Number of points must be greater than 2.");
 
+            LibUtilities::BasisKey B0(
+                LibUtilities::eOrtho_A, nq,
+                LibUtilities::PointsKey(
+                    nq, LibUtilities::eGaussLobattoLegendre));
+            LibUtilities::BasisKey B1(
+                LibUtilities::eOrtho_B, nq,
+                LibUtilities::PointsKey(
+                    nq, LibUtilities::eGaussRadauMAlpha1Beta0));
+            StdRegions::StdNodalTriExpSharedPtr stdtri =
+                MemoryManager<StdRegions::StdNodalTriExp>::AllocateSharedPtr(
+                    B0, B1, LibUtilities::eNodalTriElec);
+
+            Array<OneD, NekDouble> xnodal(nq*(nq+1)/2), ynodal(nq*(nq+1)/2);
+            stdtri->GetNodalPoints(xnodal, ynodal);
+            
             int edgeMap[3][4][2] = {
                 {{0, 1}, {-1,   -1}, {-1,        -1 }, {-1,        -1}}, // seg
                 {{0, 1}, {nq-1, nq}, {nq*(nq-1), -nq}, {-1,        -1}}, // tri
@@ -445,12 +461,12 @@ namespace Nektar
                 // inside the element. TODO: Add options for various
                 // nodal/tensor point distributions + number of points to add.
                 ElementSharedPtr e = el[i];
-                
-                LibUtilities::BasisKey B0(
-                    LibUtilities::eModified_A, nq-1,
-                    LibUtilities::PointsKey(
-                        nq, LibUtilities::ePolyEvenlySpaced));
 
+                LibUtilities::BasisKey B2(
+                    LibUtilities::eModified_A, nq,
+                    LibUtilities::PointsKey(
+                        nq, LibUtilities::eGaussLobattoLegendre));
+                
                 if (e->GetConf().e == eLine)
                 {
                     SpatialDomains::SegGeomSharedPtr geom =
@@ -458,18 +474,47 @@ namespace Nektar
                             e->GetGeom(m->spaceDim));
                     LocalRegions::SegExpSharedPtr seg =
                         MemoryManager<LocalRegions::SegExp>::AllocateSharedPtr(
-                            B0, geom);
+                            B2, geom);
                     seg->GetCoords(x,y,z);
+                    nquad = nq;
                 }
                 else if (e->GetConf().e == eTriangle)
                 {
                     SpatialDomains::TriGeomSharedPtr geom =
                         boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(
                             e->GetGeom(3));
-                    LocalRegions::TriExpSharedPtr tri =
-                        MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(
-                            B0, B0, geom);
+                    LocalRegions::NodalTriExpSharedPtr tri =
+                        MemoryManager<LocalRegions::NodalTriExp>
+                            ::AllocateSharedPtr(
+                                B0, B1, LibUtilities::eNodalTriElec, geom);
+
+                    Array<OneD, NekDouble> coord(2);
                     tri->GetCoords(x,y,z);
+                    nquad = nq*(nq+1)/2;
+                    Vmath::Vcopy(nq*nq, x, 1, stdtri->UpdatePhys(), 1);
+
+                    for (int j = 0; j < nquad; ++j)
+                    {
+                        coord[0] = xnodal[j];
+                        coord[1] = ynodal[j];
+                        x[j] = stdtri->PhysEvaluate(coord);
+                    }
+                    
+                    Vmath::Vcopy(nq*nq, y, 1, stdtri->UpdatePhys(), 1);
+                    for (int j = 0; j < nquad; ++j)
+                    {
+                        coord[0] = xnodal[j];
+                        coord[1] = ynodal[j];
+                        y[j] = stdtri->PhysEvaluate(coord);
+                    }
+
+                    Vmath::Vcopy(nq*nq, z, 1, stdtri->UpdatePhys(), 1);
+                    for (int j = 0; j < nquad; ++j)
+                    {
+                        coord[0] = xnodal[j];
+                        coord[1] = ynodal[j];
+                        z[j] = stdtri->PhysEvaluate(coord);
+                    }
                 }
                 else if (e->GetConf().e == eQuadrilateral)
                 {
@@ -478,8 +523,9 @@ namespace Nektar
                             e->GetGeom(3));
                     LocalRegions::QuadExpSharedPtr quad =
                         MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(
-                            B0, B0, geom);
+                            B2, B2, geom);
                     quad->GetCoords(x,y,z);
+                    nquad = nq*nq;
                 }
                 else
                 {
@@ -507,6 +553,7 @@ namespace Nektar
                 vector<Node>   Q    (nV);
                 vector<Node>   Qp   (nV);
                 vector<double> blend(nV);
+                vector<Node>   out  (nquad);
 
                 // Calculate segment length for 2D spherigon routine.
                 double segLength = sqrt((v[0] - v[1]).abs2());
@@ -585,9 +632,7 @@ namespace Nektar
                         P += Q[k]*blend[k];
                     }
                     
-                    x[j] = P.x;
-                    y[j] = P.y;
-                    z[j] = P.z;
+                    out[j] = P;
                 }
                 
                 // Push nodes into lines - TODO: face interior nodes. 
@@ -599,15 +644,27 @@ namespace Nektar
                     eIt = visitedEdges.find(e->GetEdge(edge)->id);
                     if (eIt == visitedEdges.end())
                     {
-                        bool reverseEdge = 
-                            !(v[vertMap[offset][edge][0]] == *(e->GetEdge(edge)->n1));
+                        bool reverseEdge = !(v[vertMap[offset][edge][0]] ==
+                                             *(e->GetEdge(edge)->n1));
                         
-                        for (int j = 1; j < nq-1; ++j)
+                        if (e->GetConf().e == eQuadrilateral)
                         {
-                            int v = edgeMap[offset][edge][0] + 
-                                  j*edgeMap[offset][edge][1];
-                            NodeSharedPtr tmp(new Node(0, x[v], y[v], z[v]));
-                            e->GetEdge(edge)->edgeNodes.push_back(tmp);
+                            for (int j = 1; j < nq-1; ++j)
+                            {
+                                int v = edgeMap[offset][edge][0] + 
+                                    j*edgeMap[offset][edge][1];
+                                e->GetEdge(edge)->edgeNodes.push_back(
+                                    NodeSharedPtr(new Node(out[v])));
+                            }
+                        }
+                        else
+                        {
+                            for (int j = 0; j < nq-2; ++j)
+                            {
+                                int v = 3 + edge*(nq-2) + j;
+                                e->GetEdge(edge)->edgeNodes.push_back(
+                                    NodeSharedPtr(new Node(out[v])));
+                            }
                         }
                         
                         if (reverseEdge)
@@ -616,21 +673,36 @@ namespace Nektar
                                     e->GetEdge(edge)->edgeNodes.end());
                         }
 
+                        e->GetEdge(edge)->curveType =
+                            LibUtilities::eGaussLobattoLegendre;
+
                         visitedEdges.insert(e->GetEdge(edge)->id);
                     }
                 }
                 
                 // Add face nodes in manifold and full 3D case, but not for 2D.
-                if (nq > 2 && m->spaceDim == 3)
+                if (m->spaceDim == 3)
                 {
-                    vector<NodeSharedPtr> volNodes((nq-2)*(nq-2));
-                    for (int j = 1; j < nq-1; ++j)
+                    vector<NodeSharedPtr> volNodes;
+                    
+                    if (e->GetConf().e == eQuadrilateral)
                     {
-                        for (int k = 1; k < nq-1; ++k)
+                        volNodes.resize((nq-2)*(nq-2));
+                        for (int j = 1; j < nq-1; ++j)
                         {
-                            int v = j*nq+k;
-                            NodeSharedPtr tmp(new Node(0, x[v], y[v], z[v]));
-                            volNodes[(j-1)*(nq-2)+(k-1)] = tmp;
+                            for (int k = 1; k < nq-1; ++k)
+                            {
+                                int v = j*nq+k;
+                                volNodes[(j-1)*(nq-2)+(k-1)] =
+                                    NodeSharedPtr(new Node(out[v]));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int j = 3+3*(nq-2); j < nquad; ++j)
+                        {
+                            volNodes.push_back(NodeSharedPtr(new Node(out[j])));
                         }
                     }
                     
@@ -641,6 +713,7 @@ namespace Nektar
             // Copy face nodes back into 3D element faces.
             if (m->expDim == 3)
             {
+                set<pair<int,int> >::iterator it;
                 int elmt = 0;
                 for (it  = m->spherigonSurfs.begin();
                      it != m->spherigonSurfs.end  (); ++it, ++elmt)
@@ -648,6 +721,7 @@ namespace Nektar
                     FaceSharedPtr f = m->element[m->expDim][it->first]->
                         GetFace(it->second);
                     f->faceNodes = el[elmt]->GetVolumeNodes();
+                    f->curveType = LibUtilities::eNodalTriElec;
                 }
             }
 

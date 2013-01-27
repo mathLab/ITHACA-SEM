@@ -345,6 +345,7 @@ namespace Nektar
                 {
                     cerr << "WARNING: Spherigon surfaces have not been defined "
                          << "-- ignoring smoothing." << endl;
+                    return;
                 }
 
                 if (m->expDim == 3)
@@ -618,8 +619,38 @@ namespace Nektar
                         visitedEdges.insert(e->GetEdge(edge)->id);
                     }
                 }
+                
+                // Add face nodes in manifold and full 3D case, but not for 2D.
+                if (nq > 2 && m->spaceDim == 3)
+                {
+                    vector<NodeSharedPtr> volNodes((nq-2)*(nq-2));
+                    for (int j = 1; j < nq-1; ++j)
+                    {
+                        for (int k = 1; k < nq-1; ++k)
+                        {
+                            int v = j*nq+k;
+                            NodeSharedPtr tmp(new Node(0, x[v], y[v], z[v]));
+                            volNodes[(j-1)*(nq-2)+(k-1)] = tmp;
+                        }
+                    }
+                    
+                    e->SetVolumeNodes(volNodes);
+                }
             }
-            
+
+            // Copy face nodes back into 3D element faces.
+            if (m->expDim == 3)
+            {
+                int elmt = 0;
+                for (it  = m->spherigonSurfs.begin();
+                     it != m->spherigonSurfs.end  (); ++it, ++elmt)
+                {
+                    FaceSharedPtr f = m->element[m->expDim][it->first]->
+                        GetFace(it->second);
+                    f->faceNodes = el[elmt]->GetVolumeNodes();
+                }
+            }
+
             if (normalsGenerated)
             {
                 m->vertexNormals.clear();

@@ -271,10 +271,11 @@ void MainWindow::Draw() {
     // Height box
     mLoadHeightButton = new QPushButton(tr("Load height points."));
     connect(mLoadHeightButton, SIGNAL(clicked()), this, SLOT(LoadHeightPoints()));
-    QLabel* vFileHeightLabel = new QLabel(tr("Height:")); //Height label
+    mHeightSliderLabel = new QLabel(tr("Height (0):")); //Height label
     mHeightSlider = new QSlider;
     mHeightSlider->setRange(0, HEIGHT_MAX);
     mHeightSlider->setOrientation(Qt::Horizontal);
+    connect(mHeightSlider, SIGNAL(sliderMoved(int)), this, SLOT(HeightValueChanged(int)));
     QLabel* vHeightInterpLabel = new QLabel(tr("Interp Range"));
     mHeightInterpRange = new QSlider;
     mHeightInterpRange->setRange(0, 30);
@@ -290,7 +291,7 @@ void MainWindow::Draw() {
 
     mHeightGrid = new QGridLayout;
     mHeightGrid->addWidget(mLoadHeightButton, 0, 1);
-    mHeightGrid->addWidget(vFileHeightLabel, 1, 0);
+    mHeightGrid->addWidget(mHeightSliderLabel, 1, 0);
     mHeightGrid->addWidget(mHeightSlider, 1, 1);//Add widget of height edit box
     mHeightGrid->addWidget(mUndoHeightButton, 2, 1);
     mHeightGrid->addWidget(vHeightInterpLabel, 3, 0);
@@ -448,6 +449,11 @@ void MainWindow::LoadHeightPoints() {
     Update();
 }
 
+
+void MainWindow::HeightValueChanged(int value)
+{
+    mHeightSliderLabel->setText("Height (" + QString::number(value) + ") :");
+}
 
 void MainWindow::HeightInterpChanged(int value)
 {
@@ -656,6 +662,7 @@ void MainWindow::ComputeFibreDirection()
     vGradientData->SetName("Gradient");
     vGradientData->SetNumberOfComponents(3);
     vGradientData->SetNumberOfTuples(nPts);
+
     vtkDoubleArray* vFibreData = vtkDoubleArray::New();
     vFibreData->SetName("FibreDirection");
     vFibreData->SetNumberOfComponents(3);

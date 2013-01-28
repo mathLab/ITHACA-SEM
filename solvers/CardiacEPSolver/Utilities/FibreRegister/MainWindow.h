@@ -60,6 +60,7 @@ class MainWindow : public QMainWindow
         void LoadHeightPoints();
         void LoadTarget();
 
+        void HeightValueChanged(int value);
         void HeightInterpChanged(int value);
         void HeightLabelsSelect(bool value);
 
@@ -100,6 +101,7 @@ class MainWindow : public QMainWindow
         QGridLayout* mHeightGrid;
         QPushButton* mLoadHeightButton;
         QPushButton* mUndoHeightButton;
+        QLabel* mHeightSliderLabel;
         QSlider* mHeightSlider;
         QSlider* mHeightInterpRange;
         QCheckBox* mHeightShowLabels;

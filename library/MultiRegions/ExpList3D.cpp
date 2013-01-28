@@ -164,10 +164,10 @@ namespace Nektar
                 const SpatialDomains::MeshGraphSharedPtr &graph3D) :
             ExpList(pSession,graph3D)
         {
-            LocalRegions::TetExpSharedPtr tet;
-            LocalRegions::HexExpSharedPtr hex;
+            LocalRegions::TetExpSharedPtr   tet;
+            LocalRegions::HexExpSharedPtr   hex;
             LocalRegions::PrismExpSharedPtr prism;
-            LocalRegions::PyrExpSharedPtr pyramid;
+            LocalRegions::PyrExpSharedPtr   pyramid;
 
             const SpatialDomains::ExpansionMap &expansions
                                         = graph3D->GetExpansions();
@@ -175,10 +175,10 @@ namespace Nektar
             SpatialDomains::ExpansionMap::const_iterator expIt;
             for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)
             {
-                SpatialDomains::TetGeomSharedPtr TetGeom;
-                SpatialDomains::HexGeomSharedPtr HexGeom;
+                SpatialDomains::TetGeomSharedPtr   TetGeom;
+                SpatialDomains::HexGeomSharedPtr   HexGeom;
                 SpatialDomains::PrismGeomSharedPtr PrismGeom;
-                SpatialDomains::PyrGeomSharedPtr PyrGeom;
+                SpatialDomains::PyrGeomSharedPtr   PyrGeom;
 
                 if((TetGeom = boost::dynamic_pointer_cast<
                         SpatialDomains::TetGeom>(expIt->second->m_geomShPtr)))
@@ -190,7 +190,8 @@ namespace Nektar
                     LibUtilities::BasisKey TetBc
                                         = expIt->second->m_basisKeyVector[2];
 
-                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange ||
+                       TetBa.GetBasisType() == LibUtilities::eGauss_Lagrange)
                     {
                       ASSERTL0(false,"LocalRegions::NodalTetExp is not "
                                      "implemented yet");
@@ -309,7 +310,8 @@ namespace Nektar
                     LibUtilities::BasisKey TetBc
                                         = exp->m_basisKeyVector[2];
 
-                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange ||
+                       TetBa.GetBasisType() == LibUtilities::eGauss_Lagrange)
                     {
                       ASSERTL0(false,"LocalRegions::NodalTetExp is not "
                                      "implemented yet");

@@ -78,6 +78,11 @@ namespace Nektar
          */
         void InputVtk::Process()
         {
+            if (m->verbose)
+            {
+                cout << "InputVtk: Start reading file..." << endl;
+            }
+
             vtkPolyDataReader *vtkMeshReader = vtkPolyDataReader::New();
             vtkMeshReader->SetFileName(config["infile"].as<string>().c_str());
             vtkMeshReader->Update();

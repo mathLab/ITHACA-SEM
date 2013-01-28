@@ -373,7 +373,7 @@ namespace Nektar
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(local.num_elements(),local.data());
+                local = Array<OneD, NekDouble>(loc.num_elements(),loc.data());
             }
             else
             {
@@ -475,6 +475,16 @@ namespace Nektar
                       NekVector<      NekDouble>& pGlobal) const
         {
             UniversalAssemble(pGlobal.GetPtr());
+        }
+
+        const void AssemblyMapCG::v_UniversalAssemble(
+                      Array<OneD,     NekDouble>& pGlobal,
+                      int                         offset) const
+        {
+            Array<OneD, NekDouble> tmp(offset);
+            Vmath::Vcopy(offset, pGlobal, 1, tmp, 1);
+            UniversalAssemble(pGlobal);
+            Vmath::Vcopy(offset, tmp, 1, pGlobal, 1);
         }
 
         const int AssemblyMapCG::v_GetFullSystemBandWidth() const

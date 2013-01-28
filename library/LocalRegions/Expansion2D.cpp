@@ -283,6 +283,11 @@ namespace Nektar
                             EdgeExp[e]->GetPhys(),1,
                             EdgeExp[e]->UpdatePhys(),1);
                 
+                if (m_negatedNormals[e])
+                {
+                    Vmath::Neg(nquad_e, EdgeExp[e]->UpdatePhys(), 1);
+                }
+
                 AddEdgeBoundaryInt(e,EdgeExp[e],outarray,varcoeffs);
             }
         }
@@ -309,6 +314,11 @@ namespace Nektar
                 Vmath::Vmul(nquad_e,normals[dir],1,
                             EdgeExp[e]->GetPhys(),1,
                             EdgeExp[e]->UpdatePhys(),1);
+                
+                if (m_negatedNormals[e])
+                {
+                    Vmath::Neg(nquad_e, EdgeExp[e]->UpdatePhys(), 1);
+                }
                 
                 AddEdgeBoundaryInt(e,EdgeExp[e],outarray);
             }
@@ -458,6 +468,11 @@ namespace Nektar
             for(n = 0; n < coordim; ++n)
             {
                 Vmath::Vmul(nquad_e,normals[n],1,EdgeExp[edge]->GetPhys(),1,inval,1);
+                
+                if (m_negatedNormals[edge])
+                {
+                    Vmath::Neg(nquad_e, inval, 1);
+                }
 
                 // Multiply by variable coefficient
                 /// @TODO: Document this (probably not needed)
@@ -919,6 +934,11 @@ namespace Nektar
                                              work,1,work,1);
                             }
                             
+                            if (m_negatedNormals[e])
+                            {
+                                Vmath::Neg(nquad_e, work, 1);
+                            }
+
                             // - tau (ulam - lam)
                             // Corresponds to the G and BU terms.
                             for(j = 0; j < order_e; ++j)
@@ -1082,6 +1102,9 @@ namespace Nektar
                 {
                     switch(edgeExp->GetBasis(0)->GetBasisType())
                     {
+                    case LibUtilities::eGauss_Lagrange:
+                        reverse( map.get() , map.get()+order_e);
+                        break;
                     case LibUtilities::eGLL_Lagrange:
                         reverse( map.get() , map.get()+order_e);
                         break;

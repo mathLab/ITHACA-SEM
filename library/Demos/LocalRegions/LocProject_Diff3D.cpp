@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <math.h>
 
+#include <StdRegions/StdExpansion3D.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>

@@ -63,6 +63,11 @@ namespace Nektar
         
         void ProcessJac::Process()
         {
+            if (m->verbose)
+            {
+                cout << "ProcessJac: Calculating Jacobians..." << endl;
+            }
+
             vector<ElementSharedPtr> &el = m->element[m->expDim];
             
             // Iterate over list of elements of expansion dimension.

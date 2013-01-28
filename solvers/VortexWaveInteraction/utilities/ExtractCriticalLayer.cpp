@@ -86,7 +86,8 @@ int main(int argc, char *argv[])
     {
         streak->ExtractDataToCoeffs(fielddef [i],
                                     fielddata[i],
-                                    streak_field);
+                                    streak_field,
+                                    streak->UpdateCoeffs());
     }
     //----------------------------------------------
     

@@ -245,6 +245,9 @@ namespace Nektar
                                       Array<OneD,      NekDouble> &outarray,
                                 CoeffState coeffstate = eLocal);
 
+            /// Smooth a field across elements
+            inline void SmoothField(Array<OneD,NekDouble> &field);
+
             /// Solve helmholtz problem
             inline void HelmSolve(
                     const Array<OneD, const NekDouble> &inarray,
@@ -414,6 +417,9 @@ namespace Nektar
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
             /// containing all local expansion coefficients.
             inline const Array<OneD, const NekDouble> &GetCoeffs() const;
+
+            /// Impose Dirichlet Boundary Conditions onto Array
+            inline void ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
             /// Put the coefficients into global ordering using m_coeffs 
             inline void LocalToGlobal(void);
@@ -703,50 +709,18 @@ namespace Nektar
                 v_AppendFieldData(fielddef,fielddata,coeffs);
             }
 
-            /// Extract the data in fielddata into the m_coeff list
-            void ExtractDataToCoeffs(
-                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                     std::vector<NekDouble> &fielddata,
-                                     std::string &field)
-            {
-                v_ExtractDataToCoeffs(fielddef,fielddata,field);
-            }
-
-
-            /// Extract the data in fielddata into the coeffs
-            void ExtractDataToCoeffs(
-                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                     std::vector<NekDouble> &fielddata,
-                                     std::string &field,
-                                     Array<OneD, NekDouble> &coeffs)
-            {
-                v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
-            }
-
 
             /** \brief Extract the data in fielddata into the coeffs
              * using the basic ExpList Elemental expansions rather
              * than planes in homogeneous case
              */ 
-            MULTI_REGIONS_EXPORT void ExtractElmtDataToCoeffs(
+            MULTI_REGIONS_EXPORT void ExtractDataToCoeffs(
                                      SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
                                      std::vector<NekDouble> &fielddata,
                                      std::string &field,
                                      Array<OneD, NekDouble> &coeffs);
 
 			
-			
-			//Extract data in fielddata into the m_coeffs_list for the 3D stability analysis (base flow is 2D)
-			void ExtractDataToCoeffs(
-                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                     std::vector<NekDouble> &fielddata,
-                                     std::string &field,
-									 bool BaseFlow3D)
-            {
-                v_ExtractDataToCoeffs(fielddef,fielddata,field,BaseFlow3D);
-            }
-			
-
             /// Returns a shared pointer to the current object.
             boost::shared_ptr<ExpList> GetSharedThisPtr()
             {
@@ -1018,9 +992,11 @@ namespace Nektar
                                                         dirForcing = NullNekDouble1DArray);
 
             // wrapper functions about virtual functions
-            virtual void v_LocalToGlobal();
+            virtual void v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray);
 
-            virtual void v_GlobalToLocal();
+            virtual void v_LocalToGlobal(void);
+
+            virtual void v_GlobalToLocal(void);
 
             virtual void v_BwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
@@ -1032,9 +1008,12 @@ namespace Nektar
             virtual void v_FwdTrans(const Array<OneD,const NekDouble> &inarray,
                                     Array<OneD,      NekDouble> &outarray,
                                     CoeffState coeffstate);
-            
-            virtual void v_FwdTrans_IterPerExp(const Array<OneD,const NekDouble> &inarray, Array<OneD,      NekDouble> &outarray);
 
+            virtual void v_FwdTrans_IterPerExp(
+                                    const Array<OneD,const NekDouble> &inarray,
+                                          Array<OneD,NekDouble> &outarray);
+
+            virtual void v_SmoothField(Array<OneD,NekDouble> &field);
 
             virtual void v_IProductWRTBase(const Array<OneD,const NekDouble> &inarray,Array<OneD,      NekDouble> &outarray, CoeffState coeffstate);
 			
@@ -1121,14 +1100,9 @@ namespace Nektar
 
             virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
 
-            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field);
-
             virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field,
                                                Array<OneD, NekDouble> &coeffs);
 			
-            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, bool BaseFlow3D);
-            
-            
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,
                                             std::string var = "v");
             virtual void v_WriteTecplotZone(std::ofstream &outfile,
@@ -1360,8 +1334,16 @@ namespace Nektar
         {
             v_FwdTrans_IterPerExp(inarray,outarray);
         }
-		
-		/**
+
+        /**
+         *
+         */
+        inline void ExpList::SmoothField(Array<OneD,NekDouble> &field)
+        {
+            v_SmoothField(field);
+        }
+
+        /**
          *
          */
         inline void ExpList::BwdTrans (const Array<OneD, const NekDouble> &inarray,
@@ -1623,12 +1605,17 @@ namespace Nektar
             return m_coeffs;
         }
         
-        inline void ExpList::LocalToGlobal()
+        inline void ExpList::ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+        {
+            v_ImposeDirichletConditions(outarray);
+        }
+
+        inline void ExpList::LocalToGlobal(void)
         {
             v_LocalToGlobal();
         }
         
-        inline void ExpList::GlobalToLocal()
+        inline void ExpList::GlobalToLocal(void)
         {
             v_GlobalToLocal();
         }

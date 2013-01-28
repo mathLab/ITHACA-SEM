@@ -60,15 +60,16 @@ namespace Nektar
         /**
          * @class EquationSystem
          *
-         * This class is a base class for all solver implementations. It provides
-         * the underlying generic functionality and interface for solving equations.
+         * This class is a base class for all solver implementations. It
+         * provides the underlying generic functionality and interface for
+         * solving equations.
          *
-         * To solve a steady-state equation, create a derived class from this class
-         * and reimplement the virtual functions to provide custom implementation
-         * for the problem.
+         * To solve a steady-state equation, create a derived class from this
+         * class and reimplement the virtual functions to provide custom
+         * implementation for the problem.
          *
-         * To solve unsteady problems, derive from the UnsteadySystem class instead
-         * which provides general time integration.
+         * To solve unsteady problems, derive from the UnsteadySystem class
+         * instead which provides general time integration.
          */
         EquationSystemFactory& GetEquationSystemFactory()
         {
@@ -496,12 +497,14 @@ namespace Nektar
             }
 
             // Set Default Parameter
-            m_session->LoadParameter("Time",                m_time,                 0.0);
-            m_session->LoadParameter("TimeStep",            m_timestep,             0.01);
-            m_session->LoadParameter("NumSteps",            m_steps,                0);
-            m_session->LoadParameter("IO_CheckSteps",       m_checksteps,           0);
-            m_session->LoadParameter("FinTime",             m_fintime,              0);
-            m_session->LoadParameter("NumQuadPointsError",  m_NumQuadPointsError,   0);
+            m_session->LoadParameter("Time",          m_time,       0.0);
+            m_session->LoadParameter("TimeStep",      m_timestep,   0.01);
+            m_session->LoadParameter("NumSteps",      m_steps,      0);
+            m_session->LoadParameter("IO_CheckSteps", m_checksteps, 0);
+            m_session->LoadParameter("IO_CheckTime",  m_checktime,  0.0);
+            m_session->LoadParameter("FinTime",       m_fintime,    0);
+            m_session->LoadParameter("NumQuadPointsError",
+                                     m_NumQuadPointsError, 0);
 
             // Read in spatial data
             int nq = m_fields[0]->GetNpoints();
@@ -687,6 +690,7 @@ namespace Nektar
                 EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(), pFunctionName);
                 pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(), pFields[i]->UpdateCoeffs());
             }
+
         }
 
 
@@ -696,7 +700,6 @@ namespace Nektar
             const std::string& pFunctionName,
             const NekDouble& pTime)
         {
-		
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
 
@@ -720,14 +723,6 @@ namespace Nektar
                 LibUtilities::EquationSharedPtr ffunc
                     = m_session->GetFunction(pFunctionName, pFieldName);
 
-                /*
-                if (m_comm->GetRank() == 0)
-                {
-                    cout << "- Field " << pFieldName << ": " 
-                         << ffunc->GetExpression() << endl;
-                }
-                */
-
                 ffunc->Evaluate(x0,x1,x2,pTime,pArray);
             }
             else if (vType == LibUtilities::eFunctionTypeFile)
@@ -735,18 +730,14 @@ namespace Nektar
                 std::string filename
                     = m_session->GetFunctionFilename(pFunctionName, pFieldName);
                 
-                if (m_comm->GetRank() == 0)
-                {
-                    cout << "- Field " << pFieldName << ": " 
-                         << "from file " << filename << endl;
-                }
 #if 0 
                 ImportFld(filename,m_fields);
 #else
                 std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
-
+                Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
+                
                 m_graph->Import(filename,FieldDef,FieldData);
                 
                 int idx = -1;
@@ -762,25 +753,55 @@ namespace Nektar
                             idx = j;
                         }
                     }
-                    ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
-                    if(FieldDef[i]->m_numHomogeneousDir)
+
+                    if(idx >= 0 )
                     {
                         m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                          FieldDef[i]->m_fields[idx],
                                                          vCoeffs);
                     }
-                    // Force nonhomgeneous extraction if base flow is not homogeneous
                     else
                     {
-                        m_fields[0]->ExtractElmtDataToCoeffs(FieldDef[i], 
-                                                             FieldData[i],
-                                                             FieldDef[i]->m_fields[idx],
-                                                             vCoeffs);
+                        cout << "Field " + pFieldName + " not found." << endl;
                     }
                 }
-                m_fields[0]->BwdTrans(vCoeffs, pArray);
+
+                m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
 #endif
             }
+        }
+
+        /**
+         * @brief Provide a description of a function for a given field name.
+         *
+         * @param pFieldName     Field name.
+         * @param pFunctionName  Function name.
+         */
+        std::string EquationSystem::DescribeFunction(
+            std::string pFieldName,
+            const std::string &pFunctionName)
+        {
+            ASSERTL0(m_session->DefinesFunction(pFunctionName),
+                     "Function '" + pFunctionName + "' does not exist.");
+            
+            std::string retVal;
+            LibUtilities::FunctionType vType;
+            
+            vType = m_session->GetFunctionType(pFunctionName, pFieldName);
+            if (vType == LibUtilities::eFunctionTypeExpression)
+            {
+                LibUtilities::EquationSharedPtr ffunc
+                    = m_session->GetFunction(pFunctionName, pFieldName);
+                retVal = ffunc->GetExpression();
+            }
+            else if (vType == LibUtilities::eFunctionTypeFile)
+            {
+                std::string filename
+                    = m_session->GetFunctionFilename(pFunctionName, pFieldName);
+                retVal = "from file " + filename;
+            }
+            
+            return retVal;
         }
         
         /**
@@ -984,6 +1005,18 @@ namespace Nektar
             {
                 EvaluateFunction(m_session->GetVariables(), m_fields, 
                                  "InitialConditions");
+                
+                if (m_session->GetComm()->GetRank() == 0)
+                {
+                    
+                    for (int i = 0; i < m_fields.num_elements(); ++i)
+                    {
+                        std::string varName = m_session->GetVariable(i);
+                        cout << "  - Field " << varName << ": "
+                             << DescribeFunction(varName, "InitialConditions")
+                             << endl;
+                    }
+                }
             }
             else
             {
@@ -992,12 +1025,11 @@ namespace Nektar
                 {
                     Vmath::Zero(nq, m_fields[i]->UpdatePhys(), 1);
                     m_fields[i]->SetPhysState(true);
-                    m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
-                                                     m_fields[i]->UpdateCoeffs());
-
+                    Vmath::Zero(m_fields[i]->GetNcoeffs(), 
+                                m_fields[i]->UpdateCoeffs(), 1);
                     if (m_session->GetComm()->GetRank() == 0)
                     {
-                        cout << "\tField "      << m_session->GetVariable(i)
+                        cout << "  - Field "    << m_session->GetVariable(i)
                              << ": 0 (default)" << endl;
                     }
                 }
@@ -1156,6 +1188,8 @@ namespace Nektar
       	    // Copy data to m_velocity
     	    for(int j = 0; j < nvar; ++j)
     	    {
+                Vmath::Zero(m_base[j]->GetNcoeffs(), m_base[j]->UpdateCoeffs(),1);
+
                 for(int i=0; i<FieldDef.size(); ++i)
                 {
 // turned off so it can be used in DiffusionReaction solver where need 
@@ -1168,7 +1202,8 @@ namespace Nektar
                                                   "m_boundaryconditions differs")).c_str()); 
 #endif  
                     m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i], 
-                                                   FieldDef[i]->m_fields[j]);
+                                                   FieldDef[i]->m_fields[j],
+                                                   m_base[j]->UpdateCoeffs());
                 }
     	    	m_base[j]->BwdTrans(m_base[j]->GetCoeffs(), 
                                     m_base[j]->UpdatePhys());    
@@ -1220,7 +1255,7 @@ namespace Nektar
                 outname += "_P"+boost::lexical_cast<std::string>(m_comm->GetRank());
             }
             outname += ".fld";
-            WriteFld(outname);                 
+            WriteFld(outname); 
         }
 
         /**
@@ -1775,6 +1810,8 @@ namespace Nektar
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
             {
+                Vmath::Zero(pFields[j]->GetNcoeffs(),pFields[j]->UpdateCoeffs(),1);
+                
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     ASSERTL1(FieldDef[i]->m_fields[j] == m_session->GetVariable(j),
@@ -1783,7 +1820,8 @@ namespace Nektar
                                            "m_boundaryconditions differs"));
 
                     pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                    FieldDef[i]->m_fields[j]);
+                                                    FieldDef[i]->m_fields[j],
+                                                    pFields[j]->UpdateCoeffs());
                 }
                 pFields[j]->BwdTrans(pFields[j]->GetCoeffs(),
                                      pFields[j]->UpdatePhys());
@@ -1806,6 +1844,8 @@ namespace Nektar
             m_graph->Import(infile,FieldDef,FieldData);
             int idx = -1;
 
+            Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
+
             for(int i = 0; i < FieldDef.size(); ++i)
             {
                 // find the index of the required field in the file.
@@ -1819,7 +1859,8 @@ namespace Nektar
                 ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
 
                 pField->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                            FieldDef[i]->m_fields[idx]);
+                                            FieldDef[i]->m_fields[idx],
+                                            pField->UpdateCoeffs());
             }
             pField->BwdTrans(pField->GetCoeffs(), pField->UpdatePhys());
         }
@@ -1844,10 +1885,11 @@ namespace Nektar
             std::vector<std::vector<NekDouble> > FieldData;
         
             m_graph->Import(infile,FieldDef,FieldData);
-        
+
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)
             {
+                Vmath::Zero(coeffs[j].num_elements(),coeffs[j],1);
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
@@ -2016,6 +2058,20 @@ namespace Nektar
                 out << "\tMax Exp. Order  : " << m_fields[0]->EvalBasisNumModesMax()<< endl;
             }
             
+            if (m_session->DefinesSolverInfo("UpwindType"))
+            {
+                std::string UpwindType;
+                UpwindType = m_session->GetSolverInfo("UpwindType");
+                if (UpwindType == "Exact")
+                {
+                    out << "\tRiemann Solver  : Exact"   <<endl;
+                }
+                else if (UpwindType == "Average")
+                {
+                    out << "\tRiemann Solver  : Average" <<endl;
+                }
+            }
+            
             if (m_session->DefinesSolverInfo("AdvectionType"))
             {
                 std::string AdvectionType;
@@ -2032,26 +2088,27 @@ namespace Nektar
                     {
                         if (AdvectionType == "WeakDG")
                         {
-                            out << "\tProjection Type : Weak Discontinuous Galerkin" <<endl;
+                            out << "\tProjection Type : Weak Discontinuous Galerkin"        <<endl;
                         }
-                        
                         else if (AdvectionType == "FRDG")
                         {
-                            out << "\tProjection Type : Flux Reconstruction DG" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction DG"             <<endl;
                         }
-                        
                         else if (AdvectionType == "FRSD")
                         {
-                            out << "\tProjection Type : Flux Reconstruction SD" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction SD"             <<endl;
                         }
-                        
                         else if (AdvectionType == "FRHU")
                         {
-                            out << "\tProjection Type : Flux Reconstruction HU" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction HU"             <<endl;
                         }
                         else if (AdvectionType == "FRc")
                         {
-                            out << "\tProjection Type : Flux Reconstruction C" <<endl;
+                            out << "\tProjection Type : Flux Reconstruction c = c-min"      <<endl;
+                        }
+                        else if (AdvectionType == "FRc")
+                        {
+                            out << "\tProjection Type : Flux Reconstruction c = c-infinity" <<endl;
                         }
                         break;
                     }

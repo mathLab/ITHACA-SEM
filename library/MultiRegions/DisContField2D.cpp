@@ -388,7 +388,7 @@ namespace Nektar
                 
             // Set up physical normals
             SetUpPhysNormals();
-                
+            
             // Set up information for parallel jobs.
             for (int i = 0; i < m_trace->GetExpSize(); ++i)
             {
@@ -1594,7 +1594,7 @@ namespace Nektar
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
                                  FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0]);   
+                                 FieldDef[0]->m_fields[0], locExpList->UpdateCoeffs());   
                              locExpList->BwdTrans_IterPerExp(
                                  locExpList->GetCoeffs(), 
                                  locExpList->UpdatePhys());
@@ -1642,7 +1642,7 @@ namespace Nektar
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
                                  FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0]);
+                                 FieldDef[0]->m_fields[0], locExpList->UpdateCoeffs());
                              locExpList->BwdTrans_IterPerExp(
                                  locExpList->GetCoeffs(), 
                                  locExpList->UpdatePhys());
@@ -1697,7 +1697,7 @@ namespace Nektar
                             // copy FieldData into locExpList
                             locExpList->ExtractDataToCoeffs(
                                 FieldDef[0], FieldData[0],
-                                FieldDef[0]->m_fields[0]);
+                                FieldDef[0]->m_fields[0],locExpList->UpdateCoeffs());
                             locExpList->BwdTrans_IterPerExp(
                                 locExpList->GetCoeffs(), 
                                 locExpList->UpdatePhys());

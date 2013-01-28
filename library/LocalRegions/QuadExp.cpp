@@ -523,15 +523,15 @@ namespace Nektar
             
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul   (nq,&normals[0][0],1,&Fx[0],1,&Fn[0],1);
-                Vmath::Vvtvvtp(nq,&normals[1][0],1,&Fy[0],1,
-                                  &normals[2][0],1,&Fz[0],1,&Fn[0],1);
+                Vmath::Vvtvvtp(nq,&normals[0][0],1,&Fx[0],1,
+                                  &normals[1][0],1,&Fy[0],1,&Fn[0],1);
+                Vmath::Vvtvp  (nq,&normals[2][0],1,&Fz[0],1,&Fn[0],1,&Fn[0],1);
             }
             else
             {
-                Vmath::Smul   (nq,normals[0][0],&Fx[0],1,&Fn[0],1);
-                Vmath::Svtsvtp(nq,normals[1][0],&Fy[0],1,
-                                  normals[2][0],&Fz[0],1,&Fn[0],1);
+                Vmath::Svtsvtp(nq,normals[0][0],&Fx[0],1,
+                                  normals[1][0],&Fy[0],1,&Fn[0],1);
+                Vmath::Svtvp  (nq,normals[2][0],&Fz[0],1,&Fn[0],1,&Fn[0],1);
             }
 
             IProductWRTBase(Fn,outarray);
@@ -1146,7 +1146,12 @@ namespace Nektar
                     for (unsigned int j = 0; j < vCoordDim; ++j)
                     {
                         outfile << coordVert[j];
-                        outfile << (j < vCoordDim - 1 ? ", " : "");
+                        outfile << (j < 2 ? ", " : "");
+                    }
+                    for (unsigned int j = vCoordDim; j < 3; ++j)
+                    {
+                        outfile << " 0";
+                        outfile << (j < 2 ? ", " : "");
                     }
                     outfile << (i < nVertices - 1 ? "," : "") << endl;
                 }

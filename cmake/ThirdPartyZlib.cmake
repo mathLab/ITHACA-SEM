@@ -1,5 +1,4 @@
-SET(THIRDPARTY_BUILD_ZLIB OFF CACHE BOOL 
-    "Build ZLib library")
+OPTION(THIRDPARTY_BUILD_ZLIB "Build ZLib library" OFF)
 
 IF (THIRDPARTY_BUILD_ZLIB)
     # Build the Zlib library separately

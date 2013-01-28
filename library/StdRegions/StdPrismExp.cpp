@@ -334,42 +334,68 @@ namespace Nektar
          * \frac {(1 + \bar \eta_1)} {(1 - \eta_3)} \frac \partial {\partial
          * \bar \eta_1} + \frac {\partial} {\partial \eta_3} \end{Bmatrix}\f$
          */
+
         void StdPrismExp::v_PhysDeriv(const Array<OneD, const NekDouble>& u_physical, 
                                       Array<OneD, NekDouble> &out_dxi1, 
                                       Array<OneD, NekDouble> &out_dxi2,
                                       Array<OneD, NekDouble> &out_dxi3 )
         {
-            // PhysDerivative implementation based on Spen's book page 152.
             int    Qx = m_base[0]->GetNumPoints();
             int    Qy = m_base[1]->GetNumPoints();
             int    Qz = m_base[2]->GetNumPoints();
+            int    Qtot = Qx*Qy*Qz;
 
-            Array<OneD, NekDouble> dEta_bar1(Qx*Qy*Qz,0.0);
-            Array<OneD, NekDouble> dXi2     (Qx*Qy*Qz,0.0);
-            Array<OneD, NekDouble> dEta3    (Qx*Qy*Qz,0.0);
-            PhysTensorDeriv(u_physical, dEta_bar1, dXi2, dEta3);
+            Array<OneD, NekDouble> dEta_bar1(Qtot,0.0);
 
-            Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
+            Array<OneD, const NekDouble> eta_x, eta_z;
             eta_x = m_base[0]->GetZ();
-            eta_y = m_base[1]->GetZ();
             eta_z = m_base[2]->GetZ();
 
-            int i, j, k, n;
+            int i, j, k;
 
-            for (k = 0, n = 0; k < Qz; ++k)
+            bool Do_1 = (out_dxi1.num_elements() > 0)? true:false;
+            bool Do_3 = (out_dxi3.num_elements() > 0)? true:false;
+
+            // out_dXi2 is just a tensor derivative so is just passed through
+            if(Do_3) 
             {
-                for (j = 0; j < Qy; ++j)
+                PhysTensorDeriv(u_physical, dEta_bar1, out_dxi2, out_dxi3);
+            }
+            else if(Do_1)
+            {
+                PhysTensorDeriv(u_physical, dEta_bar1, out_dxi2, NullNekDouble1DArray);
+            }
+            else // case if just require 2nd direction 
+            {
+                PhysTensorDeriv(u_physical, NullNekDouble1DArray, 
+                                out_dxi2, NullNekDouble1DArray);
+            }
+            
+            if(Do_1)
+            {
+                for (k = 0; k < Qz; ++k)
                 {
-                    for (i = 0; i < Qx; ++i, ++n)
-                    {
-                        if (out_dxi1.num_elements() > 0)
-                            out_dxi1[n] = 2.0/(1.0 - eta_z[k]) * dEta_bar1[n];
-                        if (out_dxi2.num_elements() > 0)
-                            out_dxi2[n] = dXi2[n];
-                        if (out_dxi3.num_elements() > 0)
-                            out_dxi3[n] = (1.0+eta_x[i])/(1.0-eta_z[k])*dEta_bar1[n] + dEta3[n];
-                    } 
+                    Vmath::Smul(Qx*Qy,2.0/(1.0-eta_z[k]),&dEta_bar1[0] + k*Qx*Qy,1,
+                                &out_dxi1[0] + k*Qx*Qy,1);
                 }
+            }
+            
+            if(Do_3)
+            {
+                // divide dEta_Bar1 by (1-eta_z) 
+                for (k = 0; k < Qz; ++k)
+                {
+                    Vmath::Smul(Qx*Qy, 1.0/(1.0-eta_z[k]),&dEta_bar1[0]+k*Qx*Qy,1,
+                                &dEta_bar1[0]+k*Qx*Qy,1);
+                }
+
+                // Multiply dEta_Bar1 by (1+eta_x) and add ot out_dxi3
+                for (i = 0; i < Qx; ++i)
+                {
+                    Vmath::Svtvp(Qz*Qy,1.0+eta_x[i],&dEta_bar1[0]+i,Qx,
+                                 &out_dxi3[0]+i,Qx,&out_dxi3[0]+i,Qx);
+                }                
+
             }
         }
 

@@ -135,7 +135,6 @@ namespace Nektar
 
                 int err = edge->QueryIntAttribute("ID",&indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
-//                ASSERTL0(indx == nextEdgeNumber, "Edge IDs must begin with zero and be sequential.");
 
                 TiXmlNode *child = edge->FirstChild();
                 edgeStr.clear();
@@ -733,7 +732,8 @@ namespace Nektar
         {
             SegGeomSharedPtr returnval;
             SegGeomMap::iterator x = m_segGeoms.find(eID);
-            ASSERTL0(x != m_segGeoms.end(), "Segment not found.");
+            ASSERTL0(x != m_segGeoms.end(), "Segment "
+                     + boost::lexical_cast<string>(eID) + " not found.");
             return x->second;
         };
 

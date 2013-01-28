@@ -13,8 +13,7 @@ namespace Nektar
 
     	std::string ThreadManagerBoost::className =
     		GetThreadManager().RegisterCreatorFunction("ThreadManagerBoost",
-    				ThreadManagerBoost::create, "Threading using Boost.");
-
+    				ThreadManagerBoost::Create, "Threading using Boost.");
 
         ThreadManagerBoost::~ThreadManagerBoost()
         {
@@ -22,7 +21,7 @@ namespace Nektar
             // we daren't lock anything as we may cause a deadlock
             for (unsigned int i=0; i<m_numThreads; i++)
             {
-                m_threadList[i]->stop();
+                m_threadList[i]->Stop();
             }
 
             m_masterQueueCondVar.notify_all();
@@ -43,7 +42,7 @@ namespace Nektar
         ThreadManagerBoost::ThreadManagerBoost(unsigned int numT) :
                 m_numThreads(numT), m_numWorkers(numT-1), m_masterQueue(), m_masterQueueMutex(),
                 m_masterActiveMutex(), m_masterQueueCondVar(), m_masterActiveCondVar(),
-                m_schedType(e_dynamic)
+                m_chunkSize(1), m_schedType(e_dynamic)
         {
             using namespace std;
             try {
@@ -56,7 +55,6 @@ namespace Nektar
                         << e.what() << endl;
                 abort();
             }
-            m_chunkSize = 1; // really, C++?
             unsigned int i = 0;
             while (i < m_numThreads)
             {
@@ -79,29 +77,29 @@ namespace Nektar
                     std::cerr << "Exception while creating worker threads" << std::endl;
                     abort();
                 }
-        
                 i++;
             }
             m_threadActiveList[m_numThreads-1] = false;
+            m_masterThreadId = boost::this_thread::get_id();
         }
         
-        void ThreadManagerBoost::queueJobs(std::vector<ThreadJob*> &joblist)
+        void ThreadManagerBoost::QueueJobs(std::vector<ThreadJob*> &joblist)
         {
             std::vector<ThreadJob *>::iterator it;
             for (it=joblist.begin(); it<joblist.end(); ++it)
             {
-                queueJob(*it);
+                QueueJob(*it);
             }
         }
         
-        void ThreadManagerBoost::queueJob(ThreadJob *job)
+        void ThreadManagerBoost::QueueJob(ThreadJob *job)
         {
             Lock masterQueueLock(m_masterQueueMutex); // locks the queue
             m_masterQueue.push(job);
             m_masterQueueCondVar.notify_all(); // alert a waiting thread.
         }   // queue unlocked
         
-        bool ThreadManagerBoost::isWorking()
+        bool ThreadManagerBoost::IsWorking()
         {
             bool working = false;
             Lock masterActiveLock(m_masterActiveMutex);
@@ -112,41 +110,47 @@ namespace Nektar
             return working;
         }
         
-        void ThreadManagerBoost::setChunkSize(unsigned int chnk)
+        void ThreadManagerBoost::SetChunkSize(unsigned int chnk)
         {
             Lock masterQueueLock(m_masterQueueMutex); // locks the queue
-            m_chunkSize = std::max(chnk, static_cast<unsigned int>(1)); // really, C++?
+            m_chunkSize = std::max(chnk, 1U);
         }
 
-        void ThreadManagerBoost::setSchedType(SchedType s)
+        void ThreadManagerBoost::SetSchedType(SchedType s)
         {
             Lock masterQueueLock(m_masterQueueMutex); // locks the queue
             m_schedType = s;
         }
 
-        void ThreadManagerBoost::wait()
+        bool ThreadManagerBoost::InThread()
+        {
+        	boost::thread::id id = boost::this_thread::get_id();
+        	return (id != m_masterThreadId);
+        }
+
+        void ThreadManagerBoost::Wait()
         {
             bool working;
             Lock masterQueueLock(m_masterQueueMutex); // locks the queue
             unsigned int nw = m_numWorkers;
-            setNumWorkersImpl(nw+1);
-            working = isWorking();
+            SetNumWorkersImpl(nw+1);
+            working = IsWorking();
             while (!m_masterQueue.empty() || working)
             {
                 // while waiting, master queue is unlocked
                 m_masterQueueCondVar.wait(masterQueueLock);
                 // on exiting wait master queue is locked again
-                working = isWorking();
+                working = IsWorking();
             }
-            setNumWorkersImpl(nw-1);
+            SetNumWorkersImpl(nw-1);
         }
         
-        unsigned int ThreadManagerBoost::getNumWorkers()
+        unsigned int ThreadManagerBoost::GetNumWorkers()
         {
             return m_numWorkers+1;
         }
         
-        void ThreadManagerBoost::setNumWorkersImpl(const unsigned int num)
+        void ThreadManagerBoost::SetNumWorkersImpl(const unsigned int num)
         {
         	Lock masterActiveLock(m_masterActiveMutex); // locks the active
 
@@ -158,26 +162,25 @@ namespace Nektar
         	m_masterActiveCondVar.notify_all();
         } // Lock on active released here
 
-        void ThreadManagerBoost::setNumWorkers(const unsigned int num)
+        void ThreadManagerBoost::SetNumWorkers(unsigned int num)
         {
-        	unsigned int nw = num;
-        	nw = std::min(nw, m_numThreads);
-        	nw = std::max(nw, static_cast<unsigned int>(0));
-        	--nw;
-        	setNumWorkersImpl(nw);
+        	num = std::min(num, m_numThreads);
+        	num = std::max(num, static_cast<unsigned int>(0));
+        	--num;
+        	SetNumWorkersImpl(num);
         }
         
-        void ThreadManagerBoost::setNumWorkers()
+        void ThreadManagerBoost::SetNumWorkers()
         {
-            setNumWorkersImpl(m_numThreads-1);
+            SetNumWorkersImpl(m_numThreads-1);
         }
         
-        unsigned int ThreadManagerBoost::getMaxNumWorkers()
+        unsigned int ThreadManagerBoost::GetMaxNumWorkers()
         {
             return m_numThreads;
         }
         
-        ThreadWorkerBoost::ThreadWorkerBoost(ThreadManagerBoost *tm, int workerNum) :
+        ThreadWorkerBoost::ThreadWorkerBoost(ThreadManagerBoost *tm, unsigned int workerNum) :
                 m_threadManager(tm), m_workerQueue(),
                 m_keepgoing(true), m_threadNum(workerNum)
         {
@@ -192,9 +195,11 @@ namespace Nektar
                 std::cerr << "Warning: ThreadWorker: " << m_threadNum
                         << "destroyed while running!" << std::endl;
             }
+            // on destuction the m_workerQueue will be destructed and that
+            // will destruct any ThreadJobs still in there.
         }
         
-        void ThreadWorkerBoost::loadJobs()
+        void ThreadWorkerBoost::LoadJobs()
         {
             // Lock the master queue
             Lock masterQueueLock(m_threadManager->m_masterQueueMutex);
@@ -214,7 +219,7 @@ namespace Nektar
             }
             if (active && m_keepgoing)
             {
-                unsigned int numToLoad = getNumToLoad();
+                unsigned int numToLoad = GetNumToLoad();
                 while (m_workerQueue.size() < numToLoad
                         && !m_threadManager->m_masterQueue.empty())
                 {
@@ -228,7 +233,7 @@ namespace Nektar
         } // lock on master queue released here
 
 
-        unsigned int ThreadWorkerBoost::getNumToLoad()
+        unsigned int ThreadWorkerBoost::GetNumToLoad()
         {
             unsigned int numToLoad;
             switch (m_threadManager->m_schedType)
@@ -245,7 +250,7 @@ namespace Nektar
             return numToLoad;
         }
         
-        void ThreadWorkerBoost::waitForActive()
+        void ThreadWorkerBoost::WaitForActive()
         {
             Lock masterActiveLock(m_threadManager->m_masterActiveMutex);
         
@@ -258,26 +263,26 @@ namespace Nektar
             }
         }
         
-        void ThreadWorkerBoost::mainLoop()
+        void ThreadWorkerBoost::MainLoop()
         {
             while (m_keepgoing)
             {
-                waitForActive();
-                loadJobs();
-                runJobs();
+                WaitForActive();
+                LoadJobs();
+                RunJobs();
             }
         } // exiting here should terminate the thread
         
-        void ThreadWorkerBoost::runJobs()
+        void ThreadWorkerBoost::RunJobs()
         {
-            while (!m_workerQueue.empty())
+            while (!m_workerQueue.empty() && m_keepgoing)
             {
                 ThreadJob * tj;
                 try
                 {
                     tj = m_workerQueue.front();
-                    tj->setWorkerNum(m_threadNum);
-                    tj->run();
+                    tj->SetWorkerNum(m_threadNum);
+                    tj->Run();
                     m_workerQueue.pop();
                     delete tj;
                 } catch(...)

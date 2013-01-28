@@ -136,7 +136,7 @@ namespace Nektar
         	                  Array<OneD,        Array<OneD, NekDouble> >&outarray,
         	            const NekDouble time,
         	            int n, unsigned int index);
-        	void run();
+        	void Run();
         };
         friend class UpdateJob;
 

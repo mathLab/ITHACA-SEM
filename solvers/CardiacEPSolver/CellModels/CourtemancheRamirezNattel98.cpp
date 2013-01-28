@@ -526,7 +526,7 @@ namespace Nektar
     {
     }
 
-    void CourtemancheRamirezNattel98::UpdateJob::run()
+    void CourtemancheRamirezNattel98::UpdateJob::Run()
     {
     	cm.UpdateImpl(inarray, outarray, time, n, index);
     }
@@ -568,7 +568,7 @@ namespace Nektar
         NekDouble alpha, beta;
 
         Nektar::Thread::ThreadHandle Th(Nektar::Thread::e_dynamic, 1);
-        unsigned int nt = Th.getNumWorkers();
+        unsigned int nt = Th.GetNumWorkers();
 //        unsigned int numperw = n / nt;
         unsigned int numperw = 5000;
         unsigned int index = 0;
@@ -576,13 +576,13 @@ namespace Nektar
         while(index+numperw < m_nq)
         {
 //        	std::cerr << "UJob queued for " << numperw << " iterations starting at " << index << std::endl;
-        	Th.queueJob(new CourtemancheRamirezNattel98::UpdateJob(*this, inarray, outarray, time, numperw, index));
+        	Th.QueueJob(new CourtemancheRamirezNattel98::UpdateJob(*this, inarray, outarray, time, numperw, index));
         	n -= numperw;
         	index += numperw;
         }
 //    	std::cerr << "URest is " << n << " iterations starting at " << index << std::endl;
 
-        	Th.queueJob(new CourtemancheRamirezNattel98::UpdateJob(*this, inarray, outarray, time, n, index));
+        	Th.QueueJob(new CourtemancheRamirezNattel98::UpdateJob(*this, inarray, outarray, time, n, index));
 
     }
 

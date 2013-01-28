@@ -24,40 +24,62 @@ namespace Nektar
     	typedef boost::unique_lock<boost::mutex> Lock;
         
         class ThreadWorkerBoost;
-        
+
+        /**
+         * @brief Implementation of ThreadManager using Boost threads.
+         */
         class ThreadManagerBoost: public ThreadManager
         {
         
+        /**
+         * So the workers can access the master queue and locks.
+         */
         friend class ThreadWorkerBoost;
-        
-        public:
-    		ThreadManagerBoost(unsigned int numWorkers);
-    		~ThreadManagerBoost();
-        	void queueJobs(std::vector<ThreadJob*>& joblist);
-        	void queueJob(ThreadJob* job);
-        	unsigned int getNumWorkers();
-        	void setNumWorkers(const unsigned int num);
-        	void setNumWorkers();
-        	unsigned int getMaxNumWorkers();
-        	void wait();
-        	void setChunkSize(unsigned int chnk);
-        	void setSchedType(SchedType s);
 
-        	static ThreadManagerSharedPtr create(unsigned int numT)
+        public:
+        	/**
+        	 * @brief Constructs a ThreadManagerBoost.
+        	 * @param numWorkers The number of threads to start (including master thread).
+        	 * @note Do not use, use factory instead.
+        	 */
+    		ThreadManagerBoost(unsigned int numWorkers);
+    		/**
+    		 * @brief Shuts down threading.
+    		 *
+    		 * Terminates all running threads (they will finish their current job),
+    		 * releases resources and destructs.
+    		 */
+    		virtual ~ThreadManagerBoost();
+        	virtual void QueueJobs(std::vector<ThreadJob*>& joblist);
+        	virtual void QueueJob(ThreadJob* job);
+        	virtual unsigned int GetNumWorkers();
+        	virtual void SetNumWorkers(const unsigned int num);
+        	virtual void SetNumWorkers();
+        	virtual unsigned int GetMaxNumWorkers();
+        	virtual void Wait();
+        	virtual void SetChunkSize(unsigned int chnk);
+        	virtual void SetSchedType(SchedType s);
+        	virtual bool InThread();
+
+        	/**
+        	 * @brief Called by the factory method.
+        	 */
+        	static ThreadManagerSharedPtr Create(unsigned int numT)
         	{
-        		if (!instance)
+        		if (!m_instance)
         		{
-        			instance = MemoryManager<ThreadManagerBoost>::AllocateSharedPtr(numT);
-        			//instance = new ThreadManagerBoost(numT);
+        			m_instance = MemoryManager<ThreadManagerBoost>::AllocateSharedPtr(numT);
         		}
-        		return instance;
+        		return m_instance;
         	}
 
         private:
-        	ThreadManagerBoost(const ThreadManagerBoost&);
         	ThreadManagerBoost();
-        	bool isWorking();
-        	void setNumWorkersImpl(const unsigned int num);
+        	ThreadManagerBoost(const ThreadManagerBoost&);
+        	bool IsWorking();
+        	void SetNumWorkersImpl(const unsigned int num);
+
+        	// Member variables
         	const unsigned int m_numThreads;
         	unsigned int m_numWorkers;
         	std::queue<ThreadJob*> m_masterQueue;
@@ -67,6 +89,7 @@ namespace Nektar
         	boost::condition_variable m_masterActiveCondVar;
         	ThreadWorkerBoost** m_threadList;
         	boost::thread** m_threadThreadList;
+        	boost::thread::id m_masterThreadId;
         	bool* m_threadBusyList;
         	bool* m_threadActiveList;
         	unsigned int m_chunkSize;
@@ -74,25 +97,57 @@ namespace Nektar
         	static std::string className;
         };
 
-
+        /**
+         * @brief Implementation class for ThreadManagerBoost.
+         *
+         * Each instance of this class corresponds to a worker thread.
+         * Instances manage their own queue of jobs to run, grabbing new
+         * jobs from the master queue when it is exhausted.
+         *
+         */
         class ThreadWorkerBoost
         {
 
         public:
-        	ThreadWorkerBoost(ThreadManagerBoost *threadManager, int workerNum);
+        	/**
+        	 * @brief Constructor
+        	 * @param threadManager Pointer to the ThreadManagerBoost that is controlling this worker.
+        	 * @param workerNum Unique number from 0..(number_of_threads - 1)
+        	 *
+        	 * Called by the ThreadManagerBoost instance.
+        	 */
+        	ThreadWorkerBoost(ThreadManagerBoost *threadManager, unsigned int workerNum);
+        	/**
+        	 * @brief Destructor.
+        	 *
+        	 * Winds up this thread's execution.  Jobs in its queue are lost.
+        	 */
         	~ThreadWorkerBoost();
-        	void operator()() { mainLoop(); };
-        	unsigned int getWorkerNum() { return m_threadNum; };
-        	void stop() { m_keepgoing = false;} ;
+        	/**
+        	 * @brief This provides the interface that boost::thread uses to start the worker.
+        	 */
+        	void operator()() { MainLoop(); };
+        	/**
+        	 * @brief Return the index of the worker thread.
+        	 * @returns Index of worker thread, an integer between 0 and (number_of_threads - 1)
+        	 */
+        	unsigned int GetWorkerNum() { return m_threadNum; };
+        	/**
+        	 * @brief A signal to shut down.
+        	 *
+        	 * If this method is called the worker will shut down.  Used by
+        	 * the ThreadManagerBoost to stop threading.
+        	 */
+        	void Stop() { m_keepgoing = false;} ;
 
         private:
         	ThreadWorkerBoost();
         	ThreadWorkerBoost(const ThreadWorkerBoost &);
-        	void mainLoop();
-        	void loadJobs();
-        	inline unsigned int getNumToLoad();
-        	void waitForActive();
-        	void runJobs();
+        	void MainLoop();
+        	void LoadJobs();
+        	unsigned int GetNumToLoad();
+        	void WaitForActive();
+        	void RunJobs();
 
         	// Member variables
         	ThreadManagerBoost *m_threadManager;

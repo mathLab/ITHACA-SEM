@@ -1908,12 +1908,10 @@ namespace Nektar
          */
         void SessionReader::StartThreads()
         {
-            //void SessionReader::LoadParameter(const std::string &pName, int &pVar, const int &pDefault) const
             int nthreads;
             LoadParameter("NThreads", nthreads, 1);
             cerr << "Number of threads will be: " << nthreads << endl;
-            //m_threadManager = Nektar::Thread::ThreadManager::createThreadManager(nthreads, 4);
-                    m_threadManager = Thread::GetThreadManager().CreateInstance("ThreadManagerBoost", nthreads);
+            m_threadManager = Thread::GetThreadManager().CreateInstance("ThreadManagerBoost", nthreads);
 
         }
     }

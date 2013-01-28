@@ -210,7 +210,7 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
     {
     }
 
-    void run()
+    void Run()
     {
         DiagonalBlockMatrixMultiplyImpl(result, blockRowSt, blockRowEnd,
         		 lhs, rhs);
@@ -227,7 +227,7 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
         std::fill(result.begin(), result.end(), 0.0);
 
         Thread::ThreadHandle THandle;
-        unsigned int nt = THandle.getMaxNumWorkers();
+        unsigned int nt = THandle.GetMaxNumWorkers();
         unsigned int numPerThread = numberOfBlockRows / nt;
         numPerThread = 10;
         unsigned int blockRow = 0;
@@ -236,7 +236,7 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
             //for(unsigned int thrd = 1; thrd < nt; thrd++)
             while (blockRow+numPerThread < numberOfBlockRows)
             {
-                THandle.queueJob(new MultiplyJob<LhsInnerMatrixType>(result, blockRow,
+                THandle.QueueJob(new MultiplyJob<LhsInnerMatrixType>(result, blockRow,
                      blockRow+numPerThread, lhs, rhs));
                 blockRow += numPerThread;
             }
@@ -244,10 +244,10 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
 
         //DiagonalBlockMatrixMultiplyImpl(result, blockRow, numberOfBlockRows,
          //                               BlockRowCache, BlockColCache, lhs, rhs);
-                THandle.queueJob(new MultiplyJob<LhsInnerMatrixType>(result, blockRow,
+                THandle.QueueJob(new MultiplyJob<LhsInnerMatrixType>(result, blockRow,
                      numberOfBlockRows, lhs, rhs));
 
-        THandle.wait();
+        THandle.Wait();
 
     }
 
@@ -281,15 +281,9 @@ class MultiplyJob : public Nektar::Thread::ThreadJob
             {
                 continue;
             }
-
             double* resultWrapper = result_ptr + rowIndex;
             const double* rhsWrapper = rhs_ptr + columnIndex;
-            //unsigned int i = 1000;
-            //while (i > 0)
-            //{
-                Multiply(resultWrapper, *block, rhsWrapper);
-            //    i--;
-            //}
+            Multiply(resultWrapper, *block, rhsWrapper);
         }
     }
 

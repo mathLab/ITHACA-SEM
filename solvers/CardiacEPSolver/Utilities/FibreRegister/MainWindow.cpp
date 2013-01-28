@@ -8,6 +8,7 @@
 #include "vtkEventQtSlotConnect.h"
 #include "vtkPolyDataWriter.h"
 #include <vtkLookupTable.h>
+#include <vtkFloatArray.h>
 
 #include "MainWindow.h"
 
@@ -33,8 +34,14 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourceFilterSmooth->SetNumberOfIterations(200);
     mSourceFilterSmooth->SetInput(mSourceData);
     
+    mSourceNormals = vtkPolyDataNormals::New();
+    mSourceNormals->SetInputConnection(mSourceFilterSmooth->GetOutputPort());
+    mSourceNormals->SetFeatureAngle(60.0);
+    mSourceNormals->ComputeCellNormalsOff();
+    mSourceNormals->ComputePointNormalsOn();
+
     mSourceFilterDepthSort = vtkDepthSortPolyData::New();
-    mSourceFilterDepthSort->SetInputConnection(mSourceFilterSmooth->GetOutputPort());
+    mSourceFilterDepthSort->SetInputConnection(mSourceNormals->GetOutputPort());
     mSourceFilterDepthSort->SetDirectionToBackToFront();
     mSourceFilterDepthSort->SetVector(1, 1, 1);
     mSourceFilterDepthSort->SetCamera(mSourceRenderer->GetActiveCamera());
@@ -227,6 +234,9 @@ void MainWindow::Draw() {
     mFileLoadButton = new QPushButton(tr("Load"));
     connect(mFileLoadButton, SIGNAL(clicked()), this, SLOT(Load()));
     
+    mFileExportSourceButton = new QPushButton(tr("Export Source..."));
+    connect(mFileExportSourceButton, SIGNAL(clicked()), this, SLOT(ExportSource()));
+
     mFileGrid = new QGridLayout;
     mFileGrid->addWidget(vFileSourceLabel, 0, 0);
     mFileGrid->addWidget(vFileTargetLabel, 1, 0);
@@ -235,6 +245,7 @@ void MainWindow::Draw() {
     mFileGrid->addWidget(mFileSourceBrowse, 0, 2);
     mFileGrid->addWidget(mFileTargetBrowse, 1, 2);
     mFileGrid->addWidget(mFileLoadButton, 2, 1); //Shifted downwards
+    mFileGrid->addWidget(mFileExportSourceButton, 3, 1);
     
     mFileBox = new QGroupBox(tr("Files"));
     mFileBox->setLayout(mFileGrid);
@@ -457,16 +468,22 @@ void MainWindow::HeightLabelsSelect(bool value)
 }
 
 void MainWindow::Update() {
-    // Height Interpolation
+    mSourceData->GetPointData()->RemoveArray("HeightSurface");
+    mSourceData->GetPointData()->RemoveArray("Gradient");
+
     int vInterpDistance = mHeightInterpRange->value();
     vtkDoubleArray* vSurfaceData=InterpSurface(mSourceHeightPointData, mSourceData, vInterpDistance);
-    mSourceData->GetPointData()->RemoveArray("HeightSurface");
     mSourceData->GetPointData()->SetScalars(vSurfaceData);
+
+    ComputeFibreDirection();
+
     mSourceData->Modified();
+
     mSourceLookupTable->SetTableRange(0, HEIGHT_MAX);
     mSourceLookupTable->Build();
     mSourceMapper->SetScalarRange(0, HEIGHT_MAX);
     mSourceMapper->SetLookupTable(mSourceLookupTable);
+
 
     mSourceVtk->update();
     mTargetVtk->update();
@@ -628,6 +645,57 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
     Update();
 }
 
+
+void MainWindow::ComputeFibreDirection()
+{
+    int nPts = mSourceData->GetNumberOfPoints();
+    double b[3];
+    double a[3], p[3];
+
+    vtkDoubleArray* vGradientData = vtkDoubleArray::New();
+    vGradientData->SetName("Gradient");
+    vGradientData->SetNumberOfComponents(3);
+    vGradientData->SetNumberOfTuples(nPts);
+    vtkDoubleArray* vFibreData = vtkDoubleArray::New();
+    vFibreData->SetName("FibreDirection");
+    vFibreData->SetNumberOfComponents(3);
+    vFibreData->SetNumberOfTuples(nPts);
+
+    if (mSourceHeightPointData->GetNumberOfPoints() < 4)
+    {
+        cout << "Not enough points to do direction." << endl;
+    }
+    else
+    {
+        vtkGradientFilter* vGradient = vtkGradientFilter::New();
+        vGradient->SetInput(mSourceData);
+        vGradient->SetInputScalars(vtkDataObject::FIELD_ASSOCIATION_POINTS, "HeightSurface");
+        vGradient->SetResultArrayName("Gradient");
+        vGradient->Update();
+        vGradientData->DeepCopy(vtkDoubleArray::SafeDownCast(vGradient->GetOutput()->GetPointData()->GetVectors("Gradient")));
+
+        vtkDoubleArray* grad = vtkDoubleArray::SafeDownCast(vGradient->GetOutput()->GetPointData()->GetVectors("Gradient"));
+        vtkFloatArray* norm = vtkFloatArray::SafeDownCast(mSourceNormals->GetOutput()->GetPointData()->GetNormals());
+        if (!grad || !norm)
+        {
+            cout << "One of the gradient or normals are not defined" << endl;
+        }
+        else
+        {
+            for (unsigned int i = 0; i < nPts; ++i)
+            {
+                grad->GetTupleValue(i, a);
+                norm->GetTuple(i, b);
+                vtkMath::Cross(a, b, p);
+                vFibreData->SetTuple(i, p);
+            }
+        }
+    }
+
+    mSourceData->GetPointData()->AddArray(vGradientData);
+    mSourceData->GetPointData()->AddArray(vFibreData);
+}
+
 vtkPoints* MainWindow::AddPoint(vtkPoints* array, double* p)
 {
     double q[3];
@@ -661,6 +729,16 @@ vtkDoubleArray* MainWindow::AddScalar(vtkDataArray* array, double v)
     }
     vVals->SetTuple1(nPts, v);
     return vVals;
+}
+
+void MainWindow::ExportSource() {
+    QString file = QFileDialog::getSaveFileName(this,
+                                                      tr("Export Source"), "", tr("Geometry (*.vtk)"));
+
+    vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+    writer->SetInput(mSourceData);
+    writer->SetFileName(file.toStdString().c_str());
+    writer->Write();
 }
 
 void MainWindow::ExportTargetPoints() {

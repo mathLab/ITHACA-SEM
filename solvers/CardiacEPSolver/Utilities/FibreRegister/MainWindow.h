@@ -28,6 +28,8 @@
 #include <vtkSelectVisiblePoints.h>
 #include <vtkLabeledDataMapper.h>
 #include <vtkContourFilter.h>
+#include <vtkGradientFilter.h>
+#include <vtkPolyDataNormals.h>
 //#include <vtkLookupTable.h>
 //#include <vtkColorTransferFunction.h>
 //#include <vtkScalarBarActor.h>
@@ -67,6 +69,7 @@ class MainWindow : public QMainWindow
     
         void CreateSourcePoint(vtkObject*, unsigned long, void*, void*, vtkCommand*);
 
+        void ExportSource();
         void ExportTargetPoints();
         void ExportHeightPoints();
         void UndoLastLandmarkPoint();
@@ -85,6 +88,7 @@ class MainWindow : public QMainWindow
         QLineEdit* mFileTargetEditBox;
         QPushButton* mFileTargetBrowse;
         QPushButton* mFileLoadButton;
+        QPushButton* mFileExportSourceButton;
 
         QGroupBox* mLandmarkBox;
         QGridLayout* mLandmarkGrid;
@@ -110,6 +114,7 @@ class MainWindow : public QMainWindow
         vtkPolyData* mSourceData;
         vtkLookupTable* mSourceLookupTable;
         vtkSmoothPolyDataFilter* mSourceFilterSmooth;
+        vtkPolyDataNormals* mSourceNormals;
         vtkDepthSortPolyData* mSourceFilterDepthSort;
         vtkPolyDataMapper* mSourceMapper;
         vtkActor* mSourceActor;
@@ -149,6 +154,10 @@ class MainWindow : public QMainWindow
         vtkPolyDataMapper* mSourceHeightContourMapper;
         vtkActor* mSourceHeightContourActor;
 
+        // Source height gradient
+        vtkPolyDataMapper* mSourceHeightVectorMapper;
+        vtkActor* mSourceHeightVectorActor;
+
         // Target Points pipeline
         vtkPolyData* mTargetPointsData;
         vtkSphereSource* mTargetSphere;
@@ -167,7 +176,8 @@ class MainWindow : public QMainWindow
         void Draw();
 
         vtkDoubleArray* InterpSurface(vtkPolyData* pPointData, vtkPolyData* pSurface, int pInterpDistance);
-    
+        void ComputeFibreDirection();
+
         vtkPoints* AddPoint(vtkPoints* array, double* p);
         vtkDoubleArray* AddScalar(vtkDataArray* array, double v);
 

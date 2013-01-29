@@ -36,6 +36,7 @@
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
+#include <LocalRegions/HexExp.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <solvers/ADRSolver/EquationSystems/UnsteadyDiffusion.cpp>
@@ -948,6 +949,12 @@ namespace Nektar
             {
                 minLength = sqrt(Area);
             }
+            else if (boost::dynamic_pointer_cast<LocalRegions::HexExp>(
+                         m_fields[0]->GetExp(n)))
+            {
+                minLength = sqrt(Area);
+            }
+
             
             tstep[n] = m_cflSafetyFactor * alpha * minLength 
                      / (stdVelocity[n] * cLambda 

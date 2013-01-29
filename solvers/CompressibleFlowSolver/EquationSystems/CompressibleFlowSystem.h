@@ -88,6 +88,7 @@ namespace Nektar
       
     protected:
         SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
+        SolverUtils::RiemannSolverSharedPtr m_riemannSolverLDG;
         SolverUtils::AdvectionSharedPtr     m_advection;
         SolverUtils::DiffusionSharedPtr     m_diffusion;
         Array<OneD, NekDouble>              m_velLoc;

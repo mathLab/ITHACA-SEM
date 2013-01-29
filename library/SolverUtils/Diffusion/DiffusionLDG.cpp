@@ -275,7 +275,9 @@ namespace Nektar
                         GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
                         Vmath::Vcopy(Nfps, 
-                                     &BDphysics[id1], 1, 
+                                     &(fields[var]->
+                                       GetBndCondExpansions()[i]->
+                                       UpdatePhys())[id1], 1, 
                                      &penaltyflux[id2], 1);
                     }
                     
@@ -375,7 +377,7 @@ namespace Nektar
                     // Imposing weak boundary condition with flux
                     if (fields[0]->GetBndCondExpansions().num_elements())
                     {
-                        WeakPenaltyforVector(fields, 
+                        v_WeakPenaltyforVector(fields, 
                                              i, j, 
                                              qfield[j][i], 
                                              qfluxtemp, 
@@ -479,7 +481,9 @@ namespace Nektar
                     {
                         Vmath::Vmul(Nfps,
                                     &m_traceNormals[dir][id2], 1, 
-                                    &BDphysics[id1], 1, 
+                                    &(fields[var]->
+                                      GetBndCondExpansions()[i]->
+                                      UpdatePhys())[id1], 1, 
                                     &penaltyflux[id2], 1);
                     }
                 }

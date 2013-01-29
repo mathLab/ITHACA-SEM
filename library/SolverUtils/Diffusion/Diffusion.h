@@ -76,33 +76,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
             
-            SOLVER_UTILS_EXPORT void NumFluxforScalar(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-                const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&uflux);
-            
-            SOLVER_UTILS_EXPORT void NumFluxforVector(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-                const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
-                      Array<OneD, Array<OneD, NekDouble> >              &qflux);
-            
-            SOLVER_UTILS_EXPORT void WeakPenaltyforScalar(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const Array<OneD, const NekDouble>                &ufield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          time);
-            
-            SOLVER_UTILS_EXPORT void WeakPenaltyforVector(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const int                                          dir,
-                const Array<OneD, const NekDouble>                &qfield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          C11,
-                NekDouble                                          time);
-            
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
             {
@@ -132,45 +105,6 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray)=0;
-            
-            virtual void v_NumFluxforScalar(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-                const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&uflux)
-            {
-                
-            };
-            
-            virtual void v_WeakPenaltyforScalar(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const Array<OneD, const NekDouble>                &ufield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          time)
-            {
-                
-            };
-            
-            virtual void v_NumFluxforVector(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-                const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
-                      Array<OneD, Array<OneD, NekDouble> >              &qflux)
-            {
-                
-            };
-                        
-            virtual void v_WeakPenaltyforVector(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const int                                          dir,
-                const Array<OneD, const NekDouble>                &qfield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          C11,
-                NekDouble                                          time)
-            {
-                
-            };
                         
             DiffusionFluxVecCB     m_fluxVector;
             DiffusionFluxVecCBNS   m_fluxVectorNS;

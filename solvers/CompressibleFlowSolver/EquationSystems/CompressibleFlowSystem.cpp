@@ -128,7 +128,7 @@ namespace Nektar
                 string advName;
                 string diffName;
                 string riemName;
-                
+
                 m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
                 m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
 
@@ -148,6 +148,9 @@ namespace Nektar
                 
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
                                             .CreateInstance(riemName);
+                
+                m_riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()
+                                                .CreateInstance("Upwind");
 
                 m_riemannSolver->AddParam (
                                     "gamma",  
@@ -159,9 +162,21 @@ namespace Nektar
                                     "N",
                                     &CompressibleFlowSystem::GetNormals, this);
                 
-                m_advection->SetRiemannSolver(m_riemannSolver);
-                m_advection->InitObject      (m_session, m_fields);
-                m_diffusion->InitObject      (m_session);
+                m_riemannSolverLDG->AddParam (
+                                    "gamma",  
+                                    &CompressibleFlowSystem::GetGamma,   this);
+                m_riemannSolverLDG->AddScalar(
+                                    "velLoc", 
+                                    &CompressibleFlowSystem::GetVelLoc,  this);
+                m_riemannSolverLDG->AddVector(
+                                    "N",
+                                    &CompressibleFlowSystem::GetNormals, this);
+                
+                
+                m_advection->SetRiemannSolver   (m_riemannSolver);
+                m_diffusion->SetRiemannSolver   (m_riemannSolverLDG);
+                m_advection->InitObject         (m_session, m_fields);
+                m_diffusion->InitObject         (m_session);
                 break;
             }
             default:
@@ -212,7 +227,7 @@ namespace Nektar
         // user defined boundaries into account
         int e, id1, id2, npts;
         
-        for(e = 0; e < m_fields[0]->
+        for (e = 0; e < m_fields[0]->
             GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
@@ -225,7 +240,7 @@ namespace Nektar
             
             // For 2D/3D, define: v* = v - 2(v.n)n
             
-            Array<OneD,NekDouble> tmp(npts,0.0);
+            Array<OneD,NekDouble> tmp(npts, 0.0);
             
             // Calculate (v.n)
             for (i = 0; i < m_expdim; ++i)
@@ -244,7 +259,6 @@ namespace Nektar
                         &tmp[0],1);
             
             // Calculate v* = v - 2.0(v.n)n
-            
             for (i = 0; i < m_expdim; ++i)
             {
                 Vmath::Vvtvp(npts,
@@ -289,7 +303,7 @@ namespace Nektar
         // user defined boundaries into account
         int e, id1, id2, npts;
         
-        for(e = 0; e < m_fields[0]->
+        for (e = 0; e < m_fields[0]->
             GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
@@ -299,83 +313,10 @@ namespace Nektar
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                 m_fields[0]->GetTraceMap()->
                     GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-            /*
-            switch(m_expdim)
-            {
-                // Special case for 2D
-                case 2:
-                {
-                    Array<OneD, NekDouble> tmp_n(npts);
-                    Array<OneD, NekDouble> tmp_t(npts);
-                    
-                    Vmath::Vmul(npts, 
-                                &Fwd[1][id2], 1, 
-                                &m_traceNormals[0][id2], 1, 
-                                &tmp_n[0], 1);
-                    
-                    Vmath::Vvtvp(npts, 
-                                 &Fwd[2][id2], 1, 
-                                 &m_traceNormals[1][id2], 1, 
-                                 &tmp_n[0], 1, 
-                                 &tmp_n[0], 1);
-                    
-                    Vmath::Vmul(npts, 
-                                &Fwd[1][id2], 1, 
-                                &m_traceNormals[1][id2], 1, 
-                                &tmp_t[0], 1);
-                    
-                    Vmath::Vvtvm(npts, 
-                                 &Fwd[2][id2], 1, 
-                                 &m_traceNormals[0][id2], 1, 
-                                 &tmp_t[0], 1, 
-                                 &tmp_t[0], 1);
-                    
-                    // negate fluxes
-                    Vmath::Neg(npts, tmp_n, 1);
-                    Vmath::Neg(npts, tmp_t, 1);
-                    
-                    // rotate back to Cartesian
-                    Vmath::Vmul(npts, 
-                                &tmp_t[0], 1, 
-                                &m_traceNormals[1][id2], 1, 
-                                &Fwd[1][id2], 1);
-                    
-                    Vmath::Vvtvm(npts,
-                                 &tmp_n[0], 1, 
-                                 &m_traceNormals[0][id2], 1, 
-                                 &Fwd[1][id2], 1, 
-                                 &Fwd[1][id2], 1);
-                    
-                    Vmath::Vmul(npts, 
-                                &tmp_t[0], 1, 
-                                &m_traceNormals[0][id2], 1, 
-                                &Fwd[2][id2], 1);
-                    
-                    Vmath::Vvtvp(npts, 
-                                 &tmp_n[0], 1, 
-                                 &m_traceNormals[1][id2], 1, 
-                                 &Fwd[2][id2], 1, 
-                                 &Fwd[2][id2], 1);
-                    break;
-                }
-                    
-                // For 1D/3D, define: v* = v - (v.n)n so that v*.n = 0
-                case 1:
-                case 3:
-                {
-                    ASSERTL0(false, "1D/3D WallViscous boundary conditions "
-                                    "not implemented yet")
-                    break;
-                }
-                default:
-                    ASSERTL0(false, "Illegal expansion dimension");
-                    break;
-            }
-            */
             
             for (i = 0; i < m_expdim ; i++)
             {
-                Vmath::Neg(npts,&Fwd[i+1][id2],1);
+                Vmath::Neg(npts,&Fwd[i+1][id2], 1);
             }
             
             // copy boundary adjusted values into the boundary expansion

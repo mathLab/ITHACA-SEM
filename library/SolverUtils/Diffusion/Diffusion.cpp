@@ -61,45 +61,5 @@ namespace Nektar
         {
             v_Diffuse(nConvectiveFields, fields, inarray, outarray);
         }
-        
-        void Diffusion::NumFluxforScalar(
-            const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-            const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&uflux)
-        {
-            v_NumFluxforScalar(fields, ufield, uflux);
-        }
-        
-        void Diffusion::WeakPenaltyforScalar(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const int                                          var,
-            const Array<OneD, const NekDouble>                &ufield,
-                  Array<OneD,       NekDouble>                &penaltyflux,
-            NekDouble                                          time)
-        {
-            v_WeakPenaltyforScalar(fields, var, ufield, penaltyflux, time);
-        }
-        
-        void Diffusion::NumFluxforVector(
-            const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-            const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
-                  Array<OneD, Array<OneD, NekDouble> >              &qflux)
-        {
-            v_NumFluxforVector(fields, ufield, qfield, qflux);
-        }
-                
-        void Diffusion::WeakPenaltyforVector(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const int                                          var,
-            const int                                          dir,
-            const Array<OneD, const NekDouble>                &qfield,
-                  Array<OneD,       NekDouble>                &penaltyflux,
-            NekDouble                                          C11,
-            NekDouble                                          time)
-        {
-            v_WeakPenaltyforVector(fields, var, dir, qfield, 
-                                   penaltyflux, C11, time);
-        }
     }
 }

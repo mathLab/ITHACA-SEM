@@ -755,13 +755,13 @@ namespace Nektar
 			
 			
             //Extract data in fielddata into the m_coeffs_list for the 3D stability analysis (base flow is 2D)
-            void ExtractDataToCoeffs(
-                                     SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                     std::vector<NekDouble> &fielddata,
-                                     std::string &field,
-                                     bool BaseFlow3D)
+            MULTI_REGIONS_EXPORT void ExtractDataToCoeffs(
+                                       SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                       std::vector<NekDouble> &fielddata,
+                                       std::string &field,
+                                       Array<OneD, NekDouble> &coeffs)
             {
-                v_ExtractDataToCoeffs(fielddef,fielddata,field,BaseFlow3D);
+                v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
             }
 			
 

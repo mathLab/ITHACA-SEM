@@ -2090,16 +2090,6 @@ namespace Nektar
 
         }
         
-        /// Extract the data in fielddata into the coeffs
-        void ExpList::ExtractDataToCoeffs(
-                                   SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                   std::vector<NekDouble> &fielddata,
-                                   std::string &field,
-                                   Array<OneD, NekDouble> &coeffs)
-        {
-            v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
-        }
-
 
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {     	

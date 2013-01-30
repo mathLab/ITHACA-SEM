@@ -138,10 +138,14 @@ namespace Nektar
                     if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eNoUserDefined)
                     {
                         if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent)
-                        {                     	     
-                            if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eI)
-                            {  	 	 
-                                ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+                        {
+                            if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eRadiation)
+                            {
+                                if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eI)
+                                {
+                                    SpatialDomains::BndUserDefinedType btype = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
+                                    ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+                                }
                             }
                         }
                     }
@@ -175,22 +179,71 @@ namespace Nektar
             }
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
-		
-		if(m_equationType == eUnsteadyStokes)
-		{
-			std::string vConvectiveType = "NoAdvection";
-			m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
-		}
 	
-#if 0 // Not required if building on an UnsteadySystem rather than an EquationSystem
-        // Set up filters
-        LibUtilities::FilterMap::const_iterator x;
-        LibUtilities::FilterMap f = m_session->GetFilters();
-        for (x = f.begin(); x != f.end(); ++x)
+        if(m_equationType == eUnsteadyStokes)
         {
-            m_filters.push_back(SolverUtils::GetFilterFactory().CreateInstance(x->first, m_session, x->second));
+            std::string vConvectiveType = "NoAdvection";
+            m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
-#endif
+        
+        // check to see if any Robin boundary conditions and if so set
+        // up m_field to boundary condition maps;
+        m_fieldsBCToElmtID  = Array<OneD, Array<OneD, int> >(m_fields.num_elements());
+        m_fieldsBCToTraceID = Array<OneD, Array<OneD, int> >(m_fields.num_elements());
+        m_fieldsRadiationFactor  = Array<OneD, Array<OneD, NekDouble> > (m_fields.num_elements());
+        
+        for (i = 0; i < m_fields.num_elements(); ++i)
+        {
+            bool Set = false;
+
+            Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
+            Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
+            int radpts = 0;
+            
+            BndConds = m_fields[i]->GetBndConditions();
+            BndExp   = m_fields[i]->GetBndCondExpansions();
+            for(int n = 0; n < BndConds.num_elements(); ++n)
+            {	
+                if(BndConds[n]->GetUserDefined() == SpatialDomains::eRadiation)
+                {
+                    if(Set == false)
+                    {
+                        m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
+                        Set = true;
+                    }
+                    radpts += BndExp[n]->GetTotPoints();
+                }
+            }
+
+            m_fieldsRadiationFactor[i] = Array<OneD, NekDouble>(radpts);
+
+            radpts = 0; // reset to use as a counter
+
+            for(int n = 0; n < BndConds.num_elements(); ++n)
+            {	
+                if(BndConds[n]->GetUserDefined() == SpatialDomains::eRadiation)
+                {
+                    
+                    int npoints    = BndExp[n]->GetNpoints();
+                    Array<OneD, NekDouble> x0(npoints,0.0);
+                    Array<OneD, NekDouble> x1(npoints,0.0);
+                    Array<OneD, NekDouble> x2(npoints,0.0);
+                    Array<OneD, NekDouble> tmpArray;
+
+                    BndExp[n]->GetCoords(x0,x1,x2);
+                    
+                    LibUtilities::Equation coeff = 
+                        boost::static_pointer_cast<
+                    SpatialDomains::RobinBoundaryCondition
+                        >(BndConds[n])->m_robinPrimitiveCoeff;
+                    
+                    coeff.Evaluate(x0,x1,x2,m_time, 
+                                   tmpArray = m_fieldsRadiationFactor[i]+ radpts);
+                    //Vmath::Neg(npoints,tmpArray = m_fieldsRadiationFactor[i]+ radpts,1);
+                    radpts += npoints;
+                }
+            }
+        }
     }
 
     IncNavierStokes::~IncNavierStokes(void)
@@ -820,19 +873,86 @@ namespace Nektar
     void IncNavierStokes::SetBoundaryConditions(NekDouble time)
     {
         int  nvariables = m_fields.num_elements();
-	
+        SpatialDomains::BndUserDefinedType BndType;
+        
         for (int i = 0; i < nvariables; ++i)
         {
             for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
             {	
-                if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eTimeDependent)
+                if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
+                   SpatialDomains::eTimeDependent)
                 {
                     m_fields[i]->EvaluateBoundaryConditions(time);
                 }
+
             }
+
+            SetRadiationBoundaryForcing(i); // Set Radiation conditions if required. 
         }
     }
     
+    // Probably should be pushed back into ContField? 
+    void IncNavierStokes::SetRadiationBoundaryForcing(int fieldid)
+    {
+        int  i,n;
+        
+        Array<OneD, const SpatialDomains::BoundaryConditionShPtr > BndConds;
+        Array<OneD, MultiRegions::ExpListSharedPtr>  BndExp;
+        
+        
+        BndConds = m_fields[fieldid]->GetBndConditions();
+        BndExp   = m_fields[fieldid]->GetBndCondExpansions();
+        
+        StdRegions::StdExpansionSharedPtr   elmt;
+        StdRegions::StdExpansion1DSharedPtr Bc;
+        
+        int cnt;
+        int elmtid,nq,offset, boundary;
+        Array<OneD, NekDouble> Bvals, U;
+        int cnt1 = 0;
+
+        for(cnt = n = 0; n < BndConds.num_elements(); ++n)
+        {            
+            SpatialDomains::BndUserDefinedType type = BndConds[n]->GetUserDefined(); 
+            
+            if((BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin)&&(type == SpatialDomains::eRadiation))
+            {
+                for(i = 0; i < BndExp[n]->GetExpSize(); ++i,cnt++)
+                {
+                    elmtid = m_fieldsBCToElmtID[fieldid][cnt];
+                    elmt   = m_fields[fieldid]->GetExp(elmtid);
+                    offset = m_fields[fieldid]->GetPhys_Offset(elmtid);
+                    
+                    U = m_fields[fieldid]->UpdatePhys() + offset;
+                    
+                    Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (BndExp[n]->GetExp(i));
+                    
+                    boundary = m_fieldsBCToTraceID[fieldid][cnt];
+                    
+                    // Get edge values and put into ubc
+                    nq = Bc->GetTotPoints();
+                    Array<OneD, NekDouble> ubc(nq);
+                    elmt->GetEdgePhysVals(boundary,Bc,U,ubc);
+                    
+                    Vmath::Vmul(nq,&m_fieldsRadiationFactor[fieldid][cnt1 + BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
+
+                    Bvals = BndExp[n]->UpdateCoeffs()+BndExp[n]->GetCoeff_Offset(i);
+
+                    Bc->IProductWRTBase(ubc,Bvals); 
+                }
+                cnt1 += BndExp[n]->GetTotPoints();
+            }
+            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh) 
+            {
+                cnt += BndExp[n]->GetExpSize();
+            }
+            else
+            {
+                ASSERTL0(false,"Unknown USERDEFINEDTYPE in pressure boundary condition");
+            }
+        }
+    }
+
     // Decide if at a steady state if the discrerte L2 sum of the
     // coefficients is the same as the previous step to within the
     // tolerance m_steadyStateTol;
@@ -840,7 +960,7 @@ namespace Nektar
     {
         static NekDouble previousL2 = 0.0;
         bool returnval = false;
-
+        
         NekDouble L2 = 0.0;
         
         // calculate L2 discrete summation 

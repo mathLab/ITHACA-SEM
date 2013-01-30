@@ -175,14 +175,15 @@ namespace Nektar
 
         EquationType  m_equationType;  ///< equation type;
         
+        
+        Array<OneD, Array<OneD, int> > m_fieldsBCToElmtID;  // Mapping from BCs to Elmt IDs
+        Array<OneD, Array<OneD, int> > m_fieldsBCToTraceID; // Mapping from BCs to Elmt Edge IDs
+        Array<OneD, Array<OneD, NekDouble> > m_fieldsRadiationFactor; // RHS Factor for Radiation Condition
 
         // Time integration classes
         LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
         Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> m_integrationScheme;
         int m_intSteps;  ///< Number of time integration steps AND  Order of extrapolation for pressure boundary conditions.         
-
-        // not required if building from an UnsteadySystem
-        //  std::vector<SolverUtils::FilterSharedPtr>                    m_filters;
 
         /**
          * Constructor.
@@ -210,6 +211,9 @@ namespace Nektar
         //time dependent boundary conditions updating
 	
         void SetBoundaryConditions(NekDouble time);
+
+        //Set Radiation forcing term 
+        void SetRadiationBoundaryForcing(int fieldid);
 
         // evaluate steady state
         bool CalcSteadyState(void);

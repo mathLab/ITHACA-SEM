@@ -91,7 +91,7 @@ namespace Nektar
 
 	private:
 
-	    void BlockPreconditioner(void);
+	    void BlockPreconditioner2D(void);
 
             virtual void v_InitObject();
 

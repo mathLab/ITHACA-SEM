@@ -40,6 +40,8 @@
 #include <StdRegions/StdExpansion.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>  // for Array
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/Communication/GsLib.hpp>
 
 #include <boost/shared_ptr.hpp>
 
@@ -122,6 +124,8 @@ namespace Nektar
 
             virtual DNekScalBlkMatSharedPtr
                 v_TransformedSchurCompl(int offset);
+
+            LibUtilities::CommSharedPtr m_comm;
 
 	private:
 

@@ -73,7 +73,7 @@ namespace Nektar
 
         void PreconditionerBlock::v_InitObject()
         {
-            BlockPreconditioner();
+            BlockPreconditioner2D();
 	}
 
 
@@ -88,7 +88,7 @@ namespace Nektar
 	 * where \f$\mathbf{S}_{1}\f$ is the local schur complement matrix for
 	 * each element.
 	 */
-        void PreconditionerBlock::BlockPreconditioner()
+        void PreconditionerBlock::BlockPreconditioner2D()
         {
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();

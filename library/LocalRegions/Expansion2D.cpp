@@ -1036,7 +1036,7 @@ namespace Nektar
             Array<OneD,int> sign;
             
             StdRegions::VarCoeffMap varcoeffs;
-            varcoeffs[StdRegions::eVarCoeffPrimative] = primCoeffs;
+            varcoeffs[StdRegions::eVarCoeffMass] = primCoeffs;
 
             LocalRegions::MatrixKey mkey(StdRegions::eMass,StdRegions::eSegment, *edgeExp, StdRegions::NullConstFactorMap, varcoeffs);
             DNekScalMat &edgemat = *edgeExp->GetLocMatrix(mkey);
@@ -1158,7 +1158,7 @@ namespace Nektar
             Array<OneD,int> sign;
 
             StdRegions::VarCoeffMap varcoeffs;
-            varcoeffs[StdRegions::eVarCoeffPrimative] = primCoeffs;
+            varcoeffs[StdRegions::eVarCoeffMass] = primCoeffs;
 
             LocalRegions::MatrixKey mkey(StdRegions::eMass,StdRegions::eSegment, *edgeExp, StdRegions::NullConstFactorMap, varcoeffs);
             DNekScalMat &edgemat = *edgeExp->GetLocMatrix(mkey);

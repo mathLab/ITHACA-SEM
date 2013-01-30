@@ -31,6 +31,7 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\t Chebyshev  = 10\n");
     fprintf(stderr,"\t Monomial   = 11\n");
     fprintf(stderr,"\t FourierSingleMode   = 12\n");
+    fprintf(stderr,"\t Gauss Lagrange   = 15\n");
 
  
     fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
@@ -81,7 +82,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		Qtype = LibUtilities::eGaussLobattoLegendre; 
+            Qtype = LibUtilities::eGaussLobattoLegendre; 
 	}
 
 	

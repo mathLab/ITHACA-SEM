@@ -75,11 +75,12 @@ namespace Nektar
     {
         // use dimension of Velocity vector to dictate dimension of operation
         int ndim       = pV.num_elements();
+        Array<OneD, Array<OneD, NekDouble> > AdvVel   (pV.num_elements());
+        Array<OneD, NekDouble> Outarray;
         
-        // ToDo: here we should add a check that V has right dimension
 	
         int nPointsTot = pFields[0]->GetNpoints();
-        Array<OneD, NekDouble> grad0,grad1,grad2;
+        Array<OneD, NekDouble> grad0,grad1,grad2,wkSp;
 		
         NekDouble OneDptscale = 1.5; // factor to rescale 1d points in dealiasing 
 
@@ -152,14 +153,15 @@ namespace Nektar
             }
             break;	 
         case 3:
-            grad1 = Array<OneD, NekDouble> (nPointsTot);
-            grad2 = Array<OneD, NekDouble> (nPointsTot);
-            pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
+            grad1 = Array<OneD, NekDouble> (pFields[0]->GetNpoints());
+            grad2 = Array<OneD, NekDouble> (pFields[0]->GetNpoints());
             
-            if(m_dealiasing == true && pFields[0]->GetWaveSpace() == false)
+            if(pFields[0]->GetWaveSpace() == false && m_dealiasing == true )
             {
-                cout << "In first option" << endl;
                 ASSERTL0(m_specHP_dealiasing == false,"Spectral/hp element dealaising is not set up for this option");
+
+                pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
+
                 pFields[0]->DealiasedProd(pV[0],grad0,grad0,m_CoeffState);
                 pFields[0]->DealiasedProd(pV[1],grad1,grad1,m_CoeffState);
                 pFields[0]->DealiasedProd(pV[2],grad2,grad2,m_CoeffState);
@@ -168,53 +170,54 @@ namespace Nektar
             }
             else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == false)
             {
-                //vector reused to avoid even more memory requirements
-                //names may be misleading
-                pFields[0]->HomogeneousBwdTrans(grad0,wkSp);
+                // take d/dx, d/dy  gradients in physical Fourier space
+                pFields[0]->PhysDeriv(pV[pVelocityComponent],grad0,grad1);
+                
+                // Take d/dz derivative using wave space field 
+                pFields[0]->PhysDeriv(MultiRegions::DirCartesianMap[2],pU,
+                                      pOutarray);
+                pFields[0]->HomogeneousBwdTrans(pOutarray,grad2);
+                
                 if(m_specHP_dealiasing) //interpolate spectral/hp gradient field 
                 {
-                    pFields[0]->PhysInterp1DScaled(OneDptscale,wkSp,grad0);
-                    Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
-                }
-                else
-                {
+                    pFields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
                     Vmath::Vmul(nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
                 }
-		
-                pFields[0]->HomogeneousBwdTrans(grad1,wkSp);
-                if(m_specHP_dealiasing) //interpolate spectral/hp gradient field 
-                {
-                    pFields[0]->PhysInterp1DScaled(OneDptscale,wkSp,grad1);
-                    Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,
-                                 Outarray,1);
-                }
                 else
                 {
+                    Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
+                }
+		
+                if(m_specHP_dealiasing) //interpolate spectral/hp gradient field 
+                {
+                    pFields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
                     Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[1],1,Outarray,1,
                                  Outarray,1);
                 }
+                else
+                {
+                    Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,
+                                 Outarray,1);
+                }
 		
-                pFields[0]->HomogeneousBwdTrans(grad2,wkSp);
                 if(m_specHP_dealiasing) //interpolate spectral/hp gradient field 
                 {
-                    pFields[0]->PhysInterp1DScaled(OneDptscale,wkSp,grad2);
-                    Vmath::Vvtvp(nPointsTot,grad2,1,AdvVel[2],1,Outarray,1,
-                                 grad0,1);
+                    pFields[0]->PhysInterp1DScaled(OneDptscale,grad2,wkSp);
+                    Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[2],1,Outarray,1,Outarray,1);
+                    pFields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,grad2); 
+                    pFields[0]->HomogeneousFwdTrans(grad2,pOutarray);
                 }
                 else
                 {
-                    Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[2],1,Outarray,1,grad0,1);
+                    Vmath::Vvtvp(nPointsTot,grad2,1,AdvVel[2],1,Outarray,1,grad0,1);
+                    pFields[0]->HomogeneousFwdTrans(grad0,pOutarray);
                 }
-		
-                if(m_specHP_dealiasing) // Galerkin project solution back to origianl space 
-                {
-                    pFields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,grad0); 
-                }
-
-                pFields[0]->HomogeneousFwdTrans(grad0,pOutarray);
             }
             else if(pFields[0]->GetWaveSpace() == false && m_dealiasing == false) 
             {
+                
+                pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
+
                 if(m_specHP_dealiasing)  // interpolate gradient field 
                 {
                     pFields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
@@ -237,7 +240,9 @@ namespace Nektar
             else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == true) 
             {
                 ASSERTL0(m_specHP_dealiasing == false,"Spectral/hp element dealaising is not set up for this option");
-                cout << "In thrid option" << endl;
+
+                pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
+
                 pFields[0]->HomogeneousBwdTrans(grad0, pOutarray);
                 pFields[0]->DealiasedProd(pV[0], pOutarray, grad0, 
                                           m_CoeffState);

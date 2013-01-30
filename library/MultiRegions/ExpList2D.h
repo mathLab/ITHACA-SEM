@@ -139,6 +139,9 @@ namespace Nektar
 
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 
+            virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+            virtual void v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
         };
 
         /// Empty ExpList2D object.

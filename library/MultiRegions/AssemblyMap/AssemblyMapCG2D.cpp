@@ -606,13 +606,65 @@ namespace Nektar
             }
 
 
+            /****
+             * STEP 1.4: Check for singular system and add pinning Dirichlet vertex
+             */
+            // Check between processes if the whole system is singular
+            int n = m_comm->GetSize();
+            int p  = m_comm->GetRank();
+            int s = (systemSingular ? 1 : 0);
+            vCommRow->AllReduce(s, LibUtilities::ReduceMin);
+            systemSingular = (s == 1 ? true : false);
+
+            // Count the number of boundary regions on each process
+            Array<OneD, int> bccounts(n, 0);
+            bccounts[p] = bndCondExp.num_elements();
+            vCommRow->AllReduce(bccounts, LibUtilities::ReduceSum);
+
+            // Find the process rank with the maximum number of boundary regions
+            int maxBCIdx = Vmath::Imax(n, bccounts, 1);
+
+            // If the system is singular, the process with the maximum number of
+            // BCs will set a Dirichlet vertex to make system non-singular.
+            // Note: we find the process with maximum boundary regions to ensure
+            // we do not try to set a Dirichlet vertex on a partition with no
+            // intersection with the boundary.
+            if(systemSingular == true && checkIfSystemSingular && maxBCIdx == p)
+            {
+                if(m_session->DefinesParameter("SingularElement"))
+                {
+                    int s_eid;
+                    m_session->LoadParameter("SingularElement", s_eid);
+
+                    ASSERTL1(s_eid < locExpVector.size(),"SingularElement Parameter is too large");
+
+                    meshVertId = locExpVector[s_eid]->GetGeom2D()->GetVid(0);
+                }
+                else if (m_session->DefinesParameter("SingularVertex"))
+                {
+                    m_session->LoadParameter("SingularVertex", meshVertId);
+                }
+                else
+                {
+                    //last region i and j=0 edge
+                    bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
+
+                    //first vertex 0 of the edge
+                    meshVertId = (bndSegExp->GetGeom1D())->GetVid(0);
+                }
+
+                if(ReorderedGraphVertId[0].count(meshVertId) == 0)
+                {
+                    ReorderedGraphVertId[0][meshVertId] = graphVertId++;
+                }
+            }
+
+
             /**
              * STEP 1.5: Exchange Dirichlet mesh vertices between processes and
              * check for singular problems.
              */
             // Collate information on Dirichlet vertices from all processes
-            int n = m_comm->GetSize();
-            int p  = m_comm->GetRank();
             Array<OneD, int> counts (n, 0);
             Array<OneD, int> offsets(n, 0);
             counts[p] = ReorderedGraphVertId[0].size();
@@ -709,50 +761,6 @@ namespace Nektar
                 }
                 
                 extraDirVerts.insert(vertids[i]);
-            }
-
-            // Check between processes if the whole system is singular
-            int s = (systemSingular ? 1 : 0);
-            vCommRow->AllReduce(s, LibUtilities::ReduceMin);
-            systemSingular = (s == 1 ? true : false);
-
-            // Count the number of boundary regions on each process
-            Array<OneD, int> bccounts(n, 0);
-            bccounts[p] = bndCondExp.num_elements();
-            vCommRow->AllReduce(bccounts, LibUtilities::ReduceSum);
-
-            // Find the process rank with the maximum number of boundary regions
-            int maxBCIdx = Vmath::Imax(n, bccounts, 1);
-
-            // If the system is singular, the process with the maximum number of
-            // BCs will set a Dirichlet vertex to make system non-singular.
-            // Note: we find the process with maximum boundary regions to ensure
-            // we do not try to set a Dirichlet vertex on a partition with no
-            // intersection with the boundary.
-            if(systemSingular == true && checkIfSystemSingular && maxBCIdx == p)
-            {
-                if(m_session->DefinesParameter("SingularElement"))
-                {
-                    int s_eid;
-                    m_session->LoadParameter("SingularElement", s_eid);
-
-                    ASSERTL1(s_eid < locExpVector.size(),"SingularElement Parameter is too large");
-                    
-                    meshVertId = locExpVector[s_eid]->GetGeom2D()->GetVid(0);
-                }
-                else
-                {
-                    //last region i and j=0 edge
-                    bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
-                    
-                    //first vertex 0 of the edge
-                    meshVertId = (bndSegExp->GetGeom1D())->GetVid(0);
-                }
-
-                if(ReorderedGraphVertId[0].count(meshVertId) == 0)
-                {
-                    ReorderedGraphVertId[0][meshVertId] = graphVertId++;
-                }
             }
 
             firstNonDirGraphVertId = graphVertId;

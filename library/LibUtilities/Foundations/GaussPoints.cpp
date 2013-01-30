@@ -307,6 +307,7 @@ namespace Nektar
             return GetI(numpoints, xpoints);
         }
 
+
         const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetI(const PointsKey &pkey)
         {
             ASSERTL0(pkey.GetPointsDim()==1, "Gauss Points can only interp to other 1d point distributions");
@@ -390,6 +391,49 @@ namespace Nektar
                 }
             }
             return y;
+        }
+        
+        const boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::GetGalerkinProjection(const PointsKey &pkey)
+        {
+            return m_GalerkinProjectionManager[pkey];
+        }
+
+        boost::shared_ptr< NekMatrix<NekDouble> > GaussPoints::CreateGPMatrix(const PointsKey &pkey)
+        {
+            boost::shared_ptr< NekMatrix<NekDouble> > returnval = CalculateGalerkinProjectionMatrix(pkey);
+
+            // Delegate to function below
+            return  returnval;
+        }
+
+        boost::shared_ptr<NekMatrix<NekDouble> > GaussPoints::CalculateGalerkinProjectionMatrix(const PointsKey &pkey)
+        {
+            int numpointsfrom = pkey.GetNumPoints();
+            int numpointsto   = GetNumPoints();
+            
+            Array<OneD, const NekDouble> weightsfrom;
+            
+            weightsfrom = PointsManager()[pkey]->GetW();
+                                    
+            boost::shared_ptr< NekMatrix<NekDouble> > Interp = GetI(pkey);
+
+            Array<OneD, NekDouble> GalProj(numpointsfrom*numpointsto);
+            
+            // set up inner product matrix and multiply by inverse of
+            // diagaonal mass matrix
+            for(int i = 0; i < numpointsto; ++i)
+            {
+                Vmath::Vmul(numpointsfrom,Interp->GetPtr().get() +i*numpointsfrom,1,
+                            &weightsfrom[0],1,&GalProj[0] +i,numpointsto);
+                Vmath::Smul(numpointsfrom,1.0/m_weights[i],&GalProj[0]+i,numpointsto,
+                            &GalProj[0]+i,numpointsto);
+            }
+
+            
+            NekDouble* t = GalProj.data();
+            boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpointsto,numpointsfrom,t));
+
+            return returnval;
         }
 
     } // end of namespace LibUtilities

@@ -89,7 +89,7 @@ namespace Nektar
             m_phys_offset(),
             m_offset_elmt_id(),
             m_physState(false),
-		    m_WaveSpace(false),
+            m_WaveSpace(false),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>
                                                         ::AllocateSharedPtr()),
             m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
@@ -175,8 +175,8 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
         }
-
-
+        
+        
         //boost::shared_ptr<ExpList> do_clone(void) const = 0; {}
 		
         /**
@@ -1869,7 +1869,7 @@ namespace Nektar
             return sqrt(err);
         }
 		
-        Array<OneD, NekDouble> ExpList::v_HomogeneousEnergy (void)
+        Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -1877,7 +1877,17 @@ namespace Nektar
             return NoEnergy;
         }
 		
-        Array<OneD, unsigned int> ExpList::v_GetZIDs(void)
+        LibUtilities::TranspositionSharedPtr ExpList::v_GetTransposition(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            LibUtilities::TranspositionSharedPtr trans;
+			
+            return trans;
+        }
+
+
+        Array<OneD, const unsigned int> ExpList::v_GetZIDs(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -1886,13 +1896,25 @@ namespace Nektar
             return NoModes;
         }
 		
-        Array<OneD, unsigned int> ExpList::v_GetYIDs(void)
+        Array<OneD, const unsigned int> ExpList::v_GetYIDs(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             Array<OneD, unsigned int> NoModes(1);
 			
             return NoModes;
+        }
+
+
+        void ExpList::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
+        void ExpList::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
         }
 		
 

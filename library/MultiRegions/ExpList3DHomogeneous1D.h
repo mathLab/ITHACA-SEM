@@ -114,7 +114,7 @@ namespace Nektar
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
             ///  m_phys.
-            void             SetCoeffPhys(void);
+            void   SetCoeffPhys(void);
 
             //  virtual functions
             virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,
@@ -130,7 +130,7 @@ namespace Nektar
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
 			
-			virtual Array<OneD, NekDouble> v_HomogeneousEnergy(void);
+            virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
 
             virtual void v_GetPeriodicEdges(
                 vector<map<int,int> > &periodicVertices,

@@ -1291,7 +1291,7 @@ namespace Nektar
                 std::vector<std::vector<NekDouble> > &fielddata)
         {
             ASSERTL1(fielddefs.size() == fielddata.size(),
-                    "Length of fielddefs and fielddata incompatible");
+                     "Length of fielddefs and fielddata incompatible");
 
             TiXmlDocument doc;
             TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
@@ -1307,10 +1307,10 @@ namespace Nektar
 
                 ASSERTL1(fielddata[f].size() > 0,
                         "Fielddata vector must contain at least one value.");
-
+                
                 int datasize = CheckFieldDefinition(fielddefs[f]);
                 ASSERTL1(fielddata[f].size() == fielddefs[f]->m_fields.size()
-                        * datasize, "Invalid size of fielddata vector.");
+                         * datasize, "Invalid size of fielddata vector.");
 
                 //---------------------------------------------
                 // Write ELEMENTS

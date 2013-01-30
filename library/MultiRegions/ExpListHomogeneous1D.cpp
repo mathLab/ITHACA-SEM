@@ -345,7 +345,7 @@ namespace Nektar
         {
             int num_dofs;
             
-            if(IsForwards)
+            if(IsForwards) 
             {
                 num_dofs = inarray.num_elements();
             }
@@ -369,8 +369,8 @@ namespace Nektar
                 }
                 else 
                 {
-                    Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),inarray,1,fft_in,1);
-                    //fft_in = inarray;
+                    Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),
+                                 inarray,1,fft_in,1);
                 }
                 
                 if(IsForwards)
@@ -394,8 +394,8 @@ namespace Nektar
                 }
                 else 
                 {
-                    Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),fft_out,1,outarray,1);
-                    //outarray = fft_out;
+                    Vmath::Vcopy(num_dfts_per_proc*m_homogeneousBasis->GetNumPoints(),
+                                 fft_out,1,outarray,1);
                 }
             }
             else 
@@ -438,7 +438,6 @@ namespace Nektar
                 else 
                 {
                     Vmath::Vcopy(ncols,inarray,1,sortedinarray,1);
-                    //sortedinarray = inarray;
                 }
                 
                 // Create NekVectors from the given data arrays
@@ -455,7 +454,6 @@ namespace Nektar
                 else 
                 {
                     Vmath::Vcopy(nrows,sortedinarray,1,outarray,1);
-                    //outarray = sortedinarray;
                 }
                 
             }
@@ -876,80 +874,83 @@ namespace Nektar
                 m_planes[i]->PhysDeriv(inarray + i*nP_pts ,tmp2 = out_d0 + i*nP_pts , tmp3 = out_d1 + i*nP_pts );
             }
             
-            if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode || 
-               m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)			
+            if(out_d2 != NullNekDouble1DArray)
             {
-                if(m_WaveSpace)
+                if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourier || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierSingleMode || 
+                   m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe || m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)			
                 {
-                    temparray = inarray;
-                }
-                else 
-                { 
-                    HomogeneousFwdTrans(inarray,temparray);
-                }
-                
-                NekDouble sign = -1.0;
-                NekDouble beta;
-		
-                //Half Mode
-				if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
-				{
-					beta = sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
-					
-					Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
-				}
-				else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
-				{
-					beta = -sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
-					
-					Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
-				}
-				
-				//Fully complex
-				else
-				{
-					for(int i = 0; i < m_planes.num_elements(); i++)
-					{
-						beta = -sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
-						
-						Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
-						
-						sign = -1.0*sign;
-					}
-				}
-		
-                if(m_WaveSpace)
-                {
-                    out_d2 = outarray;
-                }
-                else 
-                {
-                    HomogeneousBwdTrans(outarray,out_d2);
-                }
-            }
-            else 
-            {
-                ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
-		
-                if(m_WaveSpace)
-                {
-                    
-                    ASSERTL0(false,"Semi-phyisical time-stepping not implemented yet for non-Fourier basis");
-                }
-                else 
-                {
-                    StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
-                    
-                    m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXYtoZ);
-                    
-                    for(int i = 0; i < nP_pts; i++)
+                    if(m_WaveSpace)
                     {
-                        StdSeg.PhysDeriv(temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
+                        temparray = inarray;
+                    }
+                    else 
+                    { 
+                        HomogeneousFwdTrans(inarray,temparray);
                     }
                     
-                    m_transposition->Transpose(outarray,out_d2,false,LibUtilities::eZtoXY);
+                    NekDouble sign = -1.0;
+                    NekDouble beta;
                     
-                    Vmath::Smul(nT_pts,2.0/m_lhom,out_d2,1,out_d2,1);					
+                    //Half Mode
+                    if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe)
+                    {
+                        beta = sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
+                        
+                        Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
+                    }
+                    else if(m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm)
+                    {
+                        beta = -sign*2*M_PI*(m_transposition->GetK(0))/m_lhom;
+                        
+                        Vmath::Smul(nP_pts,beta,temparray,1,outarray,1);
+                    }
+                    
+                    //Fully complex
+                    else
+                    {
+                        for(int i = 0; i < m_planes.num_elements(); i++)
+                        {
+                            beta = -sign*2*M_PI*(m_transposition->GetK(i))/m_lhom;
+                            
+                            Vmath::Smul(nP_pts,beta,tmp1 = temparray + i*nP_pts,1,tmp2 = outarray + (i-int(sign))*nP_pts,1);
+                            
+                            sign = -1.0*sign;
+                        }
+                    }
+                    
+                    if(m_WaveSpace)
+                    {
+                        out_d2 = outarray;
+                    }
+                    else 
+                    {
+                        HomogeneousBwdTrans(outarray,out_d2);
+                    }
+                }
+                else 
+                {
+                    ASSERTL0(m_comm->GetColumnComm()->GetSize() == 1,"Parallelisation in the homogeneous direction implemented just for Fourier basis");
+                    
+                    if(m_WaveSpace)
+                    {
+                        
+                        ASSERTL0(false,"Semi-phyisical time-stepping not implemented yet for non-Fourier basis");
+                    }
+                    else 
+                    {
+                        StdRegions::StdSegExp StdSeg(m_homogeneousBasis->GetBasisKey());
+                        
+                        m_transposition->Transpose(inarray,temparray,false,LibUtilities::eXYtoZ);
+                        
+                        for(int i = 0; i < nP_pts; i++)
+                        {
+                            StdSeg.PhysDeriv(temparray + i*m_planes.num_elements(), tmp2 = outarray + i*m_planes.num_elements());
+                        }
+                        
+                        m_transposition->Transpose(outarray,out_d2,false,LibUtilities::eZtoXY);
+                        
+                        Vmath::Smul(nT_pts,2.0/m_lhom,out_d2,1,out_d2,1);					
+                    }
                 }
             }
         }
@@ -1069,7 +1070,12 @@ namespace Nektar
             v_PhysDeriv(edir,inarray,out_d);
         }
 		
-        Array<OneD, unsigned int> ExpListHomogeneous1D::v_GetZIDs(void)
+        LibUtilities::TranspositionSharedPtr ExpListHomogeneous1D::v_GetTransposition(void)
+        {
+            return m_transposition;
+        }
+
+        Array<OneD, const unsigned int> ExpListHomogeneous1D::v_GetZIDs(void)
         {
             return m_transposition->GetPlanesIDs();
         }

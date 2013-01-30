@@ -106,8 +106,8 @@ namespace Nektar
                         CanGetRawPtr<NekMatrix<LhsDataType, MatrixType> >
                     >::type* p=0)
     {
-        int m = lhs.GetRows();
-        int n = lhs.GetColumns();
+        int m  = lhs.GetRows();
+        int n  = lhs.GetColumns();
         int kl = lhs.GetNumberOfSubDiagonals();
         int ku = lhs.GetNumberOfSuperDiagonals();
         double alpha = lhs.Scale();

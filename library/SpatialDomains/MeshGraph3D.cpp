@@ -979,7 +979,7 @@ namespace Nektar
             return it->second;
         }
 
-        LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(Geometry2DSharedPtr face, const int flag)
+        LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(Geometry2DSharedPtr face, const int flag, const std::string variable)
         {
             ElementFaceVectorSharedPtr elements = GetElementsFromFace(face);
             ASSERTL0(elements->size() > 0, "No elements for the given face."
@@ -987,7 +987,7 @@ namespace Nektar
             // Perhaps, a check should be done here to ensure that in case
             // elements->size!=1, all elements to which the edge belongs have the same type
             // and order of expansion such that no confusion can arise.
-            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element);
+            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element,variable);
 
             int nummodes = (int) expansion->m_basisKeyVector[0].GetNumModes();
 

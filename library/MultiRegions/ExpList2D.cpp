@@ -436,7 +436,8 @@ namespace Nektar
             const StdRegions::StdExpansionVector &locexp,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
             const map<int,PeriodicFace> &periodicFaces,
-            const bool DeclareCoeffPhysArrays):
+            const bool DeclareCoeffPhysArrays, 
+            const std::string variable):
             ExpList()
         {
             int i,j,cnt,id, elmtid=0;
@@ -500,7 +501,7 @@ namespace Nektar
                     if(FaceDone.count(id)==0)
                     {
                         LibUtilities::BasisKey bkey0 = 
-                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 0); 
+                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 0, variable); 
                         LibUtilities::BasisKey bkey1 = 
                             boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 1);
                         
@@ -628,7 +629,8 @@ namespace Nektar
           */
          ExpList2D::ExpList2D(   const LibUtilities::SessionReaderSharedPtr &pSession,
                                  const SpatialDomains::CompositeMap &domain,
-                                 const SpatialDomains::MeshGraphSharedPtr &graph3D):
+                                 const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                                 const std::string variable):
              ExpList(pSession,graph3D)
          {
              ASSERTL0(boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D),

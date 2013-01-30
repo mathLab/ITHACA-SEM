@@ -1083,11 +1083,10 @@ namespace Nektar
                 return 0;
             }
             
-        void StdExpansion::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
-                                   const int offset, 
+        void StdExpansion::v_ExtractDataToCoeffs(const NekDouble *data, 
                                    const std::vector<unsigned int > &nummodes, 
                                    const int nmode_offset,
-                                   Array<OneD, NekDouble> &coeffs)
+                                   NekDouble *coeffs)
         {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
         }

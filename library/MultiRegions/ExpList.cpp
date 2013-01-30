@@ -2090,6 +2090,21 @@ namespace Nektar
 
         }
         
+        /// Extract the data in fielddata into the coeffs
+        void ExpList::ExtractDataToCoeffs(
+                                   SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                   std::vector<NekDouble> &fielddata,
+                                   std::string &field,
+                                   Array<OneD, NekDouble> &coeffs)
+        {
+            v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
+        }
+
+        void ExpList::ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+        {
+            v_ExtractCoeffsToCoeffs(fromExpList,fromCoeffs,toCoeffs);
+        }
+
 
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {     	
@@ -2128,7 +2143,6 @@ namespace Nektar
                 }
 
                 int modes_offset = 0;
-                Array<OneD, NekDouble> coeff_tmp;             
                 for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
                 {
                     int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
@@ -2145,12 +2159,43 @@ namespace Nektar
                     }
                     else // unpack data to new order
                     {
-                        (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = coeffs + m_coeff_offset[eid]);
+                        
+                        (*m_exp)[eid]->ExtractDataToCoeffs(&fielddata[offset], fielddef->m_numModes, modes_offset, &coeffs[m_coeff_offset[eid]]);
                     }
                     offset += datalen;
                 }                
             }
         }
+
+        void ExpList::v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+        {     	
+            int i;
+            int offset = 0;
+
+            // check if the same and if so just copy over coeffs
+            if(fromExpList->GetNcoeffs() == m_ncoeffs)
+            {
+                Vmath::Vcopy(m_ncoeffs,fromCoeffs,1,toCoeffs,1);
+            }
+            else
+            {
+                std::vector<unsigned int> nummodes;
+                for(i = 0; i < (*m_exp).size(); ++i)
+                {
+                    int eid = m_offset_elmt_id[i];
+                    for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
+                    {
+                        nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
+                    }
+                    
+                    (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0, 
+                                                       &toCoeffs[m_coeff_offset[eid]]);
+                    
+                    offset += fromExpList->GetExp(eid)->GetNcoeffs();
+                }
+            }
+        }
+
 
         const Array<OneD,const boost::shared_ptr<ExpList> >
                                         &ExpList::v_GetBndCondExpansions(void)

@@ -59,19 +59,21 @@ namespace Nektar
         {
             eNoExpansionType,
             eModified,
+            eModifiedQuadPlus1,
+            eModifiedQuadPlus2,
             eOrthogonal,
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
             eGauss_Lagrange,
             eGauss_Lagrange_SEM,
-			eFourier,
-			eFourierSingleMode,
-			eFourierHalfModeRe,
-			eFourierHalfModeIm,
-			eChebyshev,
-			eFourierChebyshev,
-			eChebyshevFourier,
-			eFourierModified,
+            eFourier,
+            eFourierSingleMode,
+            eFourierHalfModeRe,
+            eFourierHalfModeIm,
+            eChebyshev,
+            eFourierChebyshev,
+            eChebyshevFourier,
+            eFourierModified,
             eExpansionTypeSize
         };
 
@@ -81,19 +83,21 @@ namespace Nektar
         {
             "NOTYPE",
             "MODIFIED",
+            "MODIFIEDQUADPLUS1",
+            "MODIFIEDQUADPLUS2",
             "ORTHOGONAL",
             "GLL_LAGRANGE",
             "GLL_LAGRANGE_SEM",
             "GAUSS_LAGRANGE",
             "GAUSS_LAGRANGE_SEM",
-			"FOURIER",
-			"FOURIERSINGLEMODE",
-			"FOURIERHALFMODERE",
-			"FOURIERHALFMODEIM",
-			"CHEBYSHEV",
-			"FOURIER-CHEBYSHEV",
-			"CHEBYSHEV-FOURIER",
-			"FOURIER-MODIFIED"
+            "FOURIER",
+            "FOURIERSINGLEMODE",
+            "FOURIERHALFMODERE",
+            "FOURIERHALFMODEIM",
+            "CHEBYSHEV",
+            "FOURIER-CHEBYSHEV",
+            "CHEBYSHEV-FOURIER",
+            "FOURIER-MODIFIED"
         };
 
         class InterfaceComponent;
@@ -335,7 +339,7 @@ namespace Nektar
                         const std::string variable);
 
                 SPATIAL_DOMAINS_EXPORT ExpansionShPtr GetExpansion(
-                        GeometrySharedPtr geom);
+                                                                   GeometrySharedPtr geom, const std::string variable = "DefaultVar");
 
                 /// Sets expansions given field definitions
                 SPATIAL_DOMAINS_EXPORT void SetExpansions(

@@ -188,11 +188,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType  v_MetricInfoType();
 
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
-                    const std::vector<NekDouble> &data,
-                    const int offset,
+                    const NekDouble *data,
                     const std::vector<unsigned int > &nummodes,
-                    const int nmode_offset,
-                          Array<OneD, NekDouble> &coeffs);
+                    const int mode_offset,
+                    NekDouble *coeffs);
 
 
             LOCAL_REGIONS_EXPORT virtual void v_SetUpPhysTangents(

@@ -115,6 +115,7 @@ namespace Nektar
         {
             m_session->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
         }
+
         m_session->MatchSolverInfo("ModeType","SingleMode",m_SingleMode,false);
         m_session->MatchSolverInfo("ModeType","HalfMode",m_HalfMode,false);
     }

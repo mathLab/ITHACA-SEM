@@ -752,6 +752,13 @@ namespace Nektar
                                                               std::string &field,
                                                               Array<OneD, NekDouble> &coeffs);
 
+
+            /** \brief Extract the data from fromField using
+             * fromExpList the coeffs using the basic ExpList
+             * Elemental expansions rather than planes in homogeneous
+             * case
+             */ 
+            MULTI_REGIONS_EXPORT  void ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
 			
 			
             //Extract data in fielddata into the m_coeffs_list for the 3D stability analysis (base flow is 2D)
@@ -759,10 +766,7 @@ namespace Nektar
                                        SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
                                        std::vector<NekDouble> &fielddata,
                                        std::string &field,
-                                       Array<OneD, NekDouble> &coeffs)
-            {
-                v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
-            }
+                                       Array<OneD, NekDouble> &coeffs);
 			
 
             /// Returns a shared pointer to the current object.
@@ -1150,6 +1154,8 @@ namespace Nektar
 
             virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field,
                                                Array<OneD, NekDouble> &coeffs);
+
+            virtual void v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
 			
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,
                                               std::string var = "v");

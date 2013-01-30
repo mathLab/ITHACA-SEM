@@ -297,14 +297,14 @@ namespace Nektar
             }
         }
 
-		/**
+        /**
          * Fills the list of local expansions with the segments in one
-		 * subdomain specified in an inputfile by \a domain. This 
-		 * CompositeMap contains a list of Composites which define the 
-		 * subdomains.
+         * subdomain specified in an inputfile by \a domain. This 
+         * CompositeMap contains a list of Composites which define the 
+         * subdomains.
          * @param   domain      A domain, comprising of one or more composite
          *                      regions.
-		 * @param   i           Index of currently processed subdomain
+         * @param   i           Index of currently processed subdomain
          * @param   graph1D     A mesh, containing information about the
          *                      domain and the spectral/hp element expansion.
          * @param   DeclareCoeffPhysArrays If true, create general segment expansions

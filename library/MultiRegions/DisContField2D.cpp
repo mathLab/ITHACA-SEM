@@ -1097,7 +1097,7 @@ namespace Nektar
         }
 
         /**
-         * @brief Set up a list of elemeent IDs and edge IDs that link to the
+         * @brief Set up a list of element IDs and edge IDs that link to the
          * boundary conditions.
          */
         void DisContField2D::v_GetBoundaryToElmtMap(
@@ -1690,7 +1690,7 @@ namespace Nektar
 
                             std::vector<SpatialDomains::
                                         FieldDefinitionsSharedPtr> FieldDef;
-                            std::vector<std::vector<NekDouble> > FieldData;
+                            std::vector<std::vector<NekDouble> >   FieldData;
 
                             m_graph->Import(filebcs,FieldDef, FieldData);
 

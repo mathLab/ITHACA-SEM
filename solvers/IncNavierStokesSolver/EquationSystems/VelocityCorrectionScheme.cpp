@@ -862,7 +862,7 @@ namespace Nektar
                 }
             }
 
-            // setting if just standard BC no High order
+            // setting if just standard BC not High order
             else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
             {
                 cnt += PBndExp[n]->GetExpSize();

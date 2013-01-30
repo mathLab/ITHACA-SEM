@@ -71,6 +71,7 @@ namespace Nektar
             eSymmetry,
             eRinglebFlow,
             eTimeDependent,
+            eRadiation,
             eIsentropicVortex,
             eCalcBC,
             eQinflow,
@@ -105,6 +106,7 @@ namespace Nektar
                 known_type["RinglebFlow"] = eRinglebFlow;
                 known_type["Symmetry"] = eSymmetry;
                 known_type["TimeDependent"] = eTimeDependent;
+                known_type["Radiation"] = eRadiation;
                 known_type["IsentropicVortex"] = eIsentropicVortex;
                 known_type["InflowCFE"] = eInflowCFE;
                 known_type["OutflowCFE"] = eOutflowCFE;

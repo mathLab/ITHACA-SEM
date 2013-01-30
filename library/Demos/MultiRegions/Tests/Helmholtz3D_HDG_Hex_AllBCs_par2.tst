@@ -12,7 +12,7 @@
             <value tolerance="1e-12">0.000417674</value>
         </metric>
         <metric type="Linf" id="2">
-            <value tolerance="1e-12">0.00168661</value>
+            <value tolerance="1e-06">0.00168661</value>
         </metric>
     </metrics>
 </test>

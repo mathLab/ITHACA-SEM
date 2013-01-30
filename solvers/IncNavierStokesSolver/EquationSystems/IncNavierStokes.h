@@ -118,6 +118,8 @@ namespace Nektar
                                      Array<OneD, Array<OneD, NekDouble> > &numflux);
 
         NekDouble GetSubstepTimeStep();
+
+        NekDouble GetCFLEstimate(int &elmtid);
         
         // Mapping of the real convective field on the standard element.
         // This function gives back the convective filed in the standard
@@ -167,9 +169,8 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr m_pressure;  
         
         NekDouble   m_kinvis;        ///< Kinematic viscosity
-        // Not required when inheriting from UnsteadySytem
-        //int         m_infosteps;     ///< dump info to stdout at steps time
         int         m_energysteps;   ///< dump energy to file at steps time
+        int         m_cflsteps;      ///< dump cfl estimate
         int         m_steadyStateSteps; ///< Check for steady state at step interval
         NekDouble   m_steadyStateTol; ///< Tolerance to which steady state should be evaluated at
 

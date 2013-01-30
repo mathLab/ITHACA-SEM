@@ -94,6 +94,10 @@ namespace Nektar
                     bool UseNumMode = false,
                     TranspositionDir dir = eNoTrans);
 
+            LIB_UTILITIES_EXPORT void SetSpecVanVisc(Array<OneD, NekDouble> visc);
+            
+            LIB_UTILITIES_EXPORT NekDouble GetSpecVanVisc(const int k);
+
         protected:
             CommSharedPtr         m_hcomm;
 
@@ -156,6 +160,9 @@ namespace Nektar
 
             /// MPI_Alltoallv offset map of send/recv buffer in global vector.
             Array<OneD,int> m_OffsetMap;
+
+            /// Spectral vanishing Viscosity coefficient for stabilisation 
+            Array<OneD, NekDouble> m_specVanVisc;
         };
 
         typedef boost::shared_ptr<Transposition>      TranspositionSharedPtr;

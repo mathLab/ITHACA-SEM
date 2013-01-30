@@ -40,6 +40,7 @@
 #include <LocalRegions/Expansion3D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <LibUtilities/Foundations/Interp.h>
+#include <LibUtilities/Foundations/PhysGalerkinProject.h>
 #include <SpatialDomains/MeshGraph3D.h>
 
 
@@ -971,6 +972,65 @@ namespace Nektar
             outfile << "      </Cells>" << endl;
             outfile << "      <PointData>" << endl;
         }
+
+
+        void ExpList2D::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+
+            cnt = cnt1 = 0;
+            for(int i = 0; i < GetExpSize(); ++i)
+            {
+                // get new points key
+                int pt0 = (*m_exp)[i]->GetNumPoints(0);
+                int pt1 = (*m_exp)[i]->GetNumPoints(1);
+                int npt0 = (int) pt0*scale;
+                int npt1 = (int) pt1*scale;
+                
+                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
+                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
+
+                // Interpolate points; 
+                LibUtilities::Interp2D((*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                                       &inarray[cnt],newPointsKey0,
+                                       newPointsKey1,&outarray[cnt1]);
+
+                cnt  += pt0*pt1;
+                cnt1 += npt0*npt1;
+            }
+        }
+        
+        void ExpList2D::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+
+            cnt = cnt1 = 0;
+            for(int i = 0; i < GetExpSize(); ++i)
+            {
+                // get new points key
+                int pt0 = (*m_exp)[i]->GetNumPoints(0);
+                int pt1 = (*m_exp)[i]->GetNumPoints(1);
+                int npt0 = (int) pt0*scale;
+                int npt1 = (int) pt1*scale;
+                
+                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
+                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
+
+                // Project points; 
+                LibUtilities::PhysGalerkinProject2D(newPointsKey0, 
+                                                    newPointsKey1,
+                                       &inarray[cnt],
+                                       (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                                       &outarray[cnt1]);
+                
+                cnt  += npt0*npt1;
+                cnt1 += pt0*pt1;
+            }
+
+        }
+
 
     } //end of namespace
 } //end of namespace

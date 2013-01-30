@@ -979,6 +979,8 @@ namespace Nektar
             
             StdRegions::VarCoeffMap varcoeffs;
             varcoeffs[StdRegions::eVarCoeffMass] = primCoeffs;
+            //varcoeffs[StdRegions::eVarCoeffPrimative] = primCoeffs;
+
             
             StdRegions::ExpansionType expType = 
                 faceExp->DetExpansionType();

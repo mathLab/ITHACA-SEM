@@ -122,6 +122,7 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     mSourceHeightContourMapper->SetScalarRange(0.0, HEIGHT_MAX);
     mSourceHeightContourActor = vtkActor::New();
     mSourceHeightContourActor->SetMapper(mSourceHeightContourMapper);
+    mSourceHeightContourActor->GetProperty()->SetLineWidth(2.0);
 
     mSourceRenderer->AddActor(mSourceActor);
     mSourceRenderer->AddActor(mSourcePointsActor);

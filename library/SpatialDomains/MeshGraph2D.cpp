@@ -723,14 +723,14 @@ namespace Nektar
                 return returnval;
         }
 
-        LibUtilities::BasisKey MeshGraph2D::GetEdgeBasisKey(SegGeomSharedPtr edge)
+        LibUtilities::BasisKey MeshGraph2D::GetEdgeBasisKey(SegGeomSharedPtr edge, const std::string variable)
         {
             ElementEdgeVectorSharedPtr elements = GetElementsFromEdge(edge);
             // Perhaps, a check should be done here to ensure that
             // in case elements->size!=1, all elements to which
             // the edge belongs have the same type and order of
             // expansion such that no confusion can arise.
-            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element);
+            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element, variable);
 
             int edge_id = (*elements)[0]->m_EdgeIndx;
 

@@ -240,7 +240,8 @@ namespace Nektar
          */
         ExpList1D::ExpList1D(const SpatialDomains::CompositeMap &domain,
                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                             const bool DeclareCoeffPhysArrays):
+                             const bool DeclareCoeffPhysArrays,
+                             const std::string variable):
             ExpList()
         {
             int j,cnt,id=0;
@@ -264,7 +265,7 @@ namespace Nektar
                     {
                         // Retrieve the basis key from the expansion.
                         LibUtilities::BasisKey bkey
-                                        = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetEdgeBasisKey(SegmentGeom);
+                            = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetEdgeBasisKey(SegmentGeom, variable);
 
                         seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
@@ -297,14 +298,14 @@ namespace Nektar
             }
         }
 
-		/**
+        /**
          * Fills the list of local expansions with the segments in one
-		 * subdomain specified in an inputfile by \a domain. This 
-		 * CompositeMap contains a list of Composites which define the 
-		 * subdomains.
+         * subdomain specified in an inputfile by \a domain. This 
+         * CompositeMap contains a list of Composites which define the 
+         * subdomains.
          * @param   domain      A domain, comprising of one or more composite
          *                      regions.
-		 * @param   i           Index of currently processed subdomain
+         * @param   i           Index of currently processed subdomain
          * @param   graph1D     A mesh, containing information about the
          *                      domain and the spectral/hp element expansion.
          * @param   DeclareCoeffPhysArrays If true, create general segment expansions
@@ -411,7 +412,8 @@ namespace Nektar
                     const StdRegions::StdExpansionVector &locexp,
                     const SpatialDomains::MeshGraphSharedPtr &graph2D,
                     const map<int,int> &periodicEdges,
-                    const bool DeclareCoeffPhysArrays):
+                    const bool DeclareCoeffPhysArrays,
+                    const std::string variable):
             ExpList()
         {
             int i,j,cnt,id, elmtid=0;

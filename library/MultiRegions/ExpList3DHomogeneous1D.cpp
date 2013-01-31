@@ -192,13 +192,13 @@ namespace Nektar
 
             // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
-			Array<OneD, NekDouble> local_pts(m_planes.num_elements());
-			
-			for(n = 0; n < m_planes.num_elements(); n++)
-			{
-				local_pts[n] = pts[m_transposition->GetPlaneID(n)];
-			}
-			
+            Array<OneD, NekDouble> local_pts(m_planes.num_elements());
+            
+            for(n = 0; n < m_planes.num_elements(); n++)
+            {
+                local_pts[n] = pts[m_transposition->GetPlaneID(n)];
+            }
+            
             Array<OneD, NekDouble> z(nzplanes);
 
             Vmath::Smul(nzplanes,m_lhom/2.0,local_pts,1,z,1);
@@ -427,7 +427,7 @@ namespace Nektar
             return sqrt(err);
         }
 		
-        Array<OneD, NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
+        Array<OneD, const NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
         {
             int cnt = 0, cnt1 = 0;
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();

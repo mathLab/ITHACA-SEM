@@ -170,8 +170,7 @@ namespace Nektar
          * Given a block matrix, construct a global matrix system according to
          * a local to global mapping. #m_linSys is constructed by
          * AssembleFullMatrix().
-         * @param   mkey        Associated linear system key.
-         * @param   Mat         Block matrix.
+         * @param   pkey        Associated linear system key.
          * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &pKey,

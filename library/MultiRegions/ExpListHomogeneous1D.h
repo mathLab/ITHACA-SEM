@@ -201,6 +201,9 @@ namespace Nektar
             
             virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs);
             
+            virtual void v_ExtractCoeffsToCoeffs(
+                                                 const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
+
             virtual void v_WriteTecplotHeader(std::ofstream &outfile,
                                               std::string var = "v");
             
@@ -210,6 +213,12 @@ namespace Nektar
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                              std::string var);
 			
+
+            virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+            virtual void v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+
             virtual void v_HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                                Array<OneD, NekDouble> &outarray, 
                                                CoeffState coeffstate = eLocal,
@@ -236,7 +245,9 @@ namespace Nektar
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d);
             
-            virtual Array<OneD, unsigned int> v_GetZIDs(void);
+            virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
+
+            virtual Array<OneD, const unsigned int> v_GetZIDs(void);
             
             virtual ExpListSharedPtr &v_GetPlane(int n)
             {

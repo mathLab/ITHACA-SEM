@@ -1136,16 +1136,12 @@ namespace Nektar
         }
 
 
-        void TriExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data,
-                                            const int offset,
-                                            const std::vector<unsigned int > &nummodes,
-                                            const int nmode_offset,
-                                            Array<OneD, NekDouble> &coeffs)
+        void TriExp::v_ExtractDataToCoeffs(const NekDouble *data,
+                                           const std::vector<unsigned int > &nummodes,  const int mode_offset,   NekDouble * coeffs)
         {
-            int data_order0 = nummodes[nmode_offset];
+            int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
-
-            int data_order1 = nummodes[nmode_offset+1];
+            int data_order1 = nummodes[mode_offset+1];
             int order1      = m_base[1]->GetNumModes();
             int fillorder1  = min(order1,data_order1);
 
@@ -1163,7 +1159,7 @@ namespace Nektar
                     Vmath::Zero(m_ncoeffs,coeffs,1);
                     for(i = 0; i < fillorder0; ++i)
                     {
-                        Vmath::Vcopy(fillorder1-i,&data[offset+cnt],1,&coeffs[cnt1],1);
+                        Vmath::Vcopy(fillorder1-i,&data[cnt],1,&coeffs[cnt1],1);
                         cnt  += data_order1-i;
                         cnt1 += order1-i;
                     }

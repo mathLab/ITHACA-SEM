@@ -919,13 +919,12 @@ namespace Nektar
                 return v_CalcNumberOfCoefficients(nummodes,modes_offset);
             }
 
-            void ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
-                                     const int offset, 
+            void ExtractDataToCoeffs(const NekDouble *data, 
                                      const std::vector<unsigned int > &nummodes, 
                                      const int nmodes_offset,
-                                     Array<OneD, NekDouble> &coeffs)
+                                     NekDouble *coeffs)
             {
-                v_ExtractDataToCoeffs(data,offset,nummodes,nmodes_offset,coeffs);
+                v_ExtractDataToCoeffs(data,nummodes,nmodes_offset,coeffs);
             }
 
             // virtual functions related to LocalRegions
@@ -1299,11 +1298,10 @@ namespace Nektar
              * same expansion type.
              * @see StdExpansion::ExtractDataToCoeffs
              */
-            STD_REGIONS_EXPORT virtual  void v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
-                                                const int offset, 
+            STD_REGIONS_EXPORT virtual  void v_ExtractDataToCoeffs(const NekDouble *data, 
                                                 const std::vector<unsigned int > &nummodes, 
                                                 const int nmode_offset,
-                                                Array<OneD, NekDouble> &coeffs);
+                                                NekDouble *coeffs);
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray);
 

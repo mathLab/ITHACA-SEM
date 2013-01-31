@@ -867,9 +867,11 @@ namespace Nektar
             else
             {
                 // Do matrix multiply locally
-                NekVector<NekDouble> loc(nLocal, m_wsp, eWrapper);
                 m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
+                NekVector<NekDouble> loc(nLocal, m_wsp, eWrapper);
+
                 loc = (*m_schurCompl)*loc;
+
                 m_locToGloMap->AssembleBnd(m_wsp, pOutput);
             }
         }

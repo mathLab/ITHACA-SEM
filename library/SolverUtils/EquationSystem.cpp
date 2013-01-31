@@ -118,6 +118,7 @@ namespace Nektar
             m_HomoDirec			= 0;
             m_useFFT			= false;
             m_dealiasing		= false;
+            m_specHP_dealiasing		= false;
             m_SingleMode		= false;
             m_HalfMode			= false;
             m_MultipleModes		= false;
@@ -193,14 +194,17 @@ namespace Nektar
                     m_HomoDirec       = 2;
                 }
 
-                if(m_session->DefinesSolverInfo("USEFFT"))
-                {
-                    m_useFFT = true;
-                }
+                m_session->MatchSolverInfo("USEFFT","FFTW",m_useFFT,false);
             
-                if(m_session->DefinesSolverInfo("DEALIASING"))
+                m_session->MatchSolverInfo("DEALIASING","True",m_dealiasing,false);
+                if(m_dealiasing == false)
                 {
-                    m_dealiasing = true;
+                    m_session->MatchSolverInfo("DEALIASING","On",m_dealiasing,false);
+                }
+
+                if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+                {
+                    m_specHP_dealiasing = true;
                 }
             }
             else
@@ -209,7 +213,18 @@ namespace Nektar
                 // (homogeneous) expansions
                 m_npointsZ = 1; 
             }
-
+            
+            m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
+            if(m_specHP_dealiasing == false)
+            {
+                m_session->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
+            }
+            
+            if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+            {
+                m_specHP_dealiasing = true;
+            }
+        
             // Options to determine type of projection from file or directly 
             // from constructor
             if(m_session->DefinesSolverInfo("PROJECTION"))
@@ -311,7 +326,7 @@ namespace Nektar
 									
                                 const LibUtilities::BasisKey  BkeyZR(LibUtilities::eFourierHalfModeRe, m_npointsZ, PkeyZ);
                                 const LibUtilities::BasisKey  BkeyZI(LibUtilities::eFourierHalfModeIm, m_npointsZ, PkeyZ);
-									
+                                
 									
                                 for(i = 0; i < m_fields.num_elements(); i++)
                                 {
@@ -350,9 +365,19 @@ namespace Nektar
                             m_fields[0] = firstfield;
                             for(i = 1; i < m_fields.num_elements(); i++)
                             {
-                                m_fields[i] = MemoryManager<MultiRegions::ContField2D>
-                                    ::AllocateSharedPtr(*firstfield, m_graph,m_session->GetVariable(i),
-                                                        DeclareCoeffPhysArrays, m_checkIfSystemSingular[i]);
+                                if(m_graph->SameExpansions(m_session->GetVariable(0),m_session->GetVariable(i)))
+                                {
+                                    m_fields[i] = MemoryManager<MultiRegions::ContField2D>
+                                        ::AllocateSharedPtr(*firstfield, m_graph,m_session->GetVariable(i),
+                                                            DeclareCoeffPhysArrays, m_checkIfSystemSingular[i]);
+                                }
+                                else
+                                {
+                                    m_fields[i] = MemoryManager<MultiRegions::ContField2D>
+                                        ::AllocateSharedPtr(m_session, m_graph, m_session->GetVariable(i),
+                                                            DeclareCoeffPhysArrays, m_checkIfSystemSingular[0]);
+                                    
+                                }
                             }
 
                             if(m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
@@ -1753,7 +1778,15 @@ namespace Nektar
 
             for(int i = 0; i < m_fields.num_elements(); ++i)
             {
-                fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+                if(m_fields[i]->GetNcoeffs() == m_fields[0]->GetNcoeffs())
+                {
+                    fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+                }
+                else
+                {
+                    fieldcoeffs[i] = Array<OneD,NekDouble>(m_fields[0]->GetNcoeffs());
+                    m_fields[0]->ExtractCoeffsToCoeffs(m_fields[i],m_fields[i]->GetCoeffs(),fieldcoeffs[i]);
+                }
                 variables[i] = m_boundaryConditions->GetVariable(i);
             }
 
@@ -2014,15 +2047,14 @@ namespace Nektar
                 out << "\tHom. length (LZ): " << m_LhomZ                            << endl;
                 if(m_useFFT)
                 {
-                    out << "\tUsing FFTW " << endl;
+                    out << "\tFFT Type        : FFTW" << endl;   
                 }
                 else
                 {
-                    out << "\tUsing MVM "  << endl;
+                    out << "\tFFT Type        : MVM" << endl;               
                 }
 			
-                //if(m_SingleMode==true)
-				if(m_MultipleModes==true)
+                if(m_MultipleModes==true)
                 {
                     out << "\tSelected Mode    : " << m_NumMode << endl;
 
@@ -2040,15 +2072,15 @@ namespace Nektar
                 out << "\tN.Hom. Modes (z): " << m_npointsZ                         << endl;
                 out << "\tHom. length (LY): " << m_LhomY                            << endl;
                 out << "\tHom. length (LZ): " << m_LhomZ                            << endl;
+
                 if(m_useFFT)
                 {
-                    out << "\tUsing FFTW " << endl;
+                    out << "\tFFT Type        : FFTW" << endl;               
                 }
                 else
                 {
-                    out << "\tUsing MVM "  << endl;
+                    out << "\tFFT Type        : MVM" << endl;               
                 }
-
             }
             else
             {

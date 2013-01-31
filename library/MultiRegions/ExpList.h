@@ -401,16 +401,16 @@ namespace Nektar
 
             /// Set the \a i th coefficiient in \a m_coeffs to value \a val
             inline void SetCoeff(int i, NekDouble val);
-			
-			/// Set the coefficiient in \a m_coeffs to value \a val (0D Exapnsion)
+            
+            /// Set the coefficiient in \a m_coeffs to value \a val (0D Exapnsion)
             inline void SetCoeff(NekDouble val);
-			
-			/// Set the physical value in \a m_coeffs to value \a val (0D Exapnsion)
+            
+            /// Set the physical value in \a m_coeffs to value \a val (0D Exapnsion)
             inline void SetPhys(NekDouble val);
-			
-			inline const SpatialDomains::VertexComponentSharedPtr &GetGeom(void) const;
-			
-			inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const;
+            
+            inline const SpatialDomains::VertexComponentSharedPtr &GetGeom(void) const;
+            
+            inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const;
 
             /// Set the \a i th coefficiient in  #m_coeffs to value \a val
             inline void SetCoeffs(int i, NekDouble val);
@@ -468,13 +468,20 @@ namespace Nektar
                 return v_L2();
             }
 			
-            /// This function calculates the energy associated with each one of the modes
-            /// of a 3D homogeneous nD expansion
+            /// This function calculates the energy associated with
+            /// each one of the modesof a 3D homogeneous nD expansion
             Array<OneD, const NekDouble> HomogeneousEnergy (void)
             {
                 return v_HomogeneousEnergy();
             }
-			
+
+            /// This function sets the Spectral Vanishing Viscosity 
+            /// in homogeneous1D expansion. 
+            void SetHomo1DSpecVanVisc(Array<OneD, NekDouble> visc)
+            {
+                v_SetHomo1DSpecVanVisc(visc);
+            }
+
             /// This function returns a vector containing the wave
             /// numbers in z-direction associated
             /// with the 3D homogenous expansion. Required if a
@@ -524,6 +531,7 @@ namespace Nektar
             
             /// This function returns the number of elements in the expansion.
             inline int GetExpSize(void);
+
 
             /// This function returns the number of elements in the
             /// expansion which may be different for a homogeoenous extended
@@ -1211,6 +1219,14 @@ namespace Nektar
                          "This method is not defined or valid for this class type");
                 return LibUtilities::NullBasisSharedPtr; 
             }
+
+            // wrapper function to set viscosity for Homo1D expansion
+            virtual void v_SetHomo1DSpecVanVisc(Array<OneD, NekDouble> visc)
+            {
+                ASSERTL0(false,
+                         "This method is not defined or valid for this class type");
+            }
+
 
             virtual boost::shared_ptr<ExpList> &v_GetPlane(int n);
         };

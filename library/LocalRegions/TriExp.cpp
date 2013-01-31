@@ -1328,7 +1328,7 @@ namespace Nektar
             case StdRegions::eLaplacian:
                 {
                     if( (m_metricinfo->GetGtype() == SpatialDomains::eDeformed) ||
-                        (mkey.GetNVarCoeff() > 0) )
+                        (mkey.GetNVarCoeff() > 0)||(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio)))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1747,6 +1747,25 @@ namespace Nektar
                     BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1);
                     StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
 
+
+                    // Multiply by svv tensor if active
+                    if(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
+                    {
+                        StdRegions::StdMatrixKey svvkey(mkey,StdRegions::eSVVTensor);
+                        
+                        DNekMat  &SVVTensor = *GetStdMatrix(svvkey);
+                        
+                        NekVector<NekDouble> In1(nqtot,wsp1,eCopy);
+                        NekVector<NekDouble> Out1(nqtot,wsp1,eWrapper);
+                        
+                        Out1 = SVVTensor*In1;                                           
+
+                        NekVector<NekDouble> In2(nqtot,wsp2,eCopy);
+                        NekVector<NekDouble> Out2(nqtot,wsp2,eWrapper);
+                        
+                        Out2 = SVVTensor*In2;                                           
+                    }
+
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g1 * du_dxi1 + g2 * du_dxi2
                     // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
@@ -1796,6 +1815,24 @@ namespace Nektar
                     // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
                     BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1);
                     StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
+
+                    // Multiply by svv tensor if active
+                    if(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
+                    {
+                        StdRegions::StdMatrixKey svvkey(mkey,StdRegions::eSVVTensor);
+                        
+                        DNekMat  &SVVTensor = *GetStdMatrix(svvkey);
+                        
+                        NekVector<NekDouble> In1(nqtot,wsp1,eCopy);
+                        NekVector<NekDouble> Out1(nqtot,wsp1,eWrapper);
+                        
+                        Out1 = SVVTensor*In1;                                           
+
+                        NekVector<NekDouble> In2(nqtot,wsp2,eCopy);
+                        NekVector<NekDouble> Out2(nqtot,wsp2,eWrapper);
+                        
+                        Out2 = SVVTensor*In2;                                           
+                    }
 
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2

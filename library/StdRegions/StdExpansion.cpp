@@ -222,7 +222,7 @@ namespace Nektar
             switch(itype)
             {
                 case eEdgeToElement:
-                {
+                    {
                     v_GetEdgeToElementMap(entity,orient,map,sign);
                 }
                 break;
@@ -720,6 +720,19 @@ namespace Nektar
             }
             else
             {
+                // Multiply by svv tensor 
+                if(mkey.ConstFactorExists(eFactorSVVCutoffRatio))
+                {
+                    StdMatrixKey svvkey(mkey,eSVVTensor);
+                    
+                    DNekMat  &SVVTensor = *GetStdMatrix(svvkey);
+                    
+                    NekVector<NekDouble> In(nq,dtmp,eCopy);
+                    NekVector<NekDouble> Out(nq,dtmp,eWrapper);
+                    
+                    Out = SVVTensor*In;                                           
+                }
+                
                 v_IProductWRTDerivBase(k1, dtmp, outarray);
             }
         }

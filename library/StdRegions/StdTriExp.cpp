@@ -1283,7 +1283,7 @@ namespace Nektar
                 break;
             }  
         }
-
+        
         int StdTriExp::v_GetVertexMap(const int localVertexId)
         {
             ASSERTL0(
@@ -1480,7 +1480,78 @@ namespace Nektar
         
         DNekMatSharedPtr StdTriExp::v_GenMatrix(const StdMatrixKey &mkey)
         {
-            return StdExpansion::CreateGeneralMatrix(mkey);
+
+            MatrixType mtype   = mkey.GetMatrixType();
+            
+            DNekMatSharedPtr Mat; 
+            
+            switch(mtype)
+            {
+            case eSVVTensor:
+                {
+                    // Generate a matrix that performs a physical
+                    // space filter where the high frequencies are
+                    // filtered according to SVV filter. 
+                    
+                    // Generate an orthonogal expansion
+                    int qa = m_base[0]->GetNumPoints();
+                    int qb = m_base[1]->GetNumPoints();
+                    int qtot = qa*qb;
+                    int nmodes_a = m_base[0]->GetNumModes();
+                    int nmodes_b = m_base[1]->GetNumModes();
+                    // Declare orthogonal basis. 
+                    LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+                    LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
+                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,nmodes_b,pb);
+                    StdTriExp OrthoExp(Ba,Bb);
+                    
+                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(qtot,qtot);
+                    Array<OneD, NekDouble> inarray(qtot);
+                    Array<OneD, NekDouble> orthocoeffs(nmodes_a*nmodes_b);
+                    int i,j,k;
+
+                    
+                    int cnt;
+                    int cuttoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*nmodes_a);
+                    NekDouble  SvvDiffCoeff = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+                    
+                    for(i = 0; i < qtot; ++i)
+                    {
+                        Vmath::Zero(qtot,inarray,1);
+                        inarray[i] = 1.0;
+                        // project onto physical space.
+                        OrthoExp.FwdTrans(inarray,orthocoeffs);
+                        
+                        // apply SVV filter. 
+                        for(cnt = j = 0; j < nmodes_a; ++j)
+                        {
+                            for(k = 0; k < nmodes_b-j; ++k)
+                            {
+                                if(j + k >= cuttoff)
+                                {
+                                    orthocoeffs[cnt] += SvvDiffCoeff*exp(-(j+k-nmodes_a)*(j+k-nmodes_a)/((j+k-cuttoff+1)*(j+k-cuttoff+1)));
+                                }
+                                cnt++;
+                            }
+                        }
+
+                        // backward transform to physical space
+                        OrthoExp.FwdTrans(orthocoeffs,inarray);
+                        
+                        // Fill column of matrix
+                        Vmath::Vcopy(qtot,&inarray[0],1,&(Mat->GetPtr())[0]+i*qtot,1);
+                    }
+                }
+                break;
+            default:
+                {
+                    Mat = StdExpansion::CreateGeneralMatrix(mkey);
+                }
+                break;
+            }
+            
+            return Mat;
         }
         
         DNekMatSharedPtr StdTriExp::v_CreateStdMatrix(const StdMatrixKey &mkey)

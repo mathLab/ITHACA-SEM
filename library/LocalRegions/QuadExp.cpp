@@ -1413,7 +1413,6 @@ namespace Nektar
             return returnval;
         }
 
-
         DNekMatSharedPtr QuadExp::v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
@@ -1522,11 +1521,11 @@ namespace Nektar
             case StdRegions::eLaplacian:
                 {
                     if( (m_metricinfo->GetGtype() == SpatialDomains::eDeformed) ||
-                        (mkey.GetNVarCoeff() > 0) )
+                        (mkey.GetNVarCoeff() > 0)||(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio)))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
-
+                        
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
@@ -1903,6 +1902,7 @@ namespace Nektar
         }
 
 
+
         void QuadExp::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                 Array<OneD,NekDouble> &outarray,
                                                 const StdRegions::StdMatrixKey &mkey)
@@ -1943,6 +1943,24 @@ namespace Nektar
                     else
                     {
                         StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
+                    }
+
+                    // Multiply by svv tensor if active
+                    if(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
+                    {
+                        StdRegions::StdMatrixKey svvkey(mkey,StdRegions::eSVVTensor);
+                        
+                        DNekMat  &SVVTensor = *GetStdMatrix(svvkey);
+                        
+                        NekVector<NekDouble> In1(nqtot,wsp1,eCopy);
+                        NekVector<NekDouble> Out1(nqtot,wsp1,eWrapper);
+                        
+                        Out1 = SVVTensor*In1;                                           
+
+                        NekVector<NekDouble> In2(nqtot,wsp2,eCopy);
+                        NekVector<NekDouble> Out2(nqtot,wsp2,eWrapper);
+                        
+                        Out2 = SVVTensor*In2;                                           
                     }
 
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
@@ -2006,6 +2024,25 @@ namespace Nektar
                     else
                     {
                         StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
+                    }
+
+
+                    // Multiply by svv tensor if active
+                    if(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
+                    {
+                        StdRegions::StdMatrixKey svvkey(mkey,StdRegions::eSVVTensor);
+                        
+                        DNekMat  &SVVTensor = *GetStdMatrix(svvkey);
+                        
+                        NekVector<NekDouble> In1(nqtot,wsp1,eCopy);
+                        NekVector<NekDouble> Out1(nqtot,wsp1,eWrapper);
+                        
+                        Out1 = SVVTensor*In1;                                           
+
+                        NekVector<NekDouble> In2(nqtot,wsp2,eCopy);
+                        NekVector<NekDouble> Out2(nqtot,wsp2,eWrapper);
+                        
+                        Out2 = SVVTensor*In2;                                           
                     }
 
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2

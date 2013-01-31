@@ -128,6 +128,17 @@ namespace Nektar
                 return x->second;
             }
 
+            inline  bool ConstFactorExists(const ConstFactorType& factor) const
+            {
+                ConstFactorMap::const_iterator x = m_factors.find(factor);
+                if(x != m_factors.end())
+                {
+                    return true;
+                }
+                
+                return false;
+            }
+
             inline const ConstFactorMap& GetConstFactors() const
             {
                 return m_factors;

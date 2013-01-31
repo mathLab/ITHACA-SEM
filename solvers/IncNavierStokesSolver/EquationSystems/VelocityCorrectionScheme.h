@@ -122,6 +122,7 @@ namespace Nektar
 
         bool m_showTimings;                     // Show timings for each step
         bool m_useHomo1DSpecVanVisc;                  // bool to identify if spectral vanishing viscosity is active. 
+        bool m_useSpecVanVisc;                  // bool to identify if spectral vanishing viscosity is active. 
         Array<OneD, int> m_pressureBCtoElmtID;  // Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoTraceID; // Id of edge (2D) or face (3D) to which pressure boundary condition belongs
         

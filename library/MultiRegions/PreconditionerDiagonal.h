@@ -74,17 +74,10 @@ namespace Nektar
 
 	protected:
 
-            const boost::weak_ptr<GlobalLinSys>         m_linsys;
+            Array<OneD, NekDouble>                      m_diagonals;
 
             PreconditionerType                          m_preconType;
-	    StdRegions::StdExpansionSharedPtr           vExp;
-
-            DNekMatSharedPtr                            m_preconditioner;
-	    DNekScalBlkMatSharedPtr                     GloBlkMat;
-
-            DNekScalMatSharedPtr                        bnd_mat;
-
-            boost::shared_ptr<AssemblyMap>              m_locToGloMap;
+            StdRegions::StdExpansionSharedPtr           vExp;
 
 	private:
 

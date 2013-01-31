@@ -1,5 +1,6 @@
-SET(NEKTAR_SOLVER_FITZHUGH_NAGUMO ON CACHE BOOL
-    "Build the Fitzhugh-Nagumo solver.")
+CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_FITZHUGH_NAGUMO
+    "Build the Fitzhugh-Nagumo solver." ON
+    "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_FITZHUGH_NAGUMO )
     SET(FitzHughNagumoSolverSource 

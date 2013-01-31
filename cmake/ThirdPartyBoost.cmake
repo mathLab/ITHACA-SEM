@@ -1,5 +1,4 @@
-SET(THIRDPARTY_BUILD_BOOST OFF CACHE BOOL
-    "Build Boost libraries")
+OPTION(THIRDPARTY_BUILD_BOOST "Build Boost libraries" OFF)
 SET(Boost_USE_MULTITHREADED ON CACHE BOOL
     "Search for multithreaded boost libraries")
 MARK_AS_ADVANCED(Boost_USE_MULTITHREADED)

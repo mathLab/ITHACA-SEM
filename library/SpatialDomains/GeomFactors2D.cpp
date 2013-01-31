@@ -361,8 +361,12 @@ namespace Nektar
 
                     if(CheckJacPositive)
                     {
+                        static int cnt = 0;
+
                         ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0,
-                                 "2D Deformed Jacobian is not positive");
+                                 "2D Deformed Jacobian is not positive (cnt = " + 
+                                 boost::lexical_cast<std::string>(cnt) + ")");
+                        cnt++;
                     }
 
                     // d xi_1/d x_1

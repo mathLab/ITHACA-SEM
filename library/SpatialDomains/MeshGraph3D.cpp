@@ -133,7 +133,6 @@ namespace Nektar
 
                 int err = edge->QueryIntAttribute("ID",&indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read edge attribute ID.");
-//                ASSERTL0(indx == nextEdgeNumber, "Edge IDs must begin with zero and be sequential.");
 
                 TiXmlNode *child = edge->FirstChild();
                 edgeStr.clear();
@@ -731,7 +730,8 @@ namespace Nektar
         {
             SegGeomSharedPtr returnval;
             SegGeomMap::iterator x = m_segGeoms.find(eID);
-            ASSERTL0(x != m_segGeoms.end(), "Segment not found.");
+            ASSERTL0(x != m_segGeoms.end(), "Segment "
+                     + boost::lexical_cast<string>(eID) + " not found.");
             return x->second;
         };
 
@@ -977,7 +977,7 @@ namespace Nektar
             return it->second;
         }
 
-        LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(Geometry2DSharedPtr face, const int flag)
+        LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(Geometry2DSharedPtr face, const int flag, const std::string variable)
         {
             ElementFaceVectorSharedPtr elements = GetElementsFromFace(face);
             ASSERTL0(elements->size() > 0, "No elements for the given face."
@@ -985,7 +985,7 @@ namespace Nektar
             // Perhaps, a check should be done here to ensure that in case
             // elements->size!=1, all elements to which the edge belongs have the same type
             // and order of expansion such that no confusion can arise.
-            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element);
+            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element,variable);
 
             int nummodes = (int) expansion->m_basisKeyVector[0].GetNumModes();
 

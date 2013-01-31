@@ -51,7 +51,7 @@ namespace Nektar
         void NodalTetElec::CalculatePoints()
         {
             // Allocate the storage for points
-            Points<double>::CalculatePoints();
+            Points<NekDouble>::CalculatePoints();
 
             int index=0,isum=0;
             const int offset = 5; //offset to match Datafile

@@ -205,67 +205,67 @@ namespace Nektar
             return returnval;
         }
 		
-		IndexMapValuesSharedPtr StdExpansion::CreateIndexMap(const IndexMapKey &ikey)
-		{
-			IndexMapValuesSharedPtr returnval;
+        IndexMapValuesSharedPtr StdExpansion::CreateIndexMap(const IndexMapKey &ikey)
+        {
+            IndexMapValuesSharedPtr returnval;
 			
-			IndexMapType itype = ikey.GetIndexMapType();
+            IndexMapType itype = ikey.GetIndexMapType();
 	
-			int entity = ikey.GetIndexEntity();
+            int entity = ikey.GetIndexEntity();
 			
-			Orientation orient = ikey.GetIndexOrientation();
+            Orientation orient = ikey.GetIndexOrientation();
 			
-			Array<OneD,unsigned int>     map;
+            Array<OneD,unsigned int>     map;
             Array<OneD,int>             sign;
 			
-			switch(itype)
-			{
-				case eEdgeToElement:
-				{
-					v_GetEdgeToElementMap(entity,orient,map,sign);
-				}
-				break;
-				case eFaceToElement:
-				{
-					ASSERTL0(false,"Face to Element Index Map not implemented yet.");
-				}
-				break;
-				case eEdgeInterior:
-				{
-					v_GetEdgeInteriorMap(entity,orient,map,sign);
-				}
-				break;
-				case eFaceInterior:
-				{
-					v_GetFaceInteriorMap(entity,orient,map,sign);
-				}
-				break;
-				case eBoundary:
-				{
-					ASSERTL0(false,"Boundary Index Map not implemented yet.");
-				}
-				break;
-				case eVertex:
-				{
-					ASSERTL0(false,"Vertex Index Map not implemented yet.");
-				}
-				break;
-				default:
-				{
-					ASSERTL0(false,"The Index Map you are requiring is not between the possible options.");
-				}
-			}
+            switch(itype)
+            {
+                case eEdgeToElement:
+                {
+                    v_GetEdgeToElementMap(entity,orient,map,sign);
+                }
+                break;
+                case eFaceToElement:
+                {
+                    v_GetFaceToElementMap(entity,orient,map,sign);
+                }
+                break;
+                case eEdgeInterior:
+                {
+                    v_GetEdgeInteriorMap(entity,orient,map,sign);
+                }
+                break;
+                case eFaceInterior:
+                {
+                    v_GetFaceInteriorMap(entity,orient,map,sign);
+                }
+                break;
+                case eBoundary:
+                {
+                    ASSERTL0(false,"Boundary Index Map not implemented yet.");
+                }
+                break;
+                case eVertex:
+                {
+                    ASSERTL0(false,"Vertex Index Map not implemented yet.");
+                }
+                break;
+                default:
+                {
+                    ASSERTL0(false,"The Index Map you are requiring is not between the possible options.");
+                }
+            }
 			
-			returnval = MemoryManager<IndexMapValues>::AllocateSharedPtr(map.num_elements());
+            returnval = MemoryManager<IndexMapValues>::AllocateSharedPtr(map.num_elements());
 			
-			for(int i = 0; i < map.num_elements(); i++)
-			{
-				(*returnval)[i].index =  map[i];
-				(*returnval)[i].sign  =  sign[i];
-			}
+            for(int i = 0; i < map.num_elements(); i++)
+            {
+                (*returnval)[i].index =  map[i];
+                (*returnval)[i].sign  =  sign[i];
+            }
 			
-			return returnval;
-		}
+            return returnval;
+        }
 
         NekDouble StdExpansion::Linf()
         {
@@ -1065,11 +1065,10 @@ namespace Nektar
                 return 0;
             }
             
-        void StdExpansion::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
-                                   const int offset, 
+        void StdExpansion::v_ExtractDataToCoeffs(const NekDouble *data, 
                                    const std::vector<unsigned int > &nummodes, 
                                    const int nmode_offset,
-                                   Array<OneD, NekDouble> &coeffs)
+                                   NekDouble *coeffs)
         {
                 NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
         }

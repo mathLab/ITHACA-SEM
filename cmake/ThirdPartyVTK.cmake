@@ -1,8 +1,8 @@
-SET(THIRDPARTY_BUILD_VTK OFF CACHE BOOL
-    "Build VTK library from ThirdParty")
+OPTION(NEKTAR_USE_VTK "Use VTK library for utilities." OFF)
 
-SET(NEKTAR_USE_VTK       OFF CACHE BOOL 
-    "Use VTK library for utilities.")
+CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_VTK
+    "Build VTK library from ThirdParty" OFF
+    "NEKTAR_USE_VTK; FALSE" OFF)
 
 IF( NEKTAR_USE_VTK )
     IF( THIRDPARTY_BUILD_VTK )

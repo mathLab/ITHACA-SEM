@@ -212,57 +212,65 @@ namespace Nektar
         }
 
         void HexGeom::v_GenGeomFactors(
-            const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            int i,f;
-            GeomType Gtype = eRegular;
-
-            v_FillGeom();
-
-            // check to see if expansions are linear
-            for(i = 0; i < m_coordim; ++i)
+            if (m_geomFactorsState != ePtsFilled)
             {
-                if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(1) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(2) != 2 )
-                {
-                    Gtype = eDeformed;
-                }
-            }
+                int i,f;
+                GeomType Gtype = eRegular;
 
-            // check to see if all faces are parallelograms 
-            if(Gtype == eRegular)
-            {
-                const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
-                    { {0,1,2,3} ,
-                      {0,1,5,4} ,
-                      {1,2,6,5} ,
-                      {3,2,6,7} ,
-                      {0,3,7,4} ,
-                      {4,5,6,7} };
+                v_FillGeom();
 
-                for(f = 0; f < kNfaces; f++)
+                // check to see if expansions are linear
+                for(i = 0; i < m_coordim; ++i)
                 {
-                    // Ensure each face is a parallelogram? Check this.
-                    for (i = 0; i < m_coordim; i++)
+                    if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(1) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(2) != 2 )
                     {
-                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) +
-                                (*m_verts[ faceVerts[f][2] ])(i) - (*m_verts[ faceVerts[f][3] ])(i) ) > NekConstants::kNekZeroTol )
+                        Gtype = eDeformed;
+                    }
+                }
+
+                // check to see if all faces are parallelograms
+                if(Gtype == eRegular)
+                {
+                    const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
+                        { {0,1,2,3} ,
+                          {0,1,5,4} ,
+                          {1,2,6,5} ,
+                          {3,2,6,7} ,
+                          {0,3,7,4} ,
+                          {4,5,6,7} };
+
+                    for(f = 0; f < kNfaces; f++)
+                    {
+                        // Ensure each face is a parallelogram? Check this.
+                        for (i = 0; i < m_coordim; i++)
                         {
-                            Gtype = eDeformed;
+                            if( fabs( (*m_verts[ faceVerts[f][0] ])(i) -
+                                      (*m_verts[ faceVerts[f][1] ])(i) +
+                                      (*m_verts[ faceVerts[f][2] ])(i) -
+                                      (*m_verts[ faceVerts[f][3] ])(i) )
+                                    > NekConstants::kNekZeroTol )
+                            {
+                                Gtype = eDeformed;
+                                break;
+                            }
+                        }
+
+                        if (Gtype == eDeformed)
+                        {
                             break;
                         }
                     }
-                    
-                    if (Gtype == eDeformed)
-                    {
-                        break;
-                    }
                 }
-            }
 
-            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                Gtype, m_coordim, m_xmap, tbasis);
+                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                                            Gtype, m_coordim, m_xmap, tbasis);
+
+                m_geomFactorsState = ePtsFilled;
+            }
         }
 
         void HexGeom::v_GetLocCoords(

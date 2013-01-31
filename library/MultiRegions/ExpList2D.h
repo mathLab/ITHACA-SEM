@@ -101,14 +101,16 @@ namespace Nektar
                       const StdRegions::StdExpansionVector &locexp,
                       const SpatialDomains::MeshGraphSharedPtr &graph3D,
                       const map<int,PeriodicFace> &periodicFaces,
-                      const bool DeclareCoeffPhysArrays = true);
+                      const bool DeclareCoeffPhysArrays = true,
+                      const std::string variable = "DefaultVar");
 
             /// Specialised constructor for Neumann boundary conditions in
             /// DisContField3D and ContField3D.
             MULTI_REGIONS_EXPORT ExpList2D(  
                         const LibUtilities::SessionReaderSharedPtr &pSession,
                         const SpatialDomains::CompositeMap &domain,
-                        const SpatialDomains::MeshGraphSharedPtr &graph3D);
+                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                        const std::string variable = "DefaultVar");
             
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList2D();
@@ -137,6 +139,9 @@ namespace Nektar
 
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 
+            virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+            virtual void v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
         };
 
         /// Empty ExpList2D object.

@@ -156,7 +156,7 @@ namespace Nektar
                 if (vCG)
                 {
                     SolveLinearSystem(
-                        nGlobDofs, tmp, tmp, pLocToGloMap, nDirDofs);
+                        nGlobDofs, tmp, pOutput, pLocToGloMap, nDirDofs);
                 }
                 else
                 {
@@ -166,12 +166,8 @@ namespace Nektar
             else
             {
                 Vmath::Vcopy(nGlobDofs, pInput, 1, tmp, 1);
-                SolveLinearSystem(nGlobDofs, tmp, tmp, pLocToGloMap);
+                SolveLinearSystem(nGlobDofs, tmp, pOutput, pLocToGloMap);
             }
-            
-            Array<OneD, NekDouble> tmp2 = pOutput + nDirDofs;
-            Vmath::Vadd(nGlobDofs - nDirDofs, 
-                        tmp + nDirDofs, 1, tmp2, 1, tmp2, 1);
         }
 
 

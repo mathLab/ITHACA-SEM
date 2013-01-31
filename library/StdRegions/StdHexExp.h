@@ -58,8 +58,8 @@ namespace Nektar
                     const  LibUtilities::BasisKey &Ba,
                     const  LibUtilities::BasisKey &Bb,
                     const  LibUtilities::BasisKey &Bc,
-                    double *coeffs,
-                    double *phys);
+                    NekDouble *coeffs,
+                    NekDouble *phys);
             STD_REGIONS_EXPORT StdHexExp(const StdHexExp &T);
             STD_REGIONS_EXPORT ~StdHexExp();
 
@@ -136,16 +136,16 @@ namespace Nektar
             // Inner product functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_MatOp(
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray);
 
             STD_REGIONS_EXPORT void IProductWRTBase_SumFacKernel(
                     const Array<OneD, const NekDouble>& base0,

@@ -122,22 +122,22 @@ namespace expt
     struct IsBlockMatrix : public boost::false_type {};
 
     template<typename T>
-    struct IsBlockMatrix<NekMatrix<T, BlockMatrixTag> > : public boost::true_type {};
+    struct IsBlockMatrix<Nektar::NekMatrix<T, Nektar::BlockMatrixTag> > : public boost::true_type {};
 
     template<typename DataType>
     struct HasUnaryOp<NegateOp, DataType, typename boost::enable_if<IsBlockMatrix<DataType> >::type> : public boost::false_type {};
 
         template<typename LhsDataType, typename LhsMatrixType,
             typename RhsDataType, typename RhsMatrixType>
-        struct CommutativeTraits<NekMatrix<LhsDataType, LhsMatrixType> ,
-            expt::MultiplyOp, NekMatrix<RhsDataType, RhsMatrixType> > : public boost::false_type
+        struct CommutativeTraits<Nektar::NekMatrix<LhsDataType, LhsMatrixType> ,
+            expt::MultiplyOp, Nektar::NekMatrix<RhsDataType, RhsMatrixType> > : public boost::false_type
         {
         };
 
     template<typename LhsDataType, typename LhsMatrixType,
         typename RhsDataType>
-    struct CommutativeTraits<NekMatrix<LhsDataType, LhsMatrixType> ,
-        expt::MultiplyOp, NekVector<RhsDataType> > : public boost::false_type
+    struct CommutativeTraits<Nektar::NekMatrix<LhsDataType, LhsMatrixType> ,
+        expt::MultiplyOp, Nektar::NekVector<RhsDataType> > : public boost::false_type
     {
     };
 }

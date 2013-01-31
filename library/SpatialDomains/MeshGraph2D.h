@@ -218,7 +218,7 @@ namespace Nektar
             /** \brief Return the BasisKey corresponding to an edge of an element
 	     *  If the expansion is a triangle the Modified_B direction is modified to be one-dimensional Modified_A,GaussLobattoLegendre.
 	     **/
-	        SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetEdgeBasisKey(SegGeomSharedPtr edge);
+            SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetEdgeBasisKey(SegGeomSharedPtr edge, const std::string variable = "DefaultVar");
 
         protected:
             void ReadEdges    (TiXmlDocument &doc);

@@ -326,13 +326,52 @@ namespace Nektar
          * @param   outarray    Output array of data.
          */
         void HexExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray)
         {
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
-            int nqtot  = nquad0*nquad1*nquad2;
+            HexExp::v_IProductWRTBase_SumFac(inarray, outarray);
+        }
+
+        /**
+	 * \brief Calculate the inner product of inarray with respect to the
+	 * given basis B = base0 * base1 * base2.
+	 *
+         * \f$ \begin{array}{rcl} I_{pqr} = (\phi_{pqr}, u)_{\delta}
+         * & = & \sum_{i=0}^{nq_0} \sum_{j=0}^{nq_1} \sum_{k=0}^{nq_2}
+         *     \psi_{p}^{a} (\xi_{1i}) \psi_{q}^{a} (\xi_{2j}) \psi_{r}^{a}
+         *     (\xi_{3k}) w_i w_j w_k u(\xi_{1,i} \xi_{2,j} \xi_{3,k})
+         * J_{i,j,k}\\ & = & \sum_{i=0}^{nq_0} \psi_p^a(\xi_{1,i})
+         *     \sum_{j=0}^{nq_1} \psi_{q}^a(\xi_{2,j}) \sum_{k=0}^{nq_2}
+         *     \psi_{r}^a u(\xi_{1i},\xi_{2j},\xi_{3k})
+         * J_{i,j,k} \end{array} \f$ \n
+         * where
+         * \f$ \phi_{pqr} (\xi_1 , \xi_2 , \xi_3)
+         *    = \psi_p^a ( \xi_1) \psi_{q}^a (\xi_2) \psi_{r}^a (\xi_3) \f$ \n
+         * which can be implemented as \n
+         * \f$f_{r} (\xi_{3k})
+         *    = \sum_{k=0}^{nq_3} \psi_{r}^a u(\xi_{1i},\xi_{2j},\xi_{3k})
+         * J_{i,j,k} = {\bf B_3 U}   \f$ \n
+         * \f$ g_{q} (\xi_{3k}) = \sum_{j=0}^{nq_1} \psi_{q}^a (\xi_{2j})
+         *                          f_{r} (\xi_{3k})  = {\bf B_2 F}  \f$ \n
+         * \f$ (\phi_{pqr}, u)_{\delta}
+         *    = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{q} (\xi_{3k})
+         *    = {\bf B_1 G} \f$
+         *
+         * @param   base0       Basis to integrate wrt in first dimension.
+         * @param   base1       Basis to integrate wrt in second dimension.
+         * @param   base2       Basis to integrate wrt in third dimension.
+         * @param   inarray     Input array.
+         * @param   outarray    Output array.
+         * @param   coll_check  (not used)
+         */
+        void HexExp::v_IProductWRTBase_SumFac(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray)
+        {
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
+
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,       NekDouble> tmp(nqtot);
 
@@ -2040,9 +2079,10 @@ namespace Nektar
 
                         DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>
                                                 ::AllocateSharedPtr(rows,cols);
-                        (*WeakDeriv) = gmat[3*dir][0]*deriv0
-                                                + gmat[3*dir+1][0]*deriv1
-												+ gmat[3*dir+2][0]*deriv2;
+
+                        (*WeakDeriv) = gmat[3*dir  ][0]*deriv0
+                                     + gmat[3*dir+1][0]*deriv1
+                                     + gmat[3*dir+2][0]*deriv2;
 
                         returnval = MemoryManager<DNekScalMat>
                                             ::AllocateSharedPtr(jac,WeakDeriv);

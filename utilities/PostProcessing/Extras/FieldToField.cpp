@@ -94,13 +94,8 @@ int main(int argc, char *argv[])
     SetFields(graphShPt,fielddef, vSession,fields,nfields,variables,homo);
     int nq;//pointsper plane
     //-----------------------------------------------
-    cout<<"nfields="<<nfields<<endl;   
     // Copy data from file:fill fields with the fielddata
-    if(
-        //vSession->DefinesSolverInfo("HOMOGENEOUS")
-        fielddef[0]->m_numHomogeneousDir == 1
-
-      )
+    if(fielddef[0]->m_numHomogeneousDir == 1)
     {
         nq = fields[0]->GetPlane(1)->GetTotPoints();
         //THE IM PHYS VALUES ARE WRONG USING bwdTrans !!!
@@ -108,13 +103,13 @@ int main(int argc, char *argv[])
         {  
             for(int i = 0; i < fielddata.size(); ++i)
             {
-                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j], fields[j]->UpdateCoeffs());
             } 
 
             //bwd plane 0
             fields[j]->GetPlane(0)->BwdTrans_IterPerExp(fields[j]->GetPlane(0)->GetCoeffs(),  
                           fields[j]->GetPlane(0)->UpdatePhys() );
-
+            
             //bwd plane 1
             fields[j]->GetPlane(1)->BwdTrans_IterPerExp(fields[j]->GetPlane(1)->GetCoeffs(), 
                           fields[j]->GetPlane(1)->UpdatePhys() );
@@ -129,18 +124,11 @@ int main(int argc, char *argv[])
         {  	    
             for(int i = 0; i < fielddata.size(); ++i)
             {
-                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j]);
+                fields[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[j], fields[j]->UpdateCoeffs());
             }             
             fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());      
         }
     }
-    //----------------------------------------------    
-/*    
-         for(int g=0; g<fields[0]->GetPlane(1)->GetTotPoints(); g++)
-         {
-cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<fields[0]->GetPlane(1)->GetPhys()[g]<<endl;
-         }
-*/
 
 
     // store mesh0 quadrature points    
@@ -164,7 +152,6 @@ cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<field
     //----------------------------------------------    
   
     //Read in the mesh1
-    cout<<"read second mesh"<<endl;
     string meshfile1(argv[argc-2]);    
     //Name of the output fieldfile
     string fieldfile1(argv[argc-1]);           
@@ -200,7 +187,6 @@ cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<field
 
     SetFields(graphShPt1,fielddef, vSession1, outfield,nfields,variables,homo);    	    
     //------------------------------------------------ 
-//cout<<"setfields1 ok"<<endl;
     // store the new points:
     int nq1;
     if(
@@ -233,14 +219,6 @@ cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<field
     }
     
     NekDouble x1min = Vmath::Vmin(nq1, x1,1);
-cout<<"X1MIN+"<<x1min<<endl;
-/*
-    for(int u=0; u<nq1; u++)
-    {
-cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;    	    
-    }
-*/    
-
 
     //------------------------------------------------
     
@@ -438,7 +416,7 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
                 {   
                     if(fielddef[0]->m_numHomogeneousDir == 1)
                     {
-cout<<"homogeneous case"<<endl;
+                        cout<<"homogeneous case"<<endl;
                         const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
 
@@ -458,17 +436,9 @@ cout<<"homogeneous case"<<endl;
                                    ContField3DHomogeneous1D>::AllocateSharedPtr
                                      (*firstfield);                                   
                         }
-/*
-                        for(i = 0 ; i < nvariables; i++)
-                        {                        	
-                            Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,deal,mesh,variables[i]);                                    
-                        }
-*/
                     }
                     else
                     {    
-//cout<<" norm field"<<endl;               	    
                         i = 0;
                         MultiRegions::ContField2DSharedPtr firstfield;
                         firstfield = MemoryManager<MultiRegions::ContField2D>
@@ -547,12 +517,11 @@ cout<<"homogeneous case"<<endl;
             const char *vars = element->Attribute("FIELDS");   
             //convert char into string object 
             string varstr = string(vars);       
-cout<<"char="<<vars<<endl;           
+            cout<<"Fields to Interpolate: "<<vars<<endl;           
             if(varstr=="u" || varstr=="v" || varstr=="w" || varstr=="p")
             {
                  variables = Array<OneD, std::string>(1);
                  variables[0] = varstr;
-cout<<variables[0]<<endl;
             }
             else if(varstr=="u,v" || varstr=="v,w" || varstr=="u,w")
             {
@@ -596,12 +565,7 @@ cout<<variables[0]<<endl;
                    //attempt =0;
                    coords[0] = x1[r];
                    coords[1] = y1[r];
-//cout<<r<<"  x="<<x1[r]<<"   y="<<y1[r]<<endl;                   
                    elmtid = field0->GetExpIndex(coords, 0.001);
-//cout<<elmtid<<endl;
-//cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl; 
-
-
 /*
                    if(elmtid <0)
                    {
@@ -644,16 +608,8 @@ cout<<variables[0]<<endl;
 
                        elmtid = field0->GetExpIndex(tmpcoords, 0.001);
 
-                 
-      
-
-                                        
-                         
                    }
 */
-
-//cout<<elmtid<<endl;
-
 
                    if(elmtid<0)
                    {

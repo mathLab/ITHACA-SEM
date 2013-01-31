@@ -258,6 +258,7 @@ namespace Nektar
                     m_numMultiStepValues = 1;
                     m_numMultiStepDerivs = 0;
                     m_timeLevelOffset = Array<OneD,unsigned int>(m_numsteps);
+                    m_timeLevelOffset[0] = 0; // SJS: Not sure whether this is correct
                 }
                 break;
             case eIMEXOrder1:
@@ -720,7 +721,7 @@ namespace Nektar
                     m_timeLevelOffset[3] = 1;
                 }
                 break;
-			case eIMEXGear:
+            case eIMEXGear:
                 {
                     NekDouble twothirdth = 2.0/3.0;
 		    		m_numsteps  = 2;
@@ -753,7 +754,7 @@ namespace Nektar
                     m_timeLevelOffset[1] = 1;
                 }
                 break;
-			case eMCNAB:
+            case eMCNAB:
                 {
                     NekDouble sixthx = 9.0/16.0;
 		    		m_numsteps  = 5;
@@ -836,7 +837,7 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-			case eIMEXdirk_2_3_3:		
+            case eIMEXdirk_2_3_3:		
                 {
                     m_numsteps  = 1;
                     m_numstages = 3;
@@ -874,7 +875,7 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-			case eIMEXdirk_1_1_1:		
+            case eIMEXdirk_1_1_1:		
                 {
                     m_numsteps  = 1;
                     m_numstages = 2;
@@ -904,7 +905,7 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-			case eIMEXdirk_1_2_1:		
+            case eIMEXdirk_1_2_1:		
                 {
                     m_numsteps  = 1;
                     m_numstages = 2;
@@ -935,7 +936,7 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;
-			case eIMEXdirk_1_2_2:		
+            case eIMEXdirk_1_2_2:		
                 {
                     m_numsteps  = 1;
                     m_numstages = 2;
@@ -965,7 +966,7 @@ namespace Nektar
                     m_timeLevelOffset[0] = 0;
                 }
                 break;	
-			case eIMEXdirk_4_4_3:		
+            case eIMEXdirk_4_4_3:		
                 {
                     m_numsteps  = 1;
                     m_numstages = 5;

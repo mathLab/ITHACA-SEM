@@ -90,8 +90,8 @@ namespace Nektar
             STD_REGIONS_EXPORT StdPyrExp(const LibUtilities::BasisKey &Ba, 
                                          const LibUtilities::BasisKey &Bb, 
                                          const LibUtilities::BasisKey &Bc,
-                                         double *coeffs, 
-                                         double *phys);
+                                         NekDouble *coeffs, 
+                                         NekDouble *phys);
 
             STD_REGIONS_EXPORT StdPyrExp(const StdPyrExp &T);
 

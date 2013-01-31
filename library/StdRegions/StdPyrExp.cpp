@@ -480,7 +480,7 @@ namespace Nektar
             for (int k = 0; k < Qz; ++k) {
                 for (int j = 0; j < Qy; ++j) {
                     for (int i = 0; i < Qx; ++i) {
-                        double sum = 0.0;
+                        NekDouble sum = 0.0;
                         for (int r = 0; r <= R; ++r) {
                             for (int q = 0; q <= min(R-r,Q); ++q) {
                                 for (int p = 0; p <= min(R-r,P); ++p) {

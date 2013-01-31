@@ -288,9 +288,16 @@ namespace Nektar
          *   = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})
          *   = {\bf B_1 G} \f$
          */
-         void TetExp::v_IProductWRTBase(
-                 const Array<OneD, const NekDouble>& inarray,
-                       Array<OneD, NekDouble> & outarray)
+        void TetExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            v_IProductWRTBase_SumFac(inarray, outarray);
+        }
+
+        void TetExp::v_IProductWRTBase_SumFac(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -1672,6 +1679,7 @@ namespace Nektar
             int nblks = 2;
             returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
             NekDouble factor = 1.0;
+            MatrixStorage AMatStorage = eFULL;
 
             switch(mkey.GetMatrixType())
             {
@@ -1718,7 +1726,7 @@ namespace Nektar
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
                     DNekScalMat &mat = *GetLocMatrix(mkey);
-                    DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry);
+                    DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry,AMatStorage);
                     DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
                     DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
                     DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
@@ -2099,11 +2107,11 @@ namespace Nektar
 	    int i,j;
 	    const int three=3;
             const int nVerts = 4;
-            const double point[][3] = {
-	      {-1,-1/sqrt(double(3)),-1/sqrt(double(6))},
-	      {1,-1/sqrt(double(3)),-1/sqrt(double(6))},
-	      {0,2/sqrt(double(3)),-1/sqrt(double(6))},
-	      {0,0,3/sqrt(double(6))}};
+            const NekDouble point[][3] = {
+	      {-1,-1/sqrt(NekDouble(3)),-1/sqrt(NekDouble(6))},
+	      {1,-1/sqrt(NekDouble(3)),-1/sqrt(NekDouble(6))},
+	      {0,2/sqrt(NekDouble(3)),-1/sqrt(NekDouble(6))},
+	      {0,0,3/sqrt(NekDouble(6))}};
         
             boost::shared_ptr<SpatialDomains::VertexComponent> verts[4];
 	    for(i=0; i < nVerts; ++i)

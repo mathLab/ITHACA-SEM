@@ -89,6 +89,41 @@ namespace Nektar
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
+
+            bool useHomo1DSpecVanVisc;
+            m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useHomo1DSpecVanVisc,false);
+            
+            if(m_useHomo1DSpecVanVisc)
+            {
+                
+                Array<OneD, unsigned int> planes;
+                planes = m_fields[0]->GetZIDs();
+
+                int num_planes = planes.num_elements();
+                Array<OneD, NekDouble> SVV(num_planes,0.0);
+                NekDouble fac;
+                int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
+                int pstart;
+
+                m_session->LoadParameter("SVVStartMode",pstart,0.75*kmodes);
+                
+                for(n = 0; n < num_planes; ++n)
+                {
+                    if(planes[n] > pstart)
+                    {
+                        fac = (NekDouble)((planes[n] - kmodes)*(planes[n] - kmodes))/
+                            ((NekDouble)((planes[n] - pstart)*(planes[n] - pstart)));
+                        SVV[n] = exp(-fac)/m_kinvis;
+                    }
+                    
+                }
+
+                for(i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    m_fields[m_velocity[i]]->GetTransposition()->SetSpecVanVisc(SVV);
+                }
+            }
+            
         }
 
         m_session->MatchSolverInfo("SubSteppingScheme","True",m_subSteppingScheme,false);
@@ -111,67 +146,66 @@ namespace Nektar
             {
             case LibUtilities::eBackwardEuler:
             case LibUtilities::eBDFImplicitOrder1: 
-    
+                {
+                    m_intSteps = 1;
+                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
+                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
+                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+                        
+                    LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eForwardEuler);
+                    m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
+                    
+                    // Fields for linear interpolation
+                    m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*m_fields.num_elements());                    
+                    int ntotpts  = m_fields[0]->GetTotPoints();
+                    m_previousVelFields[0] = Array<OneD, NekDouble>(2*m_fields.num_elements()*ntotpts);
+                    for(i = 1; i < 2*m_fields.num_elements(); ++i)
                     {
-                        m_intSteps = 1;
-                        m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
-                        m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                        
-                        LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eForwardEuler);
-                        m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
-                        
-                        // Fields for linear interpolation
-                        m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*m_fields.num_elements());                    
-                        int ntotpts  = m_fields[0]->GetTotPoints();
-                        m_previousVelFields[0] = Array<OneD, NekDouble>(2*m_fields.num_elements()*ntotpts);
-                        for(i = 1; i < 2*m_fields.num_elements(); ++i)
-                        {
-                            m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
-                        }
-                        
+                        m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
                     }
-                    break;
-                    case LibUtilities::eBDFImplicitOrder2:
-                    {
-                        m_intSteps = 2;
-                        m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                        
-                        
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eBackwardEuler);
-                        m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
-                        m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-                        
-                        LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eRungeKutta2_ImprovedEuler);
-                        
-                        m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
-                        
-                        int nvel = m_velocity.num_elements();
-                        
-                        // Fields for quadratic interpolation
-                        m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(3*nvel);
-                        
-                        int ntotpts  = m_fields[0]->GetTotPoints();
-                        m_previousVelFields[0] = Array<OneD, NekDouble>(3*nvel*ntotpts);
-                        for(i = 1; i < 3*nvel; ++i)
-                        {
-                            m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
-                        }
-                        
-                    }
-                    break;
-                    default:
-                        ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder1");
-                        break;
+                    
                 }
-                
-                // set explicit time-intregration class operators
+                break;
+            case LibUtilities::eBDFImplicitOrder2:
+                {
+                    m_intSteps = 2;
+                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
+                    
+                    
+                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eBackwardEuler);
+                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
+                    m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
+                    
+                    LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eRungeKutta2_ImprovedEuler);
+                    
+                    m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
+                    
+                    int nvel = m_velocity.num_elements();
+                    
+                    // Fields for quadratic interpolation
+                    m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(3*nvel);
+                    
+                    int ntotpts  = m_fields[0]->GetTotPoints();
+                    m_previousVelFields[0] = Array<OneD, NekDouble>(3*nvel*ntotpts);
+                    for(i = 1; i < 3*nvel; ++i)
+                    {
+                        m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
+                    }
+                    
+                }
+                break;
+            default:
+                ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder1");
+                break;
+            }
+            
+            // set explicit time-intregration class operators
                 m_subStepIntegrationOps.DefineOdeRhs(&IncNavierStokes::SubStepAdvection, this);
                 m_subStepIntegrationOps.DefineProjection(&IncNavierStokes::SubStepProjection, this);
                 
-            }
-            else // Standard velocity correction scheme
+        }
+        else // Standard velocity correction scheme
         {
             
             // Set to 1 for first step and it will then be increased in
@@ -239,18 +273,18 @@ namespace Nektar
         m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
         m_acceleration = Array<OneD, Array<OneD, NekDouble> > (m_intSteps + 1);
         
-        m_HBCnumber = 0;
+        int HBCnumber = 0;
         for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
         {
             // High order boundary condition;
             if(PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
             {
                 cnt += PBndExp[n]->GetNcoeffs();
-                m_HBCnumber += PBndExp[n]->GetExpSize();
+                HBCnumber += PBndExp[n]->GetExpSize();
             }
         }
         
-        if (m_HBCnumber > 0) 
+        if (HBCnumber > 0) 
         {
             m_acceleration[0] = Array<OneD, NekDouble>(cnt, 0.0);
 
@@ -260,21 +294,21 @@ namespace Nektar
                 m_acceleration[n+1] = Array<OneD, NekDouble>(cnt, 0.0);
             }
         }
-        m_HBCsize = cnt;
 
         // creating a Map to store the information regarding
         // High-Order pressure BCs to improve efficiency
-        FillHOPBCMap(m_HBCnumber);
+        // currently only set up for Fourier expansions
+        FillHOPBCMap(HBCnumber);
         
         // set implicit time-intregration class operators
         m_integrationOps.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
-        }
+    }
         
-        VelocityCorrectionScheme::~VelocityCorrectionScheme(void)
-        {
-            
-        }
+    VelocityCorrectionScheme::~VelocityCorrectionScheme(void)
+    {
         
+    }
+    
         
     void VelocityCorrectionScheme::v_PrintSummary(std::ostream &out)
     {
@@ -314,12 +348,28 @@ namespace Nektar
         {
             cout << "\tSubstepping     : " << LibUtilities::TimeIntegrationMethodMap[m_subStepIntegrationScheme->GetIntegrationMethod()] << endl;
         }
+
+        if(m_dealiasing)
+        {
+            cout << "\tDealiasing      : Homogeneous1D"  << endl;
+        }
+        
+        if(m_specHP_dealiasing)
+        {
+            cout << "\tDealiasing      : Spectral/hp "  << endl;
+        }
+
+        if(m_useHomo1DSpecVanVisc)
+        {
+            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D) " << endl;
+        }
     }
     
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
         // Set initial condition using time t=0
         SetInitialConditions(0.0);
+
         // Set Boundary conditions on the intiial conditions
         SetBoundaryConditions(0.0); // should be dependent on m_time? 
         for(int i = 0; i < m_nConvectiveFields; ++i)
@@ -409,12 +459,41 @@ namespace Nektar
         int nqtot        = m_fields[0]->GetTotPoints();
         
         Timer  timer;
+        bool IsRoot = (m_comm->GetColumnComm()->GetRank())? false:true;
+
+#if 0
         timer.Start();
+        for(int k = 0; k < 1000; ++k)
+        {
+            m_fields[0]->IProductWRTBase(m_fields[0]->GetPhys(),
+                                         m_fields[0]->UpdateCoeffs());
+
+        }
+        timer.Stop();
+        cout << "\t 1000 Iprods   : "<< timer.TimePerTest(1) << endl;
+#endif
+
+#if 0
+        timer.Start();
+        Array<OneD, NekDouble> out (m_fields[0]->GetTotPoints());
+        Array<OneD, NekDouble> out1(m_fields[0]->GetTotPoints());
+        Array<OneD, NekDouble> out2(m_fields[0]->GetTotPoints());
         
+        for(int k = 0; k < 10000; ++k)
+        {
+            m_fields[0]->PhysDeriv(out,out1,out2);
+
+        }
+        timer.Stop();
+        cout << "\t 10000 Physderiv   : "<< timer.TimePerTest(1) << endl;
+        exit(1);
+#endif
+
+        timer.Start();
         // evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t Adv. eval Time   : "<< timer.TimePerTest(1) << endl;
         }
@@ -446,20 +525,20 @@ namespace Nektar
                             outarray[i],1);
             }
             timer.Stop();
-            if(m_showTimings)
+            if(m_showTimings&&IsRoot)
             {
                 cout << "\t Body ForceTime   : "<< timer.TimePerTest(1) << endl;
             }
         }
         
-        if(m_HBCnumber > 0)
+        if(m_pressureHBCs[0].num_elements() > 0)
         {
             // Set pressure BCs
             timer.Start();
             EvaluatePressureBCs(inarray, outarray); 
             timer.Stop();
 
-            if(m_showTimings)
+            if(m_showTimings&&IsRoot)
             {
                 cout << "\t Pressure BCs     : "<< timer.TimePerTest(1) << endl;
             }
@@ -478,6 +557,7 @@ namespace Nektar
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = 0.0;
         Timer timer;
+        bool IsRoot = (m_comm->GetColumnComm()->GetRank())? false:true;
 
         for(n = 0; n < m_nConvectiveFields; ++n)
         {
@@ -495,7 +575,7 @@ namespace Nektar
         timer.Start();
         SetUpPressureForcing(inarray, F, aii_Dt);
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t Pressure Forcing : "<< timer.TimePerTest(1) << endl;
 	}
@@ -504,7 +584,7 @@ namespace Nektar
         timer.Start();
         m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList, factors);
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t Pressure Solve   : "<< timer.TimePerTest(1) << endl;
         }
@@ -513,7 +593,7 @@ namespace Nektar
         timer.Start();
         SetUpViscousForcing(inarray, F, aii_Dt);
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t Viscous Forcing  : "<< timer.TimePerTest(1) << endl;
         }
@@ -526,7 +606,7 @@ namespace Nektar
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);            
         }
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t Visc. Slv.      : "<< timer.TimePerTest(1) << endl;
         }
@@ -539,7 +619,7 @@ namespace Nektar
         }
  
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t BwdTrans : "<< timer.TimePerTest(1) << endl;
         
@@ -552,7 +632,7 @@ namespace Nektar
     void VelocityCorrectionScheme::SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, const NekDouble Aii_DT)
     {
         
-        if(m_HBCnumber > 0)
+        if(m_pressureHBCs[0].num_elements() > 0)
         {
             Array<OneD, Array<OneD, NekDouble> > velfields(m_velocity.num_elements());
             
@@ -579,13 +659,13 @@ namespace Nektar
         PBndExp     = m_pressure->GetBndCondExpansions();
 
         int acc_order = 0;
-        accelerationTerm = Array<OneD, NekDouble>(m_HBCsize, 0.0);
+        accelerationTerm = Array<OneD, NekDouble>(m_acceleration[0].num_elements(), 0.0);
 
-        // Roll HOPBCs storage
-        Roll(m_pressureHBCs);
+        // Rotate HOPBCs storage
+        Rotate(m_pressureHBCs);
 
-        // Roll acceleration term
-        Roll(m_acceleration);
+        // Rotate acceleration term
+        Rotate(m_acceleration);
 
         // Calculate BCs at current level
         CalcPressureBCs(fields,N);
@@ -618,7 +698,7 @@ namespace Nektar
                                   accelerationTerm,    1);
             }
         }
-
+        
         // Adding acceleration term to HOPBCs
         Vmath::Svtvp(cnt, -1.0/m_timestep,
                           accelerationTerm,  1,
@@ -657,7 +737,7 @@ namespace Nektar
     }
 
 
-    void VelocityCorrectionScheme::Roll(
+    void VelocityCorrectionScheme::Rotate(
             Array<OneD, Array<OneD, NekDouble> > &input)
     {
         int  nlevels = input.num_elements();
@@ -782,7 +862,7 @@ namespace Nektar
                 }
             }
 
-            // setting if just standard BC no High order
+            // setting if just standard BC not High order
             else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
             {
                 cnt += PBndExp[n]->GetExpSize();
@@ -836,27 +916,27 @@ namespace Nektar
 
             StdRegions::StdExpansion1DSharedPtr Pbc;
             
-            for(int j = 0 ; j < m_HBCnumber ; j++)
+            for(int j = 0 ; j < m_HBCdata.num_elements() ; j++)
             {
-                Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[m_HBC[5][j]]->GetExp(m_HBC[3][j]));
+                Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (PBndExp[m_HBCdata[j].m_bndryElmtID]->GetExp(m_HBCdata[j].m_bndElmtOffset));
                 
                 // Picking up the element where the HOPBc is located
-                m_elmt = m_fields[0]->GetExp(m_HBC[0][j]);
+                m_elmt = m_fields[0]->GetExp(m_HBCdata[j].m_globalElmtID);
                 
                 // Using the physical offset to get the velocity (W is taken on the coniugated plane)
-                U = fields[m_velocity[0]] + m_HBC[2][j];
-                V = fields[m_velocity[1]] + m_HBC[2][j];
-                W = fields[m_velocity[2]] + m_HBC[7][j];
+                U = fields[m_velocity[0]] + m_HBCdata[j].m_physOffset;
+                V = fields[m_velocity[1]] + m_HBCdata[j].m_physOffset;
+                W = fields[m_velocity[2]] + m_HBCdata[j].m_assPhysOffset;
                 
                 // Derivatives to build up the curl curl of the velocity
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],V,Vx);
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],U,Uy);
-                Vmath::Smul(m_HBC[1][j],m_wavenumber[j],W,1,Wz,1);
+                Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_wavenumber[j],W,1,Wz,1);
                 
                 // x-components of vorticity curl
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vx,Vxy);
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Uy,Uyy);
-                Vmath::Smul(m_HBC[1][j],m_beta[j],U,1,Uzz,1);
+                Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],U,1,Uzz,1);
                     
                 //x-component coming from the other plane
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Wz,Wxz);
@@ -864,31 +944,31 @@ namespace Nektar
                 // y-components of vorticity curl
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vx,Vxx);
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Uy,Uxy);
-                Vmath::Smul(m_HBC[1][j],m_beta[j],V,1,Vzz,1);
+                Vmath::Smul(m_HBCdata[j].m_ptsInElmt,m_negWavenumberSq[j],V,1,Vzz,1);
                 
                 //y-component coming from the other plane
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Wz,Wyz);
                 
                 // buinding up the curl of V adding the components
-                Vmath::Vsub(m_HBC[1][j],Vxy,1,Uyy,1,Qx,1);
-                Vmath::Vsub(m_HBC[1][j],Qx,1,Uzz,1,Qx,1);
-                Vmath::Vadd(m_HBC[1][j],Qx,1,Wxz,1,Qx,1);
+                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Vxy,1,Uyy,1,Qx,1);
+                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Qx ,1,Uzz,1,Qx,1);
+                Vmath::Vadd(m_HBCdata[j].m_ptsInElmt,Qx ,1,Wxz,1,Qx,1);
                 
-                Vmath::Vsub(m_HBC[1][j],Wyz,1,Vzz,1,Qy,1);
-                Vmath::Vsub(m_HBC[1][j],Qy,1,Vxx,1,Qy,1);
-                Vmath::Vadd(m_HBC[1][j],Qy,1,Uxy,1,Qy,1);
+                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Wyz,1,Vzz,1,Qy,1);
+                Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Qy ,1,Vxx,1,Qy,1);
+                Vmath::Vadd(m_HBCdata[j].m_ptsInElmt,Qy ,1,Uxy,1,Qy,1);
 		
                 // getting the advective term
-                Nu = N[0] + m_HBC[2][j];
-                Nv = N[1] + m_HBC[2][j];
+                Nu = N[0] + m_HBCdata[j].m_physOffset;
+                Nv = N[1] + m_HBCdata[j].m_physOffset;
 
                 if(m_subSteppingScheme)
                 {
                     // Evaluate [- kinvis Curlx Curl V]
                     // x-component (stored in Qx)
-                    Vmath::Smul(m_HBC[1][j],-m_kinvis,Qx,1,Qx,1);
+                    Vmath::Smul(m_HBCdata[j].m_ptsInElmt,-m_kinvis,Qx,1,Qx,1);
                     // y-component (stored in Qy)
-                    Vmath::Smul(m_HBC[1][j],-m_kinvis,Qy,1,Qy,1);
+                    Vmath::Smul(m_HBCdata[j].m_ptsInElmt,-m_kinvis,Qy,1,Qy,1);
                     // z-component (stored in Qz) not required for this approach
                     // the third component of the normal vector is always zero
                 }
@@ -896,26 +976,26 @@ namespace Nektar
                 {
                     // Evaluate [N - kinvis Curlx Curl V]
                     // x-component (stored in Qx)
-                    Vmath::Svtvp(m_HBC[1][j],-m_kinvis,Qx,1,Nu,1,Qx,1);
+                    Vmath::Svtvp(m_HBCdata[j].m_ptsInElmt,-m_kinvis,Qx,1,Nu,1,Qx,1);
                     // y-component (stored in Qy)
-                    Vmath::Svtvp(m_HBC[1][j],-m_kinvis,Qy,1,Nv,1,Qy,1);
+                    Vmath::Svtvp(m_HBCdata[j].m_ptsInElmt,-m_kinvis,Qy,1,Nv,1,Qy,1);
                     // z-component (stored in Qz) not required for this approach
                     // the third component of the normal vector is always zero
                 }
                 
                 // Get edge values and put into Uy, Vx
-                m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Qy,Uy);
-                m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,Qx,Vx);
+                m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Qy,Uy);
+                m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Qx,Vx);
                 
                 // calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
-                Pvals = PBndExp[m_HBC[5][j]]->UpdateCoeffs()+PBndExp[m_HBC[5][j]]->GetCoeff_Offset(m_HBC[3][j]);
+                Pvals = PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
                 
                 Pbc->NormVectorIProductWRTBase(Vx,Uy,Pvals);
 
                 //update values for the acceleration term
-                m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,U,Ub);
-                m_elmt->GetEdgePhysVals(m_HBC[4][j],Pbc,V,Vb);
-                Uvals = (m_acceleration[0]) + m_HBC[9][j];
+                m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,U,Ub);
+                m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,V,Vb);
+                Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
                 Pbc->NormVectorIProductWRTBase(Ub,Vb,Uvals);
             }
         }
@@ -960,17 +1040,17 @@ namespace Nektar
                 m_pressure->HomogeneousFwdTrans(qx,Q);
             }
             
-            for(int j = 0 ; j < m_HBCnumber ; j++)
+            for(int j = 0 ; j < m_HBCdata.num_elements(); j++)
             {				
-                Qx = Q + m_HBC[2][j];
+                Qx = Q + m_HBCdata[j].m_physOffset;
                 
-                if(m_HBC[4][j] == 0)
+                if(m_HBCdata[j].m_elmtTraceID == 0)
                 {
-                    (PBndExp[m_HBC[5][j]]->UpdateCoeffs()+PBndExp[m_HBC[5][j]]->GetCoeff_Offset(m_HBC[3][j]))[0] = -1.0*Qx[0];
+                    (PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset))[0] = -1.0*Qx[0];
                 }
-                else if (m_HBC[4][j] == 1)
+                else if (m_HBCdata[j].m_elmtTraceID == 1)
                 {
-                    (PBndExp[m_HBC[5][j]]->UpdateCoeffs()+PBndExp[m_HBC[5][j]]->GetCoeff_Offset(m_HBC[3][j]))[0] = Qx[m_HBC[1][j]-1];
+                    (PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset))[0] = Qx[m_HBCdata[j].m_ptsInElmt-1];
                 }
                 else 
                 {
@@ -1367,8 +1447,6 @@ namespace Nektar
     }
 	
     
-
-    
     void VelocityCorrectionScheme::FillHOPBCMap(const int HOPBCnumber)
     {
             
@@ -1379,51 +1457,26 @@ namespace Nektar
         ////////////////////////////////////////////////////////////////////////////
         if(m_HomogeneousType == eHomogeneous1D)
         {
-            // m_HBC[0][j] contains the elements ID in the global ordering
-            // m_HBC[1][j] contains the number of physical points of the element
-            // m_HBC[2][j] contains the elmenent physical offset in the global list
-            // m_HBC[3][j] contains the element offset in the boundary expansion
-            // m_HBC[4][j] contains the trace ID on the element j
-            // m_HBC[5][j] contains the pressure bc ID
-            // m_HBC[6][j] contains the elment ids of the assocuated plane k_c (ex. k=0 k_c=1; k=1 k_c=0; k=3 k_c=4)
-            // m_HBC[7][j] contains the associated elments physical offset (k and k_c are the real and the complex plane)
-            // m_HBC[8][j] contains the plane number
-            // m_HBC[9][j] coefficients offset used to locate the acceleration
-            //             term in the general m_pressureHBC
 
-            int num_data = 10;
-            
             Array<OneD, unsigned int> planes;
             
             planes = m_fields[0]->GetZIDs();
             
-            int num_planes = planes.num_elements();
-            
+            int num_planes = planes.num_elements();            
             int num_elm_per_plane = (m_fields[0]->GetExpSize())/num_planes;
             
-            m_HBC = Array<OneD, Array<OneD, int> > (num_data);
-            for(int n = 0; n < num_data; ++n)
-            {
-                m_HBC[n] = Array<OneD, int>(m_HBCnumber);
-            }
+            m_HBCdata = Array<OneD, HBCInfo>(HOPBCnumber);
             
-            m_wavenumber = Array<OneD, NekDouble>(m_HBCnumber);
-            m_beta       = Array<OneD, NekDouble>(m_HBCnumber);
+            m_wavenumber      = Array<OneD, NekDouble>(HOPBCnumber);
+            m_negWavenumberSq = Array<OneD, NekDouble>(HOPBCnumber);
 
-            Array<OneD,int> coeffs_offset(PBndConds.num_elements(),0);
-            Array<OneD,int> coeff_count(PBndConds.num_elements(),0);
-
-            for(int n = 1 ; n < PBndConds.num_elements(); ++n)
-            {
-                coeffs_offset[n] = coeffs_offset[n-1]
-                                   + PBndExp[n-1]->GetNcoeffs();
-            }
-
+            int coeff_count = 0;
             int exp_size, exp_size_per_plane;
             int j=0;
             int K;
             NekDouble sign = -1.0;
             int cnt = 0;
+
             for(int k = 0; k < num_planes; k++)
             {
                 K = planes[k]/2;
@@ -1435,52 +1488,51 @@ namespace Nektar
                     {
                         for(int i = 0; i < exp_size_per_plane; ++i,cnt++)
                         {
-                            m_HBC[0][j] = m_pressureBCtoElmtID[cnt];                 
-                            m_elmt      = m_fields[0]->GetExp(m_HBC[0][j]);
-                            m_HBC[1][j] = m_elmt->GetTotPoints();                    
-                            m_HBC[2][j] = m_fields[0]->GetPhys_Offset(m_HBC[0][j]);  
-                            m_HBC[3][j] = i+k*exp_size_per_plane;                    
-                            m_HBC[4][j] = m_pressureBCtoTraceID[cnt];                
-                            m_HBC[5][j] = n;
-                            m_HBC[8][j] = k;
-                            m_HBC[9][j] = coeffs_offset[n] + coeff_count[n];
-                            coeff_count[n] = coeff_count[n] 
-                                          + m_elmt->GetEdgeNcoeffs(m_HBC[4][j]);
+                            m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];   
+                            m_elmt      = m_fields[0]->GetExp(m_HBCdata[j].m_globalElmtID);
+                            m_HBCdata[j].m_ptsInElmt = m_elmt->GetTotPoints();         
+                            m_HBCdata[j].m_physOffset = m_fields[0]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
+                            m_HBCdata[j].m_bndElmtOffset = i+k*exp_size_per_plane;       
+                            m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];      
+                            m_HBCdata[j].m_bndryElmtID = n;
+                            m_HBCdata[j].m_coeffOffset = coeff_count;
+                            coeff_count += m_elmt->GetEdgeNcoeffs(m_HBCdata[j].m_elmtTraceID);
                             
                             if(m_SingleMode)
                             {
-                                m_wavenumber[j] = -2*M_PI/m_LhomZ;       
-                                m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
+                                m_wavenumber[j]      = -2*M_PI/m_LhomZ;       
+                                m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
                             }
                             else if(m_HalfMode || m_MultipleModes)
                             {
-                                m_wavenumber[j] = 2*M_PI/m_LhomZ;       
-                                m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
+                                m_wavenumber[j]      = 2*M_PI/m_LhomZ;       
+                                m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
                             }
                             else
                             {
-                                m_wavenumber[j] = 2*M_PI*sign*(double(K))/m_LhomZ;       
-                                m_beta[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
+                                m_wavenumber[j]     = 2*M_PI*sign*(NekDouble(K))/m_LhomZ; 
+                                m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
                             }
                             
+                            int assElmtID;
                             if(k%2==0)
                             {
                                 if(m_HalfMode)
                                 {
-                                    m_HBC[6][j] = m_HBC[0][j];
+                                    assElmtID = m_HBCdata[j].m_globalElmtID;
                                     
                                 }
                                 else
                                 {
-                                    m_HBC[6][j] = m_HBC[0][j] + num_elm_per_plane;
+                                    assElmtID = m_HBCdata[j].m_globalElmtID + num_elm_per_plane;
                                 }
                             }
                             else 
                             {
-                                m_HBC[6][j] = m_HBC[0][j] - num_elm_per_plane;
+                                assElmtID = m_HBCdata[j].m_globalElmtID - num_elm_per_plane;
                             }
                             
-                            m_HBC[7][j] = m_fields[0]->GetPhys_Offset(m_HBC[6][j]);
+                            m_HBCdata[j].m_assPhysOffset = m_fields[0]->GetPhys_Offset(assElmtID);
                             
                             j = j+1;
                         }
@@ -1496,20 +1548,7 @@ namespace Nektar
         ////////////////////////////////////////////////////////////////////////////
         else if(m_HomogeneousType == eHomogeneous2D)
         {
-            // m_HBC[0][j] contains the elements ID in the global ordering
-            // m_HBC[1][j] contains the number of physical points of the element
-            // m_HBC[2][j] contains the elmenent physical offset in the global list
-            // m_HBC[3][j] contains the element offset in the boundary expansion
-            // m_HBC[4][j] contains the trace ID on the element j
-            // m_HBC[5][j] contains the pressure bc ID
-            
-            int num_data = 6;
-            
-            m_HBC = Array<OneD, Array<OneD, int> > (num_data);
-            for(int n = 0; n < num_data; ++n)
-            {
-                m_HBC[n] = Array<OneD, int>(m_HBCnumber);
-            }
+            m_HBCdata = Array<OneD, HBCInfo>(HOPBCnumber);
             
             int Ky,Kz;
             int cnt = 0;
@@ -1536,13 +1575,13 @@ namespace Nektar
                             {
                                 // find element and edge of this expansion. 
                                 // calculate curl x curl v;
-                                m_HBC[0][j] = m_pressureBCtoElmtID[cnt];
-                                m_elmt      = m_fields[0]->GetExp(m_HBC[0][j]);
-                                m_HBC[1][j] = m_elmt->GetTotPoints();
-                                m_HBC[2][j] = m_fields[0]->GetPhys_Offset(m_HBC[0][j]);
-                                m_HBC[3][j] = i+(k1*m_npointsY+k2)*exp_size_per_line;
-                                m_HBC[4][j] = m_pressureBCtoTraceID[cnt];                
-                                m_HBC[5][j] = n;
+                                m_HBCdata[j].m_globalElmtID = m_pressureBCtoElmtID[cnt];
+                                m_elmt      = m_fields[0]->GetExp(m_HBCdata[j].m_globalElmtID);
+                                m_HBCdata[j].m_ptsInElmt = m_elmt->GetTotPoints();
+                                m_HBCdata[j].m_physOffset = m_fields[0]->GetPhys_Offset(m_HBCdata[j].m_globalElmtID);
+                                m_HBCdata[j].m_bndElmtOffset = i+(k1*m_npointsY+k2)*exp_size_per_line;
+                                m_HBCdata[j].m_elmtTraceID = m_pressureBCtoTraceID[cnt];                
+                                m_HBCdata[j].m_bndryElmtID = n;
                             }
                         }
                         else

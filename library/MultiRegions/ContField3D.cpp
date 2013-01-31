@@ -225,6 +225,7 @@ namespace Nektar
                                          m_locToGloMap);
                     GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
                     mat->Multiply(inarray,outarray);
+                    m_locToGloMap->UniversalAssemble(outarray);
                 }
                 else
                 {
@@ -522,8 +523,7 @@ namespace Nektar
           }
           else
           {
-              Array<OneD,NekDouble> tmp(contNcoeffs);
-              LocalToGlobal(outarray,tmp);// use outarray as initial guess
+              Array<OneD,NekDouble> tmp(contNcoeffs, 0.0);
               GlobalSolve(key,wsp,tmp,dirForcing);
               GlobalToLocal(tmp,outarray);
           }
@@ -543,6 +543,7 @@ namespace Nektar
               {
                   GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
                   mat->Multiply(inarray,outarray);
+                  m_locToGloMap->UniversalAssemble(outarray);
               }
               else
               {

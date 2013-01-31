@@ -190,7 +190,8 @@ namespace Nektar
                     LibUtilities::BasisKey TetBc
                                         = expIt->second->m_basisKeyVector[2];
 
-                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange ||
+                       TetBa.GetBasisType() == LibUtilities::eGauss_Lagrange)
                     {
                       ASSERTL0(false,"LocalRegions::NodalTetExp is not "
                                      "implemented yet");
@@ -309,7 +310,8 @@ namespace Nektar
                     LibUtilities::BasisKey TetBc
                                         = exp->m_basisKeyVector[2];
 
-                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange ||
+                       TetBa.GetBasisType() == LibUtilities::eGauss_Lagrange)
                     {
                       ASSERTL0(false,"LocalRegions::NodalTetExp is not "
                                      "implemented yet");

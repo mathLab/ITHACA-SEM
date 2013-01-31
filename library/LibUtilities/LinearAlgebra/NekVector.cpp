@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
+// File: NekVector.cpp
+//
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
@@ -207,7 +209,7 @@ namespace Nektar
             
             
     template<typename DataType>
-    unsigned int NekVector<DataType>::GetDimension() const
+    const unsigned int NekVector<DataType>::GetDimension() const
     {
         return m_size;
     }
@@ -433,7 +435,8 @@ namespace Nektar
         DataType* r_buf = result.GetRawPtr();
         const DataType* lhs_buf = lhs.GetRawPtr();
         const DataType* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < lhs.GetDimension(); ++i)
+        const unsigned int ldim = lhs.GetDimension();
+        for(int i = 0; i < ldim; ++i)
         {
             r_buf[i] = lhs_buf[i] + rhs_buf[i];
         }
@@ -447,7 +450,8 @@ namespace Nektar
         DataType* r_buf = result.GetRawPtr();
         const DataType* lhs_buf = lhs.GetRawPtr();
         const DataType* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < lhs.GetDimension(); ++i)
+        const unsigned int ldim = lhs.GetDimension();
+        for(int i = 0; i < ldim; ++i)
         {
             r_buf[i] = -lhs_buf[i] + rhs_buf[i];
         }
@@ -466,7 +470,8 @@ namespace Nektar
     {
         DataType* r_buf = result.GetRawPtr();
         const DataType* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < rhs.GetDimension(); ++i)
+        const unsigned int rdim = rhs.GetDimension();
+        for(int i = 0; i < rdim; ++i)
         {
             r_buf[i] += rhs_buf[i];
         }
@@ -478,7 +483,8 @@ namespace Nektar
     {
          DataType* r_buf = result.GetRawPtr();
         const DataType* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < rhs.GetDimension(); ++i)
+        const unsigned int rdim = rhs.GetDimension();
+        for(int i = 0; i < rdim; ++i)
         {
             r_buf[i] = -r_buf[i] + rhs_buf[i];
         }
@@ -513,7 +519,8 @@ namespace Nektar
         ResultDataType* r_buf = result.GetRawPtr();
         typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
         typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < lhs.GetDimension(); ++i)
+        const unsigned int ldim = lhs.GetDimension();
+        for(int i = 0; i < ldim; ++i)
         {
             r_buf[i] = lhs_buf[i] - rhs_buf[i];
         }
@@ -527,7 +534,8 @@ namespace Nektar
         ResultDataType* r_buf = result.GetRawPtr();
         typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
         typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < lhs.GetDimension(); ++i)
+        const unsigned int ldim = lhs.GetDimension();
+        for(int i = 0; i < ldim; ++i)
         {
             r_buf[i] = -lhs_buf[i] - rhs_buf[i];
         }
@@ -549,7 +557,8 @@ namespace Nektar
     {
         ResultDataType* r_buf = result.GetRawPtr();
         typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < rhs.GetDimension(); ++i)
+        const unsigned int rdim = rhs.GetDimension();
+        for(int i = 0; i < rdim; ++i)
         {
             r_buf[i] -= rhs_buf[i];
         }
@@ -561,7 +570,8 @@ namespace Nektar
     {
                 ResultDataType* r_buf = result.GetRawPtr();
         typename boost::add_const<InputDataType>::type* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < rhs.GetDimension(); ++i)
+        const unsigned int rdim = rhs.GetDimension();
+        for(int i = 0; i < rdim; ++i)
         {
             r_buf[i] = -r_buf[i] - rhs_buf[i];
         }
@@ -598,7 +608,8 @@ namespace Nektar
         ResultDataType* r_buf = result.GetRawPtr();
         typename boost::add_const<InputDataType>::type* lhs_buf = lhs.GetRawPtr();
 
-        for(int i = 0; i < lhs.GetDimension(); ++i)
+        const unsigned int ldim = lhs.GetDimension();
+        for(int i = 0; i < ldim; ++i)
         {
             r_buf[i] = lhs_buf[i] / rhs;
         }
@@ -614,7 +625,9 @@ namespace Nektar
            const NekDouble& rhs)
     {
         ResultDataType* r_buf = result.GetRawPtr();
-        for(int i = 0; i < result.GetDimension(); ++i)
+
+        const unsigned int resdim = result.GetDimension();
+        for(int i = 0; i < resdim; ++i)
         {
             r_buf[i] /= rhs;
         }
@@ -648,7 +661,8 @@ namespace Nektar
         ResultDataType* result_buf = result.GetRawPtr();
         const InputDataType* rhs_buf = rhs.GetRawPtr();
         const InputDataType* lhs_buf = lhs.GetRawPtr();
-        for(int i = 0; i < result.GetDimension(); ++i)
+        const unsigned int resdim = result.GetDimension();
+        for(int i = 0; i < resdim; ++i)
         {
             result_buf[i] = lhs_buf[i] * rhs_buf[i];
         }
@@ -663,7 +677,8 @@ namespace Nektar
     {
         ResultDataType* result_buf = result.GetRawPtr();
         const InputDataType* rhs_buf = rhs.GetRawPtr();
-        for(int i = 0; i < result.GetDimension(); ++i)
+        const unsigned int resdim = result.GetDimension();
+        for(int i = 0; i < resdim; ++i)
         {
             result_buf[i] *= rhs_buf[i];
         }
@@ -695,7 +710,8 @@ namespace Nektar
         ResultDataType* r_buf = result.GetRawPtr();
         const InputDataType* lhs_buf = lhs.GetRawPtr();
 
-        for(int i = 0; i < lhs.GetDimension(); ++i)
+        const unsigned int ldim = lhs.GetDimension();
+        for(int i = 0; i < ldim; ++i)
         {
             r_buf[i] = lhs_buf[i] * rhs;
         }
@@ -711,7 +727,8 @@ namespace Nektar
            const NekDouble& rhs)
     {
         ResultDataType* r_buf = result.GetRawPtr();
-        for(int i = 0; i < result.GetDimension(); ++i)
+        const unsigned int rdim = result.GetDimension();
+        for(unsigned int i = 0; i < rdim; ++i)
         {
             r_buf[i] *= rhs;
         }
@@ -752,7 +769,8 @@ namespace Nektar
         const InputDataType* rhs_buf = rhs.GetRawPtr();
         NekDouble inverse = 1.0/lhs;
 
-        for(int i = 0; i < rhs.GetDimension(); ++i)
+        const unsigned int rdim = rhs.GetDimension();
+        for(int i = 0; i < rdim; ++i)
         {
             r_buf[i] = inverse * rhs_buf[i];
         }
@@ -914,7 +932,8 @@ namespace Nektar
     DataType InfinityNorm(const NekVector<DataType>& v)
     {
         DataType result = fabs(v[0]);
-        for(unsigned int i = 1; i < v.GetDimension(); ++i)
+        const unsigned int vdim = v.GetDimension();
+        for(unsigned int i = 0; i < vdim; ++i)
         {
             result = std::max(fabs(v[i]), result);
         }
@@ -928,7 +947,8 @@ namespace Nektar
     NekVector<DataType> Negate(const NekVector<DataType>& v)
     {
         NekVector<DataType> temp(v);
-        for(unsigned int i=0; i < temp.GetDimension(); ++i)
+        const unsigned int tdim = temp.GetDimension();
+        for(unsigned int i = 0; i < tdim; ++i)
         {
             temp(i) = -temp(i);
         }
@@ -942,7 +962,8 @@ namespace Nektar
     void NegateInPlace(NekVector<DataType>& v)
     {
         DataType* data = v.GetRawPtr();
-        for(unsigned int i=0; i < v.GetDimension(); ++i)
+        const unsigned int vdim = v.GetDimension();
+        for(unsigned int i = 0; i < vdim; ++i)
         {
             data[i] = -data[i];
         }
@@ -956,7 +977,8 @@ namespace Nektar
     {
         DataType result = DataType(0);
 
-        for(unsigned int i = 0; i < v.GetDimension(); ++i)
+        const unsigned int vdim = v.GetDimension();
+        for(unsigned int i = 0; i < vdim; ++i)
         {
             result += v[i]*v[i];
         }
@@ -973,7 +995,8 @@ namespace Nektar
         ASSERTL1( lhs.GetDimension() == rhs.GetDimension(), "Dot, dimension of the two operands must be identical.");
 
         DataType result = DataType(0);
-        for(unsigned int i = 0; i < lhs.GetDimension(); ++i)
+        const unsigned int ldim = lhs.GetDimension();
+        for(unsigned int i = 0; i < ldim; ++i)
         {
             result += lhs[i]*rhs[i];
         }

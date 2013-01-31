@@ -122,6 +122,9 @@ namespace Nektar
             MULTI_REGIONS_EXPORT const void UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
+            MULTI_REGIONS_EXPORT const void UniversalAssemble(
+                          Array<OneD,     NekDouble>& pGlobal,
+                          int                         offset) const;
 
             /// Retrieve the global index of a given local boundary mode.
             MULTI_REGIONS_EXPORT int GetLocalToGlobalBndMap(const int i) const;
@@ -216,6 +219,10 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT const void UniversalAssembleBnd(
                           NekVector<      NekDouble>& pGlobal) const;
+
+            MULTI_REGIONS_EXPORT const void UniversalAssembleBnd(
+                          Array<OneD,     NekDouble>& pGlobal,
+                          int                         offset) const;
 
             MULTI_REGIONS_EXPORT const int GetFullSystemBandWidth() const;
 
@@ -405,6 +412,10 @@ namespace Nektar
 
             virtual const void v_UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
+
+            virtual const void v_UniversalAssemble(
+                          Array<OneD,     NekDouble>& pGlobal,
+                          int                         offset) const;
 
             virtual const int v_GetFullSystemBandWidth() const;
 

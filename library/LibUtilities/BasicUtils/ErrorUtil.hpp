@@ -63,8 +63,8 @@ namespace ErrorUtil
 
     class NekError : public std::runtime_error
     {
-        public:
-            NekError(const std::string& message) : std::runtime_error(message) {}
+    public:
+        NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
     inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)

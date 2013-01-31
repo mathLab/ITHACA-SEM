@@ -111,20 +111,24 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
 
+            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
+
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(
-                const int dir,
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD, NekDouble> & outarray);
+                const int                           dir,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
 
             LOCAL_REGIONS_EXPORT void IProductWRTDerivBase_SumFac(
-                const int dir, 
-                const Array<OneD, const NekDouble>& inarray, 
-                      Array<OneD, NekDouble> & outarray);            
+                const int                           dir,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
 
             LOCAL_REGIONS_EXPORT void IProductWRTDerivBase_MatOp(
-                const int dir, 
-                const Array<OneD, const NekDouble>& inarray, 
-                      Array<OneD, NekDouble> & outarray);  
+                const int                           dir,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
 
             //---------------------------------------
             // Evaluation functions

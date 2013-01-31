@@ -495,7 +495,7 @@ namespace Nektar
                    != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList2D>
-                        ::AllocateSharedPtr(m_session,*(bregions[i]), graph3D);
+                        ::AllocateSharedPtr(m_session,*(bregions[i]), graph3D, variable);
 
                     // Set up normals on non-Dirichlet boundary conditions
                     if(locBCond->GetBoundaryConditionType() != 
@@ -1391,12 +1391,21 @@ namespace Nektar
                                                            SpatialDomains::RobinBoundaryCondition
                                                         >(m_bndConditions[i])->m_robinFunction;
 
+                    LibUtilities::Equation coeff     = 
+                        boost::static_pointer_cast<
+                    SpatialDomains::RobinBoundaryCondition
+                        >(m_bndConditions[i])->m_robinPrimitiveCoeff;
+
                     condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
 
                     locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                 locExpList->UpdateCoeffs());
 
-                    /// \todo RobinPrimitiveCoeff forgotten? - PB
+                    // put primitive coefficient into the physical space
+                    // storage
+                    coeff.Evaluate(x0,x1,x2,time,
+                                   locExpList->UpdatePhys());
+
                 }
                 else
                 {

@@ -2,7 +2,7 @@
 <test>
     <description>StdProject3D Hexahedron Legendre basis P=6 Q=7</description>
     <executable>StdProject3D</executable>
-    <parameters>7 9 9 9 6 6 6 7 7 7</parameters>
+    <parameters>7 10 10 10  6 6 6 7 7 7</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-12">2.20528e-14</value>

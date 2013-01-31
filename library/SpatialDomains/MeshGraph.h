@@ -59,18 +59,21 @@ namespace Nektar
         {
             eNoExpansionType,
             eModified,
+            eModifiedQuadPlus1,
+            eModifiedQuadPlus2,
             eOrthogonal,
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
             eGauss_Lagrange,
-			eFourier,
-			eFourierSingleMode,
-			eFourierHalfModeRe,
-			eFourierHalfModeIm,
-			eChebyshev,
-			eFourierChebyshev,
-			eChebyshevFourier,
-			eFourierModified,
+            eGauss_Lagrange_SEM,
+            eFourier,
+            eFourierSingleMode,
+            eFourierHalfModeRe,
+            eFourierHalfModeIm,
+            eChebyshev,
+            eFourierChebyshev,
+            eChebyshevFourier,
+            eFourierModified,
             eExpansionTypeSize
         };
 
@@ -80,18 +83,21 @@ namespace Nektar
         {
             "NOTYPE",
             "MODIFIED",
+            "MODIFIEDQUADPLUS1",
+            "MODIFIEDQUADPLUS2",
             "ORTHOGONAL",
             "GLL_LAGRANGE",
             "GLL_LAGRANGE_SEM",
-            "Gauss_LAGRANGE",
-			"FOURIER",
-			"FOURIERSINGLEMODE",
-			"FOURIERHALFMODERE",
-			"FOURIERHALFMODEIM",
-			"CHEBYSHEV",
-			"FOURIER-CHEBYSHEV",
-			"CHEBYSHEV-FOURIER",
-			"FOURIER-MODIFIED"
+            "GAUSS_LAGRANGE",
+            "GAUSS_LAGRANGE_SEM",
+            "FOURIER",
+            "FOURIERSINGLEMODE",
+            "FOURIERHALFMODERE",
+            "FOURIERHALFMODEIM",
+            "CHEBYSHEV",
+            "FOURIER-CHEBYSHEV",
+            "CHEBYSHEV-FOURIER",
+            "FOURIER-MODIFIED"
         };
 
         class InterfaceComponent;
@@ -280,13 +286,13 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void Write(
                         const std::string &outFile,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> >      &fielddata);
+                        std::vector<std::vector<NekDouble> >      &fielddata);
 
                 /// Imports an FLD file.
                 SPATIAL_DOMAINS_EXPORT void Import(
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> > &fielddata);
+                        std::vector<std::vector<NekDouble> > &fielddata);
 
                 /// Imports the definition of the fields.
                 SPATIAL_DOMAINS_EXPORT void ImportFieldDefs(
@@ -298,7 +304,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void ImportFieldData(
                         TiXmlDocument &doc,
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> > &fielddata);
+                        std::vector<std::vector<NekDouble> > &fielddata);
 
                 SPATIAL_DOMAINS_EXPORT int CheckFieldDefinition(
                         const FieldDefinitionsSharedPtr  &fielddefs);
@@ -333,7 +339,7 @@ namespace Nektar
                         const std::string variable);
 
                 SPATIAL_DOMAINS_EXPORT ExpansionShPtr GetExpansion(
-                        GeometrySharedPtr geom);
+                                                                   GeometrySharedPtr geom, const std::string variable = "DefaultVar");
 
                 /// Sets expansions given field definitions
                 SPATIAL_DOMAINS_EXPORT void SetExpansions(
@@ -571,7 +577,12 @@ namespace Nektar
          */
         inline VertexComponentSharedPtr MeshGraph::GetVertex(int id)
         {
-            return m_vertSet[id];
+            VertexComponentSharedPtr returnval;
+            VertexMap::iterator x = m_vertSet.find(id);
+            ASSERTL0(x != m_vertSet.end(),
+                     "Vertex " + boost::lexical_cast<string>(id)
+                     + " not found.");
+            return x->second;
         }
 
 

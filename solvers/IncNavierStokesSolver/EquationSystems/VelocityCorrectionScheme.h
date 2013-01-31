@@ -55,6 +55,18 @@ namespace Nektar
      *
      */
     
+    struct HBCInfo
+    {
+        int m_globalElmtID;  // elements ID in the global ordering
+        int m_ptsInElmt;     // number of physical points of the element
+        int m_physOffset;    // elmenent physical offset in the global list
+        int m_bndElmtOffset; // element offset in the boundary expansion
+        int m_elmtTraceID;   // trace ID on the element
+        int m_bndryElmtID;   // pressure boundary condition ID
+        int m_assPhysOffset; // associated elments physical offset (k and k_c are the real and the complex plane)
+        int m_coeffOffset;   // coefficients offset used to locate the acceleration term in the general m_pressureHBC
+    };
+    
     class VelocityCorrectionScheme: public IncNavierStokes
     {
     public:           
@@ -109,22 +121,19 @@ namespace Nektar
         int m_pressureBCsMaxPts;                // Maximum points used in pressure BC evaluation 
 
         bool m_showTimings;                     // Show timings for each step
+        bool m_useHomo1DSpecVanVisc;                  // bool to identify if spectral vanishing viscosity is active. 
         Array<OneD, int> m_pressureBCtoElmtID;  // Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoTraceID; // Id of edge (2D) or face (3D) to which pressure boundary condition belongs
         
         Array<OneD, Array<OneD, NekDouble> >  m_pressureHBCs; //< Storage for current and previous levels of high order pressure boundary conditions. 
         Array<OneD, Array<OneD, NekDouble> >  m_acceleration;
         
-        Array<OneD, Array<OneD, int> > m_HBC;  //data structure to old all the information regarding High order pressure BCs
-        
-        int m_HBCnumber;                       // number of elemental expansion where a boundary is of High order type
-        int m_HBCsize;                         // number of coefficients for HOPBCs
+        Array<OneD, HBCInfo > m_HBCdata;  //data structure to old all the information regarding High order pressure BCs
         
         StdRegions::StdExpansionSharedPtr m_elmt; // general standard element used to deaal with HOPBC calculations
         
-        Array<OneD, NekDouble> m_wavenumber;
-        
-        Array<OneD, NekDouble> m_beta;
+        Array<OneD, NekDouble>  m_wavenumber;            // wave number 2 pi k /Lz
+        Array<OneD, NekDouble>  m_negWavenumberSq;      // minus Square of wavenumber
         
         /**  \brief This function evaluates the normal Neumann pressure
          *  boundary condition for the velocity correction scheme at the
@@ -148,7 +157,7 @@ namespace Nektar
         
         void FillHOPBCMap(const int HOPBCnumber);
 		
-        void Roll(Array<OneD, Array<OneD, NekDouble> > &input);
+        void Rotate(Array<OneD, Array<OneD, NekDouble> > &input);
         
         // Virtual functions 
         virtual void v_PrintSummary(std::ostream &out);
@@ -170,6 +179,7 @@ namespace Nektar
     typedef boost::shared_ptr<VelocityCorrectionScheme> VelocityCorrectionSchemeSharedPtr;
     
 } //end of namespace
+
 
 #endif //VELOCITY_CORRECTION_SCHEME_H
 

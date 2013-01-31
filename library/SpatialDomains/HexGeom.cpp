@@ -212,79 +212,65 @@ namespace Nektar
         }
 
         void HexGeom::v_GenGeomFactors(
-            const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            int i,f;
-            GeomType Gtype = eRegular;
-
-            v_FillGeom();
-
-            // check to see if expansions are linear
-            for(i = 0; i < m_coordim; ++i)
+            if (m_geomFactorsState != ePtsFilled)
             {
-                if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(1) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(2) != 2 )
-                {
-                    Gtype = eDeformed;
-                }
-            }
+                int i,f;
+                GeomType Gtype = eRegular;
 
-            // check to see if all angles are 90 degrees
-            if(Gtype == eRegular)
-            {
-                const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
-                    { {0,1,2,3} ,
-                      {0,1,5,4} ,
-                      {1,2,6,5} ,
-                      {3,2,6,7} ,
-                      {0,3,7,4} ,
-                      {4,5,6,7} };
+                v_FillGeom();
 
-                for(f = 0; f < kNfaces; f++)
+                // check to see if expansions are linear
+                for(i = 0; i < m_coordim; ++i)
                 {
-                    // This condition ensures each angle is a right-angle.
-                    // It is a stronger condition than necessary.
-                    /*
-                    for(i = 0; i < 3; ++i)
+                    if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(1) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(2) != 2 )
                     {
-                        dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                        dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                        dz1 = m_verts[ faceVerts[f][i+1] ]->z() - m_verts[ faceVerts[f][i] ]->z();
+                        Gtype = eDeformed;
+                    }
+                }
 
-                        dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                        dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                        dz2 = m_verts[ faceVerts[f][((i+3)%4)] ]->z() - m_verts[ faceVerts[f][i] ]->z();
+                // check to see if all faces are parallelograms
+                if(Gtype == eRegular)
+                {
+                    const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
+                        { {0,1,2,3} ,
+                          {0,1,5,4} ,
+                          {1,2,6,5} ,
+                          {3,2,6,7} ,
+                          {0,3,7,4} ,
+                          {4,5,6,7} };
 
-                        if(fabs(dx1*dx2 + dy1*dy2 + dz1*dz2) > sqrt((dx1*dx1 + dy1*dy1 + dz1*dz1)*(dx2*dx2 + dy2*dy2 + dz2*dz2))
-                           * NekConstants::kGeomRightAngleTol)
+                    for(f = 0; f < kNfaces; f++)
+                    {
+                        // Ensure each face is a parallelogram? Check this.
+                        for (i = 0; i < m_coordim; i++)
                         {
-                            Gtype = eDeformed;
+                            if( fabs( (*m_verts[ faceVerts[f][0] ])(i) -
+                                      (*m_verts[ faceVerts[f][1] ])(i) +
+                                      (*m_verts[ faceVerts[f][2] ])(i) -
+                                      (*m_verts[ faceVerts[f][3] ])(i) )
+                                    > NekConstants::kNekZeroTol )
+                            {
+                                Gtype = eDeformed;
+                                break;
+                            }
+                        }
+
+                        if (Gtype == eDeformed)
+                        {
                             break;
                         }
                     }
-                    */
-                    
-                    // Ensure each face is a parallelogram? Check this.
-                    for (i = 0; i < m_coordim; i++)
-                    {
-                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) +
-                                (*m_verts[ faceVerts[f][2] ])(i) - (*m_verts[ faceVerts[f][3] ])(i) ) > NekConstants::kNekZeroTol )
-                        {
-                            Gtype = eDeformed;
-                            break;
-                        }
-                    }
-                    
-                    if (Gtype == eDeformed)
-                    {
-                        break;
-                    }
                 }
-            }
 
-            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                Gtype, m_coordim, m_xmap, tbasis);
+                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                                            Gtype, m_coordim, m_xmap, tbasis);
+
+                m_geomFactorsState = ePtsFilled;
+            }
         }
 
         void HexGeom::v_GetLocCoords(
@@ -297,7 +283,7 @@ namespace Nektar
 
             // calculate local coordinate for coord
             if(GetGtype() == eRegular)
-            {   // Based on Spen's book, page 99
+            {   
                 NekDouble len0 = 0.0 ;
                 NekDouble len1 = 0.0;
                 NekDouble len2 = 0.0;
@@ -325,7 +311,7 @@ namespace Nektar
                     len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
                     xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
 
-                    // use projection to side 4 to determine xi_2 coordinate based on length
+                    // use projection to side 4 to determine xi_3 coordinate based on length
                     len2 += (pts[nq0*nq1*(nq2-1)]-pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);
                     xi2  += (coords[i] -pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);
                 }
@@ -336,8 +322,35 @@ namespace Nektar
             }
             else
             {
-                NEKERROR(ErrorUtil::efatal,
-                         "inverse mapping must be set up to use this call");
+                // Determine nearest point of coords  to values in m_xmap
+                Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
+                Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
+                Array<OneD, NekDouble> ptsz = m_xmap[2]->GetPhys();
+                int npts = ptsx.num_elements();
+                Array<OneD, NekDouble> tmp1(npts), tmp2(npts);
+                const Array<OneD, const NekDouble> za = m_xmap[0]->GetPoints(0);
+                const Array<OneD, const NekDouble> zb = m_xmap[0]->GetPoints(1);
+                const Array<OneD, const NekDouble> zc = m_xmap[0]->GetPoints(2);
+                
+                //guess the first local coords based on nearest point
+                Vmath::Sadd(npts, -coords[0], ptsx,1,tmp1,1);
+                Vmath::Vmul (npts, tmp1,1,tmp1,1,tmp1,1);
+                Vmath::Sadd(npts, -coords[1], ptsy,1,tmp2,1);
+                Vmath::Vvtvp(npts, tmp2,1,tmp2,1,tmp1,1,tmp1,1);
+                Vmath::Sadd(npts, -coords[2], ptsz,1,tmp2,1);
+                Vmath::Vvtvp(npts, tmp2,1,tmp2,1,tmp1,1,tmp1,1);
+                          
+                int min_i = Vmath::Imin(npts,tmp1,1);
+                
+                // Get Local coordinates
+                int qa = za.num_elements(), qb = zb.num_elements();
+                Lcoords[2] = zc[min_i/(qa*qb)];
+                min_i = min_i%(qa*qb);
+                Lcoords[1] = zb[min_i/qa];
+                Lcoords[0] = za[min_i%qa];
+
+                // Perform newton iteration to find local coordinates 
+                NewtonIterationForLocCoord(coords,Lcoords);
             }
         }
 

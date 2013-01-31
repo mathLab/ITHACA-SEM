@@ -325,13 +325,10 @@ namespace Nektar
          * @param   outarray    Output array of data.
          */
         void HexExp::v_IProductWRTBase(
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> & outarray)
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray)
         {
-            HexExp::v_IProductWRTBase(m_base[0]->GetBdata(),
-                            m_base[1]->GetBdata(),
-                            m_base[2]->GetBdata(),
-                            inarray,outarray,1);
+            HexExp::v_IProductWRTBase_SumFac(inarray, outarray);
         }
 
         /**
@@ -366,13 +363,9 @@ namespace Nektar
          * @param   outarray    Output array.
          * @param   coll_check  (not used)
          */
-        void HexExp::v_IProductWRTBase(
-                const Array<OneD, const NekDouble>& base0,
-                const Array<OneD, const NekDouble>& base1,
-                const Array<OneD, const NekDouble>& base2,
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD, NekDouble> & outarray,
-                int coll_check)
+        void HexExp::v_IProductWRTBase_SumFac(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -392,7 +385,7 @@ namespace Nektar
                             (NekDouble*)&inarray[0],1,&tmp[0],1);
             }
 
-            StdHexExp::v_IProductWRTBase(base0, base1, base2, tmp, outarray, 1);
+            StdHexExp::v_IProductWRTBase(tmp, outarray);
         }
 
 
@@ -2085,9 +2078,10 @@ namespace Nektar
 
                         DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>
                                                 ::AllocateSharedPtr(rows,cols);
-                        (*WeakDeriv) = gmat[3*dir][0]*deriv0
-                                                + gmat[3*dir+1][0]*deriv1
-												+ gmat[3*dir+2][0]*deriv2;
+
+                        (*WeakDeriv) = gmat[3*dir  ][0]*deriv0
+                                     + gmat[3*dir+1][0]*deriv1
+                                     + gmat[3*dir+2][0]*deriv2;
 
                         returnval = MemoryManager<DNekScalMat>
                                             ::AllocateSharedPtr(jac,WeakDeriv);

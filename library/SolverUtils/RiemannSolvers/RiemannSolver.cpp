@@ -158,9 +158,9 @@ namespace Nektar
                     
                     for (i = 0; i < normals[0].num_elements(); ++i)
                     {
-                        double tmp1 =  inarray[vx][i]*normals[0][i] + 
+                        NekDouble tmp1 =  inarray[vx][i]*normals[0][i] + 
                             inarray[vy][i]*normals[1][i];
-                        double tmp2 = -inarray[vx][i]*normals[1][i] + 
+                        NekDouble tmp2 = -inarray[vx][i]*normals[1][i] + 
                             inarray[vy][i]*normals[0][i];
                         outarray[vx][i] = tmp1;
                         outarray[vy][i] = tmp2;
@@ -195,11 +195,11 @@ namespace Nektar
                     for (int i = 0; i < normals[0].num_elements(); ++i)
                     {
                         DNekMatSharedPtr m = m_rotMatrices[i];
-                        double tmp1 = inarray[vx][i]*(*m)(0,0) + 
+                        NekDouble tmp1 = inarray[vx][i]*(*m)(0,0) + 
                             inarray[vy][i]*(*m)(0,1) + inarray[vz][i]*(*m)(0,2);
-                        double tmp2 = inarray[vx][i]*(*m)(1,0) + 
+                        NekDouble tmp2 = inarray[vx][i]*(*m)(1,0) + 
                             inarray[vy][i]*(*m)(1,1) + inarray[vz][i]*(*m)(1,2);
-                        double tmp3 = inarray[vx][i]*(*m)(2,0) + 
+                        NekDouble tmp3 = inarray[vx][i]*(*m)(2,0) + 
                             inarray[vy][i]*(*m)(2,1) + inarray[vz][i]*(*m)(2,2);
                         outarray[vx][i] = tmp1;
                         outarray[vy][i] = tmp2;
@@ -255,9 +255,9 @@ namespace Nektar
 
                     for (i = 0; i < normals[0].num_elements(); ++i)
                     {
-                        double tmp1 = inarray[vx][i]*normals[0][i] - 
+                        NekDouble tmp1 = inarray[vx][i]*normals[0][i] - 
                             inarray[vy][i]*normals[1][i];
-                        double tmp2 = inarray[vx][i]*normals[1][i] + 
+                        NekDouble tmp2 = inarray[vx][i]*normals[1][i] + 
                             inarray[vy][i]*normals[0][i];
                         outarray[vx][i] = tmp1;
                         outarray[vy][i] = tmp2;
@@ -292,11 +292,11 @@ namespace Nektar
                     for (int i = 0; i < normals[0].num_elements(); ++i)
                     {
                         DNekMatSharedPtr m = m_invRotMatrices[i];
-                        double tmp1 = inarray[vx][i]*(*m)(0,0) + 
+                        NekDouble tmp1 = inarray[vx][i]*(*m)(0,0) + 
                             inarray[vy][i]*(*m)(0,1) + inarray[vz][i]*(*m)(0,2);
-                        double tmp2 = inarray[vx][i]*(*m)(1,0) + 
+                        NekDouble tmp2 = inarray[vx][i]*(*m)(1,0) + 
                             inarray[vy][i]*(*m)(1,1) + inarray[vz][i]*(*m)(1,2);
-                        double tmp3 = inarray[vx][i]*(*m)(2,0) + 
+                        NekDouble tmp3 = inarray[vx][i]*(*m)(2,0) + 
                             inarray[vy][i]*(*m)(2,1) + inarray[vz][i]*(*m)(2,2);
                         outarray[vx][i] = tmp1;
                         outarray[vy][i] = tmp2;

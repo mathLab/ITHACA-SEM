@@ -44,6 +44,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/version.hpp>
 #include <boost/program_options.hpp>
+#include <boost/thread.hpp>
 
 using namespace std;
 using namespace Nektar;
@@ -254,6 +255,7 @@ int main(int argc, char *argv[])
 
         // Test against all metrics
         status = 0;
+        string line;
         for (int i = 0; i < metrics.size(); ++i)
         {
             vStdout.clear();
@@ -265,12 +267,67 @@ int main(int argc, char *argv[])
                 status = 1;
             }
         }
+
+        // Dump output files to terminal for debugging purposes on fail.
+        if (status == 1)
+        {
+            vStdout.clear();
+            vStderr.clear();
+            vStdout.seekg(0, ios::beg);
+            vStderr.seekg(0, ios::beg);
+
+            cout << "=== Output ===" << endl;
+            while(vStdout.good())
+            {
+                getline(vStdout, line);
+                cout << line << endl;
+            }
+            cout << "=== Errors ===" << endl;
+            while(vStderr.good())
+            {
+                getline(vStderr, line);
+                cout << line << endl;
+            }
+        }
+
+        // Close output files.
         vStdout.close();
         vStderr.close();
 
-        // Change back to the original path and delete temporary directory
+        // Change back to the original path and delete temporary directory.
         fs::current_path(startDir);
-        fs::remove_all(tmpDir);
+
+        // Repeatedly try deleting directory with sleep for filesystems which
+        // work asynchronously. This allows time for the filesystem to register
+        // the output files are closed so they can be deleted and not cause a 
+        // filesystem failure. Attempts made for 1 second.
+        int i = 1000;
+        while (i > 0)
+        {
+            try
+            {
+                // If delete successful, stop trying.
+                fs::remove_all(tmpDir);
+                break;
+            }
+            catch (const fs::filesystem_error& e)
+            {
+                //usleep(1000);
+                boost::this_thread::sleep(boost::posix_time::milliseconds(1));
+                i--;
+                if (i > 0)
+                {
+                    cout << "Locked files encountered. "
+                         << "Retring after 1ms..." << endl;
+                }
+                else
+                {
+                    // If still failing after 1sec, we consider it a permanent
+                    // filesystem error and abort.
+                    throw e;
+                }
+            }
+        }
         
         // Save any changes.
         if (vm.count("generate-metric")      > 0 || 

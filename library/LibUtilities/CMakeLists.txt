@@ -69,6 +69,7 @@ SET(FoundationHeaders
     ./Foundations/NodalTriEvenlySpaced.h
     ./Foundations/NodalTetEvenlySpaced.h
     ./Foundations/NodalPrismEvenlySpaced.h
+    ./Foundations/PhysGalerkinProject.h
 )
 
 SET(InterpreterHeaders
@@ -167,6 +168,7 @@ SET(FoundationSources
         ./Foundations/NodalTriEvenlySpaced.cpp
         ./Foundations/NodalTetEvenlySpaced.cpp
         ./Foundations/NodalPrismEvenlySpaced.cpp
+        ./Foundations/PhysGalerkinProject.cpp       
 )
 
 SET(InterpreterSources

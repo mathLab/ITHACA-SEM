@@ -388,7 +388,7 @@ namespace Nektar
                 
             // Set up physical normals
             SetUpPhysNormals();
-                
+            
             // Set up information for parallel jobs.
             for (int i = 0; i < m_trace->GetExpSize(); ++i)
             {
@@ -530,8 +530,8 @@ namespace Nektar
                 if(bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
-                        ::AllocateSharedPtr(
-                            *(bregions[i]), graph2D, DeclareCoeffPhysArrays);
+                        ::AllocateSharedPtr(*(bregions[i]), graph2D, 
+                                            DeclareCoeffPhysArrays, variable);
                     
 
                     // Set up normals on non-Dirichlet boundary conditions
@@ -1097,7 +1097,7 @@ namespace Nektar
         }
 
         /**
-         * @brief Set up a list of elemeent IDs and edge IDs that link to the
+         * @brief Set up a list of element IDs and edge IDs that link to the
          * boundary conditions.
          */
         void DisContField2D::v_GetBoundaryToElmtMap(
@@ -1594,7 +1594,7 @@ namespace Nektar
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
                                  FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0]);   
+                                 FieldDef[0]->m_fields[0], locExpList->UpdateCoeffs());   
                              locExpList->BwdTrans_IterPerExp(
                                  locExpList->GetCoeffs(), 
                                  locExpList->UpdatePhys());
@@ -1642,7 +1642,7 @@ namespace Nektar
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
                                  FieldDef[0], FieldData[0],
-                                 FieldDef[0]->m_fields[0]);
+                                 FieldDef[0]->m_fields[0], locExpList->UpdateCoeffs());
                              locExpList->BwdTrans_IterPerExp(
                                  locExpList->GetCoeffs(), 
                                  locExpList->UpdatePhys());
@@ -1690,14 +1690,14 @@ namespace Nektar
 
                             std::vector<SpatialDomains::
                                         FieldDefinitionsSharedPtr> FieldDef;
-                            std::vector<std::vector<NekDouble> > FieldData;
+                            std::vector<std::vector<NekDouble> >   FieldData;
 
                             m_graph->Import(filebcs,FieldDef, FieldData);
 
                             // copy FieldData into locExpList
                             locExpList->ExtractDataToCoeffs(
                                 FieldDef[0], FieldData[0],
-                                FieldDef[0]->m_fields[0]);
+                                FieldDef[0]->m_fields[0],locExpList->UpdateCoeffs());
                             locExpList->BwdTrans_IterPerExp(
                                 locExpList->GetCoeffs(), 
                                 locExpList->UpdatePhys());

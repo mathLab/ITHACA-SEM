@@ -1,3 +1,37 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// File: Timer.cpp
+//
+// For more information, please see: http://www.nektar.info
+//
+// The MIT License
+//
+// Copyright (c) 2006 Scientific Computing and Imaging Institute,
+// University of Utah (USA) and Department of Aeronautics, Imperial
+// College London (UK).
+//
+// License for the specific language governing rights and limitations under
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+// DEALINGS IN THE SOFTWARE.
+//
+// Description: Time getting class
+//
+///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/Timer.h>
 
@@ -71,21 +105,21 @@ namespace Nektar
         #endif
     }
 
-    double Timer::TimePerTest(unsigned int n)
+    NekDouble Timer::TimePerTest(unsigned int n)
     {
         #ifdef _WIN32
             CounterType frequency;
             QueryPerformanceFrequency(&frequency);
-            return Elapsed().QuadPart/static_cast<double>(n) * 1.0/frequency.QuadPart;
+            return Elapsed().QuadPart/static_cast<NekDouble>(n) * 1.0/frequency.QuadPart;
         #elif defined(__APPLE__)
             CounterType elapsed = Elapsed();
-            double result = elapsed.tv_sec/static_cast<double>(n) +
-                ( elapsed.tv_usec/static_cast<double>(n) * 1.0e-6);
+            NekDouble result = elapsed.tv_sec/static_cast<NekDouble>(n) +
+                ( elapsed.tv_usec/static_cast<NekDouble>(n) * 1.0e-6);
             return result;
         #else
             CounterType elapsed = Elapsed();
-            double result = elapsed.tv_sec/static_cast<double>(n) +
-                ( elapsed.tv_nsec/static_cast<double>(n) * 1.0e-9);
+            NekDouble result = elapsed.tv_sec/static_cast<NekDouble>(n) +
+                ( elapsed.tv_nsec/static_cast<NekDouble>(n) * 1.0e-9);
             return result;
         #endif
     }

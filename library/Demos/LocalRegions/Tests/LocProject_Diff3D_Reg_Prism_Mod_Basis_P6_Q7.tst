@@ -5,10 +5,10 @@
     <parameters>6 4 4 5 6 6 6 7 7 6 0 0 0  1 0 0  1 1 0  0 1 0  0.5 0 1  0.5 1 1</parameters>
     <metrics>
         <metric type="L2" id="1">
-            <value tolerance="1e-10">2.41945e-11</value>
+            <value tolerance="1e-9">2.41945e-11</value>
         </metric>
         <metric type="Linf" id="2">
-            <value tolerance="1e-10">1.03926e-10</value>
+            <value tolerance="1e-9">1.03926e-10</value>
         </metric>
     </metrics>
 </test>

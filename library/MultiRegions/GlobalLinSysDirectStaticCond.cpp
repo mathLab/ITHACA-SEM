@@ -175,6 +175,7 @@ namespace Nektar
                                                                 - nGlobBndDofs;
 
             Array<OneD, NekDouble> F(nGlobDofs);
+
             if(nDirBndDofs && dirForcCalculated)
             {
                 Vmath::Vsub(nGlobDofs,in.get(),1,dirForcing.get(),1,F.get(),1);

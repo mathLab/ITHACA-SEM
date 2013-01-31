@@ -627,7 +627,7 @@ namespace expt
     };
 
     template<typename DataType, typename NodeType, typename Indices, unsigned int StartIndex>
-    struct CreateFromTree<NekMatrix<DataType, StandardMatrixTag>, NodeType, Indices, StartIndex>
+    struct CreateFromTree<Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag>, NodeType, Indices, StartIndex>
     {
         template<typename ArgVectorType>
         static Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag> Apply(const ArgVectorType& tree)
@@ -640,7 +640,7 @@ namespace expt
             unsigned int bufferSize = sizes.get<2>();
 
             return Nektar::NekMatrix<DataType, Nektar::StandardMatrixTag>(rows, columns,
-                eFULL, std::numeric_limits<unsigned int>::max(),
+                Nektar::eFULL, std::numeric_limits<unsigned int>::max(),
                 std::numeric_limits<unsigned int>::max(), bufferSize);
         }
     };

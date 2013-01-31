@@ -1114,8 +1114,10 @@ namespace Nektar
         class Mesh
         {
         public:
-            Mesh() {}
+            Mesh() : verbose(false) {}
             
+            /// Verbose flag
+            bool                       verbose;
             /// Dimension of the expansion.
             unsigned int               expDim;
             /// Dimension of the space in which the mesh is defined.

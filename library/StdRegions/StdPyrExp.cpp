@@ -484,7 +484,7 @@ namespace Nektar
             for (int k = 0; k < Qz; ++k) {
                 for (int j = 0; j < Qy; ++j) {
                     for (int i = 0; i < Qx; ++i) {
-                        double sum = 0.0;
+                        NekDouble sum = 0.0;
                         for (int r = 0; r <= R; ++r) {
                             for (int q = 0; q <= min(R-r,Q); ++q) {
                                 for (int p = 0; p <= min(R-r,P); ++p) {
@@ -612,7 +612,7 @@ namespace Nektar
             for (p = mode = 0; p < order0; ++p) {
                 for (k = 0; k < nquad2; ++k) {
                     for (j = 0; j < nquad1; ++j) {
-                        double tmp = 0.0;
+                        NekDouble tmp = 0.0;
                         for (i = 0; i < nquad0; ++i) {
                             s = i + nquad0*(j + nquad1*k);
                             tmp += bx[i+nquad0*p]*tmpin[s];
@@ -623,7 +623,7 @@ namespace Nektar
                 
                 for (q = 0; q < order1; ++q) {
                     for (k = 0; k < nquad2; ++k) {
-                        double tmp = 0.0;
+                        NekDouble tmp = 0.0;
                         for (j = 0; j < nquad1; ++j) {
                             tmp += by[j+nquad1*q]*f[j+nquad1*k];
                         }
@@ -631,7 +631,7 @@ namespace Nektar
                     }
                     
                     for (r = 0; r < order2-p-q; ++r, ++mode) {
-                        double tmp = 0.0;
+                        NekDouble tmp = 0.0;
                         s = GetMode(p,q,r);
                         for (k = 0; k < nquad2; ++k) {
                             tmp += bz[k+nquad2*s]*fb[k];

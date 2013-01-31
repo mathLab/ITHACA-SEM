@@ -556,7 +556,7 @@ namespace Nektar
             unsigned int cols = nBndDofs - NumDirBCs;
 
             // COO sparse storage to assist in assembly
-            NekSparseMatrix<double>::COOMatType  gmat_coo;
+            NekSparseMatrix<NekDouble>::COOMatType  gmat_coo;
 
             // assemble globally
             DNekScalMatSharedPtr loc_mat;

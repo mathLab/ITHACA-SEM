@@ -286,13 +286,13 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void Write(
                         const std::string &outFile,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> >      &fielddata);
+                        std::vector<std::vector<NekDouble> >      &fielddata);
 
                 /// Imports an FLD file.
                 SPATIAL_DOMAINS_EXPORT void Import(
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> > &fielddata);
+                        std::vector<std::vector<NekDouble> > &fielddata);
 
                 /// Imports the definition of the fields.
                 SPATIAL_DOMAINS_EXPORT void ImportFieldDefs(
@@ -304,7 +304,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void ImportFieldData(
                         TiXmlDocument &doc,
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> > &fielddata);
+                        std::vector<std::vector<NekDouble> > &fielddata);
 
                 SPATIAL_DOMAINS_EXPORT int CheckFieldDefinition(
                         const FieldDefinitionsSharedPtr  &fielddefs);

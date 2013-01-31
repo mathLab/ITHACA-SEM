@@ -932,7 +932,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> &outarray)
         {
             int p, n, offset, t_offset;
-            double vertnorm = 0.0;
+            NekDouble vertnorm = 0.0;
             
             for (n = 0; n < GetExpSize(); ++n)
             {

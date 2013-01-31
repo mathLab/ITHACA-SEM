@@ -234,7 +234,7 @@ namespace Nektar
 
                 NekVector<NekDouble> in(m_ncoeffs,inarray,eWrapper);
                 NekVector<NekDouble> out(nquad,outarray,eWrapper);
-                NekMatrix<double> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
+                NekMatrix<NekDouble> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
                 out = B * in;
 
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
@@ -489,7 +489,7 @@ namespace Nektar
         void StdSegExp::v_HelmholtzMatrixOp(
                 const Array<OneD, const NekDouble> &inarray,
                 Array<OneD,NekDouble> &outarray,
-                const double lambda)
+                const NekDouble lambda)
         {
             int    nquad = m_base[0]->GetNumPoints();
 

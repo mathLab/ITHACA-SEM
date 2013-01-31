@@ -273,31 +273,14 @@ namespace Vmath
 
     /********** Memory routines  ***********************/
 
-#if 0     
-    // \brief copy one double vector to another - This is just a wrapper
-    // around Blas
-    static inline void Vcopy(int n, const double *x, int incx, double *y,
-                             const int incy)
-    {
-        Blas::Dcopy(n,x,incx,y,incy);
-    }
-#else
-    // \brief copy one int vector to another
-    LIB_UTILITIES_EXPORT void Vcopy(int n, const int *x, const int incx, int *y,
-                             const int incy);
-
-    // \brief copy one int vector to another
-    LIB_UTILITIES_EXPORT void Vcopy(int n, const unsigned int *x, const int incx, unsigned int *y,
-                             const int incy);
-
-    // \brief copy one double vector to another
-    LIB_UTILITIES_EXPORT void Vcopy(int n, const double *x, const int incx, double *y,
-                             const int incy);
+    // \brief copy one vector to another
+    template<class T>
+    LIB_UTILITIES_EXPORT void Vcopy(int n, const T *x, const int incx,
+                                                 T *y, const int incy);
 
     // \brief reverse the ordering of  vector to another
     template<class T>  LIB_UTILITIES_EXPORT void  Reverse( int n, const T *x, const int incx, T *y, const int incy);
 
-#endif
 
 }
 #endif //VECTORMATH_HPP

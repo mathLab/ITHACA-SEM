@@ -433,7 +433,7 @@ namespace Nektar
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
 
             Array<OneD, NekDouble> energy(m_planes.num_elements()/2);
-            double area = 0.0;
+            NekDouble area = 0.0;
 
             // Calculate total area of elements.
             for (int n = 0; n < m_planes[0]->GetExpSize(); ++n)
@@ -447,7 +447,7 @@ namespace Nektar
             // Calculate L2 norm of real/imaginary planes.
             for (int n = 0; n < m_planes.num_elements(); n += 2)
             {
-                double err;
+                NekDouble err;
                 
                 energy[n/2] = 0;
                 

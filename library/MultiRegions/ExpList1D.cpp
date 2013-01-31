@@ -621,8 +621,8 @@ namespace Nektar
                 NekDouble integral_value = 0.0;
                 for(j = 0; j < total_breaks.num_elements()-1; j++)
                 {
-                    double a = total_breaks[j];
-                    double b = total_breaks[j+1];
+                    NekDouble a = total_breaks[j];
+                    NekDouble b = total_breaks[j+1];
 
                     // Map the quadrature points to the appropriate interval
                     for(r = 0; r < quad_points.num_elements(); r++)

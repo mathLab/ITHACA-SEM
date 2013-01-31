@@ -58,8 +58,8 @@ namespace Nektar
                     const  LibUtilities::BasisKey &Ba,
                     const  LibUtilities::BasisKey &Bb,
                     const  LibUtilities::BasisKey &Bc,
-                    double *coeffs,
-                    double *phys);
+                    NekDouble *coeffs,
+                    NekDouble *phys);
             STD_REGIONS_EXPORT StdHexExp(const StdHexExp &T);
             STD_REGIONS_EXPORT ~StdHexExp();
 

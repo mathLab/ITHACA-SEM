@@ -138,7 +138,7 @@ namespace Nektar
             
             // Lagrangian interpolation matrix
             DNekMatSharedPtr I;
-            double *interpolatingNodes = 0;
+            NekDouble *interpolatingNodes = 0;
             
             // Interpolate first coordinate direction
             I = m_base[0]->GetI(coords);

@@ -63,8 +63,8 @@ namespace Nektar
         StdHexExp::StdHexExp(const  LibUtilities::BasisKey &Ba,
                         const  LibUtilities::BasisKey &Bb,
                         const  LibUtilities::BasisKey &Bc,
-                        double *coeffs,
-                        double *phys)
+                        NekDouble *coeffs,
+                        NekDouble *phys)
         {
         }
 
@@ -844,7 +844,7 @@ namespace Nektar
 
             for(i = 0; i < nquad1*nquad2; ++i)
             {
-                Vmath::Vcopy(nquad0,(double *)(base0.get() + mode0*nquad0),1,
+                Vmath::Vcopy(nquad0,(NekDouble *)(base0.get() + mode0*nquad0),1,
                              &outarray[0]+i*nquad0, 1);
             }
 
@@ -852,7 +852,7 @@ namespace Nektar
             {
                 for(i = 0; i < nquad0; ++i)
                 {
-                    Vmath::Vmul(nquad1,(double *)(base1.get() + mode1*nquad1),1,
+                    Vmath::Vmul(nquad1,(NekDouble *)(base1.get() + mode1*nquad1),1,
                                 &outarray[0]+i+j*nquad0*nquad1, nquad0,
                                 &outarray[0]+i+j*nquad0*nquad1, nquad0);
                 }

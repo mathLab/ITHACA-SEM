@@ -133,8 +133,8 @@ namespace Nektar
             MaxNormDiff_q_qBar = 1.0;
             Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;
             
-            //m_LIM0 = 1.0e-04;
-            m_LIM0 = 1.0e-06;
+            m_LIM0 = 1.0e-04;
+            //m_LIM0 = 1.0e-06;
             m_LIM = m_LIM0;
             
             
@@ -308,16 +308,16 @@ namespace Nektar
             
             if (MaxNormDiff_q_qBar < m_LIM)
             {                   
-                //m_Delta = m_Delta + 0.5;
-                //m_X = 0.99*(1.0/m_Delta);
+                m_Delta = m_Delta + 0.5;
+                m_X = 0.99*(1.0/m_Delta);
                 
-                //coeff = 1.0106;
+                 /*//coeff = 1.0106;
                 coeff = 1.0132;
                 //mult = 10.0;
                 
                 m_X = 1.1*(coeff - 1.0)/m_dt;
                 m_Delta = 100.0*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
-                m_Delta = max(m_Delta, 1.0);
+                m_Delta = max(m_Delta, 1.0); */
                 
                 m_cst1=m_X*m_dt;
                 m_cst2=1.0/(1.0 + m_cst1);
@@ -327,17 +327,18 @@ namespace Nektar
                 
                 cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
                 
-                //m_LIM = m_LIM/10.0;
-                m_LIM = m_LIM/1000.0;
+                m_LIM = m_LIM/5.0;
+                //m_LIM = m_LIM/1000.0;
             }
             
-            /*if (MaxNormDiff_q_qBar > 2.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
+            if (MaxNormDiff_q_qBar > 10.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
             {        
                 Min_MaxNormDiff_q_qBar = 1.0;
                 
                 m_Delta0 = m_Delta0 + 0.5;
                 m_Delta = m_Delta0;
                 m_X = 0.99*(1.0/m_Delta);
+                //m_X = m_X + 0.2
                 
                 m_cst1=m_X*m_dt;
                 m_cst2=1.0/(1.0 + m_cst1);
@@ -350,7 +351,7 @@ namespace Nektar
                 m_LIM = m_LIM0;
                 
                 m_equ[0]->DoInitialise(); 
-            }*/
+            }
             
             
         }

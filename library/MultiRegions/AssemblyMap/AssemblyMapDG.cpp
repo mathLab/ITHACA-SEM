@@ -1352,61 +1352,61 @@ namespace Nektar
             return GetLocalToGlobalBndSign(i);
         }
 
-        const void AssemblyMapDG::v_LocalToGlobal(
+        void AssemblyMapDG::v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const
         {
             AssembleBnd(loc,global);
         }
 
-        const void AssemblyMapDG::v_LocalToGlobal(
+        void AssemblyMapDG::v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const
         {
             AssembleBnd(loc,global);
         }
 
-        const void AssemblyMapDG::v_GlobalToLocal(
+        void AssemblyMapDG::v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const
         {
             GlobalToLocalBnd(global,loc);
         }
 
-        const void AssemblyMapDG::v_GlobalToLocal(
+        void AssemblyMapDG::v_GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const
         {
             GlobalToLocalBnd(global,loc);
         }
 
-        const void AssemblyMapDG::v_Assemble(
+        void AssemblyMapDG::v_Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const
         {
             AssembleBnd(loc,global);
         }
 
-        const void AssemblyMapDG::v_Assemble(
+        void AssemblyMapDG::v_Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const
         {
             AssembleBnd(loc,global);
         }
 
-        const void AssemblyMapDG::v_UniversalAssemble(
+        void AssemblyMapDG::v_UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
             Gs::Gather(pGlobal, Gs::gs_add, m_gsh);
         }
 
-        const void AssemblyMapDG::v_UniversalAssemble(
+        void AssemblyMapDG::v_UniversalAssemble(
                       NekVector<      NekDouble>& pGlobal) const
         {
             UniversalAssemble(pGlobal.GetPtr());
         }
 
-        const int AssemblyMapDG::v_GetFullSystemBandWidth() const
+        int AssemblyMapDG::v_GetFullSystemBandWidth() const
         {
             return GetBndSystemBandWidth();
         }

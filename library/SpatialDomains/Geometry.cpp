@@ -142,7 +142,7 @@ namespace Nektar
             return m_geomFactors->GetGmat();
         }
 
-        const int Geometry::GetCoordim() const
+        int Geometry::GetCoordim() const
         {
             return v_GetCoordim();
         }

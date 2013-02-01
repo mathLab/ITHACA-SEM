@@ -551,15 +551,15 @@ namespace Nektar
 
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.
-            inline const int GetCoeff_Offset(int n) const;
+            inline int GetCoeff_Offset(int n) const;
 
             /// Get the start offset position for a global list of m_phys
             /// correspoinding to element n.
-            inline const int GetPhys_Offset(int n) const;
+            inline int GetPhys_Offset(int n) const;
 
             /// Get the element id associated with the n th
             /// consecutive block of data in  #m_phys and #m_coeffs
-            inline const int GetOffset_Elmt_Id(int n) const;
+            inline int GetOffset_Elmt_Id(int n) const;
 
             /// This function returns (a reference to) the array
             /// \f$\boldsymbol{\hat{u}}_l\f$ (implemented as #m_coeffs)
@@ -1763,7 +1763,7 @@ namespace Nektar
         /**
          *
          */
-        inline const int ExpList::GetCoeff_Offset(int n) const
+        inline int ExpList::GetCoeff_Offset(int n) const
         {
             return m_coeff_offset[n];
         }
@@ -1771,7 +1771,7 @@ namespace Nektar
         /**
          *
          */
-        inline const int ExpList::GetPhys_Offset(int n) const
+        inline int ExpList::GetPhys_Offset(int n) const
         {
             return m_phys_offset[n];
         }
@@ -1779,7 +1779,7 @@ namespace Nektar
         /**
          *
          */
-        inline const int ExpList::GetOffset_Elmt_Id(int n) const
+        inline int ExpList::GetOffset_Elmt_Id(int n) const
         {
             return m_offset_elmt_id[n];
         }

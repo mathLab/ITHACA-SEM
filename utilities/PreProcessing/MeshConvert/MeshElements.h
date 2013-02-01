@@ -1031,7 +1031,7 @@ namespace Nektar
         struct element_id_less_than
         {
             typedef boost::shared_ptr<Element> pT;
-            const bool operator()(const pT a, const pT b) const
+            bool operator()(const pT a, const pT b) const
             {
                 // check for 0
                 if (a.get() == 0)

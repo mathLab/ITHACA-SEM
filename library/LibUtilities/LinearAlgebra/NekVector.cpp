@@ -209,7 +209,7 @@ namespace Nektar
             
             
     template<typename DataType>
-    const unsigned int NekVector<DataType>::GetDimension() const
+    unsigned int NekVector<DataType>::GetDimension() const
     {
         return m_size;
     }

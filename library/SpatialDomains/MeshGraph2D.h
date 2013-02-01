@@ -66,7 +66,7 @@ namespace Nektar
 
             SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GetSegGeom(int eID);
 
-            inline const int GetCoordim(void){
+            inline int GetCoordim(void){
                 return GetSpaceDimension();
             }
 
@@ -89,12 +89,12 @@ namespace Nektar
 
             void GenXGeoFac();
 
-            inline const int GetNseggeoms() const
+            inline int GetNseggeoms() const
             {
                 return int(m_segGeoms.size());
             }
 
-            inline const int GetVidFromElmt(StdRegions::ExpansionType expansion,
+            inline int GetVidFromElmt(StdRegions::ExpansionType expansion,
                 const int vert, const int elmt) const
             {
                 if(expansion == StdRegions::eTriangle)
@@ -113,7 +113,7 @@ namespace Nektar
                 }
             }
 
-            inline const int GetEidFromElmt(StdRegions::ExpansionType expansion,
+            inline int GetEidFromElmt(StdRegions::ExpansionType expansion,
                 const int edge, const int elmt) const
             {
                 if(expansion == StdRegions::eTriangle)
@@ -132,7 +132,7 @@ namespace Nektar
                 }
             }
 
-            inline const StdRegions::Orientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
+            inline StdRegions::Orientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
             {
                 if(expansion == StdRegions::eTriangle)
                 {
@@ -151,7 +151,7 @@ namespace Nektar
             }
 
 
-            inline const StdRegions::Orientation GetCartesianEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
+            inline StdRegions::Orientation GetCartesianEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
             {
                 StdRegions::Orientation returnval;
 

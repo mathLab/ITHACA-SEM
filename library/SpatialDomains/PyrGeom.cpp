@@ -408,8 +408,9 @@ namespace Nektar
                 // we pick the edge to which the baseVertex of the Geometry2D-representation of the face
                 // belongs...
 
+                ASSERTL0(false, "Correct implementation required.");
                 // Compute the length of edges on a base-face
-                if( baseVertex == m_verts[ faceVerts[f][0] ]->GetVid() )
+/*                if( baseVertex == m_verts[ faceVerts[f][0] ]->GetVid() )
                 {
                     for(i = 0; i < m_coordim; i++)
                     {
@@ -445,7 +446,7 @@ namespace Nektar
                 {
                     ASSERTL0(false, "Could not find matching vertex for the face");
                 }
-
+*/
                 // Now, construct the edge-vectors of the local coordinates of
                 // the Geometry2D-representation of the face
                 for(i = 0; i < m_coordim; i++)

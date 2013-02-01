@@ -657,7 +657,6 @@ namespace Nektar
         {
             if(GetGtype() == eRegular)
             { 
-                int i;
                 NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
                 VertexComponent dv1, dv2, norm, orth1, orth2;
                 VertexComponent xin(m_coordim,0,coords[0],coords[1],coords2);

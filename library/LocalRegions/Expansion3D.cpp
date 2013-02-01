@@ -269,7 +269,6 @@ namespace Nektar
         {
             int i;
             int order_f = FaceExp->GetNcoeffs();
-            int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1);
             Array<OneD, NekDouble> coeff(order_f);
 
             StdRegions::IndexMapKey ikey(

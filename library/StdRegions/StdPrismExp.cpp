@@ -350,7 +350,7 @@ namespace Nektar
             eta_x = m_base[0]->GetZ();
             eta_z = m_base[2]->GetZ();
 
-            int i, j, k;
+            int i, k;
 
             bool Do_1 = (out_dxi1.num_elements() > 0)? true:false;
             bool Do_3 = (out_dxi3.num_elements() > 0)? true:false;

@@ -233,9 +233,14 @@ IF( WIN32 )
     ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB -DBOOST_PROGRAM_OPTIONS_DYN_LINK -DBOOST_IOSTREAMS_DYN_LINK -DBOOST_THREAD_DYN_LINK)
 ENDIF( )
 
+# Set up include directories. Include work-around for -isystem for CMake (see
+# bug 0010837) to avoid unnecessary compiler warnings for third-party libs.
+IF (APPLE)
+  SET(CMAKE_INCLUDE_SYSTEM_FLAG_C   "-isystem ") 
+  SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ") 
+ENDIF (APPLE)
 
-# Set up include directories
-INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
 INCLUDE_DIRECTORIES(SYSTEM ${Boost_INCLUDE_DIRS})
 
 # Build active components

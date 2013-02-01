@@ -2880,6 +2880,8 @@ namespace Nektar
             case eModifiedQuadPlus2:
                 quadoffset = 3;
                 break;
+            default:
+                break;
             }
             
             switch(type)

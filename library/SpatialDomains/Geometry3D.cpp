@@ -142,7 +142,7 @@ namespace Nektar
               //Interpolate derivative metric at Lcoords
               der1_x = m_xmap[0]->PhysEvaluate(Lcoords, D1Dx);
               der2_x = m_xmap[0]->PhysEvaluate(Lcoords, D1Dy);
-              der3_z = m_xmap[0]->PhysEvaluate(Lcoords, D1Dz);
+              der3_x = m_xmap[0]->PhysEvaluate(Lcoords, D1Dz);
               der1_y = m_xmap[1]->PhysEvaluate(Lcoords, D2Dx);
               der2_y = m_xmap[1]->PhysEvaluate(Lcoords, D2Dy);                  
               der3_y = m_xmap[1]->PhysEvaluate(Lcoords, D2Dz);          
@@ -234,7 +234,6 @@ namespace Nektar
             if (m_geomFactorsState != ePtsFilled)
             {
                 GeomType      Gtype  = eRegular;
-                GeomShapeType GSType = eQuadrilateral;
 
                 v_FillGeom();
 

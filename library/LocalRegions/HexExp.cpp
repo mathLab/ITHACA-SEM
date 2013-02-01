@@ -368,9 +368,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray)
         {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nquad2 = m_base[2]->GetNumPoints();
+            const int nqtot = GetTotPoints();
 
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
             Array<OneD,       NekDouble> tmp(nqtot);

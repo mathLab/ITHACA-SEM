@@ -14,8 +14,13 @@
 
 using namespace std;
 
+// Maximum value to use for potential function
 #define HEIGHT_MAX 99
 
+
+/**
+ * Constructs the graphical interface and VTK pipeline
+ */
 MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
 : QMainWindow( parent, fl ) {
 
@@ -116,7 +121,7 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
 
     mSourceHeightContours = vtkContourFilter::New();
     mSourceHeightContours->SetInput(mSourceData);
-    mSourceHeightContours->GenerateValues(10, 0.0, HEIGHT_MAX);
+    mSourceHeightContours->GenerateValues(21, 0.0, HEIGHT_MAX);
     mSourceHeightContourMapper = vtkPolyDataMapper::New();
     mSourceHeightContourMapper->SetInput(mSourceHeightContours->GetOutput());
     mSourceHeightContourMapper->SetScalarRange(0.0, HEIGHT_MAX);
@@ -137,7 +142,8 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
     Connections_s->Connect(mSourceVtk->GetRenderWindow()->GetInteractor(),
                            vtkCommand::RightButtonPressEvent,
                            this,
-                           SLOT(CreateSourcePoint( vtkObject*, unsigned long, void*, void*, vtkCommand*)));
+                           SLOT(CreateSourcePoint( vtkObject*, unsigned long,
+                                                   void*, void*, vtkCommand*)));
 
     // -------------------------------------------
 
@@ -208,11 +214,18 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
 
 }
 
+
+/**
+ * Main window destructor
+ */
 MainWindow::~MainWindow() {
     
 }
 
 
+/**
+ * Draw the GUI components.
+ */
 void MainWindow::Draw() {
     resize(800, 600);
     
@@ -326,25 +339,36 @@ void MainWindow::Draw() {
     mRootWidget->setLayout(mRootGrid);
     
     setCentralWidget(mRootWidget);
-    
 }
 
 
+/**
+ * Prompt for a VTK file to load as the source geometry and store the filename
+ * in the source filename textbox.
+ */
 void MainWindow::BrowseSource() {
     QString geoFile = QFileDialog::getOpenFileName(this,
-                                                   tr("Load Source Geometry"), "", tr("Source Geometry (*.vtk)"));
+            tr("Load Source Geometry"), "", tr("Source Geometry (*.vtk)"));
     mFileSourceEditBox->setText(geoFile);
 }
 
+
+/**
+ * Prompt for a VTK file to load as the target geometry and store the filename
+ * in the target filename textbox.
+ */
 void MainWindow::BrowseTarget() {
     QString dataFile = QFileDialog::getOpenFileName(this,
-                                                    tr("Load Target Geometry"), "", tr("Target Geometry (*.vtk)"));
+            tr("Load Target Geometry"), "", tr("Target Geometry (*.vtk)"));
     mFileTargetEditBox->setText(dataFile);
 }
 
-void MainWindow::BrowseLandmarks() {
-}
 
+/**
+ * Load the source and target geometries from the VTK files specified in the
+ * source and target filename textboxes. The source and target data is reset
+ * before load and the displays updated after loading the files.
+ */
 void MainWindow::Load() {
     ResetData();
 
@@ -354,6 +378,10 @@ void MainWindow::Load() {
     Update();
 }
 
+
+/**
+ * Reset all VTK polydata objects to the original state (i.e. empty)
+ */
 void MainWindow::ResetData() {
     mSourceData->Reset();
     mTargetData->Reset();
@@ -369,11 +397,18 @@ void MainWindow::ResetData() {
 
     vtkDoubleArray* Heights= vtkDoubleArray::New();
     Heights->SetName("height"); //setting name of the array
-    mSourceHeightPointData->GetPointData()->AddArray(Heights); //get the points dataa of the mSourcePoints Data, and we are then adding a new scalar array to it.
+    mSourceHeightPointData->GetPointData()->AddArray(Heights);
     mSourceHeightPointsVisible->SetInput(mSourceHeightPointData);
 }
 
 
+/**
+ * Load a source geometry from the file specified by the source filename textbox
+ * into the source data VTK polydata structure. The file is loaded into a
+ * temporary dataset and the points, cells and data copied into the main dataset
+ * to overcome the issue of being unable to update the scalar data after
+ * loading.
+ */
 void MainWindow::LoadSource() {
     // Load file into temporary poly data
     vtkPolyData* vTmpData = vtkPolyData::New();
@@ -401,6 +436,11 @@ void MainWindow::LoadSource() {
     mSourceRenderer->ResetCamera(mSourceActor->GetBounds());
 }
 
+
+/**
+ * Load the target geometry from the file specified by the target filename
+ * textbox into the target data VTK polydata structure.
+ */
 void MainWindow::LoadTarget() {
     vtkPolyDataReader* vTargetReader = vtkPolyDataReader::New();
     vTargetReader->SetFileName(mFileTargetEditBox->text().toStdString().c_str());
@@ -411,9 +451,14 @@ void MainWindow::LoadTarget() {
     mTargetRenderer->ResetCamera(mTargetActor->GetBounds());
 }
 
+
+/**
+ * Load the reference landmark points used for surface registration.
+ */
 void MainWindow::LoadSourceLandmarks() {
     QString pointsFile = QFileDialog::getOpenFileName(this,
-                                                      tr("Load Source Landmark Points"), "", tr("Landmark Points (*.vtk)"));
+            tr("Load Source Landmark Points"), "",
+            tr("Landmark Points (*.vtk)"));
 
     vtkPolyDataReader* vSourceLandmarks = vtkPolyDataReader::New();
     vSourceLandmarks->SetFileName(pointsFile.toStdString().c_str());
@@ -425,9 +470,14 @@ void MainWindow::LoadSourceLandmarks() {
     Update();
 }
 
+
+/**
+ * Load the height potential function points used for prescribing the
+ * interpolated height potential function and thereafter the fibre vector field.
+ */
 void MainWindow::LoadHeightPoints() {
     QString pointsFile = QFileDialog::getOpenFileName(this,
-                                                      tr("Load Height Points"), "", tr("Landmark Points (*.vtk)"));
+            tr("Load Height Points"), "", tr("Landmark Points (*.vtk)"));
 
     vtkPolyDataReader* vPointReader = vtkPolyDataReader::New();
     vPointReader->SetFileName(pointsFile.toStdString().c_str());
@@ -451,16 +501,28 @@ void MainWindow::LoadHeightPoints() {
 }
 
 
+/**
+ * Update the value of the slider label when the value changes.
+ */
 void MainWindow::HeightValueChanged(int value)
 {
     mHeightSliderLabel->setText("Height (" + QString::number(value) + ") :");
 }
 
+
+/**
+ * Update the display when the interpolation distance changes.
+ */
 void MainWindow::HeightInterpChanged(int value)
 {
     Update();
 }
 
+
+/**
+ * Toggle the display of height potential point labels. Hiding these speeds up
+ * the VTK rendering and display.
+ */
 void MainWindow::HeightLabelsSelect(bool value)
 {
     if (value) {
@@ -474,12 +536,18 @@ void MainWindow::HeightLabelsSelect(bool value)
     Update();
 }
 
+
+/**
+ * Update all VTK displays. This includes interpolating the height potential
+ * function and computing fibre directions.
+ */
 void MainWindow::Update() {
     mSourceData->GetPointData()->RemoveArray("HeightSurface");
     mSourceData->GetPointData()->RemoveArray("Gradient");
 
-    int vInterpDistance = mHeightInterpRange->value();
-    vtkDoubleArray* vSurfaceData=InterpSurface(mSourceHeightPointData, mSourceData, vInterpDistance);
+    vtkDoubleArray* vSurfaceData=InterpSurface( mSourceHeightPointData,
+                                                mSourceData,
+                                                mHeightInterpRange->value());
     mSourceData->GetPointData()->SetScalars(vSurfaceData);
 
     ComputeFibreDirection();
@@ -496,7 +564,13 @@ void MainWindow::Update() {
     mTargetVtk->update();
 }
 
-void MainWindow::CreateTargetPoint(vtkObject* caller, unsigned long vtk_event, void* client_data, void* call_data, vtkCommand* command) {
+
+/**
+ * Adds a new landmark point to the target geometry.
+ */
+void MainWindow::CreateTargetPoint(vtkObject* caller, unsigned long vtk_event,
+        void* client_data, void* call_data, vtkCommand* command) {
+
     double p[3];
     double d;
     
@@ -531,69 +605,84 @@ void MainWindow::CreateTargetPoint(vtkObject* caller, unsigned long vtk_event, v
     Update();
 }
 
-//Interp Surface
 
-vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* pSurface, int pInterpDistance) {
-    //p point data:points which have been selected.
-    //psurface: the points on the mesh
-    //Below we set the interp distance as 
-    int nSurfacePoints = pSurface->GetNumberOfPoints();//Return number of points in array
-    vtkDoubleArray* vPointDataValues = dynamic_cast<vtkDoubleArray*>(pPointData->GetPointData()->GetScalars("height"));
+/**
+ * Given the prescription of a function at a set of points, interpolates the
+ * value of the function at all points in the given mesh.
+ * @param   pPointData      Set of points with prescribed scalar values.
+ * @param   pSurface        Surface points on which to set interpolated scalars.
+ * @param   pInterpDistance Maximum distance around points to interpolate.
+ * @returns                 Interpolated scalar values at mesh points.
+ */
+vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData,
+        vtkPolyData* pSurface, int pInterpDistance) {
+
+    double p[3];
+    double q[3];
+    vtkIdList* list = vtkIdList::New();
+
+    // Number of points in surface
+    int nSurfacePoints = pSurface->GetNumberOfPoints();
     
-    
-    //for vtkDoubleArray: you are able to set  number of components, values, name, insert next value,set value etc
-    
+    vtkDoubleArray* vPointDataValues = vtkDoubleArray::SafeDownCast(
+            pPointData->GetPointData()->GetScalars("height")
+        );
+
+    // Create output data array
     vtkDoubleArray* vOutput = vtkDoubleArray::New();
     vOutput->SetNumberOfComponents(1);
     vOutput->SetName("HeightSurface");
     vOutput->SetNumberOfValues(nSurfacePoints);
-    vOutput->FillComponent(0, 0.0);
     
-    if (pPointData->GetNumberOfPoints() < 4) return vOutput;//We check to see if the number of points which we have clicked on is more than 4- since we need the four cloest neighbours.
+    // Return empty array if less than 4 points selected
+    if (pPointData->GetNumberOfPoints() < 4)
+    {
+        return vOutput;
+    }
     
+    // Create a point locator to find the nearest points in the point list
+    // to a given point in the surface.
     vtkPointLocator* vLocator = vtkPointLocator::New();
-    vLocator->SetDataSet(pPointData);//We set the data set as the poitns which we have selected on the mesh
+    vLocator->SetDataSet(pPointData);
     
-    
-   
-    for (int i = 0; i < nSurfacePoints; ++i) { //For all the points on the mesh
-        double p[3]; //third array of the double p
-        vtkIdList* list = vtkIdList::New(); //we create a list, lists are used to pass id's between objects
+    // Loop over every point in the mesh and
+    for (int i = 0; i < nSurfacePoints; ++i) {
+
+        // Retrieve the x,y,z coordinates of this surface point
+        pSurface->GetPoint(i, p);
+
+        // Seek the IDs of the nearest 4 points in the point list to this
+        // coordinate.
+        vLocator->FindClosestNPoints(4, p, list);
         
-        pSurface->GetPoint(i, p);//Copy point components (eg co-ordinates) into the array p[3] for each point in the mesh
-        //This basically gives you the co-ordinate of each point from the mesh
-        
-        vLocator->FindClosestNPoints(4, p, list); //Find 4 closest points to p and store in list,
-        //points are sorted from closest to furthest
-        
-        //int numPoints= min(4, int(list->GetNumberOfIds()));
-        
-        
-        //cout << list->GetNumberOfIds() << endl;
-        
-        //Weighted average of 4 closest points
+        // Perform a weighted average of values at the 4 closest points
         double val = 0;
         double w = 0;
         int c = 0;
-        for (int j = 0; j < 4; ++j) { //We set j to have the values 0,1,2,3
-            int id = list->GetId(j);  //Re: the 4 closest points are stored in the array list- so we get the id of these 4 positions
+
+        for (int j = 0; j < 4; ++j) {
+            // Get the j-th ID from the list.
+            int id = list->GetId(j);
             
-            //This follows the procedure which we did above, here we get the co-ordinate of the clicked points
-            double q[3];
-            pPointData->GetPoint(id, q); //co-ordinate of the height points
+            // Get the coordiate of this point in the point list.
+            pPointData->GetPoint(id, q);
             
+            // Find the distance between the points.
             double d_pq = sqrt(vtkMath::Distance2BetweenPoints(p, q));
-            //Gets the squared distance between the two points, i.e. (y2-y1)^2 + (x2-x1)^2: this result is then square-rooted. We basically find length of the line.
             
-            if (d_pq <= pInterpDistance) {//If the distabce between p and q is less than the chosen interp distance
-                val += vPointDataValues->GetValue(id) / (d_pq + 1E-10);//Getvalue gets the "data" at that particular index
-                //1e10: So we dont divide by 10
-                //vPointDataValues represent the height which you input on the screet
+            // Use the point, only if it is within the interpolation distance.
+            if (d_pq <= pInterpDistance) {
+                // Add 1e10: So we dont divide by 0.
+                val += vPointDataValues->GetValue(id) / (d_pq + 1E-10);
+
                 w   += 1.0 / (d_pq + 1E-10);
                 c   += 1;
             }
         }
-        
+
+        // If there was at least one point within the interpolation distance
+        // we finish by dividing by the sum of the weights. If no points within
+        // distance, we set the value to zero.
         if (c >= 1) {
             val /= w;
         }
@@ -601,29 +690,34 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData, vtkPolyData* 
             val = 0.0;
         }
 
-        vOutput->SetValue(i, val);//Sets value of point in mesh as weighted average
+        // Set the value in the output array.
+        vOutput->SetValue(i, val);
     }
     return vOutput;
 }
 
-//End Interp surface
 
-//Create Source Point
+/**
+ * Creates a new height potential function point with a value as chosen using
+ * the height potential value slider.
+ */
+void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event,
+        void* client_data, void* call_data, vtkCommand* command) {
 
-void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, void* client_data, void* call_data, vtkCommand* command) {
     double p_s[3];
     double d_s;
     
-    vtkRenderWindowInteractor* iren = vtkRenderWindowInteractor::SafeDownCast(caller);
+    vtkRenderWindowInteractor* iren
+            = vtkRenderWindowInteractor::SafeDownCast(caller);
     
     // consume event so the interactor style doesn't get it
     command->AbortFlagOn();
-    int* position_s = iren->GetEventPosition();
+    int* pos = iren->GetEventPosition();
     
     // Use World point picker to find a 3-space point on atrial surface
     // Point will be on camera bound if not on surface
     vtkWorldPointPicker *picker_source = vtkWorldPointPicker::New();
-    picker_source->Pick(position_s[0], position_s[1], position_s[2], mSourceRenderer);
+    picker_source->Pick(pos[0], pos[1], pos[2], mSourceRenderer);
     picker_source->GetPickPosition(p_s);
     
     // Use Point locator to find nearest vertex id on atrial surface within a
@@ -631,17 +725,23 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
     vtkPointLocator* vLocator_source = vtkPointLocator::New();
     vLocator_source->SetDataSet(mSourceData);
     vLocator_source->SetTolerance(0.1);
-    int nearestPointId_source = vLocator_source->FindClosestPointWithinRadius(5.0, p_s, d_s);
+    int nearestPointId_source
+            = vLocator_source->FindClosestPointWithinRadius(5.0, p_s, d_s);
     
-    double Heights = double(mHeightSlider->value());
+    double h = double(mHeightSlider->value());
     
     // If we are on the surface (i.e. id != -1) then add this vertex to the list
-    // of landmark points.
+    // of height potential function points.
     if (nearestPointId_source >= 0) {
-        mSourceData->GetPoints()->GetPoint(nearestPointId_source, p_s);//get all vertices in the mesh, get nearest point using the id., put in ps
-        vtkPoints* pointList = AddPoint(mSourceHeightPointData->GetPoints(), p_s);
-        vtkDataArray* pointScalars = AddScalar(mSourceHeightPointData->GetPointData()->GetScalars("height"), Heights);
-        //mSourceHeightPointData->Reset();
+        mSourceData->GetPoints()->GetPoint(nearestPointId_source, p_s);
+
+        vtkPoints* oldPointList = mSourceHeightPointData->GetPoints();
+        vtkDataArray* oldPointScalars
+                = mSourceHeightPointData->GetPointData()->GetScalars("height");
+
+        vtkPoints* pointList = AddPoint(oldPointList, p_s);
+        vtkDataArray* pointScalars = AddScalar(oldPointScalars, h);
+
         mSourceHeightPointData->GetPointData()->RemoveArray("height");
         mSourceHeightPointData->SetPoints(pointList);
         mSourceHeightPointData->GetPointData()->SetScalars(pointScalars);
@@ -653,6 +753,11 @@ void MainWindow::CreateSourcePoint(vtkObject* caller, unsigned long vtk_event, v
 }
 
 
+/**
+ * Given a scalar function \phi, computes the fibre direction as the
+ * cross-product of the \nabla\phi and the surface normal vector. Therefore, the
+ * fibre direction lies along the contours of constant \phi.
+ */
 void MainWindow::ComputeFibreDirection()
 {
     int nPts = mSourceData->GetNumberOfPoints();
@@ -671,20 +776,27 @@ void MainWindow::ComputeFibreDirection()
 
     if (mSourceHeightPointData->GetNumberOfPoints() < 4)
     {
-        cout << "Not enough points to do direction." << endl;
+        cout << "Not enough points to compute fibre direction." << endl;
     }
     else
     {
         vtkGradientFilter* vGradient = vtkGradientFilter::New();
         vGradient->SetInput(mSourceData);
-        vGradient->SetInputScalars(vtkDataObject::FIELD_ASSOCIATION_POINTS, "HeightSurface");
+        vGradient->SetInputScalars(vtkDataObject::FIELD_ASSOCIATION_POINTS,
+                                   "HeightSurface");
         vGradient->SetResultArrayName("Gradient");
         vGradient->Update();
-        vGradientData->DeepCopy(vtkDoubleArray::SafeDownCast(vGradient->GetOutput()->GetPointData()->GetVectors("Gradient")));
 
-        vtkDoubleArray* grad = vtkDoubleArray::SafeDownCast(vGradient->GetOutput()->GetPointData()->GetVectors("Gradient"));
-        vtkFloatArray* norm = vtkFloatArray::SafeDownCast(mSourceNormals->GetOutput()->GetPointData()->GetNormals());
-        if (!grad || !norm)
+        vtkDoubleArray* vGradVector = vtkDoubleArray::SafeDownCast(
+                vGradient->GetOutput()->GetPointData()->GetVectors("Gradient")
+            );
+        vtkDataArray* vNormVector = vtkFloatArray::SafeDownCast(
+                mSourceNormals->GetOutput()->GetPointData()->GetNormals()
+            );
+
+        vGradientData->DeepCopy(vGradVector);
+
+        if (!vGradVector || !vNormVector)
         {
             cout << "One of the gradient or normals are not defined" << endl;
         }
@@ -692,8 +804,8 @@ void MainWindow::ComputeFibreDirection()
         {
             for (unsigned int i = 0; i < nPts; ++i)
             {
-                grad->GetTupleValue(i, a);
-                norm->GetTuple(i, b);
+                vGradVector->GetTupleValue(i, a);
+                vNormVector->GetTuple(i, b);
                 vtkMath::Cross(a, b, p);
                 vFibreData->SetTuple(i, p);
             }
@@ -704,6 +816,10 @@ void MainWindow::ComputeFibreDirection()
     mSourceData->GetPointData()->AddArray(vFibreData);
 }
 
+
+/**
+ * Generic routine to add a new point p to a dataset array.
+ */
 vtkPoints* MainWindow::AddPoint(vtkPoints* array, double* p)
 {
     double q[3];
@@ -719,6 +835,10 @@ vtkPoints* MainWindow::AddPoint(vtkPoints* array, double* p)
     return vPts;
 }
 
+
+/**
+ * Generic routine to add a new scalar value v to a double array.
+ */
 vtkDoubleArray* MainWindow::AddScalar(vtkDataArray* array, double v)
 {
     vtkDoubleArray* vVals = vtkDoubleArray::New();
@@ -739,9 +859,14 @@ vtkDoubleArray* MainWindow::AddScalar(vtkDataArray* array, double v)
     return vVals;
 }
 
+
+/**
+ * Prompt for a filename and write the source geometry and scalar/vector data
+ * to the specified file.
+ */
 void MainWindow::ExportSource() {
     QString file = QFileDialog::getSaveFileName(this,
-                                                      tr("Export Source"), "", tr("Geometry (*.vtk)"));
+            tr("Export Source"), "", tr("Geometry (*.vtk)"));
 
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
     writer->SetInput(mSourceData);
@@ -749,9 +874,14 @@ void MainWindow::ExportSource() {
     writer->Write();
 }
 
+
+/**
+ * Prompt for a filename and write the target landmark points to the specified
+ * file.
+ */
 void MainWindow::ExportTargetPoints() {
     QString pointsFile = QFileDialog::getSaveFileName(this,
-                                                      tr("Export Landmark Points"), "", tr("Landmark Points (*.vtk)"));
+            tr("Export Landmark Points"), "", tr("Landmark Points (*.vtk)"));
     
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
     writer->SetInput(mTargetPointsData);
@@ -759,9 +889,14 @@ void MainWindow::ExportTargetPoints() {
     writer->Write();
 }
 
+
+/**
+ * Prompt for a filename and write the height potential function points
+ * prescribed by the user to the specified file.
+ */
 void MainWindow::ExportHeightPoints() {
     QString pointsFile = QFileDialog::getSaveFileName(this,
-                                                      tr("Export Height Points"), "", tr("Height Points (*.vtk)"));
+            tr("Export Height Points"), "", tr("Height Points (*.vtk)"));
 
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
     writer->SetInput(mSourceHeightPointData);
@@ -769,41 +904,63 @@ void MainWindow::ExportHeightPoints() {
     writer->Write();
 }
 
+
+/**
+ * Removes the previously added landmark point from the target landmark point
+ * dataset.
+ */
 void MainWindow::UndoLastLandmarkPoint() {
     if (mTargetPointsData->GetPoints()->GetNumberOfPoints() > 0)
     {
         double * p = new double[3];
+        int i = 0;
+        unsigned int n = 0;
+
         vtkPoints* vTargetPoints = vtkPoints::New();
-        for (unsigned int i = 0; i < mTargetPointsData->GetPoints()->GetNumberOfPoints() - 1; ++i)
+        n = mTargetPointsData->GetPoints()->GetNumberOfPoints();
+        for (i = 0; i < n - 1; ++i)
         {
             p = mTargetPointsData->GetPoint(i);
             vTargetPoints->InsertNextPoint(p);
         }
         mTargetPointsData->SetPoints(vTargetPoints);
-        delete[] p;
+
         Update();
+
+        delete[] p;
     }
 }
 
+
+/**
+ * Removes the previously added height potential function point and its
+ * corresponding scalar value.
+ */
 void MainWindow::UndoLastHeightPoint() {
     if (mSourceHeightPointData->GetPoints()->GetNumberOfPoints() > 0)
     {
-        int n = mSourceHeightPointData->GetPoints()->GetNumberOfPoints() - 1;
         double * p = new double[3];
+        int i = 0;
+        unsigned int n = 0;
+
         vtkPoints* vPts = vtkPoints::New();
         vtkDataArray* vData = vtkDoubleArray::New();
         vData->SetName("height");
         vData->SetNumberOfTuples(n);
-        for (unsigned int i = 0; i < n; ++i)
+        n = mSourceHeightPointData->GetPoints()->GetNumberOfPoints();
+        for (i = 0; i < n - 1; ++i)
         {
             p = mSourceHeightPointData->GetPoint(i);
             vPts->InsertNextPoint(p);
-            vData->SetTuple1(i, mSourceHeightPointData->GetPointData()->GetScalars("height")->GetTuple1(i));
+            vData->SetTuple1(i, mSourceHeightPointData->GetPointData()->
+                                        GetScalars("height")->GetTuple1(i));
         }
         mSourceHeightPointData->GetPointData()->RemoveArray("height");
         mSourceHeightPointData->SetPoints(vPts);
         mSourceHeightPointData->GetPointData()->SetScalars(vData);
-        delete[] p;
+
         Update();
+
+        delete[] p;
     }
 }

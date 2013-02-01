@@ -5,9 +5,6 @@
 #include <string>
 #include <sstream>
 
-//#include <QtGui/QMainWindow>
-//#include <QtGui/QLineEdit>
-//#include <QtGui/QGridLayout>
 #include <QtGui>
 #include <QVTKWidget.h>
 #include <vtkRenderer.h>
@@ -30,12 +27,6 @@
 #include <vtkContourFilter.h>
 #include <vtkGradientFilter.h>
 #include <vtkPolyDataNormals.h>
-//#include <vtkLookupTable.h>
-//#include <vtkColorTransferFunction.h>
-//#include <vtkScalarBarActor.h>
-//#include <vtkTextMapper.h>
-//#include <vtkActor2D.h>
-
 
 class vtkEventQtSlotConnect;
 
@@ -51,7 +42,6 @@ class MainWindow : public QMainWindow
     private slots:
         void BrowseSource();
         void BrowseTarget();
-        void BrowseLandmarks();
 
         void ResetData();
         void Load();

@@ -243,7 +243,6 @@ namespace Nektar
         void MeshGraph::ReadGeometry(TiXmlDocument &doc)
         {
             TiXmlHandle docHandle(&doc);
-            TiXmlNode* node = NULL;
             TiXmlElement* mesh = NULL;
             TiXmlElement* master = NULL;    // Master tag within which all data is contained.
 
@@ -818,7 +817,6 @@ namespace Nektar
                         CompositeMap compositeVector;
                         GetCompositeList(compositeListStr, compositeVector);
 
-                        bool          useExpansionType = false;
                         ExpansionType expansion_type_x, expansion_type_y, expansion_type_z;
                         int           num_modes_x, num_modes_y, num_modes_z;
 
@@ -1839,8 +1837,6 @@ namespace Nektar
 
                     SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, homoZIDs, homoYIDs, points, pointDef, numPoints, numPointDef);
                     
-					int datasize = CheckFieldDefinition(fielddef);
-
                     fielddefs.push_back(fielddef);
 
                     element = element->NextSiblingElement("ELEMENTS");
@@ -2883,6 +2879,8 @@ namespace Nektar
                 break;
             case eModifiedQuadPlus2:
                 quadoffset = 3;
+                break;
+            default:
                 break;
             }
             

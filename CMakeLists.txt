@@ -32,6 +32,7 @@ SET(LIB_DIR "lib")
 IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
 	SET(LIB_DIR "lib64")
 ENDIF()
+SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem")
 
 SET(NEKTAR_BIN_DIR bin)
 SET(NEKTAR_LIB_DIR ${LIB_DIR})
@@ -233,9 +234,14 @@ IF( WIN32 )
     ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB -DBOOST_PROGRAM_OPTIONS_DYN_LINK -DBOOST_IOSTREAMS_DYN_LINK -DBOOST_THREAD_DYN_LINK)
 ENDIF( )
 
+# Set up include directories. Include work-around for -isystem for CMake (see
+# bug 0010837) to avoid unnecessary compiler warnings for third-party libs.
+IF (APPLE)
+  SET(CMAKE_INCLUDE_SYSTEM_FLAG_C   "-isystem ") 
+  SET(CMAKE_INCLUDE_SYSTEM_FLAG_CXX "-isystem ") 
+ENDIF (APPLE)
 
-# Set up include directories
-INCLUDE_DIRECTORIES( ${CMAKE_SOURCE_DIR} ${Boost_INCLUDE_DIRS} ${LOKI_INCLUDE_DIR} ${TINYXML_BASE})
+INCLUDE_DIRECTORIES(${CMAKE_SOURCE_DIR})
 
 # Build active components
 IF (NEKTAR_BUILD_LIBRARY)

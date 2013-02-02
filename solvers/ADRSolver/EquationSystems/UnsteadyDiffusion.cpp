@@ -92,7 +92,6 @@ namespace Nektar
     {
         int i;
         int nvariables = inarray.num_elements();
-        int npoints = GetNpoints();
 
         switch (m_projectionType)
         {

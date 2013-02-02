@@ -114,12 +114,12 @@ namespace Nektar
                 return(m_base[dir]);
             }
 
-            inline const int GetNConstFactors() const
+            inline int GetNConstFactors() const
             {
                 return m_factors.size();
             }
 
-            inline const NekDouble GetConstFactor(const ConstFactorType& factor) const
+            inline NekDouble GetConstFactor(const ConstFactorType& factor) const
             {
                 ConstFactorMap::const_iterator x = m_factors.find(factor);
                 ASSERTL1(x != m_factors.end(),
@@ -133,7 +133,7 @@ namespace Nektar
                 return m_factors;
             }
 
-            inline const int GetNVarCoeff() const
+            inline int GetNVarCoeff() const
             {
                 return m_varcoeffs.size();
             }

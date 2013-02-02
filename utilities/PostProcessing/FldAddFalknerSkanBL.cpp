@@ -34,13 +34,7 @@ int main(int argc, char *argv[])
     setprecision (16);
     
     //! Auxiliary counters for the x and y directions
-    int  i, j, k, m, numModes, nFields;
-    
-    //! Auxiliary variables
-    char    LocalString[1000];
-    string  GlobalString[10000];
-    bool    inspection = 1;
-
+    int  i, j, numModes, nFields;
     
     //! Usage check
 	if((argc != 2) && (argc != 3))
@@ -68,7 +62,8 @@ int main(int argc, char *argv[])
     txt_file         = vSession->GetSolverInfo("txt_file");
     stability_solver = vSession->GetSolverInfo("stability_solver");
 
-    if(stability_solver != "velocity_correction_scheme" & stability_solver != "coupled_scheme")
+    if(stability_solver != "velocity_correction_scheme" && 
+       stability_solver != "coupled_scheme")
     {
         fprintf(stderr,"Error: You must specify the stability solver in the session file properly.\n"); 
         fprintf(stderr,"Options: 'velocity_correction_scheme' [output ===> (u,v,p)]; 'coupled_scheme' [output ===>(u,v)]\n");
@@ -219,7 +214,7 @@ int main(int argc, char *argv[])
             eta_QuadraturePts[i] = y_QuadraturePts[i] * sqrt(U_inf / (2 * x * nu));
             for(j=0; j<numLines-1; j++)
             {
-                if(eta_QuadraturePts[i] >= eta[j] & eta_QuadraturePts[i] <= eta[j+1])
+                if(eta_QuadraturePts[i] >= eta[j] && eta_QuadraturePts[i] <= eta[j+1])
                 {
                     f_QuadraturePts[i]  = (eta_QuadraturePts[i] - eta[j]) * (f[j+1] - f[j]) / (eta[j+1] - eta[j]) + f[j]; 
                     df_QuadraturePts[i] = (eta_QuadraturePts[i] - eta[j]) * (df[j+1] - df[j]) / (eta[j+1] - eta[j]) + df[j];
@@ -262,7 +257,7 @@ int main(int argc, char *argv[])
         
             for(j=0; j<numLines-1; j++)
             {
-                if(eta_QuadraturePts[i] >= eta[j] & eta_QuadraturePts[i] <= eta[j+1])
+                if(eta_QuadraturePts[i] >= eta[j] && eta_QuadraturePts[i] <= eta[j+1])
                 {
                     f_QuadraturePts[i]  = (eta_QuadraturePts[i] - eta[j]) * (f[j+1] - f[j]) / (eta[j+1] - eta[j]) + f[j]; 
                     df_QuadraturePts[i] = (eta_QuadraturePts[i] - eta[j]) * (df[j+1] - df[j]) / (eta[j+1] - eta[j]) + df[j];
@@ -294,7 +289,7 @@ int main(int argc, char *argv[])
             }
         
             //! SINGULARITY POINT: X = 0; Y = 0.
-            if((x_QuadraturePts[i] + x_0) == 0 & y_QuadraturePts[i] == 0)
+            if((x_QuadraturePts[i] + x_0) == 0 && y_QuadraturePts[i] == 0)
             {
                 u_QuadraturePts[i] = 0.0;
                 v_QuadraturePts[i] = 0.0;

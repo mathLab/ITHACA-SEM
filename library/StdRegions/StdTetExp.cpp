@@ -480,16 +480,6 @@ namespace Nektar
             }
         }
 
-
-        void StdTetExp::v_PhysDirectionalDeriv(
-            const Array<OneD, const NekDouble>& inarray,
-            const Array<OneD, const NekDouble>& direction,
-                  Array<OneD,       NekDouble> &outarray)
-        {
-            ASSERTL0(false,"This method is not defined or valid "
-                           "for this class type");
-        }
-
         void StdTetExp::v_StdPhysDeriv(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& out_d0,
@@ -559,13 +549,10 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
-            int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
-
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
 
             Array<OneD, NekDouble> wsp(nquad2*order0*order1*(order1+1)/2+
                                        nquad2*nquad1*order0);
@@ -790,10 +777,8 @@ namespace Nektar
             int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
-
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
 
             Array<OneD, NekDouble> tmp (nquad0*nquad1*nquad2);
             Array<OneD, NekDouble> wsp (nquad1*nquad2*order0 +
@@ -2074,7 +2059,6 @@ namespace Nektar
          */
         int StdTetExp::GetMode(const int I, const int J, const int K)
         {
-            const int P = m_base[0]->GetNumModes();
             const int Q = m_base[1]->GetNumModes();
             const int R = m_base[2]->GetNumModes();
             

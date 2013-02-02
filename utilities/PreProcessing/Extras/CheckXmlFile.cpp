@@ -79,7 +79,6 @@ int main(int argc, char *argv[])
             NekDouble x,y,z;
             string   outname(strtok(argv[argc-1],"."));
             outname += ".dat";
-            FILE *fp = fopen(outname.c_str(),"w");
             
             SpatialDomains::TetGeomMap   tetgeom   = mesh->GetAllTetGeoms();
             SpatialDomains::PyrGeomMap   pyrgeom   = mesh->GetAllPyrGeoms();

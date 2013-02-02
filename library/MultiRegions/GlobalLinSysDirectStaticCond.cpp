@@ -175,6 +175,7 @@ namespace Nektar
                                                                 - nGlobBndDofs;
 
             Array<OneD, NekDouble> F(nGlobDofs);
+            Array<OneD, NekDouble> tmp;
 
             if(nDirBndDofs && dirForcCalculated)
             {
@@ -185,14 +186,15 @@ namespace Nektar
                 Vmath::Vcopy(nGlobDofs,in.get(),1,F.get(),1);
             }
 
-            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,F+nDirBndDofs,
+            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,tmp=F+nDirBndDofs,
                                           eWrapper);
-            NekVector<NekDouble> F_Int(nIntDofs,F+nGlobBndDofs,eWrapper);
+            NekVector<NekDouble> F_Int(nIntDofs,tmp=F+nGlobBndDofs,eWrapper);
 
             NekVector<NekDouble> V_GlobBnd(nGlobBndDofs,out,eWrapper);
-            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,out+nDirBndDofs,
+            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,
+                                              tmp=out+nDirBndDofs,
                                               eWrapper);
-            NekVector<NekDouble> V_Int(nIntDofs,out+nGlobBndDofs,eWrapper);
+            NekVector<NekDouble> V_Int(nIntDofs,tmp=out+nGlobBndDofs,eWrapper);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,0.0);
 
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
@@ -500,8 +502,6 @@ namespace Nektar
                         const AssemblyMapSharedPtr& pLocToGloMap)
         {
             int i,j,n,cnt;
-            NekDouble one  = 1.0;
-            NekDouble zero = 0.0;
             DNekScalBlkMatSharedPtr blkMatrices[4];
 
             
@@ -728,7 +728,7 @@ namespace Nektar
                 {
                     for(j = 0; j < 4; j++)
                     {
-                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,substructuredMat[j][i]);
+                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,substructuredMat[j][i]);
                         blkMatrices[j]->SetBlock(i,i,tmpscalmat);
                     }
                 }

@@ -216,8 +216,8 @@ namespace Nektar
 
         // \brief Initializes the evaluator. Call DefineFunction(...) next.
         AnalyticExpressionEvaluator::AnalyticExpressionEvaluator():
-              m_total_eval_time(0),
-              m_timer()
+                m_timer(),
+                m_total_eval_time(0)
         {
             m_state_size = 1;
 
@@ -480,8 +480,7 @@ namespace Nektar
 
             ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
 
-            ExecutionStack&  stack    = m_executionStack[expression_id];
-            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+            ExecutionStack &stack = m_executionStack[expression_id];
 
             m_state.resize(m_state_sizes[expression_id]);
             for (int i = 0; i < stack.size(); i++)
@@ -506,8 +505,7 @@ namespace Nektar
 
             ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
 
-            ExecutionStack&  stack    = m_executionStack[expression_id];
-            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+            ExecutionStack &stack = m_executionStack[expression_id];
 
             // initialise internal vector of variable values
             m_state.resize(m_state_sizes[expression_id]);
@@ -583,8 +581,7 @@ namespace Nektar
             ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
             ASSERTL1(result.num_elements() >= num_points, "destination array must have enough capacity to store expression values at each given point");
 
-            ExecutionStack&  stack    = m_executionStack[expression_id];
-            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+            ExecutionStack &stack = m_executionStack[expression_id];
 
             /// If number of points tends to 10^6, one may end up
             /// with up to ~0.5Gb data allocated for m_state only.
@@ -666,7 +663,10 @@ namespace Nektar
             {
                 (*stack[j]).run_many(num);
             }
-            for (int i = 0; i < num; result[i] = m_state[i++]) ;
+            for (int i = 0; i < num; ++i)
+            {
+                result[i] = m_state[i];
+            }
 
             m_timer.Stop();
             m_total_eval_time += m_timer.TimePerTest(1);

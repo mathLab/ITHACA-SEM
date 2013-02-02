@@ -870,7 +870,6 @@ namespace Nektar
 
                 if(doGlobalOp)
                 {
-                    int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                     GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
                     mat->Multiply(inarray,outarray);
                     m_locToGloMap->UniversalAssemble(outarray);

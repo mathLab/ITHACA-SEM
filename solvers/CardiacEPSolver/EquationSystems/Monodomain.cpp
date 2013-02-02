@@ -235,7 +235,6 @@ namespace Nektar
             const NekDouble lambda)
     {
         int nvariables  = inarray.num_elements();
-        int ncoeffs     = inarray[0].num_elements();
         int nq          = m_fields[0]->GetNpoints();
         StdRegions::ConstFactorMap factors;
         // lambda = \Delta t
@@ -276,7 +275,6 @@ namespace Nektar
             const NekDouble time)
     {
         int nq = m_fields[0]->GetNpoints();
-        int nvar = inarray.num_elements();
 
         m_cell->TimeIntegrate(inarray, outarray, time);
 

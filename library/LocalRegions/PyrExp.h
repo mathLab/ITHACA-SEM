@@ -94,13 +94,6 @@ namespace Nektar
             // Inner product functions
             //---------------------------------------
             LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                const Array<OneD, const NekDouble>& base0, 
-                const Array<OneD, const NekDouble>& base1, 
-                const Array<OneD, const NekDouble>& base2, 
-                const Array<OneD, const NekDouble>& inarray, 
-                      Array<OneD,       NekDouble>& outarray);
-
-            LOCAL_REGIONS_EXPORT virtual void v_IProductWRTBase(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& outarray);
 

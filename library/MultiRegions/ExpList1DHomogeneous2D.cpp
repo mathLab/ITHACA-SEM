@@ -82,8 +82,6 @@ namespace Nektar
         ExpList1DHomogeneous2D::ExpList1DHomogeneous2D(const ExpList1DHomogeneous2D &In):
             ExpListHomogeneous2D(In)
         {
-            bool False = false;
-
             for(int n = 0; n < m_lines.num_elements(); ++n)
             {
                 m_lines[n] = In.m_lines[n];
@@ -141,7 +139,6 @@ namespace Nektar
         {
             int n,m,j;
             Array<OneD, NekDouble> tmp_xc;
-            int nyzlines = m_lines.num_elements();
 			int nylines = m_homogeneousBasis_y->GetNumPoints();
 			int nzlines = m_homogeneousBasis_z->GetNumPoints();
 			int npoints = 1;
@@ -201,7 +198,6 @@ namespace Nektar
         {
             int n,m,j;
             Array<OneD, NekDouble> tmp_xc;
-            int nyzlines = m_lines.num_elements();
             int npoints = 1;
 			
             int nylines = m_homogeneousBasis_y->GetNumPoints();

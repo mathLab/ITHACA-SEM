@@ -213,7 +213,6 @@ int main(int argc, char *argv[])
     NekDouble dx    = atof(argv[7])/(N>1 ? (N-1) : 1);
     NekDouble dy    = atof(argv[8])/(N>1 ? (N-1) : 1);
     NekDouble dz    = atof(argv[9])/(N>1 ? (N-1) : 1);
-    NekDouble u     = 0.0;
 
     Array<OneD, NekDouble> gloCoord(3,0.0);
 

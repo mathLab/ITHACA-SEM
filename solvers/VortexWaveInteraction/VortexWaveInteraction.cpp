@@ -1276,7 +1276,7 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
                     )
                   {
                        // the critical layer should be the bnd region 3
-                       int reg =3;
+                       //int reg =3;
                        //FileRelaxation(reg);
                   }
                   char c1[16]="";
@@ -1438,7 +1438,7 @@ cout<<"cr="<<cr_str<<endl;
                     )
                   {
                       // the critical layer should be the bnd region 3
-                      int reg =3;
+                      //int reg =3;
                       //FileRelaxation(reg);
                   }
                   char c1[16]="";

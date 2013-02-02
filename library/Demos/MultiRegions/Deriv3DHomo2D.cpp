@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    int bc_val = 0;
     int nypoints;
     int nzpoints;
     NekDouble ly;
@@ -85,7 +84,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
-	int dim = Exp_u->GetCoordim(0);
 	int nq  = Exp_u->GetTotPoints();
 	
 	Array<OneD,NekDouble>  xc0,xc1,xc2;

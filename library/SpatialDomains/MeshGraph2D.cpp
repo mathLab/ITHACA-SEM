@@ -58,7 +58,7 @@ namespace Nektar
             ReadExpansions(pSession->GetDocument());
         }
 
-        void MeshGraph2D::ReadGeometry(std::string &infilename)
+        void MeshGraph2D::ReadGeometry(const std::string &infilename)
         {
             TiXmlDocument doc(infilename);
             bool loadOkay = doc.LoadFile();
@@ -79,7 +79,6 @@ namespace Nektar
             MeshGraph::ReadGeometry(doc);
             TiXmlHandle docHandle(&doc);
 
-            TiXmlNode* node = NULL;
             TiXmlElement* mesh = NULL;
 
             /// Look for all geometry related data in GEOMETRY block.
@@ -119,7 +118,6 @@ namespace Nektar
             /// missing element numbers due to the text block format.
             std::string edgeStr;
             int i,indx;
-            int err = 0;
             int nextEdgeNumber = -1;
 
             // Curved Edges
@@ -861,6 +859,9 @@ namespace Nektar
                 const LibUtilities::PointsKey pkey(numpoints,expansion->m_basisKeyVector[edge_id].GetPointsType());
                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[edge_id].GetBasisType(),nummodes,pkey);
             }
+            
+            ASSERTL0(false, "Unable to determine edge points type.");
+            return LibUtilities::NullBasisKey;
         }
     }; //end of namespace
 }; //end of namespace

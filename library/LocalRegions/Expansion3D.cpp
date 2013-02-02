@@ -702,7 +702,6 @@ namespace Nektar
                     
                     Array<OneD,unsigned int>    fmap;
                     Array<OneD, int>            sign;
-                    StdRegions::Orientation facedir;
                     
                     // declare matrix space
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry, nbndry);
@@ -746,7 +745,6 @@ namespace Nektar
                             order_f = FaceExp[f]->GetNcoeffs();  
                             nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);    
                             normals = GetFaceNormal(f);
-                            facedir = GetFaceOrient(f);
                             
                             work = Array<OneD,NekDouble>(nquad_f);
                             varcoeff_work = Array<OneD, NekDouble>(nquad_f);

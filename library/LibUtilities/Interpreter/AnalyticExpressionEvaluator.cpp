@@ -663,7 +663,10 @@ namespace Nektar
             {
                 (*stack[j]).run_many(num);
             }
-            for (int i = 0; i < num; result[i] = m_state[i++]) ;
+            for (int i = 0; i < num; ++i)
+            {
+                result[i] = m_state[i];
+            }
 
             m_timer.Stop();
             m_total_eval_time += m_timer.TimePerTest(1);

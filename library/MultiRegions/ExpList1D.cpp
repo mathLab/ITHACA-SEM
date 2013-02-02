@@ -244,14 +244,13 @@ namespace Nektar
                              const std::string variable):
             ExpList()
         {
-            int j,cnt,id=0;
+            int j, id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
 
             // Process each composite region.
-            cnt = 0;
             for(compIt = domain.begin(); compIt != domain.end(); ++compIt)
             {
                 comp = compIt->second;
@@ -416,7 +415,7 @@ namespace Nektar
                     const std::string variable):
             ExpList()
         {
-            int i,j,cnt,id, elmtid=0;
+            int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
@@ -425,7 +424,6 @@ namespace Nektar
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
-            cnt = 0;
             for(i = 0; i < bndCond.num_elements(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType()

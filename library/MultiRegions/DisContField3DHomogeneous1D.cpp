@@ -370,7 +370,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmp_outarray;
             
             int cnt = 0;
-            int exp_size, exp_size_per_plane, elmtID, boundaryID, Phys_offset, Coef_offset;
+            int exp_size, exp_size_per_plane, elmtID, Phys_offset, Coef_offset;
             
             for(int k = 0; k < m_planes.num_elements(); k++)
             {
@@ -384,7 +384,6 @@ namespace Nektar
                         if(n == BndID)
                         {
                             elmtID = m_BCtoElmMap[cnt];
-                            boundaryID = m_BCtoEdgMap[cnt];
                             
                             Phys_offset = m_bndCondExpansions[n]->GetPhys_Offset(i+k*exp_size_per_plane);
                             Coef_offset = m_bndCondExpansions[n]->GetCoeff_Offset(i+k*exp_size_per_plane);

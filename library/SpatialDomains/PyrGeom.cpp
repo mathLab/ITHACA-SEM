@@ -363,7 +363,7 @@ namespace Nektar
             // This is the base vertex of the face (i.e. the Geometry2D)
             // This corresponds to thevertex with local ID 0 of the
             // Geometry2D
-            unsigned int baseVertex;
+            //unsigned int baseVertex;
 
             // The lenght of the vectors above
             NekDouble elementAaxis_length;
@@ -375,12 +375,14 @@ namespace Nektar
             // for every face. For every face, they are ordered in such
             // a way that the implementation below allows a unified approach
             // for all faces.
+            /*
             const unsigned int faceVerts[kNfaces][TriGeom::kNverts] =  // TODO must fix this
                 { {0,1,2} , // {0,1,2,3} ,
                   {0,1,4}   ,
                   {1,2,4}   ,
                   {3,2,4}   ,
                   {0,3,4}   };
+            */
 
             NekDouble dotproduct1 = 0.0;
             NekDouble dotproduct2 = 0.0;
@@ -399,7 +401,7 @@ namespace Nektar
                 dotproduct1 = 0.0;
                 dotproduct2 = 0.0;
 
-                baseVertex = m_faces[f]->GetVid(0);
+                //baseVertex = m_faces[f]->GetVid(0);
 
                 // We are going to construct the vectors representing the A and B axis
                 // of every face. These vectors will be constructed as a vector-representation

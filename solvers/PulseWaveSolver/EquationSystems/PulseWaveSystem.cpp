@@ -469,8 +469,6 @@ namespace Nektar
 		{
 			NekDouble IntegrationTime = 0.0;
 			int i,n,nchk = 1;
-			int ncoeffs = 0;
-			int npoints = 0;
 			int nvariables = 0;
 			
 			Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  fields(m_domainsize);			
@@ -483,8 +481,6 @@ namespace Nektar
 				m_fields[0] = m_vessels[0+2*omega];
 				m_fields[1] = m_vessels[1+2*omega];
 				
-				ncoeffs = m_fields[0]->GetNcoeffs();
-				npoints = m_fields[0]->GetNpoints();
 				nvariables = m_fields.num_elements();
 				
 				fields[omega] = Array<OneD, Array<OneD, NekDouble> >(nvariables);

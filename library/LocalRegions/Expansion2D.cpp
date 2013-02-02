@@ -260,14 +260,12 @@ namespace Nektar
                                           Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,
                                           Array<OneD,NekDouble> &outarray) 
         {
-            int e,cnt;
-            int order_e,nquad_e;
+            int e;
+            int nquad_e;
             int nedges = GetNedges();
 
-            cnt = 0;
             for(e = 0; e < nedges; ++e)
             {
-                order_e = EdgeExp[e]->GetNcoeffs();
                 nquad_e = EdgeExp[e]->GetNumPoints(0);
 
                 const Array<OneD, const Array<OneD, NekDouble> > normals = GetEdgeNormal(e);

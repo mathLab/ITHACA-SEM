@@ -90,7 +90,6 @@ namespace Nektar
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
 
-            bool useHomo1DSpecVanVisc;
             m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useHomo1DSpecVanVisc,false);
             
             if(m_useHomo1DSpecVanVisc)
@@ -552,7 +551,6 @@ namespace Nektar
     {
         int i,n;
         int phystot = m_fields[0]->GetTotPoints();
-        int ncoeffs = m_fields[0]->GetNcoeffs();
         Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = 0.0;
@@ -882,8 +880,7 @@ namespace Nektar
         PBndConds = m_pressure->GetBndConditions();
         PBndExp   = m_pressure->GetBndCondExpansions();
         
-        int elmtid,nq,offset, boundary,cnt,n;
-        int phystot = m_fields[0]->GetTotPoints();
+        int elmtid,nq,offset, boundary, n;
         
         Array<OneD, NekDouble> Pvals;
         Array<OneD, NekDouble> Uvals;
@@ -1420,7 +1417,6 @@ namespace Nektar
     void   VelocityCorrectionScheme::SetUpViscousForcing(const Array<OneD, const Array<OneD, NekDouble> > &inarray, Array<OneD, Array<OneD, NekDouble> > &Forcing, const NekDouble aii_Dt)
     {
         NekDouble aii_dtinv = 1.0/aii_Dt;
-        int ncoeffs = m_fields[0]->GetNcoeffs();
         int phystot = m_fields[0]->GetTotPoints();
 
         // Grad p
@@ -1550,7 +1546,6 @@ namespace Nektar
         {
             m_HBCdata = Array<OneD, HBCInfo>(HOPBCnumber);
             
-            int Ky,Kz;
             int cnt = 0;
             int exp_size, exp_size_per_line;
             int j=0;
@@ -1559,8 +1554,6 @@ namespace Nektar
             {
                 for(int k2 = 0; k2 < m_npointsY; k2++)
                 {
-                    Ky = k2/2;
-                    
                     for(int n = 0 ; n < PBndConds.num_elements(); ++n)
                     {
                         SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined();

@@ -91,7 +91,6 @@ namespace Nektar
             
             int NB_Tet    = tmp[1];
             int NB_Points = tmp[2];
-            int nas2      = tmp[3];
             int GridOrder = tmp[4];
             int ND        = (GridOrder+1)*(GridOrder+2)*(GridOrder+3)/6;
 

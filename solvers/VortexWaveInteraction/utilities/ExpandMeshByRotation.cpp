@@ -59,7 +59,7 @@ void ExpandComposites(TiXmlElement* mesh, map<int,int> fullEdges, int nOrigElmts
 
 int main(int argc, char *argv[])
 {
-    int i,j;
+    int i;
     
     if(argc !=3)
     {
@@ -226,8 +226,7 @@ void ExpandEdges(TiXmlElement* mesh, map<int,int> &newVerts, map<int,int> jointE
     /// cannot handle missing edge numbers as we could with
     /// missing element numbers due to the text block format.
     std::string edgeStr;
-    int i,indx;
-    int err = 0;
+    int indx;
     int nextEdgeNumber = -1;
 
     map<int,int> edgeVert0,edgeVert1;

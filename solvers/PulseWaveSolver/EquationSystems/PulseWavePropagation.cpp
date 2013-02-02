@@ -539,7 +539,6 @@ namespace Nektar
 													 NekDouble &Au,NekDouble &uu)
 	{		
 		NekDouble W2 = 0.0;
-		NekDouble c = 0.0;
 		NekDouble A_calc = 0.0;
 		NekDouble fa = 0.0;
 		NekDouble dfa = 0.0;
@@ -556,9 +555,6 @@ namespace Nektar
 		// Riemann invariant \f$W_2(Ar,ur)\f$
 		W2 = u_r - 4*sqrt(beta/(2*rho))*sqrt(sqrt(A_r));
 	 
-		// Calculate the wave speed
-		c = sqrt(beta/(2*rho))*sqrt(sqrt(A_r));
-		
 		// Newton Iteration (Area only)
 		A_calc = A_r;
 		while ((proceed) && (iter < MAX_ITER))
@@ -590,7 +586,6 @@ namespace Nektar
 	{		
 		NekDouble W1 = 0.0;
 		NekDouble c_l = 0.0;
-		NekDouble c_0 = 0.0;
 		NekDouble pext = m_pext;
 		NekDouble A_calc = 0.0;
 		NekDouble fa = 0.0;
@@ -608,8 +603,6 @@ namespace Nektar
 		// Calculate the wave speed
 		c_l = sqrt(beta/(2*rho))*sqrt(sqrt(A_l));
 		// cout << "c_l=" << c_l << endl;
-		c_0 = sqrt(beta/(2*rho))*sqrt(sqrt(A_0));
-		// cout<<"c_0="<<c_0<<endl;
 	 
 		// Riemann invariant \f$W_1(Al,ul)\f$
 		W1 = u_l + 4*c_l;	 
@@ -646,17 +639,12 @@ namespace Nektar
   void PulseWavePropagation::CR_RiemannSolver(NekDouble C,NekDouble R,NekDouble A_l,NekDouble u_l,NekDouble A_0, NekDouble beta, NekDouble pout,
 													 NekDouble &A_u,NekDouble &u_u)
 	{		
-	  //cout << "Entering CR_RiemannSolver" << endl;
-		NekDouble c_l = 0.0;
+ 	  //cout << "Entering CR_RiemannSolver" << endl;
 		NekDouble pext = m_pext;
-		NekDouble rho = m_rho;
 		NekDouble A_calc = 0.0;
 		// to modify
 		NekDouble delta_t = m_timestep;
 
-		// Calculate the wave speed
-		c_l = sqrt(beta/(2*rho))*sqrt(sqrt(A_l));
-		
 		// First order finite difference scheme
 		
 		A_calc = sqrt(A_l)+delta_t/(C*beta)*(A_l*u_l+1/R*(pout-pext-beta*(sqrt(A_l)-sqrt(A_0))));

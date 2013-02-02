@@ -440,7 +440,7 @@ namespace Nektar
             const std::string variable):
             ExpList()
         {
-            int i,j,cnt,id, elmtid=0;
+            int i, j, id, elmtid=0;
             map<int,int> FaceDone;
             map<int,int> NormalSet;
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
@@ -451,7 +451,6 @@ namespace Nektar
             
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
-            cnt = 0;
             for(i = 0; i < bndCond.num_elements(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType()

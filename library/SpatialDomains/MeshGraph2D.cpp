@@ -859,6 +859,9 @@ namespace Nektar
                 const LibUtilities::PointsKey pkey(numpoints,expansion->m_basisKeyVector[edge_id].GetPointsType());
                 return LibUtilities::BasisKey(expansion->m_basisKeyVector[edge_id].GetBasisType(),nummodes,pkey);
             }
+            
+            ASSERTL0(false, "Unable to determine edge points type.");
+            return LibUtilities::NullBasisKey;
         }
     }; //end of namespace
 }; //end of namespace

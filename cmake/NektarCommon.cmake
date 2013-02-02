@@ -105,13 +105,14 @@ MACRO(SET_COMMON_PROPERTIES name)
         IF( NOT MSVC )
             SET(CMAKE_CXX_FLAGS_DEBUG 
                 "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-deprecated -Wno-sign-compare")
+            SET(CMAKE_CXX_FLAGS_RELEASE 
+                    "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-deprecated -Wno-sign-compare")
+            SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO
+                    "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -Wall -Wno-deprecated -Wno-sign-compare")
             IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
                 SET(CMAKE_CXX_FLAGS_DEBUG 
                     "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
             ENDIF()
-
-            SET(CMAKE_CXX_FLAGS_RELEASE 
-                    "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-deprecated")
         ENDIF( NOT MSVC)
                         
         SET(CMAKE_CXX_FLAGS_RELEASE 

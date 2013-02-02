@@ -140,18 +140,13 @@ namespace Nektar
                 }
 
                 SolveLinearSystem(nGlobDofs, tmp + nDirDofs,
-				  tmp2     = tmp + nDirDofs, 
+                                  tmp2 = pOutput + nDirDofs,
                                   pLocToGloMap, nDirDofs);
             }
             else
             {
-                Vmath::Vcopy(nGlobDofs, pInput, 1, tmp, 1);
-                SolveLinearSystem(nDirDofs, tmp, tmp, pLocToGloMap);
+                SolveLinearSystem(nDirDofs, pInput, pOutput, pLocToGloMap);
             }
-            Vmath::Vadd(nGlobDofs - nDirDofs, 
-                        tmp + nDirDofs,            1,
-                        pOutput + nDirDofs,        1,
-                        tmp2 = pOutput + nDirDofs, 1);
         }
 
 

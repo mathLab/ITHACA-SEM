@@ -93,7 +93,11 @@ namespace Nektar
             int prevId = -1;
             map<unsigned int, ElmtConfig>::iterator it;
 
-            cerr << "Start reading InputGmsh..." << endl;
+            if (m->verbose)
+            {
+                cout << "InputGmsh: Start reading file..." << endl;
+            }
+
             while (!mshFile.eof())
             {
                 getline(mshFile, line);

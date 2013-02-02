@@ -84,15 +84,16 @@ namespace Nektar
             MULTI_REGIONS_EXPORT ExpList1D(
                       const SpatialDomains::CompositeMap &domain,
                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                      const bool DeclareCoeffPhysArrays = true);
+                      const bool DeclareCoeffPhysArrays = true,
+                      const std::string variable = "DefaultVar");
 			
 			
-			MULTI_REGIONS_EXPORT ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-										   const SpatialDomains::CompositeMap &domain,
-										   const SpatialDomains::MeshGraphSharedPtr &graph1D,
-										   int i,
-										   const bool DeclareCoeffPhysArrays = true);
-
+            MULTI_REGIONS_EXPORT ExpList1D(const LibUtilities::SessionReaderSharedPtr &pSession,
+                                           const SpatialDomains::CompositeMap &domain,
+                                           const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                                           int i,
+                                           const bool DeclareCoeffPhysArrays = true);
+            
             /// Specialised constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList1D(
                       const Array<OneD,const ExpListSharedPtr> &bndConstraint,
@@ -101,7 +102,9 @@ namespace Nektar
                       const StdRegions::StdExpansionVector &locexp,
                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
                       const map<int,int> &periodicEdges,
-                      const bool DeclareCoeffPhysArrays = true);
+                      const bool DeclareCoeffPhysArrays = true,
+                      const std::string variable = "DefaultVar");
+            
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList1D();

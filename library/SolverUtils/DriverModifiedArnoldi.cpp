@@ -128,7 +128,7 @@ namespace Nektar
             {
                 out << "\tInital vector       : random  " << endl;
              
-                double eps=1;
+                NekDouble eps=1;
              
                 Vmath::FillWhiteNoise(ntot, eps , &Kseq[1][0], 1);
              

@@ -118,6 +118,8 @@ namespace Nektar
                                      Array<OneD, Array<OneD, NekDouble> > &numflux);
 
         NekDouble GetSubstepTimeStep();
+
+        NekDouble GetCFLEstimate(int &elmtid);
         
         // Mapping of the real convective field on the standard element.
         // This function gives back the convective filed in the standard
@@ -143,9 +145,12 @@ namespace Nektar
                                      Array<OneD, Array<OneD, NekDouble> > &outarray);
         
     protected: 
+        std::ofstream m_mdlFile;  // modal energy file 
+
         LibUtilities::TimeIntegrationSolutionSharedPtr  m_integrationSoln;
 
         bool m_subSteppingScheme; // bool to identify if using a substepping scheme
+        bool m_SmoothAdvection; // bool to identify if advection term smoothing is requested 
         LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
 
@@ -164,22 +169,22 @@ namespace Nektar
         MultiRegions::ExpListSharedPtr m_pressure;  
         
         NekDouble   m_kinvis;        ///< Kinematic viscosity
-        // Not required when inheriting from UnsteadySytem
-        //int         m_infosteps;     ///< dump info to stdout at steps time
         int         m_energysteps;   ///< dump energy to file at steps time
+        int         m_cflsteps;      ///< dump cfl estimate
         int         m_steadyStateSteps; ///< Check for steady state at step interval
         NekDouble   m_steadyStateTol; ///< Tolerance to which steady state should be evaluated at
 
         EquationType  m_equationType;  ///< equation type;
         
+        
+        Array<OneD, Array<OneD, int> > m_fieldsBCToElmtID;  // Mapping from BCs to Elmt IDs
+        Array<OneD, Array<OneD, int> > m_fieldsBCToTraceID; // Mapping from BCs to Elmt Edge IDs
+        Array<OneD, Array<OneD, NekDouble> > m_fieldsRadiationFactor; // RHS Factor for Radiation Condition
 
         // Time integration classes
         LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
         Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> m_integrationScheme;
         int m_intSteps;  ///< Number of time integration steps AND  Order of extrapolation for pressure boundary conditions.         
-
-        // not required if building from an UnsteadySystem
-        //  std::vector<SolverUtils::FilterSharedPtr>                    m_filters;
 
         /**
          * Constructor.
@@ -201,9 +206,15 @@ namespace Nektar
                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                     Array<OneD, NekDouble> &wk = NullNekDouble1DArray);
 		
+
+        void WriteModalEnergy(void);
+
         //time dependent boundary conditions updating
 	
         void SetBoundaryConditions(NekDouble time);
+
+        //Set Radiation forcing term 
+        void SetRadiationBoundaryForcing(int fieldid);
 
         // evaluate steady state
         bool CalcSteadyState(void);

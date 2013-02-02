@@ -716,7 +716,7 @@ namespace Nektar
               Array<OneD,                   NekDouble>   &pressure)
     {
         int       npts  = m_fields[0]->GetTotPoints();
-        double    alpha = -0.5;
+        NekDouble    alpha = -0.5;
         
         // Calculate ||rho v||^2.
         Vmath::Zero(npts, pressure, 1);

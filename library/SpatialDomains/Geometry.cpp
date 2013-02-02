@@ -47,6 +47,7 @@ namespace Nektar
         Geometry::Geometry():
             m_coordim(0),
             m_state(eNotFilled),
+            m_geomFactorsState(eNotFilled),
             m_geomShapeType(eNoGeomShapeType),
             m_globalID(-1)
         {
@@ -55,6 +56,7 @@ namespace Nektar
         Geometry::Geometry(const int coordim):
             m_coordim(coordim),
             m_state(eNotFilled),
+            m_geomFactorsState(eNotFilled),
             m_geomShapeType(eNoGeomShapeType),
             m_globalID(-1)
         {

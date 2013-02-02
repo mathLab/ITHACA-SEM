@@ -1,5 +1,6 @@
-SET(NEKTAR_SOLVER_INCNAVIERSTOKES ON CACHE BOOL
-    "Build the Incompressible Navier-Stokes solver.")
+CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_INCNAVIERSTOKES
+    "Build the Incompressible Navier-Stokes solver." ON
+    "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     SET(IncNavierStokesSolverSource 
@@ -30,8 +31,6 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(2DFlow_lineforcing_bcfromfile)
     ADD_NEKTAR_TEST(ChanFlow2D_bcsfromfiles)
     ADD_NEKTAR_TEST(ChanFlow_3DH1D_MVM)
-    ADD_NEKTAR_TEST(ChanFlow_3DH1D_Parallel_mode1)
-    ADD_NEKTAR_TEST(ChanFlow_3DH1D_Parallel_mode2)
     ADD_NEKTAR_TEST(ChanFlow_3DH2D_MVM)
     ADD_NEKTAR_TEST(ChanFlow_LinNS_m8)
     ADD_NEKTAR_TEST(ChanFlow_m3)
@@ -73,6 +72,8 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ENDIF (NEKTAR_USING_FFTW)
 
     IF (NEKTAR_USE_MPI)
+        ADD_NEKTAR_TEST(ChanFlow_3DH1D_Parallel_mode1)
+        ADD_NEKTAR_TEST(ChanFlow_3DH1D_Parallel_mode2)
         ADD_NEKTAR_TEST(Channel_Flow_3modes_Parallel)
         ADD_NEKTAR_TEST(ChanFlow_m3_par)
         ADD_NEKTAR_TEST(Hex_channel_m8_par)

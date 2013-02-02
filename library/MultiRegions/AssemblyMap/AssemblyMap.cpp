@@ -524,6 +524,14 @@ namespace Nektar
             // AssemblyMap and thus will call this routine in serial.
         }
 
+        const void AssemblyMap::v_UniversalAssemble(
+                      Array<OneD,     NekDouble>& pGlobal,
+                      int                         offset) const
+        {
+            // Do nothing here since multi-level static condensation uses a
+            // AssemblyMap and thus will call this routine in serial.
+        }
+
         const int AssemblyMap::v_GetFullSystemBandWidth() const
         {
             ASSERTL0(false, "Not defined for this type of mapping.");
@@ -652,6 +660,13 @@ namespace Nektar
                       NekVector<      NekDouble>& pGlobal) const
         {
             v_UniversalAssemble(pGlobal);
+        }
+
+        const void AssemblyMap::UniversalAssemble(
+                      Array<OneD,     NekDouble>& pGlobal,
+                      int                         offset) const
+        {
+            v_UniversalAssemble(pGlobal, offset);
         }
 
         const int AssemblyMap::GetFullSystemBandWidth() const
@@ -947,6 +962,16 @@ namespace Nektar
                       NekVector<      NekDouble>& pGlobal) const
         {
             UniversalAssembleBnd(pGlobal.GetPtr());
+        }
+
+        const void AssemblyMap::UniversalAssembleBnd(
+                      Array<OneD,     NekDouble>& pGlobal,
+                      int                         offset) const
+        {
+            Array<OneD, NekDouble> tmp(offset);
+            if (offset > 0)  Vmath::Vcopy(offset, pGlobal, 1, tmp, 1);
+            UniversalAssembleBnd(pGlobal);
+            if (offset > 0)  Vmath::Vcopy(offset, tmp, 1, pGlobal, 1);
         }
 
         int AssemblyMap::GetBndSystemBandWidth() const

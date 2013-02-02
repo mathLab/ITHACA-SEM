@@ -191,10 +191,10 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
             Array<OneD, Array<OneD, NekDouble> > tmp   (nvariables);
             
-            // Reorder storage to list time-integrated fields first.
+            // Order storage to list time-integrated fields first.
             for(i = 0; i < nvariables; ++i)
             {
-                fields[i] = m_fields[m_intVariables[i]]->UpdatePhys();
+                fields[i] = m_fields[m_intVariables[i]]->GetPhys();
                 m_fields[m_intVariables[i]]->SetPhysState(false);
             }
             
@@ -251,6 +251,32 @@ namespace Nektar
                 }
                 case LibUtilities::eAdamsBashforthOrder2:
                 case LibUtilities::eAdamsBashforthOrder3:	  
+                {
+                    numMultiSteps = 2;
+
+                    IntScheme = Array<OneD, LibUtilities::
+                        TimeIntegrationSchemeSharedPtr>(numMultiSteps);
+
+                    // Used in the first time step to initalize the scheme
+                    LibUtilities::
+                        TimeIntegrationSchemeKey IntKey0(
+                                                    LibUtilities::
+                                                    eForwardEuler);
+
+                    // Used for all other time steps
+                    LibUtilities::
+                        TimeIntegrationSchemeKey IntKey1(m_timeIntMethod);
+                    IntScheme[0] = LibUtilities::
+                        TimeIntegrationSchemeManager()[IntKey0];
+                    IntScheme[1] = LibUtilities::
+                        TimeIntegrationSchemeManager()[IntKey1];
+
+                    // Initialise the scheme for actual time integration scheme
+                    u = IntScheme[1]->InitializeScheme(
+                        m_timestep, fields, m_time, m_ode);
+
+                    break;
+                }
                 case LibUtilities::eBDFImplicitOrder2:
                 {
                     numMultiSteps = 2;
@@ -262,7 +288,7 @@ namespace Nektar
                     LibUtilities::
                         TimeIntegrationSchemeKey IntKey0(
                                                     LibUtilities::
-                                                    eForwardEuler);
+                                                    eBackwardEuler);
 
                     // Used for all other time steps
                     LibUtilities::

@@ -7,9 +7,6 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    int i,j;
-    NekDouble scal1,scal2;
-
     if(argc != 3)
     {
         fprintf(stderr,"Usage: ExtractmeanModeFromHomo1DFld fieldfile outfield\n");
@@ -43,9 +40,6 @@ int main(int argc, char *argv[])
         }
         else
         {
-            int j;
-            int datalen = fielddata[i].size()/fielddef[i]->m_fields.size();
-
             int nz = fielddef[i]->m_homogeneousZIDs.size();
 
             fielddef[i]->m_numHomogeneousDir = 0;

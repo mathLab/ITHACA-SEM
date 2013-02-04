@@ -95,7 +95,7 @@ namespace Nektar
             const bool                                 DeclareCoeffPhysArrays)
             : ExpList()
         {
-            int i,j,cnt,id, elmtid=0;
+            int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
@@ -103,7 +103,6 @@ namespace Nektar
             LocalRegions::PointExpSharedPtr Point;
 			
             // First loop over boundary conditions to renumber Dirichlet boundaries
-            cnt = 0;
             for(i = 0; i < bndCond.num_elements(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)

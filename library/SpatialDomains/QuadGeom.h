@@ -48,8 +48,8 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        class QuadGeom;
-        class Curve;
+        class  QuadGeom;
+        struct Curve;
         typedef boost::shared_ptr<Curve> CurveSharedPtr;
         typedef boost::shared_ptr<QuadGeom> QuadGeomSharedPtr;
         typedef std::vector< QuadGeomSharedPtr > QuadGeomVector;

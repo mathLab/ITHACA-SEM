@@ -63,18 +63,9 @@ namespace Nektar
                 return i==0;
             }
             
-            bool isEdge_3(int i, int j, int npts){
-                return j==0;
-            }
-            
             bool isEdge_2(int i, int j, int npts){
-            return i+j==npts-1;
+                return i+j==npts-1;
             }
-            
-            bool isInteriorFace(int i, int j, int npts){
-                return !isEdge(i, j, npts);
-            }
-
         }
 
         

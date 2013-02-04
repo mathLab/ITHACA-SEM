@@ -237,7 +237,7 @@ cout<<"nIregions="<<nIregions<<endl;
 
     //order the ids on the lower curve lastIregion starting from the id on x=0
     NekDouble x_connect;
-    NekDouble x0,y0,z0,xt,yt,zt;
+    NekDouble x0,y0,z0,xt,yt=0.0,zt=0.0;
     int lastedge=-1;
     int v1,v2;
     //first point for x_connect=0(or-1.6 for the full mesh (-pi,pi)  )

@@ -63,7 +63,6 @@ int main(int argc, char *argv[])
     string fieldfile0(argv[argc-3]);
     //argc=nfiles0 =2 
     //in this way only the mesh0 is taken to create vSession
-    int nfiles0 = 2;
     //nfiles0=5;
     std::vector<std::string> filenames0;
     filenames0.push_back(meshfile0);
@@ -218,8 +217,6 @@ int main(int argc, char *argv[])
        outfield[0]->GetCoords(x1,y1);
     }
     
-    NekDouble x1min = Vmath::Vmin(nq1, x1,1);
-
     //------------------------------------------------
     
     //check 2Dmeshes compatibilities
@@ -299,28 +296,14 @@ int main(int argc, char *argv[])
 		// first session which refers to mesh0
                 static int cnt=0;		
 		// Setting parameteres for homogenous problems
-        	MultiRegions::GlobalSysSolnType solnType;
-		NekDouble static LhomX;           ///< physical length in X direction (if homogeneous) 
 		NekDouble static LhomY;           ///< physical length in Y direction (if homogeneous)
 		NekDouble static LhomZ;           ///< physical length in Z direction (if homogeneous)
 		
 		bool static DeclareCoeffPhysArrays = true;		
-		int static npointsX;              ///< number of points in X direction (if homogeneous)
 		int static npointsY;              ///< number of points in Y direction (if homogeneous)
                 int static npointsZ;              ///< number of points in Z direction (if homogeneous)	
-		int static HomoDirec       = 0;
 		bool static useFFT = false;
 		bool static deal = false;
-		///Parameter for homogeneous expansions		
-		enum HomogeneousType
-		{
-			eHomogeneous1D,
-			eHomogeneous2D,
-			eHomogeneous3D,
-			eNotHomogeneous
-		};
-	
-		enum HomogeneousType HomogeneousType = eNotHomogeneous;
 	
                 if(cnt==0)
                 { 	
@@ -330,10 +313,11 @@ int main(int argc, char *argv[])
                   )
 		{	
                         //only homo1D is working
+                    /*
            		HomogeneousType = eHomogeneous1D;
                         npointsZ = fielddef[0]->m_numModes[2];
                         LhomZ = fielddef[0]->m_homogeneousLengths[0];
-       		        HomoDirec       = 1;
+                    */
 /*	
 			std::string HomoStr = session->GetSolverInfo("HOMOGENEOUS");
 			//m_spacedim          = 3;
@@ -487,7 +471,6 @@ int main(int argc, char *argv[])
                         bool &homogeneous)
         {
 	    TiXmlDocument doc(fieldfile);
-	    bool loadOkay = doc.LoadFile(); 
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master = NULL;    // Master tag within which all data is contained.
 
@@ -559,10 +542,8 @@ int main(int argc, char *argv[])
              Array<OneD, NekDouble> coords(2);
 	     int nq1 = field1->GetTotPoints();
              int elmtid, offset;
-             int attempt;
              for(int r=0; r< nq1; r++)
              {
-                   //attempt =0;
                    coords[0] = x1[r];
                    coords[1] = y1[r];
                    elmtid = field0->GetExpIndex(coords, 0.001);

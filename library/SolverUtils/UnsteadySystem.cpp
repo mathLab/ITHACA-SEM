@@ -169,9 +169,7 @@ namespace Nektar
          */
         void UnsteadySystem::v_DoSolve()
         {
-            int i, n, nchk = 1;
-            int ncoeffs    = m_fields[0]->GetNcoeffs();
-            int npoints    = m_fields[0]->GetNpoints();
+            int i, nchk = 1;
             int nvariables = 0;
 
             if (m_intVariables.empty())
@@ -417,9 +415,9 @@ namespace Nektar
             }
 
             // Check uniqueness of checkpoint output
-            ASSERTL0(m_checktime == 0.0 && m_checksteps == 0 ||
-                     m_checktime >  0.0 && m_checksteps == 0 || 
-                     m_checktime == 0.0 && m_checksteps >  0,
+            ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||
+                     (m_checktime >  0.0 && m_checksteps == 0) || 
+                     (m_checktime == 0.0 && m_checksteps >  0),
                      "Only one of IO_CheckTime and IO_CheckSteps "
                      "should be set!");
 
@@ -771,7 +769,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> &penaltyflux,
             NekDouble time)
         {
-            int i, j, e, npoints, id1, id2;
+            int i, e, npoints, id1, id2;
             
             // Number of boundary regions
             int nbnd = m_fields[var]->GetBndCondExpansions().num_elements();
@@ -850,7 +848,7 @@ namespace Nektar
             NekDouble C11,
             NekDouble time)
         {
-            int i, j, e, npoints, id1, id2;
+            int i, e, npoints, id1, id2;
             int nbnd = m_fields[var]->GetBndCondExpansions().num_elements();
             int numBDEdge, Nfps;
             int nTraceNumPoints = GetTraceNpoints();

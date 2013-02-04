@@ -7,7 +7,6 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    int i,j;
     NekDouble scal1,scal2;
 
     if(argc != 6)
@@ -147,7 +146,6 @@ int main(int argc, char *argv[])
         // not defined in fielddef2[i]->m_fields
         for(int k = 0; k < fielddef1[i]->m_fields.size(); ++k)
         {
-            int offset = 0;
             for(j = 0; j < fielddef2[i]->m_fields.size(); ++j)
             {
                 if(fielddef1[i]->m_fields[k] == fielddef2[i]->m_fields[j])

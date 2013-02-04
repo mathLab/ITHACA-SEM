@@ -371,7 +371,7 @@ namespace Nektar
                 {
                     pGraph[*vertit].partition = part[i];
                     pGraph[*vertit].partid = boost::num_vertices(pLocalPartition);
-                    BoostVertex v = boost::add_vertex(i, pLocalPartition);
+                    boost::add_vertex(i, pLocalPartition);
                 }
             }
         }

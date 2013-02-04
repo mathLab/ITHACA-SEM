@@ -49,9 +49,9 @@ namespace Nektar
                          const LibUtilities::BasisKey &Bb,
                          const SpatialDomains::QuadGeomSharedPtr &geom):
              StdExpansion  (Ba.GetNumModes()*Bb.GetNumModes(),2,Ba,Bb),
-             Expansion     (),
              StdExpansion2D(Ba.GetNumModes()*Bb.GetNumModes(),Ba,Bb),
-             StdQuadExp(Ba,Bb),
+             StdQuadExp    (Ba,Bb),
+             Expansion     (),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(
@@ -66,9 +66,9 @@ namespace Nektar
 
         QuadExp::QuadExp(const QuadExp &T):
             StdExpansion(T),
-            Expansion   (),
             StdExpansion2D(T),
             StdQuadExp(T),
+            Expansion   (),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
@@ -1748,8 +1748,6 @@ namespace Nektar
             UseLocRegionsMatrix:
                 {
                     int i,j;
-                    int cnt = 0;
-                    int cnt2 = 0;
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
                     DNekScalMat &mat = *GetLocMatrix(mkey);

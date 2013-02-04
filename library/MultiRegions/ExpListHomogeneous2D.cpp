@@ -46,9 +46,9 @@ namespace Nektar
         ExpListHomogeneous2D::ExpListHomogeneous2D():
             ExpList(),
             m_homogeneousBasis_y(LibUtilities::NullBasisSharedPtr),
-		    m_homogeneousBasis_z(LibUtilities::NullBasisSharedPtr),
+            m_homogeneousBasis_z(LibUtilities::NullBasisSharedPtr),
             m_lhom_y(1),
-		    m_lhom_z(1),
+            m_lhom_z(1),
             m_homogeneous2DBlockMat(MemoryManager<Homo2DBlockMatrixMap>::AllocateSharedPtr())
         {
         }
@@ -61,11 +61,11 @@ namespace Nektar
 												   const bool useFFT,
 												   const bool dealiasing):
             ExpList(pSession),
+            m_useFFT(useFFT),
             m_lhom_y(lhom_y),
-		    m_lhom_z(lhom_z),
-		    m_useFFT(useFFT),
-		    m_dealiasing(dealiasing),
-            m_homogeneous2DBlockMat(MemoryManager<Homo2DBlockMatrixMap>::AllocateSharedPtr())
+            m_lhom_z(lhom_z),
+            m_homogeneous2DBlockMat(MemoryManager<Homo2DBlockMatrixMap>::AllocateSharedPtr()),
+            m_dealiasing(dealiasing)
         {
             ASSERTL2(HomoBasis_y != LibUtilities::NullBasisKey,
                      "Homogeneous Basis in y direction is a null basis");
@@ -104,24 +104,24 @@ namespace Nektar
          */
         ExpListHomogeneous2D::ExpListHomogeneous2D(const ExpListHomogeneous2D &In):
             ExpList(In,false),
+            m_useFFT(In.m_useFFT),
+            m_FFT_y(In.m_FFT_y),
+            m_FFT_z(In.m_FFT_z),
+            m_transposition(In.m_transposition),
+            m_Ycomm(In.m_Ycomm),
+            m_Zcomm(In.m_Ycomm),
             m_homogeneousBasis_y(In.m_homogeneousBasis_y),
-		    m_homogeneousBasis_z(In.m_homogeneousBasis_z),
-            m_homogeneous2DBlockMat(In.m_homogeneous2DBlockMat),
+            m_homogeneousBasis_z(In.m_homogeneousBasis_z),
             m_lhom_y(In.m_lhom_y),
-		    m_lhom_z(In.m_lhom_z),
-		    m_ny(In.m_ny),
-		    m_nz(In.m_nz),
-		    m_useFFT(In.m_useFFT),
-		    m_FFT_y(In.m_FFT_y),
-		    m_FFT_z(In.m_FFT_z),
-		    m_dealiasing(In.m_dealiasing),
-		    m_padsize_y(In.m_padsize_y),
-		    m_padsize_z(In.m_padsize_z),
-		    MatBwdPAD(In.MatBwdPAD),
-		    MatFwdPAD(In.MatFwdPAD),
-		    m_transposition(In.m_transposition),
-		    m_Ycomm(In.m_Ycomm),
-		    m_Zcomm(In.m_Ycomm)
+            m_lhom_z(In.m_lhom_z),
+            m_homogeneous2DBlockMat(In.m_homogeneous2DBlockMat),
+            m_ny(In.m_ny),
+            m_nz(In.m_nz),
+            m_dealiasing(In.m_dealiasing),
+            m_padsize_y(In.m_padsize_y),
+            m_padsize_z(In.m_padsize_z),
+            MatFwdPAD(In.MatFwdPAD),
+            MatBwdPAD(In.MatBwdPAD)
         {
             m_lines = Array<OneD, ExpListSharedPtr>(In.m_lines.num_elements());
         }

@@ -78,21 +78,21 @@ namespace Nektar
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
         ExpList::ExpList():
-            m_session(),
             m_comm(),
+            m_session(),
             m_graph(),
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
             m_phys(),
+            m_physState(false),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+                      ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
             m_offset_elmt_id(),
-            m_physState(false),
-            m_WaveSpace(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
-                                                        ::AllocateSharedPtr()),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
         {
         }
 
@@ -104,21 +104,21 @@ namespace Nektar
          */
         ExpList::ExpList(
                 const LibUtilities::SessionReaderSharedPtr &pSession):
-            m_session(pSession),
             m_comm(pSession->GetComm()),
+            m_session(pSession),
             m_graph(),
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
             m_phys(),
+            m_physState(false),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+                      ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
             m_offset_elmt_id(),
-            m_physState(false),
-            m_WaveSpace(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
-                                                        ::AllocateSharedPtr()),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
         {
         }
 
@@ -131,21 +131,21 @@ namespace Nektar
         ExpList::ExpList(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &pGraph):
-            m_session(pSession),
             m_comm(pSession->GetComm()),
+            m_session(pSession),
             m_graph(pGraph),
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
             m_phys(),
+            m_physState(false),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+                      ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
             m_offset_elmt_id(),
-            m_physState(false),
-		    m_WaveSpace(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
-                                                        ::AllocateSharedPtr()),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
         {
         }
 
@@ -155,19 +155,19 @@ namespace Nektar
          * @param   in              Source expansion list.
          */
         ExpList::ExpList(const ExpList &in, const bool DeclareCoeffPhysArrays):
-            m_session(in.m_session),
             m_comm(in.m_comm),
+            m_session(in.m_session),
             m_graph(in.m_graph),
             m_ncoeffs(in.m_ncoeffs),
             m_npoints(in.m_npoints),
             m_physState(false),
-		    m_WaveSpace(false),
             m_exp(in.m_exp),
             m_coeff_offset(in.m_coeff_offset),
             m_phys_offset(in.m_phys_offset),
             m_offset_elmt_id(in.m_offset_elmt_id),
             m_globalOptParam(in.m_globalOptParam),
-            m_blockMat(in.m_blockMat)
+            m_blockMat(in.m_blockMat),
+            m_WaveSpace(false)
         {
             if(DeclareCoeffPhysArrays)
             {
@@ -1489,9 +1489,6 @@ namespace Nektar
 
                 int i,j,k;
                 int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
-                StdRegions::ExpansionType locShape
-                                            = (*m_exp)[0]->DetExpansionType();
-
                 int nDumpCoeffs =  nElementalCoeffs*nElementalCoeffs;
                 Array<TwoD, int> exponentMap(nDumpCoeffs,3,0);
                 int cnt = 0;

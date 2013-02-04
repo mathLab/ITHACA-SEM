@@ -46,11 +46,11 @@ namespace Nektar
         TriExp::TriExp(const LibUtilities::BasisKey &Ba,
                        const LibUtilities::BasisKey &Bb,
                        const SpatialDomains::TriGeomSharedPtr &geom):
-               StdExpansion  (StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
-               Expansion     (),
-               StdExpansion2D(StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
-               Expansion2D   (),
-               StdTriExp(Ba,Bb),
+            StdExpansion  (StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
+            StdExpansion2D(StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
+            StdTriExp(Ba,Bb),
+            Expansion     (),
+            Expansion2D   (),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(
@@ -65,10 +65,10 @@ namespace Nektar
 
         TriExp::TriExp(const TriExp &T):
             StdExpansion(T),
-            Expansion(T),
             StdExpansion2D(T),
+            StdTriExp(T),
+            Expansion(T),
             Expansion2D(T),
-            StdRegions::StdTriExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
@@ -204,10 +204,10 @@ namespace Nektar
             }
         }
 
-
-        void TriExp::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble> & inarray,
-                                          const Array<OneD, const Array<OneD, NekDouble> >& direction,
-                                          Array<OneD,NekDouble> &out)
+        void TriExp::v_PhysDirectionalDeriv(
+            const Array<OneD, const NekDouble> &inarray,
+            const Array<OneD, const NekDouble> &direction,
+                  Array<OneD,       NekDouble> &out)
         {
             if(! out.num_elements())
             {
@@ -238,7 +238,7 @@ namespace Nektar
                     tangmat[i] = Array<OneD, NekDouble>(nqtot,0.0);
                     for (int k=0; k<(m_geom->GetCoordim()); ++k)
                     {
-                        Vmath::Vvtvp(nqtot,&gmat[2*k+i][0],1,&direction[k][0],1,&tangmat[i][0],1,&tangmat[i][0],1);
+                        Vmath::Vvtvp(nqtot,&gmat[2*k+i][0],1,&direction[k*nqtot],1,&tangmat[i][0],1,&tangmat[i][0],1);
                     }
                 }
 
@@ -1291,7 +1291,6 @@ namespace Nektar
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
                         int dir;
-                        Array<OneD, NekDouble> &varcoeffs = NullNekDouble1DArray;
                         switch(mkey.GetMatrixType())
                         {
                             case StdRegions::eWeakDeriv0:

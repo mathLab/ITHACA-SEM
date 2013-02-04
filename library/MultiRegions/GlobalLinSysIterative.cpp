@@ -99,6 +99,7 @@ namespace Nektar
         {
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
+            Array<OneD, NekDouble> tmp;
 
             if (m_useProjection)
             {
@@ -108,8 +109,8 @@ namespace Nektar
                 {
                     // check correctness: solve the same system with plain CG and compare
                     Array<OneD, NekDouble> cg_s   (nGlobal, 0.0);
-                    NekVector<NekDouble>   cg     (nNonDir, cg_s + nDir, eWrapper);
-                    NekVector<NekDouble>   x      (nNonDir, pOutput + nDir, eWrapper);
+                    NekVector<NekDouble>   cg     (nNonDir, tmp = cg_s + nDir, eWrapper);
+                    NekVector<NekDouble>   x      (nNonDir, tmp = pOutput + nDir, eWrapper);
 
                     DoConjugateGradient(nGlobal, pInput, cg_s, plocToGloMap, nDir);
 
@@ -142,6 +143,7 @@ namespace Nektar
         {
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
+            Array<OneD, NekDouble> tmp;
 
             if (0 == m_numPrevSols)
             {
@@ -155,7 +157,7 @@ namespace Nektar
             {
                 // Create NekVector wrappers for linear algebra operations
                 NekVector<NekDouble> b     (nNonDir, pInput  + nDir, eWrapper);
-                NekVector<NekDouble> x     (nNonDir, pOutput + nDir, eWrapper);
+                NekVector<NekDouble> x     (nNonDir, tmp = pOutput + nDir, eWrapper);
 
                 // check the input vector (rhs) is not zero
 
@@ -176,10 +178,10 @@ namespace Nektar
                 Array<OneD, NekDouble> tmpAx_s    (nGlobal, 0.0);
                 Array<OneD, NekDouble> tmpx_s     (nGlobal, 0.0);
 
-                NekVector<NekDouble> pb    (nNonDir, pb_s    + nDir, eWrapper);
-                NekVector<NekDouble> px    (nNonDir, px_s    + nDir, eWrapper);
-                NekVector<NekDouble> tmpAx (nNonDir, tmpAx_s + nDir, eWrapper);
-                NekVector<NekDouble> tmpx  (nNonDir, tmpx_s  + nDir, eWrapper);
+                NekVector<NekDouble> pb    (nNonDir, tmp = pb_s    + nDir, eWrapper);
+                NekVector<NekDouble> px    (nNonDir, tmp = px_s    + nDir, eWrapper);
+                NekVector<NekDouble> tmpAx (nNonDir, tmp = tmpAx_s + nDir, eWrapper);
+                NekVector<NekDouble> tmpx  (nNonDir, tmp = tmpx_s  + nDir, eWrapper);
 
 
                 // notation follows the paper cited:
@@ -277,8 +279,8 @@ namespace Nektar
             Array<OneD, NekDouble> tmp1, tmp2;
 
             // Create NekVector wrappers for linear algebra operations
-            NekVector<NekDouble> px           (nNonDir, px_s    + nDir, eWrapper);
-            NekVector<NekDouble> tmpAx        (nNonDir, tmpAx_s + nDir, eWrapper);
+            NekVector<NekDouble> px           (nNonDir, tmp1 = px_s    + nDir, eWrapper);
+            NekVector<NekDouble> tmpAx        (nNonDir, tmp2 = tmpAx_s + nDir, eWrapper);
 
 
             // calculating \tilda{x} - sum \alpha_i\tilda{x}_i
@@ -374,13 +376,13 @@ namespace Nektar
             Array<OneD, NekDouble> tmp;
 
             // Create NekVector wrappers for linear algebra operations
-            NekVector<NekDouble> in (nNonDir,pInput  + nDir,eWrapper);
-            NekVector<NekDouble> out(nNonDir,pOutput + nDir,eWrapper);
-            NekVector<NekDouble> w  (nNonDir,w_A + nDir,    eWrapper);
-            NekVector<NekDouble> s  (nNonDir,s_A + nDir,    eWrapper);
-            NekVector<NekDouble> p  (nNonDir,p_A,           eWrapper);
-            NekVector<NekDouble> r  (nNonDir,r_A,           eWrapper);
-            NekVector<NekDouble> q  (nNonDir,q_A,           eWrapper);
+            NekVector<NekDouble> in (nNonDir,pInput  + nDir,      eWrapper);
+            NekVector<NekDouble> out(nNonDir,tmp = pOutput + nDir,eWrapper);
+            NekVector<NekDouble> w  (nNonDir,tmp = w_A + nDir,    eWrapper);
+            NekVector<NekDouble> s  (nNonDir,tmp = s_A + nDir,    eWrapper);
+            NekVector<NekDouble> p  (nNonDir,p_A,                 eWrapper);
+            NekVector<NekDouble> r  (nNonDir,r_A,                 eWrapper);
+            NekVector<NekDouble> q  (nNonDir,q_A,                 eWrapper);
 
             int k;
             NekDouble alpha, beta, rho, rho_new, mu, eps, bb_inv, min_resid;

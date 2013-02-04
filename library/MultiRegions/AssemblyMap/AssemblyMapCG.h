@@ -120,41 +120,41 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual const Array<OneD, NekDouble>& v_GetLocalToGlobalSign() const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_LocalToGlobal(
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_LocalToGlobal(
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_GlobalToLocal(
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_GlobalToLocal(
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_Assemble(
+            MULTI_REGIONS_EXPORT virtual void v_Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_Assemble(
+            MULTI_REGIONS_EXPORT virtual void v_Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
+            MULTI_REGIONS_EXPORT virtual void v_UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
+            MULTI_REGIONS_EXPORT virtual void v_UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
+            MULTI_REGIONS_EXPORT virtual void v_UniversalAssemble(
                 Array<OneD,     NekDouble>& pGlobal,
                 int offset) const;
 
-            MULTI_REGIONS_EXPORT virtual const int v_GetFullSystemBandWidth() const;
+            MULTI_REGIONS_EXPORT virtual int v_GetFullSystemBandWidth() const;
 
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirVertexModes() const;
 

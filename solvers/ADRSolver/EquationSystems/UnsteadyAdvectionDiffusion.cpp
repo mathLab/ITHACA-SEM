@@ -56,7 +56,6 @@ namespace Nektar
 
         // Define Velocity fields
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-        int nq = m_fields[0]->GetNpoints();
         std::vector<std::string> vel;
         vel.push_back("Vx");
         vel.push_back("Vy");

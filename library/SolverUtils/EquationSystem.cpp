@@ -1096,7 +1096,6 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &base)
         {
             base = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-            int nq = m_fields[0]->GetNpoints();
             std::vector<std::string> vel;
             vel.push_back("Vx");
             vel.push_back("Vy");
@@ -1980,8 +1979,6 @@ namespace Nektar
             const std::string &name, 
             bool IsInPhysicalSpace)
         {
-            int nq = m_fields[0]->GetTotPoints();
-
             std::string var = "";
             for(int j = 0; j < m_fields.num_elements(); ++j)
             {

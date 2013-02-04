@@ -46,10 +46,10 @@ namespace Nektar
                                  const LibUtilities::PointsType Ntype,
                                  const SpatialDomains::TriGeomSharedPtr &geom):
             StdExpansion  (StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
-            Expansion     (),
             StdExpansion2D(StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
-            Expansion2D   (),
             StdNodalTriExp(Ba,Bb,Ntype),
+            Expansion     (),
+            Expansion2D   (),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(
@@ -63,10 +63,10 @@ namespace Nektar
         
         NodalTriExp::NodalTriExp(const NodalTriExp &T):
             StdExpansion(T),
-            Expansion   (),
             StdExpansion2D(T),
-            Expansion2D (),
             StdRegions::StdNodalTriExp(T),
+            Expansion   (),
+            Expansion2D (),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),

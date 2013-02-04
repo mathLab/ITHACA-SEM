@@ -86,12 +86,12 @@ namespace Nektar
         NekDouble f4 = (gamma + 1.0) / 4.0;
 
         // Right and left variables
-        NekDouble uL = rhouL/rhoL;
-        NekDouble vL = rhovL/rhoL;
-        NekDouble wL = rhowL/rhoL;
-        NekDouble uR = rhouR/rhoR;
-        NekDouble vR = rhovR/rhoR;
-        NekDouble wR = rhowR/rhoR;
+        NekDouble uL = rhouL / rhoL;
+        NekDouble vL = rhovL / rhoL;
+        NekDouble wL = rhowL / rhoL;
+        NekDouble uR = rhouR / rhoR;
+        NekDouble vR = rhovR / rhoR;
+        NekDouble wR = rhowR / rhoR;
         
         NekDouble pL = (gamma - 1.0) * 
                        (EL - 0.5 * (rhouL*uL + rhovL*vL + rhowL*wL));

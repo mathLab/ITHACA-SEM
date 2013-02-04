@@ -36,6 +36,8 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
+#include <iostream>
+#include <iomanip>
 
 namespace Nektar
 {
@@ -219,6 +221,14 @@ namespace Nektar
             {
                 WallBoundary(n, cnt, inarray);
             }
+            
+            // Wall Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::eWallViscous)
+            {
+                ASSERTL0(false, "WallViscous is a wrong bc for the "
+                                "Euler equations");
+            }
 
             // Symmetric Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
@@ -237,26 +247,6 @@ namespace Nektar
                 }
             }
             
-            // Inflow boundary condition based on characteristics
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eInflowCFE)
-            {
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    InflowCFE(n, cnt, inarray);
-                }
-            }
-            
-            // Outflow boundary condition based on characteristics
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
-                SpatialDomains::eOutflowCFE)
-            {
-                for (int i = 0; i < nvariables; ++i)
-                {
-                    OutflowCFE(n, cnt, inarray);
-                }
-            }
-
             // Isentropic Vortex Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eIsentropicVortex)

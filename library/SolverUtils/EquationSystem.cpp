@@ -2091,13 +2091,41 @@ namespace Nektar
             {
                 std::string UpwindType;
                 UpwindType = m_session->GetSolverInfo("UpwindType");
-                if (UpwindType == "Exact")
+                if (UpwindType == "Average")
+                {
+                    out << "\tRiemann Solver  : Average" <<endl;
+                }
+                else if (UpwindType == "AUSM0")
+                {
+                    out << "\tRiemann Solver  : AUSM0"   <<endl;
+                }
+                else if (UpwindType == "AUSM1")
+                {
+                    out << "\tRiemann Solver  : AUSM1"   <<endl;
+                }
+                else if (UpwindType == "AUSM2")
+                {
+                    out << "\tRiemann Solver  : AUSM2"   <<endl;
+                }
+                else if (UpwindType == "AUSM3")
+                {
+                    out << "\tRiemann Solver  : AUSM3"   <<endl;
+                }
+                else if (UpwindType == "Exact")
                 {
                     out << "\tRiemann Solver  : Exact"   <<endl;
                 }
-                else if (UpwindType == "Average")
+                else if (UpwindType == "HLL")
                 {
-                    out << "\tRiemann Solver  : Average" <<endl;
+                    out << "\tRiemann Solver  : HLL"   <<endl;
+                }
+                else if (UpwindType == "HLLC")
+                {
+                    out << "\tRiemann Solver  : HLLC"   <<endl;
+                }
+                else if (UpwindType == "LaxFriedrichs")
+                {
+                    out << "\tRiemann Solver  : Lax-Friedrichs"   <<endl;
                 }
             }
             
@@ -2274,7 +2302,7 @@ namespace Nektar
         }
 
         void EquationSystem::v_NumFluxforScalar(
-            Array<OneD, Array<OneD, NekDouble> > &ufield,
+            const Array<OneD, Array<OneD, NekDouble> >         &ufield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             ASSERTL0(false, "v_NumFluxforScalar: This function is not valid "
@@ -2282,9 +2310,9 @@ namespace Nektar
         }
 
         void EquationSystem::v_NumFluxforVector(
-            Array<OneD, Array<OneD, NekDouble> > &ufield,
+            const Array<OneD, Array<OneD, NekDouble> >   &ufield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-            Array<OneD, Array<OneD, NekDouble > > &qflux)
+            Array<OneD, Array<OneD, NekDouble > >              &qflux)
         {
             ASSERTL0(false, "v_NumFluxforVector: This function is not valid "
                      "for the Base class");

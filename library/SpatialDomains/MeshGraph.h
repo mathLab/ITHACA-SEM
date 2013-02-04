@@ -59,19 +59,21 @@ namespace Nektar
         {
             eNoExpansionType,
             eModified,
+            eModifiedQuadPlus1,
+            eModifiedQuadPlus2,
             eOrthogonal,
             eGLL_Lagrange,
             eGLL_Lagrange_SEM,
             eGauss_Lagrange,
             eGauss_Lagrange_SEM,
-			eFourier,
-			eFourierSingleMode,
-			eFourierHalfModeRe,
-			eFourierHalfModeIm,
-			eChebyshev,
-			eFourierChebyshev,
-			eChebyshevFourier,
-			eFourierModified,
+            eFourier,
+            eFourierSingleMode,
+            eFourierHalfModeRe,
+            eFourierHalfModeIm,
+            eChebyshev,
+            eFourierChebyshev,
+            eChebyshevFourier,
+            eFourierModified,
             eExpansionTypeSize
         };
 
@@ -81,19 +83,21 @@ namespace Nektar
         {
             "NOTYPE",
             "MODIFIED",
+            "MODIFIEDQUADPLUS1",
+            "MODIFIEDQUADPLUS2",
             "ORTHOGONAL",
             "GLL_LAGRANGE",
             "GLL_LAGRANGE_SEM",
             "GAUSS_LAGRANGE",
             "GAUSS_LAGRANGE_SEM",
-			"FOURIER",
-			"FOURIERSINGLEMODE",
-			"FOURIERHALFMODERE",
-			"FOURIERHALFMODEIM",
-			"CHEBYSHEV",
-			"FOURIER-CHEBYSHEV",
-			"CHEBYSHEV-FOURIER",
-			"FOURIER-MODIFIED"
+            "FOURIER",
+            "FOURIERSINGLEMODE",
+            "FOURIERHALFMODERE",
+            "FOURIERHALFMODEIM",
+            "CHEBYSHEV",
+            "FOURIER-CHEBYSHEV",
+            "CHEBYSHEV-FOURIER",
+            "FOURIER-MODIFIED"
         };
 
         class InterfaceComponent;
@@ -282,13 +286,13 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void Write(
                         const std::string &outFile,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> >      &fielddata);
+                        std::vector<std::vector<NekDouble> >      &fielddata);
 
                 /// Imports an FLD file.
                 SPATIAL_DOMAINS_EXPORT void Import(
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> > &fielddata);
+                        std::vector<std::vector<NekDouble> > &fielddata);
 
                 /// Imports the definition of the fields.
                 SPATIAL_DOMAINS_EXPORT void ImportFieldDefs(
@@ -300,7 +304,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void ImportFieldData(
                         TiXmlDocument &doc,
                         const std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<double> > &fielddata);
+                        std::vector<std::vector<NekDouble> > &fielddata);
 
                 SPATIAL_DOMAINS_EXPORT int CheckFieldDefinition(
                         const FieldDefinitionsSharedPtr  &fielddefs);
@@ -335,7 +339,7 @@ namespace Nektar
                         const std::string variable);
 
                 SPATIAL_DOMAINS_EXPORT ExpansionShPtr GetExpansion(
-                        GeometrySharedPtr geom);
+                                                                   GeometrySharedPtr geom, const std::string variable = "DefaultVar");
 
                 /// Sets expansions given field definitions
                 SPATIAL_DOMAINS_EXPORT void SetExpansions(
@@ -364,7 +368,7 @@ namespace Nektar
                         const std::string var1,
                         const std::string var2);
 
-                inline const bool CheckForGeomInfo(std::string parameter);
+                inline bool CheckForGeomInfo(std::string parameter);
 
                 inline const std::string GetGeomInfo(std::string parameter);
 
@@ -386,7 +390,7 @@ namespace Nektar
 
 
                 /* ---- Manipulation of mesh ---- */
-                inline const int GetNvertices() const;
+                inline int GetNvertices() const;
 
                 inline VertexComponentSharedPtr GetVertex(int id);
                 /// Adds a vertex to the with the next available ID.
@@ -542,7 +546,7 @@ namespace Nektar
         /**
          *
          */
-        inline const bool MeshGraph::CheckForGeomInfo(std::string parameter)
+        inline bool MeshGraph::CheckForGeomInfo(std::string parameter)
         {
             return m_geomInfo.find(parameter) != m_geomInfo.end();
         }
@@ -562,7 +566,7 @@ namespace Nektar
         /**
          *
          */
-        inline const int MeshGraph::GetNvertices() const
+        inline int MeshGraph::GetNvertices() const
         {
             return int(m_vertSet.size());
         }

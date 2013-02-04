@@ -263,7 +263,6 @@ namespace Nektar
         {
             int i;
             int cnt  = 0;
-            int cnt2 = 0;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                                                 = bcs.GetBoundaryRegions();
@@ -317,7 +316,6 @@ namespace Nektar
         {
             int i;
             int cnt  = 0;
-            int cnt2 = 0;
 			
             const SpatialDomains::BoundaryRegionCollection &bregions
 			= bcs.GetBoundaryRegions();
@@ -932,7 +930,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> &outarray)
         {
             int p, n, offset, t_offset;
-            double vertnorm = 0.0;
+            NekDouble vertnorm = 0.0;
             
             for (n = 0; n < GetExpSize(); ++n)
             {

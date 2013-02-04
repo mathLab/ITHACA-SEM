@@ -192,13 +192,13 @@ namespace Nektar
 
             // Fill z-direction
             Array<OneD, const NekDouble> pts =  m_homogeneousBasis->GetZ();
-			Array<OneD, NekDouble> local_pts(m_planes.num_elements());
-			
-			for(n = 0; n < m_planes.num_elements(); n++)
-			{
-				local_pts[n] = pts[m_transposition->GetPlaneID(n)];
-			}
-			
+            Array<OneD, NekDouble> local_pts(m_planes.num_elements());
+            
+            for(n = 0; n < m_planes.num_elements(); n++)
+            {
+                local_pts[n] = pts[m_transposition->GetPlaneID(n)];
+            }
+            
             Array<OneD, NekDouble> z(nzplanes);
 
             Vmath::Smul(nzplanes,m_lhom/2.0,local_pts,1,z,1);
@@ -307,7 +307,6 @@ namespace Nektar
         void ExpList3DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j,k;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
             int nquad2 = m_planes.num_elements();
@@ -427,13 +426,10 @@ namespace Nektar
             return sqrt(err);
         }
 		
-        Array<OneD, NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
+        Array<OneD, const NekDouble> ExpList3DHomogeneous1D::v_HomogeneousEnergy(void)
         {
-            int cnt = 0, cnt1 = 0;
-            int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
-
             Array<OneD, NekDouble> energy(m_planes.num_elements()/2);
-            double area = 0.0;
+            NekDouble area = 0.0;
 
             // Calculate total area of elements.
             for (int n = 0; n < m_planes[0]->GetExpSize(); ++n)
@@ -447,7 +443,7 @@ namespace Nektar
             // Calculate L2 norm of real/imaginary planes.
             for (int n = 0; n < m_planes.num_elements(); n += 2)
             {
-                double err;
+                NekDouble err;
                 
                 energy[n/2] = 0;
                 

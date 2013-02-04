@@ -22,7 +22,7 @@ namespace Nektar
         
         const unsigned int NodalTetElecAvailable = 10;
         static const unsigned int NodalTetElecNPTS[NodalTetElecAvailable] = {1,2,3,5,6,9,11,15,18,23};
-        static const double NodalTetElecData[][9] = {
+        static const NekDouble NodalTetElecData[][9] = {
      // %%% n_1    n_4    n_6   n_12    n_24          l_1             l_2           l_3           l_4
             // 1 1 %%% Order / Number of Points
             {0,     1,     0,     0,     0,       1.0000000000,  0.0000000000,  0.0000000000,  0.0000000000},  

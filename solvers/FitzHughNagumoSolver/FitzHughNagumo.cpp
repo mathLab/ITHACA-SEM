@@ -241,11 +241,8 @@ namespace Nektar
 
         NekDouble xmin = Vmath::Vmin(nq,x0,1);
         NekDouble xmax = Vmath::Vmax(nq,x0,1);
-        NekDouble ymin = Vmath::Vmin(nq,x1,1);
         NekDouble ymax = Vmath::Vmax(nq,x1,1);
         NekDouble rad;
-        NekDouble xc = 0.5*(xmin+xmax);
-        NekDouble yc = 0.5*(ymin+ymax);
 
         switch(initialwavetype)
         {
@@ -354,7 +351,6 @@ namespace Nektar
                                                 const NekDouble xc,
                                                 const NekDouble yc)
     {
-        int nvar = m_fields.num_elements();
         int nq = m_fields[0]->GetNpoints();
         Array<OneD,NekDouble> x0(nq);
         Array<OneD,NekDouble> x1(nq);
@@ -367,7 +363,6 @@ namespace Nektar
 
         NekDouble xmin = Vmath::Vmin(nq,x0,1);
         NekDouble xmax = Vmath::Vmax(nq,x0,1);
-        NekDouble ymin = Vmath::Vmin(nq,x1,1);
         NekDouble ymax = Vmath::Vmax(nq,x1,1);
         NekDouble rad;
 
@@ -438,8 +433,6 @@ namespace Nektar
     {
         NekDouble PI = 3.141592653589793238462;
         
-        int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();        
         int npoints = m_fields[0]->GetNpoints();
         
         Array<OneD,NekDouble> x0(npoints,0.0);
@@ -479,7 +472,6 @@ namespace Nektar
   
     {
       int nvariables = inarray.num_elements();
-      int ncoeffs    = inarray[0].num_elements();
       int npoints = m_fields[0]->GetNpoints();
       
       const NekDouble coeff = 2.0/m_epsilon;
@@ -510,7 +502,6 @@ namespace Nektar
 	
     {
       int nvariables = inarray.num_elements();
-      int ncoeffs    = inarray[0].num_elements();
       int npoints = m_fields[0]->GetNpoints();
   
       Array<OneD,NekDouble> x0(npoints,0.0);
@@ -558,9 +549,7 @@ namespace Nektar
     {
       NekDouble m_gamma = 0.5;
 
-      int nvariables = inarray.num_elements();
-      int ncoeffs    = inarray[0].num_elements();
-      int npoints    = m_fields[0]->GetNpoints();
+      int npoints = m_fields[0]->GetNpoints();
       
       Array<OneD, NekDouble> physfieldu(npoints);
       Array<OneD, NekDouble> physfieldv(npoints);
@@ -610,9 +599,7 @@ namespace Nektar
                                       const NekDouble time)
 	
     {
-      int nvariables = inarray.num_elements();
-      int ncoeffs    = inarray[0].num_elements();
-      int npoints    = m_fields[0]->GetNpoints();
+      int npoints = m_fields[0]->GetNpoints();
       
       Array<OneD, NekDouble> physfieldu(npoints);
       Array<OneD, NekDouble> physfieldv(npoints);
@@ -694,8 +681,7 @@ namespace Nektar
                                         NekDouble time, 
                                         NekDouble lambda)
   {
-    int nvariables = inarray.num_elements();
-    int ncoeffs    = inarray[0].num_elements();
+    int ncoeffs = inarray[0].num_elements();
     
     NekDouble kappa = 1.0/lambda;
 
@@ -728,8 +714,7 @@ namespace Nektar
                                             NekDouble time, 
                                             NekDouble lambda)
   {
-    int nvariables = inarray.num_elements();
-    int ncoeffs    = inarray[0].num_elements();
+    int ncoeffs = inarray[0].num_elements();
     int nq = m_fields[0]->GetNpoints();
     
     int Nelem = m_fields[0]->GetExpSize();
@@ -1211,7 +1196,7 @@ namespace Nektar
 					    Array<OneD, NekDouble> &penaltyflux,
 					    NekDouble time)
   {
-    unsigned int i, j, e, npoints, id1, id2;
+    unsigned int i, e, npoints, id1, id2;
     int nbnd = m_fields[0]->GetBndCondExpansions().num_elements();
     int numBDEdge = m_fields[0]->GetBndCondExpansions()[0]->GetExpSize();
     int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;
@@ -1266,7 +1251,7 @@ namespace Nektar
                                              NekDouble C11,
                                              NekDouble time)
   {
-    unsigned int i, j, e, npoints, id1, id2;
+    unsigned int i, e, npoints, id1, id2;
     int nbnd = m_fields[0]->GetBndCondExpansions().num_elements();
     int numBDEdge = m_fields[0]->GetBndCondExpansions()[0]->GetExpSize();
     int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;

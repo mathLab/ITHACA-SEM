@@ -157,12 +157,13 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                     const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,NekDouble> &outarray);
+                    Array<OneD,NekDouble> &outarray,
+                    const StdMatrixKey &mkey);
 
             STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD,NekDouble> &outarray,
-                    const double lambda);
+                    const StdMatrixKey &mkey);
 
             STD_REGIONS_EXPORT virtual void v_FillMode(
                     const int mode,

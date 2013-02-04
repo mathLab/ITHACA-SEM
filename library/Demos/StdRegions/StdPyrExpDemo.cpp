@@ -13,13 +13,6 @@ using namespace Nektar;
                     
 NekDouble Pyramid_sol(NekDouble x, NekDouble y, NekDouble z, int P, int Q, int R);                 
                   
-
-// modification to deal with exact solution. Return 1 if integer < 0
-static double  pow_loc(const double val, const int i)
-{
-  return (i < 0)? 1.0: pow(val,i);
-}
-
 using namespace Nektar::LibUtilities;
 using namespace Nektar::StdRegions;
 
@@ -54,15 +47,12 @@ int main(int argc, char *argv[]) {
     LibUtilities::BasisType   bType_x = static_cast<LibUtilities::BasisType>( bType_x_val );
     LibUtilities::BasisType   bType_y = static_cast<LibUtilities::BasisType>( bType_y_val );
     LibUtilities::BasisType   bType_z = static_cast<LibUtilities::BasisType>( bType_z_val );
-    LibUtilities::PointsType  NodalType = LibUtilities::eNoPointsType;
     
     if( (bType_x_val == 13) || (bType_y_val == 13) || (bType_z_val == 13) )
     {
         bType_x =   LibUtilities::eOrtho_A;
         bType_y =   LibUtilities::eOrtho_B;
         bType_z =   LibUtilities::eOrtho_C;
-        
-        NodalType = LibUtilities::eNodalTetElec;
     }
 
 
@@ -186,7 +176,7 @@ int main(int argc, char *argv[]) {
     
      // Testing the physical evaluate(u_phys): projection on to the polynomial space given by the prismatic basis function
     // The result of output should converge to the interpolation solution 
-    Array<OneD, const NekDouble> const& u_phys = sPyrE->GetPhys();
+    //Array<OneD, const NekDouble> const& u_phys = sPyrE->GetPhys();
     Array<OneD, NekDouble> pyramid_solution( Qx * Qy * Qz, 0.0 );
     cout << setprecision(4);
     for(int n = 0; n < Qx * Qy * Qz; ++n) {

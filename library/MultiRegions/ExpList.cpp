@@ -78,21 +78,21 @@ namespace Nektar
          * MultiRegions#ExpList2D or MultiRegions#ExpList3D).
          */
         ExpList::ExpList():
-            m_session(),
             m_comm(),
+            m_session(),
             m_graph(),
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
             m_phys(),
+            m_physState(false),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+                      ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
             m_offset_elmt_id(),
-            m_physState(false),
-		    m_WaveSpace(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
-                                                        ::AllocateSharedPtr()),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
         {
         }
 
@@ -104,21 +104,21 @@ namespace Nektar
          */
         ExpList::ExpList(
                 const LibUtilities::SessionReaderSharedPtr &pSession):
-            m_session(pSession),
             m_comm(pSession->GetComm()),
+            m_session(pSession),
             m_graph(),
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
             m_phys(),
+            m_physState(false),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+                      ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
             m_offset_elmt_id(),
-            m_physState(false),
-            m_WaveSpace(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
-                                                        ::AllocateSharedPtr()),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
         {
         }
 
@@ -131,21 +131,21 @@ namespace Nektar
         ExpList::ExpList(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const SpatialDomains::MeshGraphSharedPtr &pGraph):
-            m_session(pSession),
             m_comm(pSession->GetComm()),
+            m_session(pSession),
             m_graph(pGraph),
             m_ncoeffs(0),
             m_npoints(0),
             m_coeffs(),
             m_phys(),
+            m_physState(false),
+            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+                      ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
             m_offset_elmt_id(),
-            m_physState(false),
-		    m_WaveSpace(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
-                                                        ::AllocateSharedPtr()),
-            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr())
+            m_blockMat(MemoryManager<BlockMatrixMap>::AllocateSharedPtr()),
+            m_WaveSpace(false)
         {
         }
 
@@ -155,19 +155,19 @@ namespace Nektar
          * @param   in              Source expansion list.
          */
         ExpList::ExpList(const ExpList &in, const bool DeclareCoeffPhysArrays):
-            m_session(in.m_session),
             m_comm(in.m_comm),
+            m_session(in.m_session),
             m_graph(in.m_graph),
             m_ncoeffs(in.m_ncoeffs),
             m_npoints(in.m_npoints),
             m_physState(false),
-		    m_WaveSpace(false),
             m_exp(in.m_exp),
             m_coeff_offset(in.m_coeff_offset),
             m_phys_offset(in.m_phys_offset),
             m_offset_elmt_id(in.m_offset_elmt_id),
             m_globalOptParam(in.m_globalOptParam),
-            m_blockMat(in.m_blockMat)
+            m_blockMat(in.m_blockMat),
+            m_WaveSpace(false)
         {
             if(DeclareCoeffPhysArrays)
             {
@@ -175,8 +175,8 @@ namespace Nektar
                 m_phys   = Array<OneD, NekDouble>(m_npoints);
             }
         }
-
-
+        
+        
         //boost::shared_ptr<ExpList> do_clone(void) const = 0; {}
 		
         /**
@@ -1489,9 +1489,6 @@ namespace Nektar
 
                 int i,j,k;
                 int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
-                StdRegions::ExpansionType locShape
-                                            = (*m_exp)[0]->DetExpansionType();
-
                 int nDumpCoeffs =  nElementalCoeffs*nElementalCoeffs;
                 Array<TwoD, int> exponentMap(nDumpCoeffs,3,0);
                 int cnt = 0;
@@ -1869,7 +1866,7 @@ namespace Nektar
             return sqrt(err);
         }
 		
-        Array<OneD, NekDouble> ExpList::v_HomogeneousEnergy (void)
+        Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -1877,7 +1874,17 @@ namespace Nektar
             return NoEnergy;
         }
 		
-        Array<OneD, unsigned int> ExpList::v_GetZIDs(void)
+        LibUtilities::TranspositionSharedPtr ExpList::v_GetTransposition(void)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            LibUtilities::TranspositionSharedPtr trans;
+			
+            return trans;
+        }
+
+
+        Array<OneD, const unsigned int> ExpList::v_GetZIDs(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -1886,13 +1893,25 @@ namespace Nektar
             return NoModes;
         }
 		
-        Array<OneD, unsigned int> ExpList::v_GetYIDs(void)
+        Array<OneD, const unsigned int> ExpList::v_GetYIDs(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             Array<OneD, unsigned int> NoModes(1);
 			
             return NoModes;
+        }
+
+
+        void ExpList::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+        }
+        
+        void ExpList::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
         }
 		
 
@@ -2078,6 +2097,11 @@ namespace Nektar
             v_ExtractDataToCoeffs(fielddef,fielddata,field,coeffs);
         }
 
+        void ExpList::ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+        {
+            v_ExtractCoeffsToCoeffs(fromExpList,fromCoeffs,toCoeffs);
+        }
+
 
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {     	
@@ -2116,7 +2140,6 @@ namespace Nektar
                 }
 
                 int modes_offset = 0;
-                Array<OneD, NekDouble> coeff_tmp;             
                 for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
                 {
                     int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
@@ -2133,12 +2156,43 @@ namespace Nektar
                     }
                     else // unpack data to new order
                     {
-                        (*m_exp)[eid]->ExtractDataToCoeffs(fielddata, offset, fielddef->m_numModes,modes_offset,coeff_tmp = coeffs + m_coeff_offset[eid]);
+                        
+                        (*m_exp)[eid]->ExtractDataToCoeffs(&fielddata[offset], fielddef->m_numModes, modes_offset, &coeffs[m_coeff_offset[eid]]);
                     }
                     offset += datalen;
                 }                
             }
         }
+
+        void ExpList::v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
+        {     	
+            int i;
+            int offset = 0;
+
+            // check if the same and if so just copy over coeffs
+            if(fromExpList->GetNcoeffs() == m_ncoeffs)
+            {
+                Vmath::Vcopy(m_ncoeffs,fromCoeffs,1,toCoeffs,1);
+            }
+            else
+            {
+                std::vector<unsigned int> nummodes;
+                for(i = 0; i < (*m_exp).size(); ++i)
+                {
+                    int eid = m_offset_elmt_id[i];
+                    for(int j= 0; j < fromExpList->GetExp(eid)->GetNumBases(); ++j)
+                    {
+                        nummodes.push_back(fromExpList->GetExp(eid)->GetBasisNumModes(j));
+                    }
+                    
+                    (*m_exp)[eid]->ExtractDataToCoeffs(&fromCoeffs[offset], nummodes,0, 
+                                                       &toCoeffs[m_coeff_offset[eid]]);
+                    
+                    offset += fromExpList->GetExp(eid)->GetNcoeffs();
+                }
+            }
+        }
+
 
         const Array<OneD,const boost::shared_ptr<ExpList> >
                                         &ExpList::v_GetBndCondExpansions(void)

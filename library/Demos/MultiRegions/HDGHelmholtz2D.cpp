@@ -11,7 +11,7 @@
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
- fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps); \
+ fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/(double)CLOCKS_PER_SEC); \
  st = clock();
 #else
 #define Timing(s) \
@@ -34,7 +34,6 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
-    NekDouble    cps = (double)CLOCKS_PER_SEC;
 
     if(argc != 2)
     {
@@ -54,10 +53,15 @@ int main(int argc, char *argv[])
     const SpatialDomains::ExpansionMap &expansions = graph2D->GetExpansions();
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
-    cout << "Solving 2D Helmholtz:"  << endl;
-    cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
-    cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
-    cout << endl;
+
+    if (vComm->GetRank() == 0)
+    {
+        cout << "Solving 2D Helmholtz:"  << endl;
+        cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
+        cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
+        cout << endl;
+    }
+
     //----------------------------------------------
 
     //----------------------------------------------
@@ -132,9 +136,14 @@ int main(int argc, char *argv[])
 
     //-----------------------------------------------
     // Write solution to file
-    string   out = meshfile.substr(0, meshfile.find_last_of(".")) + ".fld";
+    string out = vSession->GetSessionName();
+    if (vComm->GetSize() > 1)
+    {
+        out += "_P" + boost::lexical_cast<string>(vComm->GetRank());
+    }
+    out += ".fld";
     std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
-                                                = Exp->GetFieldDefinitions();
+        = Exp->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
     for(i = 0; i < FieldDef.size(); ++i)
@@ -150,13 +159,12 @@ int main(int argc, char *argv[])
     // See if there is an exact solution, if so
     // evaluate and plot errors
     LibUtilities::EquationSharedPtr ex_sol =
-                            vSession->GetFunction("ExactSolution", 0);
+        vSession->GetFunction("ExactSolution", 0);
 
     if(ex_sol)
     {
         //----------------------------------------------
         // evaluate exact solution
-
         ex_sol->Evaluate(xc0, xc1, xc2, fce);
 
         //----------------------------------------------
@@ -166,22 +174,38 @@ int main(int argc, char *argv[])
         Fce->SetPhys(fce);
         Fce->SetPhysState(true);
 
-
-        cout << "L infinity error:  " << Exp->Linf(Fce->GetPhys()) << endl;
-        cout << "L 2 error  :       " << Exp->L2  (Fce->GetPhys()) << endl;
-        cout << "H 1 error  :       " << Exp->H1  (Fce->GetPhys()) << endl;
-
+        NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
+        NekDouble vL2Error   = Exp->L2  (Fce->GetPhys());
+        NekDouble vH1Error   = Exp->H1  (Fce->GetPhys());
+        vector<NekDouble> vQError(coordim);
+        
         for (i = 0; i < coordim; ++i)
         {
             Fce->PhysDeriv(i,Fce->GetPhys(),fce);
-            cout << "Q" << i << " L2 error:       "
-                 << Exp->L2_DGDeriv(i,fce) << endl;
+            vQError[i] = Exp->L2_DGDeriv(i,fce);
         }
+
+        if (vSession->GetComm()->GetRank() == 0)
+        {
+            cout << "L infinity error : " << vLinfError << endl;
+            cout << "L 2 error        : " << vL2Error   << endl;
+            cout << "H 1 error        : " << vH1Error   << endl;
+
+            for (i = 0; i < coordim; ++i)
+            {
+                cout << "Q" << i << " L2 error      : "
+                     << vQError[i] << endl;
+            }
+        }
+
         //--------------------------------------------
     }
 
     Timing("Output ..");
     //----------------------------------------------
+
+    vSession->Finalise();
+
     return 0;
 }
 

@@ -13,7 +13,7 @@ using namespace Nektar;
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
- fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps); \
+ fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/(double)CLOCKS_PER_SEC); \
  st = clock();
 #else
 #define Timing(s) \
@@ -34,8 +34,6 @@ int main(int argc, char *argv[])
     StdRegions::ConstFactorMap factors;
     StdRegions::VarCoeffMap varcoeffs;
     FlagList flags;
-    NekDouble    cps = (double)CLOCKS_PER_SEC;
-    NekDouble    st;
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
     {
@@ -152,11 +150,12 @@ int main(int argc, char *argv[])
 
         //-----------------------------------------------
         // Write solution to file
-        string   out(vSession->GetSessionName() + ".fld");
+        string out = vSession->GetSessionName();
         if (vSession->GetComm()->GetSize() > 1)
         {
-            out += "." + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
+            out += "_P" + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
         }
+        out += ".fld";
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());

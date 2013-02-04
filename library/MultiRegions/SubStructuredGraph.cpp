@@ -95,7 +95,6 @@ namespace Nektar
             offset += 5;
 
             int recurLevel    = sepTree[offset+0];
-            int branch        = sepTree[offset+1];
             int nLeftIntDofs  = sepTree[offset+2];
             int nRightIntDofs = sepTree[offset+3];
             int nBndDofs      = sepTree[offset+4];
@@ -594,7 +593,6 @@ namespace Nektar
             for(int i = 0; i < m_IntBlocks.size(); i++)
             {
                 int OrigGlobIdOffset = m_IntBlocks[i]->GetIdOffset();
-                int OrigNverts       = m_IntBlocks[i]->GetNverts();
                 int newNverts = 0;
 
                 m_IntBlocks[i]->SetIdOffset(offset);

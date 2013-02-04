@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/AdvectionNonConservative.h>
+#include <SolverUtils/Advection/AdvectionNonConservative.h>
 
 namespace Nektar
 {
@@ -57,8 +57,8 @@ namespace Nektar
         {
             int nDim       = advVel.num_elements();
             int nPointsTot = fields[0]->GetNpoints();
-            
             Array<OneD, NekDouble> grad0,grad1,grad2;
+
             grad0 = Array<OneD, NekDouble> (nPointsTot);
             
             if (nDim > 1)
@@ -70,6 +70,7 @@ namespace Nektar
             {
                 grad2 = Array<OneD,NekDouble>(nPointsTot);
             }
+
 
             for (int i = 0; i < nConvectiveFields; ++i)
             {
@@ -87,6 +88,8 @@ namespace Nektar
                     case 2:
                         fields[0]->PhysDeriv(inarray[i], grad0, grad1);
                         
+                        
+                        // Calculate advection terms 
                         Vmath::Vmul (nPointsTot, 
                                      grad0, 1, 
                                      advVel[0], 1, 
@@ -97,8 +100,9 @@ namespace Nektar
                                      advVel[1], 1, 
                                      outarray[i], 1, 
                                      outarray[i], 1);
+                        
                         break;
-                    case 3:
+                      case 3:
                         fields[0]->PhysDeriv(inarray[i], grad0, grad1, grad2);
                         
                         Vmath::Vmul   (nPointsTot, 

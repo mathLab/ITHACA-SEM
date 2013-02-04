@@ -266,7 +266,6 @@ namespace Nektar
   {
     
     int nvariables = m_fields.num_elements();
-    int nq         = inarray[0].num_elements();
     int cnt = 0;
 
     // loop over Boundary Regions

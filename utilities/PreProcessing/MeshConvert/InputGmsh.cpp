@@ -87,8 +87,6 @@ namespace Nektar
             string line;
             int nVertices = 0;
             int nEntities = 0;
-            int nElements = 0;
-            int nBoundaryElements = 0;
             int elm_type = 0;
             int prevId = -1;
             map<unsigned int, ElmtConfig>::iterator it;
@@ -146,7 +144,6 @@ namespace Nektar
                 // Process elements
                 else if (word == "$Elements")
                 {
-                    int zeroDid = 0, oneDid = 0, twoDid = 0, threeDid = 0;
                     getline(mshFile, line);
                     stringstream s(line);
                     s >> nEntities;

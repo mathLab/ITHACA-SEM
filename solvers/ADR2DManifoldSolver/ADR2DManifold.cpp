@@ -2232,8 +2232,8 @@ namespace Nektar
         NekDouble a_n, d_n, gamma_n;
         NekDouble A_mn, C_mn, theta, phi,radius;
 
-        std::complex<double> Spericharmonic, delta_n, varphi0, varphi1, temp;
-        std::complex<double> B_mn, D_mn;
+        std::complex<NekDouble> Spericharmonic, delta_n, varphi0, varphi1, temp;
+        std::complex<NekDouble> B_mn, D_mn;
 
         // Set some parameter values
         int Maxn = 6;
@@ -2291,8 +2291,8 @@ namespace Nektar
         // phi is in [0, 2*pi]
         phi = atan2( x1j, x0j ) + pi;
 
-        varphi0 = std::complex<double>(0.0,0.0);
-        varphi1 = std::complex<double>(0.0,0.0);
+        varphi0 = std::complex<NekDouble>(0.0,0.0);
+        varphi1 = std::complex<NekDouble>(0.0,0.0);
         for (n = 0; n < Maxn; ++n)
         {
             // Set up parameters
@@ -2304,7 +2304,7 @@ namespace Nektar
 #ifdef _MSC_VER
             temp.real( ( a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c ));
 #else
-            temp = std::complex<double>( (a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c ), temp.imag() ) ;
+            temp = std::complex<NekDouble>( (a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c ), temp.imag() ) ;
 #endif
 
             delta_n = 0.5*sqrt( temp );

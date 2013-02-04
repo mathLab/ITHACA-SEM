@@ -170,7 +170,6 @@ namespace Nektar
 
             Nektar::NekMatrix<double> m(4, 3, data);
             
-            unsigned int r = m.GetRows();
             BOOST_CHECK_EQUAL( m(0,0), 1.0 );
             BOOST_CHECK_EQUAL( m(0,1), 2.0 );
             BOOST_CHECK_EQUAL( m(0,2), 3.0 );

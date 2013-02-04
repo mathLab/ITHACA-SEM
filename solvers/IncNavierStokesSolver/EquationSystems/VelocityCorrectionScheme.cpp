@@ -89,6 +89,40 @@ namespace Nektar
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
+
+            m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useHomo1DSpecVanVisc,false);
+            
+            if(m_useHomo1DSpecVanVisc)
+            {
+                
+                Array<OneD, unsigned int> planes;
+                planes = m_fields[0]->GetZIDs();
+
+                int num_planes = planes.num_elements();
+                Array<OneD, NekDouble> SVV(num_planes,0.0);
+                NekDouble fac;
+                int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
+                int pstart;
+
+                m_session->LoadParameter("SVVStartMode",pstart,0.75*kmodes);
+                
+                for(n = 0; n < num_planes; ++n)
+                {
+                    if(planes[n] > pstart)
+                    {
+                        fac = (NekDouble)((planes[n] - kmodes)*(planes[n] - kmodes))/
+                            ((NekDouble)((planes[n] - pstart)*(planes[n] - pstart)));
+                        SVV[n] = exp(-fac)/m_kinvis;
+                    }
+                    
+                }
+
+                for(i = 0; i < m_velocity.num_elements(); ++i)
+                {
+                    m_fields[m_velocity[i]]->GetTransposition()->SetSpecVanVisc(SVV);
+                }
+            }
+            
         }
 
         m_session->MatchSolverInfo("SubSteppingScheme","True",m_subSteppingScheme,false);
@@ -267,13 +301,13 @@ namespace Nektar
         
         // set implicit time-intregration class operators
         m_integrationOps.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);
-        }
+    }
         
-        VelocityCorrectionScheme::~VelocityCorrectionScheme(void)
-        {
-            
-        }
+    VelocityCorrectionScheme::~VelocityCorrectionScheme(void)
+    {
         
+    }
+    
         
     void VelocityCorrectionScheme::v_PrintSummary(std::ostream &out)
     {
@@ -312,6 +346,21 @@ namespace Nektar
         if(m_subSteppingScheme)
         {
             cout << "\tSubstepping     : " << LibUtilities::TimeIntegrationMethodMap[m_subStepIntegrationScheme->GetIntegrationMethod()] << endl;
+        }
+
+        if(m_dealiasing)
+        {
+            cout << "\tDealiasing      : Homogeneous1D"  << endl;
+        }
+        
+        if(m_specHP_dealiasing)
+        {
+            cout << "\tDealiasing      : Spectral/hp "  << endl;
+        }
+
+        if(m_useHomo1DSpecVanVisc)
+        {
+            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D) " << endl;
         }
     }
     
@@ -409,12 +458,41 @@ namespace Nektar
         int nqtot        = m_fields[0]->GetTotPoints();
         
         Timer  timer;
+        bool IsRoot = (m_comm->GetColumnComm()->GetRank())? false:true;
+
+#if 0
         timer.Start();
+        for(int k = 0; k < 1000; ++k)
+        {
+            m_fields[0]->IProductWRTBase(m_fields[0]->GetPhys(),
+                                         m_fields[0]->UpdateCoeffs());
+
+        }
+        timer.Stop();
+        cout << "\t 1000 Iprods   : "<< timer.TimePerTest(1) << endl;
+#endif
+
+#if 0
+        timer.Start();
+        Array<OneD, NekDouble> out (m_fields[0]->GetTotPoints());
+        Array<OneD, NekDouble> out1(m_fields[0]->GetTotPoints());
+        Array<OneD, NekDouble> out2(m_fields[0]->GetTotPoints());
         
+        for(int k = 0; k < 10000; ++k)
+        {
+            m_fields[0]->PhysDeriv(out,out1,out2);
+
+        }
+        timer.Stop();
+        cout << "\t 10000 Physderiv   : "<< timer.TimePerTest(1) << endl;
+        exit(1);
+#endif
+
+        timer.Start();
         // evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t Adv. eval Time   : "<< timer.TimePerTest(1) << endl;
         }
@@ -446,7 +524,7 @@ namespace Nektar
                             outarray[i],1);
             }
             timer.Stop();
-            if(m_showTimings)
+            if(m_showTimings&&IsRoot)
             {
                 cout << "\t Body ForceTime   : "<< timer.TimePerTest(1) << endl;
             }
@@ -459,7 +537,7 @@ namespace Nektar
             EvaluatePressureBCs(inarray, outarray); 
             timer.Stop();
 
-            if(m_showTimings)
+            if(m_showTimings&&IsRoot)
             {
                 cout << "\t Pressure BCs     : "<< timer.TimePerTest(1) << endl;
             }
@@ -473,11 +551,11 @@ namespace Nektar
     {
         int i,n;
         int phystot = m_fields[0]->GetTotPoints();
-        int ncoeffs = m_fields[0]->GetNcoeffs();
         Array<OneD, Array< OneD, NekDouble> > F(m_nConvectiveFields);
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = 0.0;
         Timer timer;
+        bool IsRoot = (m_comm->GetColumnComm()->GetRank())? false:true;
 
         for(n = 0; n < m_nConvectiveFields; ++n)
         {
@@ -495,7 +573,7 @@ namespace Nektar
         timer.Start();
         SetUpPressureForcing(inarray, F, aii_Dt);
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t Pressure Forcing : "<< timer.TimePerTest(1) << endl;
 	}
@@ -504,7 +582,7 @@ namespace Nektar
         timer.Start();
         m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList, factors);
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t Pressure Solve   : "<< timer.TimePerTest(1) << endl;
         }
@@ -513,7 +591,7 @@ namespace Nektar
         timer.Start();
         SetUpViscousForcing(inarray, F, aii_Dt);
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t Viscous Forcing  : "<< timer.TimePerTest(1) << endl;
         }
@@ -526,7 +604,7 @@ namespace Nektar
             m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);            
         }
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t Visc. Slv.      : "<< timer.TimePerTest(1) << endl;
         }
@@ -539,7 +617,7 @@ namespace Nektar
         }
  
         timer.Stop();
-        if(m_showTimings)
+        if(m_showTimings&&IsRoot)
         {
             cout << "\t BwdTrans : "<< timer.TimePerTest(1) << endl;
         
@@ -782,7 +860,7 @@ namespace Nektar
                 }
             }
 
-            // setting if just standard BC no High order
+            // setting if just standard BC not High order
             else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
             {
                 cnt += PBndExp[n]->GetExpSize();
@@ -802,8 +880,7 @@ namespace Nektar
         PBndConds = m_pressure->GetBndConditions();
         PBndExp   = m_pressure->GetBndCondExpansions();
         
-        int elmtid,nq,offset, boundary,cnt,n;
-        int phystot = m_fields[0]->GetTotPoints();
+        int elmtid,nq,offset, boundary, n;
         
         Array<OneD, NekDouble> Pvals;
         Array<OneD, NekDouble> Uvals;
@@ -1340,7 +1417,6 @@ namespace Nektar
     void   VelocityCorrectionScheme::SetUpViscousForcing(const Array<OneD, const Array<OneD, NekDouble> > &inarray, Array<OneD, Array<OneD, NekDouble> > &Forcing, const NekDouble aii_Dt)
     {
         NekDouble aii_dtinv = 1.0/aii_Dt;
-        int ncoeffs = m_fields[0]->GetNcoeffs();
         int phystot = m_fields[0]->GetTotPoints();
 
         // Grad p
@@ -1430,7 +1506,7 @@ namespace Nektar
                             }
                             else
                             {
-                                m_wavenumber[j]     = 2*M_PI*sign*(double(K))/m_LhomZ; 
+                                m_wavenumber[j]     = 2*M_PI*sign*(NekDouble(K))/m_LhomZ; 
                                 m_negWavenumberSq[j] = -1.0*m_wavenumber[j]*m_wavenumber[j];
                             }
                             
@@ -1470,7 +1546,6 @@ namespace Nektar
         {
             m_HBCdata = Array<OneD, HBCInfo>(HOPBCnumber);
             
-            int Ky,Kz;
             int cnt = 0;
             int exp_size, exp_size_per_line;
             int j=0;
@@ -1479,8 +1554,6 @@ namespace Nektar
             {
                 for(int k2 = 0; k2 < m_npointsY; k2++)
                 {
-                    Ky = k2/2;
-                    
                     for(int n = 0 ; n < PBndConds.num_elements(); ++n)
                     {
                         SpatialDomains::BndUserDefinedType type = PBndConds[n]->GetUserDefined();

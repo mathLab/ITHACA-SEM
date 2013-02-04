@@ -12,7 +12,7 @@
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
- fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps); \
+ fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/(double)CLOCKS_PER_SEC); \
  st = clock();
 #else
 #define Timing(s) \
@@ -31,12 +31,11 @@ int main(int argc, char *argv[])
 
     MultiRegions::DisContField3DHomogeneous1DSharedPtr Exp,Fce;
     MultiRegions::ExpListSharedPtr DerExp1,DerExp2,DerExp3;
-    int i, nq,  coordim;
+    int i, nq;
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
     NekDouble lz;
-    NekDouble cps = (double)CLOCKS_PER_SEC;
 
     if(argc != 2)
     {
@@ -82,9 +81,7 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
-    coordim = Exp->GetCoordim(0);
-    nq      = Exp->GetTotPoints();
-
+    nq  = Exp->GetTotPoints();
     xc0 = Array<OneD,NekDouble>(nq,0.0);
     xc1 = Array<OneD,NekDouble>(nq,0.0);
     xc2 = Array<OneD,NekDouble>(nq,0.0);

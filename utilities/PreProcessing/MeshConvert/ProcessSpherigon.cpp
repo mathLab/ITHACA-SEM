@@ -546,7 +546,7 @@ namespace Nektar
                     v.push_back(*(e->GetVertex(j)));
                     vN.push_back(m->vertexNormals[v[j].id]);
                 }
-                    
+
                 vector<Node>   tmp  (nV);
                 vector<double> r    (nV);
                 vector<Node>   K    (nV);

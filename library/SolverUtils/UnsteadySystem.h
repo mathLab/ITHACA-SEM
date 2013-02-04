@@ -114,22 +114,14 @@ namespace Nektar
 
             ///
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                const Array<OneD, Array<OneD, NekDouble> >   &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
 
             ///
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                const Array<OneD, Array<OneD, NekDouble> >   &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
                 Array<OneD, Array<OneD, NekDouble> > &qflux);
-
-            /// Evaulate flux = m_fields*ivel for i th component of Vu for
-            /// direction j
-            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
-                const int i, 
-                const int j,
-                      Array<OneD, Array<OneD, NekDouble> > &physfield,
-                      Array<OneD, Array<OneD, NekDouble> > &flux);
 		            
             SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray);

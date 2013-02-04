@@ -722,17 +722,17 @@
     <CONDITIONS>
 
         <PARAMETERS>
-            <P> TimeStep       = 0          </P>
-            <P> FinTime        = 0          </P>
-            <P> NumSteps       = 10         </P>
-            <P> IO_CheckSteps  = 10000      </P>
-            <P> IO_InfoSteps   = 100        </P>
-            <P> Gamma          = 1.4        </P>
-            <P> rho0           = 1.225      </P>
-            <P> rhou0          = 0.1225     </P>
-            <P> rhov0          = 0.0        </P>
-            <P> E0             = 0.149875   </P>
-            <P> CFL            = 1.0        </P>
+            <P> TimeStep        = 0         </P>
+            <P> FinTime         = 0         </P>
+            <P> NumSteps        = 10        </P>
+            <P> IO_CheckSteps   = 10000     </P>
+            <P> IO_InfoSteps    = 100       </P>
+            <P> Gamma           = 1.4       </P>
+            <P> pInf            = 101325    </P>
+            <P> rhoInf          = 1.225     </P>
+            <P> uInf            = 0.1       </P>
+            <P> vInf            = 0.0       </P>
+            <P> CFL             = 1.0       </P>
         </PARAMETERS>
 
         <SOLVERINFO>
@@ -759,16 +759,22 @@
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="rho"    VALUE="rho0"    />
-                <D VAR="rhou"   VALUE="rhou0"   />
-                <D VAR="rhov"   VALUE="rhov0"   />
-                <D VAR="E"      VALUE="E0"      />
+                <D VAR="rho"    VALUE="rhoInf"          />
+                <D VAR="rhou"   VALUE="rhoInf * uInf"   />
+                <D VAR="rhov"   VALUE="rhoInf * vInf"   />
+                <!-- Temporary value for E-->
+                <D VAR="E"      VALUE="0.0149875"       /> 
+                <!-- Proper equation to compute E -->
+                <!--D VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/-->
             </REGION>
             <REGION REF="1">
-                <D VAR="rho"    VALUE="rho0"    />
-                <D VAR="rhou"   VALUE="rhou0"   />
-                <D VAR="rhov"   VALUE="rhov0"   />
-                <D VAR="E"      VALUE="E0"      />
+                <D VAR="rho"    VALUE="rhoInf"          />
+                <D VAR="rhou"   VALUE="rhoInf * uInf"   />
+                <D VAR="rhov"   VALUE="rhoInf * vInf"   />
+                <!-- Temporary value for E-->
+                <D VAR="E"      VALUE="0.0149875"       /> 
+                <!-- Proper equation to compute E -->
+                <!--D VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/-->
             </REGION>
             <REGION REF="2">
                 <D VAR="rho"    USERDEFINEDTYPE="Wall" VALUE="0"/>

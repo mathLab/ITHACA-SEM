@@ -87,6 +87,16 @@ namespace Nektar
         }
     }
 
+    template<typename DataType, typename LhsDataType>
+    void NekMultiplyDiagonalMatrix(DataType* result,
+                                   const NekMatrix<LhsDataType, StandardMatrixTag>& lhs,
+                                   const DataType* rhs)
+    {
+        int n = lhs.GetRows();
+        const DataType* mat_ptr = lhs.GetRawPtr();
+        Vmath::Vmul(n, mat_ptr, 1, rhs, 1, result, 1);
+    }
+
     template<typename LhsDataType, typename MatrixType>
     void NekMultiplyBandedMatrix(NekDouble* result,
                     const NekMatrix<LhsDataType, MatrixType>& lhs,
@@ -96,8 +106,8 @@ namespace Nektar
                         CanGetRawPtr<NekMatrix<LhsDataType, MatrixType> >
                     >::type* p=0)
     {
-        int m = lhs.GetRows();
-        int n = lhs.GetColumns();
+        int m  = lhs.GetRows();
+        int n  = lhs.GetColumns();
         int kl = lhs.GetNumberOfSubDiagonals();
         int ku = lhs.GetNumberOfSuperDiagonals();
         double alpha = lhs.Scale();

@@ -99,6 +99,7 @@ namespace Nektar
         NekDouble                           m_vInf;
         NekDouble                           m_wInf;
         NekDouble                           m_gasConstant;
+        NekDouble                           m_Twall;
       
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -113,7 +114,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >       &physfield, 
                   Array<OneD, Array<OneD, NekDouble> >       &flux);
         void GetViscousFluxVector(
-            const int                                           i,
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
@@ -163,6 +163,11 @@ namespace Nektar
         {
         }
 
+        NekDouble GetGasConstant()
+        {
+            return m_gasConstant;
+        }
+        
         NekDouble GetGamma()
         {
             return m_gamma;

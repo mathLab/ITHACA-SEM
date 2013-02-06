@@ -67,34 +67,32 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
             
-            virtual void v_NumFluxforScalar(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-                const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&uflux);
+            virtual void v_NumericalFluxO1(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>      &fields,
+                const Array<OneD, Array<OneD, NekDouble> >             &inarray,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                            &numericalFluxO1);
             
-            virtual void v_WeakPenaltyforScalar(
+            virtual void v_WeakPenaltyO1(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const Array<OneD, const NekDouble>                &ufield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          time);
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                      Array<OneD, Array<OneD, NekDouble> >      &penaltyfluxO1);
             
-            virtual void v_NumFluxforVector(
+            virtual void v_NumericalFluxO2(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
                 const Array<OneD, Array<OneD, NekDouble> >              &ufield,
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
                       Array<OneD, Array<OneD, NekDouble> >              &qflux);
-                        
-            virtual void v_WeakPenaltyforVector(
+            
+            virtual void v_WeakPenaltyO2(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const int                                          var,
                 const int                                          dir,
                 const Array<OneD, const NekDouble>                &qfield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          C11,
-                NekDouble                                          time);
+                      Array<OneD,       NekDouble>                &penaltyflux);
         }; 
     }
 }
-    
+
 #endif
+

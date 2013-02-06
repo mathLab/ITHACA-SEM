@@ -112,6 +112,8 @@ namespace Nektar
         }
                 
         m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
+        m_session->LoadParameter("Twall", m_Twall, 293.15);
+
         
         // Type of advection class to be used
         switch(m_projectionType)
@@ -240,7 +242,7 @@ namespace Nektar
             
             // For 2D/3D, define: v* = v - 2(v.n)n
             
-            Array<OneD,NekDouble> tmp(npts, 0.0);
+            Array<OneD, NekDouble> tmp(npts, 0.0);
             
             // Calculate (v.n)
             for (i = 0; i < m_expdim; ++i)
@@ -249,14 +251,11 @@ namespace Nektar
                              &Fwd[1+i][id2], 1,
                              &m_traceNormals[i][id2], 1,
                              &tmp[0], 1,
-                             &tmp[0], 1);
-                
+                             &tmp[0], 1);    
             }
+            
             // Calculate 2.0(v.n)
-            Vmath::Smul(npts,
-                        -2.0,
-                        &tmp[0],1,
-                        &tmp[0],1);
+            Vmath::Smul(npts, -2.0, &tmp[0], 1, &tmp[0], 1);
             
             // Calculate v* = v - 2.0(v.n)n
             for (i = 0; i < m_expdim; ++i)
@@ -266,7 +265,6 @@ namespace Nektar
                              &m_traceNormals[i][id2], 1,
                              &Fwd[1+i][id2], 1,
                              &Fwd[1+i][id2], 1);
-                
             }
             
             // copy boundary adjusted values into the boundary expansion
@@ -299,8 +297,8 @@ namespace Nektar
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
         
-        // Adjust the physical values of the trace to take 
-        // user defined boundaries into account
+        // Adjust the physical values of the trace to 
+        // take user defined boundaries into account
         int e, id1, id2, npts;
         
         for (e = 0; e < m_fields[0]->
@@ -311,13 +309,17 @@ namespace Nektar
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
-                m_fields[0]->GetTraceMap()->
-                    GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+                        m_fields[0]->GetTraceMap()->
+                            GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             
-            for (i = 0; i < m_expdim ; i++)
+            // Is this implementation true for Average and 
+            // Roe Riemann solvers only ?
+            for (i = 0; i < m_expdim; i++)
             {
-                Vmath::Neg(npts,&Fwd[i+1][id2], 1);
+                Vmath::Neg(npts, &Fwd[i+1][id2], 1);
             }
+            
+            // Why don't we impose the temperature?
             
             // copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nvariables; ++i)
@@ -495,211 +497,356 @@ namespace Nektar
      * \todo Complete the viscous flux vector
      */
     void CompressibleFlowSystem::GetViscousFluxVector(
-        const int i, 
         const Array<OneD, Array<OneD, NekDouble> >               &physfield,
-              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivativesO1,
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
-        int k, j, d;
+        int i, j, k;
+        int nvariables = m_fields.num_elements();
+        int nPts = m_fields[0]->GetTotPoints();
         
-        int nq                       = m_fields[0]->GetTotPoints();
-        NekDouble lambda             = -0.66666;
-        NekDouble thermalDiffusivity = 0.000019;;
-
+        // Note: the value below is referred to 20˚C
+        NekDouble thermalConductivity = 0.0257;
         
-        Array<OneD, NekDouble> mu(nq);
-        Array<OneD, NekDouble> tmp_mu(nq);
-        Array<OneD, NekDouble> tmp(nq);
+        // Stokes hypotesis
+        NekDouble lambda = -0.66666;
         
-        Array<OneD, Array<OneD, NekDouble> > velocities(m_expdim);
-        Array<OneD, Array<OneD, NekDouble> > du(m_expdim);
-        Array<OneD, Array<OneD, NekDouble> > dv(m_expdim);
-        Array<OneD, Array<OneD, NekDouble> > dw(m_expdim);
-        Array<OneD, Array<OneD, NekDouble> > dT(m_expdim);
+        // Auxiliary variables
+        Array<OneD, NekDouble > mu          (nPts, 0.0);
+        Array<OneD, NekDouble > mu2         (nPts, 0.0);
+        Array<OneD, NekDouble > divVel      (nPts, 0.0);
+        Array<OneD, NekDouble > pressure    (nPts, 0.0);
+        Array<OneD, NekDouble > temperature (nPts, 0.0);
         
-        Array<OneD, NekDouble > pressure   (nq, 0.0);
-        Array<OneD, NekDouble > temperature(nq, 0.0);
+        /*
+         if (intVariables.empty())
+         {
+         for (i = 0; i < m_fields.num_elements(); ++i)
+         {
+         intVariables.push_back(i);
+         }
+         nvariables = m_fields.num_elements();
+         }
+         else
+         {
+         nvariables = intVariables.size();
+         }
+         */
         
-        GetPressure(physfield, pressure);
-        GetTemperature(physfield, pressure, temperature);
-        GetDynamicViscosity(physfield, mu);
+        // Set up wrapper to fields data storage
+        Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
         
-        for (k = 0; k < m_expdim; ++k)
+        // Reorder storage to list time-integrated fields first
+        for(i = 0; i < nvariables; ++i)
         {
-            velocities[k] = Array<OneD, NekDouble >(nq, 0.0);
-            du[k] = Array<OneD, NekDouble >(nq, 0.0);
-            dv[k] = Array<OneD, NekDouble >(nq, 0.0);
-            dw[k] = Array<OneD, NekDouble >(nq, 0.0);
-            dT[k] = Array<OneD, NekDouble >(nq, 0.0);
+            fields[i] = m_fields[i]->UpdatePhys();
         }
         
-        // Building the velocities
-        for (k = 0; k < m_expdim; ++k)
+        // Thermodynamic related quantities
+        GetPressure(fields, pressure);
+        GetTemperature(fields, pressure, temperature);
+        GetDynamicViscosity(fields, mu);
+        
+        // Computing diagonal terms of viscous stress tensor
+        Array<OneD, Array<OneD, NekDouble> > tmp(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > Sgg(m_expdim);
+        
+        // mu2 = 2 * mu
+        Vmath::Smul(nPts, 2.0, &mu[0], 1, &mu2[0], 1);
+        
+        // Velocity divergence
+        for (j = 0; j < m_expdim; ++j)
         {
-            Vmath::Vdiv(nq, physfield[k+1], 1, 
-                        physfield[0], 1, 
-                        velocities[k], 1);
+            Vmath::Vadd(nPts, &divVel[0], 1, 
+                        &derivativesO1[j][j][0], 1, 
+                        &divVel[0], 1);
         }
-         
-        // Building the proper derivatives
-        if (m_expdim == 1)
+        
+        // Velocity divergence scaled by lambda * mu
+        Vmath::Smul(nPts, lambda, &divVel[0], 1, &divVel[0], 1);
+        Vmath::Vmul(nPts, &mu[0], 1, &divVel[0], 1, &divVel[0], 1);
+        
+        // Digonal terms of viscous stress tensor (Sxx, Syy, Szz)
+        // Sjj = 2 * mu * du_j/dx_j - (2 / 3) * mu * sum_j(du_j/dx_j)
+        for (j = 0; j < m_expdim; ++j)
         {
-            for (d = 0; d < m_expdim; ++d)
-            {
-                Vmath::Zero(nq, tmp, 1);
-                Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
-                Vmath::Vsub(nq, derivatives[d][1], 1, tmp, 1, tmp, 1);
-                for (j = 0; j < nq; ++j)
-                {
-                    du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
-                }
-            }
-        }
-        else if (m_expdim == 2)
-        {
-            for (d = 0; d < m_expdim; ++d)
-            {
-                Vmath::Zero(nq, tmp, 1);
-                Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
-                Vmath::Vsub(nq, derivatives[d][1], 1, tmp, 1, tmp, 1);
-                for (j = 0; j < nq; ++j)
-                {
-                    du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
-                }
-            }
-            for (d = 0; d < m_expdim; ++d)
-            {
-                Vmath::Zero(nq, tmp, 1);
-                Vmath::Vmul(nq, velocities[1], 1, derivatives[d][0], 1, tmp, 1);
-                Vmath::Vsub(nq, derivatives[d][2], 1, tmp, 1, tmp, 1);
-                for (j = 0; j < nq; ++j)
-                {
-                    dv[d][j] = (1.0 / physfield[0][j]) * tmp[j];
-                }
-            }
+            tmp[j] = Array<OneD, NekDouble>(nPts, 0.0);
+            Sgg[j] = Array<OneD, NekDouble>(nPts, 0.0);
             
-            // At the moment for 2D only
-            for (d = 0; d < m_expdim; ++d)
-            {
-                for (j = 0; j < nq; ++j)
-                {
-                    dT[d][j] = 1.0 / physfield[0][j] * derivatives[d][3][j] -
-                    (temperature[j]/physfield[0][j]) * derivatives[d][0][j] - 
-                    (0.5 * m_gasConstant / (m_gamma - 1)) * 
-                    (2.0 * velocities[0][j] * derivatives[d][1][j] + 
-                     ((velocities[0][j] * velocities[0][j] +
-                       velocities[1][j] * velocities[1][j]) / 
-                      physfield[0][j]) * derivatives[d][0][j]);
-                }
-            }
-        }
-         
-        else if (m_expdim == 3)
-        {
-            for (d = 0; d < m_expdim; ++d)
-            {
-                Vmath::Zero(nq, tmp, 1);
-                Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
-                Vmath::Vsub(nq, derivatives[d][1], 1, tmp, 1, tmp, 1);
-                for (j = 0; j < nq; ++j)
-                {
-                    du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
-                }
-            }
-            for (d = 0; d < m_expdim; ++d)
-            {
-                Vmath::Zero(nq, tmp, 1);
-                Vmath::Vmul(nq, velocities[1], 1, derivatives[d][0], 1, tmp, 1);
-                Vmath::Vsub(nq, derivatives[d][2], 1, tmp, 1, tmp, 1);
-                for (j = 0; j < nq; ++j)
-                {
-                    dv[d][j] = (1.0 / physfield[0][j]) * tmp[j];
-                }
-            }
-            for (d = 0; d < m_expdim; ++d)
-            {
-                Vmath::Zero(nq, tmp, 1);
-                Vmath::Vmul(nq, velocities[2], 1, derivatives[d][0], 1, tmp, 1);
-                Vmath::Vsub(nq, derivatives[d][3], 1, tmp, 1, tmp, 1);
-                for (j = 0; j < nq; ++j)
-                {
-                    dw[d][j] = (1.0 / physfield[0][j]) * tmp[j];
-                }
-            }
+            Vmath::Vmul(nPts, &mu2[0], 1, 
+                        &derivativesO1[j][j][0], 1, 
+                        &tmp[j][0], 1);
+            
+            Vmath::Vadd(nPts, &tmp[j][0], 1, &divVel[0], 1, &Sgg[j][0], 1);
         }
         
-        // Building the viscous flux vector
-        if (i == 0)
-        {
-            // Viscous flux vector for the rho equation
-            for (k = 0; k < m_expdim; ++k)
-            {
-                Vmath::Zero(nq, viscousTensor[k][i], 1);
-            }
+        // Extra diagonal terms of viscous stress tensor (Sxy, Sxz, Syz)
+        // Note: they exist for 2D and 3D problems only
+        Array<OneD, NekDouble > Sxy(nPts, 0.0);
+        Array<OneD, NekDouble > Sxz(nPts, 0.0);
+        Array<OneD, NekDouble > Syz(nPts, 0.0);
+        
+        if (m_expdim == 2)
+        {            
+            // Sxy = (du/dy + dv/dx)
+            Vmath::Vadd(nPts, &derivativesO1[0][1][0], 1,
+                        &derivativesO1[1][0][0], 1,
+                        &Sxy[0], 1);
         }
+        else if (m_expdim == 3)
+        {
+            // Sxy = (du/dy + dv/dx)
+            Vmath::Vadd(nPts, &derivativesO1[0][1][0], 1,
+                        &derivativesO1[1][0][0], 1,
+                        &Sxy[0], 1);
+            
+            // Sxz = (du/dz + dw/dx)
+            Vmath::Vadd(nPts, &derivativesO1[0][2][0], 1,
+                        &derivativesO1[2][0][0], 1,
+                        &Sxz[0], 1);
+            
+            // Syz = (dv/dz + dw/dy)
+            Vmath::Vadd(nPts, &derivativesO1[1][2][0], 1,
+                        &derivativesO1[2][1][0], 1,
+                        &Syz[0], 1);
+        }
+        
+        // Energy-related terms
+        Array<OneD, NekDouble > STx(nPts, 0.0);
+        Array<OneD, NekDouble > STy(nPts, 0.0);
+        Array<OneD, NekDouble > STz(nPts, 0.0);
         
         if (m_expdim == 1)
         {
-            // to be completed
+            Array<OneD, NekDouble > tmp1(nPts, 0.0);
+            
+            // u * Sxx
+            Vmath::Vmul(nPts, &physfield[0][0], 1,
+                        &Sgg[0][0], 1, &STx[0], 1);
+            
+            // k * dT/dx
+            Vmath::Smul(nPts, thermalConductivity, 
+                        &derivativesO1[0][2][0], 1, 
+                        &tmp1[0], 1);
+            
+            // STx = u * Sxx + (K / mu) * dT/dx
+            Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
         }
         else if (m_expdim == 2)
         {
-            if (i == 1)
-            {
-                for (j = 0; j < nq; ++j)
-                {
-                    viscousTensor[0][i][j] = 2.0 * mu[j] * du[0][j] 
-                                            + lambda * (du[0][j] + 
-                                                        dv[0][j]);
-                    
-                    viscousTensor[1][i][j] = dv[0][j] + du[1][j];
-                }
-            }
-            else if (i == 2)
-            {
-                for (j = 0; j < nq; ++j)
-                {
-                    viscousTensor[0][i][j] = dv[0][j] + du[1][j];
-                
-                    viscousTensor[1][i][j] = 2.0 * mu[j] * dv[1][j] 
-                                            + lambda * (du[0][j] + 
-                                                        dv[0][j]);
-                }
-            }
-            else if (i == 3)
-            {
-                for (j = 0; j < nq; ++j)
-                {
-                    viscousTensor[0][i][j] = 
-                        velocities[0][j] * viscousTensor[0][0][j] + 
-                        velocities[1][j] * viscousTensor[1][1][j] + 
-                        (thermalDiffusivity / mu[j]) * (dT[0][j]);
-                
-                    viscousTensor[1][i][j] = 
-                        velocities[1][j] * viscousTensor[1][2][j] + 
-                        velocities[0][j] * viscousTensor[1][1][j] + 
-                        (thermalDiffusivity / mu[j]) * (dT[1][j]);
-                }
-            }
+            Array<OneD, NekDouble > tmp1(nPts, 0.0);
+            Array<OneD, NekDouble > tmp2(nPts, 0.0);
+            
+            // Computation of STx
+            
+            // u * Sxx
+            Vmath::Vmul(nPts, &physfield[0][0], 1,
+                        &Sgg[0][0], 1, &STx[0], 1);
+            
+            // v * Sxy
+            Vmath::Vmul(nPts, &physfield[1][0], 1,
+                        &Sxy[0], 1, &tmp1[0], 1);
+            
+            // k * dT/dx
+            Vmath::Smul(nPts, thermalConductivity, 
+                        &derivativesO1[0][2][0], 1, 
+                        &tmp2[0], 1);
+            
+            // STx = u * Sxx + v * Sxy + (K / mu) * dT/dx
+            Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
+            Vmath::Vadd(nPts, &STx[0], 1, &tmp2[0], 1, &STx[0], 1);
+            
+            // Computation of STy
+            
+            // Re-initialise temporary arrays
+            Vmath::Zero(nPts, &tmp1[0], 1);
+            Vmath::Zero(nPts, &tmp2[0], 1);
+            
+            // v * Syy
+            Vmath::Vmul(nPts, &physfield[1][0], 1,
+                        &Sgg[1][0], 1, &STy[0], 1);
+            
+            // u * Sxy
+            Vmath::Vmul(nPts, &physfield[0][0], 1,
+                        &Sxy[0], 1, &tmp1[0], 1);
+                        
+            // k * dT/dy
+            Vmath::Smul(nPts, thermalConductivity, 
+                        &derivativesO1[1][2][0], 1, 
+                        &tmp2[0], 1);
+            
+            // STy = v * Syy + u * Sxy + (K / mu) * dT/dy
+            Vmath::Vadd(nPts, &STy[0], 1, &tmp1[0], 1, &STy[0], 1);
+            Vmath::Vadd(nPts, &STy[0], 1, &tmp2[0], 1, &STy[0], 1);
         }
         else if (m_expdim == 3)
         {
-            if (i == 1)
-            {
-                // to be completed
-            }
-            else if (i == 2)
-            {
-                // to be completed
-            }
-            else if (i == 3)
-            {
-                // to be completed
-            }
+            Array<OneD, NekDouble > tmp1(nPts, 0.0);
+            Array<OneD, NekDouble > tmp2(nPts, 0.0);
+            Array<OneD, NekDouble > tmp3(nPts, 0.0);
+            
+            // Computation of STx
+            
+            // u * Sxx
+            Vmath::Vmul(nPts, &physfield[0][0], 1,
+                        &Sgg[0][0], 1, &STx[0], 1);
+            
+            // v * Sxy
+            Vmath::Vmul(nPts, &physfield[1][0], 1,
+                        &Sxy[0], 1, &tmp1[0], 1);
+            
+            // v * Sxy
+            Vmath::Vmul(nPts, &physfield[2][0], 1,
+                        &Sxz[0], 1, &tmp2[0], 1);
+            
+            // k * dT/dx
+            Vmath::Smul(nPts, thermalConductivity, 
+                        &derivativesO1[0][2][0], 1, 
+                        &tmp3[0], 1);
+            
+            // STx = u * Sxx + v * Sxy + w * Sxz + (K / mu) * dT/dx
+            Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
+            Vmath::Vadd(nPts, &STx[0], 1, &tmp2[0], 1, &STx[0], 1);
+            Vmath::Vadd(nPts, &STx[0], 1, &tmp3[0], 1, &STx[0], 1);
+            
+            // Computation of STy
+            
+            // Re-initialise temporary arrays
+            Vmath::Zero(nPts, &tmp1[0], 1);
+            Vmath::Zero(nPts, &tmp2[0], 1);
+            Vmath::Zero(nPts, &tmp3[0], 1);
+            
+            // v * Syy
+            Vmath::Vmul(nPts, &physfield[1][0], 1,
+                        &Sgg[1][0], 1, &STy[0], 1);
+            
+            // u * Sxy
+            Vmath::Vmul(nPts, &physfield[0][0], 1,
+                        &Sxy[0], 1, &tmp1[0], 1);
+            
+            // w * Syz
+            Vmath::Vmul(nPts, &physfield[2][0], 1,
+                        &Syz[0], 1, &tmp2[0], 1);
+                        
+            // k * dT/dy
+            Vmath::Smul(nPts, thermalConductivity, 
+                        &derivativesO1[1][2][0], 1, 
+                        &tmp3[0], 1);
+            
+            // STy = v * Syy + u * Sxy + w * Syz + (K / mu) * dT/dy
+            Vmath::Vadd(nPts, &STy[0], 1, &tmp1[0], 1, &STy[0], 1);
+            Vmath::Vadd(nPts, &STy[0], 1, &tmp2[0], 1, &STy[0], 1);
+            Vmath::Vadd(nPts, &STy[0], 1, &tmp3[0], 1, &STy[0], 1);
+            
+            // Computation of STz
+            
+            // Re-initialise temporary arrays
+            Vmath::Zero(nPts, &tmp1[0], 1);
+            Vmath::Zero(nPts, &tmp2[0], 1);
+            Vmath::Zero(nPts, &tmp3[0], 1);
+            
+            // w * Szz
+            Vmath::Vmul(nPts, &physfield[2][0], 1,
+                        &Sgg[2][0], 1, &STz[0], 1);
+            
+            // u * Sxz
+            Vmath::Vmul(nPts, &physfield[0][0], 1,
+                        &Sxz[0], 1, &tmp1[0], 1);
+            
+            // v * Syz
+            Vmath::Vmul(nPts, &physfield[1][0], 1,
+                        &Syz[0], 1, &tmp2[0], 1);
+                        
+            // k * dT/dz
+            Vmath::Smul(nPts, thermalConductivity, 
+                        &derivativesO1[2][2][0], 1, 
+                        &tmp3[0], 1);
+            
+            // STy = w * Szz + u * Sxz + v * Syz + (K / mu) * dT/dz
+            Vmath::Vadd(nPts, &STz[0], 1, &tmp1[0], 1, &STz[0], 1);
+            Vmath::Vadd(nPts, &STz[0], 1, &tmp2[0], 1, &STz[0], 1);
+            Vmath::Vadd(nPts, &STz[0], 1, &tmp3[0], 1, &STz[0], 1);
         }
-        else
+        
+        switch(m_expdim)
         {
-            ASSERTL0(false, "Invalid vector index.");
+            case 1:
+            {
+                // f_11v = f_rho = 0
+                Vmath::Zero(nPts, &viscousTensor[0][0][0], 1);
+                
+                // f_21v = f_rhou 
+                Vmath::Vcopy(nPts, &Sgg[0][0], 1, &viscousTensor[0][1][0], 1);
+                
+                // f_31v = f_E
+                Vmath::Vcopy(nPts, &STx[0], 1, &viscousTensor[0][2][0], 1);
+                break;
+            }
+            case 2:
+            {
+                // f_11v = f_rho1 = 0
+                Vmath::Zero(nPts, &viscousTensor[0][0][0], 1);
+                // f_12v = f_rho2 = 0
+                Vmath::Zero(nPts, &viscousTensor[1][0][0], 1);
+                
+                // f_21v = f_rhou1
+                Vmath::Vcopy(nPts, &Sgg[0][0], 1, &viscousTensor[0][1][0], 1);
+                // f_22v = f_rhou2
+                Vmath::Vcopy(nPts, &Sxy[0],    1, &viscousTensor[1][1][0], 1);
+                
+                // f_31v = f_rhov1
+                Vmath::Vcopy(nPts, &Sxy[0],    1, &viscousTensor[0][2][0], 1);
+                // f_32v = f_rhov2
+                Vmath::Vcopy(nPts, &Sgg[1][0], 1, &viscousTensor[1][2][0], 1);
+                
+                // f_41v = f_E1
+                Vmath::Vcopy(nPts, &STx[0], 1, &viscousTensor[0][3][0], 1);
+                // f_42v = f_E2
+                Vmath::Vcopy(nPts, &STy[0], 1, &viscousTensor[1][3][0], 1);
+                break;
+            }
+            case 3:
+            {
+                // f_11v = f_rho1 = 0
+                Vmath::Zero(nPts, &viscousTensor[0][0][0], 1);
+                // f_12v = f_rho2 = 0
+                Vmath::Zero(nPts, &viscousTensor[1][0][0], 1);
+                // f_13v = f_rho3 = 0
+                Vmath::Zero(nPts, &viscousTensor[2][0][0], 1);
+                
+                // f_21v = f_rhou1
+                Vmath::Vcopy(nPts, &Sgg[0][0], 1, &viscousTensor[0][1][0], 1);
+                // f_22v = f_rhou2
+                Vmath::Vcopy(nPts, &Sxy[0],    1, &viscousTensor[1][1][0], 1);
+                // f_23v = f_rhou3
+                Vmath::Vcopy(nPts, &Sxz[0],    1, &viscousTensor[2][1][0], 1);
+                
+                // f_31v = f_rhov1
+                Vmath::Vcopy(nPts, &Sxy[0],    1, &viscousTensor[0][2][0], 1);
+                // f_32v = f_rhov2
+                Vmath::Vcopy(nPts, &Sgg[1][0], 1, &viscousTensor[1][2][0], 1);
+                // f_33v = f_rhov3
+                Vmath::Vcopy(nPts, &Syz[0],    1, &viscousTensor[2][2][0], 1);
+                
+                // f_31v = f_rhow1
+                Vmath::Vcopy(nPts, &Sxz[0],    1, &viscousTensor[0][3][0], 1);
+                // f_32v = f_rhow2
+                Vmath::Vcopy(nPts, &Syz[0],    1, &viscousTensor[1][3][0], 1);
+                // f_33v = f_rhow3
+                Vmath::Vcopy(nPts, &Sgg[2][0], 1, &viscousTensor[2][3][0], 1);
+                
+                // f_41v = f_E1
+                Vmath::Vcopy(nPts, &STx[0], 1, &viscousTensor[0][4][0], 1);
+                // f_42v = f_E2
+                Vmath::Vcopy(nPts, &STy[0], 1, &viscousTensor[1][4][0], 1);
+                // f_43v = f_E3
+                Vmath::Vcopy(nPts, &STz[0], 1, &viscousTensor[2][4][0], 1);
+                break;
+            }
+            default:
+            {
+                ASSERTL0(false, "Illegal expansion dimension");
+            }
         }
     }
 

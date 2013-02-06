@@ -1,4 +1,3 @@
-
 SET(MeshConvertHeaders 
     Module.h
     InputGmsh.h
@@ -11,6 +10,7 @@ SET(MeshConvertHeaders
     ProcessBL.h
     ProcessJac.h
     ProcessSpherigon.h
+    ProcessTetSplit.h
     MeshElements.h
 )
 
@@ -26,6 +26,7 @@ SET(MeshConvertSources
     ProcessBL.cpp
     ProcessJac.cpp
     ProcessSpherigon.cpp
+    ProcessTetSplit.cpp
     MeshConvert.cpp
     MeshElements.cpp)
 

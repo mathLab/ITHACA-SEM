@@ -260,11 +260,6 @@ namespace Nektar
             /// Generate a SpatialDomains::SegGeom object for this edge.
             SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
             {
-                if (m_geom)
-                {
-                    return m_geom;
-                }
-                
                 // Create edge vertices.
                 SpatialDomains::VertexComponentSharedPtr p[2];
                 p[0] = n1->GetGeom(coordDim);
@@ -498,11 +493,6 @@ namespace Nektar
             /// SpatialDomains::QuadGeom for this element.
             SpatialDomains::Geometry2DSharedPtr GetGeom(int coordDim)
             {
-                if (m_geom)
-                {
-                    return m_geom;
-                }
-                
                 int nEdge = edgeList.size();
                 
                 SpatialDomains::SegGeomSharedPtr edges[4];

@@ -303,7 +303,8 @@ namespace Nektar
             // Get hold of the quadrature weights
             const Array<OneD, const NekDouble>& w0 = tbasis[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = tbasis[1]->GetW();
-            const Array<OneD, const NekDouble>& w2 = tbasis[2]->GetW();
+            /// @todo Is this a bug?
+            //const Array<OneD, const NekDouble>& w2 = tbasis[2]->GetW();
 
             // Multiply the jacobian with the quadrature weights
             switch(shape)

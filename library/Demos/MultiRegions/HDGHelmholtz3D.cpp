@@ -7,12 +7,11 @@
 #include <MultiRegions/DisContField3D.h>
 #include <SpatialDomains/MeshGraph3D.h>
 
-#define TIMING
-
+//#define TIMING
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
- fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps); \
+ fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/(double)CLOCKS_PER_SEC); \
  st = clock();
 #else
 #define Timing(s) \
@@ -34,7 +33,6 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     StdRegions::ConstFactorMap factors;
-    double   st, cps = (double)CLOCKS_PER_SEC;
 
     if(argc != 2)
     {
@@ -44,7 +42,8 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    SpatialDomains::MeshGraphSharedPtr graph3D = MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
+    SpatialDomains::MeshGraphSharedPtr graph3D = 
+        MemoryManager<SpatialDomains::MeshGraph3D>::AllocateSharedPtr(vSession);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -55,9 +54,13 @@ int main(int argc, char *argv[])
     LibUtilities::BasisKey bkey0
                             = expansions.begin()->second->m_basisKeyVector[0];
 
-    cout << "Solving 3D Helmholtz:"  << endl;
-    cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
-    cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
+    if (vComm->GetRank() == 0)
+    {
+        cout << "Solving 3D Helmholtz:"  << endl;
+        cout << "         Lambda     : " << factors[StdRegions::eFactorLambda] << endl;
+        cout << "         No. modes  : " << bkey0.GetNumModes() << endl;
+        cout << endl;
+    }
     //----------------------------------------------
    
     //----------------------------------------------
@@ -131,7 +134,12 @@ int main(int argc, char *argv[])
     
     //-----------------------------------------------
     // Write solution to file
-    string   out = meshfile.substr(0, meshfile.find_last_of(".")) + ".fld";
+    string out = vSession->GetSessionName();
+    if (vComm->GetSize() > 1)
+    {
+        out += "_P" + boost::lexical_cast<string>(vComm->GetRank());
+    }
+    out += ".fld";
     std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
                                                 = Exp->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
@@ -148,14 +156,13 @@ int main(int argc, char *argv[])
     // See if there is an exact solution, if so 
     // evaluate and plot errors
     LibUtilities::EquationSharedPtr ex_sol =
-                            vSession->GetFunction("ExactSolution", 0);
-
+        vSession->GetFunction("ExactSolution", 0);
+    
     if(ex_sol)
     {
         //----------------------------------------------
         // evaluate exact solution 
-
-       ex_sol->Evaluate(xc0, xc1, xc2,  fce);
+        ex_sol->Evaluate(xc0, xc1, xc2,  fce);
 
         //----------------------------------------------
 
@@ -164,15 +171,25 @@ int main(int argc, char *argv[])
         Fce->SetPhys(fce);
         Fce->SetPhysState(true);
 
+        NekDouble vLinfError = Exp->Linf(Fce->GetPhys());
+        NekDouble vL2Error   = Exp->L2  (Fce->GetPhys());
+        NekDouble vH1Error   = Exp->H1  (Fce->GetPhys());
 
-        cout << "L infinity error: " << Exp->Linf(Fce->GetPhys()) << endl;
-        cout << "L 2 error:        " << Exp->L2  (Fce->GetPhys()) << endl;
-        cout << "H 1 error  :       " << Exp->H1  (Fce->GetPhys()) << endl;
+        if (vComm->GetRank() == 0)
+        {
+            cout << "L infinity error: " << vLinfError << endl;
+            cout << "L 2 error       : " << vL2Error   << endl;
+            cout << "H 1 error       : " << vH1Error   << endl;
+        }
         //--------------------------------------------        
     }
     
     Timing("Output ..");
+
     //----------------------------------------------        
+    
+    vSession->Finalise();
+    
     return 0;
 }
 

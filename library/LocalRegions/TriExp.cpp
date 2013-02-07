@@ -46,11 +46,11 @@ namespace Nektar
         TriExp::TriExp(const LibUtilities::BasisKey &Ba,
                        const LibUtilities::BasisKey &Bb,
                        const SpatialDomains::TriGeomSharedPtr &geom):
-               StdExpansion  (StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
-               Expansion     (),
-               StdExpansion2D(StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
-               Expansion2D   (),
-               StdTriExp(Ba,Bb),
+            StdExpansion  (StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
+            StdExpansion2D(StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
+            StdTriExp(Ba,Bb),
+            Expansion     (),
+            Expansion2D   (),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(
@@ -65,10 +65,10 @@ namespace Nektar
 
         TriExp::TriExp(const TriExp &T):
             StdExpansion(T),
-            Expansion(T),
             StdExpansion2D(T),
+            StdTriExp(T),
+            Expansion(T),
             Expansion2D(T),
-            StdRegions::StdTriExp(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
@@ -204,10 +204,10 @@ namespace Nektar
             }
         }
 
-
-        void TriExp::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble> & inarray,
-                                          const Array<OneD, const Array<OneD, NekDouble> >& direction,
-                                          Array<OneD,NekDouble> &out)
+        void TriExp::v_PhysDirectionalDeriv(
+            const Array<OneD, const NekDouble> &inarray,
+            const Array<OneD, const NekDouble> &direction,
+                  Array<OneD,       NekDouble> &out)
         {
             if(! out.num_elements())
             {
@@ -238,7 +238,7 @@ namespace Nektar
                     tangmat[i] = Array<OneD, NekDouble>(nqtot,0.0);
                     for (int k=0; k<(m_geom->GetCoordim()); ++k)
                     {
-                        Vmath::Vvtvp(nqtot,&gmat[2*k+i][0],1,&direction[k][0],1,&tangmat[i][0],1,&tangmat[i][0],1);
+                        Vmath::Vvtvp(nqtot,&gmat[2*k+i][0],1,&direction[k*nqtot],1,&tangmat[i][0],1,&tangmat[i][0],1);
                     }
                 }
 
@@ -953,7 +953,12 @@ namespace Nektar
                     for (unsigned int j = 0; j < vCoordDim; ++j)
                     {
                         outfile << coordVert[j];
-                        outfile << (j < vCoordDim - 1 ? ", " : "");
+                        outfile << (j < 2 ? ", " : "");
+                    }
+                    for (unsigned int j = vCoordDim; j < 3; ++j)
+                    {
+                        outfile << " 0";
+                        outfile << (j < 2 ? ", " : "");
                     }
                     outfile << (i < nVertices - 1 ? "," : "") << endl;
                 }
@@ -1131,16 +1136,12 @@ namespace Nektar
         }
 
 
-        void TriExp::v_ExtractDataToCoeffs(const std::vector<NekDouble> &data,
-                                            const int offset,
-                                            const std::vector<unsigned int > &nummodes,
-                                            const int nmode_offset,
-                                            Array<OneD, NekDouble> &coeffs)
+        void TriExp::v_ExtractDataToCoeffs(const NekDouble *data,
+                                           const std::vector<unsigned int > &nummodes,  const int mode_offset,   NekDouble * coeffs)
         {
-            int data_order0 = nummodes[nmode_offset];
+            int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
-
-            int data_order1 = nummodes[nmode_offset+1];
+            int data_order1 = nummodes[mode_offset+1];
             int order1      = m_base[1]->GetNumModes();
             int fillorder1  = min(order1,data_order1);
 
@@ -1158,7 +1159,7 @@ namespace Nektar
                     Vmath::Zero(m_ncoeffs,coeffs,1);
                     for(i = 0; i < fillorder0; ++i)
                     {
-                        Vmath::Vcopy(fillorder1-i,&data[offset+cnt],1,&coeffs[cnt1],1);
+                        Vmath::Vcopy(fillorder1-i,&data[cnt],1,&coeffs[cnt1],1);
                         cnt  += data_order1-i;
                         cnt1 += order1-i;
                     }
@@ -1290,7 +1291,6 @@ namespace Nektar
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
                         int dir;
-                        Array<OneD, NekDouble> &varcoeffs = NullNekDouble1DArray;
                         switch(mkey.GetMatrixType())
                         {
                             case StdRegions::eWeakDeriv0:

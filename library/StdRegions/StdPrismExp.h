@@ -78,8 +78,8 @@ namespace Nektar
             STD_REGIONS_EXPORT StdPrismExp(const LibUtilities::BasisKey &Ba, 
                                            const LibUtilities::BasisKey &Bb, 
                                            const LibUtilities::BasisKey &Bc,
-                                           double *coeffs, 
-                                           double *phys);
+                                           NekDouble *coeffs, 
+                                           NekDouble *phys);
 
             STD_REGIONS_EXPORT StdPrismExp(const StdPrismExp &T);
 

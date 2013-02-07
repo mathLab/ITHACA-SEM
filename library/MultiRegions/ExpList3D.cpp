@@ -190,7 +190,8 @@ namespace Nektar
                     LibUtilities::BasisKey TetBc
                                         = expIt->second->m_basisKeyVector[2];
 
-                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange ||
+                       TetBa.GetBasisType() == LibUtilities::eGauss_Lagrange)
                     {
                       ASSERTL0(false,"LocalRegions::NodalTetExp is not "
                                      "implemented yet");
@@ -309,7 +310,8 @@ namespace Nektar
                     LibUtilities::BasisKey TetBc
                                         = exp->m_basisKeyVector[2];
 
-                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange ||
+                       TetBa.GetBasisType() == LibUtilities::eGauss_Lagrange)
                     {
                       ASSERTL0(false,"LocalRegions::NodalTetExp is not "
                                      "implemented yet");
@@ -445,7 +447,6 @@ namespace Nektar
         void ExpList3D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j,k;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
             int nquad2 = (*m_exp)[expansion]->GetNumPoints(2);

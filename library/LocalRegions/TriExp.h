@@ -78,20 +78,19 @@ namespace Nektar
             // Differentiation Methods
             //----------------------------
             LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD, NekDouble> &out_d0,
-                                  Array<OneD, NekDouble> &out_d1,
-                                  Array<OneD, NekDouble> &out_d2
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &out_d0,
+                      Array<OneD,       NekDouble> &out_d1,
+                      Array<OneD,       NekDouble> &out_d2
                                                       = NullNekDouble1DArray);
             LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(
-                            const int dir,
-                            const Array<OneD, const NekDouble>& inarray,
-                                  Array<OneD, NekDouble> &outarray);
+                const int dir,
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_PhysDirectionalDeriv(
-                            const Array<OneD, const NekDouble> &inarray,
-                            const Array<OneD, const Array<OneD, NekDouble> >
-                                                                    &direction,
-                                  Array<OneD, NekDouble> &out);
+                const Array<OneD, const NekDouble> &inarray,
+                const Array<OneD, const NekDouble> &direction,
+                      Array<OneD,       NekDouble> &out);
 
             //---------------------------------------
             // Transforms
@@ -178,11 +177,10 @@ namespace Nektar
                 SpatialDomains::Geometry2DSharedPtr& v_GetGeom2D() const;
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
-                            const std::vector<NekDouble> &data,
-                            const int offset,
+                            const NekDouble *data,
                             const std::vector<unsigned int > &nummodes,
-                            const int nmode_offset,
-                                  Array<OneD, NekDouble> &coeffs);
+                            const int mode_offset,
+                            NekDouble *coeffs);
             LOCAL_REGIONS_EXPORT virtual
                 StdRegions::Orientation v_GetEorient(int edge);
             LOCAL_REGIONS_EXPORT virtual

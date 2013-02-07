@@ -315,7 +315,6 @@ namespace Nektar
             }
 	
             int i;
-            StdRegions::ExpansionType shape = m_coords[0]->DetExpansionType();
 
             NekDouble fac;
             // Regular geometry case

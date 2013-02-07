@@ -1,5 +1,6 @@
-SET(NEKTAR_SOLVER_COMPRESSIBLE_FLOW ON CACHE BOOL
-    "Build the Compressible Flow Solver.")
+CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_COMPRESSIBLE_FLOW
+    "Build the Compressible Flow Solver." ON
+    "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     SET(CompressibleFlowSolverSource 
@@ -10,14 +11,26 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/NavierStokesCFE.cpp
        ./RiemannSolvers/CompressibleSolver.cpp
        ./RiemannSolvers/AverageSolver.cpp
-       ./RiemannSolvers/ExactSolver.cpp)
+       ./RiemannSolvers/AUSM0Solver.cpp
+       ./RiemannSolvers/AUSM1Solver.cpp
+       ./RiemannSolvers/AUSM2Solver.cpp
+       ./RiemannSolvers/AUSM3Solver.cpp
+       ./RiemannSolvers/ExactSolver.cpp
+       ./RiemannSolvers/LaxFriedrichsSolver.cpp
+       ./RiemannSolvers/HLLSolver.cpp
+       ./RiemannSolvers/HLLCSolver.cpp
+       )
 
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver solvers 
 			${CompressibleFlowSolverSource})
 
+    ADD_NEKTAR_TEST(CylinderSubsonic_FRDG_SEM)
     ADD_NEKTAR_TEST(CylinderSubsonicMix)
     ADD_NEKTAR_TEST(CylinderSubsonic_P3)
     ADD_NEKTAR_TEST(CylinderSubsonic_P8)
+    ADD_NEKTAR_TEST(IsentropicVortex_FRDG_SEM)
+    ADD_NEKTAR_TEST(IsentropicVortex_FRSD_SEM)
+    ADD_NEKTAR_TEST(IsentropicVortex_FRHU_SEM)
     ADD_NEKTAR_TEST(IsentropicVortex16_P3)
     ADD_NEKTAR_TEST(IsentropicVortex16_P8)
     ADD_NEKTAR_TEST(RinglebFlow_P3)

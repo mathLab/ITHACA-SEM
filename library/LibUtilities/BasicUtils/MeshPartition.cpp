@@ -241,7 +241,6 @@ namespace Nektar
                 ASSERTL0(y, "Failed to get attribute.");
                 MeshEntity c;
                 c.id = y->IntValue();
-                ASSERTL0(c.id == i++, "Composite IDs not sequential.");
                 std::string vSeqStr = x->FirstChild()->ToText()->Value();
                 c.type = vSeqStr[0];
                 std::string::size_type indxBeg = vSeqStr.find_first_of('[') + 1;
@@ -372,7 +371,7 @@ namespace Nektar
                 {
                     pGraph[*vertit].partition = part[i];
                     pGraph[*vertit].partid = boost::num_vertices(pLocalPartition);
-                    BoostVertex v = boost::add_vertex(i, pLocalPartition);
+                    boost::add_vertex(i, pLocalPartition);
                 }
             }
         }

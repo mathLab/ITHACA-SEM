@@ -945,7 +945,7 @@ namespace Vmath
                              const Nektar::NekDouble   *x, const int incx,
                              const int *y, const int incy);
 
-
+/*
     // \brief copy one int vector to another
     void Vcopy(int n, const int *x, const int incx, int *y,
                              const int incy)
@@ -1002,6 +1002,32 @@ namespace Vmath
             }
         }
     }
+*/
+
+    // \brief copy one vector to another
+    template<typename T>
+    void Vcopy(int n, const T *x, const int incx,
+                            T *y, const int incy)
+    {
+        if( incx ==1 && incy == 1)
+        {
+            memcpy(y,x,n*sizeof(T));
+        }
+        else
+        {
+            while( n-- )
+            {
+                *y = *x;
+                x += incx;
+                y += incy;
+            }
+        }
+    }
+
+    template  LIB_UTILITIES_EXPORT void  Vcopy( int n, const int *x, const int incx, int *y, const int incy);
+    template  LIB_UTILITIES_EXPORT void  Vcopy( int n, const unsigned int *x, const int incx, unsigned int *y, const int incy);
+    template  LIB_UTILITIES_EXPORT void  Vcopy( int n, const Nektar::NekDouble *x, const int incx, Nektar::NekDouble *y, const int incy);
+
 
     // \brief reverse the ordering of  vector to another
     template<class T>  void  Reverse( int n, const T *x, const int incx, T *y, const int incy)

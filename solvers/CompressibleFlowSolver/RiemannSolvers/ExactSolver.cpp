@@ -72,9 +72,9 @@ namespace Nektar
      *
      */
     void ExactSolver::v_PointSolve(
-        double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
-        double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
-        double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
+        NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL,
+        NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
+        NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef)
     {
         // Exact Riemann Solver (GOTTLIEB AND GROTH - 1987; TORO - 1998) 
         NekDouble gamma = m_params["gamma"]();
@@ -86,12 +86,12 @@ namespace Nektar
         NekDouble f4 = (gamma + 1.0) / 4.0;
 
         // Right and left variables
-        NekDouble uL = rhouL/rhoL;
-        NekDouble vL = rhovL/rhoL;
-        NekDouble wL = rhowL/rhoL;
-        NekDouble uR = rhouR/rhoR;
-        NekDouble vR = rhovR/rhoR;
-        NekDouble wR = rhowR/rhoR;
+        NekDouble uL = rhouL / rhoL;
+        NekDouble vL = rhovL / rhoL;
+        NekDouble wL = rhowL / rhoL;
+        NekDouble uR = rhouR / rhoR;
+        NekDouble vR = rhovR / rhoR;
+        NekDouble wR = rhowR / rhoR;
         
         NekDouble pL = (gamma - 1.0) * 
                        (EL - 0.5 * (rhouL*uL + rhovL*vL + rhowL*wL));

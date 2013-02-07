@@ -41,9 +41,6 @@ namespace Nektar
 {
     namespace StdRegions
     {
-    
-        static int s_matrixcnt = 99;
-
         StdMatrixKey::StdMatrixKey(const MatrixType matrixType,
                                    const ExpansionType expansionType,
                                    const StdExpansion &stdExpansion,

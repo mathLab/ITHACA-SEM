@@ -38,7 +38,9 @@
 
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
-#include <SolverUtils/Advection.h>
+#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/Diffusion/Diffusion.h>
+
 
 #define EPSILON 0.000001
 
@@ -86,14 +88,16 @@ namespace Nektar
       
     protected:
         SolverUtils::RiemannSolverSharedPtr m_riemannSolver;
+        SolverUtils::RiemannSolverSharedPtr m_riemannSolverLDG;
         SolverUtils::AdvectionSharedPtr     m_advection;
+        SolverUtils::DiffusionSharedPtr     m_diffusion;
         Array<OneD, NekDouble>              m_velLoc;
         NekDouble                           m_gamma;
-        NekDouble                           m_rho0;
-        NekDouble                           m_rhou0;
-        NekDouble                           m_rhov0;
-        NekDouble                           m_rhow0;
-        NekDouble                           m_E0;
+        NekDouble                           m_pInf;
+        NekDouble                           m_rhoInf;
+        NekDouble                           m_uInf;
+        NekDouble                           m_vInf;
+        NekDouble                           m_wInf;
         NekDouble                           m_gasConstant;
       
         CompressibleFlowSystem(
@@ -108,7 +112,16 @@ namespace Nektar
             const int                                         i, 
             const Array<OneD, Array<OneD, NekDouble> >       &physfield, 
                   Array<OneD, Array<OneD, NekDouble> >       &flux);
+        void GetViscousFluxVector(
+            const int                                           i,
+            const Array<OneD, Array<OneD, NekDouble> >         &physfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
         void WallBoundary(
+            int                                               bcRegion,
+            int                                               cnt,
+            Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void WallBoundaryViscous(
             int                                               bcRegion,
             int                                               cnt,
             Array<OneD, Array<OneD, NekDouble> >             &physarray);
@@ -116,32 +129,30 @@ namespace Nektar
             int                                               bcRegion,
             int                                               cnt,
             Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void InflowCFE(
-            int                                               bcRegion,
-            int                                               cnt,
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
-        void OutflowCFE(
-            int                                               bcRegion,
-            int                                               cnt,
-            Array<OneD, Array<OneD, NekDouble> >             &physarray);
         void GetVelocityVector(
-            const Array<OneD, Array<OneD,       NekDouble> > &physfield,
-                  Array<OneD, Array<OneD,       NekDouble> > &velocity);
+            const Array<OneD,       Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,       Array<OneD,       NekDouble> >&velocity);
         void GetSoundSpeed(
-            const Array<OneD, Array<OneD,       NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &soundspeed);
+            const Array<OneD,       Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble>  &pressure,
+                  Array<OneD,                         NekDouble>  &soundspeed);
         void GetMach(
-                  Array<OneD, Array<OneD,       NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &soundspeed,
-                  Array<OneD,                   NekDouble>   &mach);
+                  Array<OneD,       Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble>  &soundspeed,
+                  Array<OneD,                         NekDouble>  &mach);
         void GetTemperature(
-                  Array<OneD, Array<OneD,       NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure,
-                  Array<OneD,                   NekDouble>   &temperature);
+            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble>  &pressure,
+                  Array<OneD,                         NekDouble>  &temperature);
+        void GetPressure(
+            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble>  &pressure);
+        void GetDynamicViscosity(
+            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble  >&mu);
         void GetStdVelocity(
-            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                  Array<OneD,                   NekDouble>   &stdV);
+            const Array<OneD, const Array<OneD,       NekDouble> >&inarray,
+                  Array<OneD,                         NekDouble>  &stdV);
       
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
@@ -168,9 +179,7 @@ namespace Nektar
         }
       
     private:
-        void GetPressure(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                  Array<OneD,                   NekDouble>   &pressure);
+
     };
 }
 #endif

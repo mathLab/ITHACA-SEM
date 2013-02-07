@@ -71,9 +71,9 @@ namespace Nektar
             struct MeshVertex
             {
                 int id;
-                double x;
-                double y;
-                double z;
+                NekDouble x;
+                NekDouble y;
+                NekDouble z;
             };
 
             struct MeshEdge

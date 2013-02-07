@@ -368,13 +368,13 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &numfluxY);
             
             SOLVER_UTILS_EXPORT inline void NumFluxforScalar(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
             
             SOLVER_UTILS_EXPORT inline void NumFluxforVector(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                Array<OneD, Array<OneD, NekDouble> >  &qflux);
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                Array<OneD, Array<OneD, NekDouble> >               &qflux);
             
             SOLVER_UTILS_EXPORT inline void SetModifiedBasis(
                 const bool modbasis);
@@ -434,6 +434,9 @@ namespace Nektar
             /// Flag to determine if dealiasing is used for homogeneous
             /// simulations.
             bool                                        m_dealiasing;
+            /// Flag to determine if dealisising is usde for the
+            /// Spectral/hp element discretisation.
+            bool                                        m_specHP_dealiasing;
             /// Type of projection; e.g continuous or discontinuous.
             enum MultiRegions::ProjectionType           m_projectionType;
             /// Array holding trace normals for DG simulations in the forwards
@@ -570,13 +573,13 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &numfluxY);
             
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
             
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                Array<OneD, Array<OneD, NekDouble > >  &qflux);
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                Array<OneD, Array<OneD, NekDouble > >              &qflux);
         };
         
         
@@ -865,17 +868,19 @@ namespace Nektar
             v_NumericalFlux(physfield, numfluxX, numfluxY);
         }
         
-        inline void EquationSystem::NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield,
-                                                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+        inline void EquationSystem::NumFluxforScalar(
+            const Array<OneD, Array<OneD, NekDouble> >   &ufield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             v_NumFluxforScalar(ufield, uflux);
         }
         
-        inline void EquationSystem::NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
-                                                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                                                     Array<OneD, Array<OneD, NekDouble> >  &qflux)
+        inline void EquationSystem::NumFluxforVector(            
+            const Array<OneD, Array<OneD, NekDouble> >               &ufield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                  Array<OneD, Array<OneD, NekDouble> >               &qflux)
         {
-            v_NumFluxforVector(ufield,qfield, qflux);
+            v_NumFluxforVector(ufield, qfield, qflux);
         }
     }
 }

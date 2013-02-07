@@ -222,7 +222,6 @@ namespace Nektar
                 {
                     continue;
                 }
-                int num_tag = 0, num_nodes = 0;
                 
                 // Create element tags
                 vector<int> tags;
@@ -649,7 +648,6 @@ namespace Nektar
             vector<int> tags;
             tags.push_back(tagId);
             
-            ElementType seg = eLine;
             ElmtConfig conf(eLine, order, order > 1, false, true,
                             LibUtilities::eGaussLobattoLegendre);
             ElementSharedPtr E = GetElementFactory().

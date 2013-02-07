@@ -234,7 +234,7 @@ namespace Nektar
 
                 NekVector<NekDouble> in(m_ncoeffs,inarray,eWrapper);
                 NekVector<NekDouble> out(nquad,outarray,eWrapper);
-                NekMatrix<double> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
+                NekMatrix<NekDouble> B(nquad,m_ncoeffs,m_base[0]->GetBdata(),eWrapper);
                 out = B * in;
 
 #endif //NEKTAR_USING_DIRECT_BLAS_CALLS 
@@ -370,17 +370,18 @@ namespace Nektar
          *  \f$ u(\xi_1) \f$
          *  \param coll_check flag to identify when a Basis->Collocation() call 
          *  should be performed to see if this is a GLL_Lagrange basis with a 
-         *  collocation property. (should be set to 0 if taking the inner product 
-         *  with respect to the derivative of basis)
+         *  collocation property. (should be set to 0 if taking the inner  
+         *  product with respect to the derivative of basis)
          *  \param outarray  the values of the inner product with respect to 
          *  each basis over region will be stored in the array \a outarray as
          *  output of the function
          */
 
-        void StdSegExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& base,
-                const Array<OneD, const NekDouble>& inarray,
-                Array<OneD, NekDouble> &outarray,
-                int coll_check)
+        void StdSegExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble> &base,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            int coll_check)
         {
             int    nquad = m_base[0]->GetNumPoints();
             Array<OneD, NekDouble> tmp(nquad);
@@ -388,7 +389,8 @@ namespace Nektar
             Array<OneD, const NekDouble> w =  m_base[0]->GetW();
 
             Vmath::Vmul(nquad, inarray, 1, w, 1, tmp, 1);
-
+            
+            /* Comment below was a bug for collocated basis
             if(coll_check&&m_base[0]->Collocation())
             {
                 Vmath::Vcopy(nquad, tmp, 1, outarray, 1);
@@ -397,7 +399,11 @@ namespace Nektar
             {
                 Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
                             &tmp[0],1,0.0,outarray.get(),1);
-            }
+            }*/
+            
+            // Correct implementation
+            Blas::Dgemv('T',nquad,m_ncoeffs,1.0,base.get(),nquad,
+                        &tmp[0],1,0.0,outarray.get(),1);
         }
 
         /** \brief Inner product of \a inarray over region with respect to the
@@ -464,8 +470,10 @@ namespace Nektar
             return  StdExpansion1D::v_PhysEvaluate(coords, physvals);
         }
 
-        void StdSegExp::v_LaplacianMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray)
+        void StdSegExp::v_LaplacianMatrixOp(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
 
@@ -481,9 +489,9 @@ namespace Nektar
 
 
         void StdSegExp::v_HelmholtzMatrixOp(
-                const Array<OneD, const NekDouble> &inarray,
-                Array<OneD,NekDouble> &outarray,
-                const double lambda)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdMatrixKey                 &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
 
@@ -499,7 +507,7 @@ namespace Nektar
             // Laplacian matrix operation
             v_PhysDeriv(physValues,dPhysValuesdx);
             v_IProductWRTBase(m_base[0]->GetDbdata(),dPhysValuesdx,outarray,1);
-            Blas::Daxpy(m_ncoeffs, lambda, wsp.get(), 1, outarray.get(), 1);
+            Blas::Daxpy(m_ncoeffs, mkey.GetConstFactor(eFactorLambda), wsp.get(), 1, outarray.get(), 1);
         }
 
 
@@ -670,7 +678,7 @@ namespace Nektar
             switch(Btype)
             {
             case LibUtilities::eGLL_Lagrange:
-			case LibUtilities::eGauss_Lagrange:
+            case LibUtilities::eGauss_Lagrange:
             case LibUtilities::eChebyshev:
             case LibUtilities::eFourier:
                 outarray[1]= nummodes-1;
@@ -697,7 +705,7 @@ namespace Nektar
             switch(Btype)
             {
             case LibUtilities::eGLL_Lagrange:
-			case LibUtilities::eGauss_Lagrange:
+            case LibUtilities::eGauss_Lagrange:
             case LibUtilities::eChebyshev:
             case LibUtilities::eFourier:
                 for(i = 0 ; i < GetNcoeffs()-2;i++)

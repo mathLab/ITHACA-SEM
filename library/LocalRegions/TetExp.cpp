@@ -38,7 +38,6 @@
 
 #include <LibUtilities/Foundations/Interp.h>
 
-
 namespace Nektar
 {
     namespace LocalRegions
@@ -62,10 +61,10 @@ namespace Nektar
                         const SpatialDomains::TetGeomSharedPtr &geom
                         ):
             StdExpansion  (StdRegions::StdTetData::getNumberOfCoefficients(Ba.GetNumModes(),Bb.GetNumModes(),Bc.GetNumModes()),3,Ba,Bb,Bc),
-            Expansion     (),
             StdExpansion3D(StdRegions::StdTetData::getNumberOfCoefficients(Ba.GetNumModes(),Bb.GetNumModes(),Bc.GetNumModes()),Ba,Bb,Bc),
-            Expansion3D   (),
             StdRegions::StdTetExp(Ba,Bb,Bc),
+            Expansion     (),
+            Expansion3D   (),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(
@@ -83,10 +82,10 @@ namespace Nektar
 	 */
         TetExp::TetExp(const TetExp &T):
             StdExpansion(T),
-            Expansion(T),
             StdExpansion3D(T),
-            Expansion3D(T),
             StdRegions::StdTetExp(T),
+            Expansion(T),
+            Expansion3D(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
@@ -288,9 +287,16 @@ namespace Nektar
          *   = \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k})
          *   = {\bf B_1 G} \f$
          */
-         void TetExp::v_IProductWRTBase(
-                 const Array<OneD, const NekDouble>& inarray,
-                       Array<OneD, NekDouble> & outarray)
+        void TetExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            v_IProductWRTBase_SumFac(inarray, outarray);
+        }
+
+        void TetExp::v_IProductWRTBase_SumFac(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
@@ -354,7 +360,7 @@ namespace Nektar
             int order0 = m_base[0]->GetNumModes ();
             int order1 = m_base[1]->GetNumModes ();
             int nqtot  = nquad0*nquad1*nquad2;
-            int i, j, k, n;
+            int i, j;
 
             const Array<OneD, const NekDouble> &z0 = m_base[0]->GetZ();
             const Array<OneD, const NekDouble> &z1 = m_base[1]->GetZ();
@@ -593,7 +599,7 @@ namespace Nektar
                   const bool dumpVar, 
                   std::string var)
         {
-            int i,j,k;
+            int i,j;
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
@@ -1674,6 +1680,7 @@ namespace Nektar
             int nblks = 2;
             returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
             NekDouble factor = 1.0;
+            MatrixStorage AMatStorage = eFULL;
 
             switch(mkey.GetMatrixType())
             {
@@ -1724,7 +1731,7 @@ namespace Nektar
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
                     DNekScalMat &mat = *GetLocMatrix(mkey);
-                    DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry);
+                    DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry,AMatStorage);
                     DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
                     DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
                     DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
@@ -1988,9 +1995,6 @@ namespace Nektar
             int nquad1  = m_base[1]->GetNumPoints();
             int nquad2  = m_base[2]->GetNumPoints();
             int nqtot   = nquad0*nquad1*nquad2;
-            int nmodes0 = m_base[0]->GetNumModes();
-            int nmodes1 = m_base[1]->GetNumModes();
-            int nmodes2 = m_base[2]->GetNumModes();
             int i, j;
 
             // Allocate temporary storage
@@ -2553,7 +2557,6 @@ namespace Nektar
             }
 	}
 
-        
         Array<OneD, unsigned int>
         TetExp::v_GetEdgeInverseBoundaryMap(int eid)
         {

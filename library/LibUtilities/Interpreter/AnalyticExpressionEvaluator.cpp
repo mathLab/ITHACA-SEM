@@ -71,11 +71,11 @@ namespace Nektar
         //             AnalyticExpression definitions for Spirit Parser
         // =========================================================================
 
-        typedef double (*PFD)();
-        typedef double (*PFD1)(double);
-        typedef double (*PFD2)(double, double);
-        typedef double (*PFD3)(double, double, double);
-        typedef double (*PFD4)(double, double, double, double);
+        typedef NekDouble (*PFD)();
+        typedef NekDouble (*PFD1)(NekDouble);
+        typedef NekDouble (*PFD2)(NekDouble, NekDouble);
+        typedef NekDouble (*PFD3)(NekDouble, NekDouble, NekDouble);
+        typedef NekDouble (*PFD4)(NekDouble, NekDouble, NekDouble, NekDouble);
         struct func
         {
             func(PFD1 p) : func1(p), size(1) {};
@@ -94,7 +94,7 @@ namespace Nektar
         };
 
         // signum function
-        double sign(double arg)
+        NekDouble sign(NekDouble arg)
         {
             return (arg > 0.0) - (arg < 0.0);
         }
@@ -103,7 +103,7 @@ namespace Nektar
         // Arg: sigma of the zero-mean gaussian distribution
         // Attention: this function is not actually used for
         // evaluation purposes.
-        double awgn(double sigma)
+        NekDouble awgn(NekDouble sigma)
         {
             AnalyticExpressionEvaluator::RandomGeneratorType rng;
             boost::variate_generator<
@@ -116,7 +116,7 @@ namespace Nektar
 
         /** This struct creates a parser that matches the function
         definitions from math.h. All of the functions accept one
-        of more doubles as arguments and returns a double. **/
+        of more NekDoubles as arguments and returns a NekDouble. **/
         static struct functions : symbols<func>
         {
             functions()
@@ -140,7 +140,7 @@ namespace Nektar
                     ("sqrt",	sqrt)
                     ("tan",		tan)
                     ("tanh",	tanh)
-                // and one more
+                    // and few more custom functions
                     ("sign",	sign)
                     ("awgn",	awgn)
                     ;
@@ -216,8 +216,8 @@ namespace Nektar
 
         // \brief Initializes the evaluator. Call DefineFunction(...) next.
         AnalyticExpressionEvaluator::AnalyticExpressionEvaluator():
-              m_total_eval_time(0),
-              m_timer()
+                m_timer(),
+                m_total_eval_time(0)
         {
             m_state_size = 1;
 
@@ -302,15 +302,15 @@ namespace Nektar
         }
 
 
-        void AnalyticExpressionEvaluator::AddConstants(std::map<std::string, double> const& constants)
+        void AnalyticExpressionEvaluator::AddConstants(std::map<std::string, NekDouble> const& constants)
         {
-            for (std::map<std::string, double>::const_iterator it = constants.begin(); it != constants.end(); ++it)
+            for (std::map<std::string, NekDouble>::const_iterator it = constants.begin(); it != constants.end(); ++it)
             {
                 AddConstant(it->first, it->second);
             }
         }
 
-        int AnalyticExpressionEvaluator::AddConstant(std::string const& name, double value)
+        int AnalyticExpressionEvaluator::AddConstant(std::string const& name, NekDouble value)
         {
             ConstantMap::const_iterator it = m_constantMapNameToId.find(name);
             if (it == m_constantMapNameToId.end())
@@ -335,24 +335,24 @@ namespace Nektar
             return it->second;
         }
 
-        double AnalyticExpressionEvaluator::GetConstant(std::string const& name)
+        NekDouble AnalyticExpressionEvaluator::GetConstant(std::string const& name)
         {
-            double* value = find(m_constantsParser, name.c_str());
+            NekDouble* value = find(m_constantsParser, name.c_str());
 
             ASSERTL1(value != NULL, "Constant variable not found: " + name);
 
             return *value;
         }
 
-        void AnalyticExpressionEvaluator::SetParameters(std::map<std::string, double> const& params)
+        void AnalyticExpressionEvaluator::SetParameters(std::map<std::string, NekDouble> const& params)
         {
-            for (std::map<std::string, double>::const_iterator it = params.begin(); it != params.end(); it++)
+            for (std::map<std::string, NekDouble>::const_iterator it = params.begin(); it != params.end(); it++)
             {
                 SetParameter(it->first, it->second);
             }
         }
 
-        void AnalyticExpressionEvaluator::SetParameter(std::string const& name, double value)
+        void AnalyticExpressionEvaluator::SetParameter(std::string const& name, NekDouble value)
         {
             ParameterMap::const_iterator it = m_parameterMapNameToId.find(name);
             if (it == m_parameterMapNameToId.end())
@@ -368,7 +368,7 @@ namespace Nektar
         }
 
 
-        double AnalyticExpressionEvaluator::GetParameter(std::string const& name)
+        NekDouble AnalyticExpressionEvaluator::GetParameter(std::string const& name)
         {
             ParameterMap::const_iterator it = m_parameterMapNameToId.find(name);
 
@@ -378,7 +378,7 @@ namespace Nektar
         }
 
 
-        double AnalyticExpressionEvaluator::GetTime() const
+        NekDouble AnalyticExpressionEvaluator::GetTime() const
         {
             return m_total_eval_time;
         }
@@ -422,7 +422,7 @@ namespace Nektar
 
             // Do the actual parsing with boost::spirit and alert the user if there was an error with an exception.
             ParsedTreeInfo   parseInfo = ast_parse<
-                                                node_val_data_factory<double>,
+                                                node_val_data_factory<NekDouble>,
                                                 std::string::const_iterator,
                                                 AnalyticExpression,
                                                 space_parser
@@ -474,14 +474,13 @@ namespace Nektar
         }
 
 
-        double AnalyticExpressionEvaluator::Evaluate(const int expression_id)
+        NekDouble AnalyticExpressionEvaluator::Evaluate(const int expression_id)
         {
             m_timer.Start();
 
             ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
 
-            ExecutionStack&  stack    = m_executionStack[expression_id];
-            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+            ExecutionStack &stack = m_executionStack[expression_id];
 
             m_state.resize(m_state_sizes[expression_id]);
             for (int i = 0; i < stack.size(); i++)
@@ -495,14 +494,18 @@ namespace Nektar
             return m_state[0];
         }
 
-        double AnalyticExpressionEvaluator::Evaluate(const int expression_id, const double x, const double y, const double z, const double t)
+        NekDouble AnalyticExpressionEvaluator::Evaluate(
+                const int expression_id,
+                const NekDouble x,
+                const NekDouble y,
+                const NekDouble z,
+                const NekDouble t)
         {
             m_timer.Start();
 
             ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
 
-            ExecutionStack&  stack    = m_executionStack[expression_id];
-            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+            ExecutionStack &stack = m_executionStack[expression_id];
 
             // initialise internal vector of variable values
             m_state.resize(m_state_sizes[expression_id]);
@@ -532,7 +535,7 @@ namespace Nektar
             return m_state[0];
         }
 
-        double AnalyticExpressionEvaluator::EvaluateAtPoint(const int expression_id, const std::vector<double> point)
+        NekDouble AnalyticExpressionEvaluator::EvaluateAtPoint(const int expression_id, const std::vector<NekDouble> point)
         {
             m_timer.Start();
 
@@ -578,8 +581,7 @@ namespace Nektar
             ASSERTL1(m_executionStack.size() > expression_id, "unknown analytic expression, it must first be defined with DefineFunction(...)");
             ASSERTL1(result.num_elements() >= num_points, "destination array must have enough capacity to store expression values at each given point");
 
-            ExecutionStack&  stack    = m_executionStack[expression_id];
-            VariableMap&  variableMap = m_stackVariableMap[expression_id];
+            ExecutionStack &stack = m_executionStack[expression_id];
 
             /// If number of points tends to 10^6, one may end up
             /// with up to ~0.5Gb data allocated for m_state only.
@@ -661,7 +663,10 @@ namespace Nektar
             {
                 (*stack[j]).run_many(num);
             }
-            for (int i = 0; i < num; result[i] = m_state[i++]) ;
+            for (int i = 0; i < num; ++i)
+            {
+                result[i] = m_state[i];
+            }
 
             m_timer.Stop();
             m_total_eval_time += m_timer.TimePerTest(1);
@@ -693,7 +698,7 @@ namespace Nektar
             else if (parserID == AnalyticExpression::numberID)
             {
                 ASSERTL1(num_children == 0, "Illegal children under number node: " + valueStr);
-                return std::make_pair(true, boost::lexical_cast<double>(valueStr.c_str()) );
+                return std::make_pair(true, boost::lexical_cast<NekDouble>(valueStr.c_str()) );
             }
             else if (parserID == AnalyticExpression::variableID)
             {

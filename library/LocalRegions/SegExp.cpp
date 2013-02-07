@@ -413,6 +413,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
                 switch(m_base[0]->GetBasisType())
                 {
+                case LibUtilities::eGauss_Lagrange:
                 case LibUtilities::eGLL_Lagrange:
                     {
                         offset = 1;
@@ -1006,20 +1007,33 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
         /// Unpack data from input file assuming it comes from the same expansion type
         void SegExp::v_ExtractDataToCoeffs(
-                const std::vector<NekDouble> &data, 
-                const int offset,
+                const NekDouble *data, 
                 const std::vector<unsigned int > &nummodes, 
-                const int nmode_offset,
-                      Array<OneD, NekDouble> &coeffs)
+                const int mode_offset,
+                NekDouble *coeffs)
         {
             switch(m_base[0]->GetBasisType())
             { 
             case LibUtilities::eModified_A:
                 {
-                    int fillorder = min((int) nummodes[nmode_offset],m_ncoeffs);
+                    int fillorder = min((int) nummodes[mode_offset],m_ncoeffs);
 
                     Vmath::Zero(m_ncoeffs,coeffs,1);
-                    Vmath::Vcopy(fillorder,&data[offset],1,&coeffs[0],1);
+                    Vmath::Vcopy(fillorder,&data[0],1,&coeffs[0],1);
+                }
+                break;
+            case LibUtilities::eGLL_Lagrange:
+                {
+                    // Assume that input is also Gll_Lagrange but no way to check;
+                    LibUtilities::PointsKey p0(nummodes[mode_offset],LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::Interp1D(p0,data, m_base[0]->GetPointsKey(), coeffs);
+                }
+                break;
+            case LibUtilities::eGauss_Lagrange:
+                {
+                    // Assume that input is also Gauss_Lagrange but no way to check;
+                    LibUtilities::PointsKey p0(nummodes[mode_offset],LibUtilities::eGaussGaussLegendre);
+                    LibUtilities::Interp1D(p0,data, m_base[0]->GetPointsKey(), coeffs);
                 }
                 break;
             default:
@@ -1033,7 +1047,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors = GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
-            const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
             int nqe = m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
 
@@ -1087,8 +1100,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
 
         void SegExp::v_LaplacianMatrixOp(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdRegions::StdMatrixKey     &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
@@ -1170,12 +1184,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
 
         void SegExp::v_HelmholtzMatrixOp(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,NekDouble> &outarray,
-                    const double lambda)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdRegions::StdMatrixKey     &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const NekDouble lambda = mkey.GetConstFactor(StdRegions::eFactorLambda);
 
             Array<OneD,NekDouble> physValues(nquad);
             Array<OneD,NekDouble> dPhysValuesdx(nquad);
@@ -1296,7 +1311,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             {
             case StdRegions::eMass:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
+                       (mkey.GetNVarCoeff()))
                     {
                         fac = 1.0;
                         goto UseLocRegionsMatrix;
@@ -1310,7 +1326,8 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 break;
             case StdRegions::eInvMass:
                 {
-                    if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                    if((m_metricinfo->GetGtype() == SpatialDomains::eDeformed)||
+                       (mkey.GetNVarCoeff()))
                     {
                         NekDouble one = 1.0;
                         StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
@@ -1547,7 +1564,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             UseLocRegionsMatrix:
                 {
                     int i,j;
-                    int cnt = 0;
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
                     DNekScalMat &mat = *GetLocMatrix(mkey);

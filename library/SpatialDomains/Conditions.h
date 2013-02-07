@@ -68,9 +68,12 @@ namespace Nektar
             eHigh,
             eWall,
             eWALL,
+            eWallViscous,
+            eWALLVISCOUS,
             eSymmetry,
             eRinglebFlow,
             eTimeDependent,
+            eRadiation,
             eIsentropicVortex,
             eCalcBC,
             eQinflow,
@@ -95,19 +98,20 @@ namespace Nektar
                 known_type["I"] = eI;
                 known_type["MG"] = eMG;
                 known_type["Wall"] = eWall;
+                known_type["WallViscous"] = eWallViscous;
                 known_type["Q-inflow"] = eQinflow;
                 known_type["Terminal"] = eTerminal;
                 known_type["R-terminal"] = eRterminal;
                 known_type["CR-terminal"] = eCRterminal;
                 known_type["RCR-terminal"] = eRCRterminal;
                 known_type["WALL"] = eWALL;
+                known_type["WALLVISCOUS"] = eWALLVISCOUS;
                 known_type["CalcBC"] = eCalcBC;
                 known_type["RinglebFlow"] = eRinglebFlow;
                 known_type["Symmetry"] = eSymmetry;
                 known_type["TimeDependent"] = eTimeDependent;
+                known_type["Radiation"] = eRadiation;
                 known_type["IsentropicVortex"] = eIsentropicVortex;
-                known_type["InflowCFE"] = eInflowCFE;
-                known_type["OutflowCFE"] = eOutflowCFE;
                 known_type["NoUserDefined"] = eNoUserDefined;
 
                 std::map<const std::string, BndUserDefinedType>::const_iterator it = known_type.find(userDefined);

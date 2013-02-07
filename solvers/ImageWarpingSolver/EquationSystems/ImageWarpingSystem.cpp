@@ -99,9 +99,8 @@ namespace Nektar
         const NekDouble time)
     {
         int i;
-        int nvariables = inarray.num_elements();
-        int npoints    = GetNpoints();
-        int ncoeffs    = inarray[0].num_elements();
+        int npoints = GetNpoints();
+        int ncoeffs = inarray[0].num_elements();
         StdRegions::ConstFactorMap factors;
 
         // Load parameter alpha.

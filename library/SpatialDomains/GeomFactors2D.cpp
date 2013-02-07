@@ -361,8 +361,12 @@ namespace Nektar
 
                     if(CheckJacPositive)
                     {
+                        static int cnt = 0;
+
                         ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0,
-                                 "2D Deformed Jacobian is not positive");
+                                 "2D Deformed Jacobian is not positive (cnt = " + 
+                                 boost::lexical_cast<std::string>(cnt) + ")");
+                        cnt++;
                     }
 
                     // d xi_1/d x_1
@@ -1075,10 +1079,6 @@ namespace Nektar
             m_laplacianmetrics      = Array<TwoD, NekDouble>(3,nqtot);
             m_laplacianMetricIsZero = Array<OneD, bool>(3, false);
             m_isUsingLaplMetrics  = true;
-
-            // Get hold of the quadrature weights
-            const Array<OneD, const NekDouble>& w0 = tbasis[0]->GetW();
-            const Array<OneD, const NekDouble>& w1 = tbasis[1]->GetW();
 
             switch(shape)
             {

@@ -495,7 +495,7 @@ namespace Nektar
                    != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList2D>
-                        ::AllocateSharedPtr(m_session,*(bregions[i]), graph3D);
+                        ::AllocateSharedPtr(m_session,*(bregions[i]), graph3D, variable);
 
                     // Set up normals on non-Dirichlet boundary conditions
                     if(locBCond->GetBoundaryConditionType() != 
@@ -529,8 +529,6 @@ namespace Nektar
 
             int                                        region1ID;
             int                                        region2ID;
-            StdRegions::Orientation                    orient1;
-            StdRegions::Orientation                    orient2;
             SpatialDomains::Composite                  comp1;
             SpatialDomains::Composite                  comp2;
             SpatialDomains::Geometry2DSharedPtr        faceGeom1;
@@ -656,9 +654,6 @@ namespace Nektar
                                              faceGeom1->GetGlobalID())+": "+
                                          boost::lexical_cast<string>(
                                              StdRegions::OrientationMap[forient]));
-                                
-                                int f1 = (*element1)[0]->m_FaceIndx;
-                                int f2 = (*element2)[0]->m_FaceIndx;
                                 
                                 // Vertex/edge maps for fwd/bwd orientation in
                                 // a-direction.
@@ -1064,8 +1059,8 @@ namespace Nektar
             Array<OneD, int> &FaceID)
         {
             map<int,int> globalIdMap;
-            int i,n,id;
-            int bid,cnt,Fid;
+            int i, n;
+            int cnt;
             int nbcs = 0;
             
             SpatialDomains::MeshGraph3DSharedPtr graph3D = 
@@ -1350,7 +1345,7 @@ namespace Nektar
                                                           const NekDouble x2_in,
                                                           const NekDouble x3_in)
         {
-            int i,j;
+            int i;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();
             MultiRegions::ExpListSharedPtr locExpList;
@@ -1396,12 +1391,21 @@ namespace Nektar
                                                            SpatialDomains::RobinBoundaryCondition
                                                         >(m_bndConditions[i])->m_robinFunction;
 
+                    LibUtilities::Equation coeff     = 
+                        boost::static_pointer_cast<
+                    SpatialDomains::RobinBoundaryCondition
+                        >(m_bndConditions[i])->m_robinPrimitiveCoeff;
+
                     condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
 
                     locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                 locExpList->UpdateCoeffs());
 
-                    /// \todo RobinPrimitiveCoeff forgotten? - PB
+                    // put primitive coefficient into the physical space
+                    // storage
+                    coeff.Evaluate(x0,x1,x2,time,
+                                   locExpList->UpdatePhys());
+
                 }
                 else
                 {

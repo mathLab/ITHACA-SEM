@@ -43,7 +43,7 @@
 
 int main(int argc, char *argv[])
 {
-    int i,j;
+    int i;
     NekDouble cr = 0;
     
     if(argc !=3)
@@ -86,7 +86,8 @@ int main(int argc, char *argv[])
     {
         streak->ExtractDataToCoeffs(fielddef [i],
                                     fielddata[i],
-                                    streak_field);
+                                    streak_field,
+                                    streak->UpdateCoeffs());
     }
     //----------------------------------------------
     
@@ -94,7 +95,6 @@ int main(int argc, char *argv[])
     vSession->LoadParameter("NumCriticalLayerPts",npts,30);
     Array<OneD, NekDouble> x_c(npts);
     Array<OneD, NekDouble> y_c(npts);       
-    NekDouble xc, yc;
     
     NekDouble trans;
     vSession->LoadParameter("WidthOfLayers",trans,0.1);

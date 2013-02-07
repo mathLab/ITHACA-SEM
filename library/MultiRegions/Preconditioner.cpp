@@ -64,8 +64,8 @@ namespace Nektar
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap):
 	   m_linsys(plinsys),
-           m_locToGloMap(pLocToGloMap),
-           m_preconType(pLocToGloMap->GetPreconType())
+           m_preconType(pLocToGloMap->GetPreconType()),
+           m_locToGloMap(pLocToGloMap)
          {
          }
 

@@ -181,11 +181,10 @@ namespace Nektar
                 SpatialDomains::Geometry2DSharedPtr& v_GetGeom2D() const;
             LOCAL_REGIONS_EXPORT virtual  int v_GetCoordim();
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
-                        const std::vector<NekDouble> &data,
-                        const int offset,
+                        const NekDouble *data,
                         const std::vector<unsigned int > &nummodes,
-                        const int nmode_offset,
-                        Array<OneD, NekDouble> &coeffs);
+                        const int mode_offset,
+                        NekDouble * coeffs);
             LOCAL_REGIONS_EXPORT virtual
                 StdRegions::Orientation v_GetEorient(int edge);
             LOCAL_REGIONS_EXPORT virtual

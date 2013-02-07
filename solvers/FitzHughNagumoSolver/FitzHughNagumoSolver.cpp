@@ -62,7 +62,6 @@ int main(int argc, char *argv[])
 
     int nsteps = EAD.GetSteps();
     int initialwavetype = EAD.initialwavetype();;
-    NekDouble lambda = 0.0;
 
     EAD.Summary(cout);
     

@@ -217,7 +217,8 @@ int main(int argc, char *argv[])
         {
             Exp[j]->ExtractDataToCoeffs(fielddef [i],
                                         fielddata[i],
-                                        fielddef [i]->m_fields[j]);
+                                        fielddef [i]->m_fields[j],
+                                        Exp[j]->UpdateCoeffs());
         }
         Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }

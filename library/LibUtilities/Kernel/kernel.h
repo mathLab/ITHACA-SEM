@@ -37,6 +37,7 @@
 #define NEKTAR_LIB_UTILIITIES_KERNEL_KERNEL_H
 
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
 namespace Nektar
@@ -72,7 +73,7 @@ namespace Nektar
 			 * \brief This funciton updates the kernel breaks.
 			 * \param h represents the mesh spacing
 			 */
-			LIB_UTILITIES_EXPORT void UpdateKernelBreaks(double h);
+			LIB_UTILITIES_EXPORT void UpdateKernelBreaks(NekDouble h);
 
 			/**
 			 * \brief This funciton returns a 2D array representing the bspline
@@ -152,7 +153,7 @@ namespace Nektar
 			   \param x_value.
 			   \param outarray is used to store the result
 			 */
-			LIB_UTILITIES_EXPORT void MoveKernelCenter(double x_value, Array<OneD,NekDouble> &outarray);
+			LIB_UTILITIES_EXPORT void MoveKernelCenter(NekDouble x_value, Array<OneD,NekDouble> &outarray);
 
 			/**
 			 * \brief This funciton calculates the mesh breaks under the kernel support
@@ -160,7 +161,7 @@ namespace Nektar
 			   \param h is the mesh spacing
 			   \param outarray contains the coordinate of the mesh breaks under the kernel support
 			 */
-			LIB_UTILITIES_EXPORT void FindMeshUnderKernel(Array<OneD,NekDouble> &inarray, double h,
+			LIB_UTILITIES_EXPORT void FindMeshUnderKernel(Array<OneD,NekDouble> &inarray, NekDouble h,
 									 Array<OneD,NekDouble> &outarray);
 
 			/**
@@ -169,7 +170,7 @@ namespace Nektar
 			   \param h is the mesh spacing.
 			   \param outarray contains the kernel values
 			 */
-			LIB_UTILITIES_EXPORT void EvaluateKernel(Array<OneD,NekDouble> inarray,double h,
+			LIB_UTILITIES_EXPORT void EvaluateKernel(Array<OneD,NekDouble> inarray,NekDouble h,
 								Array<OneD,NekDouble> &outarray);
 
 			/**
@@ -179,8 +180,8 @@ namespace Nektar
 			   \param offset
 			   \param outarray              contains the bspline values.
 			 */
-			LIB_UTILITIES_EXPORT void EvaluateBspline(Array<OneD,NekDouble> inarray, double h,
-								 double offset, Array<OneD,NekDouble> &outarray);
+			LIB_UTILITIES_EXPORT void EvaluateBspline(Array<OneD,NekDouble> inarray, NekDouble h,
+								 NekDouble offset, Array<OneD,NekDouble> &outarray);
 
 
 			/**
@@ -205,7 +206,7 @@ namespace Nektar
 			 * \brief This funciton evaluates the piecewise bspline polynomial
 			   \param interval \param interval at point \param x_value.
 			 */
-			double EvaluateBsplinePoly(double x_value,int interval);
+			NekDouble EvaluateBsplinePoly(NekDouble x_value,int interval);
 
 		private:
 

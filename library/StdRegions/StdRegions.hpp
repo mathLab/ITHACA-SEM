@@ -194,7 +194,6 @@ namespace Nektar
             eVarCoeffD01,
             eVarCoeffD02,
             eVarCoeffD12,
-            eVarCoeffPrimative,
             eVarCoeffVelX,
             eVarCoeffVelY
         };
@@ -209,7 +208,6 @@ namespace Nektar
             "VarCoeffD01",
             "VarCoeffD02",
             "VarCoeffD12",
-            "VarCoeffPrimative",
             "VarCoeffVelX",
             "VarCoeffVelY"
         };

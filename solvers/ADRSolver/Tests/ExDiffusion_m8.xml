@@ -72,6 +72,7 @@
             <I PROPERTY="EQTYPE"                VALUE="UnsteadyDiffusion"   />
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
             <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
+            <I PROPERTY="DiffusionType"         VALUE="LDG"              />
             <I PROPERTY="DiffusionAdvancement"  VALUE="Explicit"            />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
         </SOLVERINFO>

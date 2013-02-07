@@ -366,7 +366,7 @@ namespace Nektar
             return m_localToGlobalSign;
         }
 
-        const void AssemblyMapCG::v_LocalToGlobal(
+        void AssemblyMapCG::v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const
         {
@@ -391,14 +391,14 @@ namespace Nektar
             }
         }
 
-        const void AssemblyMapCG::v_LocalToGlobal(
+        void AssemblyMapCG::v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const
         {
             LocalToGlobal(loc.GetPtr(),global.GetPtr());
         }
 
-        const void AssemblyMapCG::v_GlobalToLocal(
+        void AssemblyMapCG::v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const
         {
@@ -423,14 +423,14 @@ namespace Nektar
             }
         }
 
-        const void AssemblyMapCG::v_GlobalToLocal(
+        void AssemblyMapCG::v_GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const
         {
             GlobalToLocal(global.GetPtr(),loc.GetPtr());
         }
 
-        const void AssemblyMapCG::v_Assemble(
+        void AssemblyMapCG::v_Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const
         {
@@ -458,26 +458,36 @@ namespace Nektar
             UniversalAssemble(global);
         }
 
-        const void AssemblyMapCG::v_Assemble(
+        void AssemblyMapCG::v_Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const
         {
             Assemble(loc.GetPtr(),global.GetPtr());
         }
 
-        const void AssemblyMapCG::v_UniversalAssemble(
+        void AssemblyMapCG::v_UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
             Gs::Gather(pGlobal, Gs::gs_add, m_gsh);
         }
 
-        const void AssemblyMapCG::v_UniversalAssemble(
+        void AssemblyMapCG::v_UniversalAssemble(
                       NekVector<      NekDouble>& pGlobal) const
         {
             UniversalAssemble(pGlobal.GetPtr());
         }
 
-        const int AssemblyMapCG::v_GetFullSystemBandWidth() const
+        void AssemblyMapCG::v_UniversalAssemble(
+                      Array<OneD,     NekDouble>& pGlobal,
+                      int                         offset) const
+        {
+            Array<OneD, NekDouble> tmp(offset);
+            Vmath::Vcopy(offset, pGlobal, 1, tmp, 1);
+            UniversalAssemble(pGlobal);
+            Vmath::Vcopy(offset, tmp, 1, pGlobal, 1);
+        }
+
+        int AssemblyMapCG::v_GetFullSystemBandWidth() const
         {
             return m_fullSystemBandWidth;
         }

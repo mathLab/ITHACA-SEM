@@ -76,6 +76,21 @@ namespace Nektar
                 m_outputFrequency = atoi(pParams.find("OutputFrequency")->second.c_str());
             }
 
+
+            m_session->MatchSolverInfo("Homogeneous","1D",m_isHomogeneous1D,false);
+            
+            if(m_isHomogeneous1D)
+            {
+                if (pParams.find("OutputPlane") == pParams.end())
+                {
+                    m_outputPlane = 0;
+                }
+                else
+                {
+                    m_outputPlane = atoi(pParams.find("OutputPlane")->second.c_str());
+                }
+            }
+
             ASSERTL0(pParams.find("Points") != pParams.end(),
                      "Missing parameter 'Points'.");
             m_historyPointStream.str(pParams.find("Points")->second);
@@ -110,6 +125,17 @@ namespace Nektar
             while (!m_historyPointStream.fail())
             {
                 m_historyPointStream >> gloCoord[0] >> gloCoord[1] >> gloCoord[2];
+                if(m_isHomogeneous1D) // overwrite with plane z
+                {
+                    NekDouble Z = (pFields[0]->GetHomogeneousBasis()->GetZ())[m_outputPlane];
+                    if(fabs(gloCoord[2] - Z) > NekConstants::kVertexTheSameDouble)
+                    {
+                        cout <<"Reseting History point from " << gloCoord[2] << 
+                            " to " << Z << endl;
+                    }
+                    gloCoord[2] = Z;
+                }
+                
                 if (!m_historyPointStream.fail())
                 {
                     SpatialDomains::VertexComponentSharedPtr vert
@@ -136,8 +162,30 @@ namespace Nektar
                                                 gloCoord[2]);
 
                 idList[i] = pFields[0]->GetExpIndex(gloCoord);
-                if (idList[i] != -1) {
-                    procList[i] = vRank;
+                if (idList[i] != -1) 
+                {
+                    if(m_isHomogeneous1D)
+                    {
+                        int j;
+                        Array<OneD, const unsigned int> IDs = pFields[0]->GetZIDs();
+                        for(j = 0; j < IDs.num_elements(); ++j)
+                        {
+                            if(IDs[j] == m_outputPlane)
+                            {
+                                break;
+                            }
+                        }
+                        
+                        if(j != IDs.num_elements())
+                        {
+                            m_outputPlane = j;
+                            procList[i] = vRank;
+                        }
+                    }
+                    else
+                    {
+                        procList[i] = vRank;
+                    }
                 }
             }
             vComm->AllReduce(procList, LibUtilities::ReduceMax);
@@ -187,7 +235,14 @@ namespace Nektar
                     m_outputStream << m_session->GetVariable(i) <<",";
                 }
 
-                m_outputStream << ") at points:" << endl;
+                if(m_isHomogeneous1D)
+                {
+                    m_outputStream << ") at points:";
+                }
+                else
+                {
+                    m_outputStream << ") at points:" << endl;
+                }
 
                 for (i = 0; i < m_historyPoints.size(); ++i)
                 {
@@ -203,6 +258,11 @@ namespace Nektar
                     m_outputStream.width(8);
                     m_outputStream << gloCoord[2];
                     m_outputStream << endl;
+                }
+
+                if(m_isHomogeneous1D)
+                {
+                    m_outputStream << "(in Wavespace)" << endl;
                 }
             }
             v_Update(pFields, time);
@@ -232,15 +292,31 @@ namespace Nektar
             // Pull out data values field by field
             for (j = 0; j < numFields; ++j)
             {
-                if(pFields[j]->GetPhysState() == false)
+                if(m_isHomogeneous1D)
                 {
-                    pFields[j]->BwdTrans(pFields[j]->GetCoeffs(),pFields[j]->UpdatePhys());
+                    if(pFields[j]->GetPhysState() == false)
+                    {
+                        pFields[j]->GetPlane(m_outputPlane)->BwdTrans(pFields[j]->GetPlane(m_outputPlane)->GetCoeffs(),pFields[j]->GetPlane(m_outputPlane)->UpdatePhys());
+                    }
+                    pFields[j]->GetPlane(m_outputPlane)->PutPhysInToElmtExp();
+                    for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+                    {
+                        (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+                        data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetPlane(m_outputPlane)->GetExp((*x).second)->PhysEvaluate(gloCoord);
+                    }
                 }
-                pFields[j]->PutPhysInToElmtExp();
-                for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+                else
                 {
-                    (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
-                    data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
+                    if(pFields[j]->GetPhysState() == false)
+                    {
+                        pFields[j]->BwdTrans(pFields[j]->GetCoeffs(),pFields[j]->UpdatePhys());
+                    }
+                    pFields[j]->PutPhysInToElmtExp();
+                    for (k = 0, x = m_historyList.begin(); x != m_historyList.end(); ++x, ++k)
+                    {
+                        (*x).first->GetCoords(gloCoord[0], gloCoord[1], gloCoord[2]);
+                        data[m_historyLocalPointMap[k]*numFields+j] = pFields[j]->GetExp((*x).second)->PhysEvaluate(gloCoord);
+                    }
                 }
             }
 

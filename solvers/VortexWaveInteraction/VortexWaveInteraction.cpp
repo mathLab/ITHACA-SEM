@@ -1276,7 +1276,7 @@ cout<<"alpha = "<<m_alpha[0]<<endl;
                     )
                   {
                        // the critical layer should be the bnd region 3
-                       int reg =3;
+                       //int reg =3;
                        //FileRelaxation(reg);
                   }
                   char c1[16]="";
@@ -1438,7 +1438,7 @@ cout<<"cr="<<cr_str<<endl;
                     )
                   {
                       // the critical layer should be the bnd region 3
-                      int reg =3;
+                      //int reg =3;
                       //FileRelaxation(reg);
                   }
                   char c1[16]="";
@@ -1718,7 +1718,7 @@ cout<<"cr="<<cr_str<<endl;
             Vmath::Vcopy(nstore,m_leading_real_evl,1,Growth,1);
             
             // Sort WaveForce Growth values; 
-            double store;
+            NekDouble store;
             int k;
             for(i = 0; i < nstore; ++i)
             {
@@ -1755,25 +1755,25 @@ cout<<"cr="<<cr_str<<endl;
                     int     j; 
                     int     nsteps = 10000;
                     int     idx = (i == 0)?1:i;
-                    double  da = WaveForce[idx+1] - WaveForce[idx-1];
-                    double  gval_m1 = Growth[idx-1],a,gval;
-                    double  c1 = Growth[idx-1]/(WaveForce[idx-1]-WaveForce[idx])/
+                    NekDouble  da = WaveForce[idx+1] - WaveForce[idx-1];
+                    NekDouble  gval_m1 = Growth[idx-1],a,gval;
+                    NekDouble  c1 = Growth[idx-1]/(WaveForce[idx-1]-WaveForce[idx])/
                         (WaveForce[idx-1]-WaveForce[idx+1]);
-                    double  c2 = Growth[idx]/(WaveForce[idx]-WaveForce[idx-1])/
+                    NekDouble  c2 = Growth[idx]/(WaveForce[idx]-WaveForce[idx-1])/
                         (WaveForce[idx]-WaveForce[idx+1]);
-                    double  c3 = Growth[idx+1]/(WaveForce[idx+1]-WaveForce[idx-1])/
+                    NekDouble  c3 = Growth[idx+1]/(WaveForce[idx+1]-WaveForce[idx-1])/
                         (WaveForce[idx+1]-WaveForce[idx]);
                     
                     for(j = 1; j < nsteps+1; ++j)
                     {
-                        a = WaveForce[i] + j*da/(double) nsteps;
+                        a = WaveForce[i] + j*da/(NekDouble) nsteps;
                         gval = c1*(a - WaveForce[idx  ])*(a - WaveForce[idx+1]) 
                             +  c2*(a - WaveForce[idx-1])*(a - WaveForce[idx+1])
                             +  c3*(a - WaveForce[idx-1])*(a - WaveForce[idx]);
                         
                         if(gval*gval_m1 < 0.0)
                         {
-                            wavef_new = ((a+da/(double)nsteps)*gval - a*gval_m1)/
+                            wavef_new = ((a+da/(NekDouble)nsteps)*gval - a*gval_m1)/
                                 (gval - gval_m1);
                             break;
                         }
@@ -1837,7 +1837,7 @@ cout<<"cr="<<cr_str<<endl;
             Vmath::Vcopy(nstore,m_leading_real_evl,1,Growth,1);
             
             // Sort Alpha Growth values; 
-            double store;
+            NekDouble store;
             int k;
             for(i = 0; i < nstore; ++i)
             {
@@ -1874,25 +1874,25 @@ cout<<"cr="<<cr_str<<endl;
                     int     j; 
                     int     nsteps = 10000;
                     int     idx = (i == 0)?1:i;
-                    double  da = Alpha[idx+1] - Alpha[idx-1];
-                    double  gval_m1 = Growth[idx-1],a,gval;
-                    double  c1 = Growth[idx-1]/(Alpha[idx-1]-Alpha[idx])/
+                    NekDouble  da = Alpha[idx+1] - Alpha[idx-1];
+                    NekDouble  gval_m1 = Growth[idx-1],a,gval;
+                    NekDouble  c1 = Growth[idx-1]/(Alpha[idx-1]-Alpha[idx])/
                         (Alpha[idx-1]-Alpha[idx+1]);
-                    double  c2 = Growth[idx]/(Alpha[idx]-Alpha[idx-1])/
+                    NekDouble  c2 = Growth[idx]/(Alpha[idx]-Alpha[idx-1])/
                         (Alpha[idx]-Alpha[idx+1]);
-                    double  c3 = Growth[idx+1]/(Alpha[idx+1]-Alpha[idx-1])/
+                    NekDouble  c3 = Growth[idx+1]/(Alpha[idx+1]-Alpha[idx-1])/
                         (Alpha[idx+1]-Alpha[idx]);
                     
                     for(j = 1; j < nsteps+1; ++j)
                     {
-                        a = Alpha[i] + j*da/(double) nsteps;
+                        a = Alpha[i] + j*da/(NekDouble) nsteps;
                         gval = c1*(a - Alpha[idx  ])*(a - Alpha[idx+1]) 
                             +  c2*(a - Alpha[idx-1])*(a - Alpha[idx+1])
                             +  c3*(a - Alpha[idx-1])*(a - Alpha[idx]);
                         
                         if(gval*gval_m1 < 0.0)
                         {
-                            alp_new = ((a+da/(double)nsteps)*gval - a*gval_m1)/
+                            alp_new = ((a+da/(NekDouble)nsteps)*gval - a*gval_m1)/
                                 (gval - gval_m1);
                             break;
                         }
@@ -2040,7 +2040,7 @@ cout<<"cr="<<cr_str<<endl;
 
           file += "_u_5.bc"; 
           graphShPt->Import(file,FieldDef_u, FieldData_u);
-          Ilayer->ExtractDataToCoeffs(FieldDef_u[0], FieldData_u[0], FieldDef_u[0]->m_fields[0]);
+          Ilayer->ExtractDataToCoeffs(FieldDef_u[0], FieldData_u[0], FieldDef_u[0]->m_fields[0],Ilayer->UpdateCoeffs());
           Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());
           
           if(cnt==0)
@@ -2092,7 +2092,7 @@ cout<<"cr="<<cr_str<<endl;
           std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef_v;
           std::vector<std::vector<NekDouble> > FieldData_v;
           graphShPt->Import(file,FieldDef_v, FieldData_v);
-          Ilayer->ExtractDataToCoeffs(FieldDef_v[0], FieldData_v[0], FieldDef_v[0]->m_fields[0]);
+          Ilayer->ExtractDataToCoeffs(FieldDef_v[0], FieldData_v[0], FieldDef_v[0]->m_fields[0],Ilayer->UpdateCoeffs());
           Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());
           if(cnt==0)
           {

@@ -58,8 +58,6 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    StdRegions::ExpansionType regionShape = eHexahedron;
-
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
     int bType_z_val = atoi(argv[3]);

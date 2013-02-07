@@ -37,7 +37,11 @@
 
 namespace Nektar
 {
-    string EulerArtificialDiffusionCFE::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction("EulerArtificialDiffusionCFE", EulerArtificialDiffusionCFE::create, "Euler equations in conservative variables with artificial diffusion.");
+    string EulerArtificialDiffusionCFE::className = 
+        SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction(
+            "EulerArtificialDiffusionCFE", EulerArtificialDiffusionCFE::create, 
+            "Euler equations in conservative variables with "
+            "artificial diffusion.");
 
     EulerArtificialDiffusionCFE::EulerArtificialDiffusionCFE(
             const LibUtilities::SessionReaderSharedPtr& pSession)
@@ -70,8 +74,10 @@ namespace Nektar
 
         if (m_explicitAdvection)
         {
-            m_ode.DefineOdeRhs     (&EulerArtificialDiffusionCFE::DoOdeRhs,        this);
-            m_ode.DefineProjection (&EulerArtificialDiffusionCFE::DoOdeProjection, this);
+            m_ode.DefineOdeRhs    (&EulerArtificialDiffusionCFE::
+                                    DoOdeRhs, this);
+            m_ode.DefineProjection(&EulerArtificialDiffusionCFE::
+                                    DoOdeProjection, this);
         }
         else
         {
@@ -91,9 +97,11 @@ namespace Nektar
         out << "\tProblem Type    : " << ProblemTypeMap[m_problemType] << endl;
     }
 
-    void EulerArtificialDiffusionCFE::v_SetInitialConditions(NekDouble initialtime, bool dumpInitialConditions)
+    void EulerArtificialDiffusionCFE::v_SetInitialConditions(
+        NekDouble initialtime, 
+        bool      dumpInitialConditions)
     {
-        EquationSystem::v_SetInitialConditions(initialtime,false);
+        EquationSystem::v_SetInitialConditions(initialtime, false);
 
         if(dumpInitialConditions)
         {
@@ -103,136 +111,95 @@ namespace Nektar
         }
     }
 
-    void EulerArtificialDiffusionCFE::DoOdeRhs(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-            Array<OneD,       Array<OneD, NekDouble> >&outarray,
-            const NekDouble time)
+    void EulerArtificialDiffusionCFE::DoOdeRhs(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time)
     {
         int i;
-        int ndim    = m_spacedim;
         int nvariables = inarray.num_elements();
-        int ncoeffs    = GetNcoeffs();
-        int nq         = GetTotPoints();
-        int npoints = GetNpoints();
-
-        switch(m_projectionType)
+        int npoints    = GetNpoints();
+                
+        Array<OneD, Array<OneD, NekDouble> > advVel;
+                
+        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
+                
+        for (i = 0; i < nvariables; ++i)
         {
-        case MultiRegions::eDiscontinuous:
-        {
-            //-------------------------------------------------------
-            //inarray in physical space
-
-            Array<OneD, Array<OneD, NekDouble> > modarray(nvariables);
-            for (i = 0; i < nvariables; ++i)
-            {
-                modarray[i]  = Array<OneD, NekDouble>(ncoeffs);
-            }
-            //-------------------------------------------------------
-
-
-            //-------------------------------------------------
-            // get the advection part
-            // input: physical space
-            // output: modal space
-
-            // straighforward DG
-            WeakDGAdvection(inarray, modarray, false, true);
-            //-------------------------------------------------
-
-
-            //-------------------------------------------------------
-            // negate the outarray since moving terms to the rhs
-            for(i = 0; i < nvariables; ++i)
-            {
-                Vmath::Neg(ncoeffs,modarray[i],1);
-                m_fields[i]->MultiplyByElmtInvMass(modarray[i],modarray[i]);
-                m_fields[i]->BwdTrans(modarray[i],outarray[i]);
-            }
-        }
-        break;
-        case MultiRegions::eGalerkin:
-        case MultiRegions::eMixed_CG_Discontinuous:
-            ASSERTL0(false,"Continouos scheme not implemented for EulerCFE");
-            break;
-        default:
-            ASSERTL0(false,"Unknown projection scheme for the EulerCFE");
-            break;
+            Vmath::Neg(npoints, outarray[i], 1);
         }
     }
 
-    void EulerArtificialDiffusionCFE::DoOdeProjection(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-            Array<OneD,       Array<OneD, NekDouble> >&outarray,
-            const NekDouble time)
+    void EulerArtificialDiffusionCFE::DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time)
     {
         int i;
         int nvariables = inarray.num_elements();
 
-
         switch(m_projectionType)
         {
-        case MultiRegions::eDiscontinuous:
-        {
-            // Just copy over array
-            int npoints = GetNpoints();
-
-            for(i = 0; i < nvariables; ++i)
+            case MultiRegions::eDiscontinuous:
             {
-                Vmath::Vcopy(npoints,inarray[i],1,outarray[i],1);
+                // Just copy over array
+                int npoints = GetNpoints();
+
+                for(i = 0; i < nvariables; ++i)
+                {
+                    Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
+                }
+                SetBoundaryConditions(outarray, time);
+                break;
             }
-            SetBoundaryConditions(outarray,time);
-        }
-        break;
-        case MultiRegions::eGalerkin:
-        case MultiRegions::eMixed_CG_Discontinuous:
-        {
-            ASSERTL0(false,"No Continuous Galerkin for Euler equations");
-            break;
-        }
-        default:
-            ASSERTL0(false,"Unknown projection scheme");
-            break;
+            case MultiRegions::eGalerkin:
+            case MultiRegions::eMixed_CG_Discontinuous:
+            {
+                ASSERTL0(false, "No Continuous Galerkin for Euler equations");
+                break;
+            }
+            default:
+                ASSERTL0(false, "Unknown projection scheme");
+                break;
         }
     }
     
-    //----------------------------------------------------
-    void EulerArtificialDiffusionCFE::SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &inarray,
-            NekDouble time)
-    {
-    
+    void EulerArtificialDiffusionCFE::SetBoundaryConditions(
+        Array<OneD, Array<OneD, NekDouble> > &inarray,
+        NekDouble                             time)
+    {    
         int nvariables = m_fields.num_elements();
         int nq         = inarray[0].num_elements();
-        int cnt = 0;
+        int cnt        = 0;
     
         // loop over Boundary Regions
-        for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
+        for (int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
         {
             // Wall Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eWall)
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::eWall)
             {
-                if (m_expdim == 2)
-                {
-                    WallBoundary(n,cnt,inarray);
-                }
-                else
-                {
-                    ASSERTL0(false,"1D, 3D not yet implemented");
-                }
+                WallBoundary(n, cnt, inarray);
+            }
+            
+            // Wall Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                SpatialDomains::eWallViscous)
+            {
+                ASSERTL0(false, "WallViscous is a wrong bc for the "
+                         "Euler equations");
             }
     
             // Symmetric Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eSymmetry)
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::eSymmetry)
             {
-                if (m_expdim == 2)
-                {
-                    SymmetryBoundary(n,cnt,inarray);
-                }
-                else
-                {
-                    ASSERTL0(false,"1D, 3D not yet implemented");
-                }
+                SymmetryBoundary(n, cnt, inarray);
             }
     
             // Time Dependent Boundary Condition (specified in meshfile)
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eTimeDependent)
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() 
+                == SpatialDomains::eTimeDependent)
             {
                 for (int i = 0; i < nvariables; ++i)
                 {
@@ -240,7 +207,7 @@ namespace Nektar
                 }
             }
     
-            cnt +=m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
+            cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
         }
     }
 }

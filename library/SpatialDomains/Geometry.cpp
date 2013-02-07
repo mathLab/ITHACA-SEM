@@ -46,6 +46,7 @@ namespace Nektar
 
         Geometry::Geometry():
             m_coordim(0),
+            m_geomFactorsState(eNotFilled),
             m_state(eNotFilled),
             m_geomShapeType(eNoGeomShapeType),
             m_globalID(-1)
@@ -54,6 +55,7 @@ namespace Nektar
 
         Geometry::Geometry(const int coordim):
             m_coordim(coordim),
+            m_geomFactorsState(eNotFilled),
             m_state(eNotFilled),
             m_geomShapeType(eNoGeomShapeType),
             m_globalID(-1)
@@ -140,7 +142,7 @@ namespace Nektar
             return m_geomFactors->GetGmat();
         }
 
-        const int Geometry::GetCoordim() const
+        int Geometry::GetCoordim() const
         {
             return v_GetCoordim();
         }
@@ -189,6 +191,10 @@ namespace Nektar
             return v_GetEid(i);
         }
 
+        int Geometry::GetFid(int i) const
+        {
+            return v_GetFid(i);
+        }
 
         int Geometry::GetNumVerts() const
         {
@@ -328,10 +334,24 @@ namespace Nektar
             return false;
         }
 
+        int Geometry::v_GetVid(int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for shape type geometries");
+            return 0;
+        }
+
         int Geometry::v_GetEid(int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for shape type geometries");
+            return 0;
+        }
+
+        int Geometry::v_GetFid(int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
             return 0;
         }
 
@@ -341,21 +361,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,
                 "This function is only valid for shape type geometries");
         }
-
-        void Geometry::v_GenRefGeomFactors(
-                    const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                "This function is only valid for shape type geometries");
-        }
-
-        int Geometry::v_GetVid(int i) const
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "This function is only valid for expansion type geometries");
-            return 0;
-        }
-
 
         int Geometry::v_GetNumVerts() const
         {

@@ -368,7 +368,7 @@ namespace Nektar
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
             m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal);
-            
+
             if(pLocToGloMap->AtLastLevel())
             {
                 // decide whether to assemble schur complement globally
@@ -411,8 +411,7 @@ namespace Nektar
                         {
                             for(int j = 0; j < loc_lda; ++j)
                             {
-                                //ptr[rowcoord*nbdry+colcoord] = value;
-                                ptr[j*loc_lda+i] = (*loc_mat)(i,j); //(*this)(i,j,k);
+                                ptr[j*loc_lda+i] = (*loc_mat)(i,j);
                             }
                         }
                         ptr += blockSize;
@@ -440,7 +439,6 @@ namespace Nektar
             int nbdry    = localMat->GetRows();
             int nblks    = 1;
             unsigned int esize[1] = {nbdry};
-            //esize[0] = nbdry;
 
             schurComplBlock = MemoryManager<DNekScalBlkMat>
                 ::AllocateSharedPtr(nblks, nblks, esize, esize);
@@ -571,7 +569,7 @@ namespace Nektar
                 m_S1Blk->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
                 m_RBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_R));
                 m_RTBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_RT));
-	    }
+            }
         }
 
         /**

@@ -1499,40 +1499,24 @@ namespace Nektar
             NekVector<NekDouble> V_GlobHomBndOut(nGlobHomBndDofs,pOutput+nDirBndDofs,
                                               eWrapper);
 
-            Array<OneD, NekDouble> V_GlobalTest(nGlobHomBndDofs,1.0);
-            Array<OneD, NekDouble> V_GlobalBndTest(nGlobHomBndDofs,0.0);
-            Array<OneD, NekDouble> V_LocalTest(nLocBndDofs,0.0);
-            m_locToGloMap->GlobalToLocalBnd(V_GlobalTest,V_LocalTest, nDirBndDofs);
-            m_locToGloMap->AssembleBnd(V_LocalTest,V_GlobalBndTest, nDirBndDofs);
-
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,pLocal,eWrapper);
 
             Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
 
             Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
-            Array<OneD,NekDouble> global(nGlobBndDofs,0.0);
-            Vmath::Vcopy(nGlobBndDofs-nDirBndDofs, m_locToGloSignMult.get(), 1, tmp.get() + nDirBndDofs, 1);
-            Vmath::Vcopy(nGlobBndDofs-nDirBndDofs, pInput.get()+nDirBndDofs, 1, global.get() + nDirBndDofs, 1);
 
-            //Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), global.get(), m_map.get(), pLocal.get());
             //only want to map non-dirichlet dofs
             m_locToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
 
-            for(int i=0; i<nLocBndDofs; ++i)
-            {
-                cout<<V_LocBnd[i]<<endl;
-            }
-
             V_LocBnd=RT*V_LocBnd;
             
-            //m_locToGloMap->LocalBndToGlobal(V_LocBnd,V_GlobHomBndOut, nDirBndDofs);
-            m_locToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndOut, nDirBndDofs);
+            Vmath::Assmb(nLocBndDofs, m_locToGloSignMult.get(),pLocal.get(), m_map.get(), tmp.get());
 
-            /*for(int i=0; i<nGlobHomBndDofs; ++i)
-            {
-                V_GlobHomBndOut[i]=V_GlobHomBndOut[i]/V_GlobalBndTest[i];
-                }*/
+            m_locToGloMap->UniversalAssembleBnd(tmp);
+
+            Vmath::Vcopy(nGlobBndDofs-nDirBndDofs, tmp.get() + nDirBndDofs, 1, pOutput.get() + nDirBndDofs, 1);
+
         }
 
 
@@ -1633,6 +1617,7 @@ namespace Nektar
             {
                 m_locToGloSignMult[i] = sign[i]*1.0/vCounts[vMap[i]];
             }
+
         }
 
     }

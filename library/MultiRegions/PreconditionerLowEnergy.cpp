@@ -777,7 +777,7 @@ namespace Nektar
             int vMap1, vMap2, sign1, sign2, gid1, gid2;
             int m, v, eMap1, eMap2, fMap1, fMap2;
             int offset, globalrow, globalcol, bnd_rows, nCoeffs;
-            NekDouble globalMatrixValue, globalRValue;
+            NekDouble globalMatrixValue, globalRValue, vertValue;
 
             //matrix storage
             MatrixStorage storage = eFULL;
@@ -815,6 +815,9 @@ namespace Nektar
             DNekMatSharedPtr VertBlk = MemoryManager<DNekMat>::
                 AllocateSharedPtr(nNonDirVerts,nNonDirVerts,zero,vertstorage);
 
+            Array<OneD, NekDouble> vertArray(nNonDirVerts,0.0);
+            Array<OneD, long> m_VertBlockToUniversalMap(nNonDirVerts,-1);
+
             //maps for different element types
             map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transmatrixmap;
             map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transposedtransmatrixmap;
@@ -832,6 +835,7 @@ namespace Nektar
             StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>& bndConditions = expList->GetBndConditions();
 
+            int meshVertId;
             int meshEdgeId;
             int meshFaceId;
 
@@ -879,7 +883,6 @@ namespace Nektar
                 {
                     dof    = locExpansion->GetEdgeNcoeffs(j)-2;
                     maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
-                    cout<<nel<<endl;
                     meshEdgeId = locExpansion->GetGeom3D()->GetEid(j);
 
                     if(edgeDirMap.count(meshEdgeId)==0)
@@ -923,8 +926,8 @@ namespace Nektar
             m_comm->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
 
             //Allocate arrays for block to universal map (number of expansions * p^2)
-            Array<OneD, long> m_EdgeBlockToUniversalMap(nlocalNonDirEdges*maxEdgeDof*maxEdgeDof,-1);
-            Array<OneD, long> m_FaceBlockToUniversalMap(nlocalNonDirFaces*maxFaceDof*maxFaceDof,-1);
+            Array<OneD, long> m_EdgeBlockToUniversalMap(nNonDirEdgeIDs*maxEdgeDof*maxEdgeDof,-1);
+            Array<OneD, long> m_FaceBlockToUniversalMap(nNonDirFaceIDs*maxFaceDof*maxFaceDof,-1);
 
             Array<OneD, int> m_localEdgeToGlobalMatrixMap(nlocalNonDirEdges*maxEdgeDof*maxEdgeDof,-1);
             Array<OneD, int> m_localFaceToGlobalMatrixMap(nlocalNonDirFaces*maxFaceDof*maxFaceDof,-1);
@@ -952,7 +955,7 @@ namespace Nektar
             int edgematrixoffset=0;
             int facematrixoffset=0;
             int locExpansionoffset=0;
-            int vGlobalId;
+            int vGlobal;
             int nbndCoeffs=0;
             int nAssembledFaceVector=0;
             int ntotaledgeentries=0;
@@ -987,12 +990,18 @@ namespace Nektar
 
                             n_blks[1+edgematrixlocation++]=
                                 locExpansion->GetEdgeNcoeffs(j)-2;
+
                         }
 
                         for(k=0; k<nedgemodes*nedgemodes; ++k)
                         {
+                            vGlobal=(uniqueEdgeMap[meshEdgeId])*nedgemodes*nedgemodes+k;
+
                             m_localEdgeToGlobalMatrixMap[edgematrixoffset+k]
                                 = (uniqueEdgeMap[meshEdgeId])*nedgemodes*nedgemodes+k;
+
+                            m_EdgeBlockToUniversalMap[vGlobal]
+                                = meshEdgeId * maxEdgeDof * maxEdgeDof + k + 1;
                         }
                         edgematrixoffset+=maxEdgeDof*maxEdgeDof;
                     }
@@ -1025,29 +1034,21 @@ namespace Nektar
                             
                         }
 
-                        /*Array<OneD, unsigned int> facemodearray = locExpansion->GetFaceInverseBoundaryMap(j);
-                        for(k=0; k<nfacemodes; ++k)
-                        {
-                            for(m=0; m<nfacemodes; ++m)
-                            {
-                            //nnbnecoeffs needs to be mapped
-                                vGlobalId=m_locToGloMap->GetLocalToGlobalBndMap(nbndCoeffs+facemodearray[m])-
-                                    nNonDirEdges; //+(uniqueFaceMap[meshFaceId]-1)*nfacemodes*nfacemodes+m+k;
-                                cout<<vGlobalId<<endl;
-                            }
-                            }*/
-
                         for(k=0; k<nfacemodes*nfacemodes; ++k)
                         {
+                            vGlobal=(uniqueFaceMap[meshFaceId])*nfacemodes*nfacemodes+k;
+
                             m_localFaceToGlobalMatrixMap[facematrixoffset+k]
-                                = (uniqueFaceMap[meshFaceId])*nfacemodes*nfacemodes+k;
+                                = vGlobal;
+
+                            m_FaceBlockToUniversalMap[vGlobal]
+                                = meshFaceId * maxFaceDof * maxFaceDof + k + 1;
                         }
                         facematrixoffset+=maxFaceDof*maxFaceDof;
                     }
                 }
                 nbndCoeffs=+locExpansion->NumBndryCoeffs();
             }
-
 
             edgematrixoffset=0;
             facematrixoffset=0;
@@ -1114,13 +1115,14 @@ namespace Nektar
                 //for each vertex
                 for (v=0; v<nVerts; ++v)
                 {
-
                     DNekScalMatSharedPtr tmp_mat;
                     DNekMatSharedPtr m_locMat = 
                         MemoryManager<DNekMat>::AllocateSharedPtr
                         (nVerts,nVerts,zero,storage);
 
                     vMap1=locExpansion->GetVertexMap(v);
+
+                    meshVertId = locExpansion->GetGeom3D()->GetVid(v);
                     
                     //Get vertex map
                     globalrow = m_locToGloMap->
@@ -1146,15 +1148,13 @@ namespace Nektar
                                 sign2 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + vMap2);
                                 
-                                //Global matrix value
-                                globalMatrixValue = VertBlk->
-                                    GetValue(globalrow,globalcol)
-                                    + sign1*sign2*RSRT(vMap1,vMap2);
+                                vertValue = vertArray[globalrow]
+                                      + sign1*sign2*RSRT(vMap1,vMap2);
 
-                                //build matrix containing the linear finite
-                                //element space
-                                VertBlk->SetValue
-                                    (globalrow,globalcol,globalMatrixValue);
+                                vertArray[globalrow] = vertValue;
+
+                                m_VertBlockToUniversalMap[globalrow]
+                                = meshVertId * nVerts * nVerts + 1;
                             }
                         }
                     }
@@ -1189,9 +1189,6 @@ namespace Nektar
                                     GetLocalToGlobalBndSign(cnt + eMap2);
 
                                 NekDouble globalEdgeValue = sign1*sign2*RSRT(eMap1,eMap2);
-
-                                m_EdgeBlockToUniversalMap[edgematrixoffset+v+m]
-                                    = meshEdgeId * maxEdgeDof * maxEdgeDof + v*nedgemodes + m + 1;
 
                                 m_EdgeBlockArray[edgematrixoffset+v*nedgemodes+m]=globalEdgeValue;
                             }
@@ -1231,13 +1228,11 @@ namespace Nektar
                                     GetLocalToGlobalBndSign(cnt + fMap1);
                                 sign2 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + fMap2);
-                                    
+
                                 // Get the face-face value from the low energy matrix (S2)
                                 NekDouble globalFaceValue = sign1*sign2*RSRT(fMap1,fMap2);
 
-                                m_FaceBlockToUniversalMap[facematrixoffset+v*nfacemodes+m]
-                                    = meshFaceId * maxFaceDof * maxFaceDof + v*nfacemodes + m + 1;
-
+                                //test here with local to global map
                                 m_FaceBlockArray[facematrixoffset+v*nfacemodes+m]=globalFaceValue;
                             }
                         }
@@ -1252,14 +1247,6 @@ namespace Nektar
                 m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
                 m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
             }
-
-            //Exchange face data over different processes
-            Gs::gs_data *tmp1 = Gs::Init(m_EdgeBlockToUniversalMap, m_comm);
-            Gs::Gather(m_EdgeBlockArray, Gs::gs_add, tmp1);
-
-            //Exchange face data over different processes
-            Gs::gs_data *tmp2 = Gs::Init(m_FaceBlockToUniversalMap, m_comm);
-            Gs::Gather(m_FaceBlockArray, Gs::gs_add, tmp2);
 
             //Assemble edge matrices of each process
             Array<OneD, NekDouble> m_GlobalEdgeBlock(ntotaledgeentries);
@@ -1276,6 +1263,28 @@ namespace Nektar
                          m_FaceBlockArray.get(), 
                          m_localFaceToGlobalMatrixMap.get(), 
                          m_GlobalFaceBlock.get());
+
+
+            //Exchange edge data over different processes
+            if(nNonDirVerts!=0)
+            {
+                Gs::gs_data *tmp = Gs::Init(m_VertBlockToUniversalMap, m_comm);
+                Gs::Gather(vertArray, Gs::gs_add, tmp);
+            }
+
+            //Exchange edge data over different processes
+            Gs::gs_data *tmp1 = Gs::Init(m_EdgeBlockToUniversalMap, m_comm);
+            Gs::Gather(m_GlobalEdgeBlock, Gs::gs_add, tmp1);
+
+            //Exchange face data over different processes
+            Gs::gs_data *tmp2 = Gs::Init(m_FaceBlockToUniversalMap, m_comm);
+            Gs::Gather(m_GlobalFaceBlock, Gs::gs_add, tmp2);
+
+            // Populate vertex block
+            for (int i = 0; i < nNonDirVerts; ++i)
+            {
+                  VertBlk->SetValue(i,i,1.0/vertArray[i]);
+            }
 
             //Set the first block to be the diagonal of the vertex space
             BlkMat->SetBlock(0,0, VertBlk);
@@ -1327,7 +1336,7 @@ namespace Nektar
             
             int totblks=BlkMat->GetNumberOfBlockRows();
 
-            for (i=0; i< totblks; ++i)
+            for (i=1; i< totblks; ++i)
             {
                 unsigned int nmodes=BlkMat->GetNumberOfRowsInBlockRow(i);
                 DNekMatSharedPtr tmp_mat = 
@@ -1343,6 +1352,7 @@ namespace Nektar
                     }
                     cout<<endl;
                 }
+                cout<<endl;
 
                 tmp_mat->Invert();
                 BlkMat->SetBlock(i,i,tmp_mat);
@@ -1462,8 +1472,7 @@ namespace Nektar
                         
             F_LocBnd=R*F_LocBnd;
             
-            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
-            
+            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);            
         }
 
         /**
@@ -1486,18 +1495,44 @@ namespace Nektar
 
             DNekScalBlkMat &RT = *m_RTBlk;
             NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,pInput+nDirBndDofs,
-                                              eWrapper);
+              eWrapper);
             NekVector<NekDouble> V_GlobHomBndOut(nGlobHomBndDofs,pOutput+nDirBndDofs,
                                               eWrapper);
+
+            Array<OneD, NekDouble> V_GlobalTest(nGlobHomBndDofs,1.0);
+            Array<OneD, NekDouble> V_GlobalBndTest(nGlobHomBndDofs,0.0);
+            Array<OneD, NekDouble> V_LocalTest(nLocBndDofs,0.0);
+            m_locToGloMap->GlobalToLocalBnd(V_GlobalTest,V_LocalTest, nDirBndDofs);
+            m_locToGloMap->AssembleBnd(V_LocalTest,V_GlobalBndTest, nDirBndDofs);
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,pLocal,eWrapper);
 
+            Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+
+            Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
+            Array<OneD,NekDouble> global(nGlobBndDofs,0.0);
+            Vmath::Vcopy(nGlobBndDofs-nDirBndDofs, m_locToGloSignMult.get(), 1, tmp.get() + nDirBndDofs, 1);
+            Vmath::Vcopy(nGlobBndDofs-nDirBndDofs, pInput.get()+nDirBndDofs, 1, global.get() + nDirBndDofs, 1);
+
+            //Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), global.get(), m_map.get(), pLocal.get());
+            //only want to map non-dirichlet dofs
             m_locToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
- 
+
+            for(int i=0; i<nLocBndDofs; ++i)
+            {
+                cout<<V_LocBnd[i]<<endl;
+            }
+
             V_LocBnd=RT*V_LocBnd;
             
-            m_locToGloMap->LocalBndToGlobal(V_LocBnd,V_GlobHomBndOut, nDirBndDofs);
+            //m_locToGloMap->LocalBndToGlobal(V_LocBnd,V_GlobHomBndOut, nDirBndDofs);
+            m_locToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndOut, nDirBndDofs);
+
+            /*for(int i=0; i<nGlobHomBndDofs; ++i)
+            {
+                V_GlobHomBndOut[i]=V_GlobHomBndOut[i]/V_GlobalBndTest[i];
+                }*/
         }
 
 

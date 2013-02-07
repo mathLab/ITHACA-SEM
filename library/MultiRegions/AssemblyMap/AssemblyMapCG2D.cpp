@@ -210,7 +210,7 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
                 {
                     bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
-
+                    cout<<bndConditions[i]->GetBoundaryConditionType()<<endl;
                     if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                     {
                         nLocDirBndCondDofs += bndSegExp->GetNcoeffs();
@@ -953,6 +953,9 @@ namespace Nektar
                 }
                 localOffset+=nVerts;
             }
+
+            // Number of dirichlet edges
+            m_numNonDirEdges=edgeTempGraphVertId.size();
 
             if(doInteriorMap)
             {

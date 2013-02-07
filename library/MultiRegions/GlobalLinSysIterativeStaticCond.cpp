@@ -259,7 +259,6 @@ namespace Nektar
                 else
                 {
                     DNekScalBlkMat &S1 = *m_S1Blk;
-                    DNekScalBlkMat &R = *m_RBlk;
                     DNekScalBlkMat &BinvD = *m_BinvD;
 
                     if( nIntDofs  && ((!dirForcCalculated) && (atLastLevel)) )

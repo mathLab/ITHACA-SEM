@@ -2315,12 +2315,10 @@ namespace Nektar
         Array<OneD, unsigned int>
         QuadExp::v_GetEdgeInverseBoundaryMap(int eid)
         {
-            int nEdges;
-            int cnt, n, i, j;
+            int n, j;
             int nEdgeCoeffs;
             
             int nBndCoeffs=NumBndryCoeffs();
-            int nCoeffs=GetNcoeffs();
 
             Array<OneD,unsigned int> bmap(nBndCoeffs);
             GetBoundaryMap(bmap);

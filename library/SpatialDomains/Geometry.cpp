@@ -154,13 +154,6 @@ namespace Nektar
             return ValidateRegGeomFactor(m_geomFactors);
         }
 
-        GeomFactorsSharedPtr Geometry::GetRefGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
-        {
-            GenRefGeomFactors(tbasis);
-            return ValidateRegGeomFactor(m_geomFactors);
-        }
-
         GeomFactorsSharedPtr Geometry::GetMetricInfo()
         {
             return m_geomFactors;
@@ -253,14 +246,6 @@ namespace Nektar
         {
             return v_GenGeomFactors(tbasis);
         }
-
-        void Geometry::GenRefGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
-        {
-            return v_GenRefGeomFactors(tbasis);
-        }
-
-
 
        /** 
         * @brief Put all quadrature information into face/edge structure and

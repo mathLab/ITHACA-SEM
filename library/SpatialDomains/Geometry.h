@@ -169,9 +169,6 @@ namespace Nektar
 
                 void GenGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
-                void GenRefGeomFactors(
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
-
 
                 //---------------------------------------
                 // Element connection functions

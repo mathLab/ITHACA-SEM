@@ -97,6 +97,10 @@ namespace Nektar
             GlobalLinSysIterativeStaticCondSharedPtr m_recursiveSchurCompl;
             /// Block Schur complement matrix.
             DNekScalBlkMatSharedPtr                  m_schurCompl;
+            /// Dense storage for block Schur complement matrix.
+            std::vector<double>                      m_storage;
+            std::vector<double*>                     m_denseBlocks;
+            Array<OneD, unsigned int>                m_rows;
             /// Block \f$ BD^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_BinvD;
             /// Block \f$ C \f$ matrix.
@@ -115,8 +119,6 @@ namespace Nektar
             Array<OneD, NekDouble>                   m_wsp;
             /// Preconditioner object.
             PreconditionerSharedPtr                  m_precon;
-            /// Wrapper for block matrices.
-            Array<OneD, DNekScalBlkMatSharedPtr>     m_schurComplBlock;
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.

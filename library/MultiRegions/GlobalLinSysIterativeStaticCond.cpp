@@ -367,7 +367,7 @@ namespace Nektar
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-            m_wsp = Array<OneD, NekDouble>(nLocalBnd + nGlobal);
+            m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal);
             
             if(pLocToGloMap->AtLastLevel())
             {
@@ -381,22 +381,44 @@ namespace Nektar
                 {
                     AssembleSchurComplement(pLocToGloMap);
                 }
-                
-                int nbdry, nblks;
-                unsigned int esize[1];
-                int nBlk          = m_schurCompl->GetNumberOfBlockRows();
-                m_schurComplBlock = Array<OneD, DNekScalBlkMatSharedPtr>(nBlk);
-                
-                for (int i = 0; i < nBlk; ++i)
+                else
                 {
-                    nbdry                = m_schurCompl->GetBlock(i,i)->GetRows();
-                    nblks                = 1;
-                    esize[0]             = nbdry;
-                    m_schurComplBlock[i] = MemoryManager<DNekScalBlkMat>
-                        ::AllocateSharedPtr(nblks, nblks, esize, esize);
-                    m_schurComplBlock[i]->SetBlock(
-                        0, 0, m_schurCompl->GetBlock(i,i));
-                }
+                    size_t storageSize = 0;
+                    int nBlk          = m_schurCompl->GetNumberOfBlockRows();
+
+                    // Determine storage requirements for dense blocks.
+                    for (int i = 0; i < nBlk; ++i)
+                    {
+                        m_rows[i]    = m_schurCompl->GetBlock(i,i)->GetRows();
+                        storageSize += m_rows[i] * m_rows[i];
+                    }
+
+                    // Assemble dense storage blocks.
+                    DNekScalMatSharedPtr loc_mat;
+                    m_storage.resize    (storageSize);
+                    m_denseBlocks.resize(nBlk);
+                    double *ptr = &m_storage[0];
+
+                    for (unsigned int n = 0; n < nBlk; ++n)
+                    {
+                        loc_mat = m_schurCompl->GetBlock(n,n);
+                        int loc_lda = loc_mat->GetRows();
+
+                        int blockSize    = loc_lda * loc_lda;
+                        m_denseBlocks[n] = ptr;
+
+                        for(int i = 0; i < loc_lda; ++i)
+                        {
+                            for(int j = 0; j < loc_lda; ++j)
+                            {
+                                //ptr[rowcoord*nbdry+colcoord] = value;
+                                ptr[j*loc_lda+i] = (*loc_mat)(i,j); //(*this)(i,j,k);
+                            }
+                        }
+                        ptr += blockSize;
+                    }
+
+                } // if (doGlobalOp)
             }
             else
             {
@@ -404,16 +426,27 @@ namespace Nektar
                         pLocToGloMap->GetNextLevelLocalToGlobalMap());
             }
         }
-        
+
         int GlobalLinSysIterativeStaticCond::v_GetNumBlocks()
         {
             return m_schurCompl->GetNumberOfBlockRows();
         }
-        
+
         DNekScalBlkMatSharedPtr GlobalLinSysIterativeStaticCond::
             v_GetStaticCondBlock(unsigned int n)
         {
-            return m_schurComplBlock[n];
+            DNekScalBlkMatSharedPtr schurComplBlock;
+            DNekScalMatSharedPtr    localMat = m_schurCompl->GetBlock(n,n);
+            int nbdry    = localMat->GetRows();
+            int nblks    = 1;
+            unsigned int esize[1] = {nbdry};
+            //esize[0] = nbdry;
+
+            schurComplBlock = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nblks, nblks, esize, esize);
+            schurComplBlock->SetBlock(0, 0, localMat);
+
+            return schurComplBlock;
         }
 
         /**
@@ -864,13 +897,19 @@ namespace Nektar
             }
             else
             {
-                // Do matrix multiply locally
+                // Do matrix multiply locally, using direct BLAS calls
                 m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
-                NekVector<NekDouble> loc(nLocal, m_wsp, eWrapper);
-
-                loc = (*m_schurCompl)*loc;
-
-                m_locToGloMap->AssembleBnd(m_wsp, pOutput);
+                int i, cnt;
+                Array<OneD, NekDouble> tmpout  = m_wsp + nLocal;
+                for (i = cnt = 0; i < m_denseBlocks.size(); cnt += m_rows[i], ++i)
+                {
+                    const int rows = m_rows[i];
+                    Blas::Dgemv('N', rows, rows,
+                                1.0, m_denseBlocks[i], rows, 
+                                m_wsp.get()+cnt, 1, 
+                                0.0, tmpout.get()+cnt, 1);
+                }
+                m_locToGloMap->AssembleBnd(tmpout, pOutput);
             }
         }
 

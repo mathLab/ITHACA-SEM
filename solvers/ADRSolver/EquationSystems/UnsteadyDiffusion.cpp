@@ -52,6 +52,13 @@ namespace Nektar
         m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
 
+        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
+        if(m_useSpecVanVisc)
+        {
+            m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
+            m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
+        }
+
         int nq = m_fields[0]->GetNpoints();
         if(m_session->DefinesParameter("d00"))
         {
@@ -138,6 +145,12 @@ namespace Nektar
         factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
         factors[StdRegions::eFactorTau] = 1.0;
 
+        if(m_useSpecVanVisc)
+        {
+            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_epsilon;
+        }
+
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
         // outarray = output: nabla^2 \hat{Y}
@@ -202,5 +215,13 @@ namespace Nektar
         }
     }
 
+    void UnsteadyDiffusion::v_PrintSummary(std::ostream &out)
+    {
 
+        UnsteadySystem::v_PrintSummary(out);
+        if(m_useSpecVanVisc)
+        {
+            out << "\tSpecVanVis      : True (cut off ratio = " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;
+        }
+    }
 }

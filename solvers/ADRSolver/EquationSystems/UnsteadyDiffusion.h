@@ -60,6 +60,10 @@ namespace Nektar
         virtual ~UnsteadyDiffusion();
 
     protected:
+        bool m_useSpecVanVisc;
+        NekDouble m_sVVCutoffRatio;   // cutt off ratio from which to start decayhing modes
+        NekDouble m_sVVDiffCoeff;     // Diffusion coefficient of SVV modes
+
         UnsteadyDiffusion(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -79,6 +83,7 @@ namespace Nektar
 
         virtual void v_InitObject();
 
+        virtual void v_PrintSummary(std::ostream &out);
     private:
         NekDouble m_waveFreq;
         NekDouble m_epsilon;

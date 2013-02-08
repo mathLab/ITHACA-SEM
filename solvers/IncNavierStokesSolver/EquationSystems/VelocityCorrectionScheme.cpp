@@ -87,7 +87,13 @@ namespace Nektar
         ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
         
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
-
+        if(m_useSpecVanVisc)
+        {
+            m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
+            m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
+        }
+        
+        
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
@@ -110,10 +116,9 @@ namespace Nektar
                 int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
                 int pstart;
                 NekDouble svvdiff;
+                NekDouble cutoff; 
 
-                m_session->LoadParameter("SVVStartMode",pstart,0.75*kmodes);
-                
-                m_session->LoadParameter("SVVDiffCoeff",svvdiff,0.1/m_kinvis);
+                pstart = m_sVVCutoffRatio*kmodes;
                 
                 for(n = 0; n < num_planes; ++n)
                 {
@@ -121,7 +126,7 @@ namespace Nektar
                     {
                         fac = (NekDouble)((planes[n] - kmodes)*(planes[n] - kmodes))/
                             ((NekDouble)((planes[n] - pstart)*(planes[n] - pstart)));
-                        SVV[n] = svvdiff*exp(-fac)/m_kinvis;
+                        SVV[n] = m_sVVDiffCoeff*exp(-fac)/m_kinvis;
                     }
                 }
 
@@ -368,7 +373,7 @@ namespace Nektar
 
         if(m_useSpecVanVisc)
         {
-            cout << "\tSmoothing       : Spectral vanishing viscosity " << endl;
+            cout << "\tSmoothing       : Spectral vanishing viscosity (cut off ratio = " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;        
         }
 
         if(m_useHomo1DSpecVanVisc)
@@ -613,8 +618,8 @@ namespace Nektar
         
         if(m_useSpecVanVisc)
         {
-            factors[StdRegions::eFactorSVVCutoffRatio] = 0.75;
-            factors[StdRegions::eFactorSVVDiffCoeff]   = 0.1/m_kinvis;
+            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
         }
         
         // Solve Helmholtz system and put in Physical space

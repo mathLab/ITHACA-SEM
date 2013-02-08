@@ -137,7 +137,6 @@ namespace Nektar
             eHybridDGLamToU,
             eFwdTrans,
             ePreconditioner,
-            eSVVTensor,
             SIZE_MatrixType
         };
 
@@ -180,7 +179,6 @@ namespace Nektar
             "HybridDGLamToU",
             "FwdTrans",
             "Preconditinoer",
-            "SVVTensor"
         };
 
         enum VarCoeffType

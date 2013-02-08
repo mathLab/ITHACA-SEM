@@ -1716,7 +1716,8 @@ namespace Nektar
                                                Array<OneD,NekDouble> &outarray,
                                                const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNVarCoeff() == 0)
+            if(mkey.GetNVarCoeff() == 0 && !mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
+
             {
                 // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
@@ -1747,24 +1748,6 @@ namespace Nektar
                     BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1);
                     StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
 
-
-                    // Multiply by svv tensor if active
-                    if(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
-                    {
-                        StdRegions::StdMatrixKey svvkey(mkey,StdRegions::eSVVTensor);
-                        
-                        DNekMat  &SVVTensor = *GetStdMatrix(svvkey);
-                        
-                        NekVector<NekDouble> In1(nqtot,wsp1,eCopy);
-                        NekVector<NekDouble> Out1(nqtot,wsp1,eWrapper);
-                        
-                        Out1 = SVVTensor*In1;                                           
-
-                        NekVector<NekDouble> In2(nqtot,wsp2,eCopy);
-                        NekVector<NekDouble> Out2(nqtot,wsp2,eWrapper);
-                        
-                        Out2 = SVVTensor*In2;                                           
-                    }
 
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g1 * du_dxi1 + g2 * du_dxi2
@@ -1816,23 +1799,6 @@ namespace Nektar
                     BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1);
                     StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
 
-                    // Multiply by svv tensor if active
-                    if(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
-                    {
-                        StdRegions::StdMatrixKey svvkey(mkey,StdRegions::eSVVTensor);
-                        
-                        DNekMat  &SVVTensor = *GetStdMatrix(svvkey);
-                        
-                        NekVector<NekDouble> In1(nqtot,wsp1,eCopy);
-                        NekVector<NekDouble> Out1(nqtot,wsp1,eWrapper);
-                        
-                        Out1 = SVVTensor*In1;                                           
-
-                        NekVector<NekDouble> In2(nqtot,wsp2,eCopy);
-                        NekVector<NekDouble> Out2(nqtot,wsp2,eWrapper);
-                        
-                        Out2 = SVVTensor*In2;                                           
-                    }
 
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
@@ -1919,6 +1885,7 @@ namespace Nektar
                     // wsp2 = l = wsp4 * wsp1 + wsp5 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     Vmath::Vvtvvtp(nqtot,&wsp3[0],1,&wsp1[0],1,&wsp4[0],1,&wsp2[0],1,&wsp0[0],1);
                     Vmath::Vvtvvtp(nqtot,&wsp4[0],1,&wsp1[0],1,&wsp5[0],1,&wsp2[0],1,&wsp2[0],1);
+
                     // substep 4: multiply by jacobian and quadrature weights
                     MultiplyByQuadratureMetric(wsp0,wsp0);
                     MultiplyByQuadratureMetric(wsp2,wsp2);

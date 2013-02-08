@@ -1319,57 +1319,6 @@ namespace Nektar
                     (*Mat) = Imass*Iprod;
                 }
                 break;
-            case eSVVTensor:
-                {
-                    // Generate a matrix that performs a physical
-                    // space filter where the high frequencies are
-                    // filtered according to SVV filter. 
-
-                    // Generate an orthonogal expansion
-                    int qa = m_base[0]->GetNumPoints();
-                    int qb = m_base[1]->GetNumPoints();
-                    int qtot = qa*qb;
-                    int nmodes_a = m_base[0]->GetNumModes();
-                    int nmodes_b = m_base[1]->GetNumModes();
-                    // Declare orthogonal basis. 
-                    LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
-                    LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
-                    LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
-                    LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
-                    StdQuadExp OrthoExp(Ba,Bb);
-                    
-                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(qtot,qtot);
-                    Array<OneD, NekDouble> inarray(qtot);
-                    Array<OneD, NekDouble> orthocoeffs(nmodes_a*nmodes_b);
-                    int i,j,k;
-
-                    
-                    int cuttoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
-                    NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
-                    
-                    for(i = 0; i < qtot; ++i)
-                    {
-                        Vmath::Zero(qtot,inarray,1);
-                        inarray[i] = 1.0;
-                        // project onto physical space.
-                        OrthoExp.FwdTrans(inarray,orthocoeffs);
-                        
-                        // apply SVV filter. 
-                        for(j = cuttoff; j < nmodes_a; ++j)
-                        {
-                            for(k = cuttoff; k < nmodes_b; ++k)
-                            {
-                                orthocoeffs[j*nmodes_b+k] += SvvDiffCoeff*exp(-(j-nmodes_a)*(k-nmodes_b)/((NekDouble)(j-cuttoff+1)*(k-cuttoff+1)));
-                            }
-                        }
-                        // backward transform to physical space
-                        OrthoExp.FwdTrans(orthocoeffs,inarray);
-                        
-                        // Fill column of matrix
-                        Vmath::Vcopy(qtot,&inarray[0],1,&(Mat->GetPtr())[0]+i*qtot,1);
-                    }
-                }
-                break;
             default:
                 {
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
@@ -1472,6 +1421,50 @@ namespace Nektar
                 StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
         }
+
+
+        void StdQuadExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                              const StdMatrixKey &mkey)
+        {
+            // Generate an orthonogal expansion
+            int qa = m_base[0]->GetNumPoints();
+            int qb = m_base[1]->GetNumPoints();
+            int qtot = qa*qb;
+            int nmodes_a = m_base[0]->GetNumModes();
+            int nmodes_b = m_base[1]->GetNumModes();
+            // Declare orthogonal basis. 
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
+            StdQuadExp OrthoExp(Ba,Bb);
+            
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
+            int j,k;
+            
+            int cuttoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            int nmodes = min(nmodes_a,nmodes_b);
+            
+            // project onto modal  space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+            
+            // apply SVV filter. 
+            for(j = 0; j < nmodes_a; ++j)
+            {
+                for(k = 0; k < nmodes_b; ++k)
+                {
+                    if(j + k >= cuttoff)
+                    {
+                        orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cuttoff+1)*(j+k-cuttoff+1)))));
+                    }
+                }
+            }
+            
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }                        
 
         void StdQuadExp::v_HelmholtzMatrixOp_MatFree(
                              const Array<OneD, const NekDouble> &inarray,

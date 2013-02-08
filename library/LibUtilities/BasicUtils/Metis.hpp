@@ -45,57 +45,25 @@ namespace Metis
 {
     extern "C"
     {
-/*        // -- Sparse MAtrix Reordering (equivalent to onmetis)
-        void   METIS_NodeND (int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
-                             int *perm, int *iperm);  
-
-        void AS_METIS_NodeND(int *nVerts, int *xadj, int *adjncy, int *numflag, int *options,
+        void AS_METIS_NodeND(int *nVerts, int *xadj, int *adjncy, int *vwgt, int *options,
                              int *perm, int *iperm, int *map, int *mdswitch);
-
-        void   METIS_PartMeshNodal(int *nElmts, int *nVerts, int *elType, int *numflag,
-                             int *nparts, int *edgecut, int *epart, int *npart);
-
-        void   METIS_PartGraphVKway(int *nVerts, int *xadj, int *adjcy, int *vertWgt, int *vertSize,
-                             int *wgtFlag, int *numflag, int *nparts, int *options, int *volume, int *part);
-*/    }
-
-    inline static void onmetis(int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
-                  int *perm, int *iperm)
-    {
-        METIS_NodeND(nVerts,xadj,adjncy,numflag,options,perm,iperm);
     }
 
-    inline static void as_onmetis(int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
-                           int *perm, int *iperm, int *map, int *mdswitch)
-    {
-//        AS_METIS_NodeND(nVerts,xadj,adjncy,numflag,options,perm,iperm,map,mdswitch) ;
-    }
-
-    inline static void onmetis(int nVerts, Nektar::Array<Nektar::OneD, int> xadj, Nektar::Array<Nektar::OneD, int> adjncy,
-                        Nektar::Array<Nektar::OneD, int> perm,  Nektar::Array<Nektar::OneD, int> iperm)
+    inline static void as_onmetis(
+        int                              nVerts,
+        Nektar::Array<Nektar::OneD, int> xadj,
+        Nektar::Array<Nektar::OneD, int> adjncy,
+        Nektar::Array<Nektar::OneD, int> perm, 
+        Nektar::Array<Nektar::OneD, int> iperm,
+        Nektar::Array<Nektar::OneD, int> map,
+        int                              mdswitch = 1)
     {
         ASSERTL1(xadj.num_elements() == nVerts+1,"Array xadj out of bounds");
         ASSERTL1(perm.num_elements() == nVerts,"Array perm out of bounds");
         ASSERTL1(iperm.num_elements() == nVerts,"Array iperm out of bounds");
 
-        int numflag = 0;
-        int options[8];
-        options[0]=0;
-        METIS_NodeND(&nVerts,&xadj[0],&adjncy[0],&numflag,options,&perm[0],&iperm[0]);
-    }
-
-    inline static void as_onmetis(int nVerts, Nektar::Array<Nektar::OneD, int> xadj, Nektar::Array<Nektar::OneD, int> adjncy,
-                           Nektar::Array<Nektar::OneD, int> perm,  Nektar::Array<Nektar::OneD, int> iperm, Nektar::Array<Nektar::OneD, int> map,
-                           int mdswitch)
-    {
-//        ASSERTL1(xadj.num_elements() == nVerts+1,"Array xadj out of bounds");
-//        ASSERTL1(perm.num_elements() == nVerts,"Array perm out of bounds");
-//        ASSERTL1(iperm.num_elements() == nVerts,"Array iperm out of bounds");
-//
-//        int numflag = 0;
-//        int options[8];
-//        options[0]=0;
-//        AS_METIS_NodeND(&nVerts,&xadj[0],&adjncy[0],&numflag,options,&perm[0],&iperm[0],&map[0],&mdswitch);
+        AS_METIS_NodeND(&nVerts, &xadj[0], &adjncy[0], NULL, NULL, &perm[0],
+                        &iperm[0], &map[0], &mdswitch);
     }
    
 //    inline static void MeshPartition(int nElmts, int nVerts, Nektar::Array<Nektar::OneD, int>& mesh, int type, int nparts,

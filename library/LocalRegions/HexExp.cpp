@@ -1293,43 +1293,25 @@ namespace Nektar
             const Array<TwoD, const NekDouble> & gmat = geomFactors->GetGmat();
             const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
 
-            int nqg0 = geomFactors->GetPointsKey(0).GetNumPoints();
-            int nqg1 = geomFactors->GetPointsKey(1).GetNumPoints();
-            int nqg2 = geomFactors->GetPointsKey(2).GetNumPoints();
             int nqe0 = m_base[0]->GetNumPoints();
             int nqe1 = m_base[1]->GetNumPoints();
             int nqe2 = m_base[2]->GetNumPoints();
             int nqe01 = nqe0*nqe1;
             int nqe02 = nqe0*nqe2;
             int nqe12 = nqe1*nqe2;
-            int nqg01 = nqg0*nqg1;
-            int nqg02 = nqg0*nqg2;
-            int nqg12 = nqg1*nqg2;
 
-            int nqg;
             int nqe;
-            int dir0;
-            int dir1;
             if (face == 0 || face == 5)
             {
-                nqg = nqg01;
                 nqe = nqe01;
-                dir0 = 0;
-                dir1 = 1;
             }
             else if (face == 1 || face == 3)
             {
-                nqg = nqg02;
                 nqe = nqe02;
-                dir0 = 0;
-                dir1 = 2;
             }
             else
             {
-                nqg = nqg12;
                 nqe = nqe12;
-                dir0 = 1;
-                dir1 = 2;
             }
 
             int vCoordDim = GetCoordim();
@@ -1404,11 +1386,8 @@ namespace Nektar
             {
                 int j, k;
 
-                LibUtilities::PointsKey points0;
-                LibUtilities::PointsKey points1;
-
                 Array<OneD,NekDouble> work(nqe,0.0);
-                Array<OneD,NekDouble> normals(vCoordDim*nqe,0.0);
+                //Array<OneD,NekDouble> normals(vCoordDim*nqe,0.0);
 
                 // Extract Jacobian along face and recover local
                 // derivates (dx/dr) for polynomial interpolation by
@@ -1418,94 +1397,72 @@ namespace Nektar
                     case 0:
                         for(j = 0; j < nqe; ++j)
                         {
-                            normals[j]       = -gmat[2][j]*jac[j];
-                            normals[nqe+j]   = -gmat[5][j]*jac[j];
-                            normals[2*nqe+j] = -gmat[8][j]*jac[j];
+                            normal[0][j] = -gmat[2][j]*jac[j];
+                            normal[1][j] = -gmat[5][j]*jac[j];
+                            normal[2][j] = -gmat[8][j]*jac[j];
                         }
-                        points0 = geomFactors->GetPointsKey(0);
-                        points1 = geomFactors->GetPointsKey(1);
                         break;
                     case 1:
                         for (j = 0; j< nqe0; ++j)
                         {
                             for(k = 0; k < nqe2; ++k)
                             {
-                                normals[j+k*nqe0]       = -gmat[1][j+nqe01*k]*jac[j+nqe01*k];
-                                normals[nqe+j+k*nqe0]   = -gmat[4][j+nqe01*k]*jac[j+nqe01*k];
-                                normals[2*nqe+j+k*nqe0] = -gmat[7][j+nqe01*k]*jac[j+nqe01*k];
+                                normal[0][j+k*nqe0] = -gmat[1][j+nqe01*k]*jac[j+nqe01*k];
+                                normal[1][j+k*nqe0] = -gmat[4][j+nqe01*k]*jac[j+nqe01*k];
+                                normal[2][j+k*nqe0] = -gmat[7][j+nqe01*k]*jac[j+nqe01*k];
                             }
                         }
-                        points0 = geomFactors->GetPointsKey(0);
-                        points1 = geomFactors->GetPointsKey(2);
                         break;
                     case 2:
                         for (j=0; j< nqe1; ++j)
                         {
                             for(k=0; k<nqe2; ++k)
                             {
-                                normals[j+k*nqe0]       = gmat[0][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
-                                normals[nqe+j+k*nqe0]   = gmat[3][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
-                                normals[2*nqe+j+k*nqe0] = gmat[6][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
+                                normal[0][j+k*nqe0] = gmat[0][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
+                                normal[1][j+k*nqe0] = gmat[3][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
+                                normal[2][j+k*nqe0] = gmat[6][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
                             }
                         }
-                        points0 = geomFactors->GetPointsKey(1);
-                        points1 = geomFactors->GetPointsKey(2);
                         break;
                     case 3:
                         for (j=0; j< nqe0; ++j)
                         {
                             for(k=0; k<nqe2; ++k)
                             {
-                                normals[j+k*nqe0]       = gmat[1][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
-                                normals[nqe+j+k*nqe0]   = gmat[4][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
-                                normals[2*nqe+j+k*nqe0] = gmat[7][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
+                                normal[0][j+k*nqe0] = gmat[1][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
+                                normal[1][j+k*nqe0] = gmat[4][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
+                                normal[1][j+k*nqe0] = gmat[7][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
                             }
                         }
-
-                        points0 = geomFactors->GetPointsKey(0);
-                        points1 = geomFactors->GetPointsKey(2);
                         break;
                     case 4:
                         for (j=0; j< nqe0; ++j)
                         {
                             for(k=0; k<nqe2; ++k)
                             {
-                                normals[j+k*nqe0]       = -gmat[0][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
-                                normals[nqe+j+k*nqe0]   = -gmat[3][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
-                                normals[2*nqe+j+k*nqe0] = -gmat[6][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
+                                normal[0][j+k*nqe0] = -gmat[0][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
+                                normal[1][j+k*nqe0] = -gmat[3][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
+                                normal[2][j+k*nqe0] = -gmat[6][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
                             }
                         }
-                        points0 = geomFactors->GetPointsKey(1);
-                        points1 = geomFactors->GetPointsKey(2);
                         break;
                     case 5:
                         for (j=0; j< nqe01; ++j)
                         {
-                            normals[j]       = gmat[2][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
-                            normals[nqe+j]   = gmat[5][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
-                            normals[2*nqe+j] = gmat[8][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
+                            normal[0][j] = gmat[2][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
+                            normal[1][j] = gmat[5][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
+                            normal[2][j] = gmat[8][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
                         }
-                        points0 = geomFactors->GetPointsKey(0);
-                        points1 = geomFactors->GetPointsKey(1);
                         break;
-                default:
+                    default:
                     ASSERTL0(false,"face is out of range (face < 5)");
                 }
 
-                // interpolate Jacobian and invert
-                LibUtilities::Interp2D(points0,points1,jac,
-                                       m_base[dir0]->GetPointsKey(),
-                                       m_base[dir1]->GetPointsKey(),
-                                       work);
-                Vmath::Sdiv(nqe,1.0,&work[0],1,&work[0],1);
+                Vmath::Sdiv(nqe,1.0,&jac[0],1,&work[0],1);
 
                 // interpolate
                 for(i = 0; i < GetCoordim(); ++i)
                 {
-                    LibUtilities::Interp2D(points0,points1,&normals[i*nqe],
-                                           m_base[dir0]->GetPointsKey(),
-                                           m_base[dir1]->GetPointsKey(),
-                                           &normal[i][0]);
                     Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
                 }
 

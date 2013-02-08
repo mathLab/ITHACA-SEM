@@ -92,7 +92,7 @@ ELSE (THIRDPARTY_BUILD_BOOST)
 
     #If the user has not set BOOST_ROOT, look in a couple common places first.
     IF( NOT BOOST_ROOT )
-        SET(TEST_ENV ENV{BOOST_HOME})
+        SET(TEST_ENV $ENV{BOOST_HOME})
         IF (DEFINED TEST_ENV)
             SET(Boost_NO_SYSTEM_PATHS ON)
             SET(BOOST_ROOT $ENV{BOOST_HOME})

@@ -141,7 +141,6 @@ namespace Nektar
         DNekBlkMatSharedPtr StdExpansion::CreateStdStaticCondMatrix(const StdMatrixKey &mkey)
         {
             DNekBlkMatSharedPtr returnval;
-            MatrixType mtype = mkey.GetMatrixType();
 
             DNekMatSharedPtr  mat = GetStdMatrix(mkey);
             int nbdry = NumBndryCoeffs(); // also checks to see if this is a boundary interior decomposed expansion
@@ -803,7 +802,6 @@ namespace Nektar
                                                                 Array<OneD,NekDouble> &outarray,
                                                                 const StdMatrixKey &mkey)
         {
-            int dim = 3;
             int nq = GetTotPoints();
             //            int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
             Array<OneD, NekDouble> tmp(nq);

@@ -42,7 +42,6 @@ namespace Nektar
         
         DNekMatSharedPtr Expansion1D::v_GenMatrix(const StdRegions::StdMatrixKey &mkey)
         {
-            
             DNekMatSharedPtr returnval;
             
             switch(mkey.GetMatrixType())
@@ -141,7 +140,6 @@ namespace Nektar
                 {
                     int j,k,dir;
                     int nbndry = NumDGBndryCoeffs();
-                    int nquad  = GetNumPoints(0);
                     int ncoeffs = GetNcoeffs();
 
                     Array<OneD,NekDouble> lambda(nbndry);
@@ -158,9 +156,6 @@ namespace Nektar
                     // declare matrix space
                     returnval  = MemoryManager<DNekMat>::AllocateSharedPtr(ncoeffs,nbndry); 
                     DNekMat &Qmat = *returnval;
-                    
-                    // Helmholtz matrix
-                    DNekScalMat &invHmat = *GetLocMatrix(StdRegions::eInvHybridDGHelmholtz, factors);
                     
                     // Lambda to U matrix
                     DNekScalMat &lamToU = *GetLocMatrix(StdRegions::eHybridDGLamToU, factors);
@@ -284,7 +279,7 @@ namespace Nektar
             }
         }
 
-        void Expansion1D::v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
+        void Expansion1D::AddHDGHelmholtzTraceTerms(const NekDouble tau,
                                                  const Array<OneD,const NekDouble> &inarray,  Array<OneD,NekDouble> &outarray)
         {
             int i,n;

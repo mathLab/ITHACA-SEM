@@ -1,8 +1,11 @@
 SET(SOLVER_UTILS_SOURCES
-  Advection.cpp
-  AdvectionFR.cpp
-  AdvectionNonConservative.cpp
-  AdvectionWeakDG.cpp
+  Advection/Advection.cpp
+  Advection/AdvectionFR.cpp
+  Advection/AdvectionNonConservative.cpp
+  Advection/AdvectionWeakDG.cpp
+  Diffusion/Diffusion.cpp
+  Diffusion/DiffusionLDG.cpp
+  Diffusion/DiffusionLDGNS.cpp
   Driver.cpp
   DriverArnoldi.cpp
   DriverModifiedArnoldi.cpp
@@ -19,10 +22,13 @@ SET(SOLVER_UTILS_SOURCES
 )
 
 SET(SOLVER_UTILS_HEADERS
-  Advection.h
-  AdvectionFR.h
-  AdvectionNonConservative.h
-  AdvectionWeakDG.h
+  Advection/Advection.h
+  Advection/AdvectionFR.h
+  Advection/AdvectionNonConservative.h
+  Advection/AdvectionWeakDG.h
+  Diffusion/Diffusion.h
+  Diffusion/DiffusionLDG.h
+  Diffusion/DiffusionLDGNS.h
   Driver.h
   DriverArnoldi.h
   DriverModifiedArnoldi.h

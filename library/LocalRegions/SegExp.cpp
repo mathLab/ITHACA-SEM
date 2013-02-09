@@ -1047,7 +1047,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             const SpatialDomains::GeomFactorsSharedPtr &geomFactors = GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
-            const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
             int nqe = m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
 
@@ -1101,8 +1100,9 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
 
         void SegExp::v_LaplacianMatrixOp(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdRegions::StdMatrixKey     &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
@@ -1184,12 +1184,13 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
 
         void SegExp::v_HelmholtzMatrixOp(
-                    const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,NekDouble> &outarray,
-                    const NekDouble lambda)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray,
+            const StdRegions::StdMatrixKey     &mkey)
         {
             int    nquad = m_base[0]->GetNumPoints();
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const NekDouble lambda = mkey.GetConstFactor(StdRegions::eFactorLambda);
 
             Array<OneD,NekDouble> physValues(nquad);
             Array<OneD,NekDouble> dPhysValuesdx(nquad);
@@ -1563,7 +1564,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             UseLocRegionsMatrix:
                 {
                     int i,j;
-                    int cnt = 0;
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
                     DNekScalMat &mat = *GetLocMatrix(mkey);

@@ -263,7 +263,6 @@ namespace Nektar
         {
             int i;
             int cnt  = 0;
-            int cnt2 = 0;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                                                 = bcs.GetBoundaryRegions();
@@ -317,7 +316,6 @@ namespace Nektar
         {
             int i;
             int cnt  = 0;
-            int cnt2 = 0;
 			
             const SpatialDomains::BoundaryRegionCollection &bregions
 			= bcs.GetBoundaryRegions();

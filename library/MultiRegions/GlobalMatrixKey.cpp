@@ -46,9 +46,9 @@ namespace Nektar
                     const StdRegions::VarCoeffMap &varCoeffs) :
             m_matrixType(matrixType),
             m_expansionType(StdRegions::eNoExpansionType),
-            m_locToGloMap(locToGloMap),
             m_constFactors(factors),
-            m_varCoeffs(varCoeffs)
+            m_varCoeffs(varCoeffs),
+            m_locToGloMap(locToGloMap)
         {
         }
 
@@ -56,18 +56,18 @@ namespace Nektar
                         const StdRegions::ExpansionType expType):
             m_matrixType(key.m_matrixType),
             m_expansionType(expType),
-            m_locToGloMap(key.m_locToGloMap),
             m_constFactors(key.m_constFactors),
-            m_varCoeffs(key.m_varCoeffs)
+            m_varCoeffs(key.m_varCoeffs),
+            m_locToGloMap(key.m_locToGloMap)
         {
         }
 
         GlobalMatrixKey::GlobalMatrixKey(const GlobalMatrixKey &key):
             m_matrixType(key.m_matrixType),
             m_expansionType(key.m_expansionType),
-            m_locToGloMap(key.m_locToGloMap),
             m_constFactors(key.m_constFactors),
-            m_varCoeffs(key.m_varCoeffs)
+            m_varCoeffs(key.m_varCoeffs),
+            m_locToGloMap(key.m_locToGloMap)
         {
         }
 

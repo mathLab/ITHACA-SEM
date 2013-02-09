@@ -479,7 +479,7 @@ namespace Nektar
                 ci      argIdx2;
 
                 EvaluationStep(rgt rn, ci i, ci l, ci r, vr s, cvr c, cvr p, cvr v):
-                    rng(rn), storeIdx(i), argIdx1(l), argIdx2(r), state(s), consts(c), params(p), vars(v) {};
+                    rng(rn), state(s), consts(c), params(p), vars(v), storeIdx(i), argIdx1(l), argIdx2(r) {};
 
                 virtual ~EvaluationStep() {}
 

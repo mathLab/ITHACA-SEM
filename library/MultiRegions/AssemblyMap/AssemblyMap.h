@@ -92,37 +92,37 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT const Array<OneD, NekDouble>& GetLocalToGlobalSign() const;
 
-            MULTI_REGIONS_EXPORT const void LocalToGlobal(
+            MULTI_REGIONS_EXPORT void LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT const void LocalToGlobal(
+            MULTI_REGIONS_EXPORT void LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT const void GlobalToLocal(
+            MULTI_REGIONS_EXPORT void GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const;
 
-            MULTI_REGIONS_EXPORT const void GlobalToLocal(
+            MULTI_REGIONS_EXPORT void GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
-            MULTI_REGIONS_EXPORT const void Assemble(
+            MULTI_REGIONS_EXPORT void Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const;
 
-            MULTI_REGIONS_EXPORT const void Assemble(
+            MULTI_REGIONS_EXPORT void Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT const void UniversalAssemble(
+            MULTI_REGIONS_EXPORT void UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            MULTI_REGIONS_EXPORT const void UniversalAssemble(
+            MULTI_REGIONS_EXPORT void UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            MULTI_REGIONS_EXPORT const void UniversalAssemble(
+            MULTI_REGIONS_EXPORT void UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal,
                           int                         offset) const;
 
@@ -214,17 +214,17 @@ namespace Nektar
             MULTI_REGIONS_EXPORT void AssembleBnd(const Array<OneD, const NekDouble>& loc,
                     Array<OneD, NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT const void UniversalAssembleBnd(
+            MULTI_REGIONS_EXPORT void UniversalAssembleBnd(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            MULTI_REGIONS_EXPORT const void UniversalAssembleBnd(
+            MULTI_REGIONS_EXPORT void UniversalAssembleBnd(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            MULTI_REGIONS_EXPORT const void UniversalAssembleBnd(
+            MULTI_REGIONS_EXPORT void UniversalAssembleBnd(
                           Array<OneD,     NekDouble>& pGlobal,
                           int                         offset) const;
 
-            MULTI_REGIONS_EXPORT const int GetFullSystemBandWidth() const;
+            MULTI_REGIONS_EXPORT int GetFullSystemBandWidth() const;
 
             MULTI_REGIONS_EXPORT int GetNumNonDirVertexModes() const;
 
@@ -260,10 +260,10 @@ namespace Nektar
             /// static condensation.
             MULTI_REGIONS_EXPORT bool AtLastLevel() const;
             /// Returns the method of solving global systems.
-            MULTI_REGIONS_EXPORT const GlobalSysSolnType  GetGlobalSysSolnType() const;
-            MULTI_REGIONS_EXPORT const PreconditionerType  GetPreconType() const;
+            MULTI_REGIONS_EXPORT GlobalSysSolnType  GetGlobalSysSolnType() const;
+            MULTI_REGIONS_EXPORT PreconditionerType  GetPreconType() const;
 
-            MULTI_REGIONS_EXPORT const int GetLowestStaticCondLevel() const
+            MULTI_REGIONS_EXPORT int GetLowestStaticCondLevel() const
             {
                 return m_lowestStaticCondLevel;
             }
@@ -383,41 +383,41 @@ namespace Nektar
 
             virtual const Array<OneD, NekDouble>& v_GetLocalToGlobalSign() const;
 
-            virtual const void v_LocalToGlobal(
+            virtual void v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const;
 
-            virtual const void v_LocalToGlobal(
+            virtual void v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            virtual const void v_GlobalToLocal(
+            virtual void v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const;
 
-            virtual const void v_GlobalToLocal(
+            virtual void v_GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
-            virtual const void v_Assemble(
+            virtual void v_Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const;
 
-            virtual const void v_Assemble(
+            virtual void v_Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            virtual const void v_UniversalAssemble(
+            virtual void v_UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            virtual const void v_UniversalAssemble(
+            virtual void v_UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            virtual const void v_UniversalAssemble(
+            virtual void v_UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal,
                           int                         offset) const;
 
-            virtual const int v_GetFullSystemBandWidth() const;
+            virtual int v_GetFullSystemBandWidth() const;
 
             virtual int v_GetNumNonDirVertexModes() const;
 

@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/AdvectionFR.h>
+#include <SolverUtils/Advection/AdvectionFR.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/Foundations/Basis.h>
 #include <LibUtilities/Foundations/Points.h>
@@ -895,9 +895,6 @@ namespace Nektar
                 // 2D-Problems 
                 case 2:
                 {
-                    // =========================================================
-                    // IMPLEMENTATION FOR SYSTEMS OF EQUATIONS
-                    // =========================================================
                     Array<OneD, Array<OneD, NekDouble> > fluxvector(
                                                             nDimensions);
                     Array<OneD, Array<OneD, NekDouble> > fluxvectorX1(
@@ -947,10 +944,7 @@ namespace Nektar
                         
                         for (n = 0; n < nElements; n++)
                         {
-                            // -------------------------------------------------
-                            // Proper implementation discontinuous flux: 
-                            // first attempt
-                            // -------------------------------------------------
+                            // Discontinuous flux
                             nLocalSolutionPts = fields[0]->GetExp(n)->
                             GetTotPoints();
                             phys_offset = fields[0]->GetPhys_Offset(n);
@@ -1007,23 +1001,6 @@ namespace Nektar
                             fields[0]->GetExp(n)->StdPhysDeriv(1, 
                                 auxArray1 = g_hat, 
                                 auxArray2 = DfluxvectorX2[i] + phys_offset);
-                            // -------------------------------------------------
-
-                            /*
-                            // -------------------------------------------------
-                            // Slightly incorrect implementation
-                            // -------------------------------------------------
-                            phys_offset = fields[0]->GetPhys_Offset(n);
-                            
-                            fields[i]->GetExp(n)->PhysDeriv(
-                                0, auxArray1 = fluxvectorX1[i] + phys_offset, 
-                                auxArray2 = DfluxvectorX1[i] + phys_offset);
-                            
-                            fields[i]->GetExp(n)->PhysDeriv(
-                                1, auxArray1 = fluxvectorX2[i] + phys_offset, 
-                                auxArray2 = DfluxvectorX2[i] + phys_offset);
-                            // -------------------------------------------------
-                            */
                         }
                         
                         // Divergence of the discontinuous flux
@@ -1040,20 +1017,13 @@ namespace Nektar
                                       numflux[i], 
                                       divFC[i]);
                         
-                        // -----------------------------------------------------
-                        // Divergence of the final flux for 
-                        // correct implementation
-                        // -----------------------------------------------------
+                        // Divergence of the final flux
                         Vmath::Vadd(nSolutionPts, 
                                     auxArray1 = divFD[i], 1,
                                     auxArray2 = divFC[i], 1, 
                                     auxArray3 = outarray[i], 1);
-                        // -----------------------------------------------------
-                        
-                        // -----------------------------------------------------
-                        // Multiply by the metric terms for 
-                        // correct implementation
-                        // -----------------------------------------------------
+
+                        // Multiply by the metric terms
                         for (n = 0; n < nElements; ++n)
                         {
                             nLocalSolutionPts = fields[0]->
@@ -1081,195 +1051,9 @@ namespace Nektar
                                     auxArray2 = outarray[i] + phys_offset, 1);
                             }
                         }
-                        // -----------------------------------------------------
                         
-                        /*
-                        // -----------------------------------------------------
-                        // Multiply by the metric terms for sligthly 
-                        // incorrect implementation
-                        // -----------------------------------------------------
-                        for (n = 0; n < nElements; ++n)
-                        {
-                            nLocalSolutionPts = fields[0]->
-                                                    GetExp(n)->GetTotPoints();
-                            
-                            phys_offset = fields[0]->GetPhys_Offset(n);
-                            
-                            jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
-                            
-                            if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype() 
-                                == SpatialDomains::eDeformed)
-                            {
-                                for (j = 0; j < nLocalSolutionPts; j++)
-                                {
-                                    divFC[i][phys_offset + j] = 
-                                    divFC[i][phys_offset + j]/jac[j];
-                                }
-                            }
-                            else
-                            {
-                                Vmath::Smul(
-                                        nLocalSolutionPts, 
-                                        1/jac[0], 
-                                        auxArray1 = divFC[i] + phys_offset, 1, 
-                                        auxArray2 = divFC[i] + phys_offset, 1);
-                            }
-                        }
-                        // -----------------------------------------------------
-                        
-                        // -----------------------------------------------------
-                        // Divergence of the final flux for sligthly
-                        // -----------------------------------------------------
-                        Vmath::Vadd(nSolutionPts, 
-                                    auxArray1 = divFD[i],    1, 
-                                    auxArray2 = divFC[i],    1, 
-                                    auxArray3 = outarray[i], 1);
-                        // -----------------------------------------------------
-                        */
+
                     } // close nConvectiveFields loop
-                    // =========================================================
-                    // =========================================================
-                    // =========================================================
-
-                    
-                    
-                    /*
-                    // =========================================================
-                    // IMPLEMENTATION FOR SINGLE EQUATION
-                    // =========================================================
-                    Array<OneD, Array<OneD, NekDouble> > fluxvector(
-                                                                nDimensions);            
-                    Array<OneD, Array<OneD, NekDouble> > Dfluxvector(
-                                                                nDimensions);            
-                     
-                    for(i = 0; i < nDimensions; ++i)
-                    {
-                        fluxvector[i]  = Array<OneD, NekDouble>(nSolutionPts);
-                        Dfluxvector[i] = Array<OneD, NekDouble>(nSolutionPts);
-                    }
-                     
-                    // Get the discontinuous flux FD ("i" is used by inarray)
-                    for(i = 0; i < nConvectiveFields; ++i)
-                    {                
-                        // Get the ith component of the flux vector
-                        m_fluxVector(i, inarray, fluxvector);
-                    }
-                     
-                    // Divergence of the discontinuous flux
-                    for (n = 0; n < nElements; ++n)
-                    {
-                        nLocalSolutionPts = fields[0]->
-                        GetExp(n)->GetTotPoints();
-                        phys_offset = fields[0]->GetPhys_Offset(n);
-                        
-                        jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                        gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
-                        
-                        Array<OneD, NekDouble> f_hat(nLocalSolutionPts, 0.0);
-                        Array<OneD, NekDouble> g_hat(nLocalSolutionPts, 0.0);
-                        
-                        if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype()
-                            == SpatialDomains::eDeformed)
-                        {
-                            for (j = 0; j < nLocalSolutionPts; j++)
-                            {
-                                f_hat[j] = 
-                                (fluxvector[0][j+phys_offset] 
-                                 * gmat[0][j] + 
-                                 fluxvector[1][j+phys_offset] 
-                                 * gmat[2][j]) * jac[j];
-                                
-                                g_hat[j] = 
-                                (fluxvector[0][j+phys_offset] 
-                                 * gmat[1][j] + 
-                                 fluxvector[1][j+phys_offset] 
-                                 * gmat[3][j]) * jac[j];
-                            }
-                        }
-                        else
-                        {
-                            for (j = 0; j < nLocalSolutionPts; j++)
-                            {
-                                f_hat[j] = 
-                                (fluxvector[0][j+phys_offset] 
-                                 * gmat[0][0] + 
-                                 fluxvector[1][j+phys_offset] 
-                                 * gmat[2][0]) * jac[0];
-                                
-                                g_hat[j] = 
-                                (fluxvector[0][j+phys_offset] 
-                                 * gmat[1][0] + 
-                                 fluxvector[1][j+phys_offset] 
-                                 * gmat[3][0])*jac[0];
-                            }
-                        }
-                        
-                        fields[0]->GetExp(n)->StdPhysDeriv(0, 
-                                    auxArray1 = f_hat, 
-                                    auxArray2 = Dfluxvector[0] + phys_offset); 
-                        
-                        fields[0]->GetExp(n)->StdPhysDeriv(1, 
-                                    auxArray1 = g_hat, 
-                                    auxArray2 = Dfluxvector[1] + phys_offset); 
-                    }
-                    
-                    // Computation of the divergence of the discontinuous flux
-                    Array<OneD, NekDouble> divFD(nSolutionPts, 0.0);
-                    Vmath::Vadd(nSolutionPts, 
-                                auxArray1 = Dfluxvector[0], 1,
-                                auxArray2 = Dfluxvector[1], 1, 
-                                auxArray3 = divFD, 1);
-                    
-                    // Computation of the divergence of the correction flux
-                    Array<OneD, NekDouble> divFC(nSolutionPts, 0.0);
-                    for (j = 0; j < nConvectiveFields; ++j)
-                    {
-                        v_DivCFlux_2D(nConvectiveFields,
-                                      fields, 
-                                      fluxvector[0], 
-                                      fluxvector[1],
-                                      numflux[j], 
-                                      divFC);
-                    }     
-                    
-                    // Computation of the divergence of the final flux
-                    Vmath::Vadd(nSolutionPts, 
-                                auxArray1 = divFD, 1, 
-                                auxArray2 = divFC, 1, 
-                                auxArray3 = outarray[0], 1); 
-
-                    // Multiplication by the inverse of the jacobian
-                    for (n = 0; n < nElements; ++n)
-                    {
-                        nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
-                        phys_offset = fields[0]->GetPhys_Offset(n);
-                        
-                        jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                        gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
-                        
-                        if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype() 
-                            == SpatialDomains::eDeformed)
-                        {
-                            for (j = 0; j < nLocalSolutionPts; j++)
-                            {
-                                outarray[0][phys_offset + j] = 
-                                outarray[0][phys_offset + j]/jac[j];
-                            }
-                        }
-                        else
-                        {
-                            Vmath::Smul(
-                                nLocalSolutionPts, 
-                                1/jac[0], 
-                                auxArray1 = outarray[0] + phys_offset, 1, 
-                                auxArray2 = outarray[0] + phys_offset, 1);
-                        }
-                    }
-                    // ========================================================= 
-                    // =========================================================
-                    // =========================================================
-                    */
                     break;
                 }
                     

@@ -74,7 +74,10 @@ namespace Nektar
             v_WriteToFile(outfile,dumpVar);
         }
 
-
+        int Geometry1D::GetEid() const
+        {
+            return v_GetEid();
+        }
 
 
         int Geometry1D::v_GetShapeDim() const

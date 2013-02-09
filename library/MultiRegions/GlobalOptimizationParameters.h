@@ -85,7 +85,7 @@ namespace Nektar
             /// For a given matrix type, determines if the operation should
             /// be done globally.
             // inline
-            MULTI_REGIONS_EXPORT const bool DoGlobalMatOp(const StdRegions::MatrixType i) const;
+            MULTI_REGIONS_EXPORT bool DoGlobalMatOp(const StdRegions::MatrixType i) const;
             
 
             /// For a given matrix type, determines if the operation should be
@@ -132,7 +132,7 @@ namespace Nektar
          * @param   i           Type of matrix.
          * @returns True if this type of matrix should be evaluated globally.
          */
-        inline const bool GlobalOptParam::DoGlobalMatOp(const StdRegions::MatrixType i) const
+        inline bool GlobalOptParam::DoGlobalMatOp(const StdRegions::MatrixType i) const
         {
             OptimizationOperationType type;
             switch(i)

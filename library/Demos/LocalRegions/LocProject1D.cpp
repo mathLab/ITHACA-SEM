@@ -70,7 +70,6 @@ int main(int argc, char *argv[])
     // Define a segment expansion based on basis definition
     const int zero=0;
     const int one=1;
-    const int two=2;
     const double dZero=0.0;
     SpatialDomains::VertexComponentSharedPtr  vert1 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(one,zero,x[0],dZero,dZero);
     SpatialDomains::VertexComponentSharedPtr  vert2 = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(one,zero,x[1],dZero,dZero);

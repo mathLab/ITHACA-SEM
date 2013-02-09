@@ -186,7 +186,6 @@ namespace Nektar
          */
         bool operator==(FaceSharedPtr const &p1, FaceSharedPtr const &p2)
         {
-            bool e = true;
             std::vector<NodeSharedPtr>::iterator it1, it2;
             for (it1 = p1->vertexList.begin(); it1 != p1->vertexList.end(); ++it1)
             {
@@ -466,7 +465,6 @@ namespace Nektar
          */
         unsigned int Line::GetNumNodes(ElmtConfig pConf)
         {
-            int n = pConf.order;
             return pConf.order+1;
         }
 

@@ -368,7 +368,7 @@ namespace Nektar
                         const std::string var1,
                         const std::string var2);
 
-                inline const bool CheckForGeomInfo(std::string parameter);
+                inline bool CheckForGeomInfo(std::string parameter);
 
                 inline const std::string GetGeomInfo(std::string parameter);
 
@@ -390,7 +390,7 @@ namespace Nektar
 
 
                 /* ---- Manipulation of mesh ---- */
-                inline const int GetNvertices() const;
+                inline int GetNvertices() const;
 
                 inline VertexComponentSharedPtr GetVertex(int id);
                 /// Adds a vertex to the with the next available ID.
@@ -546,7 +546,7 @@ namespace Nektar
         /**
          *
          */
-        inline const bool MeshGraph::CheckForGeomInfo(std::string parameter)
+        inline bool MeshGraph::CheckForGeomInfo(std::string parameter)
         {
             return m_geomInfo.find(parameter) != m_geomInfo.end();
         }
@@ -566,7 +566,7 @@ namespace Nektar
         /**
          *
          */
-        inline const int MeshGraph::GetNvertices() const
+        inline int MeshGraph::GetNvertices() const
         {
             return int(m_vertSet.size());
         }

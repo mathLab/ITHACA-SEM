@@ -2082,6 +2082,7 @@ namespace Nektar
         }
 
 
+
         void QuadExp::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                       Array<OneD,NekDouble> &outarray,
                                                       const StdRegions::StdMatrixKey &mkey)

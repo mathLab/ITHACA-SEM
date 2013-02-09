@@ -1445,11 +1445,13 @@ namespace Nektar
             
             int cuttoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
-            int nmodes = min(nmodes_a,nmodes_b);
             
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             
+
+#if 0      //  Filter just linear space
+            int nmodes = min(nmodes_a,nmodes_b);
             // apply SVV filter. 
             for(j = 0; j < nmodes_a; ++j)
             {
@@ -1461,6 +1463,36 @@ namespace Nektar
                     }
                 }
             }
+#else   //  Filter just bilinear space
+            int nmodes = max(nmodes_a,nmodes_b);
+
+            Array<OneD, NekDouble> fac(nmodes,0.0);
+            for(j = cuttoff; j < nmodes; ++j)
+            {
+                fac[j] = exp(-(j-nmodes)*(j-nmodes)/((NekDouble) (j-cuttoff+1.0)*(j-cuttoff+1.0)));
+            }
+
+            for(j = cuttoff; j  < nmodes_a; ++j)
+            {
+                for(k =  0; k < cuttoff; ++k)
+                {
+                    orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*fac[j]);
+                }
+                for(k = cuttoff; k < nmodes_b; ++k)
+                {
+                    orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*fac[j]*fac[k]);
+                }
+                    
+            }
+
+            for(j = 0; j  < nmodes_a; ++j)
+            {
+                for(k = cuttoff; k < nmodes_b; ++k)
+                {
+                    orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*fac[k]);
+                }
+            }
+#endif
             
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);

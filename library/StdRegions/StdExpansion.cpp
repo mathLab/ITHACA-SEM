@@ -363,14 +363,8 @@ namespace Nektar
                 {
                     StdMatrixKey masskey(eMass,mkey.GetExpansionType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
                     DNekMatSharedPtr mmat = GetStdMatrix(masskey);
-
-#if 1
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs); //Populate standard mass matrix.
-
-                    Vmath::Vcopy(m_ncoeffs*m_ncoeffs,mmat->GetRawPtr(),1,returnval->GetRawPtr(),1);
-#else
+                    
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat); //Populate standard mass matrix.
-#endif
                     returnval->Invert();
                 }
                 break;
@@ -1053,29 +1047,13 @@ namespace Nektar
             v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
         }
 
-        void StdExpansion::AddEdgeNormBoundaryBiInt(const int edge,
-                                                    boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                    const Array<OneD, const NekDouble> &Fwd,
-                                                    const Array<OneD, const NekDouble> &Bwd,
-                                                    Array<OneD, NekDouble> &outarray)
-        {
-            v_AddEdgeNormBoundaryBiInt(edge,EdgeExp,Fwd,Bwd,outarray);
-        }
-
-        void StdExpansion::AddNormTraceInt(const int dir,
-                                           Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray)
-        {
-            v_AddNormTraceInt(dir,inarray,outarray);
-        }
-
         void StdExpansion::AddFaceNormBoundaryInt(const int face,
                                                   boost::shared_ptr<StdExpansion>    &FaceExp,
                                                   const Array<OneD, const NekDouble> &Fn,
                                                   Array<OneD, NekDouble> &outarray)
         {
             v_AddFaceNormBoundaryInt(face,FaceExp,Fn,outarray);
-        }
+        }        
 
         const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
         {
@@ -1163,22 +1141,6 @@ namespace Nektar
         }
 
 
-        void StdExpansion::v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
-                                                       const Array<OneD, const NekDouble> &inarray,
-                                                       Array<OneD,NekDouble> &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-        }
-
-
-        void StdExpansion::v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
-                                                       const Array<OneD, const NekDouble> &inarray,
-                                                       Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp,
-                                                       Array<OneD,NekDouble> &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-        }
-
         void StdExpansion::v_SetCoeffsToOrientation(StdRegions::Orientation dir,
                                                     Array<OneD, const NekDouble> &inarray,
                                                     Array<OneD, NekDouble> &outarray)
@@ -1209,22 +1171,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
 
-        void StdExpansion::v_AddEdgeNormBoundaryBiInt(const int edge,
-                                                      boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                      const Array<OneD, const NekDouble> &Fwd,
-                                                      const Array<OneD, const NekDouble> &Bwd,
-                                                      Array<OneD, NekDouble> &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal, "v_AddEdgeNormBoundaryBiInt is not defined for this shape");
-        }
-
-        void StdExpansion::v_AddNormTraceInt(const int dir,
-                                             Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-        }
-        
         void StdExpansion::v_AddFaceNormBoundaryInt(const int face,
                                                     boost::shared_ptr<StdExpansion>    &FaceExp,
                                                     const Array<OneD, const NekDouble> &Fn,

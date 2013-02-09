@@ -1409,9 +1409,12 @@ namespace Nektar
                     {
                         for(k=0; k<nquad2; ++k)
                         {
-                            normals[j+k*nquad0]  = -gmat[1][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
-                            normals[nqtot+j+k*nquad0]  = -gmat[4][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
-                            normals[2*nqtot+j+k*nquad0]  = -gmat[7][j+nquad0*nquad1*k]*jac[j+nquad0*nquad1*k];
+                            normals[j+k*nquad0]  = -gmat[1][j+nquad0*nquad1*k]*
+                                jac[j+nquad0*nquad1*k];
+                            normals[nqtot+j+k*nquad0]  = -gmat[4][j+nquad0*nquad1*k]*
+                                jac[j+nquad0*nquad1*k];
+                            normals[2*nqtot+j+k*nquad0]  = -gmat[7][j+nquad0*nquad1*k]
+                                *jac[j+nquad0*nquad1*k];
                         } 
                     }
                     points0 = geomFactors->GetPointsKey(0);
@@ -1485,9 +1488,12 @@ namespace Nektar
                     {
                         for(k=0; k<nquad2; ++k)
                         {
-                            normals[j+k*nquad0]  = -gmat[0][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                            normals[nqtot+j+k*nquad0]  = -gmat[3][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                            normals[2*nqtot+j+k*nquad0]  = -gmat[6][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
+                            normals[j+k*nquad0]  = -gmat[0][j*nquad0+nquad0*nquad1*k]*
+                                jac[j*nquad0+nquad0*nquad1*k];
+                            normals[nqtot+j+k*nquad0]  = -gmat[3][j*nquad0+nquad0*nquad1*k]*
+                                jac[j*nquad0+nquad0*nquad1*k];
+                            normals[2*nqtot+j+k*nquad0]  = -gmat[6][j*nquad0+nquad0*nquad1*k]*
+                                jac[j*nquad0+nquad0*nquad1*k];
                         } 
                     }
                     points0 = geomFactors->GetPointsKey(1);

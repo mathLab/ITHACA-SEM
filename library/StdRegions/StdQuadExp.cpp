@@ -911,7 +911,7 @@ namespace Nektar
                 {   
                     if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
                     {
-                        localDOF = m_base[0]->GetNumModes()*m_base[1]->GetNumModes()-1;
+                        localDOF = m_base[0]->GetNumModes(); //*m_base[1]->GetNumModes()-1;
                     }
                     else
                     {
@@ -923,7 +923,7 @@ namespace Nektar
                 { 
                     if(m_base[0]->GetBasisType()==LibUtilities::eGLL_Lagrange)
                     {
-                        localDOF = m_base[0]->GetNumModes() * (m_base[1]->GetNumModes()-1);
+                        localDOF = m_base[0]->GetNumModes()-1; // * (m_base[1]->GetNumModes()-1);
                     }
                     else
                     {

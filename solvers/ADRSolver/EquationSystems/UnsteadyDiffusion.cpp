@@ -138,14 +138,8 @@ namespace Nektar
               Array<OneD,        Array<OneD, NekDouble> > &outarray,
         const NekDouble time)
     {
-        // Counter variable
-        int i;
-        
         // Number of fields (variables of the problem)
         int nVariables = inarray.num_elements();
-        
-        // Number of solution points
-        int nSolutionPts = GetNpoints();
         
         // RHS computation using the new advection base class
         m_diffusion->Diffuse(nVariables, 
@@ -176,7 +170,7 @@ namespace Nektar
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-
+                
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
@@ -212,6 +206,9 @@ namespace Nektar
         const NekDouble time,
         const NekDouble lambda)
     {
+        int nvariables = inarray.num_elements();
+        int npoints = m_fields[0]->GetNpoints();
+
         StdRegions::ConstFactorMap factors;
         factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
         factors[StdRegions::eFactorTau] = 1.0;

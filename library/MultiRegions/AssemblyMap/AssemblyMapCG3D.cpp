@@ -810,7 +810,7 @@ namespace Nektar
                 localFaceOffset+=nFaces;
             }
 
-            // Number of dirichlet edges and faces
+            // Number of non dirichlet edges and faces
             m_numNonDirEdges=edgeTempGraphVertId.size();
             m_numNonDirFaces=faceTempGraphVertId.size();
 

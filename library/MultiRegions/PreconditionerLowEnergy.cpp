@@ -67,17 +67,17 @@ namespace Nektar
          * This class implements preconditioning for the conjugate 
 	 * gradient matrix solver.
 	 */
-
-         PreconditionerLowEnergy::PreconditionerLowEnergy(
-                         const boost::shared_ptr<GlobalLinSys> &plinsys,
-	                 const AssemblyMapSharedPtr &pLocToGloMap)
-           : Preconditioner(plinsys, pLocToGloMap),
-	   m_linsys(plinsys),
-           m_locToGloMap(pLocToGloMap),
-           m_preconType(pLocToGloMap->GetPreconType())
-         {
-	 }
-
+        
+        PreconditionerLowEnergy::PreconditionerLowEnergy(
+            const boost::shared_ptr<GlobalLinSys> &plinsys,
+            const AssemblyMapSharedPtr &pLocToGloMap)
+            : Preconditioner(plinsys, pLocToGloMap),
+              m_linsys(plinsys),
+              m_preconType(pLocToGloMap->GetPreconType()),
+              m_locToGloMap(pLocToGloMap)
+        {
+        }
+        
         void PreconditionerLowEnergy::v_InitObject()
         {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
@@ -131,14 +131,12 @@ namespace Nektar
             const StdRegions::StdExpansionVector 
                 &locExpVector = *(expList->GetExp());
             StdRegions::StdExpansionSharedPtr locExpansion;
-            
-            int localVertId, vMap1, vMap2, nVerts, localCoeff, n, v, m;
+
+            int vMap1, vMap2, nVerts, n, v, m;
             int sign1, sign2, gid1, gid2, i, j;
             int loc_rows, globalrow, globalcol, cnt;
-            int  globalLocation, nIntEdgeFace;
 
             NekDouble globalMatrixValue, MatrixValue, value;
-            NekDouble TempValue;
             NekDouble zero=0.0;
 
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
@@ -298,25 +296,19 @@ namespace Nektar
                 &locExpVector = *(expList->GetExp());
             StdRegions::StdExpansionSharedPtr locExpansion;
             
-            int localVertId, vMap1, vMap2, nVerts, nEdges, nFaces;
-            int localCoeff, v, m, n, rows;
+            int vMap1, vMap2, nVerts;
+            int v, m, n;
             int sign1, sign2;
-            int offset, globalrow, globalcol, cnt, cnt1;
-            int globalLocation, nDirVertOffset;
+            int offset, globalrow, globalcol, cnt;
 
             NekDouble globalMatrixValue;
             NekDouble MatrixValue;
-            NekDouble localMatrixValue;
             NekDouble zero=0.0;
             DNekMatSharedPtr m_invS;
 
             int nGlobalBnd    = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nDirBnd       = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nDirBndLocal  = m_locToGloMap->GetNumLocalDirBndCoeffs();
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
-            
-            //Get Rows of statically condensed matrix
-            int gRow = nGlobalBnd - nDirBnd;
             
             //Allocate preconditioner matrix
             MatrixStorage storage = eFULL;
@@ -618,8 +610,6 @@ namespace Nektar
             int cnt;
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
-            const StdRegions::StdExpansionVector &locExpVector = 
-                *(expList->GetExp());
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
             StdRegions::StdExpansionSharedPtr locExpansion;
@@ -638,7 +628,7 @@ namespace Nektar
             SpatialDomains::TetGeomSharedPtr tetgeom=CreateRefTetGeom();
             SpatialDomains::PrismGeomSharedPtr prismgeom=CreateRefPrismGeom();
 
-            //Expansion as specified in the input file
+            //Expansion as specified in the input file - here we need to alter this so we can read in different exapansions for different element types
             int nummodes=locExpansion->GetBasisNumModes(0);
 
             //Bases for Tetrahedral element
@@ -761,23 +751,19 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
-            const StdRegions::StdExpansionVector &locExpVector = 
-                *(expList->GetExp());
             StdRegions::StdExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
 
-            int nRow, i, j, k, nmodes, ntotaledgemodes, ntotalfacemodes, nel;
+            int i, j, k, nel;
             int nVerts, nEdges,nFaces; 
-            int eid, fid, eid2, fid2, n, cnt, nedgemodes, nfacemodes;
-            int nEdgeCoeffs, nFaceCoeffs;
+            int eid, fid, n, cnt, nedgemodes, nfacemodes;
             NekDouble zero = 0.0;
-            NekDouble MatrixValue;
 
-            int vMap1, vMap2, sign1, sign2, gid1, gid2;
+            int vMap1, vMap2, sign1, sign2;
             int m, v, eMap1, eMap2, fMap1, fMap2;
-            int offset, globalrow, globalcol, bnd_rows, nCoeffs;
-            NekDouble globalMatrixValue, globalRValue, vertValue;
+            int offset, globalrow, globalcol, nCoeffs;
+            NekDouble vertValue;
 
             //matrix storage
             MatrixStorage storage = eFULL;
@@ -801,15 +787,8 @@ namespace Nektar
             DNekMatSharedPtr m_EdgeBlk;
             DNekMatSharedPtr m_FaceBlk;
 
-            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nLocalNonDir = m_locToGloMap->GetNumLocalDirBndCoeffs();
             int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nNonDir = nGlobal-nDirBnd;
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
-            int nNonDirEdges  = m_locToGloMap->GetNumNonDirEdgeModes();
-            int nNonDirFaces  = m_locToGloMap->GetNumNonDirFaceModes();
-
 
 	    //Vertex, edge and face preconditioner matrices
             DNekMatSharedPtr VertBlk = MemoryManager<DNekMat>::
@@ -827,9 +806,24 @@ namespace Nektar
             transposedtransmatrixmap[StdRegions::ePrism]=m_transposedTransformationMatrix[1];
 
             int n_exp = expList->GetNumElmts();
+            int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
+            int nNonDirFaceIDs=m_locToGloMap->GetNumNonDirFaces();
+
+            //set the number of blocks in the matrix
+            Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs+nNonDirFaceIDs);
+            n_blks[0]=nNonDirVerts;
 
             map<int,int> edgeDirMap;
             map<int,int> faceDirMap;
+            map<int,int> uniqueEdgeMap;
+            map<int,int> uniqueFaceMap;
+
+            //this should be of size total number of local edges
+            Array<OneD, unsigned int> m_edgemodeoffset(nNonDirEdgeIDs);
+            Array<OneD, unsigned int> m_facemodeoffset(nNonDirFaceIDs);
+
+            Array<OneD, unsigned int> m_edgeglobaloffset(nNonDirEdgeIDs);
+            Array<OneD, unsigned int> m_faceglobaloffset(nNonDirFaceIDs);
 
             const Array<OneD, const ExpListSharedPtr>& bndCondExp = expList->GetBndCondExpansions();
             StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
@@ -871,6 +865,9 @@ namespace Nektar
             int nlocalNonDirEdges=0;
             int nlocalNonDirFaces=0;
 
+            int edgematrixlocation=0;
+            int ntotaledgeentries=0;
+
             // Loop over all the elements in the domain and compute max edge
             // DOF. Reduce across all processes to get universal maximum.
             for(cnt=n=0; n < n_exp; ++n)
@@ -887,11 +884,27 @@ namespace Nektar
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
+                        if(uniqueEdgeMap.count(meshEdgeId)==0)
+                        {
+                            uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
+
+                            m_edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
+
+                            m_edgemodeoffset[edgematrixlocation]=dof*dof;
+
+                            ntotaledgeentries+=dof*dof;
+
+                            n_blks[1+edgematrixlocation++]=dof;
+
+                        }
+
                         nlocalNonDirEdges+=dof*dof;
                     }
                 }
             }
 
+            int facematrixlocation=0;
+            int ntotalfaceentries=0;
 
             // Loop over all the elements in the domain and compute max face
             // DOF. Reduce across all processes to get universal maximum.
@@ -910,15 +923,24 @@ namespace Nektar
 
                     if(faceDirMap.count(meshFaceId)==0)
                     {
+                        if(uniqueFaceMap.count(meshFaceId)==0)
+                        {
+                            uniqueFaceMap[meshFaceId]=facematrixlocation;
+
+                            m_facemodeoffset[facematrixlocation]=dof*dof;
+                            
+                            m_faceglobaloffset[facematrixlocation]+=ntotalfaceentries;
+
+                            ntotalfaceentries+=dof*dof;
+                            
+                            n_blks[1+nNonDirEdgeIDs+facematrixlocation++]=dof;
+                            
+                        }
                         nlocalNonDirFaces+=dof*dof;
                     }
 
                 }
             }
-
-
-            int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
-            int nNonDirFaceIDs=m_locToGloMap->GetNumNonDirFaces();
 
             m_comm = expList->GetComm();
             //m_comm = expList->GetComm()->GetRowComm(); 2D
@@ -926,8 +948,8 @@ namespace Nektar
             m_comm->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
 
             //Allocate arrays for block to universal map (number of expansions * p^2)
-            Array<OneD, long> m_EdgeBlockToUniversalMap(nNonDirEdgeIDs*maxEdgeDof*maxEdgeDof,-1);
-            Array<OneD, long> m_FaceBlockToUniversalMap(nNonDirFaceIDs*maxFaceDof*maxFaceDof,-1);
+            Array<OneD, long> m_EdgeBlockToUniversalMap(ntotaledgeentries,-1);
+            Array<OneD, long> m_FaceBlockToUniversalMap(ntotalfaceentries,-1);
 
             Array<OneD, int> m_localEdgeToGlobalMatrixMap(nlocalNonDirEdges,-1);
             Array<OneD, int> m_localFaceToGlobalMatrixMap(nlocalNonDirFaces,-1);
@@ -936,44 +958,12 @@ namespace Nektar
             Array<OneD, NekDouble> m_EdgeBlockArray(nlocalNonDirEdges,-1);
             Array<OneD, NekDouble> m_FaceBlockArray(nlocalNonDirFaces,-1);
 
-/*
-            //Allocate arrays for block to universal map (number of expansions * p^2)
-            Array<OneD, long> m_EdgeBlockToUniversalMap(nNonDirEdgeIDs*maxEdgeDof*maxEdgeDof,-1);
-            Array<OneD, long> m_FaceBlockToUniversalMap(nNonDirFaceIDs*maxFaceDof*maxFaceDof,-1);
-
-            Array<OneD, int> m_localEdgeToGlobalMatrixMap(nlocalNonDirEdges*maxEdgeDof*maxEdgeDof,-1);
-            Array<OneD, int> m_localFaceToGlobalMatrixMap(nlocalNonDirFaces*maxFaceDof*maxFaceDof,-1);
-
-            //Allocate arrays to store matrices (number of expansions * p^2)
-            Array<OneD, NekDouble> m_EdgeBlockArray(nlocalNonDirEdges*maxEdgeDof*maxEdgeDof,-1);
-            Array<OneD, NekDouble> m_FaceBlockArray(nlocalNonDirFaces*maxFaceDof*maxFaceDof,-1);*/
-
-            //Set up mappings
-            map<int,int> uniqueEdgeMap;
-            map<int,int> uniqueFaceMap;
-
-            //this should be of size total number of local edges
-            Array<OneD, unsigned int> m_facemodeoffset(nNonDirFaceIDs);
-            Array<OneD, unsigned int> m_edgemodeoffset(nNonDirEdgeIDs);
-
-            Array<OneD, unsigned int> m_faceglobaloffset(nNonDirFaceIDs);
-
-            //set the number of blocks in the matrix
-            Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs+nNonDirFaceIDs);
-            n_blks[0]=nNonDirVerts;
-
-            int edgematrixlocation=0;
-            int facematrixlocation=0;
             int ecnt;
             int fcnt;
             int edgematrixoffset=0;
             int facematrixoffset=0;
-            int locExpansionoffset=0;
             int vGlobal;
             int nbndCoeffs=0;
-            int nAssembledFaceVector=0;
-            int ntotaledgeentries=0;
-            int ntotalfaceentries=0;
 
             for(ecnt=fcnt=n=0; n < n_exp; ++n)
             {
@@ -991,33 +981,16 @@ namespace Nektar
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
-                        //if this mesh id has not already been visited then we have
-                        //a new block location. Otherwise we point the array
-                        //location to the already assigned edge.
-                        if(uniqueEdgeMap.count(meshEdgeId)==0)
-                        {
-                            uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
-
-                            m_edgemodeoffset[edgematrixlocation]=nedgemodes*nedgemodes;
-
-                            ntotaledgeentries+=nedgemodes*nedgemodes;
-
-                            n_blks[1+edgematrixlocation++]=
-                                locExpansion->GetEdgeNcoeffs(j)-2;
-
-                        }
-
                         for(k=0; k<nedgemodes*nedgemodes; ++k)
                         {
-                            vGlobal=(uniqueEdgeMap[meshEdgeId])*nedgemodes*nedgemodes+k;
+                            vGlobal=m_edgeglobaloffset[uniqueEdgeMap[meshEdgeId]]+k;
 
-                            m_localEdgeToGlobalMatrixMap[edgematrixoffset+k]
-                                = (uniqueEdgeMap[meshEdgeId])*nedgemodes*nedgemodes+k;
+                            m_localEdgeToGlobalMatrixMap[edgematrixoffset+k]=vGlobal;
 
                             m_EdgeBlockToUniversalMap[vGlobal]
                                 = meshEdgeId * maxEdgeDof * maxEdgeDof + k + 1;
                         }
-                        edgematrixoffset+=maxEdgeDof*maxEdgeDof;
+                        edgematrixoffset+=nedgemodes*nedgemodes;
                     }
                 }
 
@@ -1032,38 +1005,17 @@ namespace Nektar
                     //Check if face is has dirichlet values
                     if(faceDirMap.count(meshFaceId)==0)
                     {
-                        //if this mesh id has not already been visited then we have
-                        //a new block location. Otherwise we point the array
-                        //location to the already assigned edge.
-                        if(uniqueFaceMap.count(meshFaceId)==0)
-                        {
-                            uniqueFaceMap[meshFaceId]=
-                                facematrixlocation;
-
-                            m_facemodeoffset[facematrixlocation]=nfacemodes*nfacemodes;
-
-                            m_faceglobaloffset[facematrixlocation]+=ntotalfaceentries;
-
-                            ntotalfaceentries+=nfacemodes*nfacemodes;
-
-                            n_blks[1+nNonDirEdgeIDs+facematrixlocation++]=nfacemodes;
-                            
-                        }
-
                         for(k=0; k<nfacemodes*nfacemodes; ++k)
                         {
-                            //vGlobal=(uniqueFaceMap[meshFaceId])*nfacemodes*nfacemodes+k;
-
                             vGlobal=m_faceglobaloffset[uniqueFaceMap[meshFaceId]]+k;
-
+                            
                             m_localFaceToGlobalMatrixMap[facematrixoffset+k]
                                 = vGlobal;
-
+                            
                             m_FaceBlockToUniversalMap[vGlobal]
                                 = meshFaceId * maxFaceDof * maxFaceDof + k + 1;
                         }
                         facematrixoffset+=nfacemodes*nfacemodes;
-                        //facematrixoffset+=maxFaceDof*maxFaceDof;
                     }
                 }
                 nbndCoeffs=+locExpansion->NumBndryCoeffs();
@@ -1228,8 +1180,6 @@ namespace Nektar
                     meshFaceId = locExpansion->GetGeom3D()->GetFid(fid);
                     
                     Array<OneD, unsigned int> facemodearray = locExpansion->GetFaceInverseBoundaryMap(fid);
-
-                    int loc = uniqueFaceMap[meshFaceId]+1;
 
                     if(faceDirMap.count(meshFaceId)==0)
                     {
@@ -1626,7 +1576,7 @@ namespace Nektar
 
             unsigned int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
             unsigned int nEntries   = m_locToGloMap->GetNumLocalBndCoeffs();
-            unsigned int i,j;
+            unsigned int i;
 
             // Count the multiplicity of each global DOF on this process
             Array<OneD, NekDouble> vCounts(nGlobalBnd, 0.0);

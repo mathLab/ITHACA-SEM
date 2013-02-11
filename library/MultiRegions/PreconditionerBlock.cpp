@@ -599,7 +599,6 @@ namespace Nektar
                 }
             }
 
-
             int facematrixlocation=0;
             int ntotalfaceentries=0;
             // Loop over all the elements in the domain and compute max face

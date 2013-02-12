@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSysIterativeStaticCond.cpp
+// File: GlobalLinSysIterativeStaticCond.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -367,7 +367,7 @@ namespace Nektar
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-            m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal);
+            m_wsp = Array<OneD, NekDouble>(4*nLocalBnd + nGlobal);
 
             if(pLocToGloMap->AtLastLevel())
             {
@@ -385,6 +385,8 @@ namespace Nektar
                 {
                     size_t storageSize = 0;
                     int nBlk          = m_schurCompl->GetNumberOfBlockRows();
+
+                    m_rows = Array<OneD, unsigned int> (nBlk, 0U);
 
                     // Determine storage requirements for dense blocks.
                     for (int i = 0; i < nBlk; ++i)
@@ -898,7 +900,7 @@ namespace Nektar
                 // Do matrix multiply locally, using direct BLAS calls
                 m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
                 int i, cnt;
-                Array<OneD, NekDouble> tmpout  = m_wsp + nLocal;
+                Array<OneD, NekDouble> tmpout = m_wsp + 3*nLocal;
                 for (i = cnt = 0; i < m_denseBlocks.size(); cnt += m_rows[i], ++i)
                 {
                     const int rows = m_rows[i];

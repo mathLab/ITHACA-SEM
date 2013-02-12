@@ -71,7 +71,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            const NekDouble gamma = 1.4;
+            // They should be taken from CFS
+            const NekDouble gamma = 1.2;
             const NekDouble R     = 287.05;
             
             int i, j;
@@ -214,17 +215,17 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > Bwd    (nScalars);
             Array<OneD, Array<OneD, NekDouble> > numflux(nScalars);
             
-            for(i = 0; i < nScalars; ++i)
+            for (i = 0; i < nScalars; ++i)
             {
                 Fwd[i]     = Array<OneD, NekDouble>(nTracePts);
                 Bwd[i]     = Array<OneD, NekDouble>(nTracePts);
                 numflux[i] = Array<OneD, NekDouble>(nTracePts);
                 fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
-                fields[0]->GetTrace()->Upwind(Vn, Fwd[i], Bwd[i], numflux[i]); 
+                fields[0]->GetTrace()->Upwind(Vn, Fwd[i], Bwd[i], numflux[i]);
             }
-            
+             
             // Modify the values in case of boundary interfaces
-            if(fields[0]->GetBndCondExpansions().num_elements())
+            if (fields[0]->GetBndCondExpansions().num_elements())
             {
                 v_WeakPenaltyO1(fields, inarray, numflux);
             }
@@ -436,16 +437,28 @@ namespace Nektar
             Array<OneD, NekDouble > qBwd     (nTracePts);
             Array<OneD, NekDouble > qfluxtemp(nTracePts, 0.0);
                         
+            Array<OneD, Array<OneD, NekDouble> > traceVel(nDim);
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
             for(i = 0; i < nDim; ++i)
             {
                 m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+                traceVel[i]       = Array<OneD, NekDouble>(nTracePts, 0.0);
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
             
+            // Get the normal velocity Vn
+            for(i = 0; i < nDim; ++i)
+            {
+                fields[0]->ExtractTracePhys(ufield[i], traceVel[i]);
+                Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, 
+                             traceVel[i], 1, Vn, 1, Vn, 1);
+            }
+            
             // Evaulate Riemann flux 
-            // qflux = \hat{q} \cdot u = q \cdot n
-            for (i = 0; i < nVariables; ++i)
+            // qflux = \hat{q} \cdot u = q \cdot n 
+            // \\\\\\\\\\\\\\  Notice: I put ---> i = 1 
+            // \\\\\\\\\\\\\\ (first row of the viscous tensor is zero)
+            for (i = 1; i < nVariables; ++i)
             {
                 qflux[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
                 for (j = 0; j < nDim; ++j)
@@ -454,7 +467,7 @@ namespace Nektar
                     fields[i]->GetFwdBwdTracePhys(qfield[j][i], qFwd, qBwd);
                     
                     // Get Riemann flux of qflux --> LDG implies upwind
-                    fields[i]->GetTrace()->Upwind(m_traceNormals[j], 
+                    fields[i]->GetTrace()->Upwind(/*m_traceNormals[j]*/Vn, 
                                                   qBwd, qFwd, 
                                                   qfluxtemp);
                     

@@ -545,7 +545,10 @@ namespace Nektar
         // Thermodynamic related quantities
         GetPressure(fields, pressure);
         GetTemperature(fields, pressure, temperature);
-        GetDynamicViscosity(fields, mu);
+        
+        // Variable viscosity 
+        //GetDynamicViscosity(fields, mu);
+        Vmath::Sadd(nPts, 0.0000186, &mu[0], 1, &mu[0], 1);
         
         // Computing diagonal terms of viscous stress tensor
         Array<OneD, Array<OneD, NekDouble> > tmp(m_expdim);

@@ -159,8 +159,8 @@ namespace Nektar
                         inarrayTemp[i-1], 1);
         }
         
-        // Copy velocities into new inarrayDiffusion
-        for (i = 0; i < nvariables-1; ++i)
+        // Copy velocities into new inarrayDiff
+        for (i = 0; i < nvariables-2; ++i)
         {
             Vmath::Vcopy(npoints, inarrayTemp[i], 1, inarrayDiff[i], 1);
         }

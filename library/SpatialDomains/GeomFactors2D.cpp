@@ -971,26 +971,28 @@ namespace Nektar
             }
         }
 
-
         /**
-         *
+         * @brief Set up the m_weightedjac array, which holds the Jacobian at
+         * each quadrature point multipled by the quadrature weight.
          */
-        void GeomFactors2D::v_SetUpQuadratureMetrics(StdRegions::ExpansionType shape,
-                                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void GeomFactors2D::v_SetUpQuadratureMetrics(
+                  StdRegions::ExpansionType                        shape,
+            const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            ASSERTL1(tbasis.num_elements() == m_expDim,"Inappropriate dimension of tbasis");
+            ASSERTL1(tbasis.num_elements() == m_expDim,
+                     "Inappropriate dimension of tbasis");
 
             int i;
             int nquad0 = m_pointsKey[0].GetNumPoints();
             int nquad1 = m_pointsKey[1].GetNumPoints();
             int nqtot  = nquad0*nquad1;
 
-            m_weightedjac           = Array<OneD, NekDouble>(nqtot);
+            m_weightedjac        = Array<OneD, NekDouble>(nqtot);
             m_isUsingQuadMetrics = true;
 
-            // Fill the array m_weighted jac with the values
-            // of the (already computed) jacobian (=m_jac)
-            if((m_type == eRegular)||(m_type == eMovingRegular))
+            // Fill the array m_weighted jac with the values of the (already
+            // computed) jacobian (=m_jac)
+            if (m_type == eRegular || m_type == eMovingRegular)
             {
                 Vmath::Fill(nqtot,m_jac[0],m_weightedjac.get(),1);
             }
@@ -1006,22 +1008,24 @@ namespace Nektar
             // Multiply the jacobian with the quadrature weights
             switch(shape)
             {
-            case StdRegions::eQuadrilateral:
+                case StdRegions::eQuadrilateral:
                 {
-                    for(i = 0; i < nquad1; ++i)
+                    for (i = 0; i < nquad1; ++i)
                     {
                         Vmath::Vmul(nquad0,m_weightedjac.get()+i*nquad0,1,
                                     w0.get(),1,m_weightedjac.get()+i*nquad0,1);
                     }
 
-                    for(i = 0; i < nquad0; ++i)
+                    for (i = 0; i < nquad0; ++i)
                     {
-                        Vmath::Vmul(nquad1,m_weightedjac.get()+i,nquad0,w1.get(),1,
-                                    m_weightedjac.get()+i,nquad0);
+                        Vmath::Vmul(nquad1, m_weightedjac.get()+i, nquad0,
+                                    w1.get(), 1, m_weightedjac.get()+i, nquad0);
                     }
+
+                    break;
                 }
-                break;
-            case StdRegions::eTriangle:
+
+                case StdRegions::eTriangle:
                 {
                     for(i = 0; i < nquad1; ++i)
                     {
@@ -1031,33 +1035,40 @@ namespace Nektar
 
                     switch(tbasis[1]->GetPointsType())
                     {
-                    case LibUtilities::ePolyEvenlySpaced:
-                    case LibUtilities::eGaussLobattoLegendre:  // Legendre inner product
-                        for(i = 0; i < nquad1; ++i)
+                        case LibUtilities::ePolyEvenlySpaced:
+                        case LibUtilities::eGaussLobattoLegendre:
                         {
-                            const Array<OneD, const NekDouble>& z1 = tbasis[1]->GetZ();
-                            Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i],m_weightedjac.get()+i*nquad0,1);
+                            const Array<OneD, const NekDouble>& z1 =
+                                tbasis[1]->GetZ();
+                            for (i = 0; i < nquad1; ++i)
+                            {
+                                Blas::Dscal(nquad0, 0.5*(1-z1[i])*w1[i],
+                                            m_weightedjac.get()+i*nquad0, 1);
+                            }
+                            break;
                         }
-                        break;
-                    case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
-                        for(i = 0; i < nquad1; ++i)
+                        case LibUtilities::eGaussRadauMAlpha1Beta0:
                         {
-                            Blas::Dscal(nquad0,0.5*w1[i],m_weightedjac.get()+i*nquad0,1);
+                            for (i = 0; i < nquad1; ++i)
+                            {
+                                Blas::Dscal(nquad0, 0.5*w1[i],
+                                            m_weightedjac.get()+i*nquad0, 1);
+                            }
+                            break;
                         }
-                        break;
-                    default:
+                        default:
                         {
-                            ASSERTL0(false,"Currently no implementation for this PointsType");
+                            ASSERTL0(false,"Currently no implementation "
+                                           "for this PointsType");
                         }
                     }
+                    break;
                 }
-                break;
-            default:
+                default:
                 {
                     ASSERTL0(false,"Invalid shape type");
                 }
             }
-
         }
 
         /**

@@ -273,13 +273,15 @@ namespace Nektar
 
 
         /**
-         *
+         * @brief Set up the m_weightedjac array, which holds the Jacobian at
+         * each quadrature point multipled by the quadrature weight.
          */
         void GeomFactors3D::v_SetUpQuadratureMetrics(
             StdRegions::ExpansionType                              shape,
             const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            ASSERTL1(tbasis.num_elements() == m_expDim,"Inappropriate dimension of tbasis");
+            ASSERTL1(tbasis.num_elements() == m_expDim,
+                     "Inappropriate dimension of tbasis");
 
             int i,j,k;
             int nquad0 = m_pointsKey[0].GetNumPoints();

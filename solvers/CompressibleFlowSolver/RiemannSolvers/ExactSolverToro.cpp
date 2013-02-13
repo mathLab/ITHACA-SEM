@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Exact Riemann solver.
+// Description: Exact Riemann solver (Toro 2009).
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -51,9 +51,25 @@ namespace Nektar
 
     }
     
-    NekDouble guessp(NekDouble g[],
-                     NekDouble rhoL, NekDouble uL, NekDouble pL, NekDouble cL,
-                     NekDouble rhoR, NekDouble uR, NekDouble pR, NekDouble cR)
+    /**
+     * @brief Use either PVRS, two-rarefaction or two-shock Riemann solvers to
+     * calculate an initial pressure for the Newton-Raphson scheme.
+     *
+     * @param g      Array of calculated gamma values.
+     * @param rhoL   Density left state.
+     * @param rhoR   Density right state.  
+     * @param uL     x-velocity component left state.
+     * @param uR     x-velocity component right state.
+     * @param pL     Pressure component left state.  
+     * @param pR     Pressure component right state.  
+     * @param cL     Sound speed component left state.  
+     * @param cR     Sound speed component right state.
+     * @return       Computed initial guess for the Newton-Raphson scheme.
+     */
+    inline NekDouble guessp(
+        NekDouble g[],
+        NekDouble rhoL, NekDouble uL, NekDouble pL, NekDouble cL,
+        NekDouble rhoR, NekDouble uR, NekDouble pR, NekDouble cR)
     {
         const NekDouble quser = 2.0;
         NekDouble cup, ppv, pmin, pmax, qmax;
@@ -88,7 +104,20 @@ namespace Nektar
         }
     }
     
-    void prefun(NekDouble &f, NekDouble &fd, NekDouble p, NekDouble dk, NekDouble pk, NekDouble ck, NekDouble *g)
+    /**
+     * @brief Evaluate pressure functions fL and fR in Newton iteration of
+     * Riemann solver (see equation 4.85 and 4.86 of Toro 2009).
+     *
+     * @param g   Array of gamma parameters.
+     * @param p   Pressure at current iteration.
+     * @param dk  Density (left or right state)
+     * @param pk  Pressure (left or right state)
+     * @param ck  Sound speed (left or right state)
+     * @param f   Computed pressure (shock).
+     * @param fd  Computed pressure (rarefaction).
+     */
+    inline void prefun(NekDouble *g, NekDouble  p, NekDouble  dk, NekDouble pk,
+                       NekDouble ck, NekDouble &f, NekDouble &fd)
     {
         if (p <= pk)
         {
@@ -109,34 +138,40 @@ namespace Nektar
     }
 
     /**
-     * @brief Exact Riemann solver (Gottlieb an Groth - 1987; Toro 1998)
+     * @brief Exact Riemann solver for the Euler equations.
+     *
+     * This algorithm is transcribed from:
+     * 
+     *   "Riemann Solvers and Numerical Methods for Fluid Dynamics: A Practical
+     *   Introduction", E. F. Toro (3rd edition, 2009).
+     *
+     * The full Fortran 77 routine can be found at the end of chapter 4 (section
+     * 4.9). This transcription is essentially the functions STARPU and SAMPLE
+     * glued together, and variable names are kept mostly the same. See the
+     * preceding chapter which explains the derivation of the solver. The
+     * routines PREFUN and GUESSP are kept separate and are reproduced above.
      *
      * @param rhoL      Density left state.
      * @param rhoR      Density right state.  
-     * @param rhouL     x-velocity component left state.  
-     * @param rhouR     x-velocity component right state.  
-     * @param rhovL     y-velocity component left state.  
-     * @param rhovR     y-velocity component right state.  
-     * @param rhowL     z-velocity component left state.  
-     * @param rhowR     z-velocity component right state.
+     * @param rhouL     x-momentum component left state.  
+     * @param rhouR     x-momentum component right state.  
+     * @param rhovL     y-momentum component left state.  
+     * @param rhovR     y-momentum component right state.  
+     * @param rhowL     z-momentum component left state.  
+     * @param rhowR     z-momentum component right state.
      * @param EL        Energy left state.  
      * @param ER        Energy right state. 
-     * @param rhof      Riemann flux for density (i.e. first equation).  
-     * @param rhouf     Riemann flux for x-velocity component 
-     *                  (i.e. second equation).
-     * @param rhovf     Riemann flux for y-velocity component 
-     *                  (i.e. third equation).
-     * @param rhowf     Riemann flux for z-velocity component 
-     *                  (i.e. fourth equation).
-     * @param Ef        Riemann flux for energy (i.e. fifth equation).  
-     *
+     * @param rhof      Computed Riemann flux for density.
+     * @param rhouf     Computed Riemann flux for x-momentum component 
+     * @param rhovf     Computed Riemann flux for y-momentum component 
+     * @param rhowf     Computed Riemann flux for z-momentum component 
+     * @param Ef        Computed Riemann flux for energy.
      */
     void ExactSolverToro::v_PointSolve(
         NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL,
         NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
         NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef)
     {
-        // Exact Riemann Solver (GOTTLIEB AND GROTH - 1987; TORO - 1998) 
         NekDouble gamma = m_params["gamma"]();
 
         // Left and right variables.
@@ -176,10 +211,11 @@ namespace Nektar
         NekDouble p, fL, fR, fLd, fRd, change;
         int k;
 
+        // Newton-Raphson iteration for pressure in star region.
         for (k = 0; k < NRITER; ++k)
         {
-            prefun(fL, fLd, pOld, rhoL, pL, cL, g);
-            prefun(fR, fRd, pOld, rhoR, pR, cR, g);
+            prefun(g, pOld, rhoL, pL, cL, fL, fLd);
+            prefun(g, pOld, rhoR, pR, cR, fR, fRd);
             p = pOld - (fL+fR+uDiff) / (fLd+fRd);
             change = 2 * fabs((p-pOld)/(p+pOld));
             
@@ -202,7 +238,13 @@ namespace Nektar
         NekDouble u = 0.5*(uL+uR+fR-fL);
         
         // -- SAMPLE ROUTINE --
-        NekDouble S = 0.0; // Special for Godunov flux (see chapter 6).
+        // The variable S aligns with the Fortran parameter S of the SAMPLE
+        // routine, but is hard-coded as 0 (and should be optimised out by the
+        // compiler). Since we are using a Godunov scheme we pick this as 0 (see
+        // chapter 6 of Toro 2009).
+        const NekDouble S = 0.0;
+
+        // Computed primitive variables.
         NekDouble outRho, outU, outV, outW, outP;
         
         if (S <= u)
@@ -339,11 +381,12 @@ namespace Nektar
             }
         }
         
-        // Transform computed primitive variables to fluxes
+        // Transform computed primitive variables to fluxes.
         rhof  = outRho * outU;
         rhouf = outP + outRho*outU*outU;
         rhovf = outRho * outU * outV;
         rhowf = outRho * outU * outW;
-        Ef    = outU*(outP/(gamma-1.0) + 0.5*outRho*(outU*outU + outV*outV + outW*outW) + outP);
+        Ef    = outU*(outP/(gamma-1.0) + 0.5*outRho*
+                      (outU*outU + outV*outV + outW*outW) + outP);
     }
 }

@@ -16,6 +16,7 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./RiemannSolvers/AUSM2Solver.cpp
        ./RiemannSolvers/AUSM3Solver.cpp
        ./RiemannSolvers/ExactSolver.cpp
+       ./RiemannSolvers/ExactSolverToro.cpp
        ./RiemannSolvers/LaxFriedrichsSolver.cpp
        ./RiemannSolvers/HLLSolver.cpp
        ./RiemannSolvers/HLLCSolver.cpp

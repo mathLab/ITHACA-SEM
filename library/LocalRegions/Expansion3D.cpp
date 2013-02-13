@@ -938,7 +938,11 @@ namespace Nektar
                  * normals must be negated, since the integral being performed
                  * here requires an outwards facing normal.
                  */ 
-                if (locExp->GetRightAdjacentElementFace() != -1)
+                if (m_negatedNormals[face])
+                {
+                    Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
+                }
+                else if (locExp->GetRightAdjacentElementFace() != -1)
                 {
                     if (locExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID() 
                         == GetGeom3D()->GetGlobalID())

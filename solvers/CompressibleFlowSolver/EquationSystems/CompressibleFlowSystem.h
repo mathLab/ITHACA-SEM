@@ -100,7 +100,9 @@ namespace Nektar
         NekDouble                           m_wInf;
         NekDouble                           m_gasConstant;
         NekDouble                           m_Twall;
-      
+        std::string                         m_ViscosityType;
+        NekDouble                           m_mu;
+
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 

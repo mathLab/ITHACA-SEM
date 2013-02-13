@@ -111,10 +111,11 @@ namespace Nektar
             m_session->LoadParameter("wInf", m_wInf, 0.0);
         }
                 
-        m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
-        m_session->LoadParameter("Twall", m_Twall, 293.15);
+        m_session->LoadParameter ("GasConstant",   m_gasConstant,   287.058);
+        m_session->LoadParameter ("Twall",         m_Twall,         300.15);
+        m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
+        m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
 
-        
         // Type of advection class to be used
         switch(m_projectionType)
         {
@@ -130,30 +131,33 @@ namespace Nektar
                 string advName;
                 string diffName;
                 string riemName;
-
+                
+                // Setting up advection and diffusion operators
                 m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
                 m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
-
                 m_advection = SolverUtils::GetAdvectionFactory()
                                             .CreateInstance(advName, advName);
-                
                 m_diffusion = SolverUtils::GetDiffusionFactory()
                                             .CreateInstance(diffName, diffName);
 
+                // Setting up flux vector for advection operator
                 m_advection->SetFluxVector(&CompressibleFlowSystem::
                                             GetFluxVector, this);
                 
+                // Setting up flux vector for diffusion operator
                 m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
                                              GetViscousFluxVector, this);
 
-                m_session->LoadSolverInfo("UpwindType", riemName, "Exact");
-                
+                // Setting up Riemann solver for advection operator
+                m_session->LoadSolverInfo("UpwindType", riemName, "Average");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
                                             .CreateInstance(riemName);
                 
+                // Setting up upwind solver for diffusion operator
                 m_riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()
-                                                .CreateInstance("Upwind");
+                                                .CreateInstance("UpwindLDG");
 
+                // Setting up parameters for advection operator Riemann solver 
                 m_riemannSolver->AddParam (
                                     "gamma",  
                                     &CompressibleFlowSystem::GetGamma,   this);
@@ -164,6 +168,7 @@ namespace Nektar
                                     "N",
                                     &CompressibleFlowSystem::GetNormals, this);
                 
+                // Setting up parameters for diffusion operator Riemann solver
                 m_riemannSolverLDG->AddParam (
                                     "gamma",  
                                     &CompressibleFlowSystem::GetGamma,   this);
@@ -174,7 +179,7 @@ namespace Nektar
                                     "N",
                                     &CompressibleFlowSystem::GetNormals, this);
                 
-                
+                // Concluding initialisation of advection / diffusion operators
                 m_advection->SetRiemannSolver   (m_riemannSolver);
                 m_diffusion->SetRiemannSolver   (m_riemannSolverLDG);
                 m_advection->InitObject         (m_session, m_fields);
@@ -312,14 +317,16 @@ namespace Nektar
                         m_fields[0]->GetTraceMap()->
                             GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             
-            // Is this implementation true for Average and 
-            // Roe Riemann solvers only ?
+            // Negating both the component of the velocity
             for (i = 0; i < m_expdim; i++)
             {
                 Vmath::Neg(npts, &Fwd[i+1][id2], 1);
             }
+                        
+            // Imposition of the temperature
+            //Fwd[nvariables-1][id2] = m_gasConstant * Fwd[0][id2] * m_Twall / 
+            //                            (m_gamma - 1);
             
-            // Why don't we impose the temperature?
             
             // copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nvariables; ++i)
@@ -517,22 +524,7 @@ namespace Nektar
         Array<OneD, NekDouble > divVel      (nPts, 0.0);
         Array<OneD, NekDouble > pressure    (nPts, 0.0);
         Array<OneD, NekDouble > temperature (nPts, 0.0);
-        
-        /*
-         if (intVariables.empty())
-         {
-         for (i = 0; i < m_fields.num_elements(); ++i)
-         {
-         intVariables.push_back(i);
-         }
-         nvariables = m_fields.num_elements();
-         }
-         else
-         {
-         nvariables = intVariables.size();
-         }
-         */
-        
+                
         // Set up wrapper to fields data storage
         Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
         
@@ -546,9 +538,15 @@ namespace Nektar
         GetPressure(fields, pressure);
         GetTemperature(fields, pressure, temperature);
         
-        // Variable viscosity 
-        //GetDynamicViscosity(fields, mu);
-        Vmath::Sadd(nPts, 0.0000186, &mu[0], 1, &mu[0], 1);
+        // Variable viscosity through the Sutherland's law
+        if (m_ViscosityType == "Variable")
+        {
+            GetDynamicViscosity(fields, mu);
+        }
+        else
+        {
+            Vmath::Sadd(nPts, m_mu, &mu[0], 1, &mu[0], 1);
+        }
         
         // Computing diagonal terms of viscous stress tensor
         Array<OneD, Array<OneD, NekDouble> > tmp(m_expdim);
@@ -595,6 +593,9 @@ namespace Nektar
             Vmath::Vadd(nPts, &derivativesO1[0][1][0], 1,
                         &derivativesO1[1][0][0], 1,
                         &Sxy[0], 1);
+            
+            // Sxy = mu * (du/dy + dv/dx)
+            Vmath::Vmul(nPts, &mu[0], 1, &Sxy[0], 1, &Sxy[0], 1);
         }
         else if (m_expdim == 3)
         {
@@ -612,6 +613,15 @@ namespace Nektar
             Vmath::Vadd(nPts, &derivativesO1[1][2][0], 1,
                         &derivativesO1[2][1][0], 1,
                         &Syz[0], 1);
+            
+            // Sxy = mu * (du/dy + dv/dx)
+            Vmath::Vmul(nPts, &mu[0], 1, &Sxy[0], 1, &Sxy[0], 1);
+            
+            // Sxz = mu * (du/dy + dv/dx)
+            Vmath::Vmul(nPts, &mu[0], 1, &Sxz[0], 1, &Sxz[0], 1);
+            
+            // Syz = mu * (du/dy + dv/dx)
+            Vmath::Vmul(nPts, &mu[0], 1, &Syz[0], 1, &Syz[0], 1);
         }
         
         // Energy-related terms
@@ -736,7 +746,7 @@ namespace Nektar
                         &derivativesO1[1][2][0], 1, 
                         &tmp3[0], 1);
             
-            // STy = v * Syy + u * Sxy + w * Syz + (K / mu) * dT/dy
+            // STy = v * Syy + u * Sxy + w * Syz + K * dT/dy
             Vmath::Vadd(nPts, &STy[0], 1, &tmp1[0], 1, &STy[0], 1);
             Vmath::Vadd(nPts, &STy[0], 1, &tmp2[0], 1, &STy[0], 1);
             Vmath::Vadd(nPts, &STy[0], 1, &tmp3[0], 1, &STy[0], 1);
@@ -765,7 +775,7 @@ namespace Nektar
                         &derivativesO1[2][2][0], 1, 
                         &tmp3[0], 1);
             
-            // STy = w * Szz + u * Sxz + v * Syz + (K / mu) * dT/dz
+            // STy = w * Szz + u * Sxz + v * Syz + K * dT/dz
             Vmath::Vadd(nPts, &STz[0], 1, &tmp1[0], 1, &STz[0], 1);
             Vmath::Vadd(nPts, &STz[0], 1, &tmp2[0], 1, &STz[0], 1);
             Vmath::Vadd(nPts, &STz[0], 1, &tmp3[0], 1, &STz[0], 1);

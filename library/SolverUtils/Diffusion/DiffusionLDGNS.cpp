@@ -72,7 +72,7 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
             // They should be taken from CFS
-            const NekDouble gamma = 1.2;
+            const NekDouble gamma = 1.4;
             const NekDouble R     = 287.05;
             
             int i, j;
@@ -253,7 +253,6 @@ namespace Nektar
         {
             int cnt;
             int i, j, e;            
-            
             int id1, id2;
             
             int nBndEdgePts, nBndEdges, nBndRegions;
@@ -301,13 +300,11 @@ namespace Nektar
                         id2 = fields[0]->GetTrace()->
                         GetPhys_Offset(fields[0]->GetTraceMap()->
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
-                        
+
                         Vmath::Vdiv(nBndEdgePts,
-                                    &(fields[i+1]->
-                                      GetBndCondExpansions()[j]->
+                                    &(fields[i+1]->GetBndCondExpansions()[j]->
                                       UpdatePhys())[id1], 1,
-                                    &(fields[0]->
-                                      GetBndCondExpansions()[j]->
+                                    &(fields[0]->GetBndCondExpansions()[j]->
                                       UpdatePhys())[id1], 1,
                                     &scalarVariables[i][id2], 1);
                         
@@ -453,6 +450,10 @@ namespace Nektar
                 Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, 
                              traceVel[i], 1, Vn, 1, Vn, 1);
             }
+            
+            // I added this for doing Flip-Flop. 
+            // However it blows up when it uses this.
+            // Vmath::Neg(nTracePts, &Vn[0], 1);
             
             // Evaulate Riemann flux 
             // qflux = \hat{q} \cdot u = q \cdot n 

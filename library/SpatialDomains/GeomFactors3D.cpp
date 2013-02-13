@@ -309,7 +309,7 @@ namespace Nektar
             // Multiply the jacobian with the quadrature weights
             switch(shape)
             {
-            case StdRegions::eHexahedron:
+                case StdRegions::eHexahedron:
                 {
                     for(k = 0; k < nquad2; ++k)
                     {

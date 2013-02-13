@@ -2368,8 +2368,7 @@ namespace Nektar
                                 * m_base[1]->GetNumPoints()
                                 * m_base[2]->GetNumPoints();                
                 const Array<OneD, const NekDouble>& metric 
-                                        = m_metricinfo->GetQuadratureMetrics();  
-                    
+                                        = m_metricinfo->GetQuadratureMetrics();
                 Vmath::Vmul(nqtot, metric, 1, inarray, 1, outarray, 1);
             }
             else
@@ -2379,6 +2378,8 @@ namespace Nektar
                 int    nquad1 = m_base[1]->GetNumPoints();
                 int    nquad2 = m_base[2]->GetNumPoints();
                 int    nqtot  = nquad0*nquad1*nquad2;
+                int    nq12   = nquad1*nquad2;
+                int    nq01   = nquad0*nquad1;
 
                 const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
                 const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
@@ -2395,14 +2396,14 @@ namespace Nektar
                 }
 
                 // First coordinate
-                for(i = 0; i < nquad1*nquad2; ++i)
+                for(i = 0; i < nq12; ++i)
                 {
                     Vmath::Vmul(nquad0, outarray.get()+i*nquad0, 1,
                                 w0.get(), 1, outarray.get()+i*nquad0,1);
                 }
 
                 // Second coordinate
-                for(i = 0; i < nquad1*nquad2; ++i)
+                for(i = 0; i < nq12; ++i)
                 {
                     Vmath::Smul(nquad0, w1[i%nquad2], outarray.get()+i*nquad0, 1,
                                 outarray.get()+i*nquad0, 1);
@@ -2411,8 +2412,8 @@ namespace Nektar
                 // Third coordinate
                 for(i = 0; i < nquad2; ++i)
                 {
-                    Vmath::Smul(nquad0*nquad1, w2[i], outarray.get()+i*nquad0*nquad1, 1,
-                                outarray.get()+i*nquad0*nquad1, 1);
+                    Vmath::Smul(nq01, w2[i], outarray.get()+i*nq01, 1,
+                                outarray.get()+i*nq01, 1);
                 }
 /*
                 // multiply by integration constants 

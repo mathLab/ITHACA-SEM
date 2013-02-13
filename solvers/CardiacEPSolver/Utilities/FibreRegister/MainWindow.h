@@ -165,6 +165,9 @@ class MainWindow : public QMainWindow
 
         vtkEventQtSlotConnect* Connections;
         vtkEventQtSlotConnect* Connections_s;
+
+        unsigned int newHeightValue;
+
         void Draw();
 
         vtkDoubleArray* InterpSurface(vtkPolyData* pPointData, vtkPolyData* pSurface, int pInterpDistance);

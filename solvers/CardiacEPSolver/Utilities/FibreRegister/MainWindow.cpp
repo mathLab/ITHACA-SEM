@@ -212,6 +212,7 @@ MainWindow::MainWindow( QWidget* parent, Qt::WindowFlags fl )
                          this,
                          SLOT(CreateTargetPoint( vtkObject*, unsigned long, void*, void*, vtkCommand*)));
 
+    newHeightValue = mHeightSlider->minimum();
 }
 
 
@@ -515,6 +516,7 @@ void MainWindow::HeightValueChanged(int value)
  */
 void MainWindow::HeightInterpChanged(int value)
 {
+    newHeightValue = value;
     Update();
 }
 
@@ -547,7 +549,7 @@ void MainWindow::Update() {
 
     vtkDoubleArray* vSurfaceData=InterpSurface( mSourceHeightPointData,
                                                 mSourceData,
-                                                mHeightInterpRange->value());
+                                                newHeightValue);
     mSourceData->GetPointData()->SetScalars(vSurfaceData);
 
     ComputeFibreDirection();
@@ -617,6 +619,7 @@ void MainWindow::CreateTargetPoint(vtkObject* caller, unsigned long vtk_event,
 vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData,
         vtkPolyData* pSurface, int pInterpDistance) {
 
+    const unsigned int nPoints = 20;
     double p[3];
     double q[3];
     vtkIdList* list = vtkIdList::New();
@@ -635,7 +638,7 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData,
     vOutput->SetNumberOfValues(nSurfacePoints);
     
     // Return empty array if less than 4 points selected
-    if (pPointData->GetNumberOfPoints() < 4)
+    if (pPointData->GetNumberOfPoints() < nPoints)
     {
         return vOutput;
     }
@@ -653,14 +656,14 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData,
 
         // Seek the IDs of the nearest 4 points in the point list to this
         // coordinate.
-        vLocator->FindClosestNPoints(4, p, list);
+        vLocator->FindClosestNPoints(nPoints, p, list);
         
         // Perform a weighted average of values at the 4 closest points
         double val = 0;
         double w = 0;
         int c = 0;
 
-        for (int j = 0; j < 4; ++j) {
+        for (int j = 0; j < nPoints; ++j) {
             // Get the j-th ID from the list.
             int id = list->GetId(j);
             
@@ -673,9 +676,9 @@ vtkDoubleArray* MainWindow::InterpSurface(vtkPolyData* pPointData,
             // Use the point, only if it is within the interpolation distance.
             if (d_pq <= pInterpDistance) {
                 // Add 1e10: So we dont divide by 0.
-                val += vPointDataValues->GetValue(id) / (d_pq + 1E-10);
+                val += vPointDataValues->GetValue(id) * (1.0 - (d_pq / pInterpDistance));
 
-                w   += 1.0 / (d_pq + 1E-10);
+                w   += 1.0 - (d_pq / pInterpDistance);
                 c   += 1;
             }
         }

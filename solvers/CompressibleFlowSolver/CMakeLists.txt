@@ -9,17 +9,18 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
        ./EquationSystems/EulerCFE.cpp
        ./EquationSystems/EulerArtificialDiffusionCFE.cpp
        ./EquationSystems/NavierStokesCFE.cpp
-       ./RiemannSolvers/CompressibleSolver.cpp
        ./RiemannSolvers/AverageSolver.cpp
        ./RiemannSolvers/AUSM0Solver.cpp
        ./RiemannSolvers/AUSM1Solver.cpp
        ./RiemannSolvers/AUSM2Solver.cpp
        ./RiemannSolvers/AUSM3Solver.cpp
+       ./RiemannSolvers/CompressibleSolver.cpp
        ./RiemannSolvers/ExactSolver.cpp
        ./RiemannSolvers/ExactSolverToro.cpp
-       ./RiemannSolvers/LaxFriedrichsSolver.cpp
        ./RiemannSolvers/HLLSolver.cpp
        ./RiemannSolvers/HLLCSolver.cpp
+       ./RiemannSolvers/LaxFriedrichsSolver.cpp
+       ./RiemannSolvers/RoeSolver.cpp
        )
 
     ADD_SOLVER_EXECUTABLE(CompressibleFlowSolver solvers 

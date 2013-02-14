@@ -2174,12 +2174,9 @@ namespace Nektar
             const StdRegions::MatrixType matrixType)
         {
             int nVerts, nEdges, nFaces;
-            int vMap, eid, fid, vid, cnt, n, i, j;
-            int nEdgeCoeffs, nFaceCoeffs;
+            int eid, fid, vid, cnt, n, i;
 
             int nBndCoeffs=NumBndryCoeffs();
-            int nCoeffs=GetNcoeffs();
-            int nIntCoeffs=nCoeffs-nBndCoeffs;
 
             //Get geometric information about this element
             nVerts=GetNverts();
@@ -2205,9 +2202,8 @@ namespace Nektar
              */
 
  	    int nmodes;
-            int eid2, fid2, cnt2, m;
-            int FaceTotNCoeffs, EdgeTotNCoeffs;
-            NekDouble MatrixValue, VertexEdgeFaceValue;
+            int m;
+            NekDouble VertexEdgeFaceValue;
             NekDouble zero = 0.0;
 
             //The number of connected edges/faces is 3 (for all elements)
@@ -2421,7 +2417,7 @@ namespace Nektar
              *
              */
 
-            NekDouble EdgeFaceValue, FaceFaceValue, Rvalue;
+            NekDouble EdgeFaceValue, FaceFaceValue;
             int efCol, efRow, nedgemodes;
 	    
             //number of attached faces is always 2
@@ -2560,12 +2556,10 @@ namespace Nektar
         Array<OneD, unsigned int>
         TetExp::v_GetEdgeInverseBoundaryMap(int eid)
         {
-            int nEdges;
-            int cnt, n, i, j;
+            int n, j;
             int nEdgeCoeffs;
             
             int nBndCoeffs=NumBndryCoeffs();
-            int nCoeffs=GetNcoeffs();
 
             Array<OneD,unsigned int> bmap(nBndCoeffs);
             GetBoundaryMap(bmap);
@@ -2599,8 +2593,7 @@ namespace Nektar
         Array<OneD, unsigned int>
         TetExp::v_GetFaceInverseBoundaryMap(int fid)
         {
-            int nFaces;
-            int cnt, n, i, j;
+            int n, j;
             int nFaceCoeffs;
             
             int nBndCoeffs=NumBndryCoeffs();
@@ -2648,7 +2641,7 @@ namespace Nektar
             DNekMatSharedPtr m_inversetransformationmatrix,
             DNekMatSharedPtr m_inversetransposedtransformationmatrix)
 	{
-            int i,j,n, eid, fid;
+            int i,j,n, eid=0, fid=0;
             int nCoeffs=NumBndryCoeffs();
             NekDouble MatrixValue;
             NekDouble zero=0.0;

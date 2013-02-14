@@ -2098,7 +2098,6 @@ namespace Nektar
             int eid, fid, vid, cnt, n, i;
 
             int nBndCoeffs=NumBndryCoeffs();
-            int nCoeffs=GetNcoeffs();
 
             //Get geometric information about this element
             nVerts=GetNverts();
@@ -2133,8 +2132,7 @@ namespace Nektar
              */
 
  	    int nmodes;
-            int eid2, fid2, cnt2, m;
-            int FaceTotNCoeffs;
+            int m;
             NekDouble VertexEdgeFaceValue;
             NekDouble zero = 0.0;
 
@@ -2487,12 +2485,10 @@ namespace Nektar
         Array<OneD, unsigned int>
         PrismExp::v_GetEdgeInverseBoundaryMap(int eid)
         {
-            int nEdges;
-            int cnt, n, i, j;
+            int n, j;
             int nEdgeCoeffs;
             
             int nBndCoeffs=NumBndryCoeffs();
-            int nCoeffs=GetNcoeffs();
 
             Array<OneD,unsigned int> bmap(nBndCoeffs);
             GetBoundaryMap(bmap);
@@ -2526,8 +2522,7 @@ namespace Nektar
         Array<OneD, unsigned int>
         PrismExp::v_GetFaceInverseBoundaryMap(int fid)
         {
-            int nFaces;
-            int cnt, n, i, j;
+            int n, j;
             int nFaceCoeffs;
             
             int nBndCoeffs=NumBndryCoeffs();

@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
                     = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
     MultiRegions::ContField3DSharedPtr Exp,Fce;
-    int i, nq, coordim;
+    int nq, coordim;
     Array<OneD,NekDouble>  fce; 
     Array<OneD,NekDouble>  xc0,xc1,xc2; 
     std::string meshfile(vSession->GetFilename());

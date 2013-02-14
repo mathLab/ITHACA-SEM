@@ -36,8 +36,11 @@
 #include <CompressibleFlowSolver/EquationSystems/CompressibleFlowSystem.h>
 #include <LocalRegions/TriExp.h>
 #include <LocalRegions/QuadExp.h>
+#include <LocalRegions/HexExp.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <solvers/ADRSolver/EquationSystems/UnsteadyDiffusion.cpp>
+#include <solvers/ADRSolver/EquationSystems/UnsteadyDiffusion.h>
 
 namespace Nektar
 {
@@ -75,37 +78,39 @@ namespace Nektar
                  "Compressible flow sessions must define a Gamma parameter.");
         m_session->LoadParameter("Gamma", m_gamma, 1.4);
         
-        // Get rho0 parameter from session file.
-        ASSERTL0(m_session->DefinesParameter("rho0"),
-                 "Compressible flow sessions must define a rho0 parameter.");
-        m_session->LoadParameter("rho0", m_rho0, 1.225);
+        // Get E0 parameter from session file.
+        ASSERTL0(m_session->DefinesParameter("pInf"),
+                 "Compressible flow sessions must define a pInf parameter.");
+        m_session->LoadParameter("pInf", m_pInf, 101325);
         
-        // Get rhou0 parameter from session file.
-        ASSERTL0(m_session->DefinesParameter("rhou0"),
-                 "Compressible flow sessions must define a rhou0 parameter.");
-        m_session->LoadParameter("rhou0", m_rhou0, 0.1225);
+        // Get rhoInf parameter from session file.
+        ASSERTL0(m_session->DefinesParameter("rhoInf"),
+                 "Compressible flow sessions must define a rhoInf parameter.");
+        m_session->LoadParameter("rhoInf", m_rhoInf, 1.225);
         
-        // Get rhov0 parameter from session file.
+        // Get uInf parameter from session file.
+        ASSERTL0(m_session->DefinesParameter("uInf"),
+                 "Compressible flow sessions must define a uInf parameter.");
+        m_session->LoadParameter("uInf", m_uInf, 0.1);
+        
+        // Get vInf parameter from session file.
         if (m_expdim == 2 || m_expdim == 3)
         {
-            ASSERTL0(m_session->DefinesParameter("rhov0"),
-                 "Compressible flow sessions must define a rhov0 parameter.");        
-            m_session->LoadParameter("rhov0", m_rhov0, 0.0);
+            ASSERTL0(m_session->DefinesParameter("vInf"),
+                     "Compressible flow sessions must define a vInf parameter"
+                     "for 2D/3D problems.");
+            m_session->LoadParameter("vInf", m_vInf, 0.0);
         }
         
-        // Get rhow0 parameter from session file.
+        // Get wInf parameter from session file.
         if (m_expdim == 3)
         {
-            ASSERTL0(m_session->DefinesParameter("rhow0"),
-                 "Compressible flow sessions must define a rhow0 parameter.");
-            m_session->LoadParameter("rhow0", m_rhow0, 0.0);
+            ASSERTL0(m_session->DefinesParameter("wInf"),
+                     "Compressible flow sessions must define a wInf parameter"
+                     "for 3D problems.");
+            m_session->LoadParameter("wInf", m_wInf, 0.0);
         }
-        
-        // Get E0 parameter from session file.
-        ASSERTL0(m_session->DefinesParameter("E0"),
-                 "Compressible flow sessions must define a E0 parameter.");
-        m_session->LoadParameter("E0", m_E0, 0.149875);
-        
+                
         m_session->LoadParameter("GasConstant", m_gasConstant, 287.058);
         
         // Type of advection class to be used
@@ -121,20 +126,31 @@ namespace Nektar
             case MultiRegions::eDiscontinuous:
             {
                 string advName;
+                string diffName;
                 string riemName;
-                
+
                 m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
-                
+                m_session->LoadSolverInfo("DiffusionType", diffName, "LDGNS");
+
                 m_advection = SolverUtils::GetAdvectionFactory()
                                             .CreateInstance(advName, advName);
                 
+                m_diffusion = SolverUtils::GetDiffusionFactory()
+                                            .CreateInstance(diffName, diffName);
+
                 m_advection->SetFluxVector(&CompressibleFlowSystem::
-                                                         GetFluxVector, this);
+                                            GetFluxVector, this);
                 
+                m_diffusion->SetFluxVectorNS(&CompressibleFlowSystem::
+                                             GetViscousFluxVector, this);
+
                 m_session->LoadSolverInfo("UpwindType", riemName, "Exact");
                 
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory()
-                                                    .CreateInstance(riemName);
+                                            .CreateInstance(riemName);
+                
+                m_riemannSolverLDG = SolverUtils::GetRiemannSolverFactory()
+                                                .CreateInstance("Upwind");
 
                 m_riemannSolver->AddParam (
                                     "gamma",  
@@ -146,8 +162,21 @@ namespace Nektar
                                     "N",
                                     &CompressibleFlowSystem::GetNormals, this);
                 
-                m_advection->SetRiemannSolver(m_riemannSolver);
-                m_advection->InitObject      (m_session, m_fields);
+                m_riemannSolverLDG->AddParam (
+                                    "gamma",  
+                                    &CompressibleFlowSystem::GetGamma,   this);
+                m_riemannSolverLDG->AddScalar(
+                                    "velLoc", 
+                                    &CompressibleFlowSystem::GetVelLoc,  this);
+                m_riemannSolverLDG->AddVector(
+                                    "N",
+                                    &CompressibleFlowSystem::GetNormals, this);
+                
+                
+                m_advection->SetRiemannSolver   (m_riemannSolver);
+                m_diffusion->SetRiemannSolver   (m_riemannSolverLDG);
+                m_advection->InitObject         (m_session, m_fields);
+                m_diffusion->InitObject         (m_session);
                 break;
             }
             default:
@@ -191,14 +220,14 @@ namespace Nektar
         for (i = 0; i < nvariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-            m_fields[i]->ExtractTracePhys(physarray[i],Fwd[i]);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
         
         // Adjust the physical values of the trace to take 
         // user defined boundaries into account
         int e, id1, id2, npts;
         
-        for(e = 0; e < m_fields[0]->
+        for (e = 0; e < m_fields[0]->
             GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
@@ -209,95 +238,85 @@ namespace Nektar
                         m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             
-            switch(m_expdim)
+            // For 2D/3D, define: v* = v - 2(v.n)n
+            
+            Array<OneD,NekDouble> tmp(npts, 0.0);
+            
+            // Calculate (v.n)
+            for (i = 0; i < m_expdim; ++i)
             {
-                // Special case for 2D
-                case 2:
-                {
-                    Array<OneD, NekDouble> tmp_n(npts);
-                    Array<OneD, NekDouble> tmp_t(npts);
-                    
-                    Vmath::Vmul (npts, 
-                                 &Fwd[1][id2], 1, 
-                                 &m_traceNormals[0][id2], 1,
-                                 &tmp_n[0], 1);
-                    
-                    Vmath::Vvtvp(npts, 
-                                 &Fwd[2][id2], 1, 
-                                 &m_traceNormals[1][id2], 1,
-                                 &tmp_n[0], 1, 
-                                 &tmp_n[0], 1);
-                    
-                    Vmath::Vmul (npts, 
-                                 &Fwd[1][id2], 1, 
-                                 &m_traceNormals[1][id2], 1,
-                                 &tmp_t[0], 1);
-                    
-                    Vmath::Vvtvm(npts, 
-                                 &Fwd[2][id2], 1, 
-                                 &m_traceNormals[0][id2], 1,
-                                 &tmp_t[0], 1, &tmp_t[0], 1);
-                    
-                    // negate the normal flux
-                    Vmath::Neg  (npts, tmp_n, 1);		      
-                    
-                    // rotate back to Cartesian
-                    Vmath::Vmul (npts,
-                                 &tmp_t[0], 1, 
-                                 &m_traceNormals[1][id2], 1,
-                                 &Fwd[1][id2], 1);
-                    
-                    Vmath::Vvtvm(npts, 
-                                 &tmp_n[0], 1, 
-                                 &m_traceNormals[0][id2], 1,
-                                 &Fwd[1][id2], 1, 
-                                 &Fwd[1][id2], 1);
-                    
-                    Vmath::Vmul (npts, 
-                                 &tmp_t[0], 1,
-                                 &m_traceNormals[0][id2], 1,
-                                 &Fwd[2][id2], 1);
-                    
-                    Vmath::Vvtvp(npts, 
-                                 &tmp_n[0], 1,
-                                 &m_traceNormals[1][id2], 1,
-                                 &Fwd[2][id2], 1,
-                                 &Fwd[2][id2], 1);
-                    break;
-                }
-                    
-                // For 1D/3D, define: v* = v - (v.n)n so that v*.n = 0
-                case 1:
-                case 3:
-                {
-                    Array<OneD,NekDouble> tmp(npts);
-                    
-                    // Calculate (v.n)
-                    for (i = 0; i < m_expdim; ++i)
-                    {
-                        Vmath::Vvtvp(npts,
-                                     &Fwd[1+i][id2], 1, 
-                                     &m_traceNormals[i][id2], 1,
-                                     &tmp[0], 1,
-                                     &tmp[0], 1);
-                    }
-                    
-                    for (i = 0; i < m_expdim; ++i)
-                    {
-                        Vmath::Vvtvm(npts, 
-                                     &tmp[0], 1,
-                                     &m_traceNormals[i][id2], 1,
-                                     &Fwd[1+i][id2], 1,
-                                     &Fwd[1+i][id2], 1);
-                        
-                        Vmath::Neg  (npts, &Fwd[1+i][id2], 1);
-                    }
-                    
-                    break;
-                }
-                default:
-                    ASSERTL0(false,"Illegal expansion dimension");
-                    break;
+                Vmath::Vvtvp(npts,
+                             &Fwd[1+i][id2], 1,
+                             &m_traceNormals[i][id2], 1,
+                             &tmp[0], 1,
+                             &tmp[0], 1);
+                
+            }
+            // Calculate 2.0(v.n)
+            Vmath::Smul(npts,
+                        -2.0,
+                        &tmp[0],1,
+                        &tmp[0],1);
+            
+            // Calculate v* = v - 2.0(v.n)n
+            for (i = 0; i < m_expdim; ++i)
+            {
+                Vmath::Vvtvp(npts,
+                             &tmp[0], 1,
+                             &m_traceNormals[i][id2], 1,
+                             &Fwd[1+i][id2], 1,
+                             &Fwd[1+i][id2], 1);
+                
+            }
+            
+            // copy boundary adjusted values into the boundary expansion
+            for (i = 0; i < nvariables; ++i)
+            {
+                Vmath::Vcopy(npts, &Fwd[i][id2], 1,
+                             &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
+                             UpdatePhys())[id1], 1);
+            }
+        }
+    }
+    
+    /**
+     * @brief Wall boundary conditions for viscous compressible flow problems.
+     */
+    void CompressibleFlowSystem::WallBoundaryViscous(
+        int                                   bcRegion,
+        int                                   cnt, 
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
+    { 
+        int i;
+        int nTraceNumPoints = GetTraceTotPoints();
+        int nvariables      = physarray.num_elements();
+        
+        // get physical values of the forward trace
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        for (i = 0; i < nvariables; ++i)
+        {
+            Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
+            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
+        }
+        
+        // Adjust the physical values of the trace to take 
+        // user defined boundaries into account
+        int e, id1, id2, npts;
+        
+        for (e = 0; e < m_fields[0]->
+            GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+        {
+            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                GetExp(e)->GetNumPoints(0);
+            id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                GetPhys_Offset(e);
+            id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                m_fields[0]->GetTraceMap()->
+                    GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+            
+            for (i = 0; i < m_expdim ; i++)
+            {
+                Vmath::Neg(npts,&Fwd[i+1][id2], 1);
             }
             
             // copy boundary adjusted values into the boundary expansion
@@ -305,7 +324,7 @@ namespace Nektar
             {
                 Vmath::Vcopy(npts, &Fwd[i][id2], 1, 
                              &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1], 1);
+                               UpdatePhys())[id1], 1);
             }
         }
     }
@@ -416,449 +435,6 @@ namespace Nektar
     }
     
     /**
-     * @brief Inflow boundary conditions for compressible flow problems based
-     * on the eigenvalues of inviscid term of the compressible Euler equation.
-     */
-    void CompressibleFlowSystem::InflowCFE(
-        int                                   bcRegion,
-        int                                   cnt, 
-        Array<OneD, Array<OneD, NekDouble> > &physarray)
-    { 
-        int i, e;
-        int id1, id2;
-        int npts, pnt;
-        
-        int nTraceNumPoints = GetTraceTotPoints();
-        int nvariables      = physarray.num_elements();
-        
-        NekDouble cPlus, cMinus;
-        NekDouble rPlus, rMinus;
-        NekDouble Vnorm, Vdelta;
-        NekDouble soundSpeedCorrection;
-        NekDouble uCorrection;
-        NekDouble vCorrection;
-        NekDouble pressureCorrection;
-        NekDouble entropyCorrection;
-        
-        NekDouble rhoFinalCorrection;
-        NekDouble rhouFinalCorrection;
-        NekDouble rhovFinalCorrection;
-        NekDouble energyFinalCorrection;
-        
-        // Forward trace arrays
-        Array<OneD, NekDouble > pressurefwd  (nTraceNumPoints, 0.0);
-        Array<OneD, NekDouble > soundSpeedfwd(nTraceNumPoints, 0.0);
-        Array<OneD, NekDouble > Machfwd      (nTraceNumPoints, 0.0);
-        Array<OneD, NekDouble > Velfwd       (nTraceNumPoints, 0.0);
-        Array<OneD, NekDouble > Vnfwd        (nTraceNumPoints, 0.0);
-        
-        // Boundary values
-        NekDouble pressureB;
-        NekDouble soundSpeedB;
-        NekDouble MachB;
-        NekDouble VelB;
-        NekDouble VnB;
-
-        // Get physical values of the forward trace
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (i = 0; i < nvariables; ++i)
-        {
-            Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-        }
-                
-        // Switch on the dimensions of the problem
-        switch(m_expdim)
-        {
-            // 1D case 
-            case 1:
-            {
-                ASSERTL0(false, "1D InflowCFE boundary condition" 
-                                "not implemented yet")
-                break;
-            }
-            // 2D case
-            case 2:
-            {
-                // Get forward trace variables
-                for(i = 0; i < nTraceNumPoints; i++)
-                {
-                    // Forward trace normal velocity
-                    Vnfwd[i] = Fwd[1][i] / Fwd[0][i] * m_traceNormals[0][i] + 
-                               Fwd[2][i] / Fwd[0][i] * m_traceNormals[1][i];
-                    
-                    // Forward trace pressure
-                    pressurefwd[i] = (m_gamma - 1) * (Fwd[3][i] - 
-                                    0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] + 
-                                           Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
-                        
-                    // Forward trace speed of sound
-                    soundSpeedfwd[i] = sqrt(m_gamma * pressurefwd[i] / 
-                                            Fwd[0][i]);
-                }
-                
-                // Boundary normal velocity
-                VnB = sqrt((m_rhou0 * m_rhou0) / (m_rho0 * m_rho0) + 
-                           (m_rhov0 * m_rhov0) / (m_rho0 * m_rho0));
-                
-                // Boundary pressure
-                pressureB = (m_gamma - 1) * (m_E0 - 0.5 * 
-                                             ((m_rhou0 * m_rhou0) / (m_rho0) +  
-                                              (m_rhov0 * m_rhov0) / (m_rho0)));
-                
-                // Boundary speed of sound
-                soundSpeedB   = sqrt(m_gamma * pressureB / m_rho0);
-                 
-                // Forward trace Mach number
-                Vmath::Vdiv(nTraceNumPoints, Velfwd, 1, 
-                            soundSpeedfwd, 1, Machfwd, 1);
-                
-                // Boundary Mach number
-                MachB = VnB / soundSpeedB;
-                
-                // Loop on bcRegions
-                for(e = 0; e < m_fields[0]->
-                    GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
-                {
-                    npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                        GetExp(e)->GetNumPoints(0);
-                    
-                    id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                        GetPhys_Offset(e) ;
-                    
-                    id2  = m_fields[0]->GetTrace()->
-                        GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                                       GetBndCondTraceToGlobalTraceMap(cnt++));
-                                            
-                    // Loop on the points of the bcRegion
-                    for (i = 0; i < npts; i++)
-                    {
-                        pnt = id2 + i;
-                        if (Machfwd[pnt] < 0.99)
-                        {
-                            // + Characteristic from boundary
-                            cPlus = sqrt(m_gamma * pressureB / m_rho0);
-                            rPlus = VnB + 2.0 * cPlus / (m_gamma - 1);
-                            
-                            // - Characteristic from inside
-                            cMinus = sqrt(m_gamma * pressurefwd[pnt] / 
-                                     Fwd[0][pnt]);
-                            rMinus = Vnfwd[pnt] - 2.0 * cMinus / (m_gamma - 1);
-                            
-                            // Corrections for the boundary coditions
-                            Vnorm  = 0.5 * (rPlus + rMinus);
-                            Vdelta = Vnorm - VnB;
-                            
-                            // Speed of sound correction
-                            soundSpeedCorrection = 0.25 * (m_gamma - 1) * 
-                                                          (rPlus - rMinus);
-                            
-                            // Velocity corrections
-                            uCorrection = (VnB + Vdelta)*m_traceNormals[0][pnt];
-                            vCorrection = (VnB + Vdelta)*m_traceNormals[1][pnt];
-                            
-                            // Entropy correction
-                            entropyCorrection = pressureB / 
-                                                (pow(m_rho0, m_gamma));
-                            
-                            // rho final correction
-                            rhoFinalCorrection = pow((soundSpeedCorrection * 
-                                                      soundSpeedCorrection) / 
-                                                     (m_gamma * 
-                                                      entropyCorrection), 
-                                                      1.0 / (m_gamma - 1));
-                            
-                            // Pressure correction
-                            pressureCorrection = rhoFinalCorrection * 
-                                                 soundSpeedCorrection * 
-                                                 soundSpeedCorrection / m_gamma;
-                            
-                            // rhou final correction
-                            rhouFinalCorrection = rhoFinalCorrection * 
-                                                    uCorrection;
-                            
-                            // rhov final correction
-                            rhovFinalCorrection = rhoFinalCorrection * 
-                                                    vCorrection;
-                            
-                            energyFinalCorrection = pressureCorrection / 
-                                                    (m_gamma - 1) + 0.5 * 
-                                                    (rhouFinalCorrection * 
-                                                     uCorrection + 
-                                                     rhovFinalCorrection * 
-                                                     vCorrection);
-                            
-                            // Imposing characteristic farfield bcs
-                            (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = 
-                                2.0 * rhoFinalCorrection - Fwd[0][pnt];
-                            (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = 
-                                2.0 * rhouFinalCorrection - Fwd[1][pnt];
-                            (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = 
-                                2.0 * rhovFinalCorrection - Fwd[2][pnt];
-                            (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = 
-                                2.0 * energyFinalCorrection - Fwd[3][pnt];
-                        }
-                        else
-                        {
-                            (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = m_rho0;
-                            (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = m_rho0 * VnB;
-                            (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = m_rho0 * VnB;
-                            (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = 
-                                pressureB / (m_gamma - 1.0) + 
-                                0.5 * m_rhou0 * m_rhou0 / m_rho0;
-                        }
-                    }
-                }
-                break;
-            }
-            // 3D case
-            case 3:
-            {
-                ASSERTL0(false, "3D InflowCFE boundary condition" 
-                                "not implemented yet")
-                break;
-            }
-            default:
-            {
-                ASSERTL0(false, "Illegal expansion dimension");
-                break;
-            }
-        }
-    }
-
-    /**
-     * @brief Outflow boundary conditions for compressible flow problems based
-     * on the eigenvalues of inviscid term of the compressible Euler equation.
-     */
-    void CompressibleFlowSystem::OutflowCFE(
-        int                                   bcRegion,
-        int                                   cnt, 
-        Array<OneD, Array<OneD, NekDouble> > &physarray)
-    { 
-        int i, e;
-        int id1, id2;
-        int npts, pnt;
-        
-        int nTraceNumPoints = GetTraceTotPoints();
-        int nvariables      = physarray.num_elements();
-        
-        NekDouble cPlus, cMinus;
-        NekDouble rPlus, rMinus;
-        NekDouble Vnorm, Vdelta;
-        NekDouble soundSpeedCorrection;
-        NekDouble uCorrection;
-        NekDouble vCorrection;
-        NekDouble pressureCorrection;
-        NekDouble entropyCorrection;
-        
-        NekDouble rhoFinalCorrection;
-        NekDouble rhouFinalCorrection;
-        NekDouble rhovFinalCorrection;
-        NekDouble energyFinalCorrection;
-        
-        // Forward trace arrays
-        Array<OneD, NekDouble > pressurefwd  (nTraceNumPoints, 0.0);
-        Array<OneD, NekDouble > soundSpeedfwd(nTraceNumPoints, 0.0);
-        Array<OneD, NekDouble > Machfwd      (nTraceNumPoints, 0.0);
-        Array<OneD, NekDouble > Velfwd       (nTraceNumPoints, 0.0);
-        Array<OneD, NekDouble > Vnfwd        (nTraceNumPoints, 0.0);
-        
-        // Boundary values
-        NekDouble pressureB;
-        NekDouble soundSpeedB;
-        NekDouble MachB;
-        NekDouble VelB;
-        NekDouble VnB;
-        
-        // Get physical values of the forward trace
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (i = 0; i < nvariables; ++i)
-        {
-            Fwd[i] = Array<OneD, NekDouble>(nTraceNumPoints);
-            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-        }
-        
-        // Switch on the dimensions of the problem
-        switch(m_expdim)
-        {
-            // 1D case 
-            case 1:
-            {
-                ASSERTL0(false, "1D InflowCFE boundary condition" 
-                         "not implemented yet")
-                break;
-            }
-            // 2D case
-            case 2:
-            {
-                // Get forward trace variables
-                for(i = 0; i < nTraceNumPoints; i++)
-                {
-                    // Forward trace normal velocity
-                    Vnfwd[i] = Fwd[1][i] / Fwd[0][i] * m_traceNormals[0][i] + 
-                    Fwd[2][i] / Fwd[0][i] * m_traceNormals[1][i];
-                    
-                    // Forward trace pressure
-                    pressurefwd[i] = 
-                        (m_gamma - 1) * (Fwd[3][i] - 
-                                    0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] + 
-                                           Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
-                    
-                    // Forward trace speed of sound
-                    soundSpeedfwd[i] = sqrt(m_gamma * pressurefwd[i] / 
-                                            Fwd[0][i]);
-                }
-                
-                // Boundary normal velocity
-                VnB = sqrt((m_rhou0 * m_rhou0) / (m_rho0 * m_rho0) + 
-                           (m_rhov0 * m_rhov0) / (m_rho0 * m_rho0));
-                
-                // Boundary pressure
-                pressureB = (m_gamma - 1) * (m_E0 - 0.5 * 
-                                             ((m_rhou0 * m_rhou0) / (m_rho0) +  
-                                              (m_rhov0 * m_rhov0) / (m_rho0)));
-                
-                // Boundary speed of sound
-                soundSpeedB   = sqrt(m_gamma * pressureB / m_rho0);
-                
-                // Forward trace Mach number
-                Vmath::Vdiv(nTraceNumPoints, Velfwd, 1, 
-                            soundSpeedfwd, 1, Machfwd, 1);
-                
-                // Boundary Mach number
-                MachB = VnB / soundSpeedB;
-                
-                // Loop on bcRegions
-                for(e = 0; e < m_fields[0]->
-                    GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
-                {
-                    npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                    GetExp(e)->GetNumPoints(0);
-                    
-                    id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                    GetPhys_Offset(e) ;
-                    
-                    id2  = m_fields[0]->GetTrace()->
-                    GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                                   GetBndCondTraceToGlobalTraceMap(cnt++));
-                    
-                    // Loop on the points of the bcRegion
-                    for (i = 0; i < npts; i++)
-                    {
-                        pnt = id2 + i;
-                        
-                        // Subsonic flow charcteristic bcs
-                        if (Machfwd[pnt] < 0.99)
-                        {
-                            // + Characteristic from boundary
-                            cPlus = sqrt(m_gamma * pressurefwd[pnt] / 
-                                    Fwd[0][pnt]);
-                            rPlus = Vnfwd[pnt] + 2.0 * cPlus / (m_gamma - 1);
-                            
-                            // - Characteristic from inside
-                            cMinus = sqrt(m_gamma * pressureB / m_rho0);
-                            rMinus = VnB - 2.0 * cMinus / (m_gamma - 1);
-                            
-                            // Corrections for the boundary coditions
-                            Vnorm   = 0.5 * (rPlus + rMinus);
-                            Vdelta  = Vnorm - Vnfwd[pnt];
-
-                            // Speed of sound correction
-                            soundSpeedCorrection = 0.25 * (m_gamma - 1) * 
-                            (rPlus - rMinus);
-                            
-                            // Velocity corrections
-                            uCorrection = Fwd[1][pnt]/Fwd[0][pnt] + 
-                            Vdelta * m_traceNormals[0][pnt];
-                            vCorrection = Fwd[2][pnt]/Fwd[0][pnt] + 
-                            Vdelta * m_traceNormals[1][pnt];
-                            
-                            // Entropy correction
-                            entropyCorrection = pressurefwd[pnt] / 
-                            (pow(Fwd[0][pnt], m_gamma));
-                            
-                            // Eq.1) Rho final correction
-                            rhoFinalCorrection = pow((soundSpeedCorrection * 
-                                                      soundSpeedCorrection) / 
-                                                     (m_gamma * 
-                                                      entropyCorrection), 
-                                                     1.0 / (m_gamma - 1));
-                            
-                            // Pressure correction
-                            pressureCorrection = rhoFinalCorrection * 
-                            soundSpeedCorrection * 
-                            soundSpeedCorrection / m_gamma;
-                            
-                            // Eq.2) Rhou final correction
-                            rhouFinalCorrection = rhoFinalCorrection * 
-                            uCorrection;
-                            
-                            // Eq.3) Rhov final correction
-                            rhovFinalCorrection = rhoFinalCorrection * 
-                            vCorrection;
-                            
-                            // Eq.4) E final correction
-                            energyFinalCorrection = pressureCorrection / 
-                            (m_gamma - 1) + 0.5 * 
-                            (rhouFinalCorrection * 
-                             uCorrection + 
-                             rhovFinalCorrection * 
-                             vCorrection);
-                            
-                            // Imposing characteristic farfield bcs
-                            (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = 
-                            2.0 * rhoFinalCorrection - Fwd[0][pnt];
-                            (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = 
-                            2.0 * rhouFinalCorrection - Fwd[1][pnt];
-                            (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = 
-                            2.0 * rhovFinalCorrection - Fwd[2][pnt];
-                            (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = 
-                            2.0 * energyFinalCorrection - Fwd[3][pnt];
-                        }
-                        // Supersonic flow characteristic bcs
-                        else
-                        {
-                            (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = Fwd[0][pnt];
-                            (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = Fwd[1][pnt];
-                            (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = Fwd[2][pnt];
-                            (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                             UpdatePhys())[id1+i] = Fwd[3][pnt];
-                        }
-                    }
-                }
-                break;
-            }
-                // 3D case
-            case 3:
-            {
-                ASSERTL0(false, "3D InflowCFE boundary condition" 
-                         "not implemented yet")
-                break;
-            }
-            default:
-            {
-                ASSERTL0(false, "Illegal expansion dimension");
-                break;
-            }
-        }
-    }
-
-    /**
      * @brief Return the flux vector for the compressible Euler equations.
      * 
      * @param i           Component of the flux vector to calculate.
@@ -913,6 +489,219 @@ namespace Nektar
             ASSERTL0(false, "Invalid vector index.");
         }
     }
+    
+    /** 
+     * @brief Return the flux vector for the LDG diffusion problem.
+     * \todo Complete the viscous flux vector
+     */
+    void CompressibleFlowSystem::GetViscousFluxVector(
+        const int i, 
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
+    {
+        int k, j, d;
+        
+        int nq                       = m_fields[0]->GetTotPoints();
+        NekDouble lambda             = -0.66666;
+        NekDouble thermalDiffusivity = 0.000019;;
+
+        
+        Array<OneD, NekDouble> mu(nq);
+        Array<OneD, NekDouble> tmp_mu(nq);
+        Array<OneD, NekDouble> tmp(nq);
+        
+        Array<OneD, Array<OneD, NekDouble> > velocities(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > du(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > dv(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > dw(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > dT(m_expdim);
+        
+        Array<OneD, NekDouble > pressure   (nq, 0.0);
+        Array<OneD, NekDouble > temperature(nq, 0.0);
+        
+        GetPressure(physfield, pressure);
+        GetTemperature(physfield, pressure, temperature);
+        GetDynamicViscosity(physfield, mu);
+        
+        for (k = 0; k < m_expdim; ++k)
+        {
+            velocities[k] = Array<OneD, NekDouble >(nq, 0.0);
+            du[k] = Array<OneD, NekDouble >(nq, 0.0);
+            dv[k] = Array<OneD, NekDouble >(nq, 0.0);
+            dw[k] = Array<OneD, NekDouble >(nq, 0.0);
+            dT[k] = Array<OneD, NekDouble >(nq, 0.0);
+        }
+        
+        // Building the velocities
+        for (k = 0; k < m_expdim; ++k)
+        {
+            Vmath::Vdiv(nq, physfield[k+1], 1, 
+                        physfield[0], 1, 
+                        velocities[k], 1);
+        }
+         
+        // Building the proper derivatives
+        if (m_expdim == 1)
+        {
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][1], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+        }
+        else if (m_expdim == 2)
+        {
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][1], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[1], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][2], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    dv[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+            
+            // At the moment for 2D only
+            for (d = 0; d < m_expdim; ++d)
+            {
+                for (j = 0; j < nq; ++j)
+                {
+                    dT[d][j] = 1.0 / physfield[0][j] * derivatives[d][3][j] -
+                    (temperature[j]/physfield[0][j]) * derivatives[d][0][j] - 
+                    (0.5 * m_gasConstant / (m_gamma - 1)) * 
+                    (2.0 * velocities[0][j] * derivatives[d][1][j] + 
+                     ((velocities[0][j] * velocities[0][j] +
+                       velocities[1][j] * velocities[1][j]) / 
+                      physfield[0][j]) * derivatives[d][0][j]);
+                }
+            }
+        }
+         
+        else if (m_expdim == 3)
+        {
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][1], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[1], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][2], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    dv[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+            for (d = 0; d < m_expdim; ++d)
+            {
+                Vmath::Zero(nq, tmp, 1);
+                Vmath::Vmul(nq, velocities[2], 1, derivatives[d][0], 1, tmp, 1);
+                Vmath::Vsub(nq, derivatives[d][3], 1, tmp, 1, tmp, 1);
+                for (j = 0; j < nq; ++j)
+                {
+                    dw[d][j] = (1.0 / physfield[0][j]) * tmp[j];
+                }
+            }
+        }
+        
+        // Building the viscous flux vector
+        if (i == 0)
+        {
+            // Viscous flux vector for the rho equation
+            for (k = 0; k < m_expdim; ++k)
+            {
+                Vmath::Zero(nq, viscousTensor[k][i], 1);
+            }
+        }
+        
+        if (m_expdim == 1)
+        {
+            // to be completed
+        }
+        else if (m_expdim == 2)
+        {
+            if (i == 1)
+            {
+                for (j = 0; j < nq; ++j)
+                {
+                    viscousTensor[0][i][j] = 2.0 * mu[j] * du[0][j] 
+                                            + lambda * (du[0][j] + 
+                                                        dv[0][j]);
+                    
+                    viscousTensor[1][i][j] = dv[0][j] + du[1][j];
+                }
+            }
+            else if (i == 2)
+            {
+                for (j = 0; j < nq; ++j)
+                {
+                    viscousTensor[0][i][j] = dv[0][j] + du[1][j];
+                
+                    viscousTensor[1][i][j] = 2.0 * mu[j] * dv[1][j] 
+                                            + lambda * (du[0][j] + 
+                                                        dv[0][j]);
+                }
+            }
+            else if (i == 3)
+            {
+                for (j = 0; j < nq; ++j)
+                {
+                    viscousTensor[0][i][j] = 
+                        velocities[0][j] * viscousTensor[0][0][j] + 
+                        velocities[1][j] * viscousTensor[1][1][j] + 
+                        (thermalDiffusivity / mu[j]) * (dT[0][j]);
+                
+                    viscousTensor[1][i][j] = 
+                        velocities[1][j] * viscousTensor[1][2][j] + 
+                        velocities[0][j] * viscousTensor[1][1][j] + 
+                        (thermalDiffusivity / mu[j]) * (dT[1][j]);
+                }
+            }
+        }
+        else if (m_expdim == 3)
+        {
+            if (i == 1)
+            {
+                // to be completed
+            }
+            else if (i == 2)
+            {
+                // to be completed
+            }
+            else if (i == 3)
+            {
+                // to be completed
+            }
+        }
+        else
+        {
+            ASSERTL0(false, "Invalid vector index.");
+        }
+    }
 
     /**
      * @brief Calculate the pressure field \f$ p =
@@ -927,7 +716,7 @@ namespace Nektar
               Array<OneD,                   NekDouble>   &pressure)
     {
         int       npts  = m_fields[0]->GetTotPoints();
-        double    alpha = -0.5;
+        NekDouble    alpha = -0.5;
         
         // Calculate ||rho v||^2.
         Vmath::Zero(npts, pressure, 1);
@@ -973,13 +762,13 @@ namespace Nektar
      * @param temperature  The resulting temperature \f$ T \f$.
      */
     void CompressibleFlowSystem::GetTemperature(
-        Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD,             NekDouble  > &pressure,
-        Array<OneD,             NekDouble  > &temperature)
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+        Array<OneD,                         NekDouble  > &pressure,
+        Array<OneD,                         NekDouble  > &temperature)
     {
         for (int i = 0; i < m_fields[0]->GetTotPoints(); ++i)
         {
-            temperature[i] = pressure[i]/(physfield[0][i]*m_gasConstant);
+            temperature[i] = pressure[i] / (physfield[0][i] * m_gasConstant);
         }
     }
     
@@ -997,7 +786,7 @@ namespace Nektar
     {
         for (int i = 0; i < m_fields[0]->GetTotPoints(); ++i)
         {
-            soundspeed[i] = sqrt(m_gamma*pressure[i]/physfield[0][i]);
+            soundspeed[i] = sqrt(m_gamma * pressure[i] / physfield[0][i]);
         }
     }
     
@@ -1025,6 +814,39 @@ namespace Nektar
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vdiv(npts, mach, 1, soundspeed,   1, mach, 1);
+    }
+    
+    /**
+     * @brief Compute the dynamic viscosity using the Sutherland's law 
+     * \f$ \mu = \mu_star * (T / T_star)^3/2 * (T_star + 110) / (T + 110) \f$,
+     * where:   \mu_star = 1.7894 * 10^-5 Kg / (m * s)
+     *          T_star   = 288.15 K
+     * 
+     * @param physfield    Input physical field.
+     * @param mu           The resulting dynamic viscosity.
+     */
+    void CompressibleFlowSystem::GetDynamicViscosity(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+             Array<OneD,                    NekDouble  > &mu)
+    {
+        const int npts       = m_fields[0]->GetTotPoints();
+        const double mu_star = 0.00001794;
+        const double T_star  = 288.15;
+        Vmath::Zero(npts, mu, 1);
+        
+        Array<OneD, NekDouble > pressure         (npts, 0.0);
+        Array<OneD, NekDouble > temperature      (npts, 0.0);
+        Array<OneD, NekDouble > temperature_ratio(npts, 0.0);
+        
+        GetPressure(physfield, pressure);
+        GetTemperature(physfield, pressure, temperature);
+        
+        for (int i = 0; i < npts; ++i)
+        {
+            temperature_ratio[i] = temperature[i] / T_star;
+            mu[i] = mu_star * pow(temperature_ratio[i], 1.50) * 
+                    (T_star + 110.0) / (temperature[i] + 110.0);
+        }
     }
     
     /**
@@ -1068,6 +890,12 @@ namespace Nektar
             {
                 minLength = sqrt(Area);
             }
+            else if (boost::dynamic_pointer_cast<LocalRegions::HexExp>(
+                         m_fields[0]->GetExp(n)))
+            {
+                minLength = sqrt(Area);
+            }
+
             
             tstep[n] = m_cflSafetyFactor * alpha * minLength 
                      / (stdVelocity[n] * cLambda 

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<NEKTAR>
+    <GEOMETRY DIM="2" SPACE="2">
+        <VERTEX>
+            <V ID="0"> 0.00  -5.00    0 </V>
+            <V ID="1"> 5.00  -5.00    0 </V>
+            <V ID="2"> 5.00   0.00    0 </V>
+            <V ID="3"> 0.00   0.00    0 </V>
+            <V ID="4"> 5.00   5.00    0 </V>
+            <V ID="5"> 0.00   5.00    0 </V>
+            <V ID="6"> 10.0  -5.00    0 </V>
+            <V ID="7"> 10.0   0.00    0 </V>
+            <V ID="8"> 10.0   5.00    0 </V>
+        </VERTEX>
+        <EDGE>
+            <E ID="0">    0  1   </E>
+            <E ID="1">    1  2   </E>
+            <E ID="2">    2  3   </E>
+            <E ID="3">    3  0   </E>
+            <E ID="4">    2  4   </E>
+            <E ID="5">    4  5   </E>
+            <E ID="6">    5  3   </E>
+            <E ID="7">    1  6   </E>
+            <E ID="8">    6  7   </E>
+            <E ID="9">    7  2   </E>
+            <E ID="10">   7  8   </E>
+            <E ID="11">   8  4   </E>
+        </EDGE>
+        <ELEMENT>
+            <Q ID="0">    0     1     2     3 </Q>
+            <Q ID="1">    2     4     5     6 </Q>
+            <Q ID="2">    7     8     9     1 </Q>
+            <Q ID="3">    9    10    11     4 </Q>
+        </ELEMENT>
+        <COMPOSITE>
+            <C ID="0"> Q[0-3]    </C>
+            <C ID="100"> E[3,6]  </C>
+            <C ID="200"> E[0,7]  </C>
+            <C ID="300"> E[8,10] </C>
+            <C ID="400"> E[5,11] </C>
+        </COMPOSITE>
+        <DOMAIN> C[0] </DOMAIN>
+    </GEOMETRY>
+    
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="11" FIELDS="rho,rhou,rhov,E" TYPE="GLL_LAGRANGE_SEM" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <PARAMETERS>
+            <P> FinTime         = 0.6       </P>
+            <P> TimeStep        = 0.01      </P>
+            <P> NumSteps        = 0         </P>
+            <P> IO_CheckSteps   = 100       </P>
+            <P> IO_InfoSteps    = 100       </P>
+            <P> Gamma           = 1.4       </P>
+            <P> pInf            = 101325    </P>
+            <P> rhoInf          = 1.225     </P>
+            <P> uInf            = 0.1       </P>
+            <P> vInf            = 0.0       </P>
+            <P> CFL             = 0         </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQType"                VALUE="EulerCFE"            />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="AdvectionType"         VALUE="FRHU"              />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+            <I PROPERTY="UpwindType"            VALUE="Exact"               />
+            <I PROPERTY="ProblemType"           VALUE="IsentropicVortex"    />
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> rho  </V>
+            <V ID="1"> rhou </V>
+            <V ID="2"> rhov </V>
+            <V ID="3"> E    </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[100] </B>
+            <B ID="1"> C[200] </B>
+            <B ID="2"> C[300] </B>
+            <B ID="3"> C[400] </B>
+        </BOUNDARYREGIONS>
+        
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <P VAR="rho"       VALUE="[2]"/>
+                <P VAR="rhou"      VALUE="[2]"/>
+                <P VAR="rhov"      VALUE="[2]"/>
+                <P VAR="E"         VALUE="[2]"/>
+            </REGION>
+            
+            <REGION REF="1">
+                <P VAR="rho"       VALUE="[3]"/>
+                <P VAR="rhou"      VALUE="[3]"/>
+                <P VAR="rhov"      VALUE="[3]"/>
+                <P VAR="E"         VALUE="[3]"/>
+            </REGION>
+            
+            <REGION REF="2">
+                <P VAR="rho"       VALUE="[0]"/>
+                <P VAR="rhou"      VALUE="[0]"/>
+                <P VAR="rhov"      VALUE="[0]"/>
+                <P VAR="E"         VALUE="[0]"/>
+            </REGION>
+            
+            <REGION REF="3">
+                <P VAR="rho"       VALUE="[1]"/>
+                <P VAR="rhou"      VALUE="[1]"/>
+                <P VAR="rhov"      VALUE="[1]"/>
+                <P VAR="E"         VALUE="[1]"/>
+            </REGION>
+         </BOUNDARYCONDITIONS>
+        
+        <!-- Initial conditions not necessary 
+        since they are imposed analitically -->
+        <!--FUNCTION NAME="InitialConditions">
+            <E VAR="rho"    VALUE="1"/>
+            <E VAR="rhou"   VALUE="10000"/>
+            <E VAR="rhov"   VALUE="1"/>
+            <E VAR="E"      VALUE="1"/>
+        </FUNCTION-->
+        
+    </CONDITIONS>
+</NEKTAR>

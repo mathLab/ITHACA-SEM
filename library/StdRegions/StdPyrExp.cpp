@@ -67,10 +67,6 @@ namespace Nektar
                 ASSERTL0(false, "order in 'b' direction is higher "
                          "than order in 'c' direction");
             }
-            
-            int P = m_base[0]->GetNumModes()-1;
-            int Q = m_base[1]->GetNumModes()-1;
-            int R = m_base[2]->GetNumModes()-1;
         }
 
         StdPyrExp::StdPyrExp(const StdPyrExp &T)
@@ -484,7 +480,7 @@ namespace Nektar
             for (int k = 0; k < Qz; ++k) {
                 for (int j = 0; j < Qy; ++j) {
                     for (int i = 0; i < Qx; ++i) {
-                        double sum = 0.0;
+                        NekDouble sum = 0.0;
                         for (int r = 0; r <= R; ++r) {
                             for (int q = 0; q <= min(R-r,Q); ++q) {
                                 for (int p = 0; p <= min(R-r,P); ++p) {
@@ -586,74 +582,24 @@ namespace Nektar
         // Inner product functions
         //---------------------------------------
 
+        /** \brief  Inner product of \a inarray over region with respect to the 
+            expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
+            
+            Wrapper call to StdPyrExp::IProductWRTBase
+            
+            Input:\n
+            
+            - \a inarray: array of function evaluated at the physical collocation points
+            
+            Output:\n
+            
+            - \a outarray: array of inner product with respect to each basis over region
+            
+        */
         void StdPyrExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble> &bx,
-            const Array<OneD, const NekDouble> &by,
-            const Array<OneD, const NekDouble> &bz,
-            const Array<OneD, const NekDouble> &inarray,
+            const Array<OneD, const NekDouble> &inarray, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            /*
-            int nquad0 = m_base[0]->GetNumPoints();
-            int nquad1 = m_base[1]->GetNumPoints();
-            int nquad2 = m_base[2]->GetNumPoints();
-
-            int order0 = m_base[0]->GetNumModes();
-            int order1 = m_base[1]->GetNumModes();
-            int order2 = m_base[2]->GetNumModes();
-            
-            Array<OneD,NekDouble> tmpin(nquad0*nquad1*nquad2);
-            Array<OneD,NekDouble> f(nquad1*nquad2);
-            Array<OneD,NekDouble> fb(nquad2);
-            MultiplyByQuadratureMetric(inarray,tmpin);
-            
-            int p, q, r, i, j, k, s, mode;
-            
-            for (p = mode = 0; p < order0; ++p) {
-                for (k = 0; k < nquad2; ++k) {
-                    for (j = 0; j < nquad1; ++j) {
-                        double tmp = 0.0;
-                        for (i = 0; i < nquad0; ++i) {
-                            s = i + nquad0*(j + nquad1*k);
-                            tmp += bx[i+nquad0*p]*tmpin[s];
-                        }
-                        f[j+nquad1*k] = tmp;
-                    }
-                }
-                
-                for (q = 0; q < order1; ++q) {
-                    for (k = 0; k < nquad2; ++k) {
-                        double tmp = 0.0;
-                        for (j = 0; j < nquad1; ++j) {
-                            tmp += by[j+nquad1*q]*f[j+nquad1*k];
-                        }
-                        fb[k] = tmp;
-                    }
-                    
-                    for (r = 0; r < order2-p-q; ++r, ++mode) {
-                        double tmp = 0.0;
-                        s = GetMode(p,q,r);
-                        for (k = 0; k < nquad2; ++k) {
-                            tmp += bz[k+nquad2*s]*fb[k];
-                        }
-                        outarray[mode] = tmp;
-                    }
-                }
-            }
-            // Add correction for top singular point.
-            for (i = 0; i < nquad0; ++i) {
-                for (j = 0; j < nquad1; ++j) {
-                    for (k = 0; k < nquad2; ++k) {
-                        s = i + nquad0*(j + nquad1*k);
-                        outarray[1] += tmpin[s]*bz[k+nquad2]*(
-                            bx[i+nquad0]*by[j+nquad1] + 
-                            bx[i+nquad0]*by[j       ] + 
-                            bx[i       ]*by[j+nquad1]);
-                    }
-                }
-            }
-            */
-            
             int P = m_base[0]->GetNumModes()-1;
             int Q = m_base[1]->GetNumModes()-1;
             int R = m_base[2]->GetNumModes()-1;
@@ -661,6 +607,10 @@ namespace Nektar
             int Qx = m_base[0]->GetNumPoints();
             int Qy = m_base[1]->GetNumPoints();
             int Qz = m_base[2]->GetNumPoints();
+
+            const Array<OneD, const NekDouble> &bx = m_base[0]->GetBdata();
+            const Array<OneD, const NekDouble> &by = m_base[1]->GetBdata();
+            const Array<OneD, const NekDouble> &bz = m_base[2]->GetBdata();
 
             for( int r = 0; r <= R; ++r ) {
                 for( int q = 0; q <= min(R-r,Q); ++q ) {
@@ -692,30 +642,6 @@ namespace Nektar
                    }
                 }
             }
-        }
-
-        /** \brief  Inner product of \a inarray over region with respect to the 
-            expansion basis m_base[0]->GetBdata(),m_base[1]->GetBdata(), m_base[2]->GetBdata() and return in \a outarray 
-            
-            Wrapper call to StdPyrExp::IProductWRTBase
-            
-            Input:\n
-            
-            - \a inarray: array of function evaluated at the physical collocation points
-            
-            Output:\n
-            
-            - \a outarray: array of inner product with respect to each basis over region
-            
-        */
-        void StdPyrExp::v_IProductWRTBase(
-            const Array<OneD, const NekDouble> &inarray, 
-                  Array<OneD,       NekDouble> &outarray)
-        {
-            v_IProductWRTBase(m_base[0]->GetBdata(),
-                              m_base[1]->GetBdata(),
-                              m_base[2]->GetBdata(),
-                              inarray, outarray);
         }
         
         
@@ -1363,10 +1289,8 @@ namespace Nektar
          */
         int StdPyrExp::GetMode(int p, int q, int r)
         {
-            int P = m_base[0]->GetNumModes() - 1;
             int Q = m_base[1]->GetNumModes() - 1;
             int R = m_base[2]->GetNumModes() - 1;
-            int mode = 0;
             
             return p*(Q+1)*((Q+2)/2+(R-Q)) - (p-1)*p*(p+1)/6 + // skip to p-th plane
                 r+q*(2*(R+1)+1-q)/2 -                          // normal tri indexing

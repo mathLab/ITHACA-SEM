@@ -66,7 +66,7 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GetSegGeom(int eID);
             SPATIAL_DOMAINS_EXPORT Geometry2DSharedPtr GetGeometry2D(int gID);
 
-            inline const int GetCoordim(void){
+            inline int GetCoordim(void){
                 return GetSpaceDimension();
             }
 
@@ -82,12 +82,12 @@ namespace Nektar
 
             SPATIAL_DOMAINS_EXPORT void GenXGeoFac();
 
-            inline const int GetNseggeoms() const
+            inline int GetNseggeoms() const
             {
                 return int(m_segGeoms.size());
             }
 
-            inline const int GetVidFromElmt(StdRegions::ExpansionType expansion,
+            inline int GetVidFromElmt(StdRegions::ExpansionType expansion,
                 const int vert, const int elmt) const
             {
                 if(expansion == StdRegions::eTriangle)
@@ -106,7 +106,7 @@ namespace Nektar
                 }
             }
 
-            inline const int GetEidFromElmt(StdRegions::ExpansionType expansion,
+            inline int GetEidFromElmt(StdRegions::ExpansionType expansion,
                 const int edge, const int elmt) const
             {
                 if(expansion == StdRegions::eTriangle)
@@ -125,7 +125,7 @@ namespace Nektar
                 }
             }
 
-            inline const StdRegions::Orientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
+            inline StdRegions::Orientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
             {
                 if(expansion == StdRegions::eTriangle)
                 {
@@ -144,7 +144,7 @@ namespace Nektar
             }
 
 
-            inline const StdRegions::Orientation GetCartesianEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
+            inline StdRegions::Orientation GetCartesianEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
             {
                 StdRegions::Orientation returnval;
 
@@ -205,7 +205,7 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT ElementFaceVectorSharedPtr GetElementsFromFace(Geometry2DSharedPtr face);
 
             /// \brief Return the BasisKey corresponding to a face of an element
-            SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetFaceBasisKey(Geometry2DSharedPtr face, const int flag);
+            SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetFaceBasisKey(Geometry2DSharedPtr face, const int flag, const std::string variable = "DefaultVar");
 
         protected:
             void ReadEdges    (TiXmlDocument &doc);

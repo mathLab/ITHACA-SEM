@@ -167,10 +167,8 @@ namespace Nektar
             int nLocBndDofs        = pLocToGloMap->GetNumLocalBndCoeffs();
             int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
                                                                 - nGlobBndDofs;
-
             Array<OneD, NekDouble> F = m_wsp + m_locWspSize;
-            //Array<OneD, NekDouble> F = m_wsp + nLocBndDofs;
-
+            Array<OneD, NekDouble> tmp;
             if(nDirBndDofs && dirForcCalculated)
             {
                 Vmath::Vsub(nGlobDofs,in.get(),1,dirForcing.get(),1,F.get(),1);
@@ -180,16 +178,17 @@ namespace Nektar
                 Vmath::Vcopy(nGlobDofs,in.get(),1,F.get(),1);
             }
 
-            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,F+nDirBndDofs,
+            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,tmp=F+nDirBndDofs,
                                           eWrapper);
             NekVector<NekDouble> F_GlobBnd(nGlobBndDofs,F,eWrapper);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,0.0);
-            NekVector<NekDouble> F_Int(nIntDofs,F+nGlobBndDofs,eWrapper);
+            NekVector<NekDouble> F_Int(nIntDofs,tmp=F+nGlobBndDofs,eWrapper);
 
             NekVector<NekDouble> V_GlobBnd(nGlobBndDofs,out,eWrapper);
-            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,out+nDirBndDofs,
+            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,
+                                              tmp=out+nDirBndDofs,
                                               eWrapper);
-            NekVector<NekDouble> V_Int(nIntDofs,out+nGlobBndDofs,eWrapper);
+            NekVector<NekDouble> V_Int(nIntDofs,tmp=out+nGlobBndDofs,eWrapper);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,m_wsp,eWrapper);
 
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
@@ -608,7 +607,6 @@ namespace Nektar
                     m_expList.lock()->GetSession()->GetSolverInfo("GlobalMatrixStructure"));
             }
 */
-
             // assemble globally
             DNekScalMatSharedPtr loc_mat;
             int loc_lda;
@@ -705,8 +703,6 @@ namespace Nektar
                         const AssemblyMapSharedPtr& pLocToGloMap)
         {
             int i,j,n,cnt;
-            NekDouble one  = 1.0;
-            NekDouble zero = 0.0;
             DNekScalBlkMatSharedPtr blkMatrices[4];
 
             // Create temporary matrices within an inner-local scope to ensure
@@ -928,7 +924,7 @@ namespace Nektar
                 {
                     for(j = 0; j < 4; j++)
                     {
-                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,substructuredMat[j][i]);
+                        tmpscalmat = MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,substructuredMat[j][i]);
                         blkMatrices[j]->SetBlock(i,i,tmpscalmat);
                     }
                 }
@@ -953,9 +949,7 @@ namespace Nektar
                       Array<OneD, NekDouble>& pOutput)
         {
             int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
-            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nNonDir = nGlobal - nDir;
 
             if (m_globalSchurCompl)
             {

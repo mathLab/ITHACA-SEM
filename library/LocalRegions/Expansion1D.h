@@ -77,13 +77,13 @@ namespace Nektar
                         int edge,
                         Expansion2DSharedPtr &e);
 
-            protected:
-                virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
-
-                virtual void v_AddHDGHelmholtzTraceTerms(
+                void AddHDGHelmholtzTraceTerms(
                         const NekDouble tau,
                         const Array<OneD,const NekDouble> &inarray,
                               Array<OneD,NekDouble> &outarray);
+
+            protected:
+                virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
                 virtual void v_AddRobinMassMatrix(
                         const int vert,

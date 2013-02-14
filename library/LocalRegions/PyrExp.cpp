@@ -36,7 +36,6 @@
 #include <LocalRegions/PyrExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 
-
 namespace Nektar 
 {
     namespace LocalRegions 
@@ -51,14 +50,14 @@ namespace Nektar
                                Bb.GetNumModes(),
                                Bc.GetNumModes()),
                            3, Ba, Bb, Bc),
-            Expansion     (),
             StdExpansion3D(StdRegions::StdPyrData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes(),
                                Bc.GetNumModes()),
                            Ba, Bb, Bc),
-            Expansion3D   (),
             StdPyrExp     (Ba,Bb,Bc),
+            Expansion     (),
+            Expansion3D   (),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(
@@ -72,10 +71,10 @@ namespace Nektar
 
         PyrExp::PyrExp(const PyrExp &T):
             StdExpansion  (T),
-            Expansion     (T),
             StdExpansion3D(T),
-            Expansion3D   (T),
             StdPyrExp     (T),
+            Expansion     (T),
+            Expansion3D   (T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
@@ -277,11 +276,9 @@ namespace Nektar
          * \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k}) = {\bf
          * B_1 G} \f$
          */
-        void PyrExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-                                       const Array<OneD, const NekDouble>& base1, 
-                                       const Array<OneD, const NekDouble>& base2, 
-                                       const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD,       NekDouble>& outarray)
+        void PyrExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble> &inarray, 
+                  Array<OneD,       NekDouble> &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
@@ -299,16 +296,7 @@ namespace Nektar
                 Vmath::Smul(nquad0*nquad1*nquad2,jac[0],(NekDouble*)&inarray[0],1,&tmp[0],1);
             }
             
-            StdPyrExp::v_IProductWRTBase(base0,base1,base2,tmp,outarray);
-        }
-        
-        void PyrExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD,       NekDouble>& outarray)
-        {
-            v_IProductWRTBase(m_base[0]->GetBdata(),
-                              m_base[1]->GetBdata(),
-                              m_base[2]->GetBdata(),
-                              inarray, outarray);
+            StdPyrExp::v_IProductWRTBase(tmp,outarray);
         }
         
 

@@ -409,9 +409,8 @@ namespace Nektar
       void ContField3D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
       {
           int i,j;
-          int bndcnt      = 0;
-          int nDir        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-          int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+          int bndcnt = 0;
+          int nDir   = m_locToGloMap->GetNumGlobalDirBndCoeffs();
           
           NekDouble sign;
           const Array<OneD,const int> &bndMap = 

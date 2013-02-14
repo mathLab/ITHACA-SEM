@@ -9,11 +9,9 @@ library/Demos/StdRegions/ExtraDemos
 library/Demos/MultiRegions/ExtraDemos
 solvers/ADR2DManifoldSolver
 solvers/FitzHughNagumoSolver
-solvers/CardiacEPSolver
-solvers/FluxReconstruction
-solvers/VortexWaveInteraction
 solvers/ImageWarpingSolver
 solvers/PulseWaveSolver
+solvers/VortexWaveInteraction
 docs/*.doc
 docs/arch
 docs/emacs

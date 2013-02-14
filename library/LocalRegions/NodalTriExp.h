@@ -274,11 +274,13 @@ namespace Nektar
                 IProductWRTDerivBase(dir,inarray,outarray);
             }
             
-            virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble> &inarray, 
-                                        Array<OneD, NekDouble> &out_d0,
-                                        Array<OneD, NekDouble> &out_d1)
+            virtual void v_StdPhysDeriv(
+                const Array<OneD, const NekDouble> &inarray, 
+                      Array<OneD,       NekDouble> &out_d0,
+                      Array<OneD,       NekDouble> &out_d1,
+                      Array<OneD,       NekDouble> &out_d2 = NullNekDouble1DArray)
             {
-                StdTriExp::v_PhysDeriv(inarray, out_d0, out_d1);
+                StdTriExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
             }
         
             virtual void v_PhysDeriv(const Array<OneD, const NekDouble> &inarray, 

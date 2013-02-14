@@ -46,7 +46,6 @@ int main(int argc, char *argv[])
         ASSERTL0(loadOkay, errstr.str());
         
         TiXmlHandle docHandle(&doc);
-        TiXmlNode* node = NULL;
         TiXmlElement* master = NULL;   
         TiXmlElement* block = NULL;
         

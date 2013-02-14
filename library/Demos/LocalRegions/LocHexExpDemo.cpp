@@ -57,7 +57,6 @@ int main(int argc, char *argv[])
     }
 
     // Set up the region shape and expansion types
-    StdRegions::ExpansionType regionShape = StdRegions::eHexahedron;
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
     int bType_z_val = atoi(argv[3]);
@@ -65,15 +64,12 @@ int main(int argc, char *argv[])
     BasisType   bType_x   = static_cast<BasisType>( bType_x_val );
     BasisType   bType_y   = static_cast<BasisType>( bType_y_val );
     BasisType   bType_z   = static_cast<BasisType>( bType_z_val );
-    PointsType  NodalType = LibUtilities::eNoPointsType;
 
     if( (bType_x_val == 13) || (bType_y_val == 13) || (bType_z_val == 13) )
     {
         bType_x =   LibUtilities::eOrtho_A;
         bType_y =   LibUtilities::eOrtho_B;
         bType_z =   LibUtilities::eOrtho_C;
-
-        NodalType = LibUtilities::eNodalTetElec;
     }
 
     if( (bType_x == eOrtho_B) || (bType_x == eModified_B) ) {

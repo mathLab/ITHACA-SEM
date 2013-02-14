@@ -140,13 +140,6 @@ namespace Nektar
         }
 
 
-        void StdQuadExp::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
-                                                const Array<OneD, const NekDouble>& direction,
-                                                Array<OneD, NekDouble> &outarray)
-        {
-            ASSERTL0(false,"This method is not defined or valid for this class type");
-        }
-
         ////////////////
         // Transforms //
         ////////////////
@@ -770,23 +763,6 @@ namespace Nektar
             }
         }
 
-        void StdQuadExp::v_GetEdgePhysVals(const int edge,  StdExpansion1DSharedPtr &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
-        }    
-        
-        
-        
-        void StdQuadExp::v_GetEdgeQFactors(
-                const int edge,  
-                Array<OneD, NekDouble> &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "Method does not exist for this shape or library" );
-        }
-
-        
-        
         //////////////
         // Mappings //
         //////////////
@@ -1287,30 +1263,30 @@ namespace Nektar
             switch(mtype)
             {
             case eMass:
-				{
-					Mat = StdExpansion::CreateGeneralMatrix(mkey);
-					// For Fourier basis set the imaginary component of mean mode
-					// to have a unit diagonal component in mass matrix 
-					if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
-					{
-						for(i = 0; i < order1; ++i)
-						{
-							(*Mat)(order0*i+1,i*order0+1) = 1.0;
-						}
-					}
-                
-					if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
-					{
-						for(i = 0; i < order0; ++i)
-						{
-							(*Mat)(order0+i ,order0+i) = 1.0;
-						}
-					}
-				}
-				break;
-			case eFwdTrans:
-				{
-					Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
+                {
+                    Mat = StdExpansion::CreateGeneralMatrix(mkey);
+                    // For Fourier basis set the imaginary component of mean mode
+                    // to have a unit diagonal component in mass matrix 
+                    if(m_base[0]->GetBasisType() == LibUtilities::eFourier)
+                    {
+                        for(i = 0; i < order1; ++i)
+                        {
+                            (*Mat)(order0*i+1,i*order0+1) = 1.0;
+                        }
+                    }
+                    
+                    if(m_base[1]->GetBasisType() == LibUtilities::eFourier)
+                    {
+                        for(i = 0; i < order0; ++i)
+                        {
+                            (*Mat)(order0+i ,order0+i) = 1.0;
+                        }
+                    }
+                }
+                break;
+            case eFwdTrans:
+                {
+                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
                     StdMatrixKey iprodkey(eIProductWRTBase,DetExpansionType(),*this);
                     DNekMat &Iprod = *GetStdMatrix(iprodkey);
                     StdMatrixKey imasskey(eInvMass,DetExpansionType(),*this);
@@ -1322,8 +1298,8 @@ namespace Nektar
 			default:
                 {
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
-				}
-				break;
+                }
+                break;
             }
 	
             return Mat;

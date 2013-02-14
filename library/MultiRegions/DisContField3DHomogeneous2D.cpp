@@ -70,7 +70,6 @@ namespace Nektar
         {
             if(DeclareLinesSetCoeffPhys)
             {
-                bool False = false;
                 DisContField1DSharedPtr zero_line = boost::dynamic_pointer_cast<DisContField1D> (In.m_lines[0]);
                 
                 for(int n = 0; n < m_lines.num_elements(); ++n)
@@ -96,8 +95,6 @@ namespace Nektar
             m_bndConditions()
         {
             int i,n,nel;
-            bool True  = true; 
-            bool False = false; 
             DisContField1DSharedPtr line_zero;
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 

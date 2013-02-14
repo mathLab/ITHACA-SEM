@@ -1,5 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
+// File: Timer.h
+//
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
@@ -27,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description:
+// Description: Time getting class
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -43,6 +45,7 @@
 #endif
 
 #include <LibUtilities/LibUtilitiesDeclspec.h>
+#include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 
 namespace Nektar
 {
@@ -64,7 +67,10 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void Start();
             LIB_UTILITIES_EXPORT void Stop();
             LIB_UTILITIES_EXPORT CounterType Elapsed();
-            LIB_UTILITIES_EXPORT double TimePerTest(unsigned int n);
+
+            /// \brief Returns amount of seconds per iteration in
+            ///        a test with n iterations.
+            LIB_UTILITIES_EXPORT NekDouble TimePerTest(unsigned int n);
 
         private:
             Timer(const Timer& rhs);

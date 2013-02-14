@@ -438,9 +438,6 @@ namespace Nektar
 
         void ContField1D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
         {
-            int i,j;
-            int bndcnt=0;
-
             for(int i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)

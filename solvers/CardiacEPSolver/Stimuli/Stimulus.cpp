@@ -107,7 +107,7 @@ namespace Nektar
             {
                 
                 string vType = vStimulus->Attribute("TYPE");
-                unsigned int vId = atoi(vStimulus->Attribute("ID"));
+                //unsigned int vId = atoi(vStimulus->Attribute("ID"));
 
                 vStimList.push_back(GetStimulusFactory().CreateInstance(
                                         vType, pSession, pField, vStimulus));

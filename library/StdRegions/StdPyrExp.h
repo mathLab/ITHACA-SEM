@@ -90,8 +90,8 @@ namespace Nektar
             STD_REGIONS_EXPORT StdPyrExp(const LibUtilities::BasisKey &Ba, 
                                          const LibUtilities::BasisKey &Bb, 
                                          const LibUtilities::BasisKey &Bc,
-                                         double *coeffs, 
-                                         double *phys);
+                                         NekDouble *coeffs, 
+                                         NekDouble *phys);
 
             STD_REGIONS_EXPORT StdPyrExp(const StdPyrExp &T);
 
@@ -163,13 +163,6 @@ namespace Nektar
             //---------------------------------------
             // Inner product functions
             //---------------------------------------
-            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                const Array<OneD, const NekDouble> &bx,
-                const Array<OneD, const NekDouble> &by,
-                const Array<OneD, const NekDouble> &bz,
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray);
-
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
@@ -482,13 +475,6 @@ namespace Nektar
                                      Array<OneD, NekDouble> &out_d2)
             {
                 PhysDeriv(inarray, out_d0, out_d1, out_d2);
-            }
-
-           virtual void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
-                                                const Array<OneD, const NekDouble>& direction,
-                                                Array<OneD, NekDouble> &outarray)
-            {
-                ASSERTL0(false,"This method is not defined or valid for this class type");
             }
 
             virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 

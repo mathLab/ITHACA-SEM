@@ -99,7 +99,6 @@ namespace Nektar
                            Array<OneD,        Array<OneD, NekDouble> >&outarray,
                                                            const NekDouble time)
     {
-        int nvariables  = inarray.num_elements();
         int nq = m_nq;
         for (unsigned int i = 0; i < nq; ++i)
         {

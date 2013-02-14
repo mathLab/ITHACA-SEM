@@ -235,7 +235,6 @@ namespace Nektar
             const NekDouble lambda)
     {
         int nvariables  = inarray.num_elements();
-        int ncoeffs     = inarray[0].num_elements();
         int nq          = m_fields[0]->GetNpoints();
         StdRegions::ConstFactorMap factors;
         // lambda = \Delta t
@@ -276,16 +275,15 @@ namespace Nektar
             const NekDouble time)
     {
         int nq = m_fields[0]->GetNpoints();
-        int nvar = inarray.num_elements();
 
+        // Compute I_ion
         m_cell->TimeIntegrate(inarray, outarray, time);
 
+        // Compute I_stim
         for (unsigned int i = 0; i < m_stimulus.size(); ++i)
         {   
             m_stimulus[i]->Update(outarray, time);
         }
-
-        Vmath::Smul(nq, 1.0/m_capMembrane, outarray[0], 1, outarray[0], 1);
     }
 
 

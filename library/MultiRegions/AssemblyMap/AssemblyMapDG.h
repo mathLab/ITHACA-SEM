@@ -150,37 +150,37 @@ namespace Nektar
 
             virtual NekDouble v_GetLocalToGlobalSign(const int i) const;
 
-            virtual const void v_LocalToGlobal(
+            virtual void v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const;
 
-            virtual const void v_LocalToGlobal(
+            virtual void v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            virtual const void v_GlobalToLocal(
+            virtual void v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const;
 
-            virtual const void v_GlobalToLocal(
+            virtual void v_GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
-            virtual const void v_Assemble(
+            virtual void v_Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const;
 
-            virtual const void v_Assemble(
+            virtual void v_Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            virtual const void v_UniversalAssemble(
+            virtual void v_UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            virtual const void v_UniversalAssemble(
+            virtual void v_UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            virtual const int v_GetFullSystemBandWidth() const;
+            virtual int v_GetFullSystemBandWidth() const;
 
         }; // class
 

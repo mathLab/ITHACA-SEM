@@ -78,7 +78,6 @@ namespace Nektar
             DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             int i,n,nel;
-            bool False = false;
             ContField2DSharedPtr plane_zero;
             ContField2DSharedPtr plane_two;
 
@@ -219,26 +218,27 @@ namespace Nektar
                 HomogeneousFwdTrans(inarray,fce,(flags.isSet(eUseGlobal))?eGlobal:eLocal);
             }
 			
-			bool smode = false;
-			
-			if (m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe ||
-				m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm )
-			{
-				smode = true;
-			}
+            bool smode = false;
+            
+            if (m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeRe ||
+                m_homogeneousBasis->GetBasisType() == LibUtilities::eFourierHalfModeIm )
+            {
+                smode = true;
+            }
             
             for(n = 0; n < m_planes.num_elements(); ++n)
             {
-				if(n != 1 || m_transposition->GetK(n) != 0 || smode)
-				{
-					beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
-					new_factors = factors;
-					new_factors[StdRegions::eFactorLambda] += beta*beta;
-                
-					m_planes[n]->HelmSolve(fce + cnt,
-                                       e_out = outarray + cnt1,
-                                       flags, new_factors, varcoeff, dirForcing);
-				}
+                if(n != 1 || m_transposition->GetK(n) != 0 || smode)
+                {
+                    beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
+                    new_factors = factors;
+                    // add in Homogeneous Fourier direction and SVV if turned on
+                    new_factors[StdRegions::eFactorLambda] += beta*beta*(1+m_transposition->GetSpecVanVisc(n));
+                    
+                    m_planes[n]->HelmSolve(fce + cnt,
+                                           e_out = outarray + cnt1,
+                                           flags, new_factors, varcoeff, dirForcing);
+                }
                 
                 cnt  += m_planes[n]->GetTotPoints();
                 cnt1 += m_planes[n]->GetNcoeffs();

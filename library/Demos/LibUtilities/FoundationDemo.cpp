@@ -186,27 +186,21 @@ int main(int argc, char *argv[])
     
 
 
-     // /////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////
     //                     Interpolation                      //
-   // /////////////////////////////////////////////////////////
+    // /////////////////////////////////////////////////////////
 
     // Generate a list of interpolating nodes
     int nNodes = 2*nPts; // Number of interpolating nodes
     boost::shared_ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
-   // const ptr<Points<NekDouble> > nodes = PointsManager()[PointsKey(nNodes, pointsType)];
-    //SharedArray<const NekDouble> zNode = nodes->GetZ();
     Array<OneD, const NekDouble> zNode = nodes->GetZ();
     
     // Get the interpolation matrix I
     // Note that I is 2N rows by N columns
-     const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes,zNode);
-//     const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes, zNode);
+    const Points<NekDouble>::MatrixSharedPtrType Iptr = points->GetI(nNodes,zNode);
     const NekMatrix<NekDouble> & I = *Iptr;
     
-       
-    
     // Interpolate the data values in the y vector using the interpolation matrix I
-//     SharedArray<NekDouble> u(I.GetRows());
     Array<OneD, NekDouble> u(I.GetRows());
     for(int i = 0; i < int(I.GetRows()); ++i)
     {
@@ -216,7 +210,7 @@ int main(int argc, char *argv[])
             u[i] += I(i,j) * y[j];
         }
     }
-
+    
     // Display the original samples
     cout << setprecision(3);
     cout << "\nOriginal data: \nx      = ";
@@ -282,7 +276,92 @@ int main(int argc, char *argv[])
     }
 
 
+    ///////////////////////////////////////////////////////////
+    //                 Galkerin Projection                   //
+    ///////////////////////////////////////////////////////////
 
+    // Generate a list of projection nodes
+    Array<OneD, NekDouble> yNode(zNode.num_elements());
+    
+    for(int i = 0; i < nNodes; ++i)
+    {
+        yNode[i] = func( zNode[i], nNodes, pointsType );
+    }
+
+    PointsKey key1(nNodes, pointsType);
+    
+    // Note that I is 2N rows by N columns
+    const Points<NekDouble>::MatrixSharedPtrType GPptr = points->GetGalerkinProjection(key1);
+    const NekMatrix<NekDouble> & GP = *GPptr;
+    
+    // Project the data values in the yNode vector using the projection matrix GP
+    for(int i = 0; i < int(GP.GetRows()); ++i)
+    {
+        u[i] = 0;
+        for(int j = 0; j < int(GP.GetColumns()); ++j)
+        {
+            u[i] += GP(i,j) * yNode[j];
+        }
+    }
+    
+    // Display the original samples
+    cout << setprecision(3);
+    cout << "\n\n\n              **** Galerkin Project ****";
+    cout << "\n\nResults of Galkerin Project with " << kPointsTypeStr[pointsType] << ":";
+    
+    cout << "\nOriginal data: \nx      = ";
+    for(int i = 0; i < nPts; ++i)
+    {
+        cout << setw(6) << z[i] << " ";
+    }
+    cout << "\ny      = ";
+    for(int i = 0; i < nPts; ++i)
+    {
+        cout << setw(6) << y[i] << " ";
+    }
+
+    cout << "\nproject = ";
+    for(int i = 0; i < nPts; ++i)
+    {
+        cout << setw(6) << u[i] << " ";
+    }
+    
+
+
+    // Display the pointwise error
+    cout << setprecision(1);
+    cout << "\nerror  = ";
+    Linf = 0;
+    RMS = 0;
+    for(int i = 0; i < int(GP.GetRows()); ++i)
+    {
+        long double exact = func(z[i], nPts, pointsType);
+        long double error = exact - u[i];
+        Linf = max(Linf, fabs(error));
+        RMS += error*error;
+        long double epsilon = 1e-2;
+        if( fabs(exact) > epsilon )
+        {
+            error /= exact;
+        }
+        cout << setw(6) << error << " ";
+    }
+    RMS = sqrt(RMS) / int(GP.GetRows());
+    cout << setprecision(6);
+    cout << "\nLinf   = " << setw(6) << Linf;
+    cout << "\nRMS    = " << setw(6) << RMS << endl;
+    
+    // Show the projection matrix
+    cout << "\nI = " << endl;
+    for(int i = 0; i < int(GP.GetRows()); ++i)
+    {
+        cout << "     ";
+        for(int j = 0; j < int(GP.GetColumns()); ++j)
+        {
+            printf("% 5.3f  ", GP(i,j));
+        }
+        cout << "" << endl;
+    }
     
 
       // /////////////////////////////////////////////////////////

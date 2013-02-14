@@ -301,15 +301,15 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                 const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
 
         private:
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
             STD_REGIONS_EXPORT int  GetMode(const int i, const int j, const int k);
-            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD,       NekDouble>& outarray);
         };
 
         typedef boost::shared_ptr<StdTetExp> StdTetExpSharedPtr;

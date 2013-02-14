@@ -131,23 +131,6 @@ namespace Nektar
                 Vmath::Vmul(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
             }
         }
-        
-        // Apply fibre map (range 0 -> 1)
-        if (m_session->DefinesFunction("AnisotropicConductivity"))
-        {
-            if (m_session->DefinesCmdLineArgument("verbose"))
-            {
-                cout << "Loading Anisotropic Fibre map." << endl;
-            }
-            for (int i = 0; i < m_spacedim; ++i)
-            {
-                ASSERTL0(m_session->DefinesFunction("AnisotropicConductivity", aniso_var[i]),
-                    "Function 'AnisotropicConductivity' not correctly defined.");
-                EvaluateFunction(aniso_var[i], vTemp, "AnisotropicConductivity");
-                m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq);
-                Vmath::Vmul(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
-            }
-        }
 
         if (!m_vardiff.empty())
         {
@@ -190,6 +173,23 @@ namespace Nektar
                                     m_vardiff[varCoeffEnum[i]], 1,
                                     m_vardiff[varCoeffEnum[i]], 1);
                 }
+            }
+        }
+        
+        // Apply fibre map (range 0 -> 1)
+        if (m_session->DefinesFunction("AnisotropicConductivity"))
+        {
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                cout << "Loading Anisotropic Fibre map." << endl;
+            }
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                ASSERTL0(m_session->DefinesFunction("AnisotropicConductivity", aniso_var[i]),
+                    "Function 'AnisotropicConductivity' not correctly defined.");
+                EvaluateFunction(aniso_var[i], vTemp, "AnisotropicConductivity");
+                //m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq);
+                Vmath::Vmul(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
 
                 // Transform variable coefficient and write out to file.
                 m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[i]],

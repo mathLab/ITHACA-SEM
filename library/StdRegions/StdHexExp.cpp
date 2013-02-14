@@ -1227,7 +1227,7 @@ namespace Nektar
                      GetEdgeBasisType(0) == GetEdgeBasisType(2),
                      "Method only implemented if BasisType is indentical in "
                      "all directions");
-            ASSERTL1(bType0 == LibUtilities::eModified_A,
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A,
                       "Method only implemented for Modified_A BasisType");
 
             if (nummodesA == -1)

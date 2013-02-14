@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSysIterativeStaticCond.h
+// File: GlobalLinSysIterativeStaticCond.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -48,6 +48,19 @@ namespace Nektar
 
         typedef boost::shared_ptr<GlobalLinSysIterativeStaticCond>
             GlobalLinSysIterativeStaticCondSharedPtr;
+
+        enum LocalHelmStorageStrategy
+        {
+            eContiguous,
+            eNonContiguous,
+        };
+
+        const char* const LocalHelmStorageStrategyMap[] =
+        {
+            "Contiguous",
+            "Non-contiguous",
+        };
+
 
         /// A global linear system.
         class GlobalLinSysIterativeStaticCond : public GlobalLinSysIterative
@@ -99,7 +112,9 @@ namespace Nektar
             DNekScalBlkMatSharedPtr                  m_schurCompl;
             /// Dense storage for block Schur complement matrix.
             std::vector<double>                      m_storage;
-            std::vector<double*>                     m_denseBlocks;
+            /// Vector of pointers to local matrix data
+            std::vector<const double*>               m_denseBlocks;
+            /// Ranks of local matrices
             Array<OneD, unsigned int>                m_rows;
             /// Block \f$ BD^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_BinvD;
@@ -107,7 +122,7 @@ namespace Nektar
             DNekScalBlkMatSharedPtr                  m_C;
             /// Block \f$ D^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_invD;
-	    // Block matrices for low energy
+            /// Block matrices for low energy
             DNekScalBlkMatSharedPtr                  m_RBlk;
             DNekScalBlkMatSharedPtr                  m_RTBlk;
             DNekScalBlkMatSharedPtr                  m_S1Blk;
@@ -119,6 +134,11 @@ namespace Nektar
             Array<OneD, NekDouble>                   m_wsp;
             /// Preconditioner object.
             PreconditionerSharedPtr                  m_precon;
+
+            /// Utility strings
+            static std::string                       storagedef;
+            static std::string                       storagelookupIds[];
+
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.

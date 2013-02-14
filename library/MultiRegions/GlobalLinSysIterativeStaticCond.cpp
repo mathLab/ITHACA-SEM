@@ -62,6 +62,22 @@ namespace Nektar
                     GlobalLinSysIterativeStaticCond::create,
                     "Iterative multi-level static condensation.");
 
+
+        std::string GlobalLinSysIterativeStaticCond::storagedef = 
+            LibUtilities::SessionReader::RegisterDefaultSolverInfo(
+                "LocalHelmStorageStrategy",
+                "Non-contiguous");
+        std::string GlobalLinSysIterativeStaticCond::storagelookupIds[2] = {
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LocalHelmStorageStrategy",
+                "Contiguous",
+                MultiRegions::eContiguous),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LocalHelmStorageStrategy",
+                "Non-contiguous",
+                MultiRegions::eNonContiguous),
+        };
+
         /**
          * For a matrix system of the form @f[
          * \left[ \begin{array}{cc}
@@ -383,6 +399,9 @@ namespace Nektar
                 }
                 else
                 {
+                    LocalHelmStorageStrategy storageStrategy = m_expList.lock()->GetSession()->
+                        GetSolverInfoAsEnum<LocalHelmStorageStrategy>("LocalHelmStorageStrategy");
+
                     size_t storageSize = 0;
                     int nBlk          = m_schurCompl->GetNumberOfBlockRows();
 
@@ -397,26 +416,37 @@ namespace Nektar
 
                     // Assemble dense storage blocks.
                     DNekScalMatSharedPtr loc_mat;
-                    m_storage.resize    (storageSize);
                     m_denseBlocks.resize(nBlk);
-                    double *ptr = &m_storage[0];
+                    double *ptr = 0;
+
+                    if (MultiRegions::eContiguous == storageStrategy)
+                    {
+                        m_storage.resize    (storageSize);
+                        ptr = &m_storage[0];
+                    }
 
                     for (unsigned int n = 0; n < nBlk; ++n)
                     {
                         loc_mat = m_schurCompl->GetBlock(n,n);
-                        int loc_lda = loc_mat->GetRows();
 
-                        int blockSize    = loc_lda * loc_lda;
-                        m_denseBlocks[n] = ptr;
-
-                        for(int i = 0; i < loc_lda; ++i)
+                        if (MultiRegions::eContiguous == storageStrategy)
                         {
-                            for(int j = 0; j < loc_lda; ++j)
+                            int loc_lda      = loc_mat->GetRows();
+                            int blockSize    = loc_lda * loc_lda;
+                            m_denseBlocks[n] = ptr;
+                            for(int i = 0; i < loc_lda; ++i)
                             {
-                                ptr[j*loc_lda+i] = (*loc_mat)(i,j);
+                                for(int j = 0; j < loc_lda; ++j)
+                                {
+                                    ptr[j*loc_lda+i] = (*loc_mat)(i,j);
+                                }
                             }
+                            ptr += blockSize;
                         }
-                        ptr += blockSize;
+                        else
+                        {
+                            m_denseBlocks[n] = loc_mat->GetRawPtr();
+                        }
                     }
 
                 } // if (doGlobalOp)

@@ -37,7 +37,6 @@
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_COURTEMANCHE_H
 
 #include <CardiacEPSolver/CellModels/CellModel.h>
-#include <LibUtilities/BasicUtils/Thread.h>
 
 namespace Nektar
 {
@@ -66,7 +65,6 @@ namespace Nektar
         virtual ~CourtemancheRamirezNattel98();
 
     protected:
-
         /// Computes the reaction terms $f(u,v)$ and $g(u,v)$.
         virtual void v_Update(
                 const Array<OneD, const Array<OneD, NekDouble> >&inarray,
@@ -120,32 +118,6 @@ namespace Nektar
         NekDouble tau_tr;
         NekDouble K_Q10;
         NekDouble V_i;
-
-        class UpdateJob: public Nektar::Thread::ThreadJob
-        {
-        private:
-        	CourtemancheRamirezNattel98 &cm;
-        	const Array<OneD, const  Array<OneD, NekDouble> >&inarray;
-        	Array<OneD,        Array<OneD, NekDouble> >&outarray;
-        	const NekDouble time;
-        	int n;
-        	unsigned int index;
-        public:
-        	UpdateJob(CourtemancheRamirezNattel98 &cm,
-        	    			const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-        	                  Array<OneD,        Array<OneD, NekDouble> >&outarray,
-        	            const NekDouble time,
-        	            int n, unsigned int index);
-        	void Run();
-        };
-        friend class UpdateJob;
-
-        void UpdateImpl(
-                    const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                          Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                    const NekDouble time,
-                    int n, unsigned int index);
-
     };
 
 }

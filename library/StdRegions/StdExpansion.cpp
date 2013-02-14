@@ -1705,6 +1705,12 @@ namespace Nektar
                 ASSERTL0(false, "Not implemented.");
             }
         
+            bool StdExpansion::v_EdgeNormalNegated(const int edge)
+            {
+                ASSERTL0(false, "Not implemented.");
+                return false;
+            }
+
             void StdExpansion::v_NegateFaceNormal(const int face)
             {
                 ASSERTL0(false, "Not implemented.");

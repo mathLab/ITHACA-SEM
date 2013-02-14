@@ -276,14 +276,14 @@ namespace Nektar
     {
         int nq = m_fields[0]->GetNpoints();
 
+        // Compute I_ion
         m_cell->TimeIntegrate(inarray, outarray, time);
 
+        // Compute I_stim
         for (unsigned int i = 0; i < m_stimulus.size(); ++i)
         {   
             m_stimulus[i]->Update(outarray, time);
         }
-
-        Vmath::Smul(nq, 1.0/m_capMembrane, outarray[0], 1, outarray[0], 1);
     }
 
 

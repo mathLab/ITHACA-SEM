@@ -1212,7 +1212,7 @@ namespace Nektar
          */
         void StdHexExp::v_GetFaceToElementMap(
             const int                  fid,
-            const Orientation      faceOrient,
+            const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
             int                        nummodesA,
@@ -1223,14 +1223,11 @@ namespace Nektar
             const int nummodes1 = m_base[1]->GetNumModes();
             const int nummodes2 = m_base[2]->GetNumModes();
 
-            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
-            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
-            const LibUtilities::BasisType bType2 = GetEdgeBasisType(2);
-
-            ASSERTL1( (bType0==bType1) && (bType0==bType2),
-                      "Method only implemented if BasisType is indentical in "
-                      "all directions");
-            ASSERTL1( bType0==LibUtilities::eModified_A,
+            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1) &&
+                     GetEdgeBasisType(0) == GetEdgeBasisType(2),
+                     "Method only implemented if BasisType is indentical in "
+                     "all directions");
+            ASSERTL1(bType0 == LibUtilities::eModified_A,
                       "Method only implemented for Modified_A BasisType");
 
             if (nummodesA == -1)

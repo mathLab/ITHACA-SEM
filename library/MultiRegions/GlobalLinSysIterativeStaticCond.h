@@ -116,6 +116,8 @@ namespace Nektar
             std::vector<const double*>               m_denseBlocks;
             /// Ranks of local matrices
             Array<OneD, unsigned int>                m_rows;
+            /// Scaling factors for local matrices
+            Array<OneD, NekDouble>                   m_scale;
             /// Block \f$ BD^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_BinvD;
             /// Block \f$ C \f$ matrix.

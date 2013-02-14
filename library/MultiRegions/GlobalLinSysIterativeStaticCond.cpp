@@ -405,12 +405,14 @@ namespace Nektar
                     size_t storageSize = 0;
                     int nBlk          = m_schurCompl->GetNumberOfBlockRows();
 
-                    m_rows = Array<OneD, unsigned int> (nBlk, 0U);
+                    m_scale = Array<OneD, NekDouble> (nBlk, 1.0);
+                    m_rows  = Array<OneD, unsigned int> (nBlk, 0U);
 
                     // Determine storage requirements for dense blocks.
                     for (int i = 0; i < nBlk; ++i)
                     {
                         m_rows[i]    = m_schurCompl->GetBlock(i,i)->GetRows();
+                        m_scale[i]   = m_schurCompl->GetBlock(i,i)->Scale();
                         storageSize += m_rows[i] * m_rows[i];
                     }
 
@@ -935,7 +937,7 @@ namespace Nektar
                 {
                     const int rows = m_rows[i];
                     Blas::Dgemv('N', rows, rows,
-                                1.0, m_denseBlocks[i], rows, 
+                                m_scale[i], m_denseBlocks[i], rows, 
                                 m_wsp.get()+cnt, 1, 
                                 0.0, tmpout.get()+cnt, 1);
                 }

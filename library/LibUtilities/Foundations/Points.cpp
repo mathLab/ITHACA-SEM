@@ -55,15 +55,15 @@ namespace Nektar
         bool operator<(const PointsKey &lhs, const PointsKey &rhs)
         {
             if (lhs.m_numpoints < rhs.m_numpoints)
-        {
-        return true;
-        }
-
+            {
+                return true;
+            }
+            
             if (lhs.m_numpoints > rhs.m_numpoints)
-        {
-        return false;
-        }
-
+            {
+                return false;
+            }
+            
             return (lhs.m_pointstype < rhs.m_pointstype);
         }
 

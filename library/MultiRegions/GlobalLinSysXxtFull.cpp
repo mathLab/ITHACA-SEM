@@ -152,10 +152,9 @@ namespace Nektar
         {
             const Array<OneD, const int> &vMap
                                     = pLocToGloMap->GetLocalToGlobalMap();
-            unsigned int nGloBnd    = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             unsigned int nGlo       = pLocToGloMap->GetNumGlobalCoeffs();
             unsigned int nEntries   = pLocToGloMap->GetNumLocalCoeffs();
-            unsigned int i,j;
+            unsigned int i;
 
             // Count the multiplicity of each global DOF on this process
             Array<OneD, NekDouble> vCounts(nGlo, 0.0);

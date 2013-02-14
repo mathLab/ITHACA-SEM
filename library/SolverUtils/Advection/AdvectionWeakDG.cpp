@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/AdvectionWeakDG.h>
+#include <SolverUtils/Advection/AdvectionWeakDG.h>
 
 namespace Nektar
 {
@@ -75,7 +75,7 @@ namespace Nektar
             {
                 tmp[i] = Array<OneD,NekDouble>(nCoeffs, 0.0);
                 
-                // Get the ith component of the  flux vector in (physical space)
+                // Get the ith component of the  flux vector in physical space
                 m_fluxVector(i, inarray, fluxvector);
                 
                 for (j = 0; j < nVelDim; ++j)

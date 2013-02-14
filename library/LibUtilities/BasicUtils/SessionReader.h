@@ -240,7 +240,7 @@ namespace Nektar
                 const std::string &trueval) const;
             /// Check if the value of a solver info property matches.
             template<typename T>
-            inline const bool MatchSolverInfoAsEnum(
+            inline bool MatchSolverInfoAsEnum(
                 const std::string &name, 
                 const T           &trueval) const;
             /// Registers an enumeration value.
@@ -458,7 +458,7 @@ namespace Nektar
          *
          */
         template<typename T>
-        inline const bool SessionReader::MatchSolverInfoAsEnum(
+        inline bool SessionReader::MatchSolverInfoAsEnum(
             const std::string &name, const T &trueval) const
         {
             return (GetSolverInfoAsEnum<T>(name) == trueval);

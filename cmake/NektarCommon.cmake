@@ -103,16 +103,16 @@ MACRO(SET_COMMON_PROPERTIES name)
         ENDIF( NEKTAR_FULL_DEBUG)
    
         IF( NOT MSVC )
+            SET(CMAKE_CXX_FLAGS_DEBUG 
+                "${CMAKE_CXX_FLAGS_DEBUG} -Wall -Wno-deprecated -Wno-sign-compare")
+            SET(CMAKE_CXX_FLAGS_RELEASE 
+                    "${CMAKE_CXX_FLAGS_RELEASE} -Wall -Wno-deprecated -Wno-sign-compare")
+            SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO
+                    "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -Wall -Wno-deprecated -Wno-sign-compare")
             IF (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
                 SET(CMAKE_CXX_FLAGS_DEBUG 
-                    "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive -Wno-deprecated")
-            ELSE ()
-                SET(CMAKE_CXX_FLAGS_DEBUG 
-                    "${CMAKE_CXX_FLAGS_DEBUG} -Wno-deprecated")
+                    "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
             ENDIF()
-
-            SET(CMAKE_CXX_FLAGS_RELEASE 
-                    "${CMAKE_CXX_FLAGS_RELEASE} -Wno-deprecated")
         ENDIF( NOT MSVC)
                         
         SET(CMAKE_CXX_FLAGS_RELEASE 

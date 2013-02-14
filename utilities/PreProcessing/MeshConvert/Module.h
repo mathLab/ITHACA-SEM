@@ -77,10 +77,10 @@ namespace Nektar
              * @param desc      Description of the option.
              */
             ConfigOption(bool isBool, string defValue, string desc) :
-                isBool(isBool), beenSet(false), defValue(defValue), 
-                desc(desc), value() {}
+                isBool(isBool), beenSet(false), value(), defValue(defValue), 
+                desc(desc) {}
             ConfigOption() :
-                isBool(false), beenSet(false), defValue(), desc(), value() {}
+                isBool(false), beenSet(false), value(), defValue(), desc() {}
             
             /**
              * @brief Re-interpret the value stored in #value as some type using

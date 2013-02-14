@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
         vSession->DefinesSolverInfo("INTERFACE")
         && vSession->GetSolverInfo("INTERFACE")=="phase" )
     {
-        cr = boost::lexical_cast<double>(argv[argc-1]);
+        cr = boost::lexical_cast<NekDouble>(argv[argc-1]);
         argc=5;
     }
 
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
       
     //store the value of alpha
     string charalp (argv[argc-1]);
-    //NekDouble alpha = boost::lexical_cast<double>(charalp);
+    //NekDouble alpha = boost::lexical_cast<NekDouble>(charalp);
     cout<<"read alpha="<<charalp<<endl;
 
     //---------------------------------------------
@@ -275,7 +275,7 @@ cout<<"nIregions="<<nIregions<<endl;
 
     //order the ids on the lower curve lastIregion starting from the id on x=0
     NekDouble x_connect;
-    NekDouble x0,y0,z0,xt,yt,zt;
+    NekDouble x0,y0,z0,xt,yt=0,zt=0;
     int lastedge=-1;
     int v1,v2;
     //first point for x_connect=0(or-1.6 for the full mesh (-pi,pi)  )
@@ -2540,7 +2540,7 @@ cout<<"nlays="<<nlays<<endl;
                             Vids_lay[m][1] = V1[h];                         
                             SpatialDomains::VertexComponentSharedPtr vertex2 
                                          = mesh->GetVertex(V2[h]);
-                            NekDouble x2,y2,z2;
+                            NekDouble x2=0.0,y2=0.0,z2=0.0;
                             normbef= sqrt( (y-y2)*(y-y2)+(x-x2)*(x-x2)  );
                             ybef = (y-y2);
                             xbef = (x-x2);

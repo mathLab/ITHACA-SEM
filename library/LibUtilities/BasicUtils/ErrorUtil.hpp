@@ -45,12 +45,12 @@ namespace ErrorUtil
 {
     static boost::optional<std::ostream&> outStream;
 
-    static void SetErrorStream(std::ostream& o)
+    inline static void SetErrorStream(std::ostream& o)
     {
         outStream = o;
     }
-
-    static bool HasCustomErrorStream()
+    
+    inline static bool HasCustomErrorStream()
     {
         return outStream;
     }
@@ -63,11 +63,11 @@ namespace ErrorUtil
 
     class NekError : public std::runtime_error
     {
-        public:
-            NekError(const std::string& message) : std::runtime_error(message) {}
+    public:
+        NekError(const std::string& message) : std::runtime_error(message) {}
     };
         
-    static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
+    inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg, unsigned int level)
     {
         // The user of outStream is primarily for the unit tests.
         // The unit tests often generate errors on purpose to make sure
@@ -112,12 +112,12 @@ namespace ErrorUtil
         }
     }
 
-    static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
+    inline static void Error(ErrType type, const char *routine, int lineNumber, const std::string& msg, unsigned int level)
     {
         Error(type, routine, lineNumber, msg.c_str(), level);
     }
 
-    static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
+    inline static void Error(ErrType type, const char *routine, int lineNumber, const char *msg)
     {
         Error(type, routine, lineNumber, msg, 0);
     }

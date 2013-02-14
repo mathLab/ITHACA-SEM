@@ -73,8 +73,6 @@ namespace Nektar
             string line;
             int nVertices = 0;
             int nEntities = 0;
-            int nElements = 0;
-            int nBoundaryElements = 0;
             int nProperties = 0;
             ElementType elType = eTriangle;
             map<string, int> propMap;
@@ -152,7 +150,7 @@ namespace Nektar
                     {
                         getline(mshFile, line);
                         stringstream st(line);
-                        int id = 0, num_tag = 0, num_nodes = 0;
+                        int id = 0;
 
                         // Create element tags
                         vector<int> tags;
@@ -180,25 +178,6 @@ namespace Nektar
                         }
                         m->element[E->GetDim()].push_back(E);
                     }
-
-                    /*
-                    // Compute the number of full-dimensional elements and
-                    // boundary elements.
-                    for (int i = 0; i < m_element.size(); ++i) {
-                        if (m_element[i]->GetDim() == m_expDim) {
-                            nElements++;
-                        }
-                        if (m_element[i]->GetDim() == m_expDim - 1) {
-                            nBoundaryElements++;
-                        }
-                    }
-                    cout << "Expansion dimension is " << m_expDim << endl;
-                    cout << "Space dimension is " << m_spaceDim << endl;
-                    cout << "Read " << m_node.size() << " nodes" << endl;
-                    cout << "Read " << m_element.size() << " geometric entities" << endl;
-                    cout << "Read " << nElements << " " << m_expDim << "-D elements" << endl;
-                    cout << "Read " << nBoundaryElements << " boundary entities" << endl;
-                    */
                 }
             }
             mshFile.close();

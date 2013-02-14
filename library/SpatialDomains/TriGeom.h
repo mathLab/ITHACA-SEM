@@ -49,9 +49,9 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-        class TriGeom;
-        class SegGeom;
-        class Curve;
+        class  TriGeom;
+        class  SegGeom;
+        struct Curve;
 
         typedef boost::shared_ptr<Curve> CurveSharedPtr;
         typedef boost::shared_ptr<SegGeom> SegGeomSharedPtr;

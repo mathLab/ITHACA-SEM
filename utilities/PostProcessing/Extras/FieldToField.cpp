@@ -63,7 +63,6 @@ int main(int argc, char *argv[])
     string fieldfile0(argv[argc-3]);
     //argc=nfiles0 =2 
     //in this way only the mesh0 is taken to create vSession
-    int nfiles0 = 2;
     //nfiles0=5;
     std::vector<std::string> filenames0;
     filenames0.push_back(meshfile0);
@@ -94,13 +93,8 @@ int main(int argc, char *argv[])
     SetFields(graphShPt,fielddef, vSession,fields,nfields,variables,homo);
     int nq;//pointsper plane
     //-----------------------------------------------
-    cout<<"nfields="<<nfields<<endl;   
     // Copy data from file:fill fields with the fielddata
-    if(
-        //vSession->DefinesSolverInfo("HOMOGENEOUS")
-        fielddef[0]->m_numHomogeneousDir == 1
-
-      )
+    if(fielddef[0]->m_numHomogeneousDir == 1)
     {
         nq = fields[0]->GetPlane(1)->GetTotPoints();
         //THE IM PHYS VALUES ARE WRONG USING bwdTrans !!!
@@ -114,7 +108,7 @@ int main(int argc, char *argv[])
             //bwd plane 0
             fields[j]->GetPlane(0)->BwdTrans_IterPerExp(fields[j]->GetPlane(0)->GetCoeffs(),  
                           fields[j]->GetPlane(0)->UpdatePhys() );
-
+            
             //bwd plane 1
             fields[j]->GetPlane(1)->BwdTrans_IterPerExp(fields[j]->GetPlane(1)->GetCoeffs(), 
                           fields[j]->GetPlane(1)->UpdatePhys() );
@@ -134,13 +128,6 @@ int main(int argc, char *argv[])
             fields[j]->BwdTrans_IterPerExp(fields[j]->GetCoeffs(),fields[j]->UpdatePhys());      
         }
     }
-    //----------------------------------------------    
-/*    
-         for(int g=0; g<fields[0]->GetPlane(1)->GetTotPoints(); g++)
-         {
-cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<fields[0]->GetPlane(1)->GetPhys()[g]<<endl;
-         }
-*/
 
 
     // store mesh0 quadrature points    
@@ -164,7 +151,6 @@ cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<field
     //----------------------------------------------    
   
     //Read in the mesh1
-    cout<<"read second mesh"<<endl;
     string meshfile1(argv[argc-2]);    
     //Name of the output fieldfile
     string fieldfile1(argv[argc-1]);           
@@ -200,7 +186,6 @@ cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<field
 
     SetFields(graphShPt1,fielddef, vSession1, outfield,nfields,variables,homo);    	    
     //------------------------------------------------ 
-//cout<<"setfields1 ok"<<endl;
     // store the new points:
     int nq1;
     if(
@@ -232,16 +217,6 @@ cout<<"g="<<g<<"  phys f0="<<fields[0]->GetPlane(0)->GetPhys()[g]<<" f1="<<field
        outfield[0]->GetCoords(x1,y1);
     }
     
-    NekDouble x1min = Vmath::Vmin(nq1, x1,1);
-cout<<"X1MIN+"<<x1min<<endl;
-/*
-    for(int u=0; u<nq1; u++)
-    {
-cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;    	    
-    }
-*/    
-
-
     //------------------------------------------------
     
     //check 2Dmeshes compatibilities
@@ -321,28 +296,14 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
 		// first session which refers to mesh0
                 static int cnt=0;		
 		// Setting parameteres for homogenous problems
-        	MultiRegions::GlobalSysSolnType solnType;
-		NekDouble static LhomX;           ///< physical length in X direction (if homogeneous) 
 		NekDouble static LhomY;           ///< physical length in Y direction (if homogeneous)
 		NekDouble static LhomZ;           ///< physical length in Z direction (if homogeneous)
 		
 		bool static DeclareCoeffPhysArrays = true;		
-		int static npointsX;              ///< number of points in X direction (if homogeneous)
 		int static npointsY;              ///< number of points in Y direction (if homogeneous)
                 int static npointsZ;              ///< number of points in Z direction (if homogeneous)	
-		int static HomoDirec       = 0;
 		bool static useFFT = false;
 		bool static deal = false;
-		///Parameter for homogeneous expansions		
-		enum HomogeneousType
-		{
-			eHomogeneous1D,
-			eHomogeneous2D,
-			eHomogeneous3D,
-			eNotHomogeneous
-		};
-	
-		enum HomogeneousType HomogeneousType = eNotHomogeneous;
 	
                 if(cnt==0)
                 { 	
@@ -352,10 +313,11 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
                   )
 		{	
                         //only homo1D is working
+                    /*
            		HomogeneousType = eHomogeneous1D;
                         npointsZ = fielddef[0]->m_numModes[2];
                         LhomZ = fielddef[0]->m_homogeneousLengths[0];
-       		        HomoDirec       = 1;
+                    */
 /*	
 			std::string HomoStr = session->GetSolverInfo("HOMOGENEOUS");
 			//m_spacedim          = 3;
@@ -438,7 +400,7 @@ cout<<"x1="<<x1[u]<<"      y1="<<y1[u]<<endl;
                 {   
                     if(fielddef[0]->m_numHomogeneousDir == 1)
                     {
-cout<<"homogeneous case"<<endl;
+                        cout<<"homogeneous case"<<endl;
                         const LibUtilities::PointsKey PkeyZ(npointsZ,LibUtilities::eFourierEvenlySpaced);
                         const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,npointsZ,PkeyZ);
 
@@ -458,17 +420,9 @@ cout<<"homogeneous case"<<endl;
                                    ContField3DHomogeneous1D>::AllocateSharedPtr
                                      (*firstfield);                                   
                         }
-/*
-                        for(i = 0 ; i < nvariables; i++)
-                        {                        	
-                            Exp[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(session,BkeyZ,LhomZ,useFFT,deal,mesh,variables[i]);                                    
-                        }
-*/
                     }
                     else
                     {    
-//cout<<" norm field"<<endl;               	    
                         i = 0;
                         MultiRegions::ContField2DSharedPtr firstfield;
                         firstfield = MemoryManager<MultiRegions::ContField2D>
@@ -517,7 +471,6 @@ cout<<"homogeneous case"<<endl;
                         bool &homogeneous)
         {
 	    TiXmlDocument doc(fieldfile);
-	    bool loadOkay = doc.LoadFile(); 
             TiXmlHandle docHandle(&doc);
             TiXmlElement* master = NULL;    // Master tag within which all data is contained.
 
@@ -547,12 +500,11 @@ cout<<"homogeneous case"<<endl;
             const char *vars = element->Attribute("FIELDS");   
             //convert char into string object 
             string varstr = string(vars);       
-cout<<"char="<<vars<<endl;           
+            cout<<"Fields to Interpolate: "<<vars<<endl;           
             if(varstr=="u" || varstr=="v" || varstr=="w" || varstr=="p")
             {
                  variables = Array<OneD, std::string>(1);
                  variables[0] = varstr;
-cout<<variables[0]<<endl;
             }
             else if(varstr=="u,v" || varstr=="v,w" || varstr=="u,w")
             {
@@ -590,18 +542,11 @@ cout<<variables[0]<<endl;
              Array<OneD, NekDouble> coords(2);
 	     int nq1 = field1->GetTotPoints();
              int elmtid, offset;
-             int attempt;
              for(int r=0; r< nq1; r++)
              {
-                   //attempt =0;
                    coords[0] = x1[r];
                    coords[1] = y1[r];
-//cout<<r<<"  x="<<x1[r]<<"   y="<<y1[r]<<endl;                   
                    elmtid = field0->GetExpIndex(coords, 0.001);
-//cout<<elmtid<<endl;
-//cout<<"x="<<x1[r]<<"   y="<<y1[r]<<"    offset="<<offset<<"  elmtid="<<elmtid<<endl; 
-
-
 /*
                    if(elmtid <0)
                    {
@@ -644,16 +589,8 @@ cout<<variables[0]<<endl;
 
                        elmtid = field0->GetExpIndex(tmpcoords, 0.001);
 
-                 
-      
-
-                                        
-                         
                    }
 */
-
-//cout<<elmtid<<endl;
-
 
                    if(elmtid<0)
                    {

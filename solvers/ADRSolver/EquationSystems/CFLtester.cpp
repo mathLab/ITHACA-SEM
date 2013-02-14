@@ -54,7 +54,6 @@ namespace Nektar
         UnsteadySystem::v_InitObject();
 
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-        int nq = m_fields[0]->GetNpoints();
         std::vector<std::string> vel;
         vel.push_back("Vx");
         vel.push_back("Vy");
@@ -231,13 +230,11 @@ namespace Nektar
         NekDouble timeCFL)
 	{ 
 		
-		int nvariables      = m_fields.num_elements();
-		int nTotQuadPoints  = GetTotPoints();
 		int n_element       = m_fields[0]->GetExpSize();
         
-		const NekDouble minLengthStdTri  = 1.414213;
-		const NekDouble minLengthStdQuad = 2.0;
-		const NekDouble cLambda          = 0.2; // Spencer book pag. 317
+		//const NekDouble minLengthStdTri  = 1.414213;
+		//const NekDouble minLengthStdQuad = 2.0;
+		//const NekDouble cLambda          = 0.2; // Spencer book pag. 317
 
         Array<OneD, NekDouble> tstep      (n_element, 0.0);
 		Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
@@ -247,7 +244,7 @@ namespace Nektar
 		{
 			int npoints = m_fields[0]->GetExp(el)->GetTotPoints();
 			Array<OneD, NekDouble> one2D(npoints, 1.0);
-			NekDouble Area = m_fields[0]->GetExp(el)->Integral(one2D);
+			//NekDouble Area = m_fields[0]->GetExp(el)->Integral(one2D);
 			if(boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_fields[0]->GetExp(el)))
 			{
 				//tstep[el] =  timeCFL/(stdVelocity[el]*cLambda*(ExpOrder[el]-1)*(ExpOrder[el]-1));
@@ -336,7 +333,6 @@ namespace Nektar
         int nTotQuadPoints  = GetTotPoints();
         int n_element       = m_fields[0]->GetExpSize();       
         int nvel            = inarray.num_elements();
-        int npts            = 0;
         
         NekDouble pntVelocity;
         

@@ -69,8 +69,11 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT void WriteToFile(
                               std::ofstream& outfile,
                         const int dumpVar);
+            SPATIAL_DOMAINS_EXPORT int GetEid() const;
 
-        private:
+        protected:
+            using Geometry::v_GetEid;
+            
             virtual int v_GetShapeDim() const;
             virtual int v_GetEid() const;
             virtual int v_GetVid(int i) const;

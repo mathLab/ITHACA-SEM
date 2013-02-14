@@ -157,10 +157,11 @@ namespace Nektar
             double v_buf[] = {4, 5, 6, 0};
             
             Array<OneD, double> vector_array(4, v_buf);
-            
+            Array<OneD, double> tmp;
+
             NekMatrix<double> m(3, 3, m_buf);
             NekVector<double> v(3, vector_array, eWrapper);
-            NekVector<double> result(3, vector_array+1, eWrapper);
+            NekVector<double> result(3, tmp=vector_array+1, eWrapper);
             
             double expected_result_buf[] = {66, 81, 96};
             NekVector<double> expected_result(3, expected_result_buf);

@@ -88,7 +88,7 @@ namespace Nektar
         {
         public:
                 SPATIAL_DOMAINS_EXPORT VertexComponent(const int coordim, const int vid,
-                    double x, double y, double z);
+                    NekDouble x, NekDouble y, NekDouble z);
                 SPATIAL_DOMAINS_EXPORT VertexComponent(){}
                 SPATIAL_DOMAINS_EXPORT ~VertexComponent();
                 SPATIAL_DOMAINS_EXPORT VertexComponent(const VertexComponent &T);
@@ -96,9 +96,9 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void AddElmtConnected(int gvo_id, int locid);
                 SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
                 SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(int gvo_id, int locid) const;
-                SPATIAL_DOMAINS_EXPORT void GetCoords(double &x, double &y, double &z);
+                SPATIAL_DOMAINS_EXPORT void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
                 SPATIAL_DOMAINS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords);
-                SPATIAL_DOMAINS_EXPORT void UpdatePosition(double x, double y, double z);
+                SPATIAL_DOMAINS_EXPORT void UpdatePosition(NekDouble x, NekDouble y, NekDouble z);
 
 
                 inline int GetCoordim() const
@@ -134,14 +134,6 @@ namespace Nektar
                 int m_vid;
                 int m_coordim;
                 std::list<CompToElmt> m_elmtMap;
-
-            private:
-
-                virtual int v_GetVid(void)
-                {
-                    return GetVid();
-                }
-
         };
 
         // -----------------------------------------------------------------------

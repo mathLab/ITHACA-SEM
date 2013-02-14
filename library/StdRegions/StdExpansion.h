@@ -885,21 +885,6 @@ namespace Nektar
                 return v_GetCartesianEorient(edge);
             }
 
-            void AddHDGHelmholtzTraceTerms(const NekDouble tau,
-                                           const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray)
-            {
-                v_AddHDGHelmholtzTraceTerms(tau,inarray, outarray);
-            }
-
-            void AddHDGHelmholtzTraceTerms(const NekDouble tau,
-                                           const Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,boost::shared_ptr<StdExpansion1D> > &EdgeExp,
-                                           Array<OneD,NekDouble> &outarray)
-            {
-                v_AddHDGHelmholtzTraceTerms(tau,inarray,EdgeExp, outarray);
-            }
-
             void SetCoeffsToOrientation(
                 StdRegions::Orientation dir)
             {
@@ -919,13 +904,12 @@ namespace Nektar
                 return v_CalcNumberOfCoefficients(nummodes,modes_offset);
             }
 
-            void ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
-                                     const int offset, 
+            void ExtractDataToCoeffs(const NekDouble *data, 
                                      const std::vector<unsigned int > &nummodes, 
                                      const int nmodes_offset,
-                                     Array<OneD, NekDouble> &coeffs)
+                                     NekDouble *coeffs)
             {
-                v_ExtractDataToCoeffs(data,offset,nummodes,nmodes_offset,coeffs);
+                v_ExtractDataToCoeffs(data,nummodes,nmodes_offset,coeffs);
             }
 
             // virtual functions related to LocalRegions
@@ -946,10 +930,6 @@ namespace Nektar
                                                 const Array<OneD, const NekDouble> &Fwd,
                                                 const Array<OneD, const NekDouble> &Bwd,
                                                 Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT void AddNormTraceInt(const int dir,
-                                         Array<OneD, const NekDouble> &inarray,
-                                         Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT void AddFaceNormBoundaryInt(const int face,
                                                 boost::shared_ptr<StdExpansion>    &FaceExp,
@@ -1299,11 +1279,10 @@ namespace Nektar
              * same expansion type.
              * @see StdExpansion::ExtractDataToCoeffs
              */
-            STD_REGIONS_EXPORT virtual  void v_ExtractDataToCoeffs(const std::vector<NekDouble> &data, 
-                                                const int offset, 
+            STD_REGIONS_EXPORT virtual  void v_ExtractDataToCoeffs(const NekDouble *data, 
                                                 const std::vector<unsigned int > &nummodes, 
                                                 const int nmode_offset,
-                                                Array<OneD, NekDouble> &coeffs);
+                                                NekDouble *coeffs);
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray);
 
@@ -1580,15 +1559,6 @@ namespace Nektar
                                                              Array<OneD,NekDouble> &outarray,
                                                              const StdMatrixKey &mkey);
 
-            STD_REGIONS_EXPORT virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
-                                                     const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD,NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddHDGHelmholtzTraceTerms(const NekDouble tau,
-                                                     const Array<OneD, const NekDouble> &inarray,
-                                                     Array<OneD, boost::shared_ptr< StdExpansion1D > > &edgeExp,
-                                                     Array<OneD,NekDouble> &outarray);
-
             STD_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(StdRegions::Orientation dir,
                                                   Array<OneD, const NekDouble> &inarray,
                                                   Array<OneD, NekDouble> &outarray);
@@ -1605,16 +1575,6 @@ namespace Nektar
                                                   boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fn,
                                                   Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryBiInt(const int edge,
-                                                    boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                    const Array<OneD, const NekDouble> &Fwd,
-                                                    const Array<OneD, const NekDouble> &Bwd,
-                                                    Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_AddNormTraceInt(const int dir,
-                                           Array<OneD, const NekDouble> &inarray,
-                                           Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_AddFaceNormBoundaryInt(const int face,
                                                   boost::shared_ptr<StdExpansion>    &FaceExp,

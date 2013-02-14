@@ -52,9 +52,9 @@ namespace Nektar
      * coupled matrix system
      */ 
     CoupledLinearNS::CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSession):
-    m_singleMode(false),
-    m_zeroMode(false),
-    IncNavierStokes(pSession)
+        IncNavierStokes(pSession),
+        m_singleMode(false),
+        m_zeroMode(false)
     {
     }
     
@@ -65,8 +65,6 @@ namespace Nektar
         
         int  i;
         int  expdim = m_graph->GetMeshDimension();
-        int  n_exp  = m_fields[m_velocity[0]]->GetNumElmts();
-        int  nvel   = m_velocity.num_elements();
         
         // Get Expansion list for orthogonal expansion at p-2
         const SpatialDomains::ExpansionMap &pressure_exp = GenPressureExp(m_graph->GetExpansions("u"));
@@ -356,7 +354,6 @@ namespace Nektar
     void CoupledLinearNS::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation,const int HomogeneousMode, CoupledSolverMatrices &mat, CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap, const NekDouble lambda_imag)
     {
         int  n,i,j,k,eid;
-        int  expdim = m_graph->GetMeshDimension();
         int  nel  = m_fields[m_velocity[0]]->GetNumElmts();
         int  nvel   = m_velocity.num_elements();
         

@@ -243,7 +243,6 @@ namespace Nektar
         void MeshGraph::ReadGeometry(TiXmlDocument &doc)
         {
             TiXmlHandle docHandle(&doc);
-            TiXmlNode* node = NULL;
             TiXmlElement* mesh = NULL;
             TiXmlElement* master = NULL;    // Master tag within which all data is contained.
 
@@ -818,7 +817,6 @@ namespace Nektar
                         CompositeMap compositeVector;
                         GetCompositeList(compositeListStr, compositeVector);
 
-                        bool          useExpansionType = false;
                         ExpansionType expansion_type_x, expansion_type_y, expansion_type_z;
                         int           num_modes_x, num_modes_y, num_modes_z;
 
@@ -1291,7 +1289,7 @@ namespace Nektar
                 std::vector<std::vector<NekDouble> > &fielddata)
         {
             ASSERTL1(fielddefs.size() == fielddata.size(),
-                    "Length of fielddefs and fielddata incompatible");
+                     "Length of fielddefs and fielddata incompatible");
 
             TiXmlDocument doc;
             TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
@@ -1307,10 +1305,10 @@ namespace Nektar
 
                 ASSERTL1(fielddata[f].size() > 0,
                         "Fielddata vector must contain at least one value.");
-
+                
                 int datasize = CheckFieldDefinition(fielddefs[f]);
                 ASSERTL1(fielddata[f].size() == fielddefs[f]->m_fields.size()
-                        * datasize, "Invalid size of fielddata vector.");
+                         * datasize, "Invalid size of fielddata vector.");
 
                 //---------------------------------------------
                 // Write ELEMENTS
@@ -1839,8 +1837,6 @@ namespace Nektar
 
                     SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, homoZIDs, homoYIDs, points, pointDef, numPoints, numPointDef);
                     
-					int datasize = CheckFieldDefinition(fielddef);
-
                     fielddefs.push_back(fielddef);
 
                     element = element->NextSiblingElement("ELEMENTS");
@@ -2257,12 +2253,12 @@ namespace Nektar
         /**
          *
          */
-        ExpansionShPtr MeshGraph::GetExpansion(GeometrySharedPtr geom)
+        ExpansionShPtr MeshGraph::GetExpansion(GeometrySharedPtr geom, const std::string variable)
         {
             ExpansionMapIter iter;
             ExpansionShPtr returnval;
 
-            ExpansionMapShPtr expansionMap = m_expansionMapShPtrMap.find("DefaultVar")->second;
+            ExpansionMapShPtr expansionMap = m_expansionMapShPtrMap.find(variable)->second;
 
             for (iter = expansionMap->begin(); iter!=expansionMap->end(); ++iter)
             {
@@ -2872,232 +2868,249 @@ namespace Nektar
 
             GeomShapeType shape= in->GetGeomShapeType();
 
+            int quadoffset = 1;
             switch(type)
             {
-
             case eModified:
-            {
-                switch (shape)
-                {
-                case eSegment:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
-                    returnval.push_back(bkey);
-                }
+                quadoffset = 1;
                 break;
-                case eQuadrilateral:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
-                    returnval.push_back(bkey);
-                    returnval.push_back(bkey);
-                }
+            case eModifiedQuadPlus1:
+                quadoffset = 2;
                 break;
-                case eHexahedron:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
-                    returnval.push_back(bkey);
-                    returnval.push_back(bkey);
-                    returnval.push_back(bkey);
-                }
+            case eModifiedQuadPlus2:
+                quadoffset = 3;
                 break;
-                case eTriangle:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
-                    returnval.push_back(bkey);
-
-                    const LibUtilities::PointsKey pkey1(nummodes, LibUtilities::eGaussRadauMAlpha1Beta0);
-                    LibUtilities::BasisKey bkey1(LibUtilities::eModified_B, nummodes, pkey1);
-
-                    returnval.push_back(bkey1);
-                }
+            default:
                 break;
-                case eTetrahedron:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
-                    returnval.push_back(bkey);
-
-                    const LibUtilities::PointsKey pkey1(nummodes, LibUtilities::eGaussRadauMAlpha1Beta0);
-                    LibUtilities::BasisKey bkey1(LibUtilities::eModified_B, nummodes, pkey1);
-                    returnval.push_back(bkey1);
-
-                    const LibUtilities::PointsKey pkey2(nummodes, LibUtilities::eGaussRadauMAlpha2Beta0);
-                    LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2);
-                    returnval.push_back(bkey2);
-                }
-                break;
-                case ePrism:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
-                    returnval.push_back(bkey);
-                    returnval.push_back(bkey);
-
-                    const LibUtilities::PointsKey pkey1(nummodes, LibUtilities::eGaussRadauMAlpha1Beta0);
-                    LibUtilities::BasisKey bkey1(LibUtilities::eModified_B, nummodes, pkey1);
-                    returnval.push_back(bkey1);
-
-                }
-                break;
-                default:
-                {
-                    ASSERTL0(false,"Expansion not defined in switch for this shape");
-                }
-                break;
-                }
             }
-            break;
             
+            switch(type)
+            {
+            case eModified:
+            case eModifiedQuadPlus1:
+            case eModifiedQuadPlus2:
+                {
+                    switch (shape)
+                    {
+                    case eSegment:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
+                            returnval.push_back(bkey);
+                        }
+                        break;
+                    case eQuadrilateral:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                        }
+                        break;
+                    case eHexahedron:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                        }
+                        break;
+                    case eTriangle:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
+                            returnval.push_back(bkey);
+                            
+                            const LibUtilities::PointsKey pkey1(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha1Beta0);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eModified_B, nummodes, pkey1);
+                            
+                            returnval.push_back(bkey1);
+                        }
+                        break;
+                    case eTetrahedron:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
+                            returnval.push_back(bkey);
+                            
+                            const LibUtilities::PointsKey pkey1(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha1Beta0);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eModified_B, nummodes, pkey1);
+                            returnval.push_back(bkey1);
+                            
+                            const LibUtilities::PointsKey pkey2(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha2Beta0);
+                            LibUtilities::BasisKey bkey2(LibUtilities::eModified_C, nummodes, pkey2);
+                            returnval.push_back(bkey2);
+                        }
+                        break;
+                    case ePrism:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                            
+                            const LibUtilities::PointsKey pkey1(nummodes+quadoffset-1, LibUtilities::eGaussRadauMAlpha1Beta0);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eModified_B, nummodes, pkey1);
+                            returnval.push_back(bkey1);
+                            
+                        }
+                        break;
+                    default:
+                        {
+                            ASSERTL0(false,"Expansion not defined in switch for this shape");
+                        }
+                        break;
+                    }
+                }
+                break;
+                
             case eGLL_Lagrange:
-            {
-                switch(shape)
                 {
-                case eSegment:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
-                    returnval.push_back(bkey);
+                    switch(shape)
+                    {
+                    case eSegment:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
+                        returnval.push_back(bkey);
+                        }
+                        break;
+                    case eQuadrilateral:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                        }
+                        break;
+                    case eTriangle: // define with corrects points key
+                        // and change to Ortho on construction
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
+                            returnval.push_back(bkey);
+                            
+                            const LibUtilities::PointsKey pkey1(nummodes, LibUtilities::eGaussRadauMAlpha1Beta0);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B, nummodes, pkey1);
+                            returnval.push_back(bkey1);
+                        }
+                        break;
+                    default:
+                        {
+                            ASSERTL0(false, "Expansion not defined in switch  for this shape");
+                        }
+                        break;
+                    }
                 }
                 break;
-                case eQuadrilateral:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
-                    returnval.push_back(bkey);
-                    returnval.push_back(bkey);
-                }
-                break;
-                case eTriangle: // define with corrects points key
-                                // and change to Ortho on construction
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
-                    returnval.push_back(bkey);
-
-                    const LibUtilities::PointsKey pkey1(nummodes, LibUtilities::eGaussRadauMAlpha1Beta0);
-                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B, nummodes, pkey1);
-                    returnval.push_back(bkey1);
-                }
-                break;
-                default:
-                {
-                    ASSERTL0(false, "Expansion not defined in switch  for this shape");
-                }
-                break;
-                }
-            }
-            break;
-                   
+                
             case eGauss_Lagrange:
-            {
-                switch (shape)
                 {
-                case eSegment:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussGaussLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
-                        
-                    returnval.push_back(bkey);
+                    switch (shape)
+                    {
+                    case eSegment:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussGaussLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
+                            
+                            returnval.push_back(bkey);
+                        }
+                        break;
+                    case eQuadrilateral:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussGaussLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
+                            
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                        }
+                        break;
+                    case eHexahedron:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussGaussLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
+                            
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                        }
+                        break;
+                    default:
+                        {
+                            ASSERTL0(false, "Expansion not defined in switch  for this shape");
+                        }
+                        break;
+                    }
                 }
                 break;
-                case eQuadrilateral:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussGaussLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
-                    
-                    returnval.push_back(bkey);
-                    returnval.push_back(bkey);
-                }
-                break;
-                case eHexahedron:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussGaussLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
-                    
-                    returnval.push_back(bkey);
-                    returnval.push_back(bkey);
-                    returnval.push_back(bkey);
-                }
-                break;
-                default:
-                {
-                    ASSERTL0(false, "Expansion not defined in switch  for this shape");
-                }
-                break;
-                }
-            }
-            break;
-                    
+                
             case eOrthogonal:
-            {
-                switch (shape)
                 {
-                case eSegment:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
+                    switch (shape)
+                    {
+                    case eSegment:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
 
-                    returnval.push_back(bkey);
-                }
-                break;
-                case eTriangle:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
-
-                    returnval.push_back(bkey);
-
-                    const LibUtilities::PointsKey pkey1(nummodes, LibUtilities::eGaussRadauMAlpha1Beta0);
-                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B, nummodes, pkey1);
-
-                    returnval.push_back(bkey1);
-                }
-                break;
-                case eQuadrilateral:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
-
-                    returnval.push_back(bkey);
-                    returnval.push_back(bkey);
-                }
-                break;
-                case eTetrahedron:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
-                    LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
-
-                    returnval.push_back(bkey);
-
-                    const LibUtilities::PointsKey pkey1(nummodes, LibUtilities::eGaussRadauMAlpha1Beta0);
-                    LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B, nummodes, pkey1);
-
-                    returnval.push_back(bkey1);
-
-                    const LibUtilities::PointsKey pkey2(nummodes, LibUtilities::eGaussRadauMAlpha2Beta0);
-                    LibUtilities::BasisKey bkey2(LibUtilities::eOrtho_C, nummodes, pkey2);
-                }
-                break;
-                default:
-                {
+                            returnval.push_back(bkey);
+                        }
+                        break;
+                    case eTriangle:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
+                            
+                            returnval.push_back(bkey);
+                            
+                            const LibUtilities::PointsKey pkey1(nummodes, LibUtilities::eGaussRadauMAlpha1Beta0);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B, nummodes, pkey1);
+                            
+                            returnval.push_back(bkey1);
+                        }
+                        break;
+                    case eQuadrilateral:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
+                            
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                        }
+                        break;
+                    case eTetrahedron:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
+                            
+                            returnval.push_back(bkey);
+                            
+                            const LibUtilities::PointsKey pkey1(nummodes, LibUtilities::eGaussRadauMAlpha1Beta0);
+                            LibUtilities::BasisKey bkey1(LibUtilities::eOrtho_B, nummodes, pkey1);
+                            
+                            returnval.push_back(bkey1);
+                            
+                            const LibUtilities::PointsKey pkey2(nummodes, LibUtilities::eGaussRadauMAlpha2Beta0);
+                            LibUtilities::BasisKey bkey2(LibUtilities::eOrtho_C, nummodes, pkey2);
+                        }
+                        break;
+                    default:
+                        {
                     ASSERTL0(false,"Expansion not defined in switch  for this shape");
+                        }
+                        break;
+                    }
                 }
                 break;
-                }
-            }
-            break;
-
+                
             case eGLL_Lagrange_SEM:
-            {
-                switch (shape)
                 {
-                case eSegment:
-                {
-                    const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussLobattoLegendre);
+                    switch (shape)
+                    {
+                    case eSegment:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussLobattoLegendre);
                     LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
 
                     returnval.push_back(bkey);

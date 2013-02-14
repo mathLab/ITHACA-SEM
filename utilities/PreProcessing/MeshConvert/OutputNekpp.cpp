@@ -120,7 +120,6 @@ namespace Nektar
         {
             if (m->expDim >= 2)
             {
-                int edgecnt = 0;
                 TiXmlElement* verTag = new TiXmlElement( "EDGE" );
                 std::set<EdgeSharedPtr>::iterator it;
                 std::set<EdgeSharedPtr> tmp(
@@ -297,7 +296,6 @@ namespace Nektar
                 if (it->second->items.size() > 0) 
                 {
                     TiXmlElement *comp_tag = new TiXmlElement("C"); // Composite
-                    TiXmlElement *elm_tag;
                     bool doSort = true;
                     
                     // Ensure that this composite is not used for periodic BCs!

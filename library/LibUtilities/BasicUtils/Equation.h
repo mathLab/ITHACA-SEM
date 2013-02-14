@@ -37,8 +37,8 @@
 #define NEKTAR_LIBUTILITIES_EQUATION_HPP
 
 #include <string>
-#include <map>                          // for map
-#include <stdexcept>                    // for runtime_error
+#include <map>
+#include <stdexcept>
 #include <LibUtilities/Interpreter/AnalyticExpressionEvaluator.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -191,7 +191,7 @@ namespace Nektar
                 }
             }
 
-            LIB_UTILITIES_EXPORT void SetParameter(const std::string& name, double value)
+            LIB_UTILITIES_EXPORT void SetParameter(const std::string& name, NekDouble value)
             {
                 m_evaluator.SetParameter(name, value);
             }
@@ -208,7 +208,7 @@ namespace Nektar
 
             /// Returns time spend on expression evaluation at
             /// points (it does not include parse/pre-processing time).
-            LIB_UTILITIES_EXPORT double GetTime() const
+            LIB_UTILITIES_EXPORT NekDouble GetTime() const
             {
                 return m_evaluator.GetTime();
             }

@@ -72,8 +72,6 @@ namespace Nektar
     {
         NekDouble m_gamma = 0.5;
 
-        int nvariables  = inarray.num_elements();
-
         // compute u^2: m_u = u*u
         Vmath::Vmul(m_nq, &inarray[0][0], 1, &inarray[0][0], 1, &m_uuu[0], 1);
 

@@ -40,6 +40,7 @@
 #include <LocalRegions/Expansion3D.h>
 #include <MultiRegions/ExpList2D.h>
 #include <LibUtilities/Foundations/Interp.h>
+#include <LibUtilities/Foundations/PhysGalerkinProject.h>
 #include <SpatialDomains/MeshGraph3D.h>
 
 
@@ -435,10 +436,11 @@ namespace Nektar
             const StdRegions::StdExpansionVector &locexp,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
             const map<int,PeriodicFace> &periodicFaces,
-            const bool DeclareCoeffPhysArrays):
+            const bool DeclareCoeffPhysArrays, 
+            const std::string variable):
             ExpList()
         {
-            int i,j,cnt,id, elmtid=0;
+            int i, j, id, elmtid=0;
             map<int,int> FaceDone;
             map<int,int> NormalSet;
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
@@ -449,7 +451,6 @@ namespace Nektar
             
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
-            cnt = 0;
             for(i = 0; i < bndCond.num_elements(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType()
@@ -499,7 +500,7 @@ namespace Nektar
                     if(FaceDone.count(id)==0)
                     {
                         LibUtilities::BasisKey bkey0 = 
-                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 0); 
+                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 0, variable); 
                         LibUtilities::BasisKey bkey1 = 
                             boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 1);
                         
@@ -627,7 +628,8 @@ namespace Nektar
           */
          ExpList2D::ExpList2D(   const LibUtilities::SessionReaderSharedPtr &pSession,
                                  const SpatialDomains::CompositeMap &domain,
-                                 const SpatialDomains::MeshGraphSharedPtr &graph3D):
+                                 const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                                 const std::string variable):
              ExpList(pSession,graph3D)
          {
              ASSERTL0(boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D),
@@ -780,7 +782,7 @@ namespace Nektar
         void ExpList2D::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-            int i,j,k,offset;
+            int i,k,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
             Array<OneD, NekDouble> tmp;
             // Assume whole array is of same coordinate dimension
@@ -906,7 +908,6 @@ namespace Nektar
         void ExpList2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
             int ntot = nquad0*nquad1;
@@ -971,6 +972,65 @@ namespace Nektar
             outfile << "      </Cells>" << endl;
             outfile << "      <PointData>" << endl;
         }
+
+
+        void ExpList2D::v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+
+            cnt = cnt1 = 0;
+            for(int i = 0; i < GetExpSize(); ++i)
+            {
+                // get new points key
+                int pt0 = (*m_exp)[i]->GetNumPoints(0);
+                int pt1 = (*m_exp)[i]->GetNumPoints(1);
+                int npt0 = (int) pt0*scale;
+                int npt1 = (int) pt1*scale;
+                
+                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
+                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
+
+                // Interpolate points; 
+                LibUtilities::Interp2D((*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                                       &inarray[cnt],newPointsKey0,
+                                       newPointsKey1,&outarray[cnt1]);
+
+                cnt  += pt0*pt1;
+                cnt1 += npt0*npt1;
+            }
+        }
+        
+        void ExpList2D::v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray)
+        {
+            int cnt,cnt1;
+
+            cnt = cnt1 = 0;
+            for(int i = 0; i < GetExpSize(); ++i)
+            {
+                // get new points key
+                int pt0 = (*m_exp)[i]->GetNumPoints(0);
+                int pt1 = (*m_exp)[i]->GetNumPoints(1);
+                int npt0 = (int) pt0*scale;
+                int npt1 = (int) pt1*scale;
+                
+                LibUtilities::PointsKey newPointsKey0(npt0,(*m_exp)[i]->GetPointsType(0));
+                LibUtilities::PointsKey newPointsKey1(npt1,(*m_exp)[i]->GetPointsType(1));
+
+                // Project points; 
+                LibUtilities::PhysGalerkinProject2D(newPointsKey0, 
+                                                    newPointsKey1,
+                                       &inarray[cnt],
+                                       (*m_exp)[i]->GetBasis(0)->GetPointsKey(),
+                                       (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
+                                       &outarray[cnt1]);
+                
+                cnt  += npt0*npt1;
+                cnt1 += pt0*pt1;
+            }
+
+        }
+
 
     } //end of namespace
 } //end of namespace

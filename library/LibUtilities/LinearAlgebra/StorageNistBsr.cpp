@@ -221,11 +221,11 @@ namespace Nektar
                     const BCOMatType&   bcoMat,
                     const MatrixStorage matType):
         m_matType (matType),
-        m_blkDim  (blkDim),
         m_blkRows (blkRows),
         m_blkCols (blkCols),
-        m_nnz     (0),
+        m_blkDim  (blkDim),
         m_bnnz    (bcoMat.size()),
+        m_nnz     (0),
         m_val     (m_bnnz * blkDim*blkDim),
         m_indx    (m_bnnz+1),
         m_pntr    (blkRows+1)
@@ -247,11 +247,11 @@ namespace Nektar
     template<typename DataType>
     StorageNistBsr<DataType>::StorageNistBsr(const StorageNistBsr& src):
         m_matType(src.m_matType),
-        m_blkDim(src.m_blkDim),
         m_blkRows (src.m_blkRows),
         m_blkCols (src.m_blkCols),
-        m_nnz(src.m_nnz),
+        m_blkDim(src.m_blkDim),
         m_bnnz(src.m_bnnz),
+        m_nnz(src.m_nnz),
         m_val(src.m_val),
         m_indx(src.m_indx),
         m_pntr(src.m_pntr)

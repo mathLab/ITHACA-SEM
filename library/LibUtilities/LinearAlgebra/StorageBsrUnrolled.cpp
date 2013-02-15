@@ -605,21 +605,20 @@ namespace Nektar
 
         const double *pb;
         const double *pval;
-        int i,j,jb,je;
-        int ii,jj;
+        int jb,je;
         int bs;
         const int mm=lb*lb;
 
         double *pc=c;
-        for (i=0;i!=mb*lb;i++) *pc++ = 0;
+        for (int i=0;i!=mb*lb;i++) *pc++ = 0;
 
         pc=c;
-        for (i=0;i!=mb;i++)
+        for (int i=0;i!=mb;i++)
         {
             jb = bpntrb[i];
             je = bpntre[i];
             pval = &val[jb*mm];
-            for (j=jb;j!=je;j++)
+            for (int j=jb;j!=je;j++)
             {
                 bs=bindx[j]*lb;
                 pb = &b[bs];
@@ -628,10 +627,10 @@ namespace Nektar
                 m_mvKernel(pval,pb,pc);
                 pval+=mm;
 #else
-                for (jj=0;jj!=lb;jj++)
+                for (int jj=0;jj!=lb;jj++)
                 {
                     const double t = pb[jj];
-                    for (ii=0;ii!=lb;ii++)
+                    for (int ii=0;ii!=lb;ii++)
                     {
                         pc[ii] += t* (*pval++);
                     }

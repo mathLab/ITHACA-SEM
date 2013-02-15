@@ -56,15 +56,15 @@ namespace Nektar
 
     template<typename SparseStorageType>
     NekSparseMatrix<SparseStorageType>::NekSparseMatrix(const SparseStorageSharedPtr& sparseStoragePtr):
-        m_sparseStorage(sparseStoragePtr),
-        m_mulCallsCounter(0)
+        m_mulCallsCounter(0),
+        m_sparseStorage(sparseStoragePtr)
     {
     }
 
     template<typename SparseStorageType>
     NekSparseMatrix<SparseStorageType>::NekSparseMatrix(const NekSparseMatrix& src):
-        m_sparseStorage(src.m_sparseStorage),
-        m_mulCallsCounter(src.m_mulCallsCounter)
+        m_mulCallsCounter(src.m_mulCallsCounter),
+        m_sparseStorage(src.m_sparseStorage)
     {
     }
 

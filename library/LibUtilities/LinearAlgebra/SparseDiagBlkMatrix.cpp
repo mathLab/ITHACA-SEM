@@ -61,8 +61,8 @@ namespace Nektar
         m_rows(0),
         m_cols(0),
         m_rowoffset(sparseStoragePtrVector.num_elements()+1, 0.0),
-        m_submatrix(sparseStoragePtrVector.num_elements(),sparseStoragePtrVector),
-        m_mulCallsCounter(0)
+        m_mulCallsCounter(0),
+        m_submatrix(sparseStoragePtrVector.num_elements(),sparseStoragePtrVector)
     {
         for (int i = 0; i < sparseStoragePtrVector.num_elements(); i++)
         {
@@ -78,8 +78,8 @@ namespace Nektar
         m_rows(src.m_rows),
         m_cols(src.m_cols),
         m_rowoffset(src.m_rowoffset),
-        m_submatrix(src.m_submatrix),
-        m_mulCallsCounter(src.m_mulCallsCounter)
+        m_mulCallsCounter(src.m_mulCallsCounter),
+        m_submatrix(src.m_submatrix)
     {
     }
 

@@ -42,8 +42,7 @@
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 #include <boost/preprocessor/iteration/local.hpp>
 
-
-#define LIBSMV_MAX_RANK    12
+#include <smv.h>
 
 
 namespace Smv

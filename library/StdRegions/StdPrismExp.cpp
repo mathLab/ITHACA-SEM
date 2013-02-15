@@ -1967,10 +1967,9 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             int i, j;
-
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            int  nquad2 = m_base[2]->GetNumPoints();
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
 
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();

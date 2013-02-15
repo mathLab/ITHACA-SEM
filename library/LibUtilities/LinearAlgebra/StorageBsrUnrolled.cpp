@@ -390,17 +390,16 @@ namespace Nektar
         const int  mb = m_blkRows;
         const int  kb = m_blkCols;
 
-#ifdef NEKTAR_USING_SMV
-        Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c);
-#else
         switch(m_blkDim)
         {
+        case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+#ifndef NEKTAR_USING_SMV
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+#endif
         default: Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         }
-#endif
     }
 
 
@@ -418,17 +417,16 @@ namespace Nektar
         const int  mb = m_blkRows;
         const int  kb = m_blkCols;
 
-#ifdef NEKTAR_USING_SMV
-        Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c);
-#else
         switch(m_blkDim)
         {
+        case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+#ifdef NEKTAR_USING_SMV
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+#endif
         default: Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         }
-#endif
     }
 
 
@@ -448,17 +446,43 @@ namespace Nektar
         const int  mb = m_blkRows;
         const int  kb = m_blkCols;
 
-#ifdef NEKTAR_USING_SMV
-        Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c);
-#else
         switch(m_blkDim)
         {
+        case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+#ifdef NEKTAR_USING_SMV
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+#endif
         default: Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         }
-#endif
+    }
+
+    /// Zero-based CSR multiply.
+    /// Essentially this is slightly modified copy-paste from
+    /// NIST Sparse Blas 0.9b routine CSR_VecMult_CAB_double()
+    template<typename DataType>
+    void StorageBsrUnrolled<DataType>::Multiply_1x1(
+            const int mb,
+            const int kb,
+            const double* val,
+            const int* bindx,
+            const int* bpntrb,
+            const int* bpntre,
+            const double* b,
+                  double* c)
+    {
+        for (int i=0;i!=mb;i++)
+        {
+            double t = 0;
+            int jb = bpntrb[i];
+            int je = bpntre[i];
+            for (int j=jb;j!=je;j++)
+            {
+                t += b[bindx[j]] * (*val++);
+            }
+            c[i] = t;
+        }
     }
 
     /// Zero-based BSR multiply unrolled for 2x2 blocks.

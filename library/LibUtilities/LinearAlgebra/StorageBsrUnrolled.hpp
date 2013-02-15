@@ -167,6 +167,10 @@ namespace Nektar
                         const BCOMatType&   bcoMat);
 
 
+        void Multiply_1x1(const int mb, const int kb, const double* val,
+                    const int* bindx, const int* bpntrb, const int* bpntre,
+                    const double* b, double* c);
+
         void Multiply_2x2(const int mb, const int kb, const double* val,
                     const int* bindx, const int* bpntrb, const int* bpntre,
                     const double* b, double* c);

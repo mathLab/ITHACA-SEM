@@ -34,6 +34,7 @@ int main(int argc, char *argv[])
     StdRegions::ConstFactorMap factors;
     StdRegions::VarCoeffMap varcoeffs;
     FlagList flags;
+    NekDouble st;
 
     if( (argc != 2) && (argc != 3) && (argc != 4))
     {
@@ -140,7 +141,7 @@ int main(int argc, char *argv[])
             Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors, varcoeffs);
         }
 
-        Timing("1000 Helmholtz Solves:... ");
+        Timing("20 Helmholtz Solves:... ");
 #endif
 
         //----------------------------------------------

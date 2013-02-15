@@ -47,6 +47,9 @@
 #include <LibUtilities/LinearAlgebra/StorageBsrUnrolled.hpp>
 #include <LibUtilities/LinearAlgebra/NistSparseDescriptors.hpp>
 
+#include <LibUtilities/LinearAlgebra/LibSMV.hpp>
+
+#include <boost/preprocessor/iteration/local.hpp>
 #include <boost/lexical_cast.hpp>
 
 namespace Nektar
@@ -242,6 +245,17 @@ namespace Nektar
             throw 1;
         }
 
+#ifdef NEKTAR_USING_SMV
+        // Set pointer to rank-specific matrix-vector multiply kernel.
+        // Number of ranks is defined by LibSMV library
+        switch (blkDim)
+        {
+            #define BOOST_PP_LOCAL_MACRO(n)   case n: m_mvKernel = Smv::F77NAME(smv_##n); break;
+            #define BOOST_PP_LOCAL_LIMITS     (1, LIBSMV_MAX_RANK)
+            #include BOOST_PP_LOCAL_ITERATE()
+        }
+#endif
+
         processBcoInput(blkRows,blkCols,blkDim,bcoMat);
     }
 
@@ -376,6 +390,9 @@ namespace Nektar
         const int  mb = m_blkRows;
         const int  kb = m_blkCols;
 
+#ifdef NEKTAR_USING_SMV
+        Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c);
+#else
         switch(m_blkDim)
         {
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
@@ -383,6 +400,7 @@ namespace Nektar
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         default: Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         }
+#endif
     }
 
 
@@ -400,6 +418,9 @@ namespace Nektar
         const int  mb = m_blkRows;
         const int  kb = m_blkCols;
 
+#ifdef NEKTAR_USING_SMV
+        Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c);
+#else
         switch(m_blkDim)
         {
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
@@ -407,6 +428,7 @@ namespace Nektar
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         default: Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         }
+#endif
     }
 
 
@@ -426,6 +448,9 @@ namespace Nektar
         const int  mb = m_blkRows;
         const int  kb = m_blkCols;
 
+#ifdef NEKTAR_USING_SMV
+        Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c);
+#else
         switch(m_blkDim)
         {
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
@@ -433,6 +458,7 @@ namespace Nektar
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         default: Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         }
+#endif
     }
 
     /// Zero-based BSR multiply unrolled for 2x2 blocks.
@@ -598,6 +624,10 @@ namespace Nektar
                 bs=bindx[j]*lb;
                 pb = &b[bs];
 
+#ifdef NEKTAR_USING_SMV
+                m_mvKernel(pval,pb,pc);
+                pval+=mm;
+#else
                 for (jj=0;jj!=lb;jj++)
                 {
                     const double t = pb[jj];
@@ -606,6 +636,7 @@ namespace Nektar
                         pc[ii] += t* (*pval++);
                     }
                 }
+#endif
             }
             pc += lb;
         }

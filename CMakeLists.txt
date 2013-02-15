@@ -82,6 +82,9 @@ OPTION(NEKTAR_USE_BLAS_LAPACK "Use Blas and lapack routines." ON)
 CMAKE_DEPENDENT_OPTION(NEKTAR_USE_OPENBLAS
     "Use OpenBLAS library as a substitute to native BLAS." OFF
     "NEKTAR_USE_BLAS_LAPACK" OFF)
+CMAKE_DEPENDENT_OPTION(NEKTAR_USE_SMV
+    "Use LibSMV library for faster small matrix-vector multiplies." OFF
+    "NEKTAR_USE_BLAS_LAPACK" OFF)
 CMAKE_DEPENDENT_OPTION(NEKTAR_USE_ACML
     "Use the AMD Core Math Library (ACML) for BLAS and Lapack support." OFF
     "NEKTAR_USE_BLAS_LAPACK" OFF)
@@ -172,6 +175,12 @@ IF( NEKTAR_USE_OPENBLAS )
     INCLUDE (FindOpenBlas)
     SET(NEKTAR_USING_OPENBLAS TRUE)
 ENDIF( NEKTAR_USE_OPENBLAS )
+
+IF( NEKTAR_USE_SMV )
+    INCLUDE (FindSMV)
+    SET(NEKTAR_USING_SMV TRUE)
+    ADD_DEFINITIONS(-DNEKTAR_USING_SMV)	
+ENDIF( NEKTAR_USE_SMV )
 
 IF( NEKTAR_USE_ACCELERATE_FRAMEWORK )
     INCLUDE (FindAccelerateFramework)
@@ -284,6 +293,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindTinyXml.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindGSMPI.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindXXT.cmake
+              ${CMAKE_SOURCE_DIR}/cmake/FindSMV.cmake
               DESTINATION ${CMAKE_INSTALL_PREFIX}) 
 
 INSTALL(EXPORT Nektar++Libraries DESTINATION ${LIB_DIR})

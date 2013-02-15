@@ -55,6 +55,10 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/SparseUtils.hpp
 )
 
+IF(NEKTAR_USE_SMV)
+    SET(LinearAlgebraHeaders ${LinearAlgebraHeaders} ./LinearAlgebra/LibSMV.hpp)
+ENDIF(NEKTAR_USE_SMV)
+
 SET(FoundationHeaders
     ./Foundations/Graph.h
     ./Foundations/Basis.h
@@ -217,6 +221,10 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/SparseDiagBlkMatrix.cpp
     ./LinearAlgebra/SparseMatrix.cpp
 )
+
+IF(NEKTAR_USE_SMV)
+    SET(LinearAlgebraSources ${LinearAlgebraSources} ./LinearAlgebra/LibSMV.cpp)
+ENDIF(NEKTAR_USE_SMV)
 
 SET(KernelHeaders
 	./Kernel/kernel.h

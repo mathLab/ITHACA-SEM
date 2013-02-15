@@ -67,6 +67,8 @@ namespace Nektar
         typedef Array<OneD, const DataType>   ConstDataVectorType;
         typedef Array<OneD, IndexType>        IndexVectorType;
 
+        typedef void (*MultiplyKernel)(const double*, const double*, double*);
+
         /// \internal
         /// \brief Forward iterator through nonzero (double) elements of the matrix
         ///        that mimics forward iteration of BCOMatType.
@@ -181,6 +183,9 @@ namespace Nektar
                     const int* bindx, const int* bpntrb, const int* bpntre,
                     const double* b, double* c);
 
+
+        // interface to lowest level LibSMV multiply kernels
+        MultiplyKernel   m_mvKernel;
 
         MatrixStorage    m_matType;
 

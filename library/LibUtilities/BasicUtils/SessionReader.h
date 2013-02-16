@@ -359,6 +359,8 @@ namespace Nektar
             /// Substitutes expressions defined in the XML document.
             LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
 
+            LIB_UTILITIES_EXPORT Nektar::Thread::ThreadManagerSharedPtr GetThreadManager();
+
         private:
             boost::program_options::variables_map m_cmdLineOptions;
 

@@ -1154,12 +1154,16 @@ namespace Nektar
         void SessionReader::PartitionMesh()
         {
             ASSERTL0(m_comm.get(), "Communication not initialised.");
+        	ASSERTL0(m_threadManager, "Threading not initialised.");
 
             // Get row of comm, or the whole comm if not split
             CommSharedPtr vCommMesh = m_comm->GetRowComm();
 
+            // Number of partitions needed
+            unsigned int numPartitions = vCommMesh->GetSize() * m_threadManager->GetMaxNumWorkers();
+
             // Partition mesh into length of row comms
-            if (vCommMesh->GetSize() > 1)
+            if (numPartitions > 1)
             {
                 // Partitioner now operates in parallel
                 // Each process receives partitioning over interconnect
@@ -1913,6 +1917,11 @@ namespace Nektar
             cerr << "Number of threads will be: " << nthreads << endl;
             m_threadManager = Thread::GetThreadManager().CreateInstance("ThreadManagerBoost", nthreads);
 
+        }
+
+        Nektar::Thread::ThreadManagerSharedPtr SessionReader::GetThreadManager()
+        {
+        	return m_threadManager;
         }
     }
 }

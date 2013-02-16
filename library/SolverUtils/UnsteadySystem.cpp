@@ -536,20 +536,11 @@ namespace Nektar
          */
         void UnsteadySystem::v_DoInitialise()
         {
-            SetInitialConditions();
 
-            // check to see if we can reset time
-            if(m_fieldMetaDataMap != SpatialDomains::NullFieldMetaDataMap)
-            {
-                SpatialDomains::FieldMetaDataMap::iterator iter; 
-                
-                iter = m_fieldMetaDataMap.find("Time");
-                if(iter != m_fieldMetaDataMap.end())
-                {
-                    m_time = iter->second; 
-                }
-            }
-            
+            CheckForRestartTime(m_time);
+
+            SetInitialConditions(m_time);
+
         }
         
         /**
@@ -797,6 +788,44 @@ namespace Nektar
 
         
         
+        void UnsteadySystem::CheckForRestartTime(NekDouble &time)
+        {
+            
+            if (m_session->DefinesFunction("InitialConditions"))
+            {
+                for(int i = 0; i < m_fields.num_elements(); ++i)
+                {
+                    
+                    LibUtilities::FunctionType vType;
+                    
+                    vType = m_session->GetFunctionType("InitialConditions", m_session->GetVariable(i));
+                    if (vType == LibUtilities::eFunctionTypeFile)
+                    {
+                        std::string filename
+                            = m_session->GetFunctionFilename("InitialConditions", 
+                                                             m_session->GetVariable(i));
+
+                        m_graph->ImportFieldMetaData(filename,m_fieldMetaDataMap);
+                        
+                        // check to see if time defined
+                        if(m_fieldMetaDataMap != SpatialDomains::NullFieldMetaDataMap)
+                        {
+                            SpatialDomains::FieldMetaDataMap::iterator iter; 
+                            
+                            iter = m_fieldMetaDataMap.find("Time");
+                            if(iter != m_fieldMetaDataMap.end())
+                            {
+                                time = iter->second; 
+                            }
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+        }
+        
+
         void UnsteadySystem::WeakPenaltyforScalar(
             const int var,
             const Array<OneD, const NekDouble> &physfield,

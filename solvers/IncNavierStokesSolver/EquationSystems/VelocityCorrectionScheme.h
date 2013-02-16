@@ -163,8 +163,6 @@ namespace Nektar
 		
         void Rotate(Array<OneD, Array<OneD, NekDouble> > &input);
         
-        void CheckForRestartTime(NekDouble &time);
-
         // Virtual functions 
         virtual void v_PrintSummary(std::ostream &out);
         

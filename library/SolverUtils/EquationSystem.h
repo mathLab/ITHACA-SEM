@@ -290,6 +290,11 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline Array<
             OneD, MultiRegions::ExpListSharedPtr> &UpdateForces();
             
+
+            /// Get hold of FieldInfoMap so it can be updated
+            SOLVER_UTILS_EXPORT inline SpatialDomains::FieldMetaDataMap 
+                &UpdateFieldMetaDataMap();
+
             /// Return final time
             SOLVER_UTILS_EXPORT inline NekDouble GetFinalTime();
             
@@ -450,9 +455,11 @@ namespace Nektar
             /// singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
             
+            /// Map to identify relevant solver info to dump in output fields
+            SpatialDomains::FieldMetaDataMap            m_fieldMetaDataMap;
+
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;
-            bool m_UseContCoeff;
             
             /// Parameter for homogeneous expansions
             enum HomogeneousType

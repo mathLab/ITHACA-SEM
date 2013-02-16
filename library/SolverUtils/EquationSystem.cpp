@@ -87,7 +87,8 @@ namespace Nektar
         EquationSystem::EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession)
             : m_comm (pSession->GetComm()),
               m_session (pSession),
-              m_lambda (0)
+              m_lambda (0),
+              m_fieldMetaDataMap(SpatialDomains::NullFieldMetaDataMap)
         {
         }
 
@@ -104,8 +105,6 @@ namespace Nektar
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
-
-            m_UseContCoeff = false;
 
             // Also read and store the boundary conditions
             m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
@@ -754,7 +753,6 @@ namespace Nektar
             {
                 std::string filename
                     = m_session->GetFunctionFilename(pFunctionName, pFieldName);
-                
 #if 0 
                 ImportFld(filename,m_fields);
 #else
@@ -1822,7 +1820,14 @@ namespace Nektar
                     field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
                 }            
             }
-            m_graph->Write(outname, FieldDef, FieldData);
+
+            // Update time in field info if required
+            if(m_fieldMetaDataMap.find("Time") != m_fieldMetaDataMap.end())
+            {
+                m_fieldMetaDataMap["Time"] =  m_time; 
+            }
+
+            m_graph->Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
         }
 
         /**

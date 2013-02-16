@@ -1288,8 +1288,9 @@ namespace Nektar
         void MeshGraph::Write(
                 const std::string &outFile,
                 std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                std::vector<std::vector<NekDouble> > &fielddata)
-        {
+                std::vector<std::vector<NekDouble> > &fielddata, 
+                FieldMetaDataMap &fieldmetadatamap)
+       {
             ASSERTL1(fielddefs.size() == fielddata.size(),
                      "Length of fielddefs and fielddata incompatible");
 
@@ -1301,6 +1302,28 @@ namespace Nektar
 
             TiXmlElement * root = new TiXmlElement("NEKTAR");
             doc.LinkEndChild(root);
+
+            //---------------------------------------------
+            // write field info section 
+            if(fieldmetadatamap != NullFieldMetaDataMap)
+            {
+                TiXmlElement * infoTag = new TiXmlElement("FIELDMETADATA");
+                root->LinkEndChild(infoTag);
+                
+                FieldMetaDataMap::iterator infoit;
+                
+                for(infoit = fieldmetadatamap.begin(); infoit != fieldmetadatamap.end(); ++infoit)
+                {
+                    NekDouble val = infoit->second;
+                    stringstream s;
+                    s << val; 
+                    TiXmlElement * v = new TiXmlElement( "P" );
+                    v->SetAttribute("PARAM",(infoit->first).c_str());
+                    v->LinkEndChild(new TiXmlText(s.str()));
+                    infoTag->LinkEndChild(v);
+                }
+
+            }
 
             for (int f = 0; f < fielddefs.size(); ++f)
             {
@@ -1581,7 +1604,8 @@ namespace Nektar
         void MeshGraph::Import(
                 const std::string& infilename,
                 std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                std::vector<std::vector<NekDouble> > &fielddata)
+                std::vector<std::vector<NekDouble> > &fielddata,
+                FieldMetaDataMap &fieldmetadatamap)
         {
             TiXmlDocument doc(infilename);
             bool loadOkay = doc.LoadFile();
@@ -1592,10 +1616,97 @@ namespace Nektar
             errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
             ASSERTL0(loadOkay, errstr.str());
 
+
+            //---------------------------------------------
+            // read field meta data  section 
+            ImportFieldMetaData(doc,fieldmetadatamap);
             ImportFieldDefs(doc, fielddefs, false);
             ImportFieldData(doc, fielddefs, fielddata);
         }
 
+
+        void MeshGraph::ImportFieldMetaData(std::string filename,
+                                            FieldMetaDataMap &fieldmetadatamap)
+        {
+            TiXmlDocument doc(filename);
+            bool loadOkay = doc.LoadFile();
+            
+            std::stringstream errstr;
+            errstr << "Unable to load file: " << filename << std::endl;
+            errstr << "Reason: " << doc.ErrorDesc() << std::endl;
+            errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
+            ASSERTL0(loadOkay, errstr.str());
+                    
+            ImportFieldMetaData(doc,fieldmetadatamap);
+        }
+        
+
+        void MeshGraph::ImportFieldMetaData(TiXmlDocument &doc,
+                                            FieldMetaDataMap &fieldmetadatamap)
+        {
+            
+            TiXmlHandle docHandle(&doc);
+            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
+
+            master = doc.FirstChildElement("NEKTAR");
+            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
+            std::string strLoop = "NEKTAR";
+
+
+            TiXmlElement* metadata = master->FirstChildElement("FIELDMETADATA");
+            
+            if(!metadata) // section not available so just exit
+            {
+                return;
+            }
+            else
+            {
+                
+                TiXmlElement *param = metadata->FirstChildElement("P");
+                    
+                while (param)
+                {
+                    TiXmlAttribute *paramAttr = param->FirstAttribute();
+                    std::string attrName(paramAttr->Name());
+                    std::string paramString;
+                    
+                    if(attrName == "PARAM")
+                    {
+                        paramString.insert(0,paramAttr->Value());
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"PARAM not provided as an attribute in FIELDMETADATA section");
+                    }
+
+                    // Now read body of param
+                    std::string paramBodyStr;
+                    
+                    TiXmlNode *paramBody = param->FirstChild();
+                    
+                    paramBodyStr += paramBody->ToText()->Value();
+                    
+                    NekDouble value;
+                    std::istringstream paramStrm(paramBodyStr.c_str());
+                    
+                    try
+                    {
+                        while(!paramStrm.fail())
+                        {
+                            paramStrm >> value;
+                        }
+                    }
+                    catch(...)
+                    {
+                        ASSERTL0(false,"Failied to read PARAM data");
+                    }
+
+                    fieldmetadatamap[paramString] = value; 
+                    param = param->NextSiblingElement("P");
+                }
+            }
+        }
+        
 
         /**
          * The bool decides if the FieldDefs are in <EXPANSIONS> or in <NEKTAR>.
@@ -1938,7 +2049,7 @@ namespace Nektar
                     fielddata.push_back(elementFieldData);
 
                     int datasize = CheckFieldDefinition(fielddefs[cntdumps]);
-                    ASSERTL0(fielddata[cntdumps].size() == datasize*fielddefs[cntdumps]->m_fields.size(),"Input data is not the same length as header information");
+                    ASSERTL0(fielddata[cntdumps].size() == datasize*fielddefs[cntdumps]->m_fields.size(),"Input data is not the same length as header infoarmation");
 
                     cntdumps++;
 

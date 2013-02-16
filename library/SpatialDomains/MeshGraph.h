@@ -221,7 +221,10 @@ namespace Nektar
 
         typedef std::map<std::string, std::string> GeomInfoMap;
 
-
+        
+        typedef std::map<std::string, NekDouble>  FieldMetaDataMap;
+        static  FieldMetaDataMap  NullFieldMetaDataMap;
+        
         /// Base class for a spectral/hp element mesh.
         class MeshGraph
         {
@@ -281,18 +284,29 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT void ReadCurves(
                         std::string &infilename);
 
-
                 /* --- FLD handling routines ---- */
                 SPATIAL_DOMAINS_EXPORT void Write(
                         const std::string &outFile,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> >      &fielddata);
+                        std::vector<std::vector<NekDouble> >   &fielddata,
+                        FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap);
 
                 /// Imports an FLD file.
                 SPATIAL_DOMAINS_EXPORT void Import(
                         const std::string& infilename,
                         std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                        std::vector<std::vector<NekDouble> > &fielddata);
+                        std::vector<std::vector<NekDouble> > &fielddata,
+                        FieldMetaDataMap &fieldinfomap  = NullFieldMetaDataMap);
+
+
+                /// Imports the definition of the meta data 
+                SPATIAL_DOMAINS_EXPORT void ImportFieldMetaData(std::string filename,
+                                               FieldMetaDataMap &fieldmetadatamap);
+
+                /// Imports the definition of the meta data 
+                SPATIAL_DOMAINS_EXPORT void ImportFieldMetaData(
+                        TiXmlDocument &doc,
+                        FieldMetaDataMap &fieldmetadatamap);
 
                 /// Imports the definition of the fields.
                 SPATIAL_DOMAINS_EXPORT void ImportFieldDefs(

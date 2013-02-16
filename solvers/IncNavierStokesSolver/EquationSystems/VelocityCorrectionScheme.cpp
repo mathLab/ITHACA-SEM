@@ -321,6 +321,42 @@ namespace Nektar
         
     }
     
+    void VelocityCorrectionScheme::CheckForRestartTime(NekDouble &time)
+    {
+        
+        if (m_session->DefinesFunction("InitialConditions"))
+        {
+            for(int i = 0; i < m_fields.num_elements(); ++i)
+            {
+
+                LibUtilities::FunctionType vType;
+                
+                vType = m_session->GetFunctionType("InitialConditions", m_session->GetVariable(i));
+                if (vType == LibUtilities::eFunctionTypeFile)
+                {
+                    std::string filename
+                        = m_session->GetFunctionFilename("InitialConditions", 
+                                                         m_session->GetVariable(i));
+
+                    m_graph->ImportFieldMetaData(filename,m_fieldMetaDataMap);
+                    
+                    // check to see if time defined
+                    if(m_fieldMetaDataMap != SpatialDomains::NullFieldMetaDataMap)
+                    {
+                        SpatialDomains::FieldMetaDataMap::iterator iter; 
+                        
+                        iter = m_fieldMetaDataMap.find("Time");
+                        if(iter != m_fieldMetaDataMap.end())
+                        {
+                            time = iter->second; 
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
         
     void VelocityCorrectionScheme::v_PrintSummary(std::ostream &out)
     {
@@ -381,14 +417,15 @@ namespace Nektar
             cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D) " << endl;
         }
     }
-    
+
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
-        // Set initial condition using time t=0
-        SetInitialConditions(0.0);
 
-        // Set Boundary conditions on the intiial conditions
-        SetBoundaryConditions(0.0); // should be dependent on m_time? 
+        CheckForRestartTime(m_time);
+
+        // Set initial condition 
+        SetInitialConditions(m_time);
+
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->LocalToGlobal();

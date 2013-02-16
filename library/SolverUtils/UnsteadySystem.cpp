@@ -107,6 +107,9 @@ namespace Nektar
             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
             m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
 
+            // Set up time to be dumped in field information
+            m_fieldMetaDataMap["Time"] = m_time; 
+
             // Set up filters
             LibUtilities::FilterMap::const_iterator x;
             LibUtilities::FilterMap f = m_session->GetFilters();
@@ -534,6 +537,19 @@ namespace Nektar
         void UnsteadySystem::v_DoInitialise()
         {
             SetInitialConditions();
+
+            // check to see if we can reset time
+            if(m_fieldMetaDataMap != SpatialDomains::NullFieldMetaDataMap)
+            {
+                SpatialDomains::FieldMetaDataMap::iterator iter; 
+                
+                iter = m_fieldMetaDataMap.find("Time");
+                if(iter != m_fieldMetaDataMap.end())
+                {
+                    m_time = iter->second; 
+                }
+            }
+            
         }
         
         /**

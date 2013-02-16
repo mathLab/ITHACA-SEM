@@ -393,8 +393,8 @@ namespace Nektar
         switch(m_blkDim)
         {
         case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#ifndef NEKTAR_USING_SMV
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+#ifndef NEKTAR_USING_SMV
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
 #endif
@@ -420,8 +420,8 @@ namespace Nektar
         switch(m_blkDim)
         {
         case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#ifdef NEKTAR_USING_SMV
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+#ifdef NEKTAR_USING_SMV
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
 #endif
@@ -449,8 +449,8 @@ namespace Nektar
         switch(m_blkDim)
         {
         case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#ifdef NEKTAR_USING_SMV
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+#ifdef NEKTAR_USING_SMV
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
 #endif
@@ -501,24 +501,19 @@ namespace Nektar
     {
         const int lb = 2;
 
-        const double *pb;
-        const double *pval;
-        const int mm=lb*lb;
-        int i,j,jb,je,bs;
-
+        const double *pval = val;
         double *pc=c;
-        for (i=0;i!=mb*lb;i++) *pc++ = 0;
 
-        pc=c;
-        for (i=0;i!=mb;i++)
+        for (int i=0;i!=mb;i++)
         {
-            jb = bpntrb[i];
-            je = bpntre[i];
-            pval = &val[jb*mm];
-            for (j=jb;j!=je;j++)
+            int jb = bpntrb[i];
+            int je = bpntre[i];
+            pc[0] = 0;
+            pc[1] = 0;
+            for (int j=jb;j!=je;j++)
             {
-                bs=bindx[j]*lb;
-                pb = &b[bs];
+                int bs=bindx[j]*lb;
+                const double *pb = &b[bs];
 
                 pc[0] += pb[0] * pval[0] + pb[1] * pval[2];
                 pc[1] += pb[0] * pval[1] + pb[1] * pval[3];
@@ -542,24 +537,20 @@ namespace Nektar
     {
         const int lb = 3;
 
-        const double *pb;
-        const double *pval;
-        const int mm=lb*lb;
-        int i,j,jb,je,bs;
-
+        const double *pval = val;
         double *pc=c;
-        for (i=0;i!=mb*lb;i++) *pc++ = 0;
 
-        pc=c;
-        for (i=0;i!=mb;i++)
+        for (int i=0;i!=mb;i++)
         {
-            jb = bpntrb[i];
-            je = bpntre[i];
-            pval = &val[jb*mm];
-            for (j=jb;j!=je;j++)
+            int jb = bpntrb[i];
+            int je = bpntre[i];
+            pc[0] = 0;
+            pc[1] = 0;
+            pc[2] = 0;
+            for (int j=jb;j!=je;j++)
             {
-                bs=bindx[j]*lb;
-                pb = &b[bs];
+                int bs=bindx[j]*lb;
+                const double *pb = &b[bs];
 
                 pc[0] += pb[0] * pval[0] + pb[1] * pval[3] + pb[2] * pval[6];
                 pc[1] += pb[0] * pval[1] + pb[1] * pval[4] + pb[2] * pval[7];
@@ -584,24 +575,21 @@ namespace Nektar
     {
         const int lb = 4;
 
-        const double *pb;
-        const double *pval;
-        const int mm=lb*lb;
-        int i,j,jb,je,bs;
-
+        const double *pval = val;
         double *pc=c;
-        for (i=0;i!=mb*lb;i++) *pc++ = 0;
 
-        pc=c;
-        for (i=0;i!=mb;i++)
+        for (int i=0;i!=mb;i++)
         {
-            jb = bpntrb[i];
-            je = bpntre[i];
-            pval = &val[jb*mm];
-            for (j=jb;j!=je;j++)
+            int jb = bpntrb[i];
+            int je = bpntre[i];
+            pc[0] = 0;
+            pc[1] = 0;
+            pc[2] = 0;
+            pc[3] = 0;
+            for (int j=jb;j!=je;j++)
             {
-                bs=bindx[j]*lb;
-                pb = &b[bs];
+                int bs=bindx[j]*lb;
+                const double *pb = &b[bs];
 
                 pc[0] += pb[0] * pval[0] + pb[1] * pval[4] + pb[2] * pval[ 8] + pb[3] * pval[12];
                 pc[1] += pb[0] * pval[1] + pb[1] * pval[5] + pb[2] * pval[ 9] + pb[3] * pval[13];
@@ -627,10 +615,7 @@ namespace Nektar
     {
         const int lb = m_blkDim;
 
-        const double *pb;
-        const double *pval;
-        int jb,je;
-        int bs;
+        const double *pval = val;
         const int mm=lb*lb;
 
         double *pc=c;
@@ -639,13 +624,12 @@ namespace Nektar
         pc=c;
         for (int i=0;i!=mb;i++)
         {
-            jb = bpntrb[i];
-            je = bpntre[i];
-            pval = &val[jb*mm];
+            int jb = bpntrb[i];
+            int je = bpntre[i];
             for (int j=jb;j!=je;j++)
             {
-                bs=bindx[j]*lb;
-                pb = &b[bs];
+                int bs=bindx[j]*lb;
+                const double *pb = &b[bs];
 
 #ifdef NEKTAR_USING_SMV
                 m_mvKernel(pval,pb,pc);
@@ -656,7 +640,7 @@ namespace Nektar
                     const double t = pb[jj];
                     for (int ii=0;ii!=lb;ii++)
                     {
-                        pc[ii] += t* (*pval++);
+                        pc[ii] += t * (*pval++);
                     }
                 }
 #endif

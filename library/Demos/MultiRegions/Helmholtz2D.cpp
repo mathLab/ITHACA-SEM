@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     FlagList flags;
     NekDouble st;
 
-    if( (argc != 2) && (argc != 3) && (argc != 4))
+    if(argc < 2)
     {
         fprintf(stderr,"Usage: Helmholtz2D meshfile [SysSolnType]   or   \n");
         exit(1);
@@ -46,7 +46,8 @@ int main(int argc, char *argv[])
     {
         //----------------------------------------------
         // Read in mesh from input file
-        SpatialDomains::MeshGraphSharedPtr graph2D = MemoryManager<SpatialDomains::MeshGraph2D>::AllocateSharedPtr(vSession);
+        SpatialDomains::MeshGraphSharedPtr graph2D = 
+            SpatialDomains::MeshGraph::Read(vSession);
         //----------------------------------------------
 
         //----------------------------------------------

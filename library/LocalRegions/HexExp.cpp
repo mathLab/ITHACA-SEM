@@ -2368,16 +2368,16 @@ namespace Nektar
                
             if(m_metricinfo->IsUsingQuadMetrics())
             {
-                const Array<OneD, const NekDouble> &metric 
+                const Array<OneD, const NekDouble> &metric
                     = m_metricinfo->GetQuadratureMetrics();
-                    
+
                 Vmath::Vmul(nqtot, metric, 1, inarray, 1, outarray, 1);
             }
             else
             {
-                const Array<OneD, const NekDouble> &jac 
+                const Array<OneD, const NekDouble> &jac
                     = m_metricinfo->GetJac();
-                
+
                 if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                 {
                     Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);

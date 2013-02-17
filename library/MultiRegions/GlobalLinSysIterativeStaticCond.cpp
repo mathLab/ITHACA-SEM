@@ -35,6 +35,9 @@
 
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/LinearAlgebra/StorageBsrUnrolled.hpp>
+#include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
+#include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
 
 namespace Nektar
 {
@@ -651,7 +654,7 @@ namespace Nektar
                  << gmat_coo.size() << endl;
         }
 
-        
+
         /**
          * Populates sparse block-diagonal schur complement matrix from
          * the block matrices stored in #m_blkMatrices.
@@ -660,39 +663,120 @@ namespace Nektar
         {
             int i,j,n,cnt,rows;
 
-            // COO sparse storage to assist in data convertion
-            COOMatType lmat_coo;
-            MatrixStorage matStorage = eFULL;
-
             DNekScalMatSharedPtr loc_mat;
             int loc_lda;
-            for(n = rows = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
+            int blockSize = 0;
+
+            // first run throught to split the set of local matrices
+            // into partitions of fixed block size, and count number
+            // of local matrices that belong to each partition.
+            std::vector<std::pair<int,int> >  partitions;
+            for(n = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
             {
                 loc_mat = m_schurCompl->GetBlock(n,n);
                 loc_lda = loc_mat->GetRows();
 
-                // Set up  Matrix;
-                for(i = 0; i < loc_lda; ++i)
+                ASSERTL1(loc_lda>=0, boost::lexical_cast<std::string>(n) +
+                        "-th matrix block in Schur complement has rank 0!");
+
+                if (blockSize == loc_lda)
                 {
-                    for(j = 0; j < loc_lda; ++j)
-                    {
-                        lmat_coo[std::make_pair(rows + i, rows + j)] = (*loc_mat)(i,j);
-                    }
+                    partitions[partitions.size()-1].first++;
                 }
-                rows += loc_lda;
+                else
+                {
+                    blockSize = loc_lda;
+                    partitions.push_back(make_pair(1,loc_lda));
+                }
+            }
+
+            cout << "sizes of local matrices in order: " << endl;
+            for (int i = 0; i < partitions.size(); i++)
+            {
+                cout << " (" << partitions[i].first << ", " << partitions[i].second << ")";
+            }
+            cout << endl;
+
+            // COO sparse storage to assist in data convertion
+            COOMatType         lmat_coo;
+            COOMatVector               partitionMatrices(partitions.size());
+            Array<OneD, unsigned int>  nRows            (partitions.size(), 0U);
+            Array<OneD, unsigned int>  nCols            (partitions.size(), 0U);
+            MatrixStorage matStorage = eFULL;
+
+            // Create a vector of sparse storage holders
+            DNekBsrUnrolledDiagBlkMat::SparseStorageSharedPtrVector sparseStorage (partitions.size());
+
+            for (int part = 0, n = 0; part < partitions.size(); ++part)
+            {
+                nRows[part] = nCols[part] = 0;
+
+                for(int k = 0; k < partitions[part].first; ++k, ++n)
+                {
+                    loc_mat = m_schurCompl->GetBlock(n,n);
+                    loc_lda = loc_mat->GetRows();
+
+                    ASSERTL1(loc_lda==partitions[part].second,
+                        boost::lexical_cast<std::string>(n) + "-th matrix " +
+                        "block in Schur complement has unexpected rank");
+
+                    // Set up  Matrix;
+                    for(int i = 0; i < loc_lda; ++i)
+                    {
+                        for(int j = 0; j < loc_lda; ++j)
+                        {
+                            //lmat_coo[std::make_pair(rows + i, rows + j)] = (*loc_mat)(i,j);
+                            partitionMatrices[part][std::make_pair(i+nRows[part],j+nCols[part])] = (*loc_mat)(i,j);
+                        }
+                    }
+                    rows += loc_lda;
+                    nRows[part] += loc_lda;
+                    nCols[part] += loc_lda;
+                }
+
+                BCOMatType bcoMat;
+
+                convertCooToBco(partitions[part].first, partitions[part].first,
+                                partitions[part].second, partitionMatrices[part], bcoMat);
+
+                sparseStorage[part] =
+                MemoryManager<DNekBsrUnrolledDiagBlkMat::StorageType>::
+                    AllocateSharedPtr(
+                        partitions[part].first, partitions[part].first,
+                        partitions[part].second, bcoMat, matStorage );
             }
 
             int cols = rows;
 
-            m_localSchurCompl = MemoryManager<GlobalMatrix>::
-                    AllocateSharedPtr(m_expList.lock()->GetSession(), rows, cols, lmat_coo, matStorage);
+            // Create block diagonal matrix
+            m_localSchurCompl = MemoryManager<DNekBsrUnrolledDiagBlkMat>::
+                                            AllocateSharedPtr(sparseStorage);
 
-            cout << "localSchurCompl: row density = " 
-                 << lmat_coo.size()/cols << endl;
-            cout << "localSchurCompl: matrix rows = " 
-                 << rows << endl;
-            cout << "localSchurCompl: matrix nnzs = "
-                 << lmat_coo.size() << endl;
+            size_t matBytes, bsruBlockBytes;
+
+            matBytes      = m_localSchurCompl->GetMemoryFootprint();
+
+            bsruBlockBytes = m_localSchurCompl->GetMemoryFootprint(0);
+
+            cout << "Local matrix memory, bytes = " << matBytes;
+            if (matBytes/(1024*1024) > 0)
+            {
+                std::cout << " ("<< matBytes/(1024*1024) <<" MB)" << std::endl;
+            }
+            else
+            {
+                std::cout << " ("<< matBytes/1024 <<" KB)" << std::endl;
+            }
+
+            std::cout << "First BSRU submatrix memory, bytes = " << bsruBlockBytes;
+            if (bsruBlockBytes/(1024*1024) > 0)
+            {
+                std::cout << " ("<< bsruBlockBytes/(1024*1024) <<" MB)" << std::endl;
+            }
+            else
+            {
+                std::cout << " ("<< bsruBlockBytes/1024 <<" KB)" << std::endl;
+            }
         }
 
 

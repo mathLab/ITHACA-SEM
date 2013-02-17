@@ -37,6 +37,8 @@
 
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSysIterative.h>
+#include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
+
 
 namespace Nektar
 {
@@ -53,6 +55,9 @@ namespace Nektar
         class GlobalLinSysIterativeStaticCond : public GlobalLinSysIterative
         {
         public:
+            typedef NekSparseDiagBlkMatrix<StorageBsrUnrolled<NekDouble> >  DNekBsrUnrolledDiagBlkMat;
+            typedef boost::shared_ptr<DNekBsrUnrolledDiagBlkMat>            DNekBsrUnrolledDiagBlkMatSharedPtr;
+
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
                 const GlobalLinSysKey                &pLinSysKey,
@@ -103,13 +108,16 @@ namespace Nektar
             DNekScalBlkMatSharedPtr                  m_C;
             /// Block \f$ D^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_invD;
-	    // Block matrices for low energy
+            // Block matrices for low energy
             DNekScalBlkMatSharedPtr                  m_RBlk;
             DNekScalBlkMatSharedPtr                  m_RTBlk;
             DNekScalBlkMatSharedPtr                  m_S1Blk;
 
             /// Sparse representation of Schur complement matrix at this level
-            GlobalMatrixSharedPtr                    m_localSchurCompl;
+//            GlobalMatrixSharedPtr                    m_localSchurCompl;
+
+            /// Pointer to a double-precision Nektar++ sparse matrix.
+            DNekBsrUnrolledDiagBlkMatSharedPtr       m_localSchurCompl;
 
 
             /// Globally assembled Schur complement matrix at this level

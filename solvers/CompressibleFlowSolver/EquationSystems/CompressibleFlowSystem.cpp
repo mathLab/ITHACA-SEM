@@ -438,51 +438,41 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void CompressibleFlowSystem::GetFluxVector(
-        const int                                   i,
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD, Array<OneD, NekDouble> > &flux)
+        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        int j, nq = m_fields[0]->GetTotPoints();
+        int i, j, nq = m_fields[0]->GetTotPoints();
+
+        Array<OneD, NekDouble> pressure(nq);
+        Array<OneD, Array<OneD, NekDouble> > velocity(m_expdim);
         
-        if (i == 0)
+        // Flux vector for the rho equation.
+        for (i = 0; i < m_expdim; ++i)
         {
-            // Flux vector for the rho equation.
+            velocity[i] = Array<OneD, NekDouble>(nq);
+            Vmath::Vcopy(nq, physfield[i+1], 1, flux[0][i], 1);
+        }
+
+        GetVelocityVector(physfield, velocity);
+        GetPressure      (physfield, velocity, pressure);
+
+        // Flux vector for the velocity fields.
+        for (i = 0; i < m_expdim; ++i)
+        {
             for (j = 0; j < m_expdim; ++j)
             {
-                Vmath::Vcopy(nq, physfield[j+1], 1, flux[j], 1);
-            }
-        } 
-        else if (i >= 1 && i <= m_expdim)
-        {
-            // Flux vector for the velocity fields.
-            Array<OneD, NekDouble> pressure(nq);
-            GetPressure(physfield, pressure);
-            
-            for (j = 0; j < m_expdim; ++j)
-            {
-                Vmath::Vmul(nq, physfield[j+1], 1, physfield[i], 1, flux[j], 1);
-                Vmath::Vdiv(nq, flux[j], 1, physfield[0], 1, flux[j], 1);
+                Vmath::Vmul(nq, velocity[j], 1, physfield[i+1], 1, flux[i+1][j], 1);
             }
             
             // Add pressure to appropriate field
-            Vmath::Vadd(nq, flux[i-1], 1, pressure, 1, flux[i-1], 1);
+            Vmath::Vadd(nq, flux[i+1][i], 1, pressure, 1, flux[i+1][i], 1);
         }
-        else if (i == m_expdim+1) 
+
+        // Flux vector for energy.
+        Vmath::Vadd(nq, physfield[m_expdim+1], 1, pressure, 1, pressure, 1);
+        for (j = 0; j < m_expdim; ++j)
         {
-            // Flux vector for the total energy field.
-            Array<OneD, NekDouble> pressure(nq);
-            GetPressure(physfield, pressure);
-            Vmath::Vadd(nq, physfield[m_expdim+1], 1, pressure, 1, pressure, 1);
-            
-            for (j = 0; j < m_expdim; ++j)
-            {
-                Vmath::Vdiv(nq, physfield[j+1], 1, physfield[0], 1, flux[j], 1);
-                Vmath::Vmul(nq, flux[j], 1, pressure, 1, flux[j], 1);
-            }
-        }
-        else
-        {
-            ASSERTL0(false, "Invalid vector index.");
+            Vmath::Vmul(nq, velocity[j], 1, pressure, 1, flux[m_expdim+1][j], 1);
         }
     }
     
@@ -723,6 +713,36 @@ namespace Nektar
         }
         // Divide by rho to get rho*||v||^2.
         Vmath::Vdiv (npts, pressure, 1, physfield[0], 1, pressure, 1);
+        // pressure <- E - 0.5*pressure
+        Vmath::Svtvp(npts,     alpha, 
+                     pressure, 1, physfield[m_expdim+1], 1, pressure, 1);
+        // Multiply by (gamma-1).
+        Vmath::Smul (npts, m_gamma-1, pressure, 1, pressure, 1);
+    }
+    
+    /**
+     * @brief Calculate the pressure field \f$ p =
+     * (\gamma-1)(E-\frac{1}{2}\rho\| \mathbf{v} \|^2) \f$ assuming an ideal 
+     * gas law.
+     * 
+     * @param physfield  Input momentum.
+     * @param pressure   Computed pressure field.
+     */
+    void CompressibleFlowSystem::GetPressure(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+        const Array<OneD, const Array<OneD, NekDouble> > &velocity,
+              Array<OneD,                   NekDouble>   &pressure)
+    {
+        int       npts  = m_fields[0]->GetTotPoints();
+        NekDouble alpha = -0.5;
+        
+        // Calculate ||\rho v||^2.
+        Vmath::Vmul (npts, velocity[0], 1, physfield[1], 1, pressure, 1);
+        for (int i = 1; i < m_expdim; ++i)
+        {
+            Vmath::Vvtvp(npts, velocity[i], 1, physfield[1+i], 1, 
+                               pressure,    1, pressure,       1);
+        }
         // pressure <- E - 0.5*pressure
         Vmath::Svtvp(npts,     alpha, 
                      pressure, 1, physfield[m_expdim+1], 1, pressure, 1);

@@ -527,7 +527,7 @@ namespace Nektar
                 { 
                     ASSERTL1(wsp.num_elements()>=nquad1*nmodes0,"Workspace size is not sufficient");
 
-#if 0 
+#if 1
                     Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),               
                                 nquad0,inarray.get(),nquad0,0.0,wsp.get(),nmodes0);
                     

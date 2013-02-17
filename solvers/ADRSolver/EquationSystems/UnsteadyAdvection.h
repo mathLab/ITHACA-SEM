@@ -75,8 +75,8 @@ namespace Nektar
 
         /// Evaluate the flux at each solution point
         void GetFluxVector(
-            const Array<OneD, Array<OneD, NekDouble> > &physfield, 
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         
         /// Compute the RHS
         void DoOdeRhs(

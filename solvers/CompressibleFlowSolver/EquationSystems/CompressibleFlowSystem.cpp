@@ -172,7 +172,6 @@ namespace Nektar
                                     "N",
                                     &CompressibleFlowSystem::GetNormals, this);
                 
-                
                 m_advection->SetRiemannSolver   (m_riemannSolver);
                 m_diffusion->SetRiemannSolver   (m_riemannSolverLDG);
                 m_advection->InitObject         (m_session, m_fields);
@@ -438,8 +437,8 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void CompressibleFlowSystem::GetFluxVector(
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-        Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
         int i, j, nq = m_fields[0]->GetTotPoints();
 

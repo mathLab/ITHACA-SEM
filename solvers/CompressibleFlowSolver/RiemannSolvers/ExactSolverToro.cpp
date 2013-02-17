@@ -76,9 +76,9 @@ namespace Nektar
         
         cup  = 0.25*(rhoL + rhoR)*(cL + cR);
         ppv  = 0.5 *(pL + pR) + 0.5*(uL - uR)*cup;
-        ppv  = fmax(0.0, ppv);
-        pmin = fmin(pL, pR);
-        pmax = fmax(pL, pR);
+        ppv  = std::max(0.0, ppv);
+        pmin = std::min(pL, pR);
+        pmax = std::max(pL, pR);
         qmax = pmax/pmin;
         
         if (qmax <= quser && pmin <= ppv && ppv <= pmax)

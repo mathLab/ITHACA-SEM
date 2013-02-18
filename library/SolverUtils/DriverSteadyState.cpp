@@ -223,13 +223,13 @@ namespace Nektar
             {
                 //NormDiff_q_qBar[i] = m_equ[0]->L2Error(i, qBar1[i], false);
                 NormDiff_q_qBar[i] = m_equ[0]->LinfError(i, qBar1[i]);
-
+                
                 if (MaxNormDiff_q_qBar < NormDiff_q_qBar[i])
                 {
                     MaxNormDiff_q_qBar = m_cst1*NormDiff_q_qBar[i];
                 }
             }
-                        
+            
             #if NEKTAR_USE_MPI   
             MPI_Comm_rank(MPI_COMM_WORLD,&MPIrank);
             if (MPIrank==0)
@@ -241,64 +241,65 @@ namespace Nektar
                 m_file.close();
             }
             #else
-            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
+            //cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
+            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<endl;
             std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
             m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
             m_file.close();
             #endif  
-                
-            /*if (m_Shrinking==false && MaxNormDiff_q_qBar > m_MaxNormDiff_q_qBar)
-            {
-                m_MaxNormDiff_q_qBar=MaxNormDiff_q_qBar;
-                m_Growing=true;
-                if (m_MaxNormDiff_q_qBar < m_First_MinNormDiff_q_qBar)
-                {
-                    m_Oscillation = 0;
-                    m_First_MinNormDiff_q_qBar=0;
-                }
-            }
-            if (MaxNormDiff_q_qBar < m_MaxNormDiff_q_qBar && m_Growing==true)
-            {
-                m_Growing=false;
-                m_MaxNormDiff_q_qBar=0;
-            }
-            if (m_Growing==false && MaxNormDiff_q_qBar < m_MinNormDiff_q_qBar)
-            {
-                m_MinNormDiff_q_qBar=MaxNormDiff_q_qBar;
-                m_Shrinking=true;
-                if (m_Oscillation==0)
-                {
-                    m_First_MinNormDiff_q_qBar=m_MinNormDiff_q_qBar;
-                }
-            }
-            if (MaxNormDiff_q_qBar > m_MinNormDiff_q_qBar && m_Shrinking==true)
-            {
-                m_Shrinking=false;
-                m_MinNormDiff_q_qBar=1000;
-                m_Oscillation=m_Oscillation+1;
-            }
             
-            if (m_Oscillation==10)
-            {                   
-                //m_Delta = m_Delta + 0.25;
-                //m_X = 0.99*(1.0/m_Delta);
-
-                mult = mult + mult*0.25;
-                
-                m_X = mult*(coeff - 1.0)/m_dt;
-                m_Delta = 100*mult*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
-                
-                m_cst1=m_X*m_dt;
-                m_cst2=1.0/(1.0 + m_cst1);
-                m_cst3=m_dt/m_Delta;
-                m_cst4=m_cst2*m_cst3;
-                m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
-                
-                cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
-                
-                m_Oscillation=0;
-                //m_equ[0]->DoInitialise();
-            }*/
+            /*if (m_Shrinking==false && MaxNormDiff_q_qBar > m_MaxNormDiff_q_qBar)
+             *            {
+             *                m_MaxNormDiff_q_qBar=MaxNormDiff_q_qBar;
+             *                m_Growing=true;
+             *                if (m_MaxNormDiff_q_qBar < m_First_MinNormDiff_q_qBar)
+             *                {
+             *                    m_Oscillation = 0;
+             *                    m_First_MinNormDiff_q_qBar=0;
+             }
+             }
+             if (MaxNormDiff_q_qBar < m_MaxNormDiff_q_qBar && m_Growing==true)
+             {
+                 m_Growing=false;
+                 m_MaxNormDiff_q_qBar=0;
+             }
+             if (m_Growing==false && MaxNormDiff_q_qBar < m_MinNormDiff_q_qBar)
+             {
+                 m_MinNormDiff_q_qBar=MaxNormDiff_q_qBar;
+                 m_Shrinking=true;
+                 if (m_Oscillation==0)
+                 {
+                     m_First_MinNormDiff_q_qBar=m_MinNormDiff_q_qBar;
+                 }
+             }
+             if (MaxNormDiff_q_qBar > m_MinNormDiff_q_qBar && m_Shrinking==true)
+             {
+                 m_Shrinking=false;
+                 m_MinNormDiff_q_qBar=1000;
+                 m_Oscillation=m_Oscillation+1;
+             }
+             
+             if (m_Oscillation==10)
+             {                   
+                 //m_Delta = m_Delta + 0.25;
+                 //m_X = 0.99*(1.0/m_Delta);
+                 
+                 mult = mult + mult*0.25;
+                 
+                 m_X = mult*(coeff - 1.0)/m_dt;
+                 m_Delta = 100*mult*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
+                 
+                 m_cst1=m_X*m_dt;
+                 m_cst2=1.0/(1.0 + m_cst1);
+                 m_cst3=m_dt/m_Delta;
+                 m_cst4=m_cst2*m_cst3;
+                 m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+                 
+                 cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
+                 
+                 m_Oscillation=0;
+                 //m_equ[0]->DoInitialise();
+             }*/
             
             //Algo for updating parameters (late 2012)
             if (MaxNormDiff_q_qBar < Min_MaxNormDiff_q_qBar)
@@ -311,7 +312,7 @@ namespace Nektar
                 m_Delta = m_Delta + 0.5;
                 m_X = 0.99*(1.0/m_Delta);
                 
-                 /*//coeff = 1.0106;
+                /*//coeff = 1.0106;
                 coeff = 1.0132;
                 //mult = 10.0;
                 
@@ -327,7 +328,7 @@ namespace Nektar
                 
                 cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
                 
-                m_LIM = m_LIM/5.0;
+                m_LIM = m_LIM/10.0;
                 //m_LIM = m_LIM/1000.0;
             }
             
@@ -354,7 +355,8 @@ namespace Nektar
             }
             
             
+             }
         }
     }
-}
-
+    
+    

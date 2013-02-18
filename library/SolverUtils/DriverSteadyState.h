@@ -120,7 +120,7 @@ namespace Nektar
             
             NekDouble mult;
             NekDouble coeff;
-                        
+            
             std::ofstream m_file;
         };
     }	

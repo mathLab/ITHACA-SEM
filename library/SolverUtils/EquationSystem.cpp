@@ -2111,9 +2111,9 @@ namespace Nektar
                 {
                     out << "\tRiemann Solver  : AUSM3"   <<endl;
                 }
-                else if (UpwindType == "Exact")
+                else if (UpwindType == "ExactToro")
                 {
-                    out << "\tRiemann Solver  : Exact"   <<endl;
+                    out << "\tRiemann Solver  : ExactToro"   <<endl;
                 }
                 else if (UpwindType == "HLL")
                 {

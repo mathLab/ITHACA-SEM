@@ -133,6 +133,12 @@ namespace Nektar
              */
             boost::unordered_map<int,pair<int,int> > m_perEdgeToExpMap;
 
+            /*
+             * @brief A map identifying which edges are left- and right-adjacent
+             * for DG.
+             */
+            vector<bool> m_leftAdjacentEdges;
+
             void SetUpDG();
             bool SameTypeOfBoundaryConditions(const DisContField2D &In);
             void GenerateBoundaryConditionExpansion(

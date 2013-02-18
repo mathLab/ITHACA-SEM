@@ -227,11 +227,11 @@ namespace Nektar
         // user defined boundaries into account
         int e, id1, id2, npts;
         
-        for (e = 0; e < m_fields[0]->
-            GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+        for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]
+                 ->GetExpSize(); ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetExp(e)->GetNumPoints(0);
+                GetExp(e)->GetTotPoints();
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
@@ -239,9 +239,8 @@ namespace Nektar
                                     GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             
             // For 2D/3D, define: v* = v - 2(v.n)n
-            
             Array<OneD,NekDouble> tmp(npts, 0.0);
-            
+
             // Calculate (v.n)
             for (i = 0; i < m_expdim; ++i)
             {
@@ -250,13 +249,10 @@ namespace Nektar
                              &m_traceNormals[i][id2], 1,
                              &tmp[0], 1,
                              &tmp[0], 1);
-                
             }
+
             // Calculate 2.0(v.n)
-            Vmath::Smul(npts,
-                        -2.0,
-                        &tmp[0],1,
-                        &tmp[0],1);
+            Vmath::Smul(npts, -2.0, &tmp[0], 1, &tmp[0], 1);
             
             // Calculate v* = v - 2.0(v.n)n
             for (i = 0; i < m_expdim; ++i)
@@ -307,7 +303,7 @@ namespace Nektar
             GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetExp(e)->GetNumPoints(0);
+                GetExp(e)->GetTotPoints();
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
@@ -355,11 +351,11 @@ namespace Nektar
             GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-            GetExp(e)->GetNumPoints(0);
+                GetExp(e)->GetTotPoints();
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-            GetPhys_Offset(e);
+                GetPhys_Offset(e);
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->
-                    GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+                GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             
             switch(m_expdim)
             {

@@ -43,6 +43,7 @@
 #include <cmath>
 
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
+#include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/NistSparseBlas.hpp>
 #include <LibUtilities/LinearAlgebra/StorageBsrUnrolled.hpp>
 #include <LibUtilities/LinearAlgebra/NistSparseDescriptors.hpp>
@@ -398,7 +399,17 @@ namespace Nektar
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
 #endif
-        default: Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+        default:
+#ifdef NEKTAR_USING_SMV
+            if (m_blkDim <= LIBSMV_MAX_RANK)
+            {
+                Multiply_libsmv(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+            }
+            else
+#endif
+            {
+                Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+            }
         }
     }
 
@@ -425,7 +436,17 @@ namespace Nektar
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
 #endif
-        default: Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+        default:
+#ifdef NEKTAR_USING_SMV
+            if (m_blkDim <= LIBSMV_MAX_RANK)
+            {
+                Multiply_libsmv(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+            }
+            else
+#endif
+            {
+                Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+            }
         }
     }
 
@@ -454,7 +475,17 @@ namespace Nektar
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
 #endif
-        default: Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+        default:
+#ifdef NEKTAR_USING_SMV
+            if (m_blkDim <= LIBSMV_MAX_RANK)
+            {
+                Multiply_libsmv(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+            }
+            else
+#endif
+            {
+                Multiply_generic(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
+            }
         }
     }
 
@@ -601,9 +632,10 @@ namespace Nektar
         }
     }
 
+#ifdef NEKTAR_USING_SMV
     /// Generic zero-based BSR multiply
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::Multiply_generic(
+    void StorageBsrUnrolled<DataType>::Multiply_libsmv(
             const int mb,
             const int kb,
             const double* val,
@@ -628,22 +660,40 @@ namespace Nektar
             int je = bpntre[i];
             for (int j=jb;j!=je;j++)
             {
-                int bs=bindx[j]*lb;
-                const double *pb = &b[bs];
-
-#ifdef NEKTAR_USING_SMV
-                m_mvKernel(pval,pb,pc);
+                m_mvKernel(pval,&b[bindx[j]*lb],pc);
                 pval+=mm;
-#else
-                for (int jj=0;jj!=lb;jj++)
-                {
-                    const double t = pb[jj];
-                    for (int ii=0;ii!=lb;ii++)
-                    {
-                        pc[ii] += t * (*pval++);
-                    }
-                }
+            }
+            pc += lb;
+        }
+    }
 #endif
+
+    template<typename DataType>
+    void StorageBsrUnrolled<DataType>::Multiply_generic(
+            const int mb,
+            const int kb,
+            const double* val,
+            const int* bindx,
+            const int* bpntrb,
+            const int* bpntre,
+            const double* b,
+                  double* c)
+    {
+        const int lb = m_blkDim;
+        const double *pval = val;
+        const int mm=lb*lb;
+        double *pc=c;
+        for (int i=0;i!=mb*lb;i++) *pc++ = 0;
+
+        pc=c;
+        for (int i=0;i!=mb;i++)
+        {
+            int jb = bpntrb[i];
+            int je = bpntre[i];
+            for (int j=jb;j!=je;j++)
+            {
+                Blas::Dgemv('N',lb,lb,1.0,pval,lb,&b[bindx[j]*lb],1,1.0,pc,1);
+                pval+=mm;
             }
             pc += lb;
         }
@@ -674,9 +724,6 @@ namespace Nektar
         {
             rowcoord = (entry->first).first;
             tmp[rowcoord]++;
-
-            colcoord = (entry->first).second;
-            value    =  entry->second;
         }
         // Based upon this information, fill the array m_pntr
         // which basically contains the offset of each row's 
@@ -684,7 +731,7 @@ namespace Nektar
         m_pntr[0] = 0;
         for(i = 0; i < blkRows; i++)
         {
-            m_pntr[i+1] = m_pntr[i] + tmp[i]; 
+            m_pntr[i+1] = m_pntr[i] + tmp[i];
         }
 
         // Copy the values of m_pntr into tmp as this will be needed 

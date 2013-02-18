@@ -32,7 +32,7 @@
 // Description: sparse matrix class with block sparse row (BSR) storage
 // (sparse matrix is a CSR collection of dense square blocks of same size)
 // In contrast with Nist BSR class this one uses zero-based storage and
-// unrolled multiply routine.
+// unrolled multiply routines.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,8 +48,6 @@
 #include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 
 #include <boost/call_traits.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
 
 
 namespace Nektar
@@ -186,6 +184,12 @@ namespace Nektar
         void Multiply_generic(const int mb, const int kb, const double* val,
                     const int* bindx, const int* bpntrb, const int* bpntre,
                     const double* b, double* c);
+
+#ifdef NEKTAR_USING_SMV
+        void Multiply_libsmv(const int mb, const int kb, const double* val,
+                    const int* bindx, const int* bpntrb, const int* bpntre,
+                    const double* b, double* c);
+#endif
 
 
         // interface to lowest level LibSMV multiply kernels

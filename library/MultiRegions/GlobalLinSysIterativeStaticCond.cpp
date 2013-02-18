@@ -316,12 +316,7 @@ namespace Nektar
                     
                     t.Stop();
 
-                    std::cout << "time per solveLinearSystem = " << t.TimePerTest(1);// << std::endl;
-                    if (m_globalSchurCompl)
-                    {
-                        std::cout << "  performed " << m_globalSchurCompl->GetMulCallsCounter() << " global matrix multiplies";
-                    }
-                    std::cout << std::endl;
+                    std::cout << "time per solveLinearSystem = " << t.TimePerTest(1) << std::endl;
 
                     t.Start();
 
@@ -603,13 +598,7 @@ namespace Nektar
             // Get the matrix storage structure
             // (whether to store only one triangular part, if symmetric)
             MatrixStorage matStorage = eFULL;
-/*
-            if (m_expList.lock()->GetSession()->DefinesSolverInfo("GlobalMatrixStructure"))
-            {
-                matStorage = 
-                    m_expList.lock()->GetSession()->GetSolverInfo("GlobalMatrixStructure"));
-            }
-*/
+
             // assemble globally
             DNekScalMatSharedPtr loc_mat;
             int loc_lda;
@@ -643,14 +632,25 @@ namespace Nektar
                 cnt += loc_lda;
             }
 
-            m_globalSchurCompl = MemoryManager<GlobalMatrix>::
-                    AllocateSharedPtr(m_expList.lock()->GetSession(), rows, cols, gmat_coo, matStorage);
+            DNekBsrUnrolledDiagBlkMat::SparseStorageSharedPtrVector
+                sparseStorage (1);
 
-            cout << "globalSchurCompl: row density = " 
+            BCOMatType partMat;
+            convertCooToBco(rows, cols, 1, gmat_coo, partMat);
+
+            sparseStorage[0] =
+                 MemoryManager<DNekBsrUnrolledDiagBlkMat::StorageType>::
+                    AllocateSharedPtr(rows, cols, 1, partMat, matStorage );
+
+            // Create block diagonal matrix
+            m_sparseSchurCompl = MemoryManager<DNekBsrUnrolledDiagBlkMat>::
+                                            AllocateSharedPtr(sparseStorage);
+
+            cout << "global SchurCompl: row density = " 
                  << gmat_coo.size()/cols << endl;
-            cout << "globalSchurCompl: matrix rows = " 
+            cout << "global SchurCompl: matrix rows = " 
                  << rows << endl;
-            cout << "globalSchurCompl: matrix nnzs = " 
+            cout << "global SchurCompl: matrix nnzs = " 
                  << gmat_coo.size() << endl;
         }
 
@@ -730,14 +730,13 @@ namespace Nektar
             int cols = rows;
 
             // Create block diagonal matrix
-            m_localSchurCompl = MemoryManager<DNekBsrUnrolledDiagBlkMat>::
+            m_sparseSchurCompl = MemoryManager<DNekBsrUnrolledDiagBlkMat>::
                                             AllocateSharedPtr(sparseStorage);
 
             size_t matBytes, bsruBlockBytes;
 
-            matBytes      = m_localSchurCompl->GetMemoryFootprint();
-
-            bsruBlockBytes = m_localSchurCompl->GetMemoryFootprint(0);
+            matBytes      = m_sparseSchurCompl->GetMemoryFootprint();
+            bsruBlockBytes = m_sparseSchurCompl->GetMemoryFootprint(0);
 
             cout << "Local matrix memory, bytes = " << matBytes;
             if (matBytes/(1024*1024) > 0)
@@ -1016,27 +1015,30 @@ namespace Nektar
             int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
             int nDir = m_locToGloMap->GetNumGlobalDirBndCoeffs();
 
-            if (m_globalSchurCompl)
+
+            bool doGlobalOp = m_expList.lock()->GetGlobalOptParam()->
+                    DoGlobalMatOp(m_linSysKey.GetMatrixType());
+
+            if(doGlobalOp)
             {
                 // Do matrix multiply globally
 
                 Array<OneD, NekDouble> in  = pInput + nDir;
                 Array<OneD, NekDouble> out = pOutput+ nDir;
 
-                m_globalSchurCompl->Multiply(in,out);
+                m_sparseSchurCompl->Multiply(in,out);
 
                 m_locToGloMap->UniversalAssembleBnd(pOutput, nDir);
             }
             else
             {
                 // Do matrix multiply locally
-                // NekVector<NekDouble> loc(nLocal, m_wsp, eWrapper);
-                m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
-
-                //loc = (*m_schurCompl)*loc;
 
                 Array<OneD, NekDouble> tmp = m_wsp + nLocal;
-                m_localSchurCompl->Multiply(m_wsp,tmp);
+
+                m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
+
+                m_sparseSchurCompl->Multiply(m_wsp,tmp);
 
                 m_locToGloMap->AssembleBnd(tmp, pOutput);
             }

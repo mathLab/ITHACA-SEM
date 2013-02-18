@@ -114,10 +114,8 @@ namespace Nektar
             DNekScalBlkMatSharedPtr                  m_S1Blk;
 
             /// Sparse representation of Schur complement matrix at this level
-            DNekBsrUnrolledDiagBlkMatSharedPtr       m_localSchurCompl;
+            DNekBsrUnrolledDiagBlkMatSharedPtr       m_sparseSchurCompl;
 
-            /// Globally assembled Schur complement matrix at this level
-            GlobalMatrixSharedPtr                    m_globalSchurCompl;
             /// Local to global map.
             boost::shared_ptr<AssemblyMap>           m_locToGloMap;
             /// Workspace array for matrix multiplication

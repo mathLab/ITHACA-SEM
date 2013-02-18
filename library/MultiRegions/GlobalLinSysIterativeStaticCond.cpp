@@ -697,19 +697,15 @@ namespace Nektar
             }
             cout << endl;
 
-            // COO sparse storage to assist in data convertion
-            COOMatType         lmat_coo;
-            COOMatVector               partitionMatrices(partitions.size());
-            Array<OneD, unsigned int>  nRows            (partitions.size(), 0U);
-            Array<OneD, unsigned int>  nCols            (partitions.size(), 0U);
             MatrixStorage matStorage = eFULL;
 
             // Create a vector of sparse storage holders
-            DNekBsrUnrolledDiagBlkMat::SparseStorageSharedPtrVector sparseStorage (partitions.size());
+            DNekBsrUnrolledDiagBlkMat::SparseStorageSharedPtrVector
+                    sparseStorage (partitions.size());
 
             for (int part = 0, n = 0; part < partitions.size(); ++part)
             {
-                nRows[part] = nCols[part] = 0;
+                BCOMatType partMat;
 
                 for(int k = 0; k < partitions[part].first; ++k, ++n)
                 {
@@ -720,30 +716,15 @@ namespace Nektar
                         boost::lexical_cast<std::string>(n) + "-th matrix " +
                         "block in Schur complement has unexpected rank");
 
-                    // Set up  Matrix;
-                    for(int i = 0; i < loc_lda; ++i)
-                    {
-                        for(int j = 0; j < loc_lda; ++j)
-                        {
-                            //lmat_coo[std::make_pair(rows + i, rows + j)] = (*loc_mat)(i,j);
-                            partitionMatrices[part][std::make_pair(i+nRows[part],j+nCols[part])] = (*loc_mat)(i,j);
-                        }
-                    }
-                    rows += loc_lda;
-                    nRows[part] += loc_lda;
-                    nCols[part] += loc_lda;
+                    partMat[make_pair(k,k)] =
+                        BCOEntryType (loc_lda*loc_lda, loc_mat->GetRawPtr() );
                 }
-
-                BCOMatType bcoMat;
-
-                convertCooToBco(partitions[part].first, partitions[part].first,
-                                partitions[part].second, partitionMatrices[part], bcoMat);
 
                 sparseStorage[part] =
                 MemoryManager<DNekBsrUnrolledDiagBlkMat::StorageType>::
                     AllocateSharedPtr(
                         partitions[part].first, partitions[part].first,
-                        partitions[part].second, bcoMat, matStorage );
+                        partitions[part].second, partMat, matStorage );
             }
 
             int cols = rows;

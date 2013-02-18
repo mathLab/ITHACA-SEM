@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ExactSolver.h
+// File: Advection.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,36 +29,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Exact Riemann solver.
+// Description: Abstract base class for advection.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_EXACTSOLVER
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_EXACTSOLVER
-
-#include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
+#include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
 {
-    class ExactSolver : public CompressibleSolver
+    namespace SolverUtils
     {
-    public:
-        static RiemannSolverSharedPtr create()
+        AdvectionFactory& GetAdvectionFactory()
         {
-            return RiemannSolverSharedPtr(
-                new ExactSolver());
+            typedef Loki::SingletonHolder<AdvectionFactory,
+            Loki::CreateUsingNew,
+            Loki::NoDestroy > Type;
+            return Type::Instance();
         }
         
-        static std::string solverName;
-        
-    protected:
-        ExactSolver();
-        
-        virtual void v_PointSolve(
-            NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL,
-            NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
-            NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef);
-    };
-}
+        void Advection::InitObject(
+            const LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+        {
+            v_InitObject(pSession, pFields);
+        }
 
-#endif
+        void Advection::Advect(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+        {
+            v_Advect(nConvectiveFields, fields, advVel, inarray, outarray);
+        }
+    }
+}

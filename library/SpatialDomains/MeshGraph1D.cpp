@@ -59,7 +59,7 @@ namespace Nektar
         }
 
         // \brief Read segments (and general MeshGraph) given filename.
-        void MeshGraph1D::ReadGeometry(std::string &infilename)
+        void MeshGraph1D::ReadGeometry(const std::string &infilename)
         {
             TiXmlDocument doc(infilename);
 
@@ -80,7 +80,6 @@ namespace Nektar
             MeshGraph::ReadGeometry(doc);
             TiXmlHandle docHandle(&doc);
 
-            TiXmlNode* node = NULL;
             TiXmlElement* mesh = NULL;
 
             /// Look for all geometry related data in GEOMETRY block.

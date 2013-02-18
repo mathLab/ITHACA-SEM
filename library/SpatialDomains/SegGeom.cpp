@@ -313,7 +313,6 @@ namespace Nektar
             if (m_geomFactorsState != ePtsFilled)
             {
                 SpatialDomains::GeomType gType = eRegular;
-                const SpatialDomains::GeomType kDeformedType = eDeformed;
 
                 SegGeom::v_FillGeom();
 
@@ -455,7 +454,7 @@ namespace Nektar
             return returnval;
         }
 
-        int SegGeom::v_GetEid(int unused) const
+        int SegGeom::v_GetEid() const
         {
             return m_eid;
         }

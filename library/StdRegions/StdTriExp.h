@@ -87,10 +87,6 @@ namespace Nektar
                 const int                           dir, 
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT virtual void v_PhysDirectionalDeriv(
-                const Array<OneD, const NekDouble>& inarray,
-                const Array<OneD, const NekDouble>& direction,
-                      Array<OneD,       NekDouble>& outarray);
             STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
                 const Array<OneD, const NekDouble>& inarray, 
                       Array<OneD,       NekDouble>& out_d0,
@@ -274,11 +270,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &outarray,
                 const StdMatrixKey                 &mkey);
             
-        private:
-            //---------------------------------------
-            // Private helper functions
-            //---------------------------------------
-            void MultiplyByQuadratureMetric(
+            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
         };

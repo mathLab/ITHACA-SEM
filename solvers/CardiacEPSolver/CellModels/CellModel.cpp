@@ -94,7 +94,6 @@ namespace Nektar
         {
             m_nq = pField->GetNcoeffs();
             int order = m_field->GetExp(0)->GetBasis(0)->GetNumModes();
-            int nvar = 1;
 
             // Set up a nodal tri
             LibUtilities::BasisKey B0(

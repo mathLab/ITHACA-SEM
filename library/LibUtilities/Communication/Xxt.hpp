@@ -154,7 +154,7 @@ namespace Xxt
      *                      communication.
      * @returns crs_data structure
      */
-    static struct crs_data* Init ( unsigned int pRank,
+    static inline struct crs_data* Init ( unsigned int pRank,
                             const Nektar::Array<OneD, unsigned long> pId,
                             const Nektar::Array<OneD, unsigned int> pAi,
                             const Nektar::Array<OneD, unsigned int> pAj,
@@ -179,7 +179,7 @@ namespace Xxt
     /**
      * @brief Solve the matrix system for a given input vector b.
      */
-    static void Solve ( Nektar::Array<OneD, NekDouble> pX,
+    static inline void Solve ( Nektar::Array<OneD, NekDouble> pX,
                  struct crs_data* pCrs,
                  Nektar::Array<OneD, NekDouble> pB )
     {
@@ -195,7 +195,7 @@ namespace Xxt
     /**
      * @brief Deallocates the crs mapping data.
      */
-    static void Finalise (crs_data* pCrs)
+    static inline void Finalise (crs_data* pCrs)
     {
 #ifdef NEKTAR_USE_MPI
         if (pCrs)

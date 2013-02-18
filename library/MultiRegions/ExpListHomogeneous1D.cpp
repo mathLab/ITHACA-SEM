@@ -54,10 +54,10 @@ namespace Nektar
         ExpListHomogeneous1D::ExpListHomogeneous1D(const LibUtilities::SessionReaderSharedPtr
                 &pSession,const LibUtilities::BasisKey &HomoBasis, const NekDouble lhom, const bool useFFT, const bool dealiasing):
             ExpList(pSession),
-            m_lhom(lhom),
             m_useFFT(useFFT),
-		    m_dealiasing(dealiasing),
-            m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr())
+            m_lhom(lhom),
+            m_homogeneous1DBlockMat(MemoryManager<Homo1DBlockMatrixMap>::AllocateSharedPtr()),
+            m_dealiasing(dealiasing)
         {
             ASSERTL2(HomoBasis != LibUtilities::NullBasisKey,"Homogeneous Basis is a null basis");
             
@@ -95,17 +95,16 @@ namespace Nektar
          */
         ExpListHomogeneous1D::ExpListHomogeneous1D(const ExpListHomogeneous1D &In):
             ExpList(In,false),
-            m_homogeneousBasis(In.m_homogeneousBasis),
-            m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
-            m_lhom(In.m_lhom),
+            m_transposition(In.m_transposition),
             m_useFFT(In.m_useFFT),
             m_FFT(In.m_FFT),
-            m_FFT_deal(In.m_FFT_deal),
-            m_dealiasing(In.m_dealiasing),
-            m_padsize(In.m_padsize),
             m_tmpIN(In.m_tmpIN),
             m_tmpOUT(In.m_tmpOUT),
-            m_transposition(In.m_transposition)
+            m_homogeneousBasis(In.m_homogeneousBasis),
+            m_lhom(In.m_lhom), 
+            m_homogeneous1DBlockMat(In.m_homogeneous1DBlockMat),
+            m_dealiasing(In.m_dealiasing),
+            m_padsize(In.m_padsize)
         {
             m_planes = Array<OneD, ExpListSharedPtr>(In.m_planes.num_elements());
         }

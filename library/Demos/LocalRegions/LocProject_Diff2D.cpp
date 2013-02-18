@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 
     int           i;
 
-    int           order1,order2, nq1,nq2,NodalTri = 0;
+    int           order1,order2, nq1,nq2;
     LibUtilities::PointsType    Qtype1,Qtype2;
     LibUtilities::BasisType     btype1,btype2;
     LibUtilities::PointsType     NodalType;

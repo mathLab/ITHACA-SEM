@@ -178,7 +178,7 @@ namespace Nektar
                         
                         if(j != IDs.num_elements())
                         {
-                            m_outputPlane == j;
+                            m_outputPlane = j;
                             procList[i] = vRank;
                         }
                     }

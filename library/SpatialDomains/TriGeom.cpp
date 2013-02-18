@@ -593,7 +593,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
-                                            Gtype, m_coordim, m_xmap, tbasis);
+                    Gtype, m_coordim, m_xmap, tbasis, true);
 
                 m_geomFactorsState = ePtsFilled;
             }
@@ -725,12 +725,7 @@ namespace Nektar
                 //        "inverse mapping must be set up to use this call");
 
                 int i;
-                NekDouble len0 = 0.0 ;
-                NekDouble len1 = 0.0;
-                NekDouble xi0 = 0.0;
-                NekDouble xi1 = 0.0;
                 Array<OneD, const NekDouble> pts;
-                int nq0, nq1;
 
                 Array<OneD, NekDouble> ptsx;
                 Array<OneD, NekDouble> ptsy;  
@@ -761,7 +756,7 @@ namespace Nektar
                         boost::dynamic_pointer_cast<StdRegions::StdTriExp>(m_xmap[0]);
                 boost::shared_ptr<StdRegions::StdTriExp> trimap1 = 
                         boost::dynamic_pointer_cast<StdRegions::StdTriExp>(m_xmap[1]);
-                int icx,icy,ic;
+                int ic;
 
                 int trinp = m_xmap[0]->GetTotPoints();
                 Array<OneD, NekDouble> ltrix(trinp);

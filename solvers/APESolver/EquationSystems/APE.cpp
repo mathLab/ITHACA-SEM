@@ -229,7 +229,6 @@ namespace Nektar
   {
     
     int nvariables = m_fields.num_elements();
-    int nq         = inarray[0].num_elements();
     int cnt = 0;
 
     // loop over Boundary Regions
@@ -350,8 +349,6 @@ namespace Nektar
   void APE::GetFluxVector2D(const int i, const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
 					      Array<OneD, Array<OneD, NekDouble> > &flux)
   {
-    int nq = m_fields[0]->GetTotPoints();
-    
     NekDouble Rho0 = m_Rho0;
     NekDouble gamma = m_gamma;
 

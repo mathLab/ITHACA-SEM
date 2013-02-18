@@ -244,14 +244,13 @@ namespace Nektar
                              const std::string variable):
             ExpList()
         {
-            int j,cnt,id=0;
+            int j, id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
 
             // Process each composite region.
-            cnt = 0;
             for(compIt = domain.begin(); compIt != domain.end(); ++compIt)
             {
                 comp = compIt->second;
@@ -416,7 +415,7 @@ namespace Nektar
                     const std::string variable):
             ExpList()
         {
-            int i,j,cnt,id, elmtid=0;
+            int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
@@ -425,7 +424,6 @@ namespace Nektar
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
-            cnt = 0;
             for(i = 0; i < bndCond.num_elements(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType()
@@ -896,9 +894,6 @@ namespace Nektar
             int i,j,e_npoints,offset;
             Array<OneD,NekDouble> normals;
 
-            // Assume whole array is of same coordimate dimention
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
-
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
@@ -1056,7 +1051,6 @@ namespace Nektar
         void ExpList1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int ntot = nquad0;
             int ntotminus = (nquad0-1);

@@ -212,7 +212,7 @@ namespace Nektar
             /// Computes a hash of this GeomFactors element, based on the
             /// type, expansion/co-ordinate dimensions, metric, Jacobian and
             /// the geometric factors themselves.
-            const size_t GetHash() const
+            size_t GetHash() const
             {
                 size_t hash = 0;
                 boost::hash_combine(hash, (int)m_type);

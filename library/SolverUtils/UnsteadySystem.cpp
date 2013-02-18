@@ -169,9 +169,7 @@ namespace Nektar
          */
         void UnsteadySystem::v_DoSolve()
         {
-            int i, n, nchk = 1;
-            int ncoeffs    = m_fields[0]->GetNcoeffs();
-            int npoints    = m_fields[0]->GetNpoints();
+            int i, nchk = 1;
             int nvariables = 0;
 
             if (m_intVariables.empty())
@@ -417,9 +415,9 @@ namespace Nektar
             }
 
             // Check uniqueness of checkpoint output
-            ASSERTL0(m_checktime == 0.0 && m_checksteps == 0 ||
-                     m_checktime >  0.0 && m_checksteps == 0 || 
-                     m_checktime == 0.0 && m_checksteps >  0,
+            ASSERTL0((m_checktime == 0.0 && m_checksteps == 0) ||
+                     (m_checktime >  0.0 && m_checksteps == 0) || 
+                     (m_checktime == 0.0 && m_checksteps >  0),
                      "Only one of IO_CheckTime and IO_CheckSteps "
                      "should be set!");
 
@@ -508,13 +506,15 @@ namespace Nektar
                 m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
             }
             
-            if (m_cflSafetyFactor > 0.0)
+            if (m_session->GetComm()->GetRank() == 0)
             {
-                cout << "CFL safety factor : " << m_cflSafetyFactor << endl
-                     << "CFL time-step     : " << m_timestep        << endl;
+                if (m_cflSafetyFactor > 0.0)
+                {
+                    cout << "CFL safety factor : " << m_cflSafetyFactor << endl
+                         << "CFL time-step     : " << m_timestep        << endl;
+                }
+                cout << "Time-integration  : " << intTime  << "s"   << endl;
             }
-            cout << "Time-integration  : " << intTime  << "s"   << endl;
-
             
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
@@ -608,8 +608,8 @@ namespace Nektar
         }
 
         void UnsteadySystem::v_NumFluxforScalar(
-            Array<OneD, Array<OneD,             NekDouble> >   &ufield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+            const Array<OneD, Array<OneD, NekDouble> >               &ufield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             int i, j;
             int nTraceNumPoints = GetTraceNpoints();
@@ -678,9 +678,9 @@ namespace Nektar
         
         
         void UnsteadySystem::v_NumFluxforVector(
-            Array<OneD, Array<OneD,             NekDouble> >    &ufield,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-            Array<OneD, Array<OneD,             NekDouble> >    &qflux)
+            const Array<OneD, Array<OneD, NekDouble> >               &ufield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                  Array<OneD, Array<OneD, NekDouble> >               &qflux)
         {
             int nTraceNumPoints = GetTraceNpoints();
             int nvariables = m_fields.num_elements();
@@ -765,29 +765,13 @@ namespace Nektar
             }
         }
 
-        
-        
-        void UnsteadySystem::v_GetFluxVector(
-            const int i, const int j,
-            Array<OneD, Array<OneD, NekDouble> > &physfield,
-            Array<OneD, Array<OneD, NekDouble> > &flux)
-        {
-            for(int k = 0; k < flux.num_elements(); ++k)
-            {
-                Vmath::Zero(GetNpoints(),flux[k],1);
-            }
-            Vmath::Vcopy(GetNpoints(),physfield[i],1,flux[j],1);
-        }
-
-        
-        
         void UnsteadySystem::WeakPenaltyforScalar(
             const int var,
             const Array<OneD, const NekDouble> &physfield,
                   Array<OneD,       NekDouble> &penaltyflux,
             NekDouble time)
         {
-            int i, j, e, npoints, id1, id2;
+            int i, e, npoints, id1, id2;
             
             // Number of boundary regions
             int nbnd = m_fields[var]->GetBndCondExpansions().num_elements();
@@ -866,7 +850,7 @@ namespace Nektar
             NekDouble C11,
             NekDouble time)
         {
-            int i, j, e, npoints, id1, id2;
+            int i, e, npoints, id1, id2;
             int nbnd = m_fields[var]->GetBndCondExpansions().num_elements();
             int numBDEdge, Nfps;
             int nTraceNumPoints = GetTraceNpoints();

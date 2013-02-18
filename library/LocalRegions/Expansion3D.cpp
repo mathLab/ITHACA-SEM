@@ -44,7 +44,7 @@ namespace Nektar
     {
         Expansion3D::Expansion3D(){}
         
-        void Expansion3D::v_AddHDGHelmholtzTraceTerms(
+        void Expansion3D::AddHDGHelmholtzTraceTerms(
             const NekDouble                                tau,
             const Array<OneD, const NekDouble>            &inarray, 
             Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,  
@@ -73,7 +73,7 @@ namespace Nektar
         
         //  evaluate additional terms in HDG face. Note that this assumes that
         // edges are unpacked into local cartesian order. 
-        void Expansion3D::v_AddHDGHelmholtzFaceTerms(
+        void Expansion3D::AddHDGHelmholtzFaceTerms(
             const NekDouble                    tau,
             const int                          face,
             StdRegions::StdExpansionSharedPtr  FaceExp,
@@ -204,7 +204,7 @@ namespace Nektar
          * Computes the C matrix entries due to the presence of the identity
          * matrix in Eqn. 32.
          */
-        void Expansion3D::v_AddNormTraceInt(const int dir,
+        void Expansion3D::AddNormTraceInt(const int dir,
                                           Array<OneD, const NekDouble> &inarray,
                                           Array<OneD,StdRegions::StdExpansionSharedPtr> &FaceExp,
                                           Array<OneD,NekDouble> &outarray,
@@ -213,7 +213,6 @@ namespace Nektar
             int i,f,cnt;
             int order_f,nquad_f;
             int nfaces = GetNfaces();
-            int coordim = GetCoordim();
 
             cnt = 0;
             for(f = 0; f < nfaces; ++f)
@@ -263,14 +262,13 @@ namespace Nektar
         /**
          * For a given face add the \tilde{F}_1j contributions
          */
-        void Expansion3D::v_AddFaceBoundaryInt(const int face,
-                                              StdRegions::StdExpansionSharedPtr &FaceExp,
-                                              Array <OneD,NekDouble > &outarray,
-                                              const StdRegions::VarCoeffMap &varcoeffs)
+        void Expansion3D::AddFaceBoundaryInt(const int face,
+                                             StdRegions::StdExpansionSharedPtr &FaceExp,
+                                             Array <OneD,NekDouble > &outarray,
+                                             const StdRegions::VarCoeffMap &varcoeffs)
         {
             int i;
             int order_f = FaceExp->GetNcoeffs();
-            int nquad_f = FaceExp->GetNumPoints(0)*FaceExp->GetNumPoints(1);
             Array<OneD, NekDouble> coeff(order_f);
 
             StdRegions::IndexMapKey ikey(
@@ -382,6 +380,7 @@ namespace Nektar
                      "Matrix construction is not implemented for variable "
                      "coefficients at the moment");
             ////////////////////////////////////////////////////
+
             DNekMatSharedPtr returnval;
             
             switch(mkey.GetMatrixType())
@@ -414,9 +413,9 @@ namespace Nektar
                     DNekMat &Mat = *returnval;
                     Vmath::Zero(ncoeffs*ncoeffs,Mat.GetPtr(),1);
 
-                    StdRegions::VarCoeffType Coeffs[3] = {StdRegions::eVarCoeffD00,
-                                                            StdRegions::eVarCoeffD11,
-                                                            StdRegions::eVarCoeffD22};
+                    // StdRegions::VarCoeffType Coeffs[3] = {StdRegions::eVarCoeffD00,
+                    //                                       StdRegions::eVarCoeffD11,
+                    //                                       StdRegions::eVarCoeffD22};
 
                     for(i=0;  i < coordim; ++i)
                     {
@@ -492,12 +491,11 @@ namespace Nektar
                 // U^e (P22)
                 case StdRegions::eHybridDGLamToU:
                 {
-                    int i,j,k;
-                    int nbndry = NumDGBndryCoeffs();
-                    int ncoeffs = GetNcoeffs();
-                    int nfaces  = GetNfaces();
-                    NekDouble lambdaval = mkey.GetConstFactor(StdRegions::eFactorLambda);
-                    NekDouble tau       = mkey.GetConstFactor(StdRegions::eFactorTau);
+                    int       i,j,k;
+                    int       nbndry  = NumDGBndryCoeffs();
+                    int       ncoeffs = GetNcoeffs();
+                    int       nfaces  = GetNfaces();
+                    NekDouble tau     = mkey.GetConstFactor(StdRegions::eFactorTau);
                     
                     Array<OneD,NekDouble> lambda(nbndry);
                     DNekVec Lambda(nbndry,lambda,eWrapper);
@@ -694,7 +692,6 @@ namespace Nektar
                     int i,j,f,cnt;
                     int order_f, nquad_f;
                     int nbndry  = NumDGBndryCoeffs();
-                    int coordim = GetCoordim();
                     int nfaces  = GetNfaces();
                     NekDouble tau = mkey.GetConstFactor(StdRegions::eFactorTau);
 
@@ -705,7 +702,6 @@ namespace Nektar
                     
                     Array<OneD,unsigned int>    fmap;
                     Array<OneD, int>            sign;
-                    StdRegions::Orientation facedir;
                     
                     // declare matrix space
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(nbndry, nbndry);
@@ -749,7 +745,6 @@ namespace Nektar
                             order_f = FaceExp[f]->GetNcoeffs();  
                             nquad_f = FaceExp[f]->GetNumPoints(0)*FaceExp[f]->GetNumPoints(1);    
                             normals = GetFaceNormal(f);
-                            facedir = GetFaceOrient(f);
                             
                             work = Array<OneD,NekDouble>(nquad_f);
                             varcoeff_work = Array<OneD, NekDouble>(nquad_f);
@@ -943,7 +938,11 @@ namespace Nektar
                  * normals must be negated, since the integral being performed
                  * here requires an outwards facing normal.
                  */ 
-                if (locExp->GetRightAdjacentElementFace() != -1)
+                if (m_negatedNormals[face])
+                {
+                    Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
+                }
+                else if (locExp->GetRightAdjacentElementFace() != -1)
                 {
                     if (locExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID() 
                         == GetGeom3D()->GetGlobalID())

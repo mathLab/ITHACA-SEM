@@ -54,9 +54,9 @@ namespace Nektar
     IncNavierStokes::IncNavierStokes(const LibUtilities::SessionReaderSharedPtr& pSession):
         //EquationSystem(pSession),
         UnsteadySystem(pSession),
-        m_steadyStateSteps(0),
         m_subSteppingScheme(false),
-        m_SmoothAdvection(false)
+        m_SmoothAdvection(false),
+        m_steadyStateSteps(0)
     {
     }
 
@@ -144,7 +144,6 @@ namespace Nektar
                             {
                                 if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eI)
                                 {
-                                    SpatialDomains::BndUserDefinedType btype = m_fields[0]->GetBndConditions()[n]->GetUserDefined();
                                     ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
                                 }
                             }
@@ -255,7 +254,6 @@ namespace Nektar
     void IncNavierStokes::AdvanceInTime(int nsteps)
     {
         int i,n;
-        int phystot  = m_fields[0]->GetTotPoints();
         int n_fields = m_fields.num_elements();
         static int nchk = 0;
 		
@@ -780,7 +778,6 @@ namespace Nektar
                                                  Array<OneD, NekDouble> &wk)
     {
         int i;
-        int nvariables = inarray.num_elements();
         int nqtot      = m_fields[0]->GetTotPoints();
         int VelDim     = m_velocity.num_elements();
         Array<OneD, Array<OneD, NekDouble> > velocity(VelDim);
@@ -815,7 +812,6 @@ namespace Nektar
                 int colrank = m_comm->GetColumnComm()->GetRank();
                 int nproc   = m_comm->GetColumnComm()->GetSize();
                 int locsize = m_npointsZ/nproc/2;
-                int ensize  = m_npointsZ/nproc/2;
                 
                 Array<OneD, NekDouble> energy    (locsize,0.0);
                 Array<OneD, NekDouble> energy_tmp(locsize,0.0);
@@ -881,7 +877,6 @@ namespace Nektar
     void IncNavierStokes::SetBoundaryConditions(NekDouble time)
     {
         int  nvariables = m_fields.num_elements();
-        SpatialDomains::BndUserDefinedType BndType;
         
         for (int i = 0; i < nvariables; ++i)
         {
@@ -992,16 +987,12 @@ namespace Nektar
     
     NekDouble IncNavierStokes::GetSubstepTimeStep()
     { 
-        int nvariables     = m_fields.num_elements();
-        int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize(); 
         
         const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
         Array<OneD, int> ExpOrderList (n_element, ExpOrder);
         
-        const NekDouble minLengthStdTri  = 1.414213;
-        const NekDouble minLengthStdQuad = 2.0;
-        const NekDouble cLambda          = 0.2; // Spencer book pag. 317
+        const NekDouble cLambda = 0.2; // Spencer book pag. 317
         
         Array<OneD, NekDouble> tstep      (n_element, 0.0);
         Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
@@ -1016,8 +1007,6 @@ namespace Nektar
         
         for(int el = 0; el < n_element; ++el)
         {
-            int npoints = m_fields[0]->GetExp(el)->GetTotPoints();
-            
             tstep[el] = m_cflSafetyFactor / 
                        (stdVelocity[el] * cLambda * 
                        (ExpOrder[el]-1) * (ExpOrder[el]-1));
@@ -1032,16 +1021,12 @@ namespace Nektar
 
     NekDouble IncNavierStokes::GetCFLEstimate(int &elmtid)
     { 
-        int nvariables     = m_fields.num_elements();
-        int nTotQuadPoints = GetTotPoints();
-        int n_element      = m_fields[0]->GetExpSize(); 
+        int n_element = m_fields[0]->GetExpSize(); 
         
         const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
         Array<OneD, int> ExpOrderList (n_element, ExpOrder);
         
-        const NekDouble minLengthStdTri  = 1.414213;
-        const NekDouble minLengthStdQuad = 2.0;
-        const NekDouble cLambda          = 0.2; // Spencer book pag. 317
+        const NekDouble cLambda = 0.2; // Spencer book pag. 317
         
         Array<OneD, NekDouble> cfl        (n_element, 0.0);
         Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
@@ -1093,7 +1078,6 @@ namespace Nektar
         int nTotQuadPoints  = GetTotPoints();
         int n_element       = m_fields[0]->GetExpSize();       
         int nvel            = inarray.num_elements();
-        int npts            = 0;
         
         NekDouble pntVelocity;
         

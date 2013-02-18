@@ -886,7 +886,6 @@ namespace Nektar
             }
 
             /// - All other vertices and edges
-            int nEdgeCoeffs;
             int elmtid;
             for(i = 0; i < locExpVector.size(); ++i)
             {
@@ -897,7 +896,6 @@ namespace Nektar
                     m_numLocalBndCoeffs += locExpansion->NumBndryCoeffs();
 
                     nTotalVerts += locExpansion->GetNverts();
-
                 }
             }
 

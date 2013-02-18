@@ -49,12 +49,12 @@ namespace Nektar
             StdExpansion  (StdRegions::StdPrismData::getNumberOfCoefficients(
                                Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
                            3, Ba, Bb, Bc),
-            Expansion     (),
             StdExpansion3D(StdRegions::StdPrismData::getNumberOfCoefficients(
                                Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), 
                            Ba, Bb, Bc),
-            Expansion3D   (),
             StdPrismExp   (Ba, Bb, Bc),
+            Expansion     (),
+            Expansion3D   (),
             m_geom        (geom),
             m_metricinfo  (m_geom->GetGeomFactors(m_base)),
             m_matrixManager(
@@ -68,10 +68,10 @@ namespace Nektar
 
         PrismExp::PrismExp(const PrismExp &T):
             StdExpansion(T),
-            Expansion(T),
             StdExpansion3D(T),
-            Expansion3D(T),
             StdRegions::StdPrismExp(T),
+            Expansion(T),
+            Expansion3D(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
@@ -1157,7 +1157,7 @@ namespace Nektar
         {
             if(format==eTecplot)
             {
-                int i,j,k;
+                int i,j;
                 int nquad0 = m_base[0]->GetNumPoints();
                 int nquad1 = m_base[1]->GetNumPoints();
                 int nquad2 = m_base[2]->GetNumPoints();
@@ -1758,76 +1758,36 @@ namespace Nektar
             return returnval;
         }
         
-        /// @todo add functionality for IsUsingQuadMetrics
         void PrismExp::MultiplyByQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {
-            int i, j;
-
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            int  nquad2 = m_base[2]->GetNumPoints();
-            int  nqtot  = nquad0*nquad1*nquad2;
-
-            const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
-            const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
-            const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
-            const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
-            const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
-            
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            const int nqtot = m_base[0]->GetNumPoints() *
+                              m_base[1]->GetNumPoints() *
+                              m_base[2]->GetNumPoints();
+               
+            if(m_metricinfo->IsUsingQuadMetrics())
             {
-                Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);
+                const Array<OneD, const NekDouble> &metric 
+                    = m_metricinfo->GetQuadratureMetrics();
+                    
+                Vmath::Vmul(nqtot, metric, 1, inarray, 1, outarray, 1);
             }
             else
             {
-                Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
-            }
-            
-            // Multiply by integration constants in x-direction
-            for(i = 0; i < nquad1*nquad2; ++i)
-            {
-                Vmath::Vmul(nquad0, outarray.get()+i*nquad0, 1,
-                            w0.get(), 1, outarray.get()+i*nquad0,1);
-            }
-
-            // Multiply by integration constants in y-direction
-            for(j = 0; j < nquad2; ++j)
-            {
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Blas::Dscal(nquad0,w1[i], &outarray[0]+i*nquad0 +
-                                j*nquad0*nquad1,1);
-                }
-            }
-            
-            // Multiply by integration constants in z-direction; need to
-            // incorporate factor (1-eta_3)/2 into weights, but only if using
-            // GLL quadrature points.
-            switch(m_base[2]->GetPointsType())
-            {
-                // Legendre inner product.
-                case LibUtilities::eGaussLobattoLegendre:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1,0.25*(1-z2[i])*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1,1);
-                    }
-                    break;
+                const Array<OneD, const NekDouble> &jac 
+                    = m_metricinfo->GetJac();
                 
-                // (1,0) Jacobi inner product.
-                case LibUtilities::eGaussRadauMAlpha1Beta0:
-                    for(i = 0; i < nquad2; ++i)
-                    {
-                        Blas::Dscal(nquad0*nquad1, 0.5*w2[i],
-                                    &outarray[0]+i*nquad0*nquad1, 1);
-                    }
-                    break;
-                    
-                default:
-                    ASSERTL0(false, "Quadrature point type not supported for this element.");
-                    break;
+                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+                {
+                    Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);
+                }
+                else
+                {
+                    Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
+                }
+
+                StdPrismExp::MultiplyByQuadratureMetric(outarray, outarray);
             }
         }
         
@@ -1858,9 +1818,6 @@ namespace Nektar
             int nquad1  = m_base[1]->GetNumPoints();
             int nquad2  = m_base[2]->GetNumPoints();
             int nqtot   = nquad0*nquad1*nquad2;
-            int nmodes0 = m_base[0]->GetNumModes();
-            int nmodes1 = m_base[1]->GetNumModes();
-            int nmodes2 = m_base[2]->GetNumModes();
             int i;
             
             // Set up temporary storage.
@@ -1898,7 +1855,6 @@ namespace Nektar
 
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
             const Array<OneD, const NekDouble>& z0   = m_base[0]->GetZ();
-            const Array<OneD, const NekDouble>& z1   = m_base[1]->GetZ();
             const Array<OneD, const NekDouble>& z2   = m_base[2]->GetZ();
             
             // Step 2. Calculate the metric terms of the collapsed

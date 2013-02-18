@@ -348,7 +348,7 @@ int main(int argc, char *argv[])
     exeTime = (time2-time1);
 
     int nLocCoeffs     = Exp->GetNcoeffs();
-    int nGlobCoeffs    = nGlobCoeffs;
+    int nGlobCoeffs    = 0;
     int nLocBndCoeffs  = 0;
     int nGlobBndCoeffs = 0;
     int nLocDirCoeffs  = 0;

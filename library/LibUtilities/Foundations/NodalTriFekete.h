@@ -41,7 +41,6 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
-//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
@@ -56,48 +55,47 @@ namespace Nektar
         public:
             virtual ~NodalTriFekete()
             {
-                std::cout << "******* ~NodalTriFekete() destructor called!" << endl;
+                std::cout << "******* ~NodalTriFekete() destructor called!" 
+                          << endl;
             }
             
             NodalTriFekete(const PointsKey &key):PointsBaseType(key)
             {
             }
             
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
+            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> 
+                Create(const PointsKey &key);
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
+            const MatrixSharedPtrType GetI(const PointsKey &pkey)
             {
-                ASSERTL0(pkey.GetPointsDim()==2, "Fekete Points can only interp to other 2d point distributions");
+                ASSERTL0(pkey.GetPointsDim() == 2, 
+                         "Fekete Points can only interp to other 2d "
+                         "point distributions");
                 Array<OneD, const NekDouble> x, y;
                 PointsManager()[pkey]->GetPoints(x, y);
                 return GetI(x, y);
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x, const Array<OneD, const NekDouble>& y)
+            const MatrixSharedPtrType GetI(
+                const Array<OneD, const NekDouble>& x,
+                const Array<OneD, const NekDouble>& y)
             {
-                int numpoints = x.num_elements();
-                return GetI(numpoints, x, y);
+                int          numpoints = x.num_elements();
+                unsigned int np        = GetTotNumPoints();
 
-            }
-
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& xi,
-                                                                const Array<OneD, const NekDouble>& yi)
-            {
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
-                CalculateInterpMatrix(xi, yi, interp);
-                
-                unsigned int np = GetTotNumPoints();
-                NekDouble* d = interp.data();
-                boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, 
-                                                                    np, d));
-                return returnval;
-            }       
+                CalculateInterpMatrix(x, y, interp);
 
+                NekDouble* d = interp.data();
+                return MemoryManager<NekMatrix<NekDouble> >
+                    ::AllocateSharedPtr(numpoints, np, d);
+            }
 
         private:
             NodalTriFekete():PointsBaseType(NullPointsKey)
             {
-                std::cout << "******* NodalTriFekete() constructor called!" << endl;
+                std::cout << "******* NodalTriFekete() constructor called!" 
+                          << endl;
             }
 
             void CalculatePoints();
@@ -105,9 +103,10 @@ namespace Nektar
             void CalculateDerivMatrix();
             void NodalPointReorder2d();
 
-            void CalculateInterpMatrix(const Array<OneD, const NekDouble>& xi, const Array<OneD, const NekDouble>& yi, Array<OneD, NekDouble>& interp);
-
-
+            void CalculateInterpMatrix(
+                const Array<OneD, const NekDouble> &xi,
+                const Array<OneD, const NekDouble> &yi,
+                      Array<OneD,       NekDouble> &interp);
         }; // end of NodalTriFekete
    } // end of namespace
 } // end of namespace 

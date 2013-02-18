@@ -273,7 +273,6 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray)
         {
             // Using implementation from page 146 of Spencer Sherwin's book.
-            int Qy = m_base[1]->GetNumPoints();
             int Qz = m_base[2]->GetNumPoints();
 
             // Get the point distributions:
@@ -351,7 +350,7 @@ namespace Nektar
             eta_x = m_base[0]->GetZ();
             eta_z = m_base[2]->GetZ();
 
-            int i, j, k;
+            int i, k;
 
             bool Do_1 = (out_dxi1.num_elements() > 0)? true:false;
             bool Do_3 = (out_dxi3.num_elements() > 0)? true:false;
@@ -502,13 +501,10 @@ namespace Nektar
         void StdPrismExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                                   Array<OneD,       NekDouble>& outarray)
         {
-            int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
-
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
             
             Array<OneD, NekDouble> wsp(nquad2*order1*order0 +
                                        nquad1*nquad2*order0);
@@ -1958,7 +1954,6 @@ namespace Nektar
          */
         int StdPrismExp::GetMode(int p, int q, int r)
         {
-            int P = m_base[0]->GetNumModes() - 1;
             int Q = m_base[1]->GetNumModes() - 1;
             int R = m_base[2]->GetNumModes() - 1;
             
@@ -1972,10 +1967,9 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             int i, j;
-
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            int  nquad2 = m_base[2]->GetNumPoints();
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
 
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();

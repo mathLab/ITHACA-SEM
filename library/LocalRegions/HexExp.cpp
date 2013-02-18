@@ -60,9 +60,10 @@ namespace Nektar
                        const LibUtilities::BasisKey &Bc,
                        const SpatialDomains::HexGeomSharedPtr &geom):
             StdExpansion  (Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(),3,Ba,Bb,Bc),
-            Expansion     (),
             StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(),Ba,Bb,Bc),
             StdRegions::StdHexExp(Ba,Bb,Bc),
+            Expansion     (),
+            Expansion3D   (),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(
@@ -82,10 +83,10 @@ namespace Nektar
          */
         HexExp::HexExp(const HexExp &T):
             StdExpansion(T),
-            Expansion(T),
             StdExpansion3D(T),
-            Expansion3D(T),
             StdRegions::StdHexExp(T),
+            Expansion(T),
+            Expansion3D(T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
@@ -367,27 +368,25 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray)
         {
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nquad2 = m_base[2]->GetNumPoints();
+            const int nqtot = GetTotPoints();
+
             Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
-            Array<OneD,NekDouble> tmp(nquad0*nquad1*nquad2);
+            Array<OneD,       NekDouble> tmp(nqtot);
 
             // multiply inarray with Jacobian
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul(nquad0*nquad1*nquad2,&jac[0],1,
-                            (NekDouble*)&inarray[0],1,&tmp[0],1);
+                Vmath::Vmul(nqtot, &jac[0], 1, (NekDouble*)&inarray[0], 1,
+                                   &tmp[0], 1);
             }
             else
             {
-                Vmath::Smul(nquad0*nquad1*nquad2,jac[0],
-                            (NekDouble*)&inarray[0],1,&tmp[0],1);
+                Vmath::Smul(nqtot, jac[0], (NekDouble*)&inarray[0], 1,
+                            &tmp[0], 1);
             }
 
             StdHexExp::v_IProductWRTBase(tmp, outarray);
         }
-
 
         void HexExp::v_IProductWRTDerivBase(
                 const int dir,
@@ -2286,8 +2285,6 @@ namespace Nektar
             UseLocRegionsMatrix:
                 {
                     int i,j;
-                    int cnt = 0;
-                    int cnt2 = 0;
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
                     DNekScalMat &mat = *GetLocMatrix(mkey);
@@ -2365,28 +2362,21 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD, NekDouble> &outarray)
         {        
+            const int nqtot = m_base[0]->GetNumPoints() *
+                              m_base[1]->GetNumPoints() *
+                              m_base[2]->GetNumPoints();
+               
             if(m_metricinfo->IsUsingQuadMetrics())
             {
-                int    nqtot = m_base[0]->GetNumPoints()
-                                * m_base[1]->GetNumPoints()
-                                * m_base[2]->GetNumPoints();                
-                const Array<OneD, const NekDouble>& metric 
-                                        = m_metricinfo->GetQuadratureMetrics();  
-                    
+                const Array<OneD, const NekDouble> &metric
+                    = m_metricinfo->GetQuadratureMetrics();
+
                 Vmath::Vmul(nqtot, metric, 1, inarray, 1, outarray, 1);
             }
             else
             {
-                int    i;
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int    nquad2 = m_base[2]->GetNumPoints();
-                int    nqtot  = nquad0*nquad1*nquad2;
-
-                const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
-                const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
-                const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
-                const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
+                const Array<OneD, const NekDouble> &jac
+                    = m_metricinfo->GetJac();
 
                 if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                 {
@@ -2397,118 +2387,19 @@ namespace Nektar
                     Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
                 }
 
-                // First coordinate
-                for(i = 0; i < nquad1*nquad2; ++i)
-                {
-                    Vmath::Vmul(nquad0, outarray.get()+i*nquad0, 1,
-                                w0.get(), 1, outarray.get()+i*nquad0,1);
-                }
-
-                // Second coordinate
-                for(i = 0; i < nquad1*nquad2; ++i)
-                {
-                    Vmath::Smul(nquad0, w1[i%nquad2], outarray.get()+i*nquad0, 1,
-                                outarray.get()+i*nquad0, 1);
-                }
-
-                // Third coordinate
-                for(i = 0; i < nquad2; ++i)
-                {
-                    Vmath::Smul(nquad0*nquad1, w2[i], outarray.get()+i*nquad0*nquad1, 1,
-                                outarray.get()+i*nquad0*nquad1, 1);
-                }
-/*
-                // multiply by integration constants 
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Vmath::Vmul(nquad0, outarray.get()+i*nquad0,1,
-                                w0.get(),1,outarray.get()+i*nquad0,1);
-                }
-                    
-                for(i = 0; i < nquad0; ++i)
-                {
-                    Vmath::Vmul(nquad1,outarray.get()+i,nquad0,w1.get(),1,
-                                outarray.get()+i,nquad0);
-                }
-*/            }
+                StdHexExp::MultiplyByQuadratureMetric(outarray, outarray);
+            }
         }
-//        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
-//                        const StdRegions::MatrixType mtype,
-//                        NekDouble lambdaval,
-//                        NekDouble tau)
-//        {
-//            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau );
-//            return m_matrixManager[mkey];
-//        }
-//
-//        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
-//                        const StdRegions::MatrixType mtype,
-//                        const Array<OneD, NekDouble> &dir1Forcing,
-//                        NekDouble lambdaval,
-//                        NekDouble tau)
-//        {
-//            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
-//                            dir1Forcing);
-//            return m_matrixManager[mkey];
-//        }
-//
-//        DNekScalMatSharedPtr& HexExp::v_GetLocMatrix(
-//                        const StdRegions::MatrixType mtype,
-//                        const Array<OneD, Array<OneD, const NekDouble> >&
-//                                                                dirForcing,
-//                        NekDouble lambdaval,
-//                        NekDouble tau)
-//        {
-//            MatrixKey mkey( mtype,DetExpansionType(),*this,lambdaval,tau,
-//                            dirForcing);
-//            return m_matrixManager[mkey];
-//        }
-
-        
-
-
-
-/*
-        void HexExp::v_IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray,
-                                             Array<OneD, NekDouble> &outarray)
-        {
-            cout << "Hex::IProduct::SumFac" << endl;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nquad2 = m_base[2]->GetNumPoints();
-            int    order0 = m_base[0]->GetNumModes();
-            int    order1 = m_base[1]->GetNumModes();
-
-            Array<OneD,NekDouble> tmp(nquad0*nquad1*nquad2);
-            Array<OneD,NekDouble> wsp(nquad0*nquad1*(nquad2+order0)
-                                                + order0*order1*nquad2);
-
-            MultiplyByQuadratureMetric(inarray, tmp);
-
-            StdHexExp::IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                                    m_base[1]->GetBdata(),
-                                                    m_base[2]->GetBdata(),
-                                                    tmp, outarray, wsp,
-                                                    true, true, true);
-        }
-*/
         
         void HexExp::LaplacianMatrixOp_MatFree_Kernel(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       Array<OneD,       NekDouble> &wsp)
         {
-            int       nquad0  = m_base[0]->GetNumPoints();
-            int       nquad1  = m_base[1]->GetNumPoints();
-            int       nquad2  = m_base[2]->GetNumPoints();
-            int       nqtot   = nquad0*nquad1*nquad2; 
-            int       nmodes0 = m_base[0]->GetNumModes();
-            int       nmodes1 = m_base[1]->GetNumModes();
-            int       nmodes2 = m_base[2]->GetNumModes();
-            
-            int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
-                              nquad0*nquad1*(nquad2+nmodes0)+
-                              nmodes0*nmodes1*nquad2);
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
+            int nqtot  = nquad0*nquad1*nquad2; 
             
             const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
             const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();

@@ -140,13 +140,6 @@ namespace Nektar
         }
 
 
-        void StdQuadExp::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
-                                                const Array<OneD, const NekDouble>& direction,
-                                                Array<OneD, NekDouble> &outarray)
-        {
-            ASSERTL0(false,"This method is not defined or valid for this class type");
-        }
-
         ////////////////
         // Transforms //
         ////////////////
@@ -770,23 +763,6 @@ namespace Nektar
             }
         }
 
-        void StdQuadExp::v_GetEdgePhysVals(const int edge,  StdExpansion1DSharedPtr &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
-        }    
-        
-        
-        
-        void StdQuadExp::v_GetEdgeQFactors(
-                const int edge,  
-                Array<OneD, NekDouble> &outarray)
-        {
-            NEKERROR(ErrorUtil::efatal,
-                     "Method does not exist for this shape or library" );
-        }
-
-        
-        
         //////////////
         // Mappings //
         //////////////
@@ -1599,15 +1575,14 @@ namespace Nektar
             StdQuadExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
         
-      //up to here
-        
+        //up to here
         void StdQuadExp::MultiplyByQuadratureMetric(
-                            const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &outarray)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
         {         
             int i; 
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
                 
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
@@ -1623,7 +1598,7 @@ namespace Nektar
             {
                 Vmath::Vmul(nquad1,outarray.get()+i,nquad0,w1.get(),1,
                             outarray.get()+i,nquad0);
-            }                
+            }
         }
 
 

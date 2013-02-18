@@ -440,7 +440,7 @@ namespace Nektar
             const std::string variable):
             ExpList()
         {
-            int i,j,cnt,id, elmtid=0;
+            int i, j, id, elmtid=0;
             map<int,int> FaceDone;
             map<int,int> NormalSet;
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
@@ -451,7 +451,6 @@ namespace Nektar
             
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
-            cnt = 0;
             for(i = 0; i < bndCond.num_elements(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType()
@@ -783,7 +782,7 @@ namespace Nektar
         void ExpList2D::v_GetNormals(
             Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-            int i,j,k,offset;
+            int i,k,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
             Array<OneD, NekDouble> tmp;
             // Assume whole array is of same coordinate dimension
@@ -909,7 +908,6 @@ namespace Nektar
         void ExpList2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
             int ntot = nquad0*nquad1;

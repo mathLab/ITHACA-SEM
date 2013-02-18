@@ -78,7 +78,6 @@ namespace Nektar
             DisContField3DHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             int i,n,nel;
-            bool False = false;
             ContField2DSharedPtr plane_zero;
             ContField2DSharedPtr plane_two;
 

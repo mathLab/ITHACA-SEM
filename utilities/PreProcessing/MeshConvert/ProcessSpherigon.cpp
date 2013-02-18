@@ -378,7 +378,6 @@ namespace Nektar
                 // Calculate area of element.
                 Node ta  = v[1]    - v[0];
                 Node tb  = v[nV-1] - v[0];
-                double A = CrossProdMag(ta, tb);
                 
                 vector<Node>   tmp  (nV);
                 vector<double> r    (nV);

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AdvectionWeakDG.h
+// File: Advection.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,42 +29,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Upwind Riemann solver.
+// Description: Abstract base class for advection.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
-#define NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
-
-#include <SolverUtils/Advection.h>
+#include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
 {
     namespace SolverUtils
     {
-        class AdvectionWeakDG : public Advection
+        AdvectionFactory& GetAdvectionFactory()
         {
-        public:
-            static AdvectionSharedPtr create(std::string advType)
-            {
-                return AdvectionSharedPtr(new AdvectionWeakDG());
-            }
-            
-            static std::string type;
-            
-        protected:
-            AdvectionWeakDG();
-            
-            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
-            
-            virtual void v_Advect(
-                const int                                          nConvective,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
-        }; 
+            typedef Loki::SingletonHolder<AdvectionFactory,
+            Loki::CreateUsingNew,
+            Loki::NoDestroy > Type;
+            return Type::Instance();
+        }
+        
+        void Advection::InitObject(
+            const LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+        {
+            v_InitObject(pSession, pFields);
+        }
+
+        void Advection::Advect(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+        {
+            v_Advect(nConvectiveFields, fields, advVel, inarray, outarray);
+        }
     }
 }
-    
-#endif

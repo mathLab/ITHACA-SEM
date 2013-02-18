@@ -43,8 +43,9 @@ namespace Nektar
     namespace SpatialDomains
     {
         BoundaryConditions::BoundaryConditions(const LibUtilities::SessionReaderSharedPtr &pSession, const MeshGraphSharedPtr &meshGraph)
-            : m_session(pSession),
-              m_meshGraph(meshGraph)
+            : m_meshGraph(meshGraph), 
+              m_session  (pSession)
+              
         {
             Read(m_session->GetElement("Nektar/Conditions"));
         }
@@ -79,8 +80,6 @@ namespace Nektar
         {
             TiXmlElement *boundaryRegions = conditions->FirstChildElement("BOUNDARYREGIONS");
             ASSERTL0(boundaryRegions, "Unable to find BOUNDARYREGIONS block.");
-
-            int regionIndx = 0;
 
             // See if we have boundary regions defined.
             TiXmlElement *boundaryRegionsElement = boundaryRegions->FirstChildElement("B");

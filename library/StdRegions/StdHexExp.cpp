@@ -373,22 +373,11 @@ namespace Nektar
             }
         }
 
-
-        void StdHexExp::v_PhysDirectionalDeriv(
-                                const Array<OneD, const NekDouble>& inarray,
-                                const Array<OneD, const NekDouble>& direction,
-                                      Array<OneD, NekDouble> &outarray)
-        {
-            ASSERTL0(false,"This method is not defined or valid for this class "
-                            "type");
-        }
-
-
         void StdHexExp::v_StdPhysDeriv(
-                                const Array<OneD, const NekDouble>& inarray,
-                                      Array<OneD, NekDouble> &out_d0,
-                                      Array<OneD, NekDouble> &out_d1,
-                                      Array<OneD, NekDouble> &out_d2)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &out_d0,
+                  Array<OneD,       NekDouble> &out_d1,
+                  Array<OneD,       NekDouble> &out_d2)
         {
             StdHexExp::v_PhysDeriv(inarray, out_d0, out_d1, out_d2);
         }
@@ -1223,7 +1212,7 @@ namespace Nektar
          */
         void StdHexExp::v_GetFaceToElementMap(
             const int                  fid,
-            const Orientation      faceOrient,
+            const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
             int                        nummodesA,
@@ -1234,14 +1223,11 @@ namespace Nektar
             const int nummodes1 = m_base[1]->GetNumModes();
             const int nummodes2 = m_base[2]->GetNumModes();
 
-            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
-            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
-            const LibUtilities::BasisType bType2 = GetEdgeBasisType(2);
-
-            ASSERTL1( (bType0==bType1) && (bType0==bType2),
-                      "Method only implemented if BasisType is indentical in "
-                      "all directions");
-            ASSERTL1( bType0==LibUtilities::eModified_A,
+            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1) &&
+                     GetEdgeBasisType(0) == GetEdgeBasisType(2),
+                     "Method only implemented if BasisType is indentical in "
+                     "all directions");
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A,
                       "Method only implemented for Modified_A BasisType");
 
             if (nummodesA == -1)
@@ -1893,8 +1879,6 @@ namespace Nektar
                 }
             }
 
-            bool signChange = false;
-
             int IdxRange [3][2];
             int Incr[3];
 
@@ -2512,7 +2496,6 @@ namespace Nektar
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
-            int    nqtot  = nquad0*nquad1*nquad2;
 
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();

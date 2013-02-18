@@ -366,7 +366,7 @@ namespace Nektar
                         MultiRegions::ContField3DSharedPtr firstbase =
                             MemoryManager<MultiRegions::ContField3D>
                             ::AllocateSharedPtr(m_session,mesh,
-                                                m_session->GetVariable(i));
+                                                m_session->GetVariable(0));
                         m_base[0] = firstbase;
 			
                         for(i = 1 ; i < m_base.num_elements(); i++)
@@ -463,7 +463,6 @@ namespace Nektar
     {
         std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
-		int numfields=m_base.num_elements();
 		int nqtot = m_base[0]->GetTotPoints();
 
 		//Get Homogeneous
@@ -580,7 +579,6 @@ namespace Nektar
     {
         int ndim       = m_nConvectiveFields;
         int nPointsTot = pFields[0]->GetNpoints();
-		int nP_plane =  nPointsTot/2;
 
         Array<OneD, NekDouble> grad0,grad1,grad2;
 
@@ -908,7 +906,6 @@ namespace Nektar
         DNekMatSharedPtr    loc_mat;
         DNekBlkMatSharedPtr BlkMatrix;
         int n_exp = 0;
-        int num_trans_per_proc = 0;
         
         n_exp = m_base[0]->GetTotPoints(); // will operatore on m_phys
         

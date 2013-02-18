@@ -232,7 +232,7 @@ namespace Nektar
                 break;
             }
             
-            // Continuous projection
+        // Continuous projection
         case MultiRegions::eGalerkin:
         case MultiRegions::eMixed_CG_Discontinuous:
             {

@@ -40,8 +40,6 @@
 #include <boost/shared_ptr.hpp>
 #include <LibUtilities/Foundations/ManagerAccess.h>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
-
-//#include <LibUtilities/BasicUtils/BasicUtilsFwd.hpp>  // for NekManager
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LibUtilitiesDeclspec.h>
 
@@ -58,34 +56,31 @@ namespace Nektar
             {
             }
 
-            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> Create(const PointsKey &key);
+            LIB_UTILITIES_EXPORT static boost::shared_ptr<PointsBaseType> 
+                Create(const PointsKey &key);
 
-
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const PointsKey &pkey)
+            const MatrixSharedPtrType GetI(const PointsKey &pkey)
             {
-                ASSERTL0(pkey.GetPointsDim()==2, "NodalTriElec Points can only interp to other 2d point distributions");
+                ASSERTL0(pkey.GetPointsDim()==2, 
+                         "NodalTriElec Points can only interpolate to other 2d "
+                         "point distributions");
                 Array<OneD, const NekDouble> x, y;
                 PointsManager()[pkey]->GetPoints(x, y);
                 return GetI(x, y);
             }
 
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(const Array<OneD, const NekDouble>& x, const Array<OneD, const NekDouble>& y){
-                
+            const MatrixSharedPtrType GetI(
+                const Array<OneD, const NekDouble>& x, 
+                const Array<OneD, const NekDouble>& y)
+            {
                 int numpoints = x.num_elements();
-                return GetI(numpoints, x, y);            
-            }
-
-            const boost::shared_ptr<NekMatrix<NekDouble> > GetI(unsigned int numpoints, const Array<OneD, const NekDouble>& xi,
-                                                                const Array<OneD, const NekDouble>& yi){
-                    
                 Array<OneD, NekDouble> interp(GetTotNumPoints()*numpoints);
-                CalculateInterpMatrix(xi, yi, interp);
+                CalculateInterpMatrix(x, y, interp);
                 
                 unsigned int np = GetTotNumPoints();
                 NekDouble* d = interp.data();
-                boost::shared_ptr< NekMatrix<NekDouble> > returnval(MemoryManager<NekMatrix<NekDouble> >::AllocateSharedPtr(numpoints, 
-                                                                    np, d));
-                return returnval;
+                return MemoryManager<NekMatrix<NekDouble> >
+                    ::AllocateSharedPtr(numpoints, np, d);
             }
 
             NodalTriElec(const PointsKey &key):PointsBaseType(key)
@@ -102,7 +97,10 @@ namespace Nektar
             void CalculateDerivMatrix();
             void NodalPointReorder2d();
 
-            void CalculateInterpMatrix(const Array<OneD, const NekDouble>& , const Array<OneD, const NekDouble>& , Array<OneD, NekDouble>& );
+            void CalculateInterpMatrix(
+                const Array<OneD, const NekDouble> &xia,
+                const Array<OneD, const NekDouble> &yia,
+                      Array<OneD, NekDouble> &interp);
         };
    } // end of namespace
 } // end of namespace 

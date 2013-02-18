@@ -52,14 +52,14 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT MeshGraph1D(const LibUtilities::SessionReaderSharedPtr &pSession);
             SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph1D();
 
-            SPATIAL_DOMAINS_EXPORT void ReadGeometry(std::string &infilename);
+            SPATIAL_DOMAINS_EXPORT void ReadGeometry(const std::string &infilename);
             SPATIAL_DOMAINS_EXPORT void ReadGeometry(TiXmlDocument &doc);
             SPATIAL_DOMAINS_EXPORT void ReadElements(TiXmlDocument &doc);
             SPATIAL_DOMAINS_EXPORT void ReadComposites(TiXmlDocument &doc);
             SPATIAL_DOMAINS_EXPORT void ResolveGeomRef(const std::string
                     &prevToken, const std::string &token, Composite& composite);
 
-            inline const int GetCoordim(void)
+            inline int GetCoordim(void)
             {
                 return GetSpaceDimension();
             }
@@ -69,7 +69,7 @@ namespace Nektar
                 return m_segGeoms;
             }
 
-            inline const int GetVidFromElmt(const int vert, const int elmt) const
+            inline int GetVidFromElmt(const int vert, const int elmt) const
             {
                 ASSERTL2((elmt >=0)&&(elmt < m_segGeoms.size()),
                     "eid is out of range");

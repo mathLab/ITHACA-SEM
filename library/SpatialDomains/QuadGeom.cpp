@@ -588,7 +588,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
-                                            Gtype, m_coordim, m_xmap, tbasis);
+                    Gtype, m_coordim, m_xmap, tbasis, true);
 
                 m_geomFactorsState = ePtsFilled;
             }
@@ -657,7 +657,6 @@ namespace Nektar
         {
             if(GetGtype() == eRegular)
             { 
-                int i;
                 NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
                 VertexComponent dv1, dv2, norm, orth1, orth2;
                 VertexComponent xin(m_coordim,0,coords[0],coords[1],coords2);
@@ -731,8 +730,6 @@ namespace Nektar
                 m_xmap[0]->StdPhysDeriv(ptsx, derx_1, derx_2);                  
                 m_xmap[1]->StdPhysDeriv(ptsy, dery_1, dery_2);      
                 
-                int elmtid = m_fid;
-                int offset=0;              
                 //determine y
                 int cnt=0;
                 while( abs(F2) > 0.00001 || abs(F1)> 0.00001)

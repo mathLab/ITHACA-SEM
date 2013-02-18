@@ -275,7 +275,7 @@ cout<<"nIregions="<<nIregions<<endl;
 
     //order the ids on the lower curve lastIregion starting from the id on x=0
     NekDouble x_connect;
-    NekDouble x0,y0,z0,xt,yt,zt;
+    NekDouble x0,y0,z0,xt,yt=0,zt=0;
     int lastedge=-1;
     int v1,v2;
     //first point for x_connect=0(or-1.6 for the full mesh (-pi,pi)  )
@@ -2540,7 +2540,7 @@ cout<<"nlays="<<nlays<<endl;
                             Vids_lay[m][1] = V1[h];                         
                             SpatialDomains::VertexComponentSharedPtr vertex2 
                                          = mesh->GetVertex(V2[h]);
-                            NekDouble x2,y2,z2;
+                            NekDouble x2=0.0,y2=0.0,z2=0.0;
                             normbef= sqrt( (y-y2)*(y-y2)+(x-x2)*(x-x2)  );
                             ybef = (y-y2);
                             xbef = (x-x2);

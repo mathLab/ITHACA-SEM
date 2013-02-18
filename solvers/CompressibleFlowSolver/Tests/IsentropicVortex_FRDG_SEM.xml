@@ -67,7 +67,7 @@
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
             <I PROPERTY="AdvectionType"         VALUE="FRDG"              />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-            <I PROPERTY="UpwindType"            VALUE="Exact"               />
+            <I PROPERTY="UpwindType"            VALUE="ExactToro"               />
             <I PROPERTY="ProblemType"           VALUE="IsentropicVortex"    />
         </SOLVERINFO>
 

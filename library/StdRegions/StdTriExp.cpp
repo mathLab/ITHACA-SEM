@@ -1398,11 +1398,8 @@ namespace Nektar
 
         void StdTriExp::v_GetInteriorMap(Array<OneD, unsigned int>& outarray)
         {
-            const LibUtilities::BasisType Btype0 = GetBasisType(0);
-            const LibUtilities::BasisType Btype1 = GetBasisType(1);
-            
-            ASSERTL1(Btype0 == LibUtilities::eModified_A &&
-                     Btype1 == LibUtilities::eModified_B,
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A &&
+                     GetBasisType(1) == LibUtilities::eModified_B,
                      "Expansion not of a proper type");
             
             int i,j;
@@ -1431,11 +1428,8 @@ namespace Nektar
 
         void StdTriExp::v_GetBoundaryMap(Array<OneD, unsigned int>& outarray)
         {
-            const LibUtilities::BasisType Btype0 = GetBasisType(0);
-            const LibUtilities::BasisType Btype1 = GetBasisType(1);
-
-            ASSERTL1(Btype0 == LibUtilities::eModified_A &&
-                     Btype1 == LibUtilities::eModified_B,
+            ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A &&
+                     GetBasisType(1) == LibUtilities::eModified_B,
                      "Expansion not of a proper type");
             int i;
             int cnt;

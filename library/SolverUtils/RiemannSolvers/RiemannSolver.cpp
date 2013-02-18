@@ -74,7 +74,8 @@ namespace Nektar
          * which solvers for various Riemann problems can be implemented.
          */
         
-        RiemannSolver::RiemannSolver() : m_requiresRotation(false)
+        RiemannSolver::RiemannSolver() : m_requiresRotation(false),
+                                         m_rotStorage      (3)
         {
             
         }
@@ -102,21 +103,25 @@ namespace Nektar
             {
                 int nFields = Fwd   .num_elements();
                 int nPts    = Fwd[0].num_elements();
-                Array<OneD, Array<OneD, NekDouble> > tmp1(nFields);
-                Array<OneD, Array<OneD, NekDouble> > tmp2(nFields);
-                Array<OneD, Array<OneD, NekDouble> > tmp3(nFields);
                 
-                for (int i = 0; i < nFields; ++i)
+                if (m_rotStorage[0].num_elements() != nFields ||
+                    m_rotStorage[0][0].num_elements() != nPts)
                 {
-                    tmp1[i] = Array<OneD, NekDouble>(nPts);
-                    tmp2[i] = Array<OneD, NekDouble>(nPts);
-                    tmp3[i] = Array<OneD, NekDouble>(nPts);
+                    for (int i = 0; i < 3; ++i)
+                    {
+                        m_rotStorage[i] =
+                            Array<OneD, Array<OneD, NekDouble> >(nFields);
+                        for (int j = 0; j < nFields; ++j)
+                        {
+                            m_rotStorage[i][j] = Array<OneD, NekDouble>(nPts);
+                        }
+                    }
                 }
                 
-                rotateToNormal(Fwd, tmp1);
-                rotateToNormal(Bwd, tmp2);
-                v_Solve(tmp1, tmp2, tmp3);
-                rotateFromNormal(tmp3, flux);
+                rotateToNormal  (Fwd, m_rotStorage[0]);
+                rotateToNormal  (Bwd, m_rotStorage[1]);
+                v_Solve         (m_rotStorage[0], m_rotStorage[1], m_rotStorage[2]);
+                rotateFromNormal(m_rotStorage[2], flux);
             }
             else
             {
@@ -127,21 +132,23 @@ namespace Nektar
         /**
          * @brief Rotate velocity field to trace normal.
          * 
-         * This function performs a rotation of the triad of velocity components
-         * provided in inarray so that the first component aligns with the trace
-         * normal direction.
+         * This function performs a rotation of the velocity components provided
+         * in inarray so that the first component aligns with the trace normal
+         * direction.
          * 
          * In 2D, this is accomplished through the transform:
          * 
          * \f[ (u_x, u_y) = (n_x u_x + n_y u_y, -n_x v_x + n_y v_y) \f]
          * 
-         * @todo Implement for 1D and 3D.
+         * In 3D, we generate a (non-unique) transformation using
+         * RiemannSolver::fromToRotation.
          */
         void RiemannSolver::rotateToNormal(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD,       Array<OneD, NekDouble> > &outarray)
         {
-            const Array<OneD, const Array<OneD, NekDouble> > &normals = m_vectors["N"]();
+            const Array<OneD, const Array<OneD, NekDouble> > &normals =
+                m_vectors["N"]();
             const Array<OneD, NekDouble> &velLoc = m_scalars["velLoc"]();
             
             switch(normals.num_elements())
@@ -181,6 +188,7 @@ namespace Nektar
                 
                 case 3:
                 {
+                    int i, cnt = 0;
                     int vx = (int)velLoc[0];
                     int vy = (int)velLoc[1];
                     int vz = (int)velLoc[2];
@@ -192,15 +200,15 @@ namespace Nektar
                     }
                     
                     // Apply rotation matrices.
-                    for (int i = 0; i < normals[0].num_elements(); ++i)
+                    for (i = 0; i < normals[0].num_elements(); ++i, cnt += 9)
                     {
-                        DNekMatSharedPtr m = m_rotMatrices[i];
-                        NekDouble tmp1 = inarray[vx][i]*(*m)(0,0) + 
-                            inarray[vy][i]*(*m)(0,1) + inarray[vz][i]*(*m)(0,2);
-                        NekDouble tmp2 = inarray[vx][i]*(*m)(1,0) + 
-                            inarray[vy][i]*(*m)(1,1) + inarray[vz][i]*(*m)(1,2);
-                        NekDouble tmp3 = inarray[vx][i]*(*m)(2,0) + 
-                            inarray[vy][i]*(*m)(2,1) + inarray[vz][i]*(*m)(2,2);
+                        NekDouble *m = &m_rotMatrices[cnt];
+                        NekDouble tmp1 = inarray[vx][i]*m[0] + 
+                            inarray[vy][i]*m[1] + inarray[vz][i]*m[2];
+                        NekDouble tmp2 = inarray[vx][i]*m[3] + 
+                            inarray[vy][i]*m[4] + inarray[vz][i]*m[5];
+                        NekDouble tmp3 = inarray[vx][i]*m[6] + 
+                            inarray[vy][i]*m[7] + inarray[vz][i]*m[8];
                         outarray[vx][i] = tmp1;
                         outarray[vy][i] = tmp2;
                         outarray[vz][i] = tmp3;
@@ -278,26 +286,22 @@ namespace Nektar
                 
                 case 3:
                 {
+                    int i, cnt = 0;
                     int vx = (int)velLoc[0];
                     int vy = (int)velLoc[1];
                     int vz = (int)velLoc[2];
                     
-                    // Generate matrices if they don't already exist.
-                    if (m_rotMatrices.size() == 0)
+                    // Apply inverse of rotation matrices = transpose of
+                    // rotation matrices.
+                    for (i = 0; i < normals[0].num_elements(); ++i, cnt += 9)
                     {
-                        GenerateRotationMatrices();
-                    }
-                    
-                    // Apply rotation matrices.
-                    for (int i = 0; i < normals[0].num_elements(); ++i)
-                    {
-                        DNekMatSharedPtr m = m_invRotMatrices[i];
-                        NekDouble tmp1 = inarray[vx][i]*(*m)(0,0) + 
-                            inarray[vy][i]*(*m)(0,1) + inarray[vz][i]*(*m)(0,2);
-                        NekDouble tmp2 = inarray[vx][i]*(*m)(1,0) + 
-                            inarray[vy][i]*(*m)(1,1) + inarray[vz][i]*(*m)(1,2);
-                        NekDouble tmp3 = inarray[vx][i]*(*m)(2,0) + 
-                            inarray[vy][i]*(*m)(2,1) + inarray[vz][i]*(*m)(2,2);
+                        NekDouble *m = &m_rotMatrices[cnt];
+                        NekDouble tmp1 = inarray[vx][i]*m[0] +
+                            inarray[vy][i]*m[3] + inarray[vz][i]*m[6];
+                        NekDouble tmp2 = inarray[vx][i]*m[1] + 
+                            inarray[vy][i]*m[4] + inarray[vz][i]*m[7];
+                        NekDouble tmp3 = inarray[vx][i]*m[2] + 
+                            inarray[vy][i]*m[5] + inarray[vz][i]*m[8];
                         outarray[vx][i] = tmp1;
                         outarray[vy][i] = tmp2;
                         outarray[vz][i] = tmp3;
@@ -369,29 +373,24 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &normals = 
                 m_vectors["N"]();
 
+            int i, cnt;
             Array<OneD, NekDouble> xdir(3,0.0);
             Array<OneD, NekDouble> tn  (3);
             xdir[0] = 1.0;
-            
-            for (int i = 0; i < normals[0].num_elements(); ++i)
+
+            // Allocate storage for rotation matrices.
+            m_rotMatrices.resize(9 * normals[0].num_elements());
+            ASSERTL0(m_rotMatrices.size() == 9*normals[0].num_elements(),
+                     "Unable to allocate storage for rotation matrices!");
+
+            for (i = cnt = 0; i < normals[0].num_elements(); ++i, cnt += 9)
             {
-                DNekMatSharedPtr mat = MemoryManager<DNekMat>::
-                    AllocateSharedPtr(3,3);
-                
                 // Generate matrix which takes us from (1,0,0) vector to trace
                 // normal.
                 tn[0] = normals[0][i];
                 tn[1] = normals[1][i];
                 tn[2] = normals[2][i];
-                FromToRotation(tn, xdir, mat);
-                
-                // Generate inverse rotation matrix.
-                DNekMatSharedPtr mat2 = MemoryManager<DNekMat>::
-                    AllocateSharedPtr(*mat);
-                mat2->Invert();
-                
-                m_rotMatrices.   push_back(mat);
-                m_invRotMatrices.push_back(mat2);
+                FromToRotation(tn, xdir, &m_rotMatrices[cnt]);
             }
         }
 
@@ -410,7 +409,7 @@ namespace Nektar
         void RiemannSolver::FromToRotation(
             Array<OneD, const NekDouble> &from,
             Array<OneD, const NekDouble> &to,
-            DNekMatSharedPtr              mat)
+            NekDouble                    *mat)
         {
             NekDouble v[3];
             NekDouble e, h, f;
@@ -462,14 +461,14 @@ namespace Nektar
                 c1 = 2.0 / DOT(u, u);
                 c2 = 2.0 / DOT(v, v);
                 c3 = c1 * c2  * DOT(u, v);
-            
+                
                 for (i = 0; i < 3; i++) {
                     for (j = 0; j < 3; j++) {
-                        (*mat)(i,j) =  - c1 * u[i] * u[j]
+                        mat[3*i+j] =  - c1 * u[i] * u[j]
                             - c2 * v[i] * v[j]
                             + c3 * v[i] * u[j];
                     }
-                    (*mat)(i,i) += 1.0;
+                    mat[i+3*i] += 1.0;
                 }
             }
             else
@@ -481,17 +480,15 @@ namespace Nektar
                 hvxy = hvx * v[1];
                 hvxz = hvx * v[2];
                 hvyz = hvz * v[1];
-                (*mat)(0,0) = e + hvx * v[0];
-                (*mat)(0,1) = hvxy - v[2];
-                (*mat)(0,2) = hvxz + v[1];
-            
-                (*mat)(1,0) = hvxy + v[2];
-                (*mat)(1,1) = e + h * v[1] * v[1];
-                (*mat)(1,2) = hvyz - v[0];
-            
-                (*mat)(2,0) = hvxz - v[1];
-                (*mat)(2,1) = hvyz + v[0];
-                (*mat)(2,2) = e + hvz * v[2];
+                mat[0] = e + hvx * v[0];
+                mat[1] = hvxy - v[2];
+                mat[2] = hvxz + v[1];
+                mat[3] = hvxy + v[2];
+                mat[4] = e + h * v[1] * v[1];
+                mat[5] = hvyz - v[0];
+                mat[6] = hvxz - v[1];
+                mat[7] = hvyz + v[0];
+                mat[8] = e + hvz * v[2];
             }
         }
     }

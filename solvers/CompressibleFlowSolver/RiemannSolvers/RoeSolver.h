@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ExactSolver.h
+// File: RoeSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,35 +29,35 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Exact Riemann solver.
+// Description: Roe Riemann solver.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_EXACTSOLVER
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_EXACTSOLVER
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_ROESOLVER
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_ROESOLVER
 
 #include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
 
 namespace Nektar
 {
-    class ExactSolver : public CompressibleSolver
+    class RoeSolver : public CompressibleSolver
     {
     public:
         static RiemannSolverSharedPtr create()
         {
             return RiemannSolverSharedPtr(
-                new ExactSolver());
+                new RoeSolver());
         }
         
         static std::string solverName;
         
     protected:
-        ExactSolver();
+        RoeSolver();
         
         virtual void v_PointSolve(
-            NekDouble  rhoL, NekDouble  rhouL, NekDouble  rhovL, NekDouble  rhowL, NekDouble  EL,
-            NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
-            NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef);
+            double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
+            double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
+            double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef);
     };
 }
 

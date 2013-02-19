@@ -50,6 +50,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+using std::min;
+using std::max;
 
 namespace Nektar
 {
@@ -169,7 +171,7 @@ namespace Nektar
 
         for (; entry != m_sparseStorage->end(); ++entry)
         {
-            bandwidth = std::max(bandwidth, 2*abs(entry->first.first - entry->first.second)+1);
+            bandwidth = std::max(bandwidth, 2*std::abs((int)(entry->first.first - entry->first.second+1)));
         }
         return bandwidth;
     }
@@ -204,7 +206,7 @@ namespace Nektar
         std::vector< std::vector<int> > grid (gridRows);
         for (int row = 0; row < gridRows; row++)
         {
-            grid[row].resize(gridCols,0.0);
+            grid[row].resize(gridCols,0);
         }
 
         typename SparseStorageType::const_iterator entry = m_sparseStorage->begin();
@@ -241,7 +243,7 @@ namespace Nektar
         std::vector< std::vector<int> > grid (blockSize);
         for (int row = 0; row < blockSize; row++)
         {
-            grid[row].resize(blockSize,0.0);
+            grid[row].resize(blockSize,0);
         }
 
         typename SparseStorageType::const_iterator entry = m_sparseStorage->begin();

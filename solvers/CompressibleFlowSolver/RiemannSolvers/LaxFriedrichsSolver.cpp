@@ -120,7 +120,7 @@ namespace Nektar
         
         // Speed of sound Roe average
         NekDouble cRoe   = sqrt((gamma - 1.0) * (hRoe - 0.5 * 
-                                                 (uRoe * uRoe + vRoe * vRoe)));
+            (uRoe * uRoe + vRoe * vRoe + wRoe*wRoe)));
         
         // Minimum and maximum wave speeds
         NekDouble S    = std::max(uRoe+cRoe, std::max(uR+cR, -uL+cL));

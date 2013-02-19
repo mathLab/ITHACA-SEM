@@ -913,6 +913,10 @@ namespace Nektar
                              "and Robin conditions.");
                 }
             }
+
+            // Do parallel exchange for forwards/backwards spaces.
+            m_traceMap->UniversalTraceAssemble(Fwd);
+            m_traceMap->UniversalTraceAssemble(Bwd);
         }
 
         void DisContField3D::v_ExtractTracePhys(

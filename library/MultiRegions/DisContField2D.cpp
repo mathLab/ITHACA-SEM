@@ -67,7 +67,8 @@ namespace Nektar
             m_boundaryEdges      (In.m_boundaryEdges),
             m_periodicEdges      (In.m_periodicEdges),
             m_periodicVertices   (In.m_periodicVertices),
-            m_perEdgeToExpMap    (In.m_perEdgeToExpMap)
+            m_perEdgeToExpMap    (In.m_perEdgeToExpMap),
+            m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
         {
         }
 
@@ -239,23 +240,25 @@ namespace Nektar
             {
                 if(SetUpJustDG)
                 {
-                    m_globalBndMat     = In.m_globalBndMat;
-                    m_trace            = In.m_trace;
-                    m_traceMap         = In.m_traceMap;
-                    m_periodicEdges    = In.m_periodicEdges;
-                    m_periodicVertices = In.m_periodicVertices;
-                    m_boundaryEdges    = In.m_boundaryEdges;
-                    m_perEdgeToExpMap  = In.m_perEdgeToExpMap;
+                    m_globalBndMat      = In.m_globalBndMat;
+                    m_trace             = In.m_trace;
+                    m_traceMap          = In.m_traceMap;
+                    m_periodicEdges     = In.m_periodicEdges;
+                    m_periodicVertices  = In.m_periodicVertices;
+                    m_boundaryEdges     = In.m_boundaryEdges;
+                    m_perEdgeToExpMap   = In.m_perEdgeToExpMap;
+                    m_leftAdjacentEdges = In.m_leftAdjacentEdges;
                 }
                 else 
                 {
-                    m_globalBndMat     = In.m_globalBndMat;
-                    m_trace            = In.m_trace;
-                    m_traceMap         = In.m_traceMap;
-                    m_periodicEdges    = In.m_periodicEdges;
-                    m_periodicVertices = In.m_periodicVertices;
-                    m_boundaryEdges    = In.m_boundaryEdges;
-                    m_perEdgeToExpMap  = In.m_perEdgeToExpMap;
+                    m_globalBndMat      = In.m_globalBndMat;
+                    m_trace             = In.m_trace;
+                    m_traceMap          = In.m_traceMap;
+                    m_periodicEdges     = In.m_periodicEdges;
+                    m_periodicVertices  = In.m_periodicVertices;
+                    m_boundaryEdges     = In.m_boundaryEdges;
+                    m_perEdgeToExpMap   = In.m_perEdgeToExpMap;
+                    m_leftAdjacentEdges = In.m_leftAdjacentEdges;
                     
                     // set elmt edges to point to robin bc edges if required.
                     int i, cnt = 0;
@@ -423,9 +426,9 @@ namespace Nektar
             }
                 
             // Set up information for periodic boundary conditions.
-            for (n = 0; n < m_exp->size(); ++n)
+            for (cnt = n = 0; n < m_exp->size(); ++n)
             {
-                for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
                 {
                     map<int,int>::iterator it = m_periodicEdges.find(
                         (*m_exp)[n]->GetGeom2D()->GetEid(e));
@@ -434,6 +437,17 @@ namespace Nektar
                     {
                         m_perEdgeToExpMap[it->first] = make_pair(n, e);
                     }
+                }
+            }
+
+            // Set up left-adjacent edge list.
+            m_leftAdjacentEdges.resize(cnt);
+            cnt = 0;
+            for (int i = 0; i < m_exp->size(); ++i)
+            {
+                for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j, ++cnt)
+                {
+                    m_leftAdjacentEdges[cnt] = IsLeftAdjacentEdge(i, j);
                 }
             }
         }
@@ -806,16 +820,16 @@ namespace Nektar
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
             bool fwd = true;
-            for(n = 0; n < nexp; ++n)
+            for(cnt = n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
 
-                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e)
+                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
                 {
                     int offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
-                    
-                    fwd = IsLeftAdjacentEdge(n,e);
+
+                    fwd = m_leftAdjacentEdges[cnt];
 
                     if (fwd)
                     {

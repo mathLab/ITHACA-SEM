@@ -131,6 +131,18 @@ namespace Nektar
             int                                               bcRegion,
             int                                               cnt,
             Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void InflowCFSBoundary(
+            int                                               bcRegion, 
+            int                                               cnt, 
+            Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void OutflowCFSBoundary(
+            int                                               bcRegion, 
+            int                                               cnt, 
+            Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void ExtrapOrder0Boundary(
+            int                                               bcRegion, 
+            int                                               cnt, 
+            Array<OneD, Array<OneD, NekDouble> >             &physarray);
         void GetVelocityVector(
             const Array<OneD,       Array<OneD,       NekDouble> >&physfield,
                   Array<OneD,       Array<OneD,       NekDouble> >&velocity);

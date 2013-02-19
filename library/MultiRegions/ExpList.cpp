@@ -2102,7 +2102,131 @@ namespace Nektar
             v_ExtractCoeffsToCoeffs(fromExpList,fromCoeffs,toCoeffs);
         }
 
-
+        void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
+        {     	
+            int i, cnt;
+            int offset = 0;
+            int datalen = fielddata.size()/fielddef->m_fields.size();
+            
+            // Find data location according to field definition
+            for(i = 0; i < fielddef->m_fields.size(); ++i)
+            {
+                if(fielddef->m_fields[i] == field)
+                {
+                    break;
+                }
+                offset += datalen;
+            }
+            
+            if(i == fielddef->m_fields.size())
+            {
+                cerr << "Field (" << field << ") not found in data file; "
+                << "Setting it to zero. " << endl;
+                Vmath::Zero(coeffs.num_elements(),coeffs,1);
+            }
+            else
+            {
+                // Determine mapping from element ids to location in expansion
+                // list
+                map<int, int> ElmtID_to_ExpID;
+                
+                // loop in reverse order so that in case where using a
+                // Homogeneous expansion it sets geometry ids to first part of
+                // m_exp list. Otherwise will set to second (complex) expansion
+                for(i = (*m_exp).size()-1; i >=0; --i)
+                {
+                    ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                }
+                
+                // Communicate number of modes between processors.
+                LibUtilities::CommSharedPtr vComm =
+                m_session->GetComm()->GetRowComm();
+                int n = vComm->GetSize();
+                int p = vComm->GetRank();
+                
+                Array<OneD, int> numEls(n, 0);
+                numEls[p] = m_exp->size();
+                vComm->AllReduce(numEls, LibUtilities::ReduceSum);
+                int totEls = Vmath::Vsum(n, numEls, 1);
+                
+                Array<OneD, int> elOffsets(n, 0);
+                elOffsets[0] = 0;
+                for (i = 1; i < n; ++i)
+                {
+                    elOffsets[i] = elOffsets[i-1] + numEls[i-1];
+                }
+                
+                Array<OneD, int> coeffsPerEl  (totEls, 0.0);
+                Array<OneD, int> elmtGlobalIds(totEls, 0.0);
+                
+                // Determine number of coefficients in each local (to this
+                // partition) element.
+                int modes_offset = 0;
+                for(cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
+                {
+                    if (ElmtID_to_ExpID.count(fielddef->m_elementIDs[i]) == 0)
+                    {
+                        continue;
+                    }
+                    
+                    int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
+                    int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(
+                                                                          fielddef->m_numModes,modes_offset);
+                    if(fielddef->m_uniOrder == true)
+                    {
+                        modes_offset = 0;
+                    }
+                    
+                    elmtGlobalIds[cnt+elOffsets[p]] = fielddef->m_elementIDs[i];
+                    coeffsPerEl  [cnt+elOffsets[p]] = datalen;
+                    cnt++;
+                }
+                
+                vComm->AllReduce(coeffsPerEl,   LibUtilities::ReduceSum);
+                vComm->AllReduce(elmtGlobalIds, LibUtilities::ReduceSum);
+                
+                map<int,int> coeffsElmtMap;
+                
+                for (i = 0; i < totEls; ++i)
+                {
+                    coeffsElmtMap[elmtGlobalIds[i]] = coeffsPerEl[i];
+                }
+                
+                for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
+                {
+                    if (ElmtID_to_ExpID.count(fielddef->m_elementIDs[i]) == 0)
+                    {
+                        ASSERTL0(coeffsElmtMap.count(fielddef->m_elementIDs[i])
+                                 > 0, "Couldn't find element!");
+                        offset += coeffsElmtMap[fielddef->m_elementIDs[i]];
+                        continue;
+                    }
+                    
+                    int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
+                    int datalen = coeffsElmtMap[fielddef->m_elementIDs[i]];
+                    if(fielddef->m_uniOrder == true)
+                    {
+                        modes_offset = 0;
+                    }
+                    
+                    // Copy data if it is the same length as expansion.
+                    if(datalen == (*m_exp)[eid]->GetNcoeffs())
+                    {
+                        Vmath::Vcopy(datalen, &fielddata[offset], 1, 
+                                     &coeffs[m_coeff_offset[eid]], 1);
+                    }
+                    else // unpack data to new order
+                    {
+                        (*m_exp)[eid]->ExtractDataToCoeffs(
+                                                           &fielddata[offset], fielddef->m_numModes,
+                                                           modes_offset, &coeffs[m_coeff_offset[eid]]);
+                    }
+                    
+                    offset += datalen;
+                }                
+            }
+        }
+/*
         void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
         {     	
             int i;
@@ -2163,6 +2287,7 @@ namespace Nektar
                 }                
             }
         }
+ */
 
         void ExpList::v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {     	

@@ -70,11 +70,7 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
-        {
-            // They should be taken from CFS
-            const NekDouble gamma = 1.4;
-            const NekDouble R     = 287.05;
-            
+        {            
             int i, j;
             int nDim      = fields[0]->GetCoordim(0);
             int nScalars  = inarray.num_elements();
@@ -251,6 +247,11 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &penaltyfluxO1)
         {
+            // They should be taken from CFS
+            const NekDouble gamma = 1.4;
+            const NekDouble R     = 287.05;
+            const NekDouble Twall = 0.012;
+            
             int cnt;
             int i, j, e;            
             int id1, id2;
@@ -264,6 +265,8 @@ namespace Nektar
             
             Array<OneD, NekDouble> tmp1(nTracePts, 0.0);
             Array<OneD, NekDouble> tmp2(nTracePts, 0.0);
+            Array<OneD, NekDouble> Tw(nTracePts, Twall);
+
             
             Array< OneD, Array<OneD, NekDouble > > scalarVariables(nScalars);
             Array< OneD, Array<OneD, NekDouble > > uplus(nScalars);
@@ -301,12 +304,33 @@ namespace Nektar
                         GetPhys_Offset(fields[0]->GetTraceMap()->
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
 
+                        // Should I reinforce velocity bcs at the wall?
+                        // They don't give too different answers!
+                        // =====================================================
+                        // Reinforcing bcs for velocity in case of Wall bcs
+                        if (fields[i]->GetBndConditions()[j]->
+                            GetUserDefined() == 
+                            SpatialDomains::eWallViscous)
+                        {
+                            Vmath::Zero(nBndEdgePts, 
+                                        &scalarVariables[i][id2], 1);
+                        }
+                        // =====================================================
+                        
+                        // =====================================================
+                        // Imposing velocity bcs if not Wall
+                        else if (fields[i]->GetBndConditions()[j]->
+                                 GetBoundaryConditionType() == 
+                                 SpatialDomains::eDirichlet)
+                        {
                         Vmath::Vdiv(nBndEdgePts,
                                     &(fields[i+1]->GetBndCondExpansions()[j]->
                                       UpdatePhys())[id1], 1,
                                     &(fields[0]->GetBndCondExpansions()[j]->
                                       UpdatePhys())[id1], 1,
                                     &scalarVariables[i][id2], 1);
+                        }
+                        // =====================================================
                         
                         // For Dirichlet boundary condition: uflux = u_bcs
                         if (fields[i]->GetBndConditions()[j]->
@@ -366,27 +390,45 @@ namespace Nektar
                     GetPhys_Offset(fields[0]->GetTraceMap()->
                                    GetBndCondTraceToGlobalTraceMap(cnt++));
                     
-                    // Divide E by rho
-                    Vmath::Vdiv(nBndEdgePts,
-                                &(fields[nScalars]->
-                                  GetBndCondExpansions()[j]->
-                                  GetPhys())[id1], 1,
-                                &(fields[0]->
-                                  GetBndCondExpansions()[j]->
-                                  GetPhys())[id1], 1,
-                                &scalarVariables[nScalars-1][id2], 1);
-                    
-                    // Subtract kinetic energy to E/rho
-                    Vmath::Vsub(nBndEdgePts, 
-                                &scalarVariables[nScalars-1][id2], 1,
-                                &tmp2[id2], 1,
-                                &scalarVariables[nScalars-1][id2], 1);
-                    
-                    // Multiply by constant factor (gamma-1)/R 
-                    // (Note: I should extract R and gamma)
-                    Vmath::Smul(nBndEdgePts, 0.0014,
-                                &scalarVariables[nScalars-1][id2], 1,
-                                &scalarVariables[nScalars-1][id2], 1);
+                    /*
+                    // Imposing Temperature Twall at the wall 
+                    if (fields[i]->GetBndConditions()[j]->
+                        GetUserDefined() == 
+                        SpatialDomains::eWallViscous)
+                    {
+                        Vmath::Vcopy(nBndEdgePts, 
+                                     &Tw[0], 1, 
+                                     &scalarVariables[nScalars-1][id2], 1);
+                    }                    
+                    // Imposing Temperature through condition on the Energy
+                    // for no wall boundaries (e.g. farfield)
+                    else if (fields[i]->GetBndConditions()[j]->
+                             GetBoundaryConditionType() == 
+                             SpatialDomains::eDirichlet)
+                    {
+                    */
+                        // Divide E by rho
+                        Vmath::Vdiv(nBndEdgePts,
+                                    &(fields[nScalars]->
+                                      GetBndCondExpansions()[j]->
+                                      GetPhys())[id1], 1,
+                                    &(fields[0]->
+                                      GetBndCondExpansions()[j]->
+                                      GetPhys())[id1], 1,
+                                    &scalarVariables[nScalars-1][id2], 1);
+                        
+                        // Subtract kinetic energy to E/rho
+                        Vmath::Vsub(nBndEdgePts, 
+                                    &scalarVariables[nScalars-1][id2], 1,
+                                    &tmp2[id2], 1,
+                                    &scalarVariables[nScalars-1][id2], 1);
+                        
+                        // Multiply by constant factor (gamma-1)/R 
+                        // (Note: I should extract R and gamma)
+                        Vmath::Smul(nBndEdgePts, (gamma - 1)/R,
+                                    &scalarVariables[nScalars-1][id2], 1,
+                                    &scalarVariables[nScalars-1][id2], 1);
+                    //}
                     
                     // For Dirichlet boundary condition: uflux = u_bcs
                     if (fields[nScalars]->GetBndConditions()[j]->
@@ -450,15 +492,10 @@ namespace Nektar
                 Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, 
                              traceVel[i], 1, Vn, 1, Vn, 1);
             }
-            
-            // I added this for doing Flip-Flop. 
-            // However it blows up when it uses this.
-            // Vmath::Neg(nTracePts, &Vn[0], 1);
-            
+                        
             // Evaulate Riemann flux 
             // qflux = \hat{q} \cdot u = q \cdot n 
-            // \\\\\\\\\\\\\\  Notice: I put ---> i = 1 
-            // \\\\\\\\\\\\\\ (first row of the viscous tensor is zero)
+            // Notice: i = 1 (first row of the viscous tensor is zero)
             for (i = 1; i < nVariables; ++i)
             {
                 qflux[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
@@ -509,10 +546,13 @@ namespace Nektar
         {
             int cnt = 0;
             int nBndEdges, nBndEdgePts;
-            int i, j, e, nPts, id1, id2;
-            int nDim = fields[0]->GetCoordim(0);
-            int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+            int i, e; 
+            int id1, id2;
+            
+            int nDim        = fields[0]->GetCoordim(0);
+            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
+            
             Array<OneD, NekDouble > uterm(nTracePts);
             Array<OneD, NekDouble > qtemp(nTracePts);
 

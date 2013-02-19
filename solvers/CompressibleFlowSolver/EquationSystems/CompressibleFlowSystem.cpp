@@ -862,8 +862,7 @@ namespace Nektar
     
         // Get standard velocity to compute the time-step limit
         GetStdVelocity(inarray, stdVelocity);
-        Array<OneD, NekDouble> Sensor     (nElements, 0.0);
-        GetSensor     (inarray, Sensor);
+
         // Factors to compute the time-step limit
         NekDouble minLength;        
         NekDouble alpha   = MaxTimeStepEstimator();
@@ -1202,7 +1201,7 @@ void CompressibleFlowSystem::GetSensor(
                         nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
                         nCoeffsElement     = m_fields[0]->GetExp(e)->GetNcoeffs();
                 
-                        Array<OneD, NekDouble> OrthoElementPhys(nQuadPointsElement,0.0); 
+                        Array<OneD, NekDouble> OrthoElementPhys(nQuadPointsElement,0.0);
                         Array<OneD, NekDouble> OrthoElementCoeffs(nCoeffsElement,0.0);
                 
                         Array<OneD, NekDouble> SolPElementPhys(nQuadPointsElement,0.0);

@@ -40,6 +40,8 @@
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 #include <SolverUtils/Advection/Advection.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
+#include <StdRegions/StdQuadExp.h>
+#include <StdRegions/StdHexExp.h>
 
 
 #define EPSILON 0.000001
@@ -100,6 +102,9 @@ namespace Nektar
         NekDouble                           m_wInf;
         NekDouble                           m_gasConstant;
       
+        StdRegions::StdQuadExpSharedPtr     m_OrthoQuadExp;
+        StdRegions::StdHexExpSharedPtr      m_OrthoHexExp;
+        
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -153,10 +158,14 @@ namespace Nektar
         void GetStdVelocity(
             const Array<OneD, const Array<OneD,       NekDouble> >&inarray,
                   Array<OneD,                         NekDouble>  &stdV);
+        
+        void CompressibleFlowSystem::GetSensor(
+            const Array<OneD, const Array<OneD,       NekDouble> > &physarray,
+                  Array<OneD,                         NekDouble>   &Sensor);
       
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
-
+        
         virtual void v_SetInitialConditions(
             NekDouble initialtime = 0.0,
             bool dumpInitialConditions = true)

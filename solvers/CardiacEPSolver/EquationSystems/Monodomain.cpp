@@ -101,11 +101,6 @@ namespace Nektar
                 StdRegions::eVarCoeffD22
         };
         std::string varName = "intensity";
-//        std::string varCoeffs[3] = {
-//                "AnisotropicConductivityX",
-//                "AnisotropicConductivityY",
-//                "AnisotropicConductivityZ"
-//        };
         std::string aniso_var[3] = {
                 "fx", "fy", "fz"
         };
@@ -128,7 +123,9 @@ namespace Nektar
             EvaluateFunction(varName, vTemp, "IsotropicConductivity");
             for (int i = 0; i < m_spacedim; ++i)
             {
-                Vmath::Vmul(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                Vmath::Vmul(nq, vTemp, 1,
+                                m_vardiff[varCoeffEnum[i]], 1,
+                                m_vardiff[varCoeffEnum[i]], 1);
             }
         }
 
@@ -175,7 +172,7 @@ namespace Nektar
                 }
             }
         }
-        
+
         // Apply fibre map (range 0 -> 1)
         if (m_session->DefinesFunction("AnisotropicConductivity"))
         {
@@ -185,11 +182,15 @@ namespace Nektar
             }
             for (int i = 0; i < m_spacedim; ++i)
             {
-                ASSERTL0(m_session->DefinesFunction("AnisotropicConductivity", aniso_var[i]),
-                    "Function 'AnisotropicConductivity' not correctly defined.");
-                EvaluateFunction(aniso_var[i], vTemp, "AnisotropicConductivity");
-                //m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq);
-                Vmath::Vmul(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                ASSERTL0(m_session->DefinesFunction("AnisotropicConductivity",
+                                                    aniso_var[i]),
+                         "Function 'AnisotropicConductivity' not correctly "
+                         "defined.");
+                EvaluateFunction(aniso_var[i], vTemp,
+                                 "AnisotropicConductivity");
+                Vmath::Vmul(nq, vTemp, 1,
+                                m_vardiff[varCoeffEnum[i]], 1,
+                                m_vardiff[varCoeffEnum[i]], 1);
 
                 // Transform variable coefficient and write out to file.
                 m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[i]],

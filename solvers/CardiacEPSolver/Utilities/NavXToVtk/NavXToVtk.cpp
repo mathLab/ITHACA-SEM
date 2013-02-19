@@ -139,8 +139,6 @@ vtkPolyData* LoadDataFile(string nxdxl) {
         }
     }
 
-    vtkDoubleArray* vCFAEMean = vtkDoubleArray::New();
-
     while (!f.eof()) {
         getline(f,input);
         if (input.length() > 16 && input.substr(0,16) == "Exported seconds") {

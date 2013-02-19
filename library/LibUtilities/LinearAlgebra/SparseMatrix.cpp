@@ -171,7 +171,7 @@ namespace Nektar
 
         for (; entry != m_sparseStorage->end(); ++entry)
         {
-            bandwidth = std::max(bandwidth, 2*std::abs((int)(entry->first.first - entry->first.second+1)));
+            bandwidth = (std::max)(bandwidth, 2*std::abs((int)(entry->first.first - entry->first.second+1)));
         }
         return bandwidth;
     }
@@ -239,7 +239,7 @@ namespace Nektar
     void NekSparseMatrix<SparseStorageType>::writeBlockSparsityPatternTo(std::ostream& out,
                     const IndexType blk_row, const IndexType blk_col, IndexType blockSize)
     {
-        blockSize = std::min(blockSize, m_sparseStorage->GetRows());
+        blockSize = (std::min)(blockSize, m_sparseStorage->GetRows());
         std::vector< std::vector<int> > grid (blockSize);
         for (int row = 0; row < blockSize; row++)
         {

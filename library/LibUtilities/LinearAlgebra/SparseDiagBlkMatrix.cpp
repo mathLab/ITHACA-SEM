@@ -318,7 +318,7 @@ namespace Nektar
             typename SparseStorageType::const_iterator entry = m_submatrix[i]->begin();
             for (; entry != m_submatrix[i]->end(); ++entry)
             {
-                bandwidth = std::max(bandwidth, (IndexType) 2*abs(entry->first.first - entry->first.second)+1);
+                bandwidth = (std::max)(bandwidth, (IndexType) 2*abs(entry->first.first - entry->first.second)+1);
             }
         }
         return bandwidth;
@@ -327,11 +327,11 @@ namespace Nektar
     template<typename SparseStorageType>
     const IndexType NekSparseDiagBlkMatrix<SparseStorageType>::GetBandwidth(IndexType  i)
     {
-        int bandwidth = 0;
+        IndexType bandwidth = 0;
         typename SparseStorageType::const_iterator entry = m_submatrix[i]->begin();
         for (; entry != m_submatrix[i]->end(); ++entry)
         {
-            bandwidth = std::max(bandwidth, 2*abs(entry->first.first - entry->first.second)+1);
+            bandwidth = (std::max)(bandwidth, (IndexType) 2*abs(entry->first.first - entry->first.second)+1);
         }
         return bandwidth;
     }
@@ -474,7 +474,7 @@ namespace Nektar
                                         const IndexType blk_col,
                                               IndexType blockSize)
     {
-        blockSize = std::min(blockSize, m_submatrix[subMatrixIdx]->GetRows());
+        blockSize = (std::min)(blockSize, m_submatrix[subMatrixIdx]->GetRows());
         std::vector< std::vector<int> > grid (blockSize);
         for (int row = 0; row < blockSize; row++)
         {
@@ -512,7 +512,7 @@ namespace Nektar
                 const IndexType blk_col,
                 IndexType blockSize)
     {
-        blockSize = std::min(blockSize, GetRows());
+        blockSize = (std::min)(blockSize, GetRows());
         std::vector< std::vector<int> > grid (blockSize);
         for (int row = 0; row < blockSize; row++)
         {

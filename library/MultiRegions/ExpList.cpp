@@ -2108,7 +2108,7 @@ namespace Nektar
             int i, cnt;
             int offset = 0;
             int datalen = fielddata.size()/fielddef->m_fields.size();
-
+            
             // Find data location according to field definition
             for(i = 0; i < fielddef->m_fields.size(); ++i)
             {
@@ -2118,7 +2118,7 @@ namespace Nektar
                 }
                 offset += datalen;
             }
-
+            
             if(i == fielddef->m_fields.size())
             {
                 cerr << "Field (" << field << ") not found in data file; "
@@ -2130,7 +2130,7 @@ namespace Nektar
                 // Determine mapping from element ids to location in expansion
                 // list
                 map<int, int> ElmtID_to_ExpID;
-
+                
                 // loop in reverse order so that in case where using a
                 // Homogeneous expansion it sets geometry ids to first part of
                 // m_exp list. Otherwise will set to second (complex) expansion
@@ -2145,8 +2145,19 @@ namespace Nektar
                 int n = vComm->GetSize();
                 int p = vComm->GetRank();
 
+                // Determine number of elements in fielddef inside this process.
+                for(cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
+                {
+                    if (ElmtID_to_ExpID.count(fielddef->m_elementIDs[i]) == 0)
+                    {
+                        continue;
+                    }
+                    
+                    ++cnt;
+                }
+
                 Array<OneD, int> numEls(n, 0);
-                numEls[p] = m_exp->size();
+                numEls[p] = cnt;
                 vComm->AllReduce(numEls, LibUtilities::ReduceSum);
                 int totEls = Vmath::Vsum(n, numEls, 1);
                 
@@ -2156,9 +2167,9 @@ namespace Nektar
                 {
                     elOffsets[i] = elOffsets[i-1] + numEls[i-1];
                 }
-
-                Array<OneD, int> coeffsPerEl  (totEls, 0.0);
-                Array<OneD, int> elmtGlobalIds(totEls, 0.0);
+                
+                Array<OneD, int> coeffsPerEl  (totEls, 0);
+                Array<OneD, int> elmtGlobalIds(totEls, 0);
                 
                 // Determine number of coefficients in each local (to this
                 // partition) element.
@@ -2169,7 +2180,7 @@ namespace Nektar
                     {
                         continue;
                     }
-
+                    
                     int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                     int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(
                         fielddef->m_numModes,modes_offset);
@@ -2185,14 +2196,16 @@ namespace Nektar
 
                 vComm->AllReduce(coeffsPerEl,   LibUtilities::ReduceSum);
                 vComm->AllReduce(elmtGlobalIds, LibUtilities::ReduceSum);
-
+                
                 map<int,int> coeffsElmtMap;
-
+                
                 for (i = 0; i < totEls; ++i)
                 {
+                    ASSERTL0(coeffsElmtMap.count(elmtGlobalIds[i]) == 0,
+                             "Error in communicating global ids!");
                     coeffsElmtMap[elmtGlobalIds[i]] = coeffsPerEl[i];
                 }
-
+                
                 for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
                 {
                     if (ElmtID_to_ExpID.count(fielddef->m_elementIDs[i]) == 0)
@@ -2202,14 +2215,14 @@ namespace Nektar
                         offset += coeffsElmtMap[fielddef->m_elementIDs[i]];
                         continue;
                     }
- 
+                    
                     int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                     int datalen = coeffsElmtMap[fielddef->m_elementIDs[i]];
                     if(fielddef->m_uniOrder == true)
                     {
                         modes_offset = 0;
                     }
-
+                    
                     // Copy data if it is the same length as expansion.
                     if(datalen == (*m_exp)[eid]->GetNcoeffs())
                     {
@@ -2222,7 +2235,7 @@ namespace Nektar
                             &fielddata[offset], fielddef->m_numModes,
                             modes_offset, &coeffs[m_coeff_offset[eid]]);
                     }
-
+                    
                     offset += datalen;
                 }                
             }

@@ -385,8 +385,6 @@ namespace Nektar
 
         void MeshPartition::CheckPartitions(Array<OneD, int> &pPart)
         {
-            std::cout << "Checking partitions..." << std::endl;
-
             unsigned int       i     = 0;
             unsigned int       cnt   = 0;
             const unsigned int npart = m_comm->GetSize();
@@ -409,14 +407,11 @@ namespace Nektar
             // should not be too inefficient communication-wise.
             if (!valid)
             {
-                std::cout << "Mesh partition not valid. Correcting..." << std::endl;
                 for (i = 0; i < pPart.num_elements(); ++i)
                 {
                     pPart[i] = i % npart;
                 }
             }
-
-            std::cout << "Done checking partitions." << std::endl;
         }
 
 

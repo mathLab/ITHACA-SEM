@@ -65,15 +65,15 @@ namespace Nektar
 
         std::string GlobalLinSysIterativeStaticCond::storagedef = 
             LibUtilities::SessionReader::RegisterDefaultSolverInfo(
-                "LocalHelmStorageStrategy",
+                "LocalMatrixStorageStrategy",
                 "Non-contiguous");
         std::string GlobalLinSysIterativeStaticCond::storagelookupIds[2] = {
             LibUtilities::SessionReader::RegisterEnumValue(
-                "LocalHelmStorageStrategy",
+                "LocalMatrixStorageStrategy",
                 "Contiguous",
                 MultiRegions::eContiguous),
             LibUtilities::SessionReader::RegisterEnumValue(
-                "LocalHelmStorageStrategy",
+                "LocalMatrixStorageStrategy",
                 "Non-contiguous",
                 MultiRegions::eNonContiguous),
         };
@@ -399,8 +399,8 @@ namespace Nektar
                 }
                 else
                 {
-                    LocalHelmStorageStrategy storageStrategy = m_expList.lock()->GetSession()->
-                        GetSolverInfoAsEnum<LocalHelmStorageStrategy>("LocalHelmStorageStrategy");
+                    LocalMatrixStorageStrategy storageStrategy = m_expList.lock()->GetSession()->
+                        GetSolverInfoAsEnum<LocalMatrixStorageStrategy>("LocalMatrixStorageStrategy");
 
                     size_t storageSize = 0;
                     int nBlk          = m_schurCompl->GetNumberOfBlockRows();

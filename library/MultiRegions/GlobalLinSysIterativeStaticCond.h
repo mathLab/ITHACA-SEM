@@ -49,13 +49,13 @@ namespace Nektar
         typedef boost::shared_ptr<GlobalLinSysIterativeStaticCond>
             GlobalLinSysIterativeStaticCondSharedPtr;
 
-        enum LocalHelmStorageStrategy
+        enum LocalMatrixStorageStrategy
         {
             eContiguous,
             eNonContiguous,
         };
 
-        const char* const LocalHelmStorageStrategyMap[] =
+        const char* const LocalMatrixStorageStrategyMap[] =
         {
             "Contiguous",
             "Non-contiguous",

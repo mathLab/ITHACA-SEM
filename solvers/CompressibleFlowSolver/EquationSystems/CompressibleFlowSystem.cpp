@@ -39,8 +39,6 @@
 #include <LocalRegions/HexExp.h>
 #include <MultiRegions/ExpList.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <solvers/ADRSolver/EquationSystems/UnsteadyDiffusion.cpp>
-#include <solvers/ADRSolver/EquationSystems/UnsteadyDiffusion.h>
 
 namespace Nektar
 {
@@ -67,8 +65,8 @@ namespace Nektar
                  "No UPWINDTYPE defined in session.");
         
         // Set up locations of velocity vector.
-        m_velLoc = Array<OneD, NekDouble>(m_expdim);
-        for (int i = 0; i < m_expdim; ++i)
+        m_velLoc = Array<OneD, NekDouble>(m_spacedim);
+        for (int i = 0; i < m_spacedim; ++i)
         {
             m_velLoc[i] = i+1;
         }
@@ -94,7 +92,7 @@ namespace Nektar
         m_session->LoadParameter("uInf", m_uInf, 0.1);
         
         // Get vInf parameter from session file.
-        if (m_expdim == 2 || m_expdim == 3)
+        if (m_spacedim == 2 || m_spacedim == 3)
         {
             ASSERTL0(m_session->DefinesParameter("vInf"),
                      "Compressible flow sessions must define a vInf parameter"
@@ -103,7 +101,7 @@ namespace Nektar
         }
         
         // Get wInf parameter from session file.
-        if (m_expdim == 3)
+        if (m_spacedim == 3)
         {
             ASSERTL0(m_session->DefinesParameter("wInf"),
                      "Compressible flow sessions must define a wInf parameter"
@@ -241,7 +239,7 @@ namespace Nektar
             Array<OneD,NekDouble> tmp(npts, 0.0);
 
             // Calculate (v.n)
-            for (i = 0; i < m_expdim; ++i)
+            for (i = 0; i < m_spacedim; ++i)
             {
                 Vmath::Vvtvp(npts,
                              &Fwd[1+i][id2], 1,
@@ -254,7 +252,7 @@ namespace Nektar
             Vmath::Smul(npts, -2.0, &tmp[0], 1, &tmp[0], 1);
             
             // Calculate v* = v - 2.0(v.n)n
-            for (i = 0; i < m_expdim; ++i)
+            for (i = 0; i < m_spacedim; ++i)
             {
                 Vmath::Vvtvp(npts,
                              &tmp[0], 1,
@@ -309,7 +307,7 @@ namespace Nektar
                 m_fields[0]->GetTraceMap()->
                     GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             
-            for (i = 0; i < m_expdim ; i++)
+            for (i = 0; i < m_spacedim ; i++)
             {
                 Vmath::Neg(npts,&Fwd[i+1][id2], 1);
             }
@@ -356,7 +354,7 @@ namespace Nektar
             id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->
                 GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             
-            switch(m_expdim)
+            switch(m_spacedim)
             {
                 case 1:
                 {
@@ -443,10 +441,10 @@ namespace Nektar
         int i, j, nq = m_fields[0]->GetTotPoints();
 
         Array<OneD, NekDouble> pressure(nq);
-        Array<OneD, Array<OneD, NekDouble> > velocity(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
         
         // Flux vector for the rho equation.
-        for (i = 0; i < m_expdim; ++i)
+        for (i = 0; i < m_spacedim; ++i)
         {
             velocity[i] = Array<OneD, NekDouble>(nq);
             Vmath::Vcopy(nq, physfield[i+1], 1, flux[0][i], 1);
@@ -456,9 +454,9 @@ namespace Nektar
         GetPressure      (physfield, velocity, pressure);
 
         // Flux vector for the velocity fields.
-        for (i = 0; i < m_expdim; ++i)
+        for (i = 0; i < m_spacedim; ++i)
         {
-            for (j = 0; j < m_expdim; ++j)
+            for (j = 0; j < m_spacedim; ++j)
             {
                 Vmath::Vmul(nq, velocity[j], 1, physfield[i+1], 1, flux[i+1][j], 1);
             }
@@ -468,10 +466,10 @@ namespace Nektar
         }
 
         // Flux vector for energy.
-        Vmath::Vadd(nq, physfield[m_expdim+1], 1, pressure, 1, pressure, 1);
-        for (j = 0; j < m_expdim; ++j)
+        Vmath::Vadd(nq, physfield[m_spacedim+1], 1, pressure, 1, pressure, 1);
+        for (j = 0; j < m_spacedim; ++j)
         {
-            Vmath::Vmul(nq, velocity[j], 1, pressure, 1, flux[m_expdim+1][j], 1);
+            Vmath::Vmul(nq, velocity[j], 1, pressure, 1, flux[m_spacedim+1][j], 1);
         }
     }
     
@@ -496,11 +494,11 @@ namespace Nektar
         Array<OneD, NekDouble> tmp_mu(nq);
         Array<OneD, NekDouble> tmp(nq);
         
-        Array<OneD, Array<OneD, NekDouble> > velocities(m_expdim);
-        Array<OneD, Array<OneD, NekDouble> > du(m_expdim);
-        Array<OneD, Array<OneD, NekDouble> > dv(m_expdim);
-        Array<OneD, Array<OneD, NekDouble> > dw(m_expdim);
-        Array<OneD, Array<OneD, NekDouble> > dT(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > velocities(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble> > du(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble> > dv(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble> > dw(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble> > dT(m_spacedim);
         
         Array<OneD, NekDouble > pressure   (nq, 0.0);
         Array<OneD, NekDouble > temperature(nq, 0.0);
@@ -509,7 +507,7 @@ namespace Nektar
         GetTemperature(physfield, pressure, temperature);
         GetDynamicViscosity(physfield, mu);
         
-        for (k = 0; k < m_expdim; ++k)
+        for (k = 0; k < m_spacedim; ++k)
         {
             velocities[k] = Array<OneD, NekDouble >(nq, 0.0);
             du[k] = Array<OneD, NekDouble >(nq, 0.0);
@@ -519,7 +517,7 @@ namespace Nektar
         }
         
         // Building the velocities
-        for (k = 0; k < m_expdim; ++k)
+        for (k = 0; k < m_spacedim; ++k)
         {
             Vmath::Vdiv(nq, physfield[k+1], 1, 
                         physfield[0], 1, 
@@ -527,9 +525,9 @@ namespace Nektar
         }
          
         // Building the proper derivatives
-        if (m_expdim == 1)
+        if (m_spacedim == 1)
         {
-            for (d = 0; d < m_expdim; ++d)
+            for (d = 0; d < m_spacedim; ++d)
             {
                 Vmath::Zero(nq, tmp, 1);
                 Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
@@ -540,9 +538,9 @@ namespace Nektar
                 }
             }
         }
-        else if (m_expdim == 2)
+        else if (m_spacedim == 2)
         {
-            for (d = 0; d < m_expdim; ++d)
+            for (d = 0; d < m_spacedim; ++d)
             {
                 Vmath::Zero(nq, tmp, 1);
                 Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
@@ -552,7 +550,7 @@ namespace Nektar
                     du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
                 }
             }
-            for (d = 0; d < m_expdim; ++d)
+            for (d = 0; d < m_spacedim; ++d)
             {
                 Vmath::Zero(nq, tmp, 1);
                 Vmath::Vmul(nq, velocities[1], 1, derivatives[d][0], 1, tmp, 1);
@@ -564,7 +562,7 @@ namespace Nektar
             }
             
             // At the moment for 2D only
-            for (d = 0; d < m_expdim; ++d)
+            for (d = 0; d < m_spacedim; ++d)
             {
                 for (j = 0; j < nq; ++j)
                 {
@@ -579,9 +577,9 @@ namespace Nektar
             }
         }
          
-        else if (m_expdim == 3)
+        else if (m_spacedim == 3)
         {
-            for (d = 0; d < m_expdim; ++d)
+            for (d = 0; d < m_spacedim; ++d)
             {
                 Vmath::Zero(nq, tmp, 1);
                 Vmath::Vmul(nq, velocities[0], 1, derivatives[d][0], 1, tmp, 1);
@@ -591,7 +589,7 @@ namespace Nektar
                     du[d][j] = (1.0 / physfield[0][j]) * tmp[j];
                 }
             }
-            for (d = 0; d < m_expdim; ++d)
+            for (d = 0; d < m_spacedim; ++d)
             {
                 Vmath::Zero(nq, tmp, 1);
                 Vmath::Vmul(nq, velocities[1], 1, derivatives[d][0], 1, tmp, 1);
@@ -601,7 +599,7 @@ namespace Nektar
                     dv[d][j] = (1.0 / physfield[0][j]) * tmp[j];
                 }
             }
-            for (d = 0; d < m_expdim; ++d)
+            for (d = 0; d < m_spacedim; ++d)
             {
                 Vmath::Zero(nq, tmp, 1);
                 Vmath::Vmul(nq, velocities[2], 1, derivatives[d][0], 1, tmp, 1);
@@ -617,17 +615,17 @@ namespace Nektar
         if (i == 0)
         {
             // Viscous flux vector for the rho equation
-            for (k = 0; k < m_expdim; ++k)
+            for (k = 0; k < m_spacedim; ++k)
             {
                 Vmath::Zero(nq, viscousTensor[k][i], 1);
             }
         }
         
-        if (m_expdim == 1)
+        if (m_spacedim == 1)
         {
             // to be completed
         }
-        else if (m_expdim == 2)
+        else if (m_spacedim == 2)
         {
             if (i == 1)
             {
@@ -667,7 +665,7 @@ namespace Nektar
                 }
             }
         }
-        else if (m_expdim == 3)
+        else if (m_spacedim == 3)
         {
             if (i == 1)
             {
@@ -701,11 +699,11 @@ namespace Nektar
               Array<OneD,                   NekDouble>   &pressure)
     {
         int       npts  = m_fields[0]->GetTotPoints();
-        NekDouble    alpha = -0.5;
+        NekDouble alpha = -0.5;
         
         // Calculate ||rho v||^2.
-        Vmath::Zero(npts, pressure, 1);
-        for (int i = 0; i < m_expdim; ++i)
+        Vmath::Vmul(npts, physfield[1], 1, physfield[1], 1, pressure, 1);
+        for (int i = 1; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(npts, physfield[1+i], 1, physfield[1+i], 1, 
                                pressure,       1, pressure,       1);
@@ -714,7 +712,7 @@ namespace Nektar
         Vmath::Vdiv (npts, pressure, 1, physfield[0], 1, pressure, 1);
         // pressure <- E - 0.5*pressure
         Vmath::Svtvp(npts,     alpha, 
-                     pressure, 1, physfield[m_expdim+1], 1, pressure, 1);
+                     pressure, 1, physfield[m_spacedim+1], 1, pressure, 1);
         // Multiply by (gamma-1).
         Vmath::Smul (npts, m_gamma-1, pressure, 1, pressure, 1);
     }
@@ -723,8 +721,13 @@ namespace Nektar
      * @brief Calculate the pressure field \f$ p =
      * (\gamma-1)(E-\frac{1}{2}\rho\| \mathbf{v} \|^2) \f$ assuming an ideal 
      * gas law.
+     *
+     * This is a slightly optimised way to calculate the pressure field which
+     * avoids division by the density field if the velocity field has already
+     * been calculated.
      * 
      * @param physfield  Input momentum.
+     * @param velocity   Velocity vector.
      * @param pressure   Computed pressure field.
      */
     void CompressibleFlowSystem::GetPressure(
@@ -737,14 +740,14 @@ namespace Nektar
         
         // Calculate ||\rho v||^2.
         Vmath::Vmul (npts, velocity[0], 1, physfield[1], 1, pressure, 1);
-        for (int i = 1; i < m_expdim; ++i)
+        for (int i = 1; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(npts, velocity[i], 1, physfield[1+i], 1, 
                                pressure,    1, pressure,       1);
         }
         // pressure <- E - 0.5*pressure
         Vmath::Svtvp(npts,     alpha, 
-                     pressure, 1, physfield[m_expdim+1], 1, pressure, 1);
+                     pressure, 1, physfield[m_spacedim+1], 1, pressure, 1);
         // Multiply by (gamma-1).
         Vmath::Smul (npts, m_gamma-1, pressure, 1, pressure, 1);
     }
@@ -762,7 +765,7 @@ namespace Nektar
     {
         const int npts = m_fields[0]->GetTotPoints();
         
-        for (int i = 0; i < m_expdim; ++i)
+        for (int i = 0; i < m_spacedim; ++i)
         {
             Vmath::Vdiv(npts, physfield[1+i], 1, physfield[0], 1, 
                               velocity[i],    1);
@@ -781,10 +784,9 @@ namespace Nektar
         Array<OneD,                         NekDouble  > &pressure,
         Array<OneD,                         NekDouble  > &temperature)
     {
-        for (int i = 0; i < m_fields[0]->GetTotPoints(); ++i)
-        {
-            temperature[i] = pressure[i] / (physfield[0][i] * m_gasConstant);
-        }
+        const int nq = m_fields[0]->GetTotPoints();
+        Vmath::Vdiv(nq, pressure, 1, physfield[0], 1, temperature, 1);
+        Vmath::Smul(nq, 1.0/m_gasConstant, temperature, 1, temperature, 1);
     }
     
     /**
@@ -799,10 +801,10 @@ namespace Nektar
               Array<OneD,             NekDouble  > &pressure,
               Array<OneD,             NekDouble  > &soundspeed)
     {
-        for (int i = 0; i < m_fields[0]->GetTotPoints(); ++i)
-        {
-            soundspeed[i] = sqrt(m_gamma * pressure[i] / physfield[0][i]);
-        }
+        const int nq = m_fields[0]->GetTotPoints();
+        Vmath::Vdiv (nq, pressure, 1, physfield[0], 1, soundspeed, 1);
+        Vmath::Smul (nq, m_gamma, soundspeed, 1, soundspeed, 1);
+        Vmath::Vsqrt(nq, soundspeed, 1, soundspeed, 1);
     }
     
     /**
@@ -819,13 +821,14 @@ namespace Nektar
     {
         const int npts = m_fields[0]->GetTotPoints();
 
-        Vmath::Zero(npts, mach, 1);
-        
-        for (int i = 0; i < m_expdim; ++i)
+        Vmath::Vmul(npts, physfield[1], 1, physfield[1], 1, mach, 1);
+
+        for (int i = 1; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(npts, physfield[1+i], 1, physfield[1+i], 1, 
                                mach,           1, mach,           1);
         }
+
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vdiv(npts, mach, 1, soundspeed,   1, mach, 1);
@@ -853,7 +856,7 @@ namespace Nektar
         Array<OneD, NekDouble > temperature      (npts, 0.0);
         Array<OneD, NekDouble > temperature_ratio(npts, 0.0);
         
-        GetPressure(physfield, pressure);
+        GetPressure   (physfield, pressure);
         GetTemperature(physfield, pressure, temperature);
         
         for (int i = 0; i < npts; ++i)
@@ -870,10 +873,8 @@ namespace Nektar
     NekDouble CompressibleFlowSystem::v_GetTimeStep(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray)
     { 
-        int i, n;
-        int nvariables     = m_fields.num_elements();
-        int nTotQuadPoints = GetTotPoints();
-        int nElements      = m_fields[0]->GetExpSize(); 
+        int n;
+        int nElements = m_fields[0]->GetExpSize(); 
         const Array<OneD, int> ExpOrder = GetNumExpModesPerExp();
         
         Array<OneD, NekDouble> tstep      (nElements, 0.0);
@@ -911,7 +912,6 @@ namespace Nektar
                 minLength = sqrt(Area);
             }
 
-            
             tstep[n] = m_cflSafetyFactor * alpha * minLength 
                      / (stdVelocity[n] * cLambda 
                         * (ExpOrder[n] - 1) * (ExpOrder[n] - 1));
@@ -939,63 +939,64 @@ namespace Nektar
         int npts           = 0;
 
         // Getting the velocity vector on the 2D normal space
-        Array<OneD, Array<OneD, NekDouble> > velocity   (m_expdim);
-        Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_expdim);
+        Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
+        Array<OneD, Array<OneD, NekDouble> > stdVelocity(m_spacedim);
         Array<OneD, NekDouble>               pressure   (nTotQuadPoints);
         Array<OneD, NekDouble>               soundspeed (nTotQuadPoints);
         
         // Zero output array
         Vmath::Zero(stdV.num_elements(), stdV, 1);
         
-        for (int i = 0; i < m_expdim; ++i)
+        for (int i = 0; i < m_spacedim; ++i)
         {
             velocity   [i] = Array<OneD, NekDouble>(nTotQuadPoints);
             stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints, 0.0);
         }
         GetVelocityVector(inarray, velocity);
-        GetPressure      (inarray, pressure);
+        GetPressure      (inarray, velocity, pressure);
         GetSoundSpeed    (inarray, pressure, soundspeed);
         
         for(int el = 0; el < n_element; ++el)
         { 
-            const Array<OneD, const NekDouble> &jac  = 
-                m_fields[0]->GetExp(el)->GetGeom()->GetJac();
+            // Possible bug: not multiply by jacobian??
             const Array<TwoD, const NekDouble> &gmat = 
                 m_fields[0]->GetExp(el)->GetGeom()->GetGmat();
             
-            int nqtot = m_fields[0]->GetExp(el)->GetTotPoints();
+            int nq = m_fields[0]->GetExp(el)->GetTotPoints();
             
             if(m_fields[0]->GetExp(el)->GetGeom()->GetGtype() == 
                    SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi
-                for (int i = 0; i < m_expdim; ++i)
+                for (int i = 0; i < m_spacedim; ++i)
                 {
-                    Vmath::Zero(nqtot, stdVelocity[i], 1);
-                    for (int j = 0; j < m_expdim; ++j)
+                    Vmath::Vmul(nq, gmat[i], 1, velocity[0], 1,
+                                stdVelocity[i], 1);
+                    for (int j = 1; j < m_spacedim; ++j)
                     {
-                        Vmath::Vvtvp(nqtot, gmat[m_expdim*j+i], 1, velocity[j], 
+                        Vmath::Vvtvp(nq, gmat[m_spacedim*j+i], 1, velocity[j],
                                      1, stdVelocity[i], 1, stdVelocity[i], 1);
                     }
                 }
             }
             else
             {
-                for (int i = 0; i < m_expdim; ++i)
+                for (int i = 0; i < m_spacedim; ++i)
                 {
-                    Vmath::Zero(nqtot, stdVelocity[i], 1);
-                    for (int j = 0; j < m_expdim; ++j)
+                    Vmath::Smul(nq, gmat[i][0], velocity[0], 1,
+                                stdVelocity[i], 1);
+                    for (int j = 1; j < m_spacedim; ++j)
                     {
-                        Vmath::Svtvp(nqtot, gmat[m_expdim*j+i][0], velocity[j], 
+                        Vmath::Svtvp(nq, gmat[m_spacedim*j+i][0], velocity[j], 
                                      1, stdVelocity[i], 1, stdVelocity[i], 1);
                     }
                 }
             }
             
-            for(int i = 0; i < nqtot; ++i)
+            for (int i = 0; i < nq; ++i)
             {
                 NekDouble pntVelocity = 0.0;
-                for (int j = 0; j < m_expdim; ++j)
+                for (int j = 0; j < m_spacedim; ++j)
                 {
                     pntVelocity += stdVelocity[j][i]*stdVelocity[j][i];
                 }
@@ -1018,21 +1019,15 @@ namespace Nektar
      */
     NekDouble CompressibleFlowSystem::GetStabilityLimit(int n)
     {
-        if (n > 20)
-        {
-            ASSERTL0(false,
-                     "Illegal modes dimension for CFL calculation "
-                     "(P has to be less then 20)");
-        }
-		
+        ASSERTL0(n <= 20, "Illegal modes dimension for CFL calculation "
+                          "(P has to be less then 20)");
+
         NekDouble CFLDG[21] = {  2.0000,   6.0000,  11.8424,  19.1569, 
                                 27.8419,  37.8247,  49.0518,  61.4815, 
                                 75.0797,  89.8181, 105.6700, 122.6200,
                                140.6400, 159.7300, 179.8500, 201.0100,
                                223.1800, 246.3600, 270.5300, 295.6900,
                                321.8300}; //CFLDG 1D [0-20]
-        
-        NekDouble CFLCG[2]  = {1.0, 1.0};
         NekDouble CFL;
 		
         if (m_projectionType == MultiRegions::eDiscontinuous)
@@ -1041,9 +1036,8 @@ namespace Nektar
         }
         else 
         {
-            ASSERTL0(false,
-                     "Continuos Galerkin stability coefficients "
-                     "not introduced yet.");
+            ASSERTL0(false, "Continuous Galerkin stability coefficients "
+                            "not introduced yet.");
         }
 		
         return CFL;

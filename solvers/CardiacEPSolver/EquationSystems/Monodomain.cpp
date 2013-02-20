@@ -109,24 +109,39 @@ namespace Nektar
         int nq = m_fields[0]->GetNpoints();
         Array<OneD, NekDouble> vTemp;
 
+        // Allocate storage for variable coeffs and initialize to 1.
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq, 1.0);
+        }
+
+        // Apply intensity map (range d_min -> d_max)
         if (m_session->DefinesFunction("IsotropicConductivity"))
         {
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                cout << "Loading Isotropic Conductivity map." << endl;
+            }
             EvaluateFunction(varName, vTemp, "IsotropicConductivity");
             for (int i = 0; i < m_spacedim; ++i)
             {
-                m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq);
-                Vmath::Vcopy(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1);
+                Vmath::Vmul(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
             }
         }
-        else if (m_session->DefinesFunction(varCoeffs[0]))
+
+        // Apply fibre map (range 0 -> 1)
+        if (m_session->DefinesFunction(varCoeffs[0]))
         {
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                cout << "Loading Anisotropic Fibre map." << endl;
+            }
             for (int i = 0; i < m_spacedim; ++i)
             {
                 ASSERTL0(m_session->DefinesFunction(varCoeffs[i], varName),
                     "Function '" + varCoeffs[i] + "' not correctly defined.");
                 EvaluateFunction(varName, vTemp, varCoeffs[i]);
-                m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq);
-                Vmath::Vcopy(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1);
+                Vmath::Vmul(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
             }
         }
 

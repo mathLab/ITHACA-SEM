@@ -141,6 +141,10 @@ namespace Nektar
                     const AssemblyMapSharedPtr &plocToGloMap,
                     const int nDir)
         {
+            // Get the communicator for performing data exchanges
+            LibUtilities::CommSharedPtr vComm
+                                = m_expList.lock()->GetComm()->GetRowComm();
+
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
             Array<OneD, NekDouble> tmp;
@@ -161,9 +165,12 @@ namespace Nektar
 
                 // check the input vector (rhs) is not zero
 
-                NekDouble rhsNorm = Vmath::Dot(nNonDir,
-                                               pInput + nDir,
-                                               pInput + nDir);
+                NekDouble rhsNorm = Vmath::Dot2(nNonDir,
+                                                pInput + nDir,
+                                                pInput + nDir,
+                                                m_map + nDir);
+
+                vComm->AllReduce(rhsNorm, Nektar::LibUtilities::ReduceSum);
 
                 if (rhsNorm < NekConstants::kNekZeroTol)
                 {
@@ -188,19 +195,25 @@ namespace Nektar
                 // \alpha_i = \tilda{x_i}^T b^n
                 // projected x, px = \sum \alpha_i \tilda{x_i}
 
+                Array<OneD, NekDouble> alpha     (m_prevLinSol.size(), 0.0);
                 for (int i = 0; i < m_prevLinSol.size(); i++)
                 {
-                    NekDouble alphai = Vmath::Dot(nNonDir,
-                                                  m_prevLinSol[i],
-                                                  pInput + nDir);
+                    alpha[i] = Vmath::Dot2(nNonDir,
+                                           m_prevLinSol[i],
+                                           pInput + nDir,
+                                           m_map + nDir);
+                }
+                vComm->AllReduce(alpha, Nektar::LibUtilities::ReduceSum);
 
-                    if (alphai < NekConstants::kNekZeroTol)
+                for (int i = 0; i < m_prevLinSol.size(); i++)
+                {
+                    if (alpha[i] < NekConstants::kNekZeroTol)
                     {
                         continue;
                     }
 
                     NekVector<NekDouble> xi (nNonDir, m_prevLinSol[i], eWrapper);
-                    px += alphai * xi;
+                    px += alpha[i] * xi;
                 }
 
                 // pb = b^n - A px
@@ -235,6 +248,10 @@ namespace Nektar
                     const Array<OneD,const NekDouble> &in,
                     const int nDir)
         {
+            // Get the communicator for performing data exchanges
+            LibUtilities::CommSharedPtr vComm
+                                = m_expList.lock()->GetComm()->GetRowComm();
+
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
 
@@ -243,9 +260,11 @@ namespace Nektar
 
             v_DoMatrixMultiply(in, tmpAx_s);
 
-            const NekDouble  anorm_sq = Vmath::Dot(nNonDir,
-                                                   in      + nDir,
-                                                   tmpAx_s + nDir);
+            NekDouble anorm_sq = Vmath::Dot2(nNonDir,
+                                             in      + nDir,
+                                             tmpAx_s + nDir,
+                                             m_map   + nDir);
+            vComm->AllReduce(anorm_sq, Nektar::LibUtilities::ReduceSum);
             return std::sqrt(anorm_sq);
         }
 
@@ -261,11 +280,16 @@ namespace Nektar
             // Get vector sizes
             int nNonDir = nGlobal - nDir;
 
+            // Get the communicator for performing data exchanges
+            LibUtilities::CommSharedPtr vComm
+                                = m_expList.lock()->GetComm()->GetRowComm();
 
             // Check the solution is non-zero
-            NekDouble solNorm = Vmath::Dot(nNonDir,
-                                           newX + nDir,
-                                           newX + nDir);
+            NekDouble solNorm = Vmath::Dot2(nNonDir,
+                                            newX + nDir,
+                                            newX + nDir,
+                                            m_map + nDir);
+            vComm->AllReduce(solNorm, Nektar::LibUtilities::ReduceSum);
 
             if (solNorm < NekConstants::kNekZeroTol)
             {
@@ -293,19 +317,26 @@ namespace Nektar
             {
                 v_DoMatrixMultiply(newX, tmpAx_s);
             }
+
+            Array<OneD, NekDouble> alpha (m_prevLinSol.size(), 0.0);
             for (int i = 0; i < m_prevLinSol.size(); i++)
             {
-                NekDouble alphai = Vmath::Dot(nNonDir,
-                                              m_prevLinSol[i],
-                                              tmpAx_s + nDir);
+                alpha[i] = Vmath::Dot2(nNonDir,
+                                       m_prevLinSol[i],
+                                       tmpAx_s + nDir,
+                                       m_map + nDir);
+            }
+            vComm->AllReduce(alpha, Nektar::LibUtilities::ReduceSum);
 
-                if (alphai < NekConstants::kNekZeroTol)
+            for (int i = 0; i < m_prevLinSol.size(); i++)
+            {
+                if (alpha[i] < NekConstants::kNekZeroTol)
                 {
                     continue;
                 }
 
                 NekVector<NekDouble> xi (nNonDir, m_prevLinSol[i], eWrapper);
-                px -= alphai * xi;
+                px -= alpha[i] * xi;
             }
 
 

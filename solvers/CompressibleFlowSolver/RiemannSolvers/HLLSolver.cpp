@@ -108,43 +108,39 @@ namespace Nektar
         // Maximum wave speeds
         NekDouble SL = std::min(uL-cL, uRoe-cRoe);
         NekDouble SR = std::max(uR+cR, uRoe+cRoe);
-        
+
         // HLL Riemann fluxes (positive case)
         if (SL >= 0)
         {
-            rhof  = rhoL * uL;
-            rhouf = rhoL * uL * uL + pL;
-            rhovf = rhoL * uL * vL;
-            rhowf = rhoL * uL * wL;
+            rhof  = rhouL;
+            rhouf = rhouL * uL + pL;
+            rhovf = rhouL * vL;
+            rhowf = rhouL * wL;
             Ef    = uL * (EL + pL);
         }
         // HLL Riemann fluxes (negative case)
         else if (SR <= 0)
         {
-            rhof  = rhoR * uR;
-            rhouf = rhoR * uR * uR + pR;
-            rhovf = rhoR * uR * vR;
-            rhowf = rhoR * uR * wR;
+            rhof  = rhouR;
+            rhouf = rhouR * uR + pR;
+            rhovf = rhouR * vR;
+            rhowf = rhouR * wR;
             Ef    = uR * (ER + pR);
         }
         // HLL Riemann fluxes (general case (SL < 0 | SR > 0)
         else
         {
-            rhof  = (SR * (rhoL * uL) - 
-                     SL * (rhoR * uR) + 
-                     SR * SL * (rhoR - rhoL)) / (SR - SL);
-            
-            rhouf = (SR * (rhoL * uL * uL + pL) - 
-                     SL * (rhoR * uR * uR + pR) + 
-                     SR * SL * (rhouR - rhouL)) / (SR - SL);
-            
-            rhovf = (SR * (rhoL * uL * vL) - 
-                     SL * (rhoR * uR * vR) + 
-                     SR * SL * (rhovR - rhovL)) / (SR - SL);
-            
-            Ef    = (SR * (uL * EL + uL * pL) - 
-                     SL * (uR * ER + uR * pR) + 
-                     SR * SL * (ER - EL)) / (SR - SL);
+            NekDouble tmp1 = 1.0 / (SR - SL);
+            NekDouble tmp2 = SR * SL;
+            rhof  = (SR * rhouL - SL * rhouR + tmp2 * (rhoR - rhoL)) * tmp1;
+            rhouf = (SR * (rhouL * uL + pL) - SL * (rhouR * uR + pR) +
+                     tmp2 * (rhouR - rhouL)) * tmp1;
+            rhovf = (SR * rhouL * vL - SL * rhouR * vR +
+                     tmp2 * (rhovR - rhovL)) * tmp1;
+            rhowf = (SR * rhouL * wL - SL * rhouR * wR +
+                     tmp2 * (rhowR - rhowL)) * tmp1;
+            Ef    = (SR * uL * (EL + pL) - SL * uR * (ER + pR) + 
+                     tmp2 * (ER - EL)) * tmp1;
         }
     }
 }

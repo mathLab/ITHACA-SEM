@@ -398,7 +398,7 @@ namespace Nektar
                 tn[2] = normals[2][i];
                 FromToRotation(tn, xdir, tmp);
                 
-                for (int j = 0; j < 9; ++j)
+                for (j = 0; j < 9; ++j)
                 {
                     m_rotMat[j][i] = tmp[j];
                 }

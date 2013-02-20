@@ -108,30 +108,30 @@ namespace Nektar
         // Maximum wave speeds
         NekDouble SL = std::min(uL-cL, uRoe-cRoe);
         NekDouble SR = std::max(uR+cR, uRoe+cRoe);
-        NekDouble SM = (pR - pL + rhouL * (SL - uL) - rhouR * (SR - uR)) / 
-                       (rhoL * (SL - uL) - rhoR * (SR - uR));
         
         // HLLC Riemann fluxes (positive case)
         if (SL >= 0)
         {
-            rhof  = rhoL * uL;
-            rhouf = rhoL * uL * uL + pL;
-            rhovf = rhoL * uL * vL;
-            rhowf = rhoL * uL * wL;
+            rhof  = rhouL;
+            rhouf = rhouL * uL + pL;
+            rhovf = rhouL * vL;
+            rhowf = rhouL * wL;
             Ef    = uL * (EL + pL);
         }
         // HLLC Riemann fluxes (negative case)
         else if (SR <= 0)
         {
-            rhof  = rhoR * uR;
-            rhouf = rhoR * uR * uR + pR;
-            rhovf = rhoR * uR * vR;
-            rhowf = rhoR * uR * wR;
+            rhof  = rhouR;
+            rhouf = rhouR * uR + pR;
+            rhovf = rhouR * vR;
+            rhowf = rhouR * wR;
             Ef    = uR * (ER + pR);
         }
         // HLLC Riemann fluxes (general case (SL < 0 | SR > 0)
         else
         {
+            NekDouble SM = (pR - pL + rhouL * (SL - uL) - rhouR * (SR - uR)) / 
+                           (rhoL * (SL - uL) - rhoR * (SR - uR));
             NekDouble rhoML  = rhoL * (SL - uL) / (SL - SM);
             NekDouble rhouML = rhoML * SM;
             NekDouble rhovML = rhoML * vL;
@@ -148,18 +148,18 @@ namespace Nektar
             
             if (SL < 0.0 && SM >= 0.0)
             {
-                rhof  = rhoL * uL + SL * (rhoML - rhoL);
-                rhouf = rhoL * uL * uL + pL + SL * (rhouML - rhouL);
-                rhovf = rhoL * uL * vL + SL * (rhovML - rhovL);
-                rhowf = rhoL * uL * wL + SL * (rhowML - rhowL);
+                rhof  = rhouL + SL * (rhoML - rhoL);
+                rhouf = rhouL * uL + pL + SL * (rhouML - rhouL);
+                rhovf = rhouL * vL + SL * (rhovML - rhovL);
+                rhowf = rhouL * wL + SL * (rhowML - rhowL);
                 Ef    = uL * (EL + pL) + SL * (EML - EL);
             }
             else if(SM < 0.0 && SR > 0.0)
             {
-                rhof  = rhoR * uR + SR * (rhoMR - rhoR);
-                rhouf = rhoR * uR * uR + pR + SR * (rhouMR - rhouR);
-                rhovf = rhoR * uR * vR + SR * (rhovMR - rhovR);
-                rhowf = rhoR * uR * wR + SR * (rhowMR - rhowR);
+                rhof  = rhouR + SR * (rhoMR - rhoR);
+                rhouf = rhouR * uR + pR + SR * (rhouMR - rhouR);
+                rhovf = rhouR * vR + SR * (rhovMR - rhovR);
+                rhowf = rhouR * wR + SR * (rhowMR - rhowR);
                 Ef    = uR * (ER + pR) + SR * (EMR - ER);
             }
         }

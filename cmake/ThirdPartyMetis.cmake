@@ -7,7 +7,7 @@ IF (THIRDPARTY_BUILD_METIS)
         modmetis-5.0.2
         PREFIX ${TPSRC}
         URL ${TPURL}/modmetis-5.0.2.tar.bz2
-        URL_MD5 "f3b79d6bf41930419988e0fa04643c5e"
+        URL_MD5 "ffbdc6a50283934389a0b3b0c32b62c0"
         DOWNLOAD_DIR ${TPSRC}
         CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist -DCMAKE_C_FLAGS:STRING=-fPIC -DGKLIB_PATH:PATH=${TPSRC}/src/modmetis-5.0.2/GKlib ${TPSRC}/src/modmetis-5.0.2
     )

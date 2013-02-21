@@ -79,7 +79,7 @@ namespace Nektar
         double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
         double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
     {        
-        NekDouble gamma = m_params["gamma"]();
+        static NekDouble gamma = m_params["gamma"]();
         
         // Left and right velocities
         NekDouble uL = rhouL / rhoL;

@@ -8,6 +8,7 @@ library/CPackRPM.cmake
 library/Demos/StdRegions/ExtraDemos
 library/Demos/MultiRegions/ExtraDemos
 solvers/ADR2DManifoldSolver
+solvers/CardiacEPSolver/Utilities
 solvers/FitzHughNagumoSolver
 solvers/ImageWarpingSolver
 solvers/PulseWaveSolver

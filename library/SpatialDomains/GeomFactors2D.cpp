@@ -1058,8 +1058,9 @@ namespace Nektar
                         }
                         default:
                         {
-                            ASSERTL0(false,"Currently no implementation "
-                                           "for this PointsType");
+                            m_isUsingQuadMetrics = false;
+                            m_weightedjac = Array<OneD, NekDouble>();
+                            return;
                         }
                     }
                     break;

@@ -368,24 +368,22 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray)
         {
-            const int nqtot = GetTotPoints();
+            int    nquad0 = m_base[0]->GetNumPoints();
+            int    nquad1 = m_base[1]->GetNumPoints();
+            int    nquad2 = m_base[2]->GetNumPoints();
+            int    order0 = m_base[0]->GetNumModes();
+            int    order1 = m_base[1]->GetNumModes();
 
-            Array<OneD, const NekDouble> jac = m_metricinfo->GetJac();
-            Array<OneD,       NekDouble> tmp(nqtot);
+            Array<OneD, NekDouble> tmp(inarray.num_elements());
+            Array<OneD, NekDouble> wsp(nquad0*nquad1*(nquad2+order0) +
+                                       order0*order1*nquad2);
 
-            // multiply inarray with Jacobian
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                Vmath::Vmul(nqtot, &jac[0], 1, (NekDouble*)&inarray[0], 1,
-                                   &tmp[0], 1);
-            }
-            else
-            {
-                Vmath::Smul(nqtot, jac[0], (NekDouble*)&inarray[0], 1,
-                            &tmp[0], 1);
-            }
-
-            StdHexExp::v_IProductWRTBase(tmp, outarray);
+            MultiplyByQuadratureMetric(inarray, tmp);
+            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
+                                         m_base[1]->GetBdata(),
+                                         m_base[2]->GetBdata(),
+                                         tmp,outarray,wsp,
+                                         true,true,true);
         }
 
         void HexExp::v_IProductWRTDerivBase(
@@ -433,50 +431,49 @@ namespace Nektar
  
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
 
-            Array<OneD, NekDouble> alloc(3*nqtot + 2*m_ncoeffs +
+            Array<OneD, NekDouble> alloc(4*nqtot + 2*m_ncoeffs +
                                          nmodes0*nquad2*(nquad1+nmodes1));
-            Array<OneD, NekDouble> tmp1(alloc);               // Dir1 metric
-            Array<OneD, NekDouble> tmp2(alloc +   nqtot);     // Dir2 metric
-            Array<OneD, NekDouble> tmp3(alloc + 2*nqtot);     // Dir3 metric
-            Array<OneD, NekDouble> tmp4(alloc + 3*nqtot);     // Dir1 iprod
-            Array<OneD, NekDouble> tmp5(tmp4  +   m_ncoeffs); // Dir2 iprod
-            Array<OneD, NekDouble> wsp (tmp4  + 2*m_ncoeffs); // Wsp
+            Array<OneD, NekDouble> tmp1(alloc);               // Quad metric
+            Array<OneD, NekDouble> tmp2(alloc +   nqtot);     // Dir1 metric
+            Array<OneD, NekDouble> tmp3(alloc + 2*nqtot);     // Dir2 metric
+            Array<OneD, NekDouble> tmp4(alloc + 3*nqtot);     // Dir3 metric
+            Array<OneD, NekDouble> tmp5(alloc + 4*nqtot);     // Dir1 iprod
+            Array<OneD, NekDouble> tmp6(tmp5  +   m_ncoeffs); // Dir2 iprod
+            Array<OneD, NekDouble> wsp (tmp5  + 2*m_ncoeffs); // Wsp
+
+            MultiplyByQuadratureMetric(inarray, tmp1);
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul(nqtot,&gmat[3*dir][0],  1,inarray.get(),1,tmp1.get(),1);
-                Vmath::Vmul(nqtot,&gmat[3*dir+1][0],1,inarray.get(),1,tmp2.get(),1);
-                Vmath::Vmul(nqtot,&gmat[3*dir+2][0],1,inarray.get(),1,tmp3.get(),1);
+                Vmath::Vmul(nqtot,&gmat[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
+                Vmath::Vmul(nqtot,&gmat[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
+                Vmath::Vmul(nqtot,&gmat[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
             }
             else
             {
-                Vmath::Smul(nqtot, gmat[3*dir][0],  inarray.get(),1,tmp1.get(), 1);
-                Vmath::Smul(nqtot, gmat[3*dir+1][0],inarray.get(),1,tmp2.get(), 1);
-                Vmath::Smul(nqtot, gmat[3*dir+2][0],inarray.get(),1,tmp3.get(), 1);
+                Vmath::Smul(nqtot, gmat[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
+                Vmath::Smul(nqtot, gmat[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
+                Vmath::Smul(nqtot, gmat[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
             }  
-
-            MultiplyByQuadratureMetric(tmp1,tmp1);
-            MultiplyByQuadratureMetric(tmp2,tmp2);
-            MultiplyByQuadratureMetric(tmp3,tmp3);
             
             IProductWRTBase_SumFacKernel(   m_base[0]->GetDbdata(),
                                             m_base[1]->GetBdata(),
                                             m_base[2]->GetBdata(),
-                                            tmp1,tmp4,wsp,
+                                            tmp2,tmp5,wsp,
                                             false,true,true);
             IProductWRTBase_SumFacKernel(   m_base[0]->GetBdata(),
                                             m_base[1]->GetDbdata(),
                                             m_base[2]->GetBdata(),
-                                            tmp2,tmp5,wsp,
+                                            tmp3,tmp6,wsp,
                                             true,false,true);
             IProductWRTBase_SumFacKernel(   m_base[0]->GetBdata(),
                                             m_base[1]->GetBdata(),
                                             m_base[2]->GetDbdata(),
-                                            tmp3,outarray,wsp,
+                                            tmp4,outarray,wsp,
                                             true,true,false);
                                             
-            Vmath::Vadd(GetNcoeffs(), tmp4, 1, outarray, 1, outarray, 1);
             Vmath::Vadd(GetNcoeffs(), tmp5, 1, outarray, 1, outarray, 1);
+            Vmath::Vadd(GetNcoeffs(), tmp6, 1, outarray, 1, outarray, 1);
         }
 
 
@@ -2297,19 +2294,18 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD, NekDouble> &outarray)
         {        
-            const int nqtot = m_base[0]->GetNumPoints() *
-                              m_base[1]->GetNumPoints() *
-                              m_base[2]->GetNumPoints();
-               
             if(m_metricinfo->IsUsingQuadMetrics())
             {
                 const Array<OneD, const NekDouble> &metric
                     = m_metricinfo->GetQuadratureMetrics();
 
-                Vmath::Vmul(nqtot, metric, 1, inarray, 1, outarray, 1);
+                Vmath::Vmul(metric.num_elements(), metric, 1, inarray, 1, outarray, 1);
             }
             else
             {
+                const int nqtot = m_base[0]->GetNumPoints() *
+                                  m_base[1]->GetNumPoints() *
+                                  m_base[2]->GetNumPoints();
                 const Array<OneD, const NekDouble> &jac
                     = m_metricinfo->GetJac();
 

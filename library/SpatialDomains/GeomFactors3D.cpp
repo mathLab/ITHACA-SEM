@@ -378,8 +378,9 @@ namespace Nektar
                             break;
                             
                         default:
-                            ASSERTL0(false, "Quadrature point type not supported for this element.");
-                            break;
+                            m_isUsingQuadMetrics = false;
+                            m_weightedjac = Array<OneD, NekDouble>();
+                            return;
                     }
                     break;
                 }
@@ -424,8 +425,11 @@ namespace Nektar
                             break;
                 
                         default:
-                            ASSERTL0(false, "Unsupported quadrature points type.");
-                            break;
+                        {
+                            m_isUsingQuadMetrics = false;
+                            m_weightedjac = Array<OneD, NekDouble>();
+                            return;
+                        }
                     }
 
                     switch(tbasis[2]->GetPointsType())
@@ -447,8 +451,9 @@ namespace Nektar
                             }
                             break;
                         default:
-                            ASSERTL0(false, "Unsupported quadrature points type.");
-                            break;
+                            m_isUsingQuadMetrics = false;
+                            m_weightedjac = Array<OneD, NekDouble>();
+                            return;
                     }
                     break;
                 }

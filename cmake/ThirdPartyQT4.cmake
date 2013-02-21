@@ -1,4 +1,4 @@
-# FFTW
+# QT4 
 OPTION(NEKTAR_USE_QT4
     "Use QT4 for graphical tools and utilities." OFF)
 

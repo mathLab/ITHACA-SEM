@@ -59,28 +59,32 @@ namespace Nektar
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
 
-            Array<OneD, Array<OneD, NekDouble> > fluxvector(nVelDim);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxvector(nConvectiveFields);
+            //Array<OneD, Array<OneD, NekDouble> > fluxvector(nVelDim);
             Array<OneD, Array<OneD, NekDouble> > tmp       (nConvectiveFields);
 
             ASSERTL1(m_riemann, 
                      "Riemann solver must be provided for AdvectionWeakDG.");
 
-            for(i = 0; i < nVelDim; ++i)
+            for (i = 0; i < nConvectiveFields; ++i)
             {
-                fluxvector[i] = Array<OneD, NekDouble>(nPointsTot);
+                fluxvector[i] = Array<OneD, Array<OneD, NekDouble> >(nVelDim);
+                for(j = 0; j < nVelDim; ++j)
+                {
+                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot);
+                }
             }
-            
+
+            m_fluxVector(inarray, fluxvector);
+
             // Get the advection part (without numerical flux)
             for(i = 0; i < nConvectiveFields; ++i)
             {
                 tmp[i] = Array<OneD,NekDouble>(nCoeffs, 0.0);
                 
-                // Get the ith component of the  flux vector in physical space
-                m_fluxVector(i, inarray, fluxvector);
-                
                 for (j = 0; j < nVelDim; ++j)
                 {
-                    fields[i]->IProductWRTDerivBase(j, fluxvector[j], 
+                    fields[i]->IProductWRTDerivBase(j, fluxvector[i][j], 
                                                        outarray[i]);
                     Vmath::Vadd(nCoeffs, outarray[i], 1, tmp[i], 1, tmp[i], 1);
                 }

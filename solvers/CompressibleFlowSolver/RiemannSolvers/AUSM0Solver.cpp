@@ -53,30 +53,26 @@ namespace Nektar
      *
      * @param rhoL      Density left state.
      * @param rhoR      Density right state.  
-     * @param rhouL     x-velocity component left state.  
-     * @param rhouR     x-velocity component right state.  
-     * @param rhovL     y-velocity component left state.  
-     * @param rhovR     y-velocity component right state.  
-     * @param rhowL     z-velocity component left state.  
-     * @param rhowR     z-velocity component right state.
+     * @param rhouL     x-momentum component left state.  
+     * @param rhouR     x-momentum component right state.  
+     * @param rhovL     y-momentum component left state.  
+     * @param rhovR     y-momentum component right state.  
+     * @param rhowL     z-momentum component left state.  
+     * @param rhowR     z-momentum component right state.
      * @param EL        Energy left state.  
      * @param ER        Energy right state. 
-     * @param rhof      Riemann flux for density (i.e. first equation).  
-     * @param rhouf     Riemann flux for x-velocity component 
-     *                  (i.e. second equation).
-     * @param rhovf     Riemann flux for y-velocity component 
-     *                  (i.e. third equation).
-     * @param rhowf     Riemann flux for z-velocity component 
-     *                  (i.e. fourth equation).
-     * @param Ef        Riemann flux for energy (i.e. fifth equation).  
-     *
+     * @param rhof      Computed Riemann flux for density.
+     * @param rhouf     Computed Riemann flux for x-momentum component 
+     * @param rhovf     Computed Riemann flux for y-momentum component 
+     * @param rhowf     Computed Riemann flux for z-momentum component 
+     * @param Ef        Computed Riemann flux for energy.
      */
     void AUSM0Solver::v_PointSolve(
         double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
         double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
         double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
     {        
-        NekDouble gamma = m_params["gamma"]();
+        static NekDouble gamma = m_params["gamma"]();
         
         // Left and Right velocities
         NekDouble uL = rhouL / rhoL;
@@ -93,8 +89,6 @@ namespace Nektar
             (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
         NekDouble cL = sqrt(gamma * pL / rhoL);
         NekDouble cR = sqrt(gamma * pR / rhoR);
-        NekDouble hL = (EL + pL) / rhoL;
-        NekDouble hR = (ER + pR) / rhoR;
         
         // Average speeds of sound
         NekDouble cA = 0.5 * (cL + cR);

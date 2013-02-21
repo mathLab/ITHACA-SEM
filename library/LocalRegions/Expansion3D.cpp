@@ -42,7 +42,7 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        Expansion3D::Expansion3D(){}
+        Expansion3D::Expansion3D() : m_requireNeg() {}
         
         void Expansion3D::AddHDGHelmholtzTraceTerms(
             const NekDouble                                tau,
@@ -914,6 +914,40 @@ namespace Nektar
             StdRegions::IndexMapValuesSharedPtr map = 
                 StdExpansion::GetIndexMap(ikey);
 
+            /*
+             * Coming into this routine, the velocity V will have been
+             * multiplied by the trace normals to give the input vector Vn. By
+             * convention, these normals are inwards facing for elements which
+             * have FaceExp as their right-adjacent face.  This conditional
+             * statement therefore determines whether the normals must be
+             * negated, since the integral being performed here requires an
+             * outwards facing normal.
+             */ 
+            if (m_requireNeg.size() == 0)
+            {
+                m_requireNeg.resize(GetNfaces());
+                
+                for (i = 0; i < GetNfaces(); ++i)
+                {
+                    m_requireNeg[i] = false;
+                    if (m_negatedNormals[i])
+                    {
+                        m_requireNeg[i] = true;
+                    }
+                    
+                    Expansion2DSharedPtr faceExp = m_faceExp[i].lock();
+
+                    if (faceExp->GetRightAdjacentElementExp())
+                    {
+                        if (faceExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID() 
+                            == GetGeom3D()->GetGlobalID())
+                        {
+                            m_requireNeg[i] = true;
+                        }
+                    }
+                }
+            }
+
             int order_e = (*map).num_elements(); // Order of the element
             int n_coeffs = FaceExp->GetCoeffs().num_elements(); // Order of the trace
 
@@ -924,37 +958,21 @@ namespace Nektar
             else
             {
                 FaceExp->IProductWRTBase(Fn,FaceExp->UpdateCoeffs());
-                
-                LocalRegions::Expansion2DSharedPtr locExp = 
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion2D>(FaceExp);
-                
-                /*
-                 * Coming into this routine, the velocity V will have been
-                 * multiplied by the trace normals to give the input vector
-                 * Vn. By convention, these normals are inwards facing for
-                 * elements which have FaceExp as their right-adjacent face.
-                 * This conditional statement therefore determines whether the
-                 * normals must be negated, since the integral being performed
-                 * here requires an outwards facing normal.
-                 */ 
-                if (m_negatedNormals[face])
-                {
-                    Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
-                }
-                else if (locExp->GetRightAdjacentElementFace() != -1)
-                {
-                    if (locExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID() 
-                        == GetGeom3D()->GetGlobalID())
-                    {
-                        Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
-                    }
-                }
             }
             
-            for(i = 0; i < order_e; ++i)
+            if (m_requireNeg[face])
             {
-                outarray[(*map)[i].index] += (*map)[i].sign*FaceExp->GetCoeff(i);
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[(*map)[i].index] -= (*map)[i].sign*FaceExp->GetCoeff(i);
+                }
+            }
+            else
+            {
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[(*map)[i].index] += (*map)[i].sign*FaceExp->GetCoeff(i);
+                }
             }
         }
 

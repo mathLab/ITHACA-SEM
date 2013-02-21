@@ -1108,8 +1108,7 @@ namespace Nektar
                 case eIterativeMultiLevelStaticCond:
                 case eXxtMultiLevelStaticCond:
                     {
-                        int mdswitch = 1;
-                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph,mdswitch,partVerts);
+                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph,partVerts);
                     }
                     break;
                 default:

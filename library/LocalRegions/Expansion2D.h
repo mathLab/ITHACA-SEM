@@ -134,6 +134,7 @@ namespace Nektar
 
         private:
             std::vector<ExpansionWeakPtr> m_edgeExp;
+            std::vector<bool> m_requireNeg;
 
             Expansion3DWeakPtr m_elementLeft;
             Expansion3DWeakPtr m_elementRight;

@@ -607,7 +607,7 @@ namespace Nektar
 
         void PreconditionerLowEnergy::SetUpReferenceElements()
         {
-            int cnt;
+            int cnt,i,j;
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
@@ -615,8 +615,11 @@ namespace Nektar
             StdRegions::StdExpansionSharedPtr locExpansion;
             locExpansion = expList->GetExp(0);
 
-            DNekScalBlkMatSharedPtr r_mat;
-            DNekScalBlkMatSharedPtr rt_mat;
+            DNekScalBlkMatSharedPtr RtetBlk, RprismBlk;
+            DNekScalBlkMatSharedPtr RTtetBlk, RTprismBlk;
+
+            DNekScalMatSharedPtr Rtet, Rprism, Rmodified;
+            DNekScalMatSharedPtr RTtet, RTprism, RTmodified;
 
             /*
              * Set up a Tetrahral & prismatic element which comprises
@@ -628,7 +631,9 @@ namespace Nektar
             SpatialDomains::TetGeomSharedPtr tetgeom=CreateRefTetGeom();
             SpatialDomains::PrismGeomSharedPtr prismgeom=CreateRefPrismGeom();
 
-            //Expansion as specified in the input file - here we need to alter this so we can read in different exapansions for different element types
+            //Expansion as specified in the input file - here we need to alter
+            //this so we can read in different exapansions for different element
+            //types
             int nummodes=locExpansion->GetBasisNumModes(0);
 
             //Bases for Tetrahedral element
@@ -701,10 +706,12 @@ namespace Nektar
 
             int elmtType=0;
             //Get a LocalRegions static condensed matrix
-            r_mat = TetExp->GetLocStaticCondMatrix(TetR);
-            rt_mat = TetExp->GetLocStaticCondMatrix(TetRT);
-            m_transformationMatrix[elmtType]=r_mat->GetBlock(0,0);
-            m_transposedTransformationMatrix[elmtType]=rt_mat->GetBlock(0,0);
+            RtetBlk = TetExp->GetLocStaticCondMatrix(TetR);
+            RTtetBlk = TetExp->GetLocStaticCondMatrix(TetRT);
+            Rtet=RtetBlk->GetBlock(0,0);
+            RTtet=RTtetBlk->GetBlock(0,0);
+            m_transformationMatrix[elmtType]=Rtet;
+            m_transposedTransformationMatrix[elmtType]=RTtet;
 
             //Matrix keys for Prism element transformation matrices
             LocalRegions::MatrixKey PrismR
@@ -721,12 +728,314 @@ namespace Nektar
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
+
+            //For a tet element the bottom face is made up of the following:
+            //vertices: 0, 1 and 2 edges: 0, 1 and 2 face: 0. We first need to
+            //determine the mode locations of these vertices, edges and face so
+            //we can extract the correct values from the tetrahedral R matrix.
+
+            //These are the vertex mode locations of R which need to be replaced
+            //in the prism element
+            int TetVertex0;
+            TetVertex0=TetExp->GetVertexMap(0);
+            int TetVertex1;
+            TetVertex1=TetExp->GetVertexMap(1);
+            int TetVertex2;
+            TetVertex2=TetExp->GetVertexMap(2);
+            int TetVertex3;
+            TetVertex3=TetExp->GetVertexMap(3);
+
+
+            //These are the edge mode locations of R which need to be replaced
+            //in the prism element - THESE ARE WRONG
+            Array<OneD, unsigned int> TetEdge0;
+            TetEdge0=TetExp->GetEdgeInverseBoundaryMap(0);
+            Array<OneD, unsigned int> TetEdge1;
+            TetEdge1=TetExp->GetEdgeInverseBoundaryMap(1);
+            Array<OneD, unsigned int> TetEdge2;
+            TetEdge2=TetExp->GetEdgeInverseBoundaryMap(2);
+            Array<OneD, unsigned int> TetEdge3;
+            TetEdge3=TetExp->GetEdgeInverseBoundaryMap(3);
+            Array<OneD, unsigned int> TetEdge4;
+            TetEdge4=TetExp->GetEdgeInverseBoundaryMap(4);
+            Array<OneD, unsigned int> TetEdge5;
+            TetEdge5=TetExp->GetEdgeInverseBoundaryMap(5);
+
+            //These are the face mode locations of R which need to be replaced
+            //in the prism element
+            Array<OneD, unsigned int> TetFace;
+            TetFace=TetExp->GetFaceInverseBoundaryMap(1);
+
             elmtType++;
             //Get a LocalRegions static condensed matrix
-            r_mat = PrismExp->GetLocStaticCondMatrix(PrismR);
-            rt_mat = PrismExp->GetLocStaticCondMatrix(PrismRT);
-            m_transformationMatrix[elmtType]=r_mat->GetBlock(0,0);
-            m_transposedTransformationMatrix[elmtType]=rt_mat->GetBlock(0,0);
+            RprismBlk = PrismExp->GetLocStaticCondMatrix(PrismR);
+            RTprismBlk = PrismExp->GetLocStaticCondMatrix(PrismRT);
+            Rprism=RprismBlk->GetBlock(0,0);
+            RTprism=RTprismBlk->GetBlock(0,0);
+
+            unsigned int  nRows=Rprism->GetRows();
+            NekDouble zero=0.0;
+            DNekMatSharedPtr Rmodprism = MemoryManager<DNekMat>::
+                AllocateSharedPtr(nRows,nRows,zero,eFULL);
+            DNekMatSharedPtr RTmodprism = MemoryManager<DNekMat>::
+                AllocateSharedPtr(nRows,nRows,zero,eFULL);
+            NekDouble Rvalue, RTvalue;
+
+            //Modified Prism - copy values from R
+            for(i=0; i<nRows; ++i)
+            {
+                for(j=0; j<nRows; ++j)
+                {
+                    Rvalue=(*Rprism)(i,j);
+                    RTvalue=(*RTprism)(i,j);
+                    Rmodprism->SetValue(i,j,Rvalue);
+                    RTmodprism->SetValue(i,j,RTvalue);
+                }
+            }
+
+            //Prism vertex modes
+            int PrismVertex0;
+            PrismVertex0=PrismExp->GetVertexMap(0);
+            int PrismVertex1;
+            PrismVertex1=PrismExp->GetVertexMap(1);
+            int PrismVertex2;
+            PrismVertex2=PrismExp->GetVertexMap(2);
+            int PrismVertex3;
+            PrismVertex3=PrismExp->GetVertexMap(3);
+            int PrismVertex4;
+            PrismVertex4=PrismExp->GetVertexMap(4);
+            int PrismVertex5;
+            PrismVertex5=PrismExp->GetVertexMap(5);
+
+            //Prism edge modes
+            Array<OneD, unsigned int> PrismEdge0;
+            PrismEdge0=PrismExp->GetEdgeInverseBoundaryMap(0);
+            Array<OneD, unsigned int> PrismEdge1;
+            PrismEdge1=PrismExp->GetEdgeInverseBoundaryMap(1);
+            Array<OneD, unsigned int> PrismEdge2;
+            PrismEdge2=PrismExp->GetEdgeInverseBoundaryMap(2);
+            Array<OneD, unsigned int> PrismEdge3;
+            PrismEdge3=PrismExp->GetEdgeInverseBoundaryMap(3);
+            Array<OneD, unsigned int> PrismEdge4;
+            PrismEdge4=PrismExp->GetEdgeInverseBoundaryMap(4);
+            Array<OneD, unsigned int> PrismEdge5;
+            PrismEdge5=PrismExp->GetEdgeInverseBoundaryMap(5);
+            Array<OneD, unsigned int> PrismEdge6;
+            PrismEdge6=PrismExp->GetEdgeInverseBoundaryMap(6);
+            Array<OneD, unsigned int> PrismEdge7;
+            PrismEdge7=PrismExp->GetEdgeInverseBoundaryMap(7);
+            Array<OneD, unsigned int> PrismEdge8;
+            PrismEdge8=PrismExp->GetEdgeInverseBoundaryMap(8);
+
+            //Prism face 1 & 3 face modes
+            Array<OneD, unsigned int> PrismFace1;
+            PrismFace1=PrismExp->GetFaceInverseBoundaryMap(1);
+            Array<OneD, unsigned int> PrismFace3;
+            PrismFace3=PrismExp->GetFaceInverseBoundaryMap(3);
+
+            //vertex 0 edge 0 3 & 4
+            for(i=0; i< PrismEdge0.num_elements(); ++i)
+            {
+                Rvalue=(*Rtet)(TetVertex0,TetEdge0[i]);
+                Rmodprism->SetValue(PrismVertex0,PrismEdge0[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex0,TetEdge2[i]);
+                Rmodprism->SetValue(PrismVertex0,PrismEdge3[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex0,TetEdge3[i]);
+                Rmodprism->SetValue(PrismVertex0,PrismEdge4[i],Rvalue);
+
+                //transposed values
+                RTvalue=(*RTtet)(TetEdge0[i],TetVertex0);
+                RTmodprism->SetValue(PrismEdge0[i],PrismVertex0,RTvalue);
+                RTvalue=(*RTtet)(TetEdge2[i],TetVertex0);
+                RTmodprism->SetValue(PrismEdge3[i],PrismVertex0,RTvalue);
+                RTvalue=(*RTtet)(TetEdge3[i],TetVertex0);
+                RTmodprism->SetValue(PrismEdge4[i],PrismVertex0,RTvalue);
+            }
+
+            //vertex 1 edge 0 1 & 5
+            for(i=0; i< PrismEdge1.num_elements(); ++i)
+            {
+                Rvalue=(*Rtet)(TetVertex1,TetEdge0[i]);
+                Rmodprism->SetValue(PrismVertex1,PrismEdge0[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex1,TetEdge1[i]);
+                Rmodprism->SetValue(PrismVertex1,PrismEdge1[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex1,TetEdge4[i]);
+                Rmodprism->SetValue(PrismVertex1,PrismEdge5[i],Rvalue);
+
+                //transposed values
+                RTvalue=(*RTtet)(TetEdge0[i],TetVertex1);
+                RTmodprism->SetValue(PrismEdge0[i],PrismVertex1,RTvalue);
+                RTvalue=(*RTtet)(TetEdge1[i],TetVertex1);
+                RTmodprism->SetValue(PrismEdge1[i],PrismVertex1,RTvalue);
+                RTvalue=(*RTtet)(TetEdge4[i],TetVertex1);
+                RTmodprism->SetValue(PrismEdge5[i],PrismVertex1,RTvalue);
+            }
+
+            //vertex 2 edge 1 2 & 6
+            for(i=0; i< PrismEdge2.num_elements(); ++i)
+            {
+                Rvalue=(*Rtet)(TetVertex2,TetEdge1[i]);
+                Rmodprism->SetValue(PrismVertex2,PrismEdge1[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex1,TetEdge0[i]);
+                Rmodprism->SetValue(PrismVertex2,PrismEdge2[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex2,TetEdge5[i]);
+                Rmodprism->SetValue(PrismVertex2,PrismEdge6[i],Rvalue);
+
+                //transposed values
+                RTvalue=(*RTtet)(TetEdge1[i],TetVertex2);
+                RTmodprism->SetValue(PrismEdge1[i],PrismVertex2,RTvalue);
+                RTvalue=(*RTtet)(TetEdge0[i],TetVertex1);
+                RTmodprism->SetValue(PrismEdge2[i],PrismVertex2,RTvalue);
+                RTvalue=(*RTtet)(TetEdge5[i],TetVertex2);
+                RTmodprism->SetValue(PrismEdge6[i],PrismVertex2,RTvalue);
+            }
+
+            //vertex 3 edge 3 2 & 7
+            for(i=0; i< PrismEdge3.num_elements(); ++i)
+            {
+                Rvalue=(*Rtet)(TetVertex2,TetEdge2[i]);
+                Rmodprism->SetValue(PrismVertex3,PrismEdge3[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex0,TetEdge0[i]);
+                Rmodprism->SetValue(PrismVertex3,PrismEdge2[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex2,TetEdge5[i]);
+                Rmodprism->SetValue(PrismVertex3,PrismEdge7[i],Rvalue);
+
+                //transposed values
+                RTvalue=(*RTtet)(TetEdge2[i],TetVertex2);
+                RTmodprism->SetValue(PrismEdge3[i],PrismVertex3,RTvalue);
+                RTvalue=(*RTtet)(TetEdge0[i],TetVertex0);
+                RTmodprism->SetValue(PrismEdge2[i],PrismVertex3,RTvalue);
+                RTvalue=(*RTtet)(TetEdge5[i],TetVertex2);
+                RTmodprism->SetValue(PrismEdge7[i],PrismVertex3,RTvalue);
+            }
+
+            //vertex 4 edge 4 5 & 8
+            for(i=0; i< PrismEdge4.num_elements(); ++i)
+            {
+                Rvalue=(*Rtet)(TetVertex3,TetEdge3[i]);
+                Rmodprism->SetValue(PrismVertex4,PrismEdge4[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex3,TetEdge4[i]);
+                Rmodprism->SetValue(PrismVertex4,PrismEdge5[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex0,TetEdge2[i]);
+                Rmodprism->SetValue(PrismVertex4,PrismEdge8[i],Rvalue);
+
+                //transposed values
+                RTvalue=(*RTtet)(TetEdge3[i],TetVertex3);
+                RTmodprism->SetValue(PrismEdge4[i],PrismVertex4,RTvalue);
+                RTvalue=(*RTtet)(TetEdge4[i],TetVertex3);
+                RTmodprism->SetValue(PrismEdge5[i],PrismVertex4,RTvalue);
+                RTvalue=(*RTtet)(TetEdge2[i],TetVertex0);
+                RTmodprism->SetValue(PrismEdge8[i],PrismVertex4,RTvalue);
+            }
+
+            //vertex 5 edge 6 7 & 8
+            for(i=0; i< PrismEdge5.num_elements(); ++i)
+            {
+                Rvalue=(*Rtet)(TetVertex3,TetEdge3[i]);
+                Rmodprism->SetValue(PrismVertex5,PrismEdge6[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex3,TetEdge4[i]);
+                Rmodprism->SetValue(PrismVertex5,PrismEdge7[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex2,TetEdge2[i]);
+                Rmodprism->SetValue(PrismVertex5,PrismEdge8[i],Rvalue);
+
+                //transposed values
+                RTvalue=(*RTtet)(TetEdge3[i],TetVertex3);
+                RTmodprism->SetValue(PrismEdge6[i],PrismVertex5,RTvalue);
+                RTvalue=(*RTtet)(TetEdge4[i],TetVertex3);
+                RTmodprism->SetValue(PrismEdge7[i],PrismVertex5,RTvalue);
+                RTvalue=(*RTtet)(TetEdge2[i],TetVertex2);
+                RTmodprism->SetValue(PrismEdge8[i],PrismVertex5,RTvalue);
+            }
+
+            // face 1 vertices 0 1 4
+            for(i=0; i< PrismFace1.num_elements(); ++i)
+            {
+                Rvalue=(*Rtet)(TetVertex0,TetFace[i]);
+                Rmodprism->SetValue(PrismVertex0,PrismFace1[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex1,TetFace[i]);
+                Rmodprism->SetValue(PrismVertex1,PrismFace1[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex3,TetFace[i]);
+                Rmodprism->SetValue(PrismVertex4,PrismFace1[i],Rvalue);
+                
+                //transposed values
+                RTvalue=(*RTtet)(TetFace[i],TetVertex0);
+                RTmodprism->SetValue(PrismFace1[i],PrismVertex0,RTvalue);
+                RTvalue=(*RTtet)(TetFace[i],TetVertex1);
+                RTmodprism->SetValue(PrismFace1[i],PrismVertex1,RTvalue);
+                RTvalue=(*RTtet)(TetFace[i],TetVertex3);
+                RTmodprism->SetValue(PrismFace1[i],PrismVertex4,RTvalue);
+            }
+
+            // face 3 vertices 2, 3 & 5
+            for(i=0; i< PrismFace3.num_elements(); ++i)
+            {
+                Rvalue=(*Rtet)(TetVertex1,TetFace[i]);
+                Rmodprism->SetValue(PrismVertex2,PrismFace3[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex0,TetFace[i]);
+                Rmodprism->SetValue(PrismVertex3,PrismFace3[i],Rvalue);
+                Rvalue=(*Rtet)(TetVertex3,TetFace[i]);
+                Rmodprism->SetValue(PrismVertex5,PrismFace3[i],Rvalue);
+                
+                //transposed values
+                RTvalue=(*RTtet)(TetFace[i],TetVertex1);
+                RTmodprism->SetValue(PrismFace3[i],PrismVertex2,RTvalue);
+                RTvalue=(*RTtet)(TetFace[i],TetVertex0);
+                RTmodprism->SetValue(PrismFace3[i],PrismVertex3,RTvalue);
+                RTvalue=(*RTtet)(TetFace[i],TetVertex3);
+                RTmodprism->SetValue(PrismFace3[i],PrismVertex5,RTvalue);
+            }
+
+            // Face 1 edge 0 4 5
+            for(i=0; i< PrismFace1.num_elements(); ++i)
+            {
+                for(j=0; j<PrismEdge0.num_elements(); ++j)
+                {
+                    Rvalue=(*Rtet)(TetEdge0[j],TetFace[i]);
+                    Rmodprism->SetValue(PrismEdge0[j],PrismFace1[i],Rvalue);
+                    Rvalue=(*Rtet)(TetEdge3[j],TetFace[i]);
+                    Rmodprism->SetValue(PrismEdge4[j],PrismFace1[i],Rvalue);
+                    Rvalue=(*Rtet)(TetEdge4[j],TetFace[i]);
+                    Rmodprism->SetValue(PrismEdge5[j],PrismFace1[i],Rvalue);
+
+                    //transposed values
+                    RTvalue=(*RTtet)(TetEdge0[j],TetFace[i]);
+                    RTmodprism->SetValue(PrismEdge0[j],PrismFace1[i],RTvalue);
+                    RTvalue=(*RTtet)(TetEdge3[j],TetFace[i]);
+                    RTmodprism->SetValue(PrismEdge4[j],PrismFace1[i],RTvalue);
+                    RTvalue=(*RTtet)(TetEdge4[j],TetFace[i]);
+                    RTmodprism->SetValue(PrismEdge5[j],PrismFace1[i],RTvalue);
+                }
+            }
+                
+            // Face 3 edge 2 6 7
+            for(i=0; i< PrismFace3.num_elements(); ++i)
+            {
+                for(j=0; j<PrismEdge2.num_elements(); ++j)
+                {
+                    Rvalue=(*Rtet)(TetEdge0[j],TetFace[i]);
+                    Rmodprism->SetValue(PrismEdge2[j],PrismFace3[i],Rvalue);
+                    Rvalue=(*Rtet)(TetEdge4[j],TetFace[i]);
+                    Rmodprism->SetValue(PrismEdge6[j],PrismFace3[i],Rvalue);
+                    Rvalue=(*Rtet)(TetEdge3[j],TetFace[i]);
+                    Rmodprism->SetValue(PrismEdge7[j],PrismFace3[i],Rvalue);
+
+                    RTvalue=(*RTtet)(TetFace[i],TetEdge0[j]);
+                    RTmodprism->SetValue(PrismFace3[i],PrismEdge2[j],RTvalue);
+                    RTvalue=(*RTtet)(TetFace[i],TetEdge4[j]);
+                    RTmodprism->SetValue(PrismFace3[i],PrismEdge6[j],RTvalue);
+                    RTvalue=(*RTtet)(TetFace[i],TetEdge3[j]);
+                    RTmodprism->SetValue(PrismFace3[i],PrismEdge7[j],RTvalue);
+                }
+            }
+
+            DNekScalMatSharedPtr returnvalR = MemoryManager<DNekScalMat>
+                                            ::AllocateSharedPtr(1.0,Rmodprism);
+
+            DNekScalMatSharedPtr returnvalRT = MemoryManager<DNekScalMat>
+              ::AllocateSharedPtr(1.0,RTmodprism);
+
+            m_transformationMatrix[elmtType]=Rprism;
+            m_transposedTransformationMatrix[elmtType]=RTprism;
         }
 
 
@@ -1200,7 +1509,7 @@ namespace Nektar
 
                                 // Get the face-face value from the low energy matrix (S2)
                                 NekDouble globalFaceValue = sign1*sign2*RSRT(fMap1,fMap2);
-                                cout<<globalFaceValue<<endl;
+                                //cout<<globalFaceValue<<endl;
                                 //test here with local to global map
                                 m_FaceBlockArray[facematrixoffset+v*nfacemodes+m]=globalFaceValue;
                             }
@@ -1258,7 +1567,7 @@ namespace Nektar
 
             for(i=0; i< m_GlobalEdgeBlock.num_elements(); ++i)
             {
-                cout<<m_GlobalEdgeBlock[i]<<endl;
+                //cout<<m_GlobalEdgeBlock[i]<<endl;
             }
 
             //Set the first block to be the diagonal of the vertex space
@@ -1462,8 +1771,7 @@ namespace Nektar
          * i.e. \f$\mathbf{x}=\mathbf{R^{T}}\mathbf{\overline{x}}\f$.
          */
         void PreconditionerLowEnergy::v_DoTransformFromLowEnergy(
-            const Array<OneD, NekDouble>& pInput,
-            Array<OneD, NekDouble>& pOutput)
+            Array<OneD, NekDouble>& pInput)
         {
             int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
@@ -1473,8 +1781,6 @@ namespace Nektar
             DNekScalBlkMat &RT = *m_RTBlk;
             NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,pInput+nDirBndDofs,
               eWrapper);
-            NekVector<NekDouble> V_GlobHomBndOut(nGlobHomBndDofs,pOutput+nDirBndDofs,
-                                              eWrapper);
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,pLocal,eWrapper);
@@ -1492,8 +1798,7 @@ namespace Nektar
 
             m_locToGloMap->UniversalAssembleBnd(tmp);
 
-            Vmath::Vcopy(nGlobBndDofs-nDirBndDofs, tmp.get() + nDirBndDofs, 1, pOutput.get() + nDirBndDofs, 1);
-
+            Vmath::Vcopy(nGlobBndDofs-nDirBndDofs, tmp.get() + nDirBndDofs, 1, pInput.get() + nDirBndDofs, 1);
         }
 
 

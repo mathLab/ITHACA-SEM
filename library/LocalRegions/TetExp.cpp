@@ -1572,28 +1572,6 @@ namespace Nektar
              case StdRegions::ePreconR:
              case StdRegions::ePreconRT:
                 {
-                    /*LibUtilities::BasisKey TetBa = m_base[0]->GetBasisKey();
-		    LibUtilities::BasisKey TetBb = m_base[1]->GetBasisKey();
-		    LibUtilities::BasisKey TetBc = m_base[2]->GetBasisKey();
-
-		    SpatialDomains::TetGeomSharedPtr EquilateralTetGeom=CreateEquilateralTetGeom();
-                    StdRegions::ExpansionType shape = DetExpansionType();
-
-		    //create TetExp with equilateral Tet geometry object
-                    TetExp eqtet(TetBa,TetBb,TetBc,EquilateralTetGeom);*/
-		
-		    /*int nquad0 = m_base[0]->GetNumPoints();
-		    int nquad1 = m_base[1]->GetNumPoints();
-		    int nquad2 = m_base[2]->GetNumPoints();
-
-		    int nq=nquad0*nquad1*nquad2;
-		    Array<OneD,NekDouble> coords[3];
-
-		    coords[0] = Array<OneD,NekDouble>(nq);
-		    coords[1] = Array<OneD,NekDouble>(nq);
-		    coords[2] = Array<OneD,NekDouble>(nq);
-		    eqtet.GetCoords(coords[0],coords[1],coords[2]);*/
-
                     NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass, mkey.GetExpansionType(), *this);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);

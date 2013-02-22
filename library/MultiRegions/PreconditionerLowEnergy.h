@@ -153,8 +153,7 @@ namespace Nektar
                 Array<OneD, NekDouble>& pOutput);
 
             virtual void v_DoTransformFromLowEnergy(
-                const Array<OneD, NekDouble>& pInput,
-                Array<OneD, NekDouble>& pOutput);
+                Array<OneD, NekDouble>& pInput);
 
             virtual DNekScalBlkMatSharedPtr
                 v_TransformedSchurCompl(int offset);

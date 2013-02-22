@@ -103,17 +103,18 @@ namespace Nektar
             const Array<OneD, NekDouble>& pInput,
             Array<OneD, NekDouble>& pOutput)
         {
-            Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
+            int nDirBndDofs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            Array<OneD, NekDouble> tmp;
+            Vmath::Vcopy(pInput.num_elements(),pInput, 1, tmp=pOutput+nDirBndDofs, 1);
 	}
 
         /**
          * \brief Transform from low energy basis to orignal basis
          */ 
         void Preconditioner::v_DoTransformFromLowEnergy(
-            const Array<OneD, NekDouble>& pInput,
-            Array<OneD, NekDouble>& pOutput)
+            Array<OneD, NekDouble>& pInput)
         {
-            Vmath::Vcopy(pInput.num_elements(), pInput, 1, pOutput, 1);
+            Vmath::Vcopy(pInput.num_elements(),pInput, 1, pInput, 1);
 	}
 
         /**

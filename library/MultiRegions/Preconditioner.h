@@ -78,8 +78,7 @@ namespace Nektar
 		      Array<OneD, NekDouble>& pOutput);
 
 	    inline void DoTransformFromLowEnergy(
-                const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput);
+                Array<OneD, NekDouble>& pInput);
 
    	    inline void InitObject();
 
@@ -142,8 +141,7 @@ namespace Nektar
 		      Array<OneD, NekDouble>& pOutput);
 
 	    virtual void v_DoTransformFromLowEnergy(
-                const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput);
+                Array<OneD, NekDouble>& pInput);
 
             virtual const Array<OneD, const DNekScalMatSharedPtr>& 
                 v_GetTransformationMatrix(void) const;
@@ -215,10 +213,9 @@ namespace Nektar
          *
          */
         inline void Preconditioner::DoTransformFromLowEnergy(
-            const Array<OneD, NekDouble>& pInput,
-            Array<OneD, NekDouble>& pOutput)
+            Array<OneD, NekDouble>& pInput)
         {
-	    v_DoTransformFromLowEnergy(pInput,pOutput);
+	    v_DoTransformFromLowEnergy(pInput);
         }
         
 

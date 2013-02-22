@@ -125,22 +125,23 @@ namespace Nektar
 
         void GlobalLinSysIterativeStaticCond::v_InitObject()
         {
-            // Allocate memory for top-level structure
+
+            //Allocate memory for top-level structure
             SetupTopLevel(m_locToGloMap);
             
             // Construct this level
             Initialise(m_locToGloMap);
             
-                MultiRegions::PreconditionerType pType = m_locToGloMap->GetPreconType();
+            MultiRegions::PreconditionerType pType = m_locToGloMap->GetPreconType();
 
-                std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
-                
-                v_UniqueMap();
-                m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),m_locToGloMap);
+            std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
+            
+            v_UniqueMap();
+            m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),m_locToGloMap);
             if (m_locToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
             {
                 SetupLowEnergyTopLevel(m_locToGloMap);
-
+                
             }
         }
 
@@ -263,9 +264,8 @@ namespace Nektar
 
                     if( nIntDofs  && ((!dirForcCalculated) && (atLastLevel)) )
                     {
-                        //perform and additional multiplicity multiply?
                         pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
-                        V_LocBnd = BinvD*F_Int+S1*V_LocBnd;
+                        V_LocBnd = BinvD*F_Int+ S1*V_LocBnd;
                     }
                     else if((!dirForcCalculated) && (atLastLevel))
                     {
@@ -282,7 +282,7 @@ namespace Nektar
 
                     //F_bnd- B invD*F_int-S1*x
                     F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
-
+                    
                     Array<OneD, NekDouble> tmp;
                     m_precon->DoTransformToLowEnergy(F,tmp=F+nDirBndDofs);
                 }
@@ -302,7 +302,7 @@ namespace Nektar
                     t.Stop();
 
                     //transform back to original basis
-                    m_precon->DoTransformFromLowEnergy(out,out);
+                    m_precon->DoTransformFromLowEnergy(out);
                 }
                 else
                 {
@@ -418,6 +418,12 @@ namespace Nektar
             const Array<OneD,const unsigned int>& nint_size
                     = pLocToGloMap->GetNumLocalIntCoeffsPerPatch();
 
+            //Setup preconditioner
+            MultiRegions::PreconditionerType pType = pLocToGloMap->GetPreconType();
+            std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
+            //v_UniqueMap();
+
+
             // Setup Block Matrix systems
             MatrixStorage blkmatStorage = eDIAGONAL;
             m_schurCompl = MemoryManager<DNekScalBlkMat>
@@ -478,29 +484,12 @@ namespace Nektar
             m_invD       = MemoryManager<DNekScalBlkMat>
                     ::AllocateSharedPtr(nint_size , nint_size , blkmatStorage);
 
-            //Variants of R matrices required for low energy preconditioning
-            m_RBlk      = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-            m_RTBlk      = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+            //Original schur complement matrix
             m_S1Blk      = MemoryManager<DNekScalBlkMat>
                     ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
 
-            Array<OneD, const DNekScalMatSharedPtr> m_R = m_precon->GetTransformationMatrix();
-            Array<OneD, const DNekScalMatSharedPtr> m_RT = m_precon->GetTransposedTransformationMatrix();
-
-            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transmatrixmap;
-            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transposedtransmatrixmap;
-            transmatrixmap[StdRegions::eTetrahedron]=m_R[0];
-            transmatrixmap[StdRegions::ePrism]=m_R[1];
-            transposedtransmatrixmap[StdRegions::eTetrahedron]=m_RT[0];
-            transposedtransmatrixmap[StdRegions::ePrism]=m_RT[1];
-
             for(n = 0; n < n_exp; ++n)
             {
-                StdRegions::ExpansionType eType=
-                    (m_expList.lock()->GetExp(n))->DetExpansionType();
-
                 DNekScalMatSharedPtr tmp_mat;
                 DNekScalBlkMatSharedPtr loc_S1 = GlobalLinSys::v_GetStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
                 DNekScalBlkMatSharedPtr loc_schur = m_precon->TransformedSchurCompl(m_expList.lock()->GetOffset_Elmt_Id(n));
@@ -510,8 +499,6 @@ namespace Nektar
                 m_C         ->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(1,0));
                 m_invD      ->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(1,1));
                 m_S1Blk->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(0,0));
-                m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
-                m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
 	    }
         }
 

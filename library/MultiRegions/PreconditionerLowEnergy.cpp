@@ -89,6 +89,7 @@ namespace Nektar
 		    {
                         ASSERTL0(0,"Solver type not valid");
 		    }
+
                     SetUpReferenceElements();
                     LowEnergyPreconditioner();
 		}
@@ -1063,7 +1064,6 @@ namespace Nektar
             StdRegions::StdExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
-
             int i, j, k, nel;
             int nVerts, nEdges,nFaces; 
             int eid, fid, n, cnt, nedgemodes, nfacemodes;
@@ -1128,11 +1128,11 @@ namespace Nektar
             map<int,int> uniqueFaceMap;
 
             //this should be of size total number of local edges
-            Array<OneD, unsigned int> m_edgemodeoffset(nNonDirEdgeIDs);
-            Array<OneD, unsigned int> m_facemodeoffset(nNonDirFaceIDs);
+            Array<OneD, int> m_edgemodeoffset(nNonDirEdgeIDs,0);
+            Array<OneD, int> m_facemodeoffset(nNonDirFaceIDs,0);
 
-            Array<OneD, unsigned int> m_edgeglobaloffset(nNonDirEdgeIDs);
-            Array<OneD, unsigned int> m_faceglobaloffset(nNonDirFaceIDs);
+            Array<OneD, int> m_edgeglobaloffset(nNonDirEdgeIDs,0);
+            Array<OneD, int> m_faceglobaloffset(nNonDirFaceIDs,0);
 
             const Array<OneD, const ExpListSharedPtr>& bndCondExp = expList->GetBndCondExpansions();
             StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
@@ -1277,7 +1277,7 @@ namespace Nektar
             for(ecnt=fcnt=n=0; n < n_exp; ++n)
             {
                 nel = expList->GetOffset_Elmt_Id(n);
-                
+
                 locExpansion = expList->GetExp(nel);
 
                 //loop over the edges of the expansion
@@ -1293,6 +1293,7 @@ namespace Nektar
                         for(k=0; k<nedgemodes*nedgemodes; ++k)
                         {
                             vGlobal=m_edgeglobaloffset[uniqueEdgeMap[meshEdgeId]]+k;
+
 
                             m_localEdgeToGlobalMatrixMap[edgematrixoffset+k]=vGlobal;
 
@@ -1509,7 +1510,7 @@ namespace Nektar
 
                                 // Get the face-face value from the low energy matrix (S2)
                                 NekDouble globalFaceValue = sign1*sign2*RSRT(fMap1,fMap2);
-                                //cout<<globalFaceValue<<endl;
+
                                 //test here with local to global map
                                 m_FaceBlockArray[facematrixoffset+v*nfacemodes+m]=globalFaceValue;
                             }
@@ -1563,11 +1564,6 @@ namespace Nektar
             for (int i = 0; i < nNonDirVerts; ++i)
             {
                   VertBlk->SetValue(i,i,1.0/vertArray[i]);
-            }
-
-            for(i=0; i< m_GlobalEdgeBlock.num_elements(); ++i)
-            {
-                //cout<<m_GlobalEdgeBlock[i]<<endl;
             }
 
             //Set the first block to be the diagonal of the vertex space
@@ -1630,15 +1626,6 @@ namespace Nektar
                     (nmodes,nmodes,zero,storage);
 
                 tmp_mat=BlkMat->GetBlock(i,i);
-                for (j=0; j<tmp_mat->GetRows(); ++j)
-                {
-                    for (k=0; k<tmp_mat->GetRows(); ++k)
-                    {
-                        cout<<(*tmp_mat)(j,k)<<" ";
-                    }
-                    cout<<endl;
-                }
-                cout<<endl;
 
                 tmp_mat->Invert();
                 BlkMat->SetBlock(i,i,tmp_mat);

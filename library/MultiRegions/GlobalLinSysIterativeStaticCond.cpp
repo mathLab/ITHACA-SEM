@@ -133,7 +133,6 @@ namespace Nektar
             Initialise(m_locToGloMap);
             
             MultiRegions::PreconditionerType pType = m_locToGloMap->GetPreconType();
-
             std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
             
             v_UniqueMap();

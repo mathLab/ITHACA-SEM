@@ -172,7 +172,7 @@ namespace Nektar
         NekDouble  rhoR, NekDouble  rhouR, NekDouble  rhovR, NekDouble  rhowR, NekDouble  ER,
         NekDouble &rhof, NekDouble &rhouf, NekDouble &rhovf, NekDouble &rhowf, NekDouble &Ef)
     {
-        NekDouble gamma = m_params["gamma"]();
+        static NekDouble gamma = m_params["gamma"]();
 
         // Left and right variables.
         NekDouble uL = rhouL / rhoL;

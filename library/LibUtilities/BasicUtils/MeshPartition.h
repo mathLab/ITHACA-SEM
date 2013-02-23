@@ -180,6 +180,7 @@ namespace Nektar
             void PartitionGraph(BoostSubGraph& pGraph,
                                 BoostSubGraph& pLocalPartition);
             void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
+            void CheckPartitions(Array<OneD, int> &pPart);
         };
 
         typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

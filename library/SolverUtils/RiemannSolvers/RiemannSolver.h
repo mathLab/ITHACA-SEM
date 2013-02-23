@@ -104,9 +104,9 @@ namespace Nektar
             /// Map of parameter function types.
             std::map<std::string, RSParamFuncType > m_params;
             /// Rotation matrices for each trace quadrature point.
-            std::vector<NekDouble>                  m_rotMatrices;
+            Array<OneD, Array<OneD, NekDouble> >    m_rotMat;
             /// Rotation storage
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >   m_rotStorage;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_rotStorage;
 
             SOLVER_UTILS_EXPORT RiemannSolver();
 

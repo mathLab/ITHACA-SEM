@@ -95,6 +95,8 @@ namespace Nektar
         class Equation;
         typedef boost::shared_ptr<Equation> EquationSharedPtr;
 
+        typedef std::map<int, std::vector<int> > CompositeOrdering;
+
         struct FunctionVariableDefinition
         {
             enum FunctionType m_type;
@@ -373,6 +375,7 @@ namespace Nektar
 
             /// Substitutes expressions defined in the XML document.
             LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
+            LIB_UTILITIES_EXPORT CompositeOrdering GetCompositeOrdering() const;
 
         private:
             boost::program_options::variables_map m_cmdLineOptions;
@@ -405,6 +408,8 @@ namespace Nektar
             FilterMap                                 m_filters;
             /// Be verbose
             bool                                      m_verbose;
+            /// Map of original composite ordering for parallel periodic bcs.
+            CompositeOrdering                         m_compOrder;
             /// String to enumeration map for Solver Info parameters.
             LIB_UTILITIES_EXPORT static EnumMapList        m_enums;
             /// Default solver info options.

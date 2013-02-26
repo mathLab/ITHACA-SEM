@@ -59,6 +59,8 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void PartitionMesh();
             LIB_UTILITIES_EXPORT void WriteLocalPartition(
                     SessionReaderSharedPtr& pSession);
+            LIB_UTILITIES_EXPORT void GetCompositeOrdering(
+                std::map<int, std::vector<int> > &composites);
 
         private:
             struct MeshEntity

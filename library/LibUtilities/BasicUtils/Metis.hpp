@@ -39,99 +39,63 @@
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
+#include "metis.h"
+
 namespace Metis
 {
     extern "C"
     {
-        // -- Sparse MAtrix Reordering (equivalent to onmetis)
-        void   METIS_NodeND (int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
-                             int *perm, int *iperm);  
-
-        void AS_METIS_NodeND(int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
-                             int *perm, int *iperm, int *map, int *mdswitch);
-
-        void   METIS_PartMeshNodal(int *nElmts, int *nVerts, int *elType, int *numflag,
-                             int *nparts, int *edgecut, int *epart, int *npart);
-
-        void   METIS_PartGraphVKway(int *nVerts, int *xadj, int *adjcy, int *vertWgt, int *vertSize,
-                             int *wgtFlag, int *numflag, int *nparts, int *options, int *volume, int *part);
+        void AS_METIS_NodeND(int *nVerts, int *xadj, int *adjncy, int *vwgt,
+                             int *options, int *perm, int *iperm, int *map,
+                             int *mdswitch);
     }
 
-//#ifdef NEKTAR_USING_METIS
-    inline static void onmetis(int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
-                  int *perm, int *iperm)
-    {
-        METIS_NodeND(nVerts,xadj,adjncy,numflag,options,perm,iperm);
-    }
-
-    inline static void as_onmetis(int *nVerts, int *xadj, int *adjncy, int *numflag, int *options, 
-                           int *perm, int *iperm, int *map, int *mdswitch)
-    {
-        AS_METIS_NodeND(nVerts,xadj,adjncy,numflag,options,perm,iperm,map,mdswitch) ;   
-    }
-
-    inline static void onmetis(int nVerts, Nektar::Array<Nektar::OneD, int> xadj, Nektar::Array<Nektar::OneD, int> adjncy,
-                        Nektar::Array<Nektar::OneD, int> perm,  Nektar::Array<Nektar::OneD, int> iperm)
+    inline static void as_onmetis(
+            int                              nVerts,
+            Nektar::Array<Nektar::OneD, int> xadj,
+            Nektar::Array<Nektar::OneD, int> adjncy,
+            Nektar::Array<Nektar::OneD, int> perm,
+            Nektar::Array<Nektar::OneD, int> iperm,
+            Nektar::Array<Nektar::OneD, int> map,
+            int                              mdswitch = 1)
     {
         ASSERTL1(xadj.num_elements() == nVerts+1,"Array xadj out of bounds");
         ASSERTL1(perm.num_elements() == nVerts,"Array perm out of bounds");
         ASSERTL1(iperm.num_elements() == nVerts,"Array iperm out of bounds");
 
-        int numflag = 0;
-        int options[8];
-        options[0]=0;
-        METIS_NodeND(&nVerts,&xadj[0],&adjncy[0],&numflag,options,&perm[0],&iperm[0]);
+        AS_METIS_NodeND(&nVerts, &xadj[0], &adjncy[0], NULL, NULL, &perm[0],
+                        &iperm[0], &map[0], &mdswitch);
     }
 
-    inline static void as_onmetis(int nVerts, Nektar::Array<Nektar::OneD, int> xadj, Nektar::Array<Nektar::OneD, int> adjncy,
-                           Nektar::Array<Nektar::OneD, int> perm,  Nektar::Array<Nektar::OneD, int> iperm, Nektar::Array<Nektar::OneD, int> map,
-                           int mdswitch)
-    {
-        ASSERTL1(xadj.num_elements() == nVerts+1,"Array xadj out of bounds");
-        ASSERTL1(perm.num_elements() == nVerts,"Array perm out of bounds");
-        ASSERTL1(iperm.num_elements() == nVerts,"Array iperm out of bounds");
 
-        int numflag = 0;
-        int options[8];
-        options[0]=0;
-        AS_METIS_NodeND(&nVerts,&xadj[0],&adjncy[0],&numflag,options,&perm[0],&iperm[0],&map[0],&mdswitch);
-    }
-   
-    inline static void MeshPartition(int nElmts, int nVerts, Nektar::Array<Nektar::OneD, int>& mesh, int type, int nparts,
-                            Nektar::Array<Nektar::OneD, int>& edgePart, Nektar::Array<Nektar::OneD, int>& nodePart)
-    {
-        int numflag = 0;
-        METIS_PartMeshNodal(&nElmts, &nVerts, &mesh[0], &type, &numflag, &nparts, &edgePart[0], &nodePart[0]);
-    }
-
-    inline static void PartGraphVKway( int& nVerts,
-                                Nektar::Array<Nektar::OneD, int>& xadj,
-                                Nektar::Array<Nektar::OneD, int>& adjcy,
-                                Nektar::Array<Nektar::OneD, int>& vertWgt,
-                                Nektar::Array<Nektar::OneD, int>& vertSize,
-                                int& nparts,
-                                int& volume,
-                                Nektar::Array<Nektar::OneD, int>& part)
+    inline static void PartGraphVKway( 
+            int&                              nVerts,
+            Nektar::Array<Nektar::OneD, int>& xadj,
+            Nektar::Array<Nektar::OneD, int>& adjcy,
+            Nektar::Array<Nektar::OneD, int>& vertWgt,
+            Nektar::Array<Nektar::OneD, int>& vertSize,
+            int&                              nparts,
+            int&                              volume,
+            Nektar::Array<Nektar::OneD, int>& part)
     {
         int wgtflag = 0;
-        int *wgts = 0;
-        int *sizes = 0;
+        int *vwgt = 0;
+        int *vsize = 0;
         if (vertWgt.num_elements() > 0)
         {
             wgtflag += 1;
-            wgts = &vertWgt[0];
+            vwgt = &vertWgt[0];
         }
         if (vertSize.num_elements() > 0)
         {
             wgtflag += 2;
-            sizes = &vertSize[0];
+            vsize = &vertSize[0];
         }
-        int numflag = 0;
-        int options[5];
-        options[0]=0;
-        METIS_PartGraphVKway(&nVerts, &xadj[0], &adjcy[0], wgts, sizes, &wgtflag,
-                             &numflag, &nparts, options, &volume, &part[0]);
+        int ncon = 1;
+        int options[METIS_NOPTIONS];
+        METIS_SetDefaultOptions(options);
+        METIS_PartGraphKway(&nVerts, &ncon, &xadj[0], &adjcy[0], vwgt, vsize,
+                            0, &nparts, 0, 0, options, &volume, &part[0]);
     }
-//#endif //NEKTAR_USING_METIS
 }
 #endif //NEKTAR_LIB_UTILITIES_BASICUTILS_METIS_HPP

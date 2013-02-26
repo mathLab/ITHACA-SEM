@@ -183,8 +183,8 @@ namespace Nektar
             int nLocBndDofs        = pLocToGloMap->GetNumLocalBndCoeffs();
             int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
                                                                 - nGlobBndDofs;
-            
-            Array<OneD, NekDouble> F = m_wsp + nLocBndDofs;
+
+            Array<OneD, NekDouble> F = m_wsp + 2*nLocBndDofs;
             Array<OneD, NekDouble> tmp;
             if(nDirBndDofs && dirForcCalculated)
             {
@@ -383,7 +383,7 @@ namespace Nektar
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-            m_wsp = Array<OneD, NekDouble>(4*nLocalBnd + nGlobal);
+            m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal);
 
             if(pLocToGloMap->AtLastLevel())
             {
@@ -932,7 +932,7 @@ namespace Nektar
                 // Do matrix multiply locally, using direct BLAS calls
                 m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
                 int i, cnt;
-                Array<OneD, NekDouble> tmpout = m_wsp + 3*nLocal;
+                Array<OneD, NekDouble> tmpout = m_wsp + nLocal;
                 for (i = cnt = 0; i < m_denseBlocks.size(); cnt += m_rows[i], ++i)
                 {
                     const int rows = m_rows[i];

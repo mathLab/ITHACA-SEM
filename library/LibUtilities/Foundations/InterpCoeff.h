@@ -53,6 +53,21 @@ namespace Nektar
 			 const Array<OneD, const NekDouble>& from,  
 			 const BasisKey &tbasis0, 
 			 Array<OneD, NekDouble> &to);
+        // 2D Interpolation
+      LIB_UTILITIES_EXPORT void InterpCoeff2D(const BasisKey &fbasis0,
+                                                const BasisKey &fbasis1,
+                                                const Array<OneD, const NekDouble>& from,
+                                                const BasisKey &tbasis0,
+                                                const BasisKey &tbasis1,
+                                                Array<OneD, NekDouble> &to);
+        
+      LIB_UTILITIES_EXPORT void InterpCoeff2D(const BasisKey  &fbasis0,
+                                                const BasisKey  &fbasis1,
+                                                const NekDouble *from,
+                                                const BasisKey  &tbasis0,
+                                                const BasisKey  &tbasis1,
+                                                NekDouble *to);
+
       
     } // end of namespace
 } // end of namespace

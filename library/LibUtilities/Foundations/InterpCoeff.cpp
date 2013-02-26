@@ -67,5 +67,62 @@ namespace Nektar
 	    out  = (*ftB)*in;
 	  }
       }
+        void InterpCoeff2D(const BasisKey &fbasis0,
+                           const BasisKey &fbasis1,
+                           const Array<OneD, const NekDouble>& from,
+                           const BasisKey &tbasis0,
+                           const BasisKey &tbasis1,
+                           Array<OneD, NekDouble> &to)
+        {
+            InterpCoeff2D(fbasis0,fbasis1,from.data(),tbasis0,tbasis1,to.data());
+        }
+        
+        void InterpCoeff2D(const BasisKey  &fbasis0,
+                           const BasisKey  &fbasis1,
+                           const NekDouble *from,
+                           const BasisKey  &tbasis0,
+                           const BasisKey  &tbasis1,
+                           NekDouble *to)
+        {
+            
+            Array<OneD, NekDouble> wsp(tbasis1.GetNumModes()*fbasis0.GetNumModes());
+            
+            int fnm0 = fbasis0.GetNumModes();
+            int fnm1 = fbasis1.GetNumModes();
+            int tnm0 = tbasis0.GetNumModes();
+            int tnm1 = tbasis1.GetNumModes();
+            
+            //cout << "from := " << *from << endl;
+            //cout << "to := " << *to << endl;
+            //cout << endl;
+            
+            if(fbasis1.GetBasisType() == tbasis1.GetBasisType())
+            {
+                Vmath::Vcopy(fnm0*tnm1,from,1,wsp.get(),1);
+            }
+            else
+            {
+                // interpolate
+                
+                DNekMatSharedPtr ft1 = BasisManager()[fbasis1]->GetI(tbasis1);
+                
+                Blas::Dgemm('N', 'T', fnm0, tnm1, fnm1, 1.0, from, fnm0,
+                            ft1->GetPtr().get(), tnm1, 0.0,  wsp.get(), fnm0);
+                
+            }
+            if(fbasis0.GetBasisType() == tbasis0.GetBasisType())
+            {
+                Vmath::Vcopy(tnm0*tnm1,wsp.get(),1,to,1);
+            }
+            else
+            {
+                // interpolate
+                
+                DNekMatSharedPtr ft0 = BasisManager()[fbasis0]->GetI(tbasis0);
+                
+                Blas::Dgemm('N', 'N', tnm0, tnm1, fnm0, 1.0, ft0->GetPtr().get(),
+                            tnm0, wsp.get(), fnm0, 0.0, to, tnm0);
+            }
+        }
     }
 }

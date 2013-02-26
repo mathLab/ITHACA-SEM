@@ -199,8 +199,6 @@ namespace Nektar
             {
                 face_curved[m_curvedFaces[i]->m_curveID] = i;
             }
-            
-            int nextFaceNumber = -1;
 
             /// All faces are of the form: "<? ID="#"> ... </?>", with
             /// ? being an element type (either Q or T).
@@ -214,14 +212,10 @@ namespace Nektar
                 ASSERTL0(elementType == "Q" || elementType == "T",
                     (std::string("Unknown 3D face type: ") + elementType).c_str());
 
-                /// These should be ordered.
-                nextFaceNumber++;
-
                 /// Read id attribute.
                 int indx;
                 int err = element->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read face attribute ID.");
-//                ASSERTL0(indx == nextFaceNumber, "Face IDs must begin with zero and be sequential.");
 
                 /// Read text element description.
                 TiXmlNode* elementChild = element->FirstChild();

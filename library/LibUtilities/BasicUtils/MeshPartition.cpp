@@ -100,6 +100,17 @@ namespace Nektar
             vNew.SaveFile(vFilename.c_str());
         }
 
+        void MeshPartition::GetCompositeOrdering(
+            std::map<int, std::vector<int> > &composites)
+        {
+            std::map<int, MeshEntity>::iterator it;
+            for (it  = m_meshComposites.begin();
+                 it != m_meshComposites.end(); ++it)
+            {
+                composites[it->first] = it->second.list;
+            }
+        }
+
         void MeshPartition::ReadMesh(const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             TiXmlElement* x;

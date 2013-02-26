@@ -1011,6 +1011,10 @@ namespace Nektar
             }
         }
 
+        CompositeOrdering SessionReader::GetCompositeOrdering() const
+        {
+            return m_compOrder;
+        }
 
         /**
          *

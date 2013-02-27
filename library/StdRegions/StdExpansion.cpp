@@ -1735,14 +1735,6 @@ namespace Nektar
             return result;
         }
 
-        /*void StdExpansion::v_GetInverseBoundaryMaps(
-                Array<OneD, int > vertexmap,
-                Array<OneD, Array<OneD, unsigned int> > edgemap,
-                Array<OneD, Array<OneD, unsigned int> > facemap)
-        {
-            ASSERTL0(false, "Not implemented.");
-            }*/
-
         Array<OneD, unsigned int>
         StdExpansion::v_GetEdgeInverseBoundaryMap(int eid)
         {
@@ -1757,6 +1749,21 @@ namespace Nektar
             ASSERTL0(false, "Not implemented.");
             Array<OneD, unsigned int> noinversemap(1);
             return noinversemap;
+        }
+        void StdExpansion::v_NegateEdgeNormal(const int edge)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+        
+        bool StdExpansion::v_EdgeNormalNegated(const int edge)
+        {
+            ASSERTL0(false, "Not implemented.");
+            return false;
+        }
+        
+        void StdExpansion::v_NegateFaceNormal(const int face)
+        {
+            ASSERTL0(false, "Not implemented.");
         }
 
 

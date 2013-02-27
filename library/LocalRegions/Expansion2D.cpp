@@ -62,6 +62,32 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > normals
                                     = GetEdgeNormal(edge);
 
+            if (m_requireNeg.size() == 0)
+            {
+                m_requireNeg.resize(GetNedges());
+                
+                for (int i = 0; i < GetNedges(); ++i)
+                {
+                    m_requireNeg[i] = false;
+                    if (m_negatedNormals[i])
+                    {
+                        m_requireNeg[i] = true;
+                    }
+                    
+                    Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<
+                        Expansion1D>(m_edgeExp[i].lock());
+
+                    if (edgeExp->GetRightAdjacentElementExp())
+                    {
+                        if (edgeExp->GetRightAdjacentElementExp()->GetGeom2D()
+                            ->GetGlobalID() == GetGeom2D()->GetGlobalID())
+                        {
+                            m_requireNeg[i] = true;
+                        }
+                    }
+                }
+            }
+
             // We allow the case of mixed polynomial order by supporting only
             // those modes on the edge common to both adjoining elements. This
             // is enforced here by taking the minimum size and padding with
@@ -78,6 +104,7 @@ namespace Nektar
             LocalRegions::Expansion1DSharedPtr locExp = 
                 boost::dynamic_pointer_cast<
                     LocalRegions::Expansion1D>(EdgeExp);
+            
             
             if (m_negatedNormals[edge])
             {
@@ -104,6 +131,32 @@ namespace Nektar
         {
             int i;
 
+            if (m_requireNeg.size() == 0)
+            {
+                m_requireNeg.resize(GetNedges());
+                
+                for (i = 0; i < GetNedges(); ++i)
+                {
+                    m_requireNeg[i] = false;
+                    if (m_negatedNormals[i])
+                    {
+                        m_requireNeg[i] = true;
+                    }
+                    
+                    Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<
+                        Expansion1D>(m_edgeExp[i].lock());
+
+                    if (edgeExp->GetRightAdjacentElementExp())
+                    {
+                        if (edgeExp->GetRightAdjacentElementExp()->GetGeom2D()
+                            ->GetGlobalID() == GetGeom2D()->GetGlobalID())
+                        {
+                            m_requireNeg[i] = true;
+                        }
+                    }
+                }
+            }
+
             StdRegions::Orientation  edgedir = GetEorient(edge); 
             
             unsigned short num_mod0 = EdgeExp->GetBasis(0)->GetNumModes();
@@ -126,17 +179,9 @@ namespace Nektar
                     boost::dynamic_pointer_cast<
                         LocalRegions::Expansion1D>(EdgeExp);
                 
-                if (m_negatedNormals[edge])
+                if (m_requireNeg[edge])
                 {
                     Vmath::Neg(n_coeffs,EdgeExp->UpdateCoeffs(),1);
-                }
-                else if (locExp->GetRightAdjacentElementEdge() != -1)
-                {
-                    if (locExp->GetRightAdjacentElementExp()->GetGeom2D()->GetGlobalID() 
-                        == GetGeom2D()->GetGlobalID())
-                    {
-                        Vmath::Neg(n_coeffs,EdgeExp->UpdateCoeffs(),1);
-                    }
                 }
                 
                 Array<OneD, NekDouble> coeff(n_coeffs,0.0);
@@ -162,17 +207,9 @@ namespace Nektar
                     boost::dynamic_pointer_cast<
                         LocalRegions::Expansion1D>(EdgeExp);
                 
-                if (m_negatedNormals[edge])
+                if (m_requireNeg[edge])
                 {
                     Vmath::Neg(n_coeffs,EdgeExp->UpdateCoeffs(),1);
-                }
-                else if (locExp->GetRightAdjacentElementEdge() != -1)
-                {
-                    if (locExp->GetRightAdjacentElementExp()->GetGeom2D()->GetGlobalID() 
-                        == GetGeom2D()->GetGlobalID())
-                    {
-                        Vmath::Neg(order_e,EdgeExp->UpdateCoeffs(),1);
-                    }
                 }
             }
             

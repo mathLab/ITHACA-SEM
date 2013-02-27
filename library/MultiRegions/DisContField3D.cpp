@@ -800,7 +800,7 @@ namespace Nektar
         {
             // Loop over elements and collect forward and backward expansions.
             int nexp = GetExpSize();
-            int cnt,n,e,npts,offset, phys_offset;
+            int cnt, n, e, npts, offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
             
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
@@ -913,6 +913,10 @@ namespace Nektar
                              "and Robin conditions.");
                 }
             }
+
+            // Do parallel exchange for forwards/backwards spaces.
+            m_traceMap->UniversalTraceAssemble(Fwd);
+            m_traceMap->UniversalTraceAssemble(Bwd);
         }
 
         void DisContField3D::v_ExtractTracePhys(
@@ -983,12 +987,13 @@ namespace Nektar
             for(n = 0; n < GetExpSize(); ++n)
             {
                 offset = GetCoeff_Offset(n);
+                e_outarray = outarray+offset;
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
                     t_offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                     (*m_exp)[n]->AddFaceNormBoundaryInt(e,elmtToTrace[n][e],
                                                         Fn + t_offset,
-                                                        e_outarray = outarray+offset);
+                                                        e_outarray);
                 }
             }
         }

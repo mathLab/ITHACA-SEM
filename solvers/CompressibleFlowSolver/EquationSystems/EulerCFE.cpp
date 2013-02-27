@@ -34,10 +34,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
 #include <iostream>
 #include <iomanip>
+#include <boost/algorithm/string.hpp>
+
+#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
+#include <CompressibleFlowSolver/EquationSystems/EulerCFE.h>
 
 namespace Nektar
 {
@@ -64,7 +66,7 @@ namespace Nektar
                 m_session->GetSolverInfo("PROBLEMTYPE");
             for (i = 0; i < (int) SIZE_ProblemType; ++i)
             {
-                if (NoCaseStringCompare(ProblemTypeMap[i], ProblemTypeStr) == 0)
+                if (boost::iequals(ProblemTypeMap[i], ProblemTypeStr))
                 {
                     m_problemType = (ProblemType)i;
                     break;
@@ -127,8 +129,7 @@ namespace Nektar
         if (dumpInitialConditions)
         {
             // Dump initial conditions to file
-            std::string outname = m_sessionName + "_initial.chk";
-            WriteFld(outname);
+            Checkpoint_Output(0);
         }
     }
 
@@ -207,9 +208,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > &inarray, 
         NekDouble                             time)
     {
-
         int nvariables = m_fields.num_elements();
-        int nq         = inarray[0].num_elements();
         int cnt        = 0;
 
         // Loop over Boundary Regions
@@ -293,71 +292,71 @@ namespace Nektar
         }
     }
     
+    void EulerCFE::EvaluateIsentropicVortex(
+        const Array<OneD, NekDouble>               &x,
+        const Array<OneD, NekDouble>               &y,
+        const Array<OneD, NekDouble>               &z,
+              Array<OneD, Array<OneD, NekDouble> > &u,
+              NekDouble                             time,
+        const int                                   o)
+    {
+        int nq = x.num_elements();
+        
+        // Flow parameters
+        const NekDouble x0    = 5.0;
+        const NekDouble y0    = 0.0;
+        const NekDouble beta  = 5.0;
+        const NekDouble u0    = 1.0;
+        const NekDouble v0    = 0.5;
+        const NekDouble gamma = m_gamma;
+        NekDouble r, xbar, ybar, tmp;
+        NekDouble fac = 1.0/(16.0*gamma*M_PI*M_PI);
+        
+        // In 3D zero rhow field.
+        if (m_spacedim == 3)
+        {
+            Vmath::Zero(nq, &u[3][o], 1);
+        }
+
+        // Fill storage
+        for (int i = 0; i < nq; ++i)
+        {
+            xbar      = x[i] - u0*time - x0;
+            ybar      = y[i] - v0*time - y0;
+            r         = sqrt(xbar*xbar + ybar*ybar);
+            tmp       = beta*exp(1-r*r);
+            u[0][i+o] = pow(1.0 - (gamma-1.0)*tmp*tmp*fac, 1.0/(gamma-1.0));
+            u[1][i+o] = u[0][i+o]*(u0 - tmp*ybar/(2*M_PI));
+            u[2][i+o] = u[0][i+o]*(v0 + tmp*xbar/(2*M_PI));
+            u[m_spacedim+1][i+o] = pow(u[0][i+o], gamma)/(gamma-1.0) +
+                0.5*(u[1][i+o]*u[1][i+o] + u[2][i+o]*u[2][i+o]) / u[0][i+o];
+        }
+    }
+
     /**
      * @brief Compute the exact solution for the isentropic vortex problem.
      */
     void EulerCFE::GetExactIsentropicVortex(
-        int                                  field, 
-        Array<OneD, NekDouble>              &outarray, 
+        int                                  field,
+        Array<OneD, NekDouble>              &outarray,
         NekDouble                            time)
     {
         int nTotQuadPoints  = GetTotPoints();
-    
-        Array<OneD, NekDouble> rho(nTotQuadPoints, 100.0);
-        Array<OneD, NekDouble> rhou(nTotQuadPoints);
-        Array<OneD, NekDouble> rhov(nTotQuadPoints);
-        Array<OneD, NekDouble> E(nTotQuadPoints);
         Array<OneD, NekDouble> x(nTotQuadPoints);
         Array<OneD, NekDouble> y(nTotQuadPoints);
         Array<OneD, NekDouble> z(nTotQuadPoints);
-    
+        Array<OneD, Array<OneD, NekDouble> > u(m_spacedim+2);
+
         m_fields[0]->GetCoords(x, y, z);
-    
-        // Flow parameters
-        NekDouble x0    = 5.0;
-        NekDouble y0    = 0.0;
-        NekDouble beta  = 5.0;
-        NekDouble u0    = 1.0;
-        NekDouble v0    = 0.0;
-        NekDouble gamma = m_gamma;
-        NekDouble r;
-    
-        for (int i = 0; i < nTotQuadPoints; ++i)
+
+        for (int i = 0; i < m_spacedim + 2; ++i)
         {
-            r       = sqrt((x[i] - u0 * time - x0) * (x[i] - u0 * time - x0) + 
-                           (y[i] - v0 * time - y0) * (y[i] - v0 * time - y0));
-            
-            rho[i]  = pow((1.0 - ((gamma - 1.0) / 
-                                  (16.0 * gamma * M_PI * M_PI)) * 
-                                  beta * beta * exp(2.0 * (1.0 - r * r))), 
-                                  (1.0 / (gamma - 1.0)));
-            
-            rhou[i] = rho[i] * (1.0 - beta * exp(1.0 - r * r) * 
-                                ((y[i] - y0) / (2.0 * M_PI)));
-            
-            rhov[i] = rho[i] * (beta * exp(1.0 - r * r) * 
-                                ((x[i] - x0) / (2.0 * M_PI)));
-            
-            E[i]    = (pow(rho[i], gamma) / (gamma - 1.0)) + 
-                      0.5 * rho[i] * ((rhou[i] / rho[i]) * (rhou[i] / rho[i]) + 
-                                      (rhov[i] / rho[i]) * (rhov[i] / rho[i]));
+            u[i] = Array<OneD, NekDouble>(nTotQuadPoints);
         }
-    
-        switch (field)
-        {
-            case 0:
-                outarray = rho;
-                break;
-            case 1:
-                outarray = rhou;
-                break;
-            case 2:
-                outarray = rhov;
-                break;
-            case 3:
-                outarray = E;
-                break;
-        } 
+
+        EvaluateIsentropicVortex(x, y, z, u, time);
+        
+        Vmath::Vcopy(nTotQuadPoints, u[field], 1, outarray, 1);
     }
     
     /**
@@ -366,57 +365,24 @@ namespace Nektar
     void EulerCFE::SetInitialIsentropicVortex(NekDouble initialtime)
     {
         int nTotQuadPoints  = GetTotPoints();
-
-        Array<OneD, NekDouble> rho(nTotQuadPoints, 100.0);
-        Array<OneD, NekDouble> rhou(nTotQuadPoints);
-        Array<OneD, NekDouble> rhov(nTotQuadPoints);
-        Array<OneD, NekDouble> E(nTotQuadPoints);
         Array<OneD, NekDouble> x(nTotQuadPoints);
         Array<OneD, NekDouble> y(nTotQuadPoints);
         Array<OneD, NekDouble> z(nTotQuadPoints);
+        Array<OneD, Array<OneD, NekDouble> > u(m_spacedim+2);
 
         m_fields[0]->GetCoords(x, y, z);
 
-        // Flow parameters
-        NekDouble x0    = 5.0;
-        NekDouble y0    = 0.0;
-        NekDouble beta  = 5.0;
-        NekDouble u0    = 1.0;
-        NekDouble v0    = 0.0;
-        NekDouble gamma = m_gamma;
-        NekDouble time  = initialtime;
-        NekDouble r;
-
-        for (int i = 0; i < nTotQuadPoints; ++i)
+        for (int i = 0; i < m_spacedim + 2; ++i)
         {
-            r       = sqrt((x[i] - u0 * time - x0) * (x[i] - u0 * time - x0) + 
-                           (y[i] - v0 * time - y0) * (y[i] - v0 * time - y0));
-            
-            rho[i]  = pow((1.0 - ((gamma - 1.0) / 
-                                  (16.0 * gamma * M_PI * M_PI)) * 
-                                  beta * beta * exp(2.0 * (1.0 - r * r))), 
-                                  (1.0 / (gamma - 1.0)));
-            
-            rhou[i] = rho[i] * (1.0 - beta * exp(1.0 - r * r) * 
-                                ((y[i] - y0) / (2.0 * M_PI)));
-            
-            rhov[i] = rho[i] * (beta * exp(1.0 - r * r) * 
-                                ((x[i] - x0) / (2.0 * M_PI)));
-            
-            E[i]    = (pow(rho[i], gamma) / (gamma - 1.0)) + 
-                      0.5 * rho[i] * ((rhou[i] / rho[i]) * (rhou[i] / rho[i]) + 
-                                      (rhov[i] / rho[i]) * (rhov[i] / rho[i]));
+            u[i] = Array<OneD, NekDouble>(nTotQuadPoints);
         }
 
-        // Fill the physical space
-        m_fields[0]->SetPhys(rho);
-        m_fields[1]->SetPhys(rhou);
-        m_fields[2]->SetPhys(rhov);
-        m_fields[3]->SetPhys(E);
-    
+        EvaluateIsentropicVortex(x, y, z, u, initialtime);
+
         // Forward transform to fill the coefficient space
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
+            Vmath::Vcopy(nTotQuadPoints, u[i], 1, m_fields[i]->UpdatePhys(), 1);
             m_fields[i]->SetPhysState(true);
             m_fields[i]->FwdTrans(m_fields[i]->GetPhys(), 
                                   m_fields[i]->UpdateCoeffs());
@@ -446,9 +412,8 @@ namespace Nektar
         for(int e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
             GetExpSize(); ++e)
         {
-
             int npoints = m_fields[0]->
-                GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
+                GetBndCondExpansions()[bcRegion]->GetExp(e)->GetTotPoints();
             int id1  = m_fields[0]->
                 GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
             int id2 = m_fields[0]->
@@ -462,40 +427,8 @@ namespace Nektar
             m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetCoords(x, y, z);
 
-            // Flow parameters
-            NekDouble x0    = 5.0;
-            NekDouble y0    = 0.0;
-            NekDouble beta  = 5.0;
-            NekDouble u0    = 1.0;
-            NekDouble v0    = 0.0;
-            NekDouble gamma = m_gamma;
-            NekDouble r;
+            EvaluateIsentropicVortex(x, y, z, Fwd, time, id2);
 
-            for(int i = 0; i < npoints; i++)
-            {
-                int kk      = id2 + i;
-                r           = sqrt((x[i] - u0 * time - x0) * 
-                                   (x[i] - u0 * time - x0) + 
-                                   (y[i] - v0 * time - y0) * 
-                                   (y[i] - v0 * time - y0));
-                
-                Fwd[0][kk]  = pow((1.0 - ((gamma - 1.0) / 
-                                    (16.0 * gamma * M_PI * M_PI)) * 
-                                    beta * beta * exp(2.0 * (1.0 - r * r))), 
-                                    (1.0 / (gamma - 1.0)));
-                
-                Fwd[1][kk]  = Fwd[0][kk] * (1.0 - beta * exp(1.0 - r * r) * 
-                                            ((y[i] - y0) / (2.0 * M_PI)));
-                
-                Fwd[2][kk]  = Fwd[0][kk] * (beta * exp(1.0 - r * r) * 
-                                            ((x[i] - x0) / (2.0 * M_PI)));
-                
-                Fwd[3][kk]  = (pow(Fwd[0][kk], gamma) / (gamma - 1.0)) + 
-                              0.5 * Fwd[0][kk] * ((Fwd[1][kk] / Fwd[0][kk]) *
-                                                  (Fwd[1][kk] / Fwd[0][kk]) + 
-                                                  (Fwd[2][kk] / Fwd[0][kk]) * 
-                                                  (Fwd[2][kk] / Fwd[0][kk]));
-            }
             for (int i = 0; i < nvariables; ++i)
             {
                 Vmath::Vcopy(npoints, &Fwd[i][id2], 1, 
@@ -926,7 +859,7 @@ namespace Nektar
         {
             
             int npoints = m_fields[0]->
-            GetBndCondExpansions()[bcRegion]->GetExp(e)->GetNumPoints(0);
+            GetBndCondExpansions()[bcRegion]->GetExp(e)->GetTotPoints();
             int id1  = m_fields[0]->
             GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
             //int id2  = m_fields[0]->

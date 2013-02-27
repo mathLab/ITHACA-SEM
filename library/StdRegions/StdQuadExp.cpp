@@ -527,7 +527,7 @@ namespace Nektar
                 { 
                     ASSERTL1(wsp.num_elements()>=nquad1*nmodes0,"Workspace size is not sufficient");
 
-#if 0 
+#if 1
                     Blas::Dgemm('T','N',nmodes0,nquad1,nquad0,1.0,base0.get(),               
                                 nquad0,inarray.get(),nquad0,0.0,wsp.get(),nmodes0);
                     
@@ -1499,15 +1499,14 @@ namespace Nektar
             StdQuadExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
         
-      //up to here
-        
+        //up to here
         void StdQuadExp::MultiplyByQuadratureMetric(
-                            const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &outarray)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
         {         
             int i; 
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
                 
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
@@ -1523,7 +1522,7 @@ namespace Nektar
             {
                 Vmath::Vmul(nquad1,outarray.get()+i,nquad0,w1.get(),1,
                             outarray.get()+i,nquad0);
-            }                
+            }
         }
 
 

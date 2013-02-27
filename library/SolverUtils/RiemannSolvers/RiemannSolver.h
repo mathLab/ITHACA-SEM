@@ -96,7 +96,7 @@ namespace Nektar
         protected:
             /// Indicates whether the Riemann solver requires a rotation to be
             /// applied to the velocity fields.
-            bool m_requiresRotation;
+            bool                                    m_requiresRotation;
             /// Map of scalar function types.
             std::map<std::string, RSScalarFuncType> m_scalars;
             /// Map of vector function types.
@@ -104,9 +104,9 @@ namespace Nektar
             /// Map of parameter function types.
             std::map<std::string, RSParamFuncType > m_params;
             /// Rotation matrices for each trace quadrature point.
-            std::vector<DNekMatSharedPtr> m_rotMatrices;
-            /// Inverse rotation matrices for each trace quadrature point.
-            std::vector<DNekMatSharedPtr> m_invRotMatrices;
+            Array<OneD, Array<OneD, NekDouble> >    m_rotMat;
+            /// Rotation storage
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_rotStorage;
 
             SOLVER_UTILS_EXPORT RiemannSolver();
 
@@ -119,7 +119,7 @@ namespace Nektar
             void FromToRotation(
                 Array<OneD, const NekDouble> &from,
                 Array<OneD, const NekDouble> &to,
-                DNekMatSharedPtr              mat);
+                NekDouble                    *mat);
             void rotateToNormal  (
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                       Array<OneD,       Array<OneD, NekDouble> > &outarray);

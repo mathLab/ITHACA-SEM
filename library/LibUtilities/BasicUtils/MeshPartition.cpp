@@ -793,7 +793,7 @@ namespace Nektar
 
             if (pSession->DefinesElement("Nektar/Conditions"))
             {
-                std::map<int, int> vBndRegionIdList;
+                std::set<int> vBndRegionIdList;
                 TiXmlElement* vConditions    = new TiXmlElement(*pSession->GetElement("Nektar/Conditions"));
                 TiXmlElement* vBndRegions    = vConditions->FirstChildElement("BOUNDARYREGIONS");
                 TiXmlElement* vBndConditions = vConditions->FirstChildElement("BOUNDARYCONDITIONS");
@@ -803,7 +803,6 @@ namespace Nektar
                 {
                     TiXmlElement* vNewBndRegions = new TiXmlElement("BOUNDARYREGIONS");
                     vItem = vBndRegions->FirstChildElement();
-                    int p = 0;
                     while (vItem)
                     {
                         std::string vSeqStr = vItem->FirstChild()->ToText()->Value();
@@ -829,13 +828,14 @@ namespace Nektar
                         }
                         else
                         {
+                            int p = atoi(vItem->Attribute("ID"));
                             vListStr = "C[" + vListStr + "]";
                             TiXmlText* vList = new TiXmlText(vListStr);
                             TiXmlElement* vNewElement = new TiXmlElement("B");
                             vNewElement->SetAttribute("ID", p);
                             vNewElement->LinkEndChild(vList);
                             vNewBndRegions->LinkEndChild(vNewElement);
-                            vBndRegionIdList[atoi(vItem->Attribute("ID"))] = p++;
+                            vBndRegionIdList.insert(p);
                         }
                         vItem = vItem->NextSiblingElement();
                     }
@@ -847,10 +847,10 @@ namespace Nektar
                     vItem = vBndConditions->FirstChildElement();
                     while (vItem)
                     {
-                        std::map<int, int>::iterator x;
+                        std::set<int>::iterator x;
                         if ((x = vBndRegionIdList.find(atoi(vItem->Attribute("REF")))) != vBndRegionIdList.end())
                         {
-                            vItem->SetAttribute("REF", x->second);
+                            vItem->SetAttribute("REF", *x);
                         }
                         else
                         {

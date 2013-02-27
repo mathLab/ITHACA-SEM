@@ -458,7 +458,7 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string                        &variable)
         {
-            int i, cnt  = 0;
+            int cnt  = 0;
             MultiRegions::ExpList2DSharedPtr       locExpList;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
@@ -466,14 +466,13 @@ namespace Nektar
                 bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions = 
                 bcs.GetBoundaryConditions();
-
-            int nbnd = bregions.size();
+            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
             // count the number of non-periodic boundary regions
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
                 SpatialDomains::BoundaryConditionShPtr boundaryCondition = 
-                    GetBoundaryCondition(bconditions, i, variable);
+                    GetBoundaryCondition(bconditions, it->first, variable);
                 if (boundaryCondition->GetBoundaryConditionType() != 
                         SpatialDomains::ePeriodic)
                 {
@@ -484,18 +483,20 @@ namespace Nektar
             m_bndCondExpansions = Array<OneD,MultiRegions::ExpListSharedPtr>(cnt);
             m_bndConditions     = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(cnt);
 
-            cnt=0;
+            cnt = 0;
 
             // list Dirichlet boundaries first
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
+                locBCond = GetBoundaryCondition(
+                    bconditions, it->first, variable);
 
                 if(locBCond->GetBoundaryConditionType()
-                   != SpatialDomains::ePeriodic)
+                       != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList2D>
-                        ::AllocateSharedPtr(m_session,*(bregions[i]), graph3D, variable);
+                        ::AllocateSharedPtr(m_session, *(it->second),
+                                            graph3D, variable);
 
                     // Set up normals on non-Dirichlet boundary conditions
                     if(locBCond->GetBoundaryConditionType() != 
@@ -520,6 +521,7 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string                        &variable)
         {
+#if 0
             int i, k, l;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
@@ -718,6 +720,7 @@ namespace Nektar
                 }
                 doneBndRegions[region2ID] = region1ID;
             }
+#endif
         }
 
         bool DisContField3D::IsLeftAdjacentFace(const int n, const int e)

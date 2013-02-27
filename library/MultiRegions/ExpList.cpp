@@ -2800,10 +2800,12 @@ namespace Nektar
                      "This method is not defined or valid for this class type");
         }
 
-        SpatialDomains::BoundaryConditionShPtr ExpList::GetBoundaryCondition(const SpatialDomains::BoundaryConditionCollection& collection,
-                                                                             unsigned int index, const std::string& variable)
+        SpatialDomains::BoundaryConditionShPtr ExpList::GetBoundaryCondition(
+            const SpatialDomains::BoundaryConditionCollection& collection,
+            unsigned int regionId,
+            const std::string& variable)
         {
-            SpatialDomains::BoundaryConditionCollection::const_iterator collectionIter = collection.find(index);
+            SpatialDomains::BoundaryConditionCollection::const_iterator collectionIter = collection.find(regionId);
             ASSERTL1(collectionIter != collection.end(), "Unable to locate collection.");
             const SpatialDomains::BoundaryConditionMapShPtr boundaryConditionMap = (*collectionIter).second;
             SpatialDomains::BoundaryConditionMap::const_iterator conditionMapIter = boundaryConditionMap->find(variable);

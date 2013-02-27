@@ -509,20 +509,19 @@ namespace Nektar
             const std::string &variable,
             const bool DeclareCoeffPhysArrays)
         {  	
-            int i, cnt = 0;
+            int cnt = 0;
             SpatialDomains::BoundaryConditionShPtr             bc;
             MultiRegions::ExpList1DSharedPtr                   locExpList;
             const SpatialDomains::BoundaryRegionCollection    &bregions = 
                 bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions = 
                 bcs.GetBoundaryConditions();
+            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            int nbnd = bregions.size();
-            
             // count the number of non-periodic boundary regions
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                bc = GetBoundaryCondition(bconditions, i, variable);
+                bc = GetBoundaryCondition(bconditions, it->first, variable);
                 
                 if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
@@ -538,16 +537,16 @@ namespace Nektar
             cnt = 0;
 
             // list non-periodic boundaries
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                bc = GetBoundaryCondition(bconditions, i, variable);
-                if(bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
+                bc = GetBoundaryCondition(bconditions, it->first, variable);
+
+                if (bc->GetBoundaryConditionType() != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList1D>
-                        ::AllocateSharedPtr(*(bregions[i]), graph2D, 
+                        ::AllocateSharedPtr(*(it->second), graph2D,
                                             DeclareCoeffPhysArrays, variable);
                     
-
                     // Set up normals on non-Dirichlet boundary conditions
                     if(bc->GetBoundaryConditionType() != 
                            SpatialDomains::eDirichlet)
@@ -579,18 +578,57 @@ namespace Nektar
             const SpatialDomains::BoundaryConditions &bcs,
             const std::string                        &variable)
         {
-            int i,k;
-
             const SpatialDomains::BoundaryRegionCollection &bregions
                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
+            SpatialDomains::BoundaryRegionCollection::const_iterator it;
             
+            vector<pair<int, int> > locBndReg;
+            map<int,int> doneBndReg;
+
+            int                       region1ID, region2ID;
+            SpatialDomains::Composite comp1, comp2;
+            SpatialDomains::BoundaryConditionShPtr locBCond;
+
+            // Construct list of all periodic pairs local to this process.
+            for (it = bregions.begin(); it != bregions.end(); ++it)
+            {
+                locBCond = GetBoundaryCondition(
+                    bconditions, it->first, variable);
+
+                if (locBCond->GetBoundaryConditionType()
+                        != SpatialDomains::ePeriodic)
+                {
+                    continue;
+                }
+
+                region1ID = it->first;
+                region2ID = boost::static_pointer_cast<
+                    SpatialDomains::PeriodicBoundaryCondition>(
+                        locBCond)->m_connectedBoundaryRegion;
+
+                if (doneBndReg.count(region1ID))
+                {
+                    locBndReg.push_back(std::make_pair(region1ID, region2ID));
+
+                    SpatialDomains::BoundaryRegion::iterator bnd1It, bnd2It;
+                }
+                else
+                {
+                    std::stringstream ss;
+                    ss << "Boundary region " << region1ID << " should be "
+                       << "periodic with " << doneBndReg[region1ID] << " but "
+                       << "found " << region2ID << " instead!";
+                    ASSERTL0(doneBndReg[region1ID] == region2ID, ss.str());
+                }
+            }
+
+
+            /*
             int region1ID;
             int region2ID;
 
-            SpatialDomains::Composite comp1;
-            SpatialDomains::Composite comp2;
 
             SpatialDomains::SegGeomSharedPtr segmentGeom1;
             SpatialDomains::SegGeomSharedPtr segmentGeom2;
@@ -601,7 +639,6 @@ namespace Nektar
             StdRegions::Orientation orient1;
             StdRegions::Orientation orient2;
 
-            SpatialDomains::BoundaryConditionShPtr locBCond;
 
             // This std::map is a check so that the periodic pairs
             // are not treated twice
@@ -613,36 +650,29 @@ namespace Nektar
             {
                 locBCond = GetBoundaryCondition(bconditions, i, variable);
                 if(locBCond->GetBoundaryConditionType()
-                   == SpatialDomains::ePeriodic)
+                     != SpatialDomains::ePeriodic)
                 {
-                    region1ID = i;
-                    region2ID = (boost::static_pointer_cast<
-                                 SpatialDomains::PeriodicBoundaryCondition
-                                 >(locBCond))->m_connectedBoundaryRegion;
+                    continue;
+                }
 
-                    if(doneBndRegions.count(region1ID)==0)
-                    {
-                        ASSERTL0(bregions[region1ID]->size()
-                                 == bregions[region2ID]->size(),
-                                 "Size of the 2 periodic boundary regions "
-                                 "should be equal");
+                region1ID = i;
+                region2ID = (boost::static_pointer_cast<
+                             SpatialDomains::PeriodicBoundaryCondition
+                             >(locBCond))->m_connectedBoundaryRegion;
 
+                map<int,int> periodicVertices;
+                
+                SpatialDomains::BoundaryRegion::iterator bnd1It, bnd2It;
+                for(bnd1It =  bregions[region1ID]->begin(),
+                    bnd2It =  bregions[region2ID]->begin();
+                    bnd1It != bregions[region1ID]->end();
+                    ++bnd1It, ++bnd2It)
+                {
+                    comp1 = bnd1It->second;
+                    comp2 = bnd2It->second;
 
-                        map<int,int> periodicVertices;
-
-                        SpatialDomains::BoundaryRegion::iterator bnd1It, bnd2It;
-                        for(bnd1It =  bregions[region1ID]->begin(),
-                            bnd2It =  bregions[region2ID]->begin();
-                            bnd1It != bregions[region1ID]->end();
-                            ++bnd1It, ++bnd2It)
-                        {
-                            comp1 = bnd1It->second;
-                            comp2 = bnd2It->second;
-
-                            ASSERTL0(comp1->size() == comp2->size(),
-                                     "Size of the 2 periodic composites should "
-                                     "be equal");
-
+                    
+                    
                             for(k = 0; k < comp1->size(); k++)
                             {
                                 if(!(segmentGeom1
@@ -720,6 +750,7 @@ namespace Nektar
                     doneBndRegions[region2ID] = region1ID;
                 }
             }
+            */
         }
 
         bool DisContField2D::IsLeftAdjacentEdge(const int n, const int e)

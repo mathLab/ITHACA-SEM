@@ -329,6 +329,8 @@ namespace Nektar
                         const std::string &compositeStr,
                         CompositeMap &compositeVector) const;
 
+                inline const CompositeMap &GetComposites() const;
+
                 inline const CompositeMap &GetDomain() const;
 
 
@@ -488,6 +490,15 @@ namespace Nektar
             ASSERTL0(m_meshComposites.find(whichComposite) != m_meshComposites.end(),
                     "Composite not found.");
             return m_meshComposites.find(whichComposite)->second;
+        }
+
+
+        /**
+         *
+         */
+        inline const CompositeMap &MeshGraph::GetComposites() const
+        {
+            return m_meshComposites;
         }
 
 

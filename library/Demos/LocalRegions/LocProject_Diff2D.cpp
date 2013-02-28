@@ -33,9 +33,10 @@ int main(int argc, char *argv[])
 
     int           order1,order2, nq1,nq2;
     LibUtilities::PointsType    Qtype1,Qtype2;
-    LibUtilities::BasisType     btype1,btype2;
-    LibUtilities::PointsType     NodalType;
-    LibUtilities::ShapeType    regionshape;
+    LibUtilities::BasisType     btype1 =   LibUtilities::eOrtho_A;
+    LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
+    LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
+    StdRegions::ExpansionType    regionshape;
     StdRegions::StdExpansion2D *E;
     Array<OneD, NekDouble> sol,x,y,dx,dy;
     Array<OneD, NekDouble> coords(8);

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSysIterativeStaticCond.cpp
+// File: GlobalLinSysIterativeStaticCond.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -170,7 +170,9 @@ namespace Nektar
             int nLocBndDofs        = pLocToGloMap->GetNumLocalBndCoeffs();
             int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
                                                                 - nGlobBndDofs;
-            Array<OneD, NekDouble> F = m_wsp + m_locWspSize;
+
+            Array<OneD, NekDouble> F = m_wsp + 2*nLocBndDofs;
+
             Array<OneD, NekDouble> tmp;
             if(nDirBndDofs && dirForcCalculated)
             {
@@ -318,8 +320,6 @@ namespace Nektar
 
                     std::cout << "time per solveLinearSystem = " << t.TimePerTest(1) << std::endl;
 
-                    t.Start();
-
                     //transform back to original basis
                     if(pLocToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
                     {
@@ -386,9 +386,8 @@ namespace Nektar
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
 
-            m_locWspSize = 2*nLocalBnd;
-            m_wsp = Array<OneD, NekDouble>(m_locWspSize + nGlobal);
-            
+            m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal);
+
             if(pLocToGloMap->AtLastLevel())
             {
                 // decide whether to assemble schur complement globally
@@ -405,22 +404,6 @@ namespace Nektar
                 {
                     PrepareLocalSchurComplement();
                 }
-
-                int nbdry, nblks;
-                unsigned int esize[1];
-                int nBlk          = m_schurCompl->GetNumberOfBlockRows();
-                m_schurComplBlock = Array<OneD, DNekScalBlkMatSharedPtr>(nBlk);
-                
-                for (int i = 0; i < nBlk; ++i)
-                {
-                    nbdry                = m_schurCompl->GetBlock(i,i)->GetRows();
-                    nblks                = 1;
-                    esize[0]             = nbdry;
-                    m_schurComplBlock[i] = MemoryManager<DNekScalBlkMat>
-                        ::AllocateSharedPtr(nblks, nblks, esize, esize);
-                    m_schurComplBlock[i]->SetBlock(
-                        0, 0, m_schurCompl->GetBlock(i,i));
-                }
             }
             else
             {
@@ -428,16 +411,26 @@ namespace Nektar
                         pLocToGloMap->GetNextLevelLocalToGlobalMap());
             }
         }
-        
+
         int GlobalLinSysIterativeStaticCond::v_GetNumBlocks()
         {
             return m_schurCompl->GetNumberOfBlockRows();
         }
-        
+
         DNekScalBlkMatSharedPtr GlobalLinSysIterativeStaticCond::
             v_GetStaticCondBlock(unsigned int n)
         {
-            return m_schurComplBlock[n];
+            DNekScalBlkMatSharedPtr schurComplBlock;
+            DNekScalMatSharedPtr    localMat = m_schurCompl->GetBlock(n,n);
+            int nbdry    = localMat->GetRows();
+            int nblks    = 1;
+            unsigned int esize[1] = {nbdry};
+
+            schurComplBlock = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nblks, nblks, esize, esize);
+            schurComplBlock->SetBlock(0, 0, localMat);
+
+            return schurComplBlock;
         }
 
         /**
@@ -497,9 +490,6 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::SetupLowEnergyTopLevel(
                 const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
-            Timer t;
-            t.Start();
-
             int n;
             int n_exp = m_expList.lock()->GetNumElmts();
 
@@ -572,8 +562,6 @@ namespace Nektar
                 m_RBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_R));
                 m_RTBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_RT));
             }
-            t.Stop();
-            std::cout << "time for setting up top level = " << t.TimePerTest(1) << std::endl;
         }
 
         /**
@@ -1032,7 +1020,8 @@ namespace Nektar
             }
             else
             {
-                // Do matrix multiply locally
+                // Do matrix multiply locally using
+                // block-diagonal sparse matrix
 
                 Array<OneD, NekDouble> tmp = m_wsp + nLocal;
 

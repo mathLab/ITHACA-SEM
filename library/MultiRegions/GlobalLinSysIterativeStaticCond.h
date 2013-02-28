@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSysIterativeStaticCond.h
+// File: GlobalLinSysIterativeStaticCond.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -50,6 +50,7 @@ namespace Nektar
 
         typedef boost::shared_ptr<GlobalLinSysIterativeStaticCond>
             GlobalLinSysIterativeStaticCondSharedPtr;
+
 
         /// A global linear system.
         class GlobalLinSysIterativeStaticCond : public GlobalLinSysIterative
@@ -108,7 +109,7 @@ namespace Nektar
             DNekScalBlkMatSharedPtr                  m_C;
             /// Block \f$ D^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_invD;
-            // Block matrices for low energy
+            /// Block matrices for low energy
             DNekScalBlkMatSharedPtr                  m_RBlk;
             DNekScalBlkMatSharedPtr                  m_RTBlk;
             DNekScalBlkMatSharedPtr                  m_S1Blk;
@@ -120,11 +121,9 @@ namespace Nektar
             boost::shared_ptr<AssemblyMap>           m_locToGloMap;
             /// Workspace array for matrix multiplication
             Array<OneD, NekDouble>                   m_wsp;
-            int                                      m_locWspSize;
             /// Preconditioner object.
             PreconditionerSharedPtr                  m_precon;
-            /// Wrapper for block matrices.
-            Array<OneD, DNekScalBlkMatSharedPtr>     m_schurComplBlock;
+
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.

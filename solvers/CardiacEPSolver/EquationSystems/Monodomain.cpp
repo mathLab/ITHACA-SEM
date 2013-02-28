@@ -101,10 +101,8 @@ namespace Nektar
                 StdRegions::eVarCoeffD22
         };
         std::string varName = "intensity";
-        std::string varCoeffs[3] = {
-                "AnisotropicConductivityX",
-                "AnisotropicConductivityY",
-                "AnisotropicConductivityZ"
+        std::string aniso_var[3] = {
+                "fx", "fy", "fz"
         };
         int nq = m_fields[0]->GetNpoints();
         Array<OneD, NekDouble> vTemp;
@@ -125,23 +123,9 @@ namespace Nektar
             EvaluateFunction(varName, vTemp, "IsotropicConductivity");
             for (int i = 0; i < m_spacedim; ++i)
             {
-                Vmath::Vmul(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
-            }
-        }
-
-        // Apply fibre map (range 0 -> 1)
-        if (m_session->DefinesFunction(varCoeffs[0]))
-        {
-            if (m_session->DefinesCmdLineArgument("verbose"))
-            {
-                cout << "Loading Anisotropic Fibre map." << endl;
-            }
-            for (int i = 0; i < m_spacedim; ++i)
-            {
-                ASSERTL0(m_session->DefinesFunction(varCoeffs[i], varName),
-                    "Function '" + varCoeffs[i] + "' not correctly defined.");
-                EvaluateFunction(varName, vTemp, varCoeffs[i]);
-                Vmath::Vmul(nq, vTemp, 1, m_vardiff[varCoeffEnum[i]], 1, m_vardiff[varCoeffEnum[i]], 1);
+                Vmath::Vmul(nq, vTemp, 1,
+                                m_vardiff[varCoeffEnum[i]], 1,
+                                m_vardiff[varCoeffEnum[i]], 1);
             }
         }
 
@@ -186,12 +170,33 @@ namespace Nektar
                                     m_vardiff[varCoeffEnum[i]], 1,
                                     m_vardiff[varCoeffEnum[i]], 1);
                 }
+            }
+        }
+
+        // Apply fibre map (range 0 -> 1)
+        if (m_session->DefinesFunction("AnisotropicConductivity"))
+        {
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                cout << "Loading Anisotropic Fibre map." << endl;
+            }
+            for (int i = 0; i < m_spacedim; ++i)
+            {
+                ASSERTL0(m_session->DefinesFunction("AnisotropicConductivity",
+                                                    aniso_var[i]),
+                         "Function 'AnisotropicConductivity' not correctly "
+                         "defined.");
+                EvaluateFunction(aniso_var[i], vTemp,
+                                 "AnisotropicConductivity");
+                Vmath::Vmul(nq, vTemp, 1,
+                                m_vardiff[varCoeffEnum[i]], 1,
+                                m_vardiff[varCoeffEnum[i]], 1);
 
                 // Transform variable coefficient and write out to file.
                 m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[i]],
                                                  m_fields[0]->UpdateCoeffs());
                 std::stringstream filename;
-                filename << varCoeffs[i];
+                filename << "AnisotropicConductivity_" << aniso_var[i];
                 if (m_comm->GetSize() > 1)
                 {
                     filename << "_P" << m_comm->GetRank();

@@ -136,7 +136,6 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_NegateFaceNormal(
                 const int face);
-            
             NormalVector m_surfaceNormal;
 
             std::map<int, NormalVector> m_faceNormals;

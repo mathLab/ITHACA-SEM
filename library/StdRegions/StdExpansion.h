@@ -1395,6 +1395,11 @@ namespace Nektar
                 v_NegateEdgeNormal(edge);
             }
 
+            bool EdgeNormalNegated(const int edge)
+            {
+                return v_EdgeNormalNegated(edge);
+            }
+
             void ComputeFaceNormal(const int face)
             {
                 v_ComputeFaceNormal(face);
@@ -1842,6 +1847,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(const int edge);
             
             STD_REGIONS_EXPORT virtual void v_NegateEdgeNormal(const int edge);
+
+            STD_REGIONS_EXPORT virtual bool v_EdgeNormalNegated(const int edge);
 
             STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
 

@@ -162,7 +162,7 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual 
                 LibUtilities::ShapeType v_DetShapeType() const;
     
-            LOCAL_REGIONS_EXPORT virtual const 
+            LOCAL_REGIONS_EXPORT virtual const
                 SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
 
             LOCAL_REGIONS_EXPORT virtual const 

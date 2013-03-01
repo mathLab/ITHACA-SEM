@@ -1696,44 +1696,10 @@ namespace Nektar
             HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
         
-        void StdExpansion::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                       Array<OneD,NekDouble> &outarray,
-                                                       const StdMatrixKey &mkey)
-        {
-            // If this function is not reimplemented on shape level, the function
-            // below will be called
-            LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-        }
-        
-        void StdExpansion::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                       Array<OneD,NekDouble> &outarray,
-                                                       const StdMatrixKey &mkey)
-        {
-            // If this function is not reimplemented on shape level, the function
-            // below will be called
-            HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-        }
-        
-        const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
-        {
-            ASSERTL0(false, "Cannot get edge normals for this expansion.");
-            static NormalVector result;
-            return result;
-        }
-        
-        void StdExpansion::v_ComputeEdgeNormal(const int edge)
-        {
-            ASSERTL0(false, "Cannot compute edge normal for this expansion.");
-        }
-        
-        void StdExpansion::v_ComputeFaceNormal(const int face)
-        {
-            ASSERTL0(false, "Cannot compute face normal for this expansion.");
-        }
-        
-        void StdExpansion::v_NegateEdgeNormal(const int edge)
+        bool StdExpansion::v_EdgeNormalNegated(const int edge)
         {
             ASSERTL0(false, "Not implemented.");
+            return false;
         }
         
         void StdExpansion::v_NegateFaceNormal(const int face)
@@ -1746,7 +1712,7 @@ namespace Nektar
         {
             ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
         }
-        
+
         const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
         {
             ASSERTL0(false, "Cannot get face normals for this expansion.");

@@ -865,7 +865,7 @@ namespace Nektar
                             nLocalSolutionPts = fields[0]->
                                             GetExp(n)->GetTotPoints();
                             phys_offset = fields[0]->GetPhys_Offset(n);
-                            jac = fields[0]->GetExp(n)->GetGeom1D()->GetJac();
+                            jac = fields[0]->GetExp(n)->GetGeom1D()->GetMetricInfo()->GetJac();
                             
                             Vmath::Smul(
                                 nLocalSolutionPts, 

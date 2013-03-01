@@ -99,7 +99,7 @@ namespace Nektar
             v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {   // Based on Spen's book, page 99
 
                 // Point inside tetrahedron

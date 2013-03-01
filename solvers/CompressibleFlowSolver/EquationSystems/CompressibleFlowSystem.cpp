@@ -964,7 +964,7 @@ namespace Nektar
             
             int nq = m_fields[0]->GetExp(el)->GetTotPoints();
             
-            if(m_fields[0]->GetExp(el)->GetGeom()->GetGtype() == 
+            if(m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype() ==
                    SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi

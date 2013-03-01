@@ -663,7 +663,7 @@ namespace Nektar
             TriGeom::v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             { 
                 NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
                 VertexComponent dv1, dv2, norm, orth1, orth2;

@@ -1098,31 +1098,31 @@ namespace Nektar
                 int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
                 
                 Array<OneD, const NekDouble> jac  = 
-                    m_fields[0]->GetExp(el)->GetGeom2D()->GetJac();
-                Array<TwoD, const NekDouble> gmat = 
+                    m_fields[0]->GetExp(el)->GetGeom2D()->GetMetricInfo()->GetJac();
+                Array<TwoD, const NekDouble> df =
                     m_fields[0]->GetExp(el)->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom2D()->GetGtype() 
+                if (m_fields[0]->GetExp(el)->GetGeom2D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i] 
-                                          + gmat[2][i]*inarray[1][i];
+                        stdVelocity[0][i] = df[0][i]*inarray[0][i]
+                                          + df[2][i]*inarray[1][i];
                         
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i] 
-                                          + gmat[3][i]*inarray[1][i];
+                        stdVelocity[1][i] = df[1][i]*inarray[0][i]
+                                          + df[3][i]*inarray[1][i];
                     }
                 }
                 else
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i] 
-                                          + gmat[2][0]*inarray[1][i];
+                        stdVelocity[0][i] = df[0][0]*inarray[0][i]
+                                          + df[2][0]*inarray[1][i];
                         
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i] 
-                                          + gmat[3][0]*inarray[1][i];
+                        stdVelocity[1][i] = df[1][0]*inarray[0][i]
+                                          + df[3][0]*inarray[1][i];
                     }
                 }
                 
@@ -1147,47 +1147,42 @@ namespace Nektar
                 int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
                 
                 Array<OneD, const NekDouble> jac =
-                    m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
+                    m_fields[0]->GetExp(el)->GetGeom3D()->GetMetricInfo()->GetJac();
                 Array<TwoD, const NekDouble> gmat =
-                    m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
+                    m_fields[0]->GetExp(el)->GetGeom3D()->GetMetricInfo()->GetGmat();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom3D()->GetGtype() 
+                if (m_fields[0]->GetExp(el)->GetGeom3D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i] 
-                                          + gmat[3][i]*inarray[1][i] 
+                        stdVelocity[0][i] = gmat[0][i]*inarray[0][i]
+                                          + gmat[3][i]*inarray[1][i]
                                           + gmat[6][i]*inarray[2][i];
                         
-                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i] 
-                                          + gmat[4][i]*inarray[1][i] 
+                        stdVelocity[1][i] = gmat[1][i]*inarray[0][i]
+                                          + gmat[4][i]*inarray[1][i]
                                           + gmat[7][i]*inarray[2][i];
                         
-                        stdVelocity[2][i] = gmat[2][i]*inarray[0][i] 
-                                          + gmat[5][i]*inarray[1][i] 
+                        stdVelocity[2][i] = gmat[2][i]*inarray[0][i]
+                                          + gmat[5][i]*inarray[1][i]
                                           + gmat[8][i]*inarray[2][i];
                     }
                 }
                 else
                 {
-                    Array<OneD, const NekDouble> jac =
-                        m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
-                    Array<TwoD, const NekDouble> gmat = 
-                        m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
-                    
                     for (int i = 0; i < n_points; i++)
                     {
-                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i] 
-                                          + gmat[3][0]*inarray[1][i] 
+                        stdVelocity[0][i] = gmat[0][0]*inarray[0][i]
+                                          + gmat[3][0]*inarray[1][i]
                                           + gmat[6][0]*inarray[2][i];
                         
-                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i] 
-                                          + gmat[4][0]*inarray[1][i] 
+                        stdVelocity[1][i] = gmat[1][0]*inarray[0][i]
+                                          + gmat[4][0]*inarray[1][i]
                                           + gmat[7][0]*inarray[2][i];
                         
-                        stdVelocity[2][i] = gmat[2][0]*inarray[0][i] 
-                                          + gmat[5][0]*inarray[1][i] 
+                        stdVelocity[2][i] = gmat[2][0]*inarray[0][i]
+                                          + gmat[5][0]*inarray[1][i]
                                           + gmat[8][0]*inarray[2][i];
                     }
                 }

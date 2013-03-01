@@ -355,7 +355,7 @@ namespace Nektar
             SegGeom::v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {
                 Array<OneD, const NekDouble> pts;
                 NekDouble len = 0.0;

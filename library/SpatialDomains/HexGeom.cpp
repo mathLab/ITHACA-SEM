@@ -282,7 +282,7 @@ namespace Nektar
             v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {   
                 NekDouble len0 = 0.0 ;
                 NekDouble len1 = 0.0;

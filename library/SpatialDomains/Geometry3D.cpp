@@ -103,7 +103,7 @@ namespace Nektar
           NekDouble xmap,ymap,zmap, F1,F2, F3;
           NekDouble der1_x, der2_x, der3_x, der1_y, der2_y, der3_y,
               der1_z, der2_z, der3_z; 
-          const Array<TwoD, const NekDouble> &gmat = GetGmat();
+          const Array<TwoD, const NekDouble> &gmat = m_geomFactors->GetGmat();
           
           // Unfortunately need the points in an Array to interpolate
           Array<OneD, NekDouble> D1Dx(ptsx.num_elements(),&gmat[0][0]);

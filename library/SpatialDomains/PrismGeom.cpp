@@ -276,7 +276,7 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Lcoords)
         {
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {
                 // Point inside tetrahedron
                 VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);

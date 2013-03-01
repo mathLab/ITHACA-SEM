@@ -353,11 +353,11 @@ namespace Nektar
                 int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
                 
                 Array<OneD, const NekDouble> jac  = 
-                m_fields[0]->GetExp(el)->GetGeom2D()->GetJac();
+                m_fields[0]->GetExp(el)->GetGeom2D()->GetMetricInfo()->GetJac();
                 Array<TwoD, const NekDouble> gmat = 
-                m_fields[0]->GetExp(el)->GetGeom2D()->GetGmat();
+                m_fields[0]->GetExp(el)->GetGeom2D()->GetMetricInfo()->GetGmat();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom2D()->GetGtype() 
+                if (m_fields[0]->GetExp(el)->GetGeom2D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
@@ -402,11 +402,11 @@ namespace Nektar
                 int n_points = m_fields[0]->GetExp(el)->GetTotPoints();
                 
                 Array<OneD, const NekDouble> jac =
-                m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
+                m_fields[0]->GetExp(el)->GetGeom3D()->GetMetricInfo()->GetJac();
                 Array<TwoD, const NekDouble> gmat =
-                m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
+                m_fields[0]->GetExp(el)->GetGeom3D()->GetMetricInfo()->GetGmat();
                 
-                if (m_fields[0]->GetExp(el)->GetGeom3D()->GetGtype() 
+                if (m_fields[0]->GetExp(el)->GetGeom3D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
                 {
                     for (int i = 0; i < n_points; i++)
@@ -427,9 +427,9 @@ namespace Nektar
                 else
                 {
                     Array<OneD, const NekDouble> jac =
-                    m_fields[0]->GetExp(el)->GetGeom3D()->GetJac();
+                    m_fields[0]->GetExp(el)->GetGeom3D()->GetMetricInfo()->GetJac();
                     Array<TwoD, const NekDouble> gmat = 
-                    m_fields[0]->GetExp(el)->GetGeom3D()->GetGmat();
+                    m_fields[0]->GetExp(el)->GetGeom3D()->GetMetricInfo()->GetGmat();
                     
                     for (int i = 0; i < n_points; i++)
                     {

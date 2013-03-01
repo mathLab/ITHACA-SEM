@@ -109,9 +109,11 @@ namespace Nektar
             Array<OneD, Array<OneD,NekDouble> > d1_map   (coordim);
             Array<OneD, Array<OneD,NekDouble> > d2_map   (coordim);
             Array<OneD, Array<OneD,NekDouble> > d3_map   (coordim);
-            Array<OneD, Array<OneD,NekDouble> > d1_tbasis(coordim);
-            Array<OneD, Array<OneD,NekDouble> > d2_tbasis(coordim);
-            Array<OneD, Array<OneD,NekDouble> > d3_tbasis(coordim);
+
+            m_deriv = Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(m_expDim);
+            m_deriv[0] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
+            m_deriv[1] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
+            m_deriv[2] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
 
             // Calculate local derivatives
             for(int i = 0; i < coordim; ++i)
@@ -119,9 +121,9 @@ namespace Nektar
                 d1_map[i]    = Array<OneD,NekDouble>(nqtot_map);
                 d2_map[i]    = Array<OneD,NekDouble>(nqtot_map);
                 d3_map[i]    = Array<OneD,NekDouble>(nqtot_map);
-                d1_tbasis[i] = Array<OneD,NekDouble>(nqtot_tbasis);
-                d2_tbasis[i] = Array<OneD,NekDouble>(nqtot_tbasis);
-                d3_tbasis[i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                m_deriv[0][i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                m_deriv[1][i] = Array<OneD,NekDouble>(nqtot_tbasis);
+                m_deriv[2][i] = Array<OneD,NekDouble>(nqtot_tbasis);
 
                 // Transform from coefficient space to physical space
                 Coords[i]->BwdTrans(Coords[i]->GetCoeffs(),Coords[i]->UpdatePhys());
@@ -135,24 +137,24 @@ namespace Nektar
                     (pkey1_map == pkey1_tbasis) &&
                     (pkey2_map == pkey2_tbasis) )
                 {
-                    d1_tbasis[i] = d1_map[i];
-                    d2_tbasis[i] = d2_map[i];
-                    d3_tbasis[i] = d3_map[i];
+                    m_deriv[0][i] = d1_map[i];
+                    m_deriv[1][i] = d2_map[i];
+                    m_deriv[2][i] = d3_map[i];
                 }
                 else
                 {
                     LibUtilities::Interp3D(pkey0_map,    pkey1_map,             pkey2_map,    d1_map[i],
-                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, d1_tbasis[i]);
+                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, m_deriv[0][i]);
                     LibUtilities::Interp3D(pkey0_map,    pkey1_map,             pkey2_map,    d2_map[i],
-                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, d2_tbasis[i]);
+                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, m_deriv[1][i]);
                     LibUtilities::Interp3D(pkey0_map,    pkey1_map,             pkey2_map,    d3_map[i],
-                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, d3_tbasis[i]);
+                                           pkey0_tbasis, pkey1_tbasis,          pkey2_tbasis, m_deriv[2][i]);
                 }
             }
 
             // Based upon these derivatives, calculate:
             // 1. The (determinant of the) jacobian and the differentation      metrics
-            SetUpJacGmat3D(d1_tbasis,d2_tbasis,d3_tbasis);
+            SetUpJacGmat3D(m_deriv[0],m_deriv[1],m_deriv[2]);
 
             // 2. the jacobian muliplied with the quadrature weights
             if(QuadMetrics)
@@ -190,6 +192,84 @@ namespace Nektar
             ASSERTL1(d2[0].num_elements() == nqtot,"Number of quadrature points do not match");
             ASSERTL1(d3[0].num_elements() == nqtot,"Number of quadrature points do not match");
 
+            unsigned int pts = 1;
+            unsigned int i, j, k;
+
+            // Check each derivative combination has the correct sized storage
+            // for all quadrature points.
+            for (i = 0; i < m_expDim; ++i)
+            {
+                for (j = 0; j < m_coordDim; ++j)
+                {
+                    ASSERTL1(m_deriv[i][j].num_elements() == nqtot,
+                             "Number of quadrature points do not match");
+                }
+            }
+
+            pts = (m_type == eRegular || m_type == eMovingRegular) ? 1 : nqtot;
+
+            // Jacobian is constant across the element.
+            m_jac     = Array<OneD, NekDouble>(pts,0.0);
+
+            // Number of entries corresponds to twice the coordinate
+            // dimension. Entries are constant across element so second
+            // dimension is 1.
+            m_gmat    = Array<TwoD, NekDouble>(m_expDim*m_expDim, pts, 0.0);
+
+            m_derivFactors = Array<TwoD, NekDouble>(m_expDim*m_coordDim, pts, 0.0);
+
+            Array<TwoD, NekDouble> tmp(m_expDim*m_expDim, pts, 0.0);
+
+            // Compute g_{ij} as t_i \cdot t_j
+            for (i = 0; i < m_expDim; ++i)
+            {
+                for (j = 0; j < m_expDim; ++j)
+                {
+                    for (k = 0; k < m_coordDim; ++k)
+                    {
+                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_deriv[j][k][0], 1, &tmp[m_expDim*i+j][0], 1, &tmp[m_expDim*i+j][0], 1);
+                    }
+                }
+            }
+
+            // Compute g^{ij} by computing Cofactors(A)^T
+            for (i = 0; i < m_expDim; ++i)
+            {
+                for (j = 0; j < m_expDim; ++j)
+                {
+                    int a = ((i+1)%m_expDim)*m_expDim + ((j+1)%m_expDim);
+                    int b = ((i+1)%m_expDim)*m_expDim + ((j+2)%m_expDim);
+                    int c = ((i+2)%m_expDim)*m_expDim + ((j+1)%m_expDim);
+                    int d = ((i+2)%m_expDim)*m_expDim + ((j+2)%m_expDim);
+                    int e = j*m_expDim + i;
+                    Vmath::Vvtvvtm(pts, &tmp[a][0], 1, &tmp[d][0], 1, &tmp[b][0], 1, &tmp[c][0], 1, &m_gmat[e][0], 1);
+                }
+            }
+
+            // Compute g (Jacobian squared)
+            Vmath::Vvtvvtp(pts, &tmp[0][0], 1, &m_gmat[0][0], 1, &tmp[1][0], 1, &m_gmat[m_expDim][0], 1, &m_jac[0], 1);
+            Vmath::Vvtvp  (pts, &tmp[2][0], 1, &m_gmat[2*m_expDim][0], 1, &m_jac[0], 1, &m_jac[0], 1);
+
+            for (i = 0; i < m_expDim*m_expDim; ++i)
+            {
+                Vmath::Vdiv(pts, &m_gmat[i][0], 1, &m_jac[0], 1, &m_gmat[i][0], 1);
+            }
+
+            // Sqrt jacobian
+            Vmath::Vsqrt(pts, &m_jac[0], 1, &m_jac[0], 1);
+
+            for (i = 0; i < m_expDim; ++i)
+            {
+                for (j = 0; j < m_expDim; ++j)
+                {
+                    for (k = 0; k < m_coordDim; ++k)
+                    {
+                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_gmat[m_expDim*i+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1);
+                    }
+                }
+            }
+
+/*
             if((m_type == eRegular)||(m_type == eMovingRegular))
             {
                 m_jac     = Array<OneD, NekDouble>(1,0.0);
@@ -269,6 +349,7 @@ namespace Nektar
                 Vmath::Vdiv(nqtot,&m_gmat[7][0],1,&m_jac[0],1,&m_gmat[7][0],1);
                 Vmath::Vdiv(nqtot,&m_gmat[8][0],1,&m_jac[0],1,&m_gmat[8][0],1);
             }
+*/
         }
 
 

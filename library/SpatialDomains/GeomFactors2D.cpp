@@ -177,7 +177,7 @@ namespace Nektar
             Array<OneD, Array<OneD,NekDouble> > d1_map   (coordim);
             Array<OneD, Array<OneD,NekDouble> > d2_map   (coordim);
 
-            m_deriv = Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(2);
+            m_deriv = Array<OneD, Array<OneD, Array<OneD,NekDouble> > >(m_expDim);
             m_deriv[0] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
             m_deriv[1] = Array<OneD, Array<OneD,NekDouble> >(m_coordDim);
 
@@ -280,7 +280,7 @@ namespace Nektar
 
             // Check each derivative combination has the correct sized storage
             // for all quadrature points.
-            for (i = 0; i < 2; ++i)
+            for (i = 0; i < m_expDim; ++i)
             {
                 for (j = 0; j < m_coordDim; ++j)
                 {
@@ -297,20 +297,20 @@ namespace Nektar
             // Number of entries corresponds to twice the coordinate
             // dimension. Entries are constant across element so second
             // dimension is 1.
-            m_gmat    = Array<TwoD, NekDouble>(4, pts, 0.0);
+            m_gmat    = Array<TwoD, NekDouble>(m_expDim*m_expDim, pts, 0.0);
 
-            m_derivFactors = Array<TwoD, NekDouble>(2*m_coordDim, pts, 0.0);
+            m_derivFactors = Array<TwoD, NekDouble>(m_expDim*m_coordDim, pts, 0.0);
 
-            Array<TwoD, NekDouble> tmp(4, pts, 0.0);
+            Array<TwoD, NekDouble> tmp(m_expDim*m_expDim, pts, 0.0);
 
             // Compute g_{ij} as t_i \cdot t_j
-            for (i = 0; i < 2; ++i)
+            for (i = 0; i < m_expDim; ++i)
             {
-                for (j = 0; j < 2; ++j)
+                for (j = 0; j < m_expDim; ++j)
                 {
                     for (k = 0; k < m_coordDim; ++k)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_deriv[j][k][0], 1, &tmp[2*i+j][0], 1, &tmp[2*i+j][0], 1);
+                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_deriv[j][k][0], 1, &tmp[m_expDim*i+j][0], 1, &tmp[m_expDim*i+j][0], 1);
                     }
                 }
             }
@@ -329,13 +329,13 @@ namespace Nektar
             // Sqrt jacobian
             Vmath::Vsqrt(pts, &m_jac[0], 1, &m_jac[0], 1);
 
-            for (i = 0; i < 2; ++i)
+            for (i = 0; i < m_expDim; ++i)
             {
-                for (j = 0; j < 2; ++j)
+                for (j = 0; j < m_expDim; ++j)
                 {
                     for (k = 0; k < m_coordDim; ++k)
                     {
-                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_gmat[2*i+j][0], 1, &m_derivFactors[2*k+j][0], 1, &m_derivFactors[2*k+j][0], 1);
+                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_gmat[m_expDim*i+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1, &m_derivFactors[m_expDim*k+j][0], 1);
                     }
                 }
             }

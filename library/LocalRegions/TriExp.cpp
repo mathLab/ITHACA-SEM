@@ -121,7 +121,7 @@ namespace Nektar
                 int    nquad0 = m_base[0]->GetNumPoints();
                 int    nquad1 = m_base[1]->GetNumPoints();
                 int     nqtot = nquad0*nquad1;
-                const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+                const Array<TwoD, const NekDouble>& df   = m_metricinfo->GetDerivFactors();
 
                 Array<OneD,NekDouble> diff0(2*nqtot);
                 Array<OneD,NekDouble> diff1(diff0+nqtot);
@@ -132,43 +132,40 @@ namespace Nektar
                 {
                     if(out_d0.num_elements())
                     {
-                        Vmath::Vmul  (nqtot,&gmat[0][0],1,&diff0[0],1, &out_d0[0], 1);
-                        Vmath::Vvtvp (nqtot,&gmat[1][0],1,&diff1[0],1, &out_d0[0], 1,
-                                      &out_d0[0],1);
+                        Vmath::Vmul  (nqtot,df[0],1,diff0,1, out_d0, 1);
+                        Vmath::Vvtvp (nqtot,df[1],1,diff1,1, out_d0, 1, out_d0,1);
                     }
 
                     if(out_d1.num_elements())
                     {
-                        Vmath::Vmul  (nqtot,&gmat[2][0],1,&diff0[0],1, &out_d1[0], 1);
-                        Vmath::Vvtvp (nqtot,&gmat[3][0],1,&diff1[0],1, &out_d1[0], 1,
-                                      &out_d1[0],1);
+                        Vmath::Vmul  (nqtot,df[2],1,diff0,1, out_d1, 1);
+                        Vmath::Vvtvp (nqtot,df[3],1,diff1,1, out_d1, 1, out_d1,1);
                     }
 
                     if(out_d2.num_elements())
                     {
-                        Vmath::Vmul  (nqtot,&gmat[4][0],1,&diff0[0],1, &out_d2[0], 1);
-                        Vmath::Vvtvp (nqtot,&gmat[5][0],1,&diff1[0],1, &out_d2[0], 1,
-                                      &out_d2[0],1);
+                        Vmath::Vmul  (nqtot,df[4],1,diff0,1, out_d2, 1);
+                        Vmath::Vvtvp (nqtot,df[5],1,diff1,1, out_d2, 1, out_d2,1);
                     }
                 }
                 else // regular geometry
                 {
                     if(out_d0.num_elements())
                     {
-                        Vmath::Smul (nqtot, gmat[0][0], diff0 , 1, out_d0, 1);
-                        Blas::Daxpy (nqtot, gmat[1][0], diff1 , 1, out_d0, 1);
+                        Vmath::Smul (nqtot, df[0][0], diff0, 1, out_d0, 1);
+                        Blas::Daxpy (nqtot, df[1][0], diff1, 1, out_d0, 1);
                     }
 
                     if(out_d1.num_elements())
                     {
-                        Vmath::Smul (nqtot, gmat[2][0], diff0, 1, out_d1, 1);
-                        Blas::Daxpy (nqtot, gmat[3][0], diff1, 1, out_d1, 1);
+                        Vmath::Smul (nqtot, df[2][0], diff0, 1, out_d1, 1);
+                        Blas::Daxpy (nqtot, df[3][0], diff1, 1, out_d1, 1);
                     }
 
                     if(out_d2.num_elements())
                     {
-                        Vmath::Smul (nqtot, gmat[4][0], diff0, 1, out_d2, 1);
-                        Blas::Daxpy (nqtot, gmat[5][0], diff1, 1, out_d2, 1);
+                        Vmath::Smul (nqtot, df[4][0], diff0, 1, out_d2, 1);
+                        Blas::Daxpy (nqtot, df[5][0], diff1, 1, out_d2, 1);
                     }
                 }
             }
@@ -218,7 +215,7 @@ namespace Nektar
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nqtot = nquad0*nquad1;
 
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
 
             Array<OneD,NekDouble> diff0(2*nqtot);
             Array<OneD,NekDouble> diff1(diff0+nqtot);
@@ -238,7 +235,7 @@ namespace Nektar
                     tangmat[i] = Array<OneD, NekDouble>(nqtot,0.0);
                     for (int k=0; k<(m_geom->GetCoordim()); ++k)
                     {
-                        Vmath::Vvtvp(nqtot,&gmat[2*k+i][0],1,&direction[k*nqtot],1,&tangmat[i][0],1,&tangmat[i][0],1);
+                        Vmath::Vvtvp(nqtot,&df[2*k+i][0],1,&direction[k*nqtot],1,&tangmat[i][0],1,&tangmat[i][0],1);
                     }
                 }
 
@@ -430,7 +427,7 @@ namespace Nektar
             int    nmodes0 = m_base[0]->GetNumModes();
             int    wspsize = max(max(nqtot,m_ncoeffs),nquad1*nmodes0);
 
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+            const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
 
             Array<OneD, NekDouble> tmp0 (6*wspsize);
             Array<OneD, NekDouble> tmp1 (tmp0 +   wspsize);
@@ -464,15 +461,15 @@ namespace Nektar
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-                Vmath::Vmul(nqtot,&gmat[2*dir][0],  1,&tmp0[0],   1,&tmp0[0],1);
-                Vmath::Vmul(nqtot,&gmat[2*dir+1][0],1,&tmp1[0],   1,&tmp1[0],1);
-                Vmath::Vmul(nqtot,&gmat[2*dir+1][0],1,&inarray[0],1,&tmp2[0],1);
+                Vmath::Vmul(nqtot,&df[2*dir][0],  1,&tmp0[0],   1,&tmp0[0],1);
+                Vmath::Vmul(nqtot,&df[2*dir+1][0],1,&tmp1[0],   1,&tmp1[0],1);
+                Vmath::Vmul(nqtot,&df[2*dir+1][0],1,&inarray[0],1,&tmp2[0],1);
             }
             else
             {
-                Vmath::Smul(nqtot, gmat[2*dir][0],   tmp0,    1, tmp0, 1);
-                Vmath::Smul(nqtot, gmat[2*dir+1][0], tmp1,    1, tmp1, 1);
-                Vmath::Smul(nqtot, gmat[2*dir+1][0], inarray, 1, tmp2, 1);
+                Vmath::Smul(nqtot, df[2*dir][0],   tmp0,    1, tmp0, 1);
+                Vmath::Smul(nqtot, df[2*dir+1][0], tmp1,    1, tmp1, 1);
+                Vmath::Smul(nqtot, df[2*dir+1][0], inarray, 1, tmp2, 1);
             }
             Vmath::Vadd(nqtot, tmp0, 1, tmp1, 1, tmp1, 1);
 
@@ -726,7 +723,7 @@ namespace Nektar
             int i;
             const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();
             const SpatialDomains::GeomType type = geomFactors->GetGtype();
-            const Array<TwoD, const NekDouble> & gmat = geomFactors->GetGmat();
+            const Array<TwoD, const NekDouble> & df = geomFactors->GetDerivFactors();
             const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
             int nqe = m_base[0]->GetNumPoints();
             int dim = GetCoordim();
@@ -748,19 +745,19 @@ namespace Nektar
                 case 0:
                     for(i = 0; i < GetCoordim(); ++i)
                     {
-                        Vmath::Fill(nqe,-gmat[2*i+1][0],normal[i],1);
+                        Vmath::Fill(nqe,-df[2*i+1][0],normal[i],1);
                     }
                     break;
                 case 1:
                     for(i = 0; i < GetCoordim(); ++i)
                     {
-                        Vmath::Fill(nqe,gmat[2*i+1][0] + gmat[2*i][0],normal[i],1);
+                        Vmath::Fill(nqe,df[2*i+1][0] + df[2*i][0],normal[i],1);
                     }
                         break;
                 case 2:
                     for(i = 0; i < GetCoordim(); ++i)
                     {
-                        Vmath::Fill(nqe,-gmat[2*i][0],normal[i],1);
+                        Vmath::Fill(nqe,-df[2*i][0],normal[i],1);
                     }
                     break;
                 default:
@@ -802,7 +799,7 @@ namespace Nektar
                         edgejac[j] = jac[j];
                         for(i = 0; i < GetCoordim(); ++i)
                         {
-                            normals[i*nquad0+j] = -gmat[2*i+1][j]*edgejac[j];
+                            normals[i*nquad0+j] = -df[2*i+1][j]*edgejac[j];
                         }
                     }
                     from_key = geomFactors->GetPointsKey(0);
@@ -813,7 +810,7 @@ namespace Nektar
                         edgejac[j] = jac[nquad0*j+nquad0-1];
                         for(i = 0; i < GetCoordim(); ++i)
                         {
-                            normals[i*nquad1+j] = (gmat[2*i][nquad0*j + nquad0-1] +  gmat[2*i+1][nquad0*j + nquad0-1])*edgejac[j];
+                            normals[i*nquad1+j] = (df[2*i][nquad0*j + nquad0-1] +  df[2*i+1][nquad0*j + nquad0-1])*edgejac[j];
                         }
                     }
                     from_key = geomFactors->GetPointsKey(1);
@@ -824,7 +821,7 @@ namespace Nektar
                         edgejac[j] = jac[nquad0*j];
                         for(i = 0; i < GetCoordim(); ++i)
                         {
-                            normals[i*nquad1+j] = -gmat[2*i][nquad0*j]*edgejac[j];
+                            normals[i*nquad1+j] = -df[2*i][nquad0*j]*edgejac[j];
                         }
                     }
                     from_key = geomFactors->GetPointsKey(1);
@@ -1289,7 +1286,7 @@ namespace Nektar
                     else
                     {
                         NekDouble jac = (m_metricinfo->GetJac())[0];
-                        Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
+                        Array<TwoD, const NekDouble> df = m_metricinfo->GetDerivFactors();
                         int dir;
                         switch(mkey.GetMatrixType())
                         {
@@ -1318,7 +1315,7 @@ namespace Nektar
                         int cols = deriv1.GetColumns();
 
                         DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
-                        (*WeakDeriv) = gmat[2*dir][0]*deriv0 + gmat[2*dir+1][0]*deriv1;
+                        (*WeakDeriv) = df[2*dir][0]*deriv0 + df[2*dir+1][0]*deriv1;
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,WeakDeriv);
                     }
@@ -1343,30 +1340,21 @@ namespace Nektar
                         MatrixKey lap11key(StdRegions::eLaplacian11,
                                            mkey.GetExpansionType(), *this);
 
-                        DNekMatSharedPtr lap00 = GetStdMatrix(lap00key);
-                        DNekMatSharedPtr lap01 = GetStdMatrix(lap01key);
-                        DNekMatSharedPtr lap11 = GetStdMatrix(lap11key);
+                        DNekMat &lap00 = *GetStdMatrix(lap00key);
+                        DNekMat &lap01 = *GetStdMatrix(lap01key);
+                        DNekMat &lap11 = *GetStdMatrix(lap11key);
 
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
 
-                        int rows = lap00->GetRows();
-                        int cols = lap00->GetColumns();
+                        int rows = lap00.GetRows();
+                        int cols = lap00.GetColumns();
 
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
 
-                        // Additional terms if Tri embedded in 3D coordinate system
-                        if (m_geom->GetCoordim() == 3)
-                        {
-                            (*lap) = (gmat[0][0]*gmat[0][0]+gmat[2][0]*gmat[2][0]+gmat[4][0]*gmat[4][0])* (*lap00) +
-                                (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0] + gmat[4][0]*gmat[5][0])*(*lap01 + Transpose(*lap01)) +
-                                (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0] + gmat[5][0]*gmat[5][0])* (*lap11);
-                        }
-                        else {
-                            (*lap) = (gmat[0][0]*gmat[0][0]+gmat[2][0]*gmat[2][0])* (*lap00) +
-                                (gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0])*(*lap01 + Transpose(*lap01)) +
-                                (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0])* (*lap11);
-                        }
+                        (*lap) = gmat[0][0] * lap00 +
+                                 gmat[1][0] * (lap01 + Transpose(lap01)) +
+                                 gmat[3][0] * lap11;
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,lap);
                     }
@@ -1442,7 +1430,8 @@ namespace Nektar
                     else
                     {
                         NekDouble jac = (m_metricinfo->GetJac())[0];
-                        const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+
+                        const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
                         int dir;
 
                         switch(mkey.GetMatrixType())
@@ -1472,7 +1461,7 @@ namespace Nektar
                         int cols = stdiprod1.GetColumns();
 
                         DNekMatSharedPtr mat = MemoryManager<DNekMat>::AllocateSharedPtr(rows,cols);
-                        (*mat) = gmat[2*dir][0]*stdiprod0 + gmat[2*dir+1][0]*stdiprod1;
+                        (*mat) = df[2*dir][0]*stdiprod0 + df[2*dir+1][0]*stdiprod1;
 
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
@@ -1798,7 +1787,7 @@ namespace Nektar
 
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                    const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+                    const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
                     const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
                     const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
                     // substep 1: calculate the metric terms of the collapsed coordinate
@@ -1820,59 +1809,59 @@ namespace Nektar
                     // g1 = wsp5
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
-                        Vmath::Vmul (nqtot,&gmat[0][0],1,&wsp6[0],1,&wsp8[0],1);
-                        Vmath::Vvtvp(nqtot,&gmat[1][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                        Vmath::Vmul (nqtot,&df[0][0],1,&wsp6[0],1,&wsp8[0],1);
+                        Vmath::Vvtvp(nqtot,&df[1][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
 
                         Vmath::Vmul (nqtot,&wsp8[0],   1,&wsp8[0],   1,&wsp3[0],1);
-                        Vmath::Vmul (nqtot,&gmat[1][0],1,&wsp8[0],   1,&wsp4[0],1);
-                        Vmath::Vmul (nqtot,&gmat[1][0],1,&gmat[1][0],1,&wsp5[0],1);
+                        Vmath::Vmul (nqtot,&df[1][0],1,&wsp8[0],   1,&wsp4[0],1);
+                        Vmath::Vmul (nqtot,&df[1][0],1,&df[1][0],1,&wsp5[0],1);
 
 
-                        Vmath::Vmul (nqtot,&gmat[2][0],1,&wsp6[0],1,&wsp8[0],1);
-                        Vmath::Vvtvp(nqtot,&gmat[3][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                        Vmath::Vmul (nqtot,&df[2][0],1,&wsp6[0],1,&wsp8[0],1);
+                        Vmath::Vvtvp(nqtot,&df[3][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
 
                         Vmath::Vvtvp(nqtot,&wsp8[0],   1,&wsp8[0],   1,&wsp3[0],1,&wsp3[0],1);
-                        Vmath::Vvtvp(nqtot,&gmat[3][0],1,&wsp8[0],   1,&wsp4[0],1,&wsp4[0],1);
-                        Vmath::Vvtvp(nqtot,&gmat[3][0],1,&gmat[3][0],1,&wsp5[0],1,&wsp5[0],1);
+                        Vmath::Vvtvp(nqtot,&df[3][0],1,&wsp8[0],   1,&wsp4[0],1,&wsp4[0],1);
+                        Vmath::Vvtvp(nqtot,&df[3][0],1,&df[3][0],1,&wsp5[0],1,&wsp5[0],1);
 
                         if(dim == 3)
                         {
-                            Vmath::Vmul (nqtot,&gmat[4][0],1,&wsp6[0],1,&wsp8[0],1);
-                            Vmath::Vvtvp(nqtot,&gmat[5][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                            Vmath::Vmul (nqtot,&df[4][0],1,&wsp6[0],1,&wsp8[0],1);
+                            Vmath::Vvtvp(nqtot,&df[5][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
 
                             Vmath::Vvtvp(nqtot,&wsp8[0],   1,&wsp8[0],   1,&wsp3[0],1,&wsp3[0],1);
-                            Vmath::Vvtvp(nqtot,&gmat[5][0],1,&wsp8[0],   1,&wsp4[0],1,&wsp4[0],1);
-                            Vmath::Vvtvp(nqtot,&gmat[5][0],1,&gmat[5][0],1,&wsp5[0],1,&wsp5[0],1);
+                            Vmath::Vvtvp(nqtot,&df[5][0],1,&wsp8[0],   1,&wsp4[0],1,&wsp4[0],1);
+                            Vmath::Vvtvp(nqtot,&df[5][0],1,&df[5][0],1,&wsp5[0],1,&wsp5[0],1);
                         }
                     }
                     else
                     {
-                        Vmath::Smul (nqtot,gmat[0][0],&wsp6[0],1,&wsp8[0],1);
-                        Vmath::Svtvp(nqtot,gmat[1][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                        Vmath::Smul (nqtot,df[0][0],&wsp6[0],1,&wsp8[0],1);
+                        Vmath::Svtvp(nqtot,df[1][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
 
                         Vmath::Vmul (nqtot,&wsp8[0],1,&wsp8[0],1,&wsp3[0],1);
-                        Vmath::Smul (nqtot,gmat[1][0],&wsp8[0],1,&wsp4[0],1);
+                        Vmath::Smul (nqtot,df[1][0],&wsp8[0],1,&wsp4[0],1);
 
 
-                        Vmath::Smul (nqtot,gmat[2][0],&wsp6[0],1,&wsp8[0],1);
-                        Vmath::Svtvp(nqtot,gmat[3][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                        Vmath::Smul (nqtot,df[2][0],&wsp6[0],1,&wsp8[0],1);
+                        Vmath::Svtvp(nqtot,df[3][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
 
                         Vmath::Vvtvp(nqtot,&wsp8[0],1,&wsp8[0],1,&wsp3[0],1,&wsp3[0],1);
-                        Vmath::Svtvp(nqtot,gmat[3][0],&wsp8[0],1,&wsp4[0],1,&wsp4[0],1);
+                        Vmath::Svtvp(nqtot,df[3][0],&wsp8[0],1,&wsp4[0],1,&wsp4[0],1);
 
                         if(dim == 3)
                         {
-                            Vmath::Smul (nqtot,gmat[4][0],&wsp6[0],1,&wsp8[0],1);
-                            Vmath::Svtvp(nqtot,gmat[5][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                            Vmath::Smul (nqtot,df[4][0],&wsp6[0],1,&wsp8[0],1);
+                            Vmath::Svtvp(nqtot,df[5][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
 
                             Vmath::Vvtvp(nqtot,&wsp8[0],1,&wsp8[0],1,&wsp3[0],1,&wsp3[0],1);
-                            Vmath::Svtvp(nqtot,gmat[5][0],&wsp8[0],1,&wsp4[0],1,&wsp4[0],1);
+                            Vmath::Svtvp(nqtot,df[5][0],&wsp8[0],1,&wsp4[0],1,&wsp4[0],1);
                         }
 
-                        NekDouble g2 = gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0];
+                        NekDouble g2 = df[1][0]*df[1][0] + df[3][0]*df[3][0];
                         if(dim == 3)
                         {
-                            g2 += gmat[5][0]*gmat[5][0];
+                            g2 += df[5][0]*df[5][0];
                         }
                         Vmath::Fill(nqtot,g2,&wsp5[0],1);
                     }
@@ -2002,7 +1991,8 @@ namespace Nektar
 
                 // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                 // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
+
+                const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
                 const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
                 const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
                 // substep 1: calculate the metric terms of the collapsed coordinate
@@ -2022,63 +2012,63 @@ namespace Nektar
                 // g1 = wsp5
                 if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                 {
-                    Vmath::Vmul (nqtot,&gmat[0][0],1,&wsp6[0],1,&wsp8[0],1);
-                    Vmath::Vvtvp(nqtot,&gmat[1][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                    Vmath::Vmul (nqtot,&df[0][0],1,&wsp6[0],1,&wsp8[0],1);
+                    Vmath::Vvtvp(nqtot,&df[1][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
 
                     Vmath::Vmul (nqtot,&wsp8[0],   1,&wsp8[0],   1,&wsp3[0],1);
-                    Vmath::Vmul (nqtot,&gmat[1][0],1,&wsp8[0],   1,&wsp4[0],1);
-                    Vmath::Vmul (nqtot,&gmat[1][0],1,&gmat[1][0],1,&wsp5[0],1);
+                    Vmath::Vmul (nqtot,&df[1][0],1,&wsp8[0],   1,&wsp4[0],1);
+                    Vmath::Vmul (nqtot,&df[1][0],1,&df[1][0],1,&wsp5[0],1);
 
 
-                    Vmath::Vmul (nqtot,&gmat[2][0],1,&wsp6[0],1,&wsp8[0],1);
-                    Vmath::Vvtvp(nqtot,&gmat[3][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                    Vmath::Vmul (nqtot,&df[2][0],1,&wsp6[0],1,&wsp8[0],1);
+                    Vmath::Vvtvp(nqtot,&df[3][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
 
                     Vmath::Vvtvp(nqtot,&wsp8[0],   1,&wsp8[0],   1,&wsp3[0],1,&wsp3[0],1);
-                    Vmath::Vvtvp(nqtot,&gmat[3][0],1,&wsp8[0],   1,&wsp4[0],1,&wsp4[0],1);
-                    Vmath::Vvtvp(nqtot,&gmat[3][0],1,&gmat[3][0],1,&wsp5[0],1,&wsp5[0],1);
+                    Vmath::Vvtvp(nqtot,&df[3][0],1,&wsp8[0],   1,&wsp4[0],1,&wsp4[0],1);
+                    Vmath::Vvtvp(nqtot,&df[3][0],1,&df[3][0],1,&wsp5[0],1,&wsp5[0],1);
 
                     if(dim == 3)
                     {
-                        Vmath::Vmul (nqtot,&gmat[4][0],1,&wsp6[0],1,&wsp8[0],1);
-                        Vmath::Vvtvp(nqtot,&gmat[5][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                        Vmath::Vmul (nqtot,&df[4][0],1,&wsp6[0],1,&wsp8[0],1);
+                        Vmath::Vvtvp(nqtot,&df[5][0],1,&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
 
                         Vmath::Vvtvp(nqtot,&wsp8[0],   1,&wsp8[0],   1,&wsp3[0],1,&wsp3[0],1);
-                        Vmath::Vvtvp(nqtot,&gmat[5][0],1,&wsp8[0],   1,&wsp4[0],1,&wsp4[0],1);
-                        Vmath::Vvtvp(nqtot,&gmat[5][0],1,&gmat[5][0],1,&wsp5[0],1,&wsp5[0],1);
+                        Vmath::Vvtvp(nqtot,&df[5][0],1,&wsp8[0],   1,&wsp4[0],1,&wsp4[0],1);
+                        Vmath::Vvtvp(nqtot,&df[5][0],1,&df[5][0],1,&wsp5[0],1,&wsp5[0],1);
                     }
                 }
                 else
                 {
                     // g_0
-                    Vmath::Smul (nqtot,gmat[0][0],&wsp6[0],1,&wsp8[0],1);
-                    Vmath::Svtvp(nqtot,gmat[1][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                    Vmath::Smul (nqtot,df[0][0],&wsp6[0],1,&wsp8[0],1);
+                    Vmath::Svtvp(nqtot,df[1][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
                     Vmath::Vmul (nqtot,&wsp8[0],1,&wsp8[0],1,&wsp3[0],1);
 
                     // g_1
-                    Vmath::Smul (nqtot,gmat[1][0],&wsp8[0],1,&wsp4[0],1);
+                    Vmath::Smul (nqtot,df[1][0],&wsp8[0],1,&wsp4[0],1);
 
                     // g_0
-                    Vmath::Smul (nqtot,gmat[2][0],&wsp6[0],1,&wsp8[0],1);
-                    Vmath::Svtvp(nqtot,gmat[3][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                    Vmath::Smul (nqtot,df[2][0],&wsp6[0],1,&wsp8[0],1);
+                    Vmath::Svtvp(nqtot,df[3][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
                     Vmath::Vvtvp(nqtot,&wsp8[0],1,&wsp8[0],1,&wsp3[0],1,&wsp3[0],1);
 
                     // g_1
-                    Vmath::Svtvp(nqtot,gmat[3][0],&wsp8[0],1,&wsp4[0],1,&wsp4[0],1);
+                    Vmath::Svtvp(nqtot,df[3][0],&wsp8[0],1,&wsp4[0],1,&wsp4[0],1);
 
                     if(dim == 3)
                     {
-                        Vmath::Smul (nqtot,gmat[4][0],&wsp6[0],1,&wsp8[0],1);
-                        Vmath::Svtvp(nqtot,gmat[5][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
+                        Vmath::Smul (nqtot,df[4][0],&wsp6[0],1,&wsp8[0],1);
+                        Vmath::Svtvp(nqtot,df[5][0],&wsp7[0],1,&wsp8[0],1,&wsp8[0],1);
 
                         Vmath::Vvtvp(nqtot,&wsp8[0],1,&wsp8[0],1,&wsp3[0],1,&wsp3[0],1);
-                        Vmath::Svtvp(nqtot,gmat[5][0],&wsp8[0],1,&wsp4[0],1,&wsp4[0],1);
+                        Vmath::Svtvp(nqtot,df[5][0],&wsp8[0],1,&wsp4[0],1,&wsp4[0],1);
                     }
 
                     // g_2
-                    NekDouble g2 = gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0];
+                    NekDouble g2 = df[1][0]*df[1][0] + df[3][0]*df[3][0];
                     if(dim == 3)
                     {
-                        g2 += gmat[5][0]*gmat[5][0];
+                        g2 += df[5][0]*df[5][0];
                     }
                     Vmath::Fill(nqtot,g2,&wsp5[0],1);
                 }

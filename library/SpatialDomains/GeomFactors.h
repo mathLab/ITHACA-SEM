@@ -120,6 +120,8 @@ namespace Nektar
                 OneD, const Array<OneD, Array<OneD, NekDouble> > > 
                     &GetDeriv() const;
 
+            inline const Array<TwoD, const NekDouble> &GetDerivFactors() const;
+
             /// Return the number of dimensions of the coordinate system.
             inline int GetCoordim() const;
 
@@ -274,6 +276,8 @@ namespace Nektar
             /// Array of derivatives of size (m_expDim)x(mCoordim)x(nq)
             Array<OneD,Array<OneD,Array<OneD,NekDouble> > > m_deriv;
 
+            Array<TwoD,NekDouble> m_derivFactors;
+
             /// Array of size (m_coordDim-1)x(m_coordDim x nq).
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tangents;
 
@@ -363,6 +367,13 @@ namespace Nektar
             &GeomFactors::GetDeriv() const
         {
             return m_deriv;
+        }
+
+        /// Return the derivative factors matrix.
+        inline const Array<TwoD, const NekDouble>
+            &GeomFactors::GetDerivFactors() const
+        {
+            return m_derivFactors;
         }
 
         /// Return the number of dimensions of the coordinate system.

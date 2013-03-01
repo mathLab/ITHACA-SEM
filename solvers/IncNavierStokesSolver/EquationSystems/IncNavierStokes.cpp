@@ -1100,7 +1100,7 @@ namespace Nektar
                 Array<OneD, const NekDouble> jac  = 
                     m_fields[0]->GetExp(el)->GetGeom2D()->GetJac();
                 Array<TwoD, const NekDouble> gmat = 
-                    m_fields[0]->GetExp(el)->GetGeom2D()->GetGmat();
+                    m_fields[0]->GetExp(el)->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                 
                 if (m_fields[0]->GetExp(el)->GetGeom2D()->GetGtype() 
                     == SpatialDomains::eDeformed)

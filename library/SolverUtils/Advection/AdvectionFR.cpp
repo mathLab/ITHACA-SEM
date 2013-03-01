@@ -915,14 +915,14 @@ namespace Nektar
                             GetTotPoints();
                             phys_offset = fields[0]->GetPhys_Offset(n);
                             
-                            jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
+                            jac  = fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetJac();
+                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                             
                             // Temporary vectors
                             Array<OneD, NekDouble> f_hat(nLocalSolutionPts);
                             Array<OneD, NekDouble> g_hat(nLocalSolutionPts);
 
-                            if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype()
+                            if (fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetGtype()
                                 == SpatialDomains::eDeformed)
                             {
                                 for (j = 0; j < nLocalSolutionPts; j++)
@@ -991,10 +991,10 @@ namespace Nektar
                             GetExp(n)->GetTotPoints();
                             phys_offset = fields[0]->GetPhys_Offset(n);
                             
-                            jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
+                            jac  = fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetJac();
+                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                             
-                            if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype() 
+                            if (fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetGtype()
                                 == SpatialDomains::eDeformed)
                             {
                                 for (j = 0; j < nLocalSolutionPts; ++j)

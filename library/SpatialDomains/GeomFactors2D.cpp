@@ -273,32 +273,73 @@ namespace Nektar
                      "The dimension of array d2 does not match the coordinate "
                      "dimension");
 
-            int nqtot = m_pointsKey[0].GetNumPoints() *
+            unsigned int nqtot = m_pointsKey[0].GetNumPoints() *
                         m_pointsKey[1].GetNumPoints();
+            unsigned int pts = 1;
+            unsigned int i, j, k;
 
             // Check each derivative combination has the correct sized storage
             // for all quadrature points.
-            for (int i = 0; i < 2; ++i)
+            for (i = 0; i < 2; ++i)
             {
-                for (int j = 0; j < m_coordDim; ++j)
+                for (j = 0; j < m_coordDim; ++j)
                 {
                     ASSERTL1(m_deriv[i][j].num_elements() == nqtot,
                              "Number of quadrature points do not match");
                 }
             }
 
-            // Proceed differently depending on whether the geometry is
-            // regular or deformed.
-            if((m_type == eRegular)||(m_type == eMovingRegular))
+            pts = (m_type == eRegular || m_type == eMovingRegular) ? 1 : nqtot;
+
+            // Jacobian is constant across the element.
+            m_jac     = Array<OneD, NekDouble>(pts,0.0);
+
+            // Number of entries corresponds to twice the coordinate
+            // dimension. Entries are constant across element so second
+            // dimension is 1.
+            m_gmat    = Array<TwoD, NekDouble>(4, pts, 0.0);
+
+            m_derivFactors = Array<TwoD, NekDouble>(2*m_coordDim, pts, 0.0);
+
+            Array<TwoD, NekDouble> tmp(4, pts, 0.0);
+
+            // Compute g_{ij} as t_i \cdot t_j
+            for (i = 0; i < 2; ++i)
             {
-                // Jacobian is constant across the element.
-                m_jac     = Array<OneD, NekDouble>(1,0.0);
+                for (j = 0; j < 2; ++j)
+                {
+                    for (k = 0; k < m_coordDim; ++k)
+                    {
+                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_deriv[j][k][0], 1, &tmp[2*i+j][0], 1, &tmp[2*i+j][0], 1);
+                    }
+                }
+            }
 
-                // Number of entries corresponds to twice the coordinate
-                // dimension. Entries are constant across element so second
-                // dimension is 1.
-                m_gmat    = Array<TwoD, NekDouble>(2*m_coordDim,1,0.0);
+            // Compute g (Jacobian squared)
+            Vmath::Vvtvvtm(pts, &tmp[0][0], 1, &tmp[3][0], 1, &tmp[1][0], 1, &tmp[2][0], 1, &m_jac[0], 1);
 
+            // Compute g^{ij}
+            Vmath::Vdiv(pts, &tmp[3][0], 1, &m_jac[0], 1, &m_gmat[0][0], 1);
+            Vmath::Vdiv(pts, &tmp[1][0], 1, &m_jac[0], 1, &m_gmat[1][0], 1);
+            Vmath::Vdiv(pts, &tmp[2][0], 1, &m_jac[0], 1, &m_gmat[2][0], 1);
+            Vmath::Vdiv(pts, &tmp[0][0], 1, &m_jac[0], 1, &m_gmat[3][0], 1);
+            Vmath::Smul (pts, -1.0, &m_gmat[1][0], 1, &m_gmat[1][0], 1);
+            Vmath::Smul (pts, -1.0, &m_gmat[2][0], 1, &m_gmat[2][0], 1);
+
+            // Sqrt jacobian
+            Vmath::Vsqrt(pts, &m_jac[0], 1, &m_jac[0], 1);
+
+            for (i = 0; i < 2; ++i)
+            {
+                for (j = 0; j < 2; ++j)
+                {
+                    for (k = 0; k < m_coordDim; ++k)
+                    {
+                        Vmath::Vvtvp(pts, &m_deriv[i][k][0], 1, &m_gmat[2*i+j][0], 1, &m_derivFactors[2*k+j][0], 1, &m_derivFactors[2*k+j][0], 1);
+                    }
+                }
+            }
+            /*
                 if(m_coordDim == 2) // assume g = [0,0,1]
                 {
                     // Compute Jacobian
@@ -440,6 +481,7 @@ namespace Nektar
                     Vmath::Vsqrt(nqtot,&m_jac[0],1,&m_jac[0],1);
                 }
             }
+            */
         }
 
 
@@ -1082,7 +1124,7 @@ namespace Nektar
             ASSERTL1((m_coordDim == 2)||(m_coordDim <= 3),
                      "The coordinate dimension should be equal to two or three"
                      "for two-dimensional elements");
-
+ASSERTL0(false, "Fix Laplacian metrics");
             int i;
             int nquad0 = m_pointsKey[0].GetNumPoints();
             int nquad1 = m_pointsKey[1].GetNumPoints();

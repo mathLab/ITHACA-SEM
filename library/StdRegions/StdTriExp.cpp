@@ -50,11 +50,11 @@ namespace Nektar
         StdTriExp::StdTriExp(
             const LibUtilities::BasisKey &Ba, 
             const LibUtilities::BasisKey &Bb) :
-            StdExpansion (StdTriData::getNumberOfCoefficients(
+            StdExpansion (LibUtilities::StdTriData::getNumberOfCoefficients(
                               Ba.GetNumModes(),
                               Bb.GetNumModes()),
                           2,Ba,Bb),
-            StdExpansion2D(StdTriData::getNumberOfCoefficients(
+            StdExpansion2D(LibUtilities::StdTriData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes()),
                            Ba,Bb)
@@ -316,7 +316,7 @@ namespace Nektar
             v_IProductWRTBase(inarray,outarray);
             
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
+            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
             
             // copy inarray in case inarray == outarray
@@ -385,7 +385,7 @@ namespace Nektar
             Array<OneD, NekDouble> tmp0(m_ncoeffs);
             Array<OneD, NekDouble> tmp1(m_ncoeffs);
                 
-            StdMatrixKey      masskey(eMass,DetExpansionType(),*this);
+            StdMatrixKey      masskey(eMass,DetShapeType(),*this);
             MassMatrixOp(outarray,tmp0,masskey);
             v_IProductWRTBase(inarray,tmp1);
                 
@@ -475,7 +475,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             int nq = GetTotPoints();
-            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
             
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -574,7 +574,7 @@ namespace Nektar
                 }
             }  
 
-            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
  
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -749,9 +749,9 @@ namespace Nektar
             return 3;
         }
 
-        ExpansionType StdTriExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdTriExp::v_DetShapeType() const
         {
-            return eTriangle;
+            return LibUtilities::eTriangle;
         }
         
         int StdTriExp::v_NumBndryCoeffs() const
@@ -806,7 +806,7 @@ namespace Nektar
             const std::vector<unsigned int> &nummodes, 
             int                             &modes_offset)
         {
-            int nmodes = StdRegions::StdTriData::getNumberOfCoefficients(
+            int nmodes = LibUtilities::StdTriData::getNumberOfCoefficients(
                 nummodes[modes_offset],
                 nummodes[modes_offset+1]);
             modes_offset += 2;
@@ -1613,7 +1613,6 @@ namespace Nektar
         {
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();
-            int qtot = qa*qb;
             int nmodes_a = m_base[0]->GetNumModes();
             int nmodes_b = m_base[1]->GetNumModes();
 

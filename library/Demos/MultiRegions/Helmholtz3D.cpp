@@ -167,7 +167,7 @@ int main(int argc, char *argv[])
             out += "_P" + boost::lexical_cast<string>(vComm->GetRank());
         }
         out += ".fld";
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef =
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef =
             Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
             FieldDef[i]->m_fields.push_back("u");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        graph3D->Write(out, FieldDef, FieldData);
+        LibUtilities::Write(out, FieldDef, FieldData);
         //-----------------------------------------------
 
         if(ex_sol)

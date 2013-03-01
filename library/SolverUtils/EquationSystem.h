@@ -40,6 +40,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/FieldIO.h>
 #include <SpatialDomains/SpatialData.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
@@ -292,7 +293,7 @@ namespace Nektar
             
 
             /// Get hold of FieldInfoMap so it can be updated
-            SOLVER_UTILS_EXPORT inline SpatialDomains::FieldMetaDataMap 
+            SOLVER_UTILS_EXPORT inline LibUtilities::FieldMetaDataMap 
                 &UpdateFieldMetaDataMap();
 
             /// Return final time
@@ -456,7 +457,7 @@ namespace Nektar
             Array<OneD, bool>                           m_checkIfSystemSingular;
             
             /// Map to identify relevant solver info to dump in output fields
-            SpatialDomains::FieldMetaDataMap            m_fieldMetaDataMap;
+            LibUtilities::FieldMetaDataMap            m_fieldMetaDataMap;
 
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;

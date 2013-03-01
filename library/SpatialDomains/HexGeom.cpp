@@ -45,13 +45,13 @@ namespace Nektar
     {
         HexGeom::HexGeom()
         {
-            m_geomShapeType = eHexahedron;
+            m_shapeType = LibUtilities::eHexahedron;
         }
 
         HexGeom::HexGeom(const QuadGeomSharedPtr faces[]):
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_geomShapeType = eHexahedron;
+            m_shapeType = LibUtilities::eHexahedron;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+HexGeom::kNfaces);

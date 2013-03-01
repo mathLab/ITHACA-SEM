@@ -237,7 +237,7 @@ namespace Nektar
 	        StdQuadExp::v_IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
+                StdMatrixKey     masskey(eInvMass,DetShapeType(),*this);
                 DNekMatSharedPtr matsys = GetStdMatrix(masskey);
 
                 // copy inarray in case inarray == outarray
@@ -308,7 +308,7 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp0(m_ncoeffs);
                 Array<OneD, NekDouble> tmp1(m_ncoeffs);
                 
-                StdMatrixKey      masskey(eMass,DetExpansionType(),*this);
+                StdMatrixKey   masskey(eMass,DetShapeType(),*this);
                 MassMatrixOp(outarray,tmp0,masskey);
                 IProductWRTBase(inarray,tmp1);
                 
@@ -412,7 +412,7 @@ namespace Nektar
                              Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
             
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -475,7 +475,7 @@ namespace Nektar
                 mtype = eIProductWRTDerivBase0;
             } 
             
-            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
  
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -687,9 +687,9 @@ namespace Nektar
 
         }
         
-              ExpansionType StdQuadExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdQuadExp::v_DetShapeType() const
         {
-            return eQuadrilateral;
+            return LibUtilities::eQuadrilateral;
         };
 
 
@@ -1287,9 +1287,9 @@ namespace Nektar
             case eFwdTrans:
                 {
                     Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
-                    StdMatrixKey iprodkey(eIProductWRTBase,DetExpansionType(),*this);
+                    StdMatrixKey iprodkey(eIProductWRTBase,DetShapeType(),*this);
                     DNekMat &Iprod = *GetStdMatrix(iprodkey);
-                    StdMatrixKey imasskey(eInvMass,DetExpansionType(),*this);
+                    StdMatrixKey imasskey(eInvMass,DetShapeType(),*this);
                     DNekMat &Imass = *GetStdMatrix(imasskey);
                     
                     (*Mat) = Imass*Iprod;
@@ -1405,7 +1405,6 @@ namespace Nektar
             // Generate an orthonogal expansion
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();
-            int qtot = qa*qb;
             int nmodes_a = m_base[0]->GetNumModes();
             int nmodes_b = m_base[1]->GetNumModes();
             // Declare orthogonal basis. 

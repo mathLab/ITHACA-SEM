@@ -39,7 +39,7 @@
 
 #include<map>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>  // for Array, etc
-
+#include <LibUtilities/BasicUtils/ShapeType.hpp> 
 
 namespace Nektar
 {
@@ -231,49 +231,6 @@ namespace Nektar
         typedef std::map<ConstFactorType, NekDouble> ConstFactorMap;
         static ConstFactorMap NullConstFactorMap;
 
-        /** enum list of StdExpansion regions */
-        enum ExpansionType
-        {
-            eNoExpansionType,
-            eSegment,
-            eTriangle,
-            eQuadrilateral,
-            eTetrahedron,
-            ePyramid,
-            ePrism,
-            eHexahedron,
-            ePoint,
-            SIZE_ExpansionType
-        };
-
-
-        const char* const ExpansionTypeMap[] =
-        {
-            "NoExpansionType",
-            "Segment",
-            "Triangle",
-            "Quadrilateral",
-            "Tetrahedron",
-            "Pyramid",
-            "Prism",
-            "Hexahedron",
-            "Point"
-        };
-
-		
-        // Hold the dimension of each of the types of shapes.
-        const unsigned int ExpansionTypeDimMap[SIZE_ExpansionType] =
-        {
-            0,  // Unknown
-            1,  // eSegment
-            2,  // eTriangle
-            2,  // eQuadrilateral
-            3,  // eTetrahedron
-            3,  // ePyramid
-            3,  // ePrism
-            3,  // eHexahedron
-        };
-		
         enum IndexMapType
             {
                 eEdgeToElement,

@@ -99,7 +99,7 @@ namespace Nektar
                         (*m_exp).push_back(tet);
                     }
 
-                    m_ncoeffs += StdRegions::StdTetData::getNumberOfCoefficients(TBa.GetNumModes(), TBb.GetNumModes(), TBc.GetNumModes());
+                    m_ncoeffs += LibUtilities::StdTetData::getNumberOfCoefficients(TBa.GetNumModes(), TBb.GetNumModes(), TBc.GetNumModes());
                     
                     m_npoints += TBa.GetNumPoints()*TBb.GetNumPoints()*TBc.GetNumPoints();
                 }
@@ -427,12 +427,12 @@ namespace Nektar
 
             for(int i = 0; i < GetExpSize(); ++i)
             {
-                switch ((*m_exp)[i]->DetExpansionType())
+                switch ((*m_exp)[i]->DetShapeType())
                 {
-                    case StdRegions::eTetrahedron:  NumShape[0]++; break;
-                    case StdRegions::ePyramid:      NumShape[1]++; break;
-                    case StdRegions::ePrism:        NumShape[2]++; break;
-                    case StdRegions::eHexahedron:   NumShape[3]++; break;
+                    case LibUtilities::eTetrahedron:  NumShape[0]++; break;
+                    case LibUtilities::ePyramid:      NumShape[1]++; break;
+                    case LibUtilities::ePrism:        NumShape[2]++; break;
+                    case LibUtilities::eHexahedron:   NumShape[3]++; break;
                     default:
                         ASSERTL0(false, "Unknown expansion type.");
                         break;

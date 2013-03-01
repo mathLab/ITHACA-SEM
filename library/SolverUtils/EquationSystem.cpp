@@ -88,10 +88,10 @@ namespace Nektar
             : m_comm (pSession->GetComm()),
               m_session (pSession),
               m_lambda (0),
-              m_fieldMetaDataMap(SpatialDomains::NullFieldMetaDataMap)
+              m_fieldMetaDataMap(LibUtilities::NullFieldMetaDataMap)
         {
         }
-
+        
         /**
          * @brief Initialisation object for EquationSystem.
          */
@@ -756,12 +756,12 @@ namespace Nektar
 #if 0 
                 ImportFld(filename,m_fields);
 #else
-                std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
                 
-                m_graph->Import(filename,FieldDef,FieldData);
+                LibUtilities::Import(filename,FieldDef,FieldData);
                 
                 int idx = -1;
                 
@@ -1202,9 +1202,9 @@ namespace Nektar
             std::string pInfile, 
             SpatialDomains::MeshGraphSharedPtr pGraph)
         {
-    	    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+    	    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
     	    std::vector<std::vector<NekDouble>   > FieldData;
-    	    pGraph->Import(pInfile, FieldDef,FieldData);
+            LibUtilities::Import(pInfile, FieldDef,FieldData);
        	    int nvar= m_spacedim;
             
       	    // Copy data to m_velocity
@@ -1805,7 +1805,7 @@ namespace Nektar
             Array<OneD, std::string> &variables)
         {
 
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = field->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -1826,7 +1826,7 @@ namespace Nektar
                 m_fieldMetaDataMap["Time"] =  m_time; 
             }
 
-            m_graph->Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
+            LibUtilities::Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
         }
 
         /**
@@ -1839,10 +1839,10 @@ namespace Nektar
             const std::string &infile, 
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
@@ -1875,10 +1875,10 @@ namespace Nektar
             MultiRegions::ExpListSharedPtr &pField, 
             std::string &pFieldName)
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
             int idx = -1;
 
             Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
@@ -1918,10 +1918,10 @@ namespace Nektar
             ASSERTL0(fieldStr.size() <= coeffs.num_elements(),
                      "length of fieldstr should be the same as pFields");
         
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
         
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)

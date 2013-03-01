@@ -90,8 +90,6 @@ namespace Nektar
             NekDouble time,
             NekDouble lambda);
 
-
-        virtual void v_PrintSummary(std::ostream &out);
     private:
         NekDouble m_waveFreq;
         NekDouble m_epsilon;

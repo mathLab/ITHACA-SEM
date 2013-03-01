@@ -787,12 +787,12 @@ namespace Nektar
                             = m_session->GetFunctionFilename("InitialConditions", 
                                                              m_session->GetVariable(i));
 
-                        m_graph->ImportFieldMetaData(filename,m_fieldMetaDataMap);
+                        LibUtilities::ImportFieldMetaData(filename,m_fieldMetaDataMap);
                         
                         // check to see if time defined
-                        if(m_fieldMetaDataMap != SpatialDomains::NullFieldMetaDataMap)
+                        if(m_fieldMetaDataMap != LibUtilities::NullFieldMetaDataMap)
                         {
-                            SpatialDomains::FieldMetaDataMap::iterator iter; 
+                            LibUtilities::FieldMetaDataMap::iterator iter; 
                             
                             iter = m_fieldMetaDataMap.find("Time");
                             if(iter != m_fieldMetaDataMap.end())

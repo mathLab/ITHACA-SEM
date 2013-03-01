@@ -19,14 +19,14 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import fieldfile.
     string fieldfile(argv[argc-2]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graph.Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
 
     vector<vector<NekDouble> > combineddata;
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> newfielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> newfielddef;
 
     //----------------------------------------------
     // put mean data consecutively 
@@ -51,10 +51,10 @@ int main(int argc, char *argv[])
             int ncoeffs;
             switch(fielddef[i]->m_shapeType)
             {
-            case SpatialDomains::eTriangle:
-                ncoeffs = StdRegions::StdTriData::getNumberOfCoefficients(fielddef[i]->m_numModes[0], fielddef[i]->m_numModes[1]);
+            case  LibUtilities::eTriangle:
+                ncoeffs = LibUtilities::StdTriData::getNumberOfCoefficients(fielddef[i]->m_numModes[0], fielddef[i]->m_numModes[1]);
                 break;
-            case SpatialDomains::eQuadrilateral:
+            case LibUtilities::eQuadrilateral:
                 ncoeffs = fielddef[i]->m_numModes[0]*fielddef[i]->m_numModes[1];
                 break;
             default:
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
 
     //-----------------------------------------------
     // Write out datafile. 
-    graph.Write(argv[argc-1], newfielddef, combineddata);
+    LibUtilities::Write(argv[argc-1], newfielddef, combineddata);
     //-----------------------------------------------
 
     return 0;

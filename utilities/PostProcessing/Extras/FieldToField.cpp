@@ -22,13 +22,11 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-
-
     void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
-    	        vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef,
-		LibUtilities::SessionReaderSharedPtr &session,
-		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
-                Array<OneD, std::string> variables, bool homogeneous);
+                   vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef,
+                   LibUtilities::SessionReaderSharedPtr &session,
+                   Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
+                   Array<OneD, std::string> variables, bool homogeneous);
     void Readflddef(string fieldfile, 
                     Array<OneD, std::string> &variables, bool &homogeneous);
 
@@ -69,14 +67,14 @@ int main(int argc, char *argv[])
     filenames0.push_back(meshfile0);
     LibUtilities::SessionReaderSharedPtr vSession
             = LibUtilities::SessionReader::CreateInstance(argc, argv, filenames0);
-            //= LibUtilities::SessionReader::CreateInstance(2, argv);
+    //= LibUtilities::SessionReader::CreateInstance(2, argv);
     // Read in mesh from input file0
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(meshfile0);
     //----------------------------------------------          
     // Import fieldfile0.
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile0,fielddef,fielddata);
+    LibUtilities::Import(fieldfile0,fielddef,fielddata);
     //----------------------------------------------    
 
     //read info from fldfile
@@ -165,7 +163,7 @@ int main(int argc, char *argv[])
     //remark: homo cases malloc() error or  segmentation fault..
     //remember: there is static cnt in stfields function to define 
     // the homo quantities only for the mesh0 case
-  	    
+    
     graphShPt1 = SpatialDomains::MeshGraph::Read(meshfile1);  
 
 
@@ -287,10 +285,10 @@ int main(int argc, char *argv[])
 
 	// Define Expansion       		
         void SetFields(SpatialDomains::MeshGraphSharedPtr &mesh,
-    	        vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef,
-		LibUtilities::SessionReaderSharedPtr &session,
-		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
-                Array<OneD, std::string> variables, bool homogeneous)
+                       vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef,
+                       LibUtilities::SessionReaderSharedPtr &session,
+                       Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables,
+                       Array<OneD, std::string> variables, bool homogeneous)
 	{
                 //session reader stuff has to be evaluated only from the
 		// first session which refers to mesh0
@@ -677,83 +675,78 @@ cout<<"new val="<<field1->GetPlane(1)->UpdatePhys()[r]<<endl;
     	                      Array<OneD, NekDouble> x1,
     	                      Array<OneD, NekDouble> y1)
         {
-       	       NekDouble x0min,x0max,y0min, y0max;
-       	       NekDouble x1min,x1max,y1min, y1max;       	       
-       	       NekDouble tol = 0.0000001;
-               NekDouble tol1 = 0.00001;
-       	       x0min = Vmath::Vmin(x0.num_elements(),x0,1);
-       	       x0max = Vmath::Vmax(x0.num_elements(),x0,1);
-       	       y0min = Vmath::Vmin(y0.num_elements(),y0,1);
-       	       y0max = Vmath::Vmax(y0.num_elements(),y0,1);
-       	       
-       	       x1min = Vmath::Vmin(x1.num_elements(),x1,1);
-       	       x1max = Vmath::Vmax(x1.num_elements(),x1,1);
-       	       y1min = Vmath::Vmin(y1.num_elements(),y1,1);
-       	       y1max = Vmath::Vmax(y1.num_elements(),y1,1);       	       
-
-
-int Ixmin1 = Vmath::Imin(x1.num_elements(),x1,1);
-cout<<std::setprecision(8)<<"x0max="<<x0max<<endl;
-cout<<std::setprecision(8)<<"x1max="<<x1max<<endl;
-cout<<std::setprecision(8)<<"x0min="<<x0min<<endl;
-cout<<std::setprecision(8)<<"x1min="<<x1min<<"   Ixmin1="<<Ixmin1<<"   y_xmin="<<y1[Ixmin1]<<endl;
-cout<<std::setprecision(8)<<"y0max="<<y0max<<endl;
-cout<<std::setprecision(8)<<"y1max="<<y1max<<endl;
-cout<<"abs(x0min-x1min )="<<abs(x0min-x1min )<<endl;
-cout<<"abs(x0max-x1max)="<<abs(x0max-x1max)<<endl;
-cout<<"abs(y0min-y1min)="<<abs(y0min-y1min)<<endl;
-cout<<"abs(y0max-y1max)="<<abs(y0max-y1max)<<endl;
-
-               if(  abs(x0min-x1min )< tol1
-                    && abs(x0max-x1max)< tol1
-               	    && abs(y0min-y1min)< tol1
-                    && abs(y0max-y1max)< tol1
+            NekDouble x0min,x0max,y0min, y0max;
+            NekDouble x1min,x1max,y1min, y1max;       	       
+            NekDouble tol = 0.0000001;
+            NekDouble tol1 = 0.00001;
+            x0min = Vmath::Vmin(x0.num_elements(),x0,1);
+            x0max = Vmath::Vmax(x0.num_elements(),x0,1);
+            y0min = Vmath::Vmin(y0.num_elements(),y0,1);
+            y0max = Vmath::Vmax(y0.num_elements(),y0,1);
+       	    
+            x1min = Vmath::Vmin(x1.num_elements(),x1,1);
+            x1max = Vmath::Vmax(x1.num_elements(),x1,1);
+            y1min = Vmath::Vmin(y1.num_elements(),y1,1);
+            y1max = Vmath::Vmax(y1.num_elements(),y1,1);       	       
+            
+            
+            int Ixmin1 = Vmath::Imin(x1.num_elements(),x1,1);
+            cout<<std::setprecision(8)<<"x0max="<<x0max<<endl;
+            cout<<std::setprecision(8)<<"x1max="<<x1max<<endl;
+            cout<<std::setprecision(8)<<"x0min="<<x0min<<endl;
+            cout<<std::setprecision(8)<<"x1min="<<x1min<<"   Ixmin1="<<Ixmin1<<"   y_xmin="<<y1[Ixmin1]<<endl;
+            cout<<std::setprecision(8)<<"y0max="<<y0max<<endl;
+            cout<<std::setprecision(8)<<"y1max="<<y1max<<endl;
+            cout<<"abs(x0min-x1min )="<<abs(x0min-x1min )<<endl;
+            cout<<"abs(x0max-x1max)="<<abs(x0max-x1max)<<endl;
+            cout<<"abs(y0min-y1min)="<<abs(y0min-y1min)<<endl;
+            cout<<"abs(y0max-y1max)="<<abs(y0max-y1max)<<endl;
+            
+            if(  abs(x0min-x1min )< tol1
+                 && abs(x0max-x1max)< tol1
+                 && abs(y0min-y1min)< tol1
+                 && abs(y0max-y1max)< tol1
                  )
-               {
-                   if(abs(x0min-x1min )> tol
-                    || abs(x0max-x1max)> tol
-               	    || abs(y0min-y1min)> tol
-                    || abs(y0max-y1max)> tol  )
-                   {
-                        cout<<"Warning: mesh boundary points differ more than 10^-7"<<endl;
-                   }
-
-               	   return true;                  
-               }
-               else
-               { 
-               	   return false;
-               }
-               	      
-
-       }       	       
+            {
+                if(abs(x0min-x1min )> tol
+                   || abs(x0max-x1max)> tol
+                   || abs(y0min-y1min)> tol
+                   || abs(y0max-y1max)> tol  )
+                {
+                    cout<<"Warning: mesh boundary points differ more than 10^-7"<<endl;
+                }
+                
+                return true;                  
+            }
+            else
+            { 
+                return false;
+            }            
+        }
 
 
-	void Writefield(LibUtilities::SessionReaderSharedPtr vSession,
-                    Array<OneD, std::string> &variables,
-    	            string fieldfile, SpatialDomains::MeshGraphSharedPtr &graph,  	    
+void Writefield(LibUtilities::SessionReaderSharedPtr vSession,
+                Array<OneD, std::string> &variables,
+                string fieldfile, SpatialDomains::MeshGraphSharedPtr &graph,  	    
     	            Array<OneD, MultiRegions::ExpListSharedPtr> &outfield)
     	{
     		string var;
-    		std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+    		std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
     			= outfield[0]->GetFieldDefinitions();  			
     		std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());    		
     		Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(outfield.num_elements());   	
 		
                 for(int j=0; j< fieldcoeffs.num_elements(); ++j)
 		{  
-                        if(
-                              //vSession->DefinesSolverInfo("HOMOGENEOUS")
-                              FieldDef[0]->m_numHomogeneousDir == 1
-
-                          )
-                     {
-                         //plane 0
-                         outfield[j]->GetPlane(0)->FwdTrans_IterPerExp(outfield[j]->GetPlane(0)->GetPhys(),outfield[j]->GetPlane(0)->UpdateCoeffs());
-
-                         //plane 1
-                         outfield[j]->GetPlane(1)->FwdTrans_IterPerExp(outfield[j]->GetPlane(1)->GetPhys(),outfield[j]->GetPlane(1)->UpdateCoeffs());
-                         
+                    //vSession->DefinesSolverInfo("HOMOGENEOUS")
+                    if(FieldDef[0]->m_numHomogeneousDir == 1)
+                    {
+                        //plane 0
+                        outfield[j]->GetPlane(0)->FwdTrans_IterPerExp(outfield[j]->GetPlane(0)->GetPhys(),outfield[j]->GetPlane(0)->UpdateCoeffs());
+                        
+                        //plane 1
+                        outfield[j]->GetPlane(1)->FwdTrans_IterPerExp(outfield[j]->GetPlane(1)->GetPhys(),outfield[j]->GetPlane(1)->UpdateCoeffs());
+                        
                      }
                      else
                      {  
@@ -770,5 +763,5 @@ cout<<"abs(y0max-y1max)="<<abs(y0max-y1max)<<endl;
 		     	   outfield[0]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);  
 		     }
 		}
-		graph->Write(fieldfile,FieldDef,FieldData);		
+                LibUtilities::Write(fieldfile,FieldDef,FieldData);		
 	}    		

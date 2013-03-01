@@ -45,12 +45,12 @@ namespace Nektar
                        const LibUtilities::BasisKey &Bb,
                        const LibUtilities::BasisKey &Bc,
                        const SpatialDomains::PyrGeomSharedPtr &geom):
-            StdExpansion  (StdRegions::StdPyrData::getNumberOfCoefficients(
+            StdExpansion  (LibUtilities::StdPyrData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes(),
                                Bc.GetNumModes()),
                            3, Ba, Bb, Bc),
-            StdExpansion3D(StdRegions::StdPyrData::getNumberOfCoefficients(
+            StdExpansion3D(LibUtilities::StdPyrData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes(),
                                Bc.GetNumModes()),
@@ -234,7 +234,7 @@ namespace Nektar
 
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
-                                              DetExpansionType(),*this);
+                                              DetShapeType(),*this);
                 DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
                 // copy inarray in case inarray == outarray
@@ -586,7 +586,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
+                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetShapeType(),
                                                          *this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
@@ -615,11 +615,11 @@ namespace Nektar
                         // ASSERTL1(m_geom->GetCoordim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         ASSERTL1(m_geom->GetCoordim() == 3,"Standard Region Laplacian is only set up for Hex in three-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap01key(StdRegions::eLaplacian01,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap11key(StdRegions::eLaplacian11,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
 
                         DNekMatSharedPtr lap00 = GetStdMatrix(lap00key);
                         DNekMatSharedPtr lap01 = GetStdMatrix(lap01key);
@@ -644,9 +644,9 @@ namespace Nektar
             case StdRegions::eHelmholtz:
                 {
                     NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
-                    MatrixKey masskey(StdRegions::eMass, mkey.GetExpansionType(), *this);
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
-                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();

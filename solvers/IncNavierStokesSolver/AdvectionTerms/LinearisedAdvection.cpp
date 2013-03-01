@@ -461,13 +461,13 @@ namespace Nektar
     void LinearisedAdvection::ImportFldBase(std::string pInfile,
             SpatialDomains::MeshGraphSharedPtr pGraph, int cnt)
     {
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
-		int nqtot = m_base[0]->GetTotPoints();
-
-		//Get Homogeneous
-
-        pGraph->Import(pInfile,FieldDef,FieldData);
+        int nqtot = m_base[0]->GetTotPoints();
+        
+        //Get Homogeneous
+        
+        LibUtilities::Import(pInfile,FieldDef,FieldData);
         
         int nvar = m_session->GetVariables().size();
         int s;
@@ -883,7 +883,7 @@ namespace Nektar
     void LinearisedAdvection::WriteFldBase(std::string &outname, MultiRegions::ExpListSharedPtr &field, Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables)
     {
         
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef= field->GetFieldDefinitions();
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef= field->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 	
         // copy Data into FieldData and set variable
@@ -897,7 +897,7 @@ namespace Nektar
                 field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
             }            
         }
-        m_graph->Write(outname,FieldDef,FieldData);
+        LibUtilities::Write(outname,FieldDef,FieldData);
     }
     
     
@@ -925,7 +925,7 @@ namespace Nektar
         StdRegions::StdSegExp StdSeg(BK);
 	
         StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
-                                        StdSeg.DetExpansionType(),
+                                        StdSeg.DetShapeType(),
                                         StdSeg);
         
         loc_mat = StdSeg.GetStdMatrix(matkey);

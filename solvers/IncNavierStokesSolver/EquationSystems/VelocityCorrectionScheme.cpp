@@ -111,8 +111,6 @@ namespace Nektar
                 NekDouble fac;
                 int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
                 int pstart;
-                NekDouble svvdiff;
-                NekDouble cutoff; 
 
                 pstart = m_sVVCutoffRatio*kmodes;
                 

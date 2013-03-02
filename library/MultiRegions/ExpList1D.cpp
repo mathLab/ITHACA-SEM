@@ -951,19 +951,46 @@ namespace Nektar
                 e_npoints  = (*m_exp)[i]->GetNumPoints(0);
                 locnormals = loc_elmt->GetEdgeNormal(
                     loc_exp->GetLeftAdjacentElementEdge());
-
-                // Get the physical data offset for this expansion.
-                offset = m_phys_offset[i];
                 
-                // Process each point in the expansion.
-                for(j = 0; j < e_npoints; ++j)
+                if (e_npoints != locnormals[0].num_elements())
                 {
-                    // Process each spatial dimension and copy the values into
-                    // the output array.
-                    for(k = 0; k < coordim; ++k)
+                    LocalRegions::Expansion2DSharedPtr loc_elmt =
+                    loc_exp->GetRightAdjacentElementExp();
+                    
+                    locnormals = loc_elmt->GetEdgeNormal(
+                                                         loc_exp->GetRightAdjacentElementEdge());
+                    
+                    offset = m_phys_offset[i];
+                    // Process each point in the expansion.
+                    for(j = 0; j < e_npoints; ++j)
                     {
-                        //normals[k][offset+j] = locnormals[k*e_npoints + j];
-                        normals[k][offset+j] = locnormals[k][j];
+                        // Process each spatial dimension and copy the values into
+                        // the output array.
+                        
+                        for(k = 0; k < coordim; ++k)
+                        {
+                            normals[k][offset+j] = -locnormals[k][j];
+                        }
+                    }
+                    
+                }
+                else
+                {
+                    
+                    // Get the physical data offset for this expansion.
+                    offset = m_phys_offset[i];
+                    //cout << "NEdge = " << i << endl;
+                    // Process each point in the expansion.
+                    for(j = 0; j < e_npoints; ++j)
+                    {
+                        // Process each spatial dimension and copy the values into
+                        // the output array.
+                        
+                        for(k = 0; k < coordim; ++k)
+                        {
+                            //normals[k][offset+j] = locnormals[k*e_npoints + j];
+                            normals[k][offset+j] = locnormals[k][j];
+                        }
                     }
                 }
             }

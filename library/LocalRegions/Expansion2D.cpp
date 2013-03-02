@@ -105,7 +105,7 @@ namespace Nektar
             int i;
 
             StdRegions::Orientation  edgedir = GetEorient(edge); 
-            
+            /*
             unsigned short num_mod0 = EdgeExp->GetBasis(0)->GetNumModes();
             unsigned short num_mod1 = 0; 
             unsigned short num_mod2 = 0; 
@@ -113,8 +113,13 @@ namespace Nektar
             StdRegions::IndexMapKey ikey(StdRegions::eEdgeToElement,DetExpansionType(),num_mod0,num_mod1,num_mod2,edge,edgedir);
             
             StdRegions::IndexMapValuesSharedPtr map = StdExpansion::GetIndexMap(ikey);
+            */
+            Array<OneD,unsigned int> map;
+            Array<OneD,int> sign;
             
-            int order_e = (*map).num_elements();
+            GetEdgeToElementMap(edge,edgedir,map,sign);
+            
+            int order_e = map.num_elements();
             
             // Order of the trace
             int n_coeffs = (EdgeExp->GetCoeffs()).num_elements();
@@ -153,6 +158,11 @@ namespace Nektar
                 
                 StdRegions::StdMatrixKey masskey(StdRegions::eMass,StdRegions::eSegment,*EdgeExp);
                 EdgeExp->MassMatrixOp(EdgeExp->UpdateCoeffs(),EdgeExp->UpdateCoeffs(),masskey);
+                
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[map[i]] += (sign[i])*EdgeExp->GetCoeff(i);
+                }
             }
             else
             {
@@ -174,12 +184,12 @@ namespace Nektar
                         Vmath::Neg(order_e,EdgeExp->UpdateCoeffs(),1);
                     }
                 }
-            }
-            
-            // add data to outarray if forward edge normal is outwards
-            for(i = 0; i < order_e; ++i)
-            {
-                outarray[((*map)[i].index)] += ((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                
+                // add data to outarray if forward edge normal is outwards
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[map[i]] += (sign[i])*EdgeExp->GetCoeff(i);
+                }
             }
         }
 

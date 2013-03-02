@@ -1413,7 +1413,6 @@ namespace Nektar
             return returnval;
         }
 
-
         DNekMatSharedPtr QuadExp::v_CreateStdMatrix(const StdRegions::StdMatrixKey &mkey)
         {
             LibUtilities::BasisKey bkey0 = m_base[0]->GetBasisKey();
@@ -1522,11 +1521,11 @@ namespace Nektar
             case StdRegions::eLaplacian:
                 {
                     if( (m_metricinfo->GetGtype() == SpatialDomains::eDeformed) ||
-                        (mkey.GetNVarCoeff() > 0) )
+                        (mkey.GetNVarCoeff() > 0)||(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio)))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
-
+                        
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                     }
                     else
@@ -1901,11 +1900,11 @@ namespace Nektar
         }
 
 
-        void QuadExp::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                Array<OneD,NekDouble> &outarray,
+
+        void QuadExp::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray,
                                                 const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNVarCoeff() == 0)
+            if(mkey.GetNVarCoeff() == 0 &&!mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
             {
                 // This implementation is only valid when there are no
                 // coefficients associated to the Laplacian operator
@@ -1917,18 +1916,18 @@ namespace Nektar
                     int       nmodes0 = m_base[0]->GetNumModes();
                     int       nmodes1 = m_base[1]->GetNumModes();
                     int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-
+                    
                     const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                     const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
                     const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
                     const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
                     const Array<TwoD, const NekDouble>& metric = m_metricinfo->GetLaplacianMetrics();
-
+                    
                     // Allocate temporary storage
                     Array<OneD,NekDouble> wsp0(3*wspsize);
                     Array<OneD,NekDouble> wsp1(wsp0+wspsize);
                     Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-
+                    
                     if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
                     {
                         // LAPLACIAN MATRIX OPERATION
@@ -1942,7 +1941,8 @@ namespace Nektar
                     {
                         StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
                     }
-
+                    
+                    
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
@@ -1960,12 +1960,12 @@ namespace Nektar
                         Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
                         Vmath::Vmul(nqtot,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
                     }
-
+                    
                     // outarray = m = (D_xi1 * B)^T * k
                     // wsp1     = n = (D_xi2 * B)^T * l
                     IProductWRTBase_SumFacKernel(dbase0,base1,wsp0,outarray,wsp1,false,true);
                     IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,    wsp0,true,false);
-
+                    
                     // outarray = outarray + wsp1
                     //          = L * u_hat
                     Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
@@ -1978,12 +1978,12 @@ namespace Nektar
                     int       nmodes0 = m_base[0]->GetNumModes();
                     int       nmodes1 = m_base[1]->GetNumModes();
                     int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-
+                    
                     const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
                     const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
                     const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
                     const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-
+                    
                     // Allocate temporary storage
                     Array<OneD,NekDouble> wsp0(6*wspsize);
                     Array<OneD,NekDouble> wsp1(wsp0+wspsize);
@@ -1991,7 +1991,7 @@ namespace Nektar
                     Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
                     Array<OneD,NekDouble> wsp4(wsp0+4*wspsize);
                     Array<OneD,NekDouble> wsp5(wsp0+5*wspsize);
-
+                    
                     if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
                     {
                         // LAPLACIAN MATRIX OPERATION
@@ -2005,7 +2005,7 @@ namespace Nektar
                     {
                         StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
                     }
-
+                    
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
@@ -2020,7 +2020,7 @@ namespace Nektar
                         Vmath::Vvtvvtp(nqtot,&gmat[0][0],1,&gmat[1][0],1,&gmat[2][0],1,&gmat[3][0],1,&wsp4[0],1);
                         // wsp5 = g1*g1 + g3*g3;
                         Vmath::Vvtvvtp(nqtot,&gmat[1][0],1,&gmat[1][0],1,&gmat[3][0],1,&gmat[3][0],1,&wsp5[0],1);
-
+                        
                         // If 3D coordinates, tag on extra terms
                         if(dim == 3)
                         {
@@ -2031,7 +2031,7 @@ namespace Nektar
                             // wsp5 += g5*g5
                             Vmath::Vvtvp(nqtot,&gmat[5][0],1,&gmat[5][0],1,&wsp5[0],1,&wsp5[0],1);
                         }
-
+                        
                         Vmath::Vvtvvtp(nqtot,&wsp3[0],1,&wsp1[0],1,&wsp4[0],1,&wsp2[0],1,&wsp0[0],1);
                         Vmath::Vvtvvtp(nqtot,&wsp4[0],1,&wsp1[0],1,&wsp5[0],1,&wsp2[0],1,&wsp2[0],1);
                     }
@@ -2040,14 +2040,14 @@ namespace Nektar
                         NekDouble g0 = gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0];
                         NekDouble g1 = gmat[0][0]*gmat[1][0] + gmat[2][0]*gmat[3][0];
                         NekDouble g2 = gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0];
-
+                        
                         if(dim == 3)
                         {
                             g0 += gmat[4][0]*gmat[4][0];
                             g1 += gmat[4][0]*gmat[5][0];
                             g2 += gmat[5][0]*gmat[5][0];
                         }
-
+                        
                         if(fabs(g1) < NekConstants::kGeomFactorsTol)
                         {
                             Vmath::Smul(nqtot,g0,&wsp1[0],1,&wsp0[0],1);
@@ -2059,15 +2059,15 @@ namespace Nektar
                             Vmath::Svtsvtp(nqtot,g1,&wsp1[0],1,g2,&wsp2[0],1,&wsp2[0],1);
                         }
                     }
-
+                    
                     MultiplyByQuadratureMetric(wsp0,wsp0);
                     MultiplyByQuadratureMetric(wsp2,wsp2);
-
+                    
                     // outarray = m = (D_xi1 * B)^T * k
                     // wsp1     = n = (D_xi2 * B)^T * l
                     IProductWRTBase_SumFacKernel(dbase0,base1,wsp0,outarray,wsp1,false,true);
                     IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp1,    wsp0,true,false);
-
+                    
                     // outarray = outarray + wsp1
                     //          = L * u_hat
                     Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
@@ -2078,6 +2078,7 @@ namespace Nektar
                 StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
         }
+
 
 
         void QuadExp::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,

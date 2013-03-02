@@ -109,7 +109,7 @@ namespace Nektar
                 return false;
             }
             
-            if(lhs.m_ncoeffs < rhs.m_ncoeffs)
+            if(lhs.m_ncoeffs < rhs.m_ncoeffs) // probably do not need this check since checking the m_base below? 
             {
                 return true;
             }
@@ -144,7 +144,7 @@ namespace Nektar
             {
                 ConstFactorMap::const_iterator x, y;
                 for(x = lhs.m_factors.begin(), y = rhs.m_factors.begin();
-                        x != lhs.m_factors.end(); ++x, ++y)
+                    x != lhs.m_factors.end(); ++x, ++y)
                 {
                     if (x->second < y->second)
                     {

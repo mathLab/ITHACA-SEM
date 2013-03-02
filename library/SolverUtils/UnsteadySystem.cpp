@@ -536,11 +536,9 @@ namespace Nektar
          */
         void UnsteadySystem::v_DoInitialise()
         {
-
             CheckForRestartTime(m_time);
-
+            SetBoundaryConditions(m_time);
             SetInitialConditions(m_time);
-
         }
         
         /**

@@ -1750,10 +1750,10 @@ namespace Nektar
             Array<OneD, unsigned int> noinversemap(1);
             return noinversemap;
         }
-        void StdExpansion::v_NegateEdgeNormal(const int edge)
+        /*void StdExpansion::v_NegateEdgeNormal(const int edge)
         {
             ASSERTL0(false, "Not implemented.");
-        }
+            }*/
         
         bool StdExpansion::v_EdgeNormalNegated(const int edge)
         {
@@ -1761,10 +1761,10 @@ namespace Nektar
             return false;
         }
         
-        void StdExpansion::v_NegateFaceNormal(const int face)
+        /*void StdExpansion::v_NegateFaceNormal(const int face)
         {
             ASSERTL0(false, "Not implemented.");
-        }
+            }*/
 
 
     }//end namespace

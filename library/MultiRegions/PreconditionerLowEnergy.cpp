@@ -1118,6 +1118,7 @@ namespace Nektar
             int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
             int nNonDirFaceIDs=m_locToGloMap->GetNumNonDirFaces();
 
+            
             //set the number of blocks in the matrix
             Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs+nNonDirFaceIDs);
             n_blks[0]=nNonDirVerts;
@@ -1142,6 +1143,15 @@ namespace Nektar
             int meshEdgeId;
             int meshFaceId;
 
+            const Array<OneD, const int> &extradiredges
+                = m_locToGloMap->GetExtraDirEdges();
+            for(i=0; i<extradiredges.num_elements(); ++i)
+            {
+                meshEdgeId=extradiredges[i];
+                cout<<"to delete: "<<meshEdgeId<<endl;
+                edgeDirMap[meshEdgeId] = 1;
+            }
+
             //Determine which boundary edges and faces have dirichlet values
             for(i = 0; i < bndCondExp.num_elements(); i++)
             {
@@ -1159,6 +1169,7 @@ namespace Nektar
                             meshEdgeId = (bndCondFaceExp->GetGeom2D())->GetEid(k);
                             if(edgeDirMap.count(meshEdgeId) == 0)
                             {
+                                cout<<"Dirichlet mesh id: "<<meshEdgeId<<endl;
                                 edgeDirMap[meshEdgeId] = 1;
                             }
                         }
@@ -1195,6 +1206,7 @@ namespace Nektar
                     {
                         if(uniqueEdgeMap.count(meshEdgeId)==0)
                         {
+                            cout<<"MeshEdgeId: "<<meshEdgeId<<endl;
                             uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
 
                             m_edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
@@ -1211,7 +1223,7 @@ namespace Nektar
                     }
                 }
             }
-
+            cout<<endl;
             int facematrixlocation=0;
             int ntotalfaceentries=0;
 

@@ -579,6 +579,13 @@ namespace Nektar
             return 0;
         }
 
+        const Array<OneD, const int>& AssemblyMap::v_GetExtraDirEdges()
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            static Array<OneD, const int> result;
+            return result;
+        }
+
         LibUtilities::CommSharedPtr AssemblyMap::GetComm()
         {
             return m_comm;
@@ -728,6 +735,11 @@ namespace Nektar
         int AssemblyMap::GetNumNonDirFaces() const
         {
             return v_GetNumNonDirFaces();
+        }
+
+        const Array<OneD, const int>& AssemblyMap::GetExtraDirEdges()
+        {
+            return v_GetExtraDirEdges();
         }
 
         int AssemblyMap::GetLocalToGlobalBndMap(const int i) const

@@ -240,6 +240,7 @@ namespace Nektar
                             meshEdgeId = (bndCondFaceExp->GetGeom2D())->GetEid(k);
                             if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)
                             {
+                                //cout<<"Assembly Dirichlet mesh id: "<<meshEdgeId<<endl;
                                 edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;
                             }
                         }
@@ -351,6 +352,7 @@ namespace Nektar
                             {
                                 if (edgelist[edgeoffsets[i]+l] == meshEdgeId)
                                 {
+                                    //cout<<"meshEdgeId extra: "<<meshEdgeId<<endl;
                                     extraDirEdgeIds[meshEdgeId] = i;
                                     edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;
                                     nExtraDirichlet += locExpansion->GetEdgeNcoeffs(k) - 2;
@@ -359,6 +361,18 @@ namespace Nektar
                         }
                     }
                 }
+            }
+
+            //Low Energy preconditioner needs to know how many extra dirichlet
+            //edges are on this process
+            int m_extradiredges=extraDirEdgeIds.size();
+            m_extraDirEdges = Array<OneD, int>(m_extradiredges,-1);
+            i=0;
+            for(mapConstIt  = extraDirEdgeIds.begin(); 
+                mapConstIt != extraDirEdgeIds.end(); mapConstIt++)
+            {
+                meshEdgeId=mapConstIt->first;
+                m_extraDirEdges[i++]=meshEdgeId;
             }
 
             for (i = 0; i < n; ++i)
@@ -762,6 +776,7 @@ namespace Nektar
                         {
                             if(edgeTempGraphVertId.count(meshEdgeId) == 0)
                             {
+                                //cout<<"Assembly map MeshEdgeId: "<<meshEdgeId<<endl;
                                 boost::add_vertex(boostGraphObj);
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                                 m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
@@ -777,7 +792,7 @@ namespace Nektar
                 }
                 localEdgeOffset+=nEdges;
             }
-
+            //cout<<endl;
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(

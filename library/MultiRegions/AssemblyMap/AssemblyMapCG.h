@@ -103,6 +103,8 @@ namespace Nektar
             int m_numNonDirEdges;
             /// Number of Dirichlet faces
             int m_numNonDirFaces;
+            //Extra dirichlet edges in parallel
+            Array<OneD,int> m_extraDirEdges;
 
             /// Maximum static condensation level.
             int m_maxStaticCondLevel;
@@ -178,6 +180,9 @@ namespace Nektar
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirEdges() const;
 
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaces() const;
+
+            MULTI_REGIONS_EXPORT virtual const Array<OneD, const int>& v_GetExtraDirEdges();
+
         };
 
 

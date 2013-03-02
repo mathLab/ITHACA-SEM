@@ -527,5 +527,11 @@ namespace Nektar
             return m_numNonDirFaces;
         }
 
+        const Array<OneD, const int>& AssemblyMapCG::v_GetExtraDirEdges()
+        {
+            return m_extraDirEdges;
+        }
+
+
     } // namespace
 } // namespace

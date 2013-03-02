@@ -67,7 +67,8 @@ namespace Nektar
         {
         public:
             SOLVER_UTILS_EXPORT void InitObject(
-                LibUtilities::SessionReaderSharedPtr               pSession);
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
                         
             SOLVER_UTILS_EXPORT void Diffuse(
                 const int nConvectiveFields,
@@ -94,7 +95,8 @@ namespace Nektar
             
         protected:
             virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr              pSession)
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
             {
                 
             };

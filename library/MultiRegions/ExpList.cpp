@@ -2086,7 +2086,7 @@ namespace Nektar
             }
 
         }
-        
+
         /// Extract the data in fielddata into the coeffs
         void ExpList::ExtractDataToCoeffs(
                                    SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
@@ -2102,7 +2102,14 @@ namespace Nektar
             v_ExtractCoeffsToCoeffs(fromExpList,fromCoeffs,toCoeffs);
         }
 
-        void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
+        
+        
+        
+        /// NEW METHOD BY DAVE =================================================
+        void ExpList::v_ExtractDataToCoeffs(
+            SpatialDomains::FieldDefinitionsSharedPtr       &fielddef, 
+            std::vector<NekDouble> &fielddata, std::string  &field, 
+            Array<OneD, NekDouble>                          &coeffs)
         {     	
             int i, cnt;
             int offset = 0;
@@ -2144,8 +2151,19 @@ namespace Nektar
                 int n = vComm->GetSize();
                 int p = vComm->GetRank();
                 
+                // Determine number of elements in fielddef inside this process.
+                for(cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
+                {
+                    if (ElmtID_to_ExpID.count(fielddef->m_elementIDs[i]) == 0)
+                    {
+                        continue;
+                    }
+                    
+                    ++cnt;
+                }
+                
                 Array<OneD, int> numEls(n, 0);
-                numEls[p] = m_exp->size();
+                numEls[p] = cnt;
                 vComm->AllReduce(numEls, LibUtilities::ReduceSum);
                 int totEls = Vmath::Vsum(n, numEls, 1);
                 
@@ -2156,8 +2174,8 @@ namespace Nektar
                     elOffsets[i] = elOffsets[i-1] + numEls[i-1];
                 }
                 
-                Array<OneD, int> coeffsPerEl  (totEls, 0.0);
-                Array<OneD, int> elmtGlobalIds(totEls, 0.0);
+                Array<OneD, int> coeffsPerEl  (totEls, 0);
+                Array<OneD, int> elmtGlobalIds(totEls, 0);
                 
                 // Determine number of coefficients in each local (to this
                 // partition) element.
@@ -2171,7 +2189,7 @@ namespace Nektar
                     
                     int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
                     int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(
-                                                                          fielddef->m_numModes,modes_offset);
+                                            fielddef->m_numModes,modes_offset);
                     if(fielddef->m_uniOrder == true)
                     {
                         modes_offset = 0;
@@ -2189,6 +2207,8 @@ namespace Nektar
                 
                 for (i = 0; i < totEls; ++i)
                 {
+                    ASSERTL0(coeffsElmtMap.count(elmtGlobalIds[i]) == 0,
+                             "Error in communicating global ids!");
                     coeffsElmtMap[elmtGlobalIds[i]] = coeffsPerEl[i];
                 }
                 
@@ -2218,16 +2238,24 @@ namespace Nektar
                     else // unpack data to new order
                     {
                         (*m_exp)[eid]->ExtractDataToCoeffs(
-                                                           &fielddata[offset], fielddef->m_numModes,
-                                                           modes_offset, &coeffs[m_coeff_offset[eid]]);
+                            &fielddata[offset], fielddef->m_numModes,
+                            modes_offset, &coeffs[m_coeff_offset[eid]]);
                     }
                     
                     offset += datalen;
                 }                
             }
         }
+        /// END NEW METHOD BY DAVE =============================================
+
+
+
 /*
-        void ExpList::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs)
+        /// OLD METHOD NOT WORKING IN PARALLEL =================================
+        void ExpList::v_ExtractDataToCoeffs(
+            SpatialDomains::FieldDefinitionsSharedPtr       &fielddef, 
+            std::vector<NekDouble> &fielddata, std::string  &field, 
+            Array<OneD, NekDouble>                          &coeffs)
         {     	
             int i;
             int offset = 0;
@@ -2287,7 +2315,8 @@ namespace Nektar
                 }                
             }
         }
- */
+        /// END OLD METHOD NOT WORKING IN PARALLEL =============================
+*/
 
         void ExpList::v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {     	

@@ -102,6 +102,7 @@ namespace Nektar
         NekDouble                           m_Twall;
         std::string                         m_ViscosityType;
         NekDouble                           m_mu;
+        NekDouble                           m_thermalConductivity;
 
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);

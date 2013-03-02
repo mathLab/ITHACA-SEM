@@ -59,7 +59,8 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr              m_session;
             
             virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr               pSession);
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
             
             virtual void v_Diffuse(
                 const int                                          nConvective,

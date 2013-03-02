@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: DiffusionLDG.h
+// File: DiffusionLFR.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: LDG diffusion class.
+// Description: LFR diffusion class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_DIFFUSIONWEAKDG
-#define NEKTAR_SOLVERUTILS_DIFFUSIONWEAKDG
+#ifndef NEKTAR_SOLVERUTILS_DIFFUSIONLFR
+#define NEKTAR_SOLVERUTILS_DIFFUSIONLFR
 
 #include <SolverUtils/Diffusion/Diffusion.h>
 
@@ -42,24 +42,52 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        class DiffusionLDG : public Diffusion
+        class DiffusionLFR : public Diffusion
         {
         public:
             static DiffusionSharedPtr create(std::string diffType)
             {
-                return DiffusionSharedPtr(new DiffusionLDG());
+                return DiffusionSharedPtr(new DiffusionLFR(diffType));
             }
             
-            static std::string type;
+            static std::string                   type[];
+            
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e0; 
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e1; 
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e2; 
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e3; 
+            
+            Array<OneD, Array<OneD, NekDouble> > m_dGL_xi1;                  
+            Array<OneD, Array<OneD, NekDouble> > m_dGR_xi1;
+            Array<OneD, Array<OneD, NekDouble> > m_dGL_xi2;                  
+            Array<OneD, Array<OneD, NekDouble> > m_dGR_xi2;
+            Array<OneD, Array<OneD, NekDouble> > m_dGL_xi3;                  
+            Array<OneD, Array<OneD, NekDouble> > m_dGR_xi3;
+            DNekMatSharedPtr                     m_Ixm;
+            DNekMatSharedPtr                     m_Ixp;
             
         protected:
-            DiffusionLDG();
+            DiffusionLFR(std::string diffType);
             
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
             LibUtilities::SessionReaderSharedPtr              m_session;
             
+            std::string m_diffType;
+            
             virtual void v_InitObject(
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
+            
+            virtual void v_SetupMetrics(
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
+            
+            virtual void v_SetupCFunctions(
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
+            
+            virtual void v_SetupInterpolationMatrices(
                 LibUtilities::SessionReaderSharedPtr               pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
             
@@ -68,6 +96,21 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
+            
+            virtual void v_DerCFlux_1D(
+                const int                                     nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+                const Array<OneD, const NekDouble>               &flux, 
+                const Array<OneD, const NekDouble>               &iFlux,
+                      Array<OneD,       NekDouble>               &derCFlux);
+            
+            virtual void v_DerCFlux_2D(
+                const int                                     nConvectiveFields,
+                const int                                        direction,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+                const Array<OneD, const NekDouble>               &flux, 
+                const Array<OneD,       NekDouble>               &iFlux,
+                      Array<OneD,       NekDouble>               &derCFlux);
             
             virtual void v_NumFluxforScalar(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
@@ -79,20 +122,14 @@ namespace Nektar
                 const int                                          var,
                 const Array<OneD, const NekDouble>                &ufield,
                       Array<OneD,       NekDouble>                &penaltyflux);
-            
-            virtual void v_NumFluxforVector(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-                const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
-                      Array<OneD, Array<OneD, NekDouble> >              &qflux);
-            
-            virtual void v_WeakPenaltyforVector(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const int                                          dir,
-                const Array<OneD, const NekDouble>                &qfield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          C11);
+           /* 
+            virtual void v_DivCFlux_2D(
+                const int                                      nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+                const Array<OneD, const NekDouble>               &fluxX1, 
+                const Array<OneD, const NekDouble>               &fluxX2, 
+                const Array<OneD, const NekDouble>               &numericalFlux,
+                      Array<OneD,       NekDouble>               &divCFlux);*/
         }; 
     }
 }

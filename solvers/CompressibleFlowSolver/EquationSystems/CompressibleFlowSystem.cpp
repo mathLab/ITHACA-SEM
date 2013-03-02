@@ -115,6 +115,9 @@ namespace Nektar
         m_session->LoadParameter ("Twall",         m_Twall,         300.15);
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
         m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
+        m_session->LoadParameter ("thermalConductivity",
+                                  m_thermalConductivity, 0.0257);
+
 
         // Type of advection class to be used
         switch(m_projectionType)
@@ -183,7 +186,7 @@ namespace Nektar
                 m_advection->SetRiemannSolver   (m_riemannSolver);
                 m_diffusion->SetRiemannSolver   (m_riemannSolverLDG);
                 m_advection->InitObject         (m_session, m_fields);
-                m_diffusion->InitObject         (m_session);
+                m_diffusion->InitObject         (m_session, m_fields);
                 break;
             }
             default:
@@ -506,15 +509,11 @@ namespace Nektar
         for (i = 0; i < nvel; ++i)
         {
             Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
-            Vmath::Vdiv(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
+            Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
             Vmath::Vadd(nTracePts, tmp1, 1, absVel, 1, absVel, 1);
-        }
+        }        
         Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
-        for (i = 0; i < nTracePts; ++i)
-        {
-            cout<<"i = "<< i << ";\t absVel = "<< absVel[i] << endl;
-        }
-        
+
         // Get speed of sound
         Array<OneD, NekDouble > SoundSpeed(nTracePts);
         Array<OneD, NekDouble > pressure  (nTracePts);
@@ -536,12 +535,7 @@ namespace Nektar
         
         // The Mach number you should get here is the total Mach number
         Vmath::Vdiv(nTracePts, absVel, 1, SoundSpeed, 1, Mach, 1);
-        
-        for (i = 0; i < nTracePts; ++i)
-        {
-            cout<<"i = "<< i << ";\t Mach = "<< Mach[i] << endl;
-        }
-        
+                
         // Auxiliary variables
         int e, id1, id2, npts, pnt;
         NekDouble cPlus, rPlus, cMinus, rMinus;
@@ -944,7 +938,7 @@ namespace Nektar
         int nPts = m_fields[0]->GetTotPoints();
         
         // Note: the value below is referred to 20˚C
-        NekDouble thermalConductivity = /*0.0257*/0.0000257;
+        //NekDouble thermalConductivity = /*0.0257*/0.0000257;
         
         // Stokes hypotesis
         NekDouble lambda = -0.66666;
@@ -1069,7 +1063,7 @@ namespace Nektar
                         &Sgg[0][0], 1, &STx[0], 1);
             
             // k * dT/dx
-            Vmath::Smul(nPts, thermalConductivity, 
+            Vmath::Smul(nPts, m_thermalConductivity, 
                         &derivativesO1[0][2][0], 1, 
                         &tmp1[0], 1);
             
@@ -1092,7 +1086,7 @@ namespace Nektar
                         &Sxy[0], 1, &tmp1[0], 1);
             
             // k * dT/dx
-            Vmath::Smul(nPts, thermalConductivity, 
+            Vmath::Smul(nPts, m_thermalConductivity, 
                         &derivativesO1[0][2][0], 1, 
                         &tmp2[0], 1);
             
@@ -1115,7 +1109,7 @@ namespace Nektar
                         &Sxy[0], 1, &tmp1[0], 1);
                         
             // k * dT/dy
-            Vmath::Smul(nPts, thermalConductivity, 
+            Vmath::Smul(nPts, m_thermalConductivity, 
                         &derivativesO1[1][2][0], 1, 
                         &tmp2[0], 1);
             
@@ -1144,7 +1138,7 @@ namespace Nektar
                         &Sxz[0], 1, &tmp2[0], 1);
             
             // k * dT/dx
-            Vmath::Smul(nPts, thermalConductivity, 
+            Vmath::Smul(nPts, m_thermalConductivity, 
                         &derivativesO1[0][2][0], 1, 
                         &tmp3[0], 1);
             
@@ -1173,7 +1167,7 @@ namespace Nektar
                         &Syz[0], 1, &tmp2[0], 1);
                         
             // k * dT/dy
-            Vmath::Smul(nPts, thermalConductivity, 
+            Vmath::Smul(nPts, m_thermalConductivity, 
                         &derivativesO1[1][2][0], 1, 
                         &tmp3[0], 1);
             
@@ -1202,7 +1196,7 @@ namespace Nektar
                         &Syz[0], 1, &tmp2[0], 1);
                         
             // k * dT/dz
-            Vmath::Smul(nPts, thermalConductivity, 
+            Vmath::Smul(nPts, m_thermalConductivity, 
                         &derivativesO1[2][2][0], 1, 
                         &tmp3[0], 1);
             

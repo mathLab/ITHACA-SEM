@@ -47,7 +47,8 @@ namespace Nektar
         }
         
         void DiffusionLDGNS::v_InitObject(
-                                LibUtilities::SessionReaderSharedPtr pSession)
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
             m_session = pSession;
         }

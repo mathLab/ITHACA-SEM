@@ -47,7 +47,8 @@ namespace Nektar
         }
         
         void DiffusionLDG::v_InitObject(
-            LibUtilities::SessionReaderSharedPtr        pSession)
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
             m_session = pSession;
         }
@@ -73,6 +74,7 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux  (nDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
             
+
             for (j = 0; j < nDim; ++j)
             {
                 qfield[j] = 
@@ -109,6 +111,19 @@ namespace Nektar
                 }
             }
             
+            for (i = 0; i < nPts; ++i)
+            {
+                cout<<"LDG, i = "<<i<<",\t derivativesO1-X = "<<qfield[0][0][i] << endl;
+            }
+            cout<<endl;
+            for (i = 0; i < nPts; ++i)
+            {
+                cout<<"LDG, i = "<<i<<",\t derivativesO1-Y = "<<qfield[1][0][i] << endl;
+            }
+            int num;
+            cin>>num;
+            
+
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
             v_NumFluxforVector(fields, inarray, qfield, flux[0]);
@@ -160,8 +175,7 @@ namespace Nektar
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
             
             // Get the sign of (v \cdot n), v = an arbitrary vector
-            
-            // Evaulate upwind flux:
+            // Evaluate upwind flux:
             // uflux = \hat{u} \phi \cdot u = u^{(+,-)} n
             for (j = 0; j < nDim; ++j)
             {
@@ -192,8 +206,7 @@ namespace Nektar
                     
                     if(fields[0]->GetBndCondExpansions().num_elements())
                     {
-                        v_WeakPenaltyforScalar(fields, i, ufield[i], fluxtemp, 
-                                               time);
+                        v_WeakPenaltyforScalar(fields, i, ufield[i], fluxtemp);
                     }
                     
                     // if Vn >= 0, flux = uFwd*(tan_{\xi}^- \cdot \vec{n}), 
@@ -220,47 +233,31 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const int                                          var,
             const Array<OneD, const NekDouble>                &ufield,
-                  Array<OneD,       NekDouble>                &penaltyflux,
-            NekDouble                                          time)
+                  Array<OneD,       NekDouble>                &penaltyflux)
         {
-            int i, j, e, npoints, id1, id2;
+            int i, j, e, id1, id2;
             
             // Number of boundary regions
-            int Nfps, numBDEdge;
-            int cnt       = 0;
-            int nbnd      = fields[var]->GetBndCondExpansions().num_elements();
-            int nDim      = fields[0]->GetCoordim(0);
-            int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+            int nBndEdgePts, nBndEdges;
+            int cnt         = 0;
+            int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
+            int nDim        = fields[0]->GetCoordim(0);
+            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
             
             Array<OneD, NekDouble > uplus(nTracePts);
             
             fields[var]->ExtractTracePhys(ufield, uplus);
-            for (i = 0; i < nbnd; ++i)
+            for (i = 0; i < nBndRegions; ++i)
             {
                 // Number of boundary expansion related to that region
-                numBDEdge = fields[var]->
+                nBndEdges = fields[var]->
                 GetBndCondExpansions()[i]->GetExpSize();
-                
-                // Evaluate boundary values g_D or g_N from input files                
-                LibUtilities::EquationSharedPtr ifunc = 
-                m_session->GetFunction("InitialConditions", 0);
-                
-                npoints = fields[var]->
-                GetBndCondExpansions()[i]->GetNpoints();
-                
-                Array<OneD,NekDouble> BDphysics(npoints);
-                Array<OneD,NekDouble> x0(npoints, 0.0);
-                Array<OneD,NekDouble> x1(npoints, 0.0);
-                Array<OneD,NekDouble> x2(npoints, 0.0);
-                
-                fields[var]->GetBndCondExpansions()[i]->GetCoords(x0, x1, x2);
-                ifunc->Evaluate(x0, x1, x2, time, BDphysics);
-                
+                                                                                
                 // Weakly impose boundary conditions by modifying flux values
-                for (e = 0; e < numBDEdge ; ++e)
+                for (e = 0; e < nBndEdges ; ++e)
                 {
                     // Number of points on the expansion
-                    Nfps = fields[var]->
+                    nBndEdgePts = fields[var]->
                     GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
                     
                     id1 = fields[var]->
@@ -274,18 +271,17 @@ namespace Nektar
                     if (fields[var]->GetBndConditions()[i]->
                         GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
-                        Vmath::Vcopy(Nfps, 
+                        Vmath::Vcopy(nBndEdgePts, 
                                      &(fields[var]->
                                        GetBndCondExpansions()[i]->
-                                       UpdatePhys())[id1], 1, 
+                                       GetPhys())[id1], 1, 
                                      &penaltyflux[id2], 1);
                     }
-                    
                     // For Neumann boundary condition: uflux = u+
                     else if ((fields[var]->GetBndConditions()[i])->
                         GetBoundaryConditionType() == SpatialDomains::eNeumann)
                     {
-                        Vmath::Vcopy(Nfps, 
+                        Vmath::Vcopy(nBndEdgePts, 
                                      &uplus[id2], 1, 
                                      &penaltyflux[id2], 1);
                     }
@@ -305,7 +301,6 @@ namespace Nektar
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
             int nvariables = fields.num_elements();
             int nDim       = qfield.num_elements();
-            NekDouble time = 0.0;
             
             NekDouble C11 = 1.0;
             Array<OneD, NekDouble > Fwd(nTracePts);
@@ -334,7 +329,7 @@ namespace Nektar
                 for (j = 0; j < nDim; ++j)
                 {
                     //  Compute Fwd and Bwd value of ufield of jth direction
-                    fields[i]->GetFwdBwdTracePhys(qfield[j][i],qFwd,qBwd);
+                    fields[i]->GetFwdBwdTracePhys(qfield[j][i], qFwd, qBwd);
                     
                     // if Vn >= 0, flux = uFwd, i.e.,
                     // edge::eForward, if V*n>=0 <=> V*n_F>=0, pick 
@@ -349,8 +344,8 @@ namespace Nektar
                     // qflux = qFwd = q+
                     
                     fields[i]->GetTrace()->Upwind(m_traceNormals[j], 
-                                                    qBwd, qFwd, 
-                                                    qfluxtemp);
+                                                  qBwd, qFwd, 
+                                                  qfluxtemp);
                     
                     Vmath::Vmul(nTracePts, 
                                 m_traceNormals[j], 1, 
@@ -377,12 +372,9 @@ namespace Nektar
                     // Imposing weak boundary condition with flux
                     if (fields[0]->GetBndCondExpansions().num_elements())
                     {
-                        v_WeakPenaltyforVector(fields, 
-                                             i, j, 
-                                             qfield[j][i], 
-                                             qfluxtemp, 
-                                             C11,
-                                             time);
+                        v_WeakPenaltyforVector(fields, i, j, 
+                                               qfield[j][i], 
+                                               qfluxtemp, C11);
                     }
                     
                     // q_hat \cdot n = (q_xi \cdot n_xi) or (q_eta \cdot n_eta)
@@ -409,14 +401,13 @@ namespace Nektar
             const int                                          dir,
             const Array<OneD, const NekDouble>                &qfield,
                   Array<OneD,       NekDouble>                &penaltyflux,
-            NekDouble                                          C11,
-            NekDouble                                          time)
+            NekDouble                                          C11)
         {
-            int i, j, e, npoints, id1, id2;
-            int numBDEdge, Nfps;
-            int nbnd      = fields[var]->GetBndCondExpansions().num_elements();
-            int nDim      = fields[0]->GetCoordim(0);
-            int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+            int i, j, e, id1, id2;
+            int nBndEdges, nBndEdgePts;
+            int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
+            int nDim        = fields[0]->GetCoordim(0);
+            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
             
             Array<OneD, NekDouble > uterm(nTracePts);
             Array<OneD, NekDouble > qtemp(nTracePts);
@@ -432,30 +423,15 @@ namespace Nektar
             
             fields[var]->ExtractTracePhys(qfield, qtemp);
             
-            for (i = 0; i < nbnd; ++i)
+            for (i = 0; i < nBndRegions; ++i)
             {
-                numBDEdge = fields[var]->
+                nBndEdges = fields[var]->
                     GetBndCondExpansions()[i]->GetExpSize();
-                
-                // Evaluate boundary values g_D or g_N from input files
-                LibUtilities::EquationSharedPtr ifunc = 
-                m_session->GetFunction("InitialConditions", 0);
-                
-                npoints = fields[var]->
-                    GetBndCondExpansions()[i]->GetNpoints();
-                
-                Array<OneD,NekDouble> BDphysics(npoints);
-                Array<OneD,NekDouble> x0(npoints, 0.0);
-                Array<OneD,NekDouble> x1(npoints, 0.0);
-                Array<OneD,NekDouble> x2(npoints, 0.0);
-                
-                fields[var]->GetBndCondExpansions()[i]->GetCoords(x0, x1, x2);
-                ifunc->Evaluate(x0, x1, x2, time, BDphysics);
-                
+                                
                 // Weakly impose boundary conditions by modifying flux values
-                for (e = 0; e < numBDEdge ; ++e)
+                for (e = 0; e < nBndEdges ; ++e)
                 {
-                    Nfps = fields[var]->
+                    nBndEdgePts = fields[var]->
                     GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
                     
                     id1 = fields[var]->
@@ -470,7 +446,7 @@ namespace Nektar
                     if(fields[var]->GetBndConditions()[i]->
                     GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
-                        Vmath::Vmul(Nfps, 
+                        Vmath::Vmul(nBndEdgePts, 
                                     &m_traceNormals[dir][id2], 1, 
                                     &qtemp[id2], 1, 
                                     &penaltyflux[id2], 1);
@@ -479,11 +455,11 @@ namespace Nektar
                     else if((fields[var]->GetBndConditions()[i])->
                     GetBoundaryConditionType() == SpatialDomains::eNeumann)
                     {
-                        Vmath::Vmul(Nfps,
+                        Vmath::Vmul(nBndEdgePts,
                                     &m_traceNormals[dir][id2], 1, 
                                     &(fields[var]->
                                       GetBndCondExpansions()[i]->
-                                      UpdatePhys())[id1], 1, 
+                                      GetPhys())[id1], 1, 
                                     &penaltyflux[id2], 1);
                     }
                 }

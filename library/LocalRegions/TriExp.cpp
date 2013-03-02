@@ -2112,25 +2112,21 @@ namespace Nektar
         void TriExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                 Array<OneD, NekDouble> &outarray)
         {
+            const int nqtot = m_base[0]->GetNumPoints() *
+                              m_base[1]->GetNumPoints();
+
             if(m_metricinfo->IsUsingQuadMetrics())
             {
-                int    nqtot = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
-                const Array<OneD, const NekDouble>& metric = m_metricinfo->GetQuadratureMetrics();
-
+                const Array<OneD, const NekDouble> &metric
+                    = m_metricinfo->GetQuadratureMetrics();
+                    
                 Vmath::Vmul(nqtot, metric, 1, inarray, 1, outarray, 1);
             }
             else
             {
-                int    i;
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int    nqtot  = nquad0*nquad1;
-
-                const Array<OneD, const NekDouble>& jac = m_metricinfo->GetJac();
-                const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
-                const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
-                const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
-
+                const Array<OneD, const NekDouble> &jac
+                    = m_metricinfo->GetJac();
+                
                 if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                 {
                     Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);
@@ -2140,36 +2136,9 @@ namespace Nektar
                     Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
                 }
 
-                // multiply by integration constants
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Vmath::Vmul(nquad0,outarray.get()+i*nquad0,1,
-                                w0.get(),1, outarray.get()+i*nquad0,1);
-                }
-
-                switch(m_base[1]->GetPointsType())
-                {
-                    // Legendre inner product
-                    case LibUtilities::eGaussLobattoLegendre:
-                        for(i = 0; i < nquad1; ++i)
-                        {
-                            Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i], outarray.get()+i*nquad0,1);
-                        }
-                        break;
-                    // (1,0) Jacobi Inner product
-                    case LibUtilities::eGaussRadauMAlpha1Beta0: 
-                        for(i = 0; i < nquad1; ++i)
-                        {
-                            Blas::Dscal(nquad0,0.5*w1[i], outarray.get()+i*nquad0,1);
-                        }
-                        break;
-                    default:
-                        ASSERTL0(false, "Unsupported quadrature points type.");
-                        break;
-                }
+                StdTriExp::MultiplyByQuadratureMetric(outarray, outarray);
             }
         }
-
     }
 }
 

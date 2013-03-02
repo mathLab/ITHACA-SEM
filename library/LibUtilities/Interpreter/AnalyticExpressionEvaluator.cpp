@@ -684,7 +684,9 @@ namespace Nektar
             boost::algorithm::trim(valueStr);
 
             const parser_id parserID  = location->value.id();
+#if defined(NEKTAR_DEBUG) || defined(NEKTAR_FULLDEBUG)
             const int num_children    = location->children.size();
+#endif
 
             if (parserID == AnalyticExpression::constantID)
             {

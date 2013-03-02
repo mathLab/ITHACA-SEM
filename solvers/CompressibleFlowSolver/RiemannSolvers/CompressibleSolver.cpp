@@ -51,8 +51,8 @@ namespace Nektar
         if (m_pointSolve)
         {
             int expDim = Fwd.num_elements()-2;
-            NekDouble rhouf, rhovf, UnL, UnR;
-        
+            NekDouble rhouf, rhovf;
+
             if (expDim == 1)
             {
                 for (int i = 0; i < Fwd[0].num_elements(); ++i)

@@ -1714,6 +1714,12 @@ namespace Nektar
             static NormalVector result;
             return result;
         }
+            
+        bool StdExpansion::v_EdgeNormalNegated(const int edge)
+        {
+            ASSERTL0(false, "Not implemented.");
+            return false;
+        }
         
         void StdExpansion::v_ComputeEdgeNormal(const int edge)
         {

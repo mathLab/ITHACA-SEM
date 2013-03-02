@@ -259,10 +259,6 @@ namespace Nektar
                     Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
 
-        private:
-            //---------------------------------------
-            // Private helper functions
-            //---------------------------------------
             STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble>& inarray,
                     Array<OneD, NekDouble> &outarray);

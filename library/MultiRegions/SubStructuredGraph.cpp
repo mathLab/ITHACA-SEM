@@ -864,8 +864,8 @@ namespace Nektar
             Array<OneD, int>                    &perm,
             Array<OneD, int>                    &iperm,
             BottomUpSubStructuredGraphSharedPtr &substructgraph,
-            const int                            mdswitch,
-            std::set<int>                        partVerts)
+            std::set<int>                        partVerts,
+            int                                  mdswitch)
         {
             int nGraphVerts = boost::num_vertices(graph);
             int nGraphEdges = boost::num_edges   (graph);
@@ -993,7 +993,7 @@ namespace Nektar
                 {
                     Metis::as_onmetis(
                         nNonPartition,xadj,adjncy,perm_tmp,iperm_tmp,
-                        septreeTmp,mdswitch);
+                        septreeTmp, mdswitch);
                 }
                 catch(...)
                 {

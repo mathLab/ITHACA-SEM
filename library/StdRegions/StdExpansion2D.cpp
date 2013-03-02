@@ -202,5 +202,10 @@ namespace Nektar
                            m_edgeNormals[edge][i], 1);
             }
         }
+
+        bool StdExpansion2D::v_EdgeNormalNegated(const int edge)
+        {
+            return m_negatedNormals[edge];
+        }
     } //end namespace
 } //end namespace

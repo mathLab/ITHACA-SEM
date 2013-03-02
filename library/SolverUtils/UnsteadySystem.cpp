@@ -506,13 +506,15 @@ namespace Nektar
                 m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
             }
             
-            if (m_cflSafetyFactor > 0.0)
+            if (m_session->GetComm()->GetRank() == 0)
             {
-                cout << "CFL safety factor : " << m_cflSafetyFactor << endl
-                     << "CFL time-step     : " << m_timestep        << endl;
+                if (m_cflSafetyFactor > 0.0)
+                {
+                    cout << "CFL safety factor : " << m_cflSafetyFactor << endl
+                         << "CFL time-step     : " << m_timestep        << endl;
+                }
+                cout << "Time-integration  : " << intTime  << "s"   << endl;
             }
-            cout << "Time-integration  : " << intTime  << "s"   << endl;
-
             
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {

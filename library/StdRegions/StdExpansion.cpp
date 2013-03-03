@@ -363,14 +363,8 @@ namespace Nektar
                 {
                     StdMatrixKey masskey(eMass,mkey.GetShapeType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
                     DNekMatSharedPtr mmat = GetStdMatrix(masskey);
-
-#if 1
-                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs); //Populate standard mass matrix.
-
-                    Vmath::Vcopy(m_ncoeffs*m_ncoeffs,mmat->GetRawPtr(),1,returnval->GetRawPtr(),1);
-#else
+                    
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat); //Populate standard mass matrix.
-#endif
                     returnval->Invert();
                 }
                 break;
@@ -1168,7 +1162,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
 
-
         void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
                                                     boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                     const Array<OneD, const NekDouble> &Fn,
@@ -1176,7 +1169,7 @@ namespace Nektar
         {
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
-        
+
         void StdExpansion::v_AddFaceNormBoundaryInt(const int face,
                                                     boost::shared_ptr<StdExpansion>    &FaceExp,
                                                     const Array<OneD, const NekDouble> &Fn,

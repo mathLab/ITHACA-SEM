@@ -178,7 +178,7 @@ namespace Nektar
             "HybridDGLamToQ2",
             "HybridDGLamToU",
             "FwdTrans",
-            "Preconditinoer",
+            "Preconditioner",
         };
 
         enum VarCoeffType

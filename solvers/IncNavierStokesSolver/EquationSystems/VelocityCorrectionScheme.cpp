@@ -104,7 +104,7 @@ namespace Nektar
             {
                 m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useHomo1DSpecVanVisc,false);
             }
-            
+
             if(m_useHomo1DSpecVanVisc)
             {
                 

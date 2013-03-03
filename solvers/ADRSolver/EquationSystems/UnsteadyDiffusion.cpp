@@ -57,6 +57,13 @@ namespace Nektar
         m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
 
+        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
+        if(m_useSpecVanVisc)
+        {
+            m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
+            m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
+        }
+
         int npoints = m_fields[0]->GetNpoints();
 
         if(m_session->DefinesParameter("d00"))
@@ -163,7 +170,7 @@ namespace Nektar
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-
+                
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
@@ -205,7 +212,7 @@ namespace Nektar
         int npoints    = m_fields[0]->GetNpoints();
         factors[StdRegions::eFactorLambda] = 1.0 / lambda / m_epsilon;
         factors[StdRegions::eFactorTau]    = 1.0;
-        
+
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
         // outarray = output: nabla^2 \hat{Y}

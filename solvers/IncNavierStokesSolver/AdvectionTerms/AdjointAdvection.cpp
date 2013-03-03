@@ -275,7 +275,7 @@ namespace Nektar
 						for(i = 0 ; i < m_base.num_elements(); i++)
 						{
 							m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-							::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+							::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
 						}
 					}
 					
@@ -303,7 +303,7 @@ namespace Nektar
 							for(i = 0 ; i < m_base.num_elements(); i++)
 							{								
 								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
 								
 							} 
 						}
@@ -316,7 +316,7 @@ namespace Nektar
 							for(i = 0 ; i < m_base.num_elements(); i++)
 							{																
 								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
 							} 
 							
 						}
@@ -329,7 +329,7 @@ namespace Nektar
 							for(i = 0 ; i < m_base.num_elements(); i++)
 							{
 								m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+								::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
 								m_base[i]->SetWaveSpace(false);
 							} 
 							
@@ -397,7 +397,7 @@ namespace Nektar
                         for(i = 0 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-							::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+							::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                         }
                     }
 					else 
@@ -422,7 +422,7 @@ namespace Nektar
 						for(i = 0 ; i < m_base.num_elements(); i++)
 						{
 							m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-							::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+							::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
 						}
 						
 						

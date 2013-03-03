@@ -117,8 +117,7 @@ namespace Nektar
             // Setting parameteres for homogenous problems
             m_HomoDirec			= 0;
             m_useFFT			= false;
-            m_dealiasing		= false;
-            m_specHP_dealiasing		= false;
+            m_homogen_dealiasing	= false;
             m_SingleMode		= false;
             m_HalfMode			= false;
             m_MultipleModes		= false;
@@ -196,16 +195,12 @@ namespace Nektar
 
                 m_session->MatchSolverInfo("USEFFT","FFTW",m_useFFT,false);
             
-                m_session->MatchSolverInfo("DEALIASING","True",m_dealiasing,false);
-                if(m_dealiasing == false)
+                m_session->MatchSolverInfo("DEALIASING","True",m_homogen_dealiasing,false);
+                if(m_homogen_dealiasing == false)
                 {
-                    m_session->MatchSolverInfo("DEALIASING","On",m_dealiasing,false);
+                    m_session->MatchSolverInfo("DEALIASING","On",m_homogen_dealiasing,false);
                 }
 
-                if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
-                {
-                    m_specHP_dealiasing = true;
-                }
             }
             else
             {
@@ -214,16 +209,6 @@ namespace Nektar
                 m_npointsZ = 1; 
             }
             
-            m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
-            if(m_specHP_dealiasing == false)
-            {
-                m_session->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
-            }
-            
-            if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
-            {
-                m_specHP_dealiasing = true;
-            }
         
             // Options to determine type of projection from file or directly 
             // from constructor
@@ -287,7 +272,7 @@ namespace Nektar
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
                                     ::AllocateSharedPtr(m_session, BkeyY, BkeyZ, m_LhomY, m_LhomZ, 
-                                                        m_useFFT, m_dealiasing, m_graph, m_session->GetVariable(i));
+                                                        m_useFFT, m_homogen_dealiasing, m_graph, m_session->GetVariable(i));
                             }
                         }
                         else
@@ -315,7 +300,7 @@ namespace Nektar
                                 for(i = 0; i < m_fields.num_elements(); i++)
                                 {
                                     m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                        ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT, m_dealiasing, 
+                                        ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT, m_homogen_dealiasing, 
                                                             m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
                                 }
                             }
@@ -333,11 +318,11 @@ namespace Nektar
                                     if(i == m_fields.num_elements()-2)
                                     {
                                         m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                            ::AllocateSharedPtr(m_session, BkeyZI, m_LhomZ,m_useFFT, m_dealiasing,
+                                            ::AllocateSharedPtr(m_session, BkeyZI, m_LhomZ,m_useFFT, m_homogen_dealiasing,
                                                                 m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
                                     }
                                     m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                        ::AllocateSharedPtr(m_session, BkeyZR, m_LhomZ, m_useFFT, m_dealiasing,
+                                        ::AllocateSharedPtr(m_session, BkeyZR, m_LhomZ, m_useFFT, m_homogen_dealiasing,
                                                             m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
                                 }
                             }
@@ -350,7 +335,7 @@ namespace Nektar
                                 for(i = 0; i < m_fields.num_elements(); i++)
                                 {
                                     m_fields[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                        ::AllocateSharedPtr(m_session, BkeyZ, m_LhomZ, m_useFFT, m_dealiasing,
+                                        ::AllocateSharedPtr(m_session, BkeyZ, m_LhomZ, m_useFFT, m_homogen_dealiasing,
                                                             m_graph, m_session->GetVariable(i), m_checkIfSystemSingular[i]);
                                 }
                             }
@@ -449,7 +434,7 @@ namespace Nektar
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
                                     ::AllocateSharedPtr(m_session, BkeyY, BkeyZ, m_LhomY, m_LhomZ, 
-                                                        m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                                        m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                             }
                         }
                         else
@@ -475,7 +460,7 @@ namespace Nektar
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
                                     ::AllocateSharedPtr(m_session, BkeyZ, m_LhomZ, 
-                                                        m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                                        m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                             }
                         }
                         else

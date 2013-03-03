@@ -431,23 +431,24 @@ namespace Nektar
             bool                                        m_MultipleModes;
             /// Flag to determine if FFT is used for homogeneous transform.
             bool                                        m_useFFT;
-            /// Flag to determine if dealiasing is used for homogeneous
-            /// simulations.
-            bool                                        m_dealiasing;
-            /// Flag to determine if dealisising is usde for the
-            /// Spectral/hp element discretisation.
-            bool                                        m_specHP_dealiasing;
+            /**
+             * \brief Flag to determine if dealiasing is used for
+             * homogeneous simulations.
+             *
+             * Note this needs to be defined here so we can initialise
+             * homogeneous expansions with the correct memory. This is
+             * not necessary for Spectral/hp dealiasing 
+             */
+            bool m_homogen_dealiasing;
             /// Type of projection; e.g continuous or discontinuous.
             enum MultiRegions::ProjectionType           m_projectionType;
-            /// Array holding trace normals for DG simulations in the forwards
-            /// direction.
+            /// Array holding trace normals for DG simulations in the forwards direction.
             Array<OneD, Array<OneD, NekDouble> >        m_traceNormals;
             /// 1 x nvariable x nq
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan;
             /// 2 x m_spacedim x nq
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
-            /// Flag to indicate if the fields should be checked for
-            /// singularity.
+            /// Flag to indicate if the fields should be checked for singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
             
             /// Number of Quadrature points used to work out the error

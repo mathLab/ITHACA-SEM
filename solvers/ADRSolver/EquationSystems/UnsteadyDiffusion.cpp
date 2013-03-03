@@ -130,14 +130,8 @@ namespace Nektar
               Array<OneD,        Array<OneD, NekDouble> > &outarray,
         const NekDouble time)
     {
-        // Counter variable
-        int i;
-        
         // Number of fields (variables of the problem)
         int nVariables = inarray.num_elements();
-        
-        // Number of solution points
-        int nSolutionPts = GetNpoints();
         
         // RHS computation using the new advection base class
         m_diffusion->Diffuse(nVariables, 

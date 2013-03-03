@@ -78,7 +78,7 @@ namespace Nektar
         eLinearised,
         eAdjoint,
         eSkewSymmetric,
-		eNoAdvection,
+        eNoAdvection,
         eAdvectionFormSize
     };
     
@@ -91,7 +91,7 @@ namespace Nektar
         "Linearised",
         "Adjoint",
         "SkewSymmetric"
-		"NoAdvection"
+        "NoAdvection"
     };
 	
     /**

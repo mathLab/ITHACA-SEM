@@ -86,6 +86,8 @@ namespace Nektar
         
         ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
         
+        m_useHomo1DSpecVanVisc = false; // turn off by default. 
+
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
@@ -114,7 +116,6 @@ namespace Nektar
                             ((NekDouble)((planes[n] - pstart)*(planes[n] - pstart)));
                         SVV[n] = exp(-fac)/m_kinvis;
                     }
-                    
                 }
 
                 for(i = 0; i < m_velocity.num_elements(); ++i)
@@ -348,12 +349,12 @@ namespace Nektar
             cout << "\tSubstepping     : " << LibUtilities::TimeIntegrationMethodMap[m_subStepIntegrationScheme->GetIntegrationMethod()] << endl;
         }
 
-        if(m_dealiasing)
+        if(m_homogen_dealiasing)
         {
             cout << "\tDealiasing      : Homogeneous1D"  << endl;
         }
         
-        if(m_specHP_dealiasing)
+        if(m_advObject->GetSpecHPDealiasing())
         {
             cout << "\tDealiasing      : Spectral/hp "  << endl;
         }

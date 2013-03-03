@@ -137,9 +137,9 @@ namespace Nektar
             /// Returns the total number of local degrees of freedom
             /// \f$N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_m\f$.
             inline int GetNcoeffs(void) const;
-
-            // Returns the total number of local degrees of freedom
-            // for element eid
+            
+            /// Returns the total number of local degrees of freedom
+            /// for element eid
             MULTI_REGIONS_EXPORT int GetNcoeffs(const int eid) const;
 			
 
@@ -821,8 +821,9 @@ namespace Nektar
             /// \f$=N_{\mathrm{eof}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_l\f$
             int m_ncoeffs;
 
-            /// The total number of quadrature points. #m_npoints
-            /// \f$=Q_{\mathrm{tot}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_Q\f$
+            /** The total number of quadrature points. #m_npoints
+             *\f$=Q_{\mathrm{tot}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_Q\f$
+             **/
             int m_npoints;
 
             /**

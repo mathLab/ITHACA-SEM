@@ -318,7 +318,8 @@ namespace Nektar
             typename SparseStorageType::const_iterator entry = m_submatrix[i]->begin();
             for (; entry != m_submatrix[i]->end(); ++entry)
             {
-                bandwidth = (std::max)(bandwidth, (IndexType) 2*abs( (int) entry->first.first - entry->first.second)+1);
+                bandwidth = (std::max)(static_cast<int>(bandwidth),
+                    2*abs( static_cast<int>(entry->first.first - entry->first.second)+1));
             }
         }
         return bandwidth;
@@ -331,7 +332,8 @@ namespace Nektar
         typename SparseStorageType::const_iterator entry = m_submatrix[i]->begin();
         for (; entry != m_submatrix[i]->end(); ++entry)
         {
-            bandwidth = (std::max)(bandwidth, (IndexType) 2*abs( (int) entry->first.first - entry->first.second)+1);
+            bandwidth = (std::max)(static_cast<int>(bandwidth),
+                2*abs( static_cast<int>(entry->first.first - entry->first.second)+1));
         }
         return bandwidth;
     }

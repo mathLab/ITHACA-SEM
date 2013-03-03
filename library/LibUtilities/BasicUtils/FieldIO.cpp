@@ -87,9 +87,10 @@ namespace Nektar
                 ASSERTL1(fielddata[f].size() > 0,
                         "Fielddata vector must contain at least one value.");
                 
-                int datasize = CheckFieldDefinition(fielddefs[f]);
-                ASSERTL1(fielddata[f].size() == fielddefs[f]->m_fields.size()
-                         * datasize, "Invalid size of fielddata vector.");
+                ASSERTL1(fielddata[f].size() ==
+                             fielddefs[f]->m_fields.size() *
+                             CheckFieldDefinition(fielddefs[f]),
+                         "Invalid size of fielddata vector.");
 
                 //---------------------------------------------
                 // Write ELEMENTS
@@ -868,19 +869,23 @@ namespace Nektar
                 switch(fielddefs->m_shapeType)
                 {
                 case eSegment:
+                {
+                    int l = fielddefs->m_numModes[cnt++];
                     if(fielddefs->m_numHomogeneousDir == 1)
                     {
-                        datasize += fielddefs->m_numModes[cnt++]*fielddefs->m_numModes[cnt++];
+                        datasize += l*fielddefs->m_numModes[cnt++];
                     }
                     else if(fielddefs->m_numHomogeneousDir == 2)
                     {
-                        datasize += fielddefs->m_numModes[cnt++]*fielddefs->m_numModes[cnt++]*fielddefs->m_numModes[cnt++];
+                        int m = fielddefs->m_numModes[cnt++];
+                        datasize += l*m*fielddefs->m_numModes[cnt++];
                     }
                     else
                     {
-                        datasize += fielddefs->m_numModes[cnt++];
+                        datasize += l;
                     }
-                    break;
+                }
+                break;
                 case eTriangle:
                 {
                     int l = fielddefs->m_numModes[cnt++];
@@ -888,7 +893,8 @@ namespace Nektar
                     
                     if(fielddefs->m_numHomogeneousDir == 1)
                     {
-                        datasize += StdTriData::getNumberOfCoefficients(l,m)*fielddefs->m_homogeneousZIDs.size();
+                        datasize += StdTriData::getNumberOfCoefficients(l,m)*
+                                    fielddefs->m_homogeneousZIDs.size();
                     }
                     else
                     {
@@ -898,17 +904,16 @@ namespace Nektar
                 break;
                 case eQuadrilateral:
                     {
+                        int l = fielddefs->m_numModes[cnt++];
+                        int m = fielddefs->m_numModes[cnt++];
                         if(fielddefs->m_numHomogeneousDir == 1)
                         {
-                            datasize += fielddefs->m_numModes[cnt++]*
-                                fielddefs->m_numModes[cnt++]*
-                                fielddefs->m_homogeneousZIDs.size();
+                            datasize += l*m*fielddefs->m_homogeneousZIDs.size();
                         }
                         else
                         {
-                            datasize += fielddefs->m_numModes[cnt++]*
-                                fielddefs->m_numModes[cnt++];
-                    }
+                            datasize += l*m;
+                        }
                     }
                     break;
                 case eTetrahedron:
@@ -936,9 +941,12 @@ namespace Nektar
                     }
                     break;
                 case eHexahedron:
-                    datasize += fielddefs->m_numModes[cnt++]*
-                        fielddefs->m_numModes[cnt++]*
-                        fielddefs->m_numModes[cnt++];
+                    {
+                        int l = fielddefs->m_numModes[cnt++];
+                        int m = fielddefs->m_numModes[cnt++];
+                        int n = fielddefs->m_numModes[cnt++];
+                        datasize += l*m*n;
+                    }
                     break;
                 default:
                     ASSERTL0(false, "Unsupported shape type.");
@@ -961,13 +969,16 @@ namespace Nektar
                     case eTriangle:
                         {
                             int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-                        datasize += StdTriData::getNumberOfCoefficients(l,m);
-                    }
-                    break;
+                            int m = fielddefs->m_numModes[cnt++];
+                            datasize += StdTriData::getNumberOfCoefficients(l,m);
+                        }
+                        break;
                     case eQuadrilateral:
-                        datasize += fielddefs->m_numModes[cnt++]*
-                            fielddefs->m_numModes[cnt++];
+                        {
+                            int l = fielddefs->m_numModes[cnt++];
+                            int m = fielddefs->m_numModes[cnt++];
+                            datasize += l*m;
+                        }
                         break;
                     case eTetrahedron:
                         {
@@ -994,10 +1005,12 @@ namespace Nektar
                         }
                         break;
                     case eHexahedron:
-
-                        datasize += fielddefs->m_numModes[cnt++]*
-                            fielddefs->m_numModes[cnt++]*
-                            fielddefs->m_numModes[cnt++];
+                        {
+                            int l = fielddefs->m_numModes[cnt++];
+                            int m = fielddefs->m_numModes[cnt++];
+                            int n = fielddefs->m_numModes[cnt++];
+                            datasize += l*m*n;
+                        }
                         break;
                     default:
                         ASSERTL0(false, "Unsupported shape type.");

@@ -25,17 +25,17 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import fieldfile1.
     string fieldfile1(argv[argc-3]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef1;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef1;
     vector<vector<NekDouble> > fielddata1;
-    graph.Import(fieldfile1,fielddef1,fielddata1);
+    LibUtilities::Import(fieldfile1,fielddef1,fielddata1);
     //----------------------------------------------
 
     //----------------------------------------------
     // Import fieldfile2.
     string fieldfile2(argv[argc-2]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef2;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef2;
     vector<vector<NekDouble> > fielddata2;
-    graph.Import(fieldfile2,fielddef2,fielddata2);
+    LibUtilities::Import(fieldfile2,fielddef2,fielddata2);
     //----------------------------------------------
 
     vector<vector<NekDouble> > combineddata;
@@ -59,10 +59,10 @@ int main(int argc, char *argv[])
         int ncoeffs;
         switch(fielddef2[i]->m_shapeType)
         {
-        case SpatialDomains::eTriangle:
-            ncoeffs = StdRegions::StdTriData::getNumberOfCoefficients(fielddef2[i]->m_numModes[0], fielddef2[i]->m_numModes[1]);
+        case LibUtilities::eTriangle:
+            ncoeffs = LibUtilities::StdTriData::getNumberOfCoefficients(fielddef2[i]->m_numModes[0], fielddef2[i]->m_numModes[1]);
             break;
-        case SpatialDomains::eQuadrilateral:
+        case LibUtilities::eQuadrilateral:
             ncoeffs = fielddef2[i]->m_numModes[0]*fielddef2[i]->m_numModes[1];
             break;
         default:
@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
 
     //-----------------------------------------------
     // Write out datafile. 
-    graph.Write(argv[argc-1], fielddef2, combineddata);
+    LibUtilities::Write(argv[argc-1], fielddef2, combineddata);
     //-----------------------------------------------
 
     return 0;

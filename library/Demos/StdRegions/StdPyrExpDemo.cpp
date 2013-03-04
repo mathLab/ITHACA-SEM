@@ -1,4 +1,3 @@
-
 #include <StdRegions/StdPyrExp.h>
 #include <StdRegions/StdRegions.hpp>
 #include <LibUtilities/Foundations/Foundations.hpp>
@@ -38,7 +37,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    StdRegions::ExpansionType regionShape = ePyramid;    
+    LibUtilities::ShapeType regionShape = ePyramid;    
     
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
@@ -57,7 +56,7 @@ int main(int argc, char *argv[]) {
 
 
     // Check to see that correct Expansions are used
-    if( regionShape == StdRegions::ePyramid ) 
+    if(regionShape == LibUtilities::ePyramid ) 
     {
         if( (bType_x == LibUtilities::eOrtho_B) || (bType_x == LibUtilities::eModified_B) ) {
             NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B or Modified_B");
@@ -101,7 +100,7 @@ int main(int argc, char *argv[]) {
     
     StdRegions::StdExpansion *sPyrE;
     
-    if( regionShape == StdRegions::ePyramid ) 
+    if(regionShape == LibUtilities::ePyramid ) 
     { 
         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
         const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
@@ -118,7 +117,7 @@ int main(int argc, char *argv[]) {
             //sPyrE = new StdRegions::StdNodalTetExp( basisKey_x, basisKey_y, basisKey_z, NodalType );
             exit(1);
         } 
-            
+        
         sPyrE->GetCoords(x,y,z);
     
         //----------------------------------------------
@@ -129,9 +128,7 @@ int main(int argc, char *argv[]) {
                         
         }
         //----------------------------------------------
-                
     }
-       
              
     //---------------------------------------------
     // Project onto Expansion 
@@ -160,7 +157,7 @@ int main(int argc, char *argv[]) {
      t[1] = -0.25;
      t[2] = 0.5;
     
-    if( regionShape == StdRegions::ePyramid ) {
+     if(regionShape == LibUtilities::ePyramid ) {
         solution[0] = Pyramid_sol( t[0], t[1], t[2], P, Q, R); 
     }
     

@@ -166,6 +166,7 @@ namespace Nektar
         // Virtual functions 
         virtual void v_PrintSummary(std::ostream &out);
         
+
         virtual void v_DoSolve(void);
         
         virtual void v_TransCoeffToPhys(void);

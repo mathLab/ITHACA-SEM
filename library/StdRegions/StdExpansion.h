@@ -572,9 +572,9 @@ namespace Nektar
              *
              *  \return returns the shape of the expansion domain
              */
-            ExpansionType DetExpansionType() const
+            LibUtilities::ShapeType DetShapeType() const
             {
-                return v_DetExpansionType();
+                return v_DetShapeType();
             }
 
             int GetShapeDimension() const
@@ -1628,7 +1628,7 @@ namespace Nektar
             
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const;
 
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
 
             STD_REGIONS_EXPORT virtual int v_GetShapeDimension() const;
 

@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    StdRegions::ExpansionType regionShape = StdRegions::eTetrahedron;
+    LibUtilities::ShapeType regionShape = LibUtilities::eTetrahedron;
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
     int bType_z_val = atoi(argv[3]);
@@ -222,7 +222,8 @@ int main(int argc, char *argv[])
     // Evaulate solution at x = y = z = 0  and print error
     Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
 
-    if( regionShape == StdRegions::eTetrahedron ) {
+    if( regionShape == LibUtilities::eTetrahedron ) 
+    {
         solution[0] = Tet_sol( t[0], t[1], t[2], P, Q, R );
     }
 

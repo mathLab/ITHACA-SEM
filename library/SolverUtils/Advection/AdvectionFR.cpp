@@ -112,7 +112,7 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
             int n;
-            int nquad0, nquad1, nquad2;
+            int nquad0, nquad1;
             int nElements   = pFields[0]->GetExpSize();            
             int nDimensions = pFields[0]->GetCoordim(0);
             Array<OneD, LibUtilities::BasisSharedPtr> base;
@@ -188,7 +188,7 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {        
-            int i, j, n;
+            int i, n;
             NekDouble c0, c1, c2;
             int nquad0, nquad1, nquad2;
             int nmodes0, nmodes1, nmodes2;
@@ -524,7 +524,6 @@ namespace Nektar
                         // Function sign to compute  left correction function
                         NekDouble sign0 = pow(-1.0, p0);
                         NekDouble sign1 = pow(-1.0, p1);
-                        NekDouble sign2 = pow(-1.0, p2);
                         
                         // Factorial factor to build the scheme
                         NekDouble ap0 = boost::math::tgamma(2 * p0 + 1) 
@@ -721,8 +720,7 @@ namespace Nektar
 
             if (Basis->GetPointsType() == LibUtilities::eGaussGaussLegendre)
             {
-                int n, i, j, nLocalVertices;
-                int nquad0, nquad1, nquad2;
+                int n;
                 
                 int nElements   = pFields[0]->GetExpSize();            
                 int nDimensions = pFields[0]->GetCoordim(0);

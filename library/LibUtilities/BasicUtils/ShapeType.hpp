@@ -39,6 +39,10 @@
 
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 
+#ifdef min
+#undef min
+#endif
+
 namespace Nektar
 {
     namespace LibUtilities

@@ -73,18 +73,23 @@ namespace Nektar
             
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux  (nDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfieldStd(nDim);
+
             
 
             for (j = 0; j < nDim; ++j)
             {
                 qfield[j] = 
                     Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
+                qfieldStd[j] = 
+                Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
                 flux[j]   = 
                     Array<OneD, Array<OneD, NekDouble> >(nConvectiveFields);
                 
                 for (i = 0; i < nConvectiveFields; ++i)
                 {
                     qfield[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
+                    qfieldStd[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
                     flux[j][i]   = Array<OneD, NekDouble>(nTracePts, 0.0);
                 }
             }
@@ -110,7 +115,7 @@ namespace Nektar
                     fields[i]->BwdTrans             (qcoeffs, qfield[j][i]);
                 }
             }
-            
+
             for (i = 0; i < nPts; ++i)
             {
                 cout<<"LDG, i = "<<i<<",\t derivativesO1-X = "<<qfield[0][0][i] << endl;
@@ -122,7 +127,6 @@ namespace Nektar
             }
             int num;
             cin>>num;
-            
 
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
@@ -146,6 +150,13 @@ namespace Nektar
                 fields[i]->MultiplyByElmtInvMass(tmp[i], tmp[i]);
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
+
+            cout<<endl;
+            for (i = 0; i < nPts; ++i)
+            {
+                cout<<"LDG, i = "<<i<<",\t outarray = "<<outarray[0][i] << endl;
+            }
+            cin>>num;
         }
         
         
@@ -302,7 +313,7 @@ namespace Nektar
             int nvariables = fields.num_elements();
             int nDim       = qfield.num_elements();
             
-            NekDouble C11 = 1.0;
+            NekDouble C11 = 0.0;
             Array<OneD, NekDouble > Fwd(nTracePts);
             Array<OneD, NekDouble > Bwd(nTracePts);
             Array<OneD, NekDouble > Vn (nTracePts, 0.0);

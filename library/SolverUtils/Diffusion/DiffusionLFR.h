@@ -122,14 +122,28 @@ namespace Nektar
                 const int                                          var,
                 const Array<OneD, const NekDouble>                &ufield,
                       Array<OneD,       NekDouble>                &penaltyflux);
-           /* 
+            
+            virtual void v_NumFluxforVector(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
+                const Array<OneD, Array<OneD, NekDouble> >              &ufield,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
+                      Array<OneD, Array<OneD, NekDouble> >              &qflux);
+            
+            virtual void v_WeakPenaltyforVector(
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const int                                          var,
+                const int                                          dir,
+                const Array<OneD, const NekDouble>                &qfield,
+                      Array<OneD,       NekDouble>                &penaltyflux,
+                NekDouble                                          C11);
+            
             virtual void v_DivCFlux_2D(
                 const int                                      nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
                 const Array<OneD, const NekDouble>               &fluxX1, 
                 const Array<OneD, const NekDouble>               &fluxX2, 
                 const Array<OneD, const NekDouble>               &numericalFlux,
-                      Array<OneD,       NekDouble>               &divCFlux);*/
+                      Array<OneD,       NekDouble>               &divCFlux);
         }; 
     }
 }

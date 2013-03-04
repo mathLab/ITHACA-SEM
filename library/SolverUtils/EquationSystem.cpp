@@ -2159,17 +2159,16 @@ namespace Nektar
                         {
                             out << "\tProjection Type : Flux Reconstruction HU"             <<endl;
                         }
-                        else if (AdvectionType == "FRc")
+                        else if (AdvectionType == "FRcmin")
                         {
                             out << "\tProjection Type : Flux Reconstruction c = c-min"      <<endl;
                         }
-                        else if (AdvectionType == "FRc")
+                        else if (AdvectionType == "FRcinf")
                         {
                             out << "\tProjection Type : Flux Reconstruction c = c-infinity" <<endl;
                         }
                         break;
                     }
-                    
                     case MultiRegions::eMixed_CG_Discontinuous:
                     {
                         out << "\tProjection Type : Mixed CG/DG" << endl;
@@ -2191,6 +2190,48 @@ namespace Nektar
             else if (m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
             {
                 out << "\tProjection Type : Mixed Continuous Galerkin and Discontinuous" <<endl;
+            }
+            
+            if (m_session->DefinesSolverInfo("DiffusionType"))
+            {
+                std::string DiffusionType;
+                DiffusionType = m_session->GetSolverInfo("DiffusionType");
+                switch (m_projectionType)
+                {
+                    case MultiRegions::eGalerkin:
+                    {
+                        break;
+                    }
+                        
+                    case MultiRegions::eDiscontinuous:
+                    {
+                        if (DiffusionType == "LDG")
+                        {
+                            out << "\tDiffusion Type  : LDG"    <<endl;
+                        }
+                        else if (DiffusionType == "LFRDG")
+                        {
+                            out << "\tDiffusion Type  : LFRDG"  <<endl;
+                        }
+                        else if (DiffusionType == "LFRSD")
+                        {
+                            out << "\tDiffusion Type  : LFRSD"  <<endl;
+                        }
+                        else if (DiffusionType == "LFRHU")
+                        {
+                            out << "\tDiffusion Type  : LFRHU"  <<endl;
+                        }
+                        else if (DiffusionType == "LFRcmin")
+                        {
+                            out << "\tDiffusion Type  : LFR c = c-min"      <<endl;
+                        }
+                        else if (DiffusionType == "LFRcinf")
+                        {
+                            out << "\tDiffusion Type  : LFR c = c-infinity" <<endl;
+                        }
+                        break;
+                    }
+                }
             }
         }
 

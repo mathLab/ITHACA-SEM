@@ -909,24 +909,30 @@ namespace Nektar
         {
             int i;
             
+            /*
             StdRegions::IndexMapKey ikey(
                                          StdRegions::eFaceToElement, DetExpansionType(),
                                          GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                                          face, GetFaceOrient(face));
             StdRegions::IndexMapValuesSharedPtr map =
             StdExpansion::GetIndexMap(ikey);
+            */
             
-            int order_e = (*map).num_elements(); // Order of the element
+            Array<OneD,unsigned int> map;
+            Array<OneD,int> sign;
+            
+            GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
+            
+            int order_e = map.num_elements(); // Order of the element
             int n_coeffs = FaceExp->GetCoeffs().num_elements(); // Order of the trace
             int n_phys = FaceExp->GetPhys().num_elements();
             
-            // TAKE OUT THIS IF STATEMENT
-            
-            if(n_coeffs != order_e) // Going to orthogonal space
+            if(n_coeffs!=order_e) // Going to orthogonal space
             {
                 // ASSERTL0(false, "Variable order not supported in 3D.");
-                
+
                 FaceExp->FwdTrans(Fn,FaceExp->UpdateCoeffs());
+                
                 LocalRegions::Expansion2DSharedPtr locExp =
                 boost::dynamic_pointer_cast<
                 LocalRegions::Expansion2D>(FaceExp);
@@ -948,39 +954,33 @@ namespace Nektar
                 
                 int NumModesElementMax  = sqrt(n_coeffs);
                 int NumModesElementMin  = sqrt(order_e);
+                
                 // Only implemented for hexes so far
                 
-                const LibUtilities::PointsKey Pkey1(NumModesElementMax+1,LibUtilities::eGaussLobattoLegendre);
-                
-                LibUtilities::BasisKey bkey_ortho0(LibUtilities::eOrtho_A,NumModesElementMax,Pkey1);
-                
-                LibUtilities::BasisKey bkey_ortho1(LibUtilities::eOrtho_A,NumModesElementMax,Pkey1);
+                LibUtilities::BasisKey bkey_ortho0(LibUtilities::eOrtho_A,FaceExp->GetBasis(0)->GetNumModes(),FaceExp->GetBasis(0)->GetPointsKey());
+                LibUtilities::BasisKey bkey_ortho1(LibUtilities::eOrtho_A,FaceExp->GetBasis(1)->GetNumModes(),FaceExp->GetBasis(1)->GetPointsKey());
                 
                 // create different ortho basis for different shaped elements
                 
                 LibUtilities::BasisKey bkey0(FaceExp->GetBasis(0)->GetBasisType(),FaceExp->GetBasis(0)->GetNumModes(),FaceExp->GetBasis(0)->GetPointsKey());
-                
                 LibUtilities::BasisKey bkey1(FaceExp->GetBasis(1)->GetBasisType(),FaceExp->GetBasis(1)->GetNumModes(),FaceExp->GetBasis(1)->GetPointsKey());
                 
-                LibUtilities::InterpCoeff2D(bkey0, bkey1,FaceExp->GetCoeffs(),bkey_ortho0,bkey_ortho1,coeff);
+                LibUtilities::InterpCoeff2D(bkey0,bkey1,FaceExp->GetCoeffs(),bkey_ortho0,bkey_ortho1,coeff);
                 
                 //-----begin alternative (more expensive) for the InterpCoeff2D---------------
+                
                 /*
-                 
-                 
                  StdRegions::StdQuadExpSharedPtr     m_OrthoQuadExp;
                  m_OrthoQuadExp =  MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(bkey_ortho0,bkey_ortho1);
                  
                  FaceExp->BwdTrans(FaceExp->GetCoeffs(),m_OrthoQuadExp->UpdatePhys());
                  
                  m_OrthoQuadExp->FwdTrans(m_OrthoQuadExp->GetPhys(),coeff);
-                 */
+                */
                 
                 //------end alternative (more expensive) for the InterpCoeff2D---------------
-                
-                
+ 
                 // Cutting high frequencies
-                
                 
                 int NumModesCuttOff     = NumModesElementMin;
                 
@@ -1003,21 +1003,25 @@ namespace Nektar
                     }
                 }
                 
-                
                 //-----begin alternative (more expensive) for the InterpCoeff2D---------------
-                
+   
                 /*
                  m_OrthoQuadExp->BwdTrans(coeff,phys);
                  
                  FaceExp->FwdTrans(phys,FaceExp->UpdateCoeffs());
                  */
+                 
                 //------end alternative (more expensive) for the InterpCoeff2D---------------
                 
-                
                 LibUtilities::InterpCoeff2D(bkey_ortho0,bkey_ortho1,coeff,bkey0,bkey1,FaceExp->UpdateCoeffs());
-                
+               
                 StdRegions::StdMatrixKey masskey(StdRegions::eMass,StdRegions::eQuadrilateral,*FaceExp);
                 FaceExp->MassMatrixOp(FaceExp->UpdateCoeffs(),FaceExp->UpdateCoeffs(),masskey);
+                
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[map[i]] += sign[i]*FaceExp->GetCoeff(i);
+                }
             }
             else
             {
@@ -1036,6 +1040,7 @@ namespace Nektar
                  * normals must be negated, since the integral being performed
                  * here requires an outwards facing normal.
                  */
+                
                 if (m_negatedNormals[face])
                 {
                     Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
@@ -1048,11 +1053,11 @@ namespace Nektar
                         Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
                     }
                 }
-            }
-            
-            for(i = 0; i < order_e; ++i)
-            {
-                outarray[(*map)[i].index] += (*map)[i].sign*FaceExp->GetCoeff(i);
+                
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[map[i]] += sign[i]*FaceExp->GetCoeff(i);
+                }
             }
         }
         

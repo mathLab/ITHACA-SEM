@@ -103,8 +103,8 @@ namespace Nektar
             Array<OneD, NekDouble> &outarray)
         {
             int i;
-
-            StdRegions::Orientation  edgedir = GetEorient(edge); 
+            
+            StdRegions::Orientation  edgedir = GetEorient(edge);
             /*
             unsigned short num_mod0 = EdgeExp->GetBasis(0)->GetNumModes();
             unsigned short num_mod1 = 0; 
@@ -184,7 +184,6 @@ namespace Nektar
                         Vmath::Neg(order_e,EdgeExp->UpdateCoeffs(),1);
                     }
                 }
-                
                 // add data to outarray if forward edge normal is outwards
                 for(i = 0; i < order_e; ++i)
                 {

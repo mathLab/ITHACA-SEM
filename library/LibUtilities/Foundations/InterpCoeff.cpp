@@ -117,7 +117,6 @@ namespace Nektar
             else
             {
                 // interpolate
-                
                 DNekMatSharedPtr ft0 = BasisManager()[fbasis0]->GetI(tbasis0);
                 
                 Blas::Dgemm('N', 'N', tnm0, tnm1, fnm0, 1.0, ft0->GetPtr().get(),

@@ -902,10 +902,10 @@ namespace Nektar
         }
         
         void Expansion3D::v_AddFaceNormBoundaryInt(
-                                                   const int                            face,
-                                                   StdRegions::StdExpansionSharedPtr   &FaceExp,
-                                                   const Array<OneD, const NekDouble>  &Fn,
-                                                   Array<OneD,       NekDouble>  &outarray)
+            const int                            face,
+            StdRegions::StdExpansionSharedPtr   &FaceExp,
+            const Array<OneD, const NekDouble>  &Fn,
+                  Array<OneD,       NekDouble>  &outarray)
         {
             int i;
             
@@ -922,20 +922,17 @@ namespace Nektar
             Array<OneD,int> sign;
             
             GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
-            
+
             int order_e = map.num_elements(); // Order of the element
             int n_coeffs = FaceExp->GetCoeffs().num_elements(); // Order of the trace
-            int n_phys = FaceExp->GetPhys().num_elements();
             
-            if(n_coeffs!=order_e) // Going to orthogonal space
+            if (n_coeffs != order_e) // Going to orthogonal space
             {
-                // ASSERTL0(false, "Variable order not supported in 3D.");
-
                 FaceExp->FwdTrans(Fn,FaceExp->UpdateCoeffs());
                 
                 LocalRegions::Expansion2DSharedPtr locExp =
-                boost::dynamic_pointer_cast<
-                LocalRegions::Expansion2D>(FaceExp);
+                    boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion2D>(FaceExp);
                 
                 if (m_negatedNormals[face])
                 {
@@ -949,41 +946,38 @@ namespace Nektar
                         Vmath::Neg(n_coeffs,FaceExp->UpdateCoeffs(),1);
                     }
                 }
-                Array<OneD, NekDouble> coeff(n_coeffs,0.0);
-                Array<OneD, NekDouble> phys(n_phys,0.0);
+
+                Array<OneD, NekDouble> coeff(n_coeffs, 0.0);
                 
                 int NumModesElementMax  = sqrt(n_coeffs);
                 int NumModesElementMin  = sqrt(order_e);
                 
                 // Only implemented for hexes so far
-                
-                LibUtilities::BasisKey bkey_ortho0(LibUtilities::eOrtho_A,FaceExp->GetBasis(0)->GetNumModes(),FaceExp->GetBasis(0)->GetPointsKey());
-                LibUtilities::BasisKey bkey_ortho1(LibUtilities::eOrtho_A,FaceExp->GetBasis(1)->GetNumModes(),FaceExp->GetBasis(1)->GetPointsKey());
+                LibUtilities::BasisKey bkey_ortho0(
+                    LibUtilities::eOrtho_A,
+                    FaceExp->GetBasis(0)->GetNumModes(),
+                    FaceExp->GetBasis(0)->GetPointsKey());
+                LibUtilities::BasisKey bkey_ortho1(
+                    LibUtilities::eOrtho_A,
+                    FaceExp->GetBasis(1)->GetNumModes(),
+                    FaceExp->GetBasis(1)->GetPointsKey());
                 
                 // create different ortho basis for different shaped elements
+                LibUtilities::BasisKey bkey0(
+                    FaceExp->GetBasis(0)->GetBasisType(),
+                    FaceExp->GetBasis(0)->GetNumModes(),
+                    FaceExp->GetBasis(0)->GetPointsKey());
+                LibUtilities::BasisKey bkey1(
+                    FaceExp->GetBasis(1)->GetBasisType(),
+                    FaceExp->GetBasis(1)->GetNumModes(),
+                    FaceExp->GetBasis(1)->GetPointsKey());
+                LibUtilities::InterpCoeff2D(
+                    bkey0,       bkey1,       FaceExp->GetCoeffs(),
+                    bkey_ortho0, bkey_ortho1, coeff);
                 
-                LibUtilities::BasisKey bkey0(FaceExp->GetBasis(0)->GetBasisType(),FaceExp->GetBasis(0)->GetNumModes(),FaceExp->GetBasis(0)->GetPointsKey());
-                LibUtilities::BasisKey bkey1(FaceExp->GetBasis(1)->GetBasisType(),FaceExp->GetBasis(1)->GetNumModes(),FaceExp->GetBasis(1)->GetPointsKey());
-                
-                LibUtilities::InterpCoeff2D(bkey0,bkey1,FaceExp->GetCoeffs(),bkey_ortho0,bkey_ortho1,coeff);
-                
-                //-----begin alternative (more expensive) for the InterpCoeff2D---------------
-                
-                /*
-                 StdRegions::StdQuadExpSharedPtr     m_OrthoQuadExp;
-                 m_OrthoQuadExp =  MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(bkey_ortho0,bkey_ortho1);
-                 
-                 FaceExp->BwdTrans(FaceExp->GetCoeffs(),m_OrthoQuadExp->UpdatePhys());
-                 
-                 m_OrthoQuadExp->FwdTrans(m_OrthoQuadExp->GetPhys(),coeff);
-                */
-                
-                //------end alternative (more expensive) for the InterpCoeff2D---------------
- 
                 // Cutting high frequencies
-                
-                int NumModesCuttOff     = NumModesElementMin;
-                
+                int NumModesCuttOff = NumModesElementMin;
+
                 for (i = 0; i < n_coeffs; i++)
                 {
                     if (i == NumModesCuttOff)
@@ -1003,24 +997,32 @@ namespace Nektar
                     }
                 }
                 
-                //-----begin alternative (more expensive) for the InterpCoeff2D---------------
-   
-                /*
-                 m_OrthoQuadExp->BwdTrans(coeff,phys);
-                 
-                 FaceExp->FwdTrans(phys,FaceExp->UpdateCoeffs());
-                 */
-                 
-                //------end alternative (more expensive) for the InterpCoeff2D---------------
-                
-                LibUtilities::InterpCoeff2D(bkey_ortho0,bkey_ortho1,coeff,bkey0,bkey1,FaceExp->UpdateCoeffs());
-               
-                StdRegions::StdMatrixKey masskey(StdRegions::eMass,StdRegions::eQuadrilateral,*FaceExp);
-                FaceExp->MassMatrixOp(FaceExp->UpdateCoeffs(),FaceExp->UpdateCoeffs(),masskey);
+                LibUtilities::InterpCoeff2D(
+                    bkey_ortho0, bkey_ortho1, coeff,
+                    bkey0,       bkey1,       FaceExp->UpdateCoeffs());
+
+                StdRegions::StdMatrixKey masskey(
+                    StdRegions::eMass,
+                    FaceExp->DetExpansionType(),
+                    *FaceExp);
+                FaceExp->MassMatrixOp(
+                    FaceExp->UpdateCoeffs(),FaceExp->UpdateCoeffs(),masskey);
+
+                // Extract lower degree modes.
+                Vmath::Zero(coeff.num_elements(), coeff, 1);
+
+                for (i = 0; i < NumModesElementMin; ++i)
+                {
+                    for (int j = 0; j < NumModesElementMin; ++j)
+                    {
+                        coeff[i*NumModesElementMin+j] =
+                            FaceExp->GetCoeffs()[i*NumModesElementMax+j];
+                    }
+                }
                 
                 for(i = 0; i < order_e; ++i)
                 {
-                    outarray[map[i]] += sign[i]*FaceExp->GetCoeff(i);
+                    outarray[map[i]] += sign[i]*coeff[i];
                 }
             }
             else
@@ -1028,8 +1030,8 @@ namespace Nektar
                 FaceExp->IProductWRTBase(Fn,FaceExp->UpdateCoeffs());
                 
                 LocalRegions::Expansion2DSharedPtr locExp =
-                boost::dynamic_pointer_cast<
-                LocalRegions::Expansion2D>(FaceExp);
+                    boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion2D>(FaceExp);
                 
                 /*
                  * Coming into this routine, the velocity V will have been

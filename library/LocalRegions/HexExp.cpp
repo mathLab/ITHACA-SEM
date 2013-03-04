@@ -849,6 +849,8 @@ namespace Nektar
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
             
+            Array<OneD, NekDouble> o_tmp(nquad0*nquad1*nquad2);
+            
             if (orient == StdRegions::eNoOrientation)
             {
                 orient = GetFaceOrient(face);
@@ -918,6 +920,13 @@ namespace Nektar
 		        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0*nquad1-1-i),-nquad0,&(outarray[0])+(i*nquad1),1);
                     }
 		} 
+                o_tmp = outarray;
+                //interpolate
+                LibUtilities::Interp2D(m_base[0]->GetPointsKey(),
+                                       m_base[1]->GetPointsKey(), o_tmp,
+                                       FaceExp->GetBasis(0)->GetPointsKey(),
+                                       FaceExp->GetBasis(1)->GetPointsKey(),
+                                       outarray);
                 break;
             case 1:
                 if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
@@ -992,6 +1001,13 @@ namespace Nektar
                                      -nquad0*nquad1,&(outarray[0])+(i*nquad2),1);
                     }
 		} 
+                o_tmp = outarray;
+                //interpolate
+                LibUtilities::Interp2D(m_base[0]->GetPointsKey(),
+                                       m_base[2]->GetPointsKey(), o_tmp,
+                                       FaceExp->GetBasis(0)->GetPointsKey(),
+                                       FaceExp->GetBasis(1)->GetPointsKey(),
+                                       outarray);
                 break;
             case 2:
 	        if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
@@ -1063,6 +1079,13 @@ namespace Nektar
                                      -nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
                     }
 		} 
+                o_tmp = outarray;
+                //interpolate
+                LibUtilities::Interp2D(m_base[1]->GetPointsKey(),
+                                       m_base[2]->GetPointsKey(), o_tmp,
+                                       FaceExp->GetBasis(0)->GetPointsKey(),
+                                       FaceExp->GetBasis(1)->GetPointsKey(),
+                                       outarray);
                 break;
             case 3:
 	        if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
@@ -1137,6 +1160,13 @@ namespace Nektar
                                      &(outarray[0])+(i*nquad2),1);
                     }
 		} 
+                o_tmp = outarray;
+                //interpolate
+                LibUtilities::Interp2D(m_base[0]->GetPointsKey(),
+                                       m_base[2]->GetPointsKey(), o_tmp,
+                                       FaceExp->GetBasis(0)->GetPointsKey(),
+                                       FaceExp->GetBasis(1)->GetPointsKey(),
+                                       outarray);
                 break;
             case 4:
                 if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
@@ -1207,6 +1237,13 @@ namespace Nektar
                                      -nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
                     }
 		} 
+                o_tmp = outarray;
+                //interpolate
+                LibUtilities::Interp2D(m_base[1]->GetPointsKey(),
+                                       m_base[2]->GetPointsKey(), o_tmp,
+                                       FaceExp->GetBasis(0)->GetPointsKey(),
+                                       FaceExp->GetBasis(1)->GetPointsKey(),
+                                       outarray);
                 break;
             case 5:
                 if(orient == StdRegions::eDir1FwdDir1_Dir2FwdDir2)
@@ -1277,6 +1314,13 @@ namespace Nektar
                                    &(outarray[0])+(i*nquad1),1);
                     }
 		} 
+                o_tmp = outarray;
+                //interpolate
+                LibUtilities::Interp2D(m_base[0]->GetPointsKey(),
+                                       m_base[1]->GetPointsKey(), o_tmp,
+                                       FaceExp->GetBasis(0)->GetPointsKey(),
+                                       FaceExp->GetBasis(1)->GetPointsKey(),
+                                       outarray);
                 break;
             default:
                 ASSERTL0(false,"face value (> 5) is out of range");

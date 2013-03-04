@@ -588,7 +588,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis, true);
+                    Gtype, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
             }

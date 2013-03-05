@@ -121,13 +121,12 @@ namespace Nektar
             TiXmlElement* geometry_tag = pSession->GetElement("NEKTAR/GEOMETRY");
             TiXmlAttribute *attr = geometry_tag->FirstAttribute();
             int meshDim = 0;
-            int err = 0;
             while (attr)
             {
                 std::string attrName(attr->Name());
                 if (attrName == "DIM")
                 {
-                    err = attr->QueryIntValue(&meshDim);
+                    int err = attr->QueryIntValue(&meshDim);
                     ASSERTL1(err==TIXML_SUCCESS, "Unable to read mesh dimension.");
                     break;
                 }
@@ -817,8 +816,12 @@ namespace Nektar
                         CompositeMap compositeVector;
                         GetCompositeList(compositeListStr, compositeVector);
 
-                        ExpansionType expansion_type_x, expansion_type_y, expansion_type_z;
-                        int           num_modes_x, num_modes_y, num_modes_z;
+                        ExpansionType expansion_type_x = eNoExpansionType;
+                        ExpansionType expansion_type_y = eNoExpansionType;
+                        ExpansionType expansion_type_z = eNoExpansionType;
+                        int           num_modes_x = 0;
+                        int           num_modes_y = 0;
+                        int           num_modes_z = 0;
 
                         LibUtilities::BasisKeyVector basiskeyvec;
 

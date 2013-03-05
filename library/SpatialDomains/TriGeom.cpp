@@ -386,7 +386,7 @@ namespace Nektar
                 const TriGeom &face1,
                 const TriGeom &face2)
         {
-            StdRegions::Orientation returnval;
+            StdRegions::Orientation returnval = StdRegions::eNoOrientation;
             
             int i, j, map[3] = {-1,-1,-1};
             NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;

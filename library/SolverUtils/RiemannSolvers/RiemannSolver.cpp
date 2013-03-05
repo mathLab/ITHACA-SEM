@@ -120,7 +120,8 @@ namespace Nektar
                 
                 rotateToNormal  (Fwd, m_rotStorage[0]);
                 rotateToNormal  (Bwd, m_rotStorage[1]);
-                v_Solve         (m_rotStorage[0], m_rotStorage[1], m_rotStorage[2]);
+                v_Solve         (m_rotStorage[0], m_rotStorage[1],
+                                 m_rotStorage[2]);
                 rotateFromNormal(m_rotStorage[2], flux);
             }
             else
@@ -159,28 +160,27 @@ namespace Nektar
 
                 case 2:
                 {
-                    int vx = (int)velLoc[0];
-                    int vy = (int)velLoc[1];
-                    int i;
+                    const int vx = (int)velLoc[0];
+                    const int vy = (int)velLoc[1];
+                    const int nq = normals[0].num_elements();
                     
-                    for (i = 0; i < normals[0].num_elements(); ++i)
-                    {
-                        NekDouble tmp1 =  inarray[vx][i]*normals[0][i] + 
-                            inarray[vy][i]*normals[1][i];
-                        NekDouble tmp2 = -inarray[vx][i]*normals[1][i] + 
-                            inarray[vy][i]*normals[0][i];
-                        outarray[vx][i] = tmp1;
-                        outarray[vy][i] = tmp2;
-                    }
+                    Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
+                                     outarray[vx], 1);
+                    Vmath::Vvtvp(nq, inarray [vy], 1, normals [1],  1,
+                                     outarray[vx], 1, outarray[vx], 1);
+                    Vmath::Vmul (nq, inarray [vx], 1, normals [1],  1,
+                                     outarray[vy], 1);
+                    Vmath::Vvtvm(nq, inarray [vy], 1, normals [0],  1,
+                                     outarray[vy], 1, outarray[vy], 1);
                     
-                    for (i = 0; i < inarray.num_elements(); ++i)
+                    for (int i = 0; i < inarray.num_elements(); ++i)
                     {
                         if (i == vx || i == vy)
                         {
                             continue;
                         }
                         
-                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, 
+                        Vmath::Vcopy(inarray [i].num_elements(), inarray[i], 1,
                                      outarray[i], 1);
                     }
                     break;
@@ -188,40 +188,42 @@ namespace Nektar
                 
                 case 3:
                 {
-                    int i, cnt = 0;
-                    int vx = (int)velLoc[0];
-                    int vy = (int)velLoc[1];
-                    int vz = (int)velLoc[2];
-                    
+                    const int vx = (int)velLoc[0];
+                    const int vy = (int)velLoc[1];
+                    const int vz = (int)velLoc[2];
+                    const int nq = normals[0].num_elements();
+
                     // Generate matrices if they don't already exist.
-                    if (m_rotMatrices.size() == 0)
+                    if (m_rotMat.num_elements() == 0)
                     {
                         GenerateRotationMatrices();
                     }
                     
                     // Apply rotation matrices.
-                    for (i = 0; i < normals[0].num_elements(); ++i, cnt += 9)
-                    {
-                        NekDouble *m = &m_rotMatrices[cnt];
-                        NekDouble tmp1 = inarray[vx][i]*m[0] + 
-                            inarray[vy][i]*m[1] + inarray[vz][i]*m[2];
-                        NekDouble tmp2 = inarray[vx][i]*m[3] + 
-                            inarray[vy][i]*m[4] + inarray[vz][i]*m[5];
-                        NekDouble tmp3 = inarray[vx][i]*m[6] + 
-                            inarray[vy][i]*m[7] + inarray[vz][i]*m[8];
-                        outarray[vx][i] = tmp1;
-                        outarray[vy][i] = tmp2;
-                        outarray[vz][i] = tmp3;
-                    }
-                    
+                    Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[0],  1,
+                                       inarray [vy], 1, m_rotMat[1],  1,
+                                       outarray[vx], 1);
+                    Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[2],  1,
+                                       outarray[vx], 1, outarray[vx], 1);
+                    Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[3],  1,
+                                       inarray [vy], 1, m_rotMat[4],  1,
+                                       outarray[vy], 1);
+                    Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[5],  1,
+                                       outarray[vy], 1, outarray[vy], 1);
+                    Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[6],  1,
+                                       inarray [vy], 1, m_rotMat[7],  1,
+                                       outarray[vz], 1);
+                    Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[8],  1,
+                                       outarray[vz], 1, outarray[vz], 1);
+
                     for (int i = 0; i < inarray.num_elements(); ++i)
                     {
                         if (i == vx || i == vy || i == vz)
                         {
                             continue;
                         }
-                        
-                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, 
+
+                        Vmath::Vcopy(inarray [i].num_elements(), inarray[i], 1,
                                      outarray[i], 1);
                     }
                     break;
@@ -257,21 +259,20 @@ namespace Nektar
                     
                 case 2:
                 {
-                    int vx = (int)velLoc[0];
-                    int vy = (int)velLoc[1];
-                    int i;
+                    const int vx = (int)velLoc[0];
+                    const int vy = (int)velLoc[1];
+                    const int nq = normals[0].num_elements();
 
-                    for (i = 0; i < normals[0].num_elements(); ++i)
-                    {
-                        NekDouble tmp1 = inarray[vx][i]*normals[0][i] - 
-                            inarray[vy][i]*normals[1][i];
-                        NekDouble tmp2 = inarray[vx][i]*normals[1][i] + 
-                            inarray[vy][i]*normals[0][i];
-                        outarray[vx][i] = tmp1;
-                        outarray[vy][i] = tmp2;
-                    }
-                    
-                    for (i = 0; i < inarray.num_elements(); ++i)
+                    Vmath::Vmul (nq, inarray [vy], 1, normals [1],  1,
+                                     outarray[vx], 1);
+                    Vmath::Vvtvm(nq, inarray [vx], 1, normals [0],  1,
+                                     outarray[vx], 1, outarray[vx], 1);
+                    Vmath::Vmul (nq, inarray [vx], 1, normals [1],  1,
+                                     outarray[vy], 1);
+                    Vmath::Vvtvp(nq, inarray [vy], 1, normals [0],  1,
+                                     outarray[vy], 1, outarray[vy], 1);
+
+                    for (int i = 0; i < inarray.num_elements(); ++i)
                     {
                         if (i == vx || i == vy)
                         {
@@ -286,27 +287,27 @@ namespace Nektar
                 
                 case 3:
                 {
-                    int i, cnt = 0;
-                    int vx = (int)velLoc[0];
-                    int vy = (int)velLoc[1];
-                    int vz = (int)velLoc[2];
+                    const int vx = (int)velLoc[0];
+                    const int vy = (int)velLoc[1];
+                    const int vz = (int)velLoc[2];
+                    const int nq = normals[0].num_elements();
                     
-                    // Apply inverse of rotation matrices = transpose of
-                    // rotation matrices.
-                    for (i = 0; i < normals[0].num_elements(); ++i, cnt += 9)
-                    {
-                        NekDouble *m = &m_rotMatrices[cnt];
-                        NekDouble tmp1 = inarray[vx][i]*m[0] +
-                            inarray[vy][i]*m[3] + inarray[vz][i]*m[6];
-                        NekDouble tmp2 = inarray[vx][i]*m[1] + 
-                            inarray[vy][i]*m[4] + inarray[vz][i]*m[7];
-                        NekDouble tmp3 = inarray[vx][i]*m[2] + 
-                            inarray[vy][i]*m[5] + inarray[vz][i]*m[8];
-                        outarray[vx][i] = tmp1;
-                        outarray[vy][i] = tmp2;
-                        outarray[vz][i] = tmp3;
-                    }
-                    
+                    Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[0],  1,
+                                       inarray [vy], 1, m_rotMat[3],  1,
+                                       outarray[vx], 1);
+                    Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[6],  1,
+                                       outarray[vx], 1, outarray[vx], 1);
+                    Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[1],  1,
+                                       inarray [vy], 1, m_rotMat[4],  1,
+                                       outarray[vy], 1);
+                    Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[7],  1,
+                                       outarray[vy], 1, outarray[vy], 1);
+                    Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[2],  1,
+                                       inarray [vy], 1, m_rotMat[5],  1,
+                                       outarray[vz], 1);
+                    Vmath::Vvtvp  (nq, inarray [vz], 1, m_rotMat[8],  1,
+                                       outarray[vz], 1, outarray[vz], 1);
+
                     for (int i = 0; i < inarray.num_elements(); ++i)
                     {
                         if (i == vx || i == vy || i == vz)
@@ -314,7 +315,7 @@ namespace Nektar
                             continue;
                         }
                         
-                        Vmath::Vcopy(inarray[i].num_elements(), inarray[i], 1, 
+                        Vmath::Vcopy(inarray [i].num_elements(), inarray[i], 1,
                                      outarray[i], 1);
                     }
                     break;
@@ -373,24 +374,34 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > &normals = 
                 m_vectors["N"]();
 
-            int i, cnt;
             Array<OneD, NekDouble> xdir(3,0.0);
             Array<OneD, NekDouble> tn  (3);
+            NekDouble tmp[9];
+            const int nq = normals[0].num_elements();
+            int i, j;
             xdir[0] = 1.0;
 
             // Allocate storage for rotation matrices.
-            m_rotMatrices.resize(9 * normals[0].num_elements());
-            ASSERTL0(m_rotMatrices.size() == 9*normals[0].num_elements(),
-                     "Unable to allocate storage for rotation matrices!");
+            m_rotMat = Array<OneD, Array<OneD, NekDouble> >(9);
+            
+            for (i = 0; i < 9; ++i)
+            {
+                m_rotMat[i] = Array<OneD, NekDouble>(nq);
+            }
 
-            for (i = cnt = 0; i < normals[0].num_elements(); ++i, cnt += 9)
+            for (i = 0; i < normals[0].num_elements(); ++i)
             {
                 // Generate matrix which takes us from (1,0,0) vector to trace
                 // normal.
                 tn[0] = normals[0][i];
                 tn[1] = normals[1][i];
                 tn[2] = normals[2][i];
-                FromToRotation(tn, xdir, &m_rotMatrices[cnt]);
+                FromToRotation(tn, xdir, tmp);
+                
+                for (j = 0; j < 9; ++j)
+                {
+                    m_rotMat[j][i] = tmp[j];
+                }
             }
         }
 

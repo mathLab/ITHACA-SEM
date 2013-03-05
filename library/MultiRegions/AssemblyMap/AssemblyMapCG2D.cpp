@@ -549,7 +549,7 @@ namespace Nektar
                 BottomUpSubStructuredGraphSharedPtr &bottomUpGraph, 
                 set<int> &extraDirVerts,
                 const bool checkIfSystemSingular,
-                int mdswitch, 
+                int mdswitch,
                 bool doInteriorMap)
         {
             int i,j,k,l,m;
@@ -1204,7 +1204,7 @@ namespace Nektar
                 case eIterativeMultiLevelStaticCond:
                 case eXxtMultiLevelStaticCond:
                     {
-                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph,mdswitch,partVerts);
+                        MultiLevelBisectionReordering(boostGraphObj,perm,iperm,bottomUpGraph,partVerts,mdswitch);
                     }
                     break;
                 default:

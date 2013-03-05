@@ -1,18 +1,20 @@
 
 SET(METIS_SEARCH_PATHS 
-	${CMAKE_SOURCE_DIR}/ThirdParty/modmetis-4.0/
-	${CMAKE_SOURCE_DIR}/ThirdParty/modmetis-4.0/build/
-	${CMAKE_SOURCE_DIR}/../ThirdParty/modmetis-4.0/
-	${CMAKE_SOURCE_DIR}/../ThirdParty/modmetis-4.0/build
+	${CMAKE_SOURCE_DIR}/ThirdParty/metis-5.0.2/
+	${CMAKE_SOURCE_DIR}/ThirdParty/metis-5.0.2/build/
+	${CMAKE_SOURCE_DIR}/../ThirdParty/metis-5.0.2/
+	${CMAKE_SOURCE_DIR}/../ThirdParty/metis-5.0.2/build
     ${CMAKE_SOURCE_DIR}/ThirdParty/dist/lib 
     ${CMAKE_SOURCE_DIR}/../ThirdParty/dist/lib)
 
-FIND_LIBRARY(METIS_LIB NAMES modmetis PATHS ${METIS_SEARCH_PATHS})
-
+FIND_LIBRARY(METIS_LIB NAMES metis PATHS ${METIS_SEARCH_PATHS})
 
 SET(METIS_FOUND FALSE)
 IF (METIS_LIB)
   SET(METIS_FOUND TRUE)
+  GET_FILENAME_COMPONENT(METIS_PATH ${METIS_LIB} PATH)
+  INCLUDE_DIRECTORIES(${METIS_PATH}/../include)
+  MARK_AS_ADVANCED(METIS_PATH)
   MARK_AS_ADVANCED(METIS_LIB)
 ENDIF (METIS_LIB)
 

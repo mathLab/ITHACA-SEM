@@ -44,7 +44,7 @@ namespace Nektar
 {
     namespace LocalRegions
     {
-        Expansion3D::Expansion3D(){}
+        Expansion3D::Expansion3D() : m_requireNeg() {}
         
         void Expansion3D::AddHDGHelmholtzTraceTerms(
                                                     const NekDouble                                tau,
@@ -907,47 +907,61 @@ namespace Nektar
             const Array<OneD, const NekDouble>  &Fn,
                   Array<OneD,       NekDouble>  &outarray)
         {
-            int i;
+            int i, j;
             
             /*
-            StdRegions::IndexMapKey ikey(
-                                         StdRegions::eFaceToElement, DetExpansionType(),
-                                         GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                                         face, GetFaceOrient(face));
-            StdRegions::IndexMapValuesSharedPtr map =
-            StdExpansion::GetIndexMap(ikey);
-            */
-            
-            Array<OneD,unsigned int> map;
-            Array<OneD,int> sign;
-            
-            GetFaceToElementMap(face,GetFaceOrient(face),map,sign);
+             * Coming into this routine, the velocity V will have been
+             * multiplied by the trace normals to give the input vector Vn. By
+             * convention, these normals are inwards facing for elements which
+             * have FaceExp as their right-adjacent face.  This conditional
+             * statement therefore determines whether the normals must be
+             * negated, since the integral being performed here requires an
+             * outwards facing normal.
+             */ 
+            if (m_requireNeg.size() == 0)
+            {
+                m_requireNeg.resize(GetNfaces());
+                
+                for (i = 0; i < GetNfaces(); ++i)
+                {
+                    m_requireNeg[i] = false;
+                    if (m_negatedNormals[i])
+                    {
+                        m_requireNeg[i] = true;
+                    }
+                    
+                    Expansion2DSharedPtr faceExp = m_faceExp[i].lock();
 
-            int order_e = map.num_elements(); // Order of the element
+                    if (faceExp->GetRightAdjacentElementExp())
+                    {
+                        if (faceExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID() 
+                            == GetGeom3D()->GetGlobalID())
+                        {
+                            m_requireNeg[i] = true;
+                        }
+                    }
+                }
+            }
+
+            StdRegions::IndexMapKey ikey(
+                StdRegions::eFaceToElement, DetExpansionType(),
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, GetFaceOrient(face));
+            StdRegions::IndexMapValuesSharedPtr map =
+                StdExpansion::GetIndexMap(ikey);
+            
+            int order_e = (*map).num_elements(); // Order of the element
             int n_coeffs = FaceExp->GetCoeffs().num_elements(); // Order of the trace
             
             if (n_coeffs != order_e) // Going to orthogonal space
             {
-                FaceExp->FwdTrans(Fn,FaceExp->UpdateCoeffs());
-                
-                LocalRegions::Expansion2DSharedPtr locExp =
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion2D>(FaceExp);
-                
-                if (m_negatedNormals[face])
-                {
-                    Vmath::Neg(n_coeffs,FaceExp->UpdateCoeffs(),1);
-                }
-                else if (locExp->GetRightAdjacentElementFace() != -1)
-                {
-                    if (locExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID()
-                        == GetGeom3D()->GetGlobalID())
-                    {
-                        Vmath::Neg(n_coeffs,FaceExp->UpdateCoeffs(),1);
-                    }
-                }
+                Array<OneD, NekDouble> coeff(n_coeffs);
 
-                Array<OneD, NekDouble> coeff(n_coeffs, 0.0);
+                ASSERTL0(FaceExp->DetExpansionType() == StdRegions::eQuadrilateral,
+                         "Triangular trace expansion not supported with "
+                         "variable p");
+
+                FaceExp->FwdTrans(Fn,FaceExp->UpdateCoeffs());
                 
                 int NumModesElementMax  = sqrt(n_coeffs);
                 int NumModesElementMin  = sqrt(order_e);
@@ -961,8 +975,6 @@ namespace Nektar
                     LibUtilities::eOrtho_A,
                     FaceExp->GetBasis(1)->GetNumModes(),
                     FaceExp->GetBasis(1)->GetPointsKey());
-                
-                // create different ortho basis for different shaped elements
                 LibUtilities::BasisKey bkey0(
                     FaceExp->GetBasis(0)->GetBasisType(),
                     FaceExp->GetBasis(0)->GetNumModes(),
@@ -976,24 +988,13 @@ namespace Nektar
                     bkey_ortho0, bkey_ortho1, coeff);
                 
                 // Cutting high frequencies
-                int NumModesCuttOff = NumModesElementMin;
+                int NumModesCutOff = NumModesElementMin;
 
-                for (i = 0; i < n_coeffs; i++)
+                for (i = NumModesCutOff; i < NumModesElementMax; ++i)
                 {
-                    if (i == NumModesCuttOff)
+                    for (j = NumModesCutOff; j < NumModesElementMax; ++j)
                     {
-                        for (int s = NumModesCuttOff; s < (i + NumModesElementMax-NumModesElementMin); s++)
-                        {
-                            coeff[s] = 0.0;
-                        }
-                        
-                        NumModesCuttOff += NumModesElementMax;
-                        
-                    }
-                    
-                    if (i > (NumModesElementMax*NumModesElementMin-1))
-                    {
-                        coeff[i] = 0.0;
+                        coeff[i*NumModesElementMax+j] = 0.0;
                     }
                 }
                 
@@ -1008,57 +1009,45 @@ namespace Nektar
                 FaceExp->MassMatrixOp(
                     FaceExp->UpdateCoeffs(),FaceExp->UpdateCoeffs(),masskey);
 
-                // Extract lower degree modes.
-                Vmath::Zero(coeff.num_elements(), coeff, 1);
-
+                // Reorder coefficients for the lower degree face.
+                int offset1 = 0, offset2 = 0;
                 for (i = 0; i < NumModesElementMin; ++i)
                 {
-                    for (int j = 0; j < NumModesElementMin; ++j)
+                    for (j = 0; j < NumModesElementMin; ++j)
                     {
-                        coeff[i*NumModesElementMin+j] =
-                            FaceExp->GetCoeffs()[i*NumModesElementMax+j];
+                        FaceExp->UpdateCoeffs()[offset1+j] =
+                            FaceExp->UpdateCoeffs()[offset2+j];
                     }
+                    offset1 += NumModesElementMin;
+                    offset2 += NumModesElementMax;
                 }
-                
-                for(i = 0; i < order_e; ++i)
+
+                // Extract lower degree modes. TODO: Check this is correct.
+                for (i = NumModesElementMin; i < NumModesElementMax; ++i)
                 {
-                    outarray[map[i]] += sign[i]*coeff[i];
+                    for (j = NumModesElementMin; j < NumModesElementMax; ++j)
+                    {
+                        FaceExp->UpdateCoeffs()[i*NumModesElementMax+j] = 0.0;
+                    }
                 }
             }
             else
             {
                 FaceExp->IProductWRTBase(Fn,FaceExp->UpdateCoeffs());
-                
-                LocalRegions::Expansion2DSharedPtr locExp =
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion2D>(FaceExp);
-                
-                /*
-                 * Coming into this routine, the velocity V will have been
-                 * multiplied by the trace normals to give the input vector
-                 * Vn. By convention, these normals are inwards facing for
-                 * elements which have FaceExp as their right-adjacent face.
-                 * This conditional statement therefore determines whether the
-                 * normals must be negated, since the integral being performed
-                 * here requires an outwards facing normal.
-                 */
-                
-                if (m_negatedNormals[face])
-                {
-                    Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
-                }
-                else if (locExp->GetRightAdjacentElementFace() != -1)
-                {
-                    if (locExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID()
-                        == GetGeom3D()->GetGlobalID())
-                    {
-                        Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
-                    }
-                }
-                
+            }
+            
+            if (m_requireNeg[face])
+            {
                 for(i = 0; i < order_e; ++i)
                 {
-                    outarray[map[i]] += sign[i]*FaceExp->GetCoeff(i);
+                    outarray[(*map)[i].index] -= (*map)[i].sign*FaceExp->GetCoeff(i);
+                }
+            }
+            else
+            {
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[(*map)[i].index] += (*map)[i].sign*FaceExp->GetCoeff(i);
                 }
             }
         }

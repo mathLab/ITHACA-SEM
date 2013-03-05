@@ -1327,7 +1327,7 @@ namespace Nektar
             case StdRegions::eLaplacian:
                 {
                     if( (m_metricinfo->GetGtype() == SpatialDomains::eDeformed) ||
-                        (mkey.GetNVarCoeff() > 0) )
+                        (mkey.GetNVarCoeff() > 0)||(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio)))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1715,7 +1715,8 @@ namespace Nektar
                                                Array<OneD,NekDouble> &outarray,
                                                const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNVarCoeff() == 0)
+            if(mkey.GetNVarCoeff() == 0 && !mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
+
             {
                 // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
@@ -1745,6 +1746,7 @@ namespace Nektar
                     // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
                     BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1);
                     StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
+
 
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g1 * du_dxi1 + g2 * du_dxi2
@@ -1795,6 +1797,7 @@ namespace Nektar
                     // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
                     BwdTrans_SumFacKernel(base0,base1,inarray,wsp0,wsp1);
                     StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
+
 
                     // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
@@ -1881,6 +1884,7 @@ namespace Nektar
                     // wsp2 = l = wsp4 * wsp1 + wsp5 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
                     Vmath::Vvtvvtp(nqtot,&wsp3[0],1,&wsp1[0],1,&wsp4[0],1,&wsp2[0],1,&wsp0[0],1);
                     Vmath::Vvtvvtp(nqtot,&wsp4[0],1,&wsp1[0],1,&wsp5[0],1,&wsp2[0],1,&wsp2[0],1);
+
                     // substep 4: multiply by jacobian and quadrature weights
                     MultiplyByQuadratureMetric(wsp0,wsp0);
                     MultiplyByQuadratureMetric(wsp2,wsp2);

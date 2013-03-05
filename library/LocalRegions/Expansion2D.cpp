@@ -62,6 +62,32 @@ namespace Nektar
             const Array<OneD, const Array<OneD, NekDouble> > normals
                                     = GetEdgeNormal(edge);
 
+            if (m_requireNeg.size() == 0)
+            {
+                m_requireNeg.resize(GetNedges());
+                
+                for (int i = 0; i < GetNedges(); ++i)
+                {
+                    m_requireNeg[i] = false;
+                    if (m_negatedNormals[i])
+                    {
+                        m_requireNeg[i] = true;
+                    }
+                    
+                    Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<
+                        Expansion1D>(m_edgeExp[i].lock());
+
+                    if (edgeExp->GetRightAdjacentElementExp())
+                    {
+                        if (edgeExp->GetRightAdjacentElementExp()->GetGeom2D()
+                            ->GetGlobalID() == GetGeom2D()->GetGlobalID())
+                        {
+                            m_requireNeg[i] = true;
+                        }
+                    }
+                }
+            }
+
             // We allow the case of mixed polynomial order by supporting only
             // those modes on the edge common to both adjoining elements. This
             // is enforced here by taking the minimum size and padding with
@@ -78,6 +104,7 @@ namespace Nektar
             LocalRegions::Expansion1DSharedPtr locExp = 
                 boost::dynamic_pointer_cast<
                     LocalRegions::Expansion1D>(EdgeExp);
+            
             
             if (m_negatedNormals[edge])
             {
@@ -103,91 +130,95 @@ namespace Nektar
             Array<OneD, NekDouble> &outarray)
         {
             int i;
+
+            if (m_requireNeg.size() == 0)
+            {
+                m_requireNeg.resize(GetNedges());
+                
+                for (i = 0; i < GetNedges(); ++i)
+                {
+                    m_requireNeg[i] = false;
+                    if (m_negatedNormals[i])
+                    {
+                        m_requireNeg[i] = true;
+                    }
+                    
+                    Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<
+                        Expansion1D>(m_edgeExp[i].lock());
+
+                    if (edgeExp->GetRightAdjacentElementExp())
+                    {
+                        if (edgeExp->GetRightAdjacentElementExp()->GetGeom2D()
+                            ->GetGlobalID() == GetGeom2D()->GetGlobalID())
+                        {
+                            m_requireNeg[i] = true;
+                        }
+                    }
+                }
+            }
+
+            StdRegions::IndexMapKey ikey(
+                StdRegions::eEdgeToElement, DetExpansionType(),
+                GetBasisNumModes(0), GetBasisNumModes(1), 0,
+                edge, GetEorient(edge));
+            StdRegions::IndexMapValuesSharedPtr map =
+                StdExpansion::GetIndexMap(ikey);
             
-            StdRegions::Orientation  edgedir = GetEorient(edge);
-            /*
-            unsigned short num_mod0 = EdgeExp->GetBasis(0)->GetNumModes();
-            unsigned short num_mod1 = 0; 
-            unsigned short num_mod2 = 0; 
-            
-            StdRegions::IndexMapKey ikey(StdRegions::eEdgeToElement,DetExpansionType(),num_mod0,num_mod1,num_mod2,edge,edgedir);
-            
-            StdRegions::IndexMapValuesSharedPtr map = StdExpansion::GetIndexMap(ikey);
-            */
-            Array<OneD,unsigned int> map;
-            Array<OneD,int> sign;
-            
-            GetEdgeToElementMap(edge,edgedir,map,sign);
-            
-            int order_e = map.num_elements();
-            
+            // Order of the element
+            int order_e = map->num_elements();
             // Order of the trace
             int n_coeffs = (EdgeExp->GetCoeffs()).num_elements();
             
-            if(n_coeffs!=order_e) // Going to orthogonal space
+            if (n_coeffs != order_e) // Going to orthogonal space
             {
                 EdgeExp->FwdTrans(Fn,EdgeExp->UpdateCoeffs());
                 LocalRegions::Expansion1DSharedPtr locExp = 
                     boost::dynamic_pointer_cast<
                         LocalRegions::Expansion1D>(EdgeExp);
                 
-                if (m_negatedNormals[edge])
-                {
-                    Vmath::Neg(n_coeffs,EdgeExp->UpdateCoeffs(),1);
-                }
-                else if (locExp->GetRightAdjacentElementEdge() != -1)
-                {
-                    if (locExp->GetRightAdjacentElementExp()->GetGeom2D()->GetGlobalID() 
-                        == GetGeom2D()->GetGlobalID())
-                    {
-                        Vmath::Neg(n_coeffs,EdgeExp->UpdateCoeffs(),1);
-                    }
-                }
-                
                 Array<OneD, NekDouble> coeff(n_coeffs,0.0);
-                LibUtilities::BasisType btype = ((LibUtilities::BasisType) 1); //1-->Ortho_A
-                LibUtilities::BasisKey bkey_ortho(btype,EdgeExp->GetBasis(0)->GetNumModes(),EdgeExp->GetBasis(0)->GetPointsKey());
-                LibUtilities::BasisKey bkey(EdgeExp->GetBasis(0)->GetBasisType(),EdgeExp->GetBasis(0)->GetNumModes(),EdgeExp->GetBasis(0)->GetPointsKey());
-                LibUtilities::InterpCoeff1D(bkey,EdgeExp->GetCoeffs(),bkey_ortho,coeff);
+                LibUtilities::BasisType btype = LibUtilities::eOrtho_A;
+                LibUtilities::BasisKey bkey_ortho(
+                    btype, EdgeExp->GetBasis(0)->GetNumModes(),
+                    EdgeExp->GetBasis(0)->GetPointsKey());
+                LibUtilities::BasisKey bkey(
+                    EdgeExp->GetBasis(0)->GetBasisType(),
+                    EdgeExp->GetBasis(0)->GetNumModes(),
+                    EdgeExp->GetBasis(0)->GetPointsKey());
+                LibUtilities::InterpCoeff1D(
+                    bkey, EdgeExp->GetCoeffs(), bkey_ortho, coeff);
+
                 // Cutting high frequencies
                 for(i = order_e; i < n_coeffs; i++)
                 {
                     coeff[i] = 0.0;
                 }	
-                LibUtilities::InterpCoeff1D(bkey_ortho,coeff,bkey,EdgeExp->UpdateCoeffs());
+                LibUtilities::InterpCoeff1D(
+                    bkey_ortho, coeff, bkey, EdgeExp->UpdateCoeffs());
                 
-                StdRegions::StdMatrixKey masskey(StdRegions::eMass,StdRegions::eSegment,*EdgeExp);
-                EdgeExp->MassMatrixOp(EdgeExp->UpdateCoeffs(),EdgeExp->UpdateCoeffs(),masskey);
-                
-                for(i = 0; i < order_e; ++i)
-                {
-                    outarray[map[i]] += (sign[i])*EdgeExp->GetCoeff(i);
-                }
+                StdRegions::StdMatrixKey masskey(
+                    StdRegions::eMass, StdRegions::eSegment, *EdgeExp);
+                EdgeExp->MassMatrixOp(
+                    EdgeExp->UpdateCoeffs(), EdgeExp->UpdateCoeffs(), masskey);
             }
             else
             {
                 EdgeExp->IProductWRTBase(Fn,EdgeExp->UpdateCoeffs());
-
-                LocalRegions::Expansion1DSharedPtr locExp = 
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion1D>(EdgeExp);
-                
-                if (m_negatedNormals[edge])
-                {
-                    Vmath::Neg(n_coeffs,EdgeExp->UpdateCoeffs(),1);
-                }
-                else if (locExp->GetRightAdjacentElementEdge() != -1)
-                {
-                    if (locExp->GetRightAdjacentElementExp()->GetGeom2D()->GetGlobalID() 
-                        == GetGeom2D()->GetGlobalID())
-                    {
-                        Vmath::Neg(order_e,EdgeExp->UpdateCoeffs(),1);
-                    }
-                }
-                // add data to outarray if forward edge normal is outwards
+            }
+            
+            // add data to outarray if forward edge normal is outwards
+            if (m_requireNeg[edge])
+            {
                 for(i = 0; i < order_e; ++i)
                 {
-                    outarray[map[i]] += (sign[i])*EdgeExp->GetCoeff(i);
+                    outarray[(*map)[i].index] -= (*map)[i].sign*EdgeExp->GetCoeff(i);
+                }
+            }
+            else
+            {
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[(*map)[i].index] += (*map)[i].sign*EdgeExp->GetCoeff(i);
                 }
             }
         }

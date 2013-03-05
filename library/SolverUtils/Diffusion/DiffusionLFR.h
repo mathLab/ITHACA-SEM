@@ -96,22 +96,7 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
-            
-            virtual void v_DerCFlux_1D(
-                const int                                     nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
-                const Array<OneD, const NekDouble>               &flux, 
-                const Array<OneD, const NekDouble>               &iFlux,
-                      Array<OneD,       NekDouble>               &derCFlux);
-            
-            virtual void v_DerCFlux_2D(
-                const int                                     nConvectiveFields,
-                const int                                        direction,
-                const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
-                const Array<OneD, const NekDouble>               &flux, 
-                const Array<OneD,       NekDouble>               &iFlux,
-                      Array<OneD,       NekDouble>               &derCFlux);
-            
+                        
             virtual void v_NumFluxforScalar(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
                 const Array<OneD, Array<OneD, NekDouble> >              &ufield,
@@ -136,6 +121,21 @@ namespace Nektar
                 const Array<OneD, const NekDouble>                &qfield,
                       Array<OneD,       NekDouble>                &penaltyflux,
                 NekDouble                                          C11);
+            
+            virtual void v_DerCFlux_1D(
+                const int                                     nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+                const Array<OneD, const NekDouble>               &flux, 
+                const Array<OneD, const NekDouble>               &iFlux,
+                      Array<OneD,       NekDouble>               &derCFlux);
+            
+            virtual void v_DerCFlux_2D(
+                const int                                     nConvectiveFields,
+                const int                                        direction,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+                const Array<OneD, const NekDouble>               &flux, 
+                const Array<OneD,       NekDouble>               &iFlux,
+                      Array<OneD,       NekDouble>               &derCFlux);
             
             virtual void v_DivCFlux_2D(
                 const int                                      nConvectiveFields,

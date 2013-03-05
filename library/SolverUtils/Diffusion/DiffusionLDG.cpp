@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Diffusion/DiffusionLDG.h>
+#include <iostream>
+#include <iomanip>
 
 namespace Nektar
 {
@@ -59,7 +61,8 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int i, j, k;
+            //cout<<setprecision(16);
+            int i, j, k, num;
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
             int nCoeffs   = fields[0]->GetNcoeffs();
@@ -116,18 +119,6 @@ namespace Nektar
                 }
             }
 
-            for (i = 0; i < nPts; ++i)
-            {
-                cout<<"LDG, i = "<<i<<",\t derivativesO1-X = "<<qfield[0][0][i] << endl;
-            }
-            cout<<endl;
-            for (i = 0; i < nPts; ++i)
-            {
-                cout<<"LDG, i = "<<i<<",\t derivativesO1-Y = "<<qfield[1][0][i] << endl;
-            }
-            int num;
-            cin>>num;
-
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
             v_NumFluxforVector(fields, inarray, qfield, flux[0]);
@@ -150,13 +141,6 @@ namespace Nektar
                 fields[i]->MultiplyByElmtInvMass(tmp[i], tmp[i]);
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
-
-            cout<<endl;
-            for (i = 0; i < nPts; ++i)
-            {
-                cout<<"LDG, i = "<<i<<",\t outarray = "<<outarray[0][i] << endl;
-            }
-            cin>>num;
         }
         
         
@@ -313,7 +297,7 @@ namespace Nektar
             int nvariables = fields.num_elements();
             int nDim       = qfield.num_elements();
             
-            NekDouble C11 = 0.0;
+            NekDouble C11 = 1.0;
             Array<OneD, NekDouble > Fwd(nTracePts);
             Array<OneD, NekDouble > Bwd(nTracePts);
             Array<OneD, NekDouble > Vn (nTracePts, 0.0);

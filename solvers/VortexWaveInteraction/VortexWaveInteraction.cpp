@@ -1957,7 +1957,7 @@ cout<<"cr="<<cr_str<<endl;
             
             if(useOnlyQuads)
             {
-                if(m_waveVelocities[0]->GetExp(e)->DetExpansionType() == StdRegions::eTriangle)
+                if(m_waveVelocities[0]->GetExp(e)->DetShapeType() == LibUtilities::eTriangle)
                 {
                     for(i = 0; i < e_npts; ++i)
                     {
@@ -2033,13 +2033,13 @@ cout<<"cr="<<cr_str<<endl;
                                      SpatialDomains::MeshGraph::Read(m_sessionName+".xml");
 
 
-          std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef_u;
+          std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef_u;
           std::vector<std::vector<NekDouble> > FieldData_u;
           string file = m_sessionName;
 
 
           file += "_u_5.bc"; 
-          graphShPt->Import(file,FieldDef_u, FieldData_u);
+          LibUtilities::Import(file,FieldDef_u, FieldData_u);
           Ilayer->ExtractDataToCoeffs(FieldDef_u[0], FieldData_u[0], FieldDef_u[0]->m_fields[0],Ilayer->UpdateCoeffs());
           Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());
           
@@ -2067,11 +2067,11 @@ cout<<"cr="<<cr_str<<endl;
     	      Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(1);   
               Ilayer->FwdTrans_IterPerExp(Ilayer->GetPhys(),Ilayer->UpdateCoeffs()); 
               fieldcoeffs[0] = Ilayer->UpdateCoeffs();		
-	      std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef1  = Ilayer->GetFieldDefinitions();               
+	      std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef1  = Ilayer->GetFieldDefinitions();               
               std::vector<std::vector<NekDouble> > FieldData_1(FieldDef1.size());;
               FieldDef1[0]->m_fields.push_back("u");            	    
               Ilayer->AppendFieldData(FieldDef1[0], FieldData_1[0]);            	    
-              graphShPt->Write(file,FieldDef1,FieldData_1); 
+              LibUtilities::Write(file,FieldDef1,FieldData_1); 
               //save the bcs for the next iteration
               if(m_vwiRelaxation!=1.0)
               {
@@ -2089,9 +2089,9 @@ cout<<"cr="<<cr_str<<endl;
 
           file = m_sessionName+ "_v_5.bc"; 
 
-          std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef_v;
+          std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef_v;
           std::vector<std::vector<NekDouble> > FieldData_v;
-          graphShPt->Import(file,FieldDef_v, FieldData_v);
+          LibUtilities::Import(file,FieldDef_v, FieldData_v);
           Ilayer->ExtractDataToCoeffs(FieldDef_v[0], FieldData_v[0], FieldDef_v[0]->m_fields[0],Ilayer->UpdateCoeffs());
           Ilayer->BwdTrans_IterPerExp(Ilayer->GetCoeffs(), Ilayer->UpdatePhys());
           if(cnt==0)
@@ -2113,21 +2113,21 @@ cout<<"cr="<<cr_str<<endl;
     	      Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(1);   
               Ilayer->FwdTrans_IterPerExp(Ilayer->GetPhys(),Ilayer->UpdateCoeffs()); 
               fieldcoeffs[0] = Ilayer->UpdateCoeffs();		
-	      std::vector<SpatialDomains::FieldDefinitionsSharedPtr>  FieldDef2  = Ilayer->GetFieldDefinitions();         
+	      std::vector<LibUtilities::FieldDefinitionsSharedPtr>  FieldDef2  = Ilayer->GetFieldDefinitions();         
               std::vector<std::vector<NekDouble> > FieldData_2(FieldDef2.size());;      
               FieldDef2[0]->m_fields.push_back("v");            	    
               Ilayer->AppendFieldData(FieldDef2[0], FieldData_2[0]);            	             	
-              graphShPt->Write(file,FieldDef2,FieldData_2); 
+              LibUtilities::Write(file,FieldDef2,FieldData_2); 
               //save the bcs for the next iteration
               if(m_vwiRelaxation!=1.0)
               {
-                   Vmath::Smul(nq,1./(1.0-m_vwiRelaxation),
-                        m_bcsForcing[1],1,m_bcsForcing[1],1);              
-                   Vmath::Vcopy(nq,m_bcsForcing[1],1,m_bcsForcing[3],1);
+                  Vmath::Smul(nq,1./(1.0-m_vwiRelaxation),
+                              m_bcsForcing[1],1,m_bcsForcing[1],1);              
+                  Vmath::Vcopy(nq,m_bcsForcing[1],1,m_bcsForcing[3],1);
               }
               else
               {
-                   Vmath::Vcopy(nq, tmp_forcing,1, m_bcsForcing[3],1);                   
+                  Vmath::Vcopy(nq, tmp_forcing,1, m_bcsForcing[3],1);                   
               }
 
 

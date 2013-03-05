@@ -88,7 +88,6 @@ namespace Nektar
         // Read the geometry and the expansion information
         m_graph = SpatialDomains::MeshGraph::Read(m_session);
         m_domainsize = m_graph->GetDomain().size();
-        m_UseContCoeff = false;
 		
         // Also read and store the boundary conditions
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>

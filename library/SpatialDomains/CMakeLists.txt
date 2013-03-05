@@ -33,7 +33,6 @@ SET(SPATIAL_DOMAINS_HEADERS
 Conditions.h
 Curve.hpp
 #EdgeComponent.h
-GeometryShapeType.h
 GeomFactors.h
 GeomFactors1D.h
 GeomFactors2D.h

@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    StdRegions::ExpansionType regionShape = StdRegions::ePyramid;
+    LibUtilities::ShapeType regionShape = LibUtilities::ePyramid;
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
     int bType_z_val = atoi(argv[3]);
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
     }
 
     // Check to see that correct Expansions are used
-    if( regionShape == StdRegions::ePyramid ) 
+    if( regionShape == LibUtilities::ePyramid ) 
     {
         if( (bType_x == LibUtilities::eOrtho_B) || (bType_x == LibUtilities::eModified_B) ) {
             NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B or Modified_B");
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     
     StdRegions::StdExpansion3D *lpe = 0;
     
-    if( regionShape == StdRegions::ePyramid ) 
+    if( regionShape == LibUtilities::ePyramid ) 
     {
         // //////////////////////////////////////////////////////
         // Set up Prism vertex coordinates
@@ -214,9 +214,12 @@ int main(int argc, char *argv[])
          geom->SetOwnData();
 
 
-        if( bType_x_val < 10 ) {
+        if( bType_x_val < 10 ) 
+        {
             lpe = new LocalRegions::PyrExp( basisKey_x, basisKey_y, basisKey_z, geom );
-        } else {
+        } 
+        else 
+        {
             cerr << "Implement the NodalTetExp!!!!!!" << endl;
             //lpe = new StdRegions::StdNodalTetExp( basisKey_x, basisKey_y, basisKey_z, NodalType );
             exit(1);
@@ -259,7 +262,8 @@ int main(int argc, char *argv[])
      t[1] = -0.25;
      t[2] =  0.5;
     
-    if( regionShape == StdRegions::ePyramid ) {
+    if( regionShape == LibUtilities::ePyramid ) 
+    {
         solution[0] = Pyr_sol( t[0], t[1], t[2], P, Q, R );
     }
  

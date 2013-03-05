@@ -122,6 +122,10 @@ namespace Nektar
 
         bool m_showTimings;                     // Show timings for each step
         bool m_useHomo1DSpecVanVisc;                  // bool to identify if spectral vanishing viscosity is active. 
+        bool m_useSpecVanVisc;                  // bool to identify if spectral vanishing viscosity is active. 
+        NekDouble m_sVVCutoffRatio;             // cutt off ratio from which to start decayhing modes
+        NekDouble m_sVVDiffCoeff;               // Diffusion coefficient of SVV modes
+
         Array<OneD, int> m_pressureBCtoElmtID;  // Id of element to which pressure  boundary condition belongs
         Array<OneD, int> m_pressureBCtoTraceID; // Id of edge (2D) or face (3D) to which pressure boundary condition belongs
         
@@ -162,6 +166,7 @@ namespace Nektar
         // Virtual functions 
         virtual void v_PrintSummary(std::ostream &out);
         
+
         virtual void v_DoSolve(void);
         
         virtual void v_TransCoeffToPhys(void);

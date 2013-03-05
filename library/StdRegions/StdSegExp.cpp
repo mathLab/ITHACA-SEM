@@ -78,9 +78,9 @@ namespace Nektar
         /** \brief Return Shape of region, using  ShapeType enum list.
          *  i.e. Segment
          */
-        ExpansionType StdSegExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdSegExp::v_DetShapeType() const
         {
-            return eSegment;
+            return LibUtilities::eSegment;
         }
 
         bool StdSegExp::v_IsBoundaryInteriorExpansion()
@@ -273,7 +273,7 @@ namespace Nektar
                 v_IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMass,v_DetExpansionType(),*this);
+                StdMatrixKey      masskey(eInvMass,v_DetShapeType(),*this);
                 DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
                 NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
@@ -325,7 +325,7 @@ namespace Nektar
                     Array<OneD, NekDouble> tmp0(m_ncoeffs);
                     Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
-                    StdMatrixKey      masskey(eMass,v_DetExpansionType(),*this);
+                    StdMatrixKey      masskey(eMass,v_DetShapeType(),*this);
                     MassMatrixOp(outarray,tmp0,masskey);
                     v_IProductWRTBase(inarray,tmp1);
 
@@ -621,9 +621,9 @@ namespace Nektar
             case eFwdTrans:
                 {
                     Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
-                    StdMatrixKey iprodkey(eIProductWRTBase,v_DetExpansionType(),*this);
+                    StdMatrixKey iprodkey(eIProductWRTBase,v_DetShapeType(),*this);
                     DNekMat &Iprod = *GetStdMatrix(iprodkey);
-                    StdMatrixKey imasskey(eInvMass,v_DetExpansionType(),*this);
+                    StdMatrixKey imasskey(eInvMass,v_DetShapeType(),*this);
                     DNekMat &Imass = *GetStdMatrix(imasskey);
 
                     (*Mat) = Imass*Iprod;

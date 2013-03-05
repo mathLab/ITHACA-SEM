@@ -47,11 +47,11 @@ namespace Nektar
         StdPyrExp::StdPyrExp(const LibUtilities::BasisKey &Ba,
                              const LibUtilities::BasisKey &Bb,
                              const LibUtilities::BasisKey &Bc) 
-            : StdExpansion  (StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(),
+            : StdExpansion  (LibUtilities::StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(),
                                                                  Bb.GetNumModes(),
                                                                  Bc.GetNumModes()),
                              3, Ba, Bb, Bc),
-              StdExpansion3D(StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(),
+              StdExpansion3D(LibUtilities::StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(),
                                                                  Bb.GetNumModes(),
                                                                  Bc.GetNumModes()),
                              Ba, Bb, Bc)
@@ -567,7 +567,7 @@ namespace Nektar
             v_IProductWRTBase(inarray,outarray);
 
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
+            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
             // copy inarray in case inarray == outarray
@@ -785,9 +785,9 @@ namespace Nektar
             return 5;
         }
         
-        ExpansionType StdPyrExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdPyrExp::v_DetShapeType() const
         {
-            return ePyramid;
+            return LibUtilities::ePyramid;
         }
 
         int StdPyrExp::v_NumBndryCoeffs() const
@@ -875,7 +875,7 @@ namespace Nektar
             const std::vector<unsigned int> &nummodes, 
             int &modes_offset)
         {
-            int nmodes = StdRegions::StdPyrData::getNumberOfCoefficients(
+            int nmodes = LibUtilities::StdPyrData::getNumberOfCoefficients(
                 nummodes[modes_offset],
                 nummodes[modes_offset+1],
                 nummodes[modes_offset+2]);

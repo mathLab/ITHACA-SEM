@@ -87,10 +87,11 @@ namespace Nektar
         EquationSystem::EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession)
             : m_comm (pSession->GetComm()),
               m_session (pSession),
-              m_lambda (0)
+              m_lambda (0),
+              m_fieldMetaDataMap(LibUtilities::NullFieldMetaDataMap)
         {
         }
-
+        
         /**
          * @brief Initialisation object for EquationSystem.
          */
@@ -104,8 +105,6 @@ namespace Nektar
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
-
-            m_UseContCoeff = false;
 
             // Also read and store the boundary conditions
             m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
@@ -739,16 +738,15 @@ namespace Nektar
             {
                 std::string filename
                     = m_session->GetFunctionFilename(pFunctionName, pFieldName);
-                
 #if 0 
                 ImportFld(filename,m_fields);
 #else
-                std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
                 
-                m_graph->Import(filename,FieldDef,FieldData);
+                LibUtilities::Import(filename,FieldDef,FieldData);
                 
                 int idx = -1;
                 
@@ -1189,9 +1187,9 @@ namespace Nektar
             std::string pInfile, 
             SpatialDomains::MeshGraphSharedPtr pGraph)
         {
-    	    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+    	    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
     	    std::vector<std::vector<NekDouble>   > FieldData;
-    	    pGraph->Import(pInfile, FieldDef,FieldData);
+            LibUtilities::Import(pInfile, FieldDef,FieldData);
        	    int nvar= m_spacedim;
             
       	    // Copy data to m_velocity
@@ -1792,7 +1790,7 @@ namespace Nektar
             Array<OneD, std::string> &variables)
         {
 
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = field->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -1806,7 +1804,14 @@ namespace Nektar
                     field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
                 }            
             }
-            m_graph->Write(outname, FieldDef, FieldData);
+
+            // Update time in field info if required
+            if(m_fieldMetaDataMap.find("Time") != m_fieldMetaDataMap.end())
+            {
+                m_fieldMetaDataMap["Time"] =  m_time; 
+            }
+
+            LibUtilities::Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
         }
 
         /**
@@ -1819,10 +1824,10 @@ namespace Nektar
             const std::string &infile, 
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
@@ -1855,10 +1860,10 @@ namespace Nektar
             MultiRegions::ExpListSharedPtr &pField, 
             std::string &pFieldName)
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
             int idx = -1;
 
             Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
@@ -1898,10 +1903,10 @@ namespace Nektar
             ASSERTL0(fieldStr.size() <= coeffs.num_elements(),
                      "length of fieldstr should be the same as pFields");
         
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
         
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)

@@ -51,13 +51,13 @@ namespace Nektar
         
         PrismGeom::PrismGeom()
         {
-            m_geomShapeType = ePrism;
+            m_shapeType = LibUtilities::ePrism;
         }
 
         PrismGeom::PrismGeom(const Geometry2DSharedPtr faces[]):
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_geomShapeType = ePrism;
+            m_shapeType = LibUtilities::ePrism;
             
             /// Copy the face shared pointers.
             m_faces.insert(m_faces.begin(), faces, faces+PrismGeom::kNfaces);

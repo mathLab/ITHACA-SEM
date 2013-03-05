@@ -56,7 +56,7 @@ namespace Nektar
 
             /// Copy constructor with change in expansion type
             GlobalMatrixKey(const GlobalMatrixKey &key,
-                            const StdRegions::ExpansionType expType);
+                            const LibUtilities::ShapeType shapeType);
             /// Copy constructor.
             MULTI_REGIONS_EXPORT GlobalMatrixKey(const GlobalMatrixKey &key);
 
@@ -70,7 +70,7 @@ namespace Nektar
             /// Return the matrix type.
             MULTI_REGIONS_EXPORT StdRegions::MatrixType GetMatrixType() const;
             /// Return the expansion type associated with key
-            MULTI_REGIONS_EXPORT StdRegions::ExpansionType GetExpansionType()  const;
+            MULTI_REGIONS_EXPORT LibUtilities::ShapeType GetShapeType()  const;
             /// Returns true if a local to global map is defined.
             MULTI_REGIONS_EXPORT bool LocToGloMapIsDefined() const;
             /// Returns the number of constants defined for this matrix.
@@ -94,7 +94,7 @@ namespace Nektar
             
             /// Stores the expansion/shape type that the matrix is to
             /// be based on
-            StdRegions::ExpansionType m_expansionType;
+            LibUtilities::ShapeType     m_shapeType;
 
             StdRegions::ConstFactorMap  m_constFactors;
             StdRegions::VarCoeffMap     m_varCoeffs;
@@ -118,10 +118,10 @@ namespace Nektar
             return m_matrixType;
         }
 
-        inline StdRegions::ExpansionType
-                        GlobalMatrixKey::GetExpansionType() const
+        inline LibUtilities::ShapeType
+                        GlobalMatrixKey::GetShapeType() const
         {
-            return m_expansionType;
+            return m_shapeType;
         }
 
         inline bool GlobalMatrixKey::LocToGloMapIsDefined(void) const

@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 //    Exp->WriteToFile(outfile2,eTecplot);
 //    outfile2.close();
     string   out = meshfile + ".fld";
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                 = Exp->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
         FieldDef[i]->m_fields.push_back("u");
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
-    graph2D->Write(out, FieldDef, FieldData);
+    LibUtilities::Write(out, FieldDef, FieldData);
 
     //----------------------------------------------
     

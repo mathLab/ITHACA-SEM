@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
             out += "_P" + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
         }
         out += ".fld";
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
             FieldDef[i]->m_fields.push_back("u");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        graph2D->Write(out, FieldDef, FieldData);
+        LibUtilities::Write(out, FieldDef, FieldData);
         //-----------------------------------------------
 
         //----------------------------------------------

@@ -158,7 +158,25 @@ namespace Nektar
             
             DNekBlkMatSharedPtr GetHomogeneous1DBlockMatrix(Homogeneous1DMatType mattype, CoeffState coeffstate = eLocal) const;
 
+            
+            NekDouble GetSpecVanVisc(const int k)
+            {
+                NekDouble returnval = 0.0;
+
+                if(m_specVanVisc.num_elements())
+                {
+                    returnval = m_specVanVisc[k];
+                }
+                
+                return returnval; 
+            }
+            
             //  virtual functions
+            virtual void v_SetHomo1DSpecVanVisc(Array<OneD, NekDouble> visc)
+            {
+                m_specVanVisc = visc;
+            }
+
             virtual int v_GetNumElmts(void)
             {
                 return m_planes[0]->GetExpSize();
@@ -189,17 +207,16 @@ namespace Nektar
             
             virtual void v_IProductWRTBase_IterPerExp(const Array<OneD, const NekDouble> &inarray, 
                                                       Array<OneD, NekDouble> &outarray);
-			
+			            
+            virtual std::vector<LibUtilities::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
             
-            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
+            virtual void v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef);
             
-            virtual void v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
+            virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
             
-            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
+            virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
             
-            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
-            
-            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs);
+            virtual void v_ExtractDataToCoeffs(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field, Array<OneD, NekDouble> &coeffs);
             
             virtual void v_ExtractCoeffsToCoeffs(
                                                  const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
@@ -259,6 +276,9 @@ namespace Nektar
             //Padding operations variables
             bool m_dealiasing;
             int m_padsize;
+
+            /// Spectral vanishing Viscosity coefficient for stabilisation 
+            Array<OneD, NekDouble> m_specVanVisc;
         };
         
         inline void ExpListHomogeneous1D::HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 

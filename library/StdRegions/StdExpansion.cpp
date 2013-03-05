@@ -44,13 +44,13 @@ namespace Nektar
     {
 
         /** define list of number of vertices corresponding to each ShapeType */
-        const int g_shapenverts[SIZE_ExpansionType] = {0,2,3,4,4,5,6,8};
+        const int g_shapenverts[LibUtilities::SIZE_ShapeType] = {0,2,3,4,4,5,6,8};
 
         /** define list of number of edges corresponding to each ShapeType */
-        const int g_shapenedges[SIZE_ExpansionType] = {0,1,3,4,6,8,9,12};
+        const int g_shapenedges[LibUtilities::SIZE_ShapeType] = {0,1,3,4,6,8,9,12};
 
         /** define list of number of faces corresponding to each ShapeType */
-        const int g_shapenfaces[SIZE_ExpansionType] = {0,0,0,0,4,5,5,6};
+        const int g_shapenfaces[LibUtilities::SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
         StdExpansion::StdExpansion(void):
             m_elmt_id(0),
@@ -221,7 +221,7 @@ namespace Nektar
             switch(itype)
             {
                 case eEdgeToElement:
-                {
+                    {
                     v_GetEdgeToElementMap(entity,orient,map,sign);
                 }
                 break;
@@ -361,15 +361,16 @@ namespace Nektar
             {
             case eInvMass:
                 {
-                    StdMatrixKey masskey(eMass,mkey.GetExpansionType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
+                    StdMatrixKey masskey(eMass,mkey.GetShapeType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
                     DNekMatSharedPtr mmat = GetStdMatrix(masskey);
+                    
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat); //Populate standard mass matrix.
                     returnval->Invert();
                 }
                 break;
             case eInvNBasisTrans:
                 {
-                    StdMatrixKey tmpkey(eNBasisTrans,mkey.GetExpansionType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
+                    StdMatrixKey tmpkey(eNBasisTrans,mkey.GetShapeType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
                     DNekMatSharedPtr tmpmat = GetStdMatrix(tmpkey);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*tmpmat); //Populate  matrix.
                     returnval->Invert();
@@ -588,8 +589,8 @@ namespace Nektar
         }
 
         void StdExpansion::GeneralMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                         Array<OneD,NekDouble> &outarray,
-                                                         const StdMatrixKey &mkey)
+                                                   Array<OneD,NekDouble> &outarray,
+                                                   const StdMatrixKey &mkey)
         {
             switch(mkey.GetMatrixType())
             {
@@ -657,8 +658,8 @@ namespace Nektar
         }
 
         void StdExpansion::MassMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                      Array<OneD,NekDouble> &outarray,
-                                                      const StdMatrixKey &mkey)
+                                                Array<OneD,NekDouble> &outarray,
+                                                const StdMatrixKey &mkey)
         {
             int nq = GetTotPoints();
             Array<OneD, NekDouble> tmp(nq);
@@ -674,9 +675,9 @@ namespace Nektar
         }
 
         void StdExpansion::LaplacianMatrixOp_MatFree(const int k1, const int k2,
-                                                           const Array<OneD, const NekDouble> &inarray,
-                                                           Array<OneD,NekDouble> &outarray,
-                                                           const StdMatrixKey &mkey)
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD,NekDouble> &outarray,
+                                                     const StdMatrixKey &mkey)
         {
             ASSERTL1(k1 >= 0 && k1 < GetCoordim(),"invalid first  argument");
             ASSERTL1(k2 >= 0 && k2 < GetCoordim(),"invalid second argument");
@@ -685,11 +686,11 @@ namespace Nektar
             Array<OneD, NekDouble> tmp(nq);
             Array<OneD, NekDouble> dtmp(nq);
             VarCoeffType varcoefftypes[3][3]
-                              = { {eVarCoeffD00, eVarCoeffD01, eVarCoeffD02},
-                                  {eVarCoeffD01, eVarCoeffD11, eVarCoeffD12},
-                                  {eVarCoeffD02, eVarCoeffD12, eVarCoeffD22}
+                = { {eVarCoeffD00, eVarCoeffD01, eVarCoeffD02},
+                    {eVarCoeffD01, eVarCoeffD11, eVarCoeffD12},
+                    {eVarCoeffD02, eVarCoeffD12, eVarCoeffD22}
             };
-
+            
             v_BwdTrans(inarray,tmp);
             v_PhysDeriv(k2,tmp,dtmp);
             if (mkey.GetNVarCoeff())
@@ -719,46 +720,62 @@ namespace Nektar
             }
             else
             {
+                // Multiply by svv tensor 
+                if(mkey.ConstFactorExists(eFactorSVVCutoffRatio))
+                {
+                    SVVLaplacianFilter(dtmp,mkey);
+                }
                 v_IProductWRTDerivBase(k1, dtmp, outarray);
             }
         }
 
         void StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
-                                                                       Array<OneD,NekDouble> &outarray,
-                                                                       const StdMatrixKey &mkey)
+                                                                 Array<OneD,NekDouble> &outarray,
+                                                                 const StdMatrixKey &mkey)
         {
             const int dim = GetCoordim();
-
+            
             int i,j;
 
             Array<OneD,NekDouble> store(m_ncoeffs);
             Array<OneD,NekDouble> store2(m_ncoeffs,0.0);
 
-            const MatrixType mtype[3][3]
-                                   = {{eLaplacian00,eLaplacian01,eLaplacian02},
-                                      {eLaplacian01,eLaplacian11,eLaplacian12},
-                                      {eLaplacian02,eLaplacian12,eLaplacian22}};
-            StdMatrixKeySharedPtr mkeyij;
-
-            for(i = 0; i < dim; i++)
+            if(mkey.GetNVarCoeff() == 0)
             {
-                for(j = 0; j < dim; j++)
+                // just call diagonal matrix form of laplcian operator
+                for(i = 0; i < dim; ++i)
                 {
-                    mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mkey,mtype[i][j]);
-
-                    LaplacianMatrixOp(i,j,inarray,store,*mkeyij);
+                    LaplacianMatrixOp(i,i,inarray,store,mkey);
                     Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1);
                 }
             }
+            else
+            {
+                const MatrixType mtype[3][3]
+                    = {{eLaplacian00,eLaplacian01,eLaplacian02},
+                       {eLaplacian01,eLaplacian11,eLaplacian12},
+                       {eLaplacian02,eLaplacian12,eLaplacian22}};
+                StdMatrixKeySharedPtr mkeyij;
+                
+                for(i = 0; i < dim; i++)
+                {
+                    for(j = 0; j < dim; j++)
+                    {
+                        mkeyij = MemoryManager<StdMatrixKey>::AllocateSharedPtr(mkey,mtype[i][j]);
+                        LaplacianMatrixOp(i,j,inarray,store,*mkeyij);
+                        Vmath::Vadd(m_ncoeffs, store, 1, store2, 1, store2, 1);
+                    }
+                }
+            }
+
             Vmath::Vcopy(m_ncoeffs,store2.get(),1,outarray.get(),1);
         }
 
         void StdExpansion::WeakDerivMatrixOp_MatFree(const int k1,
-                                                           const Array<OneD, const NekDouble> &inarray,
-                                                           Array<OneD,NekDouble> &outarray,
-                                                           const StdMatrixKey &mkey)
+                                                     const Array<OneD, const NekDouble> &inarray,
+                                                     Array<OneD,NekDouble> &outarray,
+                                                     const StdMatrixKey &mkey)
         {
-            // ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
             Array<OneD, NekDouble> tmp(GetTotPoints());
             int nq = GetTotPoints();
 
@@ -779,75 +796,75 @@ namespace Nektar
                                                                 const StdMatrixKey &mkey)
         {
             int nq = GetTotPoints();
-//            int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
+            //            int varsize = ((mkey.GetVariableCoefficient(0)).num_elements())/dim;
             Array<OneD, NekDouble> tmp(nq);
 
-             v_BwdTrans(inarray,tmp);
+            v_BwdTrans(inarray,tmp);
             // For Deformed mesh ==============
-//            if (varsize==nq)
-//            {
-//                v_PhysDirectionalDeriv(tmp,mkey.GetVariableCoefficient(0),tmp);
-//            }
-//
-//            // For Regular mesh ==========
-//            else
-//            {
-//                ASSERTL0(false, "Wrong route");
-//            }
+            //            if (varsize==nq)
+            //            {
+            //                v_PhysDirectionalDeriv(tmp,mkey.GetVariableCoefficient(0),tmp);
+            //            }
+            //
+            //            // For Regular mesh ==========
+            //            else
+            //            {
+            //                ASSERTL0(false, "Wrong route");
+            //            }
 
             v_IProductWRTBase(tmp, outarray);
         }
 
         void StdExpansion::MassLevelCurvatureMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                               Array<OneD,NekDouble> &outarray,
-                                                               const StdMatrixKey &mkey)
-      {
-///@todo fix this
-//          int nqtot = GetTotPoints();
-//          int matrixid = mkey.GetMatrixID();
-//
-//          NekDouble checkweight=0.0;
-//          Array<OneD, NekDouble> tmp(nqtot), tan(nqtot), dtan0(nqtot), dtan1(nqtot), weight(nqtot,0.0);
-//
-//          int gmatnumber = (mkey.GetVariableCoefficient(1)).num_elements();
-//
-//          v_BwdTrans(inarray,tmp);
-//
-//          // weight = \grad \cdot tanvec
-//          for(int k = 0; k < GetCoordim(); ++k)
-//          {
-//              Vmath::Vcopy(nqtot, &(mkey.GetVariableCoefficient(0))[k*nqtot],
-//                              1, &tan[0], 1);
-//
-//              // For Regular mesh ...
-//              if(gmatnumber==1)
-//              {
-//                  // D_{/xi} and D_{/eta}
-//                  v_PhysDeriv(0,tan,dtan0);
-//                  v_PhysDeriv(1,tan,dtan1);
-//
-//                  // d v / d x_i = (d \xi / d x_i)*( d v / d \xi ) + (d \eta / d x_i)*( d v / d \eta )
-//                  Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+1))[0],&dtan0[0],1,&weight[0],1,&weight[0],1);
-//                  Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+2))[0],&dtan1[0],1,&weight[0],1,&weight[0],1);
-//              }
-//
-//              // For Curved mesh ...
-//              else if(gmatnumber==nqtot)
-//              {
-//                  // D_{x} and D_{y}
-//                  v_PhysDeriv(k,tan,dtan0);
-//                  Vmath::Vadd(nqtot,&dtan0[0],1,&weight[0],1,&weight[0],1);
-//              }
-//
-//              else
-//              {
-//                  ASSERTL1( ((gmatnumber=1) || (gmatnumber==nqtot) ), "Gmat is not in a right size");
-//              }
-//          }
-//
-//          Vmath::Vmul(nqtot, &weight[0], 1, &tmp[0], 1, &tmp[0], 1);
-//          v_IProductWRTBase(tmp, outarray);
-      }
+                                                              Array<OneD,NekDouble> &outarray,
+                                                              const StdMatrixKey &mkey)
+        {
+            ///@todo fix this
+            //          int nqtot = GetTotPoints();
+            //          int matrixid = mkey.GetMatrixID();
+            //
+            //          NekDouble checkweight=0.0;
+            //          Array<OneD, NekDouble> tmp(nqtot), tan(nqtot), dtan0(nqtot), dtan1(nqtot), weight(nqtot,0.0);
+            //
+            //          int gmatnumber = (mkey.GetVariableCoefficient(1)).num_elements();
+            //
+            //          v_BwdTrans(inarray,tmp);
+            //
+            //          // weight = \grad \cdot tanvec
+            //          for(int k = 0; k < GetCoordim(); ++k)
+            //          {
+            //              Vmath::Vcopy(nqtot, &(mkey.GetVariableCoefficient(0))[k*nqtot],
+            //                              1, &tan[0], 1);
+            //
+            //              // For Regular mesh ...
+            //              if(gmatnumber==1)
+            //              {
+            //                  // D_{/xi} and D_{/eta}
+            //                  v_PhysDeriv(0,tan,dtan0);
+            //                  v_PhysDeriv(1,tan,dtan1);
+            //
+            //                  // d v / d x_i = (d \xi / d x_i)*( d v / d \xi ) + (d \eta / d x_i)*( d v / d \eta )
+            //                  Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+1))[0],&dtan0[0],1,&weight[0],1,&weight[0],1);
+            //                  Vmath::Svtvp(nqtot,(mkey.GetVariableCoefficient(2*k+2))[0],&dtan1[0],1,&weight[0],1,&weight[0],1);
+            //              }
+            //
+            //              // For Curved mesh ...
+            //              else if(gmatnumber==nqtot)
+            //              {
+            //                  // D_{x} and D_{y}
+            //                  v_PhysDeriv(k,tan,dtan0);
+            //                  Vmath::Vadd(nqtot,&dtan0[0],1,&weight[0],1,&weight[0],1);
+            //              }
+            //
+            //              else
+            //              {
+            //                  ASSERTL1( ((gmatnumber=1) || (gmatnumber==nqtot) ), "Gmat is not in a right size");
+            //              }
+            //          }
+            //
+            //          Vmath::Vmul(nqtot, &weight[0], 1, &tmp[0], 1, &tmp[0], 1);
+            //          v_IProductWRTBase(tmp, outarray);
+        }
 
         void StdExpansion::LinearAdvectionDiffusionReactionMatrixOp_MatFree( const Array<OneD, const NekDouble> &inarray,
                                                                              Array<OneD,NekDouble> &outarray,
@@ -889,7 +906,7 @@ namespace Nektar
             if(addDiffusionTerm)
             {
                 Array<OneD, NekDouble> lap(m_ncoeffs);
-                StdMatrixKey mkeylap(eLaplacian,DetExpansionType(),*this);
+                StdMatrixKey mkeylap(eLaplacian,DetShapeType(),*this);
                 LaplacianMatrixOp(inarray,lap,mkeylap);
 
                 v_IProductWRTBase(tmp_adv, outarray);
@@ -906,13 +923,13 @@ namespace Nektar
 
 
         void StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
-                                                                       Array<OneD,NekDouble> &outarray,
-                                                                       const StdMatrixKey &mkey)
+                                                                 Array<OneD,NekDouble> &outarray,
+                                                                 const StdMatrixKey &mkey)
         {
             NekDouble lambda = mkey.GetConstFactor(eFactorLambda);
             Array<OneD,NekDouble> tmp(m_ncoeffs);
-            StdMatrixKey mkeymass(eMass,DetExpansionType(),*this);
-            StdMatrixKey mkeylap(eLaplacian,DetExpansionType(),*this);
+            StdMatrixKey mkeymass(eMass,DetShapeType(),*this);
+            StdMatrixKey mkeylap(eLaplacian,DetShapeType(),*this);
 
             MassMatrixOp(inarray,tmp,mkeymass);
             LaplacianMatrixOp(inarray,outarray,mkeylap);
@@ -924,7 +941,7 @@ namespace Nektar
                                           Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            StdMatrixKey      bwdtransmatkey(eBwdTrans,DetExpansionType(),*this);
+            StdMatrixKey      bwdtransmatkey(eBwdTrans,DetShapeType(),*this);
             DNekMatSharedPtr  bwdtransmat = GetStdMatrix(bwdtransmatkey);
 
             Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
@@ -956,24 +973,24 @@ namespace Nektar
 
             GetCoords(coords[0],coords[1],coords[2]);
 
-            switch(DetExpansionType())
+            switch(DetShapeType())
             {
-                case eSegment:
-                    outfile << "Zone, I=" << GetNumPoints(0) << ", F=Block" << std::endl;
-                    break;
-                case eTriangle: 
-                case eQuadrilateral:
-                    outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) <<", F=Block" << std::endl;
-                    break;
-                case eTetrahedron: 
-                case ePrism: 
-                case ePyramid: 
-                case eHexahedron:
-                    outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) << ", K="<< GetNumPoints(2) << ", F=Block" << std::endl;
-                    break;
-                default:
-                    ASSERTL0(false, "Unsupported expansion type.");
-                    break;
+            case LibUtilities::eSegment:
+                outfile << "Zone, I=" << GetNumPoints(0) << ", F=Block" << std::endl;
+                break;
+            case LibUtilities::eTriangle: 
+            case LibUtilities::eQuadrilateral:
+                outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) <<", F=Block" << std::endl;
+                break;
+            case LibUtilities::eTetrahedron: 
+            case LibUtilities::ePrism: 
+            case LibUtilities::ePyramid: 
+            case LibUtilities::eHexahedron:
+                outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) << ", K="<< GetNumPoints(2) << ", F=Block" << std::endl;
+                break;
+            default:
+                ASSERTL0(false, "Unsupported expansion type.");
+                break;
             }
 
             for(j = 0; j < coordim; ++j)
@@ -1003,124 +1020,124 @@ namespace Nektar
 
 
         // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
-            void StdExpansion::SetUpPhysNormals(const int edge)
-            {
-                v_SetUpPhysNormals(edge);
-            }
-
-	    void StdExpansion::SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
-	    {
-	    	v_SetUpPhysTangents(exp2d, edge);
-	    }
-            void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
-                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fx,
-                                                const Array<OneD, const NekDouble> &Fy,
-                                                Array<OneD, NekDouble> &outarray)
-            {
-                v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
-            }
-
-            void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
-                                                boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                const Array<OneD, const NekDouble> &Fn,
-                                                Array<OneD, NekDouble> &outarray)
-            {
-                v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
-            }
-
-            void StdExpansion::AddFaceNormBoundaryInt(const int face,
-                                                boost::shared_ptr<StdExpansion>    &FaceExp,
-                                                const Array<OneD, const NekDouble> &Fn,
-                                                Array<OneD, NekDouble> &outarray)
-            {
-                v_AddFaceNormBoundaryInt(face,FaceExp,Fn,outarray);
-            }
-
-            const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-                return NullNekDouble1DArray;
-            }
-
-
-            void StdExpansion::v_SetPhysNormals(Array<OneD, const NekDouble> &normal)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-            }
-
-            void StdExpansion::v_SetUpPhysNormals(const int edge)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-            }
-
-            void StdExpansion::v_SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
-	    {
-                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-	    }
-
-        int StdExpansion::v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
-                return 0;
-            }
-            
-        void StdExpansion::v_ExtractDataToCoeffs(const NekDouble *data, 
-                                   const std::vector<unsigned int > &nummodes, 
-                                   const int nmode_offset,
-                                   NekDouble *coeffs)
+        void StdExpansion::SetUpPhysNormals(const int edge)
         {
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
+            v_SetUpPhysNormals(edge);
+        }
+
+        void StdExpansion::SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
+        {
+            v_SetUpPhysTangents(exp2d, edge);
+        }
+        void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
+                                                  boost::shared_ptr<StdExpansion>    &EdgeExp,
+                                                  const Array<OneD, const NekDouble> &Fx,
+                                                  const Array<OneD, const NekDouble> &Fy,
+                                                  Array<OneD, NekDouble> &outarray)
+        {
+            v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fx,Fy,outarray);
+        }
+
+        void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
+                                                  boost::shared_ptr<StdExpansion>    &EdgeExp,
+                                                  const Array<OneD, const NekDouble> &Fn,
+                                                  Array<OneD, NekDouble> &outarray)
+        {
+            v_AddEdgeNormBoundaryInt(edge,EdgeExp,Fn,outarray);
+        }
+
+        void StdExpansion::AddFaceNormBoundaryInt(const int face,
+                                                  boost::shared_ptr<StdExpansion>    &FaceExp,
+                                                  const Array<OneD, const NekDouble> &Fn,
+                                                  Array<OneD, NekDouble> &outarray)
+        {
+            v_AddFaceNormBoundaryInt(face,FaceExp,Fn,outarray);
+        }
+
+        const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+            return NullNekDouble1DArray;
         }
 
 
-
-            void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
-            }
-
-        void StdExpansion::v_NormVectorIProductWRTBase(
-                              const Array<OneD, const NekDouble> &Fx, 
-                              const Array<OneD, const NekDouble> &Fy, 
-                              const Array<OneD, const NekDouble> &Fz, 
-                              Array< OneD, NekDouble> &outarray)
+        void StdExpansion::v_SetPhysNormals(Array<OneD, const NekDouble> &normal)
         {
             NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
         }
 
-            DNekScalBlkMatSharedPtr StdExpansion::v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-                return NullDNekScalBlkMatSharedPtr;
-            }
+        void StdExpansion::v_SetUpPhysNormals(const int edge)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
+        void StdExpansion::v_SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
+        int StdExpansion::v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
+            return 0;
+        }
+            
+        void StdExpansion::v_ExtractDataToCoeffs(const NekDouble *data, 
+                                                 const std::vector<unsigned int > &nummodes, 
+                                                 const int nmode_offset,
+                                                 NekDouble *coeffs)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this class");
+        }
 
 
-            StdRegions::Orientation StdExpansion::v_GetFaceOrient(int face)
 
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");
-                return eDir1FwdDir1_Dir2FwdDir2;
-            }
+        void StdExpansion::v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
 
-            StdRegions::Orientation StdExpansion::v_GetEorient(int edge)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
-                return eForwards;
-            }
+        void StdExpansion::v_NormVectorIProductWRTBase(
+                                                       const Array<OneD, const NekDouble> &Fx, 
+                                                       const Array<OneD, const NekDouble> &Fy, 
+                                                       const Array<OneD, const NekDouble> &Fz, 
+                                                       Array< OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not valid for this class");
+        }
+
+        DNekScalBlkMatSharedPtr StdExpansion::v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+            return NullDNekScalBlkMatSharedPtr;
+        }
+
+
+        StdRegions::Orientation StdExpansion::v_GetFaceOrient(int face)
+
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for three-dimensional  LocalRegions");
+            return eDir1FwdDir1_Dir2FwdDir2;
+        }
+
+        StdRegions::Orientation StdExpansion::v_GetEorient(int edge)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
+            return eForwards;
+        }
 		
-			StdRegions::Orientation StdExpansion::v_GetPorient(int point)
-			{
-				NEKERROR(ErrorUtil::efatal, "This function is only valid for one-dimensional  LocalRegions");
-				return eFwd;
-			}
+        StdRegions::Orientation StdExpansion::v_GetPorient(int point)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for one-dimensional  LocalRegions");
+            return eFwd;
+        }
 
 
-            StdRegions::Orientation StdExpansion::v_GetCartesianEorient(int edge)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
-                return eForwards;
-            }
+        StdRegions::Orientation StdExpansion::v_GetCartesianEorient(int edge)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for two-dimensional  LocalRegions");
+            return eForwards;
+        }
 
 
         void StdExpansion::v_SetCoeffsToOrientation(StdRegions::Orientation dir,
@@ -1136,313 +1153,313 @@ namespace Nektar
         }
         
 
-            void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
-                                                        boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                        const Array<OneD, const NekDouble> &Fx,
-                                                        const Array<OneD, const NekDouble> &Fy,
-                                                        Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-            }
+        void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
+                                                    boost::shared_ptr<StdExpansion>    &EdgeExp,
+                                                    const Array<OneD, const NekDouble> &Fx,
+                                                    const Array<OneD, const NekDouble> &Fy,
+                                                    Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+        }
 
-             void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
-                                                  boost::shared_ptr<StdExpansion>    &EdgeExp,
-                                                  const Array<OneD, const NekDouble> &Fn,
-                                                  Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-            }
+        void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
+                                                    boost::shared_ptr<StdExpansion>    &EdgeExp,
+                                                    const Array<OneD, const NekDouble> &Fn,
+                                                    Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+        }
 
-             void StdExpansion::v_AddFaceNormBoundaryInt(const int face,
-                                                  boost::shared_ptr<StdExpansion>    &FaceExp,
-                                                  const Array<OneD, const NekDouble> &Fn,
-                                                  Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
-            }
+        void StdExpansion::v_AddFaceNormBoundaryInt(const int face,
+                                                    boost::shared_ptr<StdExpansion>    &FaceExp,
+                                                    const Array<OneD, const NekDouble> &Fn,
+                                                    Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+        }
 
-            int StdExpansion::v_GetNedges() const
-            {
-                ASSERTL0(false, "This function is needs defining for this shape");
-                return 0;
-            }
+        int StdExpansion::v_GetNedges() const
+        {
+            ASSERTL0(false, "This function is needs defining for this shape");
+            return 0;
+        }
 
-            int StdExpansion::v_GetNfaces() const
-            {
-                ASSERTL0(false, "This function is needs defining for this shape");
-                return 0;
-            }
-
-
-            int StdExpansion::v_NumBndryCoeffs() const
-            {
-                ASSERTL0(false, "This function is needs defining for this shape");
-                return 0;
-            }
-
-            int StdExpansion::v_NumDGBndryCoeffs() const
-            {
-                ASSERTL0(false, "This function is needs defining for this shape");
-                return 0;
-            }
-
-            int StdExpansion::v_GetEdgeNcoeffs(const int i) const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
-            }
-
-            int StdExpansion::v_GetTotalEdgeIntNcoeffs() const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
-            }
-
-            int StdExpansion::v_GetEdgeNumPoints(const int i) const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
-            }
-
-            int StdExpansion::v_DetCartesianDirOfEdge(const int edge)
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
-            }
-
-            const LibUtilities::BasisKey StdExpansion::v_DetEdgeBasisKey(const int i) const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return LibUtilities::NullBasisKey;
-            }
-
-            const LibUtilities::BasisKey StdExpansion::v_DetFaceBasisKey(const int i, const int k) const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return LibUtilities::NullBasisKey;
-            }
-
-            int StdExpansion::v_GetFaceNumPoints(const int i) const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
-            }
-
-            int StdExpansion::v_GetFaceNcoeffs(const int i) const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
-            }
-
-            int StdExpansion::v_GetFaceIntNcoeffs(const int i) const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
-            }
-
-            int StdExpansion::v_GetTotalFaceIntNcoeffs() const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
-            }        
-
-            LibUtilities::PointsKey StdExpansion::v_GetFacePointsKey(const int i, const int j) const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return LibUtilities::NullPointsKey;
-            }
-
-            LibUtilities::BasisType StdExpansion::v_GetEdgeBasisType(const int i) const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-
-                return LibUtilities::eNoBasisType;
-            }
-
-            ExpansionType StdExpansion::v_DetExpansionType() const
-            {
-                ASSERTL0(false, "This expansion does not have a shape type defined");
-                return eNoExpansionType;
-            }
-
-            int StdExpansion::v_GetShapeDimension() const
-            {
-                ASSERTL0(false, "This function is not valid or not defined");
-                return 0;
-            }
-
-            bool StdExpansion::v_IsBoundaryInteriorExpansion()
-            {
-                ASSERTL0(false,"This function has not been defined for this expansion");
-                return false;
-            }
-
-            void  StdExpansion::v_IProductWRTDerivBase (const int dir,
-                                                   const Array<OneD, const NekDouble>& inarray,
-                                                   Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This method has not been defined");
-            }
-
-            /**
-             *
-             */
-            void StdExpansion::v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
-                                                   Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This method has not been defined");
-            }
+        int StdExpansion::v_GetNfaces() const
+        {
+            ASSERTL0(false, "This function is needs defining for this shape");
+            return 0;
+        }
 
 
-            /**
-             * @brief Integrates the specified function over the domain.
-             * @see StdRegions#StdExpansion#Integral.
-             */
-            NekDouble StdExpansion::v_Integral(const Array<OneD, const NekDouble>& inarray )
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                         "local expansions");
-                return 0;
-            }
+        int StdExpansion::v_NumBndryCoeffs() const
+        {
+            ASSERTL0(false, "This function is needs defining for this shape");
+            return 0;
+        }
+
+        int StdExpansion::v_NumDGBndryCoeffs() const
+        {
+            ASSERTL0(false, "This function is needs defining for this shape");
+            return 0;
+        }
+
+        int StdExpansion::v_GetEdgeNcoeffs(const int i) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        int StdExpansion::v_GetTotalEdgeIntNcoeffs() const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        int StdExpansion::v_GetEdgeNumPoints(const int i) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        int StdExpansion::v_DetCartesianDirOfEdge(const int edge)
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        const LibUtilities::BasisKey StdExpansion::v_DetEdgeBasisKey(const int i) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return LibUtilities::NullBasisKey;
+        }
+
+        const LibUtilities::BasisKey StdExpansion::v_DetFaceBasisKey(const int i, const int k) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return LibUtilities::NullBasisKey;
+        }
+
+        int StdExpansion::v_GetFaceNumPoints(const int i) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        int StdExpansion::v_GetFaceNcoeffs(const int i) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        int StdExpansion::v_GetFaceIntNcoeffs(const int i) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        int StdExpansion::v_GetTotalFaceIntNcoeffs() const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }        
+
+        LibUtilities::PointsKey StdExpansion::v_GetFacePointsKey(const int i, const int j) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return LibUtilities::NullPointsKey;
+        }
+
+        LibUtilities::BasisType StdExpansion::v_GetEdgeBasisType(const int i) const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+
+            return LibUtilities::eNoBasisType;
+        }
+
+        LibUtilities::ShapeType StdExpansion::v_DetShapeType() const
+        {
+            ASSERTL0(false, "This expansion does not have a shape type defined");
+            return LibUtilities::eNoShapeType;
+        }
+
+        int StdExpansion::v_GetShapeDimension() const
+        {
+            ASSERTL0(false, "This function is not valid or not defined");
+            return 0;
+        }
+
+        bool StdExpansion::v_IsBoundaryInteriorExpansion()
+        {
+            ASSERTL0(false,"This function has not been defined for this expansion");
+            return false;
+        }
+
+        void  StdExpansion::v_IProductWRTDerivBase (const int dir,
+                                                    const Array<OneD, const NekDouble>& inarray,
+                                                    Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This method has not been defined");
+        }
+
+        /**
+         *
+         */
+        void StdExpansion::v_FwdTrans_BndConstrained(const Array<OneD, const NekDouble>& inarray,
+                                                     Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This method has not been defined");
+        }
 
 
-            void StdExpansion::v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                         "specific element types");
-            }
+        /**
+         * @brief Integrates the specified function over the domain.
+         * @see StdRegions#StdExpansion#Integral.
+         */
+        NekDouble StdExpansion::v_Integral(const Array<OneD, const NekDouble>& inarray )
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                     "local expansions");
+            return 0;
+        }
 
-            void StdExpansion::v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                         "specific element types");
-            }
 
-            void StdExpansion::v_DGDeriv(const int dir,
-                                         const Array<OneD, const NekDouble>& inarray,
-                                         Array<OneD, boost::shared_ptr< StdExpansion > > &EdgeExp,
-                                         Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                         "specific element types");
-            }
+        void StdExpansion::v_AddRobinMassMatrix(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, DNekMatSharedPtr &inoutmat)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                     "specific element types");
+        }
 
-            /**
-             * @brief Calculate the derivative of the physical points
-             * @see StdRegions#StdExpansion#PhysDeriv
-             */
-            void StdExpansion::v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
+        void StdExpansion::v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble > &primCoeffs, Array<OneD, NekDouble> &coeffs)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                     "specific element types");
+        }
+
+        void StdExpansion::v_DGDeriv(const int dir,
+                                     const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD, boost::shared_ptr< StdExpansion > > &EdgeExp,
+                                     Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                     "specific element types");
+        }
+
+        /**
+         * @brief Calculate the derivative of the physical points
+         * @see StdRegions#StdExpansion#PhysDeriv
+         */
+        void StdExpansion::v_PhysDeriv (const Array<OneD, const NekDouble>& inarray,
                                         Array<OneD, NekDouble> &out_d1,
                                         Array<OneD, NekDouble> &out_d2,
                                         Array<OneD, NekDouble> &out_d3)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                         "local expansions");
-            }
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                     "local expansions");
+        }
 
-            void StdExpansion::v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble> &out_ds)
-            {
-                    NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                            "local expansions");
-            }
-            void StdExpansion::v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
-                            Array<OneD, NekDouble>& out_dn)
-            {
-                    NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                            "local expansions");
-            }
+        void StdExpansion::v_PhysDeriv_s(const Array<OneD, const NekDouble>& inarray,
+                                         Array<OneD, NekDouble> &out_ds)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                     "local expansions");
+        }
+        void StdExpansion::v_PhysDeriv_n(const Array<OneD, const NekDouble>& inarray,
+                                         Array<OneD, NekDouble>& out_dn)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                     "local expansions");
+        }
 	
-            /**
-             * @brief Calculate the derivative of the physical points in a
-             * given direction
-             * @see StdRegions#StdExpansion#PhysDeriv
-             */
-            void StdExpansion::v_PhysDeriv(const int dir,
-                                     const Array<OneD, const NekDouble>& inarray,
-                                     Array<OneD, NekDouble> &out_d0)
+        /**
+         * @brief Calculate the derivative of the physical points in a
+         * given direction
+         * @see StdRegions#StdExpansion#PhysDeriv
+         */
+        void StdExpansion::v_PhysDeriv(const int dir,
+                                       const Array<OneD, const NekDouble>& inarray,
+                                       Array<OneD, NekDouble> &out_d0)
 
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                         "specific element types");
-            }
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                     "specific element types");
+        }
 
-            /**
-             * @brief Physical derivative along a direction vector.
-             * @see StdRegions#StdExpansion#PhysDirectionalDeriv
-             */
-            void StdExpansion::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
-                                                const Array<OneD, const NekDouble>& direction,
-                                                Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for "
-                         "specific element types");
-            }
+        /**
+         * @brief Physical derivative along a direction vector.
+         * @see StdRegions#StdExpansion#PhysDirectionalDeriv
+         */
+        void StdExpansion::v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
+                                                  const Array<OneD, const NekDouble>& direction,
+                                                  Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for "
+                     "specific element types");
+        }
 
-            void StdExpansion::v_StdPhysDeriv (const Array<OneD, const NekDouble>& inarray,
-                                         Array<OneD, NekDouble> &out_d1,
-                                         Array<OneD, NekDouble> &out_d2,
-                                         Array<OneD, NekDouble> &out_d3)
-            {
-                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
-            }
+        void StdExpansion::v_StdPhysDeriv (const Array<OneD, const NekDouble>& inarray,
+                                           Array<OneD, NekDouble> &out_d1,
+                                           Array<OneD, NekDouble> &out_d2,
+                                           Array<OneD, NekDouble> &out_d3)
+        {
+            NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
+        }
 
-            void   StdExpansion::v_StdPhysDeriv (const int dir,
-                                           const Array<OneD, const NekDouble>& inarray,
-                                           Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
-            }
+        void   StdExpansion::v_StdPhysDeriv (const int dir,
+                                             const Array<OneD, const NekDouble>& inarray,
+                                             Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
+        }
 
-            NekDouble StdExpansion::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
-            {
-                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
-                return 0;
-            }
+        NekDouble StdExpansion::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords)
+        {
+            NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
+            return 0;
+        }
 
 
         NekDouble StdExpansion::v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble>& physvals)
-            {
-                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
-                return 0;
-            }
+        {
+            NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape");
+            return 0;
+        }
 
 
-            void StdExpansion::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function has not "
-                         "been defined for this shape");
-            }
+        void StdExpansion::v_FillMode(const int mode, Array<OneD, NekDouble> &outarray)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function has not "
+                     "been defined for this shape");
+        }
 
-            DNekMatSharedPtr StdExpansion::v_GenMatrix(const StdMatrixKey &mkey)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function has not "
-                         "been defined for this element");
-                DNekMatSharedPtr returnval;
-                return returnval;
-            }
+        DNekMatSharedPtr StdExpansion::v_GenMatrix(const StdMatrixKey &mkey)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function has not "
+                     "been defined for this element");
+            DNekMatSharedPtr returnval;
+            return returnval;
+        }
 
-            DNekMatSharedPtr StdExpansion::v_CreateStdMatrix(const StdMatrixKey &mkey)
-            {
-                NEKERROR(ErrorUtil::efatal, "This function has not "
-                         "been defined for this element");
-                DNekMatSharedPtr returnval;
-                return returnval;
-            }
+        DNekMatSharedPtr StdExpansion::v_CreateStdMatrix(const StdMatrixKey &mkey)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function has not "
+                     "been defined for this element");
+            DNekMatSharedPtr returnval;
+            return returnval;
+        }
 
-            void StdExpansion::v_GetCoords(Array<OneD, NekDouble> &coords_0,
-                                     Array<OneD, NekDouble> &coords_1,
-                                     Array<OneD, NekDouble> &coords_2)
-            {
-                NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
-            }
+        void StdExpansion::v_GetCoords(Array<OneD, NekDouble> &coords_0,
+                                       Array<OneD, NekDouble> &coords_1,
+                                       Array<OneD, NekDouble> &coords_2)
+        {
+            NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
+        }
 
-            void StdExpansion::v_GetCoord(const Array<OneD, const NekDouble>& Lcoord,
-                                    Array<OneD, NekDouble> &coord)
-            {
-                NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
-            }
-
+        void StdExpansion::v_GetCoord(const Array<OneD, const NekDouble>& Lcoord,
+                                      Array<OneD, NekDouble> &coord)
+        {
+            NEKERROR(ErrorUtil::efatal, "Write coordinate definition method");
+        }
+        
             int StdExpansion::v_GetCoordim(void)
             {
                 NEKERROR(ErrorUtil::efatal, "Write method");
@@ -1605,6 +1622,13 @@ namespace Nektar
                 LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
+
+             void StdExpansion::v_SVVLaplacianFilter(Array<OneD,NekDouble> &array,
+                                             const StdMatrixKey &mkey)
+             {
+                 ASSERTL0(false, "This function is not defined in StdExpansion.");
+             }
+
             void StdExpansion::v_LaplacianMatrixOp(const int k1, const int k2,
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
@@ -1656,91 +1680,90 @@ namespace Nektar
 
         }
 
-            void StdExpansion::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD,NekDouble> &outarray,
-                                             const StdMatrixKey &mkey)
-            {
-                // If this function is not reimplemented on shape level, the function
-                // below will be called
-                HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
-            }
-
-            void StdExpansion::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                           Array<OneD,NekDouble> &outarray,
-                                                           const StdMatrixKey &mkey)
-            {
-                // If this function is not reimplemented on shape level, the function
-                // below will be called
-                LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }
-
-            void StdExpansion::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
-                                                           Array<OneD,NekDouble> &outarray,
-                                                           const StdMatrixKey &mkey)
-            {
-                // If this function is not reimplemented on shape level, the function
-                // below will be called
-                HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }
-
-            const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
-            {
-                ASSERTL0(false, "Cannot get edge normals for this expansion.");
-                static NormalVector result;
-                return result;
-            }
-
-            void StdExpansion::v_ComputeEdgeNormal(const int edge)
-            {
-                ASSERTL0(false, "Cannot compute edge normal for this expansion.");
-            }
-
-            void StdExpansion::v_ComputeFaceNormal(const int face)
-            {
-                ASSERTL0(false, "Cannot compute face normal for this expansion.");
-            }
-
-            void StdExpansion::v_NegateEdgeNormal(const int edge)
-            {
-                ASSERTL0(false, "Not implemented.");
-            }
+        void StdExpansion::v_HelmholtzMatrixOp(const Array<OneD, const NekDouble> &inarray,
+                                               Array<OneD,NekDouble> &outarray,
+                                               const StdMatrixKey &mkey)
+        {
+            // If this function is not reimplemented on shape level, the function
+            // below will be called
+            HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
+        }
         
-            bool StdExpansion::v_EdgeNormalNegated(const int edge)
-            {
-                ASSERTL0(false, "Not implemented.");
-                return false;
-            }
+        void StdExpansion::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                       Array<OneD,NekDouble> &outarray,
+                                                       const StdMatrixKey &mkey)
+        {
+            // If this function is not reimplemented on shape level, the function
+            // below will be called
+            LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+        }
+        
+        void StdExpansion::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
+                                                       Array<OneD,NekDouble> &outarray,
+                                                       const StdMatrixKey &mkey)
+        {
+            // If this function is not reimplemented on shape level, the function
+            // below will be called
+            HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
+        }
 
-            void StdExpansion::v_NegateFaceNormal(const int face)
-            {
-                ASSERTL0(false, "Not implemented.");
-            }
+        const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
+        {
+            ASSERTL0(false, "Cannot get edge normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
+        
+        void StdExpansion::v_ComputeEdgeNormal(const int edge)
+        {
+            ASSERTL0(false, "Cannot compute edge normal for this expansion.");
+        }
 
-		
-			void StdExpansion::v_ComputeVertexNormal(const int vertex)
-			{
-				ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
-			}
+        void StdExpansion::v_NegateEdgeNormal(const int edge)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
 
-            const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
-            {
-                ASSERTL0(false, "Cannot get face normals for this expansion.");
-                static NormalVector result;
-                return result;
-            }
-		
-			const NormalVector & StdExpansion::v_GetVertexNormal(const int vertex) const
-			{
-				ASSERTL0(false, "Cannot get vertex normals for this expansion.");
-                static NormalVector result;
-                return result;
-			}	
-		
-            const NormalVector & StdExpansion::v_GetSurfaceNormal() const
-            {
-                ASSERTL0(false, "Cannot get face normals for this expansion.");
-                static NormalVector result;
-                return result;
-            }
+        bool StdExpansion::v_EdgeNormalNegated(const int edge)
+        {
+            ASSERTL0(false, "Not implemented.");
+            return false;
+        }
+        
+        void StdExpansion::v_ComputeFaceNormal(const int face)
+        {
+            ASSERTL0(false, "Cannot compute face normal for this expansion.");
+        }
+
+        void StdExpansion::v_NegateFaceNormal(const int face)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+        
+        void StdExpansion::v_ComputeVertexNormal(const int vertex)
+        {
+            ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
+        }
+
+        const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
+        {
+            ASSERTL0(false, "Cannot get face normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
+	
+        const NormalVector & StdExpansion::v_GetVertexNormal(const int vertex) const
+        {
+            ASSERTL0(false, "Cannot get vertex normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }	
+	
+        const NormalVector & StdExpansion::v_GetSurfaceNormal() const
+        {
+            ASSERTL0(false, "Cannot get face normals for this expansion.");
+            static NormalVector result;
+            return result;
+        }
     }//end namespace
 }//end namespace

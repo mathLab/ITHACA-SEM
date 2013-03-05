@@ -52,7 +52,7 @@ namespace Nektar
          */
         TriGeom::TriGeom()
         {
-            m_geomShapeType = eTriangle;
+            m_shapeType = LibUtilities::eTriangle;
         }
 
 
@@ -89,7 +89,7 @@ namespace Nektar
                 Geometry2D(verts[0]->GetCoordim()),
                 m_fid(id)
         {
-            m_geomShapeType = eTriangle;
+            m_shapeType = LibUtilities::eTriangle;
 
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+TriGeom::kNverts);
@@ -138,7 +138,7 @@ namespace Nektar
                 Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
                 m_fid(id)
         {
-            m_geomShapeType = eTriangle;
+            m_shapeType = LibUtilities::eTriangle;
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
@@ -196,7 +196,7 @@ namespace Nektar
                 Geometry2D(edges[0]->GetVertex(0)->GetCoordim()),
                 m_fid(id)
         {
-            m_geomShapeType = eTriangle;
+            m_shapeType =  LibUtilities::eTriangle;
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+TriGeom::kNedges);
@@ -336,7 +336,7 @@ namespace Nektar
         TriGeom::TriGeom(const TriGeom &in)
         {
             // From Geomtry
-            m_geomShapeType = in.m_geomShapeType;
+            m_shapeType = in.m_shapeType;
 
             // From TriFaceComponent
             m_fid = in.m_fid;
@@ -386,7 +386,7 @@ namespace Nektar
                 const TriGeom &face1,
                 const TriGeom &face2)
         {
-            StdRegions::Orientation returnval;
+            StdRegions::Orientation returnval = StdRegions::eNoOrientation;
             
             int i, j, map[3] = {-1,-1,-1};
             NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;

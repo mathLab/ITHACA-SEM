@@ -23,9 +23,10 @@ int main(int argc, char *argv[])
     
     int           order1,order2, nq1,nq2;
     LibUtilities::PointsType    Qtype1,Qtype2;
-    LibUtilities::BasisType     btype1,btype2;
-    LibUtilities::PointsType     NodalType;
-    StdRegions::ExpansionType    regionshape;
+    LibUtilities::BasisType     btype1 =   LibUtilities::eOrtho_A;
+    LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
+    LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
+    LibUtilities::ShapeType     regionshape;
     StdRegions::StdExpansion2D *E;
     Array<OneD, NekDouble> sol;
     Array<OneD, NekDouble> coords(8);
@@ -41,8 +42,8 @@ int main(int argc, char *argv[])
         
         fprintf(stderr,"Where RegionShape is an integer value which "
                 "dictates the region shape:\n");
-        fprintf(stderr,"\t Triangle      = 2\n");
-        fprintf(stderr,"\t Quadrilateral = 3\n");
+        fprintf(stderr,"\t Triangle      = 3\n");
+        fprintf(stderr,"\t Quadrilateral = 4\n");
         
         fprintf(stderr,"Where type is an integer value which "
                 "dictates the basis as:\n");
@@ -64,10 +65,10 @@ int main(int argc, char *argv[])
         exit(1);
     }
     
-    regionshape = (StdRegions::ExpansionType) atoi(argv[1]);
+    regionshape = (LibUtilities::ShapeType) atoi(argv[1]);
     
     // Check to see if 2D region
-    if((regionshape != StdRegions::eTriangle)&&(regionshape != StdRegions::eQuadrilateral))
+    if((regionshape != LibUtilities::eTriangle)&&(regionshape != LibUtilities::eQuadrilateral))
     {
         NEKERROR(ErrorUtil::efatal,"This shape is not a 2D region");
     }
@@ -99,7 +100,7 @@ int main(int argc, char *argv[])
     // Check to see that correct Expansions are used
     switch(regionshape)
     {
-    case StdRegions::eTriangle:
+    case LibUtilities::eTriangle:
         if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eModified_B))
         {
             NEKERROR(ErrorUtil::efatal,
@@ -107,7 +108,7 @@ int main(int argc, char *argv[])
         }
         
         break;
-    case StdRegions::eQuadrilateral:
+    case LibUtilities::eQuadrilateral:
         if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_C)||
            (btype1 == LibUtilities::eModified_B)||(btype1 == LibUtilities::eModified_C))
         {
@@ -145,7 +146,7 @@ int main(int argc, char *argv[])
     
     if(btype2 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTriangle) {
+        if (regionshape == LibUtilities::eTriangle) {
             Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
         else
@@ -163,9 +164,8 @@ int main(int argc, char *argv[])
     
     switch(regionshape)
     {
-    case StdRegions::eTriangle:
+    case LibUtilities::eTriangle:
         {
-            
             coords[0]    =   atof(argv[8]);
             coords[1]    =   atof(argv[9]);
             coords[2]    =   atof(argv[10]);
@@ -225,7 +225,7 @@ int main(int argc, char *argv[])
             
         }
         break;
-    case StdRegions::eQuadrilateral:
+    case  LibUtilities::eQuadrilateral:
         {
             // Gather coordinates
             coords[0]    =   atof(argv[8]);
@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
     x[0] = (coords[0] + coords[2])*0.5;
     x[1] = (coords[1] + coords[5])*0.5;
     
-    if(regionshape == StdRegions::eTriangle)
+    if(regionshape == LibUtilities::eTriangle)
     {
         sol[0] = Tri_sol(x[0],x[1],order1,order2);
     }

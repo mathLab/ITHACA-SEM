@@ -42,12 +42,12 @@ namespace Nektar
     namespace StdRegions
     {
         StdMatrixKey::StdMatrixKey(const MatrixType matrixType,
-                                   const ExpansionType expansionType,
+                                   const LibUtilities::ShapeType shapeType,
                                    const StdExpansion &stdExpansion,
                                    const ConstFactorMap &factorMap,
                                    const VarCoeffMap &varCoeffMap,
                                    LibUtilities::PointsType nodalType) :
-            m_expansionType(expansionType),
+            m_shapeType(shapeType),
             m_base(stdExpansion.GetBase()),
             m_ncoeffs(stdExpansion.GetNcoeffs()),
             m_matrixType(matrixType),
@@ -68,7 +68,7 @@ namespace Nektar
 
         StdMatrixKey::StdMatrixKey(const StdMatrixKey& rhs,
                       const StdRegions::MatrixType matrixType) :
-            m_expansionType(rhs.m_expansionType),
+            m_shapeType(rhs.m_shapeType),
             m_base(rhs.m_base),
             m_ncoeffs(rhs.m_ncoeffs),
             m_matrixType(matrixType),
@@ -80,7 +80,7 @@ namespace Nektar
         }
 
         StdMatrixKey::StdMatrixKey(const StdMatrixKey& rhs) :
-            m_expansionType(rhs.m_expansionType),
+            m_shapeType(rhs.m_shapeType),
             m_base(rhs.m_base),
             m_ncoeffs(rhs.m_ncoeffs),
             m_matrixType(rhs.m_matrixType),
@@ -109,7 +109,7 @@ namespace Nektar
                 return false;
             }
             
-            if(lhs.m_ncoeffs < rhs.m_ncoeffs)
+            if(lhs.m_ncoeffs < rhs.m_ncoeffs) // probably do not need this check since checking the m_base below? 
             {
                 return true;
             }
@@ -119,7 +119,7 @@ namespace Nektar
                 return false;
             }
             
-            for(unsigned int i = 0; i < ExpansionTypeDimMap[lhs.m_expansionType]; ++i)
+            for(unsigned int i = 0; i < LibUtilities::ShapeTypeDimMap[lhs.m_shapeType]; ++i)
             {
                 if(lhs.m_base[i].get() < rhs.m_base[i].get())
                 {
@@ -144,7 +144,7 @@ namespace Nektar
             {
                 ConstFactorMap::const_iterator x, y;
                 for(x = lhs.m_factors.begin(), y = rhs.m_factors.begin();
-                        x != lhs.m_factors.end(); ++x, ++y)
+                    x != lhs.m_factors.end(); ++x, ++y)
                 {
                     if (x->second < y->second)
                     {
@@ -204,7 +204,7 @@ namespace Nektar
                 return false;
             }
 
-            for(unsigned int i = 0; i < ExpansionTypeDimMap[lhs.m_expansionType]; ++i)
+            for(unsigned int i = 0; i < LibUtilities::ShapeTypeDimMap[lhs.m_shapeType]; ++i)
             {
                 if(lhs.m_base[i].get() != rhs.m_base[i].get())
                 {
@@ -276,7 +276,7 @@ namespace Nektar
         std::ostream& operator<<(std::ostream& os, const StdMatrixKey& rhs)
         {
             os << "MatrixType: " << MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: " 
-                << ExpansionTypeMap[rhs.GetExpansionType()] << ", Ncoeffs: " << rhs.GetNcoeffs() 
+                << LibUtilities::ShapeTypeMap[rhs.GetShapeType()] << ", Ncoeffs: " << rhs.GetNcoeffs() 
                 << std::endl;
 
             if(rhs.GetConstFactors().size())
@@ -300,7 +300,7 @@ namespace Nektar
                 }
             }
             
-            for(unsigned int i = 0; i < ExpansionTypeDimMap[rhs.GetExpansionType()]; ++i)
+            for(unsigned int i = 0; i < LibUtilities::ShapeTypeDimMap[rhs.GetShapeType()]; ++i)
             {
                 os << rhs.GetBase()[i]->GetBasisKey();
             }

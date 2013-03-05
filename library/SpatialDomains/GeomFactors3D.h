@@ -72,7 +72,7 @@ namespace Nektar
 
             /// Set up quadrature metrics for 2D expansions.
             virtual void v_SetUpQuadratureMetrics(
-                StdRegions::ExpansionType shape,
+                LibUtilities::ShapeType shape,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
                     &tbasis);
         };

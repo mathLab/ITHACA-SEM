@@ -67,37 +67,37 @@ namespace Nektar
         }
 		
 		
-		ExpansionType StdPointExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdPointExp::v_DetShapeType() const
         {
-            return ePoint;
+            return LibUtilities::ePoint;
         }
 		
-		
-		void StdPointExp::v_GetCoords(
-									Array<OneD, NekDouble> &coords_0,
-									Array<OneD, NekDouble> &coords_1,
-									Array<OneD, NekDouble> &coords_2)
+        
+        void StdPointExp::v_GetCoords(
+                                      Array<OneD, NekDouble> &coords_0,
+                                      Array<OneD, NekDouble> &coords_1,
+                                      Array<OneD, NekDouble> &coords_2)
         {
             Blas::Dcopy(GetNumPoints(0),(m_base[0]->GetZ()).get(),
                         1,&coords_0[0],1);
         }
-		
-		
-		void StdPointExp::v_BwdTrans(
-								   const Array<OneD, const NekDouble>& inarray,
-								   Array<OneD, NekDouble> &outarray)
+	
+	
+        void StdPointExp::v_BwdTrans(
+                                     const Array<OneD, const NekDouble>& inarray,
+                                     Array<OneD, NekDouble> &outarray)
         {
             int  nquad = m_base[0]->GetNumPoints();
-			
+            
             if(m_base[0]->Collocation())
             {
                 Vmath::Vcopy(nquad, inarray, 1, outarray, 1);
             }
             else
             {
-				
+                
 #ifdef NEKTAR_USING_DIRECT_BLAS_CALLS
-				
+		
                 Blas::Dgemv('N',nquad,m_base[0]->GetNumModes(),1.0, (m_base[0]->GetBdata()).get(),
                             nquad,&inarray[0],1,0.0,&outarray[0],1);
 				
@@ -126,7 +126,7 @@ namespace Nektar
                 v_IProductWRTBase(inarray,outarray);
 				
                 // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMass,v_DetExpansionType(),*this);
+                StdMatrixKey      masskey(eInvMass,v_DetShapeType(),*this);
                 DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 				
                 NekVector<NekDouble> in(m_ncoeffs,outarray,eCopy);
@@ -151,21 +151,21 @@ namespace Nektar
 				
                 switch(m_base[0]->GetBasisType())
                 {
-					case LibUtilities::eGLL_Lagrange:
+                case LibUtilities::eGLL_Lagrange:
                     {
                         offset = 1;
                     }
-						break;
-					case LibUtilities::eModified_A:
-					case LibUtilities::eModified_B:
+                    break;
+                case LibUtilities::eModified_A:
+                case LibUtilities::eModified_B:
                     {
                         offset = 2;
                     }
-						break;
-					default:
-						ASSERTL0(false,"This type of FwdTrans is not defined for this expansion type");
+                    break;
+                default:
+                    ASSERTL0(false,"This type of FwdTrans is not defined for this shapex type");
                 }
-				
+		
                 fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
 				
                 outarray[GetVertexMap(0)] = inarray[0];
@@ -178,7 +178,7 @@ namespace Nektar
                     Array<OneD, NekDouble> tmp0(m_ncoeffs);
                     Array<OneD, NekDouble> tmp1(m_ncoeffs);
 					
-                    StdMatrixKey      masskey(eMass,v_DetExpansionType(),*this);
+                    StdMatrixKey      masskey(eMass,v_DetShapeType(),*this);
                     MassMatrixOp(outarray,tmp0,masskey);
                     v_IProductWRTBase(inarray,tmp1);
 					
@@ -258,23 +258,20 @@ namespace Nektar
 				case eFwdTrans:
                 {
                     Mat = MemoryManager<DNekMat>::AllocateSharedPtr(m_ncoeffs,m_ncoeffs);
-                    StdMatrixKey iprodkey(eIProductWRTBase,v_DetExpansionType(),*this);
+                    StdMatrixKey iprodkey(eIProductWRTBase,v_DetShapeType(),*this);
                     DNekMat &Iprod = *GetStdMatrix(iprodkey);
-                    StdMatrixKey imasskey(eInvMass,v_DetExpansionType(),*this);
+                    StdMatrixKey imasskey(eInvMass,v_DetShapeType(),*this);
                     DNekMat &Imass = *GetStdMatrix(imasskey);
 					
                     (*Mat) = Imass*Iprod;
 					
-					
-					
                 }
-					break;
-				default:
+                break;
+            default:
                 {
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);
-					
                 }
-					break;
+                break;
             }
 			
             return Mat;

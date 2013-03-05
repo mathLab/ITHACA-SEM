@@ -117,7 +117,7 @@ namespace Nektar
         std::ostream& operator<<(std::ostream& os, const GlobalLinSysKey& rhs)
         {
             os << "MatrixType: " << StdRegions::MatrixTypeMap[rhs.GetMatrixType()] << ", ShapeType: "
-                            << StdRegions::ExpansionTypeMap[rhs.GetExpansionType()]
+               << LibUtilities::ShapeTypeMap[rhs.GetShapeType()]
                             << std::endl;
             os << "Solution Type: " 
                << GlobalSysSolnTypeMap[rhs.GetGlobalSysSolnType()] << endl;

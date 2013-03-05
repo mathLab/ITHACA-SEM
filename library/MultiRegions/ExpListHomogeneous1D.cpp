@@ -520,7 +520,7 @@ namespace Nektar
 				if((mattype == eForwardsCoeffSpace1D)||(mattype == eForwardsPhysSpace1D))
 				{
 					StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
-													StdPoint.DetExpansionType(),
+													StdPoint.DetShapeType(),
 													StdPoint);
 					
 					loc_mat = StdPoint.GetStdMatrix(matkey);
@@ -528,7 +528,7 @@ namespace Nektar
 				else
 				{
 					StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
-													StdPoint.DetExpansionType(),
+													StdPoint.DetShapeType(),
 													StdPoint);
 					
 					loc_mat = StdPoint.GetStdMatrix(matkey);
@@ -542,7 +542,7 @@ namespace Nektar
 				if((mattype == eForwardsCoeffSpace1D)||(mattype == eForwardsPhysSpace1D))
 				{
 					StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
-													StdSeg.DetExpansionType(),
+													StdSeg.DetShapeType(),
 													StdSeg);
 					
 					loc_mat = StdSeg.GetStdMatrix(matkey);
@@ -550,7 +550,7 @@ namespace Nektar
 				else
 				{
 					StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
-													StdSeg.DetExpansionType(),
+													StdSeg.DetShapeType(),
 													StdSeg);
 					
 					loc_mat = StdSeg.GetStdMatrix(matkey);
@@ -567,49 +567,49 @@ namespace Nektar
             return BlkMatrix;
         }
 
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpListHomogeneous1D::v_GetFieldDefinitions()
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> ExpListHomogeneous1D::v_GetFieldDefinitions()
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> returnval;
             
 			// Set up Homogeneous length details.
             Array<OneD,LibUtilities::BasisSharedPtr> HomoBasis(1,m_homogeneousBasis);
             
-			std::vector<NekDouble> HomoLen;
+            std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
-			
-			std::vector<unsigned int> PlanesIDs;
-			
-			for(int i = 0; i < m_planes.num_elements(); i++)
-			{
-				PlanesIDs.push_back(m_transposition->GetPlaneID(i));
-			}
-
+            
+            std::vector<unsigned int> PlanesIDs;
+            
+            for(int i = 0; i < m_planes.num_elements(); i++)
+            {
+                PlanesIDs.push_back(m_transposition->GetPlaneID(i));
+            }
+            
             m_planes[0]->GeneralGetFieldDefinitions(returnval, 1, HomoBasis, HomoLen, PlanesIDs);
             
-			return returnval;
+            return returnval;
         }
 
-        void  ExpListHomogeneous1D::v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
+        void  ExpListHomogeneous1D::v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
         {
             // Set up Homogeneous length details.
             Array<OneD,LibUtilities::BasisSharedPtr> HomoBasis(1,m_homogeneousBasis);
             
-			std::vector<NekDouble> HomoLen;
+            std::vector<NekDouble> HomoLen;
             HomoLen.push_back(m_lhom);
-			
-			std::vector<unsigned int> PlanesIDs;
-			
-			for(int i = 0; i < m_planes.num_elements(); i++)
-			{
-				PlanesIDs.push_back(m_transposition->GetPlaneID(i));
-			}
-
-             // enforce NumHomoDir == 1 by direct call
+            
+            std::vector<unsigned int> PlanesIDs;
+            
+            for(int i = 0; i < m_planes.num_elements(); i++)
+            {
+                PlanesIDs.push_back(m_transposition->GetPlaneID(i));
+            }
+            
+            // enforce NumHomoDir == 1 by direct call
             m_planes[0]->GeneralGetFieldDefinitions(fielddef,1, HomoBasis,HomoLen,PlanesIDs);
         }
 
 
-        void ExpListHomogeneous1D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
+        void ExpListHomogeneous1D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
             int i,n;
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
@@ -634,17 +634,17 @@ namespace Nektar
             }
         }
 		
-        void ExpListHomogeneous1D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
+        void ExpListHomogeneous1D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
            v_AppendFieldData(fielddef,fielddata,m_coeffs);
         }
 
         //Extract the data in fielddata into the m_coeff list
         void ExpListHomogeneous1D::v_ExtractDataToCoeffs(
-            SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-            std::vector<NekDouble>                    &fielddata,
-            std::string                               &field,
-            Array<OneD, NekDouble>                    &coeffs)
+            LibUtilities::FieldDefinitionsSharedPtr    &fielddef,
+            std::vector<NekDouble>       &fielddata,
+            std::string                  &field,
+            Array<OneD, NekDouble>       &coeffs)
         {
             int i,n;
             int offset = 0;

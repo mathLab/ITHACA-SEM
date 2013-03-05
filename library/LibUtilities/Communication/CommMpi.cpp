@@ -327,9 +327,10 @@ namespace Nektar
             MPI_Op vOp;
             switch (pOp)
             {
-            case ReduceSum: vOp = MPI_SUM; break;
             case ReduceMax: vOp = MPI_MAX; break;
             case ReduceMin: vOp = MPI_MIN; break;
+            case ReduceSum:
+            default:        vOp = MPI_SUM; break;
             }
             int retval = MPI_Allreduce( MPI_IN_PLACE,
                                         &pData,
@@ -356,9 +357,10 @@ namespace Nektar
             MPI_Op vOp;
             switch (pOp)
             {
-            case ReduceSum: vOp = MPI_SUM; break;
             case ReduceMax: vOp = MPI_MAX; break;
             case ReduceMin: vOp = MPI_MIN; break;
+            case ReduceSum:
+            default:        vOp = MPI_SUM; break;
             }
             int retval = MPI_Allreduce( MPI_IN_PLACE,
                                         &pData,
@@ -385,9 +387,10 @@ namespace Nektar
             MPI_Op vOp;
             switch (pOp)
             {
-            case ReduceSum: vOp = MPI_SUM; break;
             case ReduceMax: vOp = MPI_MAX; break;
             case ReduceMin: vOp = MPI_MIN; break;
+            case ReduceSum:
+            default:        vOp = MPI_SUM; break;
             }
             int retval = MPI_Allreduce( MPI_IN_PLACE,
                                         pData.get(),
@@ -414,9 +417,10 @@ namespace Nektar
             MPI_Op vOp;
             switch (pOp)
             {
-            case ReduceSum: vOp = MPI_SUM; break;
             case ReduceMax: vOp = MPI_MAX; break;
             case ReduceMin: vOp = MPI_MIN; break;
+            case ReduceSum:
+            default:        vOp = MPI_SUM; break;
             }
             int retval = MPI_Allreduce( MPI_IN_PLACE,
                                         pData.get(),

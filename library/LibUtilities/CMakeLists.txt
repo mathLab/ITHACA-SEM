@@ -111,11 +111,11 @@ SET(ExpressionTemplates
 
 SET(BasicUtilsHeaders
     ./BasicUtils/ArrayPolicies.hpp
-    ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/BoostUtil.hpp
     ./BasicUtils/Concepts.hpp
     ./BasicUtils/ConsistentObjectAccess.hpp
     ./BasicUtils/Equation.h
+    ./BasicUtils/FieldIO.h
     ./BasicUtils/ErrorUtil.hpp
     ./BasicUtils/MeshPartition.h
     ./BasicUtils/NekManager.hpp
@@ -124,22 +124,25 @@ SET(BasicUtilsHeaders
     ./BasicUtils/OperatorGenerators.hpp
     ./BasicUtils/ParseUtils.hpp
     ./BasicUtils/Timer.h
-    ./BasicUtils/Timer.cpp
     ./BasicUtils/RawType.hpp
     ./BasicUtils/SessionReader.h
+    ./BasicUtils/ShapeType.hpp
     ./BasicUtils/SharedArray.hpp
     ./BasicUtils/Vmath.hpp
     ./BasicUtils/VmathArray.hpp
     ./BasicUtils/Metis.hpp
     ./BasicUtils/XmlUtil.h
-    ./BasicUtils/XmlUtil.cpp
 )
 
 SET(BasicUtilsSources
+    ./BasicUtils/ArrayEqualityComparison.cpp
     ./BasicUtils/Equation.cpp
+    ./BasicUtils/FieldIO.cpp
     ./BasicUtils/MeshPartition.cpp
     ./BasicUtils/SessionReader.cpp
+    ./BasicUtils/Timer.cpp
     ./BasicUtils/Vmath.cpp
+    ./BasicUtils/XmlUtil.cpp
 )
 
 SET(Memory
@@ -303,10 +306,12 @@ ADD_DEFINITIONS(-DLIB_UTILITIES_EXPORTS)
 ADD_NEKTAR_LIBRARY(LibUtilities lib ${NEKTAR_LIBRARY_TYPE} ${LibUtilitySources} ${LibUtilityHeaders})
 
 TARGET_LINK_LIBRARIES(LibUtilities
-	${Boost_THREAD_LIBRARY}
-	${Boost_DATE_TIME_LIBRARY}
+    ${Boost_THREAD_LIBRARY}
+    ${Boost_IOSTREAMS_LIBRARY}
+    ${Boost_DATE_TIME_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
-	${TINYXML_LIB}
+    ${Boost_ZLIB_LIBRARY}
+    ${TINYXML_LIB}
 )
 SET_LAPACK_LINK_LIBRARIES(LibUtilities)
 

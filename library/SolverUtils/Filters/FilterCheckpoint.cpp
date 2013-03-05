@@ -91,9 +91,7 @@ namespace Nektar
             }
             vOutputFilename << ".chk";
 
-            SpatialDomains::MeshGraphSharedPtr vGraph = pFields[0]->GetGraph();
-
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = pFields[0]->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -107,7 +105,7 @@ namespace Nektar
                     pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], pFields[j]->UpdateCoeffs());
                 }
             }
-            vGraph->Write(vOutputFilename.str(),FieldDef,FieldData);
+            LibUtilities::Write(vOutputFilename.str(),FieldDef,FieldData);
             m_outputIndex++;
         }
 

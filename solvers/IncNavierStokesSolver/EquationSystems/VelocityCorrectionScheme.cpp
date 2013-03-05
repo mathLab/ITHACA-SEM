@@ -99,9 +99,10 @@ namespace Nektar
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
 
             m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
-            if(m_useSpecVanVisc)
+
+            if(m_useHomo1DSpecVanVisc == false)
             {
-                m_useHomo1DSpecVanVisc = true;
+                m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useHomo1DSpecVanVisc,false);
             }
 
             if(m_useHomo1DSpecVanVisc)
@@ -115,8 +116,6 @@ namespace Nektar
                 NekDouble fac;
                 int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
                 int pstart;
-                NekDouble svvdiff;
-                NekDouble cutoff; 
 
                 pstart = m_sVVCutoffRatio*kmodes;
                 
@@ -381,14 +380,12 @@ namespace Nektar
             cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D) " << endl;
         }
     }
-    
+
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
-        // Set initial condition using time t=0
-        SetInitialConditions(0.0);
 
-        // Set Boundary conditions on the intiial conditions
-        SetBoundaryConditions(0.0); // should be dependent on m_time? 
+        UnsteadySystem::v_DoInitialise();
+
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->LocalToGlobal();

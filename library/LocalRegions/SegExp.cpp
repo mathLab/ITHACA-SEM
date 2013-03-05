@@ -387,7 +387,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 v_IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
-                MatrixKey             masskey(StdRegions::eInvMass, DetExpansionType(),*this);
+                MatrixKey             masskey(StdRegions::eInvMass, DetShapeType(),*this);
                 DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
                 // copy inarray in case inarray == outarray
@@ -441,14 +441,14 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     Array<OneD, NekDouble> tmp0(m_ncoeffs); 
                     Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
-                    StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetExpansionType(),*this);
+                    StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetShapeType(),*this);
                     MassMatrixOp(outarray,tmp0,stdmasskey);
                     v_IProductWRTBase(inarray,tmp1);
 
                     Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
 
                     // get Mass matrix inverse (only of interior DOF)
-                    MatrixKey             masskey(StdRegions::eMass, DetExpansionType(),*this);
+                    MatrixKey             masskey(StdRegions::eMass, DetShapeType(),*this);
                     DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
 
                     Blas::Dgemv('N',nInteriorDofs,nInteriorDofs, matsys->Scale(), 
@@ -1330,7 +1330,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                        (mkey.GetNVarCoeff()))
                     {
                         NekDouble one = 1.0;
-                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
+                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetShapeType(),
                                                          *this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
@@ -1381,7 +1381,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
-                                            mkey.GetExpansionType(), *this);  
+                                            mkey.GetShapeType(), *this);  
 
                         DNekMatSharedPtr WeakDerivStd = GetStdMatrix(deriv0key);
                         fac = m_metricinfo->GetGmat()[dir][0]*
@@ -1416,10 +1416,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 {
                     NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
-                                      mkey.GetExpansionType(), *this);    
+                                      mkey.GetShapeType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                                     mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -1449,10 +1449,10 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     NekDouble one = 1.0;
 
 //                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
-//                                                  DetExpansionType(),*this,
+//                                                  DetShapeType(),*this,
 //                                                  mkey.GetConstant(0),
 //                                                  mkey.GetConstant(1));
-                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(),
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetShapeType(),
                                    *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
@@ -1682,7 +1682,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                       Array<OneD,NekDouble> &outarray)
         {
             // get Mass matrix inverse
-            MatrixKey             masskey(StdRegions::eInvMass, DetExpansionType(),*this);
+            MatrixKey             masskey(StdRegions::eInvMass, DetShapeType(),*this);
             DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
             NekVector<NekDouble> in(m_ncoeffs,inarray,eCopy);

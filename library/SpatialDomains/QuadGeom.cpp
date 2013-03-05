@@ -52,7 +52,7 @@ namespace Nektar
          */
         QuadGeom::QuadGeom()
         {
-            m_geomShapeType = eQuadrilateral;
+            m_shapeType = LibUtilities::eQuadrilateral;
         }
 
 
@@ -88,7 +88,7 @@ namespace Nektar
             Geometry2D(verts[0]->GetCoordim()),
             m_fid(id)
         {
-            m_geomShapeType = eQuadrilateral;
+            m_shapeType = LibUtilities::eQuadrilateral;
 
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+QuadGeom::kNverts);
@@ -141,7 +141,7 @@ namespace Nektar
         {
             int j;
 
-            m_geomShapeType = eQuadrilateral;
+            m_shapeType = LibUtilities::eQuadrilateral;
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
@@ -232,7 +232,7 @@ namespace Nektar
         {
             int j;
 
-            m_geomShapeType = eQuadrilateral;
+            m_shapeType = LibUtilities::eQuadrilateral;
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
@@ -287,7 +287,7 @@ namespace Nektar
         QuadGeom::QuadGeom(const QuadGeom &in)
         {
             // From Geometry
-            m_geomShapeType = in.m_geomShapeType;
+            m_shapeType = in.m_shapeType;
 
             // From QuadFaceComponent
             m_fid = in.m_fid;

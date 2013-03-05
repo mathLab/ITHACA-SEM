@@ -206,18 +206,12 @@ namespace Nektar
         const NekDouble time,
         const NekDouble lambda)
     {
-        int nvariables = inarray.num_elements();
-        int npoints = m_fields[0]->GetNpoints();
-
         StdRegions::ConstFactorMap factors;
-        factors[StdRegions::eFactorLambda] = 1.0/lambda/m_epsilon;
-        factors[StdRegions::eFactorTau] = 1.0;
 
-        if(m_useSpecVanVisc)
-        {
-            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
-            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_epsilon;
-        }
+        int nvariables = inarray.num_elements();
+        int npoints    = m_fields[0]->GetNpoints();
+        factors[StdRegions::eFactorLambda] = 1.0 / lambda / m_epsilon;
+        factors[StdRegions::eFactorTau]    = 1.0;
 
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
@@ -263,15 +257,5 @@ namespace Nektar
             Vmath::Zero(GetNpoints(), flux[k], 1);
         }
         Vmath::Vcopy(GetNpoints(), physfield[i], 1, flux[j], 1);
-    }
-
-    void UnsteadyDiffusion::v_PrintSummary(std::ostream &out)
-    {
-
-        UnsteadySystem::v_PrintSummary(out);
-        if(m_useSpecVanVisc)
-        {
-            out << "\tSpecVanVis      : True (cut off ratio = " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;
-        }
     }
 }

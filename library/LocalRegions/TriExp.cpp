@@ -46,8 +46,8 @@ namespace Nektar
         TriExp::TriExp(const LibUtilities::BasisKey &Ba,
                        const LibUtilities::BasisKey &Bb,
                        const SpatialDomains::TriGeomSharedPtr &geom):
-            StdExpansion  (StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
-            StdExpansion2D(StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
+            StdExpansion  (LibUtilities::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
+            StdExpansion2D(LibUtilities::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
             StdTriExp(Ba,Bb),
             Expansion     (),
             Expansion2D   (),
@@ -260,7 +260,7 @@ namespace Nektar
 
             // get Mass matrix inverse
             MatrixKey             masskey(StdRegions::eInvMass,
-                                          DetExpansionType(),*this);
+                                          DetShapeType(),*this);
             DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
             // copy inarray in case inarray == outarray
@@ -337,7 +337,7 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp0(m_ncoeffs);
                 Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
-                StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetExpansionType(),*this);
+                StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetShapeType(),*this);
                 MassMatrixOp(outarray,tmp0,stdmasskey);
                 IProductWRTBase(inarray,tmp1);
 
@@ -346,7 +346,7 @@ namespace Nektar
                 // get Mass matrix inverse (only of interior DOF)
                 // use block (1,1) of the static condensed system
                 // note: this block alreay contains the inverse matrix
-                MatrixKey             masskey(StdRegions::eMass,DetExpansionType(),*this);
+                MatrixKey             masskey(StdRegions::eMass,DetShapeType(),*this);
                 DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
 
                 int nBoundaryDofs = NumBndryCoeffs();
@@ -407,7 +407,7 @@ namespace Nektar
                                            Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            MatrixKey      iprodmatkey(StdRegions::eIProductWRTBase,DetExpansionType(),*this);
+            MatrixKey      iprodmatkey(StdRegions::eIProductWRTBase,DetShapeType(),*this);
             DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
 
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
@@ -516,7 +516,7 @@ namespace Nektar
                 break;
             }
 
-            MatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            MatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
 
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
@@ -1259,7 +1259,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
+                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetShapeType(),
                                                          *this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
@@ -1307,9 +1307,9 @@ namespace Nektar
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
-                                            mkey.GetExpansionType(), *this);
+                                            mkey.GetShapeType(), *this);
                         MatrixKey deriv1key(StdRegions::eWeakDeriv1,
-                                            mkey.GetExpansionType(), *this);
+                                            mkey.GetShapeType(), *this);
 
                         DNekMat &deriv0 = *GetStdMatrix(deriv0key);
                         DNekMat &deriv1 = *GetStdMatrix(deriv1key);
@@ -1337,11 +1337,11 @@ namespace Nektar
                     else
                     {
                         MatrixKey lap00key(StdRegions::eLaplacian00,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap01key(StdRegions::eLaplacian01,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap11key(StdRegions::eLaplacian11,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
 
                         DNekMatSharedPtr lap00 = GetStdMatrix(lap00key);
                         DNekMatSharedPtr lap01 = GetStdMatrix(lap01key);
@@ -1375,7 +1375,7 @@ namespace Nektar
             case StdRegions::eInvLaplacianWithUnityMean:
                 {
                     NekDouble one = 1.0;
-                    MatrixKey lapkey(StdRegions::eLaplacian,mkey.GetExpansionType(), *this);
+                    MatrixKey lapkey(StdRegions::eLaplacian,mkey.GetShapeType(), *this);
                     DNekMatSharedPtr lmat = GenMatrix(lapkey);
 
                     // replace first column with inner product wrt 1
@@ -1461,9 +1461,9 @@ namespace Nektar
                         }
 
                         MatrixKey iProdDeriv0Key(StdRegions::eIProductWRTDerivBase0,
-                                                 mkey.GetExpansionType(), *this);
+                                                 mkey.GetShapeType(), *this);
                         MatrixKey iProdDeriv1Key(StdRegions::eIProductWRTDerivBase1,
-                                                 mkey.GetExpansionType(), *this);
+                                                 mkey.GetShapeType(), *this);
 
                         DNekMat &stdiprod0 = *GetStdMatrix(iProdDeriv0Key);
                         DNekMat &stdiprod1 = *GetStdMatrix(iProdDeriv0Key);
@@ -1483,7 +1483,7 @@ namespace Nektar
                 {
                     NekDouble one = 1.0;
 
-                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
 
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 

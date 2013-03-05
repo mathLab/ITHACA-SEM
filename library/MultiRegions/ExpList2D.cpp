@@ -896,7 +896,7 @@ namespace Nektar
             int cnt = 0;
             for(i = 0; i < m_exp->size(); ++i)
             {
-                if((*m_exp)[i]->DetExpansionType() == StdRegions::eTriangle)
+                if((*m_exp)[i]->DetShapeType() == LibUtilities::eTriangle)
                 {
                     m_coeff_offset[i]   = m_ncoeffs;
                     m_phys_offset [i]   = m_npoints;
@@ -908,7 +908,7 @@ namespace Nektar
 
             for(i = 0; i < m_exp->size(); ++i)
             {
-                if((*m_exp)[i]->DetExpansionType() == StdRegions::eQuadrilateral)
+                if((*m_exp)[i]->DetShapeType() == LibUtilities::eQuadrilateral)
                 {
                     m_coeff_offset[i]   = m_ncoeffs;
                     m_phys_offset [i]   = m_npoints;
@@ -942,7 +942,7 @@ namespace Nektar
 
             for(int i = 0; i < GetExpSize(); ++i)
             {
-                if((*m_exp)[i]->DetExpansionType() == StdRegions::eTriangle)
+                if((*m_exp)[i]->DetShapeType() == LibUtilities::eTriangle)
                 {
                     NumShape[0] += 1;
                 }

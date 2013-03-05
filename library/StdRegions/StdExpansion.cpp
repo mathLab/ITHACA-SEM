@@ -44,13 +44,13 @@ namespace Nektar
     {
 
         /** define list of number of vertices corresponding to each ShapeType */
-        const int g_shapenverts[SIZE_ExpansionType] = {0,2,3,4,4,5,6,8};
+        const int g_shapenverts[LibUtilities::SIZE_ShapeType] = {0,2,3,4,4,5,6,8};
 
         /** define list of number of edges corresponding to each ShapeType */
-        const int g_shapenedges[SIZE_ExpansionType] = {0,1,3,4,6,8,9,12};
+        const int g_shapenedges[LibUtilities::SIZE_ShapeType] = {0,1,3,4,6,8,9,12};
 
         /** define list of number of faces corresponding to each ShapeType */
-        const int g_shapenfaces[SIZE_ExpansionType] = {0,0,0,0,4,5,5,6};
+        const int g_shapenfaces[LibUtilities::SIZE_ShapeType] = {0,0,0,0,4,5,5,6};
 
         StdExpansion::StdExpansion(void):
             m_elmt_id(0),
@@ -361,7 +361,7 @@ namespace Nektar
             {
             case eInvMass:
                 {
-                    StdMatrixKey masskey(eMass,mkey.GetExpansionType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
+                    StdMatrixKey masskey(eMass,mkey.GetShapeType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
                     DNekMatSharedPtr mmat = GetStdMatrix(masskey);
                     
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*mmat); //Populate standard mass matrix.
@@ -370,7 +370,7 @@ namespace Nektar
                 break;
             case eInvNBasisTrans:
                 {
-                    StdMatrixKey tmpkey(eNBasisTrans,mkey.GetExpansionType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
+                    StdMatrixKey tmpkey(eNBasisTrans,mkey.GetShapeType(),*this,NullConstFactorMap,NullVarCoeffMap,mkey.GetNodalPointsType());
                     DNekMatSharedPtr tmpmat = GetStdMatrix(tmpkey);
                     returnval = MemoryManager<DNekMat>::AllocateSharedPtr(*tmpmat); //Populate  matrix.
                     returnval->Invert();
@@ -776,7 +776,6 @@ namespace Nektar
                                                      Array<OneD,NekDouble> &outarray,
                                                      const StdMatrixKey &mkey)
         {
-            // ASSERTL1(k1 >= 0 && k1 < ExpansionTypeDimMap[v_DetExpansionType()],"invalid first  argument");
             Array<OneD, NekDouble> tmp(GetTotPoints());
             int nq = GetTotPoints();
 
@@ -907,7 +906,7 @@ namespace Nektar
             if(addDiffusionTerm)
             {
                 Array<OneD, NekDouble> lap(m_ncoeffs);
-                StdMatrixKey mkeylap(eLaplacian,DetExpansionType(),*this);
+                StdMatrixKey mkeylap(eLaplacian,DetShapeType(),*this);
                 LaplacianMatrixOp(inarray,lap,mkeylap);
 
                 v_IProductWRTBase(tmp_adv, outarray);
@@ -929,8 +928,8 @@ namespace Nektar
         {
             NekDouble lambda = mkey.GetConstFactor(eFactorLambda);
             Array<OneD,NekDouble> tmp(m_ncoeffs);
-            StdMatrixKey mkeymass(eMass,DetExpansionType(),*this);
-            StdMatrixKey mkeylap(eLaplacian,DetExpansionType(),*this);
+            StdMatrixKey mkeymass(eMass,DetShapeType(),*this);
+            StdMatrixKey mkeylap(eLaplacian,DetShapeType(),*this);
 
             MassMatrixOp(inarray,tmp,mkeymass);
             LaplacianMatrixOp(inarray,outarray,mkeylap);
@@ -942,7 +941,7 @@ namespace Nektar
                                           Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            StdMatrixKey      bwdtransmatkey(eBwdTrans,DetExpansionType(),*this);
+            StdMatrixKey      bwdtransmatkey(eBwdTrans,DetShapeType(),*this);
             DNekMatSharedPtr  bwdtransmat = GetStdMatrix(bwdtransmatkey);
 
             Blas::Dgemv('N',nq,m_ncoeffs,1.0,bwdtransmat->GetPtr().get(),
@@ -974,19 +973,19 @@ namespace Nektar
 
             GetCoords(coords[0],coords[1],coords[2]);
 
-            switch(DetExpansionType())
+            switch(DetShapeType())
             {
-            case eSegment:
+            case LibUtilities::eSegment:
                 outfile << "Zone, I=" << GetNumPoints(0) << ", F=Block" << std::endl;
                 break;
-            case eTriangle: 
-            case eQuadrilateral:
+            case LibUtilities::eTriangle: 
+            case LibUtilities::eQuadrilateral:
                 outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) <<", F=Block" << std::endl;
                 break;
-            case eTetrahedron: 
-            case ePrism: 
-            case ePyramid: 
-            case eHexahedron:
+            case LibUtilities::eTetrahedron: 
+            case LibUtilities::ePrism: 
+            case LibUtilities::ePyramid: 
+            case LibUtilities::eHexahedron:
                 outfile << "Zone, I=" << GetNumPoints(0) << ", J=" << GetNumPoints(1) << ", K="<< GetNumPoints(2) << ", F=Block" << std::endl;
                 break;
             default:
@@ -1053,7 +1052,7 @@ namespace Nektar
                                                   Array<OneD, NekDouble> &outarray)
         {
             v_AddFaceNormBoundaryInt(face,FaceExp,Fn,outarray);
-        }        
+        }
 
         const Array<OneD, const NekDouble>& StdExpansion::v_GetPhysNormals(void)
         {
@@ -1277,10 +1276,10 @@ namespace Nektar
             return LibUtilities::eNoBasisType;
         }
 
-        ExpansionType StdExpansion::v_DetExpansionType() const
+        LibUtilities::ShapeType StdExpansion::v_DetShapeType() const
         {
             ASSERTL0(false, "This expansion does not have a shape type defined");
-            return eNoExpansionType;
+            return LibUtilities::eNoShapeType;
         }
 
         int StdExpansion::v_GetShapeDimension() const
@@ -1707,46 +1706,45 @@ namespace Nektar
             // below will be called
             HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
         }
-        
+
         const NormalVector & StdExpansion::v_GetEdgeNormal(const int edge) const
         {
             ASSERTL0(false, "Cannot get edge normals for this expansion.");
             static NormalVector result;
             return result;
         }
-            
+        
+        void StdExpansion::v_ComputeEdgeNormal(const int edge)
+        {
+            ASSERTL0(false, "Cannot compute edge normal for this expansion.");
+        }
+
+        void StdExpansion::v_NegateEdgeNormal(const int edge)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+
         bool StdExpansion::v_EdgeNormalNegated(const int edge)
         {
             ASSERTL0(false, "Not implemented.");
             return false;
         }
         
-        void StdExpansion::v_ComputeEdgeNormal(const int edge)
-        {
-            ASSERTL0(false, "Cannot compute edge normal for this expansion.");
-        }
-        
         void StdExpansion::v_ComputeFaceNormal(const int face)
         {
             ASSERTL0(false, "Cannot compute face normal for this expansion.");
         }
-        
-        void StdExpansion::v_NegateEdgeNormal(const int edge)
-        {
-            ASSERTL0(false, "Not implemented.");
-        }
-        
+
         void StdExpansion::v_NegateFaceNormal(const int face)
         {
             ASSERTL0(false, "Not implemented.");
         }
         
-	
         void StdExpansion::v_ComputeVertexNormal(const int vertex)
         {
             ASSERTL0(false, "Cannot compute vertex normal for this expansion.");
         }
-        
+
         const NormalVector & StdExpansion::v_GetFaceNormal(const int face) const
         {
             ASSERTL0(false, "Cannot get face normals for this expansion.");

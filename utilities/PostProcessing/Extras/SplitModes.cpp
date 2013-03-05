@@ -8,8 +8,6 @@ using namespace Nektar;
 
 int main(int argc, char *argv[])
 {
-    int i,j;
-
     if(argc != 2)
     {
         fprintf(stderr,"Usage: Splitmodes fieldfile \n");
@@ -23,9 +21,9 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import fieldfile2.
     string fieldfile(argv[argc-1]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graph.Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
 
@@ -71,19 +69,16 @@ int main(int argc, char *argv[])
         
         for(int i = 0; i < fielddata.size(); ++i)
         {
-            int j;
-            int datalen = fielddata[i].size()/fielddef[i]->m_fields.size()/nmodes;
-
             vector<NekDouble> newdata;
         
             // Determine the number of coefficients per element
             int ncoeffs;
             switch(fielddef[i]->m_shapeType)
             {
-            case SpatialDomains::eTriangle:
-                ncoeffs = StdRegions::StdTriData::getNumberOfCoefficients(fielddef[i]->m_numModes[0], fielddef[i]->m_numModes[1]);
+            case LibUtilities::eTriangle:
+                ncoeffs = LibUtilities::StdTriData::getNumberOfCoefficients(fielddef[i]->m_numModes[0], fielddef[i]->m_numModes[1]);
                 break;
-            case SpatialDomains::eQuadrilateral:
+            case LibUtilities::eQuadrilateral:
                 ncoeffs = fielddef[i]->m_numModes[0]*fielddef[i]->m_numModes[1];
                 break;
             default:
@@ -109,9 +104,9 @@ int main(int argc, char *argv[])
 
         //-----------------------------------------------
         // Write out datafile. 
-        graph.Write(out.c_str(), fielddef, writedata);
+        LibUtilities::Write(out.c_str(), fielddef, writedata);
         //-----------------------------------------------
-
+        
     }
     //----------------------------------------------
 

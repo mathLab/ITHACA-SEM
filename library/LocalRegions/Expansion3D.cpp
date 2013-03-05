@@ -101,12 +101,12 @@ namespace Nektar
             DNekVec Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
             
             StdRegions::IndexMapKey ikey(
-                                         StdRegions::eFaceToElement, DetExpansionType(),
-                                         GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                                         face, GetFaceOrient(face));
-            StdRegions::IndexMapValuesSharedPtr map =
-            StdExpansion::GetIndexMap(ikey);
-            
+                StdRegions::eFaceToElement, DetShapeType(), 
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, GetFaceOrient(face));
+            StdRegions::IndexMapValuesSharedPtr map = 
+                StdExpansion::GetIndexMap(ikey);
+
             StdRegions::MatrixType DerivType[3] = {StdRegions::eWeakDeriv0,
                 StdRegions::eWeakDeriv1,
                 StdRegions::eWeakDeriv2};
@@ -274,25 +274,25 @@ namespace Nektar
             Array<OneD, NekDouble> coeff(order_f);
             
             StdRegions::IndexMapKey ikey(
-                                         StdRegions::eFaceToElement, DetExpansionType(),
-                                         GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                                         face, GetFaceOrient(face));
-            StdRegions::IndexMapValuesSharedPtr map =
-            StdExpansion::GetIndexMap(ikey);
-            
-            //            StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
-            //                                                    StdRegions::eVarCoeffD11,
-            //                                                    StdRegions::eVarCoeffD22};
-            //            StdRegions::VarCoeffMap::const_iterator x;
-            //            Array<OneD, NekDouble> varcoeff_work(nquad_e);
-            //
-            ///// @TODO Variable coeffs
-            //            if ((x = varcoeffs.find(VarCoeff[0])) != varcoeffs.end())
-            //            {
-            //                GetPhysEdgeVarCoeffsFromElement(edge,EdgeExp,x->second,varcoeff_work);
-            //                Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp->GetPhys(),1,EdgeExp->UpdatePhys(),1);
-            //            }
-            
+                StdRegions::eFaceToElement, DetShapeType(), 
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, GetFaceOrient(face));
+            StdRegions::IndexMapValuesSharedPtr map = 
+                StdExpansion::GetIndexMap(ikey);
+
+//            StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
+//                                                    StdRegions::eVarCoeffD11,
+//                                                    StdRegions::eVarCoeffD22};
+//            StdRegions::VarCoeffMap::const_iterator x;
+//            Array<OneD, NekDouble> varcoeff_work(nquad_e);
+//
+///// @TODO Variable coeffs
+//            if ((x = varcoeffs.find(VarCoeff[0])) != varcoeffs.end())
+//            {
+//                GetPhysEdgeVarCoeffsFromElement(edge,EdgeExp,x->second,varcoeff_work);
+//                Vmath::Vmul(nquad_e,varcoeff_work,1,EdgeExp->GetPhys(),1,EdgeExp->UpdatePhys(),1);
+//            }
+
             FaceExp->IProductWRTBase(FaceExp->GetPhys(),coeff);
             
             // add data to out array
@@ -316,17 +316,17 @@ namespace Nektar
             // retreiving face to element map for standard face orientation and
             // for actual face orientation
             StdRegions::IndexMapKey ikey1(
-                                          StdRegions::eFaceToElement, DetExpansionType(),
-                                          GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                                          face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
-            StdRegions::IndexMapValuesSharedPtr map1 =
-            StdExpansion::GetIndexMap(ikey1);
+                StdRegions::eFaceToElement, DetShapeType(), 
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
+            StdRegions::IndexMapValuesSharedPtr map1 = 
+                StdExpansion::GetIndexMap(ikey1);
             StdRegions::IndexMapKey ikey2(
-                                          StdRegions::eFaceToElement, DetExpansionType(),
-                                          GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                                          face, GetFaceOrient(face));
-            StdRegions::IndexMapValuesSharedPtr map2 =
-            StdExpansion::GetIndexMap(ikey2);
+                StdRegions::eFaceToElement, DetShapeType(), 
+                GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                face, GetFaceOrient(face));
+            StdRegions::IndexMapValuesSharedPtr map2 = 
+                StdExpansion::GetIndexMap(ikey2);
             
             ASSERTL1((*map1).num_elements() == (*map2).num_elements(),
                      "There is an error with the GetFaceToElementMap");
@@ -454,12 +454,12 @@ namespace Nektar
                         FaceExp = GetFaceExp(i);
                         order_f = FaceExp->GetNcoeffs();
                         StdRegions::IndexMapKey ikey(
-                                                     StdRegions::eFaceToElement, DetExpansionType(),
-                                                     GetBasisNumModes(0), GetBasisNumModes(1),
-                                                     GetBasisNumModes(2), i, GetFaceOrient(i));
-                        StdRegions::IndexMapValuesSharedPtr map =
-                        StdExpansion::GetIndexMap(ikey);
-                        
+                            StdRegions::eFaceToElement, DetShapeType(), 
+                            GetBasisNumModes(0), GetBasisNumModes(1), 
+                            GetBasisNumModes(2), i, GetFaceOrient(i));
+                        StdRegions::IndexMapValuesSharedPtr map = 
+                            StdExpansion::GetIndexMap(ikey);
+
                         // @TODO: Document
                         /*
                          StdRegions::VarCoeffMap edgeVarCoeffs;
@@ -512,7 +512,7 @@ namespace Nektar
                     DNekMat &Umat = *returnval;
                     
                     // Z^e matrix
-                    MatrixKey newkey(StdRegions::eInvHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey newkey(StdRegions::eInvHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat  &invHmat = *GetLocMatrix(newkey);
                     
                     Array<OneD,unsigned int> fmap;
@@ -624,7 +624,7 @@ namespace Nektar
                     DNekMat &Qmat = *returnval;
                     
                     // Lambda to U matrix
-                    MatrixKey lamToUkey(StdRegions::eHybridDGLamToU, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey lamToUkey(StdRegions::eHybridDGLamToU, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &lamToU = *GetLocMatrix(lamToUkey);
                     
                     // Inverse mass matrix
@@ -712,19 +712,19 @@ namespace Nektar
                     DNekScalMatSharedPtr LamToQ[3];
                     
                     // Matrix to map Lambda to U
-                    MatrixKey LamToUkey(StdRegions::eHybridDGLamToU, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey LamToUkey(StdRegions::eHybridDGLamToU, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LamToU = *GetLocMatrix(LamToUkey);
                     
                     // Matrix to map Lambda to Q0
-                    MatrixKey LamToQ0key(StdRegions::eHybridDGLamToQ0, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey LamToQ0key(StdRegions::eHybridDGLamToQ0, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     LamToQ[0] = GetLocMatrix(LamToQ0key);
                     
                     // Matrix to map Lambda to Q1
-                    MatrixKey LamToQ1key(StdRegions::eHybridDGLamToQ1, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey LamToQ1key(StdRegions::eHybridDGLamToQ1, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     LamToQ[1] = GetLocMatrix(LamToQ1key);
                     
                     // Matrix to map Lambda to Q2
-                    MatrixKey LamToQ2key(StdRegions::eHybridDGLamToQ2, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey LamToQ2key(StdRegions::eHybridDGLamToQ2, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     LamToQ[2] = GetLocMatrix(LamToQ2key);
                     
                     // Set up edge segment expansions from local geom info
@@ -752,12 +752,12 @@ namespace Nektar
                             varcoeff_work = Array<OneD, NekDouble>(nquad_f);
                             
                             StdRegions::IndexMapKey ikey(
-                                                         StdRegions::eFaceToElement, DetExpansionType(),
-                                                         GetBasisNumModes(0), GetBasisNumModes(1),
-                                                         GetBasisNumModes(2), f, GetFaceOrient(f));
-                            StdRegions::IndexMapValuesSharedPtr map =
-                            StdExpansion::GetIndexMap(ikey);
-                            
+                                StdRegions::eFaceToElement, DetShapeType(), 
+                                GetBasisNumModes(0), GetBasisNumModes(1), 
+                                GetBasisNumModes(2), f, GetFaceOrient(f));
+                            StdRegions::IndexMapValuesSharedPtr map = 
+                                StdExpansion::GetIndexMap(ikey);
+
                             // @TODO Variable coefficients
                             /*
                              StdRegions::VarCoeffType VarCoeff[3] = {StdRegions::eVarCoeffD00,
@@ -944,7 +944,7 @@ namespace Nektar
             }
 
             StdRegions::IndexMapKey ikey(
-                StdRegions::eFaceToElement, DetExpansionType(),
+                StdRegions::eFaceToElement, DetShapeType(),
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                 face, GetFaceOrient(face));
             StdRegions::IndexMapValuesSharedPtr map =
@@ -1072,17 +1072,17 @@ namespace Nektar
             
             StdRegions::VarCoeffMap varcoeffs;
             varcoeffs[StdRegions::eVarCoeffMass] = primCoeffs;
-            
-            StdRegions::ExpansionType expType =
-            faceExp->DetExpansionType();
-            
+
+            LibUtilities::ShapeType shapeType = 
+                faceExp->DetShapeType();
+
             LocalRegions::MatrixKey mkey(
-                                         StdRegions::eMass,
-                                         expType,
-                                         *faceExp,
-                                         StdRegions::NullConstFactorMap,
-                                         varcoeffs);
-            
+                StdRegions::eMass,
+                shapeType, 
+                *faceExp, 
+                StdRegions::NullConstFactorMap, 
+                varcoeffs);
+
             DNekScalMat &facemat = *faceExp->GetLocMatrix(mkey);
             
             // Now need to identify a map which takes the local face
@@ -1132,17 +1132,17 @@ namespace Nektar
                 sign = Array<OneD,          int> (order_f,1);
                 
                 StdRegions::IndexMapKey ikey1(
-                                              StdRegions::eFaceToElement, DetExpansionType(), 
-                                              GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                                              face, GetFaceOrient(face));
+                    StdRegions::eFaceToElement, DetShapeType(), 
+                    GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                    face, GetFaceOrient(face));
                 StdRegions::IndexMapValuesSharedPtr map1 = 
-                StdExpansion::GetIndexMap(ikey1);
+                    StdExpansion::GetIndexMap(ikey1);
                 StdRegions::IndexMapKey ikey2(
-                                              StdRegions::eFaceToElement, DetExpansionType(), 
-                                              GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
-                                              face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
+                    StdRegions::eFaceToElement, DetShapeType(), 
+                    GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
+                    face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
                 StdRegions::IndexMapValuesSharedPtr map2 = 
-                StdExpansion::GetIndexMap(ikey2);
+                    StdExpansion::GetIndexMap(ikey2);
                 
                 ASSERTL1((*map1).num_elements() == (*map2).num_elements(),
                          "There is an error with the GetFaceToElementMap");

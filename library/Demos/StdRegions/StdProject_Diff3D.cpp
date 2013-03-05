@@ -60,7 +60,7 @@ int main(int argc, char *argv[]){
     LibUtilities::BasisType     btype1 =   LibUtilities::eOrtho_A;
     LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
     LibUtilities::BasisType     btype3 =   LibUtilities::eOrtho_C;
-    StdRegions::ExpansionType    regionshape;
+    LibUtilities::ShapeType     regionshape;
     StdRegions::StdExpansion *E;
     Array<OneD, NekDouble> x, y, z, sol, dx, dy, dz;
 

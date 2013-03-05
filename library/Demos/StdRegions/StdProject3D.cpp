@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
     LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
     LibUtilities::BasisType     btype3 =   LibUtilities::eOrtho_C;
     LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
-    StdRegions::ExpansionType   regionshape;
+    LibUtilities::ShapeType     regionshape;
     StdRegions::StdExpansion *E;
     Array<OneD, NekDouble> sol;
 

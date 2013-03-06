@@ -442,7 +442,6 @@ namespace Nektar
         {
             int i, j, id, elmtid=0;
             map<int,int> FaceDone;
-            map<int,int> NormalSet;
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
             SpatialDomains::QuadGeomSharedPtr FaceQuadGeom;
             SpatialDomains::TriGeomSharedPtr FaceTriGeom;
@@ -499,16 +498,8 @@ namespace Nektar
 
                     if(FaceDone.count(id)==0)
                     {
-                        
                         LibUtilities::BasisKey bkey0 = locexp[i]->DetFaceBasisKey(j,0);
                         LibUtilities::BasisKey bkey1 = locexp[i]->DetFaceBasisKey(j,1);
-                        
-                        /*
-                        LibUtilities::BasisKey bkey0 =
-                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 0, variable); 
-                        LibUtilities::BasisKey bkey1 = 
-                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 1);
-                        */
                         
                         //if face is a quad
                         if((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
@@ -516,12 +507,6 @@ namespace Nektar
                             FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
                             
                             FaceDone[id] = elmtid;
-                            /*
-                            if (periodicFaces.count(id) > 0)
-                            {
-                                FaceDone[periodicFaces.find(id)->second.first] = elmtid;
-                            }
-                            */
                             FaceQuadExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceQuadExp);
                         }
@@ -531,12 +516,6 @@ namespace Nektar
                             FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
                             
                             FaceDone[id] = elmtid;
-                            /*
-                            if (periodicFaces.count(id) > 0)
-                            {
-                                FaceDone[periodicFaces.find(id)->second.first] = elmtid;
-                            }
-                            */
                             FaceTriExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceTriExp);
                         }
@@ -552,13 +531,6 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey bkey0 = locexp[i]->DetFaceBasisKey(j,0);
                         LibUtilities::BasisKey bkey1 = locexp[i]->DetFaceBasisKey(j,1);
-                        
-                        /*
-                        LibUtilities::BasisKey bkey0_save =
-                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 0); 
-                        LibUtilities::BasisKey bkey1_save =
-                            boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(FaceGeom, 1);
-                        */
                         
                         if( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
                                 >= bkey0.GetNumPoints()
@@ -599,8 +571,6 @@ namespace Nektar
                             {
                                 ASSERTL0(false,"dynamic cast to a proper face geometry failed"); 
                             }
-                            
-                            NormalSet.erase(id);
                         }
                         else
                         {
@@ -808,7 +778,7 @@ namespace Nektar
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
-                int e_npoints  = (*m_exp)[i]->GetNumPoints(0)*(*m_exp)[i]->GetNumPoints(1);
+                int e_npoints = (*m_exp)[i]->GetTotPoints();
                 
                 LocalRegions::Expansion2DSharedPtr loc_exp = 
                     boost::dynamic_pointer_cast<
@@ -823,8 +793,9 @@ namespace Nektar
                 if (e_npoints != locnormals[0].num_elements())
                 {
                     LocalRegions::Expansion3DSharedPtr loc_elmt =
-                    loc_exp->GetRightAdjacentElementExp();
+                        loc_exp->GetRightAdjacentElementExp();
                     int faceNumber = loc_exp->GetRightAdjacentElementFace();
+
                     // Get the number of points and normals for this expansion.
                     locnormals = loc_elmt->GetFaceNormal(faceNumber);
 
@@ -840,25 +811,11 @@ namespace Nektar
                 }
                 else
                 {
-                
-                // Get the physical data offset for this expansion.
+                    // Get the physical data offset for this expansion.
                     offset = m_phys_offset[i];
                 
-                    for(int j = 0; j < e_npoints; ++j)
-                    {
-                        for(k = 0; k < coordim; ++k)
-                        {
-                            normals[k][offset+j] = locnormals[k][j];
-                            
-                        }
-                    }
-                    
-                    /*
                     for (k = 0; k < coordim; ++k)
                     {
-                        
-                        cout << Vmath::Vmin(locnormals[0].num_elements(),locnormals[k],1) << endl;
-                        
                         LibUtilities::Interp2D(
                                 loc_elmt->GetFacePointsKey(faceNumber, 0),
                                 loc_elmt->GetFacePointsKey(faceNumber, 1),
@@ -867,7 +824,6 @@ namespace Nektar
                                 (*m_exp)[i]->GetBasis(1)->GetPointsKey(),
                                 tmp = normals[k]+offset);
                     }
-                     */
                 }
             }
         }

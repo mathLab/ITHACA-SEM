@@ -1040,7 +1040,7 @@ namespace Nektar
         const LibUtilities::BasisKey StdHexExp::v_DetFaceBasisKey(
             const int i, const int k) const
         {
-            ASSERTL2(i >= 0 && i <= 6, "face id is out of range");
+            ASSERTL2(i >= 0 && i <= 5, "face id is out of range");
             ASSERTL2(k >= 0 && k <= 1, "basis key id is out of range");
             
             //temporary solution, need to add conditions based on face id

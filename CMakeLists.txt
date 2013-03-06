@@ -164,6 +164,7 @@ INCLUDE (ThirdPartyArpack)
 INCLUDE (ThirdPartyMPI)
 INCLUDE (ThirdPartyVTK)
 INCLUDE (ThirdPartyQT4)
+INCLUDE (ThirdPartySMV)
 
 IF( NEKTAR_USE_MKL )
     INCLUDE (FindMKL)

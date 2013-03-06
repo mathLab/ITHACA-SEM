@@ -1,0 +1,21 @@
+OPTION(THIRDPARTY_BUILD_SMV "Build LibSMV" OFF)
+
+IF (THIRDPARTY_BUILD_SMV)
+    INCLUDE(ExternalProject)
+    EXTERNALPROJECT_ADD(
+        libsmvf1.0
+        PREFIX ${TPSRC}
+        URL ${TPURL}/libsmvf1.0.tar.gz
+        URL_MD5 "40cad0538acebd4aa83136ef9319150e"
+        DOWNLOAD_DIR ${TPSRC}
+        CONFIGURE_COMMAND ${CMAKE_COMMAND}
+          -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist ${TPSRC}/src/libsmvf1.0
+        INSTALL_COMMAND echo "LibSMV compiled successfully"
+    )
+    SET(SMV sbtk CACHE FILEPATH "Path to LibSMV." FORCE)
+    MARK_AS_ADVANCED(SMV)
+    LINK_DIRECTORIES(${TPSRC}/dist/lib)
+ELSE (THIRDPARTY_BUILD_SMV)
+    INCLUDE(FindSMV)
+ENDIF (THIRDPARTY_BUILD_SMV)
+

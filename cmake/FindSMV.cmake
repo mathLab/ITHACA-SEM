@@ -1,9 +1,9 @@
 
 SET(SMV_SEARCH_PATHS 
-	${CMAKE_SOURCE_DIR}/ThirdParty/libsmv/lib
-	${CMAKE_SOURCE_DIR}/../ThirdParty/libsmv/lib
-    ${CMAKE_SOURCE_DIR}/ThirdParty/dist/lib
-    ${CMAKE_SOURCE_DIR}/../ThirdParty/dist/lib)
+	${CMAKE_SOURCE_DIR}/ThirdParty/libsmv/build/lib
+	${CMAKE_SOURCE_DIR}/../ThirdParty/libsmv/build/lib
+    ${CMAKE_SOURCE_DIR}/ThirdParty/dist/build/lib
+    ${CMAKE_SOURCE_DIR}/../ThirdParty/dist/build/lib)
 
 FIND_PATH(SMV_INCLUDE_DIR NAMES smv.h PATHS ${SMV_SEARCH_PATHS})
 FIND_LIBRARY(SMV_LIBRARY NAMES smv PATHS ${SMV_SEARCH_PATHS})

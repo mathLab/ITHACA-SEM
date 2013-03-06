@@ -61,7 +61,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            //cout<<setprecision(16);
+            cout<<setprecision(16);
             int i, j, k, num;
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
@@ -297,7 +297,7 @@ namespace Nektar
             int nvariables = fields.num_elements();
             int nDim       = qfield.num_elements();
             
-            NekDouble C11 = 1.0;
+            NekDouble C11 = 0.0;
             Array<OneD, NekDouble > Fwd(nTracePts);
             Array<OneD, NekDouble > Bwd(nTracePts);
             Array<OneD, NekDouble > Vn (nTracePts, 0.0);

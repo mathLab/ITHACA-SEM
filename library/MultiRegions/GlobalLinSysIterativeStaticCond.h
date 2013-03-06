@@ -51,6 +51,21 @@ namespace Nektar
         typedef boost::shared_ptr<GlobalLinSysIterativeStaticCond>
             GlobalLinSysIterativeStaticCondSharedPtr;
 
+        enum LocalMatrixStorageStrategy
+        {
+            eNoStrategy,
+            eContiguous,
+            eNonContiguous,
+            eSparse
+        };
+
+        const char* const LocalMatrixStorageStrategyMap[] =
+        {
+            "Contiguous",
+            "Non-contiguous",
+            "Sparse"
+        };
+
 
         /// A global linear system.
         class GlobalLinSysIterativeStaticCond : public GlobalLinSysIterative
@@ -114,6 +129,16 @@ namespace Nektar
             DNekScalBlkMatSharedPtr                  m_RTBlk;
             DNekScalBlkMatSharedPtr                  m_S1Blk;
 
+            /// Dense storage for block Schur complement matrix
+            std::vector<double>                      m_storage;
+            /// Vector of pointers to local matrix data
+            std::vector<const double*>               m_denseBlocks;
+            /// Ranks of local matrices
+            Array<OneD, unsigned int>                m_rows;
+            /// Scaling factors for local matrices
+            Array<OneD, NekDouble>                   m_scale;
+
+
             /// Sparse representation of Schur complement matrix at this level
             DNekBsrUnrolledDiagBlkMatSharedPtr       m_sparseSchurCompl;
 
@@ -123,6 +148,10 @@ namespace Nektar
             Array<OneD, NekDouble>                   m_wsp;
             /// Preconditioner object.
             PreconditionerSharedPtr                  m_precon;
+
+            /// Utility strings
+            static std::string                       storagedef;
+            static std::string                       storagelookupIds[];
 
 
             /// Solve the linear system for given input and output vectors

@@ -29,12 +29,14 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: GlobalLinSysIterativeStaticCond definition
+// Description: Implementation to linear solver using single-
+//              or multi-level static condensation
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/StorageBsrUnrolled.hpp>
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
@@ -64,6 +66,26 @@ namespace Nektar
                     "IterativeMultiLevelStaticCond",
                     GlobalLinSysIterativeStaticCond::create,
                     "Iterative multi-level static condensation.");
+
+
+        std::string GlobalLinSysIterativeStaticCond::storagedef = 
+            LibUtilities::SessionReader::RegisterDefaultSolverInfo(
+                "LocalMatrixStorageStrategy",
+                "Sparse");
+        std::string GlobalLinSysIterativeStaticCond::storagelookupIds[3] = {
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LocalMatrixStorageStrategy",
+                "Contiguous",
+                MultiRegions::eContiguous),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LocalMatrixStorageStrategy",
+                "Non-contiguous",
+                MultiRegions::eNonContiguous),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LocalMatrixStorageStrategy",
+                "Sparse",
+                MultiRegions::eSparse),
+        };
 
         /**
          * For a matrix system of the form @f[
@@ -172,7 +194,6 @@ namespace Nektar
                                                                 - nGlobBndDofs;
 
             Array<OneD, NekDouble> F = m_wsp + 2*nLocBndDofs;
-
             Array<OneD, NekDouble> tmp;
             if(nDirBndDofs && dirForcCalculated)
             {
@@ -200,9 +221,6 @@ namespace Nektar
 
             if(nGlobHomBndDofs)
             {
-                Timer t;
-                t.Start();
-
                 if(pLocToGloMap->GetPreconType() != MultiRegions::eLowEnergy)
                 {
                     // construct boundary forcing
@@ -301,9 +319,6 @@ namespace Nektar
                     pLocToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
                 }
 
-                t.Stop();
-                std::cout << "time for preparing boundary system = " << t.TimePerTest(1) << std::endl;
-
 
                 // solve boundary system
                 if(atLastLevel)
@@ -343,9 +358,6 @@ namespace Nektar
             // solve interior system
             if(nIntDofs)
             {
-                Timer t;
-                t.Start();
-
                 DNekScalBlkMat &invD  = *m_invD;
 
                 if(nGlobHomBndDofs || nDirBndDofs)
@@ -365,9 +377,6 @@ namespace Nektar
                 }
 
                 V_Int = invD*F_Int;
-
-                t.Stop();
-                std::cout << "time for interior system solve = " << t.TimePerTest(1) << std::endl;
             }
         }
 
@@ -385,7 +394,6 @@ namespace Nektar
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-
             m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal);
 
             if(pLocToGloMap->AtLastLevel())
@@ -649,101 +657,166 @@ namespace Nektar
          */
         void GlobalLinSysIterativeStaticCond::PrepareLocalSchurComplement()
         {
-            int i,j,n,cnt,rows;
+            LocalMatrixStorageStrategy storageStrategy =
+                m_expList.lock()->GetSession()->
+                    GetSolverInfoAsEnum<LocalMatrixStorageStrategy>(
+                                       "LocalMatrixStorageStrategy");
 
-            DNekScalMatSharedPtr loc_mat;
-            int loc_lda;
-            int blockSize = 0;
-
-            // first run throught to split the set of local matrices
-            // into partitions of fixed block size, and count number
-            // of local matrices that belong to each partition.
-            std::vector<std::pair<int,int> >  partitions;
-            for(n = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
+            switch(storageStrategy)
             {
-                loc_mat = m_schurCompl->GetBlock(n,n);
-                loc_lda = loc_mat->GetRows();
-
-                ASSERTL1(loc_lda>=0, boost::lexical_cast<std::string>(n) +
-                        "-th matrix block in Schur complement has rank 0!");
-
-                if (blockSize == loc_lda)
+                case MultiRegions::eContiguous:
+                case MultiRegions::eNonContiguous:
                 {
-                    partitions[partitions.size()-1].first++;
+                    size_t storageSize = 0;
+                    int nBlk           = m_schurCompl->GetNumberOfBlockRows();
+
+                    m_scale = Array<OneD, NekDouble> (nBlk, 1.0);
+                    m_rows  = Array<OneD, unsigned int> (nBlk, 0U);
+
+                    // Determine storage requirements for dense blocks.
+                    for (int i = 0; i < nBlk; ++i)
+                    {
+                        m_rows[i]    = m_schurCompl->GetBlock(i,i)->GetRows();
+                        m_scale[i]   = m_schurCompl->GetBlock(i,i)->Scale();
+                        storageSize += m_rows[i] * m_rows[i];
+                    }
+
+                    // Assemble dense storage blocks.
+                    DNekScalMatSharedPtr loc_mat;
+                    m_denseBlocks.resize(nBlk);
+                    double *ptr = 0;
+
+                    if (MultiRegions::eContiguous == storageStrategy)
+                    {
+                        m_storage.resize    (storageSize);
+                        ptr = &m_storage[0];
+                    }
+
+                    for (unsigned int n = 0; n < nBlk; ++n)
+                    {
+                        loc_mat = m_schurCompl->GetBlock(n,n);
+
+                        if (MultiRegions::eContiguous == storageStrategy)
+                        {
+                            int loc_lda      = loc_mat->GetRows();
+                            int blockSize    = loc_lda * loc_lda;
+                            m_denseBlocks[n] = ptr;
+                            for(int i = 0; i < loc_lda; ++i)
+                            {
+                                for(int j = 0; j < loc_lda; ++j)
+                                {
+                                    ptr[j*loc_lda+i] = (*loc_mat)(i,j);
+                                }
+                            }
+                            ptr += blockSize;
+                        }
+                        else
+                        {
+                            m_denseBlocks[n] = loc_mat->GetRawPtr();
+                        }
+                    }
+                    break;
                 }
-                else
+                case MultiRegions::eSparse:
                 {
-                    blockSize = loc_lda;
-                    partitions.push_back(make_pair(1,loc_lda));
-                }
-            }
+                    DNekScalMatSharedPtr loc_mat;
+                    int loc_lda;
+                    int blockSize = 0;
 
-            cout << "sizes of local matrices in order: " << endl;
-            for (int i = 0; i < partitions.size(); i++)
-            {
-                cout << " (" << partitions[i].first << ", " << partitions[i].second << ")";
-            }
-            cout << endl;
+                    // first run throught to split the set of local matrices
+                    // into partitions of fixed block size, and count number
+                    // of local matrices that belong to each partition.
+                    std::vector<std::pair<int,int> >  partitions;
+                    for(int n = 0; n < m_schurCompl->GetNumberOfBlockRows(); ++n)
+                    {
+                        loc_mat = m_schurCompl->GetBlock(n,n);
+                        loc_lda = loc_mat->GetRows();
 
-            MatrixStorage matStorage = eFULL;
+                        ASSERTL1(loc_lda>=0, boost::lexical_cast<std::string>(n) +
+                                "-th matrix block in Schur complement has rank 0!");
 
-            // Create a vector of sparse storage holders
-            DNekBsrUnrolledDiagBlkMat::SparseStorageSharedPtrVector
-                    sparseStorage (partitions.size());
+                        if (blockSize == loc_lda)
+                        {
+                            partitions[partitions.size()-1].first++;
+                        }
+                        else
+                        {
+                            blockSize = loc_lda;
+                            partitions.push_back(make_pair(1,loc_lda));
+                        }
+                    }
 
-            for (int part = 0, n = 0; part < partitions.size(); ++part)
-            {
-                BCOMatType partMat;
+                    cout << "sizes of local matrices in order: " << endl;
+                    for (int i = 0; i < partitions.size(); i++)
+                    {
+                        cout << " (" << partitions[i].first << ", " << partitions[i].second << ")";
+                    }
+                    cout << endl;
 
-                for(int k = 0; k < partitions[part].first; ++k, ++n)
-                {
-                    loc_mat = m_schurCompl->GetBlock(n,n);
-                    loc_lda = loc_mat->GetRows();
+                    MatrixStorage matStorage = eFULL;
 
-                    ASSERTL1(loc_lda==partitions[part].second,
-                        boost::lexical_cast<std::string>(n) + "-th matrix " +
-                        "block in Schur complement has unexpected rank");
+                    // Create a vector of sparse storage holders
+                    DNekBsrUnrolledDiagBlkMat::SparseStorageSharedPtrVector
+                            sparseStorage (partitions.size());
 
-                    partMat[make_pair(k,k)] =
-                        BCOEntryType (loc_lda*loc_lda, loc_mat->GetRawPtr() );
-                }
+                    for (int part = 0, n = 0; part < partitions.size(); ++part)
+                    {
+                        BCOMatType partMat;
 
-                sparseStorage[part] =
-                MemoryManager<DNekBsrUnrolledDiagBlkMat::StorageType>::
-                    AllocateSharedPtr(
-                        partitions[part].first, partitions[part].first,
-                        partitions[part].second, partMat, matStorage );
-            }
+                        for(int k = 0; k < partitions[part].first; ++k, ++n)
+                        {
+                            loc_mat = m_schurCompl->GetBlock(n,n);
+                            loc_lda = loc_mat->GetRows();
 
-            int cols = rows;
+                            ASSERTL1(loc_lda==partitions[part].second,
+                                boost::lexical_cast<std::string>(n) + "-th matrix " +
+                                "block in Schur complement has unexpected rank");
 
-            // Create block diagonal matrix
-            m_sparseSchurCompl = MemoryManager<DNekBsrUnrolledDiagBlkMat>::
+                            partMat[make_pair(k,k)] =
+                                BCOEntryType (loc_lda*loc_lda, loc_mat->GetRawPtr() );
+                        }
+
+                        sparseStorage[part] =
+                        MemoryManager<DNekBsrUnrolledDiagBlkMat::StorageType>::
+                            AllocateSharedPtr(
+                                partitions[part].first, partitions[part].first,
+                                partitions[part].second, partMat, matStorage );
+                    }
+
+                    // Create block diagonal matrix
+                    m_sparseSchurCompl = MemoryManager<DNekBsrUnrolledDiagBlkMat>::
                                             AllocateSharedPtr(sparseStorage);
 
-            size_t matBytes, bsruBlockBytes;
+                    size_t matBytes, bsruBlockBytes;
 
-            matBytes      = m_sparseSchurCompl->GetMemoryFootprint();
-            bsruBlockBytes = m_sparseSchurCompl->GetMemoryFootprint(0);
+                    matBytes      = m_sparseSchurCompl->GetMemoryFootprint();
+                    bsruBlockBytes = m_sparseSchurCompl->GetMemoryFootprint(0);
 
-            cout << "Local matrix memory, bytes = " << matBytes;
-            if (matBytes/(1024*1024) > 0)
-            {
-                std::cout << " ("<< matBytes/(1024*1024) <<" MB)" << std::endl;
-            }
-            else
-            {
-                std::cout << " ("<< matBytes/1024 <<" KB)" << std::endl;
-            }
+                    cout << "Local matrix memory, bytes = " << matBytes;
+                    if (matBytes/(1024*1024) > 0)
+                    {
+                        std::cout << " ("<< matBytes/(1024*1024) <<" MB)" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << " ("<< matBytes/1024 <<" KB)" << std::endl;
+                    }
 
-            std::cout << "First BSRU submatrix memory, bytes = " << bsruBlockBytes;
-            if (bsruBlockBytes/(1024*1024) > 0)
-            {
-                std::cout << " ("<< bsruBlockBytes/(1024*1024) <<" MB)" << std::endl;
-            }
-            else
-            {
-                std::cout << " ("<< bsruBlockBytes/1024 <<" KB)" << std::endl;
+                    std::cout << "First BSRU submatrix memory, bytes = " << bsruBlockBytes;
+                    if (bsruBlockBytes/(1024*1024) > 0)
+                    {
+                        std::cout << " ("<< bsruBlockBytes/(1024*1024) <<" MB)" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << " ("<< bsruBlockBytes/1024 <<" KB)" << std::endl;
+                    }
+                    break;
+                }
+                default:
+                    ErrorUtil::NekError("Solver info property \
+                        LocalMatrixStorageStrategy takes values \
+                        Contiguous, Non-contiguous and Sparse");
             }
         }
 
@@ -1018,7 +1091,7 @@ namespace Nektar
 
                 m_locToGloMap->UniversalAssembleBnd(pOutput, nDir);
             }
-            else
+            else if (m_sparseSchurCompl)
             {
                 // Do matrix multiply locally using
                 // block-diagonal sparse matrix
@@ -1030,6 +1103,22 @@ namespace Nektar
                 m_sparseSchurCompl->Multiply(m_wsp,tmp);
 
                 m_locToGloMap->AssembleBnd(tmp, pOutput);
+            }
+            else
+            {
+                // Do matrix multiply locally, using direct BLAS calls
+                m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
+                int i, cnt;
+                Array<OneD, NekDouble> tmpout = m_wsp + nLocal;
+                for (i = cnt = 0; i < m_denseBlocks.size(); cnt += m_rows[i], ++i)
+                {
+                    const int rows = m_rows[i];
+                    Blas::Dgemv('N', rows, rows,
+                                m_scale[i], m_denseBlocks[i], rows, 
+                                m_wsp.get()+cnt, 1, 
+                                0.0, tmpout.get()+cnt, 1);
+                }
+                m_locToGloMap->AssembleBnd(tmpout, pOutput);
             }
         }
 

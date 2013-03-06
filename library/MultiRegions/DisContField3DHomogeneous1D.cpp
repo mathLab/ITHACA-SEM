@@ -204,9 +204,16 @@ namespace Nektar
             }
             
             // Fourier transform coefficient space boundary values
+            // This will only be undertaken for time dependent
+            // boundary conditions unless time == 0.0 which is the
+            // case when the method is called from the constructor.
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+                if(time == 0.0 || m_bndConditions[n]->GetUserDefined() == 
+                   SpatialDomains::eTimeDependent)
+                {
+                    m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+                }
             }
         }
         

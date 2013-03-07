@@ -78,54 +78,54 @@ namespace Nektar
         typedef Array<OneD, SparseStorageSharedPtr>  SparseStorageSharedPtrVector;
 
 
-        NekSparseDiagBlkMatrix(const SparseStorageSharedPtrVector& sparseStoragePtrVector);
-        NekSparseDiagBlkMatrix(const NekSparseDiagBlkMatrix& src);
-        ~NekSparseDiagBlkMatrix();
+        LIB_UTILITIES_EXPORT NekSparseDiagBlkMatrix(const SparseStorageSharedPtrVector& sparseStoragePtrVector);
+        LIB_UTILITIES_EXPORT NekSparseDiagBlkMatrix(const NekSparseDiagBlkMatrix& src);
+        LIB_UTILITIES_EXPORT ~NekSparseDiagBlkMatrix();
 
-        const IndexType GetRows() const;
-        const IndexType GetColumns() const;
-        const IndexType GetNumNonZeroEntries();
-        const DataType  GetFillInRatio() const;
+        LIB_UTILITIES_EXPORT const IndexType GetRows() const;
+        LIB_UTILITIES_EXPORT const IndexType GetColumns() const;
+        LIB_UTILITIES_EXPORT const IndexType GetNumNonZeroEntries();
+        LIB_UTILITIES_EXPORT const DataType  GetFillInRatio() const;
 
-        const IndexType GetRows(int i) const;
-        const IndexType GetColumns(int i) const;
-        const IndexType GetNumberOfMatrixBlocks() const;
-        const IndexType GetNumNonZeroEntries(int i) const;
-        const DataType  GetFillInRatio(int i) const;
+        LIB_UTILITIES_EXPORT const IndexType GetRows(int i) const;
+        LIB_UTILITIES_EXPORT const IndexType GetColumns(int i) const;
+        LIB_UTILITIES_EXPORT const IndexType GetNumberOfMatrixBlocks() const;
+        LIB_UTILITIES_EXPORT const IndexType GetNumNonZeroEntries(int i) const;
+        LIB_UTILITIES_EXPORT const DataType  GetFillInRatio(int i) const;
 
 
-        typename boost::call_traits<DataType>::const_reference
+        LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference
                  operator()(const IndexType row, const IndexType column) const;
-        typename boost::call_traits<DataType>::const_reference
+        LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference
                  operator()(const IndexType block, const IndexType row, const IndexType column) const;
 
         //typename SparseStorageType::const_iterator begin() const;
         //typename SparseStorageType::const_iterator end() const;
 
-        void Multiply(const DataVectorType &in,
+        LIB_UTILITIES_EXPORT void Multiply(const DataVectorType &in,
                             DataVectorType &out);
-        void Multiply(const DataType* in,
+        LIB_UTILITIES_EXPORT void Multiply(const DataType* in,
                             DataType* out);
-        void MultiplySubMatrix( const IndexType blockNum,
+        LIB_UTILITIES_EXPORT void MultiplySubMatrix( const IndexType blockNum,
                                 DataType* in,
                                 DataType* out);
 
-        const size_t GetMemoryFootprint();
-        const size_t GetMemoryFootprint(IndexType i) const;
+        LIB_UTILITIES_EXPORT const size_t GetMemoryFootprint();
+        LIB_UTILITIES_EXPORT const size_t GetMemoryFootprint(IndexType i) const;
 
-        const unsigned long GetMulCallsCounter() const;
-        const DataType   GetAvgRowDensity();
-        const DataType   GetAvgRowDensity(IndexType i) const;
-        const IndexType  GetBandwidth();
-        const IndexType  GetBandwidth(IndexType i);
-        COOMatTypeSharedPtr GetCooStorage();
-        COOMatTypeSharedPtr GetCooStorage(IndexType i);
+        LIB_UTILITIES_EXPORT const unsigned long GetMulCallsCounter() const;
+        LIB_UTILITIES_EXPORT const DataType   GetAvgRowDensity();
+        LIB_UTILITIES_EXPORT const DataType   GetAvgRowDensity(IndexType i) const;
+        LIB_UTILITIES_EXPORT const IndexType  GetBandwidth();
+        LIB_UTILITIES_EXPORT const IndexType  GetBandwidth(IndexType i);
+        LIB_UTILITIES_EXPORT COOMatTypeSharedPtr GetCooStorage();
+        LIB_UTILITIES_EXPORT COOMatTypeSharedPtr GetCooStorage(IndexType i);
 
-        void writeSparsityPatternTo(std::ostream& out, IndexType blockSize = 64);
-        void writeSubmatrixSparsityPatternTo(std::ostream& out, const IndexType subMatrixIdx, IndexType blockSize = 64);
-        void writeBlockSparsityPatternTo(std::ostream& out,
+        LIB_UTILITIES_EXPORT void writeSparsityPatternTo(std::ostream& out, IndexType blockSize = 64);
+        LIB_UTILITIES_EXPORT void writeSubmatrixSparsityPatternTo(std::ostream& out, const IndexType subMatrixIdx, IndexType blockSize = 64);
+        LIB_UTILITIES_EXPORT void writeBlockSparsityPatternTo(std::ostream& out,
                         const IndexType blk_row = 0, const IndexType blk_col = 0, IndexType blockSize = 64);
-        void writeSubmatrixBlockSparsityPatternTo(std::ostream& out, const IndexType subMatrixIdx,
+        LIB_UTILITIES_EXPORT void writeSubmatrixBlockSparsityPatternTo(std::ostream& out, const IndexType subMatrixIdx,
                         const IndexType blk_row = 0, const IndexType blk_col = 0, IndexType blockSize = 64);
 
     protected:

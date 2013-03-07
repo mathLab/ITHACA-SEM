@@ -40,7 +40,7 @@
 
 namespace Nektar{
 
-    void convertCooToBco(
+    LIB_UTILITIES_EXPORT void convertCooToBco(
                     const unsigned int  blkRows,
                     const unsigned int  blkColumns,
                     const unsigned int  blkDim,

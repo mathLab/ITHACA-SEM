@@ -77,36 +77,36 @@ namespace Nektar
         typedef Array<OneD, const DataType>          ConstDataVectorType;
 
 
-        NekSparseMatrix(const SparseStorageSharedPtr& sparseStoragePtr);
-        NekSparseMatrix(const NekSparseMatrix& src);
-        ~NekSparseMatrix();
+        LIB_UTILITIES_EXPORT NekSparseMatrix(const SparseStorageSharedPtr& sparseStoragePtr);
+        LIB_UTILITIES_EXPORT NekSparseMatrix(const NekSparseMatrix& src);
+        LIB_UTILITIES_EXPORT ~NekSparseMatrix();
 
-        const IndexType GetRows() const;
-        const IndexType GetColumns() const;
-        const IndexType GetNumNonZeroEntries() const;
+        LIB_UTILITIES_EXPORT const IndexType GetRows() const;
+        LIB_UTILITIES_EXPORT const IndexType GetColumns() const;
+        LIB_UTILITIES_EXPORT const IndexType GetNumNonZeroEntries() const;
 
-        const DataType  GetFillInRatio() const;
-        const size_t    GetMemoryFootprint() const;
-        const unsigned long GetMulCallsCounter() const;
-        const DataType  GetAvgRowDensity() const;
-        const IndexType GetBandwidth();
-        COOMatTypeSharedPtr GetCooStorage();
+        LIB_UTILITIES_EXPORT const DataType  GetFillInRatio() const;
+        LIB_UTILITIES_EXPORT const size_t    GetMemoryFootprint() const;
+        LIB_UTILITIES_EXPORT const unsigned long GetMulCallsCounter() const;
+        LIB_UTILITIES_EXPORT const DataType  GetAvgRowDensity() const;
+        LIB_UTILITIES_EXPORT const IndexType GetBandwidth();
+        LIB_UTILITIES_EXPORT COOMatTypeSharedPtr GetCooStorage();
 
 
 
-        typename boost::call_traits<DataType>::const_reference
+        LIB_UTILITIES_EXPORT typename boost::call_traits<DataType>::const_reference
                  operator()(const IndexType row, const IndexType column) const;
-        typename SparseStorageType::const_iterator begin() const;
-        typename SparseStorageType::const_iterator end() const;
+        LIB_UTILITIES_EXPORT typename SparseStorageType::const_iterator begin() const;
+        LIB_UTILITIES_EXPORT typename SparseStorageType::const_iterator end() const;
 
-        void Multiply(const DataVectorType &in,
+        LIB_UTILITIES_EXPORT void Multiply(const DataVectorType &in,
                             DataVectorType &out);
-        void Multiply(const DataType* in,
+        LIB_UTILITIES_EXPORT void Multiply(const DataType* in,
                             DataType* out);
 
 
-        void writeSparsityPatternTo(std::ostream& out, IndexType blockSize = 64);
-        void writeBlockSparsityPatternTo(std::ostream& out,
+        LIB_UTILITIES_EXPORT void writeSparsityPatternTo(std::ostream& out, IndexType blockSize = 64);
+        LIB_UTILITIES_EXPORT void writeBlockSparsityPatternTo(std::ostream& out,
                         const IndexType blk_row = 0, const IndexType blk_col = 0, IndexType blockSize = 64);
 
     protected:

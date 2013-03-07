@@ -115,40 +115,40 @@ namespace Nektar
 
     public:
         // Construct a CSR sparse matrix based on input COO storage
-        StorageNistCsr( const IndexType rows,
+        LIB_UTILITIES_EXPORT StorageNistCsr( const IndexType rows,
                         const IndexType columns,
                         const COOMatType&  cooMat,
                         const MatrixStorage matType = eFULL);
 
         // Copy constructor
-        StorageNistCsr(const StorageNistCsr& src);
+        LIB_UTILITIES_EXPORT StorageNistCsr(const StorageNistCsr& src);
 
-        ~StorageNistCsr();
+        LIB_UTILITIES_EXPORT ~StorageNistCsr();
 
 
-        const IndexType GetRows() const;
-        const IndexType GetColumns() const;
+        LIB_UTILITIES_EXPORT const IndexType GetRows() const;
+        LIB_UTILITIES_EXPORT const IndexType GetColumns() const;
         // NumNonZeroEntries == NumStoredDoubles for CSR, but
         // not for all sparse storages.
-        const IndexType GetNumNonZeroEntries() const;
-        const IndexType GetNumStoredDoubles() const;
-        const IndexType GetBlkSize() const;
-        const DataType  GetFillInRatio() const;
-        const size_t GetMemoryUsage(IndexType nnz, IndexType nRows) const;
+        LIB_UTILITIES_EXPORT const IndexType GetNumNonZeroEntries() const;
+        LIB_UTILITIES_EXPORT const IndexType GetNumStoredDoubles() const;
+        LIB_UTILITIES_EXPORT const IndexType GetBlkSize() const;
+        LIB_UTILITIES_EXPORT const DataType  GetFillInRatio() const;
+        LIB_UTILITIES_EXPORT const size_t GetMemoryUsage(IndexType nnz, IndexType nRows) const;
 
-        const_iterator begin() const;
-        const_iterator end() const;
+        LIB_UTILITIES_EXPORT const_iterator begin() const;
+        LIB_UTILITIES_EXPORT const_iterator end() const;
 
-        const typename boost::call_traits<DataType>::const_reference
+        LIB_UTILITIES_EXPORT const typename boost::call_traits<DataType>::const_reference
                 GetValue(IndexType row, IndexType column) const;
 
-        void Multiply(const DataType* in,
+        LIB_UTILITIES_EXPORT void Multiply(const DataType* in,
                             DataType* out);
-        void Multiply(const DataVectorType &in,
+        LIB_UTILITIES_EXPORT void Multiply(const DataVectorType &in,
                             DataVectorType &out);
-        void MultiplyLight(const DataVectorType &in,
+        LIB_UTILITIES_EXPORT void MultiplyLight(const DataVectorType &in,
                                  DataVectorType &out);
-        void MultiplyLightSymm(const DataVectorType &in,
+        LIB_UTILITIES_EXPORT void MultiplyLightSymm(const DataVectorType &in,
                                      DataVectorType &out);
 
 

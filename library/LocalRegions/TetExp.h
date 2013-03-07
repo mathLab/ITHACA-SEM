@@ -218,6 +218,9 @@ namespace Nektar
                 DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(
                 const MatrixKey &mkey);
 
+            LOCAL_REGIONS_EXPORT void v_DropLocStaticCondMatrix(
+                        const MatrixKey &mkey);
+
 
         private:
             SpatialDomains::Geometry3DSharedPtr m_geom;

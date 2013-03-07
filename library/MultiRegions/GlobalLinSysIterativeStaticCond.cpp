@@ -709,6 +709,7 @@ namespace Nektar
                                 }
                             }
                             ptr += blockSize;
+                            GlobalLinSys::v_DropStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
                         }
                         else
                         {
@@ -774,6 +775,8 @@ namespace Nektar
 
                             partMat[make_pair(k,k)] =
                                 BCOEntryType (loc_lda*loc_lda, loc_mat->GetRawPtr() );
+
+                            GlobalLinSys::v_DropStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
                         }
 
                         sparseStorage[part] =

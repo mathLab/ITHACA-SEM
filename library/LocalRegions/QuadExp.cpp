@@ -1818,6 +1818,11 @@ namespace Nektar
             return m_staticCondMatrixManager[mkey];
         }
 
+        void QuadExp::v_DropLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            m_staticCondMatrixManager.DeleteObject(mkey);
+        }
+
 
         void QuadExp::v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,NekDouble> &outarray,

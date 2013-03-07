@@ -1061,40 +1061,39 @@ namespace Nektar
         }
         return returnval;
     }
-}
 
-void CompressibleFlowSystem::GetSensor(
-    const Array<OneD, const Array<OneD, NekDouble> > &physarray,
-          Array<OneD,                   NekDouble>   &Sensor)
-{
-    int i, e, nCoeffsElement, NumModesElement, NumModesCuttOff, nQuadPointsElement;
-    NekDouble SensorNumerator, SensorDenominator;
-    
-    int nvariables      = m_fields.num_elements();
-    int nTotQuadPoints  = GetTotPoints();
-    int nElements       = m_fields[0]->GetExpSize();
-    
-    // Find solution (SolP) at p = P;
-    // The input array (physarray) is the solution at p = P;
-    
-    Array<OneD,int> ExpOrderElement = GetNumExpModesPerExp();
-    
-    Array<OneD, NekDouble> SolP(nTotQuadPoints,0.0);
-    Array<OneD, NekDouble> SolPmOne(nTotQuadPoints,0.0);
-    Array<OneD, NekDouble> SolNorm(nTotQuadPoints,0.0);
-    
-    Vmath::Vcopy(nTotQuadPoints,physarray[0],1,SolP,1);
-    
-    // Apply filtering procedure in 2D to obtain the solution at p = P - 1;
-    
-    // Getting the sensor for 2D elements. For now, this is only implemented for Quadrilateral elements
-    
-    if(m_expdim == 2)
+    void CompressibleFlowSystem::GetSensor(
+        const Array<OneD, const Array<OneD, NekDouble> > &physarray,
+              Array<OneD,                   NekDouble>   &Sensor)
     {
-        // filtering procedure for Quadrilateral elements described by Biotto page 94-95
-        int CoeffsCount = 0;
+        int i, e, nCoeffsElement, NumModesElement, NumModesCuttOff, nQuadPointsElement;
+        NekDouble SensorNumerator, SensorDenominator;
+    
+        int nvariables      = m_fields.num_elements();
+        int nTotQuadPoints  = GetTotPoints();
+        int nElements       = m_fields[0]->GetExpSize();
+    
+        // Find solution (SolP) at p = P;
+        // The input array (physarray) is the solution at p = P;
+    
+        Array<OneD,int> ExpOrderElement = GetNumExpModesPerExp();
+    
+        Array<OneD, NekDouble> SolP(nTotQuadPoints,0.0);
+        Array<OneD, NekDouble> SolPmOne(nTotQuadPoints,0.0);
+        Array<OneD, NekDouble> SolNorm(nTotQuadPoints,0.0);
+    
+        Vmath::Vcopy(nTotQuadPoints,physarray[0],1,SolP,1);
+    
+        // Apply filtering procedure in 2D to obtain the solution at p = P - 1;
+    
+        // Getting the sensor for 2D elements. For now, this is only implemented for Quadrilateral elements
+    
+        if(m_expdim == 2)
+        {
+            // filtering procedure for Quadrilateral elements described by Biotto page 94-95
+            int CoeffsCount = 0;
         
-          for (e = 0; e < nElements; e++)
+            for (e = 0; e < nElements; e++)
             {
                 if(boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_fields[0]->GetExp(e)))
                 {
@@ -1180,112 +1179,127 @@ void CompressibleFlowSystem::GetSensor(
                 
                     // Calculating the Sensor value in each element
                 
-                    Sensor[e] =  sqrt(SolPmeanNumerator/nQuadPointsElement)/sqrt(SolPmeanDenumerator/nQuadPointsElement);
+                    //Sensor[e] =  sqrt(SolPmeanNumerator/nQuadPointsElement)/sqrt(SolPmeanDenumerator/nQuadPointsElement);
                 
+                    for (int i = 0; i < nQuadPointsElement; ++i)
+                    {
+                        Sensor[CoeffsCount+i] = sqrt(SolPmeanNumerator/nQuadPointsElement)/sqrt(SolPmeanDenumerator/nQuadPointsElement);
+                        if (fabs(Sensor[CoeffsCount+i] < 1e-15))
+                        {
+                            Sensor[CoeffsCount+i] = 0.0;
+                        }
+                    }
                     CoeffsCount += nQuadPointsElement;
                     
                 }
+                else
+                {
+                    ASSERTL0(false, "Triangle not supported yet.");
+                }
+            }
         }
-    }
     
-    // Getting the sensor for 3D elements. For now, this is only implemented for Hexagon elements
-    // cout << "bug1" << endl;
-    if(m_expdim == 3)
-    {
-        int CoeffsCount = 0;
+        // Getting the sensor for 3D elements. For now, this is only implemented for Hexagon elements
+        // cout << "bug1" << endl;
+        if(m_expdim == 3)
+        {
+            int CoeffsCount = 0;
 
             for (e = 0; e < nElements; e++)
             {
                 if(boost::dynamic_pointer_cast<LocalRegions::HexExp>(m_fields[0]->GetExp(e)))
+                {
+                        
+                    NumModesElement = ExpOrderElement[e];
+                
+                    // Set-up of the Orthogonal basis for a Hexagon element which is needed to obtain the solution at P =  p - 1;
+                
+                    const LibUtilities::PointsKey Pkey1(NumModesElement+1,LibUtilities::eGaussLobattoLegendre);
+                    const LibUtilities::BasisKey  QuadBa1(LibUtilities::eOrtho_A,NumModesElement,Pkey1);
+                    const LibUtilities::BasisKey  QuadBa2(LibUtilities::eOrtho_A,NumModesElement,Pkey1);
+                    const LibUtilities::BasisKey  QuadBa3(LibUtilities::eOrtho_A,NumModesElement,Pkey1);
+                
+                    StdRegions::StdHexExpSharedPtr     m_OrthoHexExp;
+                    m_OrthoHexExp =  MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(QuadBa1,QuadBa2,QuadBa3);
+                
+                    nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
+                    nCoeffsElement     = m_fields[0]->GetExp(e)->GetNcoeffs();
+                
+                    Array<OneD, NekDouble> OrthoElementPhys(nQuadPointsElement,0.0);
+                    Array<OneD, NekDouble> OrthoElementCoeffs(nCoeffsElement,0.0);
+                
+                    Array<OneD, NekDouble> SolPElementPhys(nQuadPointsElement,0.0);
+                    Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,0.0);
+                
+                    Array<OneD, NekDouble> SolPmOneElementPhys(nQuadPointsElement,0.0);
+                    Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement,0.0);
+                
+                    // create vector the save the solution points per element at P = p;
+                
+                    for (int i = 0; i < nQuadPointsElement; i++)
                     {
-                        
-                        NumModesElement = ExpOrderElement[e];
-                
-                        // Set-up of the Orthogonal basis for a Hexagon element which is needed to obtain the solution at P =  p - 1;
-                
-                        const LibUtilities::PointsKey Pkey1(NumModesElement+1,LibUtilities::eGaussLobattoLegendre);
-                        const LibUtilities::BasisKey  QuadBa1(LibUtilities::eOrtho_A,NumModesElement,Pkey1);
-                        const LibUtilities::BasisKey  QuadBa2(LibUtilities::eOrtho_A,NumModesElement,Pkey1);
-                        const LibUtilities::BasisKey  QuadBa3(LibUtilities::eOrtho_A,NumModesElement,Pkey1);
-                
-                        StdRegions::StdHexExpSharedPtr     m_OrthoHexExp;
-                        m_OrthoHexExp =  MemoryManager<StdRegions::StdHexExp>::AllocateSharedPtr(QuadBa1,QuadBa2,QuadBa3);
-                
-                        nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-                        nCoeffsElement     = m_fields[0]->GetExp(e)->GetNcoeffs();
-                
-                        Array<OneD, NekDouble> OrthoElementPhys(nQuadPointsElement,0.0);
-                        Array<OneD, NekDouble> OrthoElementCoeffs(nCoeffsElement,0.0);
-                
-                        Array<OneD, NekDouble> SolPElementPhys(nQuadPointsElement,0.0);
-                        Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,0.0);
-                
-                        Array<OneD, NekDouble> SolPmOneElementPhys(nQuadPointsElement,0.0);
-                        Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement,0.0);
-                
-                        // create vector the save the solution points per element at P = p;
-                
-                        for (int i = 0; i < nQuadPointsElement; i++)
-                        {
-                            SolPElementPhys[i] = SolP[CoeffsCount+i];
-                        }
-                
-                        // Change from Modified to Orthogonal basis
-                
-                        m_OrthoHexExp->FwdTrans(SolPElementPhys, OrthoElementCoeffs);
-                
-                        // Start filtering process as described by C. Biotto page 93-95
-                
-                        NumModesCuttOff = NumModesElement - 1;
-                
-                        for (i = 0; i < nCoeffsElement; i++)
-                        {
-                            if (i == NumModesCuttOff || (i > nCoeffsElement-NumModesElement-1))
-                            {
-                                OrthoElementCoeffs[i] = 0.0;
-                                NumModesCuttOff += NumModesElement;
-                            }
-                        }
-                
-                        // Backward transformation for Orthogonal coefficient space to physical space
-                
-                        m_OrthoHexExp->BwdTrans(OrthoElementCoeffs,OrthoElementPhys);
-                
-                        // Forward transformation from Orthogonal Physical space to Modified Coefficient space
-                
-                        m_fields[0]->GetExp(e)->FwdTrans(OrthoElementPhys,SolPmOneElementCoeffs);
-                
-                        // Backward transformation from Modified Coefficient space to Modified Physical space (Outcome is the solution points at P = p - 1 on the Modified basis).
-                
-                        m_fields[0]->GetExp(e)->BwdTrans(SolPmOneElementCoeffs,SolPmOneElementPhys);
-                        
-                        for (int i = 0; i < nQuadPointsElement; i++)
-                        {
-                            SolPmOne[CoeffsCount+i] = SolPmOneElementPhys[i];
-                        }
-            
-                        NekDouble SolPmeanNumerator     = 0.0;
-                        NekDouble SolPmeanDenumerator   = 0.0;
-                
-                        // Determining the norm of the numerator of the Sensor
-                
-                        Vmath::Vsub(nQuadPointsElement, SolPElementPhys, 1, SolPmOneElementPhys, 1, SolNorm, 1);
-                        Vmath::Vmul(nQuadPointsElement, SolNorm, 1, SolNorm, 1, SolNorm, 1);
-                
-                        // Determining the Numerator and Denumerator of the Sensor
-                
-                        for (int i = 0; i < nQuadPointsElement; i++)
-                        {
-                            SolPmeanNumerator   += SolNorm[i];
-                            SolPmeanDenumerator += SolPElementPhys[i];
-                        }
-                        
-                        // Calculating the Sensor value in each element
-                
-                        Sensor[e] =  sqrt(SolPmeanNumerator/nQuadPointsElement)/sqrt(SolPmeanDenumerator/nQuadPointsElement);
-                        
-                        CoeffsCount += nQuadPointsElement;
+                        SolPElementPhys[i] = SolP[CoeffsCount+i];
                     }
+                
+                    // Change from Modified to Orthogonal basis
+                
+                    m_OrthoHexExp->FwdTrans(SolPElementPhys, OrthoElementCoeffs);
+                
+                    // Start filtering process as described by C. Biotto page 93-95
+                
+                    NumModesCuttOff = NumModesElement - 1;
+                
+                    for (i = 0; i < nCoeffsElement; i++)
+                    {
+                        if (i == NumModesCuttOff || (i > nCoeffsElement-NumModesElement-1))
+                        {
+                            OrthoElementCoeffs[i] = 0.0;
+                            NumModesCuttOff += NumModesElement;
+                        }
+                    }
+                
+                    // Backward transformation for Orthogonal coefficient space to physical space
+                
+                    m_OrthoHexExp->BwdTrans(OrthoElementCoeffs,OrthoElementPhys);
+                
+                    // Forward transformation from Orthogonal Physical space to Modified Coefficient space
+                
+                    m_fields[0]->GetExp(e)->FwdTrans(OrthoElementPhys,SolPmOneElementCoeffs);
+                
+                    // Backward transformation from Modified Coefficient space to Modified Physical space (Outcome is the solution points at P = p - 1 on the Modified basis).
+                
+                    m_fields[0]->GetExp(e)->BwdTrans(SolPmOneElementCoeffs,SolPmOneElementPhys);
+                        
+                    for (int i = 0; i < nQuadPointsElement; i++)
+                    {
+                        SolPmOne[CoeffsCount+i] = SolPmOneElementPhys[i];
+                    }
+            
+                    NekDouble SolPmeanNumerator     = 0.0;
+                    NekDouble SolPmeanDenumerator   = 0.0;
+                
+                    // Determining the norm of the numerator of the Sensor
+                
+                    Vmath::Vsub(nQuadPointsElement, SolPElementPhys, 1, SolPmOneElementPhys, 1, SolNorm, 1);
+                    Vmath::Vmul(nQuadPointsElement, SolNorm, 1, SolNorm, 1, SolNorm, 1);
+                
+                    // Determining the Numerator and Denumerator of the Sensor
+                
+                    for (int i = 0; i < nQuadPointsElement; i++)
+                    {
+                        SolPmeanNumerator   += SolNorm[i];
+                        SolPmeanDenumerator += SolPElementPhys[i];
+                    }
+                        
+                    // Calculating the Sensor value in each element
+                
+                    Sensor[e] =  sqrt(SolPmeanNumerator/nQuadPointsElement)/sqrt(SolPmeanDenumerator/nQuadPointsElement);
+                        
+                    CoeffsCount += nQuadPointsElement;
+                }
             }
+        }
     }
+
 }
+

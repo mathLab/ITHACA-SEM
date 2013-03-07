@@ -1804,7 +1804,6 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, 
             Array<OneD, std::string> &variables)
         {
-
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = field->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
@@ -1818,6 +1817,19 @@ namespace Nektar
                     FieldDef[i]->m_fields.push_back(variables[j]);
                     field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
                 }            
+            }
+            
+            map<std::string, CPFuncType>::iterator it;
+            for (it  = m_checkpointFuncs.begin();
+                 it != m_checkpointFuncs.end(); ++it)
+            {
+                Array<OneD, NekDouble> tmp;
+                (it->second)(fieldcoeffs, tmp);
+                for (int i = 0; i < FieldDef.size(); ++i)
+                {
+                    FieldDef[i]->m_fields.push_back(it->first);
+                    field->AppendFieldData(FieldDef[i], FieldData[i], tmp);
+                }
             }
 
             // Update time in field info if required

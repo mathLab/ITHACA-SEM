@@ -161,8 +161,7 @@ namespace Nektar
         void GetStdVelocity(
             const Array<OneD, const Array<OneD,       NekDouble> >&inarray,
                   Array<OneD,                         NekDouble>  &stdV);
-        
-        void CompressibleFlowSystem::GetSensor(
+        void GetSensor(
             const Array<OneD, const Array<OneD,       NekDouble> > &physarray,
                   Array<OneD,                         NekDouble>   &Sensor);
       

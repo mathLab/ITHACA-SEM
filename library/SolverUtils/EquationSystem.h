@@ -60,7 +60,11 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr&
         > EquationSystemFactory;
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
-        
+       
+        typedef boost::function<
+            void (const Array<OneD, const Array<OneD, NekDouble> >&,
+                        Array<OneD, NekDouble> &) > CPFuncType;
+
         /// A base class for describing how to solve specific equations.
         class EquationSystem
         {
@@ -455,9 +459,10 @@ namespace Nektar
             /// Flag to indicate if the fields should be checked for
             /// singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
-            
             /// Map to identify relevant solver info to dump in output fields
-            LibUtilities::FieldMetaDataMap            m_fieldMetaDataMap;
+            LibUtilities::FieldMetaDataMap              m_fieldMetaDataMap;
+            /// Map to enable solvers to add fields when checkpointing.
+            map<std::string, CPFuncType>                m_checkpointFuncs;
 
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;

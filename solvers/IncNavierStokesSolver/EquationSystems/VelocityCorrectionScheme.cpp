@@ -87,13 +87,10 @@ namespace Nektar
         ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
         
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
-        if(m_useSpecVanVisc)
-        {
-            m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
-            m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
-        }
+        m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
+        m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
         
-        
+            
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
@@ -377,7 +374,7 @@ namespace Nektar
 
         if(m_useHomo1DSpecVanVisc)
         {
-            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D) " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;  
+            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D, cut off ratio = " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;  
         }
     }
 

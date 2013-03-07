@@ -377,7 +377,7 @@ namespace Nektar
 
         if(m_useHomo1DSpecVanVisc)
         {
-            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D) " << endl;
+            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D) " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;  
         }
     }
 

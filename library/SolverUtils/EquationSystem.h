@@ -40,6 +40,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/FieldIO.h>
 #include <SpatialDomains/SpatialData.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
@@ -290,6 +291,11 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline Array<
             OneD, MultiRegions::ExpListSharedPtr> &UpdateForces();
             
+
+            /// Get hold of FieldInfoMap so it can be updated
+            SOLVER_UTILS_EXPORT inline LibUtilities::FieldMetaDataMap 
+                &UpdateFieldMetaDataMap();
+
             /// Return final time
             SOLVER_UTILS_EXPORT inline NekDouble GetFinalTime();
             
@@ -450,9 +456,11 @@ namespace Nektar
             /// singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
             
+            /// Map to identify relevant solver info to dump in output fields
+            LibUtilities::FieldMetaDataMap            m_fieldMetaDataMap;
+
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;
-            bool m_UseContCoeff;
             
             /// Parameter for homogeneous expansions
             enum HomogeneousType

@@ -48,7 +48,7 @@ namespace Nektar
             m_coordim(0),
             m_geomFactorsState(eNotFilled),
             m_state(eNotFilled),
-            m_geomShapeType(eNoGeomShapeType),
+            m_shapeType(LibUtilities::eNoShapeType),
             m_globalID(-1)
         {
         }
@@ -57,7 +57,7 @@ namespace Nektar
             m_coordim(coordim),
             m_geomFactorsState(eNotFilled),
             m_state(eNotFilled),
-            m_geomShapeType(eNoGeomShapeType),
+            m_shapeType(LibUtilities::eNoShapeType),
             m_globalID(-1)
         {
         }
@@ -159,9 +159,9 @@ namespace Nektar
             return m_geomFactors;
         }
 
-        GeomShapeType Geometry::GetGeomShapeType(void)
+        LibUtilities::ShapeType Geometry::GetShapeType(void)
         {
-            return m_geomShapeType;
+            return m_shapeType;
         }
 
         int Geometry::GetGlobalID(void)

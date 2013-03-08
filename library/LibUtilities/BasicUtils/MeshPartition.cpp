@@ -341,7 +341,13 @@ namespace Nektar
 
                 try
                 {
+                    // Attempt partitioning using METIS.
                     Metis::PartGraphVKway(nGraphVerts, xadj, adjncy, vwgt, vsize, npart, vol, part);
+
+                    // Check METIS produced a valid partition and fix if not.
+                    CheckPartitions(part);
+
+                    // Distribute partitioning to all processes.
                     for (i = 1; i < m_comm->GetSize(); ++i)
                     {
                         m_comm->Send(i, part);
@@ -375,6 +381,39 @@ namespace Nektar
                 }
             }
         }
+
+
+        void MeshPartition::CheckPartitions(Array<OneD, int> &pPart)
+        {
+            unsigned int       i     = 0;
+            unsigned int       cnt   = 0;
+            const unsigned int npart = m_comm->GetSize();
+            bool               valid = true;
+
+            // Check that every process has at least one element assigned
+            for (i = 0; i < npart; ++i)
+            {
+                cnt = std::count(pPart.begin(), pPart.end(), i);
+                if (cnt == 0)
+                {
+                    valid = false;
+                }
+            }
+
+            // If METIS produced an invalid partition, repartition naively.
+            // Elements are assigned to processes in a round-robin fashion.
+            // It is assumed that METIS failure only occurs when the number of
+            // elements is approx. the number of processes, so this approach
+            // should not be too inefficient communication-wise.
+            if (!valid)
+            {
+                for (i = 0; i < pPart.num_elements(); ++i)
+                {
+                    pPart[i] = i % npart;
+                }
+            }
+        }
+
 
         void MeshPartition::OutputPartition(
                 LibUtilities::SessionReaderSharedPtr& pSession,

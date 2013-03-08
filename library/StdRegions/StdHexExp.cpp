@@ -542,7 +542,7 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
+                StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
                 DNekMatSharedPtr matsys = GetStdMatrix(masskey);
 
                 // copy inarray in case inarray == outarray
@@ -608,7 +608,7 @@ namespace Nektar
                                                Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -726,7 +726,7 @@ namespace Nektar
                     break;
             }
 
-            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -873,9 +873,9 @@ namespace Nektar
         }
 
 
-        ExpansionType StdHexExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdHexExp::v_DetShapeType() const
         {
-            return eHexahedron;
+            return LibUtilities::eHexahedron;
         };
 
 

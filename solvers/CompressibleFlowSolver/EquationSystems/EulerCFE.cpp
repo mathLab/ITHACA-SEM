@@ -129,8 +129,7 @@ namespace Nektar
         if (dumpInitialConditions)
         {
             // Dump initial conditions to file
-            std::string outname = m_sessionName + "_initial.chk";
-            WriteFld(outname);
+            Checkpoint_Output(0);
         }
     }
 

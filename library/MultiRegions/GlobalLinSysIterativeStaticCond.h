@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSysIterativeStaticCond.h
+// File: GlobalLinSysIterativeStaticCond.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -48,6 +48,19 @@ namespace Nektar
 
         typedef boost::shared_ptr<GlobalLinSysIterativeStaticCond>
             GlobalLinSysIterativeStaticCondSharedPtr;
+
+        enum LocalMatrixStorageStrategy
+        {
+            eContiguous,
+            eNonContiguous,
+        };
+
+        const char* const LocalMatrixStorageStrategyMap[] =
+        {
+            "Contiguous",
+            "Non-contiguous",
+        };
+
 
         /// A global linear system.
         class GlobalLinSysIterativeStaticCond : public GlobalLinSysIterative
@@ -97,13 +110,21 @@ namespace Nektar
             GlobalLinSysIterativeStaticCondSharedPtr m_recursiveSchurCompl;
             /// Block Schur complement matrix.
             DNekScalBlkMatSharedPtr                  m_schurCompl;
+            /// Dense storage for block Schur complement matrix.
+            std::vector<double>                      m_storage;
+            /// Vector of pointers to local matrix data
+            std::vector<const double*>               m_denseBlocks;
+            /// Ranks of local matrices
+            Array<OneD, unsigned int>                m_rows;
+            /// Scaling factors for local matrices
+            Array<OneD, NekDouble>                   m_scale;
             /// Block \f$ BD^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_BinvD;
             /// Block \f$ C \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_C;
             /// Block \f$ D^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_invD;
-	    // Block matrices for low energy
+            /// Block matrices for low energy
             DNekScalBlkMatSharedPtr                  m_RBlk;
             DNekScalBlkMatSharedPtr                  m_RTBlk;
             DNekScalBlkMatSharedPtr                  m_S1Blk;
@@ -115,8 +136,11 @@ namespace Nektar
             Array<OneD, NekDouble>                   m_wsp;
             /// Preconditioner object.
             PreconditionerSharedPtr                  m_precon;
-            /// Wrapper for block matrices.
-            Array<OneD, DNekScalBlkMatSharedPtr>     m_schurComplBlock;
+
+            /// Utility strings
+            static std::string                       storagedef;
+            static std::string                       storagelookupIds[];
+
 
             /// Solve the linear system for given input and output vectors
             /// using a specified local to global map.

@@ -77,7 +77,7 @@ namespace Nektar
                 m_coords[i] = Coords[i];
             }
 
-            StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
+            LibUtilities::ShapeType shape = Coords[0]->DetShapeType();
 
             // The quadrature points of the mapping
             // (as specified in Coords)
@@ -277,13 +277,13 @@ namespace Nektar
          * each quadrature point multipled by the quadrature weight.
          */
         void GeomFactors3D::v_SetUpQuadratureMetrics(
-            StdRegions::ExpansionType                              shape,
+            LibUtilities::ShapeType                              shape,
             const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             ASSERTL1(tbasis.num_elements() == m_expDim,
                      "Inappropriate dimension of tbasis");
 
-            int i,j,k;
+            int i,j;
             int nquad0 = m_pointsKey[0].GetNumPoints();
             int nquad1 = m_pointsKey[1].GetNumPoints();
             int nquad2 = m_pointsKey[2].GetNumPoints();
@@ -311,7 +311,7 @@ namespace Nektar
             // Multiply the jacobian with the quadrature weights
             switch(shape)
             {
-                case StdRegions::eHexahedron:
+            case LibUtilities::eHexahedron:
                 {
                     for(i = 0; i < nquad1*nquad2; ++i)
                     {
@@ -333,7 +333,7 @@ namespace Nektar
                     break;
                 }
                 
-                case StdRegions::ePrism:
+            case LibUtilities::ePrism:
                 {
                     const Array<OneD, const NekDouble>& z2 = tbasis[2]->GetZ();
                     
@@ -378,12 +378,13 @@ namespace Nektar
                             break;
                             
                         default:
-                            ASSERTL0(false, "Quadrature point type not supported for this element.");
-                            break;
+                            m_isUsingQuadMetrics = false;
+                            m_weightedjac = Array<OneD, NekDouble>();
+                            return;
                     }
                     break;
                 }
-                case StdRegions::eTetrahedron:
+            case LibUtilities::eTetrahedron:
                 {
                     const Array<OneD, const NekDouble>& z1 = tbasis[1]->GetZ();
                     const Array<OneD, const NekDouble>& z2 = tbasis[2]->GetZ();
@@ -424,8 +425,11 @@ namespace Nektar
                             break;
                 
                         default:
-                            ASSERTL0(false, "Unsupported quadrature points type.");
-                            break;
+                        {
+                            m_isUsingQuadMetrics = false;
+                            m_weightedjac = Array<OneD, NekDouble>();
+                            return;
+                        }
                     }
 
                     switch(tbasis[2]->GetPointsType())
@@ -447,8 +451,9 @@ namespace Nektar
                             }
                             break;
                         default:
-                            ASSERTL0(false, "Unsupported quadrature points type.");
-                            break;
+                            m_isUsingQuadMetrics = false;
+                            m_weightedjac = Array<OneD, NekDouble>();
+                            return;
                     }
                     break;
                 }

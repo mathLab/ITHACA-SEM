@@ -130,8 +130,8 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual Array<OneD, NekDouble>&
                         v_UpdatePhys(const int i);
 
-                SPATIAL_DOMAINS_EXPORT virtual StdRegions::ExpansionType
-                        v_DetExpansionType() const;
+                SPATIAL_DOMAINS_EXPORT virtual LibUtilities::ShapeType
+                        v_DetShapeType() const;
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_GetLocCoords(
                         const Array<OneD, const NekDouble>& coords,

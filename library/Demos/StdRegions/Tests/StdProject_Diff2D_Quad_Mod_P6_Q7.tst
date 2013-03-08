@@ -2,7 +2,7 @@
 <test>
     <description>StdProject_Diff2D Quadrilateral Modified basis P=6 Q=7</description>
     <executable>StdProject_Diff2D</executable>
-    <parameters>3 4 4 6 6 7 7</parameters>
+    <parameters>4 4 4 6 6 7 7</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-11">1.2852e-12</value>

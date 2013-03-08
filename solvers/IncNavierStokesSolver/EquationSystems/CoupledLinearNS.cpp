@@ -460,7 +460,7 @@ namespace Nektar
             StdRegions::ConstFactorMap factors;
             factors[StdRegions::eFactorLambda] = lambda/m_kinvis;
             LocalRegions::MatrixKey helmkey(StdRegions::eHelmholtz,
-                                            locExp->DetExpansionType(),
+                                            locExp->DetShapeType(),
                                             *locExp,
                                             factors);
             
@@ -642,7 +642,7 @@ namespace Nektar
                 if((lambda_imag != NekConstants::kNekUnsetDouble)&&(nz_loc == 2))
                 {
                     LocalRegions::MatrixKey masskey(StdRegions::eMass,
-                                                    locExp->DetExpansionType(),
+                                                    locExp->DetShapeType(),
                                                     *locExp);
                     MassMat = boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(masskey);
                 }

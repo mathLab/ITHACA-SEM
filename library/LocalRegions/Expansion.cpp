@@ -59,7 +59,7 @@ namespace Nektar
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeffs)
         {
-            MatrixKey mkey(mtype, DetExpansionType(), *this, factors, varcoeffs);
+            MatrixKey mkey(mtype, DetShapeType(), *this, factors, varcoeffs);
             return GetLocMatrix(mkey);
         }
 

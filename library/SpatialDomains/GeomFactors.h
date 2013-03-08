@@ -134,13 +134,13 @@ namespace Nektar
 
             /// Set up quadrature metrics
             inline void SetUpQuadratureMetrics(
-                StdRegions::ExpansionType shape,
+                LibUtilities::ShapeType shape,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
                     &tbasis);
 
             /// Set up Laplacian metrics
             inline void SetUpLaplacianMetrics(
-                StdRegions::ExpansionType shape,
+                LibUtilities::ShapeType shape,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
                     &tbasis);
 
@@ -319,13 +319,13 @@ namespace Nektar
 
             /// Set up quadrature metrics
             virtual void v_SetUpQuadratureMetrics(
-                StdRegions::ExpansionType shape,
+                LibUtilities::ShapeType shape,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
                     &tbasis);
 
             /// Set up Laplacian metrics
             virtual void v_SetUpLaplacianMetrics(
-                StdRegions::ExpansionType shape,
+                LibUtilities::ShapeType shape,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
                     &tbasis);
         };
@@ -391,7 +391,7 @@ namespace Nektar
 
         /// Set up quadrature metrics
         inline void GeomFactors::SetUpQuadratureMetrics(
-                    StdRegions::ExpansionType shape,
+                    LibUtilities::ShapeType shape,
                     const Array<OneD, const LibUtilities::BasisSharedPtr>
                                                                     &tbasis)
         {
@@ -400,7 +400,7 @@ namespace Nektar
 
         /// Set up Laplacian metrics
         inline void GeomFactors::SetUpLaplacianMetrics(
-                    StdRegions::ExpansionType shape,
+                    LibUtilities::ShapeType shape,
                     const Array<OneD, const LibUtilities::BasisSharedPtr>
                                                                     &tbasis)
         {

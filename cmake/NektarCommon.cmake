@@ -221,7 +221,7 @@ MACRO(ADD_NEKTAR_LIBRARY name component type)
 
     # NIST Sparse BLAS only static, so link into Nektar libraries directly.
     TARGET_LINK_LIBRARIES( ${name} ${NIST_SPARSE_BLAS} ${METIS_LIB})
-    ADD_DEPENDENCIES(${name} spblastk0.9b modmetis-4.0 boost tinyxml zlib)
+    ADD_DEPENDENCIES(${name} spblastk0.9b modmetis-5.0.2 boost tinyxml zlib)
     SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
     IF (NEKTAR_USE_MPI)
         TARGET_LINK_LIBRARIES( ${name} ${GSMPI_LIBRARY} ${XXT_LIBRARY})

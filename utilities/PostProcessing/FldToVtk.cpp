@@ -76,11 +76,11 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Import field file.
         string fieldfile(argv[n]);
-        vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+        vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
         vector<vector<NekDouble> > fielddata;
-        graphShPt->Import(fieldfile,fielddef,fielddata);
+        LibUtilities::Import(fieldfile,fielddef,fielddata);
         bool useFFT = false;
-		bool dealiasing = false;
+        bool dealiasing = false;
         //----------------------------------------------
 
         //----------------------------------------------

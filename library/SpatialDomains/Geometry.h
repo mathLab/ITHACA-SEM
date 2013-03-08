@@ -38,7 +38,7 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 
 #include <SpatialDomains/GeomFactors.h>
-#include <SpatialDomains/GeometryShapeType.h>
+#include <LibUtilities/BasicUtils/ShapeType.hpp>
 
 #include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
@@ -49,19 +49,6 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-
-        const char* const GeomShapeTypeMap[] =
-        {
-            "NoGeomShapeType",
-            "Segment",
-            "Point",
-            "Triangle",
-            "Quadrilateral",
-            "Tetrahedron",
-            "Pyramid",
-            "Prism",
-            "Hexahedron"
-        };
 
         class Geometry; // Forward declaration for typedef.
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
@@ -126,7 +113,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetMetricInfo();
-                SPATIAL_DOMAINS_EXPORT GeomShapeType GetGeomShapeType(void);
+                SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType GetShapeType(void);
                 SPATIAL_DOMAINS_EXPORT int GetGlobalID(void);
                 SPATIAL_DOMAINS_EXPORT void SetGlobalID(int globalid);
                 SPATIAL_DOMAINS_EXPORT int GetVid(int i) const;
@@ -162,7 +149,7 @@ namespace Nektar
                 /// enum identifier to determine if quad points are filled
                 GeomState            m_state;
                 GeomType             m_geomType;
-                GeomShapeType        m_geomShapeType;
+                LibUtilities::ShapeType   m_shapeType;
                 int                  m_globalID;
 
                 void GenGeomFactors(

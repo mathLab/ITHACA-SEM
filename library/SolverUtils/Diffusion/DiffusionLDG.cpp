@@ -61,8 +61,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            cout<<setprecision(16);
-            int i, j, k, num;
+            int i, j, k;
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
             int nCoeffs   = fields[0]->GetNcoeffs();
@@ -118,7 +117,7 @@ namespace Nektar
                     fields[i]->BwdTrans             (qcoeffs, qfield[j][i]);
                 }
             }
-
+            
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
             v_NumFluxforVector(fields, inarray, qfield, flux[0]);

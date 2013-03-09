@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Diffusion/DiffusionLDGNS.h>
+#include <iostream>
+#include <iomanip>
 
 namespace Nektar
 {
@@ -51,6 +53,16 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
             m_session = pSession;
+            m_session->LoadParameter ("Gamma",         m_gamma, 1.4);
+            m_session->LoadParameter ("GasConstant",   m_gasConstant, 287.058);
+            m_session->LoadParameter ("Twall",         m_Twall, 300.15);
+            m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, 
+                                      "Constant");
+            m_session->LoadParameter ("mu",            m_mu, 1.78e-05);
+            m_session->LoadParameter ("thermalConductivity",
+                                      m_thermalConductivity, 0.0257);
+            m_session->LoadParameter ("rhoInf",        m_rhoInf, 1.225);
+            m_session->LoadParameter ("pInf",          m_pInf, 101325);
         }
         
         /**
@@ -71,7 +83,8 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
-        {            
+        {   
+            cout<<setprecision(16);
             int i, j;
             int nDim      = fields[0]->GetCoordim(0);
             int nScalars  = inarray.num_elements();
@@ -247,12 +260,7 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &penaltyfluxO1)
-        {
-            // They should be taken from CFS
-            const NekDouble gamma = 1.4;
-            const NekDouble R     = 287.05;
-            const NekDouble Twall = 0.012;
-            
+        {            
             int cnt;
             int i, j, e;            
             int id1, id2;
@@ -266,8 +274,7 @@ namespace Nektar
             
             Array<OneD, NekDouble> tmp1(nTracePts, 0.0);
             Array<OneD, NekDouble> tmp2(nTracePts, 0.0);
-            Array<OneD, NekDouble> Tw(nTracePts, Twall);
-
+            Array<OneD, NekDouble> Tw(nTracePts, m_Twall);
             
             Array< OneD, Array<OneD, NekDouble > > scalarVariables(nScalars);
             Array< OneD, Array<OneD, NekDouble > > uplus(nScalars);
@@ -305,9 +312,6 @@ namespace Nektar
                         GetPhys_Offset(fields[0]->GetTraceMap()->
                                        GetBndCondTraceToGlobalTraceMap(cnt++));
 
-                        // Should I reinforce velocity bcs at the wall?
-                        // They don't give too different answers!
-                        // =====================================================
                         // Reinforcing bcs for velocity in case of Wall bcs
                         if (fields[i]->GetBndConditions()[j]->
                             GetUserDefined() == 
@@ -316,9 +320,7 @@ namespace Nektar
                             Vmath::Zero(nBndEdgePts, 
                                         &scalarVariables[i][id2], 1);
                         }
-                        // =====================================================
-                        
-                        // =====================================================
+
                         // Imposing velocity bcs if not Wall
                         else if (fields[i]->GetBndConditions()[j]->
                                  GetBoundaryConditionType() == 
@@ -331,7 +333,6 @@ namespace Nektar
                                       UpdatePhys())[id1], 1,
                                     &scalarVariables[i][id2], 1);
                         }
-                        // =====================================================
                         
                         // For Dirichlet boundary condition: uflux = u_bcs
                         if (fields[i]->GetBndConditions()[j]->
@@ -377,10 +378,12 @@ namespace Nektar
             GetBndCondExpansions().num_elements();
             for (j = 0; j < nBndRegions; ++j)
             {
+                //cout<<"bcRegion = "<< j << endl;
                 nBndEdges = fields[nScalars]->
                 GetBndCondExpansions()[j]->GetExpSize();
                 for (e = 0; e < nBndEdges; ++e)
                 {
+                    //cout<<"bcEdge = "<< e << endl;
                     nBndEdgePts = fields[nScalars]->
                     GetBndCondExpansions()[j]->GetExp(e)->GetNumPoints(0);
                     
@@ -391,12 +394,11 @@ namespace Nektar
                     GetPhys_Offset(fields[0]->GetTraceMap()->
                                    GetBndCondTraceToGlobalTraceMap(cnt++));
                     
-                    /*
                     // Imposing Temperature Twall at the wall 
                     if (fields[i]->GetBndConditions()[j]->
                         GetUserDefined() == 
                         SpatialDomains::eWallViscous)
-                    {
+                    {                        
                         Vmath::Vcopy(nBndEdgePts, 
                                      &Tw[0], 1, 
                                      &scalarVariables[nScalars-1][id2], 1);
@@ -407,30 +409,37 @@ namespace Nektar
                              GetBoundaryConditionType() == 
                              SpatialDomains::eDirichlet)
                     {
-                    */
                         // Divide E by rho
                         Vmath::Vdiv(nBndEdgePts,
                                     &(fields[nScalars]->
                                       GetBndCondExpansions()[j]->
-                                      GetPhys())[id1], 1,
+                                      GetPhys())[id1], 1, 
                                     &(fields[0]->
                                       GetBndCondExpansions()[j]->
                                       GetPhys())[id1], 1,
                                     &scalarVariables[nScalars-1][id2], 1);
                         
+                        /*
                         // Subtract kinetic energy to E/rho
                         Vmath::Vsub(nBndEdgePts, 
                                     &scalarVariables[nScalars-1][id2], 1,
                                     &tmp2[id2], 1,
                                     &scalarVariables[nScalars-1][id2], 1);
-                        
+                        */
+                         
                         // Multiply by constant factor (gamma-1)/R 
-                        // (Note: I should extract R and gamma)
-                        Vmath::Smul(nBndEdgePts, (gamma - 1)/R,
+                        Vmath::Smul(nBndEdgePts, (m_gamma - 1)/m_gasConstant,
                                     &scalarVariables[nScalars-1][id2], 1,
                                     &scalarVariables[nScalars-1][id2], 1);
-                    //}
-                    
+                    }
+                    /*
+                    for (int bb = 0; bb < nBndEdgePts; ++bb)
+                    {
+                        cout<<"T-bcs = "<<scalarVariables[nScalars-1][id2+bb]<<endl;
+                    }
+                    int num;
+                    cin>>num;
+                    */
                     // For Dirichlet boundary condition: uflux = u_bcs
                     if (fields[nScalars]->GetBndConditions()[j]->
                         GetBoundaryConditionType() == 
@@ -450,6 +459,13 @@ namespace Nektar
                                      &uplus[nScalars-1][id2], 1, 
                                      &penaltyfluxO1[nScalars-1][id2], 1);
                     }
+                    /*
+                    for (int bb = 0; bb < nBndEdgePts; ++bb)
+                    {
+                        cout<<"PenaltyFlux = "<<penaltyfluxO1[nScalars-1][id2+bb]<<endl;
+                    }
+                    cin>>num;
+                     */
                 }
             }
         }
@@ -567,9 +583,11 @@ namespace Nektar
             // Extract the physical values of the solution at the boundaries
             fields[var]->ExtractTracePhys(qfield, qtemp);
             
+            //cout<<"var = "<< var << endl;
             // Loop on the boundary regions to apply appropriate bcs
             for (i = 0; i < nBndRegions; ++i)
             {
+                //cout<<"bcRegion = "<< i << endl;
                 // Number of boundary regions related to region 'i'
                 nBndEdges = fields[var]->
                 GetBndCondExpansions()[i]->GetExpSize();
@@ -577,6 +595,7 @@ namespace Nektar
                 // Weakly impose bcs by modifying flux values
                 for (e = 0; e < nBndEdges; ++e)
                 {
+                    //cout<<"bcEdge = "<< e << endl;
                     nBndEdgePts = fields[var]->
                     GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
                     
@@ -588,8 +607,7 @@ namespace Nektar
                                    GetBndCondTraceToGlobalTraceMap(cnt++));
                     
                     // In case of Dirichlet bcs: 
-                    // uflux = g_D
-                    // qflux = q+
+                    // uflux = gD
                     if(fields[var]->GetBndConditions()[i]->
                        GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
@@ -615,6 +633,14 @@ namespace Nektar
                                     &penaltyflux[id2], 1);
                          */
                     }
+                    /*
+                    for (int bb = 0; bb < nBndEdgePts; ++bb)
+                    {
+                        cout<<"2nd - bcs = "<<penaltyflux[id2+bb]<<endl;
+                    }
+                    int num;
+                    cin>>num;
+                     */
                 }
             }
         }

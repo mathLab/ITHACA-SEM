@@ -117,6 +117,9 @@ namespace Nektar
         m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
+        
+        m_Cp      = m_gamma / (m_gamma - 1.0) * m_gasConstant;
+        m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
 
 
         // Type of advection class to be used
@@ -1090,7 +1093,7 @@ namespace Nektar
                         &derivativesO1[0][2][0], 1, 
                         &tmp2[0], 1);
             
-            // STx = u * Sxx + v * Sxy + (K / mu) * dT/dx
+            // STx = u * Sxx + v * Sxy + K * dT/dx
             Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
             Vmath::Vadd(nPts, &STx[0], 1, &tmp2[0], 1, &STx[0], 1);
             
@@ -1113,7 +1116,7 @@ namespace Nektar
                         &derivativesO1[1][2][0], 1, 
                         &tmp2[0], 1);
             
-            // STy = v * Syy + u * Sxy + (K / mu) * dT/dy
+            // STy = v * Syy + u * Sxy + K * dT/dy
             Vmath::Vadd(nPts, &STy[0], 1, &tmp1[0], 1, &STy[0], 1);
             Vmath::Vadd(nPts, &STy[0], 1, &tmp2[0], 1, &STy[0], 1);
         }
@@ -1200,7 +1203,7 @@ namespace Nektar
                         &derivativesO1[2][2][0], 1, 
                         &tmp3[0], 1);
             
-            // STy = w * Szz + u * Sxz + v * Syz + K * dT/dz
+            // STz = w * Szz + u * Sxz + v * Syz + K * dT/dz
             Vmath::Vadd(nPts, &STz[0], 1, &tmp1[0], 1, &STz[0], 1);
             Vmath::Vadd(nPts, &STz[0], 1, &tmp2[0], 1, &STz[0], 1);
             Vmath::Vadd(nPts, &STz[0], 1, &tmp3[0], 1, &STz[0], 1);

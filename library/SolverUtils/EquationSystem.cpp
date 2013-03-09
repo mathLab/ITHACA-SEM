@@ -2205,32 +2205,39 @@ namespace Nektar
                         
                     case MultiRegions::eDiscontinuous:
                     {
-                        if (DiffusionType == "LDG")
+                        if (DiffusionType == "LDG" || DiffusionType == "LDGNS")
                         {
                             out << "\tDiffusion Type  : LDG"    <<endl;
                         }
-                        else if (DiffusionType == "LFRDG")
+                        else if (DiffusionType == "LFRDG" || DiffusionType == "LFRDGNS")
                         {
                             out << "\tDiffusion Type  : LFRDG"  <<endl;
                         }
-                        else if (DiffusionType == "LFRSD")
+                        else if (DiffusionType == "LFRSD" || DiffusionType == "LFRSDNS")
                         {
                             out << "\tDiffusion Type  : LFRSD"  <<endl;
                         }
-                        else if (DiffusionType == "LFRHU")
+                        else if (DiffusionType == "LFRHU" || DiffusionType == "LFRHUNS")
                         {
                             out << "\tDiffusion Type  : LFRHU"  <<endl;
                         }
-                        else if (DiffusionType == "LFRcmin")
+                        else if (DiffusionType == "LFRcmin" || DiffusionType == "LFRcminNS")
                         {
                             out << "\tDiffusion Type  : LFR c = c-min"      <<endl;
                         }
-                        else if (DiffusionType == "LFRcinf")
+                        else if (DiffusionType == "LFRcinf" || DiffusionType == "LFRcinfNS")
                         {
                             out << "\tDiffusion Type  : LFR c = c-infinity" <<endl;
                         }
                         break;
                     }
+                    case MultiRegions::eMixed_CG_Discontinuous:
+                    {
+                        break;
+                    }
+                        
+                    default:
+                        break;
                 }
             }
         }

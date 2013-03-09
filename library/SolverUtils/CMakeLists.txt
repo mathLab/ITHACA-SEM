@@ -7,6 +7,7 @@ SET(SOLVER_UTILS_SOURCES
   Diffusion/DiffusionLDG.cpp
   Diffusion/DiffusionLDGNS.cpp
   Diffusion/DiffusionLFR.cpp
+  Diffusion/DiffusionLFRNS.cpp
   Driver.cpp
   DriverArnoldi.cpp
   DriverModifiedArnoldi.cpp
@@ -32,6 +33,7 @@ SET(SOLVER_UTILS_HEADERS
   Diffusion/DiffusionLDG.h
   Diffusion/DiffusionLDGNS.h
   Diffusion/DiffusionLFR.h
+  Diffusion/DiffusionLFRNS.h
   Driver.h
   DriverArnoldi.h
   DriverModifiedArnoldi.h

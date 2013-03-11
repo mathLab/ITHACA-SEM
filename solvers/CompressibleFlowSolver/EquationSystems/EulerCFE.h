@@ -107,6 +107,9 @@ namespace Nektar
         void CPSensor(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &outarray);
+        void CPEntropy(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD, NekDouble> &outarray);
       
     private:
         void SetBoundaryConditions(

@@ -90,6 +90,7 @@ namespace Nektar
 
         m_checkpointFuncs["Mach"] = boost::bind(&EulerCFE::CPMach, this, _1, _2);
         m_checkpointFuncs["Sensor"] = boost::bind(&EulerCFE::CPSensor, this, _1, _2);
+        m_checkpointFuncs["Entropy"] = boost::bind(&EulerCFE::CPEntropy, this, _1, _2);
     }
     
     /**
@@ -310,6 +311,31 @@ namespace Nektar
         Array<OneD, NekDouble> sensor(npts);
         GetSensor(physfield, sensor);
         m_fields[0]->FwdTrans(sensor, outarray);
+    }
+
+    void EulerCFE::CPEntropy(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+        Array<OneD, NekDouble> &outarray)
+    {
+        const int npts = m_fields[0]->GetTotPoints();
+        outarray = Array<OneD, NekDouble>(GetNcoeffs());
+        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+2);
+
+        for (int i = 0; i < m_spacedim+2; ++i)
+        {
+            physfield[i] = Array<OneD, NekDouble>(npts);
+            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
+        }
+
+        Array<OneD, NekDouble> pressure(npts);
+        Array<OneD, NekDouble> temperature(npts);
+        Array<OneD, NekDouble> entropy(npts);
+
+        GetPressure(physfield, pressure);
+        GetTemperature(physfield, pressure, temperature);
+        GetEntropy(physfield, pressure, temperature, entropy);
+
+        m_fields[0]->FwdTrans(entropy, outarray);
     }
 
     /**

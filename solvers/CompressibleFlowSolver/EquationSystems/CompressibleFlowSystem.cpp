@@ -868,6 +868,25 @@ namespace Nektar
     }
     
     /**
+     * @brief Calcualte entropy.
+     */
+    void CompressibleFlowSystem::GetEntropy(
+        const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+        const Array<OneD, const NekDouble>               &pressure,
+        const Array<OneD, const NekDouble>               &temperature,
+              Array<OneD,       NekDouble>               &entropy)
+    {
+        const int npts = m_fields[0]->GetTotPoints();
+        const NekDouble temp_inf = m_pInf/(m_rhoInf*m_gasConstant);;
+
+        for (int i = 0; i < npts; ++i)
+        {
+            entropy[i] = m_gamma/(m_gamma-1.0)*m_gasConstant*log(temperature[i]/temp_inf) -
+                m_gasConstant*log(pressure[i]/m_pInf);
+        }
+    }
+
+    /**
      * @brief Calculate the maximum timestep subject to CFL restrictions.
      */
     NekDouble CompressibleFlowSystem::v_GetTimeStep(

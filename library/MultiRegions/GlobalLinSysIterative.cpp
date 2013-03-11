@@ -536,7 +536,7 @@ namespace Nektar
                         cout << "CG iterations made = " << m_totalIterations 
                              << " using tolerance of "  << m_tolerance 
                              << " (error = " << sqrt(eps/m_rhs_magnitude) << ")" 
-                             << " (bb_inv = " << sqrt(1.0/m_rhs_magnitude) << ")" 
+                            //<< " (bb_inv = " << sqrt(1.0/m_rhs_magnitude) << ")" 
                              << endl;
                     }
                     m_rhs_magnitude = NekConstants::kNekUnsetDouble;

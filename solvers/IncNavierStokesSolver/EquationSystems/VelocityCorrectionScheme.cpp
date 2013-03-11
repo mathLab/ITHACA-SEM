@@ -89,9 +89,8 @@ namespace Nektar
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
         m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
-        
         m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
-        
+            
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
@@ -374,7 +373,7 @@ namespace Nektar
 
         if(m_useHomo1DSpecVanVisc)
         {
-            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D) " << endl;
+            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D, cut off ratio = " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;  
         }
     }
 

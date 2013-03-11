@@ -449,7 +449,7 @@ namespace Nektar
                 {
                     cout << "CG iterations made = " << m_totalIterations 
                          << " using tolerance of "  << m_tolerance 
-                         << " (error = " << sqrt(vExchange[2]) << ")" << endl;
+                         << " (error = " << sqrt(eps/m_rhs_magnitude) << ")" << endl;
                 }
                 m_rhs_magnitude = NekConstants::kNekUnsetDouble;
                 return;
@@ -528,6 +528,7 @@ namespace Nektar
                 mu      = vExchange[1];
                 eps     = vExchange[2];
 
+                m_totalIterations++;
                 // test if norm is within tolerance
                 if (eps < m_tolerance * m_tolerance * m_rhs_magnitude)
                 {
@@ -550,7 +551,6 @@ namespace Nektar
                 rho   = rho_new;
 
                 k++;
-                m_totalIterations++;
             }
         }
 

@@ -175,6 +175,7 @@ namespace Nektar
         {
             bool dirForcCalculated = (bool) dirForcing.num_elements();
             bool atLastLevel       = pLocToGloMap->AtLastLevel();
+            int  scLevel           = pLocToGloMap->GetStaticCondLevel();
 
             int nGlobDofs          = pLocToGloMap->GetNumGlobalCoeffs();
             int nGlobBndDofs       = pLocToGloMap->GetNumGlobalBndCoeffs();
@@ -210,9 +211,13 @@ namespace Nektar
 
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
 
-            // set up normalisation factor for right hand side
-            Set_Rhs_Magnitude(F_GlobBnd);
-
+ 
+            // set up normalisation factor for right hand side on first SC level
+            if(scLevel == 0)
+            {
+                Set_Rhs_Magnitude(F_GlobBnd);
+            }
+            
             if(nGlobHomBndDofs)
             {
                 if(pLocToGloMap->GetPreconType() != MultiRegions::eLowEnergy)
@@ -251,7 +256,6 @@ namespace Nektar
                     // those lower levels, whilst not sending anything to the
                     // other partitions, and includes them in the modified right
                     // hand side vector.
-                    int scLevel = pLocToGloMap->GetStaticCondLevel();
                     int lcLevel = pLocToGloMap->GetLowestStaticCondLevel();
                     if(atLastLevel && scLevel < lcLevel)
                     {
@@ -318,15 +322,13 @@ namespace Nektar
                 if(atLastLevel)
                 {
                     Array<OneD, NekDouble> pert(nGlobBndDofs,0.0);
-                    
+                    NekVector<NekDouble>   Pert(nGlobBndDofs,pert,eWrapper);
+
                     Timer t;
                     t.Start();
                     
                     // Solve for difference from initial solution given inout;
                     SolveLinearSystem(nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
-                    // Add back initial conditions onto difference
-                    Vmath::Vadd(nGlobHomBndDofs,&out[nDirBndDofs],1,
-                                &pert[nDirBndDofs],1,&out[nDirBndDofs],1);
 
                     t.Stop();
 
@@ -335,12 +337,15 @@ namespace Nektar
                     {
                         DNekScalBlkMat &RT = *m_RTBlk;
 
-                        pLocToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
- 
+                        pLocToGloMap->GlobalToLocalBnd(Pert,V_LocBnd);
                         V_LocBnd=RT*V_LocBnd;
-
-                        pLocToGloMap->LocalBndToGlobal(V_LocBnd,V_GlobHomBnd, nDirBndDofs);
+                        pLocToGloMap->LocalBndToGlobal(V_LocBnd,Pert);
                     }
+
+                    // Add back initial conditions onto difference
+                    Vmath::Vadd(nGlobHomBndDofs,&out[nDirBndDofs],1,
+                                &pert[nDirBndDofs],1,&out[nDirBndDofs],1);
+
                 }
                 else
                 {

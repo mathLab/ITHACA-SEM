@@ -87,18 +87,15 @@ namespace Nektar
         ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
         
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
-        if(m_useSpecVanVisc)
-        {
-            m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
-            m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
-        }
+        m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
+        m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
         
+        m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
         
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
 
-            m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
 
             if(m_useHomo1DSpecVanVisc == false)
             {

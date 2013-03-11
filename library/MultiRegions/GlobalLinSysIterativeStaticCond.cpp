@@ -210,6 +210,9 @@ namespace Nektar
 
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
 
+            // set up normalisation factor for right hand side
+            Set_Rhs_Magnitude(F_GlobBnd);
+
             if(nGlobHomBndDofs)
             {
                 if(pLocToGloMap->GetPreconType() != MultiRegions::eLowEnergy)
@@ -237,7 +240,7 @@ namespace Nektar
                         DNekScalBlkMat &BinvD      = *m_BinvD;
                         V_LocBnd = BinvD*F_Int;
                     }
-                    
+
                     pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
                                               nDirBndDofs);
                     F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
@@ -314,14 +317,17 @@ namespace Nektar
                 // solve boundary system
                 if(atLastLevel)
                 {
-                    Array<OneD, NekDouble> offsetarray;
-
+                    Array<OneD, NekDouble> pert(nGlobBndDofs,0.0);
+                    
                     Timer t;
                     t.Start();
                     
                     // Solve for difference from initial solution given inout;
-                    SolveLinearSystem(nGlobBndDofs, F, out, pLocToGloMap, nDirBndDofs);
-                    
+                    SolveLinearSystem(nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
+                    // Add back initial conditions onto difference
+                    Vmath::Vadd(nGlobHomBndDofs,&out[nDirBndDofs],1,
+                                &pert[nDirBndDofs],1,&out[nDirBndDofs],1);
+
                     t.Stop();
 
                     //transform back to original basis

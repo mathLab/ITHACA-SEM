@@ -69,9 +69,16 @@ namespace Nektar
         protected:
             DiffusionLFRNS(std::string diffType);
             
-            Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
-            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
-            LibUtilities::SessionReaderSharedPtr              m_session;
+            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
+            LibUtilities::SessionReaderSharedPtr m_session;
+            NekDouble                            m_gamma;
+            NekDouble                            m_gasConstant;
+            NekDouble                            m_Twall;
+            std::string                          m_ViscosityType;
+            NekDouble                            m_mu;
+            NekDouble                            m_thermalConductivity;
+            NekDouble                            m_rhoInf;
+            NekDouble                            m_pInf;
             
             std::string m_diffType;
             

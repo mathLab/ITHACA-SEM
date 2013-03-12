@@ -245,8 +245,7 @@ namespace Nektar
             {
                 for (i = 0; i < nScalars; ++i)
                 {
-                    Vmath::Vmul(nTracePts, 
-                                m_traceNormals[j], 1, 
+                    Vmath::Vmul(nTracePts, m_traceNormals[j], 1, 
                                 numflux[i], 1, numericalFluxO1[j][i], 1);
                 }
             }

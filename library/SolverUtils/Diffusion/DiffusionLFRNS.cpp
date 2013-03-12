@@ -35,6 +35,7 @@
 
 #include <SolverUtils/Diffusion/DiffusionLFRNS.h>
 #include <LibUtilities/Polylib/Polylib.h>
+#include <boost/math/special_functions/gamma.hpp>
 #include <iostream>
 #include <iomanip>
 
@@ -141,13 +142,13 @@ namespace Nektar
                         
                         // Extract the Q factors at each edge point
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
-                                                               0, auxArray1 = m_Q2D_e0[n]);
+                                                0, auxArray1 = m_Q2D_e0[n]);
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
-                                                               1, auxArray1 = m_Q2D_e1[n]);
+                                                1, auxArray1 = m_Q2D_e1[n]);
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
-                                                               2, auxArray1 = m_Q2D_e2[n]);
+                                                2, auxArray1 = m_Q2D_e2[n]);
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
-                                                               3, auxArray1 = m_Q2D_e3[n]);
+                                                3, auxArray1 = m_Q2D_e3[n]);
                     }
                     break;
                 }
@@ -775,7 +776,7 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {    
             cout<<setprecision(16);
-            int i, j, n;
+            int i, j, n, z;
             int nLocalSolutionPts, phys_offset;
             
             Array<TwoD, const NekDouble> gmat;
@@ -1001,6 +1002,10 @@ namespace Nektar
                     divFC(nConvectiveFields);
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                     tmp(nConvectiveFields);
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                    tmp1(nConvectiveFields);
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                    tmp2(nConvectiveFields);
                         
                     derivativesO1[0] = Array<OneD, Array<OneD, NekDouble> >(
                                                                 nScalars);
@@ -1021,8 +1026,9 @@ namespace Nektar
                                                                     nDim);
                         BderivativesO1[i] = Array<OneD, Array<OneD, NekDouble> >(
                                                                     nDim);
-                        tmp[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                    nDim);
+                        tmp[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                        tmp1[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                        tmp2[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
                         
                         for (j = 0; j < nDim; ++j)
                         {
@@ -1038,7 +1044,147 @@ namespace Nektar
                             Array<OneD, NekDouble>(nPts, 0.0);
                             tmp[i][j] = 
                             Array<OneD, NekDouble>(nPts, 0.0);
+                            tmp1[i][j] = 
+                            Array<OneD, NekDouble>(nPts, 0.0);
+                            tmp2[i][j] = 
+                            Array<OneD, NekDouble>(nPts, 0.0);
                             
+                            // Computing the physical first-order discountinuous
+                            // derivatives 
+                            for (n = 0; n < nElements; n++)
+                            { 
+                                // Discontinuous flux
+                                nLocalSolutionPts = fields[0]->GetExp(n)->
+                                GetTotPoints();
+                                phys_offset = fields[0]->GetPhys_Offset(n);
+                                
+                                jac  = fields[0]->GetExp(n)->GetGeom2D()->
+                                GetJac();
+                                gmat = fields[0]->GetExp(n)->GetGeom2D()->
+                                GetGmat();
+                                
+                                // Temporary vectors
+                                Array<OneD, NekDouble> u1_hat(
+                                                        nLocalSolutionPts, 0.0);
+                                Array<OneD, NekDouble> u2_hat(
+                                                        nLocalSolutionPts, 0.0);
+                                
+                                switch (j)
+                                {
+                                    case 0:
+                                    {
+                                        if (fields[0]->GetExp(n)->GetGeom2D()->
+                                            GetGtype() == 
+                                            SpatialDomains::eDeformed)
+                                        {
+                                            for (z = 0; z < nLocalSolutionPts; 
+                                                 z++)
+                                            {
+                                                u1_hat[z] =
+                                                (inarray[i][z+phys_offset]
+                                                 * gmat[0][z]) * jac[z];
+                                                
+                                                u2_hat[z] =
+                                                (inarray[i][z+phys_offset]
+                                                 * gmat[1][z]) * jac[z];
+                                            }
+                                        }
+                                        else
+                                        {
+                                            for (z = 0; z < nLocalSolutionPts; 
+                                                 z++)
+                                            {
+                                                u1_hat[z] =
+                                                (inarray[i][z+phys_offset]
+                                                 * gmat[0][0]) * jac[0];
+                                                
+                                                u2_hat[z] =
+                                                (inarray[i][z+phys_offset]
+                                                 * gmat[1][0])*jac[0];
+                                            }
+                                        }
+                                        break;
+                                    }
+                                    case 1:
+                                    {
+                                        if (fields[0]->GetExp(n)->GetGeom2D()->
+                                            GetGtype() == 
+                                            SpatialDomains::eDeformed)
+                                        {
+                                            for (z = 0; z < nLocalSolutionPts; 
+                                                 z++)
+                                            {
+                                                u1_hat[z] =
+                                                (inarray[i][z+phys_offset]
+                                                 * gmat[2][z]) * jac[z];
+                                                
+                                                u2_hat[z] =
+                                                (inarray[i][z+phys_offset]
+                                                 * gmat[3][z]) * jac[z];
+                                            }
+                                        }
+                                        else
+                                        {
+                                            for (z = 0; z < nLocalSolutionPts; 
+                                                 z++)
+                                            {
+                                                u1_hat[z] =
+                                                (inarray[i][z+phys_offset]
+                                                 * gmat[2][0]) * jac[0];
+                                                
+                                                u2_hat[z] =
+                                                (inarray[i][z+phys_offset]
+                                                 * gmat[3][0])*jac[0];
+                                            }
+                                        }
+                                        break;
+                                    }
+                                }
+                                
+                                fields[i]->GetExp(n)->StdPhysDeriv(0,
+                                        auxArray1 = u1_hat,
+                                        auxArray2 = tmp1[i][j] + phys_offset);
+                                
+                                fields[i]->GetExp(n)->StdPhysDeriv(1,
+                                        auxArray1 = u2_hat,
+                                        auxArray2 = tmp2[i][j] + phys_offset); 
+                            }
+                            
+                            Vmath::Vadd(nPts,
+                                        auxArray1 = tmp1[i][j], 1,
+                                        auxArray2 = tmp2[i][j], 1,
+                                        DinarrayO1[i][j], 1);
+                            
+                            // Multiply by the metric terms
+                            for (n = 0; n < nElements; ++n)
+                            {
+                                nLocalSolutionPts = fields[0]->
+                                GetExp(n)->GetTotPoints();
+                                phys_offset = fields[0]->GetPhys_Offset(n);
+                                
+                                jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
+                                gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
+                                
+                                if (fields[0]->GetExp(n)->GetGeom2D()->
+                                    GetGtype() == SpatialDomains::eDeformed)
+                                {
+                                    for (z = 0; z < nLocalSolutionPts; z++)
+                                    {
+                                        DinarrayO1[i][j][phys_offset + z] =
+                                        DinarrayO1[i][j][phys_offset + z]/jac[z];
+                                    }
+                                }
+                                else
+                                {
+                                    Vmath::Smul(nLocalSolutionPts, 1/jac[0],
+                                                auxArray1 = DinarrayO1[i][j]
+                                                + phys_offset, 1,
+                                                auxArray2 = DinarrayO1[i][j]
+                                                + phys_offset, 1);
+                                }
+                            }
+                            
+                            /*
                             // Computing the physical first-order discountinuous
                             // derivatives 
                             for (n = 0; n < nElements; n++)
@@ -1049,6 +1195,7 @@ namespace Nektar
                                     auxArray1 = inarray[i] + phys_offset, 
                                     auxArray2 = DinarrayO1[i][j] + phys_offset); 
                             }
+                            */
                             
                             // Computing the standard first-order correction 
                             // derivatives

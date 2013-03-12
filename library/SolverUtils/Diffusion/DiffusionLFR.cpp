@@ -35,6 +35,7 @@
 
 #include <SolverUtils/Diffusion/DiffusionLFR.h>
 #include <LibUtilities/Polylib/Polylib.h>
+#include <boost/math/special_functions/gamma.hpp>
 #include <iostream>
 #include <iomanip>
 
@@ -768,9 +769,9 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
+            //cout<<setprecision(16);
             int i, j, n, z;
             int nLocalSolutionPts, phys_offset;
-            
             Array<TwoD, const NekDouble> gmat;
             Array<OneD, const NekDouble> jac;
             Array<OneD,       NekDouble> auxArray1, auxArray2, auxArray3;
@@ -802,10 +803,10 @@ namespace Nektar
                     iuFluxO1[i][j] = Array<OneD, NekDouble>(nTracePts, 0.0);
                 }
             }
-            
+
             // Compute interface numerical fluxes for inarray in physical space 
             v_NumFluxforScalar(fields, inarray, iuFluxO1);
-            
+
             switch(nDim)
             {
                 // 1D problems 

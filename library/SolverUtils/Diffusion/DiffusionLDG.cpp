@@ -61,6 +61,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
+            //cout<<setprecision(16);
             int i, j, k;
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
@@ -168,6 +169,13 @@ namespace Nektar
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
             
+            // Get the normal velocity Vn
+            for(i = 0; i < nDim; ++i)
+            {
+                Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1, 
+                             Vn, 1, Vn, 1);
+            }
+            
             // Get the sign of (v \cdot n), v = an arbitrary vector
             // Evaluate upwind flux:
             // uflux = \hat{u} \phi \cdot u = u^{(+,-)} n
@@ -186,7 +194,7 @@ namespace Nektar
                     // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uBwd
                     // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uBwd
                     
-                    fields[i]->GetTrace()->Upwind(m_traceNormals[j], 
+                    fields[i]->GetTrace()->Upwind(/*m_traceNormals[j]*/Vn, 
                                                     Fwd, Bwd, fluxtemp);
                     
                     // Imposing weak boundary condition with flux
@@ -315,6 +323,13 @@ namespace Nektar
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
             
+            // Get the normal velocity Vn
+            for(i = 0; i < nDim; ++i)
+            {
+                Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1, 
+                             Vn, 1, Vn, 1);
+            }
+            
             // Evaulate upwind flux:
             // qflux = \hat{q} \cdot u = q \cdot n - C_(11)*(u^+ - u^-)
             for (i = 0; i < nvariables; ++i)
@@ -337,7 +352,7 @@ namespace Nektar
                     // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick 
                     // qflux = qFwd = q+
                     
-                    fields[i]->GetTrace()->Upwind(m_traceNormals[j], 
+                    fields[i]->GetTrace()->Upwind(/*m_traceNormals[j]*/Vn, 
                                                   qBwd, qFwd, 
                                                   qfluxtemp);
                     

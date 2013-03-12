@@ -45,8 +45,8 @@ namespace Nektar
                                  const LibUtilities::BasisKey &Bb,
                                  const LibUtilities::PointsType Ntype,
                                  const SpatialDomains::TriGeomSharedPtr &geom):
-            StdExpansion  (StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
-            StdExpansion2D(StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
+            StdExpansion  (LibUtilities::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
+            StdExpansion2D(LibUtilities::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
             StdNodalTriExp(Ba,Bb,Ntype),
             Expansion     (),
             Expansion2D   (),
@@ -204,7 +204,7 @@ namespace Nektar
                                    Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            MatrixKey      iprodmatkey(StdRegions::eIProductWRTBase,DetExpansionType(),*this);
+            MatrixKey      iprodmatkey(StdRegions::eIProductWRTBase,DetShapeType(),*this);
             DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
@@ -311,7 +311,7 @@ namespace Nektar
                 break;
             }  
 
-            MatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            MatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
@@ -403,7 +403,7 @@ namespace Nektar
             IProductWRTBase(inarray,outarray); 
 
             // get Mass matrix inverse
-            MatrixKey  masskey(StdRegions::eInvMass, DetExpansionType(),*this,StdRegions::NullConstFactorMap,StdRegions::NullVarCoeffMap,
+            MatrixKey  masskey(StdRegions::eInvMass, DetShapeType(),*this,StdRegions::NullConstFactorMap,StdRegions::NullVarCoeffMap,
                                m_nodalPointsKey->GetPointsType());
             DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
             
@@ -797,7 +797,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
+                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetShapeType(),
                                                          *this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
@@ -825,11 +825,11 @@ namespace Nektar
                     { 
                         ASSERTL1(m_geom->GetCoordim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
-                                           mkey.GetExpansionType(), *this);  
+                                           mkey.GetShapeType(), *this);  
                         MatrixKey lap01key(StdRegions::eLaplacian01,
-                                           mkey.GetExpansionType(), *this);  
+                                           mkey.GetShapeType(), *this);  
                         MatrixKey lap11key(StdRegions::eLaplacian11,
-                                           mkey.GetExpansionType(), *this);  
+                                           mkey.GetShapeType(), *this);  
                         
                         DNekMatSharedPtr lap00 = GetStdMatrix(lap00key);
                         DNekMatSharedPtr lap01 = GetStdMatrix(lap01key);
@@ -855,10 +855,10 @@ namespace Nektar
                 {
                     NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
-                                      mkey.GetExpansionType(), *this);    
+                                      mkey.GetShapeType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this);
+                                     mkey.GetShapeType(), *this);
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();

@@ -126,6 +126,9 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 
+            SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time);
+
+
         private:
             ///
             void WeakPenaltyforScalar(

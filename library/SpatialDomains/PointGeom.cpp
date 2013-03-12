@@ -50,7 +50,7 @@ namespace Nektar
     {
         PointGeom::PointGeom()
         {
-            m_geomShapeType = ePoint;
+            m_shapeType = LibUtilities::ePoint;
         }
 
 

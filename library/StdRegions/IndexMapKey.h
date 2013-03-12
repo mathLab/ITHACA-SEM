@@ -59,7 +59,7 @@ namespace Nektar
         public:
             STD_REGIONS_EXPORT IndexMapKey(
                 const StdRegions::IndexMapType  indexmapType,
-                const StdRegions::ExpansionType expansionType,
+                const LibUtilities::ShapeType   shapeType,
                 const unsigned short            p, 
                 const unsigned short            q,
                 const unsigned short            r,
@@ -104,7 +104,7 @@ namespace Nektar
 			
             IndexMapType  m_indexMapType;
             
-            ExpansionType m_expansionType;
+            LibUtilities::ShapeType m_shapeType;
 			
             unsigned short m_p;
             unsigned short m_q;

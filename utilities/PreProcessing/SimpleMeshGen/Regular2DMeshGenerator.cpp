@@ -58,11 +58,11 @@ int main(int argc, char *argv[])
         nummodes    = boost::lexical_cast<int>(argv[6]);
         output_file = boost::lexical_cast<string>(argv[7]);
 
-        map<string, SpatialDomains::GeomShapeType> acceptable_shapes;
-        acceptable_shapes["triangles"] = SpatialDomains::eTriangle;
-        acceptable_shapes["quads"] = SpatialDomains::eQuadrilateral;
+        map<string, LibUtilities::ShapeType> acceptable_shapes;
+        acceptable_shapes["triangles"] = LibUtilities::eTriangle;
+        acceptable_shapes["quads"] = LibUtilities::eQuadrilateral;
 
-        map<std::string, SpatialDomains::GeomShapeType>::iterator type = acceptable_shapes.find(type_name);
+        map<std::string, LibUtilities::ShapeType>::iterator type = acceptable_shapes.find(type_name);
         if (type == acceptable_shapes.end())
         {
             cerr << "Wrong mesh element type " << type_name << endl << endl;
@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
         int total_quad_edges = cnt-1;
 
         // Triangular mesh is made by adding diagonal segments
-        if (type->second == SpatialDomains::eTriangle)
+        if (type->second == LibUtilities::eTriangle)
         {
             // generating diagonal edges
 
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
         cnt = 0;
         switch(type->second)
         {
-        case SpatialDomains::eQuadrilateral:
+        case LibUtilities::eQuadrilateral:
             for(j = 0; j < ny-1; ++j)
             {
                 for(i = 0; i < nx-1; ++i)
@@ -184,7 +184,7 @@ int main(int argc, char *argv[])
                 }
             }
             break;
-        case SpatialDomains::eTriangle:
+        case LibUtilities::eTriangle:
             for(j = 0; j < ny-1; ++j)
             {
                 for(i = 0; i < nx-1; ++i)
@@ -212,10 +212,10 @@ int main(int argc, char *argv[])
 
         switch(type->second)
         {
-        case SpatialDomains::eQuadrilateral:
+        case LibUtilities::eQuadrilateral:
             output << "<C ID=\"0\"> Q[0-" << (nx-1)*(ny-1)-1 << "] </C>" << endl;
             break;
-        case SpatialDomains::eTriangle:
+        case LibUtilities::eTriangle:
             output << "<C ID=\"0\"> T[0-" << 2*(nx-1)*(ny-1)-1 << "] </C>" << endl;
             break;
         default:

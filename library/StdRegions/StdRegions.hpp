@@ -39,7 +39,7 @@
 
 #include<map>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>  // for Array, etc
-
+#include <LibUtilities/BasicUtils/ShapeType.hpp> 
 
 namespace Nektar
 {
@@ -177,7 +177,8 @@ namespace Nektar
             "HybridDGLamToQ1",
             "HybridDGLamToQ2",
             "HybridDGLamToU",
-            "FwdTrans"
+            "FwdTrans",
+            "Preconditioner",
         };
 
         enum VarCoeffType
@@ -215,115 +216,76 @@ namespace Nektar
         {
             eFactorLambda,
             eFactorTau,
-            eFactorTime
+            eFactorTime,
+            eFactorSVVCutoffRatio,
+            eFactorSVVDiffCoeff
         };
 
         const char* const ConstFactorTypeMap[] = {
             "FactorLambda",
             "FactorTau",
-            "FactorTime"
+            "FactorTime",
+            "FactorSVVCutoffRatio",
+            "FactorSVVDiffCoeff"
         };
         typedef std::map<ConstFactorType, NekDouble> ConstFactorMap;
         static ConstFactorMap NullConstFactorMap;
 
-        /** enum list of StdExpansion regions */
-        enum ExpansionType
-        {
-            eNoExpansionType,
-            eSegment,
-            eTriangle,
-            eQuadrilateral,
-            eTetrahedron,
-            ePyramid,
-            ePrism,
-            eHexahedron,
-			ePoint,
-            SIZE_ExpansionType
-        };
-
-
-        const char* const ExpansionTypeMap[] =
-        {
-            "NoExpansionType",
-            "Segment",
-            "Triangle",
-            "Quadrilateral",
-            "Tetrahedron",
-            "Pyramid",
-            "Prism",
-            "Hexahedron",
-			"Point"
-        };
-
-		
-        // Hold the dimension of each of the types of shapes.
-        const unsigned int ExpansionTypeDimMap[SIZE_ExpansionType] =
-        {
-            0,  // Unknown
-            1,  // eSegment
-            2,  // eTriangle
-            2,  // eQuadrilateral
-            3,  // eTetrahedron
-            3,  // ePyramid
-            3,  // ePrism
-            3,  // eHexahedron
-        };
-		
-		enum IndexMapType
-		{
-			eEdgeToElement,
-			eFaceToElement,
-			eEdgeInterior,
-			eFaceInterior,
-			eBoundary,
-			eVertex
+        enum IndexMapType
+            {
+                eEdgeToElement,
+                eFaceToElement,
+                eEdgeInterior,
+                eFaceInterior,
+                eBoundary,
+                eVertex
 		};
-		
-		const char* const IndexMapTypeMap[] =
-        {
-            "EdgeToElement",
-			"FaceToElement",
-			"EdgeInterior",
-			"FaceInterior",
-			"Boundary",
-			"Vertex"
-        };
-		
-		enum Orientation
-		{
-			eNoOrientation,
-			eFwd,
-            eBwd,
-			eForwards,
-            eBackwards,
-			eDir1FwdDir1_Dir2FwdDir2,
-            eDir1FwdDir1_Dir2BwdDir2,
-            eDir1BwdDir1_Dir2FwdDir2,
-            eDir1BwdDir1_Dir2BwdDir2,
-            eDir1FwdDir2_Dir2FwdDir1,
-            eDir1FwdDir2_Dir2BwdDir1,
-            eDir1BwdDir2_Dir2FwdDir1,
-            eDir1BwdDir2_Dir2BwdDir1,
-			SIZE_Orientation
-		};
-		
-		const char* const OrientationMap[] =
-        {
-            "NoOrientation",
-			"Fwd",
-			"Bwd",
-			"Forwards",
-            "Backwards",
-			"Dir1FwdDir1_Dir2FwdDir2",
-            "Dir1FwdDir1_Dir2BwdDir2",
-            "Dir1BwdDir1_Dir2FwdDir2",
-            "Dir1BwdDir1_Dir2BwdDir2",
-            "Dir1FwdDir2_Dir2FwdDir1",
-            "Dir1FwdDir2_Dir2BwdDir1",
-            "Dir1BwdDir2_Dir2FwdDir1",
-            "Dir1BwdDir2_Dir2BwdDir1"
-        };
-
+        
+        const char* const IndexMapTypeMap[] =
+            {
+                "EdgeToElement",
+                "FaceToElement",
+                "EdgeInterior",
+                "FaceInterior",
+                "Boundary",
+                "Vertex"
+            };
+	
+        enum Orientation
+            {
+                eNoOrientation,
+                eFwd,
+                eBwd,
+                eForwards,
+                eBackwards,
+                eDir1FwdDir1_Dir2FwdDir2,
+                eDir1FwdDir1_Dir2BwdDir2,
+                eDir1BwdDir1_Dir2FwdDir2,
+                eDir1BwdDir1_Dir2BwdDir2,
+                eDir1FwdDir2_Dir2FwdDir1,
+                eDir1FwdDir2_Dir2BwdDir1,
+                eDir1BwdDir2_Dir2FwdDir1,
+                eDir1BwdDir2_Dir2BwdDir1,
+                SIZE_Orientation
+            };
+	
+        const char* const OrientationMap[] =
+            {
+                "NoOrientation",
+                "Fwd",
+                "Bwd",
+                "Forwards",
+                "Backwards",
+                "Dir1FwdDir1_Dir2FwdDir2",
+                "Dir1FwdDir1_Dir2BwdDir2",
+                "Dir1BwdDir1_Dir2FwdDir2",
+                "Dir1BwdDir1_Dir2BwdDir2",
+                "Dir1FwdDir2_Dir2FwdDir1",
+                "Dir1FwdDir2_Dir2BwdDir1",
+                "Dir1BwdDir2_Dir2FwdDir1",
+                "Dir1BwdDir2_Dir2BwdDir1"
+            };
+        
         // Defines a "fast find"
         // Assumes that first/last define the beginning/ending of
         // a continuous range of classes, and that start is
@@ -331,8 +293,8 @@ namespace Nektar
 
         template<class InputIterator, class EqualityComparable>
         InputIterator find(InputIterator first, InputIterator last,
-            InputIterator startingpoint,
-            const EqualityComparable& value)
+                           InputIterator startingpoint,
+                           const EqualityComparable& value)
         {
             InputIterator val;
 

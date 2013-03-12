@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     string   out(strtok(argv[1],"."));
     string   endfile(".fld");
     out += endfile;
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
         = Exp->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
     for(i = 0; i < FieldDef.size(); ++i)
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         FieldDef[i]->m_fields.push_back("u");
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
-    graph1D->Write(out, FieldDef, FieldData);
+    LibUtilities::Write(out, FieldDef, FieldData);
     //----------------------------------------------
 
     //----------------------------------------------

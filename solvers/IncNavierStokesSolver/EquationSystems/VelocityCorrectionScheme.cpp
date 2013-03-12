@@ -86,12 +86,21 @@ namespace Nektar
         
         ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
         
+        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
+        m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
+        m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
+        m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
+            
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
 
-            m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useHomo1DSpecVanVisc,false);
-            
+
+            if(m_useHomo1DSpecVanVisc == false)
+            {
+                m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useHomo1DSpecVanVisc,false);
+            }
+
             if(m_useHomo1DSpecVanVisc)
             {
                 
@@ -104,7 +113,7 @@ namespace Nektar
                 int kmodes = m_fields[0]->GetHomogeneousBasis()->GetNumModes();
                 int pstart;
 
-                m_session->LoadParameter("SVVStartMode",pstart,0.75*kmodes);
+                pstart = m_sVVCutoffRatio*kmodes;
                 
                 for(n = 0; n < num_planes; ++n)
                 {
@@ -112,14 +121,13 @@ namespace Nektar
                     {
                         fac = (NekDouble)((planes[n] - kmodes)*(planes[n] - kmodes))/
                             ((NekDouble)((planes[n] - pstart)*(planes[n] - pstart)));
-                        SVV[n] = exp(-fac)/m_kinvis;
+                        SVV[n] = m_sVVDiffCoeff*exp(-fac)/m_kinvis;
                     }
-                    
                 }
 
                 for(i = 0; i < m_velocity.num_elements(); ++i)
                 {
-                    m_fields[m_velocity[i]]->GetTransposition()->SetSpecVanVisc(SVV);
+                    m_fields[m_velocity[i]]->SetHomo1DSpecVanVisc(SVV);
                 }
             }
             
@@ -358,19 +366,22 @@ namespace Nektar
             cout << "\tDealiasing      : Spectral/hp "  << endl;
         }
 
+        if(m_useSpecVanVisc)
+        {
+            cout << "\tSmoothing       : Spectral vanishing viscosity (cut off ratio = " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;        
+        }
+
         if(m_useHomo1DSpecVanVisc)
         {
-            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D) " << endl;
+            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D, cut off ratio = " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;  
         }
     }
-    
+
     void VelocityCorrectionScheme::v_DoInitialise(void)
     {
-        // Set initial condition using time t=0
-        SetInitialConditions(0.0);
 
-        // Set Boundary conditions on the intiial conditions
-        SetBoundaryConditions(0.0); // should be dependent on m_time? 
+        UnsteadySystem::v_DoInitialise();
+
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->LocalToGlobal();
@@ -596,7 +607,13 @@ namespace Nektar
             cout << "\t Viscous Forcing  : "<< timer.TimePerTest(1) << endl;
         }
         factors[StdRegions::eFactorLambda] = 1.0/aii_Dt/m_kinvis;
-
+        
+        if(m_useSpecVanVisc)
+        {
+            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
+        }
+        
         // Solve Helmholtz system and put in Physical space
         timer.Start();
         for(i = 0; i < m_nConvectiveFields; ++i)

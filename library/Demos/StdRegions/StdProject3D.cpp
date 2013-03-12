@@ -36,9 +36,11 @@ int main(int argc, char *argv[]){
 
     int           order1,order2,order3, nq1,nq2,nq3;
     LibUtilities::PointsType    Qtype1,Qtype2,Qtype3;
-    LibUtilities::BasisType     btype1,btype2,btype3;
-    LibUtilities::PointsType     NodalType;
-    StdRegions::ExpansionType    regionshape;
+    LibUtilities::BasisType     btype1 =   LibUtilities::eOrtho_A;
+    LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
+    LibUtilities::BasisType     btype3 =   LibUtilities::eOrtho_C;
+    LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
+    LibUtilities::ShapeType     regionshape;
     StdRegions::StdExpansion *E;
     Array<OneD, NekDouble> sol;
 
@@ -48,9 +50,9 @@ int main(int argc, char *argv[]){
                        "order1 order2 order3 nq1 nq2 nq3 \n");
         fprintf(stderr,"Where RegionShape is an integer value which "
                        "dictates the region shape:\n");
-        fprintf(stderr,"\t Tetrahedron   = 4\n");
-        fprintf(stderr,"\t Prism         = 6\n");
-        fprintf(stderr,"\t Hexahedron    = 7\n");
+        fprintf(stderr,"\t Tetrahedron   = 5\n");
+        fprintf(stderr,"\t Prism         = 7\n");
+        fprintf(stderr,"\t Hexahedron    = 8\n");
 
         fprintf(stderr,"Where type is an integer value which "
                        "dictates the basis as:\n");
@@ -74,12 +76,12 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
-    regionshape = (StdRegions::ExpansionType) atoi(argv[1]);
+    regionshape = (LibUtilities::ShapeType) atoi(argv[1]);
 
     // Check to see if 3D region
-    if ((regionshape != StdRegions::eTetrahedron)
-        && (regionshape != StdRegions::ePrism)
-        && (regionshape != StdRegions::eHexahedron))
+    if ((regionshape != LibUtilities::eTetrahedron)
+        && (regionshape != LibUtilities::ePrism)
+        && (regionshape != LibUtilities::eHexahedron))
     {
         NEKERROR(ErrorUtil::efatal,"This shape is not a 3D region");
     }
@@ -96,13 +98,13 @@ int main(int argc, char *argv[]){
     }
     else if(btype1_val >=12 && btype2_val <= 16)
     {
-        if (regionshape == StdRegions::eTetrahedron)
+        if (regionshape == LibUtilities::eTetrahedron)
         {
             btype1 = LibUtilities::eOrtho_A;
             btype2 = LibUtilities::eOrtho_B;
             btype3 = LibUtilities::eOrtho_C;
         }
-        else if (regionshape == StdRegions::ePrism)
+        else if (regionshape == LibUtilities::ePrism)
         {
             btype1 = LibUtilities::eOrtho_A;
             btype2 = LibUtilities::eOrtho_A;
@@ -134,7 +136,7 @@ int main(int argc, char *argv[]){
     // Check to see that correct Expansions are used
     switch(regionshape)
     {
-        case StdRegions::eTetrahedron:
+        case LibUtilities::eTetrahedron:
             if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
                || (btype1 == eModified_B) || (btype1 == eModified_C))
             {
@@ -154,7 +156,7 @@ int main(int argc, char *argv[]){
                          "Ortho_B, Modified_A or Modified_B");
             }
             break;
-        case StdRegions::ePrism:
+        case LibUtilities::ePrism:
             if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
                || (btype1 == eModified_B) || (btype1 == eModified_C))
             {
@@ -174,7 +176,7 @@ int main(int argc, char *argv[]){
                          "Ortho_C, Modified_A or Modified_C");
             }
             break;
-        case StdRegions::eHexahedron:
+        case LibUtilities::eHexahedron:
             if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
                || (btype1 == eModified_B) || (btype1 == eModified_C))
             {
@@ -216,7 +218,7 @@ int main(int argc, char *argv[]){
 
     if(btype2 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTetrahedron) 
+        if (regionshape == LibUtilities::eTetrahedron) 
         {
             Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
@@ -232,11 +234,11 @@ int main(int argc, char *argv[]){
 
     if(btype3 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTetrahedron) 
+        if (regionshape == LibUtilities::eTetrahedron) 
         {
             Qtype3 = LibUtilities::eGaussRadauMAlpha2Beta0;
         }
-        else if (regionshape == StdRegions::ePrism)
+        else if (regionshape == LibUtilities::ePrism)
         {
             Qtype3 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
@@ -258,7 +260,7 @@ int main(int argc, char *argv[]){
 
     switch(regionshape)
     {
-        case StdRegions::eTetrahedron:
+    case LibUtilities::eTetrahedron:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -286,7 +288,7 @@ int main(int argc, char *argv[]){
             //----------------------------------------------
         }
         break;
-        case StdRegions::ePrism:
+    case LibUtilities::ePrism:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -314,7 +316,7 @@ int main(int argc, char *argv[]){
             //----------------------------------------------
         }
         break;
-        case StdRegions::eHexahedron:
+    case LibUtilities::eHexahedron:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -367,11 +369,11 @@ int main(int argc, char *argv[]){
     t[1] = -0.25;
     t[2] = -0.3;
 
-    if(regionshape == StdRegions::eTetrahedron)
+    if(regionshape == LibUtilities::eTetrahedron)
     {
         sol[0] = Tet_sol(t[0], t[1], t[2], order1, order2, order3);
     }
-    else if (regionshape == StdRegions::ePrism)
+    else if (regionshape == LibUtilities::ePrism)
     {
         sol[0] = Prism_sol(t[0], t[1], t[2], order1, order2, order3);
     }

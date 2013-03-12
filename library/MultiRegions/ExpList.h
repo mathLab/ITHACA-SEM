@@ -49,6 +49,8 @@
 
 #include <LibUtilities/Communication/Transposition.h>
 
+#include <tinyxml/tinyxml.h>
+
 namespace Nektar
 {
     namespace MultiRegions
@@ -61,7 +63,7 @@ namespace Nektar
         class GlobalLinSysKey;
         class GlobalMatrix;
 
-    enum Direction
+        enum Direction
 	{
 	    eX,
 	    eY,
@@ -69,27 +71,28 @@ namespace Nektar
 	    eS,
 	    eN
 	};	   
-
-    MultiRegions::Direction const DirCartesianMap[] =
-    {
-    	   eX,
-    	   eY,
-    	   eZ
-    }; 
+        
+        MultiRegions::Direction const DirCartesianMap[] =
+            {
+                eX,
+                eY,
+                eZ
+            }; 
     
         /// A map between global matrix keys and their associated block
         /// matrices.
         typedef map<GlobalMatrixKey,DNekScalBlkMatSharedPtr> BlockMatrixMap;
         /// A shared pointer to a BlockMatrixMap.
         typedef boost::shared_ptr<BlockMatrixMap> BlockMatrixMapShPtr;
-				
+			       
+
         /// Base class for all multi-elemental spectral/hp expansions.
         class ExpList: public boost::enable_shared_from_this<ExpList>
         {
         public:
             /// The default constructor.
             MULTI_REGIONS_EXPORT ExpList();
-
+            
             /// The default constructor.
             MULTI_REGIONS_EXPORT ExpList(
                     const LibUtilities::SessionReaderSharedPtr &pSession);
@@ -401,16 +404,16 @@ namespace Nektar
 
             /// Set the \a i th coefficiient in \a m_coeffs to value \a val
             inline void SetCoeff(int i, NekDouble val);
-			
-			/// Set the coefficiient in \a m_coeffs to value \a val (0D Exapnsion)
+            
+            /// Set the coefficiient in \a m_coeffs to value \a val (0D Exapnsion)
             inline void SetCoeff(NekDouble val);
-			
-			/// Set the physical value in \a m_coeffs to value \a val (0D Exapnsion)
+            
+            /// Set the physical value in \a m_coeffs to value \a val (0D Exapnsion)
             inline void SetPhys(NekDouble val);
-			
-			inline const SpatialDomains::VertexComponentSharedPtr &GetGeom(void) const;
-			
-			inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const;
+            
+            inline const SpatialDomains::VertexComponentSharedPtr &GetGeom(void) const;
+            
+            inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const;
 
             /// Set the \a i th coefficiient in  #m_coeffs to value \a val
             inline void SetCoeffs(int i, NekDouble val);
@@ -468,13 +471,20 @@ namespace Nektar
                 return v_L2();
             }
 			
-            /// This function calculates the energy associated with each one of the modes
-            /// of a 3D homogeneous nD expansion
+            /// This function calculates the energy associated with
+            /// each one of the modesof a 3D homogeneous nD expansion
             Array<OneD, const NekDouble> HomogeneousEnergy (void)
             {
                 return v_HomogeneousEnergy();
             }
-			
+
+            /// This function sets the Spectral Vanishing Viscosity 
+            /// in homogeneous1D expansion. 
+            void SetHomo1DSpecVanVisc(Array<OneD, NekDouble> visc)
+            {
+                v_SetHomo1DSpecVanVisc(visc);
+            }
+
             /// This function returns a vector containing the wave
             /// numbers in z-direction associated
             /// with the 3D homogenous expansion. Required if a
@@ -524,6 +534,7 @@ namespace Nektar
             
             /// This function returns the number of elements in the expansion.
             inline int GetExpSize(void);
+
 
             /// This function returns the number of elements in the
             /// expansion which may be different for a homogeoenous extended
@@ -683,12 +694,12 @@ namespace Nektar
                                              Array<OneD,int> &EdgeID);
 
             MULTI_REGIONS_EXPORT void  GeneralGetFieldDefinitions(
-                                                                  std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, 
-                                                                  int NumHomoDir = 0, 
-                                                                  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis = LibUtilities::NullBasisSharedPtr1DArray, 
-                                                                  std::vector<NekDouble> &HomoLen = SpatialDomains::NullNekDoubleVector,
-                                                                  std::vector<unsigned int> &HomoZIDs = SpatialDomains::NullUnsignedIntVector,
-                                                                  std::vector<unsigned int> &HomoYIDs = SpatialDomains::NullUnsignedIntVector);
+                                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
+                                 int NumHomoDir = 0, 
+                                 Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis = LibUtilities::NullBasisSharedPtr1DArray, 
+                                 std::vector<NekDouble> &HomoLen = LibUtilities::NullNekDoubleVector,
+                                 std::vector<unsigned int> &HomoZIDs = LibUtilities::NullUnsignedIntVector,
+                                 std::vector<unsigned int> &HomoYIDs = LibUtilities::NullUnsignedIntVector);
             
             const NekOptimize::GlobalOptParamSharedPtr &GetGlobalOptParam(void)
             {
@@ -707,14 +718,14 @@ namespace Nektar
                 v_GetPeriodicEdges(periodicVertices, periodicEdges);
             }
 
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr>
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr>
                 GetFieldDefinitions()
             {
                 return v_GetFieldDefinitions();
             }
 
 
-            void GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
+            void GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
             {
                 v_GetFieldDefinitions(fielddef);
             }
@@ -723,8 +734,7 @@ namespace Nektar
 
             /// Append the element data listed in elements
             /// fielddef->m_ElementIDs onto fielddata
-            void AppendFieldData(
-                                 SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+            void AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef,
                                  std::vector<NekDouble> &fielddata)
             {
                 v_AppendFieldData(fielddef,fielddata);
@@ -733,8 +743,7 @@ namespace Nektar
             
             /// Append the data in coeffs listed in elements
             /// fielddef->m_ElementIDs onto fielddata
-            void AppendFieldData(
-                                 SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+            void AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef,
                                  std::vector<NekDouble> &fielddata,
                                  Array<OneD, NekDouble> &coeffs)
             {
@@ -747,11 +756,11 @@ namespace Nektar
              * than planes in homogeneous case
              */ 
             MULTI_REGIONS_EXPORT void ExtractElmtDataToCoeffs(
-                                                              SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
-                                                              std::vector<NekDouble> &fielddata,
-                                                              std::string &field,
-                                                              Array<OneD, NekDouble> &coeffs);
-
+                                         LibUtilities::FieldDefinitionsSharedPtr &fielddef,
+                                         std::vector<NekDouble> &fielddata,
+                                         std::string &field,
+                                         Array<OneD, NekDouble> &coeffs);
+            
 
             /** \brief Extract the data from fromField using
              * fromExpList the coeffs using the basic ExpList
@@ -763,7 +772,7 @@ namespace Nektar
 			
             //Extract data in fielddata into the m_coeffs_list for the 3D stability analysis (base flow is 2D)
             MULTI_REGIONS_EXPORT void ExtractDataToCoeffs(
-                                       SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                       LibUtilities::FieldDefinitionsSharedPtr &fielddef,
                                        std::vector<NekDouble> &fielddata,
                                        std::string &field,
                                        Array<OneD, NekDouble> &coeffs);
@@ -802,7 +811,7 @@ namespace Nektar
             {
                 return v_GetPlane(n);
             }
-
+            
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                                                            const GlobalLinSysKey &mkey,
@@ -1143,16 +1152,16 @@ namespace Nektar
 
             virtual void v_ReadGlobalOptimizationParameters();
 
-            virtual std::vector<SpatialDomains::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
+            virtual std::vector<LibUtilities::FieldDefinitionsSharedPtr> v_GetFieldDefinitions(void);
 
-            virtual void  v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef);
+            virtual void  v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef);
 
 
-            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
+            virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata);
 
-            virtual void v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
+            virtual void v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs);
 
-            virtual void v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field,
+            virtual void v_ExtractDataToCoeffs(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field,
                                                Array<OneD, NekDouble> &coeffs);
 
             virtual void v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs);
@@ -1211,6 +1220,14 @@ namespace Nektar
                          "This method is not defined or valid for this class type");
                 return LibUtilities::NullBasisSharedPtr; 
             }
+
+            // wrapper function to set viscosity for Homo1D expansion
+            virtual void v_SetHomo1DSpecVanVisc(Array<OneD, NekDouble> visc)
+            {
+                ASSERTL0(false,
+                         "This method is not defined or valid for this class type");
+            }
+
 
             virtual boost::shared_ptr<ExpList> &v_GetPlane(int n);
         };
@@ -1990,7 +2007,7 @@ namespace Nektar
 
         const static Array<OneD, ExpListSharedPtr> NullExpListSharedPtrArray;
         
-  } //end of namespace
+    } //end of namespace
 } //end of namespace
 
 #endif // EXPLIST_H

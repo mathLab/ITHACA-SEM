@@ -204,9 +204,16 @@ namespace Nektar
             }
             
             // Fourier transform coefficient space boundary values
+            // This will only be undertaken for time dependent
+            // boundary conditions unless time == 0.0 which is the
+            // case when the method is called from the constructor.
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+                if(time == 0.0 || m_bndConditions[n]->GetUserDefined() == 
+                   SpatialDomains::eTimeDependent)
+                {
+                    m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+                }
             }
         }
         
@@ -244,7 +251,7 @@ namespace Nektar
                     beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
                     new_factors = factors;
                     // add in Homogeneous Fourier direction and SVV if turned on
-                    new_factors[StdRegions::eFactorLambda] += beta*beta*(1+m_transposition->GetSpecVanVisc(n));
+                    new_factors[StdRegions::eFactorLambda] += beta*beta*(1+GetSpecVanVisc(n));
                     m_planes[n]->HelmSolve(fce + cnt,
                                            e_out = outarray + cnt1,
                                            flags, new_factors, varcoeff, dirForcing);

@@ -282,8 +282,15 @@ namespace Nektar
                     //F_bnd- B invD*F_int-S1*x
                     F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
                     
+                    //transform from original basis to low energy
                     Array<OneD, NekDouble> tmp;
                     m_precon->DoTransformToLowEnergy(F,tmp=F+nDirBndDofs);
+                    for (int i=0; i<F.num_elements(); ++i)
+                    {
+                        //cout<<F[i]<<endl;
+                    }
+                    cout<<endl;
+
                 }
 		
       

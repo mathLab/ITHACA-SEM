@@ -119,6 +119,7 @@ namespace Nektar
 
 	}
 
+
         /**
          * \brief Inverse of the linear space
 	 *
@@ -808,6 +809,15 @@ namespace Nektar
             int PrismVertex5;
             PrismVertex5=PrismExp->GetVertexMap(5);
 
+            /*cout<<"v=[ ";
+            cout<<PrismVertex0<<" ";
+            cout<<PrismVertex1<<" ";
+            cout<<PrismVertex2<<" ";
+            cout<<PrismVertex3<<" ";
+            cout<<PrismVertex4<<" ";
+            cout<<PrismVertex5<<" ";
+            cout<<" ]"<<endl;*/
+
             //Prism edge modes
             Array<OneD, unsigned int> PrismEdge0;
             PrismEdge0=PrismExp->GetEdgeInverseBoundaryMap(0);
@@ -828,11 +838,81 @@ namespace Nektar
             Array<OneD, unsigned int> PrismEdge8;
             PrismEdge8=PrismExp->GetEdgeInverseBoundaryMap(8);
 
+            /*cout<<"e=[ ";
+            for(i=0; i<PrismEdge0.num_elements(); ++i)
+            {
+                cout<<PrismEdge0[i]<<" ";
+            }
+            for(i=0; i<PrismEdge1.num_elements(); ++i)
+            {
+                cout<<PrismEdge1[i]<<" ";
+            }
+            for(i=0; i<PrismEdge2.num_elements(); ++i)
+            {
+                cout<<PrismEdge2[i]<<" ";
+            }
+            for(i=0; i<PrismEdge3.num_elements(); ++i)
+            {
+                cout<<PrismEdge3[i]<<" ";
+            }
+            for(i=0; i<PrismEdge4.num_elements(); ++i)
+            {
+                cout<<PrismEdge4[i]<<" ";
+            }
+            for(i=0; i<PrismEdge5.num_elements(); ++i)
+            {
+                cout<<PrismEdge5[i]<<" ";
+            }
+            for(i=0; i<PrismEdge6.num_elements(); ++i)
+            {
+                cout<<PrismEdge6[i]<<" ";
+            }
+            for(i=0; i<PrismEdge7.num_elements(); ++i)
+            {
+                cout<<PrismEdge7[i]<<" ";
+            }
+            for(i=0; i<PrismEdge8.num_elements(); ++i)
+            {
+                cout<<PrismEdge8[i]<<" ";
+            }
+            cout<<" ]"<<endl;*/
+
             //Prism face 1 & 3 face modes
             Array<OneD, unsigned int> PrismFace1;
             PrismFace1=PrismExp->GetFaceInverseBoundaryMap(1);
             Array<OneD, unsigned int> PrismFace3;
             PrismFace3=PrismExp->GetFaceInverseBoundaryMap(3);
+
+            Array<OneD, unsigned int> PrismFace0;
+            PrismFace0=PrismExp->GetFaceInverseBoundaryMap(0);
+            Array<OneD, unsigned int> PrismFace2;
+            PrismFace2=PrismExp->GetFaceInverseBoundaryMap(2);
+            Array<OneD, unsigned int> PrismFace4;
+            PrismFace4=PrismExp->GetFaceInverseBoundaryMap(4);
+
+            /*cout<<"f=[ ";
+            for(i=0; i<PrismFace0.num_elements(); ++i)
+            {
+                cout<<PrismFace0[i]<<" ";
+            }
+            for(i=0; i<PrismFace1.num_elements(); ++i)
+            {
+                cout<<PrismFace1[i]<<" ";
+            }
+            for(i=0; i<PrismFace2.num_elements(); ++i)
+            {
+                cout<<PrismFace2[i]<<" ";
+            }
+            for(i=0; i<PrismFace3.num_elements(); ++i)
+            {
+                cout<<PrismFace3[i]<<" ";
+            }
+            for(i=0; i<PrismFace4.num_elements(); ++i)
+            {
+                cout<<PrismFace4[i]<<" ";
+            }
+            cout<<" ]"<<endl;*/
+
 
             //vertex 0 edge 0 3 & 4
             for(i=0; i< PrismEdge0.num_elements(); ++i)
@@ -999,12 +1079,12 @@ namespace Nektar
                     Rmodprism->SetValue(PrismEdge5[j],PrismFace1[i],Rvalue);
 
                     //transposed values
-                    RTvalue=(*RTtet)(TetEdge0[j],TetFace[i]);
-                    RTmodprism->SetValue(PrismEdge0[j],PrismFace1[i],RTvalue);
-                    RTvalue=(*RTtet)(TetEdge3[j],TetFace[i]);
-                    RTmodprism->SetValue(PrismEdge4[j],PrismFace1[i],RTvalue);
-                    RTvalue=(*RTtet)(TetEdge4[j],TetFace[i]);
-                    RTmodprism->SetValue(PrismEdge5[j],PrismFace1[i],RTvalue);
+                    RTvalue=(*RTtet)(TetFace[i],TetEdge0[j]);
+                    RTmodprism->SetValue(PrismFace1[i],PrismEdge0[j],RTvalue);
+                    RTvalue=(*RTtet)(TetFace[i],TetEdge3[j]);
+                    RTmodprism->SetValue(PrismFace1[i],PrismEdge4[j],RTvalue);
+                    RTvalue=(*RTtet)(TetFace[i],TetEdge4[j]);
+                    RTmodprism->SetValue(PrismFace1[i],PrismEdge5[j],RTvalue);
                 }
             }
                 
@@ -1029,14 +1109,18 @@ namespace Nektar
                 }
             }
 
+
+            DNekMatSharedPtr Identity = MemoryManager<DNekMat>::
+                AllocateSharedPtr(nRows,nRows,zero,eFULL);
+            
             DNekScalMatSharedPtr returnvalR = MemoryManager<DNekScalMat>
-                                            ::AllocateSharedPtr(1.0,Rmodprism);
-
+                ::AllocateSharedPtr(1.0,Rmodprism);
+            
             DNekScalMatSharedPtr returnvalRT = MemoryManager<DNekScalMat>
-              ::AllocateSharedPtr(1.0,RTmodprism);
+                ::AllocateSharedPtr(1.0,RTmodprism);
 
-            m_transformationMatrix[elmtType]=Rprism;
-            m_transposedTransformationMatrix[elmtType]=RTprism;
+            m_transformationMatrix[elmtType]=returnvalR;
+            m_transposedTransformationMatrix[elmtType]=returnvalRT;
         }
 
 
@@ -1148,7 +1232,6 @@ namespace Nektar
             for(i=0; i<extradiredges.num_elements(); ++i)
             {
                 meshEdgeId=extradiredges[i];
-                cout<<"to delete: "<<meshEdgeId<<endl;
                 edgeDirMap[meshEdgeId] = 1;
             }
 
@@ -1169,7 +1252,6 @@ namespace Nektar
                             meshEdgeId = (bndCondFaceExp->GetGeom2D())->GetEid(k);
                             if(edgeDirMap.count(meshEdgeId) == 0)
                             {
-                                cout<<"Dirichlet mesh id: "<<meshEdgeId<<endl;
                                 edgeDirMap[meshEdgeId] = 1;
                             }
                         }
@@ -1206,7 +1288,6 @@ namespace Nektar
                     {
                         if(uniqueEdgeMap.count(meshEdgeId)==0)
                         {
-                            cout<<"MeshEdgeId: "<<meshEdgeId<<endl;
                             uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
 
                             m_edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
@@ -1223,7 +1304,7 @@ namespace Nektar
                     }
                 }
             }
-            cout<<endl;
+
             int facematrixlocation=0;
             int ntotalfaceentries=0;
 
@@ -1629,16 +1710,15 @@ namespace Nektar
 
             
             int totblks=BlkMat->GetNumberOfBlockRows();
-
             for (i=1; i< totblks; ++i)
             {
                 unsigned int nmodes=BlkMat->GetNumberOfRowsInBlockRow(i);
                 DNekMatSharedPtr tmp_mat = 
                     MemoryManager<DNekMat>::AllocateSharedPtr
                     (nmodes,nmodes,zero,storage);
-
+                
                 tmp_mat=BlkMat->GetBlock(i,i);
-
+                
                 tmp_mat->Invert();
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
@@ -1754,9 +1834,7 @@ namespace Nektar
             Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
             
             Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), pInput.get(), m_map.get(), pLocal.get());
-                        
             F_LocBnd=R*F_LocBnd;
-            
             m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);            
         }
 
@@ -1792,7 +1870,7 @@ namespace Nektar
             m_locToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
 
             V_LocBnd=RT*V_LocBnd;
-            
+
             Vmath::Assmb(nLocBndDofs, m_locToGloSignMult.get(),pLocal.get(), m_map.get(), tmp.get());
 
             m_locToGloMap->UniversalAssembleBnd(tmp);

@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <MultiRegions/GlobalLinSysIterative.h>
+#include <LibUtilities/BasicUtils/Timer.h>
 
 namespace Nektar
 {
@@ -361,19 +362,7 @@ namespace Nektar
 
 
 
-        /**
-         * Solve a global linear system using the conjugate gradient method.
-         * We solve only for the non-Dirichlet modes. The operator is evaluated
-         * using an auxiliary function v_DoMatrixMultiply defined by the
-         * specific solver. Distributed math routines are used to support
-         * parallel execution of the solver.
-         *
-         * The implemented algorithm uses a reduced-communication reordering of
-         * the standard PCG method (Demmel, Heath and Vorst, 1993)
-         *
-         * @param       pInput      Input residual  of all DOFs.
-         * @param       pOutput     Solution vector of all DOFs.
-         */
+
         void GlobalLinSysIterative::DoConjugateGradient(
                                                         const int nGlobal,
                                                         const Array<OneD,const NekDouble> &pInput,
@@ -406,6 +395,7 @@ namespace Nektar
             Array<OneD, NekDouble> r_A    (nNonDir, 0.0);
             Array<OneD, NekDouble> q_A    (nNonDir, 0.0);
             Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> tmp_A  (nNonDir, 0.0);
 
             // Create NekVector wrappers for linear algebra operations
             NekVector<NekDouble> in (nNonDir,pInput  + nDir,      eWrapper);
@@ -463,6 +453,36 @@ namespace Nektar
             v_DoMatrixMultiply(w_A, s_A);
             k = 0;
 
+            Timer t;
+
+            int rank = vComm->GetRank();
+            cout << "MPI " << rank << ": calling Svtvp 1000 times on array with " << nNonDir << " elements" << endl;
+
+            t.Start();
+            for (int i = 0 ; i < 1000; i++)
+            {
+                Vmath::Svtvp(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &tmp_A[0], 1);
+            }
+            t.Stop();
+            cout << "MPI " << rank << ": One call to cpp Svtvp with increment takes " << t.TimePerTest(1000) << endl;
+
+            t.Start();
+            for (int i = 0 ; i < 1000; i++)
+            {
+                Vmath::Svtvph(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &tmp_A[0], 1);
+            }
+            t.Stop();
+            cout << "MPI " << rank << ": One call to hpp Svtvp with increment takes " << t.TimePerTest(1000) << endl;
+
+            t.Start();
+            for (int i = 0 ; i < 1000; i++)
+            {
+                Vmath::Svtvp(nNonDir, beta, &p_A[0], &w_A[nDir], &tmp_A[0]);
+            }
+            t.Stop();
+            cout << "MPI " << rank << ": One call to cpp Svtvp without increment takes " << t.TimePerTest(1000) << endl;
+
+
             vExchange[0] = Vmath::Dot2(nNonDir,
                                        r_A,
                                        w_A + nDir,
@@ -493,14 +513,18 @@ namespace Nektar
                 //q   = s   + beta  * q;
                 Vmath::Svtvp(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &p_A[0], 1);
                 Vmath::Svtvp(nNonDir, beta, &q_A[0], 1, &s_A[nDir], 1, &q_A[0], 1);
+                //Vmath::Svtvp(nNonDir, beta, &p_A[0], &w_A[nDir], &p_A[0]);
+                //Vmath::Svtvp(nNonDir, beta, &q_A[0], &s_A[nDir], &q_A[0]);
 
                 // Update solution x_{k+1}
                 //out = out + alpha * p;
                 Vmath::Svtvp(nNonDir, alpha, &p_A[0], 1, &pOutput[nDir], 1, &pOutput[nDir], 1);
+                //Vmath::Svtvp(nNonDir, alpha, &p_A[0], &pOutput[nDir], &pOutput[nDir]);
 
                 // Update residual vector r_{k+1}
                 //r   = r   - alpha * q;
                 Vmath::Svtvp(nNonDir, -alpha, &q_A[0], 1, &r_A[0], 1, &r_A[0], 1);
+                //Vmath::Svtvp(nNonDir, -alpha, &q_A[0], &r_A[0], &r_A[0]);
 
                 // Apply preconditioner
                 m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
@@ -557,7 +581,6 @@ namespace Nektar
                 k++;
             }
         }
-
 
         void GlobalLinSysIterative::Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn)
         {

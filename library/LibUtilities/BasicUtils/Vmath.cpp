@@ -463,8 +463,9 @@ namespace Vmath
              const int incx, const Nektar::NekDouble *y, const int incy,
              Nektar::NekDouble *z, const int incz);
 
+
     /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
-    template<class T> void Svtvp(int n, const T alpha, const T *x,
+    template<class T> LIB_UTILITIES_EXPORT void Svtvp(int n, const T alpha, const T *x,
                  const int incx, const T *y, const int incy,
                  T *z, const int incz)
     {
@@ -491,9 +492,26 @@ namespace Vmath
         }
     }
 
-    template LIB_UTILITIES_EXPORT void Svtvp(int n, const Nektar::NekDouble alpha, const Nektar::NekDouble *x,
-             const int incx, const Nektar::NekDouble *y, const int incy,
-             Nektar::NekDouble *z, const int incz);
+    /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
+    template<class T> LIB_UTILITIES_EXPORT void Svtvp(int n, const T alpha, const T *x, const T *y, T *z)
+    {
+        ++n;
+            while( --n )
+            {
+                *z = alpha * (*x) + (*y);
+                ++x;
+                ++y;
+                ++z;
+            }
+    }
+
+
+    template LIB_UTILITIES_EXPORT void Svtvp(int n, const double alpha, const double *x,
+                 const int incx, const double *y, const int incy,
+                 double *z, const int incz);
+    template LIB_UTILITIES_EXPORT void Svtvp(int n, const double alpha, const double *x,
+                 const double *y, double *z);
+
 
     /// \brief  svtvp (scalar times vector plus vector): z = alpha*x - y
     template<class T> void Svtvm(int n, const T alpha, const T *x,

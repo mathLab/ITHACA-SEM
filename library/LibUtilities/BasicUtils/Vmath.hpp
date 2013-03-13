@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Vmath.hpp
+// File: Vmath.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -153,6 +153,35 @@ namespace Vmath
     template<class T> LIB_UTILITIES_EXPORT void Svtvp(int n, const T alpha, const T *x,
                  const int incx, const T *y, const int incy,
                  T *z, const int incz);
+    template<class T> LIB_UTILITIES_EXPORT void Svtvp(int n, const T alpha, const T *x, const T *y, T *z);
+
+    /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
+    template<class T> LIB_UTILITIES_EXPORT void Svtvph(int n, const T alpha, const T *x,
+                 const int incx, const T *y, const int incy,
+                 T *z, const int incz)
+    {
+        ++n;
+        if (incx == 1 && incy == 1 && incz == 1)
+        {
+            while( --n )
+            {
+                *z = alpha * (*x) + (*y);
+                ++x;
+                ++y;
+                ++z;
+            }
+        }
+        else
+        {
+            while( --n )
+            {
+                *z = alpha * (*x) + (*y);
+                x += incx;
+                y += incy;
+                z += incz;
+            }
+        }
+    }
 
     /// \brief  svtvp (scalar times vector plus vector): z = alpha*x - y
     template<class T> LIB_UTILITIES_EXPORT void Svtvm(int n, const T alpha, const T *x,

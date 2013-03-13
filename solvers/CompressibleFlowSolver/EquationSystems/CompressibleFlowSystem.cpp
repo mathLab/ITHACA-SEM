@@ -1048,7 +1048,7 @@ namespace Nektar
             // Viscous flux vector for the rho equation
             for (k = 0; k < m_spacedim; ++k)
             {
-                Vmath::Zero(nq, viscousTensor[k][i], 1);
+                Vmath::Zero(nPts, viscousTensor[k][i], 1);
             }
         }
         

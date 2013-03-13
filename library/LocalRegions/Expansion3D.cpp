@@ -42,7 +42,7 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        Expansion3D::Expansion3D(){}
+        Expansion3D::Expansion3D() : m_requireNeg() {}
         
         void Expansion3D::AddHDGHelmholtzTraceTerms(
             const NekDouble                                tau,
@@ -99,7 +99,7 @@ namespace Nektar
             DNekVec Tmpcoeff(ncoeffs,tmpcoeff,eWrapper);
 
             StdRegions::IndexMapKey ikey(
-                StdRegions::eFaceToElement, DetExpansionType(), 
+                StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                 face, GetFaceOrient(face));
             StdRegions::IndexMapValuesSharedPtr map = 
@@ -272,7 +272,7 @@ namespace Nektar
             Array<OneD, NekDouble> coeff(order_f);
 
             StdRegions::IndexMapKey ikey(
-                StdRegions::eFaceToElement, DetExpansionType(), 
+                StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                 face, GetFaceOrient(face));
             StdRegions::IndexMapValuesSharedPtr map = 
@@ -314,13 +314,13 @@ namespace Nektar
             // retreiving face to element map for standard face orientation and
             // for actual face orientation
             StdRegions::IndexMapKey ikey1(
-                StdRegions::eFaceToElement, DetExpansionType(), 
+                StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                 face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
             StdRegions::IndexMapValuesSharedPtr map1 = 
                 StdExpansion::GetIndexMap(ikey1);
             StdRegions::IndexMapKey ikey2(
-                StdRegions::eFaceToElement, DetExpansionType(), 
+                StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                 face, GetFaceOrient(face));
             StdRegions::IndexMapValuesSharedPtr map2 = 
@@ -452,7 +452,7 @@ namespace Nektar
                         FaceExp = GetFaceExp(i);
                         order_f = FaceExp->GetNcoeffs();  
                         StdRegions::IndexMapKey ikey(
-                            StdRegions::eFaceToElement, DetExpansionType(), 
+                            StdRegions::eFaceToElement, DetShapeType(), 
                             GetBasisNumModes(0), GetBasisNumModes(1), 
                             GetBasisNumModes(2), i, GetFaceOrient(i));
                         StdRegions::IndexMapValuesSharedPtr map = 
@@ -510,7 +510,7 @@ namespace Nektar
                     DNekMat &Umat = *returnval;
                     
                     // Z^e matrix
-                    MatrixKey newkey(StdRegions::eInvHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey newkey(StdRegions::eInvHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat  &invHmat = *GetLocMatrix(newkey);
 
                     Array<OneD,unsigned int> fmap;
@@ -622,7 +622,7 @@ namespace Nektar
                     DNekMat &Qmat = *returnval;
                     
                     // Lambda to U matrix
-                    MatrixKey lamToUkey(StdRegions::eHybridDGLamToU, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey lamToUkey(StdRegions::eHybridDGLamToU, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &lamToU = *GetLocMatrix(lamToUkey);
 
                     // Inverse mass matrix 
@@ -710,19 +710,19 @@ namespace Nektar
                     DNekScalMatSharedPtr LamToQ[3];
                     
                     // Matrix to map Lambda to U
-                    MatrixKey LamToUkey(StdRegions::eHybridDGLamToU, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey LamToUkey(StdRegions::eHybridDGLamToU, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LamToU = *GetLocMatrix(LamToUkey);
 
                     // Matrix to map Lambda to Q0
-                    MatrixKey LamToQ0key(StdRegions::eHybridDGLamToQ0, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey LamToQ0key(StdRegions::eHybridDGLamToQ0, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     LamToQ[0] = GetLocMatrix(LamToQ0key);
  
                     // Matrix to map Lambda to Q1
-                    MatrixKey LamToQ1key(StdRegions::eHybridDGLamToQ1, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey LamToQ1key(StdRegions::eHybridDGLamToQ1, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     LamToQ[1] = GetLocMatrix(LamToQ1key);
 
                     // Matrix to map Lambda to Q2
-                    MatrixKey LamToQ2key(StdRegions::eHybridDGLamToQ2, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey LamToQ2key(StdRegions::eHybridDGLamToQ2, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     LamToQ[2] = GetLocMatrix(LamToQ2key);
 
                     // Set up edge segment expansions from local geom info
@@ -750,7 +750,7 @@ namespace Nektar
                             varcoeff_work = Array<OneD, NekDouble>(nquad_f);
 
                             StdRegions::IndexMapKey ikey(
-                                StdRegions::eFaceToElement, DetExpansionType(), 
+                                StdRegions::eFaceToElement, DetShapeType(), 
                                 GetBasisNumModes(0), GetBasisNumModes(1), 
                                 GetBasisNumModes(2), f, GetFaceOrient(f));
                             StdRegions::IndexMapValuesSharedPtr map = 
@@ -908,11 +908,45 @@ namespace Nektar
             int i;
             
             StdRegions::IndexMapKey ikey(
-                StdRegions::eFaceToElement, DetExpansionType(), 
+                StdRegions::eFaceToElement, DetShapeType(), 
                 GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                 face, GetFaceOrient(face));
             StdRegions::IndexMapValuesSharedPtr map = 
                 StdExpansion::GetIndexMap(ikey);
+
+            /*
+             * Coming into this routine, the velocity V will have been
+             * multiplied by the trace normals to give the input vector Vn. By
+             * convention, these normals are inwards facing for elements which
+             * have FaceExp as their right-adjacent face.  This conditional
+             * statement therefore determines whether the normals must be
+             * negated, since the integral being performed here requires an
+             * outwards facing normal.
+             */ 
+            if (m_requireNeg.size() == 0)
+            {
+                m_requireNeg.resize(GetNfaces());
+                
+                for (i = 0; i < GetNfaces(); ++i)
+                {
+                    m_requireNeg[i] = false;
+                    if (m_negatedNormals[i])
+                    {
+                        m_requireNeg[i] = true;
+                    }
+                    
+                    Expansion2DSharedPtr faceExp = m_faceExp[i].lock();
+
+                    if (faceExp->GetRightAdjacentElementExp())
+                    {
+                        if (faceExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID() 
+                            == GetGeom3D()->GetGlobalID())
+                        {
+                            m_requireNeg[i] = true;
+                        }
+                    }
+                }
+            }
 
             int order_e = (*map).num_elements(); // Order of the element
             int n_coeffs = FaceExp->GetCoeffs().num_elements(); // Order of the trace
@@ -924,33 +958,21 @@ namespace Nektar
             else
             {
                 FaceExp->IProductWRTBase(Fn,FaceExp->UpdateCoeffs());
-                
-                LocalRegions::Expansion2DSharedPtr locExp = 
-                    boost::dynamic_pointer_cast<
-                        LocalRegions::Expansion2D>(FaceExp);
-                
-                /*
-                 * Coming into this routine, the velocity V will have been
-                 * multiplied by the trace normals to give the input vector
-                 * Vn. By convention, these normals are inwards facing for
-                 * elements which have FaceExp as their right-adjacent face.
-                 * This conditional statement therefore determines whether the
-                 * normals must be negated, since the integral being performed
-                 * here requires an outwards facing normal.
-                 */ 
-                if (locExp->GetRightAdjacentElementFace() != -1)
-                {
-                    if (locExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID() 
-                        == GetGeom3D()->GetGlobalID())
-                    {
-                        Vmath::Neg(order_e,FaceExp->UpdateCoeffs(),1);
-                    }
-                }
             }
             
-            for(i = 0; i < order_e; ++i)
+            if (m_requireNeg[face])
             {
-                outarray[(*map)[i].index] += (*map)[i].sign*FaceExp->GetCoeff(i);
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[(*map)[i].index] -= (*map)[i].sign*FaceExp->GetCoeff(i);
+                }
+            }
+            else
+            {
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[(*map)[i].index] += (*map)[i].sign*FaceExp->GetCoeff(i);
+                }
             }
         }
 
@@ -975,12 +997,12 @@ namespace Nektar
             StdRegions::VarCoeffMap varcoeffs;
             varcoeffs[StdRegions::eVarCoeffMass] = primCoeffs;
 
-            StdRegions::ExpansionType expType = 
-                faceExp->DetExpansionType();
+            LibUtilities::ShapeType shapeType = 
+                faceExp->DetShapeType();
 
             LocalRegions::MatrixKey mkey(
                 StdRegions::eMass,
-                expType, 
+                shapeType, 
                 *faceExp, 
                 StdRegions::NullConstFactorMap, 
                 varcoeffs);
@@ -1034,13 +1056,13 @@ namespace Nektar
                 sign = Array<OneD,          int> (order_f,1);
                 
                 StdRegions::IndexMapKey ikey1(
-                    StdRegions::eFaceToElement, DetExpansionType(), 
+                    StdRegions::eFaceToElement, DetShapeType(), 
                     GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                     face, GetFaceOrient(face));
                 StdRegions::IndexMapValuesSharedPtr map1 = 
                     StdExpansion::GetIndexMap(ikey1);
                 StdRegions::IndexMapKey ikey2(
-                    StdRegions::eFaceToElement, DetExpansionType(), 
+                    StdRegions::eFaceToElement, DetShapeType(), 
                     GetBasisNumModes(0), GetBasisNumModes(1), GetBasisNumModes(2),
                     face, StdRegions::eDir1FwdDir1_Dir2FwdDir2);
                 StdRegions::IndexMapValuesSharedPtr map2 = 

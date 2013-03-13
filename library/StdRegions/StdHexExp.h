@@ -195,7 +195,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int  v_GetNedges() const;
             STD_REGIONS_EXPORT virtual int  v_GetNfaces() const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int  v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_GetEdgeNcoeffs(const int i) const;
@@ -309,11 +309,7 @@ namespace Nektar
                           Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
 
-        private:
-            //---------------------------------------
-            // Private helper functions
-            //---------------------------------------
-            void MultiplyByQuadratureMetric(
+            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
         };

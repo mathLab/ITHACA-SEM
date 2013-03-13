@@ -33,9 +33,10 @@ int main(int argc, char *argv[])
 
     int           order1,order2, nq1,nq2;
     LibUtilities::PointsType    Qtype1,Qtype2;
-    LibUtilities::BasisType     btype1,btype2;
-    LibUtilities::PointsType     NodalType;
-    StdRegions::ExpansionType    regionshape;
+    LibUtilities::BasisType     btype1 =   LibUtilities::eOrtho_A;
+    LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
+    LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
+    LibUtilities::ShapeType     regionshape;
     StdRegions::StdExpansion2D *E;
     Array<OneD, NekDouble> sol,x,y,dx,dy;
     Array<OneD, NekDouble> coords(8);
@@ -51,8 +52,8 @@ int main(int argc, char *argv[])
 
         fprintf(stderr,"Where RegionShape is an integer value which "
                 "dictates the region shape:\n");
-        fprintf(stderr,"\t Triangle      = 2\n");
-        fprintf(stderr,"\t Quadrilateral = 3\n");
+        fprintf(stderr,"\t Triangle      = 3\n");
+        fprintf(stderr,"\t Quadrilateral = 4\n");
 
         fprintf(stderr,"Where type is an integer value which "
                 "dictates the basis as:\n");
@@ -74,10 +75,11 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    regionshape = (StdRegions::ExpansionType) atoi(argv[1]);
+    regionshape = (LibUtilities::ShapeType) atoi(argv[1]);
 
     // Check to see if 2D region
-    if((regionshape != StdRegions::eTriangle)&&(regionshape != StdRegions::eQuadrilateral))
+    if((regionshape != LibUtilities::eTriangle)&&
+       (regionshape != LibUtilities::eQuadrilateral))
     {
         NEKERROR(ErrorUtil::efatal,"This shape is not a 2D region");
     }
@@ -110,35 +112,35 @@ int main(int argc, char *argv[])
     // Check to see that correct Expansions are used
     switch(regionshape)
     {
-        case StdRegions::eTriangle:
-            if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eModified_B))
-            {
-                NEKERROR(ErrorUtil::efatal,
-                         "Basis 1 cannot be of type Ortho_B or Modified_B");
-            }
-
+    case LibUtilities::eTriangle:
+        if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eModified_B))
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Basis 1 cannot be of type Ortho_B or Modified_B");
+        }
+        
             break;
-        case StdRegions::eQuadrilateral:
-            if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_C)||
-               (btype1 == LibUtilities::eModified_B)||(btype1 == LibUtilities::eModified_C))
-            {
-                NEKERROR(ErrorUtil::efatal,
-                         "Basis 1 is for 2 or 3D expansions");
+    case LibUtilities::eQuadrilateral:
+        if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_C)||
+           (btype1 == LibUtilities::eModified_B)||(btype1 == LibUtilities::eModified_C))
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Basis 1 is for 2 or 3D expansions");
+        }
+        
+        if((btype2 == LibUtilities::eOrtho_B)||(btype2 == LibUtilities::eOrtho_C)||
+           (btype2 == LibUtilities::eModified_B)||(btype2 == LibUtilities::eModified_C))
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "Basis 2 is for 2 or 3D expansions");
             }
-
-            if((btype2 == LibUtilities::eOrtho_B)||(btype2 == LibUtilities::eOrtho_C)||
-               (btype2 == LibUtilities::eModified_B)||(btype2 == LibUtilities::eModified_C))
-            {
-                NEKERROR(ErrorUtil::efatal,
-                         "Basis 2 is for 2 or 3D expansions");
-            }
-            break;
-        default:
-            ASSERTL0(false, "Not a 2D expansion.");
-            break;
+        break;
+    default:
+        ASSERTL0(false, "Not a 2D expansion.");
+        break;
     }
-
-
+    
+    
     order1 =   atoi(argv[4]);
     order2 =   atoi(argv[5]);
     nq1    =   atoi(argv[6]);
@@ -161,7 +163,8 @@ int main(int argc, char *argv[])
 
     if(btype2 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTriangle) {
+        if (regionshape == LibUtilities::eTriangle) 
+        {
             Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
         else
@@ -179,9 +182,9 @@ int main(int argc, char *argv[])
 
     switch(regionshape)
     {
-        case StdRegions::eTriangle:
+    case LibUtilities::eTriangle:
         {
-
+            
             coords[0]    =   atof(argv[8]);
             coords[1]    =   atof(argv[9]);
             coords[2]    =   atof(argv[10]);
@@ -239,76 +242,76 @@ int main(int argc, char *argv[])
 
         }
         break;
-        case StdRegions::eQuadrilateral:
-        {
-            // Gather coordinates
-            coords[0]    =   atof(argv[8]);
-            coords[1]    =   atof(argv[9]);
-            coords[2]    =   atof(argv[10]);
-            coords[3]    =   atof(argv[11]);
-            coords[4]    =   atof(argv[12]);
-            coords[5]    =   atof(argv[13]);
-            coords[6]    =   atof(argv[14]);
-            coords[7]    =   atof(argv[15]);
-
-            // Set up coordinates
-            const int zero=0;
-            const int one=1;
-            const int two=2;
-            const int three=3;
-            const double dZero=0.0;
-            SpatialDomains::VertexComponentSharedPtr verts[4];
-            verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
-            verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
-            verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
-            verts[3] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,three,coords[6],coords[7],dZero);
-
-            // Set up Edges
-            SpatialDomains::SegGeomSharedPtr edges[4];
-            edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,verts[0],verts[1]);
-            edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,verts[1],verts[2]);
-            edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,verts[2],verts[3]);
-            edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three,verts[3],verts[0]);
-
-            StdRegions::Orientation eorient[4];
-            eorient[0] = edgeDir;
-            eorient[1] = edgeDir;
-            eorient[2] = edgeDir;
-            eorient[3] = edgeDir;
-
-            SpatialDomains::QuadGeomSharedPtr geom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(zero,verts,edges,eorient);
-            geom->SetOwnData();
-
-            const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
-            const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
-            const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
-            const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
-
-            E = new LocalRegions::QuadExp(Bkey1,Bkey2,geom);
-
-            //----------------------------------------------
-            // Define solution to be projected
-            E->GetCoords(x,y);
-
-            for(i = 0; i < nq1*nq2; ++i)
+        case LibUtilities::eQuadrilateral:
             {
-                sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
+                // Gather coordinates
+                coords[0]    =   atof(argv[8]);
+                coords[1]    =   atof(argv[9]);
+                coords[2]    =   atof(argv[10]);
+                coords[3]    =   atof(argv[11]);
+                coords[4]    =   atof(argv[12]);
+                coords[5]    =   atof(argv[13]);
+                coords[6]    =   atof(argv[14]);
+                coords[7]    =   atof(argv[15]);
+                
+                // Set up coordinates
+                const int zero=0;
+                const int one=1;
+                const int two=2;
+                const int three=3;
+                const double dZero=0.0;
+                SpatialDomains::VertexComponentSharedPtr verts[4];
+                verts[0] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,zero,coords[0],coords[1],dZero);
+                verts[1] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,one,coords[2],coords[3],dZero);
+                verts[2] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,two,coords[4],coords[5],dZero);
+                verts[3] = MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr(two,three,coords[6],coords[7],dZero);
+                
+                // Set up Edges
+                SpatialDomains::SegGeomSharedPtr edges[4];
+                edges[0] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(zero,verts[0],verts[1]);
+                edges[1] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(one,verts[1],verts[2]);
+                edges[2] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(two,verts[2],verts[3]);
+                edges[3] = MemoryManager<SpatialDomains::SegGeom>::AllocateSharedPtr(three,verts[3],verts[0]);
+                
+                StdRegions::Orientation eorient[4];
+                eorient[0] = edgeDir;
+                eorient[1] = edgeDir;
+                eorient[2] = edgeDir;
+                eorient[3] = edgeDir;
+                
+                SpatialDomains::QuadGeomSharedPtr geom = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(zero,verts,edges,eorient);
+                geom->SetOwnData();
+                
+                const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
+                const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
+                const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
+                const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
+                
+                E = new LocalRegions::QuadExp(Bkey1,Bkey2,geom);
+                
+                //----------------------------------------------
+                // Define solution to be projected
+                E->GetCoords(x,y);
+                
+                for(i = 0; i < nq1*nq2; ++i)
+                {
+                    sol[i]  = Quad_sol(x[i],y[i],order1,order2,btype1,btype2);
+                }
+                //---------------------------------------------
             }
-            //---------------------------------------------
-        }
-        break;
-        default:
-            ASSERTL0(false, "Not a 2D expansion.");
             break;
+    default:
+        ASSERTL0(false, "Not a 2D expansion.");
+        break;
     }
-
-
+    
+    
     //--------------------------------------------
     // Take the numerical derivative of the solution and add together in sol
     E->PhysDeriv(sol,dx,dy);
     Vmath::Vadd(nq1*nq2,dx,1,dy,1,sol,1);
     //---------------------------------------------
-
+    
     //---------------------------------------------
     // Project onto Expansion
     E->FwdTrans(sol,E->UpdateCoeffs());
@@ -323,7 +326,7 @@ int main(int argc, char *argv[])
     // Define exact solution of differential
     switch(regionshape)
     {
-        case StdRegions::eTriangle:
+    case LibUtilities::eTriangle:
         {
             //----------------------------------------------
             // Define solution to be differentiated
@@ -334,7 +337,7 @@ int main(int argc, char *argv[])
             //----------------------------------------------
         }
         break;
-        case StdRegions::eQuadrilateral:
+    case LibUtilities::eQuadrilateral:
         {
             for(i = 0; i < nq1*nq2; ++i)
             {
@@ -343,11 +346,11 @@ int main(int argc, char *argv[])
         }
         //---------------------------------------------
         break;
-        default:
-            ASSERTL0(false, "Not a 2D expansion.");
-            break;
+    default:
+        ASSERTL0(false, "Not a 2D expansion.");
+        break;
     }
-
+    
     //--------------------------------------------
     // Write solution
     ofstream outfile("ProjectFile2D.dat");

@@ -262,8 +262,8 @@ namespace Nektar
             Array<OneD, int>                    &perm,
             Array<OneD, int>                    &iperm,
             BottomUpSubStructuredGraphSharedPtr &substructgraph,
-            const int                            mdswitch  = 1,
-            std::set<int>                        partVerts = std::set<int>());
+            std::set<int>                        partVerts = std::set<int>(),
+            int                                  mdswitch  = 1);
         
         // The parameter MDSWITCH.
         //

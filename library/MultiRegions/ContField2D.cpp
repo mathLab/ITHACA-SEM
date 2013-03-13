@@ -829,12 +829,12 @@ namespace Nektar
             
             if(flags.isSet(eUseGlobal))
             {
-                Vmath::Zero(contNcoeffs,outarray,1);
                 GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else
             {
-                Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
+                Array<OneD,NekDouble> tmp(contNcoeffs);
+                LocalToGlobal(outarray,tmp);
                 GlobalSolve(key,wsp,tmp,dirForcing);
                 GlobalToLocal(tmp,outarray);
             }

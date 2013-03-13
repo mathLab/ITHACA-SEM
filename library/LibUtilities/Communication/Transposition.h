@@ -160,9 +160,6 @@ namespace Nektar
 
             /// MPI_Alltoallv offset map of send/recv buffer in global vector.
             Array<OneD,int> m_OffsetMap;
-
-            /// Spectral vanishing Viscosity coefficient for stabilisation 
-            Array<OneD, NekDouble> m_specVanVisc;
         };
 
         typedef boost::shared_ptr<Transposition>      TranspositionSharedPtr;

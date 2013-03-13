@@ -572,9 +572,9 @@ namespace Nektar
              *
              *  \return returns the shape of the expansion domain
              */
-            ExpansionType DetExpansionType() const
+            LibUtilities::ShapeType DetShapeType() const
             {
-                return v_DetExpansionType();
+                return v_DetShapeType();
             }
 
             int GetShapeDimension() const
@@ -1058,6 +1058,13 @@ namespace Nektar
                 v_LaplacianMatrixOp(inarray,outarray,mkey);
             }
 
+            
+            void SVVLaplacianFilter(Array<OneD,NekDouble> &array,
+                                    const StdMatrixKey &mkey)
+            {
+                v_SVVLaplacianFilter(array,mkey);
+            }
+
             void LaplacianMatrixOp(const int k1, const int k2,
                                    const Array<OneD, const NekDouble> &inarray,
                                    Array<OneD,NekDouble> &outarray,
@@ -1388,6 +1395,11 @@ namespace Nektar
                 v_NegateEdgeNormal(edge);
             }
 
+            bool EdgeNormalNegated(const int edge)
+            {
+                return v_EdgeNormalNegated(edge);
+            }
+
             void ComputeFaceNormal(const int face)
             {
                 v_ComputeFaceNormal(face);
@@ -1616,7 +1628,7 @@ namespace Nektar
             
             STD_REGIONS_EXPORT virtual LibUtilities::BasisType v_GetEdgeBasisType(const int i) const;
 
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
 
             STD_REGIONS_EXPORT virtual int v_GetShapeDimension() const;
 
@@ -1790,6 +1802,9 @@ namespace Nektar
                                              Array<OneD,NekDouble> &outarray,
                                              const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(Array<OneD,NekDouble> &array,
+                                             const StdMatrixKey &mkey);
+
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(const int k1, const int k2,
                                              const Array<OneD, const NekDouble> &inarray,
                                              Array<OneD,NekDouble> &outarray,
@@ -1832,6 +1847,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_ComputeEdgeNormal(const int edge);
             
             STD_REGIONS_EXPORT virtual void v_NegateEdgeNormal(const int edge);
+
+            STD_REGIONS_EXPORT virtual bool v_EdgeNormalNegated(const int edge);
 
             STD_REGIONS_EXPORT virtual void v_ComputeFaceNormal(const int face);
 

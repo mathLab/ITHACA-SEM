@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSysIterativeStaticCond.cpp
+// File: GlobalLinSysIterativeStaticCond.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -61,6 +61,22 @@ namespace Nektar
                     "IterativeMultiLevelStaticCond",
                     GlobalLinSysIterativeStaticCond::create,
                     "Iterative multi-level static condensation.");
+
+
+        std::string GlobalLinSysIterativeStaticCond::storagedef = 
+            LibUtilities::SessionReader::RegisterDefaultSolverInfo(
+                "LocalMatrixStorageStrategy",
+                "Non-contiguous");
+        std::string GlobalLinSysIterativeStaticCond::storagelookupIds[2] = {
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LocalMatrixStorageStrategy",
+                "Contiguous",
+                MultiRegions::eContiguous),
+            LibUtilities::SessionReader::RegisterEnumValue(
+                "LocalMatrixStorageStrategy",
+                "Non-contiguous",
+                MultiRegions::eNonContiguous),
+        };
 
         /**
          * For a matrix system of the form @f[
@@ -159,6 +175,7 @@ namespace Nektar
         {
             bool dirForcCalculated = (bool) dirForcing.num_elements();
             bool atLastLevel       = pLocToGloMap->AtLastLevel();
+            int  scLevel           = pLocToGloMap->GetStaticCondLevel();
 
             int nGlobDofs          = pLocToGloMap->GetNumGlobalCoeffs();
             int nGlobBndDofs       = pLocToGloMap->GetNumGlobalBndCoeffs();
@@ -167,8 +184,8 @@ namespace Nektar
             int nLocBndDofs        = pLocToGloMap->GetNumLocalBndCoeffs();
             int nIntDofs           = pLocToGloMap->GetNumGlobalCoeffs()
                                                                 - nGlobBndDofs;
-            
-            Array<OneD, NekDouble> F = m_wsp + nLocBndDofs;
+
+            Array<OneD, NekDouble> F = m_wsp + 2*nLocBndDofs;
             Array<OneD, NekDouble> tmp;
             if(nDirBndDofs && dirForcCalculated)
             {
@@ -194,6 +211,13 @@ namespace Nektar
 
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
 
+ 
+            // set up normalisation factor for right hand side on first SC level
+            if(scLevel == 0)
+            {
+                Set_Rhs_Magnitude(F_GlobBnd);
+            }
+            
             if(nGlobHomBndDofs)
             {
                 if(pLocToGloMap->GetPreconType() != MultiRegions::eLowEnergy)
@@ -221,7 +245,7 @@ namespace Nektar
                         DNekScalBlkMat &BinvD      = *m_BinvD;
                         V_LocBnd = BinvD*F_Int;
                     }
-                    
+
                     pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
                                               nDirBndDofs);
                     F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
@@ -232,7 +256,6 @@ namespace Nektar
                     // those lower levels, whilst not sending anything to the
                     // other partitions, and includes them in the modified right
                     // hand side vector.
-                    int scLevel = pLocToGloMap->GetStaticCondLevel();
                     int lcLevel = pLocToGloMap->GetLowestStaticCondLevel();
                     if(atLastLevel && scLevel < lcLevel)
                     {
@@ -298,14 +321,15 @@ namespace Nektar
                 // solve boundary system
                 if(atLastLevel)
                 {
-                    Array<OneD, NekDouble> offsetarray;
+                    Array<OneD, NekDouble> pert(nGlobBndDofs,0.0);
+                    NekVector<NekDouble>   Pert(nGlobBndDofs,pert,eWrapper);
 
                     Timer t;
                     t.Start();
                     
                     // Solve for difference from initial solution given inout;
-                    SolveLinearSystem(nGlobBndDofs, F, out, pLocToGloMap, nDirBndDofs);
-                    
+                    SolveLinearSystem(nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
+
                     t.Stop();
 
                     //transform back to original basis
@@ -313,12 +337,15 @@ namespace Nektar
                     {
                         DNekScalBlkMat &RT = *m_RTBlk;
 
-                        pLocToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
- 
+                        pLocToGloMap->GlobalToLocalBnd(Pert,V_LocBnd);
                         V_LocBnd=RT*V_LocBnd;
-
-                        pLocToGloMap->LocalBndToGlobal(V_LocBnd,V_GlobHomBnd, nDirBndDofs);
+                        pLocToGloMap->LocalBndToGlobal(V_LocBnd,Pert);
                     }
+
+                    // Add back initial conditions onto difference
+                    Vmath::Vadd(nGlobHomBndDofs,&out[nDirBndDofs],1,
+                                &pert[nDirBndDofs],1,&out[nDirBndDofs],1);
+
                 }
                 else
                 {
@@ -367,8 +394,8 @@ namespace Nektar
         {
             int nLocalBnd = m_locToGloMap->GetNumLocalBndCoeffs();
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-            m_wsp = Array<OneD, NekDouble>(nLocalBnd + nGlobal);
-            
+            m_wsp = Array<OneD, NekDouble>(2*nLocalBnd + nGlobal);
+
             if(pLocToGloMap->AtLastLevel())
             {
                 // decide whether to assemble schur complement globally
@@ -381,22 +408,61 @@ namespace Nektar
                 {
                     AssembleSchurComplement(pLocToGloMap);
                 }
-                
-                int nbdry, nblks;
-                unsigned int esize[1];
-                int nBlk          = m_schurCompl->GetNumberOfBlockRows();
-                m_schurComplBlock = Array<OneD, DNekScalBlkMatSharedPtr>(nBlk);
-                
-                for (int i = 0; i < nBlk; ++i)
+                else
                 {
-                    nbdry                = m_schurCompl->GetBlock(i,i)->GetRows();
-                    nblks                = 1;
-                    esize[0]             = nbdry;
-                    m_schurComplBlock[i] = MemoryManager<DNekScalBlkMat>
-                        ::AllocateSharedPtr(nblks, nblks, esize, esize);
-                    m_schurComplBlock[i]->SetBlock(
-                        0, 0, m_schurCompl->GetBlock(i,i));
-                }
+                    LocalMatrixStorageStrategy storageStrategy = m_expList.lock()->GetSession()->
+                        GetSolverInfoAsEnum<LocalMatrixStorageStrategy>("LocalMatrixStorageStrategy");
+
+                    size_t storageSize = 0;
+                    int nBlk          = m_schurCompl->GetNumberOfBlockRows();
+
+                    m_scale = Array<OneD, NekDouble> (nBlk, 1.0);
+                    m_rows  = Array<OneD, unsigned int> (nBlk, 0U);
+
+                    // Determine storage requirements for dense blocks.
+                    for (int i = 0; i < nBlk; ++i)
+                    {
+                        m_rows[i]    = m_schurCompl->GetBlock(i,i)->GetRows();
+                        m_scale[i]   = m_schurCompl->GetBlock(i,i)->Scale();
+                        storageSize += m_rows[i] * m_rows[i];
+                    }
+
+                    // Assemble dense storage blocks.
+                    DNekScalMatSharedPtr loc_mat;
+                    m_denseBlocks.resize(nBlk);
+                    double *ptr = 0;
+
+                    if (MultiRegions::eContiguous == storageStrategy)
+                    {
+                        m_storage.resize    (storageSize);
+                        ptr = &m_storage[0];
+                    }
+
+                    for (unsigned int n = 0; n < nBlk; ++n)
+                    {
+                        loc_mat = m_schurCompl->GetBlock(n,n);
+
+                        if (MultiRegions::eContiguous == storageStrategy)
+                        {
+                            int loc_lda      = loc_mat->GetRows();
+                            int blockSize    = loc_lda * loc_lda;
+                            m_denseBlocks[n] = ptr;
+                            for(int i = 0; i < loc_lda; ++i)
+                            {
+                                for(int j = 0; j < loc_lda; ++j)
+                                {
+                                    ptr[j*loc_lda+i] = (*loc_mat)(i,j);
+                                }
+                            }
+                            ptr += blockSize;
+                        }
+                        else
+                        {
+                            m_denseBlocks[n] = loc_mat->GetRawPtr();
+                        }
+                    }
+
+                } // if (doGlobalOp)
             }
             else
             {
@@ -404,16 +470,26 @@ namespace Nektar
                         pLocToGloMap->GetNextLevelLocalToGlobalMap());
             }
         }
-        
+
         int GlobalLinSysIterativeStaticCond::v_GetNumBlocks()
         {
             return m_schurCompl->GetNumberOfBlockRows();
         }
-        
+
         DNekScalBlkMatSharedPtr GlobalLinSysIterativeStaticCond::
             v_GetStaticCondBlock(unsigned int n)
         {
-            return m_schurComplBlock[n];
+            DNekScalBlkMatSharedPtr schurComplBlock;
+            DNekScalMatSharedPtr    localMat = m_schurCompl->GetBlock(n,n);
+            int nbdry    = localMat->GetRows();
+            int nblks    = 1;
+            unsigned int esize[1] = {nbdry};
+
+            schurComplBlock = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nblks, nblks, esize, esize);
+            schurComplBlock->SetBlock(0, 0, localMat);
+
+            return schurComplBlock;
         }
 
         /**
@@ -538,7 +614,7 @@ namespace Nektar
                 m_S1Blk->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(0,0));
                 m_RBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_R));
                 m_RTBlk->SetBlock(n,n, tmp_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_RT));
-	    }
+            }
         }
 
         /**
@@ -864,13 +940,19 @@ namespace Nektar
             }
             else
             {
-                // Do matrix multiply locally
+                // Do matrix multiply locally, using direct BLAS calls
                 m_locToGloMap->GlobalToLocalBnd(pInput, m_wsp);
-                NekVector<NekDouble> loc(nLocal, m_wsp, eWrapper);
-
-                loc = (*m_schurCompl)*loc;
-
-                m_locToGloMap->AssembleBnd(m_wsp, pOutput);
+                int i, cnt;
+                Array<OneD, NekDouble> tmpout = m_wsp + nLocal;
+                for (i = cnt = 0; i < m_denseBlocks.size(); cnt += m_rows[i], ++i)
+                {
+                    const int rows = m_rows[i];
+                    Blas::Dgemv('N', rows, rows,
+                                m_scale[i], m_denseBlocks[i], rows, 
+                                m_wsp.get()+cnt, 1, 
+                                0.0, tmpout.get()+cnt, 1);
+                }
+                m_locToGloMap->AssembleBnd(tmpout, pOutput);
             }
         }
 

@@ -42,14 +42,14 @@ namespace Nektar
     {
         IndexMapKey::IndexMapKey(
             const StdRegions::IndexMapType  indexmapType,
-            const StdRegions::ExpansionType expansionType,
+            const LibUtilities::ShapeType   shapeType,
             const unsigned short            p, 
             const unsigned short            q,
             const unsigned short            r,
             const unsigned short            entityID,
             const StdRegions::Orientation   orientation)
             : m_indexMapType(indexmapType),
-              m_expansionType(expansionType),
+              m_shapeType(shapeType),
               m_p(p),
               m_q(q),
               m_r(r),
@@ -61,7 +61,7 @@ namespace Nektar
         IndexMapKey::IndexMapKey(const IndexMapKey& rhs,
                                  const StdRegions::IndexMapType indexmapType):
             m_indexMapType (indexmapType),
-            m_expansionType(rhs.m_expansionType),
+            m_shapeType(rhs.m_shapeType),
             m_p            (rhs.m_p),
             m_q            (rhs.m_q),
             m_r            (rhs.m_r),
@@ -72,7 +72,7 @@ namespace Nektar
 
         IndexMapKey::IndexMapKey(const IndexMapKey& rhs):
             m_indexMapType (rhs.m_indexMapType),
-            m_expansionType(rhs.m_expansionType),
+            m_shapeType(rhs.m_shapeType),
             m_p            (rhs.m_p),
             m_q            (rhs.m_q),
             m_r            (rhs.m_r),
@@ -99,11 +99,11 @@ namespace Nektar
                 return false;
             }
             
-            if(lhs.m_expansionType < rhs.m_expansionType)
+            if(lhs.m_shapeType < rhs.m_shapeType)
             {
                 return true;
             }
-            if(lhs.m_expansionType > rhs.m_expansionType)
+            if(lhs.m_shapeType > rhs.m_shapeType)
             {
                 return false;
             }
@@ -163,7 +163,7 @@ namespace Nektar
                 return false;
             }
 
-            if(lhs.m_expansionType != rhs.m_expansionType)
+            if(lhs.m_shapeType != rhs.m_shapeType)
             {
                 return false;
             }

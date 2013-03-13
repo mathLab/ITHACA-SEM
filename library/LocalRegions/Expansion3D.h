@@ -106,6 +106,7 @@ namespace Nektar
             // Only use this class for member functions
             
             std::vector<Expansion2DWeakPtr> m_faceExp;
+            std::vector<bool> m_requireNeg;
         };
         
         // type defines for use of PrismExp in a boost vector

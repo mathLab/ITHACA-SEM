@@ -49,13 +49,13 @@ namespace Nektar
     {
         PyrGeom::PyrGeom()
         {
-            m_geomShapeType = ePyramid;
+            m_shapeType = LibUtilities::ePyramid;
         }
 
         PyrGeom::PyrGeom(const Geometry2DSharedPtr faces[]) :
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_geomShapeType = ePyramid;
+            m_shapeType = LibUtilities::ePyramid;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+PyrGeom::kNfaces);

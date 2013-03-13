@@ -1,0 +1,16 @@
+IF (NEKTAR_USE_VTK AND NEKTAR_USE_QT4)
+    SET(FR_SOURCES FibreRegister.cpp
+                   MainWindow.cpp)
+
+    SET(QT_OBJECT_HEADERS MainWindow.h)
+
+    QT4_WRAP_CPP(QT_OBJECT_HEADERS_MOC ${QT_OBJECT_HEADERS})
+
+
+    ADD_EXECUTABLE(FibreRegister ${FR_SOURCES} ${QT_OBJECT_HEADERS_MOC})
+    TARGET_LINK_LIBRARIES(FibreRegister ${QT_LIBRARIES})
+    TARGET_LINK_LIBRARIES(FibreRegister vtkCommon vtksys QVTK vtkViews vtkWidgets vtkRendering vtkIO)
+
+    INSTALL(TARGETS FibreRegister 
+	    	RUNTIME DESTINATION ${NEKTAR_BIN_DIR} COMPONENT solvers OPTIONAL)
+ENDIF (NEKTAR_USE_VTK AND NEKTAR_USE_QT4)

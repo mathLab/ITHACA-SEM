@@ -53,30 +53,26 @@ namespace Nektar
      *
      * @param rhoL      Density left state.
      * @param rhoR      Density right state.  
-     * @param rhouL     x-velocity component left state.  
-     * @param rhouR     x-velocity component right state.  
-     * @param rhovL     y-velocity component left state.  
-     * @param rhovR     y-velocity component right state.  
-     * @param rhowL     z-velocity component left state.  
-     * @param rhowR     z-velocity component right state.
+     * @param rhouL     x-momentum component left state.  
+     * @param rhouR     x-momentum component right state.  
+     * @param rhovL     y-momentum component left state.  
+     * @param rhovR     y-momentum component right state.  
+     * @param rhowL     z-momentum component left state.  
+     * @param rhowR     z-momentum component right state.
      * @param EL        Energy left state.  
      * @param ER        Energy right state. 
-     * @param rhof      Riemann flux for density (i.e. first equation).  
-     * @param rhouf     Riemann flux for x-velocity component 
-     *                  (i.e. second equation).
-     * @param rhovf     Riemann flux for y-velocity component 
-     *                  (i.e. third equation).
-     * @param rhowf     Riemann flux for z-velocity component 
-     *                  (i.e. fourth equation).
-     * @param Ef        Riemann flux for energy (i.e. fifth equation).  
-     *
+     * @param rhof      Computed Riemann flux for density.
+     * @param rhouf     Computed Riemann flux for x-momentum component 
+     * @param rhovf     Computed Riemann flux for y-momentum component 
+     * @param rhowf     Computed Riemann flux for z-momentum component 
+     * @param Ef        Computed Riemann flux for energy.
      */
     void HLLCSolver::v_PointSolve(
         double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
         double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
         double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef)
     {        
-        NekDouble gamma = m_params["gamma"]();
+        static NekDouble gamma = m_params["gamma"]();
         
         // Left and Right velocities
         NekDouble uL = rhouL / rhoL;
@@ -86,58 +82,56 @@ namespace Nektar
         NekDouble vR = rhovR / rhoR;
         NekDouble wR = rhowR / rhoR;
 
-        // Left and right pressures
-        NekDouble pL = (gamma - 1.0) * (EL - 0.5 * (rhouL * uL + rhovL * vL));
-        NekDouble pR = (gamma - 1.0) * (ER - 0.5 * (rhouR * uR + rhovR * vR));
+        // Left and right pressure, sound speed and enthalpy.
+        NekDouble pL = (gamma - 1.0) *
+            (EL - 0.5 * (rhouL * uL + rhovL * vL + rhowL * wL));
+        NekDouble pR = (gamma - 1.0) *
+            (ER - 0.5 * (rhouR * uR + rhovR * vR + rhowR * wR));
         NekDouble cL = sqrt(gamma * pL / rhoL);
         NekDouble cR = sqrt(gamma * pR / rhoR);
         NekDouble hL = (EL + pL) / rhoL;
         NekDouble hR = (ER + pR) / rhoR;
         
-        // Density Roe average
-        NekDouble rhoRoe = sqrt(rhoL) * sqrt(rhoR);
+        // Square root of rhoL and rhoR.
+        NekDouble srL  = sqrt(rhoL);
+        NekDouble srR  = sqrt(rhoR);
+        NekDouble srLR = srL + srR;
         
         // Velocity Roe averages
-        NekDouble uRoe   = (sqrt(rhoL) * uL + 
-                            sqrt(rhoR) * uR) / (sqrt(rhoL) + sqrt(rhoR));
-        NekDouble vRoe   = (sqrt(rhoL) * vL + 
-                            sqrt(rhoR) * vR) / (sqrt(rhoL) + sqrt(rhoR));
-        NekDouble wRoe   = (sqrt(rhoL) * wL + 
-                            sqrt(rhoR) * wR) / (sqrt(rhoL) + sqrt(rhoR));
+        NekDouble uRoe   = (srL * uL + srR * uR) / srLR;
+        NekDouble vRoe   = (srL * vL + srR * vR) / srLR;
+        NekDouble wRoe   = (srL * wL + srR * wR) / srLR;
+        NekDouble hRoe   = (srL * hL + srR * hR) / srLR;
+        NekDouble cRoe   = sqrt((gamma - 1.0)*(hRoe - 0.5 * 
+            (uRoe * uRoe + vRoe * vRoe + wRoe * wRoe)));
 
-        // Entalpy Roe average
-        NekDouble hRoe   = (sqrt(rhoL) * hL + 
-                            sqrt(rhoR) * hR) / (sqrt(rhoL) + sqrt(rhoR));
-        NekDouble cRoe   = sqrt((gamma - 1.0) * 
-                                (hRoe - 0.5 * (uRoe * uRoe + vRoe * vRoe)));
-        
         // Maximum wave speeds
         NekDouble SL = std::min(uL-cL, uRoe-cRoe);
         NekDouble SR = std::max(uR+cR, uRoe+cRoe);
-        NekDouble SM = (pR - pL + rhouL * (SL - uL) - rhouR * (SR - uR)) / 
-                       (rhoL * (SL - uL) - rhoR * (SR - uR));
         
         // HLLC Riemann fluxes (positive case)
         if (SL >= 0)
         {
-            rhof  = rhoL * uL;
-            rhouf = rhoL * uL * uL + pL;
-            rhovf = rhoL * uL * vL;
-            rhowf = rhoL * uL * wL;
+            rhof  = rhouL;
+            rhouf = rhouL * uL + pL;
+            rhovf = rhouL * vL;
+            rhowf = rhouL * wL;
             Ef    = uL * (EL + pL);
         }
         // HLLC Riemann fluxes (negative case)
         else if (SR <= 0)
         {
-            rhof  = rhoR * uR;
-            rhouf = rhoR * uR * uR + pR;
-            rhovf = rhoR * uR * vR;
-            rhowf = rhoR * uR * wR;
+            rhof  = rhouR;
+            rhouf = rhouR * uR + pR;
+            rhovf = rhouR * vR;
+            rhowf = rhouR * wR;
             Ef    = uR * (ER + pR);
         }
         // HLLC Riemann fluxes (general case (SL < 0 | SR > 0)
         else
         {
+            NekDouble SM = (pR - pL + rhouL * (SL - uL) - rhouR * (SR - uR)) / 
+                           (rhoL * (SL - uL) - rhoR * (SR - uR));
             NekDouble rhoML  = rhoL * (SL - uL) / (SL - SM);
             NekDouble rhouML = rhoML * SM;
             NekDouble rhovML = rhoML * vL;
@@ -154,18 +148,18 @@ namespace Nektar
             
             if (SL < 0.0 && SM >= 0.0)
             {
-                rhof  = rhoL * uL + SL * (rhoML - rhoL);
-                rhouf = rhoL * uL * uL + pL + SL * (rhouML - rhouL);
-                rhovf = rhoL * uL * vL + SL * (rhovML - rhovL);
-                rhowf = rhoL * uL * wL + SL * (rhowML - rhowL);
+                rhof  = rhouL + SL * (rhoML - rhoL);
+                rhouf = rhouL * uL + pL + SL * (rhouML - rhouL);
+                rhovf = rhouL * vL + SL * (rhovML - rhovL);
+                rhowf = rhouL * wL + SL * (rhowML - rhowL);
                 Ef    = uL * (EL + pL) + SL * (EML - EL);
             }
             else if(SM < 0.0 && SR > 0.0)
             {
-                rhof  = rhoR * uR + SR * (rhoMR - rhoR);
-                rhouf = rhoR * uR * uR + pR + SR * (rhouMR - rhouR);
-                rhovf = rhoR * uR * vR + SR * (rhovMR - rhovR);
-                rhowf = rhoR * uR * wR + SR * (rhowMR - rhowR);
+                rhof  = rhouR + SR * (rhoMR - rhoR);
+                rhouf = rhouR * uR + pR + SR * (rhouMR - rhouR);
+                rhovf = rhouR * vR + SR * (rhovMR - rhovR);
+                rhowf = rhouR * wR + SR * (rhowMR - rhowR);
                 Ef    = uR * (ER + pR) + SR * (EMR - ER);
             }
         }

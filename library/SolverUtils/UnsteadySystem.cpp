@@ -107,6 +107,9 @@ namespace Nektar
             m_session->LoadParameter("IO_InfoSteps", m_infosteps, 0);
             m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
 
+            // Set up time to be dumped in field information
+            m_fieldMetaDataMap["Time"] = m_time; 
+
             // Set up filters
             LibUtilities::FilterMap::const_iterator x;
             LibUtilities::FilterMap f = m_session->GetFilters();
@@ -506,13 +509,15 @@ namespace Nektar
                 m_fields[m_intVariables[i]]->UpdatePhys() = fields[i];
             }
             
-            if (m_cflSafetyFactor > 0.0)
+            if (m_session->GetComm()->GetRank() == 0)
             {
-                cout << "CFL safety factor : " << m_cflSafetyFactor << endl
-                     << "CFL time-step     : " << m_timestep        << endl;
+                if (m_cflSafetyFactor > 0.0)
+                {
+                    cout << "CFL safety factor : " << m_cflSafetyFactor << endl
+                         << "CFL time-step     : " << m_timestep        << endl;
+                }
+                cout << "Time-integration  : " << intTime  << "s"   << endl;
             }
-            cout << "Time-integration  : " << intTime  << "s"   << endl;
-
             
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
@@ -531,7 +536,9 @@ namespace Nektar
          */
         void UnsteadySystem::v_DoInitialise()
         {
-            SetInitialConditions();
+            CheckForRestartTime(m_time);
+            SetBoundaryConditions(m_time);
+            SetInitialConditions(m_time);
         }
         
         /**
@@ -763,6 +770,43 @@ namespace Nektar
             }
         }
 
+        void UnsteadySystem::CheckForRestartTime(NekDouble &time)
+        {
+            
+            if (m_session->DefinesFunction("InitialConditions"))
+            {
+                for(int i = 0; i < m_fields.num_elements(); ++i)
+                {
+                    
+                    LibUtilities::FunctionType vType;
+                    
+                    vType = m_session->GetFunctionType("InitialConditions", m_session->GetVariable(i));
+                    if (vType == LibUtilities::eFunctionTypeFile)
+                    {
+                        std::string filename
+                            = m_session->GetFunctionFilename("InitialConditions", 
+                                                             m_session->GetVariable(i));
+
+                        LibUtilities::ImportFieldMetaData(filename,m_fieldMetaDataMap);
+                        
+                        // check to see if time defined
+                        if(m_fieldMetaDataMap != LibUtilities::NullFieldMetaDataMap)
+                        {
+                            LibUtilities::FieldMetaDataMap::iterator iter; 
+                            
+                            iter = m_fieldMetaDataMap.find("Time");
+                            if(iter != m_fieldMetaDataMap.end())
+                            {
+                                time = iter->second; 
+                            }
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+        }
+        
         void UnsteadySystem::WeakPenaltyforScalar(
             const int var,
             const Array<OneD, const NekDouble> &physfield,

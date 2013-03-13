@@ -116,9 +116,8 @@ namespace Nektar
         virtual void v_PrintSummary(std::ostream &out);
 
         void GetFluxVector(
-            const int                                         i, 
-            const Array<OneD, Array<OneD, NekDouble> >       &physfield, 
-                  Array<OneD, Array<OneD, NekDouble> >       &flux);
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         void GetViscousFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
@@ -164,6 +163,10 @@ namespace Nektar
                   Array<OneD,                         NekDouble>  &temperature);
         void GetPressure(
             const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
+                  Array<OneD,                         NekDouble>  &pressure);
+        void GetPressure(
+            const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
+            const Array<OneD, const Array<OneD,       NekDouble> >&velocity,
                   Array<OneD,                         NekDouble>  &pressure);
         void GetDynamicViscosity(
             const Array<OneD, const Array<OneD,       NekDouble> >&physfield,

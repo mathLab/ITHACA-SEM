@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    StdRegions::ExpansionType regionShape = ePyramid;    
+    LibUtilities::ShapeType regionShape = LibUtilities::ePyramid;    
     
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 
 
     // Check to see that correct Expansions are used
-    if( regionShape == StdRegions::ePyramid ) 
+    if( regionShape == LibUtilities::ePyramid ) 
     {
          if( (bType_x == LibUtilities::eOrtho_B) || (bType_x == LibUtilities::eModified_B) ) {
             NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B or Modified_B");
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     
     StdRegions::StdExpansion3D *sPyrE;
     
-    if( regionShape == StdRegions::ePyramid ) 
+    if( regionShape == LibUtilities::ePyramid ) 
     { 
         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
         const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
@@ -212,11 +212,11 @@ int main(int argc, char *argv[]) {
     t[2] = 0.25;
 
 
- if( regionShape == StdRegions::ePyramid ) {
+    if( regionShape == LibUtilities::ePyramid ) 
+    {
         diff_solution_x[0] = Pyramid_Diff_Sol( t[0], t[1], t[2], P, Q, R, 1 );  
     }
     
- 
     
     return 0;
 }

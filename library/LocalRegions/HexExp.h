@@ -160,9 +160,9 @@ namespace Nektar
                 std::string var = "v");
 
             LOCAL_REGIONS_EXPORT virtual 
-                StdRegions::ExpansionType v_DetExpansionType() const;
+                LibUtilities::ShapeType v_DetShapeType() const;
     
-            LOCAL_REGIONS_EXPORT virtual const 
+            LOCAL_REGIONS_EXPORT virtual const
                 SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
 
             LOCAL_REGIONS_EXPORT virtual const 

@@ -50,9 +50,8 @@ namespace Nektar
     namespace SolverUtils
     {
         typedef boost::function<void (
-            const int, 
             const Array<OneD, Array<OneD, NekDouble> >&,
-            Array<OneD, Array<OneD, NekDouble> >&)> AdvectionFluxVecCB;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)> AdvectionFluxVecCB;
         
         class Advection
         {
@@ -71,7 +70,7 @@ namespace Nektar
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
             {
-                m_fluxVector = boost::bind(func, obj, _1, _2, _3);
+                m_fluxVector = boost::bind(func, obj, _1, _2);
             }
             
             inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)

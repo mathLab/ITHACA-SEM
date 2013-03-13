@@ -49,7 +49,7 @@ namespace Nektar
         {
         public:
             LOCAL_REGIONS_EXPORT MatrixKey(const StdRegions::MatrixType matrixType,
-                      const StdRegions::ExpansionType expansionType,
+                      const LibUtilities::ShapeType shapeType,
                       const StdRegions::StdExpansion &stdExpansion,
                       const StdRegions::ConstFactorMap &factorMap = StdRegions::NullConstFactorMap,
                       const StdRegions::VarCoeffMap &varCoeffMap = StdRegions::NullVarCoeffMap,

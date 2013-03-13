@@ -542,7 +542,7 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
+                StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
                 DNekMatSharedPtr matsys = GetStdMatrix(masskey);
 
                 // copy inarray in case inarray == outarray
@@ -608,7 +608,7 @@ namespace Nektar
                                                Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -726,7 +726,7 @@ namespace Nektar
                     break;
             }
 
-            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -873,9 +873,9 @@ namespace Nektar
         }
 
 
-        ExpansionType StdHexExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdHexExp::v_DetShapeType() const
         {
-            return eHexahedron;
+            return LibUtilities::eHexahedron;
         };
 
 
@@ -1212,7 +1212,7 @@ namespace Nektar
          */
         void StdHexExp::v_GetFaceToElementMap(
             const int                  fid,
-            const Orientation      faceOrient,
+            const Orientation          faceOrient,
             Array<OneD, unsigned int> &maparray,
             Array<OneD,          int> &signarray,
             int                        nummodesA,
@@ -1223,14 +1223,11 @@ namespace Nektar
             const int nummodes1 = m_base[1]->GetNumModes();
             const int nummodes2 = m_base[2]->GetNumModes();
 
-            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
-            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
-            const LibUtilities::BasisType bType2 = GetEdgeBasisType(2);
-
-            ASSERTL1( (bType0==bType1) && (bType0==bType2),
-                      "Method only implemented if BasisType is indentical in "
-                      "all directions");
-            ASSERTL1( bType0==LibUtilities::eModified_A,
+            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1) &&
+                     GetEdgeBasisType(0) == GetEdgeBasisType(2),
+                     "Method only implemented if BasisType is indentical in "
+                     "all directions");
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A,
                       "Method only implemented for Modified_A BasisType");
 
             if (nummodesA == -1)
@@ -2499,18 +2496,20 @@ namespace Nektar
             int    nquad0 = m_base[0]->GetNumPoints();
             int    nquad1 = m_base[1]->GetNumPoints();
             int    nquad2 = m_base[2]->GetNumPoints();
+            int nq01 = nquad0*nquad1;
+            int nq12 = nquad1*nquad2;
 
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();
             const Array<OneD, const NekDouble>& w2 = m_base[2]->GetW();
 
-            for(i = 0; i < nquad1*nquad2; ++i)
+            for(i = 0; i < nq12; ++i)
             {
                 Vmath::Vmul(nquad0, inarray.get()+i*nquad0, 1,
                             w0.get(), 1, outarray.get()+i*nquad0,1);
             }
 
-            for(i = 0; i < nquad1*nquad2; ++i)
+            for(i = 0; i < nq12; ++i)
             {
                 Vmath::Smul(nquad0, w1[i%nquad2], outarray.get()+i*nquad0, 1,
                             outarray.get()+i*nquad0, 1);
@@ -2518,8 +2517,8 @@ namespace Nektar
 
             for(i = 0; i < nquad2; ++i)
             {
-                Vmath::Smul(nquad0*nquad1, w2[i], outarray.get()+i*nquad0*nquad1, 1,
-                            outarray.get()+i*nquad0*nquad1, 1);
+                Vmath::Smul(nq01, w2[i], outarray.get()+i*nq01, 1,
+                            outarray.get()+i*nq01, 1);
             }
         }
 

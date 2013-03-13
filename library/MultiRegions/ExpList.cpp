@@ -422,7 +422,7 @@ namespace Nektar
             // matrix multiplies
             const Array<OneD, const bool>  doBlockMatOp
                 = m_globalOptParam->DoBlockMatOp(StdRegions::eIProductWRTBase);
-            const Array<OneD, StdRegions::ExpansionType> shape = m_globalOptParam->GetShapeList();
+            const Array<OneD, LibUtilities::ShapeType> shape = m_globalOptParam->GetShapeList();
             const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
 
             Array<OneD,NekDouble> tmp_outarray;
@@ -717,14 +717,14 @@ namespace Nektar
             DNekScalMatSharedPtr    loc_mat;
             DNekScalBlkMatSharedPtr BlkMatrix;
             map<int,int> elmt_id;
-            StdRegions::ExpansionType ExpType = gkey.GetExpansionType();
+            LibUtilities::ShapeType ShapeType = gkey.GetShapeType();
 
-            if(ExpType != StdRegions::eNoExpansionType)
+            if(ShapeType != LibUtilities::eNoShapeType)
             {
                 for(i = 0 ; i < (*m_exp).size(); ++i)
                 {
-                    if((*m_exp)[m_offset_elmt_id[i]]->DetExpansionType()
-                       == ExpType)
+                    if((*m_exp)[m_offset_elmt_id[i]]->DetShapeType()
+                       == ShapeType)
                     {
                         elmt_id[n_exp++] = m_offset_elmt_id[i];
                     }
@@ -833,7 +833,7 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
-                                               (*m_exp)[eid]->DetExpansionType(),
+                                               (*m_exp)[eid]->DetShapeType(),
                                                *(*m_exp)[eid],
                                                gkey.GetConstFactors(),
                                                varcoeffs );
@@ -877,7 +877,7 @@ namespace Nektar
             {
                 if(doBlockMatOp[n])
                 {
-                    const StdRegions::ExpansionType vType
+                    const LibUtilities::ShapeType vType
                                     = m_globalOptParam->GetShapeList()[n];
                     const MultiRegions::GlobalMatrixKey vKey(gkey, vType);
                     if (cnt < m_offset_elmt_id.num_elements())
@@ -909,7 +909,7 @@ namespace Nektar
                         }
 
                         StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
-                                                      (*m_exp)[eid]->DetExpansionType(),
+                                                      (*m_exp)[eid]->DetShapeType(),
                                                       *((*m_exp)[eid]),
                                                       gkey.GetConstFactors(),varcoeffs);
 
@@ -1007,7 +1007,7 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                              (*m_exp)[eid]->DetExpansionType(),
+                                              (*m_exp)[eid]->DetShapeType(),
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
@@ -1127,7 +1127,7 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                              (*m_exp)[eid]->DetExpansionType(),
+                                              (*m_exp)[eid]->DetShapeType(),
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
@@ -1269,7 +1269,7 @@ namespace Nektar
             // matrix multiplies
             const Array<OneD, const bool>  doBlockMatOp
                 = m_globalOptParam->DoBlockMatOp(StdRegions::eBwdTrans);
-            const Array<OneD, StdRegions::ExpansionType> shape = m_globalOptParam->GetShapeList();
+            const Array<OneD, LibUtilities::ShapeType> shape = m_globalOptParam->GetShapeList();
             const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
 
             Array<OneD,NekDouble> tmp_outarray;
@@ -1515,8 +1515,8 @@ namespace Nektar
 
                     if(i>0)
                     {
-                        if ( ((*m_exp)[i]->DetExpansionType())
-                                        !=((*m_exp)[i-1]->DetExpansionType()) )
+                        if ( ((*m_exp)[i]->DetShapeType())
+                                        !=((*m_exp)[i-1]->DetShapeType()) )
                         {
                             dumpNewView = true;
                         }
@@ -1527,8 +1527,8 @@ namespace Nektar
                     }
                     if(i<(*m_exp).size()-1)
                     {
-                        if ( ((*m_exp)[i]->DetExpansionType())
-                                        !=((*m_exp)[i+1]->DetExpansionType()) )
+                        if ( ((*m_exp)[i]->DetShapeType())
+                                        !=((*m_exp)[i+1]->DetShapeType()) )
                         {
                             closeView = true;
                         }
@@ -1949,7 +1949,7 @@ namespace Nektar
             return sqrt(err);
         }
 
-        void  ExpList::GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, 
+        void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
 												  int NumHomoDir, 
 												  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
 												  std::vector<NekDouble> &HomoLen,
@@ -1965,22 +1965,22 @@ namespace Nektar
             switch((*m_exp)[0]->GetShapeDimension())
             {
             case 1:
-                startenum = (int) SpatialDomains::eSegment;
-                endenum   = (int) SpatialDomains::eSegment;
+                startenum = (int) LibUtilities::eSegment;
+                endenum   = (int) LibUtilities::eSegment;
                 break;
             case 2:
-                startenum = (int) SpatialDomains::eTriangle;
-                endenum   = (int) SpatialDomains::eQuadrilateral;
+                startenum = (int) LibUtilities::eTriangle;
+                endenum   = (int) LibUtilities::eQuadrilateral;
                 break;
             case 3:
-                startenum = (int) SpatialDomains::eTetrahedron;
-                endenum   = (int) SpatialDomains::eHexahedron;
+                startenum = (int) LibUtilities::eTetrahedron;
+                endenum   = (int) LibUtilities::eHexahedron;
                 break;
             }
 
             for(s = startenum; s <= endenum; ++s)
             {
-                SpatialDomains::GeomShapeType         shape;
+                LibUtilities::ShapeType               shape;
                 std::vector<unsigned int>             elementIDs;
                 std::vector<LibUtilities::BasisType>  basis;
                 std::vector<unsigned int>             numModes;
@@ -1992,12 +1992,12 @@ namespace Nektar
 
                 for(int i = 0; i < (*m_exp).size(); ++i)
                 {
-                    if((*m_exp)[i]->GetGeom()->GetGeomShapeType() == (SpatialDomains::GeomShapeType) s)
+                    if((*m_exp)[i]->GetGeom()->GetShapeType() == (LibUtilities::ShapeType) s)
                     {
                         elementIDs.push_back((*m_exp)[i]->GetGeom()->GetGlobalID());
                         if(first)
                         {
-                            shape = (SpatialDomains::GeomShapeType) s;
+                            shape = (LibUtilities::ShapeType) s;
                             for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
                             {
                                 basis.push_back((*m_exp)[i]->GetBasis(j)->GetBasisType());
@@ -2037,7 +2037,7 @@ namespace Nektar
 
                 if(elementIDs.size() > 0)
                 {
-                    SpatialDomains::FieldDefinitionsSharedPtr fdef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
+                    LibUtilities::FieldDefinitionsSharedPtr fdef  = MemoryManager<LibUtilities::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
                     fielddef.push_back(fdef);
                 }
             }
@@ -2046,26 +2046,26 @@ namespace Nektar
         //
         // Virtual functions
         //
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpList::v_GetFieldDefinitions()
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> ExpList::v_GetFieldDefinitions()
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> returnval;
             v_GetFieldDefinitions(returnval);
             return returnval;
         }
 
-        void  ExpList::v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
+        void  ExpList::v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
         {
             GeneralGetFieldDefinitions(fielddef);
         }
 
         //Append the element data listed in elements
         //fielddef->m_ElementIDs onto fielddata
-        void ExpList::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
+        void ExpList::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
             v_AppendFieldData(fielddef,fielddata,m_coeffs);
         }
         
-        void ExpList::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
+        void ExpList::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
             int i;
             // Determine mapping from element ids to location in
@@ -2086,10 +2086,10 @@ namespace Nektar
             }
 
         }
-
+        
         /// Extract the data in fielddata into the coeffs
         void ExpList::ExtractDataToCoeffs(
-                                   SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                   LibUtilities::FieldDefinitionsSharedPtr &fielddef,
                                    std::vector<NekDouble> &fielddata,
                                    std::string &field,
                                    Array<OneD, NekDouble> &coeffs)
@@ -2102,19 +2102,25 @@ namespace Nektar
             v_ExtractCoeffsToCoeffs(fromExpList,fromCoeffs,toCoeffs);
         }
 
-        
-        
-        
-        /// NEW METHOD BY DAVE =================================================
+        /**
+         * @brief Extract data from raw field data into expansion list.
+         *
+         * @param fielddef   Field definitions.
+         * @param fielddata  Data for associated field.
+         * @param field      Field variable name.
+         * @param coeffs     Resulting coefficient array.
+         */
         void ExpList::v_ExtractDataToCoeffs(
-            SpatialDomains::FieldDefinitionsSharedPtr       &fielddef, 
-            std::vector<NekDouble> &fielddata, std::string  &field, 
-            Array<OneD, NekDouble>                          &coeffs)
+            LibUtilities::FieldDefinitionsSharedPtr   &fielddef,
+            std::vector<NekDouble>                    &fielddata,
+            std::string                               &field,
+            Array<OneD, NekDouble>                    &coeffs)
         {     	
-            int i, cnt;
-            int offset = 0;
-            int datalen = fielddata.size()/fielddef->m_fields.size();
-            
+            int i, cnt, expId;
+            int offset       = 0;
+            int modes_offset = 0;
+            int datalen      = fielddata.size()/fielddef->m_fields.size();
+
             // Find data location according to field definition
             for(i = 0; i < fielddef->m_fields.size(); ++i)
             {
@@ -2128,195 +2134,178 @@ namespace Nektar
             if(i == fielddef->m_fields.size())
             {
                 cerr << "Field (" << field << ") not found in data file; "
-                << "Setting it to zero. " << endl;
+                     << "Setting it to zero. " << endl;
                 Vmath::Zero(coeffs.num_elements(),coeffs,1);
+                return;
             }
-            else
+
+            // Determine mapping from element ids to location in expansion list
+            map<int, int> elmtToExpId;
+
+            // Loop in reverse order so that in case where using a Homogeneous
+            // expansion it sets geometry ids to first part of m_exp
+            // list. Otherwise will set to second (complex) expansion
+            for(i = (*m_exp).size()-1; i >= 0; --i)
             {
-                // Determine mapping from element ids to location in expansion
-                // list
-                map<int, int> ElmtID_to_ExpID;
-                
-                // loop in reverse order so that in case where using a
-                // Homogeneous expansion it sets geometry ids to first part of
-                // m_exp list. Otherwise will set to second (complex) expansion
-                for(i = (*m_exp).size()-1; i >=0; --i)
+                elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+            }
+
+            // If no session is set, we use the non-parallel version of this
+            // routine. This is used for reading BCs from files - note therefore
+            // that this will probably not work in parallel.
+            if (!m_session)
+            {
+                for (cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
                 {
-                    ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
-                }
-                
-                // Communicate number of modes between processors.
-                LibUtilities::CommSharedPtr vComm =
-                m_session->GetComm()->GetRowComm();
-                int n = vComm->GetSize();
-                int p = vComm->GetRank();
-                
-                // Determine number of elements in fielddef inside this process.
-                for(cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
-                {
-                    if (ElmtID_to_ExpID.count(fielddef->m_elementIDs[i]) == 0)
+                    const int elmtId = fielddef->m_elementIDs[i];
+                    if (elmtToExpId.count(elmtId) == 0)
                     {
                         continue;
                     }
                     
-                    ++cnt;
-                }
-                
-                Array<OneD, int> numEls(n, 0);
-                numEls[p] = cnt;
-                vComm->AllReduce(numEls, LibUtilities::ReduceSum);
-                int totEls = Vmath::Vsum(n, numEls, 1);
-                
-                Array<OneD, int> elOffsets(n, 0);
-                elOffsets[0] = 0;
-                for (i = 1; i < n; ++i)
-                {
-                    elOffsets[i] = elOffsets[i-1] + numEls[i-1];
-                }
-                
-                Array<OneD, int> coeffsPerEl  (totEls, 0);
-                Array<OneD, int> elmtGlobalIds(totEls, 0);
-                
-                // Determine number of coefficients in each local (to this
-                // partition) element.
-                int modes_offset = 0;
-                for(cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
-                {
-                    if (ElmtID_to_ExpID.count(fielddef->m_elementIDs[i]) == 0)
-                    {
-                        continue;
-                    }
-                    
-                    int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
-                    int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(
-                                            fielddef->m_numModes,modes_offset);
-                    if(fielddef->m_uniOrder == true)
+                    expId   = elmtToExpId[elmtId];
+                    datalen = (*m_exp)[expId]->CalcNumberOfCoefficients(
+                        fielddef->m_numModes, modes_offset);
+
+                    // Reset modes_offset in the case where all expansions of
+                    // the same order.
+                    if (fielddef->m_uniOrder == true)
                     {
                         modes_offset = 0;
                     }
-                    
-                    elmtGlobalIds[cnt+elOffsets[p]] = fielddef->m_elementIDs[i];
-                    coeffsPerEl  [cnt+elOffsets[p]] = datalen;
-                    cnt++;
-                }
-                
-                vComm->AllReduce(coeffsPerEl,   LibUtilities::ReduceSum);
-                vComm->AllReduce(elmtGlobalIds, LibUtilities::ReduceSum);
-                
-                map<int,int> coeffsElmtMap;
-                
-                for (i = 0; i < totEls; ++i)
-                {
-                    ASSERTL0(coeffsElmtMap.count(elmtGlobalIds[i]) == 0,
-                             "Error in communicating global ids!");
-                    coeffsElmtMap[elmtGlobalIds[i]] = coeffsPerEl[i];
-                }
-                
-                for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
-                {
-                    if (ElmtID_to_ExpID.count(fielddef->m_elementIDs[i]) == 0)
-                    {
-                        ASSERTL0(coeffsElmtMap.count(fielddef->m_elementIDs[i])
-                                 > 0, "Couldn't find element!");
-                        offset += coeffsElmtMap[fielddef->m_elementIDs[i]];
-                        continue;
-                    }
-                    
-                    int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
-                    int datalen = coeffsElmtMap[fielddef->m_elementIDs[i]];
-                    if(fielddef->m_uniOrder == true)
-                    {
-                        modes_offset = 0;
-                    }
-                    
-                    // Copy data if it is the same length as expansion.
-                    if(datalen == (*m_exp)[eid]->GetNcoeffs())
+
+                    if (datalen == (*m_exp)[expId]->GetNcoeffs())
                     {
                         Vmath::Vcopy(datalen, &fielddata[offset], 1, 
-                                     &coeffs[m_coeff_offset[eid]], 1);
+                                     &coeffs[m_coeff_offset[expId]], 1);
                     }
-                    else // unpack data to new order
+                    else
                     {
-                        (*m_exp)[eid]->ExtractDataToCoeffs(
+                        (*m_exp)[expId]->ExtractDataToCoeffs(
                             &fielddata[offset], fielddef->m_numModes,
-                            modes_offset, &coeffs[m_coeff_offset[eid]]);
+                            modes_offset, &coeffs[m_coeff_offset[expId]]);
                     }
                     
                     offset += datalen;
-                }                
-            }
-        }
-        /// END NEW METHOD BY DAVE =============================================
-
-
-
-/*
-        /// OLD METHOD NOT WORKING IN PARALLEL =================================
-        void ExpList::v_ExtractDataToCoeffs(
-            SpatialDomains::FieldDefinitionsSharedPtr       &fielddef, 
-            std::vector<NekDouble> &fielddata, std::string  &field, 
-            Array<OneD, NekDouble>                          &coeffs)
-        {     	
-            int i;
-            int offset = 0;
-            int datalen = fielddata.size()/fielddef->m_fields.size();
-
-            // Find data location according to field definition
-            for(i = 0; i < fielddef->m_fields.size(); ++i)
-            {
-                if(fielddef->m_fields[i] == field)
-                {
-                    break;
                 }
+
+                return;
+            }
+
+            // Determine rank and number of processors.
+            LibUtilities::CommSharedPtr vComm =
+                m_session->GetComm()->GetRowComm();
+            int n = vComm->GetSize();
+            int p = vComm->GetRank();
+
+            // Determine number of elements in fielddef located on this process.
+            for(cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
+            {
+                if (elmtToExpId.count(fielddef->m_elementIDs[i]) == 0)
+                {
+                    continue;
+                }
+                ++cnt;
+            }
+
+            // Exchange this information between processors.
+            Array<OneD, int> numEls(n, 0);
+            numEls[p] = cnt;
+            vComm->AllReduce(numEls, LibUtilities::ReduceSum);
+            int totEls = Vmath::Vsum(n, numEls, 1);
+                
+            Array<OneD, int> elOffsets(n, 0);
+            elOffsets[0] = 0;
+            for (i = 1; i < n; ++i)
+            {
+                elOffsets[i] = elOffsets[i-1] + numEls[i-1];
+            }
+            
+            // Storage holding number of coefficients per element and their
+            // global IDs.
+            Array<OneD, int> coeffsPerEl  (totEls, 0);
+            Array<OneD, int> elmtGlobalIds(totEls, 0);
+                
+            // Determine number of coefficients in each local (to this
+            // partition) element and store in the arrays above.
+            for(cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
+            {
+                const int elmtId = fielddef->m_elementIDs[i];
+                
+                if (elmtToExpId.count(elmtId) == 0)
+                {
+                    continue;
+                }
+
+                expId   = elmtToExpId[elmtId];
+                datalen = (*m_exp)[expId]->CalcNumberOfCoefficients(
+                    fielddef->m_numModes, modes_offset);
+
+                if(fielddef->m_uniOrder == true)
+                {
+                    modes_offset = 0;
+                }
+
+                elmtGlobalIds[cnt + elOffsets[p]] = fielddef->m_elementIDs[i];
+                coeffsPerEl  [cnt + elOffsets[p]] = datalen;
+                cnt++;
+            }
+
+            // Exchange this information so that each processor knows about all
+            // coefficients per element and the corresponding global ID.
+            vComm->AllReduce(coeffsPerEl,   LibUtilities::ReduceSum);
+            vComm->AllReduce(elmtGlobalIds, LibUtilities::ReduceSum);
+
+            // Map taking element global ID to number of coefficients for that
+            // element.
+            map<int,int> coeffsElmtMap;
+
+            for (i = 0; i < totEls; ++i)
+            {
+                // Ensure that global IDs are mapped precisely once.
+                ASSERTL0(coeffsElmtMap.count(elmtGlobalIds[i]) == 0,
+                         "Error in communicating global ids for field "+
+                         field + "!");
+                coeffsElmtMap[elmtGlobalIds[i]] = coeffsPerEl[i];
+            }
+                
+            for (i = 0; i < fielddef->m_elementIDs.size(); ++i)
+            {
+                const int elmtId = fielddef->m_elementIDs[i];
+
+                if (elmtToExpId.count(elmtId) == 0)
+                {
+                    ASSERTL1(coeffsElmtMap.count(elmtId) == 1,
+                             "Couldn't find element!");
+                    offset += coeffsElmtMap[elmtId];
+                    continue;
+                }
+                    
+                expId   = elmtToExpId  [elmtId];
+                datalen = coeffsElmtMap[elmtId];
+
+                if(fielddef->m_uniOrder == true)
+                {
+                    modes_offset = 0;
+                }
+
+                if(datalen == (*m_exp)[expId]->GetNcoeffs())
+                {
+                    // Copy data if it is the same length as expansion.
+                    Vmath::Vcopy(datalen, &fielddata[offset], 1, 
+                                 &coeffs[m_coeff_offset[expId]], 1);
+                }
+                else
+                {
+                    // unpack data to new order
+                    (*m_exp)[expId]->ExtractDataToCoeffs(
+                        &fielddata[offset], fielddef->m_numModes,
+                        modes_offset, &coeffs[m_coeff_offset[expId]]);
+                }
+                    
                 offset += datalen;
-            }
-
-            if(i == fielddef->m_fields.size())
-            {
-                cerr << "Field (" << field << ") not found in data file. Setting it to zero. " << endl;
-                Vmath::Zero(coeffs.num_elements(),coeffs,1);
-            }
-            else
-            {
-
-                // Determine mapping from element ids to location in
-                // expansion list
-                map<int, int> ElmtID_to_ExpID;
-                // loop in reverse order so that in case where using
-                // a Homogeneous expansion it sets geometry ids to
-                // first part of m_exp list. Otherwise will set to
-                // second (complex) expansion
-                for(i = (*m_exp).size()-1; i >=0; --i)
-                {
-                    ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
-                }
-
-                int modes_offset = 0;
-                for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
-                {
-                    int eid = ElmtID_to_ExpID[fielddef->m_elementIDs[i]];
-                    int datalen = (*m_exp)[eid]->CalcNumberOfCoefficients(fielddef->m_numModes,modes_offset);
-                    if(fielddef->m_uniOrder == true) // reset modes_offset to zero
-                    {
-                        modes_offset = 0;
-                    }
-
-                    // copy data if of same length as expansion
-                    if(datalen == (*m_exp)[eid]->GetNcoeffs())
-                    {
-                        Vmath::Vcopy(datalen,&fielddata[offset],1,&coeffs[m_coeff_offset[eid]],1);
-                    }
-                    else // unpack data to new order
-                    {
-                        
-                        (*m_exp)[eid]->ExtractDataToCoeffs(&fielddata[offset], fielddef->m_numModes, modes_offset, &coeffs[m_coeff_offset[eid]]);
-                    }
-                    offset += datalen;
-                }                
-            }
+            }                
         }
-        /// END OLD METHOD NOT WORKING IN PARALLEL =============================
-*/
 
         void ExpList::v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {     	

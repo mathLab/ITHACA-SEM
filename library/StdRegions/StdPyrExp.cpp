@@ -920,10 +920,11 @@ namespace Nektar
             const int nummodes2 = m_base[2]->GetNumModes();
             //int nummodesA, nummodesB, P, Q;
 
+#if defined(NEKTAR_DEBUG)
             const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
             const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
             const LibUtilities::BasisType bType2 = GetEdgeBasisType(4);
-            
+#endif
             ASSERTL1( (bType0==bType1),
                       "Method only implemented if BasisType is indentical in x and y directions");
             ASSERTL1( (bType0==LibUtilities::eModified_A) && (bType1==LibUtilities::eModified_A) && (bType2==LibUtilities::eModified_C),

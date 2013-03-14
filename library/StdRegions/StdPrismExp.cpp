@@ -1244,10 +1244,11 @@ namespace Nektar
             int                        nummodesA,
             int                        nummodesB)
         {
+#if defined(NEKTAR_DEBUG)
             const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
             const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
             const LibUtilities::BasisType bType2 = GetEdgeBasisType(4);
-            
+#endif
             ASSERTL1(bType0 == bType1,
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");

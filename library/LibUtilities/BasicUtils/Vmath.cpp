@@ -492,25 +492,9 @@ namespace Vmath
         }
     }
 
-    /// \brief  svtvp (scalar times vector plus vector): z = alpha*x + y
-    template<class T> LIB_UTILITIES_EXPORT void Svtvp(int n, const T alpha, const T *x, const T *y, T *z)
-    {
-        ++n;
-            while( --n )
-            {
-                *z = alpha * (*x) + (*y);
-                ++x;
-                ++y;
-                ++z;
-            }
-    }
-
-
     template LIB_UTILITIES_EXPORT void Svtvp(int n, const double alpha, const double *x,
                  const int incx, const double *y, const int incy,
                  double *z, const int incz);
-    template LIB_UTILITIES_EXPORT void Svtvp(int n, const double alpha, const double *x,
-                 const double *y, double *z);
 
 
     /// \brief  svtvp (scalar times vector plus vector): z = alpha*x - y

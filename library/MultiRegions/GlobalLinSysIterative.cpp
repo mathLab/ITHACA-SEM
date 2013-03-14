@@ -453,36 +453,6 @@ namespace Nektar
             v_DoMatrixMultiply(w_A, s_A);
             k = 0;
 
-            Timer t;
-
-            int rank = vComm->GetRank();
-            cout << "MPI " << rank << ": calling Svtvp 1000 times on array with " << nNonDir << " elements" << endl;
-
-            t.Start();
-            for (int i = 0 ; i < 1000; i++)
-            {
-                Vmath::Svtvp(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &tmp_A[0], 1);
-            }
-            t.Stop();
-            cout << "MPI " << rank << ": One call to cpp Svtvp with increment takes " << t.TimePerTest(1000) << endl;
-
-            t.Start();
-            for (int i = 0 ; i < 1000; i++)
-            {
-                Vmath::Svtvph(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &tmp_A[0], 1);
-            }
-            t.Stop();
-            cout << "MPI " << rank << ": One call to hpp Svtvp with increment takes " << t.TimePerTest(1000) << endl;
-
-            t.Start();
-            for (int i = 0 ; i < 1000; i++)
-            {
-                Vmath::Svtvp(nNonDir, beta, &p_A[0], &w_A[nDir], &tmp_A[0]);
-            }
-            t.Stop();
-            cout << "MPI " << rank << ": One call to cpp Svtvp without increment takes " << t.TimePerTest(1000) << endl;
-
-
             vExchange[0] = Vmath::Dot2(nNonDir,
                                        r_A,
                                        w_A + nDir,
@@ -513,18 +483,14 @@ namespace Nektar
                 //q   = s   + beta  * q;
                 Vmath::Svtvp(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &p_A[0], 1);
                 Vmath::Svtvp(nNonDir, beta, &q_A[0], 1, &s_A[nDir], 1, &q_A[0], 1);
-                //Vmath::Svtvp(nNonDir, beta, &p_A[0], &w_A[nDir], &p_A[0]);
-                //Vmath::Svtvp(nNonDir, beta, &q_A[0], &s_A[nDir], &q_A[0]);
 
                 // Update solution x_{k+1}
                 //out = out + alpha * p;
                 Vmath::Svtvp(nNonDir, alpha, &p_A[0], 1, &pOutput[nDir], 1, &pOutput[nDir], 1);
-                //Vmath::Svtvp(nNonDir, alpha, &p_A[0], &pOutput[nDir], &pOutput[nDir]);
 
                 // Update residual vector r_{k+1}
                 //r   = r   - alpha * q;
                 Vmath::Svtvp(nNonDir, -alpha, &q_A[0], 1, &r_A[0], 1, &r_A[0], 1);
-                //Vmath::Svtvp(nNonDir, -alpha, &q_A[0], &r_A[0], &r_A[0]);
 
                 // Apply preconditioner
                 m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);

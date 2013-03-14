@@ -29,33 +29,7 @@ SET(NodalTetElecSources
 SET(TimeIntegrationDemoSources
 	TimeIntegrationDemo.cpp)
 
-SET(SvtvpHeaderInlineSources
-	Svtvp-header-inline.hpp
-	Svtvp-header-inline.cpp)
 
-SET(SvtvpHeaderSources
-	Svtvp-header.hpp
-	Svtvp-header.cpp)
-
-
-SET(SvtvpExplicitInstLibSources
-	Svtvp-explicit-inst-inc.cpp
-	Svtvp-explicit-inst.cpp)
-SET(SvtvpExplicitInstLibHeaders
-	Svtvp-explicit-inst-inc.hpp
-	Svtvp-explicit-inst.hpp)
-
-
-SET(SvtvpExplicitInstIncSources
-    Svtvp-explicit-inst-inc-main.cpp)
-
-SET(SvtvpExplicitInstSources
-    Svtvp-explicit-inst-main.cpp)
-
-ADD_NEKTAR_LIBRARY(SvtvpExplicitInstLib lib ${NEKTAR_LIBRARY_TYPE} ${SvtvpExplicitInstLibSources} ${SvtvpExplicitInstLibHeaders})
-
-
-   		
 #ADD_NEKTAR_EXECUTABLE(Graph demos GraphSources )
 #SET_LAPACK_LINK_LIBRARIES(Graph)
 
@@ -83,13 +57,4 @@ SET_LAPACK_LINK_LIBRARIES(NodalTetElecDemo)
 
 ADD_NEKTAR_EXECUTABLE(TimeIntegrationDemo demos TimeIntegrationDemoSources)
 SET_LAPACK_LINK_LIBRARIES(TimeIntegrationDemo)
-
-ADD_NEKTAR_EXECUTABLE(SvtvpHeaderInlineDemo demos SvtvpHeaderInlineSources)
-ADD_NEKTAR_EXECUTABLE(SvtvpHeaderDemo demos SvtvpHeaderSources)
-
-ADD_NEKTAR_EXECUTABLE(SvtvpExplicitInstIncDemo demos SvtvpExplicitInstIncSources)
-ADD_NEKTAR_EXECUTABLE(SvtvpExplicitInstDemo    demos SvtvpExplicitInstSources)
-
-TARGET_LINK_LIBRARIES(SvtvpExplicitInstIncDemo SvtvpExplicitInstLib)
-TARGET_LINK_LIBRARIES(SvtvpExplicitInstDemo SvtvpExplicitInstLib)
 

@@ -1109,10 +1109,6 @@ namespace Nektar
                 }
             }
 
-
-            DNekMatSharedPtr Identity = MemoryManager<DNekMat>::
-                AllocateSharedPtr(nRows,nRows,zero,eFULL);
-            
             DNekScalMatSharedPtr returnvalR = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,Rmodprism);
             

@@ -240,17 +240,17 @@ namespace Nektar
          */
         ExpList1D::ExpList1D(const SpatialDomains::CompositeMap &domain,
                              const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                             const bool DeclareCoeffPhysArrays):
+                             const bool DeclareCoeffPhysArrays,
+                             const std::string variable):
             ExpList()
         {
-            int j,cnt,id=0;
+            int j, id=0;
             SpatialDomains::Composite comp;
             SpatialDomains::CompositeMap::const_iterator compIt;
             SpatialDomains::SegGeomSharedPtr SegmentGeom;
             LocalRegions::SegExpSharedPtr seg;
 
             // Process each composite region.
-            cnt = 0;
             for(compIt = domain.begin(); compIt != domain.end(); ++compIt)
             {
                 comp = compIt->second;
@@ -264,7 +264,7 @@ namespace Nektar
                     {
                         // Retrieve the basis key from the expansion.
                         LibUtilities::BasisKey bkey
-                                        = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetEdgeBasisKey(SegmentGeom);
+                            = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph2D>(graph2D)->GetEdgeBasisKey(SegmentGeom, variable);
 
                         seg = MemoryManager<LocalRegions::SegExp>
                                         ::AllocateSharedPtr(bkey, SegmentGeom);
@@ -297,14 +297,14 @@ namespace Nektar
             }
         }
 
-		/**
+        /**
          * Fills the list of local expansions with the segments in one
-		 * subdomain specified in an inputfile by \a domain. This 
-		 * CompositeMap contains a list of Composites which define the 
-		 * subdomains.
+         * subdomain specified in an inputfile by \a domain. This 
+         * CompositeMap contains a list of Composites which define the 
+         * subdomains.
          * @param   domain      A domain, comprising of one or more composite
          *                      regions.
-		 * @param   i           Index of currently processed subdomain
+         * @param   i           Index of currently processed subdomain
          * @param   graph1D     A mesh, containing information about the
          *                      domain and the spectral/hp element expansion.
          * @param   DeclareCoeffPhysArrays If true, create general segment expansions
@@ -411,10 +411,11 @@ namespace Nektar
                     const StdRegions::StdExpansionVector &locexp,
                     const SpatialDomains::MeshGraphSharedPtr &graph2D,
                     const map<int,int> &periodicEdges,
-                    const bool DeclareCoeffPhysArrays):
+                    const bool DeclareCoeffPhysArrays,
+                    const std::string variable):
             ExpList()
         {
-            int i,j,cnt,id, elmtid=0;
+            int i, j, id, elmtid=0;
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
@@ -423,7 +424,6 @@ namespace Nektar
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
-            cnt = 0;
             for(i = 0; i < bndCond.num_elements(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType()
@@ -619,8 +619,8 @@ namespace Nektar
                 NekDouble integral_value = 0.0;
                 for(j = 0; j < total_breaks.num_elements()-1; j++)
                 {
-                    double a = total_breaks[j];
-                    double b = total_breaks[j+1];
+                    NekDouble a = total_breaks[j];
+                    NekDouble b = total_breaks[j+1];
 
                     // Map the quadrature points to the appropriate interval
                     for(r = 0; r < quad_points.num_elements(); r++)
@@ -894,9 +894,6 @@ namespace Nektar
             int i,j,e_npoints,offset;
             Array<OneD,NekDouble> normals;
 
-            // Assume whole array is of same coordimate dimention
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
-
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
@@ -1054,7 +1051,6 @@ namespace Nektar
         void ExpList1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int ntot = nquad0;
             int ntotminus = (nquad0-1);

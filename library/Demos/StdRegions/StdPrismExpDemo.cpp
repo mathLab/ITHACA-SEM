@@ -16,12 +16,6 @@ using namespace Nektar;
 NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z, int order1, int order2, int order3,
                   LibUtilities::BasisType bType_x, LibUtilities::BasisType bType_y, LibUtilities::BasisType bType_z);
 
-// modification to deal with exact solution. Return 1 if integer < 0
-static double  pow_loc(const double val, const int i)
-{
-  return (i < 0)? 1.0: pow(val,i);
-}
-
 using namespace Nektar::LibUtilities;
 using namespace Nektar::StdRegions;
 
@@ -47,7 +41,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    StdRegions::ExpansionType regionShape = ePrism;    
+    LibUtilities::ShapeType regionShape = LibUtilities::ePrism;    
     
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
@@ -56,20 +50,17 @@ int main(int argc, char *argv[]) {
     LibUtilities::BasisType   bType_x = static_cast<LibUtilities::BasisType>( bType_x_val );
     LibUtilities::BasisType   bType_y = static_cast<LibUtilities::BasisType>( bType_y_val );
     LibUtilities::BasisType   bType_z = static_cast<LibUtilities::BasisType>( bType_z_val );
-    LibUtilities::PointsType  NodalType = LibUtilities::eNoPointsType;
     
     if( (bType_x_val == 13) || (bType_y_val == 13) || (bType_z_val == 13) )
     {
         bType_x =   LibUtilities::eOrtho_A;
         bType_y =   LibUtilities::eOrtho_B;
         bType_z =   LibUtilities::eOrtho_C;  
-        
-        NodalType = LibUtilities::eNodalTetElec;
     }
 
 
     // Check to see that correct Expansions are used
-    if( regionShape == StdRegions::ePrism ) 
+    if( regionShape == LibUtilities::ePrism ) 
     {
         if( (bType_x == LibUtilities::eOrtho_B) || (bType_x == LibUtilities::eModified_B) ) {
             NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B or Modified_B");
@@ -130,7 +121,7 @@ int main(int argc, char *argv[]) {
     
     StdRegions::StdExpansion *spe;
     
-    if( regionShape == StdRegions::ePrism ) 
+    if( regionShape == LibUtilities::ePrism ) 
     { 
         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
         const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
@@ -183,11 +174,11 @@ int main(int argc, char *argv[]) {
     // Evaulate solution at x = y = z = 0  and print error
     Array<OneD, NekDouble> t = Array<OneD, NekDouble>(3);
 
-     t[0] = -0.39;
-     t[1] = -0.25;
-     t[2] = 0.5;
-
-    if( regionShape == StdRegions::ePrism ) {
+    t[0] = -0.39;
+    t[1] = -0.25;
+    t[2] = 0.5;
+    
+    if(regionShape == LibUtilities::ePrism ) {
         solution[0] = Prism_sol( t[0], t[1], t[2], P, Q, R, bType_x, bType_y, bType_z ); 
     }
     
@@ -203,7 +194,7 @@ int main(int argc, char *argv[]) {
     
      // Testing the physical evaluate(u_phys): projection on to the polynomial space given by the prismatic basis function
     // The result of output should converge to the interpolation solution 
-    Array<OneD, const NekDouble> const& u_phys = spe->GetPhys();
+    //Array<OneD, const NekDouble> const& u_phys = spe->GetPhys();
     Array<OneD, NekDouble> prism_solution( Qx * Qy * Qz, 0.0 );
     cout << setprecision(4);
     for(int n = 0; n < Qx * Qy * Qz; ++n) {

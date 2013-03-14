@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
     
-    StdRegions::ExpansionType regionShape = ePrism;    
+    LibUtilities::ShapeType regionShape = LibUtilities::ePrism;    
     
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
@@ -63,20 +63,17 @@ int main(int argc, char *argv[]) {
     LibUtilities::BasisType   bType_x = static_cast<LibUtilities::BasisType>( bType_x_val );
     LibUtilities::BasisType   bType_y = static_cast<LibUtilities::BasisType>( bType_y_val );
     LibUtilities::BasisType   bType_z = static_cast<LibUtilities::BasisType>( bType_z_val );
-    LibUtilities::PointsType  NodalType = LibUtilities::eNoPointsType;
     
     if( (bType_x_val == 13) || (bType_y_val == 13) || (bType_z_val == 13) )
     {
         bType_x =   LibUtilities::eOrtho_A;
         bType_y =   LibUtilities::eOrtho_B;
         bType_z =   LibUtilities::eOrtho_C;
-        
-        NodalType = LibUtilities::eNodalTetElec;
     }
 
 
     // Check to see that correct Expansions are used
-    if( regionShape == StdRegions::ePrism ) 
+    if(regionShape == LibUtilities::ePrism ) 
     {
         if( (bType_x == LibUtilities::eOrtho_B) || (bType_x == LibUtilities::eModified_B) ) {
             NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B or Modified_B");
@@ -142,7 +139,7 @@ int main(int argc, char *argv[]) {
     
     StdRegions::StdExpansion3D *spe;
     
-    if( regionShape == StdRegions::ePrism ) 
+    if( regionShape == LibUtilities::ePrism ) 
     { 
         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
         const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
@@ -235,8 +232,10 @@ int main(int argc, char *argv[]) {
     t[1] = -0.25;
     t[2] = 0.5;
     
-    if (regionShape == StdRegions::ePrism) {
-        diff_solution_x[0] = Prism_Diff_Sol( t[0], t[1], t[2], P, Q, R, bType_x, bType_y, bType_z, 1 );  
+    if (regionShape == LibUtilities::ePrism) 
+    {
+        diff_solution_x[0] = Prism_Diff_Sol( t[0], t[1], t[2], 
+                                             P, Q, R, bType_x, bType_y, bType_z, 1 );  
     }
      
     return 0;

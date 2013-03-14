@@ -40,14 +40,45 @@ int main(int argc, char *argv[])
         ASSERTL0(false,"1D not set up");
         break;
     case 2:
-        ASSERTL0(false,"2D not set up");
+        {
+            NekDouble x,y,z;
+            string   outname(strtok(argv[argc-1],"."));
+            outname += ".dat";
+            FILE *fp = fopen(outname.c_str(),"w");
+            
+            SpatialDomains::TriGeomMap trigeom = mesh->GetAllTriGeoms();
+            SpatialDomains::QuadGeomMap quadgeom = mesh->GetAllQuadGeoms();
+
+            int nverts = mesh->GetNvertices();
+
+            Array<OneD, NekDouble> xc(nverts),yc(nverts),zc(nverts);
+
+            for(int i = 0; i < nverts; ++i)
+            {
+                mesh->GetVertex(i)->GetCoords(x,y,z);
+                xc[i] = x;
+                yc[i] = y;
+                zc[i] = z;
+            }
+            
+            std::map<int,SpatialDomains::TriGeomSharedPtr>::iterator triIter;
+            for(triIter = trigeom.begin(); triIter != trigeom.end(); ++triIter)
+            {
+                fprintf(fp,"%d %d %d %d\n",(triIter->second)->GetVid(0)+1,(triIter->second)->GetVid(1)+1,(triIter->second)->GetVid(2)+1,(triIter->second)->GetVid(2)+1);
+            }
+            
+            std::map<int,SpatialDomains::QuadGeomSharedPtr>::iterator quadIter;
+            for(quadIter = quadgeom.begin(); quadIter != quadgeom.end(); ++quadIter)
+            {
+                fprintf(fp,"%d %d %d %d\n",(quadIter->second)->GetVid(0)+1,(quadIter->second)->GetVid(1)+1,(quadIter->second)->GetVid(2)+1,(quadIter->second)->GetVid(3)+1);
+            }
+        }
         break;
     case 3:
         {
             NekDouble x,y,z;
             string   outname(strtok(argv[argc-1],"."));
             outname += ".dat";
-            FILE *fp = fopen(outname.c_str(),"w");
             
             SpatialDomains::TetGeomMap   tetgeom   = mesh->GetAllTetGeoms();
             SpatialDomains::PyrGeomMap   pyrgeom   = mesh->GetAllPyrGeoms();

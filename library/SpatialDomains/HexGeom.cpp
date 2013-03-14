@@ -45,13 +45,13 @@ namespace Nektar
     {
         HexGeom::HexGeom()
         {
-            m_geomShapeType = eHexahedron;
+            m_shapeType = LibUtilities::eHexahedron;
         }
 
         HexGeom::HexGeom(const QuadGeomSharedPtr faces[]):
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_geomShapeType = eHexahedron;
+            m_shapeType = LibUtilities::eHexahedron;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+HexGeom::kNfaces);
@@ -212,57 +212,65 @@ namespace Nektar
         }
 
         void HexGeom::v_GenGeomFactors(
-            const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            int i,f;
-            GeomType Gtype = eRegular;
-
-            v_FillGeom();
-
-            // check to see if expansions are linear
-            for(i = 0; i < m_coordim; ++i)
+            if (m_geomFactorsState != ePtsFilled)
             {
-                if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(1) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(2) != 2 )
-                {
-                    Gtype = eDeformed;
-                }
-            }
+                int i,f;
+                GeomType Gtype = eRegular;
 
-            // check to see if all faces are parallelograms 
-            if(Gtype == eRegular)
-            {
-                const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
-                    { {0,1,2,3} ,
-                      {0,1,5,4} ,
-                      {1,2,6,5} ,
-                      {3,2,6,7} ,
-                      {0,3,7,4} ,
-                      {4,5,6,7} };
+                v_FillGeom();
 
-                for(f = 0; f < kNfaces; f++)
+                // check to see if expansions are linear
+                for(i = 0; i < m_coordim; ++i)
                 {
-                    // Ensure each face is a parallelogram? Check this.
-                    for (i = 0; i < m_coordim; i++)
+                    if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(1) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(2) != 2 )
                     {
-                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) +
-                                (*m_verts[ faceVerts[f][2] ])(i) - (*m_verts[ faceVerts[f][3] ])(i) ) > NekConstants::kNekZeroTol )
+                        Gtype = eDeformed;
+                    }
+                }
+
+                // check to see if all faces are parallelograms
+                if(Gtype == eRegular)
+                {
+                    const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
+                        { {0,1,2,3} ,
+                          {0,1,5,4} ,
+                          {1,2,6,5} ,
+                          {3,2,6,7} ,
+                          {0,3,7,4} ,
+                          {4,5,6,7} };
+
+                    for(f = 0; f < kNfaces; f++)
+                    {
+                        // Ensure each face is a parallelogram? Check this.
+                        for (i = 0; i < m_coordim; i++)
                         {
-                            Gtype = eDeformed;
+                            if( fabs( (*m_verts[ faceVerts[f][0] ])(i) -
+                                      (*m_verts[ faceVerts[f][1] ])(i) +
+                                      (*m_verts[ faceVerts[f][2] ])(i) -
+                                      (*m_verts[ faceVerts[f][3] ])(i) )
+                                    > NekConstants::kNekZeroTol )
+                            {
+                                Gtype = eDeformed;
+                                break;
+                            }
+                        }
+
+                        if (Gtype == eDeformed)
+                        {
                             break;
                         }
                     }
-                    
-                    if (Gtype == eDeformed)
-                    {
-                        break;
-                    }
                 }
-            }
 
-            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                Gtype, m_coordim, m_xmap, tbasis);
+                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap, tbasis, true);
+
+                m_geomFactorsState = ePtsFilled;
+            }
         }
 
         void HexGeom::v_GetLocCoords(
@@ -877,91 +885,3 @@ namespace Nektar
 
     }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: HexGeom.cpp,v $
-// Revision 1.22  2010/01/20 18:05:09  cantwell
-// Added utility for probing a line of points in a FLD file.
-//
-// Revision 1.21  2009/12/17 01:47:31  bnelson
-// Fixed visual studio compiler warning.
-//
-// Revision 1.20  2009/12/16 21:29:31  bnelson
-// Removed unused variables to fix compiler warnings.
-//
-// Revision 1.19  2009/12/15 18:09:02  cantwell
-// Split GeomFactors into 1D, 2D and 3D
-// Added generation of tangential basis into GeomFactors
-// Updated ADR2DManifold solver to use GeomFactors for tangents
-// Added <GEOMINFO> XML session section support in MeshGraph
-// Fixed const-correctness in VmathArray
-// Cleaned up LocalRegions code to generate GeomFactors
-// Removed GenSegExp
-// Temporary fix to SubStructuredGraph
-// Documentation for GlobalLinSys and GlobalMatrix classes
-//
-// Revision 1.18  2009/01/21 16:59:03  pvos
-// Added additional geometric factors to improve efficiency
-//
-// Revision 1.17  2008/12/18 14:08:58  pvos
-// NekConstants update
-//
-// Revision 1.16  2008/11/17 08:59:54  ehan
-// Added necessary mapping routines for Tet
-//
-// Revision 1.15  2008/09/23 22:09:00  ehan
-// Added new constructor HexGeom
-//
-// Revision 1.14  2008/09/23 22:06:26  ehan
-// Added new GeomFactor constructor.
-//
-// Revision 1.13  2008/09/23 18:19:56  pvos
-// Updates for working ProjectContField3D demo
-//
-// Revision 1.12  2008/09/17 13:46:26  pvos
-// Added LocalToGlobalC0ContMap for 3D expansions
-//
-// Revision 1.11  2008/09/12 11:26:19  pvos
-// Updates for mappings in 3D
-//
-// Revision 1.10  2008/06/18 19:27:18  ehan
-// Added implementation for GetLocCoords(..)
-//
-// Revision 1.9  2008/06/14 01:22:05  ehan
-// Implemented constructor and FillGeom().
-//
-// Revision 1.8  2008/06/12 21:22:43  delisi
-// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
-//
-// Revision 1.7  2008/05/29 19:02:23  delisi
-// Renamed eHex to eHexahedron.
-//
-// Revision 1.6  2008/05/28 21:52:27  jfrazier
-// Added GeomShapeType initialization for the different shapes.
-//
-// Revision 1.5  2008/05/12 17:28:26  ehan
-// Added virtual functions
-//
-// Revision 1.4  2008/04/06 06:00:37  bnelson
-// Changed ConstArray to Array<const>
-//
-// Revision 1.3  2008/02/08 23:05:28  jfrazier
-// More work on 3D components.
-//
-// Revision 1.2  2007/07/20 02:15:08  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.1  2006/05/04 18:59:00  kirby
-// *** empty log message ***
-//
-// Revision 1.11  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.10  2006/03/12 07:42:02  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.9  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

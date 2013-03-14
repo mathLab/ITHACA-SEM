@@ -36,7 +36,6 @@
 #include <LocalRegions/PyrExp.h>
 #include <LibUtilities/Foundations/Interp.h>
 
-
 namespace Nektar 
 {
     namespace LocalRegions 
@@ -46,19 +45,19 @@ namespace Nektar
                        const LibUtilities::BasisKey &Bb,
                        const LibUtilities::BasisKey &Bc,
                        const SpatialDomains::PyrGeomSharedPtr &geom):
-            StdExpansion  (StdRegions::StdPyrData::getNumberOfCoefficients(
+            StdExpansion  (LibUtilities::StdPyrData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes(),
                                Bc.GetNumModes()),
                            3, Ba, Bb, Bc),
-            Expansion     (),
-            StdExpansion3D(StdRegions::StdPyrData::getNumberOfCoefficients(
+            StdExpansion3D(LibUtilities::StdPyrData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes(),
                                Bc.GetNumModes()),
                            Ba, Bb, Bc),
-            Expansion3D   (),
             StdPyrExp     (Ba,Bb,Bc),
+            Expansion     (),
+            Expansion3D   (),
             m_geom(geom),
             m_metricinfo(m_geom->GetGeomFactors(m_base)),
             m_matrixManager(
@@ -72,10 +71,10 @@ namespace Nektar
 
         PyrExp::PyrExp(const PyrExp &T):
             StdExpansion  (T),
-            Expansion     (T),
             StdExpansion3D(T),
-            Expansion3D   (T),
             StdPyrExp     (T),
+            Expansion     (T),
+            Expansion3D   (T),
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
@@ -235,7 +234,7 @@ namespace Nektar
 
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
-                                              DetExpansionType(),*this);
+                                              DetShapeType(),*this);
                 DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
                 // copy inarray in case inarray == outarray
@@ -277,11 +276,9 @@ namespace Nektar
          * \sum_{k=0}^{nq_0} \psi_{p}^a (\xi_{3k}) g_{pq} (\xi_{3k}) = {\bf
          * B_1 G} \f$
          */
-        void PyrExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& base0, 
-                                       const Array<OneD, const NekDouble>& base1, 
-                                       const Array<OneD, const NekDouble>& base2, 
-                                       const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD,       NekDouble>& outarray)
+        void PyrExp::v_IProductWRTBase(
+            const Array<OneD, const NekDouble> &inarray, 
+                  Array<OneD,       NekDouble> &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
@@ -299,16 +296,7 @@ namespace Nektar
                 Vmath::Smul(nquad0*nquad1*nquad2,jac[0],(NekDouble*)&inarray[0],1,&tmp[0],1);
             }
             
-            StdPyrExp::v_IProductWRTBase(base0,base1,base2,tmp,outarray);
-        }
-        
-        void PyrExp::v_IProductWRTBase(const Array<OneD, const NekDouble>& inarray, 
-                                             Array<OneD,       NekDouble>& outarray)
-        {
-            v_IProductWRTBase(m_base[0]->GetBdata(),
-                              m_base[1]->GetBdata(),
-                              m_base[2]->GetBdata(),
-                              inarray, outarray);
+            StdPyrExp::v_IProductWRTBase(tmp,outarray);
         }
         
 
@@ -598,7 +586,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),
+                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetShapeType(),
                                                          *this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
@@ -627,11 +615,11 @@ namespace Nektar
                         // ASSERTL1(m_geom->GetCoordim() == 2,"Standard Region Laplacian is only set up for Quads in two-dimensional");
                         ASSERTL1(m_geom->GetCoordim() == 3,"Standard Region Laplacian is only set up for Hex in three-dimensional");
                         MatrixKey lap00key(StdRegions::eLaplacian00,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap01key(StdRegions::eLaplacian01,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap11key(StdRegions::eLaplacian11,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
 
                         DNekMatSharedPtr lap00 = GetStdMatrix(lap00key);
                         DNekMatSharedPtr lap01 = GetStdMatrix(lap01key);
@@ -656,9 +644,9 @@ namespace Nektar
             case StdRegions::eHelmholtz:
                 {
                     NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
-                    MatrixKey masskey(StdRegions::eMass, mkey.GetExpansionType(), *this);
+                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
-                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();

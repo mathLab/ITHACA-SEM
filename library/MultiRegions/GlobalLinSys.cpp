@@ -170,8 +170,7 @@ namespace Nektar
          * Given a block matrix, construct a global matrix system according to
          * a local to global mapping. #m_linSys is constructed by
          * AssembleFullMatrix().
-         * @param   mkey        Associated linear system key.
-         * @param   Mat         Block matrix.
+         * @param   pkey        Associated linear system key.
          * @param   locToGloMap Local to global mapping.
          */
         GlobalLinSys::GlobalLinSys(const GlobalLinSysKey &pKey,
@@ -241,9 +240,9 @@ namespace Nektar
             }
 
             LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                       vExp->DetExpansionType(),
-                                       *vExp, m_linSysKey.GetConstFactors(),
-                                       vVarCoeffMap);
+                                           vExp->DetShapeType(),
+                                           *vExp, m_linSysKey.GetConstFactors(),
+                                           vVarCoeffMap);
             loc_mat = vExp->GetLocMatrix(matkey);
 
             // apply robin boundary conditions to the matrix.
@@ -310,7 +309,7 @@ namespace Nektar
             }
 
             LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                           vExp->DetExpansionType(),
+                                           vExp->DetShapeType(),
                                            *vExp,
                                            m_linSysKey.GetConstFactors(),
                                            vVarCoeffMap);

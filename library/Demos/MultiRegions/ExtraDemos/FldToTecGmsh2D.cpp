@@ -33,9 +33,9 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import field file. 
     string fieldfile(argv[argc-1]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graph2D->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -61,7 +61,8 @@ int main(int argc, char *argv[])
     // Copy data to file 
     for(int i = 0; i < fielddata.size(); ++i)
     {
-        Exp->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0]);
+        Exp->ExtractDataToCoeffs(fielddef[i],fielddata[i],fielddef[i]->m_fields[0],
+                                 Exp->UpdateCoeffs());
     }
     Exp->BwdTrans(Exp->GetCoeffs(),Exp->UpdatePhys());    
     //----------------------------------------------

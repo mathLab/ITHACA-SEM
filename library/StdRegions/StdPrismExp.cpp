@@ -47,12 +47,12 @@ namespace Nektar
         StdPrismExp::StdPrismExp(const LibUtilities::BasisKey &Ba, 
                                  const LibUtilities::BasisKey &Bb, 
                                  const LibUtilities::BasisKey &Bc) 
-            : StdExpansion  (StdPrismData::getNumberOfCoefficients(
+            : StdExpansion  (LibUtilities::StdPrismData::getNumberOfCoefficients(
                                  Ba.GetNumModes(), 
                                  Bb.GetNumModes(), 
                                  Bc.GetNumModes()),
                              3,Ba,Bb,Bc),
-              StdExpansion3D(StdPrismData::getNumberOfCoefficients(
+              StdExpansion3D(LibUtilities::StdPrismData::getNumberOfCoefficients(
                                  Ba.GetNumModes(), 
                                  Bb.GetNumModes(), 
                                  Bc.GetNumModes()), 
@@ -273,7 +273,6 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray)
         {
             // Using implementation from page 146 of Spencer Sherwin's book.
-            int Qy = m_base[1]->GetNumPoints();
             int Qz = m_base[2]->GetNumPoints();
 
             // Get the point distributions:
@@ -334,42 +333,68 @@ namespace Nektar
          * \frac {(1 + \bar \eta_1)} {(1 - \eta_3)} \frac \partial {\partial
          * \bar \eta_1} + \frac {\partial} {\partial \eta_3} \end{Bmatrix}\f$
          */
+
         void StdPrismExp::v_PhysDeriv(const Array<OneD, const NekDouble>& u_physical, 
                                       Array<OneD, NekDouble> &out_dxi1, 
                                       Array<OneD, NekDouble> &out_dxi2,
                                       Array<OneD, NekDouble> &out_dxi3 )
         {
-            // PhysDerivative implementation based on Spen's book page 152.
             int    Qx = m_base[0]->GetNumPoints();
             int    Qy = m_base[1]->GetNumPoints();
             int    Qz = m_base[2]->GetNumPoints();
+            int    Qtot = Qx*Qy*Qz;
 
-            Array<OneD, NekDouble> dEta_bar1(Qx*Qy*Qz,0.0);
-            Array<OneD, NekDouble> dXi2     (Qx*Qy*Qz,0.0);
-            Array<OneD, NekDouble> dEta3    (Qx*Qy*Qz,0.0);
-            PhysTensorDeriv(u_physical, dEta_bar1, dXi2, dEta3);
+            Array<OneD, NekDouble> dEta_bar1(Qtot,0.0);
 
-            Array<OneD, const NekDouble> eta_x, eta_y, eta_z;
+            Array<OneD, const NekDouble> eta_x, eta_z;
             eta_x = m_base[0]->GetZ();
-            eta_y = m_base[1]->GetZ();
             eta_z = m_base[2]->GetZ();
 
-            int i, j, k, n;
+            int i, k;
 
-            for (k = 0, n = 0; k < Qz; ++k)
+            bool Do_1 = (out_dxi1.num_elements() > 0)? true:false;
+            bool Do_3 = (out_dxi3.num_elements() > 0)? true:false;
+
+            // out_dXi2 is just a tensor derivative so is just passed through
+            if(Do_3) 
             {
-                for (j = 0; j < Qy; ++j)
+                PhysTensorDeriv(u_physical, dEta_bar1, out_dxi2, out_dxi3);
+            }
+            else if(Do_1)
+            {
+                PhysTensorDeriv(u_physical, dEta_bar1, out_dxi2, NullNekDouble1DArray);
+            }
+            else // case if just require 2nd direction 
+            {
+                PhysTensorDeriv(u_physical, NullNekDouble1DArray, 
+                                out_dxi2, NullNekDouble1DArray);
+            }
+            
+            if(Do_1)
+            {
+                for (k = 0; k < Qz; ++k)
                 {
-                    for (i = 0; i < Qx; ++i, ++n)
-                    {
-                        if (out_dxi1.num_elements() > 0)
-                            out_dxi1[n] = 2.0/(1.0 - eta_z[k]) * dEta_bar1[n];
-                        if (out_dxi2.num_elements() > 0)
-                            out_dxi2[n] = dXi2[n];
-                        if (out_dxi3.num_elements() > 0)
-                            out_dxi3[n] = (1.0+eta_x[i])/(1.0-eta_z[k])*dEta_bar1[n] + dEta3[n];
-                    } 
+                    Vmath::Smul(Qx*Qy,2.0/(1.0-eta_z[k]),&dEta_bar1[0] + k*Qx*Qy,1,
+                                &out_dxi1[0] + k*Qx*Qy,1);
                 }
+            }
+            
+            if(Do_3)
+            {
+                // divide dEta_Bar1 by (1-eta_z) 
+                for (k = 0; k < Qz; ++k)
+                {
+                    Vmath::Smul(Qx*Qy, 1.0/(1.0-eta_z[k]),&dEta_bar1[0]+k*Qx*Qy,1,
+                                &dEta_bar1[0]+k*Qx*Qy,1);
+                }
+
+                // Multiply dEta_Bar1 by (1+eta_x) and add ot out_dxi3
+                for (i = 0; i < Qx; ++i)
+                {
+                    Vmath::Svtvp(Qz*Qy,1.0+eta_x[i],&dEta_bar1[0]+i,Qx,
+                                 &out_dxi3[0]+i,Qx,&out_dxi3[0]+i,Qx);
+                }                
+
             }
         }
 
@@ -476,13 +501,10 @@ namespace Nektar
         void StdPrismExp::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                                   Array<OneD,       NekDouble>& outarray)
         {
-            int  nquad0 = m_base[0]->GetNumPoints();
             int  nquad1 = m_base[1]->GetNumPoints();
             int  nquad2 = m_base[2]->GetNumPoints();
-
             int  order0 = m_base[0]->GetNumModes();
             int  order1 = m_base[1]->GetNumModes();
-            int  order2 = m_base[2]->GetNumModes();
             
             Array<OneD, NekDouble> wsp(nquad2*order1*order0 +
                                        nquad1*nquad2*order0);
@@ -564,7 +586,7 @@ namespace Nektar
             v_IProductWRTBase(inarray, outarray);
 
             // Get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
+            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
             
             // copy inarray in case inarray == outarray
@@ -635,7 +657,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             int nq = GetTotPoints();
-            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -763,7 +785,7 @@ namespace Nektar
                     break;
             }
 
-            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -959,9 +981,9 @@ namespace Nektar
          * \brief Return Shape of region, using ShapeType enum list;
          * i.e. prism.
          */
-        ExpansionType StdPrismExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdPrismExp::v_DetShapeType() const
         {
-            return ePrism;
+            return LibUtilities::ePrism;
         }
         
         int StdPrismExp::v_NumBndryCoeffs() const
@@ -1109,7 +1131,7 @@ namespace Nektar
         int StdPrismExp::v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, 
                                                     int &modes_offset)
         {
-            int nmodes = StdPrismData::getNumberOfCoefficients(
+            int nmodes = LibUtilities::StdPrismData::getNumberOfCoefficients(
                 nummodes[modes_offset],
                 nummodes[modes_offset+1],
                 nummodes[modes_offset+2]);
@@ -1932,7 +1954,6 @@ namespace Nektar
          */
         int StdPrismExp::GetMode(int p, int q, int r)
         {
-            int P = m_base[0]->GetNumModes() - 1;
             int Q = m_base[1]->GetNumModes() - 1;
             int R = m_base[2]->GetNumModes() - 1;
             
@@ -1946,10 +1967,9 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             int i, j;
-
-            int  nquad0 = m_base[0]->GetNumPoints();
-            int  nquad1 = m_base[1]->GetNumPoints();
-            int  nquad2 = m_base[2]->GetNumPoints();
+            int nquad0 = m_base[0]->GetNumPoints();
+            int nquad1 = m_base[1]->GetNumPoints();
+            int nquad2 = m_base[2]->GetNumPoints();
 
             const Array<OneD, const NekDouble>& w0 = m_base[0]->GetW();
             const Array<OneD, const NekDouble>& w1 = m_base[1]->GetW();

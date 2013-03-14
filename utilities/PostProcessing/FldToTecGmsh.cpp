@@ -47,14 +47,13 @@ int main(int argc, char *argv[])
     vSession->LoadParameter("OutputExtraPlanes",nExtraPlanes,0);
 
     vSession->MatchSolverInfo("Extrude2DWithHomogeneous","True",Extrude2DWithHomogeneous,false);
-	vSession->MatchSolverInfo("ModeType","SingleMode",SingleModePlot,false);
-	vSession->MatchSolverInfo("ModeType","HalfMode",HalfModePlot,false);
+    vSession->MatchSolverInfo("ModeType","SingleMode",SingleModePlot,false);
+    vSession->MatchSolverInfo("ModeType","HalfMode",HalfModePlot,false);
 
 
     // Read in mesh from input file
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);
-	//----------------------------------------------
-
+    //----------------------------------------------
     for (int n = 1; n < argc; ++n)
     {
         string fname = std::string(argv[n]);
@@ -94,9 +93,9 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Import field file.
         string fieldfile(argv[n]);
-        vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+        vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
         vector<vector<NekDouble> > fielddata;
-        graphShPt->Import(fieldfile,fielddef,fielddata);
+        LibUtilities::Import(fieldfile,fielddef,fielddata);
         //----------------------------------------------
 
         if(Extrude2DWithHomogeneous) // Set up Homogeneous information
@@ -420,7 +419,8 @@ int main(int argc, char *argv[])
             {
 
                 Exp[j]->ExtractDataToCoeffs(fielddef[i],fielddata[i],
-                                            fielddef[i]->m_fields[j]);
+                                            fielddef[i]->m_fields[j],
+                                            Exp[j]->UpdateCoeffs());
             }
 
             if(SingleModePlot)
@@ -431,9 +431,6 @@ int main(int argc, char *argv[])
                 Vmath::Vcopy(dim,&Exp[j]->GetCoeffs()[0],1,&Exp1[j]->UpdateCoeffs()[dim],1);
 
                 Exp1[j]->BwdTrans(Exp1[j]->GetCoeffs(),Exp1[j]->UpdatePhys());
-
-
-
 
             }
             else if(HalfModePlot)

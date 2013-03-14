@@ -71,9 +71,9 @@ namespace Nektar
             struct MeshVertex
             {
                 int id;
-                double x;
-                double y;
-                double z;
+                NekDouble x;
+                NekDouble y;
+                NekDouble z;
             };
 
             struct MeshEdge
@@ -180,6 +180,7 @@ namespace Nektar
             void PartitionGraph(BoostSubGraph& pGraph,
                                 BoostSubGraph& pLocalPartition);
             void OutputPartition(SessionReaderSharedPtr& pSession, BoostSubGraph& pGraph, TiXmlElement* pGeometry);
+            void CheckPartitions(Array<OneD, int> &pPart);
         };
 
         typedef boost::shared_ptr<MeshPartition> MeshPartitionSharedPtr;

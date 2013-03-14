@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AdvectionWeakDG.h
+// File: RoeSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,42 +29,36 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Upwind Riemann solver.
+// Description: Roe Riemann solver.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
-#define NEKTAR_SOLVERUTILS_ADVECTIONWEAKDG
+#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_ROESOLVER
+#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_ROESOLVER
 
-#include <SolverUtils/Advection.h>
+#include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
 
 namespace Nektar
 {
-    namespace SolverUtils
+    class RoeSolver : public CompressibleSolver
     {
-        class AdvectionWeakDG : public Advection
+    public:
+        static RiemannSolverSharedPtr create()
         {
-        public:
-            static AdvectionSharedPtr create(std::string advType)
-            {
-                return AdvectionSharedPtr(new AdvectionWeakDG());
-            }
-            
-            static std::string type;
-            
-        protected:
-            AdvectionWeakDG();
-            
-            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
-            
-            virtual void v_Advect(
-                const int                                          nConvective,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
-        }; 
-    }
+            return RiemannSolverSharedPtr(
+                new RoeSolver());
+        }
+        
+        static std::string solverName;
+        
+    protected:
+        RoeSolver();
+        
+        virtual void v_PointSolve(
+            double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
+            double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
+            double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef);
+    };
 }
-    
+
 #endif

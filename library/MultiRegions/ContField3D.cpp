@@ -225,6 +225,7 @@ namespace Nektar
                                          m_locToGloMap);
                     GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
                     mat->Multiply(inarray,outarray);
+                    m_locToGloMap->UniversalAssemble(outarray);
                 }
                 else
                 {
@@ -408,9 +409,8 @@ namespace Nektar
       void ContField3D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
       {
           int i,j;
-          int bndcnt      = 0;
-          int nDir        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-          int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
+          int bndcnt = 0;
+          int nDir   = m_locToGloMap->GetNumGlobalDirBndCoeffs();
           
           NekDouble sign;
           const Array<OneD,const int> &bndMap = 
@@ -522,7 +522,8 @@ namespace Nektar
           }
           else
           {
-              Array<OneD,NekDouble> tmp(contNcoeffs, 0.0);
+              Array<OneD,NekDouble> tmp(contNcoeffs);
+              LocalToGlobal(outarray,tmp);
               GlobalSolve(key,wsp,tmp,dirForcing);
               GlobalToLocal(tmp,outarray);
           }
@@ -542,6 +543,7 @@ namespace Nektar
               {
                   GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
                   mat->Multiply(inarray,outarray);
+                  m_locToGloMap->UniversalAssemble(outarray);
               }
               else
               {

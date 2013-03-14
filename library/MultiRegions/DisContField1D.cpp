@@ -263,7 +263,6 @@ namespace Nektar
         {
             int i;
             int cnt  = 0;
-            int cnt2 = 0;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                                                 = bcs.GetBoundaryRegions();
@@ -317,7 +316,6 @@ namespace Nektar
         {
             int i;
             int cnt  = 0;
-            int cnt2 = 0;
 			
             const SpatialDomains::BoundaryRegionCollection &bregions
 			= bcs.GetBoundaryRegions();
@@ -773,7 +771,9 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp(nLocalSolutionPts, 0.0);
                 
                 // Partition the field vector in local vectors
-                tmp = field + (n * nLocalSolutionPts);
+                Vmath::Vcopy(nLocalSolutionPts, 
+                             (&field[phys_offset]), 1,
+                             (&tmp[0]), 1);
                 
                 // Basis definition on each element
                 Basis = (*m_exp)[n]->GetBasis(0);
@@ -794,8 +794,8 @@ namespace Nektar
                     }
                     
                     // Set the x-coordinate of the standard interface point
-                    interface_coord[0] = vertex_coord;
-                    
+                    interface_coord[0] = -1.0;
+
                     // Implementation for every points except Gauss points
                     if (Basis->GetPointsType() != LibUtilities::eGaussGaussLegendre)
                     {
@@ -925,35 +925,33 @@ namespace Nektar
             }
         }		 
 	
-        /// Note this routine changes m_trace->m_coeffs space; ; is the same
-        /// for point expansion (croth)
         void DisContField1D::v_AddTraceIntegral(
             const Array<OneD, const NekDouble> &Fn, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            int p,n,offset, t_offset;
-            double vertnorm =0.0;
+            int p, n, offset, t_offset;
+            NekDouble vertnorm = 0.0;
             
-            for(n = 0; n < GetExpSize(); ++n)
+            for (n = 0; n < GetExpSize(); ++n)
             {
                 offset = GetCoeff_Offset(n);
 		
                 for(p = 0; p < 2; ++p)
                 {
                     vertnorm = 0.0;
-                    for (int i=0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
+                    for (int i = 0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
                     {
                         vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
                     }
                     
                     t_offset = GetTrace()->GetPhys_Offset(n+p);
                     
-                    if(vertnorm >= 0.0) 
+                    if (vertnorm >= 0.0) 
                     {
                         outarray[offset+(*m_exp)[n]->GetVertexMap(1)] += Fn[t_offset];
                     }
                     
-                    if(vertnorm < 0.0) 
+                    if (vertnorm < 0.0) 
                     {
                         outarray[offset] -= Fn[t_offset];
                     }
@@ -1095,53 +1093,57 @@ namespace Nektar
 			
             for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                m_bndCondExpansions[i]->GetCoords(x0,x1,x2);
-
-                if(x2_in != NekConstants::kNekUnsetDouble && x3_in != NekConstants::kNekUnsetDouble)
+                if(time == 0.0 || m_bndConditions[i]->GetUserDefined() == 
+                   SpatialDomains::eTimeDependent)
                 {
-                    x1 = x2_in;
-                    x2 = x3_in;
-                }
-
-                if(m_bndConditions[i]->GetBoundaryConditionType()
+                    m_bndCondExpansions[i]->GetCoords(x0,x1,x2);
+                    
+                    if(x2_in != NekConstants::kNekUnsetDouble && x3_in != NekConstants::kNekUnsetDouble)
+                    {
+                        x1 = x2_in;
+                        x2 = x3_in;
+                    }
+                    
+                    if(m_bndConditions[i]->GetBoundaryConditionType()
                         == SpatialDomains::eDirichlet)
-                {
-                    m_bndCondExpansions[i]->SetCoeff(
-                            (boost::static_pointer_cast<SpatialDomains
-                             ::DirichletBoundaryCondition>(m_bndConditions[i])
-                             ->m_dirichletCondition).Evaluate(x0,x1,x2,time));
-                }
-				else if((m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eJunction)||
-						(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)||
-						(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eMerging))
-                {
-                   //Do not update this conditions as they will be by the domain-linking Riemann solvers
-                }	
-				else if(m_bndConditions[i]->GetBoundaryConditionType()
-                        == SpatialDomains::eNeumann)
-                {
-                    m_bndCondExpansions[i]->SetCoeff(
-                            (boost::static_pointer_cast<SpatialDomains
-                             ::NeumannBoundaryCondition>(m_bndConditions[i])
-                             ->m_neumannCondition).Evaluate(x0,x1,x2,time));
-                }
-                else if(m_bndConditions[i]->GetBoundaryConditionType()
-                        == SpatialDomains::eRobin)
-                {
-                    m_bndCondExpansions[i]->SetCoeff(
-                            (boost::static_pointer_cast<SpatialDomains
-                             ::RobinBoundaryCondition>(m_bndConditions[i])
-                             ->m_robinFunction).Evaluate(x0,x1,x2,time));
-
-                    m_bndCondExpansions[i]->SetPhys(
-                            (boost::static_pointer_cast<SpatialDomains
-                             ::RobinBoundaryCondition>(m_bndConditions[i])
+                    {
+                        m_bndCondExpansions[i]->SetCoeff(
+                                                         (boost::static_pointer_cast<SpatialDomains
+                                                          ::DirichletBoundaryCondition>(m_bndConditions[i])
+                                                          ->m_dirichletCondition).Evaluate(x0,x1,x2,time));
+                    }
+                    else if((m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eJunction)||
+                            (m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)||
+                            (m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eMerging))
+                    {
+                        //Do not update this conditions as they will be by the domain-linking Riemann solvers
+                    }	
+                    else if(m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::eNeumann)
+                    {
+                        m_bndCondExpansions[i]->SetCoeff(
+                                                         (boost::static_pointer_cast<SpatialDomains
+                                                          ::NeumannBoundaryCondition>(m_bndConditions[i])
+                                                          ->m_neumannCondition).Evaluate(x0,x1,x2,time));
+                    }
+                    else if(m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::eRobin)
+                    {
+                        m_bndCondExpansions[i]->SetCoeff(
+                                                         (boost::static_pointer_cast<SpatialDomains
+                                                          ::RobinBoundaryCondition>(m_bndConditions[i])
+                                                          ->m_robinFunction).Evaluate(x0,x1,x2,time));
+                        
+                        m_bndCondExpansions[i]->SetPhys(
+                                                        (boost::static_pointer_cast<SpatialDomains
+                                                         ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinPrimitiveCoeff).Evaluate(x0,x1,x2,time));
-
-                }
-                else
-                {
-                    ASSERTL0(false,"This type of BC not implemented yet");
+                        
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"This type of BC not implemented yet");
+                    }
                 }
             }
         }

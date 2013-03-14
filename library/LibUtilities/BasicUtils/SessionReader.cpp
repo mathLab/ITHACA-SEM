@@ -1571,9 +1571,6 @@ namespace Nektar
             TiXmlElement *variablesElement = 
                 conditions->FirstChildElement("VARIABLES");
 
-            // Current index, should be zero-based.
-            int varIndex = 0;
-
             // See if we have parameters defined. They are optional so we go on
             // if not.
             if (variablesElement)

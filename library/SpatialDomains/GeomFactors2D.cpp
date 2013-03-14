@@ -148,7 +148,7 @@ namespace Nektar
                 m_coords[i] = Coords[i];
             }
 
-            StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
+            LibUtilities::ShapeType shape = Coords[0]->DetShapeType();
 
             // The quadrature points of the mapping
             // (as specified in Coords)
@@ -361,8 +361,12 @@ namespace Nektar
 
                     if(CheckJacPositive)
                     {
+                        static int cnt = 0;
+
                         ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0,
-                                 "2D Deformed Jacobian is not positive");
+                                 "2D Deformed Jacobian is not positive (cnt = " + 
+                                 boost::lexical_cast<std::string>(cnt) + ")");
+                        cnt++;
                     }
 
                     // d xi_1/d x_1
@@ -967,26 +971,28 @@ namespace Nektar
             }
         }
 
-
         /**
-         *
+         * @brief Set up the m_weightedjac array, which holds the Jacobian at
+         * each quadrature point multipled by the quadrature weight.
          */
-        void GeomFactors2D::v_SetUpQuadratureMetrics(StdRegions::ExpansionType shape,
-                                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void GeomFactors2D::v_SetUpQuadratureMetrics(
+             LibUtilities::ShapeType                        shape,
+            const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            ASSERTL1(tbasis.num_elements() == m_expDim,"Inappropriate dimension of tbasis");
+            ASSERTL1(tbasis.num_elements() == m_expDim,
+                     "Inappropriate dimension of tbasis");
 
             int i;
             int nquad0 = m_pointsKey[0].GetNumPoints();
             int nquad1 = m_pointsKey[1].GetNumPoints();
             int nqtot  = nquad0*nquad1;
 
-            m_weightedjac           = Array<OneD, NekDouble>(nqtot);
+            m_weightedjac        = Array<OneD, NekDouble>(nqtot);
             m_isUsingQuadMetrics = true;
 
-            // Fill the array m_weighted jac with the values
-            // of the (already computed) jacobian (=m_jac)
-            if((m_type == eRegular)||(m_type == eMovingRegular))
+            // Fill the array m_weighted jac with the values of the (already
+            // computed) jacobian (=m_jac)
+            if (m_type == eRegular || m_type == eMovingRegular)
             {
                 Vmath::Fill(nqtot,m_jac[0],m_weightedjac.get(),1);
             }
@@ -1002,64 +1008,74 @@ namespace Nektar
             // Multiply the jacobian with the quadrature weights
             switch(shape)
             {
-            case StdRegions::eQuadrilateral:
+            case LibUtilities::eQuadrilateral:
                 {
-                    for(i = 0; i < nquad1; ++i)
+                    for (i = 0; i < nquad1; ++i)
                     {
                         Vmath::Vmul(nquad0,m_weightedjac.get()+i*nquad0,1,
                                     w0.get(),1,m_weightedjac.get()+i*nquad0,1);
                     }
 
-                    for(i = 0; i < nquad0; ++i)
+                    for (i = 0; i < nquad0; ++i)
                     {
-                        Vmath::Vmul(nquad1,m_weightedjac.get()+i,nquad0,w1.get(),1,
-                                    m_weightedjac.get()+i,nquad0);
+                        Vmath::Vmul(nquad1, m_weightedjac.get()+i, nquad0,
+                                    w1.get(), 1, m_weightedjac.get()+i, nquad0);
                     }
+
+                    break;
                 }
-                break;
-            case StdRegions::eTriangle:
+
+            case LibUtilities::eTriangle:
                 {
                     for(i = 0; i < nquad1; ++i)
                     {
                         Vmath::Vmul(nquad0,m_weightedjac.get()+i*nquad0,1,
                                     w0.get(),1,m_weightedjac.get()+i*nquad0,1);
                     }
-
+                    
                     switch(tbasis[1]->GetPointsType())
                     {
-                    case LibUtilities::ePolyEvenlySpaced:
-                    case LibUtilities::eGaussLobattoLegendre:  // Legendre inner product
-                        for(i = 0; i < nquad1; ++i)
+                        case LibUtilities::ePolyEvenlySpaced:
+                    case LibUtilities::eGaussLobattoLegendre:
                         {
-                            const Array<OneD, const NekDouble>& z1 = tbasis[1]->GetZ();
-                            Blas::Dscal(nquad0,0.5*(1-z1[i])*w1[i],m_weightedjac.get()+i*nquad0,1);
+                            const Array<OneD, const NekDouble>& z1 =
+                                tbasis[1]->GetZ();
+                            for (i = 0; i < nquad1; ++i)
+                            {
+                                Blas::Dscal(nquad0, 0.5*(1-z1[i])*w1[i],
+                                            m_weightedjac.get()+i*nquad0, 1);
+                            }
+                            break;
                         }
-                        break;
-                    case LibUtilities::eGaussRadauMAlpha1Beta0: // (1,0) Jacobi Inner product
-                        for(i = 0; i < nquad1; ++i)
+                    case LibUtilities::eGaussRadauMAlpha1Beta0:
                         {
-                            Blas::Dscal(nquad0,0.5*w1[i],m_weightedjac.get()+i*nquad0,1);
+                            for (i = 0; i < nquad1; ++i)
+                            {
+                                Blas::Dscal(nquad0, 0.5*w1[i],
+                                            m_weightedjac.get()+i*nquad0, 1);
+                            }
+                            break;
                         }
-                        break;
                     default:
                         {
-                            ASSERTL0(false,"Currently no implementation for this PointsType");
+                            m_isUsingQuadMetrics = false;
+                            m_weightedjac = Array<OneD, NekDouble>();
+                            return;
                         }
                     }
+                    break;
                 }
-                break;
             default:
                 {
                     ASSERTL0(false,"Invalid shape type");
                 }
             }
-
         }
 
         /**
          *
          */
-        void GeomFactors2D::v_SetUpLaplacianMetrics(StdRegions::ExpansionType shape,
+        void GeomFactors2D::v_SetUpLaplacianMetrics(LibUtilities::ShapeType shape,
                                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             ASSERTL1(tbasis.num_elements() == m_expDim,"Inappropriate dimension of tbasis");
@@ -1076,13 +1092,9 @@ namespace Nektar
             m_laplacianMetricIsZero = Array<OneD, bool>(3, false);
             m_isUsingLaplMetrics  = true;
 
-            // Get hold of the quadrature weights
-            const Array<OneD, const NekDouble>& w0 = tbasis[0]->GetW();
-            const Array<OneD, const NekDouble>& w1 = tbasis[1]->GetW();
-
             switch(shape)
             {
-            case StdRegions::eQuadrilateral:
+            case LibUtilities::eQuadrilateral:
                 {
                     if(( m_type == eRegular)||
                        ( m_type == eMovingRegular))
@@ -1131,7 +1143,7 @@ namespace Nektar
                     Vmath::Vmul(nqtot,&m_weightedjac[0],1,&m_laplacianmetrics[2][0],1,&m_laplacianmetrics[2][0],1);
                 }
                 break;
-            case StdRegions::eTriangle:
+            case LibUtilities::eTriangle:
                 {
                     Array<OneD, NekDouble> dEta_dXi[2] = {Array<OneD, NekDouble>(nqtot,1.0),
                                                           Array<OneD, NekDouble>(nqtot,1.0)};

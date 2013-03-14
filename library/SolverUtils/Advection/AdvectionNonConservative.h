@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ExactSolver.h
+// File: AdvectionNonConservative.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,36 +29,40 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Exact Riemann solver.
+// Description: Non-conservative advection class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_EXACTSOLVER
-#define NEKTAR_SOLVERS_COMPRESSIBLEFLOWSOLVER_RIEMANNSOLVER_EXACTSOLVER
+#ifndef NEKTAR_SOLVERUTILS_ADVECTIONNONCONSERVATIVE
+#define NEKTAR_SOLVERUTILS_ADVECTIONNONCONSERVATIVE
 
-#include <CompressibleFlowSolver/RiemannSolvers/CompressibleSolver.h>
+#include <SolverUtils/Advection/Advection.h>
 
 namespace Nektar
 {
-    class ExactSolver : public CompressibleSolver
+    namespace SolverUtils
     {
-    public:
-        static RiemannSolverSharedPtr create()
+        class AdvectionNonConservative : public Advection
         {
-            return RiemannSolverSharedPtr(
-                new ExactSolver());
-        }
-        
-        static std::string solverName;
-        
-    protected:
-        ExactSolver();
-        
-        virtual void v_PointSolve(
-            double  rhoL, double  rhouL, double  rhovL, double  rhowL, double  EL,
-            double  rhoR, double  rhouR, double  rhovR, double  rhowR, double  ER,
-            double &rhof, double &rhouf, double &rhovf, double &rhowf, double &Ef);
-    };
+        public:
+            static AdvectionSharedPtr create(std::string advType)
+            {
+                return AdvectionSharedPtr(new AdvectionNonConservative());
+            }
+            
+            static std::string type;
+            
+        protected:
+            AdvectionNonConservative();
+            
+            virtual void v_Advect(
+                const int                                          nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
+        }; 
+    }
 }
-
+    
 #endif

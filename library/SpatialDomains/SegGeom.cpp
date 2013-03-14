@@ -47,7 +47,7 @@ namespace Nektar
     {
         SegGeom::SegGeom()
         {
-            m_geomShapeType = eSegment;
+            m_shapeType = LibUtilities::eSegment;
         }
 
         SegGeom::SegGeom(int id, const int coordim):
@@ -59,7 +59,7 @@ namespace Nektar
                                               LibUtilities::eGaussLobattoLegendre
                                            )
                                           );
-            m_geomShapeType = eSegment;
+            m_shapeType = LibUtilities::eSegment;
             m_eid = id;
 
             for(int i = 0; i < m_coordim; ++i)
@@ -74,7 +74,7 @@ namespace Nektar
                 const VertexComponentSharedPtr vertex[]):
             Geometry1D(coordim)
         {
-            m_geomShapeType = eSegment;
+            m_shapeType = LibUtilities::eSegment;
             m_eid   = id;
             m_state = eNotFilled;
 
@@ -105,7 +105,7 @@ namespace Nektar
                 const CurveSharedPtr& curve):
             Geometry1D(coordim)
         {
-            m_geomShapeType = eSegment;
+            m_shapeType = LibUtilities::eSegment;
             m_eid = id;
             m_state = eNotFilled;
 
@@ -176,7 +176,7 @@ namespace Nektar
                 const VertexComponentSharedPtr& vert2):
             Geometry1D(vert1->GetCoordim()), m_xmap(vert1->GetCoordim())
         {
-            m_geomShapeType = eSegment;
+            m_shapeType = LibUtilities::eSegment;
 
             m_verts[0] = vert1;
             m_verts[1] = vert2;
@@ -199,7 +199,7 @@ namespace Nektar
         SegGeom::SegGeom(const SegGeom &in)
         {
             // From Geometry class
-            m_geomShapeType = in.m_geomShapeType;
+            m_shapeType = in.m_shapeType;
 
             // info from EdgeComponent class
             m_eid     = in.m_eid;
@@ -310,18 +310,22 @@ namespace Nektar
         void SegGeom::v_GenGeomFactors(
                 const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
         {
-            SpatialDomains::GeomType gType = eRegular;
-            const SpatialDomains::GeomType kDeformedType = eDeformed;
-
-            SegGeom::v_FillGeom();
-
-            if(m_xmap[0]->GetBasisNumModes(0)!=2)
+            if (m_geomFactorsState != ePtsFilled)
             {
-                gType = eDeformed;
-            }
+                SpatialDomains::GeomType gType = eRegular;
 
-            m_geomFactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(gType,
-                                                         m_coordim, m_xmap, tbasis);
+                SegGeom::v_FillGeom();
+
+                if(m_xmap[0]->GetBasisNumModes(0)!=2)
+                {
+                    gType = eDeformed;
+                }
+
+                m_geomFactors = MemoryManager<GeomFactors1D>::AllocateSharedPtr(gType,
+                                                             m_coordim, m_xmap, tbasis);
+
+                m_geomFactorsState = ePtsFilled;
+            }
         }
 
 
@@ -385,7 +389,7 @@ namespace Nektar
 
             int i,j;
             int  nquad = m_xmap[0]->GetNumPoints(0);
-            double *coords[3];
+            NekDouble *coords[3];
 
             SegGeom::v_FillGeom();
 
@@ -450,7 +454,7 @@ namespace Nektar
             return returnval;
         }
 
-        int SegGeom::v_GetEid(int unused) const
+        int SegGeom::v_GetEid() const
         {
             return m_eid;
         }
@@ -506,9 +510,9 @@ namespace Nektar
         }
 
 
-        StdRegions::ExpansionType SegGeom::v_DetExpansionType() const
+        LibUtilities::ShapeType SegGeom::v_DetShapeType() const
         {
-            return StdRegions::eSegment;
+            return  LibUtilities::eSegment;
         }
 
         int SegGeom::v_GetNumVerts() const

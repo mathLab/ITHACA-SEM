@@ -188,11 +188,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType  v_MetricInfoType();
 
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
-                    const std::vector<NekDouble> &data,
-                    const int offset,
+                    const NekDouble *data,
                     const std::vector<unsigned int > &nummodes,
-                    const int nmode_offset,
-                          Array<OneD, NekDouble> &coeffs);
+                    const int mode_offset,
+                    NekDouble *coeffs);
 
 
             LOCAL_REGIONS_EXPORT virtual void v_SetUpPhysTangents(
@@ -217,12 +216,13 @@ namespace Nektar
             //-----------------------------
             LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                     const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,NekDouble> &outarray);
+                          Array<OneD,       NekDouble> &outarray,
+                    const StdRegions::StdMatrixKey     &mkey);
 
             LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp(
                     const Array<OneD, const NekDouble> &inarray,
-                          Array<OneD,NekDouble> &outarray,
-                    const double lambda);
+                          Array<OneD,       NekDouble> &outarray,
+                    const StdRegions::StdMatrixKey     &mkey);
 
             //-----------------------------
             // Matrix creation functions

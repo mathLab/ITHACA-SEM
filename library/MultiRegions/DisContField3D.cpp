@@ -495,7 +495,7 @@ namespace Nektar
                    != SpatialDomains::ePeriodic)
                 {
                     locExpList = MemoryManager<MultiRegions::ExpList2D>
-                        ::AllocateSharedPtr(m_session,*(bregions[i]), graph3D);
+                        ::AllocateSharedPtr(m_session,*(bregions[i]), graph3D, variable);
 
                     // Set up normals on non-Dirichlet boundary conditions
                     if(locBCond->GetBoundaryConditionType() != 
@@ -529,8 +529,6 @@ namespace Nektar
 
             int                                        region1ID;
             int                                        region2ID;
-            StdRegions::Orientation                    orient1;
-            StdRegions::Orientation                    orient2;
             SpatialDomains::Composite                  comp1;
             SpatialDomains::Composite                  comp2;
             SpatialDomains::Geometry2DSharedPtr        faceGeom1;
@@ -656,9 +654,6 @@ namespace Nektar
                                              faceGeom1->GetGlobalID())+": "+
                                          boost::lexical_cast<string>(
                                              StdRegions::OrientationMap[forient]));
-                                
-                                int f1 = (*element1)[0]->m_FaceIndx;
-                                int f2 = (*element2)[0]->m_FaceIndx;
                                 
                                 // Vertex/edge maps for fwd/bwd orientation in
                                 // a-direction.
@@ -805,7 +800,7 @@ namespace Nektar
         {
             // Loop over elements and collect forward and backward expansions.
             int nexp = GetExpSize();
-            int cnt,n,e,npts,offset, phys_offset;
+            int cnt, n, e, npts, offset, phys_offset;
             Array<OneD,NekDouble> e_tmp;
             
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
@@ -918,6 +913,10 @@ namespace Nektar
                              "and Robin conditions.");
                 }
             }
+
+            // Do parallel exchange for forwards/backwards spaces.
+            m_traceMap->UniversalTraceAssemble(Fwd);
+            m_traceMap->UniversalTraceAssemble(Bwd);
         }
 
         void DisContField3D::v_ExtractTracePhys(
@@ -988,12 +987,13 @@ namespace Nektar
             for(n = 0; n < GetExpSize(); ++n)
             {
                 offset = GetCoeff_Offset(n);
+                e_outarray = outarray+offset;
                 for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e)
                 {
                     t_offset = m_trace->GetPhys_Offset(elmtToTrace[n][e]->GetElmtId());
                     (*m_exp)[n]->AddFaceNormBoundaryInt(e,elmtToTrace[n][e],
                                                         Fn + t_offset,
-                                                        e_outarray = outarray+offset);
+                                                        e_outarray);
                 }
             }
         }
@@ -1064,8 +1064,8 @@ namespace Nektar
             Array<OneD, int> &FaceID)
         {
             map<int,int> globalIdMap;
-            int i,n,id;
-            int bid,cnt,Fid;
+            int i, n;
+            int cnt;
             int nbcs = 0;
             
             SpatialDomains::MeshGraph3DSharedPtr graph3D = 
@@ -1350,62 +1350,75 @@ namespace Nektar
                                                           const NekDouble x2_in,
                                                           const NekDouble x3_in)
         {
-            int i,j;
+            int i;
             int npoints;
             int nbnd = m_bndCondExpansions.num_elements();
             MultiRegions::ExpListSharedPtr locExpList;
 
             for(i = 0; i < nbnd; ++i)
             {
-                locExpList = m_bndCondExpansions[i];
-                npoints = locExpList->GetNpoints();
-
-                Array<OneD,NekDouble> x0(npoints,0.0);
-                Array<OneD,NekDouble> x1(npoints,0.0);
-                Array<OneD,NekDouble> x2(npoints,0.0);
-
-                locExpList->GetCoords(x0,x1,x2);
-
-                if(m_bndConditions[i]->GetBoundaryConditionType()
-                                        == SpatialDomains::eDirichlet)
+                if(time == 0.0 || m_bndConditions[i]->GetUserDefined() == 
+                   SpatialDomains::eTimeDependent)
                 {
+                    locExpList = m_bndCondExpansions[i];
+                    npoints = locExpList->GetNpoints();
+                    
+                    Array<OneD,NekDouble> x0(npoints,0.0);
+                    Array<OneD,NekDouble> x1(npoints,0.0);
+                    Array<OneD,NekDouble> x2(npoints,0.0);
+                    
+                    locExpList->GetCoords(x0,x1,x2);
+                    
+                    if(m_bndConditions[i]->GetBoundaryConditionType()
+                       == SpatialDomains::eDirichlet)
+                    {
                     LibUtilities::Equation  condition = boost::static_pointer_cast<
-                    SpatialDomains::DirichletBoundaryCondition >(m_bndConditions[i])->m_dirichletCondition;
-
+                        SpatialDomains::DirichletBoundaryCondition >(m_bndConditions[i])->m_dirichletCondition;
+                    
                     condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
-
+                    
                     locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
+                                                        locExpList->UpdateCoeffs());
+                    }
+                    else if(m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::eNeumann)
+                    {
+                        LibUtilities::Equation  condition = boost::static_pointer_cast<
+                        SpatialDomains::NeumannBoundaryCondition
+                            >(m_bndConditions[i])->m_neumannCondition;
+                        
+                        condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
+                        
+                        locExpList->IProductWRTBase(locExpList->GetPhys(),
                                                     locExpList->UpdateCoeffs());
-                }
-                else if(m_bndConditions[i]->GetBoundaryConditionType()
-                                        == SpatialDomains::eNeumann)
-                {
-                    LibUtilities::Equation  condition = boost::static_pointer_cast<
-                                                           SpatialDomains::NeumannBoundaryCondition
-                                                        >(m_bndConditions[i])->m_neumannCondition;
-
-                    condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
-
-                    locExpList->IProductWRTBase(locExpList->GetPhys(),
-                                                locExpList->UpdateCoeffs());
-                }
-                else if(m_bndConditions[i]->GetBoundaryConditionType()
-                                        == SpatialDomains::eRobin)
-                {
-                    LibUtilities::Equation  condition = boost::static_pointer_cast<
-                                                           SpatialDomains::RobinBoundaryCondition
-                                                        >(m_bndConditions[i])->m_robinFunction;
-
-                    condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
-
-                    locExpList->IProductWRTBase(locExpList->GetPhys(),
-                                                locExpList->UpdateCoeffs());
-
-                    /// \todo RobinPrimitiveCoeff forgotten? - PB
-                }
-                else
-                {
-                    ASSERTL0(false,"This type of BC not implemented yet");
+                    }
+                    else if(m_bndConditions[i]->GetBoundaryConditionType()
+                            == SpatialDomains::eRobin)
+                    {
+                        LibUtilities::Equation  condition = boost::static_pointer_cast<
+                        SpatialDomains::RobinBoundaryCondition
+                            >(m_bndConditions[i])->m_robinFunction;
+                        
+                        LibUtilities::Equation coeff     = 
+                            boost::static_pointer_cast<
+                        SpatialDomains::RobinBoundaryCondition
+                            >(m_bndConditions[i])->m_robinPrimitiveCoeff;
+                        
+                        condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
+                        
+                        locExpList->IProductWRTBase(locExpList->GetPhys(),
+                                                    locExpList->UpdateCoeffs());
+                        
+                        // put primitive coefficient into the physical space
+                        // storage
+                        coeff.Evaluate(x0,x1,x2,time,
+                                       locExpList->UpdatePhys());
+                        
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"This type of BC not implemented yet");
+                    }
                 }
             }
         }

@@ -1,6 +1,6 @@
 # Loki
-SET(THIRDPARTY_BUILD_LOKI ON CACHE BOOL
-    "Build TinyXML library from ThirdParty.")
+OPTION(THIRDPARTY_BUILD_LOKI 
+    "Build TinyXML library from ThirdParty." ON)
 
 IF (THIRDPARTY_BUILD_LOKI)
     IF (NOT EXISTS ${TPSRC}/loki-0.1.3.tar.bz2)
@@ -13,3 +13,5 @@ IF (THIRDPARTY_BUILD_LOKI)
 ENDIF()
 
 INCLUDE (FindLoki)
+
+INCLUDE_DIRECTORIES(SYSTEM ${LOKI_INCLUDE_DIR})

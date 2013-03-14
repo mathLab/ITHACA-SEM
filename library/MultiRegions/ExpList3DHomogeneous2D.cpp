@@ -175,7 +175,6 @@ namespace Nektar
         {
             int n,m,j;
             Array<OneD, NekDouble> tmp_xc;
-            int nyzlines = m_lines.num_elements();
 			int nylines = m_homogeneousBasis_y->GetNumPoints();
 			int nzlines = m_homogeneousBasis_z->GetNumPoints();
             
@@ -234,7 +233,6 @@ namespace Nektar
         {
             int n,m,j;
             Array<OneD, NekDouble> tmp_xc;
-            int nyzlines = m_lines.num_elements();
             int npoints = m_lines[0]->GetTotPoints();
 
             int nylines = m_homogeneousBasis_y->GetNumPoints();
@@ -309,7 +307,6 @@ namespace Nektar
         void ExpList3DHomogeneous2D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j,k;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = m_homogeneousBasis_y->GetNumPoints();
             int nquad2 = m_homogeneousBasis_z->GetNumPoints();

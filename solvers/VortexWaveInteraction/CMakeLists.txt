@@ -1,5 +1,6 @@
-SET(NEKTAR_SOLVER_VORTEXWAVE ON CACHE BOOL
-    "Build the Vortex-Wave interaction solver.")
+CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_VORTEXWAVE
+    "Build the Vortex-Wave interaction solver." ON
+    "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_VORTEXWAVE )
     SET(VortexWaveInteractionSolverSource

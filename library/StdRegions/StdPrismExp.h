@@ -44,24 +44,6 @@ namespace Nektar
 {
     namespace StdRegions
     {
-        namespace StdPrismData
-        {
-            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
-            {
-                int nCoef = 0;
-                for (int a = 0; a < Na; ++a)
-                {
-                    for (int b = 0; b < Nb; ++b)
-                    {
-                        for (int c = 0; c < Nc - a; ++c)
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                return nCoef;
-            }
-        }
 
         /// Class representing a prismatic element in reference space.
         class StdPrismExp: virtual public StdExpansion3D
@@ -78,8 +60,8 @@ namespace Nektar
             STD_REGIONS_EXPORT StdPrismExp(const LibUtilities::BasisKey &Ba, 
                                            const LibUtilities::BasisKey &Bb, 
                                            const LibUtilities::BasisKey &Bc,
-                                           double *coeffs, 
-                                           double *phys);
+                                           NekDouble *coeffs, 
+                                           NekDouble *phys);
 
             STD_REGIONS_EXPORT StdPrismExp(const StdPrismExp &T);
 
@@ -210,14 +192,13 @@ namespace Nektar
                 const int mode, 
                 Array<OneD, NekDouble> &outarray);  
 
-
             //---------------------------------------
             // Helper functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual int v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int v_GetNedges() const;
             STD_REGIONS_EXPORT virtual int v_GetNfaces() const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_GetEdgeNcoeffs(const int i) const;
@@ -273,15 +254,15 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                 const StdMatrixKey &mkey);
             
+            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
 
         private:
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
             STD_REGIONS_EXPORT int GetMode(int I, int J, int K);
-            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD,       NekDouble>& outarray);
         };
 
         typedef boost::shared_ptr<StdPrismExp> StdPrismExpSharedPtr;

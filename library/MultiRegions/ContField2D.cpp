@@ -819,7 +819,7 @@ namespace Nektar
                     bndcnt += m_bndCondExpansions[i]->GetNcoeffs();
                 }
             }
-									
+            
             m_locToGloMap->UniversalAssemble(gamma);
 
             // Add weak boundary conditions to forcing
@@ -829,12 +829,12 @@ namespace Nektar
             
             if(flags.isSet(eUseGlobal))
             {
-                Vmath::Zero(contNcoeffs,outarray,1);
                 GlobalSolve(key,wsp,outarray,dirForcing);
             }
             else
             {
-                Array<OneD,NekDouble> tmp(contNcoeffs,0.0);
+                Array<OneD,NekDouble> tmp(contNcoeffs);
+                LocalToGlobal(outarray,tmp);
                 GlobalSolve(key,wsp,tmp,dirForcing);
                 GlobalToLocal(tmp,outarray);
             }
@@ -858,10 +858,10 @@ namespace Nektar
          *                      \f$N_{\mathrm{dof}}\f$.
          */
         void ContField2D::v_GeneralMatrixOp(
-                                       const GlobalMatrixKey             &gkey,
-                                       const Array<OneD,const NekDouble> &inarray,
-                                       Array<OneD,      NekDouble> &outarray,
-                                       CoeffState coeffstate)
+                const GlobalMatrixKey              &gkey,
+                const Array<OneD,const NekDouble>  &inarray,
+                      Array<OneD,      NekDouble>  &outarray,
+                      CoeffState                   coeffstate)
         {
             if(coeffstate == eGlobal)
             {
@@ -872,6 +872,7 @@ namespace Nektar
                 {
                     GlobalMatrixSharedPtr mat = GetGlobalMatrix(gkey);
                     mat->Multiply(inarray,outarray);
+                    m_locToGloMap->UniversalAssemble(outarray);
                 }
                 else
                 {

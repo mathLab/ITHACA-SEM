@@ -191,22 +191,29 @@ namespace Nektar
         {
             int n;
             const Array<OneD, const NekDouble> z = m_homogeneousBasis->GetZ();
-			Array<OneD, NekDouble> local_z(m_planes.num_elements());
-			
-			for(n = 0; n < m_planes.num_elements(); n++)
-			{
-				local_z[n] = z[m_transposition->GetPlaneID(n)];
-			}
-
+            Array<OneD, NekDouble> local_z(m_planes.num_elements());
+            
+            for(n = 0; n < m_planes.num_elements(); n++)
+            {
+                local_z[n] = z[m_transposition->GetPlaneID(n)];
+            }
+            
             for(n = 0; n < m_planes.num_elements(); ++n)
             {
-					m_planes[n]->EvaluateBoundaryConditions(time,0.5*m_lhom*(1.0+local_z[n]));
+                m_planes[n]->EvaluateBoundaryConditions(time,0.5*m_lhom*(1.0+local_z[n]));
             }
             
             // Fourier transform coefficient space boundary values
+            // This will only be undertaken for time dependent
+            // boundary conditions unless time == 0.0 which is the
+            // case when the method is called from the constructor.
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+                if(time == 0.0 || m_bndConditions[n]->GetUserDefined() == 
+                   SpatialDomains::eTimeDependent)
+                {
+                    m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+                }
             }
         }
         
@@ -228,26 +235,27 @@ namespace Nektar
             Array<OneD, NekDouble> fce(inarray.num_elements());
 
             // Transform forcing function in half-physical space if required
-			if(m_WaveSpace)
-			{
-				fce = inarray;
-			}
-			else 
-			{
-				HomogeneousFwdTrans(inarray,fce);
-			}
-
+            if(m_WaveSpace)
+            {
+                fce = inarray;
+            }
+            else 
+            {
+                HomogeneousFwdTrans(inarray,fce);
+            }
+            
             for(n = 0; n < m_planes.num_elements(); ++n)
             {
-				if(n != 1 || m_transposition->GetK(n) != 0)
-				{
-					beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
-					new_factors = factors;
-					new_factors[StdRegions::eFactorLambda] += beta*beta;
-					m_planes[n]->HelmSolve(fce + cnt,
-										   e_out = outarray + cnt1,
-										   flags, new_factors, varcoeff, dirForcing);
-				}
+                if(n != 1 || m_transposition->GetK(n) != 0)
+                {
+                    beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
+                    new_factors = factors;
+                    // add in Homogeneous Fourier direction and SVV if turned on
+                    new_factors[StdRegions::eFactorLambda] += beta*beta*(1+GetSpecVanVisc(n));
+                    m_planes[n]->HelmSolve(fce + cnt,
+                                           e_out = outarray + cnt1,
+                                           flags, new_factors, varcoeff, dirForcing);
+                }
                 
                 cnt  += m_planes[n]->GetTotPoints();
                 cnt1 += m_planes[n]->GetNcoeffs();
@@ -368,10 +376,8 @@ namespace Nektar
             Array<OneD, NekDouble> tmp_V2;
             Array<OneD, NekDouble> tmp_outarray;
             
-            bool NegateNormals;
-            
             int cnt = 0;
-            int exp_size, exp_size_per_plane, elmtID, boundaryID, Phys_offset, Coef_offset;
+            int exp_size, exp_size_per_plane, elmtID, Phys_offset, Coef_offset;
             
             for(int k = 0; k < m_planes.num_elements(); k++)
             {
@@ -385,7 +391,6 @@ namespace Nektar
                         if(n == BndID)
                         {
                             elmtID = m_BCtoElmMap[cnt];
-                            boundaryID = m_BCtoEdgMap[cnt];
                             
                             Phys_offset = m_bndCondExpansions[n]->GetPhys_Offset(i+k*exp_size_per_plane);
                             Coef_offset = m_bndCondExpansions[n]->GetCoeff_Offset(i+k*exp_size_per_plane);

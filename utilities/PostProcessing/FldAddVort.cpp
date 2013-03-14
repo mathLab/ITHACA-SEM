@@ -34,11 +34,11 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import field file.
     string fieldfile(argv[argc-1]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile,fielddef,fielddata);
-	bool useFFT = false;
-	bool dealiasing = false;
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
+    bool useFFT = false;
+    bool dealiasing = false;
     //----------------------------------------------
 
     //----------------------------------------------
@@ -60,8 +60,8 @@ int main(int argc, char *argv[])
 
                 // Define Homogeneous expansion
                 //int nplanes = fielddef[0]->m_numModes[1];
-				int nplanes; 
-				vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[1]);
+                int nplanes; 
+                vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[1]);
                 
                 // choose points to be at evenly spaced points at
                 const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
@@ -193,7 +193,8 @@ int main(int argc, char *argv[])
         {
             Exp[j]->ExtractDataToCoeffs(fielddef [i],
                                         fielddata[i],
-                                        fielddef [i]->m_fields[j]);
+                                        fielddef [i]->m_fields[j],
+                                        Exp[j]->UpdateCoeffs());
         }
         Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }
@@ -253,8 +254,8 @@ int main(int argc, char *argv[])
     //-----------------------------------------------
     // Write solution to file with additional computed fields
     string   out(argv[argc-1]);
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
-                                                = Exp[0]->GetFieldDefinitions();
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+        = Exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
     
     vector<string > outname;
@@ -285,7 +286,7 @@ int main(int argc, char *argv[])
             Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
         }
     }
-    graphShPt->Write(out, FieldDef, FieldData);
+    LibUtilities::Write(out, FieldDef, FieldData);
     //-----------------------------------------------
 
     return 0;

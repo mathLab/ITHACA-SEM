@@ -87,10 +87,11 @@ namespace Nektar
         EquationSystem::EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession)
             : m_comm (pSession->GetComm()),
               m_session (pSession),
-              m_lambda (0)
+              m_lambda (0),
+              m_fieldMetaDataMap(LibUtilities::NullFieldMetaDataMap)
         {
         }
-
+        
         /**
          * @brief Initialisation object for EquationSystem.
          */
@@ -105,8 +106,6 @@ namespace Nektar
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
 
-            m_UseContCoeff = false;
-
             // Also read and store the boundary conditions
             m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
                 ::AllocateSharedPtr(m_session, m_graph);
@@ -118,6 +117,7 @@ namespace Nektar
             m_HomoDirec			= 0;
             m_useFFT			= false;
             m_dealiasing		= false;
+            m_specHP_dealiasing		= false;
             m_SingleMode		= false;
             m_HalfMode			= false;
             m_MultipleModes		= false;
@@ -193,14 +193,17 @@ namespace Nektar
                     m_HomoDirec       = 2;
                 }
 
-                if(m_session->DefinesSolverInfo("USEFFT"))
-                {
-                    m_useFFT = true;
-                }
+                m_session->MatchSolverInfo("USEFFT","FFTW",m_useFFT,false);
             
-                if(m_session->DefinesSolverInfo("DEALIASING"))
+                m_session->MatchSolverInfo("DEALIASING","True",m_dealiasing,false);
+                if(m_dealiasing == false)
                 {
-                    m_dealiasing = true;
+                    m_session->MatchSolverInfo("DEALIASING","On",m_dealiasing,false);
+                }
+
+                if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+                {
+                    m_specHP_dealiasing = true;
                 }
             }
             else
@@ -209,7 +212,18 @@ namespace Nektar
                 // (homogeneous) expansions
                 m_npointsZ = 1; 
             }
-
+            
+            m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
+            if(m_specHP_dealiasing == false)
+            {
+                m_session->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
+            }
+            
+            if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+            {
+                m_specHP_dealiasing = true;
+            }
+        
             // Options to determine type of projection from file or directly 
             // from constructor
             if(m_session->DefinesSolverInfo("PROJECTION"))
@@ -311,7 +325,7 @@ namespace Nektar
 									
                                 const LibUtilities::BasisKey  BkeyZR(LibUtilities::eFourierHalfModeRe, m_npointsZ, PkeyZ);
                                 const LibUtilities::BasisKey  BkeyZI(LibUtilities::eFourierHalfModeIm, m_npointsZ, PkeyZ);
-									
+                                
 									
                                 for(i = 0; i < m_fields.num_elements(); i++)
                                 {
@@ -350,9 +364,19 @@ namespace Nektar
                             m_fields[0] = firstfield;
                             for(i = 1; i < m_fields.num_elements(); i++)
                             {
-                                m_fields[i] = MemoryManager<MultiRegions::ContField2D>
-                                    ::AllocateSharedPtr(*firstfield, m_graph,m_session->GetVariable(i),
-                                                        DeclareCoeffPhysArrays, m_checkIfSystemSingular[i]);
+                                if(m_graph->SameExpansions(m_session->GetVariable(0),m_session->GetVariable(i)))
+                                {
+                                    m_fields[i] = MemoryManager<MultiRegions::ContField2D>
+                                        ::AllocateSharedPtr(*firstfield, m_graph,m_session->GetVariable(i),
+                                                            DeclareCoeffPhysArrays, m_checkIfSystemSingular[i]);
+                                }
+                                else
+                                {
+                                    m_fields[i] = MemoryManager<MultiRegions::ContField2D>
+                                        ::AllocateSharedPtr(m_session, m_graph, m_session->GetVariable(i),
+                                                            DeclareCoeffPhysArrays, m_checkIfSystemSingular[0]);
+                                    
+                                }
                             }
 
                             if(m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
@@ -690,6 +714,7 @@ namespace Nektar
                 EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(), pFunctionName);
                 pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(), pFields[i]->UpdateCoeffs());
             }
+
         }
 
 
@@ -728,15 +753,15 @@ namespace Nektar
             {
                 std::string filename
                     = m_session->GetFunctionFilename(pFunctionName, pFieldName);
-                
 #if 0 
                 ImportFld(filename,m_fields);
 #else
-                std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
-
-                m_graph->Import(filename,FieldDef,FieldData);
+                Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
+                
+                LibUtilities::Import(filename,FieldDef,FieldData);
                 
                 int idx = -1;
                 
@@ -751,23 +776,20 @@ namespace Nektar
                             idx = j;
                         }
                     }
-                    ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
-                    if(FieldDef[i]->m_numHomogeneousDir)
+
+                    if(idx >= 0 )
                     {
                         m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                          FieldDef[i]->m_fields[idx],
                                                          vCoeffs);
                     }
-                    // Force nonhomgeneous extraction if base flow is not homogeneous
                     else
                     {
-                        m_fields[0]->ExtractElmtDataToCoeffs(FieldDef[i], 
-                                                             FieldData[i],
-                                                             FieldDef[i]->m_fields[idx],
-                                                             vCoeffs);
+                        cout << "Field " + pFieldName + " not found." << endl;
                     }
                 }
-                m_fields[0]->BwdTrans(vCoeffs, pArray);
+
+                m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
 #endif
             }
         }
@@ -1009,6 +1031,7 @@ namespace Nektar
                 
                 if (m_session->GetComm()->GetRank() == 0)
                 {
+                    
                     for (int i = 0; i < m_fields.num_elements(); ++i)
                     {
                         std::string varName = m_session->GetVariable(i);
@@ -1025,9 +1048,8 @@ namespace Nektar
                 {
                     Vmath::Zero(nq, m_fields[i]->UpdatePhys(), 1);
                     m_fields[i]->SetPhysState(true);
-                    m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),
-                                                     m_fields[i]->UpdateCoeffs());
-
+                    Vmath::Zero(m_fields[i]->GetNcoeffs(), 
+                                m_fields[i]->UpdateCoeffs(), 1);
                     if (m_session->GetComm()->GetRank() == 0)
                     {
                         cout << "  - Field "    << m_session->GetVariable(i)
@@ -1072,7 +1094,6 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &base)
         {
             base = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-            int nq = m_fields[0]->GetNpoints();
             std::vector<std::string> vel;
             vel.push_back("Vx");
             vel.push_back("Vy");
@@ -1181,14 +1202,16 @@ namespace Nektar
             std::string pInfile, 
             SpatialDomains::MeshGraphSharedPtr pGraph)
         {
-    	    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+    	    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
     	    std::vector<std::vector<NekDouble>   > FieldData;
-    	    pGraph->Import(pInfile, FieldDef,FieldData);
+            LibUtilities::Import(pInfile, FieldDef,FieldData);
        	    int nvar= m_spacedim;
             
       	    // Copy data to m_velocity
     	    for(int j = 0; j < nvar; ++j)
     	    {
+                Vmath::Zero(m_base[j]->GetNcoeffs(), m_base[j]->UpdateCoeffs(),1);
+
                 for(int i=0; i<FieldDef.size(); ++i)
                 {
 // turned off so it can be used in DiffusionReaction solver where need 
@@ -1201,7 +1224,8 @@ namespace Nektar
                                                   "m_boundaryconditions differs")).c_str()); 
 #endif  
                     m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i], 
-                                                   FieldDef[i]->m_fields[j]);
+                                                   FieldDef[i]->m_fields[j],
+                                                   m_base[j]->UpdateCoeffs());
                 }
     	    	m_base[j]->BwdTrans(m_base[j]->GetCoeffs(), 
                                     m_base[j]->UpdatePhys());    
@@ -1751,7 +1775,15 @@ namespace Nektar
 
             for(int i = 0; i < m_fields.num_elements(); ++i)
             {
-                fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+                if(m_fields[i]->GetNcoeffs() == m_fields[0]->GetNcoeffs())
+                {
+                    fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
+                }
+                else
+                {
+                    fieldcoeffs[i] = Array<OneD,NekDouble>(m_fields[0]->GetNcoeffs());
+                    m_fields[0]->ExtractCoeffsToCoeffs(m_fields[i],m_fields[i]->GetCoeffs(),fieldcoeffs[i]);
+                }
                 variables[i] = m_boundaryConditions->GetVariable(i);
             }
 
@@ -1773,7 +1805,7 @@ namespace Nektar
             Array<OneD, std::string> &variables)
         {
 
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = field->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -1787,7 +1819,14 @@ namespace Nektar
                     field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
                 }            
             }
-            m_graph->Write(outname, FieldDef, FieldData);
+
+            // Update time in field info if required
+            if(m_fieldMetaDataMap.find("Time") != m_fieldMetaDataMap.end())
+            {
+                m_fieldMetaDataMap["Time"] =  m_time; 
+            }
+
+            LibUtilities::Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
         }
 
         /**
@@ -1800,14 +1839,16 @@ namespace Nektar
             const std::string &infile, 
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
             {
+                Vmath::Zero(pFields[j]->GetNcoeffs(),pFields[j]->UpdateCoeffs(),1);
+                
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     ASSERTL1(FieldDef[i]->m_fields[j] == m_session->GetVariable(j),
@@ -1816,7 +1857,8 @@ namespace Nektar
                                            "m_boundaryconditions differs"));
 
                     pFields[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                    FieldDef[i]->m_fields[j]);
+                                                    FieldDef[i]->m_fields[j],
+                                                    pFields[j]->UpdateCoeffs());
                 }
                 pFields[j]->BwdTrans(pFields[j]->GetCoeffs(),
                                      pFields[j]->UpdatePhys());
@@ -1833,11 +1875,13 @@ namespace Nektar
             MultiRegions::ExpListSharedPtr &pField, 
             std::string &pFieldName)
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
             int idx = -1;
+
+            Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
 
             for(int i = 0; i < FieldDef.size(); ++i)
             {
@@ -1852,7 +1896,8 @@ namespace Nektar
                 ASSERTL1(idx >= 0, "Field " + pFieldName + " not found.");
 
                 pField->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                            FieldDef[i]->m_fields[idx]);
+                                            FieldDef[i]->m_fields[idx],
+                                            pField->UpdateCoeffs());
             }
             pField->BwdTrans(pField->GetCoeffs(), pField->UpdatePhys());
         }
@@ -1873,14 +1918,15 @@ namespace Nektar
             ASSERTL0(fieldStr.size() <= coeffs.num_elements(),
                      "length of fieldstr should be the same as pFields");
         
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
         
-            m_graph->Import(infile,FieldDef,FieldData);
-        
+            LibUtilities::Import(infile,FieldDef,FieldData);
+
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)
             {
+                Vmath::Zero(coeffs[j].num_elements(),coeffs[j],1);
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     m_fields[0]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
@@ -1938,8 +1984,6 @@ namespace Nektar
             const std::string &name, 
             bool IsInPhysicalSpace)
         {
-            int nq = m_fields[0]->GetTotPoints();
-
             std::string var = "";
             for(int j = 0; j < m_fields.num_elements(); ++j)
             {
@@ -2005,15 +2049,14 @@ namespace Nektar
                 out << "\tHom. length (LZ): " << m_LhomZ                            << endl;
                 if(m_useFFT)
                 {
-                    out << "\tUsing FFTW " << endl;
+                    out << "\tFFT Type        : FFTW" << endl;   
                 }
                 else
                 {
-                    out << "\tUsing MVM "  << endl;
+                    out << "\tFFT Type        : MVM" << endl;               
                 }
 			
-                //if(m_SingleMode==true)
-				if(m_MultipleModes==true)
+                if(m_MultipleModes==true)
                 {
                     out << "\tSelected Mode    : " << m_NumMode << endl;
 
@@ -2031,15 +2074,15 @@ namespace Nektar
                 out << "\tN.Hom. Modes (z): " << m_npointsZ                         << endl;
                 out << "\tHom. length (LY): " << m_LhomY                            << endl;
                 out << "\tHom. length (LZ): " << m_LhomZ                            << endl;
+
                 if(m_useFFT)
                 {
-                    out << "\tUsing FFTW " << endl;
+                    out << "\tFFT Type        : FFTW" << endl;               
                 }
                 else
                 {
-                    out << "\tUsing MVM "  << endl;
+                    out << "\tFFT Type        : MVM" << endl;               
                 }
-
             }
             else
             {
@@ -2053,13 +2096,41 @@ namespace Nektar
             {
                 std::string UpwindType;
                 UpwindType = m_session->GetSolverInfo("UpwindType");
-                if (UpwindType == "Exact")
-                {
-                    out << "\tRiemann Solver  : Exact"   <<endl;
-                }
-                else if (UpwindType == "Average")
+                if (UpwindType == "Average")
                 {
                     out << "\tRiemann Solver  : Average" <<endl;
+                }
+                else if (UpwindType == "AUSM0")
+                {
+                    out << "\tRiemann Solver  : AUSM0"   <<endl;
+                }
+                else if (UpwindType == "AUSM1")
+                {
+                    out << "\tRiemann Solver  : AUSM1"   <<endl;
+                }
+                else if (UpwindType == "AUSM2")
+                {
+                    out << "\tRiemann Solver  : AUSM2"   <<endl;
+                }
+                else if (UpwindType == "AUSM3")
+                {
+                    out << "\tRiemann Solver  : AUSM3"   <<endl;
+                }
+                else if (UpwindType == "ExactToro")
+                {
+                    out << "\tRiemann Solver  : ExactToro"   <<endl;
+                }
+                else if (UpwindType == "HLL")
+                {
+                    out << "\tRiemann Solver  : HLL"   <<endl;
+                }
+                else if (UpwindType == "HLLC")
+                {
+                    out << "\tRiemann Solver  : HLLC"   <<endl;
+                }
+                else if (UpwindType == "LaxFriedrichs")
+                {
+                    out << "\tRiemann Solver  : Lax-Friedrichs"   <<endl;
                 }
             }
             
@@ -2236,7 +2307,7 @@ namespace Nektar
         }
 
         void EquationSystem::v_NumFluxforScalar(
-            Array<OneD, Array<OneD, NekDouble> > &ufield,
+            const Array<OneD, Array<OneD, NekDouble> >         &ufield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             ASSERTL0(false, "v_NumFluxforScalar: This function is not valid "
@@ -2244,9 +2315,9 @@ namespace Nektar
         }
 
         void EquationSystem::v_NumFluxforVector(
-            Array<OneD, Array<OneD, NekDouble> > &ufield,
+            const Array<OneD, Array<OneD, NekDouble> >   &ufield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
-            Array<OneD, Array<OneD, NekDouble > > &qflux)
+            Array<OneD, Array<OneD, NekDouble > >              &qflux)
         {
             ASSERTL0(false, "v_NumFluxforVector: This function is not valid "
                      "for the Base class");

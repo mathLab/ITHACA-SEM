@@ -61,12 +61,12 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT MeshGraph2D(const LibUtilities::SessionReaderSharedPtr &pSession);
             SPATIAL_DOMAINS_EXPORT virtual ~MeshGraph2D();
 
-            SPATIAL_DOMAINS_EXPORT void ReadGeometry(std::string &infilename);
+            SPATIAL_DOMAINS_EXPORT void ReadGeometry(const std::string &infilename);
             SPATIAL_DOMAINS_EXPORT void ReadGeometry(TiXmlDocument &doc);
 
             SPATIAL_DOMAINS_EXPORT SegGeomSharedPtr GetSegGeom(int eID);
 
-            inline const int GetCoordim(void){
+            inline int GetCoordim(void){
                 return GetSpaceDimension();
             }
 
@@ -89,15 +89,15 @@ namespace Nektar
 
             void GenXGeoFac();
 
-            inline const int GetNseggeoms() const
+            inline int GetNseggeoms() const
             {
                 return int(m_segGeoms.size());
             }
 
-            inline const int GetVidFromElmt(StdRegions::ExpansionType expansion,
+            inline int GetVidFromElmt(LibUtilities::ShapeType shape,
                 const int vert, const int elmt) const
             {
-                if(expansion == StdRegions::eTriangle)
+                if(shape == LibUtilities::eTriangle)
                 {
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
@@ -113,10 +113,10 @@ namespace Nektar
                 }
             }
 
-            inline const int GetEidFromElmt(StdRegions::ExpansionType expansion,
+            inline int GetEidFromElmt(LibUtilities::ShapeType shape,
                 const int edge, const int elmt) const
             {
-                if(expansion == StdRegions::eTriangle)
+                if(shape == LibUtilities::eTriangle)
                 {
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
@@ -132,9 +132,9 @@ namespace Nektar
                 }
             }
 
-            inline const StdRegions::Orientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
+            inline StdRegions::Orientation GetEorientFromElmt(LibUtilities::ShapeType shape,const int edge, const int elmt) const
             {
-                if(expansion == StdRegions::eTriangle)
+                if(shape == LibUtilities::eTriangle)
                 {
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
@@ -151,11 +151,11 @@ namespace Nektar
             }
 
 
-            inline const StdRegions::Orientation GetCartesianEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
+            inline StdRegions::Orientation GetCartesianEorientFromElmt(LibUtilities::ShapeType shape,const int edge, const int elmt) const
             {
                 StdRegions::Orientation returnval;
 
-                if(expansion == StdRegions::eTriangle)
+                if(shape == LibUtilities::eTriangle)
                 {
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
@@ -218,7 +218,7 @@ namespace Nektar
             /** \brief Return the BasisKey corresponding to an edge of an element
 	     *  If the expansion is a triangle the Modified_B direction is modified to be one-dimensional Modified_A,GaussLobattoLegendre.
 	     **/
-	        SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetEdgeBasisKey(SegGeomSharedPtr edge);
+            SPATIAL_DOMAINS_EXPORT LibUtilities::BasisKey GetEdgeBasisKey(SegGeomSharedPtr edge, const std::string variable = "DefaultVar");
 
         protected:
             void ReadEdges    (TiXmlDocument &doc);

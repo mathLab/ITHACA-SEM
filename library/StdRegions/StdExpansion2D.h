@@ -130,6 +130,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(const Array<OneD, const NekDouble>& coords, const Array<OneD, const NekDouble> & physvals);
 
             STD_REGIONS_EXPORT virtual void v_NegateEdgeNormal(const int edge);
+            STD_REGIONS_EXPORT virtual bool v_EdgeNormalNegated(const int edge);
         
         private:
 

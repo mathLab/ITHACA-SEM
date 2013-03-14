@@ -81,24 +81,23 @@ namespace Nektar
     NavierStokesCFE(const LibUtilities::SessionReaderSharedPtr& pSession);
 
     virtual void v_InitObject();
-    /// Print a summary of time stepping parameters.
     virtual void v_PrintSummary(std::ostream &out);
-
-    void DoOdeRhs(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-		  Array<OneD,  Array<OneD, NekDouble> > &outarray,
-		  const NekDouble time);
-    
-    void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-			 Array<OneD,  Array<OneD, NekDouble> > &outarray,
-			 const NekDouble time);
-
-    virtual void v_SetInitialConditions(NekDouble initialtime = 0.0,
-					bool dumpInitialConditions = true);
+    void DoOdeRhs(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time);
+    void DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble                                   time);
+    virtual void v_SetInitialConditions(
+        NekDouble                               initialtime = 0.0,
+        bool                                    dumpInitialConditions = true);
     
     private:
-
-    void SetBoundaryConditions(Array<OneD, Array<OneD, NekDouble> > &physarray, NekDouble time);
-    
+      void SetBoundaryConditions(
+        Array<OneD, Array<OneD, NekDouble> >             &physarray, 
+        NekDouble                                         time);
   };
 }
 #endif

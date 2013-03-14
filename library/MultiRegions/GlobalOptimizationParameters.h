@@ -85,7 +85,7 @@ namespace Nektar
             /// For a given matrix type, determines if the operation should
             /// be done globally.
             // inline
-            MULTI_REGIONS_EXPORT const bool DoGlobalMatOp(const StdRegions::MatrixType i) const;
+            MULTI_REGIONS_EXPORT bool DoGlobalMatOp(const StdRegions::MatrixType i) const;
             
 
             /// For a given matrix type, determines if the operation should be
@@ -93,7 +93,7 @@ namespace Nektar
             // inline
             inline const Array<OneD, const bool>  &DoBlockMatOp(const StdRegions::MatrixType i) const;
             
-            inline const Array<OneD, const StdRegions::ExpansionType>  &GetShapeList() const;
+            inline const Array<OneD, const LibUtilities::ShapeType>  &GetShapeList() const;
             inline const Array<OneD, const int>  &GetShapeNumElements() const; 
 
         private:
@@ -113,7 +113,7 @@ namespace Nektar
             /// A list ExpansionTypes indicating the order in which
             /// shapes are listed to call the appropriate key for the
             /// block matrices.
-            Array<OneD, StdRegions::ExpansionType> m_shapeList;
+            Array<OneD, LibUtilities::ShapeType> m_shapeList;
 
             /// A list of  number of elements contained within each shape type
             Array<OneD, const int> m_shapeNumElements;
@@ -132,7 +132,7 @@ namespace Nektar
          * @param   i           Type of matrix.
          * @returns True if this type of matrix should be evaluated globally.
          */
-        inline const bool GlobalOptParam::DoGlobalMatOp(const StdRegions::MatrixType i) const
+        inline bool GlobalOptParam::DoGlobalMatOp(const StdRegions::MatrixType i) const
         {
             OptimizationOperationType type;
             switch(i)
@@ -233,7 +233,7 @@ namespace Nektar
             return m_shapeNumElements;
         }
 
-        inline const Array<OneD, const StdRegions::ExpansionType>  &GlobalOptParam::GetShapeList() const
+        inline const Array<OneD, const LibUtilities::ShapeType>  &GlobalOptParam::GetShapeList() const
         {
             return m_shapeList;
         }

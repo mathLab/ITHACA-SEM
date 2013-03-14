@@ -50,12 +50,31 @@ namespace Nektar
         m_pointSolve = false;
     }
 
+    /**
+     * @brief Average Riemann solver.
+     *
+     * @param rhoL      Density left state.
+     * @param rhoR      Density right state.  
+     * @param rhouL     x-momentum component left state.  
+     * @param rhouR     x-momentum component right state.  
+     * @param rhovL     y-momentum component left state.  
+     * @param rhovR     y-momentum component right state.  
+     * @param rhowL     z-momentum component left state.  
+     * @param rhowR     z-momentum component right state.
+     * @param EL        Energy left state.  
+     * @param ER        Energy right state. 
+     * @param rhof      Computed Riemann flux for density.
+     * @param rhouf     Computed Riemann flux for x-momentum component 
+     * @param rhovf     Computed Riemann flux for y-momentum component 
+     * @param rhowf     Computed Riemann flux for z-momentum component 
+     * @param Ef        Computed Riemann flux for energy.
+     */
     void AverageSolver::v_ArraySolve(
         const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
         const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
               Array<OneD,       Array<OneD, NekDouble> > &flux)
     {
-        NekDouble gamma = m_params["gamma"]();
+        static NekDouble gamma = m_params["gamma"]();
         
         int expDim = Fwd.num_elements()-2;
         int i, j;
@@ -66,7 +85,7 @@ namespace Nektar
             Array<OneD, NekDouble> Ufwd(expDim);
             Array<OneD, NekDouble> Ubwd(expDim);
             
-            for (int i = 0; i < expDim; ++i)
+            for (i = 0; i < expDim; ++i)
             {
                 Ufwd[i] = Fwd[i+1][j]/Fwd[0][j];
                 Ubwd[i] = Bwd[i+1][j]/Bwd[0][j];
@@ -82,7 +101,7 @@ namespace Nektar
             flux[expDim+1][j] = 0.5 * (Ufwd[0] * (Fwd[expDim+1][j] + Pfwd) + 
                                        Ubwd[0] * (Bwd[expDim+1][j] + Pbwd));
             
-            for (int i = 0; i < expDim; ++i)
+            for (i = 0; i < expDim; ++i)
             {
                 flux[i+1][j] = 0.5 * (Fwd[0][j] * Ufwd[0] * Ufwd[i] + 
                                       Bwd[0][j] * Ubwd[0] * Ubwd[i]);

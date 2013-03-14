@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_ADVECTIONFR
 #define NEKTAR_SOLVERUTILS_ADVECTIONFR
 
-#include <SolverUtils/Advection.h>
+#include <SolverUtils/Advection/Advection.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 

@@ -115,7 +115,6 @@ namespace Nektar
         {
             TiXmlHandle docHandle(&doc);
 
-            TiXmlNode* node = NULL;
             TiXmlElement* conditions = NULL;
 
             /// Look for all data in CONDITIONS block.

@@ -99,7 +99,7 @@ namespace Nektar
                         (*m_exp).push_back(tet);
                     }
 
-                    m_ncoeffs += StdRegions::StdTetData::getNumberOfCoefficients(TBa.GetNumModes(), TBb.GetNumModes(), TBc.GetNumModes());
+                    m_ncoeffs += LibUtilities::StdTetData::getNumberOfCoefficients(TBa.GetNumModes(), TBb.GetNumModes(), TBc.GetNumModes());
                     
                     m_npoints += TBa.GetNumPoints()*TBb.GetNumPoints()*TBc.GetNumPoints();
                 }
@@ -190,7 +190,8 @@ namespace Nektar
                     LibUtilities::BasisKey TetBc
                                         = expIt->second->m_basisKeyVector[2];
 
-                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange ||
+                       TetBa.GetBasisType() == LibUtilities::eGauss_Lagrange)
                     {
                       ASSERTL0(false,"LocalRegions::NodalTetExp is not "
                                      "implemented yet");
@@ -309,7 +310,8 @@ namespace Nektar
                     LibUtilities::BasisKey TetBc
                                         = exp->m_basisKeyVector[2];
 
-                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange)
+                    if(TetBa.GetBasisType() == LibUtilities::eGLL_Lagrange ||
+                       TetBa.GetBasisType() == LibUtilities::eGauss_Lagrange)
                     {
                       ASSERTL0(false,"LocalRegions::NodalTetExp is not "
                                      "implemented yet");
@@ -425,12 +427,12 @@ namespace Nektar
 
             for(int i = 0; i < GetExpSize(); ++i)
             {
-                switch ((*m_exp)[i]->DetExpansionType())
+                switch ((*m_exp)[i]->DetShapeType())
                 {
-                    case StdRegions::eTetrahedron:  NumShape[0]++; break;
-                    case StdRegions::ePyramid:      NumShape[1]++; break;
-                    case StdRegions::ePrism:        NumShape[2]++; break;
-                    case StdRegions::eHexahedron:   NumShape[3]++; break;
+                    case LibUtilities::eTetrahedron:  NumShape[0]++; break;
+                    case LibUtilities::ePyramid:      NumShape[1]++; break;
+                    case LibUtilities::ePrism:        NumShape[2]++; break;
+                    case LibUtilities::eHexahedron:   NumShape[3]++; break;
                     default:
                         ASSERTL0(false, "Unknown expansion type.");
                         break;
@@ -445,7 +447,6 @@ namespace Nektar
         void ExpList3D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j,k;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = (*m_exp)[expansion]->GetNumPoints(1);
             int nquad2 = (*m_exp)[expansion]->GetNumPoints(2);

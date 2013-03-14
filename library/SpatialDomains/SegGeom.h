@@ -109,7 +109,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual VertexComponentSharedPtr
                         v_GetVertex(const int i) const;
 
-                SPATIAL_DOMAINS_EXPORT virtual int v_GetEid(int i = 0) const;
+                SPATIAL_DOMAINS_EXPORT virtual int v_GetEid() const;
 
                 SPATIAL_DOMAINS_EXPORT virtual const LibUtilities::BasisSharedPtr
                         v_GetBasis(const int i, const int j);
@@ -130,8 +130,8 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT virtual Array<OneD, NekDouble>&
                         v_UpdatePhys(const int i);
 
-                SPATIAL_DOMAINS_EXPORT virtual StdRegions::ExpansionType
-                        v_DetExpansionType() const;
+                SPATIAL_DOMAINS_EXPORT virtual LibUtilities::ShapeType
+                        v_DetShapeType() const;
 
                 SPATIAL_DOMAINS_EXPORT virtual void v_GetLocCoords(
                         const Array<OneD, const NekDouble>& coords,

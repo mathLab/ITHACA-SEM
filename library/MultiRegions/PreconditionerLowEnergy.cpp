@@ -141,11 +141,10 @@ namespace Nektar
             const StdRegions::StdExpansionVector &locExpVector = *(expList->GetExp());
             StdRegions::StdExpansionSharedPtr locExpansion;
 
-            int localVertId, vMap1, vMap2, nVerts, localCoeff, n, v, m;
+            int vMap1, vMap2, nVerts, n, v, m;
             int sign1, sign2, gid1, gid2, i, j;
-            int loc_rows, globalrow, globalcol, cnt, globalLocation, nIntEdgeFace;
+            int loc_rows, globalrow, globalcol, cnt;
             NekDouble globalMatrixValue, MatrixValue, value;
-            NekDouble TempValue;
             NekDouble zero=0.0;
             int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
             int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
@@ -290,22 +289,17 @@ namespace Nektar
             const StdRegions::StdExpansionVector &locExpVector = *(expList->GetExp());
             StdRegions::StdExpansionSharedPtr locExpansion;
 
-            int localVertId, vMap1, vMap2, nVerts, nEdges, nFaces, localCoeff, v, m, n, rows;
+            int vMap1, vMap2, nVerts, v, m, n;
             int sign1, sign2;
-            int offset, globalrow, globalcol, cnt, cnt1, globalLocation, nDirVertOffset;
+            int offset, globalrow, globalcol, cnt;
             NekDouble globalMatrixValue;
             NekDouble MatrixValue;
-            NekDouble localMatrixValue;
             NekDouble zero=0.0;
             DNekMatSharedPtr m_invS;
 
             int nGlobalBnd    = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nDirBnd       = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nDirBndLocal  = m_locToGloMap->GetNumLocalDirBndCoeffs();
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
-            
-            //Get Rows of statically condensed matrix
-            int gRow = nGlobalBnd - nDirBnd;
             
             //Allocate preconditioner matrix
             MatrixStorage storage = eFULL;
@@ -422,7 +416,7 @@ namespace Nektar
             boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
 
             int nVerts, nEdges, nFaces, bndry_rows;
-            int vMap, eid, fid, vid, cnt, n, i, j;
+            int vMap, eid, fid, vid, cnt, n,  j;
             int nEdgeCoeffs, nFaceCoeffs;
 
             DNekScalBlkMatSharedPtr loc_mat;
@@ -457,7 +451,7 @@ namespace Nektar
             if(m_preconType == MultiRegions::eLowEnergy || m_preconType == MultiRegions::eLocalLowEnergy)
             {
                 LocalRegions::MatrixKey matkey(StdRegions::ePreconditioner,
-                                               vExp->DetExpansionType(),
+                                               vExp->DetShapeType(),
                                                *vExp,
                                                m_linSysKey.GetConstFactors(),
                                                vVarCoeffMap);
@@ -509,9 +503,6 @@ namespace Nektar
             edgeModeLocation = Array<OneD, Array<OneD, unsigned int> > (nEdges);
             faceModeLocation = Array<OneD, Array<OneD, unsigned int> > (nFaces);
 	    
-            //Get expansion type
-            StdRegions::ExpansionType eType=vExp->DetExpansionType();
-	    
             //loop over vertices and determine the location of vertex coefficients in the storage array
             for (vid=0; vid<nVerts; ++vid)
             {
@@ -540,8 +531,6 @@ namespace Nektar
                 edgeModeLocation[eid]=maparray;
             }
 
-            int nTotFaceCoeffs=vExp->GetTotalFaceIntNcoeffs();
-	                
             //loop over faces and determine location of face coefficients in the storage array
             for (cnt=fid=0; fid<nFaces; ++fid)
             {
@@ -579,10 +568,9 @@ namespace Nektar
         void PreconditionerLowEnergy::SetLowEnergyModes_Rv()
         {
             boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
-            int nVerts, nEdges, nFaces, bndry_rows, nmodes;
-            int vMap, eid, eid2, fid, fid2, vid, cnt, cnt2, n, m;
-            int FaceTotNCoeffs, EdgeTotNCoeffs;
-            NekDouble MatrixValue, VertexEdgeFaceValue;
+            int nmodes;
+            int eid, fid, vid, n, m;
+            NekDouble VertexEdgeFaceValue;
             NekDouble zero = 0.0;
 
             //The number of connected edges/faces is 3 (for all elements)
@@ -641,7 +629,7 @@ namespace Nektar
                     nmodes=MatFaceLocation[fid].num_elements();
                     Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 1, &facemodearray[fid*nmodes], 1);
                 }
-
+                
                 m_vertexedgefacetransformmatrix = MemoryManager<DNekMat>::AllocateSharedPtr(
 											    1, efRow, zero, storage);
                 DNekMat &Sveft = (*m_vertexedgefacetransformmatrix);
@@ -765,11 +753,11 @@ namespace Nektar
 	 */
         void PreconditionerLowEnergy::SetLowEnergyModes_Ref()
         {
-            int eid, fid, fid2, cnt, i, j, n, m, nmodes, nedgemodes;
+            int eid, fid,  cnt, i, n, m, nmodes, nedgemodes;
             int efRow, efCol, FaceTotNCoeffs, EdgeTotNCoeffs;
             NekDouble zero = 0.0;
 	    
-            NekDouble EdgeFaceValue, FaceFaceValue, Rvalue;
+            NekDouble EdgeFaceValue, FaceFaceValue;
 	    
             //number of attached faces is always 2
             int nConnectedFaces=2;
@@ -1100,18 +1088,15 @@ namespace Nektar
         void PreconditionerLowEnergy::LowEnergyPreconditioner()
         {
             boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
-            const StdRegions::StdExpansionVector &locExpVector = *(expList->GetExp());
             StdRegions::StdExpansionSharedPtr locExpansion;
 
-            int nRow, i, j, nmodes, ntotaledgemodes, ntotalfacemodes;
-            int nVerts, nEdges,nFaces, eid, fid, eid2, fid2, n, cnt, nedgemodes, nfacemodes;
-            int nEdgeCoeffs, nFaceCoeffs;
+            int nRow;
+            int nVerts, nEdges,nFaces, eid, fid, n, cnt, nedgemodes, nfacemodes;
             NekDouble zero = 0.0;
-            NekDouble MatrixValue;
 
-            int vMap1, vMap2, sign1, sign2, gid1, gid2, m, v, eMap1, eMap2, fMap1, fMap2;
+            int vMap1, vMap2, sign1, sign2, m, v, eMap1, eMap2, fMap1, fMap2;
             int offset, globalrow, globalcol;
-            NekDouble globalMatrixValue, globalRValue;
+            NekDouble globalMatrixValue;
 
             MatrixStorage storage = eFULL;
             MatrixStorage vertstorage = eDIAGONAL;
@@ -1139,10 +1124,7 @@ namespace Nektar
             nEdges=vExp->GetGeom()->GetNumEdges();
             nFaces=vExp->GetGeom()->GetNumFaces();
 
-            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
             int nDirBnd    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nNonDir = nGlobal-nDirBnd;
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
             int nNonDirEdges  = m_locToGloMap->GetNumNonDirEdgeModes();
             int nNonDirFaces  = m_locToGloMap->GetNumNonDirFaceModes();
@@ -1333,18 +1315,15 @@ namespace Nektar
         void PreconditionerLowEnergy::BlockPreconditioner()
         {
             boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
-            const StdRegions::StdExpansionVector &locExpVector = *(expList->GetExp());
             StdRegions::StdExpansionSharedPtr locExpansion;
 
-            int nRow, i, j, nmodes, ntotaledgemodes, ntotalfacemodes;
-            int nVerts, nEdges,nFaces, eid, fid, eid2, fid2, n, cnt, nedgemodes, nfacemodes;
-            int nEdgeCoeffs, nFaceCoeffs;
+            int nRow;
+            int nVerts, nEdges,nFaces, eid, fid, n, cnt, nedgemodes, nfacemodes;
             NekDouble zero = 0.0;
-            NekDouble MatrixValue;
 
-            int vMap1, vMap2, sign1, sign2, gid1, gid2, m, v, eMap1, eMap2, fMap1, fMap2;
+            int vMap1, vMap2, sign1, sign2, m, v, eMap1, eMap2, fMap1, fMap2;
             int offset, globalrow, globalcol;
-            NekDouble globalMatrixValue, globalRValue;
+            NekDouble globalMatrixValue;
 
             MatrixStorage storage = eFULL;
             MatrixStorage vertstorage = eDIAGONAL;
@@ -1362,10 +1341,7 @@ namespace Nektar
             nEdges=vExp->GetGeom()->GetNumEdges();
             nFaces=vExp->GetGeom()->GetNumFaces();
 
-            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
-            int nLocal = m_locToGloMap->GetNumLocalBndCoeffs();
             int nDirBnd    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            int nNonDir = nGlobal-nDirBnd;
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
             int nNonDirEdges  = m_locToGloMap->GetNumNonDirEdgeModes();
             int nNonDirFaces  = m_locToGloMap->GetNumNonDirFaceModes();

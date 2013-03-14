@@ -64,9 +64,9 @@ namespace Nektar
             return v_GetVertex(i);
         }
 
-        StdRegions::ExpansionType Geometry1D::DetExpansionType() const
+        LibUtilities::ShapeType Geometry1D::DetShapeType() const
         {
-            return v_DetExpansionType();
+            return v_DetShapeType();
         }
 
         void Geometry1D::WriteToFile(std::ofstream &outfile, const int dumpVar)
@@ -74,7 +74,10 @@ namespace Nektar
             v_WriteToFile(outfile,dumpVar);
         }
 
-
+        int Geometry1D::GetEid() const
+        {
+            return v_GetEid();
+        }
 
 
         int Geometry1D::v_GetShapeDim() const
@@ -114,11 +117,11 @@ namespace Nektar
             return 0;
         }
 
-        StdRegions::ExpansionType Geometry1D::v_DetExpansionType() const
+        LibUtilities::ShapeType Geometry1D::v_DetShapeType() const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
-            return StdRegions::eNoExpansionType;
+            return LibUtilities::eNoShapeType;
         }
 
         void Geometry1D::v_WriteToFile(std::ofstream &outfile, const int dumpVar)

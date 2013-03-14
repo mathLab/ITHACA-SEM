@@ -125,7 +125,7 @@ namespace Nektar
     void CellModel::Initialise()
     {
         ASSERTL1(m_nvar > 0, "Cell model must have at least 1 variable.");
-
+        
         m_cellSol = Array<OneD, Array<OneD, NekDouble> >(m_nvar);
         m_wsp = Array<OneD, Array<OneD, NekDouble> >(m_nvar);
         for (unsigned int i = 0; i < m_nvar; ++i)

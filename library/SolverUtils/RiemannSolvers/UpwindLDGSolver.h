@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Diffusion.cpp
+// File: UpwindLDGSolver.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,38 +29,40 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Abstract base class for diffusion.
+// Description: Upwind Riemann solver for LDG.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Diffusion/Diffusion.h>
+#ifndef NEKTAR_SOLVERUTILS_UPWINDLDGSOLVER
+#define NEKTAR_SOLVERUTILS_UPWINDLDGSOLVER
+
+#include <SolverUtils/SolverUtilsDeclspec.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
 
 namespace Nektar
 {
     namespace SolverUtils
     {
-        DiffusionFactory& GetDiffusionFactory()
+        class UpwindLDGSolver : public RiemannSolver
         {
-            typedef Loki::SingletonHolder<DiffusionFactory,
-            Loki::CreateUsingNew,
-            Loki::NoDestroy > Type;
-            return Type::Instance();
-        }
-        
-        void Diffusion::InitObject(
-            const LibUtilities::SessionReaderSharedPtr        pSession,
-            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
-        {
-            v_InitObject(pSession, pFields);
-        }
-        
-        void Diffusion::Diffuse(
-            const int nConvectiveFields,
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
-        {
-            v_Diffuse(nConvectiveFields, fields, inarray, outarray);
-        }
+        public:
+            SOLVER_UTILS_EXPORT static RiemannSolverSharedPtr create()
+            {
+                return RiemannSolverSharedPtr(
+                    new UpwindLDGSolver());
+            }
+            
+            static std::string solverName;
+            
+        protected:
+            UpwindLDGSolver();
+            
+            virtual void v_Solve(
+                const Array<OneD, const Array<OneD, NekDouble> > &Fwd,
+                const Array<OneD, const Array<OneD, NekDouble> > &Bwd,
+                      Array<OneD,       Array<OneD, NekDouble> > &flux);
+        }; 
     }
 }
+    
+#endif

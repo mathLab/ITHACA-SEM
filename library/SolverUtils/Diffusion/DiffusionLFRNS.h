@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: DiffusionLDGNS.h
+// File: DiffusionLFRNS.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: LDG diffusion class.
+// Description: LFRNS diffusion class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_DIFFUSIONLDGNS
-#define NEKTAR_SOLVERUTILS_DIFFUSIONLDGNS
+#ifndef NEKTAR_SOLVERUTILS_DIFFUSIONLFRNS
+#define NEKTAR_SOLVERUTILS_DIFFUSIONLFRNS
 
 #include <SolverUtils/Diffusion/Diffusion.h>
 
@@ -42,18 +42,32 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        class DiffusionLDGNS : public Diffusion
+        class DiffusionLFRNS : public Diffusion
         {
         public:
             static DiffusionSharedPtr create(std::string diffType)
             {
-                return DiffusionSharedPtr(new DiffusionLDGNS());
+                return DiffusionSharedPtr(new DiffusionLFRNS(diffType));
             }
             
-            static std::string type;
+            static std::string                   type[];
+            
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e0; 
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e1; 
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e2; 
+            Array<OneD, Array<OneD, NekDouble> > m_Q2D_e3; 
+            
+            Array<OneD, Array<OneD, NekDouble> > m_dGL_xi1;                  
+            Array<OneD, Array<OneD, NekDouble> > m_dGR_xi1;
+            Array<OneD, Array<OneD, NekDouble> > m_dGL_xi2;                  
+            Array<OneD, Array<OneD, NekDouble> > m_dGR_xi2;
+            Array<OneD, Array<OneD, NekDouble> > m_dGL_xi3;                  
+            Array<OneD, Array<OneD, NekDouble> > m_dGR_xi3;
+            DNekMatSharedPtr                     m_Ixm;
+            DNekMatSharedPtr                     m_Ixp;
             
         protected:
-            DiffusionLDGNS();
+            DiffusionLFRNS(std::string diffType);
             
             Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
             LibUtilities::SessionReaderSharedPtr m_session;
@@ -65,9 +79,22 @@ namespace Nektar
             NekDouble                            m_thermalConductivity;
             NekDouble                            m_rhoInf;
             NekDouble                            m_pInf;
-
+            
+            std::string m_diffType;
             
             virtual void v_InitObject(
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
+            
+            virtual void v_SetupMetrics(
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
+            
+            virtual void v_SetupCFunctions(
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
+            
+            virtual void v_SetupInterpolationMatrices(
                 LibUtilities::SessionReaderSharedPtr               pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
             
@@ -100,6 +127,29 @@ namespace Nektar
                 const int                                          dir,
                 const Array<OneD, const NekDouble>                &qfield,
                       Array<OneD,       NekDouble>                &penaltyflux);
+            
+            virtual void v_DerCFlux_1D(
+                const int                                     nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+                const Array<OneD, const NekDouble>               &flux, 
+                const Array<OneD, const NekDouble>               &iFlux,
+                      Array<OneD,       NekDouble>               &derCFlux);
+            
+            virtual void v_DerCFlux_2D(
+                const int                                     nConvectiveFields,
+                const int                                        direction,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+                const Array<OneD, const NekDouble>               &flux, 
+                const Array<OneD,       NekDouble>               &iFlux,
+                      Array<OneD,       NekDouble>               &derCFlux);
+            
+            virtual void v_DivCFlux_2D(
+                const int                                      nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
+                const Array<OneD, const NekDouble>               &fluxX1, 
+                const Array<OneD, const NekDouble>               &fluxX2, 
+                const Array<OneD, const NekDouble>               &numericalFlux,
+                      Array<OneD,       NekDouble>               &divCFlux);
         }; 
     }
 }

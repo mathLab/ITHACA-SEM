@@ -102,9 +102,8 @@ namespace Nektar
 
         if (dumpInitialConditions)
         {
-            // dump initial conditions to file
-            std::string outname = m_sessionName + "_initial.chk";
-            WriteFld(outname);
+            // Dump initial conditions to file
+            Checkpoint_Output(0);
         }
     }
 
@@ -119,14 +118,21 @@ namespace Nektar
         
         Array<OneD, Array<OneD, NekDouble> > advVel;
         Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
-        Array<OneD, Array<OneD, NekDouble> > inarrayTemp(nvariables);
-        Array<OneD, Array<OneD, NekDouble> > inarrayDiffusion(nvariables);
+        Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
+
+        Array<OneD, Array<OneD, NekDouble> > inarrayTemp(nvariables-1);
+        Array<OneD, Array<OneD, NekDouble> > inarrayDiff(nvariables-1);
 
         for (i = 0; i < nvariables; ++i)
         {
             outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
+        }
+        
+        for (i = 0; i < nvariables-1; ++i)
+        {
             inarrayTemp[i] = Array<OneD, NekDouble>(npoints, 0.0);
-            inarrayDiffusion[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            inarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);        
         }
         
         // Advection term in physical rhs form
@@ -136,7 +142,7 @@ namespace Nektar
         {
             Vmath::Neg(npoints, outarrayAdv[i], 1);
         }
-        
+
         // Extract pressure and temperature
         Array<OneD, NekDouble > pressure   (npoints, 0.0);
         Array<OneD, NekDouble > temperature(npoints, 0.0);
@@ -152,25 +158,25 @@ namespace Nektar
                         inarrayTemp[i-1], 1);
         }
         
-        // Copy velocities into new inarrayDiffusion
-        for (i = 0; i < nvariables-1; ++i)
+        // Copy velocities into new inarrayDiff
+        for (i = 0; i < nvariables-2; ++i)
         {
-            Vmath::Vcopy(npoints, inarrayTemp[i], 1, inarrayDiffusion[i], 1);
+            Vmath::Vcopy(npoints, inarrayTemp[i], 1, inarrayDiff[i], 1);
         }
         
         // Copy temperature into new inarrayDiffusion
         Vmath::Vcopy(npoints, 
                      temperature, 1, 
-                     inarrayDiffusion[nvariables-1], 1);
+                     inarrayDiff[nvariables-2], 1);
         
         // Diffusion term in physical rhs form
-        m_diffusion->Diffuse(nvariables, m_fields, inarrayDiffusion, outarray);
+        m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff);
         
         for (i = 0; i < nvariables; ++i)
         {
             Vmath::Vadd(npoints, 
-                        outarray[i], 1, 
                         outarrayAdv[i], 1, 
+                        outarrayDiff[i], 1, 
                         outarray[i], 1);
         }
     }
@@ -241,6 +247,27 @@ namespace Nektar
                 SpatialDomains::eSymmetry)
             {
                 SymmetryBoundary(n, cnt, inarray);
+            }
+            
+            // Inflow characteristic Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::eInflowCFS)
+            {
+                InflowCFSBoundary(n, cnt, inarray);
+            }
+            
+            // Outflow characteristic Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::eOutflowCFS)
+            {
+                OutflowCFSBoundary(n, cnt, inarray);
+            }
+            
+            // Extrapolation of the data at the boundaries
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::eExtrapOrder0)
+            {
+                ExtrapOrder0Boundary(n, cnt, inarray);
             }
             
             // Time Dependent Boundary Condition (specified in meshfile)

@@ -217,15 +217,28 @@ namespace Nektar
                     MeshCurved c;
                     ASSERTL0(x->Attribute("ID", &c.id),
                              "Failed to get attribute ID");
-                    ASSERTL0(x->Attribute("EDGEID", &c.edgeid),
-                             "Failed to get attribute EDGEID");
                     c.type = std::string(x->Attribute("TYPE"));
                     ASSERTL0(!c.type.empty(),
                              "Failed to get attribute TYPE");
                     ASSERTL0(x->Attribute("NUMPOINTS", &c.npoints),
                              "Failed to get attribute NUMPOINTS");
                     c.data = x->FirstChild()->ToText()->Value();
-                    m_meshCurved[c.id] = c;
+                    c.entitytype = x->Value()[0];
+                    if (c.entitytype == "E")
+                    {
+                        ASSERTL0(x->Attribute("EDGEID", &c.entityid),
+                             "Failed to get attribute EDGEID");
+                    }
+                    else if (c.entitytype == "F")
+                    {
+                        ASSERTL0(x->Attribute("FACEID", &c.entityid),
+                             "Failed to get attribute FACEID");
+                    }
+                    else
+                    {
+                        ASSERTL0(false, "Unknown curve type.");
+                    }
+                    m_meshCurved[std::make_pair(c.entitytype, c.id)] = c;
                     x = x->NextSiblingElement();
                 }
             }
@@ -572,15 +585,26 @@ namespace Nektar
 
             if (m_dim >= 2)
             {
-                std::map<int, MeshCurved>::const_iterator vItCurve;
-                for (vItCurve = m_meshCurved.begin(); vItCurve != m_meshCurved.end(); ++vItCurve)
+                std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
+                for (vItCurve  = m_meshCurved.begin(); 
+                     vItCurve != m_meshCurved.end(); 
+                     ++vItCurve)
                 {
                     MeshCurved c = vItCurve->second;
-                    if (vEdges.find(c.edgeid) != vEdges.end())
+                    
+                    if (vEdges.find(c.entityid) != vEdges.end() || 
+                        vFaces.find(c.entityid) != vFaces.end())
                     {
-                        x = new TiXmlElement("E");
+                        x = new TiXmlElement(c.entitytype);
                         x->SetAttribute("ID", c.id);
-                        x->SetAttribute("EDGEID", c.edgeid);
+                        if (c.entitytype == "E")
+                        {
+                            x->SetAttribute("EDGEID", c.entityid);
+                        }
+                        else
+                        {
+                            x->SetAttribute("FACEID", c.entityid);
+                        }
                         x->SetAttribute("TYPE", c.type);
                         x->SetAttribute("NUMPOINTS", c.npoints);
                         y = new TiXmlText(c.data);

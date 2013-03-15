@@ -48,9 +48,10 @@ namespace Nektar
         }
         
         void Diffusion::InitObject(
-            const LibUtilities::SessionReaderSharedPtr        pSession)
+            const LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
         {
-            v_InitObject(pSession);
+            v_InitObject(pSession, pFields);
         }
         
         void Diffusion::Diffuse(

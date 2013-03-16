@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Vmath.hpp
+// File: Vmath.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -492,9 +492,9 @@ namespace Vmath
         }
     }
 
-    template LIB_UTILITIES_EXPORT void Svtvp(int n, const double alpha, const double *x,
-                 const int incx, const double *y, const int incy,
-                 double *z, const int incz);
+    template LIB_UTILITIES_EXPORT void Svtvp(int n, const Nektar::NekDouble alpha, const Nektar::NekDouble *x,
+                 const int incx, const Nektar::NekDouble *y, const int incy,
+                 Nektar::NekDouble *z, const int incz);
 
 
     /// \brief  svtvp (scalar times vector plus vector): z = alpha*x - y

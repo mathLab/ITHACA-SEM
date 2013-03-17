@@ -373,7 +373,7 @@ namespace Nektar
          *  
          * @param       pInput      Input residual  of all DOFs.  
          * @param       pOutput     Solution vector of all DOFs.  
-         */  
+         */
         void GlobalLinSysIterative::DoConjugateGradient(
                                                         const int nGlobal,
                                                         const Array<OneD,const NekDouble> &pInput,

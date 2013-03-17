@@ -809,15 +809,6 @@ namespace Nektar
             int PrismVertex5;
             PrismVertex5=PrismExp->GetVertexMap(5);
 
-            /*cout<<"v=[ ";
-            cout<<PrismVertex0<<" ";
-            cout<<PrismVertex1<<" ";
-            cout<<PrismVertex2<<" ";
-            cout<<PrismVertex3<<" ";
-            cout<<PrismVertex4<<" ";
-            cout<<PrismVertex5<<" ";
-            cout<<" ]"<<endl;*/
-
             //Prism edge modes
             Array<OneD, unsigned int> PrismEdge0;
             PrismEdge0=PrismExp->GetEdgeInverseBoundaryMap(0);
@@ -1547,7 +1538,6 @@ namespace Nektar
                                     GetLocalToGlobalBndSign(cnt + eMap2);
 
                                 NekDouble globalEdgeValue = sign1*sign2*RSRT(eMap1,eMap2);
-                                cout<<"globalEdgeValue: "<<globalEdgeValue<<endl;
 
                                 m_EdgeBlockArray[edgematrixoffset+v*nedgemodes+m]=globalEdgeValue;
                             }
@@ -1660,7 +1650,6 @@ namespace Nektar
                     for (m=0; m<nedgemodes; ++m)
                     {
                         NekDouble EdgeValue = m_GlobalEdgeBlock[offset+v*nedgemodes+m];
-                        cout<<"EdgeValue: "<<EdgeValue<<endl;
                         m_gmat->SetValue(v,m,EdgeValue);
                     }
                 }
@@ -1685,7 +1674,6 @@ namespace Nektar
                     for (m=0; m<nfacemodes; ++m)
                     {
                         NekDouble FaceValue = m_GlobalFaceBlock[offset+v*nfacemodes+m];
-                        cout<<"FaceValue: "<<FaceValue<<endl;
                         m_gmat->SetValue(v,m,FaceValue);
                     }
                 }

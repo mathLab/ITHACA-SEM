@@ -199,8 +199,6 @@ namespace Nektar
             {
                 face_curved[m_curvedFaces[i]->m_curveID] = i;
             }
-            
-            int nextFaceNumber = -1;
 
             /// All faces are of the form: "<? ID="#"> ... </?>", with
             /// ? being an element type (either Q or T).
@@ -214,14 +212,10 @@ namespace Nektar
                 ASSERTL0(elementType == "Q" || elementType == "T",
                     (std::string("Unknown 3D face type: ") + elementType).c_str());
 
-                /// These should be ordered.
-                nextFaceNumber++;
-
                 /// Read id attribute.
                 int indx;
                 int err = element->QueryIntAttribute("ID", &indx);
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read face attribute ID.");
-//                ASSERTL0(indx == nextFaceNumber, "Face IDs must begin with zero and be sequential.");
 
                 /// Read text element description.
                 TiXmlNode* elementChild = element->FirstChild();
@@ -417,18 +411,18 @@ namespace Nektar
                             elementDataStrm >> faceID;
                             Geometry2DSharedPtr face = GetGeometry2D(faceID);
                             if (face == Geometry2DSharedPtr() ||
-                                (face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
+                                (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
                             {
                                 std::stringstream errorstring;
                                 errorstring << "Element " << indx << " has invalid face: " << faceID;
                                 ASSERTL0(false, errorstring.str().c_str());
                             }
-                            else if (face->GetGeomShapeType() == eTriangle)
+                            else if (face->GetShapeType() == LibUtilities::eTriangle)
                             {
                                 ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
                                 tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
                             }
-                            else if (face->GetGeomShapeType() == eQuadrilateral)
+                            else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                             {
                                 ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
                             }
@@ -474,19 +468,19 @@ namespace Nektar
                             elementDataStrm >> faceID;
                             Geometry2DSharedPtr face = GetGeometry2D(faceID);
                             if (face == Geometry2DSharedPtr() ||
-                                (face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
+                                (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
                             {
                                 std::stringstream errorstring;
                                 errorstring << "Element " << indx << " has invalid face: " << faceID;
                                 ASSERTL0(false, errorstring.str().c_str());
                             }
-                            else if (face->GetGeomShapeType() == eTriangle)
+                            else if (face->GetShapeType() == LibUtilities::eTriangle)
                             {
                                 ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
                                 faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
                                 Ntfaces++;
                             }
-                            else if (face->GetGeomShapeType() == eQuadrilateral)
+                            else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                             {
                                 ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
                                 faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
@@ -537,19 +531,19 @@ namespace Nektar
                             elementDataStrm >> faceID;
                             Geometry2DSharedPtr face = GetGeometry2D(faceID);
                             if (face == Geometry2DSharedPtr() ||
-                                (face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
+                                (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
                             {
                                 std::stringstream errorstring;
                                 errorstring << "Element " << indx << " has invalid face: " << faceID;
                                 ASSERTL0(false, errorstring.str().c_str());
                             }
-                            else if (face->GetGeomShapeType() == eTriangle)
+                            else if (face->GetShapeType() == LibUtilities::eTriangle)
                             {
                                 ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
                                 faces[Nfaces++] = boost::static_pointer_cast<TriGeom>(face);
                                 Ntfaces++;
                             }
-                            else if (face->GetGeomShapeType() == eQuadrilateral)
+                            else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                             {
                                 ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
                                 faces[Nfaces++] = boost::static_pointer_cast<QuadGeom>(face);
@@ -597,18 +591,18 @@ namespace Nektar
                             elementDataStrm >> faceID;
                             Geometry2DSharedPtr face = GetGeometry2D(faceID);
                             if (face == Geometry2DSharedPtr() ||
-                                (face->GetGeomShapeType() != eTriangle && face->GetGeomShapeType() != eQuadrilateral))
+                                (face->GetShapeType() != LibUtilities::eTriangle && face->GetShapeType() != LibUtilities::eQuadrilateral))
                             {
                                 std::stringstream errorstring;
                                 errorstring << "Element " << indx << " has invalid face: " << faceID;
                                 ASSERTL0(false, errorstring.str().c_str());
                             }
-                            else if (face->GetGeomShapeType() == eTriangle)
+                            else if (face->GetShapeType() == LibUtilities::eTriangle)
                             {
                                 ASSERTL0(Ntfaces < kNtfaces, errorstring.str().c_str());
                                 //tfaces[Ntfaces++] = boost::static_pointer_cast<TriGeom>(face);
                             }
-                            else if (face->GetGeomShapeType() == eQuadrilateral)
+                            else if (face->GetShapeType() == LibUtilities::eQuadrilateral)
                             {
                                 ASSERTL0(Nqfaces < kNqfaces, errorstring.str().c_str());
                                 qfaces[Nqfaces++] = boost::static_pointer_cast<QuadGeom>(face);

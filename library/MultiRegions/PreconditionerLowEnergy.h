@@ -133,6 +133,8 @@ namespace Nektar
 
             void CreateMultiplicityMap(void);
 
+            void SetupBlockTransformationMatrix(void);
+
             SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
 
@@ -155,8 +157,10 @@ namespace Nektar
             virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInput);
 
+            virtual void v_BuildPreconditioner();
+
             virtual DNekScalBlkMatSharedPtr
-                v_TransformedSchurCompl(int offset);
+                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
         };
     }
 }

@@ -205,8 +205,8 @@ namespace Nektar
                     OutputFormat format,
                     const bool dumpVar = true,
                     std::string var = "v");
-            STD_REGIONS_EXPORT virtual ExpansionType
-                    v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType
+                v_DetShapeType() const;
 
             //----------------------------
             // Wrapper functions

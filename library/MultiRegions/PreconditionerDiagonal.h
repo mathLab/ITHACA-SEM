@@ -91,6 +91,8 @@ namespace Nektar
                       const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
+            virtual void v_BuildPreconditioner();
+
             static std::string lookupIds[];
             static std::string def;
 	};

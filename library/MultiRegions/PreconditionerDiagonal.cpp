@@ -75,9 +75,13 @@ namespace Nektar
 
         void PreconditionerDiagonal::v_InitObject()
         {
-	    if(m_preconType == MultiRegions::eDiagonal)
-	    {
- 	        GlobalSysSolnType solvertype = 
+	}
+
+        void PreconditionerDiagonal::v_BuildPreconditioner()
+        {
+            if(m_preconType == MultiRegions::eDiagonal)
+            {
+                GlobalSysSolnType solvertype = 
                     m_locToGloMap->GetGlobalSysSolnType();
                 if (solvertype == eIterativeFull)
                 {
@@ -92,9 +96,9 @@ namespace Nektar
                 {
                     ASSERTL0(0,"Unsupported solver type");
                 }
-	    }
-	}
-
+            }
+        }
+        
         /**
          * Diagonal preconditioner computed by summing the relevant elements of
          * the local matrix system.

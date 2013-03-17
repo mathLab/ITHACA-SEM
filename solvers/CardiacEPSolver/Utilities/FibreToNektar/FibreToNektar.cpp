@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
         //-----------------------------------------------
         // Write solution to file
         string   out(argv[3]);
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
                 Exp->AppendFieldData(FieldDef[i], FieldData[i], fibre[j]);
             }
         }
-        graph2D->Write(out, FieldDef, FieldData);
+        LibUtilities::Write(out, FieldDef, FieldData);
         //-----------------------------------------------
     }
     catch (...) {

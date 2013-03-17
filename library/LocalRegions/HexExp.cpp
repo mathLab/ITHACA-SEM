@@ -302,7 +302,7 @@ namespace Nektar
 
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
-                                              DetExpansionType(),*this);
+                                              DetShapeType(),*this);
                 DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
                 // copy inarray in case inarray == outarray
@@ -509,7 +509,7 @@ namespace Nektar
                 break;
             }  
             
-            MatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            MatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
@@ -786,9 +786,9 @@ namespace Nektar
 
 
         /// Return the region shape using the enum-list of ShapeType
-        StdRegions::ExpansionType HexExp::v_DetExpansionType() const
+        LibUtilities::ShapeType HexExp::v_DetShapeType() const
         {
-            return StdRegions::eHexahedron;
+            return LibUtilities::eHexahedron;
         }
 
         
@@ -1941,7 +1941,7 @@ namespace Nektar
                     {
                         NekDouble one = 1.0;
                         StdRegions::StdMatrixKey masskey(StdRegions::eMass,
-                                                    DetExpansionType(), *this);
+                                                    DetShapeType(), *this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
 
@@ -1994,11 +1994,11 @@ namespace Nektar
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
-                                            mkey.GetExpansionType(), *this);
+                                            mkey.GetShapeType(), *this);
                         MatrixKey deriv1key(StdRegions::eWeakDeriv1,
-                                            mkey.GetExpansionType(), *this);
+                                            mkey.GetShapeType(), *this);
                         MatrixKey deriv2key(StdRegions::eWeakDeriv2,
-                                            mkey.GetExpansionType(), *this);
+                                            mkey.GetShapeType(), *this);
 
                         DNekMat &deriv0 = *GetStdMatrix(deriv0key);
                         DNekMat &deriv1 = *GetStdMatrix(deriv1key);
@@ -2033,17 +2033,17 @@ namespace Nektar
                     else
                     {
                         MatrixKey lap00key(StdRegions::eLaplacian00,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap01key(StdRegions::eLaplacian01,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap02key(StdRegions::eLaplacian02,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap11key(StdRegions::eLaplacian11,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap12key(StdRegions::eLaplacian12,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap22key(StdRegions::eLaplacian22,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
 
                         DNekMat &lap00 = *GetStdMatrix(lap00key);
                         DNekMat &lap01 = *GetStdMatrix(lap01key);
@@ -2088,10 +2088,10 @@ namespace Nektar
                 {
                     NekDouble lambda = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
-                                      mkey.GetExpansionType(), *this);
+                                      mkey.GetShapeType(), *this);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                                     mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -2138,10 +2138,10 @@ namespace Nektar
                     NekDouble one = 1.0;
 
 //                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
-//                                                  DetExpansionType(),*this,
+//                                                  DetShapeType(),*this,
 //                                                  mkey.GetConstant(0),
 //                                                  mkey.GetConstant(1));
-                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
                     mat->Invert();

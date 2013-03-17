@@ -204,7 +204,7 @@ namespace Nektar
             // Low Energy Basis functions
             //-----------------------------
 
-            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int> 
+            /*LOCAL_REGIONS_EXPORT Array<OneD, unsigned int> 
                 v_GetEdgeInverseBoundaryMap(int eid);
 
             LOCAL_REGIONS_EXPORT Array<OneD, unsigned int>
@@ -212,7 +212,7 @@ namespace Nektar
             
             LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
                 const DNekMatSharedPtr &r_bnd, 
-                const StdRegions::MatrixType matrixType);
+                const StdRegions::MatrixType matrixType);*/
 
         private:
             SpatialDomains::Geometry3DSharedPtr m_geom;

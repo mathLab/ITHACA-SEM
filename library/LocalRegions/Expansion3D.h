@@ -101,6 +101,21 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &primCoeffs, 
                 DNekMatSharedPtr                   &inoutmat);
 
+            //-----------------------------
+            // Low Energy Basis functions
+            //-----------------------------
+
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
+                v_GetEdgeInverseBoundaryMap(int eid);
+
+            LOCAL_REGIONS_EXPORT virtual Array<OneD, unsigned int>
+                v_GetFaceInverseBoundaryMap(int fid);
+
+            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildTransformationMatrix(
+                const DNekMatSharedPtr &r_bnd, 
+                const StdRegions::MatrixType matrixType);
+
+
         private:
             // Do not add members here since it may lead to conflicts.
             // Only use this class for member functions

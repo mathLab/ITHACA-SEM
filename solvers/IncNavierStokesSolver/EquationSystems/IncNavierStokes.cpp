@@ -244,6 +244,10 @@ namespace Nektar
                 }
             }
         }
+
+        // Set up Field Meta Data for output files
+        m_fieldMetaDataMap["Kinvis"] = m_kinvis;
+        m_fieldMetaDataMap["TimeStep"] = m_timestep;
     }
 
     IncNavierStokes::~IncNavierStokes(void)

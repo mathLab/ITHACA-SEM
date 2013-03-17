@@ -176,7 +176,7 @@ namespace Nektar
                     int &modes_offset);
             STD_REGIONS_EXPORT virtual const LibUtilities::BasisKey 
                     v_DetEdgeBasisKey(const int i) const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual bool v_IsBoundaryInteriorExpansion();
             STD_REGIONS_EXPORT virtual void v_GetCoords(
                 Array<OneD, NekDouble> &coords_0,
@@ -246,6 +246,9 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD,NekDouble> &outarray,
+                    const StdMatrixKey &mkey);
+            STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                    Array<OneD, NekDouble> &array,
                     const StdMatrixKey &mkey);
             STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
                     const Array<OneD, const NekDouble> &inarray,

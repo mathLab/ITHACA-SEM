@@ -121,13 +121,12 @@ namespace Nektar
             TiXmlElement* geometry_tag = pSession->GetElement("NEKTAR/GEOMETRY");
             TiXmlAttribute *attr = geometry_tag->FirstAttribute();
             int meshDim = 0;
-            int err = 0;
             while (attr)
             {
                 std::string attrName(attr->Name());
                 if (attrName == "DIM")
                 {
-                    err = attr->QueryIntValue(&meshDim);
+                    int err = attr->QueryIntValue(&meshDim);
                     ASSERTL1(err==TIXML_SUCCESS, "Unable to read mesh dimension.");
                     break;
                 }
@@ -817,8 +816,12 @@ namespace Nektar
                         CompositeMap compositeVector;
                         GetCompositeList(compositeListStr, compositeVector);
 
-                        ExpansionType expansion_type_x, expansion_type_y, expansion_type_z;
-                        int           num_modes_x, num_modes_y, num_modes_z;
+                        ExpansionType expansion_type_x = eNoExpansionType;
+                        ExpansionType expansion_type_y = eNoExpansionType;
+                        ExpansionType expansion_type_z = eNoExpansionType;
+                        int           num_modes_x = 0;
+                        int           num_modes_y = 0;
+                        int           num_modes_z = 0;
 
                         LibUtilities::BasisKeyVector basiskeyvec;
 
@@ -936,8 +939,8 @@ namespace Nektar
                 }
                 else if(expType == "ELEMENTS")  // Reading a file with the expansion definition
                 {
-                    std::vector<FieldDefinitionsSharedPtr> fielddefs;
-                    ImportFieldDefs(doc, fielddefs, true);
+                    std::vector<LibUtilities::FieldDefinitionsSharedPtr> fielddefs;
+                    LibUtilities::ImportFieldDefs(doc, fielddefs, true);
                     cout << "    Number of elements: " << fielddefs.size() << endl;
                     SetExpansions(fielddefs);
                 }
@@ -1162,21 +1165,15 @@ namespace Nektar
 
             TiXmlElement *facelement = field->FirstChildElement("F");
             int faceindx, faceid;
-            int nextFaceNumber = -1;
 
             while(facelement)
             {
-                /// These should be ordered.
-                nextFaceNumber++;
-
                 std::string face(facelement->ValueStr());
                 ASSERTL0(face == "F", (std::string("Unknown 3D curve type: ") + face).c_str());
 
                 /// Read id attribute.
                 err = facelement->QueryIntAttribute("ID", &faceindx);
-
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
-                ASSERTL0(faceindx == nextFaceNumber, "Face IDs must begin with zero and be sequential.");
 
                 /// Read face id attribute.
                 err = facelement->QueryIntAttribute("FACEID", &faceid);
@@ -1277,865 +1274,6 @@ namespace Nektar
             ASSERTL0(loadOkay, errstr.str());
 
             ReadCurves(doc);
-        }
-
-
-        /**
-         *
-         */
-        void MeshGraph::Write(
-                const std::string &outFile,
-                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                std::vector<std::vector<NekDouble> > &fielddata)
-        {
-            ASSERTL1(fielddefs.size() == fielddata.size(),
-                     "Length of fielddefs and fielddata incompatible");
-
-            TiXmlDocument doc;
-            TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
-            doc.LinkEndChild(decl);
-
-            cout << "Writing outfile: " << outFile << endl;
-
-            TiXmlElement * root = new TiXmlElement("NEKTAR");
-            doc.LinkEndChild(root);
-
-            for (int f = 0; f < fielddefs.size(); ++f)
-            {
-
-                ASSERTL1(fielddata[f].size() > 0,
-                        "Fielddata vector must contain at least one value.");
-                
-                int datasize = CheckFieldDefinition(fielddefs[f]);
-                ASSERTL1(fielddata[f].size() == fielddefs[f]->m_fields.size()
-                         * datasize, "Invalid size of fielddata vector.");
-
-                //---------------------------------------------
-                // Write ELEMENTS
-                TiXmlElement * elemTag = new TiXmlElement("ELEMENTS");
-                root->LinkEndChild(elemTag);
-
-                // Write FIELDS
-                std::string fieldsString;
-                {
-                    std::stringstream fieldsStringStream;
-                    bool first = true;
-                    for (std::vector<int>::size_type i = 0; i
-                    < fielddefs[f]->m_fields.size(); i++)
-                    {
-                        if (!first)
-                            fieldsStringStream << ",";
-                        fieldsStringStream << fielddefs[f]->m_fields[i];
-                        first = false;
-                    }
-                    fieldsString = fieldsStringStream.str();
-                }
-                elemTag->SetAttribute("FIELDS", fieldsString);
-
-                // Write SHAPE
-                std::string shapeString;
-                {
-                    std::stringstream shapeStringStream;
-                    shapeStringStream << GeomShapeTypeMap[fielddefs[f]->m_shapeType];
-                    if(fielddefs[f]->m_numHomogeneousDir == 1)
-                    {
-                        shapeStringStream << "-HomogenousExp1D";
-                    }
-                    else if (fielddefs[f]->m_numHomogeneousDir == 2)
-                    {
-                        shapeStringStream << "-HomogenousExp2D";
-                    }
-
-                    shapeString = shapeStringStream.str();
-                }
-                elemTag->SetAttribute("SHAPE", shapeString);
-
-                // Write BASIS
-                std::string basisString;
-                {
-                    std::stringstream basisStringStream;
-                    bool first = true;
-                    for (std::vector<LibUtilities::BasisType>::size_type i = 0; i < fielddefs[f]->m_basis.size(); i++)
-                    {
-                        if (!first)
-                            basisStringStream << ",";
-                        basisStringStream
-                        << LibUtilities::BasisTypeMap[fielddefs[f]->m_basis[i]];
-                        first = false;
-                    }
-                    basisString = basisStringStream.str();
-                }
-                elemTag->SetAttribute("BASIS", basisString);
-
-                // Write homogeneuous length details
-                if(fielddefs[f]->m_numHomogeneousDir)
-                {
-                    std::string homoLenString;
-                    {
-                        std::stringstream homoLenStringStream;
-                        bool first = true;
-                        for (int i = 0; i < fielddefs[f]->m_numHomogeneousDir; ++i)
-                        {
-                            if (!first)
-                                homoLenStringStream << ",";
-                            homoLenStringStream
-                            << fielddefs[f]->m_homogeneousLengths[i];
-                            first = false;
-                        }
-                        homoLenString = homoLenStringStream.str();
-                    }
-                    elemTag->SetAttribute("HOMOGENEOUSLENGTHS", homoLenString);
-                }
-				
-                // Write homogeneuous planes/lines details
-                if(fielddefs[f]->m_numHomogeneousDir)
-                {
-                    if(fielddefs[f]->m_homogeneousYIDs.size() > 0)
-                    {
-                        std::string homoYIDsString;
-                        {
-                            std::stringstream homoYIDsStringStream;
-                            bool first = true;
-                            for(int i = 0; i < fielddefs[f]->m_homogeneousYIDs.size(); i++)
-                            {
-                                if (!first)
-                                    homoYIDsStringStream << ",";
-                                homoYIDsStringStream << fielddefs[f]->m_homogeneousYIDs[i];
-                                first = false;
-                            }
-                            homoYIDsString = homoYIDsStringStream.str();
-                        }
-                        elemTag->SetAttribute("HOMOGENEOUSYIDS", homoYIDsString);
-                    }
-                    
-                    if(fielddefs[f]->m_homogeneousZIDs.size() > 0)
-                    {
-                        std::string homoZIDsString;
-                        {
-                            std::stringstream homoZIDsStringStream;
-                            bool first = true;
-                            for(int i = 0; i < fielddefs[f]->m_homogeneousZIDs.size(); i++)
-                            {
-                                if (!first)
-                                    homoZIDsStringStream << ",";
-                                homoZIDsStringStream << fielddefs[f]->m_homogeneousZIDs[i];
-                                first = false;
-                            }
-                            homoZIDsString = homoZIDsStringStream.str();
-                        }
-                        elemTag->SetAttribute("HOMOGENEOUSZIDS", homoZIDsString);
-                    }
-                }
-                
-                // Write NUMMODESPERDIR
-                std::string numModesString;
-                {
-                    std::stringstream numModesStringStream;
-
-                    if (fielddefs[f]->m_uniOrder)
-                    {
-                        numModesStringStream << "UNIORDER:";
-                        // Just dump single definition
-                        bool first = true;
-                        for (std::vector<int>::size_type i = 0; i
-                                 < fielddefs[f]->m_basis.size(); i++)
-                        {
-                            if (!first)
-                                numModesStringStream << ",";
-                            numModesStringStream << fielddefs[f]->m_numModes[i];
-                            first = false;
-                        }
-                    }
-                    else
-                    {
-                        numModesStringStream << "MIXORDER:";
-                        bool first = true;
-                        for (std::vector<int>::size_type i = 0; i
-                                 < fielddefs[f]->m_numModes.size(); i++)
-                        {
-                            if (!first)
-                                numModesStringStream << ",";
-                            numModesStringStream << fielddefs[f]->m_numModes[i];
-                            first = false;
-                        }
-                    }
-                    
-                    numModesString = numModesStringStream.str();
-                }
-                elemTag->SetAttribute("NUMMODESPERDIR", numModesString);
-
-                //Write ID
-                // Should ideally look at ways of compressing this stream
-                // if just sequential;
-                std::string idString;
-                {
-                    std::stringstream idStringStream;
-                    bool first = true;
-                    for (std::vector<Geometry>::size_type i = 0; i
-                    < fielddefs[f]->m_elementIDs.size(); i++)
-                    {
-                        if (!first)
-                            idStringStream << ",";
-                        idStringStream << fielddefs[f]->m_elementIDs[i];
-                        first = false;
-                    }
-                    idString = idStringStream.str();
-                }
-                elemTag->SetAttribute("ID", idString);
-
-                // Write binary data
-                std::string compressedDataString;
-                {
-                    // Serialize the fielddata vector to the stringstream.
-                    std::stringstream archiveStringStream(std::string((char*) &fielddata[f][0], sizeof(fielddata[f][0]) / sizeof(char) * fielddata[f].size()));
-
-                    // Compress the serialized data.
-                    std::stringstream compressedData;
-                    {
-                        boost::iostreams::filtering_streambuf<boost::iostreams::input>   out;
-                        out.push(boost::iostreams::zlib_compressor());
-                        out.push(archiveStringStream);
-                        boost::iostreams::copy(out, compressedData);
-
-                        // try decompressing to see if compression accurate
-                        try
-                        {
-                            std::stringstream elementDecompressedData;
-                            boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-                            in.push(boost::iostreams::zlib_decompressor());
-                            in.push(compressedData);
-                            
-                            boost::iostreams::copy(in, elementDecompressedData);
-                        }
-                        catch (boost::iostreams::zlib_error e)
-                        {
-                            if (e.error() == boost::iostreams::zlib::stream_end)
-                            {
-                                cout <<  "Stream end zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::stream_error)
-                            {
-                                cout <<   "Stream zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::version_error)
-                            {
-                                cout << "Version zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::data_error)
-                            {
-                                cout <<  "Data zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::mem_error)
-                            {
-                                cout << "Memory zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::buf_error)
-                            {
-                                cout <<"Buffer zlib error";
-                            }
-                            else
-                            {
-                                cout <<  "Unknown zlib error";
-                            }
-
-                            cout << endl << "Retrying compression will not check again" << endl;
-                            compressedData.clear();
-                            compressedData.str("");
-                            boost::iostreams::copy(out, compressedData);
-                        }
-                    }
-
-                    // If the string length is not divisible by 3,
-                    // pad it. There is a bug in transform_width
-                    // that will make it reference past the end
-                    // and crash.
-                    switch (compressedData.str().length() % 3)
-                    {
-                    case 1:
-                        compressedData << '\0';
-                    case 2:
-                        compressedData << '\0';
-                        break;
-                    }
-                    compressedDataString = compressedData.str();
-                }
-
-                // Convert from binary to base64.
-                typedef boost::archive::iterators::base64_from_binary<
-                        boost::archive::iterators::transform_width<
-                        std::string::const_iterator, 6, 8> > base64_t;
-                std::string base64string(base64_t(compressedDataString.begin()),
-                        base64_t(compressedDataString.end()));
-                elemTag->LinkEndChild(new TiXmlText(base64string));
-
-            }
-            doc.SaveFile(outFile);
-        }
-
-
-        /**
-         *
-         */
-        void MeshGraph::Import(
-                const std::string& infilename,
-                std::vector<FieldDefinitionsSharedPtr> &fielddefs,
-                std::vector<std::vector<NekDouble> > &fielddata)
-        {
-            TiXmlDocument doc(infilename);
-            bool loadOkay = doc.LoadFile();
-
-            std::stringstream errstr;
-            errstr << "Unable to load file: " << infilename << std::endl;
-            errstr << "Reason: " << doc.ErrorDesc() << std::endl;
-            errstr << "Position: Line " << doc.ErrorRow() << ", Column " << doc.ErrorCol() << std::endl;
-            ASSERTL0(loadOkay, errstr.str());
-
-            ImportFieldDefs(doc, fielddefs, false);
-            ImportFieldData(doc, fielddefs, fielddata);
-        }
-
-
-        /**
-         * The bool decides if the FieldDefs are in <EXPANSIONS> or in <NEKTAR>.
-         */
-        void MeshGraph::ImportFieldDefs(TiXmlDocument &doc, std::vector<FieldDefinitionsSharedPtr> &fielddefs, bool expChild)
-        {
-            ASSERTL1(fielddefs.size() == 0, "Expected an empty fielddefs vector.");
-
-            TiXmlHandle docHandle(&doc);
-            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
-
-            master = doc.FirstChildElement("NEKTAR");
-            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
-            std::string strLoop = "NEKTAR";
-            TiXmlElement* loopXml = master;
-
-            TiXmlElement *expansionTypes;
-            if(expChild)
-            {
-                expansionTypes = master->FirstChildElement("EXPANSIONS");
-                ASSERTL0(expansionTypes, "Unable to find EXPANSIONS tag in file.");
-                loopXml = expansionTypes;
-                strLoop = "EXPANSIONS";
-            }
-
-            // Loop through all nektar tags, finding all of the element tags.
-            while (loopXml)
-            {
-                TiXmlElement* element = loopXml->FirstChildElement("ELEMENTS");
-                ASSERTL0(element, "Unable to find ELEMENTS tag within nektar tag.");
-
-                while (element)
-                {
-                    // Extract the attributes.
-                    std::string idString;
-                    std::string shapeString;
-                    std::string basisString;
-                    std::string homoLengthsString;
-					std::string homoZIDsString;
-					std::string homoYIDsString;
-                    std::string numModesString;
-                    std::string numPointsString;
-                    std::string fieldsString;
-                    std::string pointsString;
-                    bool pointDef = false;
-                    bool numPointDef = false;
-                    TiXmlAttribute *attr = element->FirstAttribute();
-                    while (attr)
-                    {
-                        std::string attrName(attr->Name());
-                        if (attrName == "FIELDS")
-                        {
-                            fieldsString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "SHAPE")
-                        {
-                            shapeString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "BASIS")
-                        {
-                            basisString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "HOMOGENEOUSLENGTHS")
-                        {
-                            homoLengthsString.insert(0,attr->Value());
-                        }
-						else if (attrName == "HOMOGENEOUSZIDS")
-                        {
-                            homoZIDsString.insert(0,attr->Value());
-                        }
-						else if (attrName == "HOMOGENEOUSYIDS")
-                        {
-                            homoYIDsString.insert(0,attr->Value());
-                        }
-                        else if (attrName == "NUMMODESPERDIR")
-                        {
-                            numModesString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "ID")
-                        {
-                            idString.insert(0, attr->Value());
-                        }
-                        else if (attrName == "POINTSTYPE")
-                        {
-                            pointsString.insert(0, attr->Value());
-                            pointDef = true;
-                        }
-                        else if (attrName == "NUMPOINTSPERDIR")
-                        {
-                            numPointsString.insert(0, attr->Value());
-                            numPointDef = true;
-                        }
-                        else
-                        {
-                            std::string errstr("Unknown attribute: ");
-                            errstr += attrName;
-                            ASSERTL1(false, errstr.c_str());
-                        }
-
-                        // Get the next attribute.
-                        attr = attr->Next();
-                    }
-
-                    // Check to see if homogeneous expansion and if so
-                    // strip down the shapeString definition
-                    int numHomoDir = 0;
-                    size_t loc;
-                    //---> This finds the first location of  'n'!
-                    if((loc = shapeString.find_first_of("-"))!=string::npos)
-                    {
-                        if(shapeString.find("Exp1D")!=string::npos)
-                        {
-                            numHomoDir = 1;
-                        }
-                        else // HomogeneousExp1D
-                        {
-                            numHomoDir = 2;
-                        }
-
-                        shapeString.erase(loc,shapeString.length());
-                    }
-
-                    // Reconstruct the fielddefs.
-                    std::vector<unsigned int> elementIds;
-                    {
-                        bool valid = ParseUtils::GenerateSeqVector(idString.c_str(), elementIds);
-                        ASSERTL0(valid, "Unable to correctly parse the element ids.");
-                    }
-
-                    // Get the geometrical shape
-                    SpatialDomains::GeomShapeType shape;
-                    bool valid = false;
-                    for (unsigned int j = 0; j < SpatialDomains::SIZE_GeomShapeType; j++)
-                    {
-                        if (SpatialDomains::GeomShapeTypeMap[j] == shapeString)
-                        {
-                            shape = (SpatialDomains::GeomShapeType) j;
-                            valid = true;
-                            break;
-                        }
-                    }
-
-                    ASSERTL0(valid, std::string("Unable to correctly parse the shape type: ").append(shapeString).c_str());
-
-                    // Get the basis
-                    std::vector<std::string> basisStrings;
-                    std::vector<LibUtilities::BasisType> basis;
-                    valid = ParseUtils::GenerateOrderedStringVector(basisString.c_str(), basisStrings);
-                    ASSERTL0(valid, "Unable to correctly parse the basis types.");
-                    for (std::vector<std::string>::size_type i = 0; i < basisStrings.size(); i++)
-                    {
-                        valid = false;
-                        for (unsigned int j = 0; j < LibUtilities::SIZE_BasisType; j++)
-                        {
-                            if (LibUtilities::BasisTypeMap[j] == basisStrings[i])
-                            {
-                                basis.push_back((LibUtilities::BasisType) j);
-                                valid = true;
-                                break;
-                            }
-                        }
-                        ASSERTL0(valid, std::string("Unable to correctly parse the basis type: ").append(basisStrings[i]).c_str());
-                    }
-
-                    // Get homoLengths
-                    std::vector<NekDouble> homoLengths;
-                    if(numHomoDir)
-                    {
-                        valid = ParseUtils::GenerateUnOrderedVector(homoLengthsString.c_str(), homoLengths);
-                        ASSERTL0(valid, "Unable to correctly parse the number of homogeneous lengths.");
-                    }
-					
-					// Get Homogeneous points IDs
-					std::vector<unsigned int> homoZIDs;
-					std::vector<unsigned int> homoYIDs;
-					
-					if(numHomoDir == 1)
-                    {
-                        valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(), homoZIDs);
-                        ASSERTL0(valid, "Unable to correctly parse homogeneous planes IDs.");
-                    }
-					
-					if(numHomoDir == 2)
-					{
-						valid = ParseUtils::GenerateSeqVector(homoZIDsString.c_str(), homoZIDs);
-                        ASSERTL0(valid, "Unable to correctly parse homogeneous lines IDs in z-direction.");
-						valid = ParseUtils::GenerateSeqVector(homoYIDsString.c_str(), homoYIDs);
-                        ASSERTL0(valid, "Unable to correctly parse homogeneous lines IDs in y-direction.");
-					}
-					
-
-                    // Get points type
-                    std::vector<LibUtilities::PointsType> points;
-
-                    if(pointDef)
-                    {
-                        std::vector<std::string> pointsStrings;
-                        valid = ParseUtils::GenerateOrderedStringVector(pointsString.c_str(), pointsStrings);
-                        ASSERTL0(valid, "Unable to correctly parse the points types.");
-                        for (std::vector<std::string>::size_type i = 0; i < pointsStrings.size(); i++)
-                        {
-                            valid = false;
-                            for (unsigned int j = 0; j < LibUtilities::SIZE_PointsType; j++)
-                            {
-                                if (LibUtilities::kPointsTypeStr[j] == pointsStrings[i])
-                                {
-                                    points.push_back((LibUtilities::PointsType) j);
-                                    valid = true;
-                                    break;
-                                }
-                            }
-
-                            ASSERTL0(valid, std::string("Unable to correctly parse the points type: ").append(pointsStrings[i]).c_str());
-                        }
-                    }
-
-                    // Get numModes
-                    std::vector<unsigned int> numModes;
-                    bool UniOrder = false;
-
-                    if(strstr(numModesString.c_str(),"UNIORDER:"))
-                    {
-                        UniOrder  = true;
-                    }
-
-                    valid = ParseUtils::GenerateOrderedVector(numModesString.c_str()+9, numModes);
-                    ASSERTL0(valid, "Unable to correctly parse the number of modes.");
-
-                    // Get numPoints
-                    std::vector<unsigned int> numPoints;
-                    if(numPointDef)
-                    {
-                        valid = ParseUtils::GenerateOrderedVector(numPointsString.c_str(), numPoints);
-                        ASSERTL0(valid, "Unable to correctly parse the number of points.");
-                    }
-
-                    // Get fields names
-                    std::vector<std::string> Fields;
-                    valid = ParseUtils::GenerateOrderedStringVector(fieldsString.c_str(), Fields);
-                    ASSERTL0(valid, "Unable to correctly parse the number of fields.");
-
-                    SpatialDomains::FieldDefinitionsSharedPtr fielddef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIds, basis, UniOrder, numModes, Fields, numHomoDir, homoLengths, homoZIDs, homoYIDs, points, pointDef, numPoints, numPointDef);
-                    
-                    fielddefs.push_back(fielddef);
-
-                    element = element->NextSiblingElement("ELEMENTS");
-                }
-                loopXml = loopXml->NextSiblingElement(strLoop);
-            }
-        }
-
-
-        /**
-         *
-         */
-        void MeshGraph::ImportFieldData(TiXmlDocument &doc, const std::vector<FieldDefinitionsSharedPtr> &fielddefs, std::vector<std::vector<NekDouble> > &fielddata)
-        {
-            int cntdumps = 0;
-            ASSERTL1(fielddata.size() == 0, "Expected an empty fielddata vector.");
-
-            TiXmlHandle docHandle(&doc);
-            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
-
-            master = doc.FirstChildElement("NEKTAR");
-            ASSERTL0(master, "Unable to find NEKTAR tag in file.");
-
-            // Loop through all nektar tags, finding all of the element tags.
-            while (master)
-            {
-                TiXmlElement* element = master->FirstChildElement("ELEMENTS");
-                ASSERTL0(element, "Unable to find ELEMENTS tag within nektar tag.");
-                while (element)
-                {
-                    // Extract the body, which the "data".
-                    TiXmlNode* elementChild = element->FirstChild();
-                    ASSERTL0(elementChild, "Unable to extract the data from the element tag.");
-                    std::string elementStr;
-                    while(elementChild)
-                    {
-                        if (elementChild->Type() == TiXmlNode::TEXT)
-                        {
-                            elementStr += elementChild->ToText()->ValueStr();
-                        }
-                        elementChild = elementChild->NextSibling();
-                    }
-
-                    // Convert from base64 to binary.
-                    typedef boost::archive::iterators::transform_width<
-                            boost::archive::iterators::binary_from_base64<
-                            std::string::const_iterator>, 8, 6 > binary_t;
-                    std::stringstream elementCompressedData(std::string(binary_t(elementStr.begin()), binary_t(elementStr.end())));
-
-                    // Decompress the binary data.
-                    std::stringstream elementDecompressedData;
-                    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-                    in.push(boost::iostreams::zlib_decompressor());
-                    in.push(elementCompressedData);
-                    try
-                    {
-                        boost::iostreams::copy(in, elementDecompressedData);
-                    }
-                    catch (boost::iostreams::zlib_error e)
-                    {
-                        if (e.error() == boost::iostreams::zlib::stream_end)
-                        {
-                            ASSERTL0(false, "Stream end zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::stream_error)
-                        {
-                            ASSERTL0(false, "Stream zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::version_error)
-                        {
-                            ASSERTL0(false, "Version zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::data_error)
-                        {
-                            ASSERTL0(false, "Data zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::mem_error)
-                        {
-                            ASSERTL0(false, "Memory zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::buf_error)
-                        {
-                            ASSERTL0(false, "Buffer zlib error");
-                        }
-                        else
-                        {
-                            ASSERTL0(false, "Unknown zlib error");
-                        }
-                    }
-
-                    // Deserialize the array.
-                    std::string vData = elementDecompressedData.str();
-                    NekDouble* readFieldData = (NekDouble*) vData.c_str();
-                    std::vector<NekDouble> elementFieldData(readFieldData, readFieldData + elementDecompressedData.str().length() * sizeof(*elementDecompressedData.str().c_str()) / sizeof(NekDouble));
-                    fielddata.push_back(elementFieldData);
-
-                    int datasize = CheckFieldDefinition(fielddefs[cntdumps]);
-                    ASSERTL0(fielddata[cntdumps].size() == datasize*fielddefs[cntdumps]->m_fields.size(),"Input data is not the same length as header information");
-
-                    cntdumps++;
-
-                    element = element->NextSiblingElement("ELEMENTS");
-                }
-                master = master->NextSiblingElement("NEKTAR");
-            }
-        }
-
-
-        /**
-         *
-         */
-        int MeshGraph::CheckFieldDefinition(const FieldDefinitionsSharedPtr &fielddefs)
-        {
-            int i;
-            ASSERTL0(fielddefs->m_elementIDs.size() > 0, "Fielddefs vector must contain at least one element of data .");
-
-            unsigned int numbasis = 0;
-
-            // Determine nummodes vector lists are correct length
-            switch(fielddefs->m_shapeType)
-            {
-                case eSegment:
-                    numbasis = 1;
-                    if(fielddefs->m_numHomogeneousDir)
-                    {
-                        numbasis += fielddefs->m_numHomogeneousDir;
-                    }
-
-                    break;
-                case eTriangle:  case eQuadrilateral:
-                    if(fielddefs->m_numHomogeneousDir)
-                    {
-                        numbasis = 3;
-                    }
-                    else
-                    {
-                        numbasis = 2;
-                    }
-                    break;
-                case eTetrahedron:
-                case ePyramid:
-                case ePrism:
-                case eHexahedron:
-                    numbasis = 3;
-                    break;
-                default:
-                    ASSERTL0(false, "Unsupported shape type.");
-                    break;
-            }
-
-            unsigned int datasize = 0;
-
-            ASSERTL0(fielddefs->m_basis.size() == numbasis, "Length of basis vector is incorrect");
-
-            if(fielddefs->m_uniOrder == true)
-            {
-                unsigned int cnt = 0;
-                // calculate datasize
-                switch(fielddefs->m_shapeType)
-                {
-                case eSegment:
-                    if(fielddefs->m_numHomogeneousDir == 1)
-                    {
-                        datasize += fielddefs->m_numModes[cnt++]*fielddefs->m_numModes[cnt++];
-                    }
-                    else if(fielddefs->m_numHomogeneousDir == 2)
-                    {
-                        datasize += fielddefs->m_numModes[cnt++]*fielddefs->m_numModes[cnt++]*fielddefs->m_numModes[cnt++];
-                    }
-                    else
-                    {
-                        datasize += fielddefs->m_numModes[cnt++];
-                    }
-                    break;
-                case eTriangle:
-                {
-                    int l = fielddefs->m_numModes[cnt++];
-                    int m = fielddefs->m_numModes[cnt++];
-
-                    if(fielddefs->m_numHomogeneousDir == 1)
-                    {
-                        datasize += StdRegions::StdTriData::getNumberOfCoefficients(l,m)*fielddefs->m_homogeneousZIDs.size();
-                    }
-                    else
-                    {
-                        datasize += StdRegions::StdTriData::getNumberOfCoefficients(l,m);
-                    }
-                }
-                break;
-                case eQuadrilateral:
-                {
-                    if(fielddefs->m_numHomogeneousDir == 1)
-                    {
-                        datasize += fielddefs->m_numModes[cnt++]*
-                                fielddefs->m_numModes[cnt++]*
-                                fielddefs->m_homogeneousZIDs.size();
-                    }
-                    else
-                    {
-                        datasize += fielddefs->m_numModes[cnt++]*
-                                fielddefs->m_numModes[cnt++];
-                    }
-                }
-                break;
-                case eTetrahedron:
-                {
-                    int l = fielddefs->m_numModes[cnt++];
-                    int m = fielddefs->m_numModes[cnt++];
-                    int n = fielddefs->m_numModes[cnt++];
-                    datasize += StdRegions::StdTetData::getNumberOfCoefficients(l,m,n);
-                }
-                break;
-                case ePyramid:
-                {
-                    int l = fielddefs->m_numModes[cnt++];
-                    int m = fielddefs->m_numModes[cnt++];
-                    int n = fielddefs->m_numModes[cnt++];
-                    datasize += StdRegions::StdPyrData::getNumberOfCoefficients(l,m,n);
-                }
-                break;
-                case  ePrism:
-                {
-                    int l = fielddefs->m_numModes[cnt++];
-                    int m = fielddefs->m_numModes[cnt++];
-                    int n = fielddefs->m_numModes[cnt++];
-                    datasize += StdRegions::StdPrismData::getNumberOfCoefficients(l,m,n);
-                }
-                break;
-                case eHexahedron:
-                    datasize += fielddefs->m_numModes[cnt++]*
-                    fielddefs->m_numModes[cnt++]*
-                    fielddefs->m_numModes[cnt++];
-                    break;
-                default:
-                    ASSERTL0(false, "Unsupported shape type.");
-                    break;
-                }
-
-                datasize *= fielddefs->m_elementIDs.size();
-            }
-            else
-            {
-                unsigned int cnt = 0;
-                // calculate data length
-                for(i = 0; i < fielddefs->m_elementIDs.size(); ++i)
-                {
-                    switch(fielddefs->m_shapeType)
-                    {
-                    case eSegment:
-                        datasize += fielddefs->m_numModes[cnt++];
-                        break;
-                    case eTriangle:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-                        datasize += StdRegions::StdTriData::getNumberOfCoefficients(l,m);
-                    }
-                    break;
-                    case eQuadrilateral:
-                        datasize += fielddefs->m_numModes[cnt++]*
-                        fielddefs->m_numModes[cnt++];
-                        break;
-                    case eTetrahedron:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-                        int n = fielddefs->m_numModes[cnt++];
-                        datasize += StdRegions::StdTetData::getNumberOfCoefficients(l,m,n);
-                    }
-                    break;
-                    case ePyramid:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-                        int n = fielddefs->m_numModes[cnt++];
-                        datasize += StdRegions::StdPyrData::getNumberOfCoefficients(l,m,n);
-                    }
-                    break;
-                    case  ePrism:
-                    {
-                        int l = fielddefs->m_numModes[cnt++];
-                        int m = fielddefs->m_numModes[cnt++];
-                        int n = fielddefs->m_numModes[cnt++];
-                        datasize += StdRegions::StdPrismData::getNumberOfCoefficients(l,m,n);
-                    }
-                    break;
-                    case eHexahedron:
-                        datasize += fielddefs->m_numModes[cnt++]*
-                        fielddefs->m_numModes[cnt++]*
-                        fielddefs->m_numModes[cnt++];
-                        break;
-                    default:
-                        ASSERTL0(false, "Unsupported shape type.");
-                        break;
-                    }
-                }
-            }
-
-            return datasize;
         }
 
 
@@ -2276,7 +1414,7 @@ namespace Nektar
          *
          */
         void MeshGraph::SetExpansions(
-                std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
+                std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
         {
             int i, j, k, g, h, cnt, id;
             GeometrySharedPtr geom;
@@ -2368,7 +1506,7 @@ namespace Nektar
 
                         switch (fielddef[i]->m_shapeType)
                         {
-                        case eSegment:
+                        case LibUtilities::eSegment:
                         {
                             ASSERTL0(m_segGeoms.count(fielddef[i]->m_elementIDs[j]),
                                     "Failed to find geometry with same global id");
@@ -2401,7 +1539,7 @@ namespace Nektar
                             bkeyvec.push_back(bkey);
                         }
                         break;
-                        case eTriangle:
+                        case LibUtilities::eTriangle:
                         {
                             ASSERTL0(m_triGeoms.count(fielddef[i]->m_elementIDs[j]),
                                     "Failed to find geometry with same global id");
@@ -2452,7 +1590,7 @@ namespace Nektar
                             }
                         }
                         break;
-                        case eQuadrilateral:
+                        case LibUtilities::eQuadrilateral:
                         {
                             ASSERTL0(m_quadGeoms.count(fielddef[i]->m_elementIDs[j]),
                                     "Failed to find geometry with same global id");
@@ -2488,7 +1626,7 @@ namespace Nektar
                         }
                         break;
 
-                        case eTetrahedron:
+                        case LibUtilities::eTetrahedron:
                         {
                             k = fielddef[i]->m_elementIDs[j];
                             ASSERTL0(m_tetGeoms.find(k) != m_tetGeoms.end(),
@@ -2526,7 +1664,7 @@ namespace Nektar
                             }
                         }
                         break;
-                        case ePrism:
+                        case LibUtilities::ePrism:
                         {
                             k = fielddef[i]->m_elementIDs[j];
                             ASSERTL0(m_prismGeoms.find(k) != m_prismGeoms.end(),
@@ -2563,7 +1701,7 @@ namespace Nektar
                             }
                         }
                         break;
-                        case eHexahedron:
+                        case LibUtilities::eHexahedron:
                         {
                             k = fielddef[i]->m_elementIDs[j];
                             ASSERTL0(m_hexGeoms.find(k) != m_hexGeoms.end(),
@@ -2625,7 +1763,7 @@ namespace Nektar
          *
          */
         void MeshGraph::SetExpansions(
-                std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef,
+                std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef,
                 std::vector< std::vector<LibUtilities::PointsType> > &pointstype)
         {
             int i,j,k,g,h,cnt,id;
@@ -2693,7 +1831,7 @@ namespace Nektar
 
                     switch(fielddef[i]->m_shapeType)
                     {
-                    case eSegment:
+                    case LibUtilities::eSegment:
                     {
                         k = fielddef[i]->m_elementIDs[j];
                         ASSERTL0(m_segGeoms.find(k) != m_segGeoms.end(),
@@ -2709,7 +1847,7 @@ namespace Nektar
                         bkeyvec.push_back(bkey);
                     }
                     break;
-                    case eTriangle:
+                    case  LibUtilities::eTriangle:
                     {
                         k = fielddef[i]->m_elementIDs[j];
                         ASSERTL0(m_triGeoms.find(k) != m_triGeoms.end(),
@@ -2728,7 +1866,7 @@ namespace Nektar
                         }
                     }
                     break;
-                    case eQuadrilateral:
+                    case  LibUtilities::eQuadrilateral:
                     {
                         k = fielddef[i]->m_elementIDs[j];
                         ASSERTL0(m_quadGeoms.find(k) != m_quadGeoms.end(),
@@ -2748,7 +1886,7 @@ namespace Nektar
                         }
                     }
                     break;
-                    case eTetrahedron:
+                    case  LibUtilities::eTetrahedron:
                     {
                         k = fielddef[i]->m_elementIDs[j];
                         ASSERTL0(m_tetGeoms.find(k) != m_tetGeoms.end(),
@@ -2768,7 +1906,7 @@ namespace Nektar
                         }
                     }
                     break;
-                    case ePrism:
+                    case  LibUtilities::ePrism:
                     {
                         k = fielddef[i]->m_elementIDs[j];
                         ASSERTL0(m_prismGeoms.find(k) != m_prismGeoms.end(),
@@ -2788,7 +1926,7 @@ namespace Nektar
                         }
                     }
                     break;
-                    case eHexahedron:
+                    case  LibUtilities::eHexahedron:
                     {
                         k = fielddef[i]->m_elementIDs[j];
                         ASSERTL0(m_hexGeoms.find(k) != m_hexGeoms.end(),
@@ -2824,7 +1962,6 @@ namespace Nektar
 
         }
 
-
         /**
          * For each element of shape given by \a shape in field \a
          * var, replace the current BasisKeyVector describing the
@@ -2837,8 +1974,7 @@ namespace Nektar
          * @param   shape     The shape of elements to be changed.
          * @param   keys      The new basis vector to apply to those elements.
          */
-        void MeshGraph::SetBasisKey(
-            SpatialDomains::GeomShapeType   shape,
+        void MeshGraph::SetBasisKey(LibUtilities::ShapeType   shape,
             LibUtilities::BasisKeyVector    &keys,
             std::string                     var)
         {
@@ -2848,7 +1984,7 @@ namespace Nektar
 
             for (elemIter = expansionMap->begin(); elemIter != expansionMap->end(); ++elemIter)
             {
-                if ((elemIter->second)->m_geomShPtr->GetGeomShapeType() == shape)
+                if ((elemIter->second)->m_geomShPtr->GetShapeType() == shape)
                 {
                     (elemIter->second)->m_basisKeyVector = keys;
                 }
@@ -2866,7 +2002,7 @@ namespace Nektar
         {
             LibUtilities::BasisKeyVector returnval;
 
-            GeomShapeType shape= in->GetGeomShapeType();
+            LibUtilities::ShapeType shape= in->GetShapeType();
 
             int quadoffset = 1;
             switch(type)
@@ -2892,14 +2028,14 @@ namespace Nektar
                 {
                     switch (shape)
                     {
-                    case eSegment:
+                    case LibUtilities::eSegment:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
                             returnval.push_back(bkey);
                         }
                         break;
-                    case eQuadrilateral:
+                    case LibUtilities::eQuadrilateral:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
@@ -2907,7 +2043,7 @@ namespace Nektar
                             returnval.push_back(bkey);
                         }
                         break;
-                    case eHexahedron:
+                    case LibUtilities::eHexahedron:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
@@ -2916,7 +2052,7 @@ namespace Nektar
                             returnval.push_back(bkey);
                         }
                         break;
-                    case eTriangle:
+                    case LibUtilities::eTriangle:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
@@ -2928,7 +2064,7 @@ namespace Nektar
                             returnval.push_back(bkey1);
                         }
                         break;
-                    case eTetrahedron:
+                    case LibUtilities::eTetrahedron:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
@@ -2943,7 +2079,7 @@ namespace Nektar
                             returnval.push_back(bkey2);
                         }
                         break;
-                    case ePrism:
+                    case LibUtilities::ePrism:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+quadoffset, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eModified_A, nummodes, pkey);
@@ -2969,14 +2105,14 @@ namespace Nektar
                 {
                     switch(shape)
                     {
-                    case eSegment:
+                    case LibUtilities::eSegment:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
                         returnval.push_back(bkey);
                         }
                         break;
-                    case eQuadrilateral:
+                    case LibUtilities::eQuadrilateral:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
@@ -2984,7 +2120,7 @@ namespace Nektar
                             returnval.push_back(bkey);
                         }
                         break;
-                    case eTriangle: // define with corrects points key
+                    case LibUtilities::eTriangle: // define with corrects points key
                         // and change to Ortho on construction
                         {
                             const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
@@ -3009,7 +2145,7 @@ namespace Nektar
                 {
                     switch (shape)
                     {
-                    case eSegment:
+                    case LibUtilities::eSegment:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussGaussLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
@@ -3017,7 +2153,7 @@ namespace Nektar
                             returnval.push_back(bkey);
                         }
                         break;
-                    case eQuadrilateral:
+                    case LibUtilities::eQuadrilateral:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussGaussLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
@@ -3026,7 +2162,7 @@ namespace Nektar
                             returnval.push_back(bkey);
                         }
                         break;
-                    case eHexahedron:
+                    case LibUtilities::eHexahedron:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussGaussLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
@@ -3049,7 +2185,7 @@ namespace Nektar
                 {
                     switch (shape)
                     {
-                    case eSegment:
+                    case LibUtilities::eSegment:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
@@ -3057,7 +2193,7 @@ namespace Nektar
                             returnval.push_back(bkey);
                         }
                         break;
-                    case eTriangle:
+                    case LibUtilities::eTriangle:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
@@ -3070,7 +2206,7 @@ namespace Nektar
                             returnval.push_back(bkey1);
                         }
                         break;
-                    case eQuadrilateral:
+                    case LibUtilities::eQuadrilateral:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
@@ -3079,7 +2215,7 @@ namespace Nektar
                             returnval.push_back(bkey);
                         }
                         break;
-                    case eTetrahedron:
+                    case LibUtilities::eTetrahedron:
                         {
                             const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussLobattoLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eOrtho_A, nummodes, pkey);
@@ -3108,7 +2244,7 @@ namespace Nektar
                 {
                     switch (shape)
                     {
-                    case eSegment:
+                    case LibUtilities::eSegment:
                         {
                             const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussLobattoLegendre);
                     LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
@@ -3116,7 +2252,7 @@ namespace Nektar
                     returnval.push_back(bkey);
                 }
                 break;
-                case eQuadrilateral:
+                case LibUtilities::eQuadrilateral:
                 {
                     const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussLobattoLegendre);
                     LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
@@ -3125,7 +2261,7 @@ namespace Nektar
                     returnval.push_back(bkey);
                 }
                 break;
-                case eHexahedron:
+                case LibUtilities::eHexahedron:
                 {
                     const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussLobattoLegendre);
                     LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
@@ -3148,7 +2284,7 @@ namespace Nektar
             {
                 switch (shape)
                 {
-                    case eSegment:
+                    case LibUtilities::eSegment:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
                         LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
@@ -3156,7 +2292,7 @@ namespace Nektar
                         returnval.push_back(bkey);
                     }
                         break;
-                    case eQuadrilateral:
+                    case LibUtilities::eQuadrilateral:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
                         LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
@@ -3165,7 +2301,7 @@ namespace Nektar
                         returnval.push_back(bkey);
                     }
                         break;
-                    case eHexahedron:
+                    case LibUtilities::eHexahedron:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
                         LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
@@ -3188,14 +2324,14 @@ namespace Nektar
             {
                 switch (shape)
                 {
-                case eSegment:
+                case LibUtilities::eSegment:
                 {
                     const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierEvenlySpaced);
                     LibUtilities::BasisKey bkey(LibUtilities::eFourier, nummodes, pkey);
                     returnval.push_back(bkey);
                 }
                 break;
-                case eQuadrilateral:
+                case LibUtilities::eQuadrilateral:
                 {
                     const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierEvenlySpaced);
                     LibUtilities::BasisKey bkey(LibUtilities::eFourier, nummodes, pkey);
@@ -3203,7 +2339,7 @@ namespace Nektar
                     returnval.push_back(bkey);
                 }
                 break;
-                case eHexahedron:
+                case LibUtilities::eHexahedron:
                 {
                     const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierEvenlySpaced);
                     LibUtilities::BasisKey bkey(LibUtilities::eFourier, nummodes, pkey);
@@ -3226,14 +2362,14 @@ namespace Nektar
             {
                 switch (shape)
                 {
-                    case eSegment:
+                    case LibUtilities::eSegment:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierSingleModeSpaced);
                         LibUtilities::BasisKey bkey(LibUtilities::eFourierSingleMode, nummodes, pkey);
                         returnval.push_back(bkey);
                     }
                     break;
-                    case eQuadrilateral:
+                    case LibUtilities::eQuadrilateral:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierSingleModeSpaced);
                         LibUtilities::BasisKey bkey(LibUtilities::eFourierSingleMode, nummodes, pkey);
@@ -3241,7 +2377,7 @@ namespace Nektar
                         returnval.push_back(bkey);
                     }
                     break;
-                    case eHexahedron:
+                    case LibUtilities::eHexahedron:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierSingleModeSpaced);
                         LibUtilities::BasisKey bkey(LibUtilities::eFourierSingleMode, nummodes, pkey);
@@ -3263,14 +2399,14 @@ namespace Nektar
             {
                 switch (shape)
                 {
-                    case eSegment:
+                    case LibUtilities::eSegment:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierSingleModeSpaced);
                         LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeRe, nummodes, pkey);
                         returnval.push_back(bkey);
                     }
                     break;
-                    case eQuadrilateral:
+                    case LibUtilities::eQuadrilateral:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierSingleModeSpaced);
                         LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeRe, nummodes, pkey);
@@ -3278,7 +2414,7 @@ namespace Nektar
                         returnval.push_back(bkey);
                     }
                     break;
-                    case eHexahedron:
+                    case LibUtilities::eHexahedron:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierSingleModeSpaced);
                         LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeRe, nummodes, pkey);
@@ -3300,14 +2436,14 @@ namespace Nektar
             {
                 switch (shape)
                 {
-                    case eSegment:
+                    case LibUtilities::eSegment:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierSingleModeSpaced);
                         LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeIm, nummodes, pkey);
                         returnval.push_back(bkey);
                     }
                     break;
-                    case eQuadrilateral:
+                    case LibUtilities::eQuadrilateral:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierSingleModeSpaced);
                         LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeIm, nummodes, pkey);
@@ -3315,7 +2451,7 @@ namespace Nektar
                         returnval.push_back(bkey);
                     }
                     break;
-                    case eHexahedron:
+                    case LibUtilities::eHexahedron:
                     {
                         const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierSingleModeSpaced);
                         LibUtilities::BasisKey bkey(LibUtilities::eFourierHalfModeIm, nummodes, pkey);
@@ -3337,14 +2473,14 @@ namespace Nektar
             {
                 switch (shape)
                 {
-                case eSegment:
+                case LibUtilities::eSegment:
                 {
                     const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussChebyshev);
                     LibUtilities::BasisKey bkey(LibUtilities::eChebyshev, nummodes, pkey);
                     returnval.push_back(bkey);
                 }
                 break;
-                case eQuadrilateral:
+                case LibUtilities::eQuadrilateral:
                 {
                     const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussChebyshev);
                     LibUtilities::BasisKey bkey(LibUtilities::eChebyshev, nummodes, pkey);
@@ -3352,7 +2488,7 @@ namespace Nektar
                     returnval.push_back(bkey);
                 }
                 break;
-                case eHexahedron:
+                case LibUtilities::eHexahedron:
                 {
                     const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussChebyshev);
                     LibUtilities::BasisKey bkey(LibUtilities::eChebyshev, nummodes, pkey);
@@ -3374,7 +2510,7 @@ namespace Nektar
             {
                 switch (shape)
                 {
-                case eQuadrilateral:
+                case LibUtilities::eQuadrilateral:
                 {
                     const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierEvenlySpaced);
                     LibUtilities::BasisKey bkey(LibUtilities::eFourier, nummodes, pkey);
@@ -3398,7 +2534,7 @@ namespace Nektar
             {
                 switch (shape)
                 {
-                case eQuadrilateral:
+                case LibUtilities::eQuadrilateral:
                 {
                     const LibUtilities::PointsKey pkey1(nummodes, LibUtilities::eGaussGaussChebyshev);
                     LibUtilities::BasisKey bkey1(LibUtilities::eChebyshev, nummodes, pkey1);
@@ -3422,7 +2558,7 @@ namespace Nektar
             {
                 switch (shape)
                 {
-                case eQuadrilateral:
+                case LibUtilities::eQuadrilateral:
                 {
                     const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eFourierEvenlySpaced);
                     LibUtilities::BasisKey bkey(LibUtilities::eFourier, nummodes, pkey);
@@ -3468,23 +2604,23 @@ namespace Nektar
         {
             LibUtilities::BasisKeyVector returnval;
 
-            GeomShapeType shape = in->GetGeomShapeType();
+            LibUtilities::ShapeType shape = in->GetShapeType();
 
             switch (shape)
             {
-                case eSegment:
+                case LibUtilities::eSegment:
                 {
                     ASSERTL0(false,"Homogeneous expansion not defined for this shape");
                 }
                 break;
 
-                case eQuadrilateral:
+                case LibUtilities::eQuadrilateral:
                 {
                     ASSERTL0(false,"Homogeneous expansion not defined for this shape");
                 }
                 break;
 
-                case eHexahedron:
+                case LibUtilities::eHexahedron:
                 {
                     switch(type_x)
                     {
@@ -3640,13 +2776,13 @@ namespace Nektar
                 }
                 break;
 
-                case eTriangle:
+                case LibUtilities::eTriangle:
                 {
                     ASSERTL0(false,"Homogeneous expansion not defined for this shape");
                 }
                 break;
 
-                case eTetrahedron:
+                case LibUtilities::eTetrahedron:
                 {
                     ASSERTL0(false,"Homogeneous expansion not defined for this shape");
                 }

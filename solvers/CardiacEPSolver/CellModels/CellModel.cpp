@@ -76,14 +76,15 @@ namespace Nektar
 
         // Number of points in nodal space is the number of coefficients
         // in modified basis
-        std::set<enum StdRegions::ExpansionType> s;
+        std::set<enum LibUtilities::ShapeType> s;
         for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
         {
-            s.insert(m_field->GetExp(i)->DetExpansionType());
+            s.insert(m_field->GetExp(i)->DetShapeType());
         }
 
         // Use nodal projection if only triangles
-        if (s.size() == 1 && (s.count(StdRegions::eTriangle) == 1 || s.count(StdRegions::eTetrahedron) == 1))
+        if (s.size() == 1 && (s.count(LibUtilities::eTriangle) == 1 || 
+                              s.count(LibUtilities::eTetrahedron) == 1))
         {
             m_useNodal = true;
         }
@@ -124,7 +125,7 @@ namespace Nektar
     void CellModel::Initialise()
     {
         ASSERTL1(m_nvar > 0, "Cell model must have at least 1 variable.");
-
+        
         m_cellSol = Array<OneD, Array<OneD, NekDouble> >(m_nvar);
         m_wsp = Array<OneD, Array<OneD, NekDouble> >(m_nvar);
         for (unsigned int i = 0; i < m_nvar; ++i)
@@ -179,7 +180,7 @@ namespace Nektar
                 {
                     phys_offset = m_field->GetPhys_Offset(i);
                     coef_offset = m_field->GetCoeff_Offset(i);
-                    if (m_field->GetExp(0)->DetExpansionType() == StdRegions::eTriangle)
+                    if (m_field->GetExp(0)->DetShapeType() == LibUtilities::eTriangle)
                     {
                         m_field->GetExp(0)->FwdTrans(inarray[k] + phys_offset, m_nodalTri->UpdateCoeffs());
                         m_nodalTri->ModalToNodal(m_nodalTri->GetCoeffs(), tmp=m_nodalTmp[k]+coef_offset);
@@ -238,7 +239,7 @@ namespace Nektar
                 {
                     int phys_offset = m_field->GetPhys_Offset(i);
                     int coef_offset = m_field->GetCoeff_Offset(i);
-                    if (m_field->GetExp(0)->DetExpansionType() == StdRegions::eTriangle)
+                    if (m_field->GetExp(0)->DetShapeType() == LibUtilities::eTriangle)
                     {
                         m_nodalTri->NodalToModal(m_wsp[k]+coef_offset, m_nodalTri->UpdateCoeffs());
                         m_field->GetExp(0)->BwdTrans(m_nodalTri->GetCoeffs(), tmp=outarray[k] + phys_offset);
@@ -286,7 +287,7 @@ namespace Nektar
             for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
             {
                 int coef_offset = m_field->GetCoeff_Offset(i);
-                if (m_field->GetExp(0)->DetExpansionType() == StdRegions::eTriangle)
+                if (m_field->GetExp(0)->DetShapeType() == LibUtilities::eTriangle)
                 {
                     m_nodalTri->NodalToModal(m_cellSol[idx]+coef_offset, tmp=outarray+coef_offset);
                 }

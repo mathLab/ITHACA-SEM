@@ -195,7 +195,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int  v_GetNedges() const;
             STD_REGIONS_EXPORT virtual int  v_GetNfaces() const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int  v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_GetEdgeNcoeffs(const int i) const;

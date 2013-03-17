@@ -91,7 +91,7 @@ namespace Nektar
 		    }
 
                     SetUpReferenceElements();
-                    LowEnergyPreconditioner();
+                    SetupBlockTransformationMatrix();
 		}
 		break;
             case MultiRegions::eInverseLinear:
@@ -690,14 +690,14 @@ namespace Nektar
             //Matrix keys for tetrahedral element transformation matrices
             LocalRegions::MatrixKey TetR
                 (StdRegions::ePreconR,
-                 StdRegions::eTetrahedron,
+                 LibUtilities::eTetrahedron,
                  *TetExp,
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
                 
             LocalRegions::MatrixKey TetRT
                 (StdRegions::ePreconRT,
-                 StdRegions::eTetrahedron,
+                 LibUtilities::eTetrahedron,
                  *TetExp,
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
@@ -718,14 +718,14 @@ namespace Nektar
             //Matrix keys for Prism element transformation matrices
             LocalRegions::MatrixKey PrismR
                 (StdRegions::ePreconR,
-                 StdRegions::ePrism,
+                 LibUtilities::ePrism,
                  *PrismExp,
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
             
             LocalRegions::MatrixKey PrismRT
                 (StdRegions::ePreconRT,
-                 StdRegions::ePrism,
+                 LibUtilities::ePrism,
                  *PrismExp,
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
@@ -838,45 +838,6 @@ namespace Nektar
             Array<OneD, unsigned int> PrismEdge8;
             PrismEdge8=PrismExp->GetEdgeInverseBoundaryMap(8);
 
-            /*cout<<"e=[ ";
-            for(i=0; i<PrismEdge0.num_elements(); ++i)
-            {
-                cout<<PrismEdge0[i]<<" ";
-            }
-            for(i=0; i<PrismEdge1.num_elements(); ++i)
-            {
-                cout<<PrismEdge1[i]<<" ";
-            }
-            for(i=0; i<PrismEdge2.num_elements(); ++i)
-            {
-                cout<<PrismEdge2[i]<<" ";
-            }
-            for(i=0; i<PrismEdge3.num_elements(); ++i)
-            {
-                cout<<PrismEdge3[i]<<" ";
-            }
-            for(i=0; i<PrismEdge4.num_elements(); ++i)
-            {
-                cout<<PrismEdge4[i]<<" ";
-            }
-            for(i=0; i<PrismEdge5.num_elements(); ++i)
-            {
-                cout<<PrismEdge5[i]<<" ";
-            }
-            for(i=0; i<PrismEdge6.num_elements(); ++i)
-            {
-                cout<<PrismEdge6[i]<<" ";
-            }
-            for(i=0; i<PrismEdge7.num_elements(); ++i)
-            {
-                cout<<PrismEdge7[i]<<" ";
-            }
-            for(i=0; i<PrismEdge8.num_elements(); ++i)
-            {
-                cout<<PrismEdge8[i]<<" ";
-            }
-            cout<<" ]"<<endl;*/
-
             //Prism face 1 & 3 face modes
             Array<OneD, unsigned int> PrismFace1;
             PrismFace1=PrismExp->GetFaceInverseBoundaryMap(1);
@@ -889,30 +850,6 @@ namespace Nektar
             PrismFace2=PrismExp->GetFaceInverseBoundaryMap(2);
             Array<OneD, unsigned int> PrismFace4;
             PrismFace4=PrismExp->GetFaceInverseBoundaryMap(4);
-
-            /*cout<<"f=[ ";
-            for(i=0; i<PrismFace0.num_elements(); ++i)
-            {
-                cout<<PrismFace0[i]<<" ";
-            }
-            for(i=0; i<PrismFace1.num_elements(); ++i)
-            {
-                cout<<PrismFace1[i]<<" ";
-            }
-            for(i=0; i<PrismFace2.num_elements(); ++i)
-            {
-                cout<<PrismFace2[i]<<" ";
-            }
-            for(i=0; i<PrismFace3.num_elements(); ++i)
-            {
-                cout<<PrismFace3[i]<<" ";
-            }
-            for(i=0; i<PrismFace4.num_elements(); ++i)
-            {
-                cout<<PrismFace4[i]<<" ";
-            }
-            cout<<" ]"<<endl;*/
-
 
             //vertex 0 edge 0 3 & 4
             for(i=0; i< PrismEdge0.num_elements(); ++i)
@@ -1119,6 +1056,58 @@ namespace Nektar
             m_transposedTransformationMatrix[elmtType]=returnvalRT;
         }
 
+       /**
+         *
+         *
+         */
+       void PreconditionerLowEnergy::SetupBlockTransformationMatrix()
+       {
+           boost::shared_ptr<MultiRegions::ExpList> 
+               expList=((m_linsys.lock())->GetLocMat()).lock();
+           StdRegions::StdExpansionSharedPtr locExpansion;
+
+           int cnt, n, nel; 
+           //Transformation matrices
+           DNekMat R;
+           DNekMat RT;
+
+           const Array<OneD,const unsigned int>& nbdry_size
+               = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+
+           int n_exp=expList->GetNumElmts();
+
+           //maps for different element types
+           map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
+           map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
+           transmatrixmap[LibUtilities::eTetrahedron]=m_transformationMatrix[0];
+           transmatrixmap[LibUtilities::ePrism]=m_transformationMatrix[1];
+           transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_transposedTransformationMatrix[0];
+           transposedtransmatrixmap[LibUtilities::ePrism]=m_transposedTransformationMatrix[1];
+
+           MatrixStorage blkmatStorage = eDIAGONAL;
+           
+           //Variants of R matrices required for low energy preconditioning
+           m_RBlk      = MemoryManager<DNekScalBlkMat>
+               ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+           m_RTBlk      = MemoryManager<DNekScalBlkMat>
+               ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+
+           for(cnt=n=0; n < n_exp; ++n)
+           {
+               nel = expList->GetOffset_Elmt_Id(n);
+               
+               locExpansion = expList->GetExp(nel);
+               LibUtilities::ShapeType eType=locExpansion->DetShapeType();
+                
+               //Get correct transformation matrix for element type
+               R=(*(transmatrixmap[eType]));
+               RT=(*(transposedtransmatrixmap[eType]));
+               
+               m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
+               m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
+           }
+       }
+        
 
        /**
 	 * \brief Construct the low energy preconditioner from
@@ -1137,7 +1126,8 @@ namespace Nektar
 	 * where \f$\mathbf{S}_{1}\f$ is the local schur complement matrix for
 	 * each element.
 	 */
-        void PreconditionerLowEnergy::LowEnergyPreconditioner()
+       //void PreconditionerLowEnergy::LowEnergyPreconditioner()
+       void PreconditionerLowEnergy::v_BuildPreconditioner()
         {
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
@@ -1187,12 +1177,12 @@ namespace Nektar
             Array<OneD, long> m_VertBlockToUniversalMap(nNonDirVerts,-1);
 
             //maps for different element types
-            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transmatrixmap;
-            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transposedtransmatrixmap;
-            transmatrixmap[StdRegions::eTetrahedron]=m_transformationMatrix[0];
-            transmatrixmap[StdRegions::ePrism]=m_transformationMatrix[1];
-            transposedtransmatrixmap[StdRegions::eTetrahedron]=m_transposedTransformationMatrix[0];
-            transposedtransmatrixmap[StdRegions::ePrism]=m_transposedTransformationMatrix[1];
+            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
+            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
+            transmatrixmap[LibUtilities::eTetrahedron]=m_transformationMatrix[0];
+            transmatrixmap[LibUtilities::ePrism]=m_transformationMatrix[1];
+            transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_transposedTransformationMatrix[0];
+            transposedtransmatrixmap[LibUtilities::ePrism]=m_transposedTransformationMatrix[1];
 
             int n_exp = expList->GetNumElmts();
             int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
@@ -1341,7 +1331,6 @@ namespace Nektar
             }
 
             m_comm = expList->GetComm();
-            //m_comm = expList->GetComm()->GetRowComm(); 2D
             m_comm->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
             m_comm->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
 
@@ -1446,8 +1435,7 @@ namespace Nektar
                 
                 locExpansion = expList->GetExp(nel);
                 nCoeffs=locExpansion->NumBndryCoeffs();
-                StdRegions::ExpansionType eType=
-                    locExpansion->DetExpansionType();
+                LibUtilities::ShapeType eType=locExpansion->DetShapeType();
 
                 //Get correct transformation matrix for element type
                 R=(*(transmatrixmap[eType]));
@@ -1559,6 +1547,7 @@ namespace Nektar
                                     GetLocalToGlobalBndSign(cnt + eMap2);
 
                                 NekDouble globalEdgeValue = sign1*sign2*RSRT(eMap1,eMap2);
+                                cout<<"globalEdgeValue: "<<globalEdgeValue<<endl;
 
                                 m_EdgeBlockArray[edgematrixoffset+v*nedgemodes+m]=globalEdgeValue;
                             }
@@ -1671,6 +1660,7 @@ namespace Nektar
                     for (m=0; m<nedgemodes; ++m)
                     {
                         NekDouble EdgeValue = m_GlobalEdgeBlock[offset+v*nedgemodes+m];
+                        cout<<"EdgeValue: "<<EdgeValue<<endl;
                         m_gmat->SetValue(v,m,EdgeValue);
                     }
                 }
@@ -1695,6 +1685,7 @@ namespace Nektar
                     for (m=0; m<nfacemodes; ++m)
                     {
                         NekDouble FaceValue = m_GlobalFaceBlock[offset+v*nfacemodes+m];
+                        cout<<"FaceValue: "<<FaceValue<<endl;
                         m_gmat->SetValue(v,m,FaceValue);
                     }
                 }
@@ -1714,7 +1705,7 @@ namespace Nektar
                     (nmodes,nmodes,zero,storage);
                 
                 tmp_mat=BlkMat->GetBlock(i,i);
-                
+
                 tmp_mat->Invert();
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
@@ -1883,28 +1874,29 @@ namespace Nektar
          * i.e. \f$\mathbf{S}_{2}=\mathbf{R}\mathbf{S}_{1}\mathbf{R}^{T}\f$
          */     
         DNekScalBlkMatSharedPtr PreconditionerLowEnergy::
-        v_TransformedSchurCompl(int offset)
+        v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
 	{
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
          
             StdRegions::StdExpansionSharedPtr locExpansion;                
             locExpansion = expList->GetExp(offset);
-            int nbnd=locExpansion->NumBndryCoeffs();   
+            int nbnd=locExpansion->NumBndryCoeffs();
             int ncoeffs=locExpansion->GetNcoeffs();
             int nint=ncoeffs-nbnd;
-            
+
             //This is the SC elemental matrix in the orginal basis (S1)
-            DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
+            //DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
+
             DNekScalMatSharedPtr m_S1=loc_mat->GetBlock(0,0);
 
             //Transformation matrices 
-            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transmatrixmap;
-            map<StdRegions::ExpansionType,DNekScalMatSharedPtr> transposedtransmatrixmap;
-            transmatrixmap[StdRegions::eTetrahedron]=m_transformationMatrix[0];
-            transmatrixmap[StdRegions::ePrism]=m_transformationMatrix[1];
-            transposedtransmatrixmap[StdRegions::eTetrahedron]=m_transposedTransformationMatrix[0];
-            transposedtransmatrixmap[StdRegions::ePrism]=m_transposedTransformationMatrix[1];
+            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
+            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
+            transmatrixmap[LibUtilities::eTetrahedron]=m_transformationMatrix[0];
+            transmatrixmap[LibUtilities::ePrism]=m_transformationMatrix[1];
+            transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_transposedTransformationMatrix[0];
+            transposedtransmatrixmap[LibUtilities::ePrism]=m_transposedTransformationMatrix[1];
 
             DNekScalMat &S1 = (*m_S1);
             
@@ -1915,8 +1907,8 @@ namespace Nektar
             DNekMatSharedPtr m_S2 = MemoryManager<DNekMat>::AllocateSharedPtr(nbnd,nbnd,zero,storage);
             DNekMatSharedPtr m_RS1 = MemoryManager<DNekMat>::AllocateSharedPtr(nbnd,nbnd,zero,storage);
             
-            StdRegions::ExpansionType eType=
-                (expList->GetExp(offset))->DetExpansionType();
+            LibUtilities::ShapeType eType=
+                (expList->GetExp(offset))->DetShapeType();
             
             //transformation matrices
             DNekScalMat &R = (*(transmatrixmap[eType]));

@@ -62,6 +62,9 @@ namespace Nektar
         virtual ~UnsteadyDiffusion();
 
     protected:
+        bool m_useSpecVanVisc;
+        NekDouble m_sVVCutoffRatio;   // cutt off ratio from which to start decayhing modes
+        NekDouble m_sVVDiffCoeff;     // Diffusion coefficient of SVV modes
         SolverUtils::DiffusionSharedPtr         m_diffusion;        
         SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
 
@@ -89,7 +92,6 @@ namespace Nektar
                   Array<OneD,       Array<OneD, NekDouble> >&outarray,
             NekDouble time,
             NekDouble lambda);
-
 
     private:
         NekDouble m_waveFreq;

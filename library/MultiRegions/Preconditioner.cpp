@@ -103,9 +103,6 @@ namespace Nektar
             const Array<OneD, NekDouble>& pInput,
             Array<OneD, NekDouble>& pOutput)
         {
-            int nDirBndDofs = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-            Array<OneD, NekDouble> tmp;
-            Vmath::Vcopy(pInput.num_elements(),pInput, 1, tmp=pOutput+nDirBndDofs, 1);
 	}
 
         /**
@@ -114,7 +111,11 @@ namespace Nektar
         void Preconditioner::v_DoTransformFromLowEnergy(
             Array<OneD, NekDouble>& pInput)
         {
-            Vmath::Vcopy(pInput.num_elements(),pInput, 1, pInput, 1);
+            Vmath::Smul(pInput.num_elements(),1.0,pInput, 1, pInput, 1);
+	}
+
+        void Preconditioner::v_BuildPreconditioner()
+        {
 	}
 
         /**
@@ -142,15 +143,15 @@ namespace Nektar
          * \f$\mathbf{R}^{T}\f$
          */
         DNekScalBlkMatSharedPtr Preconditioner::
-        v_TransformedSchurCompl(int offset)
+        v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
 	{
-            boost::shared_ptr<MultiRegions::ExpList> 
-                expList=((m_linsys.lock())->GetLocMat()).lock();
+            //boost::shared_ptr<MultiRegions::ExpList> 
+            //    expList=((m_linsys.lock())->GetLocMat()).lock();
          
-            StdRegions::StdExpansionSharedPtr locExpansion;                
-            locExpansion = expList->GetExp(offset);
+            //StdRegions::StdExpansionSharedPtr locExpansion;                
+            //locExpansion = expList->GetExp(offset);
 
-            DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
+            //DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
 	    return loc_mat;
 	}
 

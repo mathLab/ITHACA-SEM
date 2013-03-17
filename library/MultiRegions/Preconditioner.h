@@ -80,6 +80,8 @@ namespace Nektar
 	    inline void DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInput);
 
+	    inline void BuildPreconditioner();
+
    	    inline void InitObject();
 
             Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
@@ -109,7 +111,7 @@ namespace Nektar
                 GetBlockTransposedTransformationMatrix() const;
 
             inline DNekScalBlkMatSharedPtr
-                TransformedSchurCompl(int offset);
+                TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
 
 	protected:
 
@@ -122,7 +124,7 @@ namespace Nektar
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
             virtual DNekScalBlkMatSharedPtr
-                v_TransformedSchurCompl(int offset);
+                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
 
             LibUtilities::CommSharedPtr m_comm;
 
@@ -142,6 +144,8 @@ namespace Nektar
 
 	    virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInput);
+
+	    virtual void v_BuildPreconditioner();
 
             virtual const Array<OneD, const DNekScalMatSharedPtr>& 
                 v_GetTransformationMatrix(void) const;
@@ -184,9 +188,9 @@ namespace Nektar
          *
          */ 
         inline DNekScalBlkMatSharedPtr Preconditioner::
-            TransformedSchurCompl(int offset)
+            TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
         {
-            return v_TransformedSchurCompl(offset);
+            return v_TransformedSchurCompl(offset,loc_mat);
         }
 
         /**
@@ -217,6 +221,15 @@ namespace Nektar
         {
 	    v_DoTransformFromLowEnergy(pInput);
         }
+
+        /**
+         *
+         */
+        inline void Preconditioner::BuildPreconditioner()
+        {
+	    v_BuildPreconditioner();
+        }
+
         
 
     }

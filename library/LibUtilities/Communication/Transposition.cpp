@@ -649,23 +649,6 @@ namespace Nektar
             }
         }
 
-        void Transposition::SetSpecVanVisc(Array<OneD, NekDouble> visc)
-        {
-            m_specVanVisc = visc;
-        }
-
-        NekDouble Transposition::GetSpecVanVisc(const int k)
-        {
-            NekDouble returnval = 0.0;
-
-            if(m_specVanVisc.num_elements())
-            {
-                returnval = m_specVanVisc[k];
-            }
-            
-            return returnval; 
-        }
-
 
         // TODO: Impelement 2D and 3D transposition routines
     }

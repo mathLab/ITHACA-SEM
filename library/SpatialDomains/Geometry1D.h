@@ -64,8 +64,8 @@ namespace Nektar
                         GetXmap(const int i);
             SPATIAL_DOMAINS_EXPORT VertexComponentSharedPtr
                         GetVertex(const int i) const;
-            SPATIAL_DOMAINS_EXPORT StdRegions::ExpansionType
-                        DetExpansionType() const;
+            SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType
+                        DetShapeType() const;
             SPATIAL_DOMAINS_EXPORT void WriteToFile(
                               std::ofstream& outfile,
                         const int dumpVar);
@@ -82,8 +82,8 @@ namespace Nektar
                          v_GetXmap(const int i);
             virtual VertexComponentSharedPtr
                          v_GetVertex(const int i) const;
-            virtual StdRegions::ExpansionType
-                         v_DetExpansionType() const;
+            virtual LibUtilities::ShapeType
+                         v_DetShapeType() const;
             virtual void v_WriteToFile(
                               std::ofstream& outfile,
                         const int dumpVar);

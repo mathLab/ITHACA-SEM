@@ -20,10 +20,7 @@ int main(int argc, char *argv[])
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables);
          Array<OneD, int> GetReflectionIndex(Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,
          int Ireg);
-
-
-    int i,j;
-
+         
     if(argc != 3)
     {
         fprintf(stderr,"Usage: SplitFld  meshfile fieldfile\n");
@@ -42,7 +39,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     // Also read and store the boundary conditions
-    SpatialDomains::MeshGraph *meshptr = graphShPt.get();
     SpatialDomains::BoundaryConditionsSharedPtr boundaryConditions;        
     boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
                                         ::AllocateSharedPtr(vSession, graphShPt);
@@ -52,20 +48,16 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import field file.
     string fieldfile(argv[argc-1]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile,fielddef,fielddata);
-    bool useFFT = false;
-    bool dealiasing = false;
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
-    
     // Define Expansion    
     int nfields; 
     nfields = fielddef[0]->m_fields.size(); 
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp; 
     Exp = Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);    
-   
 
     std::string solvtype = vSession->GetSolverInfo("SOLVERTYPE");
     if(solvtype == "CoupledLinearisedNS" && vSession->DefinesSolverInfo("HOMOGENEOUS") )
@@ -93,13 +85,9 @@ int main(int argc, char *argv[])
     }
     //----------------------------------------------    
 	
-
-
-
-
     //----------------------------------------------
     // Copy data from field file
-    for(j = 0; j < nfields; ++j)
+    for(int j = 0; j < nfields; ++j)
     {
         for(int i = 0; i < fielddef.size(); ++i)
         {
@@ -136,20 +124,18 @@ int main(int argc, char *argv[])
 
         
      // copy Data into FieldData and set variable
-
-         int lastfield = nfields-1;
-/*
-         for(int g=0; g<Exp[0]->GetPlane(1)->GetNcoeffs(); g++)
-         {
-cout<<"g="<<g<<"  coeff f0="<<Exp[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1="<<Exp[lastfield]->GetPlane(1)->GetCoeff(g)<<endl;
-         }  
-*/
-
+    /*
+      for(int g=0; g<Exp[0]->GetPlane(1)->GetNcoeffs(); g++)
+      {
+      cout<<"g="<<g<<"  coeff f0="<<Exp[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1="<<Exp[lastfield]->GetPlane(1)->GetCoeff(g)<<endl;
+      }  
+    */
+    
      for(int j =0; j<nfields; j++)
      {
           outfile = out;
-          std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
-                = Exp[j]->GetFieldDefinitions(); 
+          std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+              = Exp[j]->GetFieldDefinitions(); 
           std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
           //fieldcoeffs[j] = fields[j]->UpdateCoeffs();             	    
           for(int i = 0; i < FieldDef.size(); ++i)
@@ -161,7 +147,7 @@ cout<<"g="<<g<<"  coeff f0="<<Exp[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1="<<
 
           }
           outfile += "_"+var+"_"+endfile;  
-          graphShPt->Write(outfile,FieldDef,FieldData); 
+          LibUtilities::Write(outfile,FieldDef,FieldData); 
 
       }
 
@@ -180,7 +166,6 @@ cout<<"g="<<g<<"  coeff f0="<<Exp[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1="<<
 		Array<OneD,MultiRegions::ExpListSharedPtr> &Exp,int nvariables)
 	{		
 		// Setting parameteres for homogenous problems
-        	MultiRegions::GlobalSysSolnType solnType;
 		NekDouble LhomX;           ///< physical length in X direction (if homogeneous) 
 		NekDouble LhomY;           ///< physical length in Y direction (if homogeneous)
 		NekDouble LhomZ;           ///< physical length in Z direction (if homogeneous)
@@ -298,7 +283,7 @@ cout<<"g="<<g<<"  coeff f0="<<Exp[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1="<<
                         i = 0;
                         MultiRegions::ContField2DSharedPtr firstfield;
                         firstfield = MemoryManager<MultiRegions::ContField2D>
-                                ::AllocateSharedPtr(session,mesh,session->GetVariable(i),DeclareCoeffPhysArrays);
+                            ::AllocateSharedPtr(session,mesh,session->GetVariable(i),DeclareCoeffPhysArrays);
 
                         Exp[0] = firstfield;
                         for(i = 1 ; i < nvariables; i++)

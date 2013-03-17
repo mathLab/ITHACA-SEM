@@ -2,7 +2,7 @@
 <test>
     <description>StdProject2D Triangle Nodal basis P=6 Q=7</description>
     <executable>StdProject2D</executable>
-    <parameters>2 12 11 6 6 7 7</parameters>
+    <parameters>3 12 11 6 6 7 7</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-12">1.78107e-15</value>

@@ -44,24 +44,6 @@ namespace Nektar
 {
     namespace StdRegions
     {
-        namespace StdPrismData
-        {
-            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
-            {
-                int nCoef = 0;
-                for (int a = 0; a < Na; ++a)
-                {
-                    for (int b = 0; b < Nb; ++b)
-                    {
-                        for (int c = 0; c < Nc - a; ++c)
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                return nCoef;
-            }
-        }
 
         /// Class representing a prismatic element in reference space.
         class StdPrismExp: virtual public StdExpansion3D
@@ -210,14 +192,13 @@ namespace Nektar
                 const int mode, 
                 Array<OneD, NekDouble> &outarray);  
 
-
             //---------------------------------------
             // Helper functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual int v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int v_GetNedges() const;
             STD_REGIONS_EXPORT virtual int v_GetNfaces() const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_GetEdgeNcoeffs(const int i) const;

@@ -716,41 +716,9 @@ namespace Nektar
             for (i = 0; i < npts; i++)
             {
                 pnt = id2+i;
-                /*
-                // Specific case for Couette flow
-                if(m_fields[0]->GetBndConditions()[bcRegion]->
-                   GetUserDefined().GetEquation() == "OutFlowCouette")
-                {
-                    NekDouble rho0      = 1.0;
-                    NekDouble Re        = 15;
-                    NekDouble mu        = m_viscLam;
-                    NekDouble u_average = 15.0*mu/4.0;
-                    NekDouble T0        = 300;
-                    NekDouble P         = m_GasConstant*rho0*T0;
-                    P                   = P - 1.5 / Re * rho0 * u_average * 
-                    u_average / 0.4 * 4.0;
-                    
-                    NekDouble sigma = 0.25;
-                    NekDouble K     = sigma*(1.0-0.1*0.1)*0.0006675/4.0;
-                    NekDouble L1    = K*(pressure[pnt]-P);
-                    
-                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[0][pnt];
-                    (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[1][pnt];
-                    (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[2][pnt];
-                    P = P - L1;
-                    NekDouble rhoe = P/(m_gamma-1.0) + 0.5*(Fwd[1][pnt]*Fwd[1][pnt] 
-                                                            + Fwd[2][pnt]*Fwd[2][pnt])/Fwd[0][pnt];
-                    (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhoe;
-                }
-                 */
+
                 // Subsonic flows
-                if (Mach[pnt] < 0.99 /*&& m_fields[0]->
-                        GetBndConditions()[bcRegion]->
-                        GetUserDefined().GetEquation() != "OutFlowSuperSonic"*/)
+                if (Mach[pnt] < 0.99)
                 {
                     // + Characteristic from inside
                     cPlus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);

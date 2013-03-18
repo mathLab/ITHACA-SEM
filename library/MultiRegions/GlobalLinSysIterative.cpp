@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSysIterative.cpp
+// File: GlobalLinSysIterative.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -361,18 +361,18 @@ namespace Nektar
 
 
 
-        /**
-         * Solve a global linear system using the conjugate gradient method.
-         * We solve only for the non-Dirichlet modes. The operator is evaluated
-         * using an auxiliary function v_DoMatrixMultiply defined by the
-         * specific solver. Distributed math routines are used to support
-         * parallel execution of the solver.
-         *
-         * The implemented algorithm uses a reduced-communication reordering of
-         * the standard PCG method (Demmel, Heath and Vorst, 1993)
-         *
-         * @param       pInput      Input residual  of all DOFs.
-         * @param       pOutput     Solution vector of all DOFs.
+        /**  
+         * Solve a global linear system using the conjugate gradient method.  
+         * We solve only for the non-Dirichlet modes. The operator is evaluated  
+         * using an auxiliary function v_DoMatrixMultiply defined by the  
+         * specific solver. Distributed math routines are used to support  
+         * parallel execution of the solver.  
+         *  
+         * The implemented algorithm uses a reduced-communication reordering of  
+         * the standard PCG method (Demmel, Heath and Vorst, 1993)  
+         *  
+         * @param       pInput      Input residual  of all DOFs.  
+         * @param       pOutput     Solution vector of all DOFs.  
          */
         void GlobalLinSysIterative::DoConjugateGradient(
                                                         const int nGlobal,
@@ -489,14 +489,14 @@ namespace Nektar
                          "Exceeded maximum number of iterations (5000)");
 
                 // Compute new search direction p_k, q_k
-                p   = w   + beta  * p;
-                q   = s   + beta  * q;
+                Vmath::Svtvp(nNonDir, beta, &p_A[0], 1, &w_A[nDir], 1, &p_A[0], 1);
+                Vmath::Svtvp(nNonDir, beta, &q_A[0], 1, &s_A[nDir], 1, &q_A[0], 1);
 
                 // Update solution x_{k+1}
-                out = out + alpha * p;
+                Vmath::Svtvp(nNonDir, alpha, &p_A[0], 1, &pOutput[nDir], 1, &pOutput[nDir], 1);
 
                 // Update residual vector r_{k+1}
-                r   = r   - alpha * q;
+                Vmath::Svtvp(nNonDir, -alpha, &q_A[0], 1, &r_A[0], 1, &r_A[0], 1);
 
                 // Apply preconditioner
                 m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
@@ -554,13 +554,12 @@ namespace Nektar
             }
         }
 
-
         void GlobalLinSysIterative::Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn)
         {
-            
-            Array<OneD, NekDouble> vExchange(1);            
+
+            Array<OneD, NekDouble> vExchange(1);
             vExchange[0] = Vmath::Dot(pIn.GetDimension(),&pIn[0],&pIn[0]);
-            
+
             m_expList.lock()->GetComm()->GetRowComm()->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
             m_rhs_magnitude = (vExchange[0] > 1e-6)? vExchange[0]:1.0;
         }

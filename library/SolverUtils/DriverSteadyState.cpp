@@ -128,6 +128,7 @@ namespace Nektar
             {
                 q0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
                 qBar0[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
+                m_equ[0]->CopyFromPhysField(i, qBar0[i]);
             }
             
             MaxNormDiff_q_qBar = 1.0;
@@ -198,6 +199,7 @@ namespace Nektar
             q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
             qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
             
+            //Implicit formulation
             Vmath::Smul(qBar1[i].num_elements(), m_cst4, q0[i], 1, qBar1[i], 1);
             Vmath::Vadd(qBar1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
             Vmath::Smul(qBar1[i].num_elements(), m_cst5, qBar1[i], 1, qBar1[i], 1);
@@ -205,6 +207,17 @@ namespace Nektar
             Vmath::Smul(q1[i].num_elements(), m_cst1, qBar1[i], 1, q1[i], 1);
             Vmath::Vadd(q1[i].num_elements(), q0[i], 1, q1[i], 1, q1[i], 1);
             Vmath::Smul(q1[i].num_elements(), m_cst2, q1[i], 1, q1[i], 1);
+            
+            
+            //Explicit formulation
+//             Vmath::Svtvm(q1[i].num_elements(), 1.0, qBar0[i], 1, q0[i], 1, q1[i], 1); //q1 = 1.0*qbar0 - q0
+//             Vmath::Smul(q1[i].num_elements(), m_cst1, q1[i], 1, q1[i], 1); //q1 = X*dt*q1
+//             Vmath::Vadd(q1[i].num_elements(), q0[i], 1, q1[i], 1, q1[i], 1); // q1 = q0 + q1
+//             
+//             Vmath::Svtvm(q1[i].num_elements(), 1.0, q0[i], 1, qBar0[i], 1, qBar1[i], 1);
+//             Vmath::Smul(q1[i].num_elements(), m_cst3, qBar1[i], 1, qBar1[i], 1);
+//             Vmath::Vadd(q1[i].num_elements(), qBar0[i], 1, qBar1[i], 1, qBar1[i], 1);
+            
         }
         
         
@@ -301,58 +314,59 @@ namespace Nektar
                  //m_equ[0]->DoInitialise();
              }*/
             
-            //Algo for updating parameters (late 2012)
-            if (MaxNormDiff_q_qBar < Min_MaxNormDiff_q_qBar)
-            {
-                Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;
-            }
             
-            if (MaxNormDiff_q_qBar < m_LIM)
-            {                   
-                m_Delta = m_Delta + 0.5;
-                m_X = 0.99*(1.0/m_Delta);
-                
-                /*//coeff = 1.0106;
-                coeff = 1.0132;
-                //mult = 10.0;
-                
-                m_X = 1.1*(coeff - 1.0)/m_dt;
-                m_Delta = 100.0*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
-                m_Delta = max(m_Delta, 1.0); */
-                
-                m_cst1=m_X*m_dt;
-                m_cst2=1.0/(1.0 + m_cst1);
-                m_cst3=m_dt/m_Delta;
-                m_cst4=m_cst2*m_cst3;
-                m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
-                
-                cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
-                
-                m_LIM = m_LIM/10.0;
-                //m_LIM = m_LIM/1000.0;
-            }
-            
-            if (MaxNormDiff_q_qBar > 10.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
-            {        
-                Min_MaxNormDiff_q_qBar = 1.0;
-                
-                m_Delta0 = m_Delta0 + 0.5;
-                m_Delta = m_Delta0;
-                m_X = 0.99*(1.0/m_Delta);
-                //m_X = m_X + 0.2
-                
-                m_cst1=m_X*m_dt;
-                m_cst2=1.0/(1.0 + m_cst1);
-                m_cst3=m_dt/m_Delta;
-                m_cst4=m_cst2*m_cst3;
-                m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
-                
-                cout << "\nThe problem is reinitialized: New Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
-                
-                m_LIM = m_LIM0;
-                
-                m_equ[0]->DoInitialise(); 
-            }
+//             //Algo for updating parameters (late 2012)
+//             if (MaxNormDiff_q_qBar < Min_MaxNormDiff_q_qBar)
+//             {
+//                 Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;
+//             }
+//             
+//             if (MaxNormDiff_q_qBar < m_LIM)
+//             {                   
+//                 m_Delta = m_Delta + 0.5;
+//                 m_X = 0.99*(1.0/m_Delta);
+//                 
+//                 /*//coeff = 1.0106;
+//                 coeff = 1.0132;
+//                 //mult = 10.0;
+//                 
+//                 m_X = 1.1*(coeff - 1.0)/m_dt;
+//                 m_Delta = 100.0*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
+//                 m_Delta = max(m_Delta, 1.0); */
+//                 
+//                 m_cst1=m_X*m_dt;
+//                 m_cst2=1.0/(1.0 + m_cst1);
+//                 m_cst3=m_dt/m_Delta;
+//                 m_cst4=m_cst2*m_cst3;
+//                 m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+//                 
+//                 cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
+//                 
+//                 m_LIM = m_LIM/10.0;
+//                 //m_LIM = m_LIM/1000.0;
+//             }
+//             
+//             if (MaxNormDiff_q_qBar > 10.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
+//             {        
+//                 Min_MaxNormDiff_q_qBar = 1.0;
+//                 
+//                 m_Delta0 = m_Delta0 + 0.5;
+//                 m_Delta = m_Delta0;
+//                 m_X = 0.99*(1.0/m_Delta);
+//                 //m_X = m_X + 0.2
+//                 
+//                 m_cst1=m_X*m_dt;
+//                 m_cst2=1.0/(1.0 + m_cst1);
+//                 m_cst3=m_dt/m_Delta;
+//                 m_cst4=m_cst2*m_cst3;
+//                 m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+//                 
+//                 cout << "\nThe problem is reinitialized: New Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
+//                 
+//                 m_LIM = m_LIM0;
+//                 
+//                 m_equ[0]->DoInitialise(); 
+//             }
             
             
              }

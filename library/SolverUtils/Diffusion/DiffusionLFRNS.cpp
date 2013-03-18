@@ -839,8 +839,6 @@ namespace Nektar
                                                             nScalars);
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                             derivativesO1(1);
-                    Array<OneD, Array<OneD, NekDouble> >iqFluxO2(
-                                                            nConvectiveFields);
                     Array<OneD, Array<OneD, NekDouble> > stdDCorrFluxO2(
                                                             nConvectiveFields);
                     Array<OneD, Array<OneD, NekDouble> > DderivativesO1(
@@ -863,8 +861,6 @@ namespace Nektar
                                                             nPts, 0.0);
                         derivativesO1[0][i] = Array<OneD, NekDouble>(
                                                             nPts, 0.0);
-                        iqFluxO2[i]         = Array<OneD, NekDouble>(
-                                                            nTracePts, 0.0);
                         stdDCorrFluxO2[i]   = Array<OneD, NekDouble>(
                                                             nPts, 0.0);
                         DderivativesO1[i]   = Array<OneD, NekDouble>(
@@ -938,7 +934,7 @@ namespace Nektar
                     
                     for (i = 0; i < nConvectiveFields; ++i)
                     {
-                        viscousFlux[i] = Array<OneD, NekDouble>(nPts, 0.0);
+                        viscousFlux[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
                     }
                     
                     m_fluxVectorNS(inarray, derivativesO1, viscousTensor); 
@@ -964,7 +960,7 @@ namespace Nektar
                         // Computing the standard second-order correction 
                         // derivative
                         v_DerCFlux_1D(nConvectiveFields, fields, 
-                                      viscousTensor[0][i], iqFluxO2[i],
+                                      viscousTensor[0][i], viscousFlux[i],
                                       stdDCorrFluxO2[i]);
                         
                         // Computing the second-order derivative
@@ -1004,18 +1000,16 @@ namespace Nektar
                     derivativesO1(2);
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                     BderivativesO1(nScalars);
-                    Array<OneD, Array<OneD, NekDouble> >
-                    iqFluxO2(nConvectiveFields);
                     Array<OneD, Array<OneD, NekDouble> > 
                     divFD(nConvectiveFields);
                     Array<OneD, Array<OneD, NekDouble> > 
                     divFC(nConvectiveFields);
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                    tmp(nConvectiveFields);
+                    tmp(nScalars);
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                    tmp1(nConvectiveFields);
+                    tmp1(nScalars);
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                    tmp2(nConvectiveFields);
+                    tmp2(nScalars);
                         
                     derivativesO1[0] = Array<OneD, Array<OneD, NekDouble> >(
                                                                 nScalars);
@@ -1373,7 +1367,7 @@ namespace Nektar
                     
                     for (i = 0; i < nConvectiveFields; ++i)
                     {
-                        viscousFlux[i] = Array<OneD, NekDouble>(nPts, 0.0);
+                        viscousFlux[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
                     }
                     
                     // Computing the viscous tensor
@@ -1400,7 +1394,6 @@ namespace Nektar
                         stdDderivativesO1[i][1] = 
                         Array<OneD, NekDouble>(nPts, 0.0);
                         
-                        iqFluxO2[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
                         divFD[i] = Array<OneD, NekDouble>(nPts, 0.0);
                         divFC[i] = Array<OneD, NekDouble>(nPts, 0.0);
                         
@@ -1474,8 +1467,8 @@ namespace Nektar
                         v_DivCFlux_2D(nConvectiveFields,
                                       fields, 
                                       viscousTensor[0][i], 
-                                      viscousTensor[0][i], 
-                                      iqFluxO2[i], 
+                                      viscousTensor[1][i],
+                                      viscousFlux[i],
                                       divFC[i]);
                         
                         // Divergence of the standard final flux
@@ -1584,9 +1577,8 @@ namespace Nektar
             {
                 for (i = 0; i < nScalars; ++i)
                 {
-                    Vmath::Vmul(nTracePts, 
-                                m_traceNormals[j], 1, 
-                                numflux[i], 1, numericalFluxO1[i][j], 1);
+                    Vmath::Vcopy(nTracePts,numflux[i], 1,
+                                 numericalFluxO1[i][j], 1);
                 }
             }
         }        

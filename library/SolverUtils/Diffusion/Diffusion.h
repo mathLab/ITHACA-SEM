@@ -87,7 +87,7 @@ namespace Nektar
             {
                 m_fluxVectorNS = boost::bind(func, obj, _1, _2, _3, _4);
             }
-                        
+                       
             inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
             {
                 m_riemann = riemann;

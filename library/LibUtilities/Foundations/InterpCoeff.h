@@ -67,6 +67,24 @@ namespace Nektar
                                                 const BasisKey  &tbasis0,
                                                 const BasisKey  &tbasis1,
                                                 NekDouble *to);
+        // 3D Interpolation
+      LIB_UTILITIES_EXPORT void InterpCoeff3D(const BasisKey &fbasis0,
+                                                const BasisKey &fbasis1,
+                                                const BasisKey &fbasis2,
+                                                const Array<OneD, const NekDouble>& from,
+                                                const BasisKey &tbasis0,
+                                                const BasisKey &tbasis1,
+                                                const BasisKey &tbasis2,
+                                                Array<OneD, NekDouble> &to);
+        
+      LIB_UTILITIES_EXPORT void InterpCoeff3D(const BasisKey  &fbasis0,
+                                                const BasisKey  &fbasis1,
+                                                const BasisKey  &fbasis2,
+                                                const NekDouble *from,
+                                                const BasisKey  &tbasis0,
+                                                const BasisKey  &tbasis1,
+                                                const BasisKey  &tbasis2,
+                                                NekDouble *to);
 
       
     } // end of namespace

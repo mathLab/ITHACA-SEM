@@ -100,20 +100,23 @@ namespace Nektar
             unsigned int            field,
             Array<OneD, NekDouble> &outfield,
             const NekDouble         time = 0.0);
-
         void CPMach(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &outarray);
         void CPSensor(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &outarray);
+        void CPVarP(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                    Array<OneD, NekDouble> &outarray);
+        
         void CPEntropy(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                   Array<OneD, NekDouble> &outarray);
-      
+        
     private:
         void SetBoundaryConditions(
-            Array<OneD, Array<OneD, NekDouble> >            &physarray, 
+            Array<OneD, Array<OneD, NekDouble> >            &physarray,
             NekDouble                                        time);
 
         /// Isentropic Vortex Test Case.

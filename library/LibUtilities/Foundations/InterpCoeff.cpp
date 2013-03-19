@@ -123,5 +123,60 @@ namespace Nektar
                             tnm0, wsp.get(), fnm0, 0.0, to, tnm0);
             }
         }
+        void InterpCoeff3D(const BasisKey  &fbasis0,
+                           const BasisKey  &fbasis1,
+                           const BasisKey  &fbasis2,
+                           const Array<OneD, const NekDouble>& from,
+                           const BasisKey  &tbasis0,
+                           const BasisKey  &tbasis1,
+                           const BasisKey  &tbasis2,
+                           Array<OneD, NekDouble> &to)
+        {
+            InterpCoeff3D(fbasis0,fbasis1,
+                          fbasis2,from.data(),
+                          tbasis0,tbasis1,
+                          tbasis2,to.data());
+        }
+        void InterpCoeff3D(const BasisKey  &fbasis0,
+                           const BasisKey  &fbasis1,
+                           const BasisKey  &fbasis2,
+                           const NekDouble *from,
+                           const BasisKey  &tbasis0,
+                           const BasisKey  &tbasis1,
+                           const BasisKey  &tbasis2,
+                           NekDouble *to)
+        {
+            int i;
+
+            Array<OneD, NekDouble> wsp1(tbasis0.GetNumModes()*tbasis1.GetNumModes()*fbasis2.GetNumModes());
+            Array<OneD, NekDouble> wsp2(tbasis0.GetNumModes()*fbasis1.GetNumModes()*fbasis2.GetNumModes());
+            
+            int fnm0 = fbasis0.GetNumModes();
+            int fnm1 = fbasis1.GetNumModes();
+            int fnm2 = fbasis2.GetNumModes();
+            int tnm0 = tbasis0.GetNumModes();
+            int tnm1 = tbasis1.GetNumModes();
+            int tnm2 = tbasis2.GetNumModes();
+            
+            //Array<OneD, NekDouble> wsp1(tnm0*tnm1*fnm2);
+            //Array<OneD, NekDouble> wsp2(tnm0*fnm1*fnm2);
+            
+            DNekMatSharedPtr ft0 = BasisManager()[fbasis0]->GetI(tbasis0);
+            DNekMatSharedPtr ft1 = BasisManager()[fbasis1]->GetI(tbasis1);
+            DNekMatSharedPtr ft2 = BasisManager()[fbasis2]->GetI(tbasis2);
+            
+            Blas::Dgemm('N', 'N', tnm0, fnm1*fnm2, fnm0, 1.0, ft0->GetPtr().get(),
+                        tnm0, from, fnm0, 0.0, wsp2.get(), tnm0);
+            
+            for(i = 0; i < fnm2; i++)
+            {
+                Blas::Dgemm('N', 'T', tnm0,  tnm1,  fnm1, 1.0, wsp2.get()+i*tnm0*fnm1,
+                            tnm0, ft1->GetPtr().get(), tnm1, 0.0, wsp1.get()+i*tnm0*tnm1, tnm0);
+            }
+            
+            Blas::Dgemm('N', 'T', tnm0*tnm1,  tnm2,  fnm2, 1.0, wsp1.get(),
+                        tnm0*tnm1, ft2->GetPtr().get(), tnm2, 0.0, to, tnm0*tnm1);
+            
+        }
     }
 }

@@ -163,14 +163,18 @@ namespace Nektar
         void GetDynamicViscosity(
             const Array<OneD, const Array<OneD,       NekDouble> >&physfield,
                   Array<OneD,                         NekDouble  >&mu);
-
         void GetStdVelocity(
             const Array<OneD, const Array<OneD,       NekDouble> >&inarray,
                   Array<OneD,                         NekDouble>  &stdV);
         void GetSensor(
             const Array<OneD, const Array<OneD,       NekDouble> > &physarray,
                   Array<OneD,                         NekDouble>   &Sensor);
-      
+        void GetArtificialDynamicViscosity(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                    NekDouble  > &mu_var);
+        void SetVarPOrderElmt(
+            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                  Array<OneD,                    NekDouble  > &PolyOrder);
         virtual NekDouble v_GetTimeStep(
             const Array<OneD, const Array<OneD, NekDouble> > &inarray);
         

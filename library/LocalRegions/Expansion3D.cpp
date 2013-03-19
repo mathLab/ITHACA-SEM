@@ -988,7 +988,26 @@ namespace Nektar
                 
                 // Cutting high frequencies
                 int NumModesCutOff = NumModesElementMin;
-
+                
+                for (i = 0; i < n_coeffs; i++)
+                {
+                    if (i == NumModesCutOff)
+                    {
+                        for(int s = NumModesCutOff;s<(i+NumModesElementMax-NumModesElementMin);s++)
+                        {
+                            coeff[s] = 0.0;
+                        }
+                        
+                        NumModesCutOff += NumModesElementMax;
+                    }
+                    
+                    if (i > NumModesElementMax*NumModesElementMin-1)
+                    {
+                        coeff[i] = 0.0;
+                    }
+                }
+                
+                /*
                 for (i = NumModesCutOff; i < NumModesElementMax; ++i)
                 {
                     for (j = NumModesCutOff; j < NumModesElementMax; ++j)
@@ -996,6 +1015,13 @@ namespace Nektar
                         coeff[i*NumModesElementMax+j] = 0.0;
                     }
                 }
+                */
+                
+                for (int i = 0; i < coeff.num_elements(); i++)
+                {
+                    cout << i << "  ::  " << coeff[i] << endl;
+                }
+                cout << endl;
                 
                 LibUtilities::InterpCoeff2D(
                     bkey_ortho0, bkey_ortho1, coeff,

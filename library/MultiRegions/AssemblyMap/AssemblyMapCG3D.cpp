@@ -240,7 +240,6 @@ namespace Nektar
                             meshEdgeId = (bndCondFaceExp->GetGeom2D())->GetEid(k);
                             if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)
                             {
-                                //cout<<"Assembly Dirichlet mesh id: "<<meshEdgeId<<endl;
                                 edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;
                             }
                         }
@@ -352,7 +351,6 @@ namespace Nektar
                             {
                                 if (edgelist[edgeoffsets[i]+l] == meshEdgeId)
                                 {
-                                    //cout<<"meshEdgeId extra: "<<meshEdgeId<<endl;
                                     extraDirEdgeIds[meshEdgeId] = i;
                                     edgeReorderedGraphVertId[meshEdgeId] = graphVertId++;
                                     nExtraDirichlet += locExpansion->GetEdgeNcoeffs(k) - 2;

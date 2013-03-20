@@ -1133,7 +1133,6 @@ namespace Nektar
             int vMap1, vMap2, sign1, sign2;
             int m, v, eMap1, eMap2, fMap1, fMap2;
             int offset, globalrow, globalcol, nCoeffs;
-            NekDouble vertValue;
 
             //matrix storage
             MatrixStorage storage = eFULL;
@@ -1464,14 +1463,7 @@ namespace Nektar
                 //for each vertex
                 for (v=0; v<nVerts; ++v)
                 {
-                    DNekScalMatSharedPtr tmp_mat;
-                    DNekMatSharedPtr m_locMat = 
-                        MemoryManager<DNekMat>::AllocateSharedPtr
-                        (nVerts,nVerts,zero,storage);
-
                     vMap1=locExpansion->GetVertexMap(v);
-
-                    meshVertId = locExpansion->GetGeom3D()->GetVid(v);
                     
                     //Get vertex map
                     globalrow = m_locToGloMap->
@@ -1491,19 +1483,19 @@ namespace Nektar
                             //offset for dirichlet conditions
                             if (globalcol == globalrow)
                             {
+                                meshVertId = locExpansion->GetGeom3D()->GetVid(v);
+
                                 //modal connectivity between elements
                                 sign1 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + vMap1);
                                 sign2 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + vMap2);
                                 
-                                vertValue = vertArray[globalrow]
-                                      + sign1*sign2*RSRT(vMap1,vMap2);
-
-                                vertArray[globalrow] = vertValue;
+                                vertArray[globalrow]
+                                    += sign1*sign2*RSRT(vMap1,vMap2);
 
                                 m_VertBlockToUniversalMap[globalrow]
-                                = meshVertId * nVerts * nVerts + 1;
+                                = meshVertId * maxEdgeDof * maxEdgeDof + 1;
                             }
                         }
                     }
@@ -1542,7 +1534,7 @@ namespace Nektar
                                 m_EdgeBlockArray[edgematrixoffset+v*nedgemodes+m]=globalEdgeValue;
                             }
                         }
-                        edgematrixoffset+=maxEdgeDof*maxEdgeDof;
+                        edgematrixoffset+=nedgemodes*nedgemodes;
                     }
                 }
                 
@@ -1579,12 +1571,11 @@ namespace Nektar
                                 // Get the face-face value from the low energy matrix (S2)
                                 NekDouble globalFaceValue = sign1*sign2*RSRT(fMap1,fMap2);
 
-                                //test here with local to global map
+                                //local face value to global face value
                                 m_FaceBlockArray[facematrixoffset+v*nfacemodes+m]=globalFaceValue;
                             }
                         }
                         facematrixoffset+=nfacemodes*nfacemodes;
-                        //facematrixoffset+=maxFaceDof*maxFaceDof;
                     }
                 }
 
@@ -1612,8 +1603,7 @@ namespace Nektar
                          m_localFaceToGlobalMatrixMap.get(), 
                          m_GlobalFaceBlock.get());
 
-
-            //Exchange edge data over different processes
+            //Exchange vertex data over different processes
             if(nNonDirVerts!=0)
             {
                 Gs::gs_data *tmp = Gs::Init(m_VertBlockToUniversalMap, m_comm);
@@ -1653,7 +1643,7 @@ namespace Nektar
                         m_gmat->SetValue(v,m,EdgeValue);
                     }
                 }
-    
+
                 BlkMat->SetBlock(1+loc,1+loc, m_gmat);
 
                 offset+=m_edgemodeoffset[loc];
@@ -1693,7 +1683,6 @@ namespace Nektar
                     (nmodes,nmodes,zero,storage);
                 
                 tmp_mat=BlkMat->GetBlock(i,i);
-
                 tmp_mat->Invert();
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
@@ -1750,6 +1739,7 @@ namespace Nektar
                          
                         NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
                         NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
+
                         z = M * r;
                     }
                     else

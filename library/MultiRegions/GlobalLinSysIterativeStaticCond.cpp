@@ -233,7 +233,8 @@ namespace Nektar
                 else if((!dirForcCalculated) && (atLastLevel))
                 {
                     //include dirichlet boundary forcing
-                    DNekScalBlkMat &SchurCompl = *m_schurCompl;
+                    //DNekScalBlkMat &SchurCompl = *m_schurCompl;
+                    DNekScalBlkMat &SchurCompl = *m_S1Blk;
                     pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
                     V_LocBnd = SchurCompl*V_LocBnd;
                 }
@@ -247,14 +248,10 @@ namespace Nektar
                                           nDirBndDofs);
                 F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
                 
-                //Setup block R matrix (Low Energy Preconditioner). Note:
-                //this routine does nothing for other preconditioner types
-                //m_precon->SetupBlockTransformationMatrix();
-                
                 //transform from original basis to low energy
                 Array<OneD, NekDouble> tmp;
                 m_precon->DoTransformToLowEnergy(F,tmp=F+nDirBndDofs);
-                
+
                 // For parallel multi-level static condensation some
                 // processors may have different levels to others. This
                 // routine receives contributions to partition vertices from
@@ -292,7 +289,7 @@ namespace Nektar
                     SolveLinearSystem(nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
                     
                     t.Stop();
-                    
+
                     //transform back to original basis
                     m_precon->DoTransformFromLowEnergy(pert);
 

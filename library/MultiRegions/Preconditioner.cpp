@@ -182,16 +182,16 @@ namespace Nektar
                 bnd_mat=loc_mat->GetBlock(0,0);
 
                 //offset by number of rows
-                int bnd_lda = bnd_mat->GetRows();
+                int bnd_row = bnd_mat->GetRows();
 
-                for(i = 0; i < bnd_lda; ++i)
+                for(i = 0; i < bnd_row; ++i)
                 {
                     gid1  = m_locToGloMap->GetLocalToGlobalBndMap (cnt + i) - nDirBnd;
                     sign1 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + i);
 
                     if(gid1 >= 0)
                     {
-                        for(j = 0; j < bnd_lda; ++j)
+                        for(j = 0; j < bnd_row; ++j)
                         {
                             gid2  = m_locToGloMap->GetLocalToGlobalBndMap(cnt+j) - nDirBnd;
                             sign2 = m_locToGloMap->GetLocalToGlobalBndSign(cnt+j);
@@ -203,7 +203,7 @@ namespace Nektar
                         }
                    }
                 }
-                cnt += bnd_lda;
+                cnt += bnd_row;
             }
             return diagonals;
         }

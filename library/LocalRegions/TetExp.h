@@ -219,26 +219,6 @@ namespace Nektar
                 DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(
                 const MatrixKey &mkey);
 
-
-            //-----------------------------
-            // Low Energy Basis functions
-            //-----------------------------
-
-            /*LOCAL_REGIONS_EXPORT virtual void v_GetInverseBoundaryMaps(
-                Array<OneD, int > vertexmap,
-                Array<OneD, Array<OneD, unsigned int> > edgemap,
-                Array<OneD, Array<OneD, unsigned int> > facemap);*/
-
-            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int> 
-                v_GetEdgeInverseBoundaryMap(int eid);
-
-            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int>
-                v_GetFaceInverseBoundaryMap(int fid);
-
-            LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
-                const DNekMatSharedPtr &r_bnd, 
-                const StdRegions::MatrixType matrixType);
-
             LOCAL_REGIONS_EXPORT void SetUpInverseTransformationMatrix(
                 const DNekMatSharedPtr & m_transformationmatrix,
                 DNekMatSharedPtr m_inversetransformationmatrix,

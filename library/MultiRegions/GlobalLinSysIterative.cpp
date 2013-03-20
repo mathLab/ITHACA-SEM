@@ -458,7 +458,9 @@ namespace Nektar
             // If iteration is progressing calculate first iteration details
 
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
+
             v_DoMatrixMultiply(w_A, s_A);
+
             k = 0;
 
             vExchange[0] = Vmath::Dot2(nNonDir,

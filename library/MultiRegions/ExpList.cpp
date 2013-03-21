@@ -1874,7 +1874,7 @@ namespace Nektar
 
             for(i = 0; i < (*m_exp).size(); ++i)
             {
-                err += (*m_exp)[i]->Integral(inarray+m_offset_elmt_id[i]);
+                err += (*m_exp)[m_offset_elmt_id[i]]->Integral(inarray+m_phys_offset[i]);
             }
             m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
 

@@ -1158,7 +1158,7 @@ namespace Nektar
 
             int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
-
+            cout<<"nNonDirVerts"<<nNonDirVerts<<endl;
 	    //Vertex, edge and face preconditioner matrices
             DNekMatSharedPtr VertBlk = MemoryManager<DNekMat>::
                 AllocateSharedPtr(nNonDirVerts,nNonDirVerts,zero,vertstorage);
@@ -1621,8 +1621,19 @@ namespace Nektar
             // Populate vertex block
             for (int i = 0; i < nNonDirVerts; ++i)
             {
+                cout<<vertArray[i]<<endl;
                   VertBlk->SetValue(i,i,1.0/vertArray[i]);
             }
+
+            /*for(m=0; m<VertBlk->GetRows(); ++m)
+            {
+                for(v=0; v<VertBlk->GetRows(); ++v)
+                {
+                    cout<<(*VertBlk)(m,v)<<" ";
+                }
+                cout<<endl;
+                }*/
+            
 
             //Set the first block to be the diagonal of the vertex space
             BlkMat->SetBlock(0,0, VertBlk);
@@ -1684,6 +1695,14 @@ namespace Nektar
                 
                 tmp_mat=BlkMat->GetBlock(i,i);
                 tmp_mat->Invert();
+                /*for(m=0; m<tmp_mat->GetRows(); ++m)
+                {
+                    for(v=0; v<tmp_mat->GetRows(); ++v)
+                    {
+                        cout<<(*tmp_mat)(m,v)<<" ";
+                    }
+                    cout<<endl;
+                    }*/
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
         }

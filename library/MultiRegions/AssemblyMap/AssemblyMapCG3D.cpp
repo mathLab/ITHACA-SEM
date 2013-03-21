@@ -527,6 +527,10 @@ namespace Nektar
             int edgeCnt;
             int faceCnt;
 
+            m_numNonDirVertexModes = 0;
+            m_numNonDirEdgeModes   = 0;
+            m_numNonDirFaceModes   = 0;
+
             m_numLocalBndCoeffs = 0;
 
             /// - Periodic vertices
@@ -774,7 +778,6 @@ namespace Nektar
                         {
                             if(edgeTempGraphVertId.count(meshEdgeId) == 0)
                             {
-                                //cout<<"Assembly map MeshEdgeId: "<<meshEdgeId<<endl;
                                 boost::add_vertex(boostGraphObj);
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                                 m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
@@ -790,7 +793,7 @@ namespace Nektar
                 }
                 localEdgeOffset+=nEdges;
             }
-            //cout<<endl;
+
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(

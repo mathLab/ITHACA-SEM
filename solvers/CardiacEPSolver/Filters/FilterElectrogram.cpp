@@ -162,7 +162,6 @@ namespace Nektar
         Array<OneD, NekDouble> x(nq);
         Array<OneD, NekDouble> y(nq);
         Array<OneD, NekDouble> z(nq);
-        pFields[0]->GetCoords(x,y,z);
 
         Array<OneD, NekDouble> oneOverR(nq);
         for (unsigned int i = 0; i < m_electrogramPoints.size(); ++i)
@@ -173,6 +172,8 @@ namespace Nektar
 
             // Compute 1/R
             m_electrogramPoints[i]->GetCoords(px,py,pz);
+
+            pFields[0]->GetCoords(x,y,z);
 
             Vmath::Sadd   (nq, -px, x, 1, x, 1);
             Vmath::Sadd   (nq, -py, y, 1, y, 1);

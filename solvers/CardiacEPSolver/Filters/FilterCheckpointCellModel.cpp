@@ -101,7 +101,7 @@ namespace Nektar
 
         // copy Data into FieldData and set variable
         std::string varName;
-        for(int j = 1; j < m_cell->GetNumCellVariables(); ++j)
+        for(int j = 2; j < m_cell->GetNumCellVariables(); ++j)
         {
             varName = m_cell->GetCellVarName(j);
 

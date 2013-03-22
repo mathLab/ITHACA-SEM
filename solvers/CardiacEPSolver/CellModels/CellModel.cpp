@@ -328,7 +328,10 @@ namespace Nektar
         }
 
         // Load each cell model variable
-        for(int j = 1; j < m_cellSol.num_elements(); ++j)
+        // j=0 and j=1 are for transmembrane or intra/extra-cellular volt.
+        Vmath::Zero(m_nq, m_cellSol[0], 1);
+        Vmath::Zero(m_nq, m_cellSol[1], 1);
+        for(int j = 2; j < m_cellSol.num_elements(); ++j)
         {
             // Get the name of the jth variable
             varName = GetCellVarName(j);
@@ -351,13 +354,13 @@ namespace Nektar
 
                 // Read the restart file containing this variable
                 LibUtilities::Import(file, FieldDef, FieldData);
-
+cout << FieldDef[0]->m_fields[j-2] << endl;
                 // Extract the data into the modal coefficients
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
                     m_field->ExtractDataToCoeffs(FieldDef[i],
                                                  FieldData[i],
-                                                 FieldDef[i]->m_fields[j],
+                                                 varName,
                                                  coeffs);
                 }
 

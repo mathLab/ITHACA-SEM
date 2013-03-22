@@ -328,7 +328,7 @@ namespace Nektar
         }
 
         // Load each cell model variable
-        for(int j = 0; j < m_cellSol.num_elements(); ++j)
+        for(int j = 1; j < m_cellSol.num_elements(); ++j)
         {
             // Get the name of the jth variable
             varName = GetCellVarName(j);

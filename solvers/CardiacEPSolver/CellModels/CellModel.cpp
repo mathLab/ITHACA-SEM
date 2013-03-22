@@ -386,10 +386,57 @@ namespace Nektar
                     m_field->BwdTrans(coeffs, m_cellSol[j]);
                 }
             }
-            else
+            else if (m_session->GetFunctionType(fncName, varName) ==
+                    LibUtilities::eFunctionTypeExpression)
             {
-                ASSERTL0(false, "Analytic expressions for cell model not yet "
-                                "implemented.");
+                LibUtilities::EquationSharedPtr equ =
+                        m_session->GetFunction(fncName, varName);
+
+                if (root)
+                {
+                    cout << "  - Field " << varName << ": "
+                         << equ->GetExpression() << endl;
+                }
+
+                const unsigned int nphys = m_field->GetNpoints();
+                Array<OneD, NekDouble> x0(nphys);
+                Array<OneD, NekDouble> x1(nphys);
+                Array<OneD, NekDouble> x2(nphys);
+                m_field->GetCoords(x0,x1,x2);
+
+                if (m_useNodal)
+                {
+                    Array<OneD, NekDouble> phys(nphys);
+                    equ->Evaluate(x0, x1, x2, phys);
+                    for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
+                    {
+                        int phys_offset = m_field->GetPhys_Offset(i);
+                        int coef_offset = m_field->GetCoeff_Offset(i);
+                        if (m_field->GetExp(0)->DetShapeType() ==
+                                LibUtilities::eTriangle)
+                        {
+                            m_field->GetExp(0)->FwdTrans(
+                                            phys + phys_offset,
+                                            m_nodalTri->UpdateCoeffs());
+                            m_nodalTri->ModalToNodal(
+                                            m_nodalTri->GetCoeffs(),
+                                            tmp = m_cellSol[j] + coef_offset);
+                        }
+                        else
+                        {
+                            m_field->GetExp(0)->FwdTrans(
+                                            phys + phys_offset,
+                                            m_nodalTet->UpdateCoeffs());
+                            m_nodalTet->ModalToNodal(
+                                            m_nodalTet->GetCoeffs(),
+                                            tmp = m_cellSol[j] + coef_offset);
+                        }
+                    }
+                }
+                else
+                {
+                    equ->Evaluate(x0, x1, x2, m_cellSol[j]);
+                }
             }
         }
     }

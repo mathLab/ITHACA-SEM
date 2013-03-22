@@ -80,14 +80,13 @@ namespace Nektar
             virtual void v_ComputeTangents();
 
             /// Set up quadrature metrics for 2D expansions.
-            virtual void v_SetUpQuadratureMetrics(
-                StdRegions::ExpansionType shape,
+            virtual void v_SetUpQuadratureMetrics(LibUtilities::ShapeType shape,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
                     &tbasis);
 
             /// Set up Laplacian metrics for 2D expansions.
             virtual void v_SetUpLaplacianMetrics(
-                StdRegions::ExpansionType shape,
+                LibUtilities::ShapeType shape,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
                     &tbasis);
         };

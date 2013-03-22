@@ -71,7 +71,7 @@ namespace Nektar
             // Helper functions
             //---------------------------------------
 
-            SPATIAL_DOMAINS_EXPORT int    GetFid() const;
+            SPATIAL_DOMAINS_EXPORT int GetFid() const;
             SPATIAL_DOMAINS_EXPORT const VertexComponentSharedPtr
                         GetVertex(int i) const;
             SPATIAL_DOMAINS_EXPORT const Geometry1DSharedPtr
@@ -104,11 +104,15 @@ namespace Nektar
 
             Array<OneD, StdRegions::StdExpansion2DSharedPtr> m_xmap;
 
-        private:
+            void NewtonIterationForLocCoord(const Array<OneD, const NekDouble> &coords, 
+                                       Array<OneD,NekDouble> &Lcoords);
 
+        private:
             //---------------------------------------
             // Helper functions
             //---------------------------------------
+            
+            using Geometry::v_GetFid;
 
             virtual int                         v_GetShapeDim() const;
             virtual int                         v_GetFid() const;

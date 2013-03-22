@@ -53,7 +53,7 @@ namespace Nektar
         {
         public:
             STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType,
-                          const StdRegions::ExpansionType expansionType,
+                          const LibUtilities::ShapeType shapeType,
                           const StdRegions::StdExpansion &stdExpansion,
                           const ConstFactorMap &factorMap = NullConstFactorMap,
                           const VarCoeffMap &varCoeffMap = NullVarCoeffMap,
@@ -84,9 +84,9 @@ namespace Nektar
                 return m_matrixType;
             }
 
-            ExpansionType GetExpansionType() const
+            LibUtilities::ShapeType GetShapeType() const
             {
-                return m_expansionType;
+                return m_shapeType;
             }
 
             LibUtilities::PointsType GetNodalPointsType() const
@@ -114,12 +114,12 @@ namespace Nektar
                 return(m_base[dir]);
             }
 
-            inline const int GetNConstFactors() const
+            inline int GetNConstFactors() const
             {
                 return m_factors.size();
             }
 
-            inline const NekDouble GetConstFactor(const ConstFactorType& factor) const
+            inline NekDouble GetConstFactor(const ConstFactorType& factor) const
             {
                 ConstFactorMap::const_iterator x = m_factors.find(factor);
                 ASSERTL1(x != m_factors.end(),
@@ -128,12 +128,23 @@ namespace Nektar
                 return x->second;
             }
 
+            inline  bool ConstFactorExists(const ConstFactorType& factor) const
+            {
+                ConstFactorMap::const_iterator x = m_factors.find(factor);
+                if(x != m_factors.end())
+                {
+                    return true;
+                }
+                
+                return false;
+            }
+
             inline const ConstFactorMap& GetConstFactors() const
             {
                 return m_factors;
             }
 
-            inline const int GetNVarCoeff() const
+            inline int GetNVarCoeff() const
             {
                 return m_varcoeffs.size();
             }
@@ -165,7 +176,7 @@ namespace Nektar
             }
 
         protected:
-            ExpansionType m_expansionType;
+            LibUtilities::ShapeType m_shapeType;
             Array<OneD, const LibUtilities::BasisSharedPtr> m_base;
 
             unsigned int m_ncoeffs;

@@ -64,8 +64,8 @@ namespace Nektar
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap):
 	   m_linsys(plinsys),
-           m_locToGloMap(pLocToGloMap),
-           m_preconType(pLocToGloMap->GetPreconType())
+           m_preconType(pLocToGloMap->GetPreconType()),
+           m_locToGloMap(pLocToGloMap)
          {
          }
 
@@ -127,11 +127,9 @@ namespace Nektar
             int sign1, sign2, gid1, gid2, i, j, n, cnt;
             Array<OneD, NekDouble> diagonals(rows,0.0);
 
-            boost::shared_ptr<MultiRegions::ExpList> expList=((m_linsys.lock())->GetLocMat()).lock();
-
             // Extract diagonal contributions of globally assembled
             // schur complement matrix
-            for(cnt=n=0; n < expList->GetNumElmts(); ++n)
+            for(cnt = n = 0; n < m_linsys.lock()->GetNumBlocks(); ++n)
             {
                 //Get statically condensed local matrix
                 loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);

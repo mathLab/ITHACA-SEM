@@ -47,39 +47,6 @@ namespace Nektar
     {
         class StdMatrixKey;
 
-        namespace StdTetData
-        {
-            /**
-             * Adds up the number of cells in a truncated Nc by Nc by Nc
-             * pyramid, where the longest Na rows and longest Nb columns are
-             * kept. Example: (Na, Nb, Nc) = (3, 4, 5); The number of
-             * coefficients is the sum of the elements of the following
-             * matrix:
-             *
-             * |5  4  3  2  0|
-             * |4  3  2  0   |
-             * |3  2  0      |
-             * |0  0         |
-             * |0            |
-             * 
-             * Sum = 28 = number of tet coefficients.
-             */
-            inline int getNumberOfCoefficients(int Na, int Nb, int Nc)
-            {
-                int nCoef = 0;
-                for (int a = 0; a < Na; ++a)
-                {
-                    for (int b = 0; b < Nb - a; ++b)
-                    {
-                        for (int c = 0; c < Nc - a - b; ++c)
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                return nCoef;
-            }
-        }
 
         class StdTetExp : virtual public StdExpansion3D
         {
@@ -95,18 +62,15 @@ namespace Nektar
                 const LibUtilities::BasisKey &Ba,
                 const LibUtilities::BasisKey &Bb,
                 const LibUtilities::BasisKey &Bc, 
-                double *coeffs,
-                double *phys);
+                NekDouble *coeffs,
+                NekDouble *phys);
             STD_REGIONS_EXPORT StdTetExp(const StdTetExp &T);
             STD_REGIONS_EXPORT ~StdTetExp();
 
-            ExpansionType DetExpansionType() const
+            LibUtilities::ShapeType DetShapeType() const
             {
-                return eTetrahedron;
+                return LibUtilities::eTetrahedron;
             }
-
-
-
 
 
             /** \brief Single Point Evaluation */
@@ -149,10 +113,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_PhysDeriv(
                 const int dir,
                 const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD,       NekDouble>& outarray);
-            STD_REGIONS_EXPORT virtual void v_PhysDirectionalDeriv(
-                const Array<OneD, const NekDouble>& inarray,
-                const Array<OneD, const NekDouble>& direction,
                       Array<OneD,       NekDouble>& outarray);
             STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
                 const Array<OneD, const NekDouble>& inarray,
@@ -242,7 +202,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int  v_GetNedges() const;
             STD_REGIONS_EXPORT virtual int  v_GetNfaces() const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int  v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_GetEdgeNcoeffs(const int i) const;
@@ -305,15 +265,15 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                 const StdMatrixKey &mkey);
 
+            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
+                const Array<OneD, const NekDouble>& inarray,
+                      Array<OneD,       NekDouble>& outarray);
 
         private:
             //---------------------------------------
             // Private helper functions
             //---------------------------------------
             STD_REGIONS_EXPORT int  GetMode(const int i, const int j, const int k);
-            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD,       NekDouble>& outarray);
         };
 
         typedef boost::shared_ptr<StdTetExp> StdTetExpSharedPtr;

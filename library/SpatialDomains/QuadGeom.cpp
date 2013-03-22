@@ -52,7 +52,7 @@ namespace Nektar
          */
         QuadGeom::QuadGeom()
         {
-            m_geomShapeType = eQuadrilateral;
+            m_shapeType = LibUtilities::eQuadrilateral;
         }
 
 
@@ -88,7 +88,7 @@ namespace Nektar
             Geometry2D(verts[0]->GetCoordim()),
             m_fid(id)
         {
-            m_geomShapeType = eQuadrilateral;
+            m_shapeType = LibUtilities::eQuadrilateral;
 
             /// Copy the vert shared pointers.
             m_verts.insert(m_verts.begin(), verts, verts+QuadGeom::kNverts);
@@ -141,7 +141,7 @@ namespace Nektar
         {
             int j;
 
-            m_geomShapeType = eQuadrilateral;
+            m_shapeType = LibUtilities::eQuadrilateral;
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
@@ -186,7 +186,7 @@ namespace Nektar
             for(int i = 0; i < m_coordim; ++i)
             {
                 int npts = curve->m_points.size();
-                int nEdgePts = (int)sqrt(static_cast<double>(npts));
+                int nEdgePts = (int)sqrt(static_cast<NekDouble>(npts));
                 Array<OneD,NekDouble> tmp(npts);
                 LibUtilities::PointsKey curveKey(nEdgePts, curve->m_ptype);
 
@@ -232,7 +232,7 @@ namespace Nektar
         {
             int j;
 
-            m_geomShapeType = eQuadrilateral;
+            m_shapeType = LibUtilities::eQuadrilateral;
 
             /// Copy the edge shared pointers.
             m_edges.insert(m_edges.begin(), edges, edges+QuadGeom::kNedges);
@@ -287,7 +287,7 @@ namespace Nektar
         QuadGeom::QuadGeom(const QuadGeom &in)
         {
             // From Geometry
-            m_geomShapeType = in.m_geomShapeType;
+            m_shapeType = in.m_shapeType;
 
             // From QuadFaceComponent
             m_fid = in.m_fid;
@@ -341,7 +341,7 @@ namespace Nektar
                StdRegions::eDir1FwdDir1_Dir2FwdDir2;
 
            int i, j, map[4] = {-1,-1,-1,-1};
-           double x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
+           NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
            
            // For periodic faces, we calculate the vector between the centre
            // points of the two faces. (For connected faces this will be
@@ -525,64 +525,73 @@ namespace Nektar
         /**
          * Set up GeoFac for this geometry using Coord quadrature distribution
          */
-        void QuadGeom::v_GenGeomFactors(const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+        void QuadGeom::v_GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            int i;
-            GeomType Gtype = eRegular;
-
-	    QuadGeom::v_FillGeom();
-
-            // We will first check whether we have a regular or deformed geometry.
-            // We will define regular as those cases where the Jacobian and the metric
-            // terms of the derivative are constants (i.e. not coordinate dependent)
-
-            // Check to see if expansions are linear
-            // If not linear => deformed geometry
-            for(i = 0; i < m_coordim; ++i)
+            if (m_geomFactorsState != ePtsFilled)
             {
-                if((m_xmap[i]->GetBasisNumModes(0) != 2)||
-                   (m_xmap[i]->GetBasisNumModes(1) != 2))
-                {
-                    Gtype = eDeformed;
-                }
-            }
+                int i;
+                GeomType Gtype = eRegular;
 
-            // For linear expansions, the mapping from standard to local
-            // element is given by the relation:
-            // x_i = 0.25 * [ ( x_i^A + x_i^B + x_i^C + x_i^D)       +
-            //                (-x_i^A + x_i^B + x_i^C - x_i^D)*xi_1  +
-            //                (-x_i^A - x_i^B + x_i^C + x_i^D)*xi_2  +
-            //                ( x_i^A - x_i^B + x_i^C - x_i^D)*xi_1*xi_2 ]
-            //
-            // The jacobian of the transformation and the metric terms dxi_i/dx_j,
-            // involve only terms of the form dx_i/dxi_j (both for coordim == 2 or 3).
-            // Inspecting the formula above, it can be appreciated that the derivatives
-            // dx_i/dxi_j will be constant, if the coefficient of the non-linear term
-            // is zero.
-            //
-            // That is why for regular geometry, we require
-            //
-            //     x_i^A - x_i^B + x_i^C - x_i^D = 0
-            //
-            // or equivalently
-            //
-            //     x_i^A - x_i^B = x_i^D - x_i^C
-            //
-            // This corresponds to quadrilaterals which are paralellograms.
-            if(Gtype == eRegular)
-            {
-                for(i = 0; i < m_coordim; i++)
+                QuadGeom::v_FillGeom();
+
+                // We will first check whether we have a regular or deformed
+                // geometry. We will define regular as those cases where the
+                // Jacobian and the metric terms of the derivative are constants
+                // (i.e. not coordinate dependent)
+
+                // Check to see if expansions are linear
+                // If not linear => deformed geometry
+                for(i = 0; i < m_coordim; ++i)
                 {
-                    if( fabs( (*m_verts[0])(i) - (*m_verts[1])(i) +
-                              (*m_verts[2])(i) - (*m_verts[3])(i) ) > NekConstants::kNekZeroTol )
+                    if((m_xmap[i]->GetBasisNumModes(0) != 2)||
+                       (m_xmap[i]->GetBasisNumModes(1) != 2))
                     {
                         Gtype = eDeformed;
-                        break;
                     }
                 }
-            }
 
-            m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(Gtype, m_coordim, m_xmap, tbasis);
+                // For linear expansions, the mapping from standard to local
+                // element is given by the relation:
+                // x_i = 0.25 * [ ( x_i^A + x_i^B + x_i^C + x_i^D)       +
+                //                (-x_i^A + x_i^B + x_i^C - x_i^D)*xi_1  +
+                //                (-x_i^A - x_i^B + x_i^C + x_i^D)*xi_2  +
+                //                ( x_i^A - x_i^B + x_i^C - x_i^D)*xi_1*xi_2 ]
+                //
+                // The jacobian of the transformation and the metric terms
+                // dxi_i/dx_j, involve only terms of the form dx_i/dxi_j (both
+                // for coordim == 2 or 3). Inspecting the formula above, it can
+                // be appreciated that the derivatives dx_i/dxi_j will be
+                // constant, if the coefficient of the non-linear term is zero.
+                //
+                // That is why for regular geometry, we require
+                //
+                //     x_i^A - x_i^B + x_i^C - x_i^D = 0
+                //
+                // or equivalently
+                //
+                //     x_i^A - x_i^B = x_i^D - x_i^C
+                //
+                // This corresponds to quadrilaterals which are paralellograms.
+                if(Gtype == eRegular)
+                {
+                    for(i = 0; i < m_coordim; i++)
+                    {
+                        if( fabs( (*m_verts[0])(i) - (*m_verts[1])(i) +
+                                  (*m_verts[2])(i) - (*m_verts[3])(i) )
+                                > NekConstants::kNekZeroTol )
+                        {
+                            Gtype = eDeformed;
+                            break;
+                        }
+                    }
+                }
+
+                m_geomFactors = MemoryManager<GeomFactors2D>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap, tbasis, true);
+
+                m_geomFactorsState = ePtsFilled;
+            }
         }
 
 
@@ -643,46 +652,66 @@ namespace Nektar
         /**
          *
          */
-        void QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords, Array<OneD,NekDouble> &Lcoords)
+        void QuadGeom::v_GetLocCoords(const Array<OneD, const NekDouble> &coords, 
+                                      Array<OneD,NekDouble> &Lcoords)
         {
-	    QuadGeom::v_FillGeom();                       
-            // calculate local coordinate for coord
-	/*
-	//this method works only for strictly regular elements and sometimes fails
             if(GetGtype() == eRegular)
-            { // can assume it is right angled rectangle
-                int i;
-                NekDouble len0 = 0.0 ;
-                NekDouble len1 = 0.0;
-                NekDouble xi0 = 0.0;
-                NekDouble xi1 = 0.0;
-                Array<OneD, const NekDouble> pts;
-                int nq0, nq1;
+            { 
+                NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
+                VertexComponent dv1, dv2, norm, orth1, orth2;
+                VertexComponent xin(m_coordim,0,coords[0],coords[1],coords2);
 
-                // get points;
-                //find end points
-                for(i = 0; i < m_coordim; ++i)
-                {
-                    nq0 = m_xmap[i]->GetNumPoints(0);
-                    nq1 = m_xmap[i]->GetNumPoints(1);
+                // Calculate edge vectors from 0-1 and 0-3 edges. 
+                dv1.Sub(*m_verts[1],*m_verts[0]);
+                dv2.Sub(*m_verts[3],*m_verts[0]);
 
-                    pts = m_xmap[i]->GetPhys();
+                // Obtain normal to plane in which dv1 and dv2 lie
+                norm.Mult(dv1,dv2);
+                
+                // Obtain vector which are normal to dv1 and dv2. 
+                orth1.Mult(norm,dv1);
+                orth2.Mult(norm,dv2);
+                
+                // Start with vector of desired points minus vertex_0
+                xin -= *m_verts[0];
 
-                    // use projection to side 1 to determine xi_1 coordinate based on length
-                    len0 += (pts[nq0-1]-pts[0])*(pts[nq0-1]-pts[0]);
-                    xi0  += (coords[i] -pts[0])*(pts[nq0-1]-pts[0]);
-
-                    // use projection to side 4 to determine xi_2 coordinate based on length
-                    len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
-                    xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
-                }
-
-                Lcoords[0] =  2*xi0/len0-1.0;
-                Lcoords[1] =  2*xi1/len1-1.0;
+                // Calculate length using L/|dv1| = (x-v0).n1/(dv1.n1) for coordiante 1
+                // Then rescale to [-1,1]. 
+                Lcoords[0] = xin.dot(orth2)/dv1.dot(orth2);
+                Lcoords[0] = 2*Lcoords[0]-1;
+                Lcoords[1] = xin.dot(orth1)/dv2.dot(orth1);
+                Lcoords[1] = 2*Lcoords[1]-1;
             }
             else
-            { 
-*/         
+            {
+                QuadGeom::v_FillGeom();                       
+                
+#if 1                
+                
+                // Determine nearest point of coords  to values in m_xmap
+                Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
+                Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
+                int npts = ptsx.num_elements();
+                Array<OneD, NekDouble> tmpx(npts), tmpy(npts);
+                const Array<OneD, const NekDouble> za = m_xmap[0]->GetPoints(0);
+                const Array<OneD, const NekDouble> zb = m_xmap[0]->GetPoints(1);
+                
+                
+                //guess the first local coords based on nearest point
+                Vmath::Sadd(npts, -coords[0], ptsx,1,tmpx,1);
+                Vmath::Sadd(npts, -coords[1], ptsy,1,tmpy,1);
+                Vmath::Vmul (npts, tmpx,1,tmpx,1,tmpx,1);
+                Vmath::Vvtvp(npts, tmpy,1,tmpy,1,tmpx,1,tmpx,1);
+                          
+                int min_i = Vmath::Imin(npts,tmpx,1);
+                
+                Lcoords[0] = za[min_i%za.num_elements()];
+                Lcoords[1] = zb[min_i/za.num_elements()];
+
+                // Perform newton iteration to find local coordinates 
+                NewtonIterationForLocCoord(coords,Lcoords);
+#else
+                
                 Array<OneD, NekDouble> ptsx;
                 Array<OneD, NekDouble> ptsy;  
                 NekDouble xmap,ymap, F1,F2;
@@ -701,10 +730,6 @@ namespace Nektar
                 m_xmap[0]->StdPhysDeriv(ptsx, derx_1, derx_2);                  
                 m_xmap[1]->StdPhysDeriv(ptsy, dery_1, dery_2);      
                 
-                
-
-                int elmtid = m_fid;
-                int offset=0;              
                 //determine y
                 int cnt=0;
                 while( abs(F2) > 0.00001 || abs(F1)> 0.00001)
@@ -734,12 +759,12 @@ namespace Nektar
                     	Lcoords[0] = Lcoords[1] = 2.0;    
                         break;
                     }
-		 }		              
-           // }
-
+                }
+#endif
+            }
         }
-
-
+            
+            
         /**
          *
          */

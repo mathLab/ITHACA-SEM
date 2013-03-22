@@ -1,7 +1,6 @@
 
 SET(PrecompiledHeaderSources
     TestConsistentObjectAccess.cpp
-    TestExpressionEvaluator.cpp
     TestLowerTriangularMatrix.cpp
     TestMatrixStoragePolicies.cpp
     TestNekMatrixMultiplication.cpp
@@ -35,7 +34,7 @@ TARGET_LINK_LIBRARIES(LibUtilitiesUnitTests
 
 SET_LAPACK_LINK_LIBRARIES(LibUtilitiesUnitTests)
 
-ADD_TEST(NAME LibUtilities COMMAND LibUtilitiesUnitTests --detect_memory_leaks=0)
+#ADD_TEST(NAME LibUtilities COMMAND LibUtilitiesUnitTests --detect_memory_leaks=0)
 SUBDIRS(LinearAlgebra)
 
 IF( NEKTAR_USE_EXPRESSION_TEMPLATES )

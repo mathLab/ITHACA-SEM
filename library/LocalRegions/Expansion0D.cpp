@@ -39,8 +39,8 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        Expansion0D::Expansion0D() : StdExpansion0D(), 
-            Expansion(), StdExpansion()
+        Expansion0D::Expansion0D() : StdExpansion(), Expansion(), 
+                                     StdExpansion0D()
         {
             m_elementVertexLeft  = -1;
             m_elementVertexRight = -1;

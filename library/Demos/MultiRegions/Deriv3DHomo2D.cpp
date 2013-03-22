@@ -36,7 +36,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Define Expansion
-    int bc_val = 0;
     int nypoints;
     int nzpoints;
     NekDouble ly;
@@ -85,7 +84,6 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Set up coordinates of mesh for Forcing function evaluation
-	int dim = Exp_u->GetCoordim(0);
 	int nq  = Exp_u->GetTotPoints();
 	
 	Array<OneD,NekDouble>  xc0,xc1,xc2;
@@ -122,22 +120,22 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
 	
-	//Taking derivative and printing the error
+    //Taking derivative and printing the error
 	
-	Exp_u->PhysDeriv(Exp_u->GetPhys(),Exp_u->UpdatePhys(),dump,dump);
+    Exp_u->PhysDeriv(Exp_u->GetPhys(),Exp_u->UpdatePhys(),dump,dump);
 	
-	cout << "L infinity error:  " << Exp_u->Linf(dudx) << endl;
-	cout << "L 2 error  :       " << Exp_u->L2  (dudx) << endl;	
+    cout << "L infinity error (variable dudx): " << Exp_u->Linf(dudx) << endl;
+    cout << "L 2 error (variable dudx)       : " << Exp_u->L2  (dudx) << endl;	
 	
-	Exp_v->PhysDeriv(Exp_v->GetPhys(),dump,Exp_v->UpdatePhys(),dump);
+    Exp_v->PhysDeriv(Exp_v->GetPhys(),dump,Exp_v->UpdatePhys(),dump);
 	
-	cout << "L infinity error:  " << Exp_v->Linf(dvdy) << endl;
-	cout << "L 2 error  :       " << Exp_v->L2  (dvdy) << endl;
+    cout << "L infinity error (variable dvdy): " << Exp_v->Linf(dvdy) << endl;
+    cout << "L 2 error (variable dvdy)       : " << Exp_v->L2  (dvdy) << endl;
 	
-	Exp_w->PhysDeriv(Exp_w->GetPhys(),dump,dump,Exp_w->UpdatePhys());
+    Exp_w->PhysDeriv(Exp_w->GetPhys(),dump,dump,Exp_w->UpdatePhys());
 	
-	cout << "L infinity error:  " << Exp_w->Linf(dwdz) << endl;
-	cout << "L 2 error  :       " << Exp_w->L2  (dwdz) << endl;
+    cout << "L infinity error (variable dwdz): " << Exp_w->Linf(dwdz) << endl;
+    cout << "L 2 error (variable dwdz)       : " << Exp_w->L2  (dwdz) << endl;
 	
-	return 0;
+    return 0;
 }

@@ -45,13 +45,13 @@ namespace Nektar
     {
         HexGeom::HexGeom()
         {
-            m_geomShapeType = eHexahedron;
+            m_shapeType = LibUtilities::eHexahedron;
         }
 
         HexGeom::HexGeom(const QuadGeomSharedPtr faces[]):
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_geomShapeType = eHexahedron;
+            m_shapeType = LibUtilities::eHexahedron;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+HexGeom::kNfaces);
@@ -212,79 +212,65 @@ namespace Nektar
         }
 
         void HexGeom::v_GenGeomFactors(
-            const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
+                const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
-            int i,f;
-            GeomType Gtype = eRegular;
-
-            v_FillGeom();
-
-            // check to see if expansions are linear
-            for(i = 0; i < m_coordim; ++i)
+            if (m_geomFactorsState != ePtsFilled)
             {
-                if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(1) != 2 ||
-                    m_xmap[i]->GetBasisNumModes(2) != 2 )
-                {
-                    Gtype = eDeformed;
-                }
-            }
+                int i,f;
+                GeomType Gtype = eRegular;
 
-            // check to see if all angles are 90 degrees
-            if(Gtype == eRegular)
-            {
-                const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
-                    { {0,1,2,3} ,
-                      {0,1,5,4} ,
-                      {1,2,6,5} ,
-                      {3,2,6,7} ,
-                      {0,3,7,4} ,
-                      {4,5,6,7} };
+                v_FillGeom();
 
-                for(f = 0; f < kNfaces; f++)
+                // check to see if expansions are linear
+                for(i = 0; i < m_coordim; ++i)
                 {
-                    // This condition ensures each angle is a right-angle.
-                    // It is a stronger condition than necessary.
-                    /*
-                    for(i = 0; i < 3; ++i)
+                    if (m_xmap[i]->GetBasisNumModes(0) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(1) != 2 ||
+                        m_xmap[i]->GetBasisNumModes(2) != 2 )
                     {
-                        dx1 = m_verts[ faceVerts[f][i+1] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                        dy1 = m_verts[ faceVerts[f][i+1] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                        dz1 = m_verts[ faceVerts[f][i+1] ]->z() - m_verts[ faceVerts[f][i] ]->z();
+                        Gtype = eDeformed;
+                    }
+                }
 
-                        dx2 = m_verts[ faceVerts[f][((i+3)%4)] ]->x() - m_verts[ faceVerts[f][i] ]->x();
-                        dy2 = m_verts[ faceVerts[f][((i+3)%4)] ]->y() - m_verts[ faceVerts[f][i] ]->y();
-                        dz2 = m_verts[ faceVerts[f][((i+3)%4)] ]->z() - m_verts[ faceVerts[f][i] ]->z();
+                // check to see if all faces are parallelograms
+                if(Gtype == eRegular)
+                {
+                    const unsigned int faceVerts[kNfaces][QuadGeom::kNverts] =
+                        { {0,1,2,3} ,
+                          {0,1,5,4} ,
+                          {1,2,6,5} ,
+                          {3,2,6,7} ,
+                          {0,3,7,4} ,
+                          {4,5,6,7} };
 
-                        if(fabs(dx1*dx2 + dy1*dy2 + dz1*dz2) > sqrt((dx1*dx1 + dy1*dy1 + dz1*dz1)*(dx2*dx2 + dy2*dy2 + dz2*dz2))
-                           * NekConstants::kGeomRightAngleTol)
+                    for(f = 0; f < kNfaces; f++)
+                    {
+                        // Ensure each face is a parallelogram? Check this.
+                        for (i = 0; i < m_coordim; i++)
                         {
-                            Gtype = eDeformed;
+                            if( fabs( (*m_verts[ faceVerts[f][0] ])(i) -
+                                      (*m_verts[ faceVerts[f][1] ])(i) +
+                                      (*m_verts[ faceVerts[f][2] ])(i) -
+                                      (*m_verts[ faceVerts[f][3] ])(i) )
+                                    > NekConstants::kNekZeroTol )
+                            {
+                                Gtype = eDeformed;
+                                break;
+                            }
+                        }
+
+                        if (Gtype == eDeformed)
+                        {
                             break;
                         }
                     }
-                    */
-                    
-                    // Ensure each face is a parallelogram? Check this.
-                    for (i = 0; i < m_coordim; i++)
-                    {
-                        if( fabs( (*m_verts[ faceVerts[f][0] ])(i) - (*m_verts[ faceVerts[f][1] ])(i) +
-                                (*m_verts[ faceVerts[f][2] ])(i) - (*m_verts[ faceVerts[f][3] ])(i) ) > NekConstants::kNekZeroTol )
-                        {
-                            Gtype = eDeformed;
-                            break;
-                        }
-                    }
-                    
-                    if (Gtype == eDeformed)
-                    {
-                        break;
-                    }
                 }
-            }
 
-            m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                Gtype, m_coordim, m_xmap, tbasis);
+                m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
+                    Gtype, m_coordim, m_xmap, tbasis, true);
+
+                m_geomFactorsState = ePtsFilled;
+            }
         }
 
         void HexGeom::v_GetLocCoords(
@@ -297,7 +283,7 @@ namespace Nektar
 
             // calculate local coordinate for coord
             if(GetGtype() == eRegular)
-            {   // Based on Spen's book, page 99
+            {   
                 NekDouble len0 = 0.0 ;
                 NekDouble len1 = 0.0;
                 NekDouble len2 = 0.0;
@@ -325,7 +311,7 @@ namespace Nektar
                     len1 += (pts[nq0*(nq1-1)]-pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
                     xi1  += (coords[i] -pts[0])*(pts[nq0*(nq1-1)]-pts[0]);
 
-                    // use projection to side 4 to determine xi_2 coordinate based on length
+                    // use projection to side 4 to determine xi_3 coordinate based on length
                     len2 += (pts[nq0*nq1*(nq2-1)]-pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);
                     xi2  += (coords[i] -pts[0])*(pts[nq0*nq1*(nq2-1)]-pts[0]);
                 }
@@ -336,8 +322,35 @@ namespace Nektar
             }
             else
             {
-                NEKERROR(ErrorUtil::efatal,
-                         "inverse mapping must be set up to use this call");
+                // Determine nearest point of coords  to values in m_xmap
+                Array<OneD, NekDouble> ptsx = m_xmap[0]->GetPhys();
+                Array<OneD, NekDouble> ptsy = m_xmap[1]->GetPhys();
+                Array<OneD, NekDouble> ptsz = m_xmap[2]->GetPhys();
+                int npts = ptsx.num_elements();
+                Array<OneD, NekDouble> tmp1(npts), tmp2(npts);
+                const Array<OneD, const NekDouble> za = m_xmap[0]->GetPoints(0);
+                const Array<OneD, const NekDouble> zb = m_xmap[0]->GetPoints(1);
+                const Array<OneD, const NekDouble> zc = m_xmap[0]->GetPoints(2);
+                
+                //guess the first local coords based on nearest point
+                Vmath::Sadd(npts, -coords[0], ptsx,1,tmp1,1);
+                Vmath::Vmul (npts, tmp1,1,tmp1,1,tmp1,1);
+                Vmath::Sadd(npts, -coords[1], ptsy,1,tmp2,1);
+                Vmath::Vvtvp(npts, tmp2,1,tmp2,1,tmp1,1,tmp1,1);
+                Vmath::Sadd(npts, -coords[2], ptsz,1,tmp2,1);
+                Vmath::Vvtvp(npts, tmp2,1,tmp2,1,tmp1,1,tmp1,1);
+                          
+                int min_i = Vmath::Imin(npts,tmp1,1);
+                
+                // Get Local coordinates
+                int qa = za.num_elements(), qb = zb.num_elements();
+                Lcoords[2] = zc[min_i/(qa*qb)];
+                min_i = min_i%(qa*qb);
+                Lcoords[1] = zb[min_i/qa];
+                Lcoords[0] = za[min_i%qa];
+
+                // Perform newton iteration to find local coordinates 
+                NewtonIterationForLocCoord(coords,Lcoords);
             }
         }
 
@@ -872,91 +885,3 @@ namespace Nektar
 
     }; //end of namespace
 }; //end of namespace
-
-//
-// $Log: HexGeom.cpp,v $
-// Revision 1.22  2010/01/20 18:05:09  cantwell
-// Added utility for probing a line of points in a FLD file.
-//
-// Revision 1.21  2009/12/17 01:47:31  bnelson
-// Fixed visual studio compiler warning.
-//
-// Revision 1.20  2009/12/16 21:29:31  bnelson
-// Removed unused variables to fix compiler warnings.
-//
-// Revision 1.19  2009/12/15 18:09:02  cantwell
-// Split GeomFactors into 1D, 2D and 3D
-// Added generation of tangential basis into GeomFactors
-// Updated ADR2DManifold solver to use GeomFactors for tangents
-// Added <GEOMINFO> XML session section support in MeshGraph
-// Fixed const-correctness in VmathArray
-// Cleaned up LocalRegions code to generate GeomFactors
-// Removed GenSegExp
-// Temporary fix to SubStructuredGraph
-// Documentation for GlobalLinSys and GlobalMatrix classes
-//
-// Revision 1.18  2009/01/21 16:59:03  pvos
-// Added additional geometric factors to improve efficiency
-//
-// Revision 1.17  2008/12/18 14:08:58  pvos
-// NekConstants update
-//
-// Revision 1.16  2008/11/17 08:59:54  ehan
-// Added necessary mapping routines for Tet
-//
-// Revision 1.15  2008/09/23 22:09:00  ehan
-// Added new constructor HexGeom
-//
-// Revision 1.14  2008/09/23 22:06:26  ehan
-// Added new GeomFactor constructor.
-//
-// Revision 1.13  2008/09/23 18:19:56  pvos
-// Updates for working ProjectContField3D demo
-//
-// Revision 1.12  2008/09/17 13:46:26  pvos
-// Added LocalToGlobalC0ContMap for 3D expansions
-//
-// Revision 1.11  2008/09/12 11:26:19  pvos
-// Updates for mappings in 3D
-//
-// Revision 1.10  2008/06/18 19:27:18  ehan
-// Added implementation for GetLocCoords(..)
-//
-// Revision 1.9  2008/06/14 01:22:05  ehan
-// Implemented constructor and FillGeom().
-//
-// Revision 1.8  2008/06/12 21:22:43  delisi
-// Added method stubs for GenGeomFactors, FillGeom, and GetLocCoords.
-//
-// Revision 1.7  2008/05/29 19:02:23  delisi
-// Renamed eHex to eHexahedron.
-//
-// Revision 1.6  2008/05/28 21:52:27  jfrazier
-// Added GeomShapeType initialization for the different shapes.
-//
-// Revision 1.5  2008/05/12 17:28:26  ehan
-// Added virtual functions
-//
-// Revision 1.4  2008/04/06 06:00:37  bnelson
-// Changed ConstArray to Array<const>
-//
-// Revision 1.3  2008/02/08 23:05:28  jfrazier
-// More work on 3D components.
-//
-// Revision 1.2  2007/07/20 02:15:08  bnelson
-// Replaced boost::shared_ptr with Nektar::ptr
-//
-// Revision 1.1  2006/05/04 18:59:00  kirby
-// *** empty log message ***
-//
-// Revision 1.11  2006/04/09 02:08:35  jfrazier
-// Added precompiled header.
-//
-// Revision 1.10  2006/03/12 07:42:02  sherwin
-//
-// Updated member names and StdRegions call. Still has not been compiled
-//
-// Revision 1.9  2006/02/19 01:37:33  jfrazier
-// Initial attempt at bringing into conformance with the coding standard.  Still more work to be done.  Has not been compiled.
-//
-//

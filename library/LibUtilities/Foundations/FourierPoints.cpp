@@ -60,7 +60,7 @@ namespace Nektar
             }
             else
             {
-                double dx = 2.0/(double)(npts);
+                NekDouble dx = 2.0/(NekDouble)(npts);
                 for(unsigned int i=0;i<npts;++i)
                 {
                     m_points[0][i] = -1.0 + i*dx;
@@ -82,7 +82,7 @@ namespace Nektar
             {
                 for(unsigned int i=0; i<npts; ++i)
                 {
-                    m_weights[i] =  1.0/(double)npts;
+                    m_weights[i] =  1.0/(NekDouble)npts;
                 }
             }
         }
@@ -101,7 +101,7 @@ namespace Nektar
 
             for(unsigned int i=1;i<npts;++i)
             {
-                m_derivmatrix[0]->SetValue(0,i, -0.5*M_PI*pow(-1.0,double(i))*cos(M_PI*i/npts)/sin(M_PI*i/npts));
+                m_derivmatrix[0]->SetValue(0,i, -0.5*M_PI*pow(-1.0,NekDouble(i))*cos(M_PI*i/npts)/sin(M_PI*i/npts));
             }
 
             for(unsigned int i=1;i<npts;++i)
@@ -174,13 +174,13 @@ namespace Nektar
             }
         }
 
-        double FourierPoints::PeriodicSincFunction(const NekDouble x, const NekDouble h)
+        NekDouble FourierPoints::PeriodicSincFunction(const NekDouble x, const NekDouble h)
         {
             // This formula is based upon a mapped version of 
             // the periodic sinc presented in Trefethen's "Spectral Methods
             // in Matlab"
 
-            double y = 1.0;
+            NekDouble y = 1.0;
             
             if(fabs(x)>1.0e-12)
             {

@@ -426,7 +426,6 @@ namespace Nektar
         int i;
         int nvariables = inarray.num_elements();
         int ncoeffs    = inarray[0].num_elements();
-        int npoints = m_fields[0]->GetNpoints();
         switch(m_projectionType)
         {
         case MultiRegions::eDiscontinuous:
@@ -523,6 +522,9 @@ namespace Nektar
                 Vmath::Svtvp(ncoeffs,m_epsilon[1],&outarray[1][0],1,&Reaction2[0],1,&outarray[1][0],1);
                 break;
             }
+            default:
+                ASSERTL0(false, "Unknown equation type.");
+                break;
             }
             break;
         }
@@ -539,7 +541,6 @@ namespace Nektar
             const NekDouble time)
 
     {
-        int nvariables = inarray.num_elements();
         int ncoeffs    = inarray[0].num_elements();
 
         Array<OneD, NekDouble> temp(ncoeffs);
@@ -573,8 +574,6 @@ namespace Nektar
             const NekDouble time)
 
     {
-        int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
         int npoints    = m_fields[0]->GetNpoints();
 
         NekDouble A = 2.0;
@@ -594,22 +593,22 @@ namespace Nektar
         m_fields[1]->SetPhysState(true);
 
         // temp = phys0*phys0*phy1
-                Vmath::Vmul(npoints,&phys0[0],1,&phys0[0],1,&cubterm[0],1);
-                Vmath::Vmul(npoints,&phys1[0],1,&cubterm[0],1,&cubterm[0],1);
-
+        Vmath::Vmul(npoints,&phys0[0],1,&phys0[0],1,&cubterm[0],1);
+        Vmath::Vmul(npoints,&phys1[0],1,&cubterm[0],1,&cubterm[0],1);
+        
                 // outarray[0] = A - B*phy0 + phy0*phy0*phy1 - phy0
-                NekDouble coeff = -1.0*(B+1.0);
-                Vmath::Svtvp(npoints,coeff,&phys0[0],1,&cubterm[0],1,&phys0out[0],1);
-                Vmath::Sadd(npoints,A,&phys0out[0],1,&phys0out[0],1);
-
-                // outarray[1] = B*phys1 - phy0*phy0*phy1
-                Vmath::Svtsvtp(npoints,B,&phys1[0],1,-1.0,&cubterm[0],1,&phys1out[0],1);
-
-                m_fields[0]->FwdTrans(phys0out, outarray[0]);
-                m_fields[0]->SetPhysState(false);
-
-                m_fields[1]->FwdTrans(phys1out, outarray[1]);
-                m_fields[1]->SetPhysState(false);
+        NekDouble coeff = -1.0*(B+1.0);
+        Vmath::Svtvp(npoints,coeff,&phys0[0],1,&cubterm[0],1,&phys0out[0],1);
+        Vmath::Sadd(npoints,A,&phys0out[0],1,&phys0out[0],1);
+        
+        // outarray[1] = B*phys1 - phy0*phy0*phy1
+        Vmath::Svtsvtp(npoints,B,&phys1[0],1,-1.0,&cubterm[0],1,&phys1out[0],1);
+        
+        m_fields[0]->FwdTrans(phys0out, outarray[0]);
+        m_fields[0]->SetPhysState(false);
+        
+        m_fields[1]->FwdTrans(phys1out, outarray[1]);
+        m_fields[1]->SetPhysState(false);
     }
 
     void ADR2DManifold::ODEeReactionFHNtest1(const Array<OneD, const Array<OneD, NekDouble> >&inarray,
@@ -618,7 +617,6 @@ namespace Nektar
 
     {
         int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
         int npoints = m_fields[0]->GetNpoints();
 
         NekDouble epsilon = 1.0/32.0;
@@ -652,8 +650,6 @@ namespace Nektar
     {
         NekDouble m_gamma = 0.5;
 
-        int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
         int npoints    = m_fields[0]->GetNpoints();
 
         Array<OneD, NekDouble> physfieldu(npoints);
@@ -695,8 +691,6 @@ namespace Nektar
             const NekDouble time)
 
     {
-        int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
         int npoints    = m_fields[0]->GetNpoints();
 
         Array<OneD, NekDouble> physfieldu(npoints);
@@ -795,8 +789,6 @@ namespace Nektar
             const NekDouble time)
 
     {
-        int nvariables = inarray.num_elements();
-        int ncoeffs    = inarray[0].num_elements();
         int npoints    = m_fields[0]->GetNpoints();
 
         Array<OneD, NekDouble> physfieldu(npoints);
@@ -848,7 +840,6 @@ namespace Nektar
     {
         int nvariables = inarray.num_elements();
         int ncoeffs    = inarray[0].num_elements();
-        int TotPoints = m_fields[0]->GetTotPoints();
 
         NekDouble kappa;
 
@@ -917,7 +908,6 @@ namespace Nektar
             NekDouble time,
             NekDouble lambda)
     {
-        int nvariables = inarray.num_elements();
         int ncoeffs    = inarray[0].num_elements();
 
         NekDouble kappa = 1.0/lambda;
@@ -1153,7 +1143,6 @@ namespace Nektar
             bool NumericalFluxIncludesNormal, bool InFieldIsInPhysSpace, int nvariables)
     {
         int i;
-        int nVelDim         = m_spacedim;
         int nPointsTot      = GetNpoints();
         int ncoeffs         = GetNcoeffs();
         int nTracePointsTot = GetTraceNpoints();
@@ -1514,7 +1503,6 @@ namespace Nektar
         int i;
 
         int nTraceNumPoints = GetTraceNpoints();
-        int nvel = m_spacedim; //m_velocity.num_elements();
 
         Array<OneD, NekDouble > Fwd(nTraceNumPoints);
         Array<OneD, NekDouble > Bwd(nTraceNumPoints);
@@ -1546,8 +1534,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > &numfluxY)
     {
         int nTraceNumPoints = GetTraceNpoints();
-        int nvel = m_velocity.num_elements();
-
+        
         Array<OneD, NekDouble > Fwd(nTraceNumPoints);
         Array<OneD, NekDouble > Bwd(nTraceNumPoints);
         Array<OneD, NekDouble > tmp(nTraceNumPoints,0.0);
@@ -1721,7 +1708,7 @@ namespace Nektar
             Array<OneD, NekDouble> &penaltyflux,
             NekDouble time)
     {
-        unsigned int i, j, e, npoints, id1, id2;
+        unsigned int i, e, npoints, id1, id2;
         int nbnd = m_fields[0]->GetBndCondExpansions().num_elements();
         int numBDEdge = m_fields[0]->GetBndCondExpansions()[0]->GetExpSize();
         int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;
@@ -1775,7 +1762,7 @@ namespace Nektar
             NekDouble C11,
             NekDouble time)
     {
-        unsigned int i, j, e, npoints, id1, id2;
+        unsigned int i, e, npoints, id1, id2;
         int nbnd = m_fields[0]->GetBndCondExpansions().num_elements();
         int numBDEdge = m_fields[0]->GetBndCondExpansions()[0]->GetExpSize();
         int Nfps = m_fields[0]->GetBndCondExpansions()[0]->GetExp(0)->GetNumPoints(0) ;
@@ -2178,7 +2165,6 @@ namespace Nektar
             const NekDouble x2j, const NekDouble time)
     {
 
-        int nq = m_fields[0]->GetNpoints();
         NekDouble dist, radius, cosdiff, sin_theta, cos_theta, sin_varphi, cos_varphi;
         NekDouble pi = 3.14159265358979323846;
         NekDouble newvarphi_c, newtheta_c, returnval;
@@ -2222,15 +2208,14 @@ namespace Nektar
             const NekDouble x2j, const NekDouble time)
 
     {
-        int nq = m_fields[0]->GetNpoints();
         NekDouble pi = 3.14159265358979323846;
 
         int i, m, n, ind;
         NekDouble a_n, d_n, gamma_n;
         NekDouble A_mn, C_mn, theta, phi,radius;
 
-        std::complex<double> Spericharmonic, delta_n, varphi0, varphi1, temp;
-        std::complex<double> B_mn, D_mn;
+        std::complex<NekDouble> Spericharmonic, delta_n, varphi0, varphi1, temp;
+        std::complex<NekDouble> B_mn, D_mn;
 
         // Set some parameter values
         int Maxn = 6;
@@ -2288,8 +2273,8 @@ namespace Nektar
         // phi is in [0, 2*pi]
         phi = atan2( x1j, x0j ) + pi;
 
-        varphi0 = (0.0,0.0);
-        varphi1 = (0.0,0.0);
+        varphi0 = std::complex<NekDouble>(0.0,0.0);
+        varphi1 = std::complex<NekDouble>(0.0,0.0);
         for (n = 0; n < Maxn; ++n)
         {
             // Set up parameters
@@ -2301,7 +2286,7 @@ namespace Nektar
 #ifdef _MSC_VER
             temp.real( ( a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c ));
 #else
-            temp = std::complex<double>( (a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c ), temp.imag() ) ;
+            temp = std::complex<NekDouble>( (a_n + d_n )*( a_n + d_n ) - 4.0*( a_n*d_n - m_b*m_c ), temp.imag() ) ;
 #endif
 
             delta_n = 0.5*sqrt( temp );
@@ -2563,6 +2548,9 @@ namespace Nektar
             }
             out << "\tTime Integration Method : " << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod] << endl;
             EquationSystem::TimeParamSummary(out);
+            break;
+        default:
+            ASSERTL0(false, "Unsupported equation type.");
             break;
         }
         cout << "=======================================================================" << endl;

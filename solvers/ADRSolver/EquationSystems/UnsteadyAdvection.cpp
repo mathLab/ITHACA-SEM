@@ -38,7 +38,10 @@
 
 namespace Nektar
 {
-    string UnsteadyAdvection::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyAdvection", UnsteadyAdvection::create, "Unsteady Advection equation.");
+    string UnsteadyAdvection::className = GetEquationSystemFactory().
+        RegisterCreatorFunction("UnsteadyAdvection",
+                                UnsteadyAdvection::create,
+                                "Unsteady Advection equation.");
 
     UnsteadyAdvection::UnsteadyAdvection(
             const LibUtilities::SessionReaderSharedPtr& pSession)
@@ -103,6 +106,11 @@ namespace Nektar
                 m_advection->InitObject      (m_session, m_fields);
                 break;
             }
+            default:
+            {
+                ASSERTL0(false, "Unsupported projection type.");
+                break;
+            }
         }
         
         // If explicit it computes RHS and PROJECTION for the time integration
@@ -132,10 +140,10 @@ namespace Nektar
     {
         // Number of trace (interface) points
         int nTracePts = GetTraceNpoints();
-        
+
         // Auxiliary variable to compute the normal velocity
         Array<OneD, NekDouble> tmp(nTracePts);
-        
+
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
         
@@ -227,7 +235,7 @@ namespace Nektar
                 break;
             }
             
-            // Continuous projection
+        // Continuous projection
         case MultiRegions::eGalerkin:
         case MultiRegions::eMixed_CG_Discontinuous:
             {
@@ -254,19 +262,21 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void UnsteadyAdvection::GetFluxVector(
-        const int i, 
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD, Array<OneD, NekDouble> > &flux)
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        ASSERTL1(flux.num_elements() == m_velocity.num_elements(),
+        ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
                  "Dimension of flux array and velocity array do not match");
 
-        for(int j = 0; j < flux.num_elements(); ++j)
+        int nq = GetNpoints();
+
+        for(int i = 0; i < flux.num_elements(); ++i)
         {
-            Vmath::Vmul(GetNpoints(), 
-                        physfield[i], 1, 
-                        m_velocity[j], 1, 
-                        flux[j], 1);
+            for(int j = 0; j < flux[0].num_elements(); ++j)
+            {
+                Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
+                            flux[i][j], 1);
+            }
         }
     }
 

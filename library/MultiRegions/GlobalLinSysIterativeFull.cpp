@@ -100,8 +100,8 @@ namespace Nektar
          *
          * @param           pInput      RHS of linear system, \f$b\f$.
          * @param           pOutput     On input, values of dirichlet degrees
-         *                              of freedom. On output, the solution
-         *                              \f$x\f$.
+         *                              of freedom with initial guess on other values.
+         *                              On output, the solution \f$x\f$.
          * @param           pLocToGloMap    Local to global mapping.
          * @param           pDirForcing Precalculated Dirichlet forcing.
          */
@@ -113,14 +113,13 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
             bool vCG;
-            if (m_locToGloMap
-                = boost::dynamic_pointer_cast<AssemblyMapCG>(
-                                                                pLocToGloMap))
+            if ((m_locToGloMap = boost::dynamic_pointer_cast<AssemblyMapCG>(
+                     pLocToGloMap)))
             {
                 vCG = true;
             }
-            else if (m_locToGloMap
-                = boost::dynamic_pointer_cast<AssemblyMapDG>(pLocToGloMap))
+            else if ((m_locToGloMap = boost::dynamic_pointer_cast<
+                          AssemblyMapDG>(pLocToGloMap)))
             {
                 vCG = false;
             }
@@ -128,38 +127,38 @@ namespace Nektar
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
-            int nLocDofs  = pLocToGloMap->GetNumLocalCoeffs();
-
             int nDirTotal = nDirDofs;
+            
             expList->GetComm()->AllReduce(nDirTotal, LibUtilities::ReduceSum);
+            
+            Array<OneD, NekDouble> tmp(nGlobDofs);
 
             if(nDirTotal)
             {
                 // calculate the Dirichlet forcing
-                Array<OneD, NekDouble> global_tmp(nGlobDofs);
-                Array<OneD, NekDouble> offsetarray;
-
                 if(dirForcCalculated)
                 {
                     Vmath::Vsub(nGlobDofs, pInput.get(), 1,
                                 pDirForcing.get(), 1,
-                                global_tmp.get(), 1);
+                                tmp.get(), 1);
                 }
                 else
                 {
                     // Calculate the dirichlet forcing B_b (== X_b) and
                     // substract it from the rhs
                     expList->GeneralMatrixOp(
-                                    m_linSysKey,
-                                    pOutput, global_tmp, eGlobal);
+                        m_linSysKey, pOutput, tmp, eGlobal);
 
-                    Vmath::Vsub(nGlobDofs,  pInput.get(), 1,
-                                            global_tmp.get(), 1,
-                                            global_tmp.get(), 1);
+                    Vmath::Vsub(nGlobDofs, pInput.get(), 1,
+                                           tmp.get(),    1,
+                                           tmp.get(),    1);
                 }
                 if (vCG)
                 {
-                    SolveLinearSystem(nGlobDofs, global_tmp, pOutput, pLocToGloMap, nDirDofs);
+                    Array<OneD, NekDouble> out(nGlobDofs,0.0);
+                    // solve for perturbation from intiial guess in pOutput
+                    SolveLinearSystem(nGlobDofs, tmp, out, pLocToGloMap, nDirDofs);
+                    Vmath::Vadd(nGlobDofs,out,1,pOutput,1,out,1);
                 }
                 else
                 {
@@ -168,7 +167,8 @@ namespace Nektar
             }
             else
             {
-	      SolveLinearSystem(nGlobDofs, pInput, pOutput, pLocToGloMap);
+                Vmath::Vcopy(nGlobDofs, pInput, 1, tmp, 1);
+                SolveLinearSystem(nGlobDofs, tmp, pOutput, pLocToGloMap);
             }
         }
 
@@ -199,7 +199,9 @@ namespace Nektar
                 int nNonDir = nGlobal - nDir;
                 Array<OneD, NekDouble> robin_A(nGlobal, 0.0);
                 Array<OneD, NekDouble> robin_l(nLocal,  0.0);
-                NekVector<NekDouble> robin(nNonDir,robin_A + nDir, eWrapper);
+                Array<OneD, NekDouble> tmp;
+                NekVector<NekDouble> robin(nNonDir,
+                                           tmp = robin_A + nDir, eWrapper);
 
                 // Operation: p_A = A * d_A
                 // First map d_A to local solution

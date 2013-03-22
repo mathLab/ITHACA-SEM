@@ -81,7 +81,7 @@ namespace Nektar
             OpenStream();
             
             string      line, word;
-            int         nParam, nModes, nElements, nCurves, nCurveTypes;
+            int         nParam, nElements, nCurves;
             int         i, j, k, nodeCounter = 0;
             int         nComposite = 0;
             ElementType elType;
@@ -104,7 +104,10 @@ namespace Nektar
             m->expDim   = 0;
             m->spaceDim = 0;
             
-            cerr << "Start reading InputNek..." << endl;
+            if (m->verbose)
+            {
+                cout << "InputNek: Start reading file..." << endl;
+            }
             
             // -- Read in parameters.
 
@@ -123,10 +126,6 @@ namespace Nektar
                 getline(mshFile, line);
                 s.str(line);
                 s >> tmp1 >> tmp2;
-                if (tmp2 == "MODES")
-                {
-                    nModes = (int)boost::lexical_cast<double>(tmp1);
-                }
             }
             
             // -- Read in passive scalars (ignore)
@@ -386,13 +385,12 @@ namespace Nektar
                 }
                 
                 int nCurvedSides;
-                int faceId, elId, vid1, vid2, vid3;
+                int faceId, elId;
                 map<string,pair<NekCurve, string> >::iterator it;
                 HOSurfSet::iterator hoIt;
 
                 s.clear(); s.str(line);
                 s >> nCurvedSides;
-                int skip = 0;
                 
                 // Iterate over curved sides, and look up high-order surface
                 // information in the HOSurfSet, then map this onto faces.
@@ -1161,7 +1159,7 @@ namespace Nektar
         
         void HOSurf::Reflect()
         {
-            int n, i, j, cnt;
+            int i, j, cnt;
             int np = ((int)sqrt(8.0*surfVerts.size()+1.0)-1)/2;
             NodeSharedPtr* tmp = new NodeSharedPtr[np*np];
             

@@ -138,9 +138,9 @@ namespace Gs
      *                      global DOF on the process.
      * @param   pComm       Communication object used for inter-process
      *                      communication.
-     * @returns GSLib data structure containing mapping information.
+     * @return GSLib data structure containing mapping information.
      */
-    static gs_data* Init (  const Nektar::Array<OneD, long> pId,
+    static inline gs_data* Init (  const Nektar::Array<OneD, long> pId,
                             const LibUtilities::CommSharedPtr& pComm)
     {
 #ifdef NEKTAR_USE_MPI
@@ -151,7 +151,7 @@ namespace Gs
         LibUtilities::CommMpiSharedPtr vCommMpi = boost::dynamic_pointer_cast<LibUtilities::CommMpi> (pComm);
         ASSERTL1(vCommMpi, "Failed to cast MPI Comm object.");
         comm vComm;
-        vComm.c  = vCommMpi->GetComm();
+        MPI_Comm_dup(vCommMpi->GetComm(), &vComm.c);
         vComm.id = vCommMpi->GetRank();
         vComm.np = vCommMpi->GetSize();
         return nektar_gs_setup(&pId[0], pId.num_elements(), &vComm);
@@ -170,8 +170,8 @@ namespace Gs
      * -distributed dot products, for which the contributions of each DOF must
      * be included only once.
      */
-    static void Unique (    const Nektar::Array<OneD, long> pId,
-                            const LibUtilities::CommSharedPtr& pComm)
+    static inline void Unique(const Nektar::Array<OneD, long> pId,
+                              const LibUtilities::CommSharedPtr& pComm)
     {
 #ifdef NEKTAR_USE_MPI
         if (pComm->GetSize() == 1)
@@ -192,7 +192,7 @@ namespace Gs
     /**
      * @brief Deallocates the GSLib mapping data.
      */
-    static void Finalise (gs_data *pGsh)
+    static inline void Finalise (gs_data *pGsh)
     {
 #ifdef NEKTAR_USE_MPI
         if (pGsh)
@@ -208,7 +208,7 @@ namespace Gs
      *
      * The
      */
-    static void Gather(Nektar::Array<OneD, NekDouble> pU, gs_op pOp,
+    static inline void Gather(Nektar::Array<OneD, NekDouble> pU, gs_op pOp,
                        gs_data *pGsh, Nektar::Array<OneD, NekDouble> pBuffer
                                                         = NullNekDouble1DArray)
     {

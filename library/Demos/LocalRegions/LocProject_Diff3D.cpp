@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <math.h>
 
+#include <StdRegions/StdExpansion3D.h>
 #include <LocalRegions/HexExp.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
@@ -19,11 +20,11 @@ using namespace Nektar::SpatialDomains;
 
 /// Defines a solution which excites all modes in the Tet expansion.
 NekDouble Tet_sol(NekDouble x, NekDouble y, NekDouble z,
-            int order1, int order2, int order3);
+                  int order1, int order2, int order3);
 
 /// Derivative of the Tet expansion solution.
 NekDouble Tet_Dsol(NekDouble x, NekDouble y, NekDouble z,
-            int order1, int order2, int order3);
+                   int order1, int order2, int order3);
 
 /// Defines a solution which excites all modes in the Tet expansion.
 NekDouble Prism_sol(NekDouble x, NekDouble y, NekDouble z,
@@ -35,17 +36,17 @@ NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
 
 /// Defines a solution which excites all modes in the Hex expansion.
 NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
-            int order1, int order2, int order3,
-           LibUtilities::BasisType btype1,
-           LibUtilities::BasisType btype2,
-           LibUtilities::BasisType btype3);
+                  int order1, int order2, int order3,
+                  LibUtilities::BasisType btype1,
+                  LibUtilities::BasisType btype2,
+                  LibUtilities::BasisType btype3);
 
 /// Derivative of the Hex expansion solution.
 NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z,
-            int order1, int order2, int order3,
-           LibUtilities::BasisType btype1,
-           LibUtilities::BasisType btype2,
-           LibUtilities::BasisType btype3);
+                   int order1, int order2, int order3,
+                   LibUtilities::BasisType btype1,
+                   LibUtilities::BasisType btype2,
+                   LibUtilities::BasisType btype3);
 
 /// Creates a Hex geometry based on the command-line parameters.
 SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[]);
@@ -59,7 +60,7 @@ SpatialDomains::TetGeomSharedPtr CreateTetGeom(int argc, char *argv[]);
 /// modification to deal with exact solution. Return 1 if integer < 0
 static double  pow_loc(const double val, const int i)
 {
-  return (i < 0)? 1.0: pow(val,i);
+    return (i < 0)? 1.0: pow(val,i);
 }
 
 
@@ -72,7 +73,7 @@ int main(int argc, char *argv[]){
     LibUtilities::PointsType    Qtype1,Qtype2,Qtype3;
     LibUtilities::BasisType     btype1,btype2,btype3;
 
-    StdRegions::ExpansionType    regionshape;
+    LibUtilities::ShapeType    regionshape;
     StdRegions::StdExpansion *E;
     Array<OneD, NekDouble> x, y, z, sol, dx, dy, dz;
 
@@ -84,9 +85,9 @@ int main(int argc, char *argv[]){
 
         fprintf(stderr,"Where RegionShape is an integer value which "
                        "dictates the region shape:\n");
-        fprintf(stderr,"\t Tetrahedron   = 4\n");
-        fprintf(stderr,"\t Prism         = 6\n");
-        fprintf(stderr,"\t Hexahedron    = 7\n");
+        fprintf(stderr,"\t Tetrahedron   = 5\n");
+        fprintf(stderr,"\t Prism         = 7\n");
+        fprintf(stderr,"\t Hexahedron    = 8\n");
 
         fprintf(stderr,"Where type is an integer value which "
                        "dictates the basis as:\n");
@@ -105,12 +106,12 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
-    regionshape = (ExpansionType) atoi(argv[1]);
+    regionshape = (ShapeType) atoi(argv[1]);
 
     // Check to see if 3D region
-    if (regionshape != StdRegions::eTetrahedron &&
-        regionshape != StdRegions::ePrism       &&
-        regionshape != StdRegions::eHexahedron)
+    if (regionshape != LibUtilities::eTetrahedron &&
+        regionshape != LibUtilities::ePrism       &&
+        regionshape != LibUtilities::eHexahedron)
     {
         NEKERROR(ErrorUtil::efatal,"This shape is not a 3D region");
     }
@@ -126,68 +127,74 @@ int main(int argc, char *argv[]){
     // Check to see that correct Expansions are used
     switch(regionshape)
     {
-    case StdRegions::eTetrahedron:
+    case LibUtilities::eTetrahedron:
         if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
-                || (btype1 == eModified_B) || (btype1 == eModified_C))
+           || (btype1 == eModified_B) || (btype1 == eModified_C))
         {
-            NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B, "
-                                        "Ortho_C, Modified_B or Modified_C");
+            NEKERROR(ErrorUtil::efatal, 
+                     "Basis 1 cannot be of type Ortho_B, "
+                     "Ortho_C, Modified_B or Modified_C");
         }
         if((btype2 == eOrtho_A) || (btype2 == eOrtho_C)
-                || (btype2 == eModified_A) || (btype2 == eModified_C))
+           || (btype2 == eModified_A) || (btype2 == eModified_C))
         {
-            NEKERROR(ErrorUtil::efatal, "Basis 2 cannot be of type Ortho_A, "
-                                        "Ortho_C, Modified_A or Modified_C");
+            NEKERROR(ErrorUtil::efatal, 
+                     "Basis 2 cannot be of type Ortho_A, "
+                     "Ortho_C, Modified_A or Modified_C");
         }
         if((btype3 == eOrtho_A) || (btype3 == eOrtho_B)
-                || (btype3 == eModified_A) || (btype3 == eModified_B))
+           || (btype3 == eModified_A) || (btype3 == eModified_B))
         {
-            NEKERROR(ErrorUtil::efatal, "Basis 3 cannot be of type Ortho_A, "
-                                        "Ortho_B, Modified_A or Modified_B");
+            NEKERROR(ErrorUtil::efatal, 
+                     "Basis 3 cannot be of type Ortho_A, "
+                     "Ortho_B, Modified_A or Modified_B");
         }
         break;
-    case StdRegions::ePrism:
+    case LibUtilities::ePrism:
         if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
-                || (btype1 == eModified_B) || (btype1 == eModified_C))
+           || (btype1 == eModified_B) || (btype1 == eModified_C))
         {
             NEKERROR(ErrorUtil::efatal,
-                     "Basis 1 cannot be of type Ortho_B, Ortho_C, Modified_B "
-                     "or Modified_C");
+                     "Basis 1 cannot be of type Ortho_B, Ortho_C, "
+                     "Modified_B or Modified_C");
         }
         if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
-                || (btype2 == eModified_B) || (btype2 == eModified_C))
+           || (btype2 == eModified_B) || (btype2 == eModified_C))
         {
             NEKERROR(ErrorUtil::efatal,
-                     "Basis 2 cannot be of type Ortho_B, Ortho_C, Modified_B "
-                     "or Modified_C");
+                     "Basis 2 cannot be of type Ortho_B, Ortho_C, "
+                     "Modified_B or Modified_C");
         }
         if((btype3 == eOrtho_A) || (btype3 == eOrtho_C)
-                || (btype3 == eModified_A) || (btype3 == eModified_C))
+           || (btype3 == eModified_A) || (btype3 == eModified_C))
         {
             NEKERROR(ErrorUtil::efatal,
-                     "Basis 3 cannot be of type Ortho_A, Ortho_C, Modified_A "
-                     "or Modified_C");
+                     "Basis 3 cannot be of type Ortho_A, Ortho_C, "
+                     "Modified_A or Modified_C");
         }
         break;
-    case StdRegions::eHexahedron:
+    case LibUtilities::eHexahedron:
         if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
-                || (btype1 == eModified_B) || (btype1 == eModified_C))
+           || (btype1 == eModified_B) || (btype1 == eModified_C))
         {
             NEKERROR(ErrorUtil::efatal, "Basis 1 is for 2 or 3D expansions");
         }
         if((btype2 == eOrtho_B) || (btype2 == eOrtho_C)
-                || (btype2 == eModified_B) || (btype2 == eModified_C))
+           || (btype2 == eModified_B) || (btype2 == eModified_C))
         {
             NEKERROR(ErrorUtil::efatal, "Basis 2 is for 2 or 3D expansions");
         }
         if((btype3 == eOrtho_B) || (btype3 == eOrtho_C)
-                || (btype3 == eModified_B) || (btype3 == eModified_C))
+           || (btype3 == eModified_B) || (btype3 == eModified_C))
         {
             NEKERROR(ErrorUtil::efatal, "Basis 3 is for 2 or 3D expansions");
         }
         break;
+    default:
+        ASSERTL0(false, "Not a 3D expansion.");
+        break;
     }
-
+    
     order1 =   atoi(argv[5]);
     order2 =   atoi(argv[6]);
     order3 =   atoi(argv[7]);
@@ -211,7 +218,8 @@ int main(int argc, char *argv[]){
 
     if(btype2 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTetrahedron) {
+        if (regionshape == LibUtilities::eTetrahedron) 
+        {
             Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
         else
@@ -226,10 +234,11 @@ int main(int argc, char *argv[]){
 
     if(btype3 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTetrahedron) {
+        if (regionshape == LibUtilities::eTetrahedron) 
+        {
             Qtype3 = LibUtilities::eGaussRadauMAlpha2Beta0;
         }
-        else if (regionshape == StdRegions::ePrism)
+        else if (regionshape == LibUtilities::ePrism)
         {
             Qtype3 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
@@ -251,7 +260,7 @@ int main(int argc, char *argv[]){
 
     switch(regionshape)
     {
-    case StdRegions::eTetrahedron:
+    case LibUtilities::eTetrahedron:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -274,7 +283,7 @@ int main(int argc, char *argv[]){
             //----------------------------------------------
         }
         break;
-    case StdRegions::ePrism:
+    case LibUtilities::ePrism:
         {
             const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
             const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
@@ -297,32 +306,35 @@ int main(int argc, char *argv[]){
             //----------------------------------------------
         }
         break;
-    case StdRegions::eHexahedron:
-        {
-            const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
-            const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
-            const LibUtilities::PointsKey Pkey3(nq3,Qtype3);
-            const LibUtilities::BasisKey Bkey1(btype1,order1,Pkey1);
-            const LibUtilities::BasisKey Bkey2(btype2,order2,Pkey2);
-            const LibUtilities::BasisKey Bkey3(btype3,order3,Pkey3);
-
-            SpatialDomains::HexGeomSharedPtr geom = CreateHexGeom(argc, argv);
-            E = new LocalRegions::HexExp(Bkey1, Bkey2, Bkey3, geom);
-
-            E->GetCoords(x,y,z);
-
-            //----------------------------------------------
-            // Define solution to be projected
-            for(i = 0; i < nq1*nq2*nq3; ++i)
+        case LibUtilities::eHexahedron:
             {
-                sol[i]  = Hex_sol(x[i], y[i], z[i], order1, order2, order3,
-                                  btype1, btype2, btype3);
+                const LibUtilities::PointsKey Pkey1(nq1,Qtype1);
+                const LibUtilities::PointsKey Pkey2(nq2,Qtype2);
+                const LibUtilities::PointsKey Pkey3(nq3,Qtype3);
+                const LibUtilities::BasisKey Bkey1(btype1,order1,Pkey1);
+                const LibUtilities::BasisKey Bkey2(btype2,order2,Pkey2);
+                const LibUtilities::BasisKey Bkey3(btype3,order3,Pkey3);
+                
+                SpatialDomains::HexGeomSharedPtr geom = CreateHexGeom(argc, argv);
+                E = new LocalRegions::HexExp(Bkey1, Bkey2, Bkey3, geom);
+                
+                E->GetCoords(x,y,z);
+                
+                //----------------------------------------------
+                // Define solution to be projected
+                for(i = 0; i < nq1*nq2*nq3; ++i)
+                {
+                    sol[i]  = Hex_sol(x[i], y[i], z[i], order1, order2, order3,
+                                      btype1, btype2, btype3);
+                }
+                //---------------------------------------------
             }
-            //---------------------------------------------
-        }
+            break;
+    default:
+        ASSERTL0(false, "Not a 3D expansion.");
         break;
     }
-
+    
     //---------------------------------------------
     // Evaluate derivative of solution, add together and put in sol
     E->PhysDeriv(sol,dx,dy,dz);
@@ -344,7 +356,7 @@ int main(int argc, char *argv[]){
     // Define exact solution of differential
     switch(regionshape)
     {
-    case StdRegions::eTetrahedron:
+        case LibUtilities::eTetrahedron:
         {
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
@@ -352,7 +364,7 @@ int main(int argc, char *argv[]){
             }
         }
         break;
-    case StdRegions::ePrism:
+        case LibUtilities::ePrism:
         {
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
@@ -360,7 +372,7 @@ int main(int argc, char *argv[]){
             }
         }
         break;
-    case StdRegions::eHexahedron:
+        case LibUtilities::eHexahedron:
         {
             for(i = 0; i < nq1*nq2*nq3; ++i)
             {
@@ -369,6 +381,9 @@ int main(int argc, char *argv[]){
             }
         }
         break;
+        default:
+            ASSERTL0(false, "Not a 3D expansion.");
+            break;
     }
     //--------------------------------------------
 
@@ -458,7 +473,7 @@ NekDouble Hex_sol(NekDouble x, NekDouble y, NekDouble z,
 
 
 NekDouble Tet_Dsol(NekDouble x, NekDouble y, NekDouble z,
-            int order1, int order2, int order3){
+                   int order1, int order2, int order3){
     int    l,k,m;
     NekDouble sol = 0;
 
@@ -502,10 +517,10 @@ NekDouble Prism_Dsol(NekDouble x, NekDouble y, NekDouble z,
 
 
 NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z,
-            int order1, int order2, int order3,
-           LibUtilities::BasisType btype1,
-           LibUtilities::BasisType btype2,
-           LibUtilities::BasisType btype3)
+                   int order1, int order2, int order3,
+                   LibUtilities::BasisType btype1,
+                   LibUtilities::BasisType btype2,
+                   LibUtilities::BasisType btype3)
 {
     int i,j,k;
     NekDouble sol = 0.0;
@@ -525,19 +540,19 @@ NekDouble Hex_Dsol(NekDouble x, NekDouble y, NekDouble z,
             for (k = 0; k < Nz; ++k)
             {
                 a  = i*(Fx ? M_PI*(cos(M_PI*i*x) - sin(M_PI*i*x))
-                           : pow_loc(x,i-1));
+                        : pow_loc(x,i-1));
                 a *= (Fy ? (sin(M_PI*j*y) + cos(M_PI*j*y)) : pow_loc(y,j));
                 a *= (Fz ? (sin(M_PI*k*z) + cos(M_PI*k*z)) : pow_loc(z,k));
                 sol += a;
                 a  = (Fx ? (sin(M_PI*i*x) + cos(M_PI*i*x)) : pow_loc(x,i));
                 a *= j*(Fy ? M_PI*(cos(M_PI*j*y) - sin(M_PI*j*y))
-                           : pow_loc(y,j-1));
+                        : pow_loc(y,j-1));
                 a *= (Fz ? (sin(M_PI*k*z) + cos(M_PI*k*z)) : pow_loc(z,k));
                 sol += a;
                 a  = (Fx ? (sin(M_PI*i*x) + cos(M_PI*i*x)) : pow_loc(x,i));
                 a *= (Fy ? (sin(M_PI*j*y) + cos(M_PI*j*y)) : pow_loc(y,j));
                 a *= k*(Fz ? M_PI*(cos(M_PI*k*z) - sin(M_PI*k*z))
-                           : pow_loc(z,k-1));
+                        : pow_loc(z,k-1));
                 sol += a;
             }
         }
@@ -576,8 +591,8 @@ SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[])
 
     for( int i = 0; i < nVerts; ++i ) {
         verts[i] = MemoryManager<VertexComponent>
-                            ::AllocateSharedPtr( three,  i,   point[i][0],
-                                                 point[i][1], point[i][2] );
+            ::AllocateSharedPtr( three,  i,   point[i][0],
+                                 point[i][1], point[i][2] );
     }
 
     // /////////////////////////////////////////////////////////////////////
@@ -622,11 +637,11 @@ SpatialDomains::HexGeomSharedPtr CreateHexGeom(int argc, char *argv[])
             eorientArray[j] = isEdgeFlipped[i][j]  ?  eBackwards  :  eForwards;
         }
         faces[i] = MemoryManager<QuadGeom>
-                            ::AllocateSharedPtr( i, edgeArray, eorientArray);
+            ::AllocateSharedPtr( i, edgeArray, eorientArray);
     }
 
     SpatialDomains::HexGeomSharedPtr geom =
-            MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
+        MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr(faces);
     geom->SetOwnData();
 
     return geom;
@@ -686,8 +701,6 @@ SpatialDomains::PrismGeomSharedPtr CreatePrismGeom(int argc, char *argv[])
     
     // ////////////////////////////////////////////////////////////////////
     // Set up Prism faces
-    const int nQFaces = 3;
-    const int nTFaces = 2;
     const int nFaces  = 5;
     const int edgeConnectivity[][4] = {
         {0,1,2,3}, 
@@ -765,8 +778,8 @@ SpatialDomains::TetGeomSharedPtr CreateTetGeom(int argc, char *argv[])
     VertexComponentSharedPtr verts[4];
     const int three = 3;
     for(int i=0; i < nVerts; ++i){
-        verts[i] =  MemoryManager<VertexComponent>::
-        AllocateSharedPtr( three, i, point[i][0], point[i][1], point[i][2] );
+        verts[i] =  MemoryManager<VertexComponent>
+            ::AllocateSharedPtr(three,i,point[i][0],point[i][1],point[i][2]);
     }
 
     // /////////////////////////////////////////////////////////////////////
@@ -785,7 +798,7 @@ SpatialDomains::TetGeomSharedPtr CreateTetGeom(int argc, char *argv[])
             vertsArray[j] = verts[vertexConnectivity[i][j]];
         }
         edges[i] = MemoryManager<SegGeom>
-                                    ::AllocateSharedPtr(i, three, vertsArray);
+            ::AllocateSharedPtr(i, three, vertsArray);
     }
 
     // //////////////////////////////////////////////////////////////
@@ -808,11 +821,11 @@ SpatialDomains::TetGeomSharedPtr CreateTetGeom(int argc, char *argv[])
             eorientArray[j] = isEdgeFlipped[i][j] ? eBackwards : eForwards;
         }
         faces[i] = MemoryManager<TriGeom>
-                            ::AllocateSharedPtr(i, edgeArray, eorientArray);
+            ::AllocateSharedPtr(i, edgeArray, eorientArray);
     }
 
     SpatialDomains::TetGeomSharedPtr geom =
-            MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(faces);
+        MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(faces);
     geom->SetOwnData();
 
     return geom;

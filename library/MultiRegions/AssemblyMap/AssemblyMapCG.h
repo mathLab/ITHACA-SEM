@@ -72,7 +72,11 @@ namespace Nektar
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
-
+            MULTI_REGIONS_EXPORT map<int, vector<pair<int, int> > > 
+                &GetExtraDirDofs()
+            {
+                return m_extraDirDofs;
+            }
 
         protected:
             /// Integer map of local coeffs to global space
@@ -91,14 +95,10 @@ namespace Nektar
             int m_numNonDirEdgeModes;
             /// Number of non Dirichlet face modes
             int m_numNonDirFaceModes;
-
+            /// Maximum static condensation level.
             int m_maxStaticCondLevel;
-
-
-
-
-
-
+            map<int, vector<pair<int, int> > > m_extraDirDofs;
+            
             void SetUpUniversalC0ContMap(const ExpList &locExp);
 
             /// Calculate the bandwith of the full matrix system.
@@ -120,37 +120,41 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual const Array<OneD, NekDouble>& v_GetLocalToGlobalSign() const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_LocalToGlobal(
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_LocalToGlobal(
+            MULTI_REGIONS_EXPORT virtual void v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_GlobalToLocal(
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_GlobalToLocal(
+            MULTI_REGIONS_EXPORT virtual void v_GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_Assemble(
+            MULTI_REGIONS_EXPORT virtual void v_Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_Assemble(
+            MULTI_REGIONS_EXPORT virtual void v_Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
+            MULTI_REGIONS_EXPORT virtual void v_UniversalAssemble(
                           Array<OneD,     NekDouble>& pGlobal) const;
 
-            MULTI_REGIONS_EXPORT virtual const void v_UniversalAssemble(
+            MULTI_REGIONS_EXPORT virtual void v_UniversalAssemble(
                           NekVector<      NekDouble>& pGlobal) const;
 
-            MULTI_REGIONS_EXPORT virtual const int v_GetFullSystemBandWidth() const;
+            MULTI_REGIONS_EXPORT virtual void v_UniversalAssemble(
+                Array<OneD,     NekDouble>& pGlobal,
+                int offset) const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetFullSystemBandWidth() const;
 
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirVertexModes() const;
 

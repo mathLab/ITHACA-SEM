@@ -41,7 +41,7 @@ using namespace Nektar::SolverUtils;
 
 int main(int argc, char *argv[])
 {
-    // Create session reader.
+    // Create session reader
     LibUtilities::SessionReaderSharedPtr session;
     session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
@@ -50,49 +50,51 @@ int main(int argc, char *argv[])
 
     EquationSystemSharedPtr equ;
 
-    // Record start time.
+    // Record start time
     time(&starttime);
 
-    // Create instance of module to solve the equation specified in the session.
+    // Create instance of module to solve the equation specified in the session
     try
     {
         equ = GetEquationSystemFactory().CreateInstance(
-            session->GetSolverInfo("EQTYPE"), session);
+                                session->GetSolverInfo("EQTYPE"), session);
     }
     catch (int e)
     {
         ASSERTL0(e == -1, "No such solver class defined.");
     }
 
-    // Print a summary of solver and problem parameters and initialise the
-    // solver.
+    // Print a summary of solver/problem parameters
     equ->PrintSummary(cout);
+    
+    // Initialise the problem
     equ->DoInitialise();
 
-    // Solve the problem.
+    // Solve the problem
     equ->DoSolve();
 
-    // Record end time.
+    // Record end time
     time(&endtime);
-    CPUtime = (1.0/60.0/60.0)*difftime(endtime,starttime);
+    
+    // Compute the computational time in hours
+    CPUtime = difftime(endtime, starttime);
 
     // Write output to .fld file
     equ->Output();
 
-    // Evaluate and output computation time and solution accuracy.
-    // The specific format of the error output is essential for the
-    // regression tests to work.
+    // Evaluate and output computation time and solution accuracy
     if (session->GetComm()->GetRank() == 0)
     {
         cout << "-------------------------------------------" << endl;
-        cout << "Total Computation Time = " << CPUtime << " hr." << endl;
+        cout << "Total Computation Time = " << CPUtime << "s" << endl;
+        cout << "-------------------------------------------" << endl;
     }
     
     for(int i = 0; i < equ->GetNvariables(); ++i)
     {
-        // Get Exact solution
-        Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(),0.0);
-        equ->EvaluateExactSolution(i,exactsoln,equ->GetFinalTime());
+        // Get exact solution
+        Array<OneD, NekDouble> exactsoln(equ->GetTotPoints(), 0.0);
+        equ->EvaluateExactSolution(i, exactsoln, equ->GetFinalTime());
         
         NekDouble l2 = equ->L2Error  (i, exactsoln);
         NekDouble li = equ->LinfError(i, exactsoln);

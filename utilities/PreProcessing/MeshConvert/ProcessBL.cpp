@@ -73,7 +73,7 @@ namespace Nektar
             config["rho"]        = ConfigOption(false, "1.205",
                 "Density (kg/m^3).");
             config["mu"]         = ConfigOption(false, "1.82e-5",
-                "Dynamic viscosity (kg\(m*s)).");
+                "Dynamic viscosity (kg/(m*s)).");
 	    config["TetsOff"]    = ConfigOption(true,  "0",
                 "Use this option to turn off splitting prisms into tetrahedra");
         }
@@ -85,6 +85,12 @@ namespace Nektar
         
         void ProcessBL::Process()
         {
+            if (m->verbose)
+            {
+                cout << "ProcessBL: Refining prismatic boundary layer..."
+                     << endl;
+            }
+
 	    // Initialisation of parameters and settings.
 
             // Physical problem parameters.
@@ -660,21 +666,21 @@ namespace Nektar
                                 // If this face matches a triple denoting a
                                 // split quad face, add the face to the
                                 // expansion list.
-                                if (fid == 0 && (
-                                        faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 2  ||
-                                        faceNodes[0] == 0 && faceNodes[1] == 2 && faceNodes[2] == 3  ||
-                                        faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 3  ||
-                                        faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 3) ||
-                                    fid == 2 && (
-                                        faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 5  ||
-                                        faceNodes[0] == 1 && faceNodes[1] == 4 && faceNodes[2] == 5  ||
-                                        faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 4  ||
-                                        faceNodes[0] == 2 && faceNodes[1] == 4 && faceNodes[2] == 5) ||
-                                    fid == 4 && (
-                                        faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 5 ||
-                                        faceNodes[0] == 0 && faceNodes[1] == 4 && faceNodes[2] == 5 ||
-                                        faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 4 ||
-                                        faceNodes[0] == 3 && faceNodes[1] == 4 && faceNodes[2] == 5))
+                                if ((fid == 0 && (
+                                        (faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 2)   ||
+                                        (faceNodes[0] == 0 && faceNodes[1] == 2 && faceNodes[2] == 3)   ||
+                                        (faceNodes[0] == 0 && faceNodes[1] == 1 && faceNodes[2] == 3)   ||
+                                        (faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 3))) ||
+                                    (fid == 2 && (
+                                        (faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 5)   ||
+                                        (faceNodes[0] == 1 && faceNodes[1] == 4 && faceNodes[2] == 5)   ||
+                                        (faceNodes[0] == 1 && faceNodes[1] == 2 && faceNodes[2] == 4)   ||
+                                        (faceNodes[0] == 2 && faceNodes[1] == 4 && faceNodes[2] == 5))) ||
+                                    (fid == 4 && (
+                                        (faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 5) ||
+                                        (faceNodes[0] == 0 && faceNodes[1] == 4 && faceNodes[2] == 5) ||
+                                        (faceNodes[0] == 0 && faceNodes[1] == 3 && faceNodes[2] == 4) ||
+                                        (faceNodes[0] == 3 && faceNodes[1] == 4 && faceNodes[2] == 5))))
                                 {
                                     triNodeList[0] = nodeList[mapPrism[tmp[0]]];
                                     triNodeList[1] = nodeList[mapPrism[tmp[1]]];

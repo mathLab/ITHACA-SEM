@@ -74,6 +74,8 @@ namespace Nektar
             SpatialDomains::VertexComponentVector   m_historyPoints;
             unsigned int                            m_index;
             unsigned int                            m_outputFrequency;
+            unsigned int                            m_outputPlane; // plane to take history point from if using a homogeneous1D expansion
+            bool                                    m_isHomogeneous1D;
             std::string                             m_outputFile;
             std::ofstream                           m_outputStream;
             std::stringstream                       m_historyPointStream;

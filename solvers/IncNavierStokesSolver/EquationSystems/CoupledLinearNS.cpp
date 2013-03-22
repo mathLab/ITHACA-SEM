@@ -40,10 +40,10 @@
 
 namespace Nektar
 {
-
+    
     string CoupledLinearNS::className = SolverUtils::GetEquationSystemFactory().RegisterCreatorFunction("CoupledLinearisedNS", CoupledLinearNS::create);
-
-
+    
+    
     /**
      *  @class CoupledLinearNS 
      *
@@ -52,9 +52,9 @@ namespace Nektar
      * coupled matrix system
      */ 
     CoupledLinearNS::CoupledLinearNS(const LibUtilities::SessionReaderSharedPtr &pSession):
+        IncNavierStokes(pSession),
         m_singleMode(false),
-        m_zeroMode(false),
-        IncNavierStokes(pSession)
+        m_zeroMode(false)
     {
     }
     
@@ -65,12 +65,10 @@ namespace Nektar
         
         int  i;
         int  expdim = m_graph->GetMeshDimension();
-        int  n_exp  = m_fields[m_velocity[0]]->GetNumElmts();
-        int  nvel   = m_velocity.num_elements();
-
+        
         // Get Expansion list for orthogonal expansion at p-2
         const SpatialDomains::ExpansionMap &pressure_exp = GenPressureExp(m_graph->GetExpansions("u"));
-
+        
         m_nConvectiveFields = m_fields.num_elements();
         if(NoCaseStringCompare(m_boundaryConditions->GetVariable(m_nConvectiveFields-1),"p") == 0)
         {
@@ -80,17 +78,17 @@ namespace Nektar
         if(expdim == 2)
         {
             int nz; 
-
+            
             if(m_HomogeneousType == eHomogeneous1D)
             {
                 ASSERTL0(m_fields.num_elements() > 2,"Expect to have three at least three components of velocity variables");
                 LibUtilities::BasisKey Homo1DKey = m_fields[0]->GetHomogeneousBasis()->GetBasisKey();
                 
                 m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_session, Homo1DKey, m_LhomZ, m_useFFT,m_dealiasing, pressure_exp);
-
+                
                 ASSERTL1(m_npointsZ%2==0,"Non binary number of planes have been specified");
                 nz = m_npointsZ/2;                
-
+                
             }
             else
             {
@@ -104,13 +102,13 @@ namespace Nektar
             {
                 velocity[i] = m_fields[m_velocity[i]];
             }
-
+            
             // Set up Array of mappings
             m_locToGloMap = Array<OneD, CoupledLocalToGlobalC0ContMapSharedPtr> (nz);
             
             if(m_session->DefinesSolverInfo("SingleMode"))
             {
-
+                
                 ASSERTL0(nz <=2 ,"For single mode calculation can only have  nz <= 2");
                 m_singleMode = true;
                 if(m_session->DefinesSolverInfo("BetaZero"))
@@ -149,7 +147,7 @@ namespace Nektar
             ASSERTL0(false,"Exp dimension not recognised");
         }
     }
-
+    
     /**
      * Set up a coupled linearised Naviers-Stokes solve. Primarily a
      * wrapper fuction around the full mode by mode version of
@@ -162,9 +160,9 @@ namespace Nektar
         int nz;
         if(m_singleMode)
         {
-
+            
             NekDouble lambda_imag; 
-
+            
             // load imaginary componont of any potential shift
             // Probably should be called from DriverArpack but not yet
             // clear how to do this
@@ -213,10 +211,10 @@ namespace Nektar
                 SetUpCoupledMatrix(lam,Advfield,IsLinearNSEquation,n,m_mat[n],m_locToGloMap[n]);
             }
         }
-    
+        
     }
-
-
+    
+    
     /**
      * Set up a coupled linearised Naviers-Stokes solve in the
      * following manner: 
@@ -352,14 +350,13 @@ namespace Nektar
      * matrix equation to solve for \f${\bf v}_{int}\f$.
      *
      */
-
+    
     void CoupledLinearNS::SetUpCoupledMatrix(const NekDouble lambda,  const Array< OneD, Array< OneD, NekDouble > > &Advfield, bool IsLinearNSEquation,const int HomogeneousMode, CoupledSolverMatrices &mat, CoupledLocalToGlobalC0ContMapSharedPtr &locToGloMap, const NekDouble lambda_imag)
     {
         int  n,i,j,k,eid;
-        int  expdim = m_graph->GetMeshDimension();
         int  nel  = m_fields[m_velocity[0]]->GetNumElmts();
         int  nvel   = m_velocity.num_elements();
-
+        
         // if Advfield is defined can assume it is an Oseen or LinearNS equation
         bool AddAdvectionTerms = (Advfield ==  NullNekDoubleArrayofArray)? false: true; 
         //bool AddAdvectionTerms = true; // Temporary debugging trip
@@ -375,7 +372,7 @@ namespace Nektar
         int rows, cols;
         NekDouble zero = 0.0;
         Array<OneD, unsigned int> bmap,imap; 
-
+        
         Array<OneD,unsigned int> nsize_bndry   (nel);
         Array<OneD,unsigned int> nsize_bndry_p1(nel);
         Array<OneD,unsigned int> nsize_int     (nel);
@@ -383,7 +380,7 @@ namespace Nektar
         Array<OneD,unsigned int> nsize_p_m1    (nel);
         
         int nz_loc;
-
+        
         if(HomogeneousMode) // Homogeneous mode flag
         {
             nz_loc = 2;
@@ -410,32 +407,32 @@ namespace Nektar
             nsize_p[n] = m_pressure->GetExp(eid)->GetNcoeffs()*nz_loc;
             nsize_p_m1[n] = nsize_p[n]-nz_loc;
         }
-            
+        
         MatrixStorage blkmatStorage = eDIAGONAL;
         DNekScalBlkMatSharedPtr pAh = MemoryManager<DNekScalBlkMat>
-            ::AllocateSharedPtr(nsize_bndry_p1,nsize_bndry_p1,blkmatStorage);
+        ::AllocateSharedPtr(nsize_bndry_p1,nsize_bndry_p1,blkmatStorage);
         mat.m_BCinv = MemoryManager<DNekScalBlkMat>
-            ::AllocateSharedPtr(nsize_bndry,nsize_int,blkmatStorage);
+        ::AllocateSharedPtr(nsize_bndry,nsize_int,blkmatStorage);
         mat.m_Btilde = MemoryManager<DNekScalBlkMat>
-            ::AllocateSharedPtr(nsize_bndry,nsize_int,blkmatStorage);
+        ::AllocateSharedPtr(nsize_bndry,nsize_int,blkmatStorage);
         mat.m_Cinv = MemoryManager<DNekScalBlkMat>
-            ::AllocateSharedPtr(nsize_int,nsize_int,blkmatStorage);
+        ::AllocateSharedPtr(nsize_int,nsize_int,blkmatStorage);
         
         mat.m_D_bnd = MemoryManager<DNekScalBlkMat>
-            ::AllocateSharedPtr(nsize_p,nsize_bndry,blkmatStorage);
-
+        ::AllocateSharedPtr(nsize_p,nsize_bndry,blkmatStorage);
+        
         mat.m_D_int = MemoryManager<DNekScalBlkMat>
-            ::AllocateSharedPtr(nsize_p,nsize_int,blkmatStorage);
-
+        ::AllocateSharedPtr(nsize_p,nsize_int,blkmatStorage);
+        
         // Final level static condensation matrices. 
         DNekScalBlkMatSharedPtr pBh = MemoryManager<DNekScalBlkMat>
-            ::AllocateSharedPtr(nsize_bndry_p1,nsize_p_m1,blkmatStorage);
+        ::AllocateSharedPtr(nsize_bndry_p1,nsize_p_m1,blkmatStorage);
         DNekScalBlkMatSharedPtr pCh = MemoryManager<DNekScalBlkMat>
-            ::AllocateSharedPtr(nsize_p_m1,nsize_bndry_p1,blkmatStorage);
+        ::AllocateSharedPtr(nsize_p_m1,nsize_bndry_p1,blkmatStorage);
         DNekScalBlkMatSharedPtr pDh = MemoryManager<DNekScalBlkMat>
-            ::AllocateSharedPtr(nsize_p_m1,nsize_p_m1,blkmatStorage);
-
-
+        ::AllocateSharedPtr(nsize_p_m1,nsize_p_m1,blkmatStorage);
+        
+        
         Timer timer;
         timer.Start();
         for(n = 0; n < nel; ++n)
@@ -463,19 +460,19 @@ namespace Nektar
             StdRegions::ConstFactorMap factors;
             factors[StdRegions::eFactorLambda] = lambda/m_kinvis;
             LocalRegions::MatrixKey helmkey(StdRegions::eHelmholtz,
-                                            locExp->DetExpansionType(),
+                                            locExp->DetShapeType(),
                                             *locExp,
                                             factors);
-
-
+            
+            
             int ncoeffs = m_fields[m_velocity[0]]->GetExp(eid)->GetNcoeffs();
             int nbmap = bmap.num_elements();
             int nimap = imap.num_elements(); 
-
+            
             Array<OneD, NekDouble> coeffs  = m_fields[m_velocity[0]]->GetExp(eid)->UpdateCoeffs();
             Array<OneD, NekDouble> phys    = m_fields[m_velocity[0]]->GetExp(eid)->UpdatePhys();
             int psize   = m_pressure->GetExp(eid)->GetNcoeffs();
-
+            
             Array<OneD, NekDouble> deriv   = m_pressure->GetExp(eid)->UpdatePhys();
             Array<OneD, NekDouble> pcoeffs = m_pressure->GetExp(eid)->UpdateCoeffs();
             
@@ -531,7 +528,7 @@ namespace Nektar
                         }
                     }
                 }
-
+                
                 
                 // Loop over pressure space and construct boundary block matrices.         
                 for(i = 0; i < bmap.num_elements(); ++i)
@@ -540,7 +537,7 @@ namespace Nektar
                     Vmath::Zero(ncoeffs,coeffs,1);
                     coeffs[bmap[i]] = 1.0;
                     m_fields[m_velocity[0]]->GetExp(eid)->BwdTrans(coeffs,phys);
-                
+                    
                     // Differentiation & Inner product wrt base. 
                     for(j = 0; j < nvel; ++j)
                     {
@@ -549,7 +546,7 @@ namespace Nektar
                             NekDouble beta =  -2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1);
-
+                            
                             m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                             
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
@@ -560,13 +557,13 @@ namespace Nektar
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dbnd->GetRawPtr() + 
                                         ((nz_loc*j)*bmap.num_elements()+i)*nsize_p[n]+psize,1);
-
+                            
                         }
                         else
                         {
                             if(j < 2) // required for mean mode of homogeneous expansion 
                             {
-		  		locExp->PhysDeriv(MultiRegions::DirCartesianMap[j],phys,deriv);		
+                                locExp->PhysDeriv(MultiRegions::DirCartesianMap[j],phys,deriv);		
                                 m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                                 // copy into column major storage. 
                                 for(k = 0; k < nz_loc; ++k)
@@ -579,7 +576,7 @@ namespace Nektar
                         }
                     }
                 }
-            
+                
                 for(i = 0; i < imap.num_elements(); ++i)
                 {
                     // Fill element with mode
@@ -595,9 +592,9 @@ namespace Nektar
                             NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
                             
                             Vmath::Smul(m_fields[m_velocity[0]]->GetExp(eid)->GetTotPoints(), beta, phys,1,deriv,1); 
-
+                            
                             m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
-
+                            
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dint->GetRawPtr() + 
                                         ((nz_loc*j+1)*imap.num_elements()+i)*nsize_p[n],1);
@@ -616,7 +613,7 @@ namespace Nektar
                                 locExp->PhysDeriv(MultiRegions::DirCartesianMap[j],phys,deriv);
                                 
                                 m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
-
+                                
                                 // copy into column major storage. 
                                 for(k = 0; k < nz_loc; ++k)
                                 {
@@ -641,15 +638,15 @@ namespace Nektar
                 Array<OneD, const NekDouble> HelmMat_data = HelmMat.GetOwnedMatrix()->GetPtr();
                 NekDouble HelmMatScale = HelmMat.Scale();
                 int HelmMatRows = HelmMat.GetRows();
-
+                
                 if((lambda_imag != NekConstants::kNekUnsetDouble)&&(nz_loc == 2))
                 {
                     LocalRegions::MatrixKey masskey(StdRegions::eMass,
-                                                    locExp->DetExpansionType(),
+                                                    locExp->DetShapeType(),
                                                     *locExp);
                     MassMat = boost::dynamic_pointer_cast<LocalRegions::Expansion>(locExp)->GetLocMatrix(masskey);
                 }
-
+                
                 Array<OneD, NekDouble> Advtmp;
                 Array<OneD, Array<OneD, NekDouble> > AdvDeriv(nvel*nvel);
                 // Use ExpList phys array for temporaary storage
@@ -685,8 +682,8 @@ namespace Nektar
                         }
                     }
                 }
-
-
+                
+                
                 for(i = 0; i < nbmap; ++i)
                 {
                     
@@ -717,27 +714,27 @@ namespace Nektar
                             {
                                 Ah_data[i+2*k*nbmap + (j+(2*k+1)*nbmap)*AhRows] -= lambda_imag*(*MassMat)(bmap[i],bmap[j]);
                             }
-
+                            
                             for(j = 0; j < nbmap; ++j)
                             {
                                 Ah_data[i+(2*k+1)*nbmap + (j+2*k*nbmap)*AhRows] += lambda_imag*(*MassMat)(bmap[i],bmap[j]);
                             }
-
+                            
                             for(j = 0; j < nimap; ++j)
                             {
                                 B_data[i+2*k*nbmap + (j+(2*k+1)*nimap)*nbndry] -= lambda_imag*(*MassMat)(bmap[i],imap[j]);
                             }
-
+                            
                             for(j = 0; j < nimap; ++j)
                             {
                                 B_data[i+(2*k+1)*nbmap + (j+2*k*nimap)*nbndry] += lambda_imag*(*MassMat)(bmap[i],imap[j]);
                             }
-
+                            
                         }
                     }
-
-
-
+                    
+                    
+                    
                     for(k = 0; k < nvel; ++k)
                     {
                         if((nz_loc == 2)&&(k == 2)) // handle d/dz derivative
@@ -746,42 +743,42 @@ namespace Nektar
                             
                             // Real Component
                             Vmath::Smul(npoints,beta,phys,1,deriv,1);
-
+                            
                             m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dbnd->GetRawPtr() + 
                                         ((nz_loc*k+1)*bmap.num_elements()+i)*nsize_p[n],1);
-
+                            
                             // Imaginary Component
                             Vmath::Neg(psize,pcoeffs,1);
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dbnd->GetRawPtr() + 
                                         ((nz_loc*k)*bmap.num_elements()+i)*nsize_p[n]+psize,1);
-
+                            
                             // now do advection terms
                             Vmath::Vmul(npoints, 
                                         Advtmp = Advfield[k] + phys_offset,
                                         1,deriv,1,tmpphys,1);
-
+                            
                             locExp->IProductWRTBase(tmpphys,coeffs);
-
-
+                            
+                            
                             // real contribution
                             for(nv = 0; nv < nvel; ++nv)
                             {
                                 for(j = 0; j < nbmap; ++j)
                                 {
                                     Ah_data[j+2*nv*nbmap + (i+(2*nv+1)*nbmap)*AhRows] +=
-                                        coeffs[bmap[j]];
+                                    coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
                                     C_data[i+(2*nv+1)*nbmap + (j+2*nv*nimap)*nbndry] += 
-                                        coeffs[imap[j]];
+                                    coeffs[imap[j]];
                                 }
                             }
-
+                            
                             Vmath::Neg(ncoeffs,coeffs,1);
                             // imaginary contribution
                             for(nv = 0; nv < nvel; ++nv)
@@ -789,13 +786,13 @@ namespace Nektar
                                 for(j = 0; j < nbmap; ++j)
                                 {
                                     Ah_data[j+(2*nv+1)*nbmap + (i+2*nv*nbmap)*AhRows] +=
-                                        coeffs[bmap[j]];
+                                    coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
                                     C_data[i+2*nv*nbmap + (j+(2*nv+1)*nimap)*nbndry] += 
-                                        coeffs[imap[j]];
+                                    coeffs[imap[j]];
                                 }
                             }
                         }
@@ -815,16 +812,16 @@ namespace Nektar
                                     for(j = 0; j < nbmap; ++j)
                                     {
                                         Ah_data[j+nv*nbmap + (i+nv*nbmap)*AhRows] +=
-                                            coeffs[bmap[j]];
+                                        coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
                                         C_data[i+nv*nbmap + (j+nv*nimap)*nbndry] += 
-                                            coeffs[imap[j]];
+                                        coeffs[imap[j]];
                                     }
                                 }
-
+                                
                                 // copy into column major storage. 
                                 m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
                                 for(j = 0; j < nz_loc; ++j)
@@ -835,7 +832,7 @@ namespace Nektar
                                 }
                             }
                         }
-
+                        
                         if(IsLinearNSEquation)
                         {
                             for(nv = 0; nv < nvel; ++nv)
@@ -851,23 +848,23 @@ namespace Nektar
                                     for(j = 0; j < nbmap; ++j)
                                     {
                                         Ah_data[j+(k*nz_loc+n1)*nbmap + 
-                                                 (i+(nv*nz_loc+n1)*nbmap)*AhRows] +=
-                                                coeffs[bmap[j]];
+                                        (i+(nv*nz_loc+n1)*nbmap)*AhRows] +=
+                                        coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
                                         C_data[i+(nv*nz_loc+n1)*nbmap + 
-                                               (j+(k*nz_loc+n1)*nimap)*nbndry] += 
-                                            coeffs[imap[j]];
+                                        (j+(k*nz_loc+n1)*nimap)*nbndry] += 
+                                        coeffs[imap[j]];
                                     }
                                 }
                             }                            
                         }
                     }
                 }
-                    
-
+                
+                
                 for(i = 0; i < nimap; ++i)
                 {
                     // Fill element with mode
@@ -887,7 +884,7 @@ namespace Nektar
                             D_data[i+k*nimap + (j+k*nimap)*nint] += m_kinvis*HelmMatScale*HelmMat_data[imap[i]+HelmMatRows*imap[j]];
                         }
                     }
-
+                    
                     if((lambda_imag != NekConstants::kNekUnsetDouble)&&(nz_loc == 2))
                     {
                         for(k = 0; k < nvel; ++k)
@@ -896,31 +893,31 @@ namespace Nektar
                             {
                                 C_data[j+2*k*nbmap + (i+(2*k+1)*nimap)*nbndry] += lambda_imag*(*MassMat)(bmap[j],imap[i]);
                             }
-
+                            
                             for(j = 0; j < nbmap; ++j) // C set up as transpose
                             {
                                 C_data[j+(2*k+1)*nbmap + (i+2*k*nimap)*nbndry] -= lambda_imag*(*MassMat)(bmap[j],imap[i]);
                             }
-
+                            
                             for(j = 0; j < nimap; ++j)
                             {
                                 D_data[i+2*k*nimap + (j+(2*k+1)*nimap)*nint] -= lambda_imag*(*MassMat)(imap[i],imap[j]);
                             }
-
+                            
                             for(j = 0; j < nimap; ++j)
                             {
                                 D_data[i+(2*k+1)*nimap + (j+2*k*nimap)*nint] += lambda_imag*(*MassMat)(imap[i],imap[j]);
                             }
                         }
                     }
-
-
+                    
+                    
                     for(k = 0; k < nvel; ++k)
                     {
                         if((nz_loc == 2)&&(k == 2)) // handle d/dz derivative
                         { 
                             NekDouble beta = -2*M_PI*HomogeneousMode/m_LhomZ;
-
+                            
                             // Real Component
                             Vmath::Smul(npoints,beta,phys,1,deriv,1);
                             m_pressure->GetExp(eid)->IProductWRTBase(deriv,pcoeffs);
@@ -932,7 +929,7 @@ namespace Nektar
                             Blas::Dcopy(psize,&(pcoeffs)[0],1,
                                         Dint->GetRawPtr() + 
                                         ((nz_loc*k)*imap.num_elements()+i)*nsize_p[n]+psize,1);
-
+                            
                             // Advfield[k] *d/dx_k to all velocity
                             // components on diagonal
                             Vmath::Vmul(npoints, Advtmp = Advfield[k] + phys_offset,1,deriv,1,tmpphys,1);
@@ -944,13 +941,13 @@ namespace Nektar
                                 for(j = 0; j < nbmap; ++j)
                                 {
                                     B_data[j+2*nv*nbmap + (i+(2*nv+1)*nimap)*nbndry] += 
-                                        coeffs[bmap[j]];
+                                    coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
                                     D_data[j+2*nv*nimap + (i+(2*nv+1)*nimap)*nint] += 
-                                        coeffs[imap[j]];
+                                    coeffs[imap[j]];
                                 }
                             }
                             Vmath::Neg(ncoeffs,coeffs,1);
@@ -960,16 +957,16 @@ namespace Nektar
                                 for(j = 0; j < nbmap; ++j)
                                 {
                                     B_data[j+(2*nv+1)*nbmap + (i+2*nv*nimap)*nbndry] += 
-                                        coeffs[bmap[j]];
+                                    coeffs[bmap[j]];
                                 }
                                 
                                 for(j = 0; j < nimap; ++j)
                                 {
                                     D_data[j+(2*nv+1)*nimap + (i+2*nv*nimap)*nint] += 
-                                        coeffs[imap[j]];
+                                    coeffs[imap[j]];
                                 }
                             }
-
+                            
                         }
                         else
                         {
@@ -989,13 +986,13 @@ namespace Nektar
                                     for(j = 0; j < nbmap; ++j)
                                     {
                                         B_data[j+nv*nbmap + (i+nv*nimap)*nbndry] +=
-                                            coeffs[bmap[j]];
+                                        coeffs[bmap[j]];
                                     }
                                     
                                     for(j = 0; j < nimap; ++j)
                                     {
                                         D_data[j+nv*nimap + (i+nv*nimap)*nint] += 
-                                            coeffs[imap[j]];
+                                        coeffs[imap[j]];
                                     }
                                 }
                                 // copy into column major storage. 
@@ -1008,7 +1005,7 @@ namespace Nektar
                                 }
                             }
                         }
-
+                        
                         if(IsLinearNSEquation)
                         {
                             int n1;
@@ -1019,33 +1016,33 @@ namespace Nektar
                                             AdvDeriv[k*nvel+nv],
                                             1,tmpphys,1);
                                 locExp->IProductWRTBase(tmpphys,coeffs);
-
+                                
                                 for(n1 = 0; n1 < nz_loc; ++n1)
                                 {
                                     for(j = 0; j < nbmap; ++j)
                                     {
                                         B_data[j+(k*nz_loc+n1)*nbmap + 
-                                               (i+(nv*nz_loc+n1)*nimap)*nbndry] += 
-                                            coeffs[bmap[j]];
+                                        (i+(nv*nz_loc+n1)*nimap)*nbndry] += 
+                                        coeffs[bmap[j]];
                                     }
-
+                                    
                                     for(j = 0; j < nimap; ++j)
                                     {
                                         D_data[j+(k*nz_loc+n1)*nimap +  
-                                               (i+(nv*nz_loc+n1)*nimap)*nint] += 
-                                            coeffs[imap[j]];
+                                        (i+(nv*nz_loc+n1)*nimap)*nint] += 
+                                        coeffs[imap[j]];
                                     }
                                 }
                             }
                         }
                     }
                 }
-
-
+                
+                
                 D->Invert();
                 (*B) = (*B)*(*D);
-
-
+                
+                
                 // perform (*Ah) = (*Ah) - (*B)*(*C) but since size of
                 // Ah is larger than (*B)*(*C) easier to call blas
                 // directly
@@ -1061,17 +1058,17 @@ namespace Nektar
             mat.m_Cinv->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,D));
             mat.m_D_bnd->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, Dbnd));
             mat.m_D_int->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, Dint));
-
+            
             // Do matrix manipulations and get final set of block matries    
             // reset boundary to put mean mode into boundary system. 
             
             DNekMatSharedPtr Cinv,BCinv,Btilde; 
             DNekMat  DintCinvDTint, BCinvDTint_m_DTbnd, DintCinvBTtilde_m_Dbnd;
-
+            
             Cinv   = D;
             BCinv  = B;  
             Btilde = C; 
-
+            
             DintCinvDTint      = (*Dint)*(*Cinv)*Transpose(*Dint);
             BCinvDTint_m_DTbnd = (*BCinv)*Transpose(*Dint) - Transpose(*Dbnd);
             
@@ -1083,7 +1080,7 @@ namespace Nektar
             DNekMatSharedPtr Ch = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p_m1[n],nsize_bndry_p1[n],zero);
             DNekMatSharedPtr Dh = MemoryManager<DNekMat>::AllocateSharedPtr(nsize_p_m1[n], nsize_p_m1[n],zero);
             Array<OneD, NekDouble> Dh_data = Dh->GetPtr();
-
+            
             // Copy matrices into final structures. 
             int n1,n2;
             for(n1 = 0; n1 < nz_loc; ++n1)
@@ -1097,12 +1094,12 @@ namespace Nektar
                             //(*Dh)(i+n1*(psize-1),j+n2*(psize-1)) = 
                             //-DintCinvDTint(i+1+n1*psize,j+1+n2*psize);
                             Dh_data[(i+n1*(psize-1)) + (j+n2*(psize-1))*Dh->GetRows()] = 
-                                -DintCinvDTint(i+1+n1*psize,j+1+n2*psize);
+                            -DintCinvDTint(i+1+n1*psize,j+1+n2*psize);
                         }
                     }                    
                 }
             }
-
+            
             for(n1 = 0; n1 < nz_loc; ++n1)
             {
                 for(i = 0; i < nsize_bndry_p1[n]-nz_loc; ++i)
@@ -1111,13 +1108,13 @@ namespace Nektar
                     (*Ah)(nsize_bndry_p1[n]-nz_loc+n1,i) = DintCinvBTtilde_m_Dbnd(n1*psize,i);
                 }
             }
-
+            
             for(n1 = 0; n1 < nz_loc; ++n1)
             {
                 for(n2 = 0; n2 < nz_loc; ++n2)
                 {
                     (*Ah)(nsize_bndry_p1[n]-nz_loc+n1,nsize_bndry_p1[n]-nz_loc+n2) = 
-                        -DintCinvDTint(n1*psize,n2*psize);
+                    -DintCinvDTint(n1*psize,n2*psize);
                 }
             }
             
@@ -1132,7 +1129,7 @@ namespace Nektar
                     }
                 }
             }
-
+            
             for(n1 = 0; n1 < nz_loc; ++n1)
             {
                 for(n2 = 0; n2 < nz_loc; ++n2)
@@ -1144,7 +1141,7 @@ namespace Nektar
                     }
                 }
             }
-
+            
             // Do static condensation
             Dh->Invert();
             (*Bh) = (*Bh)*(*Dh);
@@ -1152,7 +1149,7 @@ namespace Nektar
             Blas::Dgemm('N','N', Bh->GetRows(), Ch->GetColumns(), Bh->GetColumns(), -1.0,
                         Bh->GetRawPtr(), Bh->GetRows(), Ch->GetRawPtr(), Ch->GetRows(), 
                         1.0, Ah->GetRawPtr(), Ah->GetRows());
-
+            
             // Set matrices for later inversion. Probably do not need to be 
             // attached to class
             pAh->SetBlock(n,n,loc_mat = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,Ah));
@@ -1162,8 +1159,8 @@ namespace Nektar
         }
         timer.Stop();
         cout << "Matrix Setup Costs: " << timer.TimePerTest(1) << endl;
-
-
+        
+        
         timer.Start();
         // Set up global coupled boundary solver. 
         // This is a key to define the solution matrix type
@@ -1179,13 +1176,13 @@ namespace Nektar
     {
         cout <<  "\tSolver Type     : Coupled Linearised NS" <<endl;
     }
-
+    
     void CoupledLinearNS::v_DoInitialise(void)
     {
         switch(m_equationType)
         {
-        case eUnsteadyStokes:
-        case eUnsteadyNavierStokes:
+            case eUnsteadyStokes:
+            case eUnsteadyNavierStokes:
             {
                 
                 LibUtilities::TimeIntegrationMethod intMethod;
@@ -1204,7 +1201,7 @@ namespace Nektar
                 
                 switch(intMethod)
                 {
-					case LibUtilities::eIMEXOrder1: 
+                    case LibUtilities::eIMEXOrder1: 
                     {
                         m_intSteps = 1;
                         m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
@@ -1212,7 +1209,7 @@ namespace Nektar
                         m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
                     }
                     break;
-                case LibUtilities::eIMEXOrder2: 
+                    case LibUtilities::eIMEXOrder2: 
                     {
                         m_intSteps = 2;
                         m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
@@ -1221,133 +1218,133 @@ namespace Nektar
                         LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
                         m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
                     }
-						break;
-					default:
-						ASSERTL0(0,"Integration method not setup: Options include ImexOrder1, ImexOrder2");
-						break;
+                    break;
+                    default:
+                        ASSERTL0(0,"Integration method not setup: Options include ImexOrder1, ImexOrder2");
+                        break;
                 }
                 
                 // Could defind this from IncNavierStokes class? 
                 m_integrationOps.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);
-				
+                
                 m_integrationOps.DefineImplicitSolve(&CoupledLinearNS::SolveUnsteadyStokesSystem,this);
-				
+                
                 // Set initial condition using time t=0
-				
+                
                 SetInitialConditions(0.0);
-				
-            }
-			case eSteadyStokes:
-				SetUpCoupledMatrix(0.0);
-				break;
-			case eSteadyOseen:
-            {
-                Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
-                {
-                    AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-                }
-				
-                ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
-						 "Advection Velocity section must be defined in "
-						 "session file.");
-				
-                std::vector<std::string> fieldStr;
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
-                {
-                    fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
-                }
-                EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
                 
-                SetUpCoupledMatrix(0.0,AdvField,false);
             }
-				break;
-			case eSteadyNavierStokes:
-			{				
-				m_session->LoadParameter("KinvisMin", m_kinvisMin);
-				m_session->LoadParameter("KinvisPercentage", m_KinvisPercentage);
-				m_session->LoadParameter("Tolerence", m_tol);
-				m_session->LoadParameter("MaxIteration", m_maxIt);
-				m_session->LoadParameter("MatrixSetUpStep", m_MatrixSetUpStep);
-				m_session->LoadParameter("Restart", m_Restart);
-				
-				
-				DefineForcingTerm();
-				
-				if (m_Restart == 1)
+                    case eSteadyStokes:
+                        SetUpCoupledMatrix(0.0);
+                        break;
+                    case eSteadyOseen:
+                    {
+                        Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
+                        for(int i = 0; i < m_velocity.num_elements(); ++i)
+                        {
+                            AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                        }
+                        
+                        ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
+                        "Advection Velocity section must be defined in "
+                        "session file.");
+                        
+                        std::vector<std::string> fieldStr;
+                        for(int i = 0; i < m_velocity.num_elements(); ++i)
+                        {
+                            fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+                        }
+                        EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
+                        
+                        SetUpCoupledMatrix(0.0,AdvField,false);
+                    }
+                    break;
+                    case eSteadyNavierStokes:
+                    {				
+                        m_session->LoadParameter("KinvisMin", m_kinvisMin);
+                        m_session->LoadParameter("KinvisPercentage", m_KinvisPercentage);
+                        m_session->LoadParameter("Tolerence", m_tol);
+                        m_session->LoadParameter("MaxIteration", m_maxIt);
+                        m_session->LoadParameter("MatrixSetUpStep", m_MatrixSetUpStep);
+                        m_session->LoadParameter("Restart", m_Restart);
+                        
+                        
+                        DefineForcingTerm();
+                        
+                        if (m_Restart == 1)
+                        {
+                            ASSERTL0(m_session->DefinesFunction("Restart"),
+                                     "Restart section must be defined in session file.");
+                            
+                            Array<OneD, Array<OneD, NekDouble> > Restart(m_velocity.num_elements());
+                            for(int i = 0; i < m_velocity.num_elements(); ++i)
+                            {
+                                Restart[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                            }
+                            std::vector<std::string> fieldStr;
+                            for(int i = 0; i < m_velocity.num_elements(); ++i)
+                            {
+                                fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+                            }
+                            EvaluateFunction(fieldStr, Restart, "Restart");
+                            
+                            for(int i = 0; i < m_velocity.num_elements(); ++i)
+                            {
+                                m_fields[m_velocity[i]]->FwdTrans_IterPerExp(Restart[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+                            }
+                            cout << "Saving the RESTART file for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
+                        }
+                        else //We solve the Stokes Problem
 				{
-					ASSERTL0(m_session->DefinesFunction("Restart"),
-							 "Restart section must be defined in session file.");
-					
-					Array<OneD, Array<OneD, NekDouble> > Restart(m_velocity.num_elements());
-					for(int i = 0; i < m_velocity.num_elements(); ++i)
-					{
-						Restart[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-					}
-					std::vector<std::string> fieldStr;
-					for(int i = 0; i < m_velocity.num_elements(); ++i)
-					{
-						fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
-					}
-					EvaluateFunction(fieldStr, Restart, "Restart");
-					
-					for(int i = 0; i < m_velocity.num_elements(); ++i)
-					{
-						m_fields[m_velocity[i]]->FwdTrans_IterPerExp(Restart[i], m_fields[m_velocity[i]]->UpdateCoeffs());
-					}
-					cout << "Saving the RESTART file for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
-				}
-				else //We solve the Stokes Problem
-				{
-					
-					/*Array<OneD, Array<OneD, NekDouble> >ZERO(m_velocity.num_elements());
-					
-					for(int i = 0; i < m_velocity.num_elements(); ++i)
-					{				
-						ZERO[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-						m_fields[m_velocity[i]]->FwdTrans(ZERO[i], m_fields[m_velocity[i]]->UpdateCoeffs());
-					}*/
-					
-					SetUpCoupledMatrix(0.0);						
-					m_initialStep = true;
-					m_counter=1;
-					//SolveLinearNS(m_ForcingTerm_Coeffs);
-					Solve();
-					m_initialStep = false;
-					cout << "Saving the Stokes Flow for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
-				}
-			}
-				break;
-			case eSteadyLinearisedNS:
-            {                
-				SetInitialConditions(0.0);
-				
-                Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
-                {
-                    AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                    
+                    /*Array<OneD, Array<OneD, NekDouble> >ZERO(m_velocity.num_elements());
+                     *					
+                     *					for(int i = 0; i < m_velocity.num_elements(); ++i)
+                     *					{				
+                     *						ZERO[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                     *						m_fields[m_velocity[i]]->FwdTrans(ZERO[i], m_fields[m_velocity[i]]->UpdateCoeffs());
+                     }*/
+                    
+                    SetUpCoupledMatrix(0.0);						
+                    m_initialStep = true;
+                    m_counter=1;
+                    //SolveLinearNS(m_ForcingTerm_Coeffs);
+                    Solve();
+                    m_initialStep = false;
+                    cout << "Saving the Stokes Flow for m_kinvis = "<< m_kinvis << " (<=> Re = " << 1/m_kinvis << ")" <<endl;
                 }
-                
-                ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
-						 "Advection Velocity section must be defined in "
-						 "session file.");
-				
-                std::vector<std::string> fieldStr;
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
-                {
-                    fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
-                }
-                EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
-				
-                SetUpCoupledMatrix(m_lambda,AdvField,true);
-            }
-				break;
-			case eNoEquationType:
-			default:
-				ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
+                    }
+                    break;
+                    case eSteadyLinearisedNS:
+                    {                
+                        SetInitialConditions(0.0);
+                        
+                        Array<OneD, Array<OneD, NekDouble> > AdvField(m_velocity.num_elements());
+                        for(int i = 0; i < m_velocity.num_elements(); ++i)
+                        {
+                            AdvField[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                        }
+                        
+                        ASSERTL0(m_session->DefinesFunction("AdvectionVelocity"),
+                        "Advection Velocity section must be defined in "
+                        "session file.");
+                        
+                        std::vector<std::string> fieldStr;
+                        for(int i = 0; i < m_velocity.num_elements(); ++i)
+                        {
+                            fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+                        }
+                        EvaluateFunction(fieldStr,AdvField,"AdvectionVelocity");
+                        
+                        SetUpCoupledMatrix(m_lambda,AdvField,true);
+                    }
+                    break;
+                    case eNoEquationType:
+                    default:
+                        ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
         }
     }
-	
+    
     void CoupledLinearNS::EvaluateAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                             Array<OneD, Array<OneD, NekDouble> > &outarray,
                                             const NekDouble time)
@@ -1364,7 +1361,7 @@ namespace Nektar
             }        
         }
     }
-
+    
     void CoupledLinearNS::SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
                                                     Array<OneD, Array<OneD, NekDouble> > &outarray, 
                                                     const NekDouble time, 
@@ -1386,7 +1383,7 @@ namespace Nektar
         }
         
         SetBoundaryConditions(time);		
-
+        
         // Forcing for advection solve 
         for(i = 0; i < m_velocity.num_elements(); ++i)
         {
@@ -1394,7 +1391,7 @@ namespace Nektar
             Vmath::Smul(m_fields[m_velocity[i]]->GetNcoeffs(),lambda,m_fields[m_velocity[i]]->GetCoeffs(), 1,m_fields[m_velocity[i]]->UpdateCoeffs(),1);
             forcing[i] = m_fields[m_velocity[i]]->GetCoeffs();
         }
-
+        
         SolveLinearNS(forcing);
         
         for(i = 0; i < m_velocity.num_elements(); ++i)
@@ -1403,100 +1400,95 @@ namespace Nektar
         }
     }
     
-	
-	void CoupledLinearNS::v_TransCoeffToPhys(void)
+    
+    void CoupledLinearNS::v_TransCoeffToPhys(void)
     {
-		int nfields = m_fields.num_elements();
-		for (int k=0 ; k < nfields; ++k)
-		{
-			//Backward Transformation in physical space for time evolution
-			m_forces[k]->BwdTrans_IterPerExp(m_forces[k]->GetCoeffs(),
-										     m_forces[k]->UpdatePhys());			
-		}
-		
-	}
-	
-	void CoupledLinearNS::v_TransPhysToCoeff(void)
+        int nfields = m_fields.num_elements();
+        for (int k=0 ; k < nfields; ++k)
+        {
+            //Backward Transformation in physical space for time evolution
+            m_forces[k]->BwdTrans_IterPerExp(m_forces[k]->GetCoeffs(),
+                                             m_forces[k]->UpdatePhys());			
+        }
+        
+    }
+    
+    void CoupledLinearNS::v_TransPhysToCoeff(void)
     {
-		int nfields = m_fields.num_elements();
-		for (int k=0 ; k < nfields; ++k)
-		{
-			//Forward Transformation in physical space for time evolution
-			m_forces[k]->FwdTrans_IterPerExp(m_forces[k]->GetPhys(),
-										     m_forces[k]->UpdateCoeffs());
-			
-		}
-	}
-	
+        int nfields = m_fields.num_elements();
+        for (int k=0 ; k < nfields; ++k)
+        {
+            //Forward Transformation in physical space for time evolution
+            m_forces[k]->FwdTrans_IterPerExp(m_forces[k]->GetPhys(),
+                                             m_forces[k]->UpdateCoeffs());
+            
+        }
+    }
+    
     void CoupledLinearNS::v_DoSolve(void)
     {
         switch(m_equationType)
         {
-			case eUnsteadyStokes:
-			case eUnsteadyNavierStokes:
-				AdvanceInTime(m_steps);
-				break;
-			case eSteadyStokes:
-			case eSteadyOseen:
-			case eSteadyLinearisedNS:
-			{
-				Solve();				
-				break;
-			}
-			case eSteadyNavierStokes:
-			{	
-				Timer Generaltimer;
-				Generaltimer.Start();
-				
-				int Check(0);
-				
-				//Saving the init datas
-				Checkpoint_Output(Check);
-				//TmpOutput(Check);
-				Check++;
-				
-				cout<<"We execute INITIALLY SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
-				SolveSteadyNavierStokes();
-				
-				while(m_kinvis > m_kinvisMin)
-				{		
-					/*if (Check == 1)
-					{
-						cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
-						SolveSteadyNavierStokes();
-						//Checkpoint_Output(Check);
-						//TmpOutput(Check);
-						Check++;
-					}*/
-					
-					Continuation();
-					
-					if (m_kinvis > m_kinvisMin)
-					{
-						cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
-						SolveSteadyNavierStokes();
-						Checkpoint_Output(Check);
-						//TmpOutput(Check);
-						Check++;
-					}
-				}
-				
-				//The pressure is evaluated at the very end of the process
-				//PressureReconstruction();
-				
-				Generaltimer.Stop();
-				cout<<"\nThe total calculation time is : " << Generaltimer.TimePerTest(1)/60 << " minute(s). \n\n";
-				
-				break;
-			}
-			case eNoEquationType:
-			default:
-				ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
+            case eUnsteadyStokes:
+            case eUnsteadyNavierStokes:
+                AdvanceInTime(m_steps);
+                break;
+            case eSteadyStokes:
+            case eSteadyOseen:
+            case eSteadyLinearisedNS:
+            {
+                Solve();				
+                break;
+            }
+            case eSteadyNavierStokes:
+            {	
+                Timer Generaltimer;
+                Generaltimer.Start();
+                
+                int Check(0);
+                
+                //Saving the init datas
+                Checkpoint_Output(Check);
+                Check++;
+                
+                cout<<"We execute INITIALLY SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
+                SolveSteadyNavierStokes();
+                
+                while(m_kinvis > m_kinvisMin)
+                {		
+                    if (Check == 1)
+                    {
+                        cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
+                        SolveSteadyNavierStokes();
+                        Checkpoint_Output(Check);
+                        Check++;
+                    }
+                    
+                    Continuation();
+                    
+                    if (m_kinvis > m_kinvisMin)
+                    {
+                        cout<<"We execute SolveSteadyNavierStokes for m_kinvis = "<<m_kinvis<<" (<=> Re = "<<1/m_kinvis<<")"<<endl;
+                        SolveSteadyNavierStokes();
+                        Checkpoint_Output(Check);
+                        Check++;
+                    }
+                }
+                
+                
+                Generaltimer.Stop();
+                cout<<"\nThe total calculation time is : " << Generaltimer.TimePerTest(1)/60 << " minute(s). \n\n";
+                
+                break;
+            }
+            case eNoEquationType:
+            default:
+                ASSERTL0(false,"Unknown or undefined equation type for CoupledLinearNS");
         }
     }
-
-	
-	
+    
+    
+    
     void CoupledLinearNS::Solve(void)
     {
         Array <OneD, Array<OneD, NekDouble> > forcing(m_velocity.num_elements());
@@ -1528,38 +1520,38 @@ namespace Nektar
         
         SolveLinearNS(forcing);
     }
-	
-	void CoupledLinearNS::DefineForcingTerm(void)
-	{
-		m_ForcingTerm = Array<OneD, Array<OneD, NekDouble> > (m_velocity.num_elements());
-		m_ForcingTerm_Coeffs = Array<OneD, Array<OneD, NekDouble> > (m_velocity.num_elements());
-				
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			m_ForcingTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			m_ForcingTerm_Coeffs[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetNcoeffs(),0.0);
-		}
-		
-		if(m_session->DefinesFunction("ForcingTerm"))
-		{
-			std::vector<std::string> fieldStr;
-			for(int i = 0; i < m_velocity.num_elements(); ++i)
-			{
-				fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
-			}
-			EvaluateFunction(fieldStr, m_ForcingTerm, "ForcingTerm");
-			for(int i = 0; i < m_velocity.num_elements(); ++i)
-			{
-				m_fields[m_velocity[i]]->FwdTrans_IterPerExp(m_ForcingTerm[i], m_ForcingTerm_Coeffs[i]);
-			}
-		}
-		else
-		{
-			cout << "'ForcingTerm' section has not been defined in the input file => forcing=0" << endl;
-		}
-	}
-	
-	void CoupledLinearNS::SolveSteadyNavierStokes(void)
+    
+    void CoupledLinearNS::DefineForcingTerm(void)
+    {
+        m_ForcingTerm = Array<OneD, Array<OneD, NekDouble> > (m_velocity.num_elements());
+        m_ForcingTerm_Coeffs = Array<OneD, Array<OneD, NekDouble> > (m_velocity.num_elements());
+        
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            m_ForcingTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+            m_ForcingTerm_Coeffs[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetNcoeffs(),0.0);
+        }
+        
+        if(m_session->DefinesFunction("ForcingTerm"))
+        {
+            std::vector<std::string> fieldStr;
+            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                fieldStr.push_back(m_boundaryConditions->GetVariable(m_velocity[i]));
+            }
+            EvaluateFunction(fieldStr, m_ForcingTerm, "ForcingTerm");
+            for(int i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                m_fields[m_velocity[i]]->FwdTrans_IterPerExp(m_ForcingTerm[i], m_ForcingTerm_Coeffs[i]);
+            }
+        }
+        else
+        {
+            cout << "'ForcingTerm' section has not been defined in the input file => forcing=0" << endl;
+        }
+    }
+    
+    void CoupledLinearNS::SolveSteadyNavierStokes(void)
     {
         Timer Newtontimer;
         Newtontimer.Start();
@@ -1579,69 +1571,66 @@ namespace Nektar
         
         m_counter=1;
         
-        //InfNorm(delta_velocity_Phys, Inf_norm);
         L2Norm(delta_velocity_Phys, L2_norm);		
         
-        //while(max(Inf_norm[0], Inf_norm[1]) > m_tol)// && m_counter <= m_maxIt)
-        while(max(L2_norm[0], L2_norm[1]) > m_tol)// && m_counter <= m_maxIt)
-		{
+        //while(max(Inf_norm[0], Inf_norm[1]) > m_tol)
+        while(max(L2_norm[0], L2_norm[1]) > m_tol)
+        {
             if(m_counter == 1) //At the first Newton step, we use the solution of the Stokes problem (if Restart=0 in input file)
 				               //Or the solution of the .rst file (if Restart=1 in input file) 
-            {				
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
-                {
-                    RHS_Coeffs[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetNcoeffs(),0.0);
-                    RHS_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-                }
-                
-                for(int i = 0; i < m_velocity.num_elements(); ++i)
-                {
-                    m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
-                }
-                
-                //m_initialStep = true; //TTTTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTTTTTTTT !!!!!!!!!!!!!!!!!!!!!!!!!!!
-                EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
-                SetUpCoupledMatrix(0.0, Velocity_Phys, true);
-                SolveLinearNS(RHS_Coeffs);
-                //m_initialStep = false; //TTTTTTTTTTTTTTTTTTTTTTTTTTTTEEEEEEEEEEEEEEEEEEEEEEEEEEESSSSSSSSSSSSSSSSSSSSSSSSTTTTTTTTTTTTTTTTTTTTTT !!!!!!!!!!!!!!!!!!!!!!!!!!!
-            }
-            if(m_counter > 1)
-            {
-                EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
-                
-                if(m_counter%m_MatrixSetUpStep == 0) //Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.
+				               {				
+                                   for(int i = 0; i < m_velocity.num_elements(); ++i)
+                                   {
+                                       RHS_Coeffs[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetNcoeffs(),0.0);
+                                       RHS_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+                                   }
+                                   
+                                   for(int i = 0; i < m_velocity.num_elements(); ++i)
+                                   {
+                                       m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
+                                   }
+                                   
+                                   m_initialStep = true; 
+                                   EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
+                                   SetUpCoupledMatrix(0.0, Velocity_Phys, true);
+                                   SolveLinearNS(RHS_Coeffs);
+                                   m_initialStep = false; 
+                               }
+                               if(m_counter > 1)
+                               {
+                                   EvaluateNewtonRHS(Velocity_Phys, RHS_Coeffs);
+                                   
+                                   if(m_counter%m_MatrixSetUpStep == 0) //Setting Up the matrix is expensive. We do it at each "m_MatrixSetUpStep" step.
 				{
                     SetUpCoupledMatrix(0.0, Velocity_Phys, true);
                 }
                 SolveLinearNS(RHS_Coeffs);
-            }
-            
-            //SolveLinearNS(RHS_Coeffs);
-            
-            for(int i = 0; i < m_velocity.num_elements(); ++i)
-            {
-                m_fields[m_velocity[i]]->BwdTrans_IterPerExp(RHS_Coeffs[i], RHS_Phys[i]);
-                m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), delta_velocity_Phys[i]); 
-            }
-            
-            for(int i = 0; i < m_velocity.num_elements(); ++i)
-            {
-                Vmath::Vadd(Velocity_Phys[i].num_elements(),Velocity_Phys[i], 1, delta_velocity_Phys[i], 1, 
-                            Velocity_Phys[i], 1);
-            }	
-            
-            //InfNorm(delta_velocity_Phys, Inf_norm);
-            L2Norm(delta_velocity_Phys, L2_norm);
-            
-            if(max(Inf_norm[0], Inf_norm[1]) > 100)
-            {
-                cout<<"\nThe Newton method has failed at m_kinvis = "<<m_kinvis<<" (<=> Re = " << 1/m_kinvis << ")"<< endl;
-                ASSERTL0(0, "The Newton method has failed... \n");
-            }
-            
-            
-            cout << "\n";
-            m_counter++;
+                               }
+                               
+                               for(int i = 0; i < m_velocity.num_elements(); ++i)
+                               {
+                                   m_fields[m_velocity[i]]->BwdTrans_IterPerExp(RHS_Coeffs[i], RHS_Phys[i]);
+                                   m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), delta_velocity_Phys[i]); 
+                               }
+                               
+                               for(int i = 0; i < m_velocity.num_elements(); ++i)
+                               {
+                                   Vmath::Vadd(Velocity_Phys[i].num_elements(),Velocity_Phys[i], 1, delta_velocity_Phys[i], 1, 
+                                               Velocity_Phys[i], 1);
+                               }	
+                               
+                               //InfNorm(delta_velocity_Phys, Inf_norm);
+                               L2Norm(delta_velocity_Phys, L2_norm);
+                               
+                               if(max(Inf_norm[0], Inf_norm[1]) > 100)
+                               {
+                                   cout<<"\nThe Newton method has failed at m_kinvis = "<<m_kinvis<<" (<=> Re = " << 1/m_kinvis << ")"<< endl;
+                                   ASSERTL0(0, "The Newton method has failed... \n");
+                               }
+                               
+                               
+                               cout << "\n";
+                               m_counter++;
         }	
         
         if (m_counter > 1) //We save u:=u+\delta u in u->Coeffs
@@ -1697,141 +1686,96 @@ namespace Nektar
         
         m_kinvis -= m_kinvis*m_KinvisPercentage/100;
     }		
-	
-	
-	void  CoupledLinearNS::InfNorm(Array<OneD, Array<OneD, NekDouble> > &inarray,
-				 Array<OneD, NekDouble> &outarray)
-	{
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			outarray[i] = 0.0;
-			for(int j = 0; j < inarray[i].num_elements(); ++j)
-			{
-				if(inarray[i][j] > outarray[i]) 
-				{
-					outarray[i] = inarray[i][j];
-				}
-			}
-			cout << "InfNorm["<<i<<"] = "<< outarray[i] <<endl;
-		}
-	}
-	
-	void  CoupledLinearNS::L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
-								   Array<OneD, NekDouble> &outarray)
-	{
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			outarray[i] = 0.0;
-			for(int j = 0; j < inarray[i].num_elements(); ++j)
-			{
-				outarray[i] += inarray[i][j]*inarray[i][j];
-			}
-			outarray[i]=sqrt(outarray[i]);
-			cout << "L2Norm["<<i<<"] = "<< outarray[i] <<endl;
-		}
-	}
-	
-	
-	void CoupledLinearNS::PressureReconstruction(void)
-	{
-		//We solve the Poisson equation for the pressure with div((u.grad)u) as forcing term
-		Array<OneD, Array<OneD, NekDouble> > Velocity_Phys(m_velocity.num_elements());
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{	
-			Velocity_Phys[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			m_fields[m_velocity[i]]->BwdTrans_IterPerExp(m_fields[m_velocity[i]]->GetCoeffs(), Velocity_Phys[i]);
-		}
-		
-		Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > tmp_Div_Eval_Adv(m_velocity.num_elements());
-		
-		Array<OneD, NekDouble > Div_Eval_Adv(m_fields[m_velocity[0]]->GetTotPoints(), 0.0);
-		Array<OneD, NekDouble > Div_Eval_Adv_Coeffs(m_fields[m_velocity[0]]->GetNcoeffs(), 0.0);
-		
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			Eval_Adv[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			tmp_Div_Eval_Adv[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-		}
-		
-		//We evaluate the nonlinear term (u.grad)u
-		EvaluateAdvectionTerms(Velocity_Phys, Eval_Adv);
-		
-		//And we calculate the divergence of this nonlinear tern
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			m_fields[m_velocity[i]]->PhysDeriv(i, Eval_Adv[i], tmp_Div_Eval_Adv[i]);
-		}
-		Vmath::Vadd(Div_Eval_Adv.num_elements(), tmp_Div_Eval_Adv[0], 1, tmp_Div_Eval_Adv[1], 1, Div_Eval_Adv, 1);				
-		
-						
-		//-------------------------------------------------------------------------------------------------	
-		StdRegions::ConstFactorMap factors;
-		factors[StdRegions::eFactorLambda] = 0;
-		
-        // Solver Pressure Poisson Equation 
-		//m_pressure->HelmSolve(Div_Eval_Adv, m_pressure->UpdateCoeffs(), NullFlagList, factors);
-		//m_fields[1]->HelmSolve(Div_Eval_Adv, m_pressure->UpdateCoeffs(), NullFlagList, factors);
-		//-------------------------------------------------------------------------------------------------	
-		
-		cout<<"Reconstruction of the pressure \n";
-	}	
-	
-	void CoupledLinearNS::EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
-											  Array<OneD, Array<OneD, NekDouble> > &outarray)
-	{
-		Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > tmp_DerVel(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > AdvTerm(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > ViscTerm(m_velocity.num_elements());
-		Array<OneD, Array<OneD, NekDouble> > Forc(m_velocity.num_elements());
-		
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			Eval_Adv[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			tmp_DerVel[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			
-			AdvTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			ViscTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			Forc[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			outarray[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
-			
-			m_fields[m_velocity[i]]->PhysDeriv(i, Velocity[i], tmp_DerVel[i]);
-			
-			Vmath::Smul(tmp_DerVel[i].num_elements(), m_kinvis, tmp_DerVel[i], 1, tmp_DerVel[i], 1);
-		}
-		
-		EvaluateAdvectionTerms(Velocity, Eval_Adv);
-		
-		for(int i = 0; i < m_velocity.num_elements(); ++i)
-		{
-			m_fields[m_velocity[i]]->IProductWRTBase(Eval_Adv[i], AdvTerm[i]); //(w, (u.grad)u)
-			m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_DerVel[i], ViscTerm[i]); //(grad w, grad u)
-			m_fields[m_velocity[i]]->IProductWRTBase(m_ForcingTerm[i], Forc[i]); //(w, f)
-			
-			Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, AdvTerm[i], 1, outarray[i], 1);
-			Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, ViscTerm[i], 1, outarray[i], 1);
-			
-			Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1, Forc[i], 1, outarray[i], 1);
-		}
-	}
-	
-	
-
+    
+    
+    void  CoupledLinearNS::InfNorm(Array<OneD, Array<OneD, NekDouble> > &inarray,
+                                   Array<OneD, NekDouble> &outarray)
+    {
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            outarray[i] = 0.0;
+            for(int j = 0; j < inarray[i].num_elements(); ++j)
+            {
+                if(inarray[i][j] > outarray[i]) 
+                {
+                    outarray[i] = inarray[i][j];
+                }
+            }
+            cout << "InfNorm["<<i<<"] = "<< outarray[i] <<endl;
+        }
+    }
+    
+    void  CoupledLinearNS::L2Norm(Array<OneD, Array<OneD, NekDouble> > &inarray,
+                                  Array<OneD, NekDouble> &outarray)
+    {
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            outarray[i] = 0.0;
+            for(int j = 0; j < inarray[i].num_elements(); ++j)
+            {
+                outarray[i] += inarray[i][j]*inarray[i][j];
+            }
+            outarray[i]=sqrt(outarray[i]);
+            cout << "L2Norm["<<i<<"] = "<< outarray[i] <<endl;
+        }
+    }
+    
+    
+    void CoupledLinearNS::EvaluateNewtonRHS(Array<OneD, Array<OneD, NekDouble> > &Velocity,
+                                            Array<OneD, Array<OneD, NekDouble> > &outarray)
+    {
+        Array<OneD, Array<OneD, NekDouble> > Eval_Adv(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > tmp_DerVel(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > AdvTerm(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > ViscTerm(m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > Forc(m_velocity.num_elements());
+        
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            Eval_Adv[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+            tmp_DerVel[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+            
+            AdvTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+            ViscTerm[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+            Forc[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+            outarray[i] = Array<OneD, NekDouble> (m_fields[m_velocity[i]]->GetTotPoints(),0.0);
+            
+            m_fields[m_velocity[i]]->PhysDeriv(i, Velocity[i], tmp_DerVel[i]);
+            
+            Vmath::Smul(tmp_DerVel[i].num_elements(), m_kinvis, tmp_DerVel[i], 1, tmp_DerVel[i], 1);
+        }
+        
+        EvaluateAdvectionTerms(Velocity, Eval_Adv);
+        
+        for(int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            m_fields[m_velocity[i]]->IProductWRTBase(Eval_Adv[i], AdvTerm[i]); //(w, (u.grad)u)
+            m_fields[m_velocity[i]]->IProductWRTDerivBase(i, tmp_DerVel[i], ViscTerm[i]); //(grad w, grad u)
+            m_fields[m_velocity[i]]->IProductWRTBase(m_ForcingTerm[i], Forc[i]); //(w, f)
+            
+            Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, AdvTerm[i], 1, outarray[i], 1);
+            Vmath::Vsub(outarray[i].num_elements(), outarray[i], 1, ViscTerm[i], 1, outarray[i], 1);
+            
+            Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1, Forc[i], 1, outarray[i], 1);
+        }
+    }
+    
+    
+    
     const SpatialDomains::ExpansionMap &CoupledLinearNS::GenPressureExp(const SpatialDomains::ExpansionMap &VelExp)
     {
         int i;
         SpatialDomains::ExpansionMapShPtr returnval;
-
+        
         returnval = MemoryManager<SpatialDomains::ExpansionMap>::AllocateSharedPtr();
         
         SpatialDomains::ExpansionMap::const_iterator  expMapIter;
         int nummodes;
-
+        
         for (expMapIter = VelExp.begin(); expMapIter != VelExp.end(); ++expMapIter)
         {
             LibUtilities::BasisKeyVector BasisVec;
-
+            
             for(i = 0; i <  expMapIter->second->m_basisKeyVector.size(); ++i)
             {
                 LibUtilities::BasisKey B = expMapIter->second->m_basisKeyVector[i];
@@ -1841,16 +1785,16 @@ namespace Nektar
                 LibUtilities::BasisKey newB(B.GetBasisType(),nummodes-2,B.GetPointsKey());
                 BasisVec.push_back(newB);
             }
-
+            
             // Put new expansion into list. 
             SpatialDomains::ExpansionShPtr expansionElementShPtr =
-                MemoryManager<SpatialDomains::Expansion>::AllocateSharedPtr(expMapIter->second->m_geomShPtr, BasisVec);
+            MemoryManager<SpatialDomains::Expansion>::AllocateSharedPtr(expMapIter->second->m_geomShPtr, BasisVec);
             (*returnval)[expMapIter->first] = expansionElementShPtr;
         }
         
         // Save expansion into graph. 
         m_graph->SetExpansions("p",returnval);
-            
+        
         return *returnval;
     }
     
@@ -1923,7 +1867,7 @@ namespace Nektar
         int i,n;
         Array<OneD,  MultiRegions::ExpListSharedPtr> vel_fields(m_velocity.num_elements());
         Array<OneD, Array<OneD, NekDouble> > force(m_velocity.num_elements());
-
+        
         if(m_HomogeneousType == eHomogeneous1D)
         {
             int ncoeffsplane = m_fields[m_velocity[0]]->GetPlane(0)->GetNcoeffs();
@@ -1956,7 +1900,7 @@ namespace Nektar
             SolveLinearNS(force,vel_fields,m_pressure);
         }
     }
-
+    
     void CoupledLinearNS::SolveLinearNS(const Array<OneD, Array<OneD, NekDouble> > &forcing,  Array<OneD, MultiRegions::ExpListSharedPtr> &fields, MultiRegions::ExpListSharedPtr &pressure,  const int mode)
     {
         int i,j,k,n,eid,cnt,cnt1;
@@ -1964,19 +1908,19 @@ namespace Nektar
         int nvel = m_velocity.num_elements();
         int nel  = fields[0]->GetNumElmts();
         Array<OneD, unsigned int> bmap, imap; 
-
+        
         Array<OneD, NekDouble > f_bnd(m_mat[mode].m_BCinv->GetRows());
         NekVector< NekDouble  > F_bnd(f_bnd.num_elements(), f_bnd, eWrapper);
         Array<OneD, NekDouble > f_int(m_mat[mode].m_BCinv->GetColumns());
         NekVector< NekDouble  > F_int(f_int.num_elements(),f_int, eWrapper);
-
+        
         int nz_loc;
         int  nplanecoeffs = fields[m_velocity[0]]->GetNcoeffs();// this is fine since we pass the nplane coeff data. 
- 
+        
         if(mode) // Homogeneous mode flag
         {
             nz_loc = 2;
-         }
+        }
         else
         {
             if(m_singleMode)
@@ -2016,23 +1960,23 @@ namespace Nektar
                     for(k = 0; k < nbnd; ++k)
                     {
                         f_bnd[cnt+k] = forcing[j][n*nplanecoeffs + 
-                                                  offset+bmap[k]];
+                        offset+bmap[k]];
                     }
                     for(k = 0; k < nint; ++k)
                     {
                         f_int[cnt1+k] = forcing[j][n*nplanecoeffs + 
-                                                   offset+imap[k]];
+                        offset+imap[k]];
                     }
                     cnt  += nbnd;
                     cnt1 += nint;
                 }
             }
         }
-
+        
         Array<OneD, NekDouble > f_p(m_mat[mode].m_D_int->GetRows());
         NekVector<  NekDouble > F_p(f_p.num_elements(),f_p,eWrapper);
         NekVector<  NekDouble > F_p_tmp(m_mat[mode].m_Cinv->GetRows());
-
+        
         // fbnd does not currently hold the pressure mean
         F_bnd = F_bnd - (*m_mat[mode].m_BCinv)*F_int;
         F_p_tmp = (*m_mat[mode].m_Cinv)*F_int;
@@ -2043,9 +1987,9 @@ namespace Nektar
         Array<OneD, NekDouble > fh_bnd(m_locToGloMap[mode]->GetNumGlobalCoeffs(),0.0);
         
         const Array<OneD,const int>& loctoglomap
-            = m_locToGloMap[mode]->GetLocalToGlobalMap();
+        = m_locToGloMap[mode]->GetLocalToGlobalMap();
         const Array<OneD,const NekDouble>& loctoglosign
-            = m_locToGloMap[mode]->GetLocalToGlobalSign();
+        = m_locToGloMap[mode]->GetLocalToGlobalSign();
         
         offset = cnt = 0; 
         for(i = 0; i < nel; ++i)
@@ -2058,22 +2002,22 @@ namespace Nektar
                 for(k = 0; k < nbnd; ++k)
                 {
                     fh_bnd[loctoglomap[offset+j*nbnd+k]] += 
-                        loctoglosign[offset+j*nbnd+k]*f_bnd[cnt+k];
+                    loctoglosign[offset+j*nbnd+k]*f_bnd[cnt+k];
                 }
                 cnt += nbnd;
             }
-
+            
             nint    = pressure->GetExp(eid)->GetNcoeffs();
             offset += nvel*nbnd + nint*nz_loc; 
         }
-
+        
         offset = cnt1 = 0; 
         for(i = 0; i <  nel; ++i)
         {
             eid  = fields[0]->GetOffset_Elmt_Id(i);
             nbnd = nz_loc*fields[0]->GetExp(eid)->NumBndryCoeffs(); 
             nint = pressure->GetExp(eid)->GetNcoeffs(); 
-
+            
             for(n = 0; n < nz_loc; ++n)
             {
                 for(j = 0; j < nint; ++j)
@@ -2084,10 +2028,10 @@ namespace Nektar
             }
             offset += nvel*nbnd + nz_loc*nint; 
         }
-
+        
         //  Set Weak BC into f_bnd and Dirichlet Dofs in bnd
         const Array<OneD,const int>& bndmap
-            = m_locToGloMap[mode]->GetBndCondCoeffsToGlobalCoeffsMap();
+        = m_locToGloMap[mode]->GetBndCondCoeffsToGlobalCoeffsMap();
         
         // Forcing function with weak boundary conditions and
         // Dirichlet conditions
@@ -2105,7 +2049,7 @@ namespace Nektar
             {
                 bndCondExp = m_fields[k]->GetBndCondExpansions();
             }
-
+            
             for(i = 0; i < bndCondExp.num_elements(); ++i)
             {
                 const Array<OneD, const NekDouble > bndCondCoeffs = bndCondExp[i]->GetCoeffs();
@@ -2113,34 +2057,34 @@ namespace Nektar
                 for(n = 0; n < nz_loc; ++n)
                 {
                     if(bndConds[i]->GetBoundaryConditionType() 
-                       == SpatialDomains::eDirichlet)
+                        == SpatialDomains::eDirichlet)
                     {
                         for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
                         {
-							if (m_equationType == eSteadyNavierStokes && m_initialStep == false)
-							{
-								//This condition set all the Dirichlet BC at 0 after
-								//the initial step of the Newton method
-								bnd[bndmap[bndcnt++]] = 0;
-							}
-							else
-							{
-								bnd[bndmap[bndcnt++]] = bndCondCoeffs[cnt++];
-							}
+                            if (m_equationType == eSteadyNavierStokes && m_initialStep == false)
+                            {
+                                //This condition set all the Dirichlet BC at 0 after
+                                //the initial step of the Newton method
+                                bnd[bndmap[bndcnt++]] = 0;
+                            }
+                            else
+                            {
+                                bnd[bndmap[bndcnt++]] = bndCondCoeffs[cnt++];
+                            }
                         }
                     }
                     else
                     {                    
                         for(j = 0; j < (bndCondExp[i])->GetNcoeffs(); j++)
                         {
-							fh_bnd[bndmap[bndcnt++]]
-							+= bndCondCoeffs[cnt++];
+                            fh_bnd[bndmap[bndcnt++]]
+                            += bndCondCoeffs[cnt++];
                         }
                     }
                 }
             }
         }
-		        
+        
         m_mat[mode].m_CoupledBndSys->Solve(fh_bnd,bnd,m_locToGloMap[mode]);
         
         // unpack pressure and velocity boundary systems. 
@@ -2163,9 +2107,9 @@ namespace Nektar
             }
             offset += nvel*nbnd + nint*nz_loc;
         }
-
+        
         pressure->SetPhysState(false);
-
+        
         offset = cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i)
         {
@@ -2179,21 +2123,21 @@ namespace Nektar
                 for(j = 0; j < nint; ++j)
                 {
                     p_coeffs[n*totpcoeffs + cnt1+j] = 
-                        f_p[cnt+j] = bnd[loctoglomap[offset + 
-                                                    (nvel*nz_loc)*nbnd + 
-                                                     n*nint + j]];
+                    f_p[cnt+j] = bnd[loctoglomap[offset + 
+                    (nvel*nz_loc)*nbnd + 
+                    n*nint + j]];
                 }
                 cnt += nint;
             }
             offset += (nvel*nbnd + nint)*nz_loc;
         }
-
+        
         // Back solve first level of static condensation for interior
         // velocity space and store in F_int
         F_int = F_int + Transpose(*m_mat[mode].m_D_int)*F_p
-                                       - Transpose(*m_mat[mode].m_Btilde)*F_bnd;
+        - Transpose(*m_mat[mode].m_Btilde)*F_bnd;
         F_int = (*m_mat[mode].m_Cinv)*F_int;
-    
+        
         // Unpack solution from Bnd and F_int to v_coeffs 
         cnt = cnt1 = 0;
         for(i = 0; i < nel; ++i) // loop over elements
@@ -2204,7 +2148,7 @@ namespace Nektar
             nbnd   = bmap.num_elements();
             nint   = imap.num_elements();
             offset = fields[0]->GetCoeff_Offset(eid);
-
+            
             for(j = 0; j < nvel; ++j) // loop over velocity fields 
             {
                 for(n = 0; n < nz_loc; ++n)
@@ -2212,15 +2156,15 @@ namespace Nektar
                     for(k = 0; k < nbnd; ++k)
                     {
                         fields[j]->SetCoeff(n*nplanecoeffs + 
-                                            offset+bmap[k],
-                                            f_bnd[cnt+k]);
+                        offset+bmap[k],
+                        f_bnd[cnt+k]);
                     }
                     
                     for(k = 0; k < nint; ++k)
                     {
                         fields[j]->SetCoeff(n*nplanecoeffs + 
-                                            offset+imap[k],
-                                            f_int[cnt1+k]);
+                        offset+imap[k],
+                        f_int[cnt1+k]);
                     }
                     cnt  += nbnd;
                     cnt1 += nint;
@@ -2233,7 +2177,7 @@ namespace Nektar
             fields[j]->SetPhysState(false);
         }
     }
-
+    
     void CoupledLinearNS::v_Output(void)
     {    
         Array<OneD, Array<OneD, NekDouble > > fieldcoeffs(m_fields.num_elements()+1);
@@ -2245,39 +2189,39 @@ namespace Nektar
             fieldcoeffs[i] = m_fields[i]->UpdateCoeffs();
             variables[i]   = m_boundaryConditions->GetVariable(i);
         }
-
+        
         fieldcoeffs[i] = Array<OneD, NekDouble>(m_fields[0]->GetNcoeffs());  
         // project pressure field to velocity space        
         if(m_singleMode==true)
         {
-			Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
-			m_pressure->GetPlane(0)->BwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetCoeffs(), m_pressure->GetPlane(0)->UpdatePhys());
-			m_pressure->GetPlane(1)->BwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetCoeffs(), m_pressure->GetPlane(1)->UpdatePhys()); 
-			m_fields[0]->GetPlane(0)->FwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetPhys(),fieldcoeffs[i]);
-			m_fields[0]->GetPlane(1)->FwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetPhys(),tmpfieldcoeffs);
-			for(int e=0; e<m_fields[0]->GetNcoeffs()/2; e++)
-			{
-				fieldcoeffs[i][e+m_fields[0]->GetNcoeffs()/2] = tmpfieldcoeffs[e];
-			}          
-		}
-		else
-		{
-			m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
+            Array<OneD, NekDouble > tmpfieldcoeffs (m_fields[0]->GetNcoeffs()/2);
+            m_pressure->GetPlane(0)->BwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetCoeffs(), m_pressure->GetPlane(0)->UpdatePhys());
+            m_pressure->GetPlane(1)->BwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetCoeffs(), m_pressure->GetPlane(1)->UpdatePhys()); 
+            m_fields[0]->GetPlane(0)->FwdTrans_IterPerExp(m_pressure->GetPlane(0)->GetPhys(),fieldcoeffs[i]);
+            m_fields[0]->GetPlane(1)->FwdTrans_IterPerExp(m_pressure->GetPlane(1)->GetPhys(),tmpfieldcoeffs);
+            for(int e=0; e<m_fields[0]->GetNcoeffs()/2; e++)
+            {
+                fieldcoeffs[i][e+m_fields[0]->GetNcoeffs()/2] = tmpfieldcoeffs[e];
+            }          
+        }
+        else
+        {
+            m_pressure->BwdTrans_IterPerExp(m_pressure->GetCoeffs(),m_pressure->UpdatePhys());
             m_fields[0]->FwdTrans_IterPerExp(m_pressure->GetPhys(),fieldcoeffs[i]);
-		}
+        }
         variables[i] = "p"; 
-		
+        
         std::string outname = m_sessionName + ".fld";
-		
+        
         WriteFld(outname,m_fields[0],fieldcoeffs,variables);
     }
-
+    
     int CoupledLinearNS::v_GetForceDimension()
-	{
-		return m_session->GetVariables().size();
-	}
+    {
+        return m_session->GetVariables().size();
+    }
 }
 
 /**
-* $Log: CoupledLinearNS.cpp,v $
-**/
+ * $Log: CoupledLinearNS.cpp,v $
+ **/

@@ -1,8 +1,13 @@
 SET(SOLVER_UTILS_SOURCES
-  Advection.cpp
-  AdvectionFR.cpp
-  AdvectionNonConservative.cpp
-  AdvectionWeakDG.cpp
+  Advection/Advection.cpp
+  Advection/AdvectionFR.cpp
+  Advection/AdvectionNonConservative.cpp
+  Advection/AdvectionWeakDG.cpp
+  Diffusion/Diffusion.cpp
+  Diffusion/DiffusionLDG.cpp
+  Diffusion/DiffusionLDGNS.cpp
+  Diffusion/DiffusionLFR.cpp
+  Diffusion/DiffusionLFRNS.cpp
   Driver.cpp
   DriverArnoldi.cpp
   DriverModifiedArnoldi.cpp
@@ -15,14 +20,20 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterThresholdMax.cpp
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
+  RiemannSolvers/UpwindLDGSolver.cpp
   UnsteadySystem.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
-  Advection.h
-  AdvectionFR.h
-  AdvectionNonConservative.h
-  AdvectionWeakDG.h
+  Advection/Advection.h
+  Advection/AdvectionFR.h
+  Advection/AdvectionNonConservative.h
+  Advection/AdvectionWeakDG.h
+  Diffusion/Diffusion.h
+  Diffusion/DiffusionLDG.h
+  Diffusion/DiffusionLDGNS.h
+  Diffusion/DiffusionLFR.h
+  Diffusion/DiffusionLFRNS.h
   Driver.h
   DriverArnoldi.h
   DriverModifiedArnoldi.h
@@ -35,6 +46,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterThresholdMax.h
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
+  RiemannSolvers/UpwindLDGSolver.h
   SolverUtils.hpp
   SolverUtilsDeclspec.h
   UnsteadySystem.h

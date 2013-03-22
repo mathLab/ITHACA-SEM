@@ -340,7 +340,6 @@ namespace Nektar
         void ExpList2DHomogeneous1D::v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion)
         {
             int i,j;
-            int coordim  = (*m_exp)[expansion]->GetCoordim();
             int nquad0 = (*m_exp)[expansion]->GetNumPoints(0);
             int nquad1 = m_planes.num_elements();
             int ntot = nquad0*nquad1;

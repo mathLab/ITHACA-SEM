@@ -111,41 +111,39 @@ namespace Nektar
         {
             bool dirForcCalculated = (bool) pDirForcing.num_elements();
             int nDirDofs  = pLocToGloMap->GetNumGlobalDirBndCoeffs();
-
+            int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
+            Array<OneD, NekDouble> tmp(nGlobDofs), tmp2;
+            
             if(nDirDofs)
             {
                 // calculate the dirichlet forcing
-                int nGlobDofs = pLocToGloMap->GetNumGlobalCoeffs();
-                Array<OneD, NekDouble> tmp(nGlobDofs);
                 if(dirForcCalculated)
                 {
-                    Vmath::Vsub(nGlobDofs, pInput.get(), 1,
+                    Vmath::Vsub(nGlobDofs,
+                                pInput.get(),      1,
                                 pDirForcing.get(), 1,
-                                tmp.get(), 1);
+                                tmp.get(),         1);
                 }
                 else
                 {
                     // Calculate the dirichlet forcing and substract it
                     // from the rhs
-                    int nLocDofs = pLocToGloMap->GetNumLocalCoeffs();
-
                     m_expList.lock()->GeneralMatrixOp(
-                            m_linSysKey,
-                            pOutput, tmp, eGlobal);
+                        m_linSysKey, pOutput, tmp, eGlobal);
                     
                     Vmath::Vsub(nGlobDofs, 
-                                pInput.get(),1,
-                                tmp.get(),   1,
-                                tmp.get(),   1);
+                                pInput.get(), 1,
+                                tmp.get(),    1,
+                                tmp.get(),    1);
                 }
 
-                Array<OneD, NekDouble> offsetarray;
                 SolveLinearSystem(nGlobDofs, tmp + nDirDofs,
-				  offsetarray = pOutput + nDirDofs, pLocToGloMap, nDirDofs);
+                                  tmp2 = pOutput + nDirDofs,
+                                  pLocToGloMap, nDirDofs);
             }
             else
             {
-                SolveLinearSystem(pLocToGloMap->GetNumGlobalCoeffs(), pInput,pOutput, pLocToGloMap);
+                SolveLinearSystem(nDirDofs, pInput, pOutput, pLocToGloMap);
             }
         }
 

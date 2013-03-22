@@ -107,12 +107,14 @@ namespace Nektar
             int nFace = 0;
             int maxEdgeDof = 0;
             int maxFaceDof = 0;
+            int maxIntDof = 0;
             int dof = 0;
             int cnt;
             int i,j,k;
             int meshVertId;
             int meshEdgeId;
             int meshFaceId;
+            int elementId;
             int vGlobalId;
             int maxBndGlobalId = 0;
             StdRegions::Orientation         edgeOrient;
@@ -121,6 +123,7 @@ namespace Nektar
             Array<OneD, int>                    edgeInteriorSign;
             Array<OneD, unsigned int>           faceInteriorMap;
             Array<OneD, int>                    faceInteriorSign;
+            Array<OneD, unsigned int>           interiorMap;
 
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
@@ -148,6 +151,9 @@ namespace Nektar
                     dof = locExpansion->GetFaceIntNcoeffs(j);
                     maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
                 }
+                locExpansion->GetInteriorMap(interiorMap);
+                dof = interiorMap.num_elements();
+                maxIntDof = (dof > maxIntDof ? dof : maxIntDof);
             }
 
             // Tell other processes about how many dof we have
@@ -156,6 +162,7 @@ namespace Nektar
             vCommRow->AllReduce(nFace, LibUtilities::ReduceSum);
             vCommRow->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
             vCommRow->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
+            vCommRow->AllReduce(maxIntDof, LibUtilities::ReduceMax);
 
             // Assemble global to universal mapping for this process
             for(i = 0; i < locExpVector.size(); ++i)
@@ -221,22 +228,30 @@ namespace Nektar
                     }
                 }
 
+                // Add interior DOFs to complete universal numbering
+                locExpansion->GetInteriorMap(interiorMap);
+                dof = interiorMap.num_elements();
+                elementId = (locExpansion->GetGeom())->GetGlobalID();
+                for (k = 0; k < dof; ++k)
+                {
+                    vGlobalId = m_localToGlobalMap[cnt+interiorMap[k]];
+                    m_globalToUniversalMap[vGlobalId]
+                           = nVert + nEdge*maxEdgeDof + nFace*maxFaceDof + elementId*maxIntDof + k + 1;
+                }
             }
 
-            // Finally, internal DOF do not participate in any data
-            // exchange, so we set these to the special GSLib id=0 so
+            // Set up the GSLib universal assemble mapping
+            // Internal DOF do not participate in any data
+            // exchange, so we keep these set to the special GSLib id=0 so
             // they are ignored.
-            for (k = maxBndGlobalId + 1; k < m_globalToUniversalMap.num_elements(); ++k)
-            {
-                m_globalToUniversalMap[k] = 0;
-            }
-
             Nektar::Array<OneD, long> tmp(m_numGlobalCoeffs);
+            Vmath::Zero(m_numGlobalCoeffs, tmp, 1);
             Nektar::Array<OneD, long> tmp2(m_numGlobalBndCoeffs, tmp);
-            for (unsigned int i = 0; i < m_numGlobalCoeffs; ++i)
+            for (unsigned int i = 0; i < m_numGlobalBndCoeffs; ++i)
             {
                 tmp[i] = m_globalToUniversalMap[i];
             }
+
             m_gsh = Gs::Init(tmp, vCommRow);
             m_bndGsh = Gs::Init(tmp2, vCommRow);
             Gs::Unique(tmp, vCommRow);
@@ -249,9 +264,6 @@ namespace Nektar
                 m_globalToUniversalBndMapUnique[i] = (tmp2[i] >= 0 ? 1 : 0);
             }
         }
-
-
-
 
         /**
          * The bandwidth calculated here corresponds to what is referred to as
@@ -354,14 +366,14 @@ namespace Nektar
             return m_localToGlobalSign;
         }
 
-        const void AssemblyMapCG::v_LocalToGlobal(
+        void AssemblyMapCG::v_LocalToGlobal(
                     const Array<OneD, const NekDouble>& loc,
                           Array<OneD,       NekDouble>& global) const
         {
             Array<OneD, const NekDouble> local;
             if(global.data() == loc.data())
             {
-                local = Array<OneD, NekDouble>(local.num_elements(),local.data());
+                local = Array<OneD, NekDouble>(loc.num_elements(),loc.data());
             }
             else
             {
@@ -379,14 +391,14 @@ namespace Nektar
             }
         }
 
-        const void AssemblyMapCG::v_LocalToGlobal(
+        void AssemblyMapCG::v_LocalToGlobal(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const
         {
             LocalToGlobal(loc.GetPtr(),global.GetPtr());
         }
 
-        const void AssemblyMapCG::v_GlobalToLocal(
+        void AssemblyMapCG::v_GlobalToLocal(
                     const Array<OneD, const NekDouble>& global,
                           Array<OneD,       NekDouble>& loc) const
         {
@@ -411,14 +423,14 @@ namespace Nektar
             }
         }
 
-        const void AssemblyMapCG::v_GlobalToLocal(
+        void AssemblyMapCG::v_GlobalToLocal(
                     const NekVector<NekDouble>& global,
                           NekVector<      NekDouble>& loc) const
         {
             GlobalToLocal(global.GetPtr(),loc.GetPtr());
         }
 
-        const void AssemblyMapCG::v_Assemble(
+        void AssemblyMapCG::v_Assemble(
                     const Array<OneD, const NekDouble> &loc,
                           Array<OneD,       NekDouble> &global) const
         {
@@ -446,26 +458,36 @@ namespace Nektar
             UniversalAssemble(global);
         }
 
-        const void AssemblyMapCG::v_Assemble(
+        void AssemblyMapCG::v_Assemble(
                     const NekVector<NekDouble>& loc,
                           NekVector<      NekDouble>& global) const
         {
             Assemble(loc.GetPtr(),global.GetPtr());
         }
 
-        const void AssemblyMapCG::v_UniversalAssemble(
+        void AssemblyMapCG::v_UniversalAssemble(
                       Array<OneD,     NekDouble>& pGlobal) const
         {
             Gs::Gather(pGlobal, Gs::gs_add, m_gsh);
         }
 
-        const void AssemblyMapCG::v_UniversalAssemble(
+        void AssemblyMapCG::v_UniversalAssemble(
                       NekVector<      NekDouble>& pGlobal) const
         {
             UniversalAssemble(pGlobal.GetPtr());
         }
 
-        const int AssemblyMapCG::v_GetFullSystemBandWidth() const
+        void AssemblyMapCG::v_UniversalAssemble(
+                      Array<OneD,     NekDouble>& pGlobal,
+                      int                         offset) const
+        {
+            Array<OneD, NekDouble> tmp(offset);
+            Vmath::Vcopy(offset, pGlobal, 1, tmp, 1);
+            UniversalAssemble(pGlobal);
+            Vmath::Vcopy(offset, tmp, 1, pGlobal, 1);
+        }
+
+        int AssemblyMapCG::v_GetFullSystemBandWidth() const
         {
             return m_fullSystemBandWidth;
         }

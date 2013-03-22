@@ -33,8 +33,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-using namespace std;
-
 #include <LibUtilities/Communication/CommMpi.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 
@@ -42,7 +40,7 @@ namespace Nektar
 {
     namespace LibUtilities
     {
-        string CommMpi::className
+        std::string CommMpi::className
             = GetCommFactory().RegisterCreatorFunction(
                 "ParallelMPI",
                 CommMpi::create,
@@ -211,8 +209,8 @@ namespace Nektar
                       m_comm,
                       &status);
 
-            ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
-                     "MPI error receiving data.");
+            //ASSERTL0(status.MPI_ERROR == MPI_SUCCESS,
+            //         "MPI error receiving data.");
         }
 
 
@@ -329,9 +327,10 @@ namespace Nektar
             MPI_Op vOp;
             switch (pOp)
             {
-            case ReduceSum: vOp = MPI_SUM; break;
             case ReduceMax: vOp = MPI_MAX; break;
             case ReduceMin: vOp = MPI_MIN; break;
+            case ReduceSum:
+            default:        vOp = MPI_SUM; break;
             }
             int retval = MPI_Allreduce( MPI_IN_PLACE,
                                         &pData,
@@ -358,9 +357,10 @@ namespace Nektar
             MPI_Op vOp;
             switch (pOp)
             {
-            case ReduceSum: vOp = MPI_SUM; break;
             case ReduceMax: vOp = MPI_MAX; break;
             case ReduceMin: vOp = MPI_MIN; break;
+            case ReduceSum:
+            default:        vOp = MPI_SUM; break;
             }
             int retval = MPI_Allreduce( MPI_IN_PLACE,
                                         &pData,
@@ -387,9 +387,10 @@ namespace Nektar
             MPI_Op vOp;
             switch (pOp)
             {
-            case ReduceSum: vOp = MPI_SUM; break;
             case ReduceMax: vOp = MPI_MAX; break;
             case ReduceMin: vOp = MPI_MIN; break;
+            case ReduceSum:
+            default:        vOp = MPI_SUM; break;
             }
             int retval = MPI_Allreduce( MPI_IN_PLACE,
                                         pData.get(),
@@ -416,9 +417,10 @@ namespace Nektar
             MPI_Op vOp;
             switch (pOp)
             {
-            case ReduceSum: vOp = MPI_SUM; break;
             case ReduceMax: vOp = MPI_MAX; break;
             case ReduceMin: vOp = MPI_MIN; break;
+            case ReduceSum:
+            default:        vOp = MPI_SUM; break;
             }
             int retval = MPI_Allreduce( MPI_IN_PLACE,
                                         pData.get(),

@@ -58,8 +58,8 @@ namespace Nektar
                     const  LibUtilities::BasisKey &Ba,
                     const  LibUtilities::BasisKey &Bb,
                     const  LibUtilities::BasisKey &Bc,
-                    double *coeffs,
-                    double *phys);
+                    NekDouble *coeffs,
+                    NekDouble *phys);
             STD_REGIONS_EXPORT StdHexExp(const StdHexExp &T);
             STD_REGIONS_EXPORT ~StdHexExp();
 
@@ -99,10 +99,6 @@ namespace Nektar
                     const int dir,
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble>& outarray);
-            STD_REGIONS_EXPORT virtual void v_PhysDirectionalDeriv(
-                    const Array<OneD, const NekDouble>& inarray,
-                    const Array<OneD, const NekDouble>& direction,
-                          Array<OneD, NekDouble> &outarray);
             STD_REGIONS_EXPORT virtual void v_StdPhysDeriv(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &out_d0,
@@ -140,24 +136,16 @@ namespace Nektar
             // Inner product functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                    const Array<OneD, const NekDouble>& bx,
-                    const Array<OneD, const NekDouble>& by,
-                    const Array<OneD, const NekDouble>& bz,
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> & outarray,
-                    int coll_check);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_MatOp(
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFac(
-                    const Array<OneD, const NekDouble>& inarray,
-                          Array<OneD, NekDouble> &outarray);
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD,       NekDouble> &outarray);
 
             STD_REGIONS_EXPORT void IProductWRTBase_SumFacKernel(
                     const Array<OneD, const NekDouble>& base0,
@@ -207,7 +195,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int  v_GetNedges() const;
             STD_REGIONS_EXPORT virtual int  v_GetNfaces() const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int  v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_GetEdgeNcoeffs(const int i) const;
@@ -321,11 +309,7 @@ namespace Nektar
                           Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
 
-        private:
-            //---------------------------------------
-            // Private helper functions
-            //---------------------------------------
-            void MultiplyByQuadratureMetric(
+            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
         };

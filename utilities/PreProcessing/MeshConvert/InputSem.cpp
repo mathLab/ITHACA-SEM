@@ -77,10 +77,13 @@ namespace Nektar
          */
         void InputSem::Process()
         {
-            cerr << "Start reading InputSem..." << endl;
-            
             // Open the file stream.
             OpenStream();
+
+            if (m->verbose)
+            {
+                cout << "InputSem: Start reading file..." << endl;
+            }
 
             // Read through input file and populate the section map.
             map<string,streampos>::iterator it;
@@ -219,7 +222,6 @@ namespace Nektar
                 {
                     continue;
                 }
-                int num_tag = 0, num_nodes = 0;
                 
                 // Create element tags
                 vector<int> tags;
@@ -646,7 +648,6 @@ namespace Nektar
             vector<int> tags;
             tags.push_back(tagId);
             
-            ElementType seg = eLine;
             ElmtConfig conf(eLine, order, order > 1, false, true,
                             LibUtilities::eGaussLobattoLegendre);
             ElementSharedPtr E = GetElementFactory().

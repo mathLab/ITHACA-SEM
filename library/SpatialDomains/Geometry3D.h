@@ -81,8 +81,6 @@ namespace Nektar
                 GetFace(int i);
             SPATIAL_DOMAINS_EXPORT StdRegions::Orientation 
                 GetFaceOrient(const int i) const;
-            SPATIAL_DOMAINS_EXPORT int GetFid(int i) const;
-
             SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion3DSharedPtr
                 GetXmap(const int i);
 
@@ -102,9 +100,13 @@ namespace Nektar
             // 3D Geometry Methods
             //---------------------------------------
 
+            void NewtonIterationForLocCoord
+                (const Array<OneD, const NekDouble> &coords, 
+                 Array<OneD,NekDouble> &Lcoords);
+
             virtual void      v_FillGeom();
-            virtual NekDouble v_GetCoord(
-                const int i, const Array<OneD, const NekDouble> &Lcoord);
+            virtual NekDouble v_GetCoord(const int i, 
+                                         const Array<OneD, const NekDouble> &Lcoord);
             virtual void      v_GenGeomFactors(
                 const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
 

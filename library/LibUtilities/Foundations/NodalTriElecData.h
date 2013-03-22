@@ -9,7 +9,7 @@ namespace Nektar
                                                     {2,1,0},{0,2,1},{1,2,0}};
         const unsigned int NodalTriElecAvailable = 16;
         static const unsigned int NodalTriElecNPTS[NodalTriElecAvailable] = {1,2,3,4,5,7,8,10,12,14,16,19,21,24,27,30};
-        static const double NodalTriElecData[][6] = {
+        static const NekDouble NodalTriElecData[][6] = {
 
             // %%% n_1 n_3 n_6 l_1 l_2 l_3
             // 1 1 %%% Order / Number of Points

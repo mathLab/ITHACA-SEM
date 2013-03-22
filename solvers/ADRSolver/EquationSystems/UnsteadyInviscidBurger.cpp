@@ -89,6 +89,11 @@ namespace Nektar
                 m_advection->InitObject      (m_session, m_fields);
                 break;
             }
+            default:
+            {
+                ASSERTL0(false, "Unsupported projection type.");
+                break;
+            }
         }
                 
         // If explicit it computes RHS and PROJECTION for the time integration
@@ -262,18 +267,19 @@ namespace Nektar
      * @param flux        Resulting flux.
      */
     void UnsteadyInviscidBurger::GetFluxVector(
-        const int i, 
-        const Array<OneD, Array<OneD, NekDouble> > &physfield,
-              Array<OneD, Array<OneD, NekDouble> > &flux)
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        for(int j = 0; j < flux.num_elements(); ++j)
+        const int nq = GetNpoints();
+
+        for (int i = 0; i < flux.num_elements(); ++i)
         {
-            Vmath::Vmul(GetNpoints(), 
-                        physfield[i], 1, 
-                        physfield[i], 1, 
-                        flux[j], 1);
-            
-            Vmath::Smul(GetNpoints(), 0.5, flux[j], 1, flux[j], 1);
+            for (int j = 0; j < flux[0].num_elements(); ++j)
+            {
+                Vmath::Vmul(nq, physfield[i], 1, physfield[i], 1, 
+                            flux[i][j], 1);
+                Vmath::Smul(nq, 0.5, flux[i][j], 1, flux[i][j], 1);
+            }
         }
     }
 }

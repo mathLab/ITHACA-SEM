@@ -168,9 +168,8 @@ namespace Nektar
         //  19  K_i  Potassium
         //  20  Ca_rel Calcium Rel
         //  21  Ca_up  Calcium up
-        int nvariables = inarray.num_elements();
-        int n          = m_nq;
-        int i          = 0;
+        int n = m_nq;
+        int i = 0;
         NekDouble alpha, beta;
         Vmath::Zero(n, outarray[0], 1);
 

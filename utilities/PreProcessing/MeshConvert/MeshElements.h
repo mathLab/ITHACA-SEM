@@ -352,22 +352,21 @@ namespace Nektar
                  std::vector<EdgeSharedPtr> pEdgeList,
                  LibUtilities::PointsType   pCurveType)
                 : vertexList(pVertexList), 
-                  faceNodes (pFaceNodes), 
                   edgeList  (pEdgeList),
+                  faceNodes (pFaceNodes), 
                   curveType (pCurveType),
                   m_geom    () {}
             
             /// Copy an existing face.
             Face(const Face& pSrc)
-                : vertexList(pSrc.vertexList), faceNodes(pSrc.faceNodes), 
-                  edgeList  (pSrc.edgeList),   curveType(pSrc.curveType),
+                : vertexList(pSrc.vertexList), edgeList  (pSrc.edgeList),
+                  faceNodes (pSrc.faceNodes),  curveType (pSrc.curveType),
                   m_geom    (pSrc.m_geom) {}
             ~Face() {}
 
             /// Equality is defined by matching all vertices.
             bool operator==(Face& pSrc)
             {
-                bool e = true;
                 std::vector<NodeSharedPtr>::iterator it1, it2;
                 for (it1 = vertexList.begin(); it1 != vertexList.end(); ++it1)
                 {
@@ -771,7 +770,7 @@ namespace Nektar
                     int n) const
             {
                 std::vector<NodeSharedPtr> nodeList;
-                int cnt, cnt2;
+                int cnt2;
 
                 // Triangle
                 if (vertex.size() == 3)
@@ -1031,7 +1030,7 @@ namespace Nektar
         struct element_id_less_than
         {
             typedef boost::shared_ptr<Element> pT;
-            const bool operator()(const pT a, const pT b) const
+            bool operator()(const pT a, const pT b) const
             {
                 // check for 0
                 if (a.get() == 0)
@@ -1114,8 +1113,10 @@ namespace Nektar
         class Mesh
         {
         public:
-            Mesh() {}
+            Mesh() : verbose(false) {}
             
+            /// Verbose flag
+            bool                       verbose;
             /// Dimension of the expansion.
             unsigned int               expDim;
             /// Dimension of the space in which the mesh is defined.

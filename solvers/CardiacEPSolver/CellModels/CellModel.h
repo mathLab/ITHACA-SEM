@@ -91,7 +91,7 @@ namespace Nektar
             v_PrintSummary(out);
         }
 
-        const unsigned int GetNumCellVariables()
+        unsigned int GetNumCellVariables()
         {
             return m_nvar;
         }

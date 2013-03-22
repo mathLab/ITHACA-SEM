@@ -51,7 +51,6 @@ namespace Nektar
             DisContField3DHomogeneous2D (In,false)
         {
             
-            bool False = false;
             ContField1DSharedPtr zero_line = boost::dynamic_pointer_cast<ContField1D> (In.m_lines[0]);
             
             for(int n = 0; n < m_lines.num_elements(); ++n)
@@ -78,7 +77,6 @@ namespace Nektar
             DisContField3DHomogeneous2D(pSession,HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,useFFT,dealiasing)
         {
             int i,n,nel;
-            bool False = false;
             ContField1DSharedPtr line_zero;
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
 
@@ -114,6 +112,19 @@ namespace Nektar
             SetCoeffPhys(); 
 
             SetupBoundaryConditions(HomoBasis_y,HomoBasis_z,lhom_y,lhom_z,bcs);
+        }
+
+
+        void ContField3DHomogeneous2D::v_ImposeDirichletConditions(Array<OneD,NekDouble>& outarray)
+        {
+            Array<OneD, NekDouble> tmp; 
+            int ncoeffs = m_lines[0]->GetNcoeffs();
+
+            for(int n = 0; n < m_lines.num_elements(); ++n)
+            {
+                m_lines[n]->ImposeDirichletConditions(tmp = outarray + 
+                                                       n*ncoeffs);
+            }
         }
 
 

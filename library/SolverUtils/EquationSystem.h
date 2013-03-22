@@ -40,6 +40,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/FieldIO.h>
 #include <SpatialDomains/SpatialData.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
@@ -136,6 +137,11 @@ namespace Nektar
                 Array<OneD, NekDouble>& pArray,
                 const std::string& pFunctionName,
                 const NekDouble& pTime = 0.0);
+            
+            // Describe a function.
+            SOLVER_UTILS_EXPORT std::string DescribeFunction(
+                std::string pFieldName,
+                const std::string &pFunctionName);
             
             /// Perform initialisation of the base flow.
             SOLVER_UTILS_EXPORT void InitialiseBaseFlow(
@@ -285,6 +291,11 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline Array<
             OneD, MultiRegions::ExpListSharedPtr> &UpdateForces();
             
+
+            /// Get hold of FieldInfoMap so it can be updated
+            SOLVER_UTILS_EXPORT inline LibUtilities::FieldMetaDataMap 
+                &UpdateFieldMetaDataMap();
+
             /// Return final time
             SOLVER_UTILS_EXPORT inline NekDouble GetFinalTime();
             
@@ -363,13 +374,13 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &numfluxY);
             
             SOLVER_UTILS_EXPORT inline void NumFluxforScalar(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
             
             SOLVER_UTILS_EXPORT inline void NumFluxforVector(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                Array<OneD, Array<OneD, NekDouble> >  &qflux);
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                Array<OneD, Array<OneD, NekDouble> >               &qflux);
             
             SOLVER_UTILS_EXPORT inline void SetModifiedBasis(
                 const bool modbasis);
@@ -395,37 +406,61 @@ namespace Nektar
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
-            
             SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
-            
-            std::string                          m_filename;                 ///< Filename
-            std::string                          m_sessionName;              ///< Name of the sessions
-            NekDouble                            m_time;                     ///< Continous time
-            NekDouble                            m_fintime;                  ///< Time to be taken during the simulation
-            NekDouble                            m_timestep;                 ///< Time step size
-            NekDouble                            m_lambda;                   ///< Lambda constant in real system if one required
-            int                                  m_steps;                    ///< Number of steps to take
-            int                                  m_checksteps;               ///< Number of steps between checkpoints
-            int                                  m_spacedim;                 ///< Spatial dimension (> expansion dim)
-            int                                  m_expdim;                   ///< Dimension of the expansion
-            bool                                 m_SingleMode;               ///< Flag to determine if use single mode or not.
-            bool                                 m_HalfMode;                 ///< Flag to determine if use half mode or not
-            bool                                 m_MultipleModes;            ///< Flag to determine if use multiple mode or not
-            enum MultiRegions::ProjectionType    m_projectionType;           ///< Type of projection, i.e. Continuous or Discontinuous
-            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;             ///< Array holding the forward normals
-            
+            /// Filename.
+            std::string                                 m_filename;
+            /// Name of the session.
+            std::string                                 m_sessionName;
+            /// Current time of simulation.
+            NekDouble                                   m_time;
+            /// Finish time of the simulation.
+            NekDouble                                   m_fintime;
+            /// Time step size
+            NekDouble                                   m_timestep;
+            /// Lambda constant in real system if one required.
+            NekDouble                                   m_lambda;
+            /// Time between checkpoints.
+            NekDouble                                   m_checktime;
+            /// Number of steps to take.
+            int                                         m_steps;
+            /// Number of steps between checkpoints.
+            int                                         m_checksteps;
+            /// Spatial dimension (>= expansion dim).
+            int                                         m_spacedim;
+            /// Expansion dimension.
+            int                                         m_expdim;
+            /// Flag to determine if single homogeneous mode is used.
+            bool                                        m_SingleMode;
+            /// Flag to determine if half homogeneous mode is used.
+            bool                                        m_HalfMode;
+            /// Flag to determine if use multiple homogenenous modes are used.
+            bool                                        m_MultipleModes;
+            /// Flag to determine if FFT is used for homogeneous transform.
+            bool                                        m_useFFT;
+            /// Flag to determine if dealiasing is used for homogeneous
+            /// simulations.
+            bool                                        m_dealiasing;
+            /// Flag to determine if dealisising is usde for the
+            /// Spectral/hp element discretisation.
+            bool                                        m_specHP_dealiasing;
+            /// Type of projection; e.g continuous or discontinuous.
+            enum MultiRegions::ProjectionType           m_projectionType;
+            /// Array holding trace normals for DG simulations in the forwards
+            /// direction.
+            Array<OneD, Array<OneD, NekDouble> >        m_traceNormals;
             /// 1 x nvariable x nq
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan;
-            
             /// 2 x m_spacedim x nq
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
+            /// Flag to indicate if the fields should be checked for
+            /// singularity.
+            Array<OneD, bool>                           m_checkIfSystemSingular;
             
-            /// Flag to indicate if the fields should be checked for singularity.
-            Array<OneD, bool> m_checkIfSystemSingular;
-            
+            /// Map to identify relevant solver info to dump in output fields
+            LibUtilities::FieldMetaDataMap            m_fieldMetaDataMap;
+
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;
-            bool m_UseContCoeff;
             
             /// Parameter for homogeneous expansions
             enum HomogeneousType
@@ -436,8 +471,6 @@ namespace Nektar
                 eNotHomogeneous
             };
             
-            bool m_useFFT;      ///< flag to determine if use or not the FFT for transformations
-            bool m_dealiasing;  ///< flag to determine if use dealising or not
             
             
             enum HomogeneousType m_HomogeneousType;
@@ -548,13 +581,13 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &numfluxY);
             
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
             
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                Array<OneD, Array<OneD, NekDouble > >  &qflux);
+                const Array<OneD, Array<OneD, NekDouble> >         &ufield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                Array<OneD, Array<OneD, NekDouble > >              &qflux);
         };
         
         
@@ -843,17 +876,19 @@ namespace Nektar
             v_NumericalFlux(physfield, numfluxX, numfluxY);
         }
         
-        inline void EquationSystem::NumFluxforScalar(Array<OneD, Array<OneD, NekDouble> > &ufield,
-                                                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
+        inline void EquationSystem::NumFluxforScalar(
+            const Array<OneD, Array<OneD, NekDouble> >   &ufield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux)
         {
             v_NumFluxforScalar(ufield, uflux);
         }
         
-        inline void EquationSystem::NumFluxforVector(Array<OneD, Array<OneD, NekDouble> > &ufield,
-                                                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &qfield,
-                                                     Array<OneD, Array<OneD, NekDouble> >  &qflux)
+        inline void EquationSystem::NumFluxforVector(            
+            const Array<OneD, Array<OneD, NekDouble> >               &ufield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
+                  Array<OneD, Array<OneD, NekDouble> >               &qflux)
         {
-            v_NumFluxforVector(ufield,qfield, qflux);
+            v_NumFluxforVector(ufield, qfield, qflux);
         }
     }
 }

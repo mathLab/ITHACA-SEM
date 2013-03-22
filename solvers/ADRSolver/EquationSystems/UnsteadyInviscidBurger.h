@@ -38,7 +38,7 @@
 
 #include <SolverUtils/UnsteadySystem.h>
 #include <SolverUtils/RiemannSolvers/RiemannSolver.h>
-#include <SolverUtils/Advection.h>
+#include <SolverUtils/Advection/Advection.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -72,9 +72,8 @@ namespace Nektar
 
         /// Evaluate the flux at each solution point
         void GetFluxVector(
-            const int i, 
-            const Array<OneD, Array<OneD, NekDouble> > &physfield, 
-                  Array<OneD, Array<OneD, NekDouble> > &flux);
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         
         /// Compute the RHS
         void DoOdeRhs(

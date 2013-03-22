@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYDIFFUSION_H
 
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/Diffusion/Diffusion.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -57,27 +58,40 @@ namespace Nektar
         /// Name of class
         static std::string className;
 
+        /// Destructor
         virtual ~UnsteadyDiffusion();
 
     protected:
+        bool m_useSpecVanVisc;
+        NekDouble m_sVVCutoffRatio;   // cutt off ratio from which to start decayhing modes
+        NekDouble m_sVVDiffCoeff;     // Diffusion coefficient of SVV modes
+        SolverUtils::DiffusionSharedPtr         m_diffusion;        
+        SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
+
         UnsteadyDiffusion(
                 const LibUtilities::SessionReaderSharedPtr& pSession);
-
-        void DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                          Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                    const NekDouble time);
-
-
-        void DoOdeProjection(const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,
-                          Array<OneD,  Array<OneD, NekDouble> > &outarray,
-                          const NekDouble time);
-
-        virtual void DoImplicitSolve(const Array<OneD, const Array<OneD,      NekDouble> >&inarray,
-                      Array<OneD, Array<OneD, NekDouble> >&outarray,
-                      NekDouble time,
-                      NekDouble lambda);
-
+        
         virtual void v_InitObject();
+        
+        void GetFluxVector(
+            const int i, 
+            const int j,
+            const Array<OneD, Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> > &derivatives,
+                  Array<OneD, Array<OneD, NekDouble> > &flux);
+        void DoOdeRhs(
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                  Array<OneD,       Array<OneD, NekDouble> >&outarray,
+            const NekDouble time);
+        void DoOdeProjection(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble time);
+        virtual void DoImplicitSolve(
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                  Array<OneD,       Array<OneD, NekDouble> >&outarray,
+            NekDouble time,
+            NekDouble lambda);
 
     private:
         NekDouble m_waveFreq;

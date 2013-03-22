@@ -61,6 +61,11 @@ namespace Nektar
         
         void OutputNekpp::Process()
         {
+            if (m->verbose)
+            {
+                cout << "OutputNekpp: Writing file..." << endl;
+            }
+
             TiXmlDocument doc;
             TiXmlDeclaration* decl = new TiXmlDeclaration( "1.0", "utf-8", "");
             doc.LinkEndChild( decl );
@@ -115,7 +120,6 @@ namespace Nektar
         {
             if (m->expDim >= 2)
             {
-                int edgecnt = 0;
                 TiXmlElement* verTag = new TiXmlElement( "EDGE" );
                 std::set<EdgeSharedPtr>::iterator it;
                 std::set<EdgeSharedPtr> tmp(
@@ -292,7 +296,6 @@ namespace Nektar
                 if (it->second->items.size() > 0) 
                 {
                     TiXmlElement *comp_tag = new TiXmlElement("C"); // Composite
-                    TiXmlElement *elm_tag;
                     bool doSort = true;
                     
                     // Ensure that this composite is not used for periodic BCs!
@@ -438,6 +441,7 @@ namespace Nektar
                         case eNeumann:      tagId = "N"; break;
                         case ePeriodic:     tagId = "P"; break;
                         case eHOPCondition: tagId = "N"; break;
+                        default:                         break;
                     }
                     
                     TiXmlElement *tag = new TiXmlElement(tagId);

@@ -80,6 +80,11 @@ namespace Nektar
          */
         void OutputGmsh::Process()
         {
+            if (m->verbose)
+            {
+                cout << "OutputGmsh: Writing file..." << endl;
+            }
+
             // Open the file stream.
             OpenStream();
             
@@ -111,8 +116,8 @@ namespace Nektar
                 for (int i = 0; i < m->element[d].size(); ++i)
                 {
                     ElementSharedPtr e = m->element[d][i];
-                    if (e->GetConf().order <= 1        && maxOrder > 1 ||
-                        e->GetConf().order == maxOrder && e->GetConf().faceNodes == false)
+                    if ((e->GetConf().order <= 1        && maxOrder > 1) ||
+                        (e->GetConf().order == maxOrder && e->GetConf().faceNodes == false))
                     {
                         toComplete.push_back(e);
                     }

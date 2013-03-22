@@ -38,6 +38,7 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 
 #include <SpatialDomains/GeomFactors.h>
+#include <LibUtilities/BasicUtils/ShapeType.hpp>
 
 #include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
@@ -48,35 +49,6 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-
-        // Types of geometry types.
-        enum GeomShapeType
-        {
-            eNoGeomShapeType,
-            eSegment,
-            ePoint,
-            eTriangle,
-            eQuadrilateral,
-            eTetrahedron,
-            ePyramid,
-            ePrism,
-            eHexahedron,
-            SIZE_GeomShapeType
-        };
-
-
-        const char* const GeomShapeTypeMap[] =
-        {
-            "NoGeomShapeType",
-            "Segment",
-            "Point",
-            "Triangle",
-            "Quadrilateral",
-            "Tetrahedron",
-            "Pyramid",
-            "Prism",
-            "Hexahedron"
-        };
 
         class Geometry; // Forward declaration for typedef.
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
@@ -137,15 +109,16 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT GeomType GetGtype();
                 SPATIAL_DOMAINS_EXPORT const Array<OneD, const NekDouble>& GetJac();
                 SPATIAL_DOMAINS_EXPORT const Array<TwoD, const NekDouble>& GetGmat();
-                SPATIAL_DOMAINS_EXPORT const int GetCoordim() const;
+                SPATIAL_DOMAINS_EXPORT int GetCoordim() const;
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetMetricInfo();
-                SPATIAL_DOMAINS_EXPORT GeomShapeType GetGeomShapeType(void);
+                SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType GetShapeType(void);
                 SPATIAL_DOMAINS_EXPORT int GetGlobalID(void);
                 SPATIAL_DOMAINS_EXPORT void SetGlobalID(int globalid);
                 SPATIAL_DOMAINS_EXPORT int GetVid(int i) const;
-                SPATIAL_DOMAINS_EXPORT int GetEid(int i = 0) const;
+                SPATIAL_DOMAINS_EXPORT int GetEid(int i) const;
+                SPATIAL_DOMAINS_EXPORT int GetFid(int i) const;
                 SPATIAL_DOMAINS_EXPORT int GetNumVerts() const;
                 SPATIAL_DOMAINS_EXPORT StdRegions::Orientation
                             GetEorient(const int i) const;
@@ -166,26 +139,21 @@ namespace Nektar
 
                 SPATIAL_DOMAINS_EXPORT static GeomFactorsSharedPtr
                             ValidateRegGeomFactor(GeomFactorsSharedPtr geomFactor);
+                static GeomFactorsVector m_regGeomFactorsManager;
 
                 /// coordinate dimension
                 int                  m_coordim;
-
                 GeomFactorsSharedPtr m_geomFactors;
+                GeomState            m_geomFactorsState;
 
                 /// enum identifier to determine if quad points are filled
                 GeomState            m_state;
-
-                static GeomFactorsVector m_regGeomFactorsManager;
-
-                GeomShapeType m_geomShapeType;
-                int           m_globalID;
+                GeomType             m_geomType;
+                LibUtilities::ShapeType   m_shapeType;
+                int                  m_globalID;
 
                 void GenGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
-
-        private:
-                GeomType m_geomType;
-
 
                 //---------------------------------------
                 // Element connection functions
@@ -198,15 +166,15 @@ namespace Nektar
                             int locid);
                 virtual int  v_NumElmtConnected() const;
 
-
                 //---------------------------------------
                 // Helper functions
                 //---------------------------------------
 
                 virtual int  v_GetEid(int i) const;
+                virtual int  v_GetVid(int i) const;
+                virtual int  v_GetFid(int i) const;
                 virtual void v_GenGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
-                virtual int  v_GetVid(int i) const;
                 virtual int  v_GetNumVerts() const;
                 virtual StdRegions::Orientation
                              v_GetEorient(const int i) const;
@@ -245,7 +213,6 @@ namespace Nektar
                 int i;
                 size_t seed  = 0;
                 int nVert = p->GetNumVerts();
-                int nEdge = p->GetNumEdges();
                 std::vector<unsigned int> ids(nVert);
 
                 for (i = 0; i < nVert; ++i)

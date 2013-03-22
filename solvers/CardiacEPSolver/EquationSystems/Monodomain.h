@@ -38,6 +38,7 @@
 
 #include <SolverUtils/UnsteadySystem.h>
 #include <CardiacEPSolver/CellModels/CellModel.h>
+#include <CardiacEPSolver/Stimuli/Stimulus.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -97,6 +98,8 @@ namespace Nektar
         /// Cell model.
         CellModelSharedPtr m_cell;
 
+        std::vector<StimulusSharedPtr> m_stimulus;
+
         /// Variable diffusivity
         StdRegions::VarCoeffMap m_vardiff;
 
@@ -106,6 +109,7 @@ namespace Nektar
         /// Stimulus current
         NekDouble m_stimDuration;
 
+        void LoadStimuli();
     };
 
 }

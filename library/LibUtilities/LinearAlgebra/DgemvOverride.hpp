@@ -149,7 +149,7 @@ namespace expt
             typename boost::enable_if
             <
                 Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, IsDouble, MultiplyOp,
-                                             CanGetRawPtr, MultiplyOp, IsVector>
+                                            Nektar::CanGetRawPtr, MultiplyOp, Nektar::IsVector>
 //                boost::mpl::and_
 //                <
 //                    boost::is_same<typename A1::ResultType, double>,
@@ -180,8 +180,8 @@ namespace expt
         struct AlphaAXParameterAccessImpl< Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, IndicesType, index,
             typename boost::enable_if
             <
-                Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, CanGetRawPtr, MultiplyOp,
-                                             IsDouble, MultiplyOp, IsVector>
+                Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, Nektar::CanGetRawPtr, MultiplyOp,
+                                             IsDouble, MultiplyOp, Nektar::IsVector>
 //                boost::mpl::and_
 //                <
 //                    CanGetRawPtr<typename A1::ResultType>,
@@ -212,8 +212,8 @@ namespace expt
         struct AlphaAXParameterAccessImpl< Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, IndicesType, index,
             typename boost::enable_if
             <
-                Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, CanGetRawPtr, MultiplyOp,
-                                             IsVector, MultiplyOp, IsDouble>
+                Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, Nektar::CanGetRawPtr, MultiplyOp,
+                                             Nektar::IsVector, MultiplyOp, IsDouble>
 //                boost::mpl::and_
 //                <
 //                    CanGetRawPtr<typename A1::ResultType>,
@@ -247,10 +247,10 @@ namespace expt
             <
                 boost::mpl::and_    
                 <
-                    TestBinaryNode<Node<A1, MultiplyOp, A2>, CanGetRawPtr, MultiplyOp, IsVector>,
-                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, IsDouble, MultiplyOp, CanGetRawPtr, MultiplyOp, IsVector> >,
-                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, CanGetRawPtr, MultiplyOp, IsDouble, MultiplyOp, IsVector> >,
-                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, CanGetRawPtr, MultiplyOp, IsVector, MultiplyOp, IsDouble> >
+                    TestBinaryNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, Nektar::IsVector>,
+                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, IsDouble, MultiplyOp, Nektar::CanGetRawPtr, MultiplyOp, Nektar::IsVector> >,
+                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, IsDouble, MultiplyOp, Nektar::IsVector> >,
+                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, Nektar::IsVector, MultiplyOp, IsDouble> >
 //                    CanGetRawPtr<typename A1::ResultType>,
 //                    boost::is_same<typename A2::ResultType, NekVector<double> >
                 >
@@ -309,7 +309,7 @@ namespace expt
             <
                 boost::mpl::and_    
                 <
-                    boost::is_same<typename L::ResultType, NekVector<double> >,
+                    boost::is_same<typename L::ResultType, Nektar::NekVector<double> >,
                     boost::is_same<typename R::ResultType, double>
                 >
             >::type> : public boost::true_type 
@@ -334,7 +334,7 @@ namespace expt
             <
                 boost::mpl::and_    
                 <
-                    boost::is_same<typename R::ResultType, NekVector<double> >,
+                    boost::is_same<typename R::ResultType, Nektar::NekVector<double> >,
                     boost::is_same<typename L::ResultType, double>
                 >
             >::type> : public boost::true_type 
@@ -357,7 +357,7 @@ namespace expt
         struct BetaYParameterAccessImpl< NodeType, IndicesType, index, 
             typename boost::enable_if
             <
-                boost::is_same<typename NodeType::ResultType, NekVector<double> >
+                boost::is_same<typename NodeType::ResultType, Nektar::NekVector<double> >
             >::type> : public boost::true_type 
         {
             typedef DgemvNodeEvaluator<NodeType, IndicesType, index> YWrappedEvaluator;

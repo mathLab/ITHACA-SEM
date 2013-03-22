@@ -227,7 +227,7 @@ namespace expt
             typename boost::enable_if
             <
                 Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, IsDouble, MultiplyOp,
-                                             CanGetRawPtr, MultiplyOp, CanGetRawPtr>
+                                             Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr>
                 //boost::mpl::and_    
                 //<
                 //    boost::is_same<typename A1::ResultType, double>,
@@ -258,8 +258,8 @@ namespace expt
         struct AlphaABParameterAccessImpl< Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, IndicesType, index,
             typename boost::enable_if
             <
-                Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, CanGetRawPtr, MultiplyOp,
-                                             IsDouble, MultiplyOp, CanGetRawPtr>
+                Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, Nektar::CanGetRawPtr, MultiplyOp,
+                                             IsDouble, MultiplyOp, Nektar::CanGetRawPtr>
                 //boost::mpl::and_    
                 //<
                 //    CanGetRawPtr<typename A1::ResultType>,
@@ -290,8 +290,8 @@ namespace expt
         struct AlphaABParameterAccessImpl< Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, IndicesType, index,
             typename boost::enable_if
             <
-                Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, CanGetRawPtr, MultiplyOp,
-                                             CanGetRawPtr, MultiplyOp, IsDouble>
+                Test3ArgumentAssociativeNode<Node<Node<A1, MultiplyOp, A2>, MultiplyOp, A3>, Nektar::CanGetRawPtr, MultiplyOp,
+                                             Nektar::CanGetRawPtr, MultiplyOp, IsDouble>
                 //boost::mpl::and_    
                 //<
                 //    CanGetRawPtr<typename A1::ResultType>,
@@ -325,10 +325,10 @@ namespace expt
             <
                 boost::mpl::and_
                 <
-                    TestBinaryNode<Node<A1, MultiplyOp, A2>, CanGetRawPtr, MultiplyOp, CanGetRawPtr>,
-                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, CanGetRawPtr, MultiplyOp, CanGetRawPtr, MultiplyOp, IsDouble> >,
-                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, CanGetRawPtr, MultiplyOp, IsDouble, MultiplyOp, CanGetRawPtr> >,
-                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, IsDouble, MultiplyOp, CanGetRawPtr, MultiplyOp, CanGetRawPtr> >
+                    TestBinaryNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr>,
+                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr, MultiplyOp, IsDouble> >,
+                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, Nektar::CanGetRawPtr, MultiplyOp, IsDouble, MultiplyOp, Nektar::CanGetRawPtr> >,
+                    boost::mpl::not_<Test3ArgumentAssociativeNode<Node<A1, MultiplyOp, A2>, IsDouble, MultiplyOp, Nektar::CanGetRawPtr, MultiplyOp, Nektar::CanGetRawPtr> >
                 >
                 //boost::mpl::and_
                 //<
@@ -392,7 +392,7 @@ namespace expt
             <
                 boost::mpl::and_    
                 <
-                    CanGetRawPtr<typename L::ResultType>,
+                Nektar::CanGetRawPtr<typename L::ResultType>,
                     boost::is_same<typename R::ResultType, double>
                 >
             >::type> : public boost::true_type
@@ -417,7 +417,7 @@ namespace expt
             <
                 boost::mpl::and_    
                 <
-                    CanGetRawPtr<typename R::ResultType>,
+                    Nektar::CanGetRawPtr<typename R::ResultType>,
                     boost::is_same<typename L::ResultType, double>
                 >
             >::type> : public boost::true_type

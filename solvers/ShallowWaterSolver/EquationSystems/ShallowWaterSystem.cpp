@@ -146,7 +146,6 @@ namespace Nektar
   {
         int i,n,nchk = 0;
         int nq = m_fields[0]->GetTotPoints();
-        int ncoeffs = m_fields[0]->GetNcoeffs();
         int nvariables = m_fields.num_elements();
 
         // Set up wrapper to fields data storage.

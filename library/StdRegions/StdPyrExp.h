@@ -44,37 +44,6 @@ namespace Nektar
 {
     namespace StdRegions
     {
-        namespace StdPyrData
-        {
-            inline int getNumberOfCoefficients(int Na, int Nb, int Nc)
-            {
-                int nCoef = 0;
-                for (int c = 0; c < Nc; ++c)
-                {
-                    for (int b = 0; b < min(Nc-c,Nb); ++b)
-                    {
-                        for (int a = 0 ; a < min(Nc-c,Na); ++a)
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                /*
-                for (int a = 0; a < Na; ++a)
-                {
-                    for (int b = 0; b < Nb; ++b)
-                    {
-                        for (int c = 0; c < Nc - a - b; ++c)
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                */
-                cout << "Na = " << Na << " Nb = " << Nb << " Nc = " << Nc << " nCoef = " << nCoef << endl;
-                return nCoef;
-            }
-        }
 
         class StdPyrExp : virtual public StdExpansion3D
         {
@@ -90,8 +59,8 @@ namespace Nektar
             STD_REGIONS_EXPORT StdPyrExp(const LibUtilities::BasisKey &Ba, 
                                          const LibUtilities::BasisKey &Bb, 
                                          const LibUtilities::BasisKey &Bc,
-                                         double *coeffs, 
-                                         double *phys);
+                                         NekDouble *coeffs, 
+                                         NekDouble *phys);
 
             STD_REGIONS_EXPORT StdPyrExp(const StdPyrExp &T);
 
@@ -164,13 +133,6 @@ namespace Nektar
             // Inner product functions
             //---------------------------------------
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
-                const Array<OneD, const NekDouble> &bx,
-                const Array<OneD, const NekDouble> &by,
-                const Array<OneD, const NekDouble> &bz,
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray);
-
-            STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
 
@@ -206,7 +168,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int v_GetNedges() const;
             STD_REGIONS_EXPORT virtual int v_GetNfaces() const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_GetEdgeNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int v_GetFaceNcoeffs(const int i) const;
@@ -399,9 +361,9 @@ namespace Nektar
                 return 5;
             }
 
-            virtual ExpansionType v_DetExpansionType() const
+            virtual LibUtilities::ShapeType v_DetShapeType() const
             {
-                return DetExpansionType();
+                return DetShapeType();
             }
 
             virtual int v_GetFaceNcoeffs(const int i) const
@@ -482,13 +444,6 @@ namespace Nektar
                                      Array<OneD, NekDouble> &out_d2)
             {
                 PhysDeriv(inarray, out_d0, out_d1, out_d2);
-            }
-
-           virtual void v_PhysDirectionalDeriv(const Array<OneD, const NekDouble>& inarray,
-                                                const Array<OneD, const NekDouble>& direction,
-                                                Array<OneD, NekDouble> &outarray)
-            {
-                ASSERTL0(false,"This method is not defined or valid for this class type");
             }
 
             virtual void v_StdPhysDeriv(const Array<OneD, const NekDouble>& inarray, 

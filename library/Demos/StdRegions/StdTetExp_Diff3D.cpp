@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    StdRegions::ExpansionType regionShape = eTetrahedron;    
+    LibUtilities::ShapeType regionShape = LibUtilities::eTetrahedron;    
     
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
@@ -62,20 +62,17 @@ int main(int argc, char *argv[]) {
     LibUtilities::BasisType   bType_x = static_cast<LibUtilities::BasisType>( bType_x_val );
     LibUtilities::BasisType   bType_y = static_cast<LibUtilities::BasisType>( bType_y_val );
     LibUtilities::BasisType   bType_z = static_cast<LibUtilities::BasisType>( bType_z_val );
-    LibUtilities::PointsType  NodalType = LibUtilities::eNoPointsType;
     
     if( (bType_x_val == 13) || (bType_y_val == 13) || (bType_z_val == 13) )
     {
         bType_x =   LibUtilities::eOrtho_A;
         bType_y =   LibUtilities::eOrtho_B;
         bType_z =   LibUtilities::eOrtho_C;
-        
-        NodalType = LibUtilities::eNodalTetElec;
     }
 
 
     // Check to see that correct Expansions are used
-    if( regionShape == StdRegions::eTetrahedron ) 
+    if( regionShape == LibUtilities::eTetrahedron ) 
     {
         if( (bType_x == LibUtilities::eOrtho_B) || (bType_x == LibUtilities::eModified_B) ) {
             NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B or Modified_B");
@@ -119,7 +116,7 @@ int main(int argc, char *argv[]) {
     
     StdRegions::StdExpansion3D *ste;
     
-    if( regionShape == StdRegions::eTetrahedron ) 
+    if( regionShape == LibUtilities::eTetrahedron ) 
     { 
         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
         const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );
@@ -129,9 +126,11 @@ int main(int argc, char *argv[]) {
         const LibUtilities::BasisKey    basisKey_y( bType_y, yModes, pointsKey_y );
         const LibUtilities::BasisKey    basisKey_z( bType_z, zModes, pointsKey_z );
     
-        if( bType_x_val < 10 ) {
+        if( bType_x_val < 10 ) 
+        {
             ste = new StdRegions::StdTetExp( basisKey_x, basisKey_y, basisKey_z );
-        } else {
+        } else 
+        {
             cerr << "Implement the next line!!!!!!" << endl;
             //ste = new StdRegions::StdNodalTetExp( basisKey_x, basisKey_y, basisKey_z, NodalType );
             exit(1);
@@ -156,10 +155,7 @@ int main(int argc, char *argv[]) {
             diff_solution_z[n] = Tet_Diff_Sol( x[n], y[n], z[n], P, Q, R, 3);
         }
         //---------------------------------------------
-                 
     }
-     
-         
      
     //---------------------------------------------
     // Project onto Expansion 
@@ -222,7 +218,7 @@ int main(int argc, char *argv[]) {
     t[1] = -0.75;
     t[2] = -0.85;
     
-    if( regionShape == StdRegions::eTetrahedron ) {
+    if( regionShape ==  LibUtilities::eTetrahedron ) {
         solution[0] = Tet_sol( t[0], t[1], t[2], P, Q, R );        
     }
     

@@ -39,7 +39,7 @@
 #include <LibUtilities/Polylib/Polylib.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
-
+#include <boost/math/special_functions/gamma.hpp>
 
 namespace Nektar
 {
@@ -526,8 +526,7 @@ namespace Nektar
 
                 }//end scope
                 break;
-                    
-			case eGauss_Lagrange:
+            case eGauss_Lagrange:
                 {
                     mode = m_bdata.data();
                     boost::shared_ptr< Points<NekDouble> > m_points = PointsManager()[PointsKey(numModes, eGaussGaussLegendre)];
@@ -537,7 +536,7 @@ namespace Nektar
                     {
                         for(q = 0; q < numPoints; ++q)
                         {
-                            mode[q] = Polylib::hglj(p, z[q], zp.data(), numModes, 0.0, 0.0);
+                            mode[q] = Polylib::hgj(p, z[q], zp.data(), numModes, 0.0, 0.0);
                         }
                     }
 					
@@ -547,8 +546,7 @@ namespace Nektar
 								m_dbdata.data(), numPoints);
 					
                 }//end scope
-				break;
-                    
+                break;
             case eFourier:
 
                 ASSERTL0(numModes%2==0, "Fourier modes should be a factor of 2");
@@ -659,277 +657,9 @@ namespace Nektar
                                 m_dbdata.data(),numPoints);
                 }//end scope
                 break;
-                    
-            /** \brief Left derivative of the correction function for FR DG method (see J Sci Comput (2011) 47: 50–72)
-                     
-                \f$\tilde dGL_{DG} = (-1)^{p}/2( d(L_(p)) - d(L_{p+1}) )\f$
-                     
-            */
-            case eDG_DG_Left:
-                {                                        
-                    // Number of modes (here the left polynomial DG_DG_Left of degree p is stored) 
-                    mode = m_bdata.data();
-                    int p = numModes - 1;
-
-                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
-                    Array<OneD,NekDouble> dLp   (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
-
-                    // Function sign to build up DG_DG_Left
-                    NekDouble sign = pow(-1.0, p);
-                    
-                    // Factor to build up DG_DG_Left recovering the DG scheme
-                    NekDouble etap = 0.0;
-                    
-                    // Derivative of the Legendre polynomials
-                    // dLp  = derivative of the Legendre polynomial of order p
-                    // dLpp = derivative of the Legendre polynomial of order p+1
-                    // dLpm = derivative of the Legendre polynomial of order p-1
-                    Polylib::jacobd(numPoints, z.data(), &(dLp[0]),  p,   0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
-                    
-                    // Building the DG_DG_Left                    
-                    for(int i = 0; i < numPoints; ++i)
-                    {
-                        mode[i]  = etap * dLpm[i];
-                        mode[i] += dLpp[i];
-                        mode[i]  = dLp[i] - mode[i];
-                        mode[i]  = 0.5 * sign * m_bdata[i]; 
-                    }
-                }//end scope
-                break;
-                    
-                    
-                /** \brief Right derivative of the correction function for FR DG method (see J Sci Comput (2011) 47: 50–72)
-                     
-                    \f$\tilde dGR_{DG} = 1/2( d(L_{p}) + d(L_{p+1}) ) \f$
-                     
-                */
-                case eDG_DG_Right:
-                {            
-                    // Number of modes (here the right polynomial DG_DG_Right of degree p is stored) 
-                    mode = m_bdata.data();
-                    int p = numModes - 1;
-                    
-                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
-                    Array<OneD,NekDouble> dLp   (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
-                    
-                    // Function sign to build up DG_DG_Right
-                    NekDouble sign = pow(-1.0, p);
-                    
-                    // Factor to build up DG_DG_Right recovering the DG scheme
-                    NekDouble etap = 0.0;
-                    
-                    // Derivative of the Legendre polynomials
-                    // dLp  = derivative of the Legendre polynomial of order p
-                    // dLpp = derivative of the Legendre polynomial of order p+1
-                    // dLpm = derivative of the Legendre polynomial of order p-1
-                    Polylib::jacobd(numPoints, z.data(), &(dLp[0]),  p,   0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
-                    
-                    // Building the DG_DG_Right                    
-                    for(int i = 0; i < numPoints; ++i)
-                    {
-                        mode[i]  = etap * dLpm[i];
-                        mode[i] += dLpp[i];
-                        mode[i] += dLp[i];
-                        mode[i]  = 0.5 * mode[i]; 
-                    }
-  
-                }//end scope
-                break;
-                    
-                 
-                /** \brief Left derivative of the correction function for FR SD method (see J Sci Comput (2011) 47: 50–72)
-                     
-                    \f$\tilde dGL_{SD} = (-1)^{p}/2( d(L_{p}) - (pd(L_{p-1}) + (p+1)d(L_{p+1}))/(2p + 1) ) \f$
-                     
-                */
-                case eDG_SD_Left:
-                {              
-                    // Number of modes (here the left polynomial DG_SD_Left of degree p is stored)
-                    mode = m_bdata.data();
-                    int p = numModes - 1;
-
-                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
-                    Array<OneD,NekDouble> dLp   (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
-                    
-                    // Function sign to build up DG_SD_Left
-                    NekDouble sign = pow(-1.0, p);
-                    
-                    // Factor to build up DG_SD_Left recovering the SD scheme
-                    NekDouble etap = p / (1.0 + p);
-                    
-                    // Factor to build up DG_SD_Left
-                    NekDouble overeta = 1.0 / (1.0 + etap);
-                    
-                    // Derivative of the Legendre polynomials
-                    // dLp  = derivative of the Legendre polynomial of order p
-                    // dLpp = derivative of the Legendre polynomial of order p+1
-                    // dLpm = derivative of the Legendre polynomial of order p-1
-                    Polylib::jacobd(numPoints, z.data(), &(dLp[0]),  p,   0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
-                    
-                    // Building the DG_SD_Left
-                    for(i = 0; i < numPoints; ++i)
-                    {
-                        mode[i]  = etap * dLpm[i];
-                        mode[i] += dLpp[i];
-                        mode[i] *= overeta;
-                        mode[i]  = dLp[i] - mode[i];
-                        mode[i]  = 0.5 * sign * mode[i]; 
-                    }
-                }//end scope
-                break;
-                    
-                /** \brief Right derivative of the correction function for FR SD method (see J Sci Comput (2011) 47: 50–72)
-                     
-                    \f$\tilde dGR_{SD} = 1/2( d(L_{p}) + (pd(L_{p-1}) + (p+1)d(L_{p+1}))/(2p + 1) ) \f$
-                     
-                */
-                case eDG_SD_Right:
-                {              
-                    // Number of modes (here the right polynomials DG_SD_Right of degree p is stored)
-                    mode = m_bdata.data();
-                    int p = numModes - 1;
-
-                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
-                    Array<OneD,NekDouble> dLp   (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
-                    
-                    // Function sign to build up DG_SD_Right
-                    NekDouble sign = pow(-1.0, p);
-                    
-                    // Factor to build up DG_SD_Right recovering the SD scheme
-                    NekDouble etap = p / (1.0 + p);
-                    
-                    // Factor to build up DG_SD_Right
-                    NekDouble overeta = 1.0 / (1.0 + etap);
-                    
-                    // Derivative of the Legendre polynomials
-                    // dLp  = derivative of the Legendre polynomial of order p
-                    // dLpp = derivative of the Legendre polynomial of order p+1
-                    // dLpm = derivative of the Legendre polynomial of order p-1
-                    Polylib::jacobd(numPoints, z.data(), &(dLp[0]),  p,   0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
-
-                    // Building the DG_SD_Right
-                    for(i = 0; i < numPoints; ++i)
-                    {
-                        mode[i]  = etap * dLpm[i];
-                        mode[i] += dLpp[i];
-                        mode[i] *= overeta;
-                        mode[i] += dLp[i];
-                        mode[i]  = 0.5 * mode[i]; 
-                    }
-                }//end scope
-                break;
-
-                    
-                /** \brief Left derivative of the correction function for FR HU method (see J Sci Comput (2011) 47: 50–72)
-                     
-                    \f$\tilde dGL_{HU} = (-1)^{p}/2( d(L_{p}) - ((p+1)d(L_{p-1}) + pd(L_{p+1}))/(2p + 1) ) \f$
-                     
-                */                   
-                case eDG_HU_Left:
-                {  
-                    // Number of modes (here the left polynomial DG_HU_Left of degree p is stored) 
-                    mode = m_bdata.data();
-                    int p = numModes - 1;
-
-                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
-                    Array<OneD,NekDouble> dLp   (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
-                    
-                    // Function sign to build up DG_HU_Left
-                    NekDouble sign = pow(-1.0, p);
-                    
-                    // Factor to build up DG_HU_Left recovering the HU scheme
-                    NekDouble etap = (1.0 + p) / p;
-                    
-                    // Factor to build up DG_HU_Left
-                    NekDouble overeta = 1.0 / (1.0 + etap);
-                    
-                    // Derivative of the Legendre polynomials
-                    // dLp  = derivative of the Legendre polynomial of order p
-                    // dLpp = derivative of the Legendre polynomial of order p+1
-                    // dLpm = derivative of the Legendre polynomial of order p-1
-                    Polylib::jacobd(numPoints, z.data(), &(dLp[0]),  p,   0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
-                    
-                    // Building the DG_HU_Left
-                    for(i = 0; i < numPoints; ++i)
-                    {
-                        mode[i]  = etap * dLpm[i];
-                        mode[i] += dLpp[i];
-                        mode[i] *= overeta;
-                        mode[i]  = dLp[i] - mode[i];
-                        mode[i]  = 0.5 * sign * mode[i]; 
-                    }
-                }//end scope
-                break;
-                    
-                /** \brief Right derivative of the correction function for FR HU method (see J Sci Comput (2011) 47: 50–72)
-                     
-                    \f$\tilde dGR_{SD} = 1/2( d(L_{p}) + ((p+1)d(L_{p-1}) + pd(L_{p+1}))/(2p + 1) ) \f$
-                     
-                */
-                case eDG_HU_Right:
-                {                      
-                    // Number of modes (here the right polynomial DG_HU_Right of degree p is stored) 
-                    mode = m_bdata.data();
-                    int p = numModes - 1;
-
-                    // Auxiliary vectors to build up the auxiliary derivatives of the Legendre polynomials
-                    Array<OneD,NekDouble> dLp   (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpp  (numPoints, 0.0);
-                    Array<OneD,NekDouble> dLpm  (numPoints, 0.0);
-                    
-                    // Function sign to build up DG_HU_Right
-                    NekDouble sign = pow(-1.0, p);
-                    
-                    // Factor to build up DG_HU_Right recovering the HU scheme
-                    NekDouble etap = (1.0 + p) / p;
-                    
-                    // Factor to build up DG_HU_Right
-                    NekDouble overeta = 1.0 / (1.0 + etap);
-                    
-                    // Derivative of the Legendre polynomials
-                    // dLp  = derivative of the Legendre polynomial of order p
-                    // dLpp = derivative of the Legendre polynomial of order p+1
-                    // dLpm = derivative of the Legendre polynomial of order p-1
-                    Polylib::jacobd(numPoints, z.data(), &(dLp[0]),  p,   0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpp[0]), p+1, 0.0, 0.0);
-                    Polylib::jacobd(numPoints, z.data(), &(dLpm[0]), p-1, 0.0, 0.0);
-                    
-                    // Building the DG_HU_Right
-                    for(i = 0; i < numPoints; ++i)
-                    {
-                        mode[i]  = etap * dLpm[i];
-                        mode[i] += dLpp[i];
-                        mode[i] *= overeta;
-                        mode[i] += dLp[i];
-                        mode[i]  = 0.5 * mode[i]; 
-                    } 
-                }//end scope
-                break;
-
-                    
             default:
                 ASSERTL0(false, "Basis Type not known or "
-                    "not implemented at this time.");
+                                "not implemented at this time.");
             }
         }
 
@@ -960,14 +690,17 @@ namespace Nektar
         }
 
         /** \brief Determine if basis has collocation property,
-        *  i.e. GLL_Lagrange with Lobatto integration of appropriate order.
-        */
+         *  i.e. GLL_Lagrange with Lobatto integration of appropriate order,
+         *  Gauss_Lagrange with Gauss integration of appropriate order.
+         */
         bool BasisKey::Collocation() const
         {
-            return ( m_basistype == eGLL_Lagrange &&
-                GetPointsType() == eGaussLobattoLegendre &&
-                GetNumModes() == GetNumPoints() || 
-                m_basistype == eGauss_Lagrange);
+            return ((m_basistype     == eGLL_Lagrange         &&
+                     GetPointsType() == eGaussLobattoLegendre &&
+                     GetNumModes()   == GetNumPoints())       || 
+                    (m_basistype     == eGauss_Lagrange       &&
+                     GetPointsType() == eGaussGaussLegendre   &&
+                     GetNumModes()   == GetNumPoints()));
         }
 
         // BasisKey compared to BasisKey

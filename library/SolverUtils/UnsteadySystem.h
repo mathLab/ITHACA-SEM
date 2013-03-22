@@ -50,39 +50,14 @@ namespace Nektar
         public:
             /// Destructor
             SOLVER_UTILS_EXPORT virtual ~UnsteadySystem();
-		
-            /// Calculate the largest time-step for maintaining a stable
-            /// solution (using CFL).
+		            
+            /// Calculate the larger time-step mantaining the problem stable.
             SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
-                const Array<OneD,int> ExpOrder, 
-                const Array<OneD,NekDouble> CFL, 
-                NekDouble timeCFL);
-            
-            /// Calculate the larger time-step mantaining the problem stable, just for CFLTester equation
-            SOLVER_UTILS_EXPORT NekDouble GetTimeStep(
-                int ExpOrder, 
-                NekDouble CFL, 
-                NekDouble TimeStability);
+                const Array<OneD, const Array<OneD, NekDouble> > &inarray);
 		
-            /// CFL number
-            NekDouble m_cfl;
-		
-            // Mapping of the real convective field on the standard element.
-            // This function gives back the convective filed in the standard
-            // element to calculate the stability region of the problem in a
-            // unique way.
-            SOLVER_UTILS_EXPORT Array<OneD,NekDouble> GetStdVelocity(
-                const Array<OneD, Array<OneD,NekDouble> > inarray);
-            
-            /// Function to calculate the stability limit for DG/CG
-            SOLVER_UTILS_EXPORT NekDouble GetStabilityLimit(int n);
-            
-	        /// Function to calculate the stability limit for DG/CG (a vector
-	        /// of them)
-            SOLVER_UTILS_EXPORT Array<OneD,NekDouble> 
-                GetStabilityLimitVector(
-                    const Array<OneD,int> &ExpOrder);
-            
+            /// CFL safety factor (comprise between 0 to 1).
+            NekDouble m_cflSafetyFactor;
+		                        
         protected:
             /// Number of time steps between outputting status information.
             int                                             m_infosteps;
@@ -104,9 +79,14 @@ namespace Nektar
             std::vector<FilterSharedPtr>                    m_filters;
 
             /// Initialises UnsteadySystem class members.
-            SOLVER_UTILS_EXPORT UnsteadySystem(const LibUtilities::SessionReaderSharedPtr& pSession);
+            SOLVER_UTILS_EXPORT UnsteadySystem(
+                const LibUtilities::SessionReaderSharedPtr& pSession);
 
+            /// Init object for UnsteadySystem class.
             SOLVER_UTILS_EXPORT virtual void v_InitObject();
+            
+            /// Get the maximum timestep estimator for cfl control.
+            SOLVER_UTILS_EXPORT NekDouble MaxTimeStepEstimator();
 
             /// Solves an unsteady problem.
             SOLVER_UTILS_EXPORT virtual void v_DoSolve();
@@ -118,7 +98,8 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
             
             /// Print the solution at each solution point in a txt file
-            SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(Array<OneD, Array<OneD, NekDouble> > &solution1D);
+            SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(
+                Array<OneD, Array<OneD, NekDouble> > &solution1D);
 
             ///
             SOLVER_UTILS_EXPORT virtual void v_NumericalFlux(
@@ -133,33 +114,20 @@ namespace Nektar
 
             ///
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforScalar(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                const Array<OneD, Array<OneD, NekDouble> >   &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &uflux);
 
             ///
             SOLVER_UTILS_EXPORT virtual void v_NumFluxforVector(
-                Array<OneD, Array<OneD, NekDouble> > &ufield,
+                const Array<OneD, Array<OneD, NekDouble> >   &ufield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &qfield,
                 Array<OneD, Array<OneD, NekDouble> > &qflux);
-
-            /// Evaulate flux = m_fields*ivel for i th component of Vu for
-            /// direction j
-            SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
-                const int i, 
-                const int j,
-                      Array<OneD, Array<OneD, NekDouble> > &physfield,
-                      Array<OneD, Array<OneD, NekDouble> > &flux);
-		
-            /// Virtual function to get the time step
+		            
             SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
-                const Array<OneD,int> ExpOrder, 
-                const Array<OneD,NekDouble> CFL, NekDouble timeCFL);
-		
-            /// Virtual function to get the time step
-			SOLVER_UTILS_EXPORT virtual NekDouble v_GetTimeStep(
-                int ExpOrder, 
-                NekDouble CFL, 
-                NekDouble TimeStability);
+                const Array<OneD, const Array<OneD, NekDouble> > &inarray);
+
+            SOLVER_UTILS_EXPORT void CheckForRestartTime(NekDouble &time);
+
 
         private:
             ///

@@ -161,6 +161,11 @@ int main(int argc, char* argv[])
     vector<ModuleSharedPtr> modules;
     vector<string>          modcmds;
     
+    if (vm.count("verbose"))
+    {
+        m->verbose = true;
+    }
+
     if (vm.count("module"))
     {
         modcmds = vm["module"].as<vector<string> >();
@@ -192,8 +197,8 @@ int main(int argc, char* argv[])
             // filename.xml:vtk:opt1=arg1:opt2=arg2
             if (tmp1.size() == 1)
             {
-                int    dot    = tmp1[0].find_last_of('.');
-                string ext    = tmp1[0].substr(++dot, tmp1[0].length() - dot);
+                int    dot    = tmp1[0].find_last_of('.') + 1;
+                string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
                 module.second = ext;
                 tmp1.push_back(string(i == 0 ? "infile=" : "outfile=")+tmp1[0]);
             }

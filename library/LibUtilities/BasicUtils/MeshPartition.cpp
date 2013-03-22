@@ -217,15 +217,28 @@ namespace Nektar
                     MeshCurved c;
                     ASSERTL0(x->Attribute("ID", &c.id),
                              "Failed to get attribute ID");
-                    ASSERTL0(x->Attribute("EDGEID", &c.edgeid),
-                             "Failed to get attribute EDGEID");
                     c.type = std::string(x->Attribute("TYPE"));
                     ASSERTL0(!c.type.empty(),
                              "Failed to get attribute TYPE");
                     ASSERTL0(x->Attribute("NUMPOINTS", &c.npoints),
                              "Failed to get attribute NUMPOINTS");
                     c.data = x->FirstChild()->ToText()->Value();
-                    m_meshCurved[c.id] = c;
+                    c.entitytype = x->Value()[0];
+                    if (c.entitytype == "E")
+                    {
+                        ASSERTL0(x->Attribute("EDGEID", &c.entityid),
+                             "Failed to get attribute EDGEID");
+                    }
+                    else if (c.entitytype == "F")
+                    {
+                        ASSERTL0(x->Attribute("FACEID", &c.entityid),
+                             "Failed to get attribute FACEID");
+                    }
+                    else
+                    {
+                        ASSERTL0(false, "Unknown curve type.");
+                    }
+                    m_meshCurved[std::make_pair(c.entitytype, c.id)] = c;
                     x = x->NextSiblingElement();
                 }
             }
@@ -241,7 +254,6 @@ namespace Nektar
                 ASSERTL0(y, "Failed to get attribute.");
                 MeshEntity c;
                 c.id = y->IntValue();
-                ASSERTL0(c.id == i++, "Composite IDs not sequential.");
                 std::string vSeqStr = x->FirstChild()->ToText()->Value();
                 c.type = vSeqStr[0];
                 std::string::size_type indxBeg = vSeqStr.find_first_of('[') + 1;
@@ -342,7 +354,13 @@ namespace Nektar
 
                 try
                 {
+                    // Attempt partitioning using METIS.
                     Metis::PartGraphVKway(nGraphVerts, xadj, adjncy, vwgt, vsize, npart, vol, part);
+
+                    // Check METIS produced a valid partition and fix if not.
+                    CheckPartitions(part);
+
+                    // Distribute partitioning to all processes.
                     for (i = 1; i < m_comm->GetSize(); ++i)
                     {
                         m_comm->Send(i, part);
@@ -372,10 +390,43 @@ namespace Nektar
                 {
                     pGraph[*vertit].partition = part[i];
                     pGraph[*vertit].partid = boost::num_vertices(pLocalPartition);
-                    BoostVertex v = boost::add_vertex(i, pLocalPartition);
+                    boost::add_vertex(i, pLocalPartition);
                 }
             }
         }
+
+
+        void MeshPartition::CheckPartitions(Array<OneD, int> &pPart)
+        {
+            unsigned int       i     = 0;
+            unsigned int       cnt   = 0;
+            const unsigned int npart = m_comm->GetSize();
+            bool               valid = true;
+
+            // Check that every process has at least one element assigned
+            for (i = 0; i < npart; ++i)
+            {
+                cnt = std::count(pPart.begin(), pPart.end(), i);
+                if (cnt == 0)
+                {
+                    valid = false;
+                }
+            }
+
+            // If METIS produced an invalid partition, repartition naively.
+            // Elements are assigned to processes in a round-robin fashion.
+            // It is assumed that METIS failure only occurs when the number of
+            // elements is approx. the number of processes, so this approach
+            // should not be too inefficient communication-wise.
+            if (!valid)
+            {
+                for (i = 0; i < pPart.num_elements(); ++i)
+                {
+                    pPart[i] = i % npart;
+                }
+            }
+        }
+
 
         void MeshPartition::OutputPartition(
                 LibUtilities::SessionReaderSharedPtr& pSession,
@@ -534,15 +585,26 @@ namespace Nektar
 
             if (m_dim >= 2)
             {
-                std::map<int, MeshCurved>::const_iterator vItCurve;
-                for (vItCurve = m_meshCurved.begin(); vItCurve != m_meshCurved.end(); ++vItCurve)
+                std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
+                for (vItCurve  = m_meshCurved.begin(); 
+                     vItCurve != m_meshCurved.end(); 
+                     ++vItCurve)
                 {
                     MeshCurved c = vItCurve->second;
-                    if (vEdges.find(c.edgeid) != vEdges.end())
+                    
+                    if (vEdges.find(c.entityid) != vEdges.end() || 
+                        vFaces.find(c.entityid) != vFaces.end())
                     {
-                        x = new TiXmlElement("E");
+                        x = new TiXmlElement(c.entitytype);
                         x->SetAttribute("ID", c.id);
-                        x->SetAttribute("EDGEID", c.edgeid);
+                        if (c.entitytype == "E")
+                        {
+                            x->SetAttribute("EDGEID", c.entityid);
+                        }
+                        else
+                        {
+                            x->SetAttribute("FACEID", c.entityid);
+                        }
                         x->SetAttribute("TYPE", c.type);
                         x->SetAttribute("NUMPOINTS", c.npoints);
                         y = new TiXmlText(c.data);
@@ -660,11 +722,6 @@ namespace Nektar
 
             pNektar->LinkEndChild(vElmtGeometry);
 
-            // Write expansions data
-            if (pSession->DefinesElement("Nektar/Expansions"))
-            {
-                pNektar->LinkEndChild(new TiXmlElement(*pSession->GetElement("Nektar/Expansions")));
-            }
             if (pSession->DefinesElement("Nektar/Conditions"))
             {
                 std::map<int, int> vBndRegionIdList;
@@ -735,20 +792,19 @@ namespace Nektar
                 }
                 pNektar->LinkEndChild(vConditions);
             }
-            if (pSession->DefinesElement("Nektar/Filters"))
-            {
-                pNektar->LinkEndChild(new TiXmlElement(*pSession->GetElement("Nektar/Filters")));
-            }
-            // @todo: Extract subset of history points within this partition.
-            if (pSession->DefinesElement("Nektar/History"))
-            {
-                pNektar->LinkEndChild(new TiXmlElement(*pSession->GetElement("Nektar/History")));
-            }
-            if (pSession->DefinesElement("Nektar/GlobalOptimizationParameters"))
-            {
-                pNektar->LinkEndChild(new TiXmlElement(*pSession->GetElement("Nektar/GlobalOptimizationParameters")));
-            }
 
+            // Distribute other sections of the XML to each process as is.
+            TiXmlElement* vSrc = pSession->GetElement("Nektar")
+                                                    ->FirstChildElement();
+            while (vSrc)
+            {
+                std::string vName = boost::to_upper_copy(vSrc->ValueStr());
+                if (vName != "GEOMETRY" && vName != "CONDITIONS")
+                {
+                    pNektar->LinkEndChild(new TiXmlElement(*vSrc));
+                }
+                vSrc = vSrc->NextSiblingElement();
+            }
         }
 
     }

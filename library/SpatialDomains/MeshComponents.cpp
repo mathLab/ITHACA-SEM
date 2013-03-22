@@ -41,7 +41,7 @@ namespace Nektar
     namespace SpatialDomains
     {
         VertexComponent::VertexComponent(const int coordim, const int vid,
-            double x, double y, double z)
+            NekDouble x, NekDouble y, NekDouble z)
         {
             m_coordim = coordim;
             m_vid     = vid;
@@ -94,7 +94,7 @@ namespace Nektar
             return(false);
         }
 
-        void VertexComponent::GetCoords(double &x, double &y, double &z)
+        void VertexComponent::GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
         {
             switch(m_coordim)
             {
@@ -123,7 +123,7 @@ namespace Nektar
         }
 
 
-        void VertexComponent::UpdatePosition(double x, double y, double z)
+        void VertexComponent::UpdatePosition(NekDouble x, NekDouble y, NekDouble z)
         {
             (*this)(0) = x;
             (*this)(1) = y;

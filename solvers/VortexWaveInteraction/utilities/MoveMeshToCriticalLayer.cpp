@@ -91,9 +91,6 @@ void EnforceRotationalSymmetry(SpatialDomains::MeshGraphSharedPtr &mesh,
 
 int main(int argc, char *argv[])
 {
-    int i,j;
-    NekDouble cr = 0;
-    
     if(argc !=4)
     {
         fprintf(stderr,"Usage: ./MoveMeshToCriticalLayer  meshfile streakfile  outfile\n");
@@ -195,9 +192,9 @@ void GetStreakLocation(LibUtilities::SessionReaderSharedPtr &vSession,
 
     //----------------------------------------------
     // Import field file.
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    mesh->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -207,7 +204,8 @@ void GetStreakLocation(LibUtilities::SessionReaderSharedPtr &vSession,
     {
         streak->ExtractDataToCoeffs(fielddef [i],
                                     fielddata[i],
-                                    streak_field);
+                                    streak_field,
+                                    streak->UpdateCoeffs());
     }
     //----------------------------------------------
     
@@ -363,6 +361,8 @@ void GetNewVertexLocation(TiXmlElement *doc,
                         dverty[vid0] = dverty[InterfaceVerts[InterfaceVerts.size()-1]];
                     }
                 }
+                break;
+            default:
                 break;
             }
             Verts[vid0].solve = eNoSolve;
@@ -618,7 +618,6 @@ void   RedefineVertices(TiXmlElement *doc,
     vector<NekDouble> xpts,ypts,zpts;
     NekDouble xval, yval, zval;
         
-    NekDouble yoffset = 0.0;
     while (vertex)
     {
         nextVertexNumber++;

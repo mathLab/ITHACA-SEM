@@ -269,7 +269,12 @@ namespace Nektar
 
             // First construct vector of elements to process.
             vector<ElementSharedPtr> el;
-            
+
+            if (m->verbose)
+            {
+                cout << "ProcessSpherigon: Smoothing mesh..." << endl;
+            }
+
             if (m->expDim == 2)
             {
                 // Manifold case - copy expansion dimension.
@@ -373,7 +378,6 @@ namespace Nektar
                 // Calculate area of element.
                 Node ta  = v[1]    - v[0];
                 Node tb  = v[nV-1] - v[0];
-                double A = CrossProdMag(ta, tb);
                 
                 vector<Node>   tmp  (nV);
                 vector<double> r    (nV);

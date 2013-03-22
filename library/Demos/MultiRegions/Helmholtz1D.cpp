@@ -100,7 +100,9 @@ int main(int argc, char *argv[])
         //----------------------------------------------
 
         //----------------------------------------------
-        // Helmholtz solution taking physical forcing
+        //Helmholtz solution taking physical forcing after setting
+        //initial condition to zero
+        Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
         Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), NullFlagList, factors);
         //----------------------------------------------
 
@@ -118,7 +120,7 @@ int main(int argc, char *argv[])
         {
             out += "." + boost::lexical_cast<string>(vComm->GetRank());
         }
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
             = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
         for(i = 0; i < FieldDef.size(); ++i)
@@ -126,7 +128,7 @@ int main(int argc, char *argv[])
             FieldDef[i]->m_fields.push_back("u");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        graph1D->Write(out, FieldDef, FieldData);
+        LibUtilities::Write(out, FieldDef, FieldData);
         //----------------------------------------------
 
         //----------------------------------------------

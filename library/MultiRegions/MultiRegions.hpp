@@ -84,6 +84,9 @@ namespace Nektar
             eIterativeFull,
             eIterativeStaticCond,
             eIterativeMultiLevelStaticCond,
+            eXxtFullMatrix,
+            eXxtStaticCond,
+            eXxtMultiLevelStaticCond,
             eSIZE_GlobalSysSolnType
         };
 
@@ -96,7 +99,10 @@ namespace Nektar
             "DirectMultiLevelStaticCond",
             "IterativeFull",
             "IterativeStaticCond",
-            "IterativeMultiLevelStaticCond"
+            "IterativeMultiLevelStaticCond",
+            "XxtFull",
+            "XxtStaticCond",
+            "XxtMultiLevelStaticCond"
         };
 
         /// Type of Galerkin projection.
@@ -153,6 +159,7 @@ namespace Nektar
         };
 
         typedef boost::shared_ptr<RobinBCInfo> RobinBCInfoSharedPtr;
+
 
     }// end of namespace
 }// end of namespace

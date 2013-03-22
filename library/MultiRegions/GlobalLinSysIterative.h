@@ -68,15 +68,22 @@ namespace Nektar
             /// Tolerance of iterative solver.
             NekDouble                                   m_tolerance;
 
+            /// dot product of rhs to normalise stopping criterion
+            NekDouble                                   m_rhs_magnitude;
+
             PreconditionerSharedPtr                     m_precon;
 
             MultiRegions::PreconditionerType            m_precontype;
 
-
+            
             int                                         m_totalIterations;
 
             /// Whether to apply projection technique
             bool                                        m_useProjection;
+
+            /// Provide verbose output and root if parallel. 
+            bool                                        m_root;
+            bool                                        m_verbose;
 
             /// Storage for solutions to previous linear problems
             boost::circular_buffer<Array<OneD, NekDouble> > m_prevLinSol;
@@ -102,6 +109,8 @@ namespace Nektar
                     const int pNumDir);
 
 
+            void Set_Rhs_Magnitude(const NekVector<NekDouble> &pIn);
+            
         private:
 
             void printArray(

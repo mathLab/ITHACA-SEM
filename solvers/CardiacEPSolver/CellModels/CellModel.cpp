@@ -314,30 +314,83 @@ namespace Nektar
 
     void CellModel::LoadCellModel()
     {
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
-        std::vector<std::vector<NekDouble> > FieldData;
-        Array<OneD, NekDouble> coeffs;
+        const bool root = (m_session->GetComm()->GetRank() == 0);
+        const std::string fncName = "CellModelInitialConditions";
+        std::string varName;
+        Array<OneD, NekDouble> coeffs(m_field->GetNcoeffs());
+        Array<OneD, NekDouble> tmp;
 
         SpatialDomains::MeshGraphSharedPtr vGraph = m_field->GetGraph();
 
-        // Copy FieldData into m_fields
+        if (root)
+        {
+            cout << "Cell model initial conditions: " << endl;
+        }
+
+        // Load each cell model variable
         for(int j = 0; j < m_cellSol.num_elements(); ++j)
         {
-            if (m_session->GetFunctionType("CellModelInitialConditions", j) == LibUtilities::eFunctionTypeFile)
+            // Get the name of the jth variable
+            varName = GetCellVarName(j);
+
+            // Check if this variable is defined in a file or analytically
+            if (m_session->GetFunctionType(fncName, varName) ==
+                    LibUtilities::eFunctionTypeFile)
             {
-                vGraph->Import(m_session->GetFunctionFilename("CellModelInitialConditions", j),FieldDef,FieldData);
+                const std::string file =
+                        m_session->GetFunctionFilename(fncName, varName);
+
+                if (root)
+                {
+                    cout << "  - Field " << varName << ": from file "
+                         << file << endl;
+                }
+
+                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+                std::vector<std::vector<NekDouble> > FieldData;
+
+                // Read the restart file containing this variable
+                LibUtilities::Import(file, FieldDef, FieldData);
+
+                // Extract the data into the modal coefficients
                 for(int i = 0; i < FieldDef.size(); ++i)
                 {
-                    m_field->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                    FieldDef[i]->m_fields[j], coeffs);
+                    m_field->ExtractDataToCoeffs(FieldDef[i],
+                                                 FieldData[i],
+                                                 FieldDef[i]->m_fields[j],
+                                                 coeffs);
                 }
-                m_field->BwdTrans(coeffs, m_cellSol[j]);
+
+                // If using nodal cell model then we do a modal->nodal transform
+                // otherwise we do a backward transform onto physical points.
+                if (m_useNodal)
+                {
+                    for (unsigned int i = 0; i < m_field->GetNumElmts(); ++i)
+                    {
+                        int coef_offset = m_field->GetCoeff_Offset(i);
+                        if (m_field->GetExp(0)->DetShapeType() ==
+                                LibUtilities::eTriangle)
+                        {
+                            m_nodalTri->ModalToNodal(coeffs+coef_offset,
+                                                tmp=m_cellSol[j]+coef_offset);
+                        }
+                        else
+                        {
+                            m_nodalTet->ModalToNodal(coeffs+coef_offset,
+                                                tmp=m_cellSol[j]+coef_offset);
+                        }
+                    }
+                }
+                else
+                {
+                    m_field->BwdTrans(coeffs, m_cellSol[j]);
+                }
             }
             else
             {
-
+                ASSERTL0(false, "Analytic expressions for cell model not yet "
+                                "implemented.");
             }
         }
-
     }
 }

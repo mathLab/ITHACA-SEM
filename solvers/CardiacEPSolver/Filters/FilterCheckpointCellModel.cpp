@@ -73,12 +73,13 @@ namespace Nektar
 
         m_index = 0;
         m_outputIndex = 0;
+
+        v_Update(pFields, 0.0);
     }
 
     void FilterCheckpointCellModel::v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time)
     {
-        m_index++;
-        if (m_index % m_outputFrequency > 0)
+        if (m_index++ % m_outputFrequency > 0)
         {
             return;
         }
@@ -99,15 +100,18 @@ namespace Nektar
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
         // copy Data into FieldData and set variable
+        std::string varName;
         for(int j = 0; j < m_cell->GetNumCellVariables(); ++j)
         {
+            varName = m_cell->GetCellVarName(j);
+
             for(int i = 0; i < FieldDef.size(); ++i)
             {
                 // Retrieve data from cell model
                 Array<OneD, NekDouble> data = m_cell->GetCellSolutionCoeffs(j);
 
                 // Could do a search here to find correct variable
-                FieldDef[i]->m_fields.push_back(boost::lexical_cast<std::string>(j));
+                FieldDef[i]->m_fields.push_back(varName);
                 pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], data);
             }
         }

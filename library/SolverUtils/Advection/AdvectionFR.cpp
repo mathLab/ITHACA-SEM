@@ -41,6 +41,8 @@
 #include <StdRegions/StdSegExp.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <boost/math/special_functions/gamma.hpp>
+#include <iostream>
+#include <iomanip>
 
 
 namespace Nektar
@@ -111,22 +113,46 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
-            int n;
+            int i, n;
             int nquad0, nquad1;
-            int nElements   = pFields[0]->GetExpSize();            
-            int nDimensions = pFields[0]->GetCoordim(0);
-            Array<OneD, LibUtilities::BasisSharedPtr> base;
+            int phys_offset;
+            int nLocalSolutionPts;
+            int nElements    = pFields[0]->GetExpSize();            
+            int nDimensions  = pFields[0]->GetCoordim(0);
+            int nSolutionPts = pFields[0]->GetTotPoints();
+            
+            Array<TwoD, const NekDouble> gmat;
+            Array<OneD, const NekDouble> jac;
+            
+            m_jac  = Array<OneD, NekDouble>(nSolutionPts);
+
             Array<OneD, NekDouble> auxArray1;
+            Array<OneD, LibUtilities::BasisSharedPtr> base;
                         
             switch (nDimensions)
             {
                 case 1:
                 {
-                    // nothing to do for 1D problems
+                    for (n = 0; n < nElements; ++n) 
+                    {
+                        nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
+                        phys_offset = pFields[0]->GetPhys_Offset(n);
+                        jac = pFields[0]->GetExp(n)->GetGeom1D()->GetJac();
+                        for (i = 0; i < nLocalSolutionPts; ++i)
+                        {
+                            m_jac[i+phys_offset] = jac[0];
+                        }
+                    }
                     break;
                 }
                 case 2:
                 {
+                    m_gmat = Array<OneD, Array<OneD, NekDouble> >(4);
+                    m_gmat[0] = Array<OneD, NekDouble>(nSolutionPts);
+                    m_gmat[1] = Array<OneD, NekDouble>(nSolutionPts);
+                    m_gmat[2] = Array<OneD, NekDouble>(nSolutionPts);
+                    m_gmat[3] = Array<OneD, NekDouble>(nSolutionPts);
+
                     m_Q2D_e0 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     m_Q2D_e1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     m_Q2D_e2 = Array<OneD, Array<OneD, NekDouble> >(nElements);
@@ -152,6 +178,36 @@ namespace Nektar
                             2, auxArray1 = m_Q2D_e2[n]);
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
                             3, auxArray1 = m_Q2D_e3[n]);
+                        
+                        nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
+                        phys_offset = pFields[0]->GetPhys_Offset(n);
+                        
+                        jac  = pFields[0]->GetExp(n)->GetGeom2D()->GetJac();
+                        gmat = pFields[0]->GetExp(n)->GetGeom2D()->GetGmat();
+                        
+                        if (pFields[0]->GetExp(n)->GetGeom2D()->GetGtype()
+                            == SpatialDomains::eDeformed)
+                        {
+                            for (i = 0; i < nLocalSolutionPts; ++i)
+                            {
+                                m_jac[i+phys_offset]     = jac[i];
+                                m_gmat[0][i+phys_offset] = gmat[0][i];
+                                m_gmat[1][i+phys_offset] = gmat[1][i];
+                                m_gmat[2][i+phys_offset] = gmat[2][i];
+                                m_gmat[3][i+phys_offset] = gmat[3][i];
+                            }
+                        }
+                        else
+                        {
+                            for (i = 0; i < nLocalSolutionPts; ++i)
+                            {
+                                m_jac[i+phys_offset]     = jac[0];
+                                m_gmat[0][i+phys_offset] = gmat[0][0];
+                                m_gmat[1][i+phys_offset] = gmat[1][0];
+                                m_gmat[2][i+phys_offset] = gmat[2][0];
+                                m_gmat[3][i+phys_offset] = gmat[3][0];
+                            }  
+                        }
                     }
                     break;
                 }
@@ -258,7 +314,7 @@ namespace Nektar
                                * (ap0 * boost::math::tgamma(p0 + 1))
                                * (ap0 * boost::math::tgamma(p0 + 1)));
                         }
-                        else if (m_advType == "FRinf")
+                        else if (m_advType == "FRcinf")
                         {
                             c0 = 10000000000000000.0;
                         }
@@ -396,7 +452,7 @@ namespace Nektar
                                * (ap1 * boost::math::tgamma(p1 + 1))
                                * (ap1 * boost::math::tgamma(p1 + 1)));
                         }
-                        else if (m_advType == "FRinf")
+                        else if (m_advType == "FRcinf")
                         {
                             c0 = 10000000000000000.0;
                             c1 = 10000000000000000.0;
@@ -592,7 +648,7 @@ namespace Nektar
                                * (ap2 * boost::math::tgamma(p2 + 1))
                                * (ap2 * boost::math::tgamma(p2 + 1)));
                         }
-                        else if (m_advType == "FRinf")
+                        else if (m_advType == "FRcinf")
                         {
                             c0 = 10000000000000000.0;
                             c1 = 10000000000000000.0;
@@ -721,7 +777,6 @@ namespace Nektar
             if (Basis->GetPointsType() == LibUtilities::eGaussGaussLegendre)
             {
                 int n;
-                
                 int nElements   = pFields[0]->GetExpSize();            
                 int nDimensions = pFields[0]->GetCoordim(0);
                 
@@ -784,6 +839,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
+            //cout<<setprecision(16);
             int i, j, n;
             int nLocalSolutionPts, phys_offset;
             
@@ -820,7 +876,7 @@ namespace Nektar
             {
                 // 1D-Problems 
                 case 1:
-                {                    
+                {  
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
                         fluxvector(nConvectiveFields);
                     Array<OneD, NekDouble> DfluxvectorX1(nSolutionPts);
@@ -857,7 +913,8 @@ namespace Nektar
                                       numflux[i], 
                                       divFC);
                         
-                        // Computation of the advection term
+                        // Back to the physical space using local operations
+                        /*
                         for (n = 0; n < nElements; n++) 
                         {
                             nLocalSolutionPts = fields[0]->
@@ -877,6 +934,14 @@ namespace Nektar
                                 DfluxvectorX1 + phys_offset, 1, 
                                 auxArray3 = outarray[i] + phys_offset, 1); 
                         }
+                        */
+                        
+                        // Back to the physical space using global operations
+                        Vmath::Vdiv(nSolutionPts, &divFC[0], 1, &m_jac[0], 1, 
+                                    &outarray[i][0], 1);
+                        
+                        Vmath::Vadd(nSolutionPts, &outarray[i][0], 1, 
+                                    &DfluxvectorX1[0], 1, &outarray[i][0], 1);
                     }
                     break;
                 }
@@ -982,7 +1047,7 @@ namespace Nektar
                                     divFC, 1,
                                     outarray[i], 1);
 
-                        // Multiply by the metric terms
+                        // Back to the physical space using local operations
                         for (n = 0; n < nElements; ++n)
                         {
                             nLocalSolutionPts = fields[0]->
@@ -1003,13 +1068,17 @@ namespace Nektar
                             else
                             {
                                 Vmath::Smul(
-                                    nLocalSolutionPts, 
-                                    1/jac[0], 
+                                    nLocalSolutionPts, 1/jac[0], 
                                     outarray[i] + phys_offset, 1, 
                                     auxArray2 = outarray[i] + phys_offset, 1);
                             }
                         }
                         
+                        // Back to the physical space using a global operation
+                        /*
+                        Vmath::Vdiv(nSolutionPts, &outarray[i][0], 1,
+                                    &m_jac[0], 1, &outarray[i][0], 1);
+                        */
 
                     } // close nConvectiveFields loop
                     break;

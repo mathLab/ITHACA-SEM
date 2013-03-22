@@ -265,7 +265,7 @@ namespace Nektar
                                          * (ap0 * boost::math::tgamma(p0 + 1))
                                          * (ap0 * boost::math::tgamma(p0 + 1)));
                         }
-                        else if (m_diffType == "LFRinfNS")
+                        else if (m_diffType == "LFRcinfNS")
                         {
                             c0 = 10000000000000000.0;
                         }
@@ -403,7 +403,7 @@ namespace Nektar
                                          * (ap1 * boost::math::tgamma(p1 + 1))
                                          * (ap1 * boost::math::tgamma(p1 + 1)));
                         }
-                        else if (m_diffType == "LFRinfNS")
+                        else if (m_diffType == "LFRcinfNS")
                         {
                             c0 = 10000000000000000.0;
                             c1 = 10000000000000000.0;
@@ -600,7 +600,7 @@ namespace Nektar
                                          * (ap2 * boost::math::tgamma(p2 + 1))
                                          * (ap2 * boost::math::tgamma(p2 + 1)));
                         }
-                        else if (m_diffType == "LFRinfNS")
+                        else if (m_diffType == "LFRcinfNS")
                         {
                             c0 = 10000000000000000.0;
                             c1 = 10000000000000000.0;
@@ -785,7 +785,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {    
-            cout<<setprecision(16);
+            //cout<<setprecision(16);
             int i, j, n, z;
             int nLocalSolutionPts, phys_offset;
             
@@ -1712,12 +1712,10 @@ namespace Nektar
             GetBndCondExpansions().num_elements();
             for (j = 0; j < nBndRegions; ++j)
             {
-                //cout<<"bcRegion = "<< j << endl;
                 nBndEdges = fields[nScalars]->
                 GetBndCondExpansions()[j]->GetExpSize();
                 for (e = 0; e < nBndEdges; ++e)
                 {
-                    //cout<<"bcEdge = "<< e << endl;
                     nBndEdgePts = fields[nScalars]->
                     GetBndCondExpansions()[j]->GetExp(e)->GetNumPoints(0);
                     

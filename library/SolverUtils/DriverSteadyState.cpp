@@ -100,9 +100,11 @@ namespace Nektar
             
             m_Delta = m_Delta0;            
             
-            m_cst1=m_X*m_dt;
+            //m_cst1=m_X*m_dt;
+            m_cst1=m_X;
             m_cst2=1.0/(1.0 + m_cst1);
-            m_cst3=m_dt/m_Delta;
+            //m_cst3=m_dt/m_Delta;
+            m_cst3=1.0/m_Delta;
             m_cst4=m_cst2*m_cst3;
             m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
             
@@ -239,7 +241,8 @@ namespace Nektar
                 
                 if (MaxNormDiff_q_qBar < NormDiff_q_qBar[i])
                 {
-                    MaxNormDiff_q_qBar = m_cst1*NormDiff_q_qBar[i];
+                    //MaxNormDiff_q_qBar = m_cst1*NormDiff_q_qBar[i];
+                    MaxNormDiff_q_qBar = NormDiff_q_qBar[i];
                 }
             }
             
@@ -248,14 +251,14 @@ namespace Nektar
             if (MPIrank==0)
             {
                 //cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
-                cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<endl;
+                cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<"; for X = " << m_cst1 <<" and Delta = " << 1.0/m_cst3 <<endl;
                 std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
                 m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
                 m_file.close();
             }
             #else
             //cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
-            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<endl;
+            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<"; for X = " << m_cst1 <<" and Delta = " << 1.0/m_cst3 <<endl;
             std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
             m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
             m_file.close();

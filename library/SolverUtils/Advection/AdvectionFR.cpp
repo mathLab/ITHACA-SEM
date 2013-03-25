@@ -120,6 +120,8 @@ namespace Nektar
             int nElements    = pFields[0]->GetExpSize();            
             int nDimensions  = pFields[0]->GetCoordim(0);
             int nSolutionPts = pFields[0]->GetTotPoints();
+            int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
+
             
             Array<TwoD, const NekDouble> gmat;
             Array<OneD, const NekDouble> jac;
@@ -209,6 +211,15 @@ namespace Nektar
                             }  
                         }
                     }
+                    
+                    m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(
+                                                                nDimensions);
+                    for(i = 0; i < nDimensions; ++i)
+                    {
+                        m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+                    }
+                    pFields[0]->GetTrace()->GetNormals(m_traceNormals);
+                    
                     break;
                 }
                 case 3:
@@ -1084,23 +1095,16 @@ namespace Nektar
                         }
                         
                         // Divergence of the discontinuous flux
-                        Vmath::Vadd(nSolutionPts,
-                                    DfluxvectorX1, 1,
-                                    DfluxvectorX2, 1,
-                                    divFD, 1);
+                        Vmath::Vadd(nSolutionPts, DfluxvectorX1, 1,
+                                    DfluxvectorX2, 1, divFD, 1);
 
                         // Divergence of the correction flux
-                        v_DivCFlux_2D(nConvectiveFields,
-                                      fields,
-                                      fluxvector[i][0],
-                                      fluxvector[i][1],
-                                      numflux[i],
-                                      divFC);
+                        v_DivCFlux_2D(nConvectiveFields, fields,
+                                      fluxvector[i][0], fluxvector[i][1],
+                                      numflux[i], divFC);
                         
                         // Divergence of the final flux
-                        Vmath::Vadd(nSolutionPts,
-                                    divFD, 1,
-                                    divFC, 1,
+                        Vmath::Vadd(nSolutionPts, divFD, 1, divFC, 1,
                                     outarray[i], 1);
 
                         /*
@@ -1170,7 +1174,7 @@ namespace Nektar
             int i, j, n;
             int nLocalSolutionPts, phys_offset;
             
-            Array<OneD,       NekDouble> auxArray1;
+            //Array<OneD,       NekDouble> auxArray1;
             //Array<TwoD, const NekDouble> gmat;
             //Array<OneD, const NekDouble> jac;
             
@@ -1232,7 +1236,7 @@ namespace Nektar
             // FluxJumps computation without interpolation                  
             else
             {
-                for(n = 0; n < nElements; ++n)
+                for (n = 0; n < nElements; ++n)
                 {
                     nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
                     
@@ -1252,20 +1256,20 @@ namespace Nektar
                 // Left jump multiplied by left derivative of C function
                 Vmath::Smul(nLocalSolutionPts, 
                             JumpL[0][n], 
-                            auxArray1 = m_dGL_xi1[n], 1, 
-                            DCL, 1);
+                            &m_dGL_xi1[n][0], 1, 
+                            &DCL[0], 1);
             
                 // Right jump multiplied by right derivative of C function
                 Vmath::Smul(nLocalSolutionPts, 
                             JumpR[0][n], 
-                            auxArray1 = m_dGR_xi1[n], 1, 
-                            DCR, 1);
+                            &m_dGR_xi1[n][0], 1, 
+                            &DCR[0], 1);
             
                 // Assembling divergence of the correction flux
                 Vmath::Vadd(nLocalSolutionPts, 
-                            DCL, 1, 
-                            DCR, 1, 
-                            auxArray1 = divCFlux + phys_offset, 1);
+                            &DCL[0], 1, 
+                            &DCR[0], 1, 
+                            &divCFlux[phys_offset], 1);
             }
         }
         
@@ -1292,7 +1296,7 @@ namespace Nektar
             int n, e, i, j, cnt;
             
             int nElements   = fields[0]->GetExpSize();
-            int nDimensions = fields[0]->GetCoordim(0);  
+            //int nDimensions = fields[0]->GetCoordim(0);  
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
             
             int nLocalSolutionPts;
@@ -1302,12 +1306,13 @@ namespace Nektar
             int nquad0;
             int nquad1;
             
-            Array<OneD, NekDouble> auxArray1, auxArray2;
+            Array<OneD, NekDouble> auxArray1 /*,auxArray2*/;
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
             
+            /*
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
             for(i = 0; i < nDimensions; ++i)
@@ -1315,6 +1320,7 @@ namespace Nektar
                 m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
+            */
             
             // Loop on the elements
             for(n = 0; n < nElements; ++n)
@@ -1340,12 +1346,12 @@ namespace Nektar
                     
                     Array<OneD, NekDouble> tmparrayX1(nEdgePts, 0.0);
                     Array<OneD, NekDouble> tmparrayX2(nEdgePts, 0.0);
-                    Array<OneD, NekDouble> fluxN    (nEdgePts, 0.0);
-                    Array<OneD, NekDouble> fluxT    (nEdgePts, 0.0);
-                    Array<OneD, NekDouble> fluxJumps(nEdgePts, 0.0);
+                    Array<OneD, NekDouble> fluxN     (nEdgePts, 0.0);
+                    Array<OneD, NekDouble> fluxT     (nEdgePts, 0.0);
+                    Array<OneD, NekDouble> fluxJumps (nEdgePts, 0.0);
                     
                     // Offset of the trace space correspondent to edge e
-                    trace_offset  = fields[0]->GetTrace()->GetPhys_Offset(
+                    trace_offset = fields[0]->GetTrace()->GetPhys_Offset(
                                     elmtToTrace[n][e]->GetElmtId());
                     
                     // Get the normals of edge e
@@ -1382,17 +1388,15 @@ namespace Nektar
                     }*/
                     
                     // Subtract to the Riemann flux the discontinuous flux 
-                    Vmath::Vsub(nEdgePts, 
-                                &numericalFlux[trace_offset], 1, 
+                    Vmath::Vsub(nEdgePts, &numericalFlux[trace_offset], 1, 
                                 &fluxN[0], 1, &fluxJumps[0], 1);
                     
                     // Check the ordering of the jump vectors
                     if (fields[0]->GetExp(n)->GetEorient(e) == 
                         StdRegions::eBackwards)
                     {
-                        Vmath::Reverse(nEdgePts, 
-                                       auxArray1 = fluxJumps, 1,
-                                       auxArray2 = fluxJumps, 1);
+                        Vmath::Reverse(nEdgePts, &fluxJumps[0], 1, 
+                                       &fluxJumps[0], 1);
                     }
                     
                     NekDouble fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?

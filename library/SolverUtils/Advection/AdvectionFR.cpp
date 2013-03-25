@@ -823,8 +823,7 @@ namespace Nektar
          * @brief Compute the advection term at each time-step using the Flux
          * Reconstruction approach (FR).
          *
-         * @param nConvectiveFields   Number of fields (i.e. independent 
-         *                            variables).
+         * @param nConvectiveFields   Number of fields.
          * @param fields              Pointer to fields.
          * @param advVel              Advection velocities.
          * @param inarray             Solution at the previous time-step.
@@ -844,8 +843,8 @@ namespace Nektar
             int nLocalSolutionPts, phys_offset;
             
             Array<OneD,       NekDouble> auxArray1, auxArray2, auxArray3;
-            Array<TwoD, const NekDouble> gmat;
-            Array<OneD, const NekDouble> jac;
+            //Array<TwoD, const NekDouble> gmat;
+            //Array<OneD, const NekDouble> jac;
             
             LibUtilities::BasisSharedPtr Basis;
             Basis = fields[0]->GetExp(0)->GetBasis(0);
@@ -971,8 +970,56 @@ namespace Nektar
                     // Get the discontinuous flux FD ("i" is used by inarray)
                     for(i = 0; i < nConvectiveFields; ++i)
                     {
+                        // Temporary vectors
+                        Array<OneD, NekDouble> f_hat(nSolutionPts);
+                        Array<OneD, NekDouble> g_hat(nSolutionPts);
+                        
+                        Vmath::Vvtvvtp(nSolutionPts, 
+                                       &m_gmat[0][0], 1, 
+                                       &fluxvector[i][0][0], 1,
+                                       &m_gmat[2][0], 1, 
+                                       &fluxvector[i][1][0], 1,
+                                       &f_hat[0], 1);
+                        
+                        Vmath::Vmul(nSolutionPts, &m_jac[0], 1, &f_hat[0], 1, 
+                                    &f_hat[0], 1);
+                        
+                        
+                        Vmath::Vvtvvtp(nSolutionPts, 
+                                       &m_gmat[1][0], 1, 
+                                       &fluxvector[i][0][0], 1,
+                                       &m_gmat[3][0], 1, 
+                                       &fluxvector[i][1][0], 1,
+                                       &g_hat[0], 1);
+                        
+                        Vmath::Vmul(nSolutionPts, &m_jac[0], 1, &g_hat[0], 1, 
+                                    &g_hat[0], 1);
+                        /*
+                        Vmath::Vvtvp(nSolutionPts, &m_gmat[0][gmat_offset], 1, 
+                                     &fluxvector[i][0][0], 1, &f_hat[0], 1);
+                        
+                        Vmath::Vvtvp(nSolutionPts, &m_gmat[0][g_cnt], 1, 
+                                     &fluxvector[i][0][0], 1, &f_hat[0], 1);
+                        */
+                        /*
+                        for (j = 0; j < nSolutionPts; j++)
+                        {
+                            f_hat[j] =
+                            (fluxvector[i][0][j]
+                             * m_gmat[0][j] +
+                             fluxvector[i][1][j]
+                             * m_gmat[2][j]) * m_jac[j];
+                            
+                            g_hat[j] =
+                            (fluxvector[i][0][j]
+                             * m_gmat[1][j] +
+                             fluxvector[i][1][j]
+                             * m_gmat[3][j]) * m_jac[j];
+                        }*/
+
                         for (n = 0; n < nElements; n++)
                         {
+                            /*
                             // Discontinuous flux
                             nLocalSolutionPts = fields[0]->GetExp(n)->
                             GetTotPoints();
@@ -1025,6 +1072,15 @@ namespace Nektar
                                 auxArray2 = DfluxvectorX1 + phys_offset);
                             fields[0]->GetExp(n)->StdPhysDeriv(1, g_hat,
                                 auxArray2 = DfluxvectorX2 + phys_offset);
+                             */
+                            
+                            phys_offset = fields[0]->GetPhys_Offset(n);
+                            fields[0]->GetExp(n)->StdPhysDeriv(0, 
+                                auxArray1 = f_hat + phys_offset,
+                                auxArray2 = DfluxvectorX1 + phys_offset);
+                            fields[0]->GetExp(n)->StdPhysDeriv(1, 
+                                auxArray1 = g_hat + phys_offset,
+                                auxArray2 = DfluxvectorX2 + phys_offset);
                         }
                         
                         // Divergence of the discontinuous flux
@@ -1047,6 +1103,7 @@ namespace Nektar
                                     divFC, 1,
                                     outarray[i], 1);
 
+                        /*
                         // Back to the physical space using local operations
                         for (n = 0; n < nElements; ++n)
                         {
@@ -1073,12 +1130,11 @@ namespace Nektar
                                     auxArray2 = outarray[i] + phys_offset, 1);
                             }
                         }
+                        */
                         
                         // Back to the physical space using a global operation
-                        /*
                         Vmath::Vdiv(nSolutionPts, &outarray[i][0], 1,
                                     &m_jac[0], 1, &outarray[i][0], 1);
-                        */
 
                     } // close nConvectiveFields loop
                     break;
@@ -1097,14 +1153,11 @@ namespace Nektar
         /**
          * @brief Compute the divergence of the corrective flux for 1D problems.
          *
-         * @param nConvectiveFields   Number of fields (i.e. independent 
-         *                            variables).
+         * @param nConvectiveFields   Number of fields.
          * @param fields              Pointer to fields.
-         * @param fluxX1              Volumetric flux in the physical space in 
-         *                            direction X1.
-         * @param numericalFlux       Riemann flux in the physical space.
-         * @param divCFlux            Divergence of the corrective flux for 1D
-         *                            Problems.
+         * @param fluxX1              X1-volumetric flux in physical space.
+         * @param numericalFlux       Interface flux in physical space.
+         * @param divCFlux            Divergence of the corrective flux.
          *
          */
         void AdvectionFR::v_DivCFlux_1D(
@@ -1117,9 +1170,9 @@ namespace Nektar
             int i, j, n;
             int nLocalSolutionPts, phys_offset;
             
-            Array<OneD,       NekDouble> auxArray1, auxArray2, auxArray3;
-            Array<TwoD, const NekDouble> gmat;
-            Array<OneD, const NekDouble> jac;
+            Array<OneD,       NekDouble> auxArray1;
+            //Array<TwoD, const NekDouble> gmat;
+            //Array<OneD, const NekDouble> jac;
             
             LibUtilities::BasisSharedPtr Basis;
             Basis = fields[0]->GetExp(0)->GetBasis(0);
@@ -1219,16 +1272,12 @@ namespace Nektar
         /**
          * @brief Compute the divergence of the corrective flux for 2D problems.
          *
-         * @param nConvectiveFields   Number of fields (i.e. independent 
-         *                            variables).
+         * @param nConvectiveFields   Number of fields.
          * @param fields              Pointer to fields.
-         * @param fluxX1              Volumetric flux in the physical space in 
-         *                            direction X1.
-         * @param fluxX2              Volumetric flux in the physical space in 
-         *                            direction X2.
-         * @param numericalFlux       Riemann flux in the physical space.
-         * @param divCFlux            Divergence of the corrective flux for 2D
-         *                            problems.
+         * @param fluxX1              X1-volumetric flux in physical space.
+         * @param fluxX2              X2-volumetric flux in physical space.
+         * @param numericalFlux       Interface flux in physical space.
+         * @param divCFlux            Divergence of the corrective flux.
          *
          * \todo: Switch on shapes eventually here.
          */
@@ -1317,13 +1366,20 @@ namespace Nektar
                                                 fluxX2 + phys_offset,
                                                 auxArray1 = tmparrayX2);
                     
+
                     // Multiply the edge components of the flux by the normal
+                    Vmath::Vvtvvtp(nEdgePts, &tmparrayX1[0], 1, 
+                                   &m_traceNormals[0][trace_offset], 1,
+                                   &tmparrayX2[0], 1, 
+                                   &m_traceNormals[1][trace_offset], 1,
+                                   &fluxN[0], 1);                    
+                    /*
                     for (i = 0; i < nEdgePts; ++i)
                     {
                         fluxN[i] = 
                         tmparrayX1[i]*m_traceNormals[0][trace_offset+i] + 
                         tmparrayX2[i]*m_traceNormals[1][trace_offset+i];
-                    }
+                    }*/
                     
                     // Subtract to the Riemann flux the discontinuous flux 
                     Vmath::Vsub(nEdgePts, 
@@ -1427,18 +1483,13 @@ namespace Nektar
         /**
          * @brief Compute the divergence of the corrective flux for 3D problems.
          *
-         * @param nConvectiveFields   Number of fields (i.e. independent 
-         *                            variables).
+         * @param nConvectiveFields   Number of fields.
          * @param fields              Pointer to fields.
-         * @param fluxX1              Volumetric flux in the physical space in 
-         *                            direction X1.
-         * @param fluxX2              Volumetric flux in the physical space in 
-         *                            direction X2.
-         * @param fluxX3              Volumetric flux in the physical space in 
-         *                            direction X3.
-         * @param numericalFlux       Riemann flux in the physical space.
-         * @param divCFlux            Divergence of the corrective flux for 3D
-         *                            Problems.
+         * @param fluxX1              X1-volumetric flux in physical space.
+         * @param fluxX2              X2-volumetric flux in physical space.
+         * @param fluxX3              X3-volumetric flux in physical space.
+         * @param numericalFlux       Interface flux in physical space.
+         * @param divCFlux            Divergence of the corrective flux.
          *
          * \todo: To be implemented. Switch on shapes eventually here.
          */

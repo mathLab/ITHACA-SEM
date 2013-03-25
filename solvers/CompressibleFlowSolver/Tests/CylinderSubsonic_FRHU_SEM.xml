@@ -2832,9 +2832,9 @@
         <PARAMETERS>
             <P> TimeStep        = 0.00001     </P>
             <P> FinTime         = 0.0       </P>
-            <P> NumSteps        = 5         </P>
-            <P> IO_CheckSteps   = 100       </P>
-            <P> IO_InfoSteps    = 10        </P>
+            <P> NumSteps        = 25         </P>
+            <P> IO_CheckSteps   = 10000       </P>
+            <P> IO_InfoSteps    = 10000        </P>
             <P> Gamma           = 1.4       </P>
             <P> pInf            = 101325    </P>
             <P> rhoInf          = 1.225     </P>
@@ -2845,9 +2845,9 @@
         <SOLVERINFO>
             <I PROPERTY="EQType"                VALUE="EulerCFE"            />
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
-            <I PROPERTY="AdvectionType"         VALUE="FRDG"                />
+            <I PROPERTY="AdvectionType"         VALUE="FRHU"                />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-            <I PROPERTY="UpwindType"            VALUE="ExactToro"               />
+            <I PROPERTY="UpwindType"            VALUE="HLLC"               />
             <I PROPERTY="ProblemType"           VALUE="General"             />
         </SOLVERINFO>
         

@@ -280,7 +280,6 @@ namespace Nektar
                 if(atLastLevel)
                 {
                     Array<OneD, NekDouble> pert(nGlobBndDofs,0.0);
-                    NekVector<NekDouble>   Pert(nGlobBndDofs,pert,eWrapper);
                     
                     Timer t;
                     t.Start();

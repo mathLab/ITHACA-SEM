@@ -1,10 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Interpreter.hpp
+// File StimulusPoint.h
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
+//
 //
 // Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
 // Department of Aeronautics, Imperial College London (UK), and Scientific
@@ -29,67 +30,57 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Wrapper around interp.y functions for function interpretation
+// Description: Rectangular stimulus header file
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
+#ifndef NEKTAR_SOLVERS_CARDIACEPSOLVER_STIMULI_STIMULUSRECT
+#define NEKTAR_SOLVERS_CARDIACEPSOLVER_STIMULI_STIMULUSRECT
 
-#include <cstdio>
-
-extern "C" 
-{
-    // -- Routines from initial.y:
-
-    void   yy_initialize (void);
-    double yy_interpret  (const char*);
-    
-    void   yy_vec_init   (const char*, const char*);
-    void   yy_vec_interp (const int, ...);
-    
-    void   yy_help       (void);
-    void   yy_show       (void);
-}
+#include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <MultiRegions/ExpList.h>
+#include <CardiacEPSolver/Stimuli/Stimulus.h>
 
 namespace Nektar
 {
-    class Interpret 
+    
+    /// Protocol base class.
+    class StimulusPoint: public Stimulus
     {
     public:
-        
-        Interpret()
+        /// Creates an instance of this class
+        static StimulusSharedPtr create(
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField,
+                const TiXmlElement* pXml)
         {
-            yy_initialise();
+            return MemoryManager<StimulusPoint>
+                    ::AllocateSharedPtr(pSession, pField, pXml);
         }
 
-        ~Interpret()
-        {
+        /// Name of class
+        static std::string className;
 
-        }
+        StimulusPoint(const LibUtilities::SessionReaderSharedPtr& pSession,
+                     const MultiRegions::ExpListSharedPtr& pField,
+                     const TiXmlElement* pXml);
         
-        void SetVector (const char* v, const char* f)
-        { 
-            yy_vec_init (v, f); 
-        }
+        virtual ~StimulusPoint() {}
         
-        void EvaluateVector (const int n ... )
-        { 
-            yy_vec_interp (n ... ); 
-        }
+        /// Initialise the stimulus storage and set initial conditions
+        void Initialise();
         
-        double EvaluateDoubleValue (const char* s)
-        { 
-            return yy_interpret (s); 
-        }
+    protected:
+        NekDouble m_strength;
 
-        int EvaluateIntValue (const char* s)
-        { 
-            return static_cast<int>(yy_interpret (s)); 
-        }
+        virtual void v_Update(Array<OneD, Array<OneD, NekDouble> >&outarray,
+                              const NekDouble time);
         
-    private:
+        virtual void v_PrintSummary(std::ostream &out);
         
     };
+}
 
-#endif
+#endif 

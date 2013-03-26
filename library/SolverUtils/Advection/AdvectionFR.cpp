@@ -1159,7 +1159,7 @@ namespace Nektar
          *                            direction X2.
          * @param numericalFlux       Riemann flux in the physical space.
          * @param divCFlux            Divergence of the corrective flux for 2D
-         *                            Problems.
+         *                            problems.
          *
          * \todo: Switch on shapes eventually here.
          */

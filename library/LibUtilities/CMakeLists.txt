@@ -219,10 +219,6 @@ IF(NEKTAR_USE_SMV)
     SET(LinearAlgebraSources ${LinearAlgebraSources} ./LinearAlgebra/LibSMV.cpp)
 ENDIF(NEKTAR_USE_SMV)
 
-SET(KernelHeaders
-	./Kernel/kernel.h
-)
-
 SET(MemoryHeaders
 	./Memory/ThreadSpecificPool.hpp
 	./Memory/NekMemoryManager.hpp	

@@ -71,8 +71,10 @@ namespace Nektar
         class GlobalLinSysIterativeStaticCond : public GlobalLinSysIterative
         {
         public:
-            typedef NekSparseDiagBlkMatrix<StorageBsrUnrolled<NekDouble> >  DNekBsrUnrolledDiagBlkMat;
-            typedef boost::shared_ptr<DNekBsrUnrolledDiagBlkMat>            DNekBsrUnrolledDiagBlkMatSharedPtr;
+            typedef NekSparseDiagBlkMatrix<StorageBsrUnrolled<NekDouble> >
+                                            DNekBsrUnrolledDiagBlkMat;
+            typedef boost::shared_ptr<DNekBsrUnrolledDiagBlkMat>
+                                            DNekBsrUnrolledDiagBlkMatSharedPtr;
 
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(

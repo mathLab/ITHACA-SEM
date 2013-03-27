@@ -333,15 +333,8 @@ namespace Nektar
                     Array<OneD, NekDouble> pert(nGlobBndDofs,0.0);
                     NekVector<NekDouble>   Pert(nGlobBndDofs,pert,eWrapper);
 
-                    Timer t;
-                    t.Start();
-                    
                     // Solve for difference from initial solution given inout;
                     SolveLinearSystem(nGlobBndDofs, F, pert, pLocToGloMap, nDirBndDofs);
-
-                    t.Stop();
-
-                    std::cout << "time per solveLinearSystem = " << t.TimePerTest(1) << std::endl;
 
                     //transform back to original basis
                     if(pLocToGloMap->GetPreconType() == MultiRegions::eLowEnergy)
@@ -462,9 +455,6 @@ namespace Nektar
         void GlobalLinSysIterativeStaticCond::SetupTopLevel(
                 const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
         {
-            Timer t;
-            t.Start();
-
             int n;
             int n_exp = m_expList.lock()->GetNumElmts();
 
@@ -501,9 +491,6 @@ namespace Nektar
                     m_invD      ->SetBlock(n,n, tmp_mat = loc_mat->GetBlock(1,1));
                 }
             }
-
-            t.Stop();
-            std::cout << "time for setting up top level = " << t.TimePerTest(1) << std::endl;
         }
 
         void GlobalLinSysIterativeStaticCond::SetupLowEnergyTopLevel(
@@ -673,6 +660,9 @@ namespace Nektar
                     GetSolverInfoAsEnum<LocalMatrixStorageStrategy>(
                                        "LocalMatrixStorageStrategy");
 
+            bool verbose = (m_expList.lock()->GetSession()->
+                    DefinesCmdLineArgument("verbose"))? true : false;
+
             switch(storageStrategy)
             {
                 case MultiRegions::eContiguous:
@@ -758,12 +748,15 @@ namespace Nektar
                         }
                     }
 
-                    cout << "sizes of local matrices in order: " << endl;
-                    for (int i = 0; i < partitions.size(); i++)
+                    if (verbose)
                     {
-                        cout << " (" << partitions[i].first << ", " << partitions[i].second << ")";
+                        cout << "sizes of local matrices in order: " << endl;
+                        for (int i = 0; i < partitions.size(); i++)
+                        {
+                            cout << " (" << partitions[i].first << ", " << partitions[i].second << ")";
+                        }
+                        cout << endl;
                     }
-                    cout << endl;
 
                     MatrixStorage matStorage = eFULL;
 
@@ -806,24 +799,27 @@ namespace Nektar
                     matBytes      = m_sparseSchurCompl->GetMemoryFootprint();
                     bsruBlockBytes = m_sparseSchurCompl->GetMemoryFootprint(0);
 
-                    cout << "Local matrix memory, bytes = " << matBytes;
-                    if (matBytes/(1024*1024) > 0)
+                    if (verbose)
                     {
-                        std::cout << " ("<< matBytes/(1024*1024) <<" MB)" << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << " ("<< matBytes/1024 <<" KB)" << std::endl;
-                    }
+                        cout << "Local matrix memory, bytes = " << matBytes;
+                        if (matBytes/(1024*1024) > 0)
+                        {
+                            std::cout << " ("<< matBytes/(1024*1024) <<" MB)" << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << " ("<< matBytes/1024 <<" KB)" << std::endl;
+                        }
 
-                    std::cout << "First BSRU submatrix memory, bytes = " << bsruBlockBytes;
-                    if (bsruBlockBytes/(1024*1024) > 0)
-                    {
-                        std::cout << " ("<< bsruBlockBytes/(1024*1024) <<" MB)" << std::endl;
-                    }
-                    else
-                    {
-                        std::cout << " ("<< bsruBlockBytes/1024 <<" KB)" << std::endl;
+                        std::cout << "First BSRU submatrix memory, bytes = " << bsruBlockBytes;
+                        if (bsruBlockBytes/(1024*1024) > 0)
+                        {
+                            std::cout << " ("<< bsruBlockBytes/(1024*1024) <<" MB)" << std::endl;
+                        }
+                        else
+                        {
+                            std::cout << " ("<< bsruBlockBytes/1024 <<" KB)" << std::endl;
+                        }
                     }
                     break;
                 }

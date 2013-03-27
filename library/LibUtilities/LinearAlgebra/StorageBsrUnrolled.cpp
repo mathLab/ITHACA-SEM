@@ -432,7 +432,7 @@ namespace Nektar
         {
         case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#ifdef NEKTAR_USING_SMV
+#ifndef NEKTAR_USING_SMV
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
 #endif
@@ -471,7 +471,7 @@ namespace Nektar
         {
         case 1:  Multiply_1x1(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 2:  Multiply_2x2(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
-#ifdef NEKTAR_USING_SMV
+#ifndef NEKTAR_USING_SMV
         case 3:  Multiply_3x3(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
         case 4:  Multiply_4x4(mb,kb,val,bindx,bpntrb,bpntre,b,c); return;
 #endif

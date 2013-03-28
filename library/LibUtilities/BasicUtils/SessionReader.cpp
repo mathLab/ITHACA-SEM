@@ -40,9 +40,13 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
 #include <iostream>
+#include <fstream>
 #include <string>
 using namespace std;
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string.hpp>
 #include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -1015,19 +1019,41 @@ namespace Nektar
         /**
          *
          */
+        void SessionReader::LoadDoc(
+            const std::string &pFilename,
+            TiXmlDocument* pDoc) const
+        {
+            if (pFilename.size() > 3 && pFilename.substr(pFilename.size() - 3, 3) == ".gz")
+            {
+                ifstream file(pFilename.c_str(), ios_base::in | ios_base::binary);
+                stringstream ss;
+                boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+                in.push(boost::iostreams::gzip_decompressor());
+                in.push(file);
+                boost::iostreams::copy(in, ss);
+                ss >> (*pDoc);
+            }
+            else
+            {
+                ifstream fileStream(pFilename.c_str());
+                fileStream >> (*pDoc);
+            }
+        }
+
+        /**
+         *
+         */
         TiXmlDocument *SessionReader::MergeDoc(
             const std::vector<std::string> &pFilenames) const
         {
             ASSERTL0(pFilenames.size() > 0, "No filenames for merging.");
 
+            bool loadOkay;
+
             // Read the first document
-            TiXmlDocument *vMainDoc = new TiXmlDocument(pFilenames[0]);
-            ASSERTL0(vMainDoc, "Failed to create XML document object.");
-            bool loadOkay = vMainDoc->LoadFile();
-            ASSERTL0(loadOkay, "Unable to load file: " + pFilenames[0]   + 
-                     ". Check XML standards compliance. Error on line: " +
-                     boost::lexical_cast<std::string>(vMainDoc->Row())   + 
-                     ": " + std::string(vMainDoc->ErrorDesc()));
+            TiXmlDocument *vMainDoc = new TiXmlDocument;
+            LoadDoc(pFilenames[0], vMainDoc);
+
             TiXmlHandle vMainHandle(vMainDoc);
             TiXmlElement* vMainNektar = 
                 vMainHandle.FirstChildElement("NEKTAR").Element();

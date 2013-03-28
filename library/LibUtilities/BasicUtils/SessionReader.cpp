@@ -58,6 +58,7 @@ using namespace std;
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
+namespace io = boost::iostreams;
 
 namespace Nektar
 {
@@ -1023,20 +1024,32 @@ namespace Nektar
             const std::string &pFilename,
             TiXmlDocument* pDoc) const
         {
-            if (pFilename.size() > 3 && pFilename.substr(pFilename.size() - 3, 3) == ".gz")
+            if (pFilename.size() > 3 &&
+                pFilename.substr(pFilename.size() - 3, 3) == ".gz")
             {
-                ifstream file(pFilename.c_str(), ios_base::in | ios_base::binary);
+                ifstream file(pFilename.c_str(),
+                              ios_base::in | ios_base::binary);
+                ASSERTL0(file.good(), "Unable to open file: " + pFilename);
                 stringstream ss;
-                boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-                in.push(boost::iostreams::gzip_decompressor());
+                io::filtering_streambuf<io::input> in;
+                in.push(io::gzip_decompressor());
                 in.push(file);
-                boost::iostreams::copy(in, ss);
-                ss >> (*pDoc);
+                try
+                {
+                    io::copy(in, ss);
+                    ss >> (*pDoc);
+                }
+                catch (io::gzip_error& e)
+                {
+                    ASSERTL0(false,
+                             "Error: File '" + pFilename + "' is corrupt.");
+                }
             }
             else
             {
-                ifstream fileStream(pFilename.c_str());
-                fileStream >> (*pDoc);
+                ifstream file(pFilename.c_str());
+                ASSERTL0(file.good(), "Unable to open file: " + pFilename);
+                file >> (*pDoc);
             }
         }
 
@@ -1047,8 +1060,6 @@ namespace Nektar
             const std::vector<std::string> &pFilenames) const
         {
             ASSERTL0(pFilenames.size() > 0, "No filenames for merging.");
-
-            bool loadOkay;
 
             // Read the first document
             TiXmlDocument *vMainDoc = new TiXmlDocument;
@@ -1063,13 +1074,10 @@ namespace Nektar
             // version already present in the loaded XML data.
             for (int i = 1; i < pFilenames.size(); ++i)
             {
-                TiXmlDocument vTempDoc (pFilenames[i]);
-                loadOkay = vTempDoc.LoadFile();
-                ASSERTL0(loadOkay, "Unable to load file: " + pFilenames[i]   +
-                         ". Check XML standards compliance. Error on line: " + 
-                         boost::lexical_cast<std::string>(vTempDoc.Row()));
+                TiXmlDocument* vTempDoc = new TiXmlDocument;
+                LoadDoc(pFilenames[i], vTempDoc);
 
-                TiXmlHandle docHandle(&vTempDoc);
+                TiXmlHandle docHandle(vTempDoc);
                 TiXmlElement* vTempNektar;
                 vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
                 ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
@@ -1087,6 +1095,8 @@ namespace Nektar
                     vMainNektar->LinkEndChild(q);
                     p = p->NextSiblingElement();
                 }
+
+                delete vTempDoc;
             }
 
             return vMainDoc;

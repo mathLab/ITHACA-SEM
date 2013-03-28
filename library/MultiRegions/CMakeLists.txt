@@ -45,6 +45,7 @@ Preconditioner.cpp
 PreconditionerDiagonal.cpp
 PreconditionerLowEnergy.cpp
 PreconditionerBlock.cpp
+PreconditionerLinear.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
@@ -87,6 +88,7 @@ Preconditioner.h
 PreconditionerDiagonal.h
 PreconditionerLowEnergy.h
 PreconditionerBlock.h
+PreconditionerLinear.h
 )
 
 SET(ASSEMBLY_MAP_HEADERS

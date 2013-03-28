@@ -69,16 +69,21 @@ namespace Nektar
                             const StdRegions::VarCoeffMap &varcoeffs = StdRegions::NullVarCoeffMap);
 
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
-                    const DNekMatSharedPtr &r_bnd, 
+                    const DNekScalMatSharedPtr &r_bnd, 
                     const StdRegions::MatrixType matrixType);
+
+                LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix(
+                    const DNekScalMatSharedPtr &r_bnd); 
 
             protected:
                 virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
 
                 virtual DNekMatSharedPtr v_BuildTransformationMatrix(
-                    const DNekMatSharedPtr &r_bnd, 
+                    const DNekScalMatSharedPtr &r_bnd, 
                     const StdRegions::MatrixType matrixType);
 
+                virtual DNekMatSharedPtr v_BuildVertexMatrix(
+                    const DNekScalMatSharedPtr &r_bnd); 
 
             private:
 

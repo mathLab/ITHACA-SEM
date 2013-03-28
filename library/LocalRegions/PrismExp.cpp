@@ -1580,26 +1580,6 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                     break;
                 }
-             case StdRegions::ePreconR:
-             case StdRegions::ePreconRT:
-                {
-                    NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
-                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), *this);
-                    DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
-                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
-                    DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
-
-                    int rows = LapMat.GetRows();
-                    int cols = LapMat.GetColumns();
-
-                    DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows, cols);
-
-                    NekDouble one = 1.0;
-                    (*helm) = LapMat + factor*MassMat;
-
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, helm);
-                }
-                break;
                 case StdRegions::eHybridDGHelmholtz:
                 case StdRegions::eHybridDGLamToU:
                 case StdRegions::eHybridDGLamToQ0:
@@ -1668,16 +1648,14 @@ namespace Nektar
             int nbdry = NumBndryCoeffs();
             int nint = m_ncoeffs - nbdry;
 
-            unsigned int exp_size[] = {nbdry, nint};
-            int nblks = 2;
-            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
             NekDouble factor = 1.0;
+            unsigned int exp_size[] = {nbdry, nint};
+            int nblks;
 
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eLaplacian:
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
-
                 // use Deformed case for both regular and deformed geometries
                 factor = 1.0;
                 goto UseLocRegionsMatrix;
@@ -1686,6 +1664,9 @@ namespace Nektar
             case StdRegions::ePreconRT:
                 factor = 1.0;
                 goto UsePreconMatrix;
+                break;
+            case StdRegions::ePreconLinearSpace:
+                goto UsePreconLinearSpaceMatrix;
                 break;
             default:
                 if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -1702,6 +1683,9 @@ namespace Nektar
                 break;
             UseStdRegionsMatrix:
                 {
+                    nblks=2;
+                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); 
+
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
                     DNekBlkMatSharedPtr  mat = GetStdStaticCondMatrix(mkey);
@@ -1717,6 +1701,9 @@ namespace Nektar
                 break;
             UseLocRegionsMatrix:
                 {
+                    nblks=2;
+                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); 
+
                     int i,j;
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
@@ -1776,64 +1763,42 @@ namespace Nektar
                 break;
             UsePreconMatrix:
                 {
-                    int i,j;
-                    NekDouble            invfactor = 1.0/factor;
-                    NekDouble            one = 1.0;
-                    DNekScalMat &mat = *GetLocMatrix(mkey);
-                    DNekMatSharedPtr A = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nbdry);
-                    DNekMatSharedPtr B = MemoryManager<DNekMat>::AllocateSharedPtr(nbdry,nint);
-                    DNekMatSharedPtr C = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nbdry);
-                    DNekMatSharedPtr D = MemoryManager<DNekMat>::AllocateSharedPtr(nint,nint);
+                    nblks=2;
+                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); 
 
-                    Array<OneD,unsigned int> bmap(nbdry);
-                    Array<OneD,unsigned int> imap(nint);
-                    GetBoundaryMap(bmap);
-                    GetInteriorMap(imap);
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
+                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
+                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
 
-                    for(i = 0; i < nbdry; ++i)
-                    {
-                        for(j = 0; j < nbdry; ++j)
-                        {
-                            (*A)(i,j) = mat(bmap[i],bmap[j]);
-                        }
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
 
-                        for(j = 0; j < nint; ++j)
-                        {
-                            (*B)(i,j) = mat(bmap[i],imap[j]);
-                        }
-                    }
+                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R));
+                    returnval->SetBlock(0,1,Blk01);
+                    returnval->SetBlock(1,0,Blk10);
+                    returnval->SetBlock(1,1,Blk11);
+                }
+                break;
+                UsePreconLinearSpaceMatrix:
+                {
+                    int nverts=GetNverts();
+                    unsigned int vert_size[] = {nverts, nverts};
+                    nblks=1;
+                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, vert_size, vert_size); 
 
-                    for(i = 0; i < nint; ++i)
-                    {
-                        for(j = 0; j < nbdry; ++j)
-                        {
-                            (*C)(i,j) = mat(imap[i],bmap[j]);
-                        }
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
 
-                        for(j = 0; j < nint; ++j)
-                        {
-                            (*D)(i,j) = mat(imap[i],imap[j]);
-                        }
-                    }
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
 
-                    // Calculate static condensed system
-                    if(nint)
-                    {
-                        D->Invert();
-                        (*B) = (*B)*(*D);
-                        (*A) = (*A) - (*B)*(*C);
-                    }
-
-                    DNekScalMatSharedPtr     Atmp;
-                    DNekMatSharedPtr     R;
-
-                    R=BuildTransformationMatrix(A,mkey.GetMatrixType());
-
-                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,R));
-                    returnval->SetBlock(0,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,B));
-                    returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,C));
-                    returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
-                    
+                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R));
                 }
             }
             return returnval;

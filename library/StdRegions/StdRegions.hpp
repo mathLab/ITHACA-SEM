@@ -138,6 +138,7 @@ namespace Nektar
             eFwdTrans,
             ePreconR,
             ePreconRT,
+            ePreconLinearSpace,
             SIZE_MatrixType
         };
 
@@ -180,7 +181,8 @@ namespace Nektar
             "HybridDGLamToU",
             "FwdTrans",
             "PreconR",
-            "PreconRT"
+            "PreconRT",
+            "PreconLinearSpace"
         };
 
         enum VarCoeffType

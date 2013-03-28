@@ -56,12 +56,18 @@ namespace Nektar
         }
 
         DNekMatSharedPtr Expansion::BuildTransformationMatrix(
-            const DNekMatSharedPtr &r_bnd, 
+            const DNekScalMatSharedPtr &r_bnd, 
             const StdRegions::MatrixType matrixType)
         {
             return v_BuildTransformationMatrix(r_bnd,matrixType);
         }
-
+        
+        DNekMatSharedPtr Expansion::BuildVertexMatrix(
+            const DNekScalMatSharedPtr &r_bnd)
+        {
+            return v_BuildVertexMatrix(r_bnd);
+        }
+        
 
         DNekScalMatSharedPtr Expansion::GetLocMatrix(const StdRegions::MatrixType mtype,
                     const StdRegions::ConstFactorMap &factors,
@@ -78,8 +84,15 @@ namespace Nektar
         }
 
         DNekMatSharedPtr Expansion::v_BuildTransformationMatrix(
-            const DNekMatSharedPtr &r_bnd, 
+            const DNekScalMatSharedPtr &r_bnd, 
             const StdRegions::MatrixType matrixType)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+            return NullDNekMatSharedPtr;
+        }
+
+        DNekMatSharedPtr Expansion::v_BuildVertexMatrix(
+            const DNekScalMatSharedPtr &r_bnd)
         {
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekMatSharedPtr;

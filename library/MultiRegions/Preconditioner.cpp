@@ -45,11 +45,9 @@ namespace Nektar
         std::string Preconditioner::lookupIds[7] = {
                 LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Null",MultiRegions::eNull),
                 LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Diagonal",MultiRegions::eDiagonal),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","InverseLinear",MultiRegions::eInverseLinear),
+                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Linear",MultiRegions::eLinear),
                 LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LowEnergy",MultiRegions::eLowEnergy),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LinearLowEnergy",MultiRegions::eLinearLowEnergy),
                 LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block",MultiRegions::eBlock),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LocalLowEnergy",MultiRegions::eLocalLowEnergy),
         };
         std::string Preconditioner::def = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Preconditioner","Diagonal");
 

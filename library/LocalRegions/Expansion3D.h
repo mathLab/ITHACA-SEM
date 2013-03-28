@@ -112,9 +112,11 @@ namespace Nektar
                 v_GetFaceInverseBoundaryMap(int fid);
 
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildTransformationMatrix(
-                const DNekMatSharedPtr &r_bnd, 
+                const DNekScalMatSharedPtr &r_bnd, 
                 const StdRegions::MatrixType matrixType);
 
+            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildVertexMatrix(
+                const DNekScalMatSharedPtr &r_bnd); 
 
         private:
             // Do not add members here since it may lead to conflicts.

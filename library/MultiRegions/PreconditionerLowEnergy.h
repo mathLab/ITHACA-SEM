@@ -65,7 +65,6 @@ namespace Nektar
 
             /// Name of class
             static std::string className1;
-            static std::string className2;
 
             MULTI_REGIONS_EXPORT PreconditionerLowEnergy(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
@@ -117,19 +116,11 @@ namespace Nektar
 
 	private:
 
-	    void InverseLinearSpacePreconditioner(void);
-
-	    void StaticCondInverseLinearSpacePreconditioner(void);
-
 	    void SetUpLowEnergyBasis(void);
-
-            void CreateLinearFiniteElmentSpace(void);
 
 	    void LowEnergyPreconditioner(void);
 
             void SetUpReferenceElements(void);
-
-            void SetupLowEnergyTopLevel(void);
 
             void CreateMultiplicityMap(void);
 

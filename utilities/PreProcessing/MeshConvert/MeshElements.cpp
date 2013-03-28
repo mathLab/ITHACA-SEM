@@ -68,8 +68,9 @@ namespace Nektar
         Element::Element(ElmtConfig   pConf,
                          unsigned int pNumNodes,
                          unsigned int pGotNodes) 
-            : m_conf(pConf), m_geom(),
-              curveType(LibUtilities::ePolyEvenlySpaced)
+            : m_conf(pConf), 
+              curveType(LibUtilities::ePolyEvenlySpaced),
+              m_geom()
         {
             if (pNumNodes != pGotNodes)
             {

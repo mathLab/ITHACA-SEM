@@ -94,6 +94,18 @@ namespace Nektar
             Node() : id(0), x(0.0), y(0.0), z(0.0), m_geom() {}
             ~Node() {}
 
+            /// Reset the local id;
+            void SetID(int pId)
+            {
+                id = pId;
+            }
+
+            /// Get the local id;
+            unsigned int GetID(void)
+            {
+                return id;
+            }
+
             /// Define node ordering based on ID.
             bool operator<(const Node& pSrc)
             {
@@ -159,6 +171,13 @@ namespace Nektar
             double dot(const Node &pSrc) const
             {
                 return x*pSrc.x + y*pSrc.y + z*pSrc.z;
+            }
+
+
+            Node curl(const Node &pSrc) const
+            {
+                return Node(id, y*pSrc.z - z*pSrc.y, 
+                            z*pSrc.x-x*pSrc.z, x*pSrc.y-y*pSrc.x);
             }
 
             /// Generate a %SpatialDomains::VertexComponent for this node.

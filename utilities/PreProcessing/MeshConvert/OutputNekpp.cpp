@@ -258,7 +258,7 @@ namespace Nektar
                     curved->LinkEndChild(e);
                 }
             }
-
+#if 0 
             // 2D elements in 3-space, output face curvature information
             if (m->expDim == 2 && m->spaceDim == 3)
             {
@@ -301,6 +301,7 @@ namespace Nektar
                     }
                 }
             }
+#endif
             pRoot->LinkEndChild( curved );
         }
 
@@ -391,7 +392,7 @@ namespace Nektar
                     exp->SetAttribute("COMPOSITE", "C["
                         + boost::lexical_cast<std::string>(it->second->id)
                         + "]");
-                    exp->SetAttribute("NUMMODES",7);
+                    exp->SetAttribute("NUMMODES",4);
                     exp->SetAttribute("TYPE","MODIFIED");
                     
                     if (m->fields.size() == 0)

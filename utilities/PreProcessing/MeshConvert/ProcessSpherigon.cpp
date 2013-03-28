@@ -87,10 +87,12 @@ namespace Nektar
          */
         ProcessSpherigon::ProcessSpherigon(MeshSharedPtr m) : ProcessModule(m)
         {
-            config["N"] = ConfigOption(false, "8",
+            config["N"] = ConfigOption(false, "5",
                 "Number of points to add to face edges.");
             config["surf"] = ConfigOption(false, "-1",
                 "Tag identifying surface to process.");
+            config["BothTriFacesOnPrism"] = ConfigOption(true, "-1",
+                "Curve both triangular faces of prism on boundary.");
         }
       
         /**
@@ -313,6 +315,7 @@ namespace Nektar
                 
                 // Construct list of spherigon edges/faces from a tag.
                 int surfTag = config["surf"].as<int>();
+                bool prismTag = config["BothTriFacesOnPrism"].beenSet;
                 if (surfTag != -1)
                 {
                     m->spherigonSurfs.clear();
@@ -337,7 +340,19 @@ namespace Nektar
                                 tags.end())
                             {
                                 m->spherigonSurfs.insert(make_pair(i, j));
+                                
+                                // Curve other tri face on Prism. Note
+                                // could be problem on pyramid when
+                                // implemented
+                                if((nSurf == 5)&&prismTag)
+                                {
+                                    // add other end of prism on boundary for smoothing
+                                    int triFace = (j == 1)? 3:1;
+                                    
+                                    m->spherigonSurfs.insert(make_pair(i, triFace));
+                                }
                             }
+
                         }
                     }
                 }

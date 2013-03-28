@@ -200,7 +200,10 @@ namespace Nektar
                            -d2[0][0]*(d1[1][0]*d3[2][0] - d3[1][0]*d1[2][0])
                            +d3[0][0]*(d1[1][0]*d2[2][0] - d2[1][0]*d1[2][0]);
                 
-                ASSERTL1(m_jac[0] > 0, "3D Regular Jacobian is not positive");
+                if(m_jac[0] < 0)
+                {
+                    NEKERROR(ErrorUtil::ewarning,"3D Deformed Jacobian is not positive");
+                }
 
                 // Spen's book page 160
                 m_gmat[0][0] =  (d2[1][0]*d3[2][0] - d3[1][0]*d2[2][0])/m_jac[0];  // d xi_1/d x_1
@@ -255,8 +258,10 @@ namespace Nektar
                 Vmath::Vvtvp(nqtot,&d2[0][0],1,&m_gmat[1][0],1,&m_jac[0],1,&m_jac[0],1);
                 Vmath::Vvtvp(nqtot,&d3[0][0],1,&m_gmat[2][0],1,&m_jac[0],1,&m_jac[0],1);
                 
-                ASSERTL1(Vmath::Vmin(nqtot,&m_jac[0],1) > 0, 
-                         "3D Deformed Jacobian is not positive");
+                if(Vmath::Vmin(nqtot,&m_jac[0],1) < 0)
+                {
+                    NEKERROR(ErrorUtil::ewarning,"3D Deformed Jacobian is not positive");
+                }
                 
                 // Scale g[i] by 1/J3D
                 Vmath::Vdiv(nqtot,&m_gmat[0][0],1,&m_jac[0],1,&m_gmat[0][0],1);

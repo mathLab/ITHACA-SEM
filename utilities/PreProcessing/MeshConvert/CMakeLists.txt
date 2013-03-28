@@ -5,6 +5,7 @@ SET(MeshConvertHeaders
     InputPly.h
     InputSem.h
     InputSwan.h
+    InputStarTec.h
     OutputGmsh.h
     OutputNekpp.h
     ProcessBL.h
@@ -21,6 +22,7 @@ SET(MeshConvertSources
     InputPly.cpp
     InputSem.cpp
     InputSwan.cpp
+    InputStarTec.cpp
     OutputGmsh.cpp
     OutputNekpp.cpp
     ProcessBL.cpp

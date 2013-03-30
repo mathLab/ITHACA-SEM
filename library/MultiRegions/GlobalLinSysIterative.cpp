@@ -52,9 +52,10 @@ namespace Nektar
                 const boost::shared_ptr<AssemblyMap>
                 &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
+                  m_rhs_magnitude(NekConstants::kNekUnsetDouble),
+                  m_precon(NullPreconditionerSharedPtr),
                   m_totalIterations(0),
                   m_useProjection(false),
-                  m_rhs_magnitude(NekConstants::kNekUnsetDouble),
                   m_numPrevSols(0)
         {
             LibUtilities::SessionReaderSharedPtr vSession
@@ -65,9 +66,9 @@ namespace Nektar
 
             LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
             m_root = (vComm->GetRank())? false : true;
-
+            
             m_verbose = (vSession->DefinesCmdLineArgument("verbose"))? true :false;
-
+            
             std::string successiveRhs;
             vSession->LoadSolverInfo("SuccessiveRHS",  successiveRhs );
             try
@@ -75,7 +76,10 @@ namespace Nektar
                 int solutionsToStore = boost::lexical_cast<int>(successiveRhs);
                 m_prevLinSol.set_capacity(solutionsToStore);
                 m_useProjection = true;
-                std::cout << "Using successive rhs projection with " << solutionsToStore << " solutions to be stored" << std::endl;
+                if(m_verbose)
+                {
+                    std::cout << "Using successive rhs projection with " << solutionsToStore << " solutions to be stored" << std::endl;
+                }
             }
             catch(...)
             {

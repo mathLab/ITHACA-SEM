@@ -117,13 +117,13 @@ namespace Nektar
             int elementId;
             int vGlobalId;
             int maxBndGlobalId = 0;
-            StdRegions::Orientation         edgeOrient;
-            StdRegions::Orientation         faceOrient;
-            Array<OneD, unsigned int>           edgeInteriorMap;
-            Array<OneD, int>                    edgeInteriorSign;
-            Array<OneD, unsigned int>           faceInteriorMap;
-            Array<OneD, int>                    faceInteriorSign;
-            Array<OneD, unsigned int>           interiorMap;
+            StdRegions::Orientation     edgeOrient;
+            StdRegions::Orientation     faceOrient;
+            Array<OneD, unsigned int>   edgeInteriorMap;
+            Array<OneD, int>            edgeInteriorSign;
+            Array<OneD, unsigned int>   faceInteriorMap;
+            Array<OneD, int>            faceInteriorSign;
+            Array<OneD, unsigned int>   interiorMap;
 
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();

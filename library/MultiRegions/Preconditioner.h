@@ -54,6 +54,9 @@ namespace Nektar
 
         class Preconditioner;
         typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
+
+        static PreconditionerSharedPtr NullPreconditionerSharedPtr;
+
         typedef LibUtilities::NekFactory< std::string, Preconditioner, 
             const boost::shared_ptr<GlobalLinSys>&,
             const boost::shared_ptr<AssemblyMap>& > PreconFactory;

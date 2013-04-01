@@ -59,6 +59,7 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT TetExp(const TetExp &T);
 
+
             LOCAL_REGIONS_EXPORT ~TetExp();
 
         protected:
@@ -218,6 +219,10 @@ namespace Nektar
                 DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(
                 const MatrixKey &mkey);
 
+            LOCAL_REGIONS_EXPORT void SetUpInverseTransformationMatrix(
+                const DNekMatSharedPtr & m_transformationmatrix,
+                DNekMatSharedPtr m_inversetransformationmatrix,
+                DNekMatSharedPtr m_inversetransposedtransformationmatrix);
 
         private:
             SpatialDomains::Geometry3DSharedPtr m_geom;
@@ -239,8 +244,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       Array<OneD,       NekDouble> &wsp);
-
-	    LOCAL_REGIONS_EXPORT SpatialDomains::TetGeomSharedPtr CreateEquilateralTetGeom();
         };
 
         // type defines for use of TetExp in a boost vector

@@ -1018,7 +1018,6 @@ namespace Nektar
             outfile << std::endl;
         }
 
-
         // VIRTUAL INLINE FUNCTIONS FROM HEADER FILE
         void StdExpansion::SetUpPhysNormals(const int edge)
         {
@@ -1511,7 +1510,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape" );
             }
 
-
             void StdExpansion::v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
@@ -1653,13 +1651,13 @@ namespace Nektar
         void StdExpansion::v_WeakDirectionalDerivMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                                           Array<OneD,NekDouble> &outarray,
                                                           const StdMatrixKey &mkey)
-            {
-                // If this function is not reimplemented on shape level, the function
-                // below will be called
-                WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
-
-            }
-
+        {
+            // If this function is not reimplemented on shape level, the function
+            // below will be called
+            WeakDirectionalDerivMatrixOp_MatFree(inarray,outarray,mkey);
+            
+        }
+        
         void StdExpansion::v_MassLevelCurvatureMatrixOp(const Array<OneD, const NekDouble> &inarray,
                                                         Array<OneD,NekDouble> &outarray,
                                                         const StdMatrixKey &mkey)
@@ -1688,7 +1686,7 @@ namespace Nektar
             // below will be called
             HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
-        
+
         void StdExpansion::v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                        Array<OneD,NekDouble> &outarray,
                                                        const StdMatrixKey &mkey)
@@ -1764,6 +1762,22 @@ namespace Nektar
             ASSERTL0(false, "Cannot get face normals for this expansion.");
             static NormalVector result;
             return result;
+        }
+
+        Array<OneD, unsigned int>
+        StdExpansion::v_GetEdgeInverseBoundaryMap(int eid)
+        {
+            ASSERTL0(false, "Not implemented.");
+            Array<OneD, unsigned int> noinversemap(1);
+            return noinversemap;
+        }
+
+        Array<OneD, unsigned int>
+        StdExpansion::v_GetFaceInverseBoundaryMap(int fid)
+        {
+            ASSERTL0(false, "Not implemented.");
+            Array<OneD, unsigned int> noinversemap(1);
+            return noinversemap;
         }
     }//end namespace
 }//end namespace

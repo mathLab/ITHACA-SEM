@@ -40,6 +40,8 @@
 #include <StdRegions/StdExpansion.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>  // for Array
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
+#include <LibUtilities/Communication/Comm.h>
+#include <LibUtilities/Communication/GsLib.hpp>
 
 #include <boost/shared_ptr.hpp>
 
@@ -52,6 +54,9 @@ namespace Nektar
 
         class Preconditioner;
         typedef boost::shared_ptr<Preconditioner>  PreconditionerSharedPtr;
+
+        static PreconditionerSharedPtr NullPreconditionerSharedPtr;
+
         typedef LibUtilities::NekFactory< std::string, Preconditioner, 
             const boost::shared_ptr<GlobalLinSys>&,
             const boost::shared_ptr<AssemblyMap>& > PreconFactory;
@@ -71,13 +76,45 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
+	    inline void DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
+
+	    inline void DoTransformFromLowEnergy(
+                Array<OneD, NekDouble>& pInput);
+
+	    inline void BuildPreconditioner();
+
    	    inline void InitObject();
 
             Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
 
-            const inline DNekMatSharedPtr &GetTransformationMatrix(void) const;
+            const inline Array<OneD, const DNekScalMatSharedPtr> 
+                &GetTransformationMatrix(void) const;
+            
+            const inline Array<OneD, const DNekScalMatSharedPtr> 
+                &GetTransposedTransformationMatrix(void) const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockTransformedSchurCompl() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockCMatrix() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockInvDMatrix() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockSchurCompl() const;
+        
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockTransformationMatrix() const;
+            
+            inline const DNekScalBlkMatSharedPtr&
+                GetBlockTransposedTransformationMatrix() const;
 
-            const inline DNekMatSharedPtr &GetTransposedTransformationMatrix(void) const;
+            inline DNekScalBlkMatSharedPtr
+                TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
 
 	protected:
 
@@ -89,6 +126,11 @@ namespace Nektar
 
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
+            virtual DNekScalBlkMatSharedPtr
+                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
+
+            LibUtilities::CommSharedPtr m_comm;
+
 	private:
 
             void NullPreconditioner(void);
@@ -99,9 +141,20 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
-            virtual const DNekMatSharedPtr& v_GetTransformationMatrix(void) const;
+	    virtual void v_DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
 
-            virtual const DNekMatSharedPtr& v_GetTransposedTransformationMatrix(void) const;
+	    virtual void v_DoTransformFromLowEnergy(
+                Array<OneD, NekDouble>& pInput);
+
+	    virtual void v_BuildPreconditioner();
+
+            virtual const Array<OneD, const DNekScalMatSharedPtr>& 
+                v_GetTransformationMatrix(void) const;
+
+            virtual const Array<OneD, const DNekScalMatSharedPtr>& 
+                v_GetTransposedTransformationMatrix(void) const;
 
             static std::string lookupIds[];
             static std::string def;
@@ -119,28 +172,68 @@ namespace Nektar
         /**
          *
          */
-        inline const DNekMatSharedPtr& Preconditioner::GetTransformationMatrix(void) const
+        inline const Array<OneD,const DNekScalMatSharedPtr>& 
+            Preconditioner::GetTransformationMatrix() const
         {
-	  return v_GetTransformationMatrix();
+            return v_GetTransformationMatrix();
         }
 
         /**
          *
          */
-        inline const DNekMatSharedPtr& Preconditioner::GetTransposedTransformationMatrix(void) const
+        inline const Array<OneD,const DNekScalMatSharedPtr>& 
+            Preconditioner::GetTransposedTransformationMatrix() const
         {
-	  return v_GetTransposedTransformationMatrix();
+            return v_GetTransposedTransformationMatrix();
+        }
+
+        /**
+         *
+         */ 
+        inline DNekScalBlkMatSharedPtr Preconditioner::
+            TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
+        {
+            return v_TransformedSchurCompl(offset,loc_mat);
         }
 
         /**
          *
          */
         inline void Preconditioner::DoPreconditioner(
-                const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput)
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
         {
 	    v_DoPreconditioner(pInput,pOutput);
         }
+        
+        /**
+         *
+         */
+        inline void Preconditioner::DoTransformToLowEnergy(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+	    v_DoTransformToLowEnergy(pInput,pOutput);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoTransformFromLowEnergy(
+            Array<OneD, NekDouble>& pInput)
+        {
+	    v_DoTransformFromLowEnergy(pInput);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::BuildPreconditioner()
+        {
+	    v_BuildPreconditioner();
+        }
+
+        
 
     }
 }

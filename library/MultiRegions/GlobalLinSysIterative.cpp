@@ -52,9 +52,10 @@ namespace Nektar
                 const boost::shared_ptr<AssemblyMap>
                 &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
+                  m_rhs_magnitude(NekConstants::kNekUnsetDouble),
+                  m_precon(NullPreconditionerSharedPtr),
                   m_totalIterations(0),
                   m_useProjection(false),
-                  m_rhs_magnitude(NekConstants::kNekUnsetDouble),
                   m_numPrevSols(0)
         {
             LibUtilities::SessionReaderSharedPtr vSession
@@ -65,9 +66,9 @@ namespace Nektar
 
             LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
             m_root = (vComm->GetRank())? false : true;
-
+            
             m_verbose = (vSession->DefinesCmdLineArgument("verbose"))? true :false;
-
+            
             std::string successiveRhs;
             vSession->LoadSolverInfo("SuccessiveRHS",  successiveRhs );
             try
@@ -75,7 +76,10 @@ namespace Nektar
                 int solutionsToStore = boost::lexical_cast<int>(successiveRhs);
                 m_prevLinSol.set_capacity(solutionsToStore);
                 m_useProjection = true;
-                std::cout << "Using successive rhs projection with " << solutionsToStore << " solutions to be stored" << std::endl;
+                if(m_verbose)
+                {
+                    std::cout << "Using successive rhs projection with " << solutionsToStore << " solutions to be stored" << std::endl;
+                }
             }
             catch(...)
             {
@@ -381,17 +385,15 @@ namespace Nektar
                                                         const AssemblyMapSharedPtr &plocToGloMap,
                                                         const int nDir)
         {
-            // Check if preconditioner has been computed and compute if needed.
             if (!m_precon)
             {
                 MultiRegions::PreconditionerType pType = plocToGloMap->GetPreconType();
-                
                 std::string PreconType = MultiRegions::PreconditionerTypeMap[pType];
-                
                 v_UniqueMap();
                 m_precon = GetPreconFactory().CreateInstance(PreconType,GetSharedThisPtr(),plocToGloMap);
+                m_precon -> BuildPreconditioner();
             }
-            
+
             // Get the communicator for performing data exchanges
             LibUtilities::CommSharedPtr vComm
                 = m_expList.lock()->GetComm()->GetRowComm();
@@ -460,7 +462,9 @@ namespace Nektar
             // If iteration is progressing calculate first iteration details
 
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
+
             v_DoMatrixMultiply(w_A, s_A);
+
             k = 0;
 
             vExchange[0] = Vmath::Dot2(nNonDir,
@@ -549,7 +553,6 @@ namespace Nektar
                 beta  = rho_new/rho;
                 alpha = rho_new/(mu - rho_new*beta/alpha);
                 rho   = rho_new;
-
                 k++;
             }
         }

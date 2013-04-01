@@ -112,6 +112,8 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT int GetCoordim() const;
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetRefGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
                 SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetMetricInfo();
                 SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType GetShapeType(void);
                 SPATIAL_DOMAINS_EXPORT int GetGlobalID(void);

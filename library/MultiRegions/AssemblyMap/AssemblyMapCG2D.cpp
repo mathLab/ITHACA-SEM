@@ -210,7 +210,6 @@ namespace Nektar
                 for(j = 0; j < bndCondExp[i]->GetExpSize(); j++)
                 {
                     bndSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(bndCondExp[i]->GetExp(j));
-
                     if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                     {
                         nLocDirBndCondDofs += bndSegExp->GetNcoeffs();
@@ -502,6 +501,12 @@ namespace Nektar
             
             m_hash = boost::hash_range(
                 m_localToGlobalMap.begin(), m_localToGlobalMap.end());
+
+            // Add up hash values if parallel
+            int hash = m_hash;
+            m_comm->AllReduce(hash, 
+                              LibUtilities::ReduceSum);
+            m_hash = hash;
         }
 
         /**
@@ -959,6 +964,9 @@ namespace Nektar
                 }
                 localOffset+=nVerts;
             }
+
+            // Number of dirichlet edges
+            m_numNonDirEdges=edgeTempGraphVertId.size();
 
             if(doInteriorMap)
             {

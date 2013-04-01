@@ -240,6 +240,17 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT int GetNumNonDirFaceModes() const;
 
+            MULTI_REGIONS_EXPORT int GetNumDirEdges() const;
+
+            MULTI_REGIONS_EXPORT int GetNumDirFaces() const;
+
+            MULTI_REGIONS_EXPORT int GetNumNonDirEdges() const;
+
+            MULTI_REGIONS_EXPORT int GetNumNonDirFaces() const;
+
+            MULTI_REGIONS_EXPORT const Array<OneD, const int>& 
+                GetExtraDirEdges();
+
             /// Returns the bandwidth of the boundary system.
             MULTI_REGIONS_EXPORT int GetBndSystemBandWidth() const;
             /// Returns the level of static condensation for this map.
@@ -433,6 +444,17 @@ namespace Nektar
 
             virtual int v_GetNumNonDirFaceModes() const;
 
+            virtual int v_GetNumDirEdges() const;
+
+            virtual int v_GetNumDirFaces() const;
+
+            virtual int v_GetNumNonDirEdges() const;
+
+            virtual int v_GetNumNonDirFaces() const;
+            
+            virtual const Array<OneD, const int>& 
+                v_GetExtraDirEdges();
+            
         };
 
 

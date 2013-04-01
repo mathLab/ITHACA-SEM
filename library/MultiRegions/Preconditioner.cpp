@@ -45,11 +45,9 @@ namespace Nektar
         std::string Preconditioner::lookupIds[7] = {
                 LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Null",MultiRegions::eNull),
                 LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Diagonal",MultiRegions::eDiagonal),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","InverseLinear",MultiRegions::eInverseLinear),
+                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Linear",MultiRegions::eLinear),
                 LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LowEnergy",MultiRegions::eLowEnergy),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LinearLowEnergy",MultiRegions::eLinearLowEnergy),
                 LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block",MultiRegions::eBlock),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LocalLowEnergy",MultiRegions::eLocalLowEnergy),
         };
         std::string Preconditioner::def = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Preconditioner","Diagonal");
 
@@ -86,7 +84,9 @@ namespace Nektar
 	}
 
 
-
+        /**
+         * \brief Apply a preconditioner to the conjugate gradient method
+         */ 
         void Preconditioner::v_DoPreconditioner(
                       const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput)
@@ -95,22 +95,64 @@ namespace Nektar
 	}
 
         /**
+         * \brief Transform from original basis to low energy basis
+         */ 
+        void Preconditioner::v_DoTransformToLowEnergy(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+	}
+
+        /**
+         * \brief Transform from low energy basis to orignal basis
+         */ 
+        void Preconditioner::v_DoTransformFromLowEnergy(
+            Array<OneD, NekDouble>& pInput)
+        {
+            Vmath::Smul(pInput.num_elements(),1.0,pInput, 1, pInput, 1);
+	}
+
+        void Preconditioner::v_BuildPreconditioner()
+        {
+	}
+
+        /**
          * \brief Get the transformation matrix \f$\mathbf{R}\f$
-         */
-        const DNekMatSharedPtr& Preconditioner::v_GetTransformationMatrix() const
+         */ 
+        const Array<OneD, const DNekScalMatSharedPtr>& Preconditioner::v_GetTransformationMatrix() const
 	{
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-            return NullDNekMatSharedPtr;
+            static Array<OneD,DNekScalMatSharedPtr> result;
+            return result;
 	}
 
         /**
          * \brief Get the transposed transformation matrix \f$\mathbf{R}^{T}\f$
          */
-        const DNekMatSharedPtr& Preconditioner::v_GetTransposedTransformationMatrix() const
+        const Array<OneD, const DNekScalMatSharedPtr>& Preconditioner::v_GetTransposedTransformationMatrix() const
 	{
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-            return NullDNekMatSharedPtr;
+            static Array<OneD,DNekScalMatSharedPtr> result;
+            return result;
 	}
+
+        /**
+         * \brief Get block elemental transposed transformation matrix
+         * \f$\mathbf{R}^{T}\f$
+         */
+        DNekScalBlkMatSharedPtr Preconditioner::
+        v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
+	{
+            //boost::shared_ptr<MultiRegions::ExpList> 
+            //    expList=((m_linsys.lock())->GetLocMat()).lock();
+         
+            //StdRegions::StdExpansionSharedPtr locExpansion;                
+            //locExpansion = expList->GetExp(offset);
+
+            //DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
+	    return loc_mat;
+	}
+
 
         /**
          *  Performs global assembly of diagonal entries
@@ -138,16 +180,16 @@ namespace Nektar
                 bnd_mat=loc_mat->GetBlock(0,0);
 
                 //offset by number of rows
-                int bnd_lda = bnd_mat->GetRows();
+                int bnd_row = bnd_mat->GetRows();
 
-                for(i = 0; i < bnd_lda; ++i)
+                for(i = 0; i < bnd_row; ++i)
                 {
                     gid1  = m_locToGloMap->GetLocalToGlobalBndMap (cnt + i) - nDirBnd;
                     sign1 = m_locToGloMap->GetLocalToGlobalBndSign(cnt + i);
 
                     if(gid1 >= 0)
                     {
-                        for(j = 0; j < bnd_lda; ++j)
+                        for(j = 0; j < bnd_row; ++j)
                         {
                             gid2  = m_locToGloMap->GetLocalToGlobalBndMap(cnt+j) - nDirBnd;
                             sign2 = m_locToGloMap->GetLocalToGlobalBndSign(cnt+j);
@@ -159,7 +201,7 @@ namespace Nektar
                         }
                    }
                 }
-                cnt += bnd_lda;
+                cnt += bnd_row;
             }
             return diagonals;
         }

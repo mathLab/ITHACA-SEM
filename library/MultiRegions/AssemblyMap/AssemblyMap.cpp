@@ -555,7 +555,36 @@ namespace Nektar
             return 0;
         }
 
+        int AssemblyMap::v_GetNumDirEdges() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
 
+        int AssemblyMap::v_GetNumDirFaces() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        int AssemblyMap::v_GetNumNonDirEdges() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        int AssemblyMap::v_GetNumNonDirFaces() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        const Array<OneD, const int>& AssemblyMap::v_GetExtraDirEdges()
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            static Array<OneD, const int> result;
+            return result;
+        }
 
         LibUtilities::CommSharedPtr AssemblyMap::GetComm()
         {
@@ -688,11 +717,35 @@ namespace Nektar
             return v_GetNumNonDirFaceModes();
         }
 
+        int AssemblyMap::GetNumDirEdges() const
+        {
+            return v_GetNumDirEdges();
+        }
+
+        int AssemblyMap::GetNumDirFaces() const
+        {
+            return v_GetNumDirFaces();
+        }
+
+        int AssemblyMap::GetNumNonDirEdges() const
+        {
+            return v_GetNumNonDirEdges();
+        }
+
+        int AssemblyMap::GetNumNonDirFaces() const
+        {
+            return v_GetNumNonDirFaces();
+        }
+
+        const Array<OneD, const int>& AssemblyMap::GetExtraDirEdges()
+        {
+            return v_GetExtraDirEdges();
+        }
+
         int AssemblyMap::GetLocalToGlobalBndMap(const int i) const
         {
             return m_localToGlobalBndMap[i];
         }
-
 
         const Array<OneD,const int>&
                     AssemblyMap::GetLocalToGlobalBndMap(void)
@@ -888,6 +941,7 @@ namespace Nektar
             {
                 Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
+          UniversalAssembleBnd(tmp);
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
         }
         

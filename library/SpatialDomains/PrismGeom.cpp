@@ -39,7 +39,6 @@
 #include <SpatialDomains/Geometry2D.h>
 #include <StdRegions/StdPrismExp.h>
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/QuadGeom.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/GeomFactors3D.h>
 
@@ -183,6 +182,10 @@ namespace Nektar
             return 9;
         }
 
+        int PrismGeom::v_GetNumFaces() const
+        {
+            return 5;
+        }
         
         /**
          * @brief Determines if a point specified in global coordinates is
@@ -348,6 +351,30 @@ namespace Nektar
                 NewtonIterationForLocCoord(coords,Lcoords);
             }
         }
+        
+        int PrismGeom::v_GetVertexEdgeMap(const int i, const int j) const
+	{
+	    const unsigned int VertexEdgeConnectivity[][3] = {
+	        {0,3,4},{0,1,5},{1,2,6},{2,3,7},{4,5,8},{6,7,8}};
+
+	    return VertexEdgeConnectivity[i][j];
+	}
+        
+        int PrismGeom::v_GetVertexFaceMap(const int i, const int j) const
+	{
+	    const unsigned int VertexFaceConnectivity[][3] = {
+	        {0,1,4},{0,1,2},{0,2,3},{0,3,4},{1,2,4},{2,3,4}};
+            
+	    return VertexFaceConnectivity[i][j];
+	}
+        
+        int PrismGeom::v_GetEdgeFaceMap(const int i, const int j) const
+	{
+	    const unsigned int EdgeFaceConnectivity[][2] = {
+                {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},{2,4}};
+            
+	    return EdgeFaceConnectivity[i][j];
+	}
 
         void PrismGeom::SetUpLocalEdges(){
             // find edge 0

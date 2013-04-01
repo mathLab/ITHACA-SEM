@@ -257,6 +257,12 @@ namespace Nektar
                                   Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
 
+            //---------------------------------------
+            // Preconditioners
+            //---------------------------------------
+            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int> 
+                v_GetEdgeInverseBoundaryMap(int eid);
+
         private:
             SpatialDomains::Geometry2DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;

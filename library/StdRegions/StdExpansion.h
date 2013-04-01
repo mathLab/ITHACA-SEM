@@ -830,7 +830,7 @@ namespace Nektar
                 return m_stdStaticCondMatrixManager[mkey];
             }
 			
-			inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
+	    inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
             {
                 return m_IndexMapManager[ikey];
             }
@@ -985,6 +985,7 @@ namespace Nektar
                 v_GetFaceToElementMap(fid,faceOrient,maparray,signarray,
                                       nummodesA,nummodesB);
             }
+
 
             /**
              * @brief Extract the physical values along edge \a edge from \a
@@ -1431,6 +1432,25 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
+            /*STD_REGIONS_EXPORT void GetInverseBoundaryMaps(const Array<OneD, int > vertexmap,
+				 const Array<OneD, Array<OneD, unsigned int> > edgemap,
+				 const Array<OneD, Array<OneD, unsigned int> > facemap)
+            {
+                v_GetInverseBoundaryMaps(vertexmap,edgemap,facemap);
+                }*/
+
+            STD_REGIONS_EXPORT Array<OneD, unsigned int> 
+                GetEdgeInverseBoundaryMap(int eid)
+            {
+                return v_GetEdgeInverseBoundaryMap(eid);
+            }
+            
+            STD_REGIONS_EXPORT Array<OneD, unsigned int>
+                GetFaceInverseBoundaryMap(int fid)
+            {
+                return v_GetFaceInverseBoundaryMap(fid);
+            }
+
         protected:
 
 
@@ -1442,14 +1462,14 @@ namespace Nektar
             Array<OneD, NekDouble> m_phys;                    /**< Array containing expansion evaluated at the quad points */
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
-			LibUtilities::NekManager<IndexMapKey, IndexMapValues , IndexMapKey::opLess> m_IndexMapManager;
+	    LibUtilities::NekManager<IndexMapKey, IndexMapValues , IndexMapKey::opLess> m_IndexMapManager;
 			
             bool StdMatManagerAlreadyCreated(const StdMatrixKey &mkey)
             {
                 return m_stdMatrixManager.AlreadyCreated(mkey);
             }
 			
-			bool IndexMapManagerAlreadyCreated(const IndexMapKey &ikey)
+            bool IndexMapManagerAlreadyCreated(const IndexMapKey &ikey)
             {
                 return m_IndexMapManager.AlreadyCreated(ikey);
             }
@@ -1860,6 +1880,18 @@ namespace Nektar
 			
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
+
+            /*STD_REGIONS_EXPORT virtual void v_GetInverseBoundaryMaps(
+                Array<OneD, int > vertexmap,
+                Array<OneD, Array<OneD, unsigned int> > edgemap,
+                Array<OneD, Array<OneD, unsigned int> > facemap);*/
+
+            STD_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
+                v_GetEdgeInverseBoundaryMap(int eid);
+
+            STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
+                v_GetFaceInverseBoundaryMap(int fid);
+
         };
 
 

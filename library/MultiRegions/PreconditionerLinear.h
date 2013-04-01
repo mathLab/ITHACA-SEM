@@ -32,8 +32,8 @@
 // Description: Preconditioner header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLOWENERGY_H
-#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLOWENERGY_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEAR_H
+#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEAR_H
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
@@ -46,10 +46,10 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class PreconditionerLowEnergy;
-        typedef boost::shared_ptr<PreconditionerLowEnergy>  PreconditionerLowEnergySharedPtr;
+        class PreconditionerLinear;
+        typedef boost::shared_ptr<PreconditionerLinear>  PreconditionerLinearSharedPtr;
 
-        class PreconditionerLowEnergy: public Preconditioner
+        class PreconditionerLinear: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
@@ -58,7 +58,7 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLowEnergy>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinear>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
 	        return p;
             }
@@ -66,68 +66,34 @@ namespace Nektar
             /// Name of class
             static std::string className1;
 
-            MULTI_REGIONS_EXPORT PreconditionerLowEnergy(
+            MULTI_REGIONS_EXPORT PreconditionerLinear(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerLowEnergy() {}
+            virtual ~PreconditionerLinear() {}
 
 	protected:
 
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
             PreconditionerType                          m_preconType;
-	    StdRegions::StdExpansionSharedPtr           vExp;
 
             DNekMatSharedPtr                            m_preconditioner;
 	    DNekScalBlkMatSharedPtr                     GloBlkMat;
 	    DNekBlkMatSharedPtr                         BlkMat;
 
-            DNekScalMatSharedPtr                        bnd_mat;
-
-	    DNekScalMatSharedPtr                        m_TetR;
-	    DNekScalMatSharedPtr                        m_TetRT;
-	    DNekScalMatSharedPtr                        m_PrismR;
-	    DNekScalMatSharedPtr                        m_PrismRT;
-
-            DNekScalBlkMatSharedPtr                     m_schurCompl;
-            DNekScalBlkMatSharedPtr                     m_BinvD;
-            DNekScalBlkMatSharedPtr                     m_C;
-            DNekScalBlkMatSharedPtr                     m_invD;
-
-            DNekScalBlkMatSharedPtr                     m_RBlk;
-            DNekScalBlkMatSharedPtr                     m_RTBlk;
-            DNekScalBlkMatSharedPtr                     m_S1Blk;
-
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
-
-            Array<OneD, int>                            vertModeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     faceModeLocation;
-
-            Array<OneD, Array<OneD, unsigned int> >     MatEdgeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     MatFaceLocation;
-
-            Array<OneD,DNekScalMatSharedPtr> m_transformationMatrix;
-            Array<OneD,DNekScalMatSharedPtr> m_transposedTransformationMatrix;
 
             Array<OneD, NekDouble>      m_locToGloSignMult;
 
 	private:
 
-	    void SetUpLowEnergyBasis(void);
+	    void InverseLinearSpacePreconditioner(void);
 
-	    void LowEnergyPreconditioner(void);
-
-            void SetUpReferenceElements(void);
+	    void StaticCondInverseLinearSpacePreconditioner(void);
 
             void CreateMultiplicityMap(void);
-
-            void SetupBlockTransformationMatrix(void);
-
-            SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
-            SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
 
             virtual void v_InitObject();
 
@@ -135,23 +101,15 @@ namespace Nektar
                       const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
-	    virtual const Array<OneD,const DNekScalMatSharedPtr>& 
-                v_GetTransformationMatrix() const;
-            
-	    virtual const Array<OneD,const DNekScalMatSharedPtr>& 
-                v_GetTransposedTransformationMatrix() const;
-            
-            virtual void v_DoTransformToLowEnergy(
-                const Array<OneD, NekDouble>& pInput,
-                Array<OneD, NekDouble>& pOutput);
+            //virtual void v_DoTransformToLowEnergy(
+            //const Array<OneD, NekDouble>& pInput,
+            //Array<OneD, NekDouble>& pOutput);
 
-            virtual void v_DoTransformFromLowEnergy(
-                Array<OneD, NekDouble>& pInput);
+            //virtual void v_DoTransformFromLowEnergy(
+            // Array<OneD, NekDouble>& pInput);
 
             virtual void v_BuildPreconditioner();
 
-            virtual DNekScalBlkMatSharedPtr
-                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
         };
     }
 }

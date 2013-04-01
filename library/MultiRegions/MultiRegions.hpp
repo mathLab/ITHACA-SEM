@@ -117,22 +117,18 @@ namespace Nektar
         {
             eNull,    ///< No Solution type specified
             eDiagonal,
-            eInverseLinear,
+            eLinear,
 	    eLowEnergy,
-            eLinearLowEnergy,
-            eBlock,
-            eLocalLowEnergy
+            eBlock
         };
 
         const char* const PreconditionerTypeMap[] =
         {
             "Null",
             "Diagonal",
-            "InverseLinear",
+            "Linear",
 	    "LowEnergy",
-	    "LinearLowEnergy",
-            "Block",
-            "LocalLowEnergy"
+            "Block"
         };
 
 

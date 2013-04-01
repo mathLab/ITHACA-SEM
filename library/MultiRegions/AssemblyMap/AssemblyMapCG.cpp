@@ -117,13 +117,13 @@ namespace Nektar
             int elementId;
             int vGlobalId;
             int maxBndGlobalId = 0;
-            StdRegions::Orientation         edgeOrient;
-            StdRegions::Orientation         faceOrient;
-            Array<OneD, unsigned int>           edgeInteriorMap;
-            Array<OneD, int>                    edgeInteriorSign;
-            Array<OneD, unsigned int>           faceInteriorMap;
-            Array<OneD, int>                    faceInteriorSign;
-            Array<OneD, unsigned int>           interiorMap;
+            StdRegions::Orientation     edgeOrient;
+            StdRegions::Orientation     faceOrient;
+            Array<OneD, unsigned int>   edgeInteriorMap;
+            Array<OneD, int>            edgeInteriorSign;
+            Array<OneD, unsigned int>   faceInteriorMap;
+            Array<OneD, int>            faceInteriorSign;
+            Array<OneD, unsigned int>   interiorMap;
 
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
@@ -506,6 +506,32 @@ namespace Nektar
         {
             return m_numNonDirFaceModes;
         }
+
+        int AssemblyMapCG::v_GetNumDirEdges() const
+        {
+            return m_numDirEdges;
+        }
+
+        int AssemblyMapCG::v_GetNumDirFaces() const
+        {
+            return m_numDirFaces;
+        }
+
+        int AssemblyMapCG::v_GetNumNonDirEdges() const
+        {
+            return m_numNonDirEdges;
+        }
+
+        int AssemblyMapCG::v_GetNumNonDirFaces() const
+        {
+            return m_numNonDirFaces;
+        }
+
+        const Array<OneD, const int>& AssemblyMapCG::v_GetExtraDirEdges()
+        {
+            return m_extraDirEdges;
+        }
+
 
     } // namespace
 } // namespace

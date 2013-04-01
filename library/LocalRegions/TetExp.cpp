@@ -93,7 +93,6 @@ namespace Nektar
         {
         }
 
-
         /**
 	 * \brief Destructor
 	 */
@@ -158,10 +157,10 @@ namespace Nektar
          * @param   out_d2      Derivative in third coordinate direction.
          */
         void TetExp::v_PhysDeriv(
-                 const Array<OneD, const NekDouble> & inarray,
-                       Array<OneD,NekDouble> &out_d0,
-                       Array<OneD,NekDouble> &out_d1,
-                       Array<OneD,NekDouble> &out_d2)
+            const Array<OneD, const NekDouble> & inarray,
+            Array<OneD,NekDouble> &out_d0,
+            Array<OneD,NekDouble> &out_d1,
+            Array<OneD,NekDouble> &out_d2)
         {
             int  TotPts = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*
                 m_base[2]->GetNumPoints();
@@ -172,7 +171,7 @@ namespace Nektar
             Array<OneD,NekDouble> Diff2 = Diff1 + TotPts;
             
             StdTetExp::v_PhysDeriv(inarray, Diff0, Diff1, Diff2);
-
+            
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 if(out_d0.num_elements())
@@ -181,7 +180,7 @@ namespace Nektar
                     Vmath::Vvtvp (TotPts,&gmat[1][0],1,&Diff1[0],1, &out_d0[0], 1,&out_d0[0],1);
                     Vmath::Vvtvp (TotPts,&gmat[2][0],1,&Diff2[0],1, &out_d0[0], 1,&out_d0[0],1);
                 }
-
+                
                 if(out_d1.num_elements())
                 {
                     Vmath::Vmul  (TotPts,&gmat[3][0],1,&Diff0[0],1, &out_d1[0], 1);
@@ -245,7 +244,7 @@ namespace Nektar
             else
             {
                 IProductWRTBase(inarray,outarray);
-
+                
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
                                               DetShapeType(),*this);
@@ -811,7 +810,7 @@ namespace Nektar
             SpatialDomains::GeomType            type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
-            int nq = m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
+            int nq= m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints();
             int vCoordDim = GetCoordim();
             
             m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
@@ -1576,46 +1575,6 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, helm);
                 }
                 break;
-             case StdRegions::ePreconditioner:
-                {
-                    LibUtilities::BasisKey TetBa = m_base[0]->GetBasisKey();
-		    LibUtilities::BasisKey TetBb = m_base[1]->GetBasisKey();
-		    LibUtilities::BasisKey TetBc = m_base[2]->GetBasisKey();
-
-		    SpatialDomains::TetGeomSharedPtr EquilateralTetGeom=CreateEquilateralTetGeom();
-
-		    //create TetExp with equilateral Tet geometry object
-                    TetExp eqtet(TetBa,TetBb,TetBc,EquilateralTetGeom);
-		
-		    int nquad0 = m_base[0]->GetNumPoints();
-		    int nquad1 = m_base[1]->GetNumPoints();
-		    int nquad2 = m_base[2]->GetNumPoints();
-
-		    int nq=nquad0*nquad1*nquad2;
-		    Array<OneD,NekDouble> coords[3];
-
-		    coords[0] = Array<OneD,NekDouble>(nq);
-		    coords[1] = Array<OneD,NekDouble>(nq);
-		    coords[2] = Array<OneD,NekDouble>(nq);
-		    eqtet.GetCoords(coords[0],coords[1],coords[2]);
-
-                    NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
-                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), eqtet);
-                    DNekScalMat &MassMat = *(eqtet.m_matrixManager[masskey]);
-                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetShapeType(), eqtet, mkey.GetConstFactors(), mkey.GetVarCoeffs());
-                    DNekScalMat &LapMat = *(eqtet.m_matrixManager[lapkey]);
-
-                    int rows = LapMat.GetRows();
-                    int cols = LapMat.GetColumns();
-
-                    DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows, cols);
-
-                    NekDouble one = 1.0;
-                    (*helm) = LapMat + factor*MassMat;
-
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, helm);
-                }
-                break;
             case StdRegions::eIProductWRTBase:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -1682,20 +1641,25 @@ namespace Nektar
             int nint = m_ncoeffs - nbdry;
 
             unsigned int exp_size[] = {nbdry, nint};
-            int nblks = 2;
-            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
+            int nblks;
+
             NekDouble factor = 1.0;
             MatrixStorage AMatStorage = eFULL;
-
+            
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eLaplacian:
-            case StdRegions::ePreconditioner:
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
-
                 // use Deformed case for both regular and deformed geometries
                 factor = 1.0;
                 goto UseLocRegionsMatrix;
+                break;
+            case StdRegions::ePreconR:
+            case StdRegions::ePreconRT:
+                goto UsePreconMatrix;
+                break;
+            case StdRegions::ePreconLinearSpace:
+                goto UsePreconLinearSpaceMatrix;
                 break;
             default:
                 if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
@@ -1713,6 +1677,9 @@ namespace Nektar
                 break;
             UseStdRegionsMatrix:
                 {
+                    nblks = 2;
+                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
+
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
                     DNekBlkMatSharedPtr  mat = GetStdStaticCondMatrix(mkey);
@@ -1728,6 +1695,9 @@ namespace Nektar
                 break;
             UseLocRegionsMatrix:
                 {
+                    nblks = 2;
+                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
+
                     int i,j;
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
@@ -1783,6 +1753,46 @@ namespace Nektar
                     returnval->SetBlock(1,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(factor,C));
                     returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
 
+                }
+                break;
+            UsePreconMatrix:
+                {
+                    nblks = 2;
+                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
+
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
+                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
+                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R));
+                    returnval->SetBlock(0,1,Blk01);
+                    returnval->SetBlock(1,0,Blk10);
+                    returnval->SetBlock(1,1,Blk11);
+                }
+                break;
+                UsePreconLinearSpaceMatrix:
+                {
+                    int nverts=GetNverts();
+                    unsigned int vert_size[] = {nverts, nverts};
+                    nblks=1;
+                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, vert_size, vert_size); 
+
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R));
                 }
             }
             return returnval;
@@ -2049,83 +2059,128 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
 
-        SpatialDomains::TetGeomSharedPtr TetExp::CreateEquilateralTetGeom()
-        {
-	    int i,j;
-	    const int three=3;
-            const int nVerts = 4;
-            const NekDouble point[][3] = {
-	      {-1,-1/sqrt(NekDouble(3)),-1/sqrt(NekDouble(6))},
-	      {1,-1/sqrt(NekDouble(3)),-1/sqrt(NekDouble(6))},
-	      {0,2/sqrt(NekDouble(3)),-1/sqrt(NekDouble(6))},
-	      {0,0,3/sqrt(NekDouble(6))}};
-        
-            boost::shared_ptr<SpatialDomains::VertexComponent> verts[4];
-	    for(i=0; i < nVerts; ++i)
-	    {
-	        verts[i] =  MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr( three, i, point[i][0], point[i][1], point[i][2] );
-	    }
+        /**
+	 * \brief Build inverse and inverse transposed transformation matrix: \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
+	 *
+	 * \f\mathbf{R^{-T}}=[\left[\begin{array}{ccc} \mathbf{I} & -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
+	 *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
+	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
+	 *
+	 */
+        void TetExp::SetUpInverseTransformationMatrix(
+            const DNekMatSharedPtr & m_transformationmatrix,
+            DNekMatSharedPtr m_inversetransformationmatrix,
+            DNekMatSharedPtr m_inversetransposedtransformationmatrix)
+	{
+            int i,j,n, eid=0, fid=0;
+            int nCoeffs=NumBndryCoeffs();
+            NekDouble MatrixValue;
+            NekDouble zero=0.0;
+            DNekMat &R = (*m_transformationmatrix);
+            // Define storage for vertex transpose matrix and zero all entries
+            MatrixStorage storage = eFULL;
+            m_inversetransformationmatrix = 
+                MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs,nCoeffs,zero,storage);
+            DNekMat &InvR = (*m_inversetransformationmatrix);
+            //transposed inverse transformation matrix
+            m_inversetransposedtransformationmatrix = 
+                MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs,nCoeffs,zero,storage);
+            DNekMat &InvRT = (*m_inversetransposedtransformationmatrix);
 
-            //////////////////////////////
-            // Set up Tetrahedron Edges //
-            //////////////////////////////
+            int nVerts=GetNverts();
+            int nEdges=GetNedges();
+            int nFaces=GetNfaces();
 
-           // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
-           const int nEdges = 6;
-           const int vertexConnectivity[][2] = {
-             {0,1},{1,2},{0,2},{0,3},{1,3},{2,3}
-           };
+            //Set up map between element vertex, edge or face on the reference
+            //element and modes in the matrix
+            //Array<OneD, int > vertModeLocation(nVerts);
+            //Array<OneD, Array<OneD, unsigned int> > edgeModeLocation(nEdges);
+            //Array<OneD, Array<OneD, unsigned int> > faceModeLocation(nFaces);
 
-           // Populate the list of edges
-	   SpatialDomains::SegGeomSharedPtr edges[nEdges];
-           for(i=0; i < nEdges; ++i)
-	   {
-               boost::shared_ptr<SpatialDomains::VertexComponent> vertsArray[2];
-	       for(j=0; j<2; ++j)
-	       {
-                   vertsArray[j] = verts[vertexConnectivity[i][j]];
-	       }
+            //mapping arrays for vertices, edges and faces
+            //GetInverseBoundaryMaps(vertModeLocation,edgeModeLocation,faceModeLocation);
 
-               edges[i] = MemoryManager<SpatialDomains::SegGeom>
-                                ::AllocateSharedPtr(i, three, vertsArray);
-           }
+            int nedgemodes, nfacemodes;
+            nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
+            nfacemodes=GetFaceIntNcoeffs(fid);//edgeModeLocation[eid].num_elements();
 
-           //////////////////////////////
-           // Set up Tetrahedron faces //
-           //////////////////////////////
- 
-	   const int nFaces = 4;
-           const int edgeConnectivity[][3] = {
-                 {0,1,2}, {0,4,3}, {1,5,4}, {2,5,3}
-                 };
-           const bool isEdgeFlipped[][3] = {
-                 {0,0,1}, {0,0,1}, {0,0,1}, {0,0,1}
-                 };
+            Array<OneD, unsigned int> 
+                edgemodearray(nEdges*nedgemodes);
+            Array<OneD, unsigned int> 
+                facemodearray(nFaces*nfacemodes);
+            
+            //create array of edge modes
+            for(eid=0; eid < nEdges; ++eid)
+            {
+                Array<OneD, unsigned int> edgearray=GetEdgeInverseBoundaryMap(eid);
+                nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
+                Vmath::Vcopy(nedgemodes, &edgearray[0], 1, &edgemodearray[eid*nedgemodes], 1);
+            }
 
-           // Populate the list of faces
-	   SpatialDomains::TriGeomSharedPtr faces[nFaces];
-           for(i=0; i < nFaces; ++i)
-	   {
-	       SpatialDomains::SegGeomSharedPtr edgeArray[3];
-	       StdRegions::Orientation eorientArray[3];
-               for(j=0; j < 3; ++j)
-	       {
-                   edgeArray[j] = edges[edgeConnectivity[i][j]];
-                   eorientArray[j] = isEdgeFlipped[i][j] ? StdRegions::eBackwards : StdRegions::eForwards;
-	       }
-           
+            //create array of face modes
+            for(fid=0; fid < nFaces; ++fid)
+            {
+                Array<OneD, unsigned int> facearray=GetEdgeInverseBoundaryMap(eid);
+                nfacemodes=GetFaceIntNcoeffs(fid);//faceModeLocation[fid].num_elements();
+                Vmath::Vcopy(nfacemodes, &facearray[0], 1, &facemodearray[fid*nfacemodes], 1);
+            }
+            
+            int nedgemodestotal=nedgemodes*nEdges;
+            int nfacemodestotal=nfacemodes*nFaces;
 
-	       faces[i] = MemoryManager<SpatialDomains::TriGeom>
-                                ::AllocateSharedPtr(i, edgeArray, eorientArray);
-	   }
-
-           SpatialDomains::TetGeomSharedPtr geom =
-                         MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(faces);
-
-	   geom->SetOwnData();
-
-           return geom;
-       }
-
+            //vertex-edge/face
+            for (i=0; i<nVerts; ++i)
+            {
+                for(j=0; j<nedgemodestotal; ++j)
+                {
+                    InvR.SetValue(
+                        GetVertexMap(i),edgemodearray[j],
+                        -R(GetVertexMap(i),edgemodearray[j]));
+                    InvRT.SetValue(
+                        edgemodearray[j],GetVertexMap(i),
+                        -R(GetVertexMap(i),edgemodearray[j]));
+                }
+                for(j=0; j<nfacemodestotal; ++j)
+                {
+                    InvR.SetValue(
+                        GetVertexMap(i),facemodearray[j],
+                        -R(GetVertexMap(i),facemodearray[j]));
+                    InvRT.SetValue(
+                        facemodearray[j],GetVertexMap(i),
+                        -R(GetVertexMap(i),facemodearray[j]));
+                    for(n=0; n<nedgemodestotal; ++n)
+                    {
+                        MatrixValue=InvR.GetValue(
+                            GetVertexMap(i),facemodearray[j])
+                            +R(GetVertexMap(i),edgemodearray[n])
+                            *R(edgemodearray[n],facemodearray[j]);
+                        InvR.SetValue(
+                            GetVertexMap(i),facemodearray[j],MatrixValue);
+                        InvRT.SetValue(
+                            facemodearray[j],GetVertexMap(i),MatrixValue);
+                    }
+                }
+            }
+            
+            //edge-face contributions
+            for (i=0; i<nedgemodestotal; ++i)
+            {
+                for(j=0; j<nfacemodestotal; ++j)
+                {
+                    InvR.SetValue(
+                        edgemodearray[i],facemodearray[j],
+                        -R(edgemodearray[i],facemodearray[j]));
+                    InvRT.SetValue(
+                        facemodearray[j],edgemodearray[i],
+                        -R(edgemodearray[i],facemodearray[j]));
+                }
+            }
+            
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                InvR.SetValue(i,i,1.0);
+                InvRT.SetValue(i,i,1.0);
+            }
+	}
     }//end of namespace
 }//end of namespace

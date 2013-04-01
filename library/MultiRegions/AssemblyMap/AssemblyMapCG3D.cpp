@@ -256,6 +256,10 @@ namespace Nektar
                 }
             }
 
+            // Number of dirichlet edges and faces
+            m_numDirEdges=edgeReorderedGraphVertId.size();
+            m_numDirFaces=faceReorderedGraphVertId.size();
+
             /**
              * STEP 1.5: Exchange Dirichlet mesh vertices between processes and
              * check for singular problems.
@@ -355,6 +359,18 @@ namespace Nektar
                         }
                     }
                 }
+            }
+
+            //Low Energy preconditioner needs to know how many extra dirichlet
+            //edges are on this process
+            int m_extradiredges=extraDirEdgeIds.size();
+            m_extraDirEdges = Array<OneD, int>(m_extradiredges,-1);
+            i=0;
+            for(mapConstIt  = extraDirEdgeIds.begin(); 
+                mapConstIt != extraDirEdgeIds.end(); mapConstIt++)
+            {
+                meshEdgeId=mapConstIt->first;
+                m_extraDirEdges[i++]=meshEdgeId;
             }
 
             for (i = 0; i < n; ++i)
@@ -510,6 +526,10 @@ namespace Nektar
             int vertCnt;
             int edgeCnt;
             int faceCnt;
+
+            m_numNonDirVertexModes = 0;
+            m_numNonDirEdgeModes   = 0;
+            m_numNonDirFaceModes   = 0;
 
             m_numLocalBndCoeffs = 0;
 
@@ -805,6 +825,10 @@ namespace Nektar
                 }
                 localFaceOffset+=nFaces;
             }
+
+            // Number of non dirichlet edges and faces
+            m_numNonDirEdges=edgeTempGraphVertId.size();
+            m_numNonDirFaces=faceTempGraphVertId.size();
 
             localVertOffset=0;
             localEdgeOffset=0;
@@ -1461,6 +1485,12 @@ namespace Nektar
 
             m_hash = boost::hash_range(m_localToGlobalMap.begin(), 
                                        m_localToGlobalMap.end());
+            
+            // Add up hash values if parallel
+            int hash = m_hash;
+            m_comm->AllReduce(hash, 
+                              LibUtilities::ReduceSum);
+            m_hash = hash;
         }
     } // namespace
 } // namespace

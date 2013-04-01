@@ -199,6 +199,12 @@ namespace Nektar
 
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
 
+            //zero GlobHomBnd so that we ensure we are solving for
+            //full problem rather than perturbation from initial
+            //condition in this case
+
+            Vmath::Zero(nGlobHomBndDofs,tmp = out+nDirBndDofs,1);
+
             if(nGlobHomBndDofs)
             {
                 if(nIntDofs || ((nDirBndDofs) && (!dirForcCalculated)

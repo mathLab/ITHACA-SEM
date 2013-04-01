@@ -1547,6 +1547,10 @@ namespace Nektar
          *                      should be evaluated.
          * @param   bndCondExpansions   List of boundary conditions.
          * @param   bndConditions   Information about the boundary conditions.
+         *
+         * This will only be undertaken for time dependent
+         * boundary conditions unless time == 0.0 which is the
+         * case when the method is called from the constructor.
          */
         void DisContField2D::v_EvaluateBoundaryConditions(const NekDouble time,
                                                           const NekDouble x2_in,

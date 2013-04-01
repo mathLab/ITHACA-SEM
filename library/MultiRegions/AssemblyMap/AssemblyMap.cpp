@@ -890,6 +890,32 @@ namespace Nektar
             }
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
         }
+        
+        void AssemblyMap::LocalBndToGlobal(
+                    const NekVector<NekDouble>& loc,
+                    NekVector<NekDouble>& global) const
+        {
+            LocalBndToGlobal(loc.GetPtr(), global.GetPtr());
+        }
+
+
+        void AssemblyMap::LocalBndToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                    Array<OneD,NekDouble>& global)  const
+        {
+            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+
+            if(m_signChange)
+            {
+                Vmath::Scatr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.get(), m_localToGlobalBndMap.get(), global.get());
+            }
+            else
+            {
+                Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), global.get());
+            }
+        }
+
 
         void AssemblyMap::AssembleBnd(
                     const NekVector<NekDouble>& loc,

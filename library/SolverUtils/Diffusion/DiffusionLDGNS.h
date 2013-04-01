@@ -55,11 +55,21 @@ namespace Nektar
         protected:
             DiffusionLDGNS();
             
-            Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
-            LibUtilities::SessionReaderSharedPtr              m_session;
+            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
+            LibUtilities::SessionReaderSharedPtr m_session;
+            NekDouble                            m_gamma;
+            NekDouble                            m_gasConstant;
+            NekDouble                            m_Twall;
+            std::string                          m_ViscosityType;
+            NekDouble                            m_mu;
+            NekDouble                            m_thermalConductivity;
+            NekDouble                            m_rhoInf;
+            NekDouble                            m_pInf;
+
             
             virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr               pSession);
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
             
             virtual void v_Diffuse(
                 const int                                          nConvective,
@@ -67,34 +77,32 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
             
-            virtual void v_NumFluxforScalar(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
-                const Array<OneD, Array<OneD, NekDouble> >              &ufield,
-                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&uflux);
+            virtual void v_NumericalFluxO1(
+                const Array<OneD, MultiRegions::ExpListSharedPtr>      &fields,
+                const Array<OneD, Array<OneD, NekDouble> >             &inarray,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                            &numericalFluxO1);
             
-            virtual void v_WeakPenaltyforScalar(
+            virtual void v_WeakPenaltyO1(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const int                                          var,
-                const Array<OneD, const NekDouble>                &ufield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          time);
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                      Array<OneD, Array<OneD, NekDouble> >      &penaltyfluxO1);
             
-            virtual void v_NumFluxforVector(
+            virtual void v_NumericalFluxO2(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
                 const Array<OneD, Array<OneD, NekDouble> >              &ufield,
                       Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&qfield,
                       Array<OneD, Array<OneD, NekDouble> >              &qflux);
-                        
-            virtual void v_WeakPenaltyforVector(
+            
+            virtual void v_WeakPenaltyO2(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const int                                          var,
                 const int                                          dir,
                 const Array<OneD, const NekDouble>                &qfield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          C11,
-                NekDouble                                          time);
+                      Array<OneD,       NekDouble>                &penaltyflux);
         }; 
     }
 }
-    
+
 #endif
+

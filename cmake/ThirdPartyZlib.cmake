@@ -5,8 +5,8 @@ IF (THIRDPARTY_BUILD_ZLIB)
     EXTERNALPROJECT_ADD(
         zlib
         PREFIX ${TPSRC}
-        URL ${TPURL}/zlib-1.2.3.tar.bz2
-        URL_MD5 "dee233bf288ee795ac96a98cc2e369b6"
+        URL ${TPURL}/zlib-1.2.7.tar.gz
+        URL_MD5 "60df6a37c56e7c1366cca812414f7b85"
         DOWNLOAD_DIR ${TPSRC}
         CONFIGURE_COMMAND ./configure --shared --prefix=${TPSRC}/dist
         BUILD_IN_SOURCE 1

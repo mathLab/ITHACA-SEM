@@ -265,6 +265,106 @@ namespace Nektar
             }
         }
 
+        /** Construct a linear space assemblyMapCG from the full map  */
+        AssemblyMapCGSharedPtr AssemblyMapCG::XxtLinearSpaceMap(const ExpList &locexp)
+        {
+            AssemblyMapCGSharedPtr returnval;
+            
+            int i,j;
+            int nverts = 0;
+            const boost::shared_ptr<StdRegions::StdExpansionVector> exp = locexp.GetExp();
+            int nelmts = exp->size();
+
+            // Get Default Map and turn off any searched values. 
+            returnval = MemoryManager<AssemblyMapCG>::AllocateSharedPtr(m_session);
+            returnval->m_solnType   = eXxtFullMatrix;
+            returnval->m_preconType = eNull;
+            returnval->m_maxStaticCondLevel = 0;
+            returnval->m_signChange = false;
+            returnval->m_comm = m_comm; // CHECK wit CHRIS
+
+            // Count the number of vertices 
+            for(i = 0; i < nelmts; ++i)
+            {
+                nverts += (*exp)[i]->GetNverts();
+            }
+            
+            returnval->m_numLocalCoeffs = nverts; 
+            
+            returnval->m_localToGlobalMap = Array<OneD, int>(nverts,-1);
+
+            int cnt  = 0;
+            int cnt1 = 0;
+            Array<OneD,int> GlobCoeffs(m_numGlobalCoeffs,-1); 
+            
+            // Set up local to global map;
+            for(i = 0; i < nelmts; ++i)
+            {
+                for(j = 0; j < (*exp)[i]->GetNverts(); ++j)
+                {
+                    returnval->m_localToGlobalMap[cnt] = 
+                        m_localToGlobalMap[cnt1 + (*exp)[i]->GetVertexMap(j)];
+                    GlobCoeffs[returnval->m_localToGlobalMap[cnt]] = 1;
+
+                    // Set up numLocalDirBndCoeffs
+                    if(returnval->m_localToGlobalMap[cnt] < m_numGlobalDirBndCoeffs)
+                    {
+                        returnval->m_numLocalDirBndCoeffs++;
+                    }
+                    cnt++;
+                }
+                cnt1 += (*exp)[i]->GetNcoeffs();
+            }
+
+            cnt = 0;
+            // reset up global numbering and count number of dofs
+            for(i = 0; i < m_numGlobalCoeffs; ++i)
+            {
+                if(GlobCoeffs[i] != -1)
+                {
+                    GlobCoeffs[i] = cnt++;
+                }
+            }
+            
+            // Setup number of globalCoeffs; 
+            returnval->m_numGlobalCoeffs = cnt;
+
+            // Setup number of  globalDirBndcoeffs 
+            for(i = 0; i < m_numGlobalDirBndCoeffs; ++i)
+            {
+                if(GlobCoeffs[i] != -1)
+                {
+                    returnval->m_numGlobalDirBndCoeffs++;
+                }
+            }
+
+            // Universal map;
+            if(m_globalToUniversalMap.num_elements())
+            {
+                returnval->m_globalToUniversalMap = Array<OneD, int> (returnval->m_numGlobalCoeffs);
+                // reset localtoglobal and setup universal map
+                for(i = 0; i < nverts; ++i)
+                {
+                    cnt = returnval->m_localToGlobalMap[i];
+                    returnval->m_localToGlobalMap[i] = GlobCoeffs[cnt];
+                    
+                    returnval->m_globalToUniversalMap[GlobCoeffs[cnt]] = m_globalToUniversalMap[cnt];
+                }
+            }                
+            else // not sure this option is ever needed. 
+            {
+                for(i = 0; i < nverts; ++i)
+                {
+                    cnt = returnval->m_localToGlobalMap[i];
+                    returnval->m_localToGlobalMap[i] = GlobCoeffs[cnt];
+                }
+
+            }
+
+            return returnval;
+        }
+
+
         /**
          * The bandwidth calculated here corresponds to what is referred to as
          * half-bandwidth.  If the elements of the matrix are designated as

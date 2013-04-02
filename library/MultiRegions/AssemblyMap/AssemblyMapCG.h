@@ -69,6 +69,8 @@ namespace Nektar
                                     const int numLocalCoeffs,
                                     const ExpList &locExp);
 
+            /// Generate a linear space mapping from existing mapping 
+            MULTI_REGIONS_EXPORT boost::shared_ptr<AssemblyMapCG> XxtLinearSpaceMap(const ExpList &locexp);
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG();
 
@@ -111,7 +113,7 @@ namespace Nektar
             map<int, vector<pair<int, int> > > m_extraDirDofs;
             
             void SetUpUniversalC0ContMap(const ExpList &locExp);
-
+            
             /// Calculate the bandwith of the full matrix system.
             void CalculateFullSystemBandWidth();
 

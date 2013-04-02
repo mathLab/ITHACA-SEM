@@ -8,7 +8,7 @@
 
 # Attempt to identify Macports libraries, if they exist. This prevents
 # cmake warnings later on.
-SET(ZLIB_ROOT /opt/local/lib)
+SET(ZLIB_ROOT /opt/local/)
 
 
 # Find a system ZLIB library

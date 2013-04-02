@@ -104,7 +104,8 @@ namespace Nektar
             if (config["z"].as<bool>())
             {
                 filename += ".gz";
-                ofstream fout(filename.c_str(), std::ios_base::out | std::ios_base::binary);
+                ofstream fout(filename.c_str(),
+                              std::ios_base::out | std::ios_base::binary);
 
                 std::stringstream decompressed;
                 decompressed << doc;

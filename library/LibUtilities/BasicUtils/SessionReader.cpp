@@ -1166,7 +1166,7 @@ namespace Nektar
                 vPartitioner->PartitionMesh();
                 vPartitioner->WriteLocalPartition(vSession);
                 
-                vCommMesh->Block();
+                m_comm->Block();
 
                 m_filename = GetSessionNameRank() + ".xml";
 

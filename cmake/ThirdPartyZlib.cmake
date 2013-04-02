@@ -27,6 +27,7 @@ ENDIF()
 
 # If we or the user
 IF (THIRDPARTY_BUILD_ZLIB)
+    MESSAGE(STATUS "Will build Zlib 1.2.7")
     # Build the Zlib library separately
     EXTERNALPROJECT_ADD(
         zlib-1.2.7

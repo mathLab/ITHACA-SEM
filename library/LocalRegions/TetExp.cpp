@@ -707,6 +707,64 @@ namespace Nektar
         }
 
 
+
+        void TetExp::v_ExtractDataToCoeffs(const NekDouble *data,
+                                           const std::vector<unsigned int > &nummodes,  
+                                           const int mode_offset,   
+                                           NekDouble * coeffs)
+        {
+            int data_order0 = nummodes[mode_offset];
+            int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
+            int data_order1 = nummodes[mode_offset+1];
+            int order1      = m_base[1]->GetNumModes();
+            int fillorder1  = min(order1,data_order1);
+            int data_order2 = nummodes[mode_offset+2];
+            int order2      = m_base[2]->GetNumModes();
+            int fillorder2  = min(order2,data_order2);
+
+            switch(m_base[0]->GetBasisType())
+            {
+            case LibUtilities::eModified_A:
+                {
+                    int i,j;
+                    int cnt  = 0;
+                    int cnt1 = 0;
+                    
+                    ASSERTL1(m_base[1]->GetBasisType() == LibUtilities::eModified_B,
+                             "Extraction routine not set up for this basis");
+                    ASSERTL1(m_base[2]->GetBasisType() == LibUtilities::eModified_C,
+                             "Extraction routine not set up for this basis");
+
+                    Vmath::Zero(m_ncoeffs,coeffs,1);
+                    for(j = 0; j < fillorder0; ++j)
+                    {
+                        for(i = 0; i < fillorder1-j; ++i)
+                        {
+                            Vmath::Vcopy(fillorder2-j-i,&data[cnt],1,&coeffs[cnt1],1);
+                            cnt  += data_order2-j-i;
+                            cnt1 += order2-j-i;
+                        }
+                        
+                        // count out data for j iteration
+                        for(i = fillorder1-j; i < data_order1; ++i)
+                        {
+                            cnt += data_order2-j-i;
+                        }
+                        
+                        for(i = fillorder1-j; i < order1; ++i)
+                        {
+                            cnt1 += order2-j-i;
+                        }
+
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"basis is either not set up or not hierarchicial");
+            }
+        }
+
+
         StdRegions::Orientation TetExp::v_GetFaceOrient(int face)
         {
             return m_geom->GetFaceOrient(face);

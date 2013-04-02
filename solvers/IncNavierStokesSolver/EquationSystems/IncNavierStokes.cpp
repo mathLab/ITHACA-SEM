@@ -1074,8 +1074,8 @@ namespace Nektar
     
     
     Array<OneD, NekDouble> IncNavierStokes::GetStdVelocity(
-        const Array<OneD, Array<OneD,NekDouble> > inarray)
-	{
+                                                           const Array<OneD, Array<OneD,NekDouble> > inarray)
+    {
         // Checking if the problem is 2D
         ASSERTL0(m_expdim >= 2, "Method not implemented for 1D");
         
@@ -1211,7 +1211,7 @@ namespace Nektar
         }
 		
         return stdV;
-	}
+    }
 
 
 

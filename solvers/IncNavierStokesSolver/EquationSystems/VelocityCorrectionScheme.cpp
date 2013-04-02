@@ -90,12 +90,13 @@ namespace Nektar
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
         m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
             
+        // Needs to be set outside of next if so that it is turned off by default
+        m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
+
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
 
-
-            m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
 
             if(m_useHomo1DSpecVanVisc == false)
             {
@@ -382,6 +383,10 @@ namespace Nektar
     {
 
         UnsteadySystem::v_DoInitialise();
+
+        // Set up Field Meta Data for output files
+        m_fieldMetaDataMap["Kinvis"] = m_kinvis;
+        m_fieldMetaDataMap["TimeStep"] = m_timestep;
 
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {

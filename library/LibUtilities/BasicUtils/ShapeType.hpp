@@ -175,6 +175,7 @@ namespace Nektar
         {
             inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
             {
+#if 0
                 int nCoef = 0;
                 for (int a = 0; a < Na; ++a)
                 {
@@ -187,6 +188,9 @@ namespace Nektar
                     }
                 }
                 return nCoef;
+#else
+                return Nb*StdTriData::getNumberOfCoefficients(Na,Nc);
+#endif
             }
         }
 

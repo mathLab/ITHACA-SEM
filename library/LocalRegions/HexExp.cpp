@@ -818,6 +818,62 @@ namespace Nektar
         }
 
         
+        void HexExp::v_ExtractDataToCoeffs(const NekDouble *data,
+                                           const std::vector<unsigned int > &nummodes,  
+                                           const int mode_offset,   
+                                           NekDouble * coeffs)
+        {
+            int data_order0 = nummodes[mode_offset];
+            int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
+            int data_order1 = nummodes[mode_offset+1];
+            int order1      = m_base[1]->GetNumModes();
+            int fillorder1  = min(order1,data_order1);
+            int data_order2 = nummodes[mode_offset+2];
+            int order2      = m_base[2]->GetNumModes();
+            int fillorder2  = min(order2,data_order2);
+            
+            switch(m_base[0]->GetBasisType())
+            {
+            case LibUtilities::eModified_A:
+                {
+                    int i,j;
+                    int cnt  = 0;
+                    int cnt1 = 0;
+                    
+                    ASSERTL1(m_base[1]->GetBasisType() == LibUtilities::eModified_A,
+                             "Extraction routine not set up for this basis");
+                    ASSERTL1(m_base[2]->GetBasisType() == LibUtilities::eModified_A,
+                             "Extraction routine not set up for this basis");
+                    
+                    Vmath::Zero(m_ncoeffs,coeffs,1);
+                    for(j = 0; j < fillorder0; ++j)
+                    {
+                        for(i = 0; i < fillorder1; ++i)
+                        {
+                            Vmath::Vcopy(fillorder2,&data[cnt],1,&coeffs[cnt1],1);
+                            cnt  += data_order2;
+                            cnt1 += order2;
+                        }
+                        
+                        // count out data for j iteration
+                        for(i = fillorder1; i < data_order1; ++i)
+                        {
+                            cnt += data_order2;
+                        }
+                        
+                        for(i = fillorder1; i < order1; ++i)
+                        {
+                            cnt1 += order2;
+                        }
+
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false,"basis is either not set up or not hierarchicial");
+            }
+        }
+
         StdRegions::Orientation HexExp::v_GetFaceOrient(int face)
         {
             return m_geom->GetFaceOrient(face);

@@ -1165,21 +1165,15 @@ namespace Nektar
 
             TiXmlElement *facelement = field->FirstChildElement("F");
             int faceindx, faceid;
-            int nextFaceNumber = -1;
 
             while(facelement)
             {
-                /// These should be ordered.
-                nextFaceNumber++;
-
                 std::string face(facelement->ValueStr());
                 ASSERTL0(face == "F", (std::string("Unknown 3D curve type: ") + face).c_str());
 
                 /// Read id attribute.
                 err = facelement->QueryIntAttribute("ID", &faceindx);
-
                 ASSERTL0(err == TIXML_SUCCESS, "Unable to read curve attribute ID.");
-                ASSERTL0(faceindx == nextFaceNumber, "Face IDs must begin with zero and be sequential.");
 
                 /// Read face id attribute.
                 err = facelement->QueryIntAttribute("FACEID", &faceid);

@@ -147,7 +147,6 @@ namespace Nektar
 
         // Variables
         //  0   V    membrane potential
-        //  1   -    unused
         //  2   m    fast sodium current m gate
         //  3   h    fast sodium current h gate
         //  4   j    fast sodium current j gate
@@ -581,27 +580,26 @@ namespace Nektar
         switch (idx)
         {
             case 0:  return "u";
-            case 1:  return "v";
-            case 2:  return "m";
-            case 3:  return "h";
-            case 4:  return "j";
-            case 5:  return "o_a";
-            case 6:  return "o_i";
-            case 7:  return "u_a";
-            case 8:  return "u_i";
-            case 9:  return "x_r";
-            case 10: return "x_s";
-            case 11: return "d";
-            case 12: return "f";
-            case 13: return "f_Ca";
-            case 14: return "U";
-            case 15: return "V";
-            case 16: return "W";
-            case 17: return "Na_i";
-            case 18: return "Ca_i";
-            case 19: return "K_i";
-            case 20: return "Ca_rel";
-            case 21: return "Ca_up";
+            case 1:  return "m";
+            case 2:  return "h";
+            case 3:  return "j";
+            case 4:  return "o_a";
+            case 5:  return "o_i";
+            case 6:  return "u_a";
+            case 7:  return "u_i";
+            case 8:  return "x_r";
+            case 9: return "x_s";
+            case 10: return "d";
+            case 11: return "f";
+            case 12: return "f_Ca";
+            case 13: return "U";
+            case 14: return "V";
+            case 15: return "W";
+            case 16: return "Na_i";
+            case 17: return "Ca_i";
+            case 18: return "K_i";
+            case 19: return "Ca_rel";
+            case 20: return "Ca_up";
         }
     }
 

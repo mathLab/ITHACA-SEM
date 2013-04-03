@@ -101,7 +101,7 @@ namespace Nektar
 
         // copy Data into FieldData and set variable
         std::string varName;
-        for(int j = 2; j < m_cell->GetNumCellVariables(); ++j)
+        for(int j = 1; j < m_cell->GetNumCellVariables(); ++j)
         {
             varName = m_cell->GetCellVarName(j);
 
@@ -115,7 +115,12 @@ namespace Nektar
                 pFields[0]->AppendFieldData(FieldDef[i], FieldData[i], data);
             }
         }
-        LibUtilities::Write(vOutputFilename.str(),FieldDef,FieldData);
+
+        // Update time in field info if required
+        LibUtilities::FieldMetaDataMap fieldMetaDataMap;
+        fieldMetaDataMap["Time"] =  time;
+
+        LibUtilities::Write(vOutputFilename.str(),FieldDef,FieldData,fieldMetaDataMap);
         m_outputIndex++;
     }
 

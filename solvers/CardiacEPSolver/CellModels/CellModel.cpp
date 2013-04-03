@@ -361,7 +361,6 @@ namespace Nektar
                 if(iter != fieldMetaDataMap.end())
                 {
                     m_lastTime = iter->second;
-                    cout << "Set start time for cell model to " << m_lastTime << endl;
                 }
 
                 // Extract the data into the modal coefficients

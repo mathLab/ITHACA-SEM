@@ -38,6 +38,7 @@
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <MultiRegions/GlobalLinSys.h>
+#include <MultiRegions/GlobalLinSysXxtFull.h>
 #include <LocalRegions/MatrixKey.h>
 #include <math.h>
 
@@ -65,10 +66,7 @@ namespace Nektar
         PreconditionerLinear::PreconditionerLinear(
             const boost::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
-            : Preconditioner(plinsys, pLocToGloMap),
-              m_linsys(plinsys),
-              m_preconType(pLocToGloMap->GetPreconType()),
-              m_locToGloMap(pLocToGloMap)
+            : Preconditioner(plinsys, pLocToGloMap)
         {
         }
         
@@ -89,7 +87,22 @@ namespace Nektar
                 break;
                 case MultiRegions::eIterativeStaticCond:
                 {
+#if 1
+                    boost::shared_ptr<MultiRegions::ExpList> 
+                        expList=((m_linsys.lock())->GetLocMat()).lock();
+                    m_vertLocToGloMap = m_locToGloMap->XxtLinearSpaceMap(*expList);
+
+                    // Generate XXT system. 
+                    GlobalLinSysKey preconKey(StdRegions::ePreconLinearSpace,
+                                              m_vertLocToGloMap,
+                                              (m_linsys.lock())->GetKey().GetConstFactors());
+
+
+                    m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
+                        AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);
+#else
                     StaticCondInverseLinearSpacePreconditioner();
+#endif
                 }
                 break;
                 default:
@@ -329,7 +342,7 @@ namespace Nektar
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
             switch(solvertype)
             {
-                case MultiRegions::eIterativeFull:
+            case MultiRegions::eIterativeFull:
                 {
                     int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
                     int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
@@ -341,8 +354,57 @@ namespace Nektar
                     z = M * r;
                 }
                 break;
-                case MultiRegions::eIterativeStaticCond:
+            case MultiRegions::eXxtFullMatrix:
                 {
+                }
+                break;
+            case MultiRegions::eIterativeStaticCond:
+                {
+#if 1
+                    int i,val;
+                    int nloc = m_vertLocToGloMap->GetNumLocalCoeffs();
+                    int nglo = m_vertLocToGloMap->GetNumGlobalCoeffs();
+                    // mapping from full space to vertices
+                    Array<OneD, int> LocToGloBnd = m_vertLocToGloMap->GetLocalToGlobalBndMap();
+
+                    // Global to local for linear solver (different from above)
+                    Array<OneD, int> LocToGlo = m_vertLocToGloMap->GetLocalToGlobalMap();
+
+                    // number of Dir coeffs in full system. 
+                    int nDirFull = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+
+                    Array<OneD,NekDouble> In(nglo,0.0);
+                    Array<OneD,NekDouble> Out(nglo,0.0);
+                    
+                    // Gather rhs
+                    for(i = 0; i < nloc; ++i)
+                    {
+                        val = LocToGloBnd[i];
+                        if(val >= nDirFull)
+                        {
+                            In[LocToGlo[i]] = pInput[val-nDirFull];
+                        }
+                    }
+
+                    // Do solve without enforcing any boundary conditions. 
+                    m_vertLinsys->SolveLinearSystem(m_vertLocToGloMap->GetNumLocalCoeffs(),
+                                                In,Out,m_vertLocToGloMap);
+                    
+
+                    //Copy input to output as a unit preconditioner on any other value
+                    Vmath::Vcopy(pInput.num_elements(),pInput,1,pOutput,1);
+
+
+                    // Scatter back soln from linear solve
+                    for(i = 0; i < nloc; ++i)
+                    {
+                        val = LocToGloBnd[i];
+                        if(val >= nDirFull)
+                        {
+                            pOutput[val-nDirFull] = Out[LocToGlo[i]];
+                        }
+                    }
+#else
                     int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                     int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
                     int nNonDir = nGlobal-nDir;
@@ -351,7 +413,9 @@ namespace Nektar
                     NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
                     NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
                     z = M * r;
+#endif
                 }
+                break;
                 default:
                     ASSERTL0(0,"Unsupported solver type");
                     break;

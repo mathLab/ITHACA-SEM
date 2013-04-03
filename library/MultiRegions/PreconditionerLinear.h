@@ -74,18 +74,13 @@ namespace Nektar
             virtual ~PreconditionerLinear() {}
 
 	protected:
-
-            const boost::weak_ptr<GlobalLinSys>         m_linsys;
-
-            PreconditionerType                          m_preconType;
-
-            DNekMatSharedPtr                            m_preconditioner;
 	    DNekScalBlkMatSharedPtr                     GloBlkMat;
 	    DNekBlkMatSharedPtr                         BlkMat;
 
-            boost::shared_ptr<AssemblyMap>              m_locToGloMap;
+            GlobalLinSysSharedPtr                       m_vertLinsys;
+            boost::shared_ptr<AssemblyMap>              m_vertLocToGloMap;
 
-            Array<OneD, NekDouble>      m_locToGloSignMult;
+            Array<OneD, NekDouble>                      m_locToGloSignMult;
 
 	private:
 

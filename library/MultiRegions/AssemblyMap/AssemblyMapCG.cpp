@@ -266,7 +266,7 @@ namespace Nektar
         }
 
         /** Construct a linear space assemblyMapCG from the full map  */
-        AssemblyMapCGSharedPtr AssemblyMapCG::XxtLinearSpaceMap(const ExpList &locexp)
+        AssemblyMapSharedPtr AssemblyMapCG::v_XxtLinearSpaceMap(const ExpList &locexp)
         {
             AssemblyMapCGSharedPtr returnval;
             
@@ -293,6 +293,9 @@ namespace Nektar
             
             returnval->m_localToGlobalMap = Array<OneD, int>(nverts,-1);
 
+            // Store original global ids in this map
+            returnval->m_localToGlobalBndMap = Array<OneD, int>(nverts,-1);
+
             int cnt  = 0;
             int cnt1 = 0;
             Array<OneD,int> GlobCoeffs(m_numGlobalCoeffs,-1); 
@@ -303,6 +306,7 @@ namespace Nektar
                 for(j = 0; j < (*exp)[i]->GetNverts(); ++j)
                 {
                     returnval->m_localToGlobalMap[cnt] = 
+                        returnval->m_localToGlobalBndMap[cnt] = 
                         m_localToGlobalMap[cnt1 + (*exp)[i]->GetVertexMap(j)];
                     GlobCoeffs[returnval->m_localToGlobalMap[cnt]] = 1;
 

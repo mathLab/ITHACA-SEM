@@ -2131,13 +2131,8 @@ namespace Nektar
                 offset += datalen;
             }
             
-            if(i == fielddef->m_fields.size())
-            {
-                cerr << "Field (" << field << ") not found in data file; "
-                     << "Setting it to zero. " << endl;
-                Vmath::Zero(coeffs.num_elements(),coeffs,1);
-                return;
-            }
+            ASSERTL0(i != fielddef->m_fields.size(),
+                     "Field (" + field + ") not found in file.");
 
             // Determine mapping from element ids to location in expansion list
             map<int, int> elmtToExpId;

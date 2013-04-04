@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs values at specific points during time-stepping.
+// Description: Outputs virtual electrograms at specific locations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -39,7 +39,10 @@
 
 namespace Nektar
 {
-    std::string FilterElectrogram::className = GetFilterFactory().RegisterCreatorFunction("Electrogram", FilterElectrogram::create);
+    std::string FilterElectrogram::className =
+            GetFilterFactory().RegisterCreatorFunction(
+                    "Electrogram",
+                    FilterElectrogram::create);
 
     /**
      *
@@ -99,15 +102,14 @@ namespace Nektar
                  "No history points in stream.");
 
         m_index = 0;
-        m_electrogramList.clear();
         Array<OneD, NekDouble>  gloCoord(3,0.0);
         LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
         // Read electrogram points
         // Always use dim = 3 to allow electrode to be above surface
-        int dim = 3;
+        const int dim = 3;
+        const NekDouble tol = 1e-06;
         int i = 0;
-        NekDouble tol = 1e-06;
 
         while (!m_electrogramStream.fail())
         {

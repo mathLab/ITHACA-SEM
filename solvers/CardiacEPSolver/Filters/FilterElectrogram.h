@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File FilterCheckpoint.h
+// File FilterElectrogram.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Outputs solution fields during time-stepping.
+// Description: Outputs virtual electrograms at specific locations.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -42,51 +42,53 @@ using namespace SolverUtils;
 
 namespace Nektar
 {
-//    namespace SolverUtils
-//    {
-        class FilterElectrogram : public Filter
-        {
-        public:
-            friend class MemoryManager<FilterElectrogram>;
+    class FilterElectrogram : public Filter
+    {
+    public:
+        friend class MemoryManager<FilterElectrogram>;
 
-            /// Creates an instance of this class
-            static FilterSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams) {
-                FilterSharedPtr p = MemoryManager<FilterElectrogram>::AllocateSharedPtr(pSession, pParams);
-                //p->InitObject();
-                return p;
-            }
+        /// Creates an instance of this class
+        static FilterSharedPtr create(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::map<std::string, std::string> &pParams) {
+            FilterSharedPtr p = MemoryManager<FilterElectrogram>::AllocateSharedPtr(pSession, pParams);
+            return p;
+        }
 
-            ///Name of the class
-            static std::string className;
+        ///Name of the class
+        static std::string className;
 
-            FilterElectrogram(
-                const LibUtilities::SessionReaderSharedPtr &pSession,
-                const std::map<std::string, std::string> &pParams);
-            ~FilterElectrogram();
+        FilterElectrogram(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const std::map<std::string, std::string> &pParams);
+        ~FilterElectrogram();
 
-        protected:
-            virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
-            virtual bool v_IsTimeDependent();
+    protected:
+        virtual void v_Initialise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+        virtual void v_Update(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+        virtual void v_Finalise(const Array<OneD, const MultiRegions::ExpListSharedPtr> &pFields, const NekDouble &time);
+        virtual bool v_IsTimeDependent();
 
-        private:
-            Array<OneD, Array<OneD, NekDouble> >    m_grad_R_x;
-            Array<OneD, Array<OneD, NekDouble> >    m_grad_R_y;
-            Array<OneD, Array<OneD, NekDouble> >    m_grad_R_z;
-            SpatialDomains::VertexComponentVector   m_electrogramPoints;
-            unsigned int                            m_index;
-            unsigned int                            m_outputFrequency;
-            std::string                             m_outputFile;
-            std::ofstream                           m_outputStream;
-            std::stringstream                       m_electrogramStream;
-            std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >
-            m_electrogramList;
-            std::map<int, int>                      m_electrogramLocalPointMap;
-        };
-//    }
+    private:
+        /// Gradient of the radius from each electrogram point in x-direction
+        Array<OneD, Array<OneD, NekDouble> >    m_grad_R_x;
+        /// Gradient of the radius from each electrogram point in y-direction
+        Array<OneD, Array<OneD, NekDouble> >    m_grad_R_y;
+        /// Gradient of the radius from each electrogram point in z-direction
+        Array<OneD, Array<OneD, NekDouble> >    m_grad_R_z;
+        /// List of electrogram points
+        SpatialDomains::VertexComponentVector   m_electrogramPoints;
+        /// Counts number of calls to update (number of timesteps)
+        unsigned int                            m_index;
+        /// Number of timesteps between outputs
+        unsigned int                            m_outputFrequency;
+        /// Filename to output electrogram data to
+        std::string                             m_outputFile;
+        /// Output file stream for electrogram data
+        std::ofstream                           m_outputStream;
+        /// Point coordinate input string
+        std::stringstream                       m_electrogramStream;
+    };
 }
 
-#endif /* NEKTAR_SOLVERUTILS_FILTERS_FILTERCHECKPOINT_H */
+#endif

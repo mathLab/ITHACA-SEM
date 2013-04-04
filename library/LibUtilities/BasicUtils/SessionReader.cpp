@@ -814,10 +814,13 @@ namespace Nektar
             FunctionVariableMap::const_iterator it2;
             std::string vName = boost::to_upper_copy(pName);
 
-            if ((it1 = m_functions.find(vName))     != m_functions.end() &&
-                (it2 = it1->second.find(pVariable)) != it1->second.end())
+            // Check function exists
+            if ((it1 = m_functions.find(vName))     != m_functions.end())
             {
-                return true;
+                bool varExists =
+                    (it2 = it1->second.find(pVariable)) != it1->second.end() ||
+                    (it2 = it1->second.find("*")) != it1->second.end();
+                return varExists;
             }
             return false;
         }
@@ -831,18 +834,33 @@ namespace Nektar
             const std::string &pVariable) const
         {
             FunctionMap::const_iterator it1;
-            FunctionVariableMap::const_iterator it2;
+            FunctionVariableMap::const_iterator it2, it3;
             std::string vName = boost::to_upper_copy(pName);
 
             ASSERTL0((it1 = m_functions.find(vName)) != m_functions.end(),
                      std::string("No such function '") + pName
                      + std::string("' has been defined in the session file."));
-            ASSERTL0((it2 = it1->second.find(pVariable)) != it1->second.end(),
+
+            // Check for specific and wildcard definitions
+            bool specific = (it2 = it1->second.find(pVariable)) !=
+                            it1->second.end();
+            bool wildcard = (it3 = it1->second.find("*")) !=
+                            it1->second.end();
+
+            // Check function is defined somewhere
+            ASSERTL0(specific || wildcard,
                      std::string("No such variable '") + pVariable
                      + std::string("' defined for function '") + pName
                      + std::string("' in session file."));
+
+            // If not specific, must be wildcard
+            if (!specific)
+            {
+                it2 = it3;
+            }
+
             ASSERTL0((it2->second.m_type == eFunctionTypeExpression),
-                     std::string("Function is defined by a file."));
+                    std::string("Function is defined by a file."));
             return it2->second.m_expression;
         }
 
@@ -867,17 +885,32 @@ namespace Nektar
             const std::string &pVariable) const
         {
             FunctionMap::const_iterator it1;
-            FunctionVariableMap::const_iterator it2;
+            FunctionVariableMap::const_iterator it2, it3;
             std::string vName = boost::to_upper_copy(pName);
 
             it1 = m_functions.find(vName);
             ASSERTL0 (it1 != m_functions.end(),
                       std::string("Function '") + pName
                       + std::string("' not found."));
-            ASSERTL0 ((it2 = it1->second.find(pVariable)) != it1->second.end(),
-                    std::string("No such variable '") + pVariable
-                    + std::string("' defined for function '") + pName
-                    + std::string("' in session file."));
+
+            // Check for specific and wildcard definitions
+            bool specific = (it2 = it1->second.find(pVariable)) !=
+                            it1->second.end();
+            bool wildcard = (it3 = it1->second.find("*")) !=
+                            it1->second.end();
+
+            // Check function is defined somewhere
+            ASSERTL0(specific || wildcard,
+                     std::string("No such variable '") + pVariable
+                     + std::string("' defined for function '") + pName
+                     + std::string("' in session file."));
+
+            // If not specific, must be wildcard
+            if (!specific)
+            {
+                it2 = it3;
+            }
+
             return it2->second.m_type;
         }
 
@@ -902,17 +935,32 @@ namespace Nektar
             const std::string &pVariable) const
         {
             FunctionMap::const_iterator it1;
-            FunctionVariableMap::const_iterator it2;
+            FunctionVariableMap::const_iterator it2, it3;
             std::string vName = boost::to_upper_copy(pName);
 
             it1 = m_functions.find(vName);
             ASSERTL0 (it1 != m_functions.end(),
                       std::string("Function '") + pName
                       + std::string("' not found."));
-            ASSERTL0 ((it2 = it1->second.find(pVariable)) != it1->second.end(),
-                    std::string("No such variable '") + pVariable
-                    + std::string("' defined for function '") + pName
-                    + std::string("' in session file."));
+
+            // Check for specific and wildcard definitions
+            bool specific = (it2 = it1->second.find(pVariable)) !=
+                            it1->second.end();
+            bool wildcard = (it3 = it1->second.find("*")) !=
+                            it1->second.end();
+
+            // Check function is defined somewhere
+            ASSERTL0(specific || wildcard,
+                     std::string("No such variable '") + pVariable
+                     + std::string("' defined for function '") + pName
+                     + std::string("' in session file."));
+
+            // If not specific, must be wildcard
+            if (!specific)
+            {
+                it2 = it3;
+            }
+
             return it2->second.m_filename;
         }
 
@@ -1202,7 +1250,7 @@ namespace Nektar
                 vPartitioner->PartitionMesh();
                 vPartitioner->WriteLocalPartition(vSession);
                 
-                vCommMesh->Block();
+                m_comm->Block();
 
                 m_filename = GetSessionNameRank() + ".xml";
 
@@ -1715,11 +1763,16 @@ namespace Nektar
                     FunctionVariableDefinition funcDef;
                     std::string conditionType = variable->Value();
 
-                    // All function variables must specify VAR
-                    ASSERTL0(variable->Attribute("VAR"),
-                             "Attribute VAR expected for function '"
-                             + functionStr + "'.");
-                    std::string variableStr = variable->Attribute("VAR");
+                    // If no var is specified, assume wildcard
+                    std::string variableStr;
+                    if (!variable->Attribute("VAR"))
+                    {
+                        variableStr = "*";
+                    }
+                    else
+                    {
+                        variableStr = variable->Attribute("VAR");
+                    }
 
                     // Parse list of variables
                     std::vector<std::string> variableList;

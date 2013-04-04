@@ -1866,6 +1866,21 @@ namespace Nektar
             return sqrt(err);
         }
 		
+
+        NekDouble ExpList::v_Integral(const Array<OneD, const NekDouble> &inarray)
+        {
+            NekDouble err = 0.0;
+            int       i   = 0;
+
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                err += (*m_exp)[m_offset_elmt_id[i]]->Integral(inarray+m_phys_offset[i]);
+            }
+            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
+
+            return err;
+        }
+
         Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
             ASSERTL0(false,
@@ -2131,13 +2146,8 @@ namespace Nektar
                 offset += datalen;
             }
             
-            if(i == fielddef->m_fields.size())
-            {
-                cerr << "Field (" << field << ") not found in data file; "
-                     << "Setting it to zero. " << endl;
-                Vmath::Zero(coeffs.num_elements(),coeffs,1);
-                return;
-            }
+            ASSERTL0(i != fielddef->m_fields.size(),
+                     "Field (" + field + ") not found in file.");
 
             // Determine mapping from element ids to location in expansion list
             map<int, int> elmtToExpId;

@@ -470,7 +470,13 @@ namespace Nektar
             {
                 return v_L2();
             }
-			
+
+            NekDouble Integral (const Array<OneD, const NekDouble> &inarray
+                                                        = NullNekDouble1DArray)
+            {
+                return v_Integral(inarray);
+            }
+
             /// This function calculates the energy associated with
             /// each one of the modesof a 3D homogeneous nD expansion
             Array<OneD, const NekDouble> HomogeneousEnergy (void)
@@ -1179,7 +1185,10 @@ namespace Nektar
 
             virtual NekDouble v_L2(void);
             virtual NekDouble v_L2(const Array<OneD, const NekDouble> &soln);
-            
+            virtual NekDouble v_Integral (
+                    const Array<OneD, const NekDouble> &inarray
+                                                        = NullNekDouble1DArray);
+
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
             virtual Array<OneD, const unsigned int> v_GetZIDs(void);

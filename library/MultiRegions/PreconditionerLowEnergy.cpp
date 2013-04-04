@@ -50,7 +50,7 @@ namespace Nektar
          */
         string PreconditionerLowEnergy::className
                 = GetPreconFactory().RegisterCreatorFunction(
-                    "LowEnergy",
+                    "LowEnergyBlock",
                     PreconditionerLowEnergy::create,
                     "LowEnergy Preconditioning");
  

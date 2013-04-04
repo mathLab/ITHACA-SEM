@@ -117,6 +117,7 @@ namespace Nektar
         {
             eNull,    ///< No Solution type specified
             eDiagonal,
+            eLinearWithDiagonal,
             eLinear,
 	    eLowEnergy,
             eLLE,
@@ -127,9 +128,10 @@ namespace Nektar
         {
             "Null",
             "Diagonal",
-            "Linear",
-	    "LowEnergy",
-            "LinearwithLowEnergy",
+            "FullLinearSpaceWithDiagonal",
+            "FullLinearSpace",
+	    "LowEnergyBlock",
+            "FullLinearSpaceWithLowEnergyBlock",
             "Block"
         };
 

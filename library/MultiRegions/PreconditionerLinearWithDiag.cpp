@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Preconditioner.cpp
+// File PreconditionerLinearWithDiag.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,12 +29,12 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Preconditioner definition
+// Description: Preconditioner definition for Diagonal with Linear Subspace
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
-#include <MultiRegions/PreconditionerLLE.h>
+#include <MultiRegions/PreconditionerLinearWithDiag.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <LocalRegions/MatrixKey.h>
 #include <math.h>
@@ -47,20 +47,20 @@ namespace Nektar
          * Registers the class with the Factory.
          */
 
-        string PreconditionerLLE::className
+        string PreconditionerLinearWithDiag::className
                 = GetPreconFactory().RegisterCreatorFunction(
-                    "FullLinearSpaceWithLowEnergy",
-                    PreconditionerLLE::create,
-                    "Full Linear space and Low Energy Preconditioning");
+                    "FullLinearSpaceWithDiagonal",
+                    PreconditionerLinearWithDiag::create,
+                    "Full linear space and diagonal preconditioning");
  
        /**
-         * @class PreconditionerLLE
+         * @class PreconditionerLinearWithDiag
          *
          * This class implements preconditioning for the conjugate 
 	 * gradient matrix solver.
 	 */
         
-        PreconditionerLLE::PreconditionerLLE(
+        PreconditionerLinearWithDiag::PreconditionerLinearWithDiag(
             const boost::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
@@ -70,57 +70,34 @@ namespace Nektar
         /**
          *
          */ 
-        void PreconditionerLLE::v_InitObject()
+        void PreconditionerLinearWithDiag::v_InitObject()
         {
             m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap);
-            m_lowEnergyPrecon = GetPreconFactory().CreateInstance("LowEnergyBlock",m_linsys.lock(),m_locToGloMap);
+            m_diagonalPrecon = GetPreconFactory().CreateInstance("Diagonal",m_linsys.lock(),m_locToGloMap);
         }
 
         /**
          *
          */
-        void PreconditionerLLE::v_DoTransformToLowEnergy(
-            const Array<OneD, NekDouble>& pInput,
-            Array<OneD, NekDouble>& pOutput)
+        void PreconditionerLinearWithDiag::v_BuildPreconditioner()
         {
-            m_lowEnergyPrecon->DoTransformToLowEnergy(pInput,pOutput);
-        }
-
-        /**
-         *
-         */
-        void PreconditionerLLE::v_DoTransformFromLowEnergy(
-            Array<OneD, NekDouble>& pInput)
-        {
-            m_lowEnergyPrecon->DoTransformFromLowEnergy(pInput);
-        }
-
-
-        DNekScalBlkMatSharedPtr PreconditionerLLE::
-        v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
-	{
-            DNekScalBlkMatSharedPtr returnval;
-            returnval=m_lowEnergyPrecon->TransformedSchurCompl(offset,loc_mat);
-            return returnval;
-        }
-
-        /**
-         *
-         */
-        void PreconditionerLLE::v_BuildPreconditioner()
-        {
-            m_lowEnergyPrecon->BuildPreconditioner();
+            m_linSpacePrecon->BuildPreconditioner();
+            m_diagonalPrecon->BuildPreconditioner();
 	}
 
 
         /**
          *
          */
-        void PreconditionerLLE::v_DoPreconditioner(
+        void PreconditionerLinearWithDiag::v_DoPreconditioner(
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            m_lowEnergyPrecon->DoPreconditioner(pInput, pOutput);
+            m_diagonalPrecon->DoPreconditioner(pInput, pOutput);
+            // Since linear preconditioner just copies other entries
+            // this will only modify the linear space degrees of
+            // freedom
+            m_linSpacePrecon->DoPreconditioner(pInput, pOutput);
         }
 
     }

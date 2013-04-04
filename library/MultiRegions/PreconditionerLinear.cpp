@@ -52,9 +52,9 @@ namespace Nektar
 
         string PreconditionerLinear::className1
                 = GetPreconFactory().RegisterCreatorFunction(
-                    "Linear",
+                    "FullLinearSpace",
                     PreconditionerLinear::create,
-                    "Linear space inverse Preconditioning");
+                    "Full Linear space inverse Preconditioning");
  
        /**
          * @class PreconditionerLinear

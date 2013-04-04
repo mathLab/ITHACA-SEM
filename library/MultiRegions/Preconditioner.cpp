@@ -43,12 +43,13 @@ namespace Nektar
     namespace MultiRegions
     {
         std::string Preconditioner::lookupIds[7] = {
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Null",MultiRegions::eNull),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Diagonal",MultiRegions::eDiagonal),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Linear",MultiRegions::eLinear),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LowEnergy",MultiRegions::eLowEnergy),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LinearwithLowEnergy",MultiRegions::eLLE),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block",MultiRegions::eBlock),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Null",MultiRegions::eNull),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Diagonal",MultiRegions::eDiagonal),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpaceWithDiagonal",MultiRegions::eLinearWithDiagonal),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpace",MultiRegions::eLinear),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LowEnergyBlock",MultiRegions::eLowEnergy),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpaceWithLowEnergyBlock",MultiRegions::eLLE),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block",MultiRegions::eBlock),
         };
         std::string Preconditioner::def = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Preconditioner","Diagonal");
 

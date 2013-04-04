@@ -199,7 +199,8 @@ namespace Nektar
                 m_locToGloMap->GetGlobalSysSolnType();
             switch (m_preconType)
             {
-                case MultiRegions::eDiagonal:
+            case MultiRegions::eDiagonal:
+            case MultiRegions::eLinearWithDiagonal:
                 {
                     int nGlobal = solvertype == eIterativeFull ?
                         m_locToGloMap->GetNumGlobalCoeffs() :

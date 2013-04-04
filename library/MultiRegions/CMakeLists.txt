@@ -1,4 +1,10 @@
 SET(MULTI_REGIONS_SOURCES
+./AssemblyMap/AssemblyMap.cpp
+./AssemblyMap/AssemblyMapCG.cpp
+./AssemblyMap/AssemblyMapDG.cpp
+./AssemblyMap/AssemblyMapCG1D.cpp
+./AssemblyMap/AssemblyMapCG2D.cpp
+./AssemblyMap/AssemblyMapCG3D.cpp
 ExpList.cpp
 ExpList0D.cpp
 ExpList1D.cpp
@@ -30,23 +36,16 @@ GlobalLinSysIterativeFull.cpp
 GlobalLinSysIterativeStaticCond.cpp
 GlobalMatrix.cpp
 GlobalMatrixKey.cpp
-
-./AssemblyMap/AssemblyMap.cpp
-./AssemblyMap/AssemblyMapCG.cpp
-./AssemblyMap/AssemblyMapDG.cpp
-./AssemblyMap/AssemblyMapCG1D.cpp
-./AssemblyMap/AssemblyMapCG2D.cpp
-./AssemblyMap/AssemblyMapCG3D.cpp
-
 GlobalOptimizationParameters.cpp
-SubStructuredGraph.cpp
-
 Preconditioner.cpp
 PreconditionerDiagonal.cpp
 PreconditionerLowEnergy.cpp
 PreconditionerBlock.cpp
 PreconditionerLinear.cpp
 PreconditionerLLE.cpp
+PreconditionerLinearWithDiag.cpp
+SubStructuredGraph.cpp
+
 )
 
 SET(MULTI_REGIONS_HEADERS
@@ -81,16 +80,17 @@ GlobalLinSysIterativeFull.h
 GlobalLinSysIterativeStaticCond.h
 GlobalMatrix.h
 GlobalMatrixKey.h
+GlobalOptimizationParameters.h
 MultiRegions.hpp
 MultiRegionsDeclspec.h
-GlobalOptimizationParameters.h
-SubStructuredGraph.h
 Preconditioner.h
 PreconditionerDiagonal.h
 PreconditionerLowEnergy.h
 PreconditionerBlock.h
 PreconditionerLinear.h
 PreconditionerLLE.h
+PreconditionerLinearWithDiag.h
+SubStructuredGraph.h
 )
 
 SET(ASSEMBLY_MAP_HEADERS

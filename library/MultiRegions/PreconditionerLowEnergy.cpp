@@ -66,7 +66,6 @@ namespace Nektar
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap),
               m_linsys(plinsys),
-              m_preconType(pLocToGloMap->GetPreconType()),
               m_locToGloMap(pLocToGloMap)
         {
         }

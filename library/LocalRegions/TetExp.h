@@ -224,6 +224,9 @@ namespace Nektar
                 DNekMatSharedPtr m_inversetransformationmatrix,
                 DNekMatSharedPtr m_inversetransposedtransformationmatrix);
 
+            LOCAL_REGIONS_EXPORT void v_ComputeConditionNumberOfMatrix(
+                const DNekScalMatSharedPtr & mat);
+
         private:
             SpatialDomains::Geometry3DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;

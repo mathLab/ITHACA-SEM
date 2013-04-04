@@ -377,10 +377,8 @@ namespace Nektar
 
             int elmtType=0;
             //Get a LocalRegions static condensed matrix
-            RtetBlk = TetExp->GetLocStaticCondMatrix(TetR);
-            RTtetBlk = TetExp->GetLocStaticCondMatrix(TetRT);
-            Rtet=RtetBlk->GetBlock(0,0);
-            RTtet=RTtetBlk->GetBlock(0,0);
+            Rtet = TetExp->GetLocMatrix(TetR);
+            RTtet = TetExp->GetLocMatrix(TetRT);
             m_transformationMatrix[elmtType]=Rtet;
             m_transposedTransformationMatrix[elmtType]=RTtet;
 
@@ -407,42 +405,29 @@ namespace Nektar
 
             //These are the vertex mode locations of R which need to be replaced
             //in the prism element
-            int TetVertex0;
-            TetVertex0=TetExp->GetVertexMap(0);
-            int TetVertex1;
-            TetVertex1=TetExp->GetVertexMap(1);
-            int TetVertex2;
-            TetVertex2=TetExp->GetVertexMap(2);
-            int TetVertex3;
-            TetVertex3=TetExp->GetVertexMap(3);
+            int TetVertex0=TetExp->GetVertexMap(0);
+            int TetVertex1=TetExp->GetVertexMap(1);
+            int TetVertex2=TetExp->GetVertexMap(2);
+            int TetVertex3=TetExp->GetVertexMap(3);
 
 
             //These are the edge mode locations of R which need to be replaced
-            //in the prism element - THESE ARE WRONG
-            Array<OneD, unsigned int> TetEdge0;
-            TetEdge0=TetExp->GetEdgeInverseBoundaryMap(0);
-            Array<OneD, unsigned int> TetEdge1;
-            TetEdge1=TetExp->GetEdgeInverseBoundaryMap(1);
-            Array<OneD, unsigned int> TetEdge2;
-            TetEdge2=TetExp->GetEdgeInverseBoundaryMap(2);
-            Array<OneD, unsigned int> TetEdge3;
-            TetEdge3=TetExp->GetEdgeInverseBoundaryMap(3);
-            Array<OneD, unsigned int> TetEdge4;
-            TetEdge4=TetExp->GetEdgeInverseBoundaryMap(4);
-            Array<OneD, unsigned int> TetEdge5;
-            TetEdge5=TetExp->GetEdgeInverseBoundaryMap(5);
+            //in the prism element
+            Array<OneD, unsigned int> TetEdge0=TetExp->GetEdgeInverseBoundaryMap(0);
+            Array<OneD, unsigned int> TetEdge1=TetExp->GetEdgeInverseBoundaryMap(1);
+            Array<OneD, unsigned int> TetEdge2=TetExp->GetEdgeInverseBoundaryMap(2);
+            Array<OneD, unsigned int> TetEdge3=TetExp->GetEdgeInverseBoundaryMap(3);
+            Array<OneD, unsigned int> TetEdge4=TetExp->GetEdgeInverseBoundaryMap(4);
+            Array<OneD, unsigned int> TetEdge5=TetExp->GetEdgeInverseBoundaryMap(5);
 
             //These are the face mode locations of R which need to be replaced
             //in the prism element
-            Array<OneD, unsigned int> TetFace;
-            TetFace=TetExp->GetFaceInverseBoundaryMap(1);
+            Array<OneD, unsigned int> TetFace=TetExp->GetFaceInverseBoundaryMap(1);
 
             elmtType++;
             //Get a LocalRegions static condensed matrix
-            RprismBlk = PrismExp->GetLocStaticCondMatrix(PrismR);
-            RTprismBlk = PrismExp->GetLocStaticCondMatrix(PrismRT);
-            Rprism=RprismBlk->GetBlock(0,0);
-            RTprism=RTprismBlk->GetBlock(0,0);
+            Rprism = PrismExp->GetLocMatrix(PrismR);
+            RTprism = PrismExp->GetLocMatrix(PrismRT);
 
             unsigned int  nRows=Rprism->GetRows();
             NekDouble zero=0.0;
@@ -465,51 +450,44 @@ namespace Nektar
             }
 
             //Prism vertex modes
-            int PrismVertex0;
-            PrismVertex0=PrismExp->GetVertexMap(0);
-            int PrismVertex1;
-            PrismVertex1=PrismExp->GetVertexMap(1);
-            int PrismVertex2;
-            PrismVertex2=PrismExp->GetVertexMap(2);
-            int PrismVertex3;
-            PrismVertex3=PrismExp->GetVertexMap(3);
-            int PrismVertex4;
-            PrismVertex4=PrismExp->GetVertexMap(4);
-            int PrismVertex5;
-            PrismVertex5=PrismExp->GetVertexMap(5);
+            int PrismVertex0=PrismExp->GetVertexMap(0);
+            int PrismVertex1=PrismExp->GetVertexMap(1);
+            int PrismVertex2=PrismExp->GetVertexMap(2);
+            int PrismVertex3=PrismExp->GetVertexMap(3);
+            int PrismVertex4=PrismExp->GetVertexMap(4);
+            int PrismVertex5=PrismExp->GetVertexMap(5);
 
             //Prism edge modes
-            Array<OneD, unsigned int> PrismEdge0;
-            PrismEdge0=PrismExp->GetEdgeInverseBoundaryMap(0);
-            Array<OneD, unsigned int> PrismEdge1;
-            PrismEdge1=PrismExp->GetEdgeInverseBoundaryMap(1);
-            Array<OneD, unsigned int> PrismEdge2;
-            PrismEdge2=PrismExp->GetEdgeInverseBoundaryMap(2);
-            Array<OneD, unsigned int> PrismEdge3;
-            PrismEdge3=PrismExp->GetEdgeInverseBoundaryMap(3);
-            Array<OneD, unsigned int> PrismEdge4;
-            PrismEdge4=PrismExp->GetEdgeInverseBoundaryMap(4);
-            Array<OneD, unsigned int> PrismEdge5;
-            PrismEdge5=PrismExp->GetEdgeInverseBoundaryMap(5);
-            Array<OneD, unsigned int> PrismEdge6;
-            PrismEdge6=PrismExp->GetEdgeInverseBoundaryMap(6);
-            Array<OneD, unsigned int> PrismEdge7;
-            PrismEdge7=PrismExp->GetEdgeInverseBoundaryMap(7);
-            Array<OneD, unsigned int> PrismEdge8;
-            PrismEdge8=PrismExp->GetEdgeInverseBoundaryMap(8);
+            Array<OneD, unsigned int> PrismEdge0=
+                PrismExp->GetEdgeInverseBoundaryMap(0);
+            Array<OneD, unsigned int> PrismEdge1=
+                PrismExp->GetEdgeInverseBoundaryMap(1);
+            Array<OneD, unsigned int> PrismEdge2=
+                PrismExp->GetEdgeInverseBoundaryMap(2);
+            Array<OneD, unsigned int> PrismEdge3=
+                PrismExp->GetEdgeInverseBoundaryMap(3);
+            Array<OneD, unsigned int> PrismEdge4=
+                PrismExp->GetEdgeInverseBoundaryMap(4);
+            Array<OneD, unsigned int> PrismEdge5=
+                PrismExp->GetEdgeInverseBoundaryMap(5);
+            Array<OneD, unsigned int> PrismEdge6=
+                PrismExp->GetEdgeInverseBoundaryMap(6);
+            Array<OneD, unsigned int> PrismEdge7=
+                PrismExp->GetEdgeInverseBoundaryMap(7);
+            Array<OneD, unsigned int> PrismEdge8=
+                PrismExp->GetEdgeInverseBoundaryMap(8);
 
             //Prism face 1 & 3 face modes
-            Array<OneD, unsigned int> PrismFace1;
-            PrismFace1=PrismExp->GetFaceInverseBoundaryMap(1);
-            Array<OneD, unsigned int> PrismFace3;
-            PrismFace3=PrismExp->GetFaceInverseBoundaryMap(3);
-
-            Array<OneD, unsigned int> PrismFace0;
-            PrismFace0=PrismExp->GetFaceInverseBoundaryMap(0);
-            Array<OneD, unsigned int> PrismFace2;
-            PrismFace2=PrismExp->GetFaceInverseBoundaryMap(2);
-            Array<OneD, unsigned int> PrismFace4;
-            PrismFace4=PrismExp->GetFaceInverseBoundaryMap(4);
+            Array<OneD, unsigned int> PrismFace1=
+                PrismExp->GetFaceInverseBoundaryMap(1);
+            Array<OneD, unsigned int> PrismFace3=
+                PrismExp->GetFaceInverseBoundaryMap(3);
+            Array<OneD, unsigned int> PrismFace0=
+                PrismExp->GetFaceInverseBoundaryMap(0);
+            Array<OneD, unsigned int> PrismFace2=
+                PrismExp->GetFaceInverseBoundaryMap(2);
+            Array<OneD, unsigned int> PrismFace4=
+                PrismExp->GetFaceInverseBoundaryMap(4);
 
             //vertex 0 edge 0 3 & 4
             for(i=0; i< PrismEdge0.num_elements(); ++i)

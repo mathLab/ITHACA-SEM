@@ -40,9 +40,13 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 
 #include <iostream>
+#include <fstream>
 #include <string>
 using namespace std;
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 #include <boost/algorithm/string.hpp>
 #include <tinyxml/tinyxml.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
@@ -54,6 +58,7 @@ using namespace std;
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
+namespace io = boost::iostreams;
 
 namespace Nektar
 {
@@ -1063,19 +1068,51 @@ namespace Nektar
         /**
          *
          */
+        void SessionReader::LoadDoc(
+            const std::string &pFilename,
+            TiXmlDocument* pDoc) const
+        {
+            if (pFilename.size() > 3 &&
+                pFilename.substr(pFilename.size() - 3, 3) == ".gz")
+            {
+                ifstream file(pFilename.c_str(),
+                              ios_base::in | ios_base::binary);
+                ASSERTL0(file.good(), "Unable to open file: " + pFilename);
+                stringstream ss;
+                io::filtering_streambuf<io::input> in;
+                in.push(io::gzip_decompressor());
+                in.push(file);
+                try
+                {
+                    io::copy(in, ss);
+                    ss >> (*pDoc);
+                }
+                catch (io::gzip_error& e)
+                {
+                    ASSERTL0(false,
+                             "Error: File '" + pFilename + "' is corrupt.");
+                }
+            }
+            else
+            {
+                ifstream file(pFilename.c_str());
+                ASSERTL0(file.good(), "Unable to open file: " + pFilename);
+                file >> (*pDoc);
+            }
+        }
+
+        /**
+         *
+         */
         TiXmlDocument *SessionReader::MergeDoc(
             const std::vector<std::string> &pFilenames) const
         {
             ASSERTL0(pFilenames.size() > 0, "No filenames for merging.");
 
             // Read the first document
-            TiXmlDocument *vMainDoc = new TiXmlDocument(pFilenames[0]);
-            ASSERTL0(vMainDoc, "Failed to create XML document object.");
-            bool loadOkay = vMainDoc->LoadFile();
-            ASSERTL0(loadOkay, "Unable to load file: " + pFilenames[0]   + 
-                     ". Check XML standards compliance. Error on line: " +
-                     boost::lexical_cast<std::string>(vMainDoc->Row())   + 
-                     ": " + std::string(vMainDoc->ErrorDesc()));
+            TiXmlDocument *vMainDoc = new TiXmlDocument;
+            LoadDoc(pFilenames[0], vMainDoc);
+
             TiXmlHandle vMainHandle(vMainDoc);
             TiXmlElement* vMainNektar = 
                 vMainHandle.FirstChildElement("NEKTAR").Element();
@@ -1085,13 +1122,10 @@ namespace Nektar
             // version already present in the loaded XML data.
             for (int i = 1; i < pFilenames.size(); ++i)
             {
-                TiXmlDocument vTempDoc (pFilenames[i]);
-                loadOkay = vTempDoc.LoadFile();
-                ASSERTL0(loadOkay, "Unable to load file: " + pFilenames[i]   +
-                         ". Check XML standards compliance. Error on line: " + 
-                         boost::lexical_cast<std::string>(vTempDoc.Row()));
+                TiXmlDocument* vTempDoc = new TiXmlDocument;
+                LoadDoc(pFilenames[i], vTempDoc);
 
-                TiXmlHandle docHandle(&vTempDoc);
+                TiXmlHandle docHandle(vTempDoc);
                 TiXmlElement* vTempNektar;
                 vTempNektar = docHandle.FirstChildElement("NEKTAR").Element();
                 ASSERTL0(vTempNektar, "Unable to find NEKTAR tag in file.");
@@ -1109,6 +1143,8 @@ namespace Nektar
                     vMainNektar->LinkEndChild(q);
                     p = p->NextSiblingElement();
                 }
+
+                delete vTempDoc;
             }
 
             return vMainDoc;

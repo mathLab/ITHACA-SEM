@@ -345,7 +345,9 @@ namespace Nektar
             // Universal map;
             if(m_globalToUniversalMap.num_elements())
             {
+                LibUtilities::CommSharedPtr vCommRow = m_session->GetComm()->GetRowComm();
                 returnval->m_globalToUniversalMap = Array<OneD, int> (returnval->m_numGlobalCoeffs);
+                returnval->m_globalToUniversalMapUnique = Array<OneD, int> (returnval->m_numGlobalCoeffs);
                 // reset localtoglobal and setup universal map
                 for(i = 0; i < nverts; ++i)
                 {
@@ -353,6 +355,19 @@ namespace Nektar
                     returnval->m_localToGlobalMap[i] = GlobCoeffs[cnt];
                     
                     returnval->m_globalToUniversalMap[GlobCoeffs[cnt]] = m_globalToUniversalMap[cnt];
+                }
+                
+                Nektar::Array<OneD, long> tmp(nverts);
+                Vmath::Zero(returnval->m_numGlobalCoeffs, tmp, 1);
+                for (unsigned int i = 0; i < returnval->m_numGlobalCoeffs; ++i)
+                {
+                    tmp[i] = returnval->m_globalToUniversalMap[i];
+                }
+                returnval->m_gsh = Gs::Init(tmp, vCommRow);
+                Gs::Unique(tmp, vCommRow);
+                for (unsigned int i = 0; i < returnval->m_numGlobalCoeffs; ++i)
+                {
+                    returnval->m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
                 }
             }                
             else // not sure this option is ever needed. 
@@ -364,6 +379,7 @@ namespace Nektar
                 }
 
             }
+
 
             return returnval;
         }

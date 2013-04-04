@@ -119,6 +119,7 @@ namespace Nektar
             eDiagonal,
             eLinear,
 	    eLowEnergy,
+            eLLE,
             eBlock
         };
 
@@ -128,6 +129,7 @@ namespace Nektar
             "Diagonal",
             "Linear",
 	    "LowEnergy",
+            "LinearwithLowEnergy",
             "Block"
         };
 

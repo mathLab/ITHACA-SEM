@@ -48,7 +48,7 @@ namespace Nektar
         /**
          * Registers the class with the Factory.
          */
-        string PreconditionerLowEnergy::className1
+        string PreconditionerLowEnergy::className
                 = GetPreconFactory().RegisterCreatorFunction(
                     "LowEnergy",
                     PreconditionerLowEnergy::create,
@@ -83,6 +83,7 @@ namespace Nektar
             SetupBlockTransformationMatrix();
             CreateMultiplicityMap();
 
+            //
 	}
 
         /**

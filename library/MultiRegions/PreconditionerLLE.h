@@ -32,24 +32,21 @@
 // Description: Preconditioner header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEAR_H
-#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEAR_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLLE_H
+#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLLE_H
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
-#include <LocalRegions/TetExp.h>
-#include <LocalRegions/PrismExp.h>
-
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-        class PreconditionerLinear;
-        typedef boost::shared_ptr<PreconditionerLinear>  PreconditionerLinearSharedPtr;
+        class PreconditionerLLE;
+        typedef boost::shared_ptr<PreconditionerLLE>  PreconditionerLLESharedPtr;
 
-        class PreconditionerLinear: public Preconditioner
+        class PreconditionerLLE: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
@@ -58,28 +55,40 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinear>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLLE>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
 	        return p;
             }
 
             /// Name of class
-            static std::string className1;
+            static std::string className;
 
-            MULTI_REGIONS_EXPORT PreconditionerLinear(
+            MULTI_REGIONS_EXPORT PreconditionerLLE(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerLinear() {}
+            virtual ~PreconditionerLLE() {}
 
 	protected:
-            GlobalLinSysSharedPtr                       m_vertLinsys;
-            boost::shared_ptr<AssemblyMap>              m_vertLocToGloMap;
+            //const boost::weak_ptr<GlobalLinSys>         m_linsys;
+
+            PreconditionerSharedPtr m_linSpacePrecon;
+            PreconditionerSharedPtr m_lowEnergyPrecon;
 
 	private:
 
             virtual void v_InitObject();
+
+            virtual void v_DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_DoTransformFromLowEnergy(
+                Array<OneD, NekDouble>& pInput);
+
+            virtual DNekScalBlkMatSharedPtr
+                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,

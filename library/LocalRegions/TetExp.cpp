@@ -1631,9 +1631,6 @@ namespace Nektar
                     MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
                     DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
-                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
-                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
-                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
 
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
@@ -1647,9 +1644,6 @@ namespace Nektar
                     MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
                     DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
-                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
-                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
-                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
 
                     DNekScalMatSharedPtr Atmp;
                     DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());

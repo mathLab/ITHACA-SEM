@@ -107,11 +107,19 @@ namespace Nektar
         // Always use dim = 3 to allow electrode to be above surface
         int dim = 3;
         int i = 0;
+        NekDouble tol = 1e-06;
+
         while (!m_electrogramStream.fail())
         {
             m_electrogramStream >> gloCoord[0] >> gloCoord[1] >> gloCoord[2];
             if (!m_electrogramStream.fail())
             {
+                ASSERTL0(pFields[0]->GetExpIndex(gloCoord, tol) == -1,
+                         "Electrogram point must lie outside of domain: ("
+                        + boost::lexical_cast<string>(gloCoord[0]) + ","
+                        + boost::lexical_cast<string>(gloCoord[1]) + ","
+                        + boost::lexical_cast<string>(gloCoord[2]) + ")");
+
                 SpatialDomains::VertexComponentSharedPtr vert
                     = MemoryManager<SpatialDomains::VertexComponent>
                     ::AllocateSharedPtr(dim, i, gloCoord[0],

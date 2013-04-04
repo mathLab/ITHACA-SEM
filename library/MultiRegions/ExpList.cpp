@@ -1866,6 +1866,21 @@ namespace Nektar
             return sqrt(err);
         }
 		
+
+        NekDouble ExpList::v_Integral(const Array<OneD, const NekDouble> &inarray)
+        {
+            NekDouble err = 0.0;
+            int       i   = 0;
+
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                err += (*m_exp)[m_offset_elmt_id[i]]->Integral(inarray+m_phys_offset[i]);
+            }
+            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
+
+            return err;
+        }
+
         Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
             ASSERTL0(false,

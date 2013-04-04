@@ -1859,8 +1859,6 @@ namespace Nektar
                 }
             }
 
-            ASSERTL1((nummodesA>0)&&(nummodesA>0), "number of modes must be greater than 0");
-
             int i,j;
             Array<OneD, int> arrayindx(nFaceIntCoeffs);
 

@@ -167,10 +167,10 @@ MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
         ${Boost_FILESYSTEM_LIBRARY} 
         ${Boost_SYSTEM_LIBRARY}
         ${Boost_PROGRAM_OPTIONS_LIBRARY} 
-        ${Boost_ZLIB_LIBRARY} 
+        ${ZLIB_LIBRARY} 
         optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
 	)
-    ADD_DEPENDENCIES(${name} boost tinyxml zlib)
+    ADD_DEPENDENCIES(${name} boost tinyxml zlib-1.2.7)
 
     IF( NEKTAR_USE_MPI )
         TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
@@ -221,7 +221,8 @@ MACRO(ADD_NEKTAR_LIBRARY name component type)
 
     # NIST Sparse BLAS only static, so link into Nektar libraries directly.
     TARGET_LINK_LIBRARIES( ${name} ${NIST_SPARSE_BLAS} ${METIS_LIB})
-    ADD_DEPENDENCIES(${name} spblastk0.9b modmetis-5.0.2 boost tinyxml zlib)
+    ADD_DEPENDENCIES(${name} spblastk0.9b modmetis-5.0.2 boost tinyxml
+        zlib-1.2.7)
     SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
     IF (NEKTAR_USE_MPI)
         TARGET_LINK_LIBRARIES( ${name} ${GSMPI_LIBRARY} ${XXT_LIBRARY})

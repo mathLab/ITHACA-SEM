@@ -29,8 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: sparse matrix class with compressed sparse row (CSR) storage
-//
+// Description: Interface to NIST CSR sparse matrix storage.
+
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STORAGE_NIST_CSR_HPP
@@ -48,15 +48,22 @@
 
 namespace Nektar
 {
-    // Construct a CSR sparse matrix based on input matrix in
-    // coordinate storage (COO) sparse format.
-    //
-    // Generic, symmetric, diagonal and lower-/upper-triangular 
-    // input matrix type identifiers respected.
-    // For symmetric matrix type input COO storage should define its
-    // upper-triangular part. For all other matrix properties the
-    // conversion from COO to CSR is straightforward.
-    //
+
+    /*
+     *  This class is an interface to NIST CSR sparse matrix storage.
+     *  The CSR (Compressed Sparse Row) sparse format assumes sparse
+     *  matrix is a collection of individual non-zero entries with
+     *  additional indexing: one index array stores column indices of
+     *  non-zero entries row by row; another one stores offsets of each
+     *  row in the first indexing array. Indexing is 0-based.
+     *
+     *  The constructor takes input matrix in coordinate storage
+     *  (COO) sparse format.
+     *
+     *  Multiply kernels are provided by NIST Sparse BLAS v 0.9
+     *
+     */
+
     template<typename T>
     class StorageNistCsr
     {

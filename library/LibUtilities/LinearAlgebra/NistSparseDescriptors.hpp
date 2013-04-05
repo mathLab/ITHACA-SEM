@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NistSparseDescriptors.hpp
+// File: NistSparseDescriptors.hpp
 //
 // For more information, please see: http://www.nektar.info
 //

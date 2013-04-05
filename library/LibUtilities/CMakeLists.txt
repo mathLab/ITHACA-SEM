@@ -193,9 +193,9 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/SparseUtils.hpp
 )
 
-IF(NEKTAR_USE_SMV)
+IF(NEKTAR_USING_SMV)
     SET(LinearAlgebraHeaders ${LinearAlgebraHeaders} ./LinearAlgebra/LibSMV.hpp)
-ENDIF(NEKTAR_USE_SMV)
+ENDIF(NEKTAR_USING_SMV)
 
 SET(LinearAlgebraSources
     ./LinearAlgebra/blas.cpp
@@ -215,9 +215,9 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/SparseMatrix.cpp
 )
 
-IF(NEKTAR_USE_SMV)
+IF(NEKTAR_USING_SMV)
     SET(LinearAlgebraSources ${LinearAlgebraSources} ./LinearAlgebra/LibSMV.cpp)
-ENDIF(NEKTAR_USE_SMV)
+ENDIF(NEKTAR_USING_SMV)
 
 SET(MemoryHeaders
 	./Memory/ThreadSpecificPool.hpp

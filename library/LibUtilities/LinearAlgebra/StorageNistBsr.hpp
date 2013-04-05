@@ -29,8 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: sparse matrix class with block sparse row (BSR) storage
-// (sparse matrix is a CSR collection of dense square blocks of same size)
+// Description: Interface to NIST BSR sparse matrix storage.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -49,8 +48,17 @@
 
 namespace Nektar
 {
-    // Construct a BSR sparse matrix based on input matrix in
-    // block coordinate storage (BCO) sparse format.
+
+    /*
+     *  This class is an interface to NIST BSR sparse matrix storage.
+     *  The BSR sparse format assumes sparse matrix is a CSR collection of
+     *  dense square blocks of same size. Indexing is partially 1-based.
+     *  The constructor takes input matrix in block coordinate storage
+     *  (BCO) sparse format.
+     *
+     *  Multiply kernels are provided by NIST Sparse BLAS v 0.9
+     *
+     */
 
     template<typename T>
     class StorageNistBsr

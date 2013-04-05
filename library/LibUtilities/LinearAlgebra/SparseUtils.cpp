@@ -54,7 +54,7 @@ namespace Nektar{
                     const COOMatType&   cooMat,
                           BCOMatType&   bcoMat)
     {
-        COOMatTypeConstIt  entry;       
+        COOMatTypeConstIt  entry;
         BCOMatTypeConstIt  blk;
         int rowcoord, localRow, blkRowCoord;
         int colcoord, localCol, blkColCoord;

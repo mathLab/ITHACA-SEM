@@ -29,8 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: sparse matrix class with block sparse row (BSR) storage
-// (sparse matrix is a CSR collection of dense square blocks of same size)
+// Description: Interface to NIST BSR sparse matrix storage.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -325,13 +324,10 @@ namespace Nektar
         // block in the current block row
         IndexType  offset = (m_pntr[brow]-1)*m_blkDim*m_blkDim;
 
-        //cout << "grow = " << grow << ", gcolumn = " << gcolumn <<", brow = " << brow << ", bcol = " << bcol << ", offset = " << offset << endl;
-
         IndexType i;
         static DataType defaultReturnValue;
         for( i = m_pntr[brow]; i < m_pntr[brow+1]; i++)
         {
-            //cout << "i = " << i << ", m_indx[i] = " << m_indx[i] << ", current value = " << m_val[offset+lrow + lcol*m_blkDim] << ", offset = " << offset << endl;
             if(bcol == m_indx[i]-1)
             {
                 return m_val[offset+lrow + lcol*m_blkDim];

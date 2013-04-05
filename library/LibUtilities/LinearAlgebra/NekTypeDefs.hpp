@@ -40,7 +40,6 @@
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
-//#include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>

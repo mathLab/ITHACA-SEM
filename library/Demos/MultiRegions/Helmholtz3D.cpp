@@ -44,7 +44,7 @@
 
 using namespace Nektar;
 
-#define TIMING
+//#define TIMING
 #ifdef TIMING
 #include <time.h>
 #define Timing(s) \
@@ -54,8 +54,6 @@ using namespace Nektar;
 #define Timing(s) \
  /* Nothing */
 #endif
-
-int NoCaseStringCompare(const string & s1, const string& s2);
 
 int main(int argc, char *argv[])
 {

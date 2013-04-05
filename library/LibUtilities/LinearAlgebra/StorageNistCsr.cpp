@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: sparse matrix class with compressed sparse row (CSR) storage
+// Description: Interface to NIST CSR sparse matrix storage.
 //
 ///////////////////////////////////////////////////////////////////////////////
 

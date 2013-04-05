@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: generic sparse matrix class templated by underlying sparse
+// Description: Diagonal block sparse matrix class templated by underlying sparse
 //              storage format
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -52,19 +52,12 @@
 namespace Nektar
 {
 
-    // Construct a CSR sparse matrix based on input matrix in
-    // coordinate storage (COO) sparse format.
-    // This COO sparse matrix is given as a map< pair<int,int>, NekDouble>
-    // where the pair refers to the coordinate of the non-zero entry
-    // and the NekDouble contains its value.
-    // The constructor now converts from COO storage to CSR storage.
-    //
-    // Generic, symmetric, diagonal and lower-/upper-triangular 
-    // input matrix type identifiers respected.
-    // For symmetric matrix type input COO storage should define its
-    // upper-triangular part. For all other matrix properties the
-    // conversion from COO to CSR is straightforward.
-    //
+    /*
+     * This is a class-container to diagonal block matrix
+     * with elements being sparse matrices. The type of
+     * sparse entries is defined with template parameter.
+     *
+     */
     template<typename SparseStorageType>
     class NekSparseDiagBlkMatrix
     {

@@ -206,31 +206,6 @@ namespace Nektar
         {
             m_submatrix[i]->Multiply(&in[m_rowoffset[i]], &out[m_rowoffset[i]]);
         }
-
-/*
-        IndexType num_threads = 4;
-        IndexType nel = m_submatrix.num_elements();
-        IndexType i, j;
-        IndexType elm_per_thread = (IndexType)nel/(IndexType)num_threads;
-
-        #pragma omp parallel for shared(j)
-        for (j = 0; j < num_threads; j++)
-        {
-            const IndexType start = (j+0)*elm_per_thread;
-            const IndexType end   = (j+1)*elm_per_thread + (j+1 == num_threads)*(nel % num_threads);
-
-            std::cout << "nel = " << nel << ", j = " << j << ", start = " << start << ", end = " << end << std::endl;
-            std::cout << "nel % num_threads = " << nel % num_threads << std::endl;
-            std::cout << "(j+1 == num_threads)*(nel % num_threads) = " << (j+1 == num_threads)*(nel % num_threads) << std::endl;
-            std::cout << "(j+1)*nel/num_threads = " << (j+1)*nel/num_threads << std::endl;
-
-            for (i = start; i < end; ++i)
-            {
-                m_submatrix[i]->Multiply(&in[m_rowoffset[i]], &out[m_rowoffset[i]]);
-            }
-        }
-*/
-
         m_mulCallsCounter++;
     }
 

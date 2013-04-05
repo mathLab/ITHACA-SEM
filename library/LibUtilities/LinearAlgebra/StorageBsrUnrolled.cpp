@@ -29,10 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: sparse matrix class with block sparse row (Bsr C based) storage
-// (sparse matrix is a CSR collection of dense square blocks of same size)
-// In contrast with Nist BSR class this one uses zero-based storage and
-// unrolled multiply routine for a few matrix sizes.
+// Description: 0-based sparse BSR storage class with own unrolled and
+//              LibSMV multiply kernels.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -342,13 +340,10 @@ namespace Nektar
         // block in the current block row
         IndexType  offset = m_pntr[brow]*m_blkDim*m_blkDim;
 
-        //cout << "grow = " << grow << ", gcolumn = " << gcolumn <<", brow = " << brow << ", bcol = " << bcol << ", offset = " << offset << endl;
-
         IndexType i;
         static DataType defaultReturnValue;
         for( i = m_pntr[brow]; i < m_pntr[brow+1]; i++)
         {
-            //cout << "i = " << i << ", m_indx[i] = " << m_indx[i] << ", current value = " << m_val[offset+lrow + lcol*m_blkDim] << ", offset = " << offset << endl;
             if(bcol == m_indx[i])
             {
                 return m_val[offset+lrow + lcol*m_blkDim];
@@ -668,6 +663,7 @@ namespace Nektar
     }
 #endif
 
+    /// Generic zero-based BSR multiply for higher matrix ranks
     template<typename DataType>
     void StorageBsrUnrolled<DataType>::Multiply_generic(
             const int mb,
@@ -702,7 +698,7 @@ namespace Nektar
 
 
     // converts input vector of BCO blocks
-    // to the internal CSR representation
+    // to the internal BSR representation
     template<typename DataType>
     void StorageBsrUnrolled<DataType>::processBcoInput(
                         const IndexType  blkRows,

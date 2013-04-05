@@ -29,10 +29,8 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: sparse matrix class with block sparse row (BSR) storage
-// (sparse matrix is a CSR collection of dense square blocks of same size)
-// In contrast with Nist BSR class this one uses zero-based storage and
-// unrolled multiply routines.
+// Description: 0-based sparse BSR storage class with own unrolled and
+//              LibSMV multiply kernels.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -52,8 +50,21 @@
 
 namespace Nektar
 {
-    // Construct a zero-based BSR sparse matrix based on input matrix in
-    // block coordinate storage (BCO) sparse format.
+    /*
+     *  Zero-based BSR (Block Sparse Row) storage class with its sparse
+     *  multiply kernels built upon dense multiply kernels provided by
+     *  LibSMV library. It also includes its own unrolled multiply kernels
+     *  up to 4x4 matrices, provided 'just in case' LibSMV library
+     *  is not available. When matrix is larger than either one
+     *  supported by LibSMV library or 4x4 (whichever is greater), the
+     *  multiply kernel calls dense dgemv from BLAS.
+     *
+     *  The BSR sparse format assumes sparse matrix is a CSR collection of
+     *  dense square blocks of same size. In contrast with Nist BSR class
+     *  this one uses zero-based storage. The constructor takes input matrix in
+     *  block coordinate storage (BCO) sparse format.
+     *
+     */
 
     template<typename T>
     class StorageBsrUnrolled
@@ -150,8 +161,6 @@ namespace Nektar
                             DataVectorType &out);
         LIB_UTILITIES_EXPORT void MultiplyLight(const DataVectorType &in,
                                  DataVectorType &out);
-//        void MultiplyLightSymm(const DataVectorType &in,
-//                                     DataVectorType &out);
 
 
     protected:

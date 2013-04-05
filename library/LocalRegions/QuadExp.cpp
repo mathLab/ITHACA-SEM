@@ -139,9 +139,16 @@ namespace Nektar
 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Vmul  (nqtot,gmat[4],1,diff0,1, out_d2, 1);
-                    Vmath::Vvtvp (nqtot,gmat[5],1,diff1,1, out_d2, 1,
-                                  out_d2,1);
+                    if (m_geom->GetCoordim() == 3)
+                    {
+                        Vmath::Vmul  (nqtot,gmat[4],1,diff0,1, out_d2, 1);
+                        Vmath::Vvtvp (nqtot,gmat[5],1,diff1,1, out_d2, 1,
+                                        out_d2,1);
+                    }
+                    else
+                    {
+                        Vmath::Zero  (nqtot, out_d2, 1);
+                    }
                 }
             }
             else // regular geometry
@@ -160,8 +167,15 @@ namespace Nektar
 
                 if(out_d2.num_elements())
                 {
-                    Vmath::Smul (nqtot, gmat[4][0], diff0,1, out_d2, 1);
-                    Blas::Daxpy (nqtot, gmat[5][0], diff1,1, out_d2, 1);
+                    if (m_geom->GetCoordim() == 3)
+                    {
+                        Vmath::Smul (nqtot, gmat[4][0], diff0,1, out_d2, 1);
+                        Blas::Daxpy (nqtot, gmat[5][0], diff1,1, out_d2, 1);
+                    }
+                    else
+                    {
+                        Vmath::Zero (nqtot, out_d2, 1);
+                    }
                 }
             }
         }

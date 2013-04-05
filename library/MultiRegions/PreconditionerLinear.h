@@ -73,6 +73,7 @@ namespace Nektar
             MULTI_REGIONS_EXPORT
             virtual ~PreconditionerLinear() {}
 
+        
 	protected:
             GlobalLinSysSharedPtr                       m_vertLinsys;
             boost::shared_ptr<AssemblyMap>              m_vertLocToGloMap;
@@ -81,10 +82,16 @@ namespace Nektar
 
             virtual void v_InitObject();
 
+
+            virtual void v_DoPreconditionerWithNonVertOutput(
+                                  const Array<OneD, NekDouble>& pInput,
+                                  Array<OneD, NekDouble>& pOutput,
+                                  const Array<OneD, NekDouble>& pNonVertOutput);
+            
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
-
+		      
             virtual void v_BuildPreconditioner();
 
         };

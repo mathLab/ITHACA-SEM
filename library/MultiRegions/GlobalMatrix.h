@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalMatrix.h
+// File: GlobalMatrix.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -47,12 +47,12 @@ namespace Nektar
         class GlobalMatrix
         {
         public:
-            typedef NekSparseMatrix<StorageNistCsr<NekDouble> >      DNekCsrMat;
-            typedef NekSparseMatrix<StorageNistBsr<NekDouble> >      DNekBsrMat;
-            typedef NekSparseMatrix<StorageBsrUnrolled<NekDouble> >  DNekBsrUnrolledMat;
-            typedef boost::shared_ptr<DNekCsrMat>                    DNekCsrMatSharedPtr;
-            typedef boost::shared_ptr<DNekBsrMat>                    DNekBsrMatSharedPtr;
-            typedef boost::shared_ptr<DNekBsrUnrolledMat>            DNekBsrUnrolledMatSharedPtr;
+            typedef NekSparseMatrix<StorageNistCsr<NekDouble> >     DNekCsrMat;
+            typedef NekSparseMatrix<StorageNistBsr<NekDouble> >     DNekBsrMat;
+            typedef NekSparseMatrix<StorageSmvBsr<NekDouble> >      DNekSmvBsrMat;
+            typedef boost::shared_ptr<DNekCsrMat>                   DNekCsrMatSharedPtr;
+            typedef boost::shared_ptr<DNekBsrMat>                   DNekBsrMatSharedPtr;
+            typedef boost::shared_ptr<DNekSmvBsrMat>                DNekSmvBsrMatSharedPtr;
 
             /// Construct a new matrix.
             MULTI_REGIONS_EXPORT GlobalMatrix(
@@ -77,14 +77,14 @@ namespace Nektar
             /// Pointer to a double-precision Nektar++ sparse matrix.
             DNekCsrMatSharedPtr          m_csrmatrix;
             DNekBsrMatSharedPtr          m_bsrmatrix;
-            DNekBsrUnrolledMatSharedPtr  m_bsrunrolledmatrix;
-
-            unsigned long                m_mulCallsCounter;
+            DNekSmvBsrMatSharedPtr       m_smvbsrmatrix;
 
             unsigned int                 m_rows;
             unsigned int                 m_cols;
             Array<OneD, NekDouble>       m_tmpin;
             Array<OneD, NekDouble>       m_tmpout;
+
+            unsigned long                m_mulCallsCounter;
 
             bool                         m_copyOp;
 

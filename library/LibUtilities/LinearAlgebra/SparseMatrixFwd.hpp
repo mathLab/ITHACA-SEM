@@ -70,7 +70,7 @@ namespace Nektar
 
     template<typename DataType> class StorageNistCsr;
     template<typename DataType> class StorageNistBsr;
-    template<typename DataType> class StorageBsrUnrolled;
+    template<typename DataType> class StorageSmvBsr;
 
     template<typename SparseStorageType> class NekSparseMatrix;
     template<typename SparseStorageType> class NekSparseDiagBlkMatrix;

@@ -71,10 +71,10 @@ namespace Nektar
         class GlobalLinSysIterativeStaticCond : public GlobalLinSysIterative
         {
         public:
-            typedef NekSparseDiagBlkMatrix<StorageBsrUnrolled<NekDouble> >
-                                            DNekBsrUnrolledDiagBlkMat;
-            typedef boost::shared_ptr<DNekBsrUnrolledDiagBlkMat>
-                                            DNekBsrUnrolledDiagBlkMatSharedPtr;
+            typedef NekSparseDiagBlkMatrix<StorageSmvBsr<NekDouble> >
+                                            DNekSmvBsrDiagBlkMat;
+            typedef boost::shared_ptr<DNekSmvBsrDiagBlkMat>
+                                            DNekSmvBsrDiagBlkMatSharedPtr;
 
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
@@ -142,7 +142,7 @@ namespace Nektar
 
 
             /// Sparse representation of Schur complement matrix at this level
-            DNekBsrUnrolledDiagBlkMatSharedPtr       m_sparseSchurCompl;
+            DNekSmvBsrDiagBlkMatSharedPtr            m_sparseSchurCompl;
 
             /// Local to global map.
             boost::shared_ptr<AssemblyMap>           m_locToGloMap;

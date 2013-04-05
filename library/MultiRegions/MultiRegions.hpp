@@ -137,16 +137,16 @@ namespace Nektar
 
         enum MatrixStorageType
         {
-            eCSR,
-            eBSR,
-            eBSRUnrolled
+            eNistCSR,
+            eNistBSR,
+            eSmvBSR
         };
 
         const char* const MatrixStorageTypeMap[] =
         {
-            "CSR",
-            "BSR",
-            "BSRUnrolled"
+            "NistCSR",
+            "NistBSR",
+            "SmvBSR"
         };
 
 

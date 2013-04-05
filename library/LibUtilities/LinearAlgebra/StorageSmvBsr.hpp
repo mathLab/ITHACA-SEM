@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: StorageBsrUnrolled.hpp
+// File: StorageSmvBsr.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -34,8 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STORAGE_BSR_UNROLLED_HPP
-#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STORAGE_BSR_UNROLLED_HPP
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STORAGE_SMV_BSR_HPP
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STORAGE_SMV_BSR_HPP
 
 #include <map>
 #include <vector>
@@ -67,7 +67,7 @@ namespace Nektar
      */
 
     template<typename T>
-    class StorageBsrUnrolled
+    class StorageSmvBsr
     {
 
     public:
@@ -130,16 +130,16 @@ namespace Nektar
 
     public:
         // Constructs zero-based BSR sparse matrix based on input BCO storage
-        LIB_UTILITIES_EXPORT StorageBsrUnrolled( const IndexType  blkRows,
+        LIB_UTILITIES_EXPORT StorageSmvBsr( const IndexType  blkRows,
                              const IndexType  blkCols,
                              const IndexType  blkDim,
                              const BCOMatType&   bcoMat,
                              const MatrixStorage matType = eFULL);
 
         // Copy constructor
-        LIB_UTILITIES_EXPORT StorageBsrUnrolled(const StorageBsrUnrolled& src);
+        LIB_UTILITIES_EXPORT StorageSmvBsr(const StorageSmvBsr& src);
 
-        LIB_UTILITIES_EXPORT ~StorageBsrUnrolled();
+        LIB_UTILITIES_EXPORT ~StorageSmvBsr();
 
         LIB_UTILITIES_EXPORT const IndexType GetRows() const;
         LIB_UTILITIES_EXPORT const IndexType GetColumns() const;
@@ -225,4 +225,4 @@ namespace Nektar
 
 } // namespace
 
-#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STORAGE_BSR_UNROLLED_HPP
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_STORAGE_SMV_BSR_HPP

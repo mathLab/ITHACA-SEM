@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalMatrix.cpp
+// File: GlobalMatrix.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -36,7 +36,7 @@
 #include <MultiRegions/GlobalMatrix.h>
 #include <LibUtilities/LinearAlgebra/StorageNistCsr.hpp>
 #include <LibUtilities/LinearAlgebra/StorageNistBsr.hpp>
-#include <LibUtilities/LinearAlgebra/StorageBsrUnrolled.hpp>
+#include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/SparseMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
 
@@ -49,14 +49,14 @@ namespace Nektar
     namespace MultiRegions
     {
         std::string GlobalMatrix::def = LibUtilities::SessionReader::
-            RegisterDefaultSolverInfo("GlobalMatrixStorageType","CSR");
+            RegisterDefaultSolverInfo("GlobalMatrixStorageType","NistCSR");
         std::string GlobalMatrix::lookupIds[3] = {
             LibUtilities::SessionReader::RegisterEnumValue(
-                "GlobalMatrixStorageType", "CSR", MultiRegions::eCSR),
+                "GlobalMatrixStorageType", "NistCSR", MultiRegions::eNistCSR),
             LibUtilities::SessionReader::RegisterEnumValue(
-                "GlobalMatrixStorageType", "BSR", MultiRegions::eBSR),
+                "GlobalMatrixStorageType", "NistBSR", MultiRegions::eNistBSR),
             LibUtilities::SessionReader::RegisterEnumValue(
-                "GlobalMatrixStorageType", "BSRUnrolled", MultiRegions::eBSRUnrolled)
+                "GlobalMatrixStorageType", "SmvBSR", MultiRegions::eSmvBSR)
         };
 
 
@@ -77,11 +77,11 @@ namespace Nektar
                                    unsigned int columns,
                                    const COOMatType &cooMat,
                                    const MatrixStorage& matStorage):
-            m_rows(rows),
-            m_cols(columns),
             m_csrmatrix(),
             m_bsrmatrix(),
-            m_bsrunrolledmatrix(),
+            m_smvbsrmatrix(),
+            m_rows(rows),
+            m_cols(columns),
             m_mulCallsCounter(0)
         {
             MatrixStorageType storageType = pSession->
@@ -94,7 +94,7 @@ namespace Nektar
 
             BCOMatType bcoMat;
 
-            if (storageType != eCSR)
+            if (storageType != eNistCSR)
             {
                 if(pSession->DefinesParameter("SparseBlockSize"))
                 {
@@ -127,9 +127,9 @@ namespace Nektar
             size_t matBytes;
             switch(storageType)
             {
-                case eCSR:
+                case eNistCSR:
                     {
-                    // Create CSR sparse storage holder
+                    // Create NIST CSR sparse storage holder
                     DNekCsrMat::SparseStorageSharedPtr sparseStorage =
                             MemoryManager<DNekCsrMat::StorageType>::
                                     AllocateSharedPtr(
@@ -144,10 +144,10 @@ namespace Nektar
                     }
                     break;
 
-                case eBSR:
+                case eNistBSR:
                     {
 
-                    // Create BSR sparse storage holder
+                    // Create NIST BSR sparse storage holder
                     DNekBsrMat::SparseStorageSharedPtr sparseStorage =
                             MemoryManager<DNekBsrMat::StorageType>::
                                     AllocateSharedPtr(
@@ -162,20 +162,20 @@ namespace Nektar
                     }
                     break;
 
-                case eBSRUnrolled:
+                case eSmvBSR:
                     {
 
-                    // Create zero-based unrolled-multiply BSR sparse storage holder
-                    DNekBsrUnrolledMat::SparseStorageSharedPtr sparseStorage =
-                            MemoryManager<DNekBsrUnrolledMat::StorageType>::
+                    // Create zero-based Smv-multiply BSR sparse storage holder
+                    DNekSmvBsrMat::SparseStorageSharedPtr sparseStorage =
+                            MemoryManager<DNekSmvBsrMat::StorageType>::
                                     AllocateSharedPtr(
                                         brows, bcols, block_size, bcoMat, matStorage );
 
                     // Create sparse matrix
-                    m_bsrunrolledmatrix = MemoryManager<DNekBsrUnrolledMat>::
+                    m_smvbsrmatrix = MemoryManager<DNekSmvBsrMat>::
                                             AllocateSharedPtr( sparseStorage );
 
-                    matBytes = m_bsrunrolledmatrix->GetMemoryFootprint();
+                    matBytes = m_smvbsrmatrix->GetMemoryFootprint();
 
                     }
                     break;
@@ -207,12 +207,12 @@ namespace Nektar
         void GlobalMatrix::Multiply(const Array<OneD,const NekDouble> &in, 
                                           Array<OneD,      NekDouble> &out)
         {
-            if (m_csrmatrix) {        m_csrmatrix->Multiply(in,out); return; }
+            if (m_csrmatrix) {       m_csrmatrix->Multiply(in,out); return; }
 
             if (!m_copyOp)
             {
-                if (m_bsrmatrix)          m_bsrmatrix->Multiply(in,out);
-                if (m_bsrunrolledmatrix)  m_bsrunrolledmatrix->Multiply(in,out);
+                if (m_bsrmatrix)     m_bsrmatrix->Multiply(in,out);
+                if (m_smvbsrmatrix)  m_smvbsrmatrix->Multiply(in,out);
             }
             else
             {
@@ -220,8 +220,8 @@ namespace Nektar
                 // using temporary storage for rhs and result vectors.
                 Vmath::Vcopy(m_rows, &in[0], 1, &m_tmpin[0], 1);
 
-                if (m_bsrmatrix)          m_bsrmatrix->Multiply(m_tmpin,m_tmpout);
-                if (m_bsrunrolledmatrix)  m_bsrunrolledmatrix->Multiply(m_tmpin,m_tmpout);
+                if (m_bsrmatrix)     m_bsrmatrix->Multiply(m_tmpin,m_tmpout);
+                if (m_smvbsrmatrix)  m_smvbsrmatrix->Multiply(m_tmpin,m_tmpout);
 
                 Vmath::Vcopy(m_rows, &m_tmpout[0], 1, &out[0], 1);
             }
@@ -229,16 +229,18 @@ namespace Nektar
 
         const unsigned long GlobalMatrix::GetMulCallsCounter() const 
         {
-            if (m_csrmatrix)          return m_csrmatrix->GetMulCallsCounter();
-            if (m_bsrmatrix)          return m_bsrmatrix->GetMulCallsCounter();
-            if (m_bsrunrolledmatrix)  return m_bsrunrolledmatrix->GetMulCallsCounter();
+            if (m_csrmatrix)     return m_csrmatrix->GetMulCallsCounter();
+            if (m_bsrmatrix)     return m_bsrmatrix->GetMulCallsCounter();
+            if (m_smvbsrmatrix)  return m_smvbsrmatrix->GetMulCallsCounter();
+            return -1;
         }
 
         const unsigned int GlobalMatrix::GetNumNonZeroEntries() const
         {
-            if (m_csrmatrix)          return m_csrmatrix->GetNumNonZeroEntries();
-            if (m_bsrmatrix)          return m_bsrmatrix->GetNumNonZeroEntries();
-            if (m_bsrunrolledmatrix)  return m_bsrunrolledmatrix->GetNumNonZeroEntries();
+            if (m_csrmatrix)     return m_csrmatrix->GetNumNonZeroEntries();
+            if (m_bsrmatrix)     return m_bsrmatrix->GetNumNonZeroEntries();
+            if (m_smvbsrmatrix)  return m_smvbsrmatrix->GetNumNonZeroEntries();
+            return -1;
         }
 
 

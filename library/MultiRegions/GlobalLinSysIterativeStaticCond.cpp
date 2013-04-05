@@ -37,7 +37,7 @@
 #include <MultiRegions/GlobalLinSysIterativeStaticCond.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LibUtilities/BasicUtils/ErrorUtil.hpp>
-#include <LibUtilities/LinearAlgebra/StorageBsrUnrolled.hpp>
+#include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
 
@@ -626,18 +626,18 @@ namespace Nektar
                 cnt += loc_lda;
             }
 
-            DNekBsrUnrolledDiagBlkMat::SparseStorageSharedPtrVector
+            DNekSmvBsrDiagBlkMat::SparseStorageSharedPtrVector
                 sparseStorage (1);
 
             BCOMatType partMat;
             convertCooToBco(rows, cols, 1, gmat_coo, partMat);
 
             sparseStorage[0] =
-                 MemoryManager<DNekBsrUnrolledDiagBlkMat::StorageType>::
+                 MemoryManager<DNekSmvBsrDiagBlkMat::StorageType>::
                     AllocateSharedPtr(rows, cols, 1, partMat, matStorage );
 
             // Create block diagonal matrix
-            m_sparseSchurCompl = MemoryManager<DNekBsrUnrolledDiagBlkMat>::
+            m_sparseSchurCompl = MemoryManager<DNekSmvBsrDiagBlkMat>::
                                             AllocateSharedPtr(sparseStorage);
 
             cout << "global SchurCompl: row density = " 
@@ -761,7 +761,7 @@ namespace Nektar
                     MatrixStorage matStorage = eFULL;
 
                     // Create a vector of sparse storage holders
-                    DNekBsrUnrolledDiagBlkMat::SparseStorageSharedPtrVector
+                    DNekSmvBsrDiagBlkMat::SparseStorageSharedPtrVector
                             sparseStorage (partitions.size());
 
                     for (int part = 0, n = 0; part < partitions.size(); ++part)
@@ -784,14 +784,14 @@ namespace Nektar
                         }
 
                         sparseStorage[part] =
-                        MemoryManager<DNekBsrUnrolledDiagBlkMat::StorageType>::
+                        MemoryManager<DNekSmvBsrDiagBlkMat::StorageType>::
                             AllocateSharedPtr(
                                 partitions[part].first, partitions[part].first,
                                 partitions[part].second, partMat, matStorage );
                     }
 
                     // Create block diagonal matrix
-                    m_sparseSchurCompl = MemoryManager<DNekBsrUnrolledDiagBlkMat>::
+                    m_sparseSchurCompl = MemoryManager<DNekSmvBsrDiagBlkMat>::
                                             AllocateSharedPtr(sparseStorage);
 
                     size_t matBytes, bsruBlockBytes;

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: StorageBsrUnrolled.cpp
+// File: StorageSmvBsr.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -43,7 +43,7 @@
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
 #include <LibUtilities/LinearAlgebra/NistSparseBlas.hpp>
-#include <LibUtilities/LinearAlgebra/StorageBsrUnrolled.hpp>
+#include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/NistSparseDescriptors.hpp>
 
 #include <LibUtilities/LinearAlgebra/LibSMV.hpp>
@@ -55,7 +55,7 @@ namespace Nektar
 {
 
     template<typename DataType>
-    StorageBsrUnrolled<DataType>::const_iterator::const_iterator(
+    StorageSmvBsr<DataType>::const_iterator::const_iterator(
                     MatrixStorage       matType,
                     IndexType           begin,
                     IndexType           end,
@@ -108,7 +108,7 @@ namespace Nektar
     }
 
     template<typename DataType>
-    CoordType StorageBsrUnrolled<DataType>::const_iterator::storageIndexToFullCoord(IndexType storageIndex)
+    CoordType StorageSmvBsr<DataType>::const_iterator::storageIndexToFullCoord(IndexType storageIndex)
     {
         // find local row and column indices within this block
 
@@ -137,7 +137,7 @@ namespace Nektar
 
 
     template<typename DataType>
-    StorageBsrUnrolled<DataType>::const_iterator::const_iterator(const const_iterator& src):
+    StorageSmvBsr<DataType>::const_iterator::const_iterator(const const_iterator& src):
         m_matType(src.m_matType),
         m_iter(src.m_iter),
         m_begin(src.m_begin),
@@ -149,12 +149,12 @@ namespace Nektar
     }
 
     template<typename DataType>
-    StorageBsrUnrolled<DataType>::const_iterator::~const_iterator()
+    StorageSmvBsr<DataType>::const_iterator::~const_iterator()
     {
     }
 
     template<typename DataType>
-    typename StorageBsrUnrolled<DataType>::const_iterator StorageBsrUnrolled<DataType>::const_iterator::operator++(int)
+    typename StorageSmvBsr<DataType>::const_iterator StorageSmvBsr<DataType>::const_iterator::operator++(int)
     {
         const_iterator out = *this;
         forward();
@@ -162,38 +162,38 @@ namespace Nektar
     }
 
     template<typename DataType>
-    typename StorageBsrUnrolled<DataType>::const_iterator& StorageBsrUnrolled<DataType>::const_iterator::operator++()
+    typename StorageSmvBsr<DataType>::const_iterator& StorageSmvBsr<DataType>::const_iterator::operator++()
     {
         forward();
         return *this;
     }
 
     template<typename DataType>
-    const typename StorageBsrUnrolled<DataType>::const_iterator::IterType& StorageBsrUnrolled<DataType>::const_iterator::operator*()
+    const typename StorageSmvBsr<DataType>::const_iterator::IterType& StorageSmvBsr<DataType>::const_iterator::operator*()
     {
         return m_iter;
     }
 
     template<typename DataType>
-    const typename StorageBsrUnrolled<DataType>::const_iterator::IterType* StorageBsrUnrolled<DataType>::const_iterator::operator->()
+    const typename StorageSmvBsr<DataType>::const_iterator::IterType* StorageSmvBsr<DataType>::const_iterator::operator->()
     {
         return &m_iter;
     }
 
     template<typename DataType>
-    const bool StorageBsrUnrolled<DataType>::const_iterator::operator==(const const_iterator& rhs)
+    const bool StorageSmvBsr<DataType>::const_iterator::operator==(const const_iterator& rhs)
     {
         return m_iter.nnzindex == rhs.m_iter.nnzindex;
     }
 
     template<typename DataType>
-    const bool StorageBsrUnrolled<DataType>::const_iterator::operator!=(const const_iterator& rhs)
+    const bool StorageSmvBsr<DataType>::const_iterator::operator!=(const const_iterator& rhs)
     {
         return !(m_iter.nnzindex == rhs.m_iter.nnzindex);
     }
 
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::const_iterator::forward()
+    void StorageSmvBsr<DataType>::const_iterator::forward()
     {
         while((m_iter.storageindex+1 < m_val.num_elements()) &&
               (m_val[++m_iter.storageindex] <= NekConstants::kNekSparseNonZeroTol));
@@ -218,7 +218,7 @@ namespace Nektar
 
 
     template<typename DataType>
-    StorageBsrUnrolled<DataType>::StorageBsrUnrolled(
+    StorageSmvBsr<DataType>::StorageSmvBsr(
                     const IndexType  blkRows,
                     const IndexType  blkCols,
                     const IndexType  blkDim,
@@ -260,7 +260,7 @@ namespace Nektar
 
 
     template<typename DataType>
-    StorageBsrUnrolled<DataType>::StorageBsrUnrolled(const StorageBsrUnrolled& src):
+    StorageSmvBsr<DataType>::StorageSmvBsr(const StorageSmvBsr& src):
         m_matType(src.m_matType),
         m_blkRows (src.m_blkRows),
         m_blkCols (src.m_blkCols),
@@ -274,51 +274,51 @@ namespace Nektar
     }
 
     template<typename DataType>
-    StorageBsrUnrolled<DataType>::~StorageBsrUnrolled()
+    StorageSmvBsr<DataType>::~StorageSmvBsr()
     {
     }
 
 
     template<typename DataType>
-    const IndexType StorageBsrUnrolled<DataType>::GetRows() const
+    const IndexType StorageSmvBsr<DataType>::GetRows() const
     {
         return m_blkRows*m_blkDim;
     }
 
     template<typename DataType>
-    const IndexType StorageBsrUnrolled<DataType>::GetColumns() const
+    const IndexType StorageSmvBsr<DataType>::GetColumns() const
     {
         return m_blkCols*m_blkDim;
     }
 
     template<typename DataType>
-    const IndexType StorageBsrUnrolled<DataType>::GetNumNonZeroEntries() const
+    const IndexType StorageSmvBsr<DataType>::GetNumNonZeroEntries() const
     {
         return m_nnz;
     }
 
     template<typename DataType>
-    const IndexType StorageBsrUnrolled<DataType>::GetBlkSize() const
+    const IndexType StorageSmvBsr<DataType>::GetBlkSize() const
     {
         return m_blkDim;
     }
 
 
     template<typename DataType>
-    const IndexType StorageBsrUnrolled<DataType>::GetNumStoredDoubles() const
+    const IndexType StorageSmvBsr<DataType>::GetNumStoredDoubles() const
     {
         return m_bnnz*m_blkDim*m_blkDim;
     }
 
     template<typename DataType>
-    const DataType StorageBsrUnrolled<DataType>::GetFillInRatio() const
+    const DataType StorageSmvBsr<DataType>::GetFillInRatio() const
     {
         return (DataType)(m_bnnz*m_blkDim*m_blkDim)/(DataType)m_nnz;
     }
 
 
     template<typename DataType>
-    const size_t StorageBsrUnrolled<DataType>::GetMemoryUsage(IndexType nnz, IndexType nRows) const
+    const size_t StorageSmvBsr<DataType>::GetMemoryUsage(IndexType nnz, IndexType nRows) const
     {
         return sizeof(DataType) *m_val.capacity()   +
                sizeof(IndexType)*m_indx.capacity() +
@@ -329,7 +329,7 @@ namespace Nektar
 
 
     template<typename DataType>
-    const typename boost::call_traits<DataType>::const_reference StorageBsrUnrolled<DataType>::GetValue(IndexType grow, IndexType gcolumn) const
+    const typename boost::call_traits<DataType>::const_reference StorageSmvBsr<DataType>::GetValue(IndexType grow, IndexType gcolumn) const
     {
         IndexType  brow = grow    / m_blkDim;
         IndexType  bcol = gcolumn / m_blkDim;
@@ -356,13 +356,13 @@ namespace Nektar
 
 
     template<typename DataType>
-    typename StorageBsrUnrolled<DataType>::const_iterator StorageBsrUnrolled<DataType>::begin() const
+    typename StorageSmvBsr<DataType>::const_iterator StorageSmvBsr<DataType>::begin() const
     {
         return const_iterator(m_matType, 0, m_nnz, m_blkDim, m_val, m_indx, m_pntr);
     }
 
     template<typename DataType>
-    typename StorageBsrUnrolled<DataType>::const_iterator StorageBsrUnrolled<DataType>::end() const
+    typename StorageSmvBsr<DataType>::const_iterator StorageSmvBsr<DataType>::end() const
     {
         return const_iterator(m_matType, m_nnz, m_nnz, m_blkDim, m_val, m_indx, m_pntr);
     }
@@ -373,7 +373,7 @@ namespace Nektar
     // C = A*B where A is matrix and B is vector.
     // No scaling. Previous content of C is discarded.
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::Multiply(
+    void StorageSmvBsr<DataType>::Multiply(
             const DataVectorType &in,
                   DataVectorType &out)
     {
@@ -410,7 +410,7 @@ namespace Nektar
 
 
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::Multiply(
+    void StorageSmvBsr<DataType>::Multiply(
             const DataType*  in,
                   DataType*  out)
     {
@@ -449,7 +449,7 @@ namespace Nektar
     // This function is defined for backward compatibility with
     // NIST storage classes
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::MultiplyLight(
+    void StorageSmvBsr<DataType>::MultiplyLight(
             const DataVectorType &in,
                   DataVectorType &out)
     {
@@ -488,7 +488,7 @@ namespace Nektar
     /// Essentially this is slightly modified copy-paste from
     /// NIST Sparse Blas 0.9b routine CSR_VecMult_CAB_double()
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::Multiply_1x1(
+    void StorageSmvBsr<DataType>::Multiply_1x1(
             const int mb,
             const int kb,
             const double* val,
@@ -515,7 +515,7 @@ namespace Nektar
     /// Essentially this is slightly optimised copy-paste from
     /// NIST Sparse Blas 0.9b routine BSR_VecMult_BAB_double()
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::Multiply_2x2(
+    void StorageSmvBsr<DataType>::Multiply_2x2(
             const int mb,
             const int kb,
             const double* val,
@@ -551,7 +551,7 @@ namespace Nektar
 
     /// Zero-based BSR multiply unrolled for 3x3 blocks
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::Multiply_3x3(
+    void StorageSmvBsr<DataType>::Multiply_3x3(
             const int mb,
             const int kb,
             const double* val,
@@ -589,7 +589,7 @@ namespace Nektar
 
     /// Zero-based BSR multiply unrolled for 4x4 blocks
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::Multiply_4x4(
+    void StorageSmvBsr<DataType>::Multiply_4x4(
             const int mb,
             const int kb,
             const double* val,
@@ -630,7 +630,7 @@ namespace Nektar
 #ifdef NEKTAR_USING_SMV
     /// Generic zero-based BSR multiply
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::Multiply_libsmv(
+    void StorageSmvBsr<DataType>::Multiply_libsmv(
             const int mb,
             const int kb,
             const double* val,
@@ -665,7 +665,7 @@ namespace Nektar
 
     /// Generic zero-based BSR multiply for higher matrix ranks
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::Multiply_generic(
+    void StorageSmvBsr<DataType>::Multiply_generic(
             const int mb,
             const int kb,
             const double* val,
@@ -700,7 +700,7 @@ namespace Nektar
     // converts input vector of BCO blocks
     // to the internal BSR representation
     template<typename DataType>
-    void StorageBsrUnrolled<DataType>::processBcoInput(
+    void StorageSmvBsr<DataType>::processBcoInput(
                         const IndexType  blkRows,
                         const IndexType  blkColumns,
                         const IndexType  blkDim,
@@ -755,7 +755,7 @@ namespace Nektar
 
 
     // explicit instantiation
-    template class StorageBsrUnrolled<NekDouble>;
+    template class StorageSmvBsr<NekDouble>;
 
 
 } // namespace

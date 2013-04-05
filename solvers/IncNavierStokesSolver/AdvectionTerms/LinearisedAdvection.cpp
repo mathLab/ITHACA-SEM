@@ -482,7 +482,7 @@ namespace Nektar
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
-                if((m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"|| m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))&& nvar==3)
+                if((m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"|| m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))&& m_MultipleModes==false)
                 {
                     
                     // w-component must be ignored and set to zero.

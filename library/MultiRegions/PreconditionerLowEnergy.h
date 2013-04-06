@@ -142,8 +142,16 @@ namespace Nektar
             virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInput);
 
-            virtual void v_BuildPreconditioner();
+            virtual void v_DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
+            virtual void v_DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+            
+            virtual void v_BuildPreconditioner();
+            
             virtual DNekScalBlkMatSharedPtr
                 v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
         };

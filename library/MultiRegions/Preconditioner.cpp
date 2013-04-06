@@ -129,6 +129,26 @@ namespace Nektar
             Vmath::Smul(pInput.num_elements(),1.0,pInput, 1, pInput, 1);
 	}
 
+        /**
+         * \brief Multiply by the block inverse transformation matrix
+         */ 
+        void Preconditioner::v_DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput)
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
+	}
+
+        /**
+         * \brief Multiply by the block transposed inverse transformation matrix
+         */ 
+        void Preconditioner::v_DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput)
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
+	}
+
         void Preconditioner::v_BuildPreconditioner()
         {
 	}

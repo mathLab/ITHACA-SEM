@@ -88,6 +88,14 @@ namespace Nektar
 	    inline void DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInput);
 
+            inline void DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+            
+            inline void DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);                
+
 	    inline void BuildPreconditioner();
 
    	    inline void InitObject();
@@ -152,6 +160,14 @@ namespace Nektar
 	    virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInput);
 
+            virtual void v_DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
 	    virtual void v_BuildPreconditioner();
 
             static std::string lookupIds[];
@@ -215,6 +231,26 @@ namespace Nektar
             Array<OneD, NekDouble>& pInput)
         {
 	    v_DoTransformFromLowEnergy(pInput);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoMultiplybyInverseTransformationMatrix(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+            v_DoMultiplybyInverseTransformationMatrix(pInput,pOutput);
+        }
+           
+        /**
+         *
+         */
+        inline void Preconditioner::DoMultiplybyInverseTransposedTransformationMatrix(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+            v_DoMultiplybyInverseTransposedTransformationMatrix(pInput,pOutput);
         }
 
         /**

@@ -96,6 +96,21 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
 	}
 
+
+
+        /**
+         * \brief Apply a preconditioner to the conjugate gradient
+         * method with an ouptut for non-vertex degrees of freedom
+         */ 
+        void Preconditioner::v_DoPreconditionerWithNonVertOutput(
+                      const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput,
+                      const Array<OneD, NekDouble>& pNonVertOutput)
+
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
+	}
+
         /**
          * \brief Transform from original basis to low energy basis
          */ 

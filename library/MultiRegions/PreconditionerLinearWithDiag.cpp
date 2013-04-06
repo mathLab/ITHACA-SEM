@@ -93,11 +93,13 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            m_diagonalPrecon->DoPreconditioner(pInput, pOutput);
+            
+            Array<OneD, NekDouble> OutputDiag(pOutput.num_elements());
+            m_diagonalPrecon->DoPreconditioner(pInput, OutputDiag);
             // Since linear preconditioner just copies other entries
             // this will only modify the linear space degrees of
             // freedom
-            m_linSpacePrecon->DoPreconditioner(pInput, pOutput);
+            m_linSpacePrecon->DoPreconditionerWithNonVertOutput(pInput, pOutput,OutputDiag);
         }
 
     }

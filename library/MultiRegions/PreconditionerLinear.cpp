@@ -97,22 +97,25 @@ namespace Nektar
 
 	}
 
-
         /**
          *
          */
         void PreconditionerLinear::v_DoPreconditioner(
                 const Array<OneD, NekDouble>& pInput,
-                      Array<OneD, NekDouble>& pOutput)
+                Array<OneD, NekDouble>& pOutput)
+        {
+            v_DoPreconditionerWithNonVertOutput(pInput,pOutput,NullNekDouble1DArray);
+        }
+
+        void PreconditionerLinear::v_DoPreconditionerWithNonVertOutput(
+                                                                       const Array<OneD, NekDouble>& pInput,
+                                                                       Array<OneD, NekDouble>& pOutput,
+                                                                       const Array<OneD, NekDouble>& pNonVertOutput)
         {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
             switch(solvertype)
             {
-                case MultiRegions::eXxtFullMatrix:
-                {
-                }
-                break;
-                case MultiRegions::eIterativeStaticCond:
+            case MultiRegions::eIterativeStaticCond:
                 {
                     int i,val;
                     int nloc = m_vertLocToGloMap->GetNumLocalCoeffs();
@@ -143,8 +146,18 @@ namespace Nektar
                     m_vertLinsys->SolveLinearSystem(m_vertLocToGloMap->GetNumLocalCoeffs(),
                                                 In,Out,m_vertLocToGloMap);
 
-                    //Copy input to output as a unit preconditioner on any other value
-                    Vmath::Vcopy(pInput.num_elements(),pInput,1,pOutput,1);
+                    
+                    if(pNonVertOutput != NullNekDouble1DArray)
+                    {
+                        ASSERTL1(pNonVertOutput.num_elements() >= pOutput.num_elements(),"Non Vert output is not of sufficient length");
+                        Vmath::Vcopy(pOutput.num_elements(),pNonVertOutput,1,pOutput,1);
+                    }
+                    else
+                    {
+                        //Copy input to output as a unit preconditioner on
+                        //any other value
+                        Vmath::Vcopy(pInput.num_elements(),pInput,1,pOutput,1);
+                    }
 
 
 
@@ -159,12 +172,11 @@ namespace Nektar
                     }
                 }
                 break;
-                default:
-                    ASSERTL0(0,"Unsupported solver type");
-                    break;
+            default:
+                ASSERTL0(0,"Unsupported solver type");
+                break;
 	    }
         }
-
     }
 }
 

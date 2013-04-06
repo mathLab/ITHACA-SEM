@@ -42,6 +42,7 @@
 #include <LocalRegions/Expansion3D.h>
 #include <LocalRegions/Expansion2D.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
+#include <LocalRegions/TetExp.h>
 
 namespace Nektar
 {
@@ -200,20 +201,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT DNekScalBlkMatSharedPtr CreateStaticCondMatrix(
                 const MatrixKey &mkey);
 
-            //-----------------------------
-            // Low Energy Basis functions
-            //-----------------------------
-
-            /*LOCAL_REGIONS_EXPORT Array<OneD, unsigned int> 
-                v_GetEdgeInverseBoundaryMap(int eid);
-
-            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int>
-                v_GetFaceInverseBoundaryMap(int fid);
-            
-            LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
-                const DNekMatSharedPtr &r_bnd, 
-                const StdRegions::MatrixType matrixType);*/
-
         private:
             SpatialDomains::Geometry3DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
@@ -228,7 +215,8 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       Array<OneD,       NekDouble> &wsp);
-	    LOCAL_REGIONS_EXPORT SpatialDomains::PrismGeomSharedPtr CreateReferencePrismGeom();
+
+	    //LOCAL_REGIONS_EXPORT SpatialDomains::PrismGeomSharedPtr CreateReferencePrismGeom();
         };
 
         // type defines for use of PrismExp in a boost vector

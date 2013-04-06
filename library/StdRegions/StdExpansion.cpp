@@ -1779,5 +1779,14 @@ namespace Nektar
             Array<OneD, unsigned int> noinversemap(1);
             return noinversemap;
         }
+
+        DNekMatSharedPtr 
+        StdExpansion::v_BuildInverseTransformationMatrix(
+            const DNekScalMatSharedPtr & m_transformationmatrix)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+            return NullDNekMatSharedPtr;
+        }
+
     }//end namespace
 }//end namespace

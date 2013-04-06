@@ -2000,5 +2000,6 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
+
     }//end of namespace
 }//end of namespace

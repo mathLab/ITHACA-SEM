@@ -49,9 +49,9 @@ namespace Nektar
 
         string PreconditionerLLE::className
                 = GetPreconFactory().RegisterCreatorFunction(
-                    "FullLinearSpaceWithLowEnergy",
+                    "FullLinearSpaceWithLowEnergyBlock",
                     PreconditionerLLE::create,
-                    "Full Linear space and Low Energy Preconditioning");
+                    "Full Linear space and low energy block preconditioning");
  
        /**
          * @class PreconditionerLLE
@@ -110,6 +110,7 @@ namespace Nektar
         void PreconditionerLLE::v_BuildPreconditioner()
         {
             m_lowEnergyPrecon->BuildPreconditioner();
+            m_linSpacePrecon->BuildPreconditioner();
 	}
 
 
@@ -120,7 +121,8 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            m_lowEnergyPrecon->DoPreconditioner(pInput, pOutput);
+            m_linSpacePrecon->DoPreconditioner(pInput, pOutput);
+            //m_lowEnergyPrecon->DoPreconditioner(pOutput, pOutput);
         }
 
     }

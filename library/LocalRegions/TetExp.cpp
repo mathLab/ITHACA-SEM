@@ -1646,9 +1646,9 @@ namespace Nektar
                     DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
 
                     DNekScalMatSharedPtr Atmp;
-                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+                    DNekMatSharedPtr RT=BuildTransformationMatrix(A,mkey.GetMatrixType());
 
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,RT);
                 }
                 break;
             default:
@@ -2045,128 +2045,5 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
 
-        /**
-	 * \brief Build inverse and inverse transposed transformation matrix: \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
-	 *
-	 * \f\mathbf{R^{-T}}=[\left[\begin{array}{ccc} \mathbf{I} & -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
-	 *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
-	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
-	 *
-	 */
-        void TetExp::SetUpInverseTransformationMatrix(
-            const DNekMatSharedPtr & m_transformationmatrix,
-            DNekMatSharedPtr m_inversetransformationmatrix,
-            DNekMatSharedPtr m_inversetransposedtransformationmatrix)
-	{
-            int i,j,n, eid=0, fid=0;
-            int nCoeffs=NumBndryCoeffs();
-            NekDouble MatrixValue;
-            NekDouble zero=0.0;
-            DNekMat &R = (*m_transformationmatrix);
-            // Define storage for vertex transpose matrix and zero all entries
-            MatrixStorage storage = eFULL;
-            m_inversetransformationmatrix = 
-                MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs,nCoeffs,zero,storage);
-            DNekMat &InvR = (*m_inversetransformationmatrix);
-            //transposed inverse transformation matrix
-            m_inversetransposedtransformationmatrix = 
-                MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs,nCoeffs,zero,storage);
-            DNekMat &InvRT = (*m_inversetransposedtransformationmatrix);
-
-            int nVerts=GetNverts();
-            int nEdges=GetNedges();
-            int nFaces=GetNfaces();
-
-            //Set up map between element vertex, edge or face on the reference
-            //element and modes in the matrix
-            //Array<OneD, int > vertModeLocation(nVerts);
-            //Array<OneD, Array<OneD, unsigned int> > edgeModeLocation(nEdges);
-            //Array<OneD, Array<OneD, unsigned int> > faceModeLocation(nFaces);
-
-            //mapping arrays for vertices, edges and faces
-            //GetInverseBoundaryMaps(vertModeLocation,edgeModeLocation,faceModeLocation);
-
-            int nedgemodes, nfacemodes;
-            nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
-            nfacemodes=GetFaceIntNcoeffs(fid);//edgeModeLocation[eid].num_elements();
-
-            Array<OneD, unsigned int> 
-                edgemodearray(nEdges*nedgemodes);
-            Array<OneD, unsigned int> 
-                facemodearray(nFaces*nfacemodes);
-            
-            //create array of edge modes
-            for(eid=0; eid < nEdges; ++eid)
-            {
-                Array<OneD, unsigned int> edgearray=GetEdgeInverseBoundaryMap(eid);
-                nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
-                Vmath::Vcopy(nedgemodes, &edgearray[0], 1, &edgemodearray[eid*nedgemodes], 1);
-            }
-
-            //create array of face modes
-            for(fid=0; fid < nFaces; ++fid)
-            {
-                Array<OneD, unsigned int> facearray=GetEdgeInverseBoundaryMap(eid);
-                nfacemodes=GetFaceIntNcoeffs(fid);//faceModeLocation[fid].num_elements();
-                Vmath::Vcopy(nfacemodes, &facearray[0], 1, &facemodearray[fid*nfacemodes], 1);
-            }
-            
-            int nedgemodestotal=nedgemodes*nEdges;
-            int nfacemodestotal=nfacemodes*nFaces;
-
-            //vertex-edge/face
-            for (i=0; i<nVerts; ++i)
-            {
-                for(j=0; j<nedgemodestotal; ++j)
-                {
-                    InvR.SetValue(
-                        GetVertexMap(i),edgemodearray[j],
-                        -R(GetVertexMap(i),edgemodearray[j]));
-                    InvRT.SetValue(
-                        edgemodearray[j],GetVertexMap(i),
-                        -R(GetVertexMap(i),edgemodearray[j]));
-                }
-                for(j=0; j<nfacemodestotal; ++j)
-                {
-                    InvR.SetValue(
-                        GetVertexMap(i),facemodearray[j],
-                        -R(GetVertexMap(i),facemodearray[j]));
-                    InvRT.SetValue(
-                        facemodearray[j],GetVertexMap(i),
-                        -R(GetVertexMap(i),facemodearray[j]));
-                    for(n=0; n<nedgemodestotal; ++n)
-                    {
-                        MatrixValue=InvR.GetValue(
-                            GetVertexMap(i),facemodearray[j])
-                            +R(GetVertexMap(i),edgemodearray[n])
-                            *R(edgemodearray[n],facemodearray[j]);
-                        InvR.SetValue(
-                            GetVertexMap(i),facemodearray[j],MatrixValue);
-                        InvRT.SetValue(
-                            facemodearray[j],GetVertexMap(i),MatrixValue);
-                    }
-                }
-            }
-            
-            //edge-face contributions
-            for (i=0; i<nedgemodestotal; ++i)
-            {
-                for(j=0; j<nfacemodestotal; ++j)
-                {
-                    InvR.SetValue(
-                        edgemodearray[i],facemodearray[j],
-                        -R(edgemodearray[i],facemodearray[j]));
-                    InvRT.SetValue(
-                        facemodearray[j],edgemodearray[i],
-                        -R(edgemodearray[i],facemodearray[j]));
-                }
-            }
-            
-            for (i = 0; i < nCoeffs; ++i)
-            {
-                InvR.SetValue(i,i,1.0);
-                InvRT.SetValue(i,i,1.0);
-            }
-	}
     }//end of namespace
 }//end of namespace

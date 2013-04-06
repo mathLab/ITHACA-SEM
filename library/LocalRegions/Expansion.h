@@ -73,7 +73,7 @@ namespace Nektar
                     const StdRegions::MatrixType matrixType);
 
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix(
-                    const DNekScalMatSharedPtr &r_bnd); 
+                    const DNekScalMatSharedPtr &r_bnd);
 
             protected:
                 virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
@@ -83,7 +83,7 @@ namespace Nektar
                     const StdRegions::MatrixType matrixType);
 
                 virtual DNekMatSharedPtr v_BuildVertexMatrix(
-                    const DNekScalMatSharedPtr &r_bnd); 
+                    const DNekScalMatSharedPtr &r_bnd);  
 
             private:
 

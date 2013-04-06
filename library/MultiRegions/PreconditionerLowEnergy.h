@@ -80,7 +80,7 @@ namespace Nektar
             PreconditionerType                          m_preconType;
 	    StdRegions::StdExpansionSharedPtr           vExp;
 
-            DNekMatSharedPtr                            m_preconditioner;
+            //DNekMatSharedPtr                            m_preconditioner;
 	    DNekScalBlkMatSharedPtr                     GloBlkMat;
 	    DNekBlkMatSharedPtr                         BlkMat;
 
@@ -98,33 +98,42 @@ namespace Nektar
 
             DNekScalBlkMatSharedPtr                     m_RBlk;
             DNekScalBlkMatSharedPtr                     m_RTBlk;
+            DNekScalBlkMatSharedPtr                     m_InvRBlk;
+            DNekScalBlkMatSharedPtr                     m_InvRTBlk;
+
             DNekScalBlkMatSharedPtr                     m_S1Blk;
 
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
-            Array<OneD, int>                            vertModeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     faceModeLocation;
+            //Array<OneD, int>                            vertModeLocation;
+            //Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation;
+            //Array<OneD, Array<OneD, unsigned int> >     faceModeLocation;
 
-            Array<OneD, Array<OneD, unsigned int> >     MatEdgeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     MatFaceLocation;
+            //Array<OneD, Array<OneD, unsigned int> >     MatEdgeLocation;
+            //Array<OneD, Array<OneD, unsigned int> >     MatFaceLocation;
 
             Array<OneD,DNekScalMatSharedPtr> m_transformationMatrix;
             Array<OneD,DNekScalMatSharedPtr> m_transposedTransformationMatrix;
+            Array<OneD,DNekScalMatSharedPtr> m_inversetransformationMatrix;
+            Array<OneD,DNekScalMatSharedPtr> m_inversetransposedTransformationMatrix;
 
             Array<OneD, NekDouble>      m_locToGloSignMult;
 
 	private:
-
-	    void SetUpLowEnergyBasis(void);
-
-	    void LowEnergyPreconditioner(void);
 
             void SetUpReferenceElements(void);
 
             void CreateMultiplicityMap(void);
 
             void SetupBlockTransformationMatrix(void);
+
+            void ModifyPrismTransformationMatrix(
+                LocalRegions::TetExpSharedPtr TetExp,
+                LocalRegions::PrismExpSharedPtr PrismExp,
+                DNekScalMatSharedPtr Rtet,
+                DNekScalMatSharedPtr RTtet,
+                DNekMatSharedPtr Rmodprism,
+                DNekMatSharedPtr RTmodprism);
 
             SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);

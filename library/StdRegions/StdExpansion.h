@@ -1432,12 +1432,6 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
-            /*STD_REGIONS_EXPORT void GetInverseBoundaryMaps(const Array<OneD, int > vertexmap,
-				 const Array<OneD, Array<OneD, unsigned int> > edgemap,
-				 const Array<OneD, Array<OneD, unsigned int> > facemap)
-            {
-                v_GetInverseBoundaryMaps(vertexmap,edgemap,facemap);
-                }*/
 
             STD_REGIONS_EXPORT Array<OneD, unsigned int> 
                 GetEdgeInverseBoundaryMap(int eid)
@@ -1450,6 +1444,15 @@ namespace Nektar
             {
                 return v_GetFaceInverseBoundaryMap(fid);
             }
+
+            STD_REGIONS_EXPORT DNekMatSharedPtr BuildInverseTransformationMatrix(
+                const DNekScalMatSharedPtr & m_transformationmatrix)
+            {
+                return v_BuildInverseTransformationMatrix(
+                    m_transformationmatrix);
+            }
+
+
 
         protected:
 
@@ -1881,16 +1884,14 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
 
-            /*STD_REGIONS_EXPORT virtual void v_GetInverseBoundaryMaps(
-                Array<OneD, int > vertexmap,
-                Array<OneD, Array<OneD, unsigned int> > edgemap,
-                Array<OneD, Array<OneD, unsigned int> > facemap);*/
-
             STD_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
                 v_GetEdgeInverseBoundaryMap(int eid);
 
             STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
                 v_GetFaceInverseBoundaryMap(int fid);
+
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(
+                    const DNekScalMatSharedPtr & m_transformationmatrix);
 
         };
 

@@ -1442,7 +1442,7 @@ namespace Nektar
 
                 //create array of edge modes
                 Array<OneD, unsigned int> inedgearray=GetEdgeInverseBoundaryMap(eid);
-                nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
+                nedgemodes=GetEdgeNcoeffs(eid)-2;
                 Array<OneD, unsigned int> edgemodearray(nedgemodes);
 
                 Vmath::Vcopy(nedgemodes, &inedgearray[0], 
@@ -1546,13 +1546,11 @@ namespace Nektar
             DNekScalMat &R = (*m_transformationmatrix);
             // Define storage for vertex transpose matrix and zero all entries
             MatrixStorage storage = eFULL;
+
+            //inverse transformation matrix
             DNekMatSharedPtr m_inversetransformationmatrix = 
                 MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs,nCoeffs,zero,storage);
             DNekMat &InvR = (*m_inversetransformationmatrix);
-            //transposed inverse transformation matrix
-            DNekMatSharedPtr m_inversetransposedtransformationmatrix = 
-                MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs,nCoeffs,zero,storage);
-            DNekMat &InvRT = (*m_inversetransposedtransformationmatrix);
 
             int nVerts=GetNverts();
             int nEdges=GetNedges();
@@ -1594,17 +1592,11 @@ namespace Nektar
                     InvR.SetValue(
                         GetVertexMap(i),edgemodearray[j],
                         -R(GetVertexMap(i),edgemodearray[j]));
-                    InvRT.SetValue(
-                        edgemodearray[j],GetVertexMap(i),
-                        -R(GetVertexMap(i),edgemodearray[j]));
                 }
                 for(j=0; j<nfacemodestotal; ++j)
                 {
                     InvR.SetValue(
                         GetVertexMap(i),facemodearray[j],
-                        -R(GetVertexMap(i),facemodearray[j]));
-                    InvRT.SetValue(
-                        facemodearray[j],GetVertexMap(i),
                         -R(GetVertexMap(i),facemodearray[j]));
                     for(n=0; n<nedgemodestotal; ++n)
                     {
@@ -1614,8 +1606,6 @@ namespace Nektar
                             *R(edgemodearray[n],facemodearray[j]);
                         InvR.SetValue(
                             GetVertexMap(i),facemodearray[j],MatrixValue);
-                        InvRT.SetValue(
-                            facemodearray[j],GetVertexMap(i),MatrixValue);
                     }
                 }
             }
@@ -1628,16 +1618,12 @@ namespace Nektar
                     InvR.SetValue(
                         edgemodearray[i],facemodearray[j],
                         -R(edgemodearray[i],facemodearray[j]));
-                    InvRT.SetValue(
-                        facemodearray[j],edgemodearray[i],
-                        -R(edgemodearray[i],facemodearray[j]));
                 }
             }
             
             for (i = 0; i < nCoeffs; ++i)
             {
                 InvR.SetValue(i,i,1.0);
-                InvRT.SetValue(i,i,1.0);
             }
 
             return m_inversetransformationmatrix;

@@ -750,7 +750,8 @@ namespace Nektar
                expList=((m_linsys.lock())->GetLocMat()).lock();
            StdRegions::StdExpansionSharedPtr locExpansion;
 
-           int cnt, n, nel; 
+           int cnt, n, nel;
+ 
            //Transformation matrices
            DNekMat R;
            DNekMat RT;
@@ -765,12 +766,20 @@ namespace Nektar
            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> invtransmatrixmap;
            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> invtransposedtransmatrixmap;
+
+           //Transformation matrix map
            transmatrixmap[LibUtilities::eTetrahedron]=m_transformationMatrix[0];
            transmatrixmap[LibUtilities::ePrism]=m_transformationMatrix[1];
+
+           //Transposed transformation matrix map
            transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_transposedTransformationMatrix[0];
            transposedtransmatrixmap[LibUtilities::ePrism]=m_transposedTransformationMatrix[1];
+
+           //Inverse transfomation map
            invtransmatrixmap[LibUtilities::eTetrahedron]=m_inverseTransformationMatrix[0];
            invtransmatrixmap[LibUtilities::ePrism]=m_inverseTransformationMatrix[1];
+
+           //Inverse transposed transformation map
            invtransposedtransmatrixmap[LibUtilities::eTetrahedron]=m_inverseTransposedTransformationMatrix[0];
            invtransposedtransmatrixmap[LibUtilities::ePrism]=m_inverseTransposedTransformationMatrix[1];
 
@@ -792,10 +801,17 @@ namespace Nektar
                
                locExpansion = expList->GetExp(nel);
                LibUtilities::ShapeType eType=locExpansion->DetShapeType();
-                
+
+               //Block R matrix
                m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
+
+               //Block RT matrix
                m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
+
+               //Block inverse R matrix
                m_InvRBlk->SetBlock(n,n, invtransmatrixmap[eType]);
+
+               //Block inverse RT matrix
                m_InvRTBlk->SetBlock(n,n, invtransposedtransmatrixmap[eType]);
            }
        }

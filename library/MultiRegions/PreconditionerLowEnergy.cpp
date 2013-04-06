@@ -374,8 +374,8 @@ namespace Nektar
             //Arrays to store the transformation matrices for each element type;
             m_transformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
             m_transposedTransformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
-            m_inversetransformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
-            m_inversetransposedTransformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
+            m_inverseTransformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
+            m_inverseTransposedTransformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
 
             int elmtType=0;
             //Get a LocalRegions static condensed matrix
@@ -396,8 +396,8 @@ namespace Nektar
             DNekScalMatSharedPtr InvRTtet = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRTtmp);
 
-            m_inversetransformationMatrix[elmtType]=InvRtet;
-            m_inversetransposedTransformationMatrix[elmtType]=InvRTtet;
+            m_inverseTransformationMatrix[elmtType]=InvRtet;
+            m_inverseTransposedTransformationMatrix[elmtType]=InvRTtet;
 
             //Matrix keys for Prism element transformation matrices
             LocalRegions::MatrixKey PrismR
@@ -462,28 +462,9 @@ namespace Nektar
             
             DNekScalMatSharedPtr InvRTprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRTtmp);
-            cout<<endl;
-            for(int i=0; i<InvRTprism->GetRows(); ++i)
-            {
-                for(int j=0; j<InvRTprism->GetRows(); ++j)
-                {
-                    cout<<(*InvRTprism)(i,j)<<" ";
-                }
-                cout<<endl;
-            }
-            cout<<endl;
-            for(int i=0; i<RTprismmod->GetRows(); ++i)
-            {
-                for(int j=0; j<RTprismmod->GetRows(); ++j)
-                {
-                    cout<<(*RTprismmod)(i,j)<<" ";
-                }
-                cout<<endl;
-            }
 
-
-            m_inversetransformationMatrix[elmtType]=InvRtet;
-            m_inversetransposedTransformationMatrix[elmtType]=InvRTtet;
+            m_inverseTransformationMatrix[elmtType]=InvRtet;
+            m_inverseTransposedTransformationMatrix[elmtType]=InvRTtet;
         }
 
         void PreconditionerLowEnergy::ModifyPrismTransformationMatrix(
@@ -782,10 +763,16 @@ namespace Nektar
            //maps for different element types
            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
+           map<LibUtilities::ShapeType,DNekScalMatSharedPtr> invtransmatrixmap;
+           map<LibUtilities::ShapeType,DNekScalMatSharedPtr> invtransposedtransmatrixmap;
            transmatrixmap[LibUtilities::eTetrahedron]=m_transformationMatrix[0];
            transmatrixmap[LibUtilities::ePrism]=m_transformationMatrix[1];
            transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_transposedTransformationMatrix[0];
            transposedtransmatrixmap[LibUtilities::ePrism]=m_transposedTransformationMatrix[1];
+           invtransmatrixmap[LibUtilities::eTetrahedron]=m_inverseTransformationMatrix[0];
+           invtransmatrixmap[LibUtilities::ePrism]=m_inverseTransformationMatrix[1];
+           invtransposedtransmatrixmap[LibUtilities::eTetrahedron]=m_inverseTransposedTransformationMatrix[0];
+           invtransposedtransmatrixmap[LibUtilities::ePrism]=m_inverseTransposedTransformationMatrix[1];
 
            MatrixStorage blkmatStorage = eDIAGONAL;
            
@@ -808,8 +795,8 @@ namespace Nektar
                 
                m_RBlk->SetBlock(n,n, transmatrixmap[eType]);
                m_RTBlk->SetBlock(n,n, transposedtransmatrixmap[eType]);
-               //m_InvRBlk->SetBlock(n,n, invtransmatrixmap[eType]);
-               //m_InvRTBlk->SetBlock(n,n, invtransposedtransmatrixmap[eType]);
+               m_InvRBlk->SetBlock(n,n, invtransmatrixmap[eType]);
+               m_InvRTBlk->SetBlock(n,n, invtransposedtransmatrixmap[eType]);
            }
        }
         

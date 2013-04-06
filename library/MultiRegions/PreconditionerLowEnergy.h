@@ -105,17 +105,10 @@ namespace Nektar
 
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
-            //Array<OneD, int>                            vertModeLocation;
-            //Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation;
-            //Array<OneD, Array<OneD, unsigned int> >     faceModeLocation;
-
-            //Array<OneD, Array<OneD, unsigned int> >     MatEdgeLocation;
-            //Array<OneD, Array<OneD, unsigned int> >     MatFaceLocation;
-
             Array<OneD,DNekScalMatSharedPtr> m_transformationMatrix;
             Array<OneD,DNekScalMatSharedPtr> m_transposedTransformationMatrix;
-            Array<OneD,DNekScalMatSharedPtr> m_inversetransformationMatrix;
-            Array<OneD,DNekScalMatSharedPtr> m_inversetransposedTransformationMatrix;
+            Array<OneD,DNekScalMatSharedPtr> m_inverseTransformationMatrix;
+            Array<OneD,DNekScalMatSharedPtr> m_inverseTransposedTransformationMatrix;
 
             Array<OneD, NekDouble>      m_locToGloSignMult;
 

@@ -94,13 +94,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
 
-            const inline Array<OneD, const DNekScalMatSharedPtr> 
-                &GetTransformationMatrix(void) const;
-            
-            const inline Array<OneD, const DNekScalMatSharedPtr> 
-                &GetTransposedTransformationMatrix(void) const;
-            
-            inline const DNekScalBlkMatSharedPtr&
+             inline const DNekScalBlkMatSharedPtr&
                 GetBlockTransformedSchurCompl() const;
             
             inline const DNekScalBlkMatSharedPtr&
@@ -160,12 +154,6 @@ namespace Nektar
 
 	    virtual void v_BuildPreconditioner();
 
-            virtual const Array<OneD, const DNekScalMatSharedPtr>& 
-                v_GetTransformationMatrix(void) const;
-
-            virtual const Array<OneD, const DNekScalMatSharedPtr>& 
-                v_GetTransposedTransformationMatrix(void) const;
-
             static std::string lookupIds[];
             static std::string def;
 	};
@@ -177,24 +165,6 @@ namespace Nektar
         inline void Preconditioner::InitObject()
         {
             v_InitObject();
-        }
-
-        /**
-         *
-         */
-        inline const Array<OneD,const DNekScalMatSharedPtr>& 
-            Preconditioner::GetTransformationMatrix() const
-        {
-            return v_GetTransformationMatrix();
-        }
-
-        /**
-         *
-         */
-        inline const Array<OneD,const DNekScalMatSharedPtr>& 
-            Preconditioner::GetTransposedTransformationMatrix() const
-        {
-            return v_GetTransposedTransformationMatrix();
         }
 
         /**

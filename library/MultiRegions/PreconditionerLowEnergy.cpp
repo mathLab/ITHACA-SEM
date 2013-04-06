@@ -289,8 +289,8 @@ namespace Nektar
             DNekScalBlkMatSharedPtr RtetBlk, RprismBlk;
             DNekScalBlkMatSharedPtr RTtetBlk, RTprismBlk;
 
-            DNekScalMatSharedPtr Rtet, Rprism, Rmodified;
-            DNekScalMatSharedPtr RTtet, RTprism, RTmodified;
+            DNekScalMatSharedPtr Rprism;
+            DNekScalMatSharedPtr RTprism;
             DNekMatSharedPtr InvRtmp, InvRTtmp;
             /*
              * Set up a Tetrahral & prismatic element which comprises
@@ -371,18 +371,9 @@ namespace Nektar
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
-            //Arrays to store the transformation matrices for each element type;
-            m_transformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
-            m_transposedTransformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
-            m_inverseTransformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
-            m_inverseTransposedTransformationMatrix = Array<OneD,DNekScalMatSharedPtr>(2);
-
-            int elmtType=0;
             //Get a LocalRegions static condensed matrix
             Rtet = TetExp->GetLocMatrix(TetR);
             RTtet = TetExp->GetLocMatrix(TetRT);
-            m_transformationMatrix[elmtType]=Rtet;
-            m_transposedTransformationMatrix[elmtType]=RTtet;
 
             //inverse transformation matrix
             InvRtmp=TetExp->BuildInverseTransformationMatrix(Rtet);
@@ -390,14 +381,11 @@ namespace Nektar
             //inverse transposed transformation matrix
             InvRTtmp=TetExp->BuildInverseTransformationMatrix(Rtet);
             InvRTtmp->Transpose();
-            DNekScalMatSharedPtr InvRtet = MemoryManager<DNekScalMat>
+            InvRtet = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRtmp);
             
-            DNekScalMatSharedPtr InvRTtet = MemoryManager<DNekScalMat>
+            InvRTtet = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRTtmp);
-
-            m_inverseTransformationMatrix[elmtType]=InvRtet;
-            m_inverseTransposedTransformationMatrix[elmtType]=InvRTtet;
 
             //Matrix keys for Prism element transformation matrices
             LocalRegions::MatrixKey PrismR
@@ -414,7 +402,6 @@ namespace Nektar
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
-            elmtType++;
             //Get a LocalRegions static condensed matrix
             Rprism = PrismExp->GetLocMatrix(PrismR);
             RTprism = PrismExp->GetLocMatrix(PrismRT);
@@ -439,16 +426,13 @@ namespace Nektar
                 }
             }
 
-            ModifyPrismTransformationMatrix(TetExp,PrismExp,Rtet,RTtet,Rtmpprism,RTtmpprism);
+            ModifyPrismTransformationMatrix(TetExp,PrismExp,Rtmpprism,RTtmpprism);
 
-            DNekScalMatSharedPtr Rprismmod = MemoryManager<DNekScalMat>
+            Rprismmod = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,Rtmpprism);
             
-            DNekScalMatSharedPtr RTprismmod = MemoryManager<DNekScalMat>
+            RTprismmod = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RTtmpprism);
-
-            m_transformationMatrix[elmtType]=Rprismmod;
-            m_transposedTransformationMatrix[elmtType]=RTprismmod;
 
             //inverse transformation matrix
             InvRtmp=PrismExp->BuildInverseTransformationMatrix(Rprismmod);
@@ -457,21 +441,22 @@ namespace Nektar
             InvRTtmp=PrismExp->BuildInverseTransformationMatrix(Rprismmod);
             InvRTtmp->Transpose();
 
-            DNekScalMatSharedPtr InvRprism = MemoryManager<DNekScalMat>
+            InvRprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRtmp);
             
-            DNekScalMatSharedPtr InvRTprism = MemoryManager<DNekScalMat>
+            InvRTprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRTtmp);
 
-            m_inverseTransformationMatrix[elmtType]=InvRtet;
-            m_inverseTransposedTransformationMatrix[elmtType]=InvRTtet;
         }
 
+       /**
+         * This routine replaces the vertex-edge, vertex-face and edge-face
+         * modes of the prism with the corresponding ones from the tetrahedron.
+         *
+         */
         void PreconditionerLowEnergy::ModifyPrismTransformationMatrix(
             LocalRegions::TetExpSharedPtr TetExp,
             LocalRegions::PrismExpSharedPtr PrismExp,
-            DNekScalMatSharedPtr Rtet,
-            DNekScalMatSharedPtr RTtet,
             DNekMatSharedPtr Rmodprism,
             DNekMatSharedPtr RTmodprism)
         {
@@ -752,10 +737,6 @@ namespace Nektar
 
            int cnt, n, nel;
  
-           //Transformation matrices
-           DNekMat R;
-           DNekMat RT;
-
            const Array<OneD,const unsigned int>& nbdry_size
                = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
 
@@ -768,20 +749,20 @@ namespace Nektar
            map<LibUtilities::ShapeType,DNekScalMatSharedPtr> invtransposedtransmatrixmap;
 
            //Transformation matrix map
-           transmatrixmap[LibUtilities::eTetrahedron]=m_transformationMatrix[0];
-           transmatrixmap[LibUtilities::ePrism]=m_transformationMatrix[1];
+           transmatrixmap[LibUtilities::eTetrahedron]=Rtet;
+           transmatrixmap[LibUtilities::ePrism]=Rprismmod;
 
            //Transposed transformation matrix map
-           transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_transposedTransformationMatrix[0];
-           transposedtransmatrixmap[LibUtilities::ePrism]=m_transposedTransformationMatrix[1];
+           transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
+           transposedtransmatrixmap[LibUtilities::ePrism]=RTprismmod;
 
            //Inverse transfomation map
-           invtransmatrixmap[LibUtilities::eTetrahedron]=m_inverseTransformationMatrix[0];
-           invtransmatrixmap[LibUtilities::ePrism]=m_inverseTransformationMatrix[1];
+           invtransmatrixmap[LibUtilities::eTetrahedron]=InvRtet;
+           invtransmatrixmap[LibUtilities::ePrism]=InvRprism;
 
            //Inverse transposed transformation map
-           invtransposedtransmatrixmap[LibUtilities::eTetrahedron]=m_inverseTransposedTransformationMatrix[0];
-           invtransposedtransmatrixmap[LibUtilities::ePrism]=m_inverseTransposedTransformationMatrix[1];
+           invtransposedtransmatrixmap[LibUtilities::eTetrahedron]=InvRTtet;
+           invtransposedtransmatrixmap[LibUtilities::ePrism]=InvRTprism;
 
            MatrixStorage blkmatStorage = eDIAGONAL;
            
@@ -885,15 +866,18 @@ namespace Nektar
             //maps for different element types
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
-            transmatrixmap[LibUtilities::eTetrahedron]=m_transformationMatrix[0];
-            transmatrixmap[LibUtilities::ePrism]=m_transformationMatrix[1];
-            transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_transposedTransformationMatrix[0];
-            transposedtransmatrixmap[LibUtilities::ePrism]=m_transposedTransformationMatrix[1];
+
+            //Transformation matrix
+            transmatrixmap[LibUtilities::eTetrahedron]=Rtet;
+            transmatrixmap[LibUtilities::ePrism]=Rprismmod;
+
+            //Transposed transformation matrix
+            transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
+            transposedtransmatrixmap[LibUtilities::ePrism]=RTprismmod;
 
             int n_exp = expList->GetNumElmts();
             int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
             int nNonDirFaceIDs=m_locToGloMap->GetNumNonDirFaces();
-
             
             //set the number of blocks in the matrix
             Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs+nNonDirFaceIDs);
@@ -1423,24 +1407,6 @@ namespace Nektar
 	}
 
         /**
-         * \brief Get the tetrahedral transformation matrix \f$\mathbf{R}\f$
-         */
-        const Array<OneD,const DNekScalMatSharedPtr>& PreconditionerLowEnergy::
-        v_GetTransformationMatrix() const
-	{
-	    return m_transformationMatrix;
-	}
-
-        /**
-         * \brief Get the transposed transformation matrix \f$\mathbf{R}^{T}\f$
-         */
-        const Array<OneD,const DNekScalMatSharedPtr>& PreconditionerLowEnergy::
-        v_GetTransposedTransformationMatrix() const
-	{
-	    return m_transposedTransformationMatrix;
-	}
-
-        /**
          * \brief transform the solution vector vector to low energy
          *
          * As the conjugate gradient system is solved for the low energy basis,
@@ -1539,10 +1505,10 @@ namespace Nektar
             //Transformation matrices 
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
-            transmatrixmap[LibUtilities::eTetrahedron]=m_transformationMatrix[0];
-            transmatrixmap[LibUtilities::ePrism]=m_transformationMatrix[1];
-            transposedtransmatrixmap[LibUtilities::eTetrahedron]=m_transposedTransformationMatrix[0];
-            transposedtransmatrixmap[LibUtilities::ePrism]=m_transposedTransformationMatrix[1];
+            transmatrixmap[LibUtilities::eTetrahedron]=Rtet;
+            transmatrixmap[LibUtilities::ePrism]=Rprismmod;
+            transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
+            transposedtransmatrixmap[LibUtilities::ePrism]=RTprismmod;
 
             DNekScalMat &S1 = (*m_S1);
             

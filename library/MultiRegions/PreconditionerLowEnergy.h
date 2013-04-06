@@ -78,12 +78,8 @@ namespace Nektar
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
             PreconditionerType                          m_preconType;
-	    StdRegions::StdExpansionSharedPtr           vExp;
 
-            //DNekMatSharedPtr                            m_preconditioner;
-	    DNekScalBlkMatSharedPtr                     GloBlkMat;
 	    DNekBlkMatSharedPtr                         BlkMat;
-
             DNekScalMatSharedPtr                        bnd_mat;
 
 	    DNekScalMatSharedPtr                        m_TetR;
@@ -105,10 +101,14 @@ namespace Nektar
 
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
-            Array<OneD,DNekScalMatSharedPtr> m_transformationMatrix;
-            Array<OneD,DNekScalMatSharedPtr> m_transposedTransformationMatrix;
-            Array<OneD,DNekScalMatSharedPtr> m_inverseTransformationMatrix;
-            Array<OneD,DNekScalMatSharedPtr> m_inverseTransposedTransformationMatrix;
+            DNekScalMatSharedPtr Rtet;
+            DNekScalMatSharedPtr RTtet;
+            DNekScalMatSharedPtr InvRtet;
+            DNekScalMatSharedPtr InvRTtet;
+            DNekScalMatSharedPtr Rprismmod;
+            DNekScalMatSharedPtr RTprismmod;
+            DNekScalMatSharedPtr InvRprism;
+            DNekScalMatSharedPtr InvRTprism;
 
             Array<OneD, NekDouble>      m_locToGloSignMult;
 
@@ -123,8 +123,6 @@ namespace Nektar
             void ModifyPrismTransformationMatrix(
                 LocalRegions::TetExpSharedPtr TetExp,
                 LocalRegions::PrismExpSharedPtr PrismExp,
-                DNekScalMatSharedPtr Rtet,
-                DNekScalMatSharedPtr RTtet,
                 DNekMatSharedPtr Rmodprism,
                 DNekMatSharedPtr RTmodprism);
 
@@ -137,12 +135,6 @@ namespace Nektar
                       const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
-	    virtual const Array<OneD,const DNekScalMatSharedPtr>& 
-                v_GetTransformationMatrix() const;
-            
-	    virtual const Array<OneD,const DNekScalMatSharedPtr>& 
-                v_GetTransposedTransformationMatrix() const;
-            
             virtual void v_DoTransformToLowEnergy(
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput);

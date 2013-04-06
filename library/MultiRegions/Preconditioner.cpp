@@ -134,39 +134,12 @@ namespace Nektar
 	}
 
         /**
-         * \brief Get the transformation matrix \f$\mathbf{R}\f$
-         */ 
-        const Array<OneD, const DNekScalMatSharedPtr>& Preconditioner::v_GetTransformationMatrix() const
-	{
-            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-            static Array<OneD,DNekScalMatSharedPtr> result;
-            return result;
-	}
-
-        /**
-         * \brief Get the transposed transformation matrix \f$\mathbf{R}^{T}\f$
-         */
-        const Array<OneD, const DNekScalMatSharedPtr>& Preconditioner::v_GetTransposedTransformationMatrix() const
-	{
-            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-            static Array<OneD,DNekScalMatSharedPtr> result;
-            return result;
-	}
-
-        /**
          * \brief Get block elemental transposed transformation matrix
          * \f$\mathbf{R}^{T}\f$
          */
         DNekScalBlkMatSharedPtr Preconditioner::
         v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
 	{
-            //boost::shared_ptr<MultiRegions::ExpList> 
-            //    expList=((m_linsys.lock())->GetLocMat()).lock();
-         
-            //StdRegions::StdExpansionSharedPtr locExpansion;                
-            //locExpansion = expList->GetExp(offset);
-
-            //DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
 	    return loc_mat;
 	}
 

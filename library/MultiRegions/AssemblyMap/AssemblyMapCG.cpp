@@ -346,8 +346,9 @@ namespace Nektar
             if(m_globalToUniversalMap.num_elements())
             {
                 LibUtilities::CommSharedPtr vCommRow = m_session->GetComm()->GetRowComm();
-                returnval->m_globalToUniversalMap = Array<OneD, int> (returnval->m_numGlobalCoeffs);
-                returnval->m_globalToUniversalMapUnique = Array<OneD, int> (returnval->m_numGlobalCoeffs);
+                int nglocoeffs = returnval->m_numGlobalCoeffs;
+                returnval->m_globalToUniversalMap = Array<OneD, int> (nglocoeffs);
+                returnval->m_globalToUniversalMapUnique = Array<OneD, int> (nglocoeffs);
                 // reset localtoglobal and setup universal map
                 for(i = 0; i < nverts; ++i)
                 {
@@ -357,15 +358,15 @@ namespace Nektar
                     returnval->m_globalToUniversalMap[GlobCoeffs[cnt]] = m_globalToUniversalMap[cnt];
                 }
                 
-                Nektar::Array<OneD, long> tmp(nverts);
-                Vmath::Zero(returnval->m_numGlobalCoeffs, tmp, 1);
-                for (unsigned int i = 0; i < returnval->m_numGlobalCoeffs; ++i)
+                Nektar::Array<OneD, long> tmp(nglocoeffs);
+                Vmath::Zero(nglocoeffs, tmp, 1);
+                for (unsigned int i = 0; i < nglocoeffs; ++i)
                 {
                     tmp[i] = returnval->m_globalToUniversalMap[i];
                 }
                 returnval->m_gsh = Gs::Init(tmp, vCommRow);
                 Gs::Unique(tmp, vCommRow);
-                for (unsigned int i = 0; i < returnval->m_numGlobalCoeffs; ++i)
+                for (unsigned int i = 0; i < nglocoeffs; ++i)
                 {
                     returnval->m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
                 }

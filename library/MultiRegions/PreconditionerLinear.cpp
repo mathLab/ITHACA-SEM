@@ -126,8 +126,8 @@ namespace Nektar
                     // Global to local for linear solver (different from above)
                     Array<OneD, int> LocToGlo = m_vertLocToGloMap->GetLocalToGlobalMap();
 
-                    // number of Dir coeffs in full system. 
-                    int nDirFull = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+                    // number of Dir coeffs in linear solver.
+                    int nDirFull = m_vertLocToGloMap->GetNumGlobalDirBndCoeffs();
 
                     Array<OneD,NekDouble> In(nglo,0.0);
                     Array<OneD,NekDouble> Out(nglo,0.0);

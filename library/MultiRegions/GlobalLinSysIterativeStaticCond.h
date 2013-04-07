@@ -37,6 +37,8 @@
 
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalLinSysIterative.h>
+#include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
+
 
 namespace Nektar
 {
@@ -51,14 +53,17 @@ namespace Nektar
 
         enum LocalMatrixStorageStrategy
         {
+            eNoStrategy,
             eContiguous,
             eNonContiguous,
+            eSparse
         };
 
         const char* const LocalMatrixStorageStrategyMap[] =
         {
             "Contiguous",
             "Non-contiguous",
+            "Sparse"
         };
 
 
@@ -66,6 +71,11 @@ namespace Nektar
         class GlobalLinSysIterativeStaticCond : public GlobalLinSysIterative
         {
         public:
+            typedef NekSparseDiagBlkMatrix<StorageSmvBsr<NekDouble> >
+                                            DNekSmvBsrDiagBlkMat;
+            typedef boost::shared_ptr<DNekSmvBsrDiagBlkMat>
+                                            DNekSmvBsrDiagBlkMatSharedPtr;
+
             /// Creates an instance of this class
             static GlobalLinSysSharedPtr create(
                 const GlobalLinSysKey                &pLinSysKey,
@@ -110,14 +120,6 @@ namespace Nektar
             GlobalLinSysIterativeStaticCondSharedPtr m_recursiveSchurCompl;
             /// Block Schur complement matrix.
             DNekScalBlkMatSharedPtr                  m_schurCompl;
-            /// Dense storage for block Schur complement matrix.
-            std::vector<double>                      m_storage;
-            /// Vector of pointers to local matrix data
-            std::vector<const double*>               m_denseBlocks;
-            /// Ranks of local matrices
-            Array<OneD, unsigned int>                m_rows;
-            /// Scaling factors for local matrices
-            Array<OneD, NekDouble>                   m_scale;
             /// Block \f$ BD^{-1} \f$ matrix.
             DNekScalBlkMatSharedPtr                  m_BinvD;
             /// Block \f$ C \f$ matrix.
@@ -128,8 +130,20 @@ namespace Nektar
             DNekScalBlkMatSharedPtr                  m_RBlk;
             DNekScalBlkMatSharedPtr                  m_RTBlk;
             DNekScalBlkMatSharedPtr                  m_S1Blk;
-            /// Globally assembled Schur complement matrix at this level
-            GlobalMatrixSharedPtr                    m_globalSchurCompl;
+
+            /// Dense storage for block Schur complement matrix
+            std::vector<double>                      m_storage;
+            /// Vector of pointers to local matrix data
+            std::vector<const double*>               m_denseBlocks;
+            /// Ranks of local matrices
+            Array<OneD, unsigned int>                m_rows;
+            /// Scaling factors for local matrices
+            Array<OneD, NekDouble>                   m_scale;
+
+
+            /// Sparse representation of Schur complement matrix at this level
+            DNekSmvBsrDiagBlkMatSharedPtr            m_sparseSchurCompl;
+
             /// Local to global map.
             boost::shared_ptr<AssemblyMap>           m_locToGloMap;
             /// Workspace array for matrix multiplication
@@ -168,6 +182,10 @@ namespace Nektar
             /// Assemble the Schur complement matrix.
             void AssembleSchurComplement(
                     const boost::shared_ptr<AssemblyMap>& locToGloMap);
+
+            /// Prepares local representation of Schur complement
+            /// stored as a sparse block-diagonal matrix.
+            void PrepareLocalSchurComplement();
 
             ///
             void ConstructNextLevelCondensedSystem(

@@ -1,14 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File NektarUnivConsts.hpp
+// File: SparseUtils.hpp
 //
 // For more information, please see: http://www.nektar.info
 //
 // The MIT License
 //
-// Copyright (c) 2006 Scientific Computing and Imaging Institute,
-// University of Utah (USA) and Department of Aeronautics, Imperial
-// College London (UK).
+// Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
+// Department of Aeronautics, Imperial College London (UK), and Scientific
+// Computing and Imaging Institute, University of Utah (USA).
 //
 // License for the specific language governing rights and limitations under
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,29 +29,30 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Universal constants in the Nektar Library
+// Description: common utility functions for sparse matrices
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef  NEKTARUNIVCONSTS_HPP
-#define  NEKTARUNIVCONSTS_HPP
+#ifndef NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_SPARSE_UTILS_HPP
+#define NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_SPARSE_UTILS_HPP
 
-#include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+#include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 
-namespace Nektar
-{
-    namespace NekConstants
-    {
-        static const NekDouble kNekUnsetDouble = -9999;
-        static const NekDouble kVertexTheSameDouble  = 1.0e-8;
-        static const NekDouble kGeomFactorsTol = 1.0e-8;
-        static const NekDouble kNekZeroTol = 1.0e-12;
-        static const NekDouble kGeomRightAngleTol = 1e-14;
-        static const NekDouble kNekSqrtTol = 1.0e-16;
-        static const NekDouble kNekIterativeTol = 1e-09;
-        static const NekDouble kNekSparseNonZeroTol = 1e-16;
-    }
-} //end of namespace
+namespace Nektar{
 
-#endif
+    LIB_UTILITIES_EXPORT void convertCooToBco(
+                    const unsigned int  blkRows,
+                    const unsigned int  blkColumns,
+                    const unsigned int  blkDim,
+                    const COOMatType&   cooMat,
+                          BCOMatType&   bcoMat);
 
+    template<class SparseStorageType>
+    std::ostream& operator<<(std::ostream& os, const NekSparseMatrix<SparseStorageType>& rhs);
+
+    template<class SparseStorageType>
+    std::ostream& operator<<(std::ostream& os, const NekSparseDiagBlkMatrix<SparseStorageType>& rhs);
+
+} // namespace
+
+#endif //NEKTAR_LIB_UTILITIES_LINEAR_ALGEBRA_SPARSE_UTILS_HPP

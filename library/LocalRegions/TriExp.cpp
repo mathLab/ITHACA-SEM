@@ -1644,6 +1644,12 @@ namespace Nektar
             return m_staticCondMatrixManager[mkey];
         }
 
+        void TriExp::v_DropLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            m_staticCondMatrixManager.DeleteObject(mkey);
+        }
+
+
 
         void TriExp::v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,NekDouble> &outarray,

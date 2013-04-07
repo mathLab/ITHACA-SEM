@@ -52,9 +52,9 @@ namespace Nektar
                 const boost::shared_ptr<AssemblyMap>
                 &pLocToGloMap)
                 : GlobalLinSys(pKey, pExpList, pLocToGloMap),
+                  m_rhs_magnitude(NekConstants::kNekUnsetDouble),
                   m_totalIterations(0),
                   m_useProjection(false),
-                  m_rhs_magnitude(NekConstants::kNekUnsetDouble),
                   m_numPrevSols(0)
         {
             LibUtilities::SessionReaderSharedPtr vSession

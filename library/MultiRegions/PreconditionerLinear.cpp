@@ -126,12 +126,13 @@ namespace Nektar
                     // Global to local for linear solver (different from above)
                     Array<OneD, int> LocToGlo = m_vertLocToGloMap->GetLocalToGlobalMap();
 
-                    // number of Dir coeffs in linear solver.
-                    int nDirFull = m_vertLocToGloMap->GetNumGlobalDirBndCoeffs();
+                    // number of Dir coeffs in from full problem
+                    int nDirFull = m_locToGloMap->GetNumGlobalDirBndCoeffs();
 
                     Array<OneD,NekDouble> In(nglo,0.0);
                     Array<OneD,NekDouble> Out(nglo,0.0);
                     
+
                     // Gather rhs
                     for(i = 0; i < nloc; ++i)
                     {
@@ -145,7 +146,6 @@ namespace Nektar
                     // Do solve without enforcing any boundary conditions. 
                     m_vertLinsys->SolveLinearSystem(m_vertLocToGloMap->GetNumLocalCoeffs(),
                                                 In,Out,m_vertLocToGloMap);
-
                     
                     if(pNonVertOutput != NullNekDouble1DArray)
                     {

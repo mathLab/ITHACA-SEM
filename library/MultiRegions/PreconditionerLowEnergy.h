@@ -132,15 +132,19 @@ namespace Nektar
             virtual void v_InitObject();
 
             virtual void v_DoPreconditioner(                
-                      const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput);
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
 
             virtual void v_DoTransformToLowEnergy(
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput);
 
             virtual void v_DoTransformFromLowEnergy(
-                Array<OneD, NekDouble>& pInput);
+                Array<OneD, NekDouble>& pInOut);
 
             virtual void v_DoMultiplybyInverseTransformationMatrix(
                 const Array<OneD, NekDouble>& pInput,

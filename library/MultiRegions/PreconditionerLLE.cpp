@@ -80,10 +80,10 @@ namespace Nektar
          *
          */
         void PreconditionerLLE::v_DoTransformToLowEnergy(
-            const Array<OneD, NekDouble>& pInput,
-            Array<OneD, NekDouble>& pOutput)
+            Array<OneD, NekDouble>& pInOut,
+            int offset)
         {
-            m_lowEnergyPrecon->DoTransformToLowEnergy(pInput,pOutput);
+            m_lowEnergyPrecon->DoTransformToLowEnergy(pInOut,offset);
         }
 
         /**
@@ -118,11 +118,17 @@ namespace Nektar
          *
          */
         void PreconditionerLLE::v_DoPreconditioner(
-                const Array<OneD, NekDouble>& pInput,
-                      Array<OneD, NekDouble>& pOutput)
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
         {
-            m_linSpacePrecon->DoPreconditioner(pInput, pOutput);
-            //m_lowEnergyPrecon->DoPreconditioner(pOutput, pOutput);
+            Array<OneD, NekDouble> OutputLowEnergy(pOutput.num_elements());
+            Array<OneD, NekDouble> OutputLinear(pOutput.num_elements());
+            Array<OneD, NekDouble> OutputInverseMultiply(pOutput.num_elements());
+
+            m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
+            m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(OutputLowEnergy, OutputInverseMultiply);
+            //m_linSpacePrecon->DoPreconditionerWithNonVertOutput(pInput, OutputLinear,OutputInverseMultiply);
+            m_lowEnergyPrecon->DoTransformToLowEnergy(OutputInverseMultiply,pOutput);
         }
 
     }

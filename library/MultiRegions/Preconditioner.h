@@ -82,11 +82,15 @@ namespace Nektar
                          const Array<OneD, NekDouble>& pNonVertOutput);
 
 	    inline void DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
+
+            inline void DoTransformToLowEnergy(
                 const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput);
+                Array<OneD, NekDouble>& pOutput);
 
 	    inline void DoTransformFromLowEnergy(
-                Array<OneD, NekDouble>& pInput);
+                Array<OneD, NekDouble>& pInOut);
 
             inline void DoMultiplybyInverseTransformationMatrix(
                 const Array<OneD, NekDouble>& pInput,
@@ -149,13 +153,17 @@ namespace Nektar
 		      Array<OneD, NekDouble>& pOutput);
 
             virtual void v_DoPreconditionerWithNonVertOutput(
-                         const Array<OneD, NekDouble>& pInput,
-                         Array<OneD, NekDouble>& pOutput,
-                         const Array<OneD, NekDouble>& pNonVertOutput);
-
-	    virtual void v_DoTransformToLowEnergy(
                 const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput);
+                Array<OneD, NekDouble>& pOutput,
+                const Array<OneD, NekDouble>& pNonVertOutput);
+            
+	    virtual void v_DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
+
+            virtual void v_DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
 	    virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInput);
@@ -207,11 +215,21 @@ namespace Nektar
          *
          */
         inline void Preconditioner::DoPreconditionerWithNonVertOutput(
-                         const Array<OneD, NekDouble>& pInput,
-                         Array<OneD, NekDouble>& pOutput,
-                         const Array<OneD, NekDouble>& pNonVertOutput)
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput,
+            const Array<OneD, NekDouble>& pNonVertOutput)
         {
             v_DoPreconditionerWithNonVertOutput(pInput,pOutput,pNonVertOutput);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoTransformToLowEnergy(
+            Array<OneD, NekDouble>& pInOut,
+            int offset)
+        {
+	    v_DoTransformToLowEnergy(pInOut,offset);
         }
 
         /**

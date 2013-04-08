@@ -250,7 +250,7 @@ namespace Nektar
                 
                 //transform from original basis to low energy
                 Array<OneD, NekDouble> tmp;
-                m_precon->DoTransformToLowEnergy(F,tmp=F+nDirBndDofs);
+                m_precon->DoTransformToLowEnergy(F,nDirBndDofs);
 
                 // For parallel multi-level static condensation some
                 // processors may have different levels to others. This

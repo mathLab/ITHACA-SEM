@@ -274,8 +274,7 @@ namespace Nektar
          * Sets up reference elements which are used to preconditioning the
          * corresponding matrices. Currently we support tetrahedral, prismatic
          * and hexahedral elements
-	 */         
-
+	 */
         void PreconditionerLowEnergy::SetUpReferenceElements()
         {
             int cnt,i,j;
@@ -292,13 +291,14 @@ namespace Nektar
             DNekScalMatSharedPtr Rprism;
             DNekScalMatSharedPtr RTprism;
             DNekMatSharedPtr InvRtmp, InvRTtmp;
+
             /*
              * Set up a Tetrahral & prismatic element which comprises
              * equilateral triangles as all faces for the tet and the end faces
              * for the prism. Using these elements a new expansion is created
              * (which is the same as the expansion specified in the input
-             * file).*/
-
+             * file).
+             */
             SpatialDomains::TetGeomSharedPtr tetgeom=CreateRefTetGeom();
             SpatialDomains::PrismGeomSharedPtr prismgeom=CreateRefPrismGeom();
 
@@ -356,14 +356,15 @@ namespace Nektar
                 }
             }
 
-            //Matrix keys for tetrahedral element transformation matrices
+            //Matrix keys for tetrahedral element transformation matrix
             LocalRegions::MatrixKey TetR
                 (StdRegions::ePreconR,
                  LibUtilities::eTetrahedron,
                  *TetExp,
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
-                
+
+            //Matrix keys for tetrahedral transposed transformation matrix
             LocalRegions::MatrixKey TetRT
                 (StdRegions::ePreconRT,
                  LibUtilities::eTetrahedron,
@@ -371,14 +372,16 @@ namespace Nektar
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
-            //Get a LocalRegions static condensed matrix
+            //Get tetrahedral transformation matrix
             Rtet = TetExp->GetLocMatrix(TetR);
+
+            //Get tetrahedral transposed transformation matrix
             RTtet = TetExp->GetLocMatrix(TetRT);
 
-            //inverse transformation matrix
+            //Inverse transformation matrix
             InvRtmp=TetExp->BuildInverseTransformationMatrix(Rtet);
 
-            //inverse transposed transformation matrix
+            //Inverse transposed transformation matrix
             InvRTtmp=TetExp->BuildInverseTransformationMatrix(Rtet);
             InvRTtmp->Transpose();
             InvRtet = MemoryManager<DNekScalMat>
@@ -387,14 +390,15 @@ namespace Nektar
             InvRTtet = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRTtmp);
 
-            //Matrix keys for Prism element transformation matrices
+            //Matrix keys for Prism element transformation matrix
             LocalRegions::MatrixKey PrismR
                 (StdRegions::ePreconR,
                  LibUtilities::ePrism,
                  *PrismExp,
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
-            
+
+            //Matrix keys for Prism element transposed transformation matrix
             LocalRegions::MatrixKey PrismRT
                 (StdRegions::ePreconRT,
                  LibUtilities::ePrism,
@@ -402,8 +406,10 @@ namespace Nektar
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
-            //Get a LocalRegions static condensed matrix
+            //Get prism transformation matrix
             Rprism = PrismExp->GetLocMatrix(PrismR);
+
+            //Get prism transposed transformation matrix
             RTprism = PrismExp->GetLocMatrix(PrismRT);
 
             unsigned int  nRows=Rprism->GetRows();
@@ -414,7 +420,7 @@ namespace Nektar
                 AllocateSharedPtr(nRows,nRows,zero,eFULL);
             NekDouble Rvalue, RTvalue;
 
-            //Modified Prism - copy values from R
+            //Modified Prism - copy values from the primsm transformation matrix
             for(i=0; i<nRows; ++i)
             {
                 for(j=0; j<nRows; ++j)
@@ -426,6 +432,9 @@ namespace Nektar
                 }
             }
 
+            //Replace triangular faces and edges of the prims transformation
+            //matrix with the corresponding values of the tetrahedral
+            //transformation matrix.
             ModifyPrismTransformationMatrix(TetExp,PrismExp,Rtmpprism,RTtmpprism);
 
             Rprismmod = MemoryManager<DNekScalMat>
@@ -434,10 +443,10 @@ namespace Nektar
             RTprismmod = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RTtmpprism);
 
-            //inverse transformation matrix
+            //Inverse transformation matrix
             InvRtmp=PrismExp->BuildInverseTransformationMatrix(Rprismmod);
 
-            //inverse transposed transformation matrix
+            //Inverse transposed transformation matrix
             InvRTtmp=PrismExp->BuildInverseTransformationMatrix(Rprismmod);
             InvRTtmp->Transpose();
 
@@ -450,9 +459,13 @@ namespace Nektar
         }
 
        /**
-         * This routine replaces the vertex-edge, vertex-face and edge-face
-         * modes of the prism with the corresponding ones from the tetrahedron.
-         *
+         * This routine replaces the edge and triangular face components of the
+         * prismatic vertex transformation matrices (\f$\mathbf{R}_{ve} &
+         * \mathbf{R}_{vf}\f) with the corresponding components from the
+         * tetrahedral transformation matrices. Additionally, triangular face
+         * components in the prismatic edge transformation matrix
+         * (\f$\mathbf{R}_{ef}\f) with the corresponding component from the
+         * tetrahedral transformation matrix.
          */
         void PreconditionerLowEnergy::ModifyPrismTransformationMatrix(
             LocalRegions::TetExpSharedPtr TetExp,
@@ -735,7 +748,7 @@ namespace Nektar
                expList=((m_linsys.lock())->GetLocMat()).lock();
            StdRegions::StdExpansionSharedPtr locExpansion;
 
-           int cnt, n, nel;
+           int n, nel;
  
            const Array<OneD,const unsigned int>& nbdry_size
                = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
@@ -776,7 +789,7 @@ namespace Nektar
            m_InvRTBlk      = MemoryManager<DNekScalBlkMat>
                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
 
-           for(cnt=n=0; n < n_exp; ++n)
+           for(n=0; n < n_exp; ++n)
            {
                nel = expList->GetOffset_Elmt_Id(n);
                
@@ -1035,14 +1048,12 @@ namespace Nektar
             Array<OneD, NekDouble> m_EdgeBlockArray(nlocalNonDirEdges,-1);
             Array<OneD, NekDouble> m_FaceBlockArray(nlocalNonDirFaces,-1);
 
-            int ecnt;
-            int fcnt;
             int edgematrixoffset=0;
             int facematrixoffset=0;
             int vGlobal;
             int nbndCoeffs=0;
 
-            for(ecnt=fcnt=n=0; n < n_exp; ++n)
+            for(n=0; n < n_exp; ++n)
             {
                 nel = expList->GetOffset_Elmt_Id(n);
 
@@ -1414,6 +1425,47 @@ namespace Nektar
          * energy basis i.e. \f$\overline{\mathbf{x}}=\mathbf{R}\mathbf{x}\f$.
          */
         void PreconditionerLowEnergy::v_DoTransformToLowEnergy(
+            Array<OneD, NekDouble>& pInOut,
+            int offset)
+        {
+            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
+            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+
+            //Non-dirichlet boundary dofs
+            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,pInOut+offset,
+                                          eWrapper);
+
+            //Block transformation matrix
+            DNekScalBlkMat &R = *m_RBlk;
+
+            Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
+            NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
+            Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+
+            //Not actually needed but we should only work with the Global boundary dofs
+            Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
+            Vmath::Vcopy(nGlobBndDofs, pInOut.get(), 1, tmp.get(), 1);
+
+            //Global boundary (with dirichlet values) to local boundary with multiplicity
+            Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), tmp.get(), m_map.get(), pLocal.get());
+
+            //Multiply by the block transformation matrix
+            F_LocBnd=R*F_LocBnd;
+
+            //Assemble local boundary to global non-dirichlet Dofs
+            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
+        }
+
+        /**
+         * \brief transform the solution vector vector to low energy
+         *
+         * As the conjugate gradient system is solved for the low energy basis,
+         * the solution vector \f$\mathbf{x}\f$ must be transformed to the low
+         * energy basis i.e. \f$\overline{\mathbf{x}}=\mathbf{R}\mathbf{x}\f$.
+         */
+        void PreconditionerLowEnergy::v_DoTransformToLowEnergy(
             const Array<OneD, NekDouble>& pInput,
             Array<OneD, NekDouble>& pOutput)
         {
@@ -1422,7 +1474,13 @@ namespace Nektar
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
             int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
 
-            NekVector<NekDouble> F_GlobBnd(nGlobBndDofs,pInput,eWrapper);
+            //Input/output vectors should be length nGlobHomBndDofs
+            ASSERTL1(pInput.num_elements() >= nGlobHomBndDofs,
+                     "Input array is greater than the nGlobHomBndDofs");
+            ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs,
+                     "Output array is greater than the nGlobHomBndDofs");
+
+            NekVector<NekDouble> F_GlobBnd(nGlobHomBndDofs,pInput,eWrapper);
             NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,pOutput,
                                           eWrapper);
             
@@ -1431,10 +1489,14 @@ namespace Nektar
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
             Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
-            
-            Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), pInput.get(), m_map.get(), pLocal.get());
+
+            // offset input data by Dirichlet boundary conditions.
+            Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
+            Vmath::Vcopy(nGlobHomBndDofs, pInput.get(), 1, tmp.get() + nDirBndDofs, 1);
+
+            Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), tmp.get(), m_map.get(), pLocal.get());
             F_LocBnd=R*F_LocBnd;
-            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
+            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
         }
 
         /**
@@ -1447,50 +1509,60 @@ namespace Nektar
          * i.e. \f$\mathbf{x}=\mathbf{R^{T}}\mathbf{\overline{x}}\f$.
          */
         void PreconditionerLowEnergy::v_DoTransformFromLowEnergy(
-            Array<OneD, NekDouble>& pInput)
+            Array<OneD, NekDouble>& pInOut)
         {
             int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
             int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
 
+            ASSERTL1(pInOut.num_elements() >= nGlobBndDofs,
+                     "Output array is greater than the nGlobBndDofs");
+
+            //Block transposed transformation matrix
             DNekScalBlkMat &RT = *m_RTBlk;
-            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,pInput+nDirBndDofs,
-              eWrapper);
+
+            NekVector<NekDouble> V_GlobHomBnd(nGlobHomBndDofs,pInOut+nDirBndDofs,
+                                              eWrapper);
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> V_LocBnd(nLocBndDofs,pLocal,eWrapper);
-
             Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
-
             Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
 
-            //only want to map non-dirichlet dofs
+            //Global boundary (less dirichlet) to local boundary
             m_locToGloMap->GlobalToLocalBnd(V_GlobHomBnd,V_LocBnd, nDirBndDofs);
 
+            //Multiply by the block transposed transformation matrix
             V_LocBnd=RT*V_LocBnd;
 
+            //Assemble local boundary to global boundary
             Vmath::Assmb(nLocBndDofs, m_locToGloSignMult.get(),pLocal.get(), m_map.get(), tmp.get());
 
+            //Universal assemble across processors
             m_locToGloMap->UniversalAssembleBnd(tmp);
 
-            Vmath::Vcopy(nGlobBndDofs-nDirBndDofs, tmp.get() + nDirBndDofs, 1, pInput.get() + nDirBndDofs, 1);
+            //copy non-dirichlet boundary values
+            Vmath::Vcopy(nGlobBndDofs-nDirBndDofs, tmp.get() + nDirBndDofs, 1, pInOut.get() + nDirBndDofs, 1);
         }
 
         /**
          * \brief Multiply by the block inverse transformation matrix
          */ 
         void PreconditionerLowEnergy::v_DoMultiplybyInverseTransformationMatrix(
-                const Array<OneD, NekDouble>& pInput,
-                      Array<OneD, NekDouble>& pOutput)
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
         {
             int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
             int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
             int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
 
-            ASSERTL1(pInput.num_elements() >= nGlobHomBndDofs,"Input array is not of correct dimension");
-            ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs,"Output array is not of correct dimension");
+            ASSERTL1(pInput.num_elements() >= nGlobHomBndDofs,
+                     "Input array is greater than the nGlobHomBndDofs");
+            ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs,
+                     "Output array is greater than the nGlobHomBndDofs");
+
             NekVector<NekDouble> F_GlobBnd(nGlobHomBndDofs,pInput,eWrapper);
             NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,pOutput,
                                           eWrapper);
@@ -1500,10 +1572,14 @@ namespace Nektar
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
             Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
-            
-            Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), pInput.get(), m_map.get(), pLocal.get());
+
+            // offset input data by Dirichlet boundary conditions.
+            Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
+            Vmath::Vcopy(nGlobHomBndDofs, pInput.get(), 1, tmp.get() + nDirBndDofs, 1);
+
+            Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), tmp.get(), m_map.get(), pLocal.get());
             F_LocBnd=invR*F_LocBnd;
-            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd, nDirBndDofs);
+            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
 
 	}
 

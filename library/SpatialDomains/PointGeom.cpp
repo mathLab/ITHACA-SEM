@@ -100,6 +100,12 @@ namespace Nektar
             return returnval;
         }
 
+        void PointGeom::v_GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        {
+
+        }
+
         VertexComponentSharedPtr PointGeom::v_GetVertex(const int i) const
         {
             VertexComponentSharedPtr returnval;

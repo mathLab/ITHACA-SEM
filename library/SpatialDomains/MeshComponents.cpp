@@ -210,6 +210,14 @@ namespace Nektar
         {
             return (x.m_id != y.m_id);
         }
+
+
+        void VertexComponent::v_GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        {
+
+        }
+
     }; //end of namespace
 }; //end of namespace
 

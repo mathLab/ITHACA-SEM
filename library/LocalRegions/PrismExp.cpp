@@ -53,10 +53,8 @@ namespace Nektar
                                Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), 
                            Ba, Bb, Bc),
             StdPrismExp   (Ba, Bb, Bc),
-            Expansion     (),
-            Expansion3D   (),
-            m_geom        (geom),
-            m_metricinfo  (m_geom->GetGeomFactors(m_base)),
+            Expansion     (geom),
+            Expansion3D   (geom),
             m_matrixManager(
                     boost::bind(&PrismExp::CreateMatrix, this, _1),
                     std::string("PrismExpMatrix")),
@@ -72,8 +70,6 @@ namespace Nektar
             StdRegions::StdPrismExp(T),
             Expansion(T),
             Expansion3D(T),
-            m_geom(T.m_geom),
-            m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
             m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
@@ -578,21 +574,6 @@ namespace Nektar
         // Helper functions
         //---------------------------------------
 
-        const SpatialDomains::GeomFactorsSharedPtr& PrismExp::v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-        const SpatialDomains::GeometrySharedPtr PrismExp::v_GetGeom() const
-        {
-            return m_geom;
-        }
-
-        const SpatialDomains::Geometry3DSharedPtr& PrismExp::v_GetGeom3D() const
-        {
-            return m_geom;
-        }
-        
         int PrismExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
@@ -600,7 +581,7 @@ namespace Nektar
 
         StdRegions::Orientation PrismExp::v_GetFaceOrient(int face)
         {
-            return m_geom->GetFaceOrient(face);
+            return GetGeom3D()->GetFaceOrient(face);
         }
 
         ///Returns the physical values at the quadrature points of a face

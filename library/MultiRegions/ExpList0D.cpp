@@ -101,6 +101,7 @@ namespace Nektar
 
             SpatialDomains::VertexComponentSharedPtr PointGeom;
             LocalRegions::PointExpSharedPtr Point;
+			LocalRegions::Expansion1DSharedPtr exp;
 			
             // First loop over boundary conditions to renumber Dirichlet boundaries
             for(i = 0; i < bndCond.num_elements(); ++i)
@@ -125,14 +126,14 @@ namespace Nektar
             {
                 for(j = 0; j < 2; ++j)
                 {
-                    PointGeom = (locexp[i]->GetGeom1D())->GetVertex(j);
+                    exp = LocalRegions::Expansion1D::FromStdExp(locexp[i]);
+                    PointGeom = (exp->GetGeom1D())->GetVertex(j);
 					id = PointGeom->GetVid();
 					
                     if(EdgeDone.count(id)==0)
                     {						
                         Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(PointGeom);
                         EdgeDone[id] = elmtid;
-						
                         //if (periodicVertices.count(id) > 0)
                         //{
 						//   EdgeDone[periodicVertices.find(id)->second] = elmtid;

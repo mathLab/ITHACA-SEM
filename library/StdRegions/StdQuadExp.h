@@ -255,9 +255,8 @@ namespace Nektar
                     const NekDouble> &inarray,
                     Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
-
-            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
-                    const Array<OneD, const NekDouble>& inarray,
+            STD_REGIONS_EXPORT void v_MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
         };
         typedef boost::shared_ptr<StdQuadExp> StdQuadExpSharedPtr;

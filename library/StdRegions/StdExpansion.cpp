@@ -96,7 +96,8 @@ namespace Nektar
                 m_base[0] = LibUtilities::BasisManager()[Ba];
                 break;
             default:
-                ASSERTL0(false, "numbases incorrectly specified");
+                break;
+//                ASSERTL0(false, "numbases incorrectly specified");
             };
 
             //allocate memory for phys
@@ -1523,6 +1524,20 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
 
+            void StdExpansion::v_MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray)
+            {
+                v_MultiplyByStdQuadratureMetric(inarray, outarray);
+            }
+
+            void StdExpansion::v_MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal, "Method does not exist for this shape or library");
+            }
+
             void StdExpansion::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
             {
                 NEKERROR(ErrorUtil::efatal, "WriteToFile: Write method");
@@ -1538,34 +1553,6 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
                 return SpatialDomains::NullGeomFactorsSharedPtr;
 
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry> StdExpansion::v_GetGeom() const
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-
-                return SpatialDomains::NullGeometrySharedPtr;
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry1D>& StdExpansion::v_GetGeom1D() const
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-
-                return SpatialDomains::NullGeometry1DSharedPtr;
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry2D>& StdExpansion::v_GetGeom2D() const
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-
-                return SpatialDomains::NullGeometry2DSharedPtr;
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry3D>& StdExpansion::v_GetGeom3D() const
-            {
-                NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
-
-                return SpatialDomains::NullGeometry3DSharedPtr;
             }
 
             void StdExpansion::v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,

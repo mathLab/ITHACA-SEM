@@ -49,10 +49,8 @@ namespace Nektar
             StdExpansion  (StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
             StdExpansion2D(StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
             StdTriExp(Ba,Bb),
-            Expansion     (),
-            Expansion2D   (),
-            m_geom(geom),
-            m_metricinfo(m_geom->GetGeomFactors(m_base)),
+            Expansion     (geom),
+            Expansion2D   (geom),
             m_matrixManager(
                     boost::bind(&TriExp::CreateMatrix, this, _1),
                     std::string("TriExpMatrix")),
@@ -69,8 +67,6 @@ namespace Nektar
             StdTriExp(T),
             Expansion(T),
             Expansion2D(T),
-            m_geom(T.m_geom),
-            m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
             m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
@@ -946,7 +942,7 @@ namespace Nektar
                 Array<OneD, NekDouble> coordVert(vCoordDim);
                 for (unsigned int i = 0; i < nVertices; ++i)
                 {
-                    m_geom->GetVertex(i)->GetCoords(coordVert);
+                    GetGeom2D()->GetVertex(i)->GetCoords(coordVert);
                     for (unsigned int j = 0; j < vCoordDim; ++j)
                     {
                         outfile << coordVert[j];
@@ -1109,24 +1105,6 @@ namespace Nektar
         }
 
 
-        const SpatialDomains::GeomFactorsSharedPtr& TriExp::v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-
-        const SpatialDomains::GeometrySharedPtr TriExp::v_GetGeom() const
-        {
-            return m_geom;
-        }
-
-
-        const SpatialDomains::Geometry2DSharedPtr& TriExp::v_GetGeom2D() const
-        {
-            return m_geom;
-        }
-
-
         int TriExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
@@ -1170,13 +1148,13 @@ namespace Nektar
 
         StdRegions::Orientation TriExp::v_GetEorient(int edge)
         {
-            return m_geom->GetEorient(edge);
+            return GetGeom2D()->GetEorient(edge);
         }
 
 
         StdRegions::Orientation TriExp::v_GetCartesianEorient(int edge)
         {
-            return m_geom->GetCartesianEorient(edge);
+            return GetGeom2D()->GetCartesianEorient(edge);
         }
 
 

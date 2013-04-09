@@ -59,8 +59,8 @@ namespace Nektar
             StdExpansion(Ba.GetNumModes(), 1, Ba),
             StdExpansion1D(Ba.GetNumModes(), Ba),
             StdRegions::StdSegExp(Ba),
-            m_geom(geom),
-            m_metricinfo(m_geom->GetGeomFactors(m_base)),
+            Expansion(geom),
+            Expansion1D(geom),
             m_matrixManager(
                     boost::bind(&SegExp::CreateMatrix, this, _1),
                     std::string("SegExpMatrix")),
@@ -76,9 +76,11 @@ namespace Nektar
          * @param   S           Existing segment to duplicate.
          */
         SegExp::SegExp(const SegExp &S):
+            StdExpansion(S),
+            StdExpansion1D(S),
             StdRegions::StdSegExp(S),
-            m_geom(S.m_geom),
-            m_metricinfo(S.m_metricinfo),
+            Expansion(S),
+            Expansion1D(S),
             m_matrixManager(S.m_matrixManager),
             m_staticCondMatrixManager(S.m_staticCondMatrixManager)
         {
@@ -848,14 +850,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             return m_geom->GetCoordim();
         }
 
-        /// Returns a pointer to the GeomFactors object describing the
-        /// metric information for the segment.
-        const SpatialDomains::GeomFactorsSharedPtr& SegExp::v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-
         const Array<OneD, const NekDouble>& SegExp::v_GetPhysNormals(void)
         {
             NEKERROR(ErrorUtil::efatal, "Got to SegExp");
@@ -865,22 +859,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         SpatialDomains::GeomType SegExp::v_MetricInfoType()
         {
             return m_metricinfo->GetGtype();
-        }
-
-
-
-        /// Returns a pointer to a Geometry object describing the
-        /// geometry of the segment.
-        const SpatialDomains::GeometrySharedPtr SegExp::v_GetGeom() const
-        {
-            return m_geom;
-        }
-
-        /// Returns a pointer to a Geometry1D object describing the
-        /// geometry of the segment.
-        const SpatialDomains::Geometry1DSharedPtr& SegExp::v_GetGeom1D() const
-        {
-            return m_geom;
         }
 
         /** \brief Virtual function to evaluate the discrete \f$ L_\infty\f$
@@ -997,7 +975,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
 
         void SegExp::v_SetUpPhysTangents(
-                const StdRegions::StdExpansionSharedPtr &exp2D,
+                const ExpansionSharedPtr &exp2D,
                 const int edge)
         {
              GetMetricInfo()->ComputeEdgeTangents(exp2D->GetGeom(),

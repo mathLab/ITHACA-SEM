@@ -35,6 +35,10 @@
 
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <MultiRegions/ExpList.h>
+#include <LocalRegions/Expansion.h>
+#include <LocalRegions/Expansion2D.h>
+#include <LocalRegions/Expansion3D.h>
+
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -100,7 +104,7 @@ namespace Nektar
         void AssemblyMapCG::SetUpUniversalC0ContMap(
                 const ExpList &locExp)
         {
-            StdRegions::StdExpansionSharedPtr locExpansion;
+            LocalRegions::ExpansionSharedPtr locExpansion;
             int nDim = 0;
             int nVert = 0;
             int nEdge = 0;
@@ -136,7 +140,7 @@ namespace Nektar
             // Loop over all the elements in the domain to gather mesh data
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion>(locExpVector[i]);
+                locExpansion = LocalRegions::Expansion::FromStdExp(locExpVector[i]);
                 nVert += locExpansion->GetNverts();
                 nEdge += locExpansion->GetNedges();
                 nFace += locExpansion->GetNfaces();
@@ -167,7 +171,7 @@ namespace Nektar
             // Assemble global to universal mapping for this process
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion>(locExpVector[i]);
+                locExpansion = LocalRegions::Expansion::FromStdExp(locExpVector[i]);
                 nDim = locExpansion->GetShapeDimension();
                 cnt = locExp.GetCoeff_Offset(i);
 
@@ -189,11 +193,11 @@ namespace Nektar
                     dof = locExpansion->GetEdgeNcoeffs(j)-2;
                     if (nDim == 2)
                     {
-                        meshEdgeId   = (locExpansion->GetGeom2D())->GetEid(j);
+                        meshEdgeId   = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetEid(j);
                     }
                     else
                     {
-                        meshEdgeId   = (locExpansion->GetGeom3D())->GetEid(j);
+                        meshEdgeId   = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
                     }
 
                     // Set the global DOF's for the interior modes of edge j
@@ -210,11 +214,11 @@ namespace Nektar
                 // Loop over all faces of element i
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    faceOrient          = (locExpansion->GetGeom3D())->GetFaceOrient(j);
+                    faceOrient          = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFaceOrient(j);
 
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
                     dof = locExpansion->GetFaceIntNcoeffs(j);
-                    meshFaceId = (locExpansion->GetGeom3D())->GetFid(j);
+                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
 
                     for(k = 0; k < dof; ++k)
                     {

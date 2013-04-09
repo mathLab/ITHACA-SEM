@@ -36,15 +36,23 @@
 #include <LocalRegions/Expansion.h>
 #include <LocalRegions/MatrixKey.h>
 
-
+#include <SpatialDomains/MeshComponents.h>
 namespace Nektar
 {
     namespace LocalRegions 
     {
-        Expansion::Expansion(void)
+        Expansion::Expansion(SpatialDomains::GeometrySharedPtr pGeom) :
+                    m_geom(pGeom),
+                    m_metricinfo(m_geom->GetGeomFactors(m_base))
         {
         }
         
+        Expansion::Expansion(const Expansion &pSrc) :
+                m_geom(pSrc.m_geom),
+                m_metricinfo(pSrc.m_metricinfo)
+        {
+
+        }
 
         Expansion::~Expansion()
         {
@@ -63,12 +71,85 @@ namespace Nektar
             return GetLocMatrix(mkey);
         }
 
+        SpatialDomains::GeometrySharedPtr Expansion::GetGeom() const
+        {
+            return m_geom;
+        }
+
+        const SpatialDomains::GeomFactorsSharedPtr& Expansion::v_GetMetricInfo() const
+        {
+            return m_metricinfo;
+        }
+
+
         DNekScalMatSharedPtr Expansion::v_GetLocMatrix(const LocalRegions::MatrixKey &mkey)
         {
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekScalMatSharedPtr;
         }
 
+        void Expansion::v_MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+                                                 Array<OneD, NekDouble> &outarray)
+        {
+            const int nqtot = GetTotPoints();
+
+            if (m_metrics.count(MetricQuadrature) == 0)
+            {
+                ComputeQuadratureMetric();
+            }
+
+            Vmath::Vmul(nqtot, m_metrics[MetricQuadrature], 1, inarray, 1, outarray, 1);
+        }
+
+        void Expansion::ComputeLaplacianMetric()
+        {
+            if (m_metrics.count(MetricQuadrature) == 0)
+            {
+                ComputeQuadratureMetric();
+            }
+
+            const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
+            const unsigned int nqtot = GetTotPoints();
+            const unsigned int dim = GetShapeDimension();
+            const unsigned int pts =
+                        (type == SpatialDomains::eRegular ||
+                         type == SpatialDomains::eMovingRegular) ? 1 : nqtot;
+            const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
+                                       {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
+                                       {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
+            };
+
+            for (unsigned int i = 0; i < dim; ++i)
+            {
+                for (unsigned int j = i; j < dim; ++j)
+                {
+                    m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
+                    Vmath::Vcopy(nqtot, &m_metricinfo->GetGmat()[i*dim+j][0], 1,
+                                        &m_metrics[m[i][j]][0], 1);
+                    MultiplyByQuadratureMetric(m_metrics[m[i][j]],
+                                               m_metrics[m[i][j]]);
+
+                }
+            }
+        }
+
+        void Expansion::ComputeQuadratureMetric()
+        {
+            unsigned int nqtot = GetTotPoints();
+            SpatialDomains::GeomType type = m_metricinfo->GetGtype();
+            if (type == SpatialDomains::eRegular ||
+                   type == SpatialDomains::eMovingRegular)
+            {
+                m_metrics[MetricQuadrature] = Array<OneD, NekDouble>(nqtot, m_metricinfo->GetJac()[0]);
+            }
+            else
+            {
+                m_metrics[MetricQuadrature] = m_metricinfo->GetJac();
+            }
+
+            MultiplyByStdQuadratureMetric(m_metrics[MetricQuadrature],
+                                                   m_metrics[MetricQuadrature]);
+        }
 
     } //end of namespace
 } //end of namespace

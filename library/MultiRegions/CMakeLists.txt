@@ -43,7 +43,7 @@ SubStructuredGraph.cpp
 
 Preconditioner.cpp
 PreconditionerDiagonal.cpp
-PreconditionerLowEnergy.cpp
+#PreconditionerLowEnergy.cpp
 )
 
 SET(MULTI_REGIONS_HEADERS
@@ -84,7 +84,7 @@ GlobalOptimizationParameters.h
 SubStructuredGraph.h
 Preconditioner.h
 PreconditionerDiagonal.h
-PreconditionerLowEnergy.h
+#PreconditionerLowEnergy.h
 )
 
 SET(ASSEMBLY_MAP_HEADERS

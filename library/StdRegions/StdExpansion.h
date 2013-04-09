@@ -74,7 +74,7 @@ namespace Nektar
 
             /** \brief Constructor */
             STD_REGIONS_EXPORT StdExpansion(const int numcoeffs, const int numbases,
-                         const LibUtilities::BasisKey &Ba,
+                         const LibUtilities::BasisKey &Ba = LibUtilities::NullBasisKey,
                          const LibUtilities::BasisKey &Bb = LibUtilities::NullBasisKey,
                          const LibUtilities::BasisKey &Bc = LibUtilities::NullBasisKey);
 
@@ -1029,6 +1029,20 @@ namespace Nektar
                 v_GetFacePhysVals(face, FaceExp, inarray, outarray, orient);
             }
 
+            void MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> &outarray)
+            {
+                v_MultiplyByQuadratureMetric(inarray, outarray);
+            }
+
+            void MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> & outarray)
+            {
+                v_MultiplyByStdQuadratureMetric(inarray, outarray);
+            }
+
             // Matrix Routines
 
             /** \brief this function generates the mass matrix
@@ -1242,26 +1256,6 @@ namespace Nektar
             const boost::shared_ptr<SpatialDomains::GeomFactors>& GetMetricInfo(void) const
             {
                 return v_GetMetricInfo();
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry> GetGeom(void) const
-            {
-                return v_GetGeom();
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry1D>& GetGeom1D(void) const
-            {
-                return v_GetGeom1D();
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry2D>& GetGeom2D(void) const
-            {
-                return v_GetGeom2D();
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry3D>& GetGeom3D(void) const
-            {
-                return v_GetGeom3D();
             }
 
             STD_REGIONS_EXPORT virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
@@ -1763,19 +1757,19 @@ namespace Nektar
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
 
+            STD_REGIONS_EXPORT virtual void v_MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
             STD_REGIONS_EXPORT virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
             STD_REGIONS_EXPORT virtual void v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true);
 
             STD_REGIONS_EXPORT virtual const  boost::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry> v_GetGeom() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry1D>& v_GetGeom1D() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry2D>& v_GetGeom2D() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry3D>& v_GetGeom3D() const;
 
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray);

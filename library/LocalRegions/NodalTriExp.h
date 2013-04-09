@@ -71,16 +71,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
 
-            const SpatialDomains::GeometrySharedPtr GetGeom() const
-            {
-                return m_geom;
-            }
-            
-            const SpatialDomains::Geometry2DSharedPtr& GetGeom2D() const
-            {
-                return m_geom;
-            }
-
             LOCAL_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             
             //----------------------------
@@ -192,9 +182,6 @@ namespace Nektar
             virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
         private:           
-            SpatialDomains::Geometry2DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
             

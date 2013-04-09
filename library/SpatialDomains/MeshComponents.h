@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
 #define NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
 
-#include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/Geometry0D.h>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <set>
@@ -84,7 +84,7 @@ namespace Nektar
 
         // --------------------------------------------------------------------
         /// Vertex Component
-        class VertexComponent: public Geometry, public NekPoint <NekDouble>
+        class VertexComponent: public Geometry0D, public NekPoint <NekDouble>
         {
         public:
                 SPATIAL_DOMAINS_EXPORT VertexComponent(const int coordim, const int vid,
@@ -134,6 +134,9 @@ namespace Nektar
                 int m_vid;
                 int m_coordim;
                 std::list<CompToElmt> m_elmtMap;
+
+                virtual void v_GenGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
         };
 
         // -----------------------------------------------------------------------

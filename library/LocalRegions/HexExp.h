@@ -162,17 +162,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual 
                 StdRegions::ExpansionType v_DetExpansionType() const;
     
-            LOCAL_REGIONS_EXPORT virtual const
-                SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
-
-            LOCAL_REGIONS_EXPORT virtual const 
-                SpatialDomains::GeometrySharedPtr v_GetGeom() const;
-
-            LOCAL_REGIONS_EXPORT virtual const 
-                SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const;
-
-            LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
-        
             LOCAL_REGIONS_EXPORT virtual 
                 StdRegions::Orientation v_GetFaceOrient(int face);
 
@@ -276,9 +265,6 @@ namespace Nektar
                 const MatrixKey &mkey);
                             
         private:
-            SpatialDomains::Geometry3DSharedPtr   m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 

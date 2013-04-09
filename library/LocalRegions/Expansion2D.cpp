@@ -43,8 +43,8 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        Expansion2D::Expansion2D() : 
-            StdExpansion(), Expansion(), StdExpansion2D()
+        Expansion2D::Expansion2D(SpatialDomains::Geometry2DSharedPtr pGeom) :
+            StdExpansion(), Expansion(pGeom), StdExpansion2D()
         {
             m_elementFaceLeft  = -1;
             m_elementFaceRight = -1;

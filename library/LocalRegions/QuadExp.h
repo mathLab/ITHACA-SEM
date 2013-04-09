@@ -175,10 +175,6 @@ namespace Nektar
                         std::string var = "v");
             LOCAL_REGIONS_EXPORT virtual const
                 SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
-            LOCAL_REGIONS_EXPORT virtual const
-                SpatialDomains::GeometrySharedPtr v_GetGeom() const;
-            LOCAL_REGIONS_EXPORT virtual const
-                SpatialDomains::Geometry2DSharedPtr& v_GetGeom2D() const;
             LOCAL_REGIONS_EXPORT virtual  int v_GetCoordim();
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
                         const NekDouble *data,
@@ -262,17 +258,11 @@ namespace Nektar
                         const StdRegions::StdMatrixKey &mkey);
             
         private:
-            SpatialDomains::Geometry2DSharedPtr  m_geom;
-            SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
-
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             QuadExp();
 
-            void MultiplyByQuadratureMetric(
-                            const Array<OneD, const NekDouble> &inarray,
-                                  Array<OneD,       NekDouble> &outarray);
         };
 
         // type defines for use of QuadExp in a boost vector

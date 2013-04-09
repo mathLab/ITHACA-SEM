@@ -378,12 +378,14 @@ namespace Nektar
                 
             // Set up information for periodic boundary conditions.
             cnt = 0;
+            LocalRegions::Expansion3DSharedPtr exp3d;
             for (int n = 0; n < m_exp->size(); ++n)
             {
-                for (int e = 0; e < (*m_exp)[n]->GetNfaces(); ++e, ++cnt)
+                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
+                for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
                 {
                     map<int,PeriodicFace>::iterator it = m_periodicFaces.find(
-                        (*m_exp)[n]->GetGeom3D()->GetFid(e));
+                        exp3d->GetGeom3D()->GetFid(e));
                     
                     if (it != m_periodicFaces.end())
                     {
@@ -814,10 +816,12 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
              
+            LocalRegions::Expansion3DSharedPtr exp3d;
             for(cnt = n = 0; n < nexp; ++n)
             {
+                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
                 phys_offset = GetPhys_Offset(n);
-                for(e = 0; e < (*m_exp)[n]->GetNfaces(); ++e, ++cnt)
+                for(e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
                 {
                     offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
@@ -825,20 +829,20 @@ namespace Nektar
                     bool fwd = m_leftAdjacentFaces[cnt];
                     if (fwd)
                     {
-                        (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
+                        exp3d->GetFacePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Fwd + offset);
                     }
                     else
                     {
-                        (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
+                        exp3d->GetFacePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Bwd + offset);
                     }
                     
                     // Check to see if this face is periodic.
                     it2 = m_periodicFaces.find(
-                        (*m_exp)[n]->GetGeom3D()->GetFid(e));
+                        exp3d->GetGeom3D()->GetFid(e));
                     
                     if (it2 != m_periodicFaces.end())
                     {
@@ -855,7 +859,7 @@ namespace Nektar
                         // Extract from 3D element to 2D space. We use the
                         // GetFacePhysVals function since the data will need
                         // reordering depending on relative face orientations.
-                        (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
+                        exp3d->GetFacePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Bwd + offset2,
                                                      it2->second.second);
@@ -1074,9 +1078,11 @@ namespace Nektar
             
             // Populate global ID map (takes global geometry ID to local
             // expansion list ID).
+            LocalRegions::Expansion3DSharedPtr exp3d;
             for (i = 0; i < GetExpSize(); ++i)
             {
-                globalIdMap[(*m_exp)[i]->GetGeom3D()->GetGlobalID()] = i;
+                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[i]);
+                globalIdMap[exp3d->GetGeom3D()->GetGlobalID()] = i;
             }
 
             // Determine number of boundary condition expansions.
@@ -1096,14 +1102,15 @@ namespace Nektar
                 FaceID = Array<OneD, int>(nbcs);
             }
             
+            LocalRegions::Expansion2DSharedPtr exp2d;
             for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
                 {
+                    exp2d = LocalRegions::Expansion2D::FromStdExp(m_bndCondExpansions[n]->GetExp(i));
                     // Use face to element map from MeshGraph3D.
                     SpatialDomains::ElementFaceVectorSharedPtr tmp = 
-                        graph3D->GetElementsFromFace(
-                            m_bndCondExpansions[n]->GetExp(i)->GetGeom2D());
+                        graph3D->GetElementsFromFace(exp2d->GetGeom2D());
                     
                     ElmtID[cnt] = globalIdMap[(*tmp)[0]->
                                               m_Element->GetGlobalID()];

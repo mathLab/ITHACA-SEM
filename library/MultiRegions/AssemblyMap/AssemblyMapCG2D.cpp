@@ -37,6 +37,7 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapCG2D.h>
 #include <MultiRegions/ExpList.h>
 #include <LocalRegions/SegExp.h>
+#include <LocalRegions/Expansion2D.h>
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -157,7 +158,7 @@ namespace Nektar
             int nLocBndCondDofs = 0;
             int nLocDirBndCondDofs = 0;
             int nExtraDirichlet = 0;
-            StdRegions::StdExpansion2DSharedPtr locExpansion;
+            LocalRegions::Expansion2DSharedPtr locExpansion;
             LocalRegions::SegExpSharedPtr       bndSegExp;
             LibUtilities::BasisType             bType;
             StdRegions::Orientation         edgeOrient;
@@ -170,16 +171,18 @@ namespace Nektar
             Array<OneD, map<int,int> > Dofs(2);
             BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
             set<int> extraDirVerts;
+            LocalRegions::Expansion2DSharedPtr exp2d;
             
             for(i = 0; i < locExpVector.size(); ++i)
             {
+                exp2d = LocalRegions::Expansion2D::FromStdExp(locExpVector[i]);
                 for(j = 0; j < locExpVector[i]->GetNverts(); ++j)
                 {
                     // Vert Dofs
-                    Dofs[0][(locExpVector[i]->GetGeom2D())->GetVid(j)] = 1;
+                    Dofs[0][(exp2d->GetGeom2D())->GetVid(j)] = 1;
                     // Edge Dofs
-                    Dofs[1][(locExpVector[i]->GetGeom2D())->GetEid(j)] = 
-                        locExpVector[i]->GetEdgeNcoeffs(j)-2;
+                    Dofs[1][(exp2d->GetGeom2D())->GetEid(j)] =
+                        exp2d->GetEdgeNcoeffs(j)-2;
                 }
             }
 
@@ -246,7 +249,7 @@ namespace Nektar
             m_numLocalBndCoeffs = 0;
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[locExp.GetOffset_Elmt_Id(i)]);
+                locExpansion = LocalRegions::Expansion2D::FromStdExp(locExpVector[locExp.GetOffset_Elmt_Id(i)]);
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
                     nEdgeCoeffs = locExpansion->GetEdgeNcoeffs(j);
@@ -302,8 +305,7 @@ namespace Nektar
             for(i = 0; i < m_numPatches; ++i)
             {
                 int elmtid = locExp.GetOffset_Elmt_Id(i);
-                locExpansion = boost::dynamic_pointer_cast<
-                    StdRegions::StdExpansion2D>(locExpVector[elmtid]);
+                locExpansion = LocalRegions::Expansion2D::FromStdExp(locExpVector[elmtid]);
                 m_numLocalBndCoeffsPerPatch[i] = (unsigned int) 
                     locExpVector[elmtid]->NumBndryCoeffs();
                 m_numLocalIntCoeffsPerPatch[i] = (unsigned int) 
@@ -324,7 +326,7 @@ namespace Nektar
             // Loop over all the elements in the domain
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion2D>(locExpVector[i]);
+                locExpansion = LocalRegions::Expansion2D::FromStdExp(locExpVector[i]);
 
                 cnt = locExp.GetCoeff_Offset(i);
 
@@ -468,8 +470,7 @@ namespace Nektar
                     for(i = 0; i < locExpVector.size(); ++i)
                     {
                         int eid = locExp.GetOffset_Elmt_Id(i);
-                        locExpansion = boost::dynamic_pointer_cast<
-                            StdRegions::StdExpansion2D>(locExpVector[eid]);
+                        locExpansion = LocalRegions::Expansion2D::FromStdExp(locExpVector[eid]);
                         for(j = 0; j < locExpansion->GetNverts(); ++j)
                         {
                             meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
@@ -638,7 +639,7 @@ namespace Nektar
 
                     ASSERTL1(s_eid < locExpVector.size(),"SingularElement Parameter is too large");
 
-                    meshVertId = locExpVector[s_eid]->GetGeom2D()->GetVid(0);
+                    meshVertId = LocalRegions::Expansion2D::FromStdExp(locExpVector[s_eid])->GetGeom2D()->GetVid(0);
                 }
                 else if (m_session->DefinesParameter("SingularVertex"))
                 {
@@ -915,7 +916,7 @@ namespace Nektar
                     nVerts = locExpansion->GetNverts();
                     for(j = 0; j < nVerts; ++j)
                     {
-                        meshVertId = (locExpansion->GetGeom2D())->GetVid(j);
+                        meshVertId = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetVid(j);
                         if(ReorderedGraphVertId[0].count(meshVertId) == 0)
                         {
                             // non-periodic & non-Dirichlet vertex 
@@ -944,7 +945,7 @@ namespace Nektar
                     nVerts = locExpansion->GetNverts();
                     for(j = 0; j < nVerts; ++j)
                     {
-                        meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
+                        meshEdgeId = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetEid(j);
                         if(ReorderedGraphVertId[1].count(meshEdgeId) == 0)
                         {
                             // non-periodic & non-Dirichlet edge
@@ -1111,8 +1112,8 @@ namespace Nektar
                     {
                         for (j = 0; j < locExpansion->GetNverts(); ++j, ++cnt)
                         {
-                            int vid = locExpansion->GetGeom2D()->GetVid(j)+1;
-                            int eid = locExpansion->GetGeom2D()->GetEid(j)+1;
+                            int vid = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetVid(j)+1;
+                            int eid = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetEid(j)+1;
                         
                             if (foundVerts.count(vid) == 0)
                             {

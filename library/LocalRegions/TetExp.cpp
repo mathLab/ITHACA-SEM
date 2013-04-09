@@ -63,10 +63,8 @@ namespace Nektar
             StdExpansion  (StdRegions::StdTetData::getNumberOfCoefficients(Ba.GetNumModes(),Bb.GetNumModes(),Bc.GetNumModes()),3,Ba,Bb,Bc),
             StdExpansion3D(StdRegions::StdTetData::getNumberOfCoefficients(Ba.GetNumModes(),Bb.GetNumModes(),Bc.GetNumModes()),Ba,Bb,Bc),
             StdRegions::StdTetExp(Ba,Bb,Bc),
-            Expansion     (),
-            Expansion3D   (),
-            m_geom(geom),
-            m_metricinfo(m_geom->GetGeomFactors(m_base)),
+            Expansion     (geom),
+            Expansion3D   (geom),
             m_matrixManager(
                     boost::bind(&TetExp::CreateMatrix, this, _1),
                     std::string("TetExpMatrix")),
@@ -86,8 +84,6 @@ namespace Nektar
             StdRegions::StdTetExp(T),
             Expansion(T),
             Expansion3D(T),
-            m_geom(T.m_geom),
-            m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
             m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
@@ -683,25 +679,6 @@ namespace Nektar
             return StdRegions::eTetrahedron;
         }
 
-
-        const SpatialDomains::GeomFactorsSharedPtr& TetExp::v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-
-        const SpatialDomains::GeometrySharedPtr TetExp::v_GetGeom() const
-        {
-            return m_geom;
-        }
-
-
-        const SpatialDomains::Geometry3DSharedPtr& TetExp::v_GetGeom3D() const
-        {
-            return m_geom;
-        }
-
-
         int TetExp::v_GetCoordim()
         {
             return m_geom->GetCoordim();
@@ -710,7 +687,7 @@ namespace Nektar
 
         StdRegions::Orientation TetExp::v_GetFaceOrient(int face)
         {
-            return m_geom->GetFaceOrient(face);
+            return GetGeom3D()->GetFaceOrient(face);
         }
 
       

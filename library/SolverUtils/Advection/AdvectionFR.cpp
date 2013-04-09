@@ -41,7 +41,8 @@
 #include <StdRegions/StdSegExp.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
 #include <boost/math/special_functions/gamma.hpp>
-
+#include <LocalRegions/Expansion1D.h>
+#include <LocalRegions/Expansion2D.h>
 
 namespace Nektar
 {
@@ -865,7 +866,7 @@ namespace Nektar
                             nLocalSolutionPts = fields[0]->
                                             GetExp(n)->GetTotPoints();
                             phys_offset = fields[0]->GetPhys_Offset(n);
-                            jac = fields[0]->GetExp(n)->GetGeom1D()->GetMetricInfo()->GetJac();
+                            jac = LocalRegions::Expansion1D::FromStdExp(fields[0]->GetExp(n))->GetGeom1D()->GetMetricInfo()->GetJac();
                             
                             Vmath::Smul(
                                 nLocalSolutionPts, 
@@ -915,14 +916,14 @@ namespace Nektar
                             GetTotPoints();
                             phys_offset = fields[0]->GetPhys_Offset(n);
                             
-                            jac  = fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetJac();
-                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
+                            jac  = LocalRegions::Expansion2D::FromStdExp(fields[0]->GetExp(n))->GetGeom2D()->GetMetricInfo()->GetJac();
+                            gmat = LocalRegions::Expansion2D::FromStdExp(fields[0]->GetExp(n))->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                             
                             // Temporary vectors
                             Array<OneD, NekDouble> f_hat(nLocalSolutionPts);
                             Array<OneD, NekDouble> g_hat(nLocalSolutionPts);
 
-                            if (fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetGtype()
+                            if (LocalRegions::Expansion2D::FromStdExp(fields[0]->GetExp(n))->GetGeom2D()->GetMetricInfo()->GetGtype()
                                 == SpatialDomains::eDeformed)
                             {
                                 for (j = 0; j < nLocalSolutionPts; j++)
@@ -991,10 +992,10 @@ namespace Nektar
                             GetExp(n)->GetTotPoints();
                             phys_offset = fields[0]->GetPhys_Offset(n);
                             
-                            jac  = fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetJac();
-                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
+                            jac  = LocalRegions::Expansion2D::FromStdExp(fields[0]->GetExp(n))->GetGeom2D()->GetMetricInfo()->GetJac();
+                            gmat = LocalRegions::Expansion2D::FromStdExp(fields[0]->GetExp(n))->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                             
-                            if (fields[0]->GetExp(n)->GetGeom2D()->GetMetricInfo()->GetGtype()
+                            if (LocalRegions::Expansion2D::FromStdExp(fields[0]->GetExp(n))->GetGeom2D()->GetMetricInfo()->GetGtype()
                                 == SpatialDomains::eDeformed)
                             {
                                 for (j = 0; j < nLocalSolutionPts; ++j)

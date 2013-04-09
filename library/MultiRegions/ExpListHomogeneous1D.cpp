@@ -37,6 +37,7 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdPointExp.h>
+#include <LocalRegions/Expansion.h>
 
 namespace Nektar
 {
@@ -613,13 +614,15 @@ namespace Nektar
         {
             int i,n;
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
-            
+            LocalRegions::ExpansionSharedPtr exp;
+
             // Determine mapping from element ids to location in
             // expansion list
             map<int, int> ElmtID_to_ExpID;
             for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
             {
-                ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
+                ElmtID_to_ExpID[exp->GetGeom()->GetGlobalID()] = i;
             }
 
             for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
@@ -693,9 +696,12 @@ namespace Nektar
         
             // Determine mapping from element ids to location in expansion list.
             map<int, int> ElmtID_to_ExpID;
+            LocalRegions::ExpansionSharedPtr exp;
+
             for(i = 0; i < m_planes[0]->GetExpSize(); ++i)
             {
-            ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
+                exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
+            ElmtID_to_ExpID[exp->GetGeom()->GetGlobalID()] = i;
             }
             
             if(i == fielddef->m_fields.size())

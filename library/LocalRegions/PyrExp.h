@@ -126,9 +126,6 @@ namespace Nektar
                 OutputFormat   format, 
                 const bool     dumpVar = true, 
                 std::string    var = "v");
-            LOCAL_REGIONS_EXPORT virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
-            LOCAL_REGIONS_EXPORT virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const;
-            LOCAL_REGIONS_EXPORT virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const;
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
             

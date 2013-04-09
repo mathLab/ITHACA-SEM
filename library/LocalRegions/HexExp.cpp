@@ -62,10 +62,8 @@ namespace Nektar
             StdExpansion  (Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(),3,Ba,Bb,Bc),
             StdExpansion3D(Ba.GetNumModes()*Bb.GetNumModes()*Bc.GetNumModes(),Ba,Bb,Bc),
             StdRegions::StdHexExp(Ba,Bb,Bc),
-            Expansion     (),
-            Expansion3D   (),
-            m_geom(geom),
-            m_metricinfo(m_geom->GetGeomFactors(m_base)),
+            Expansion     (geom),
+            Expansion3D   (geom),
             m_matrixManager(
                     boost::bind(&HexExp::CreateMatrix, this, _1),
                     std::string("HexExpMatrix")),
@@ -87,8 +85,6 @@ namespace Nektar
             StdRegions::StdHexExp(T),
             Expansion(T),
             Expansion3D(T),
-            m_geom(T.m_geom),
-            m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
             m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
@@ -792,41 +788,15 @@ namespace Nektar
         }
 
         
-        const SpatialDomains::GeomFactorsSharedPtr& HexExp::v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-        
-        /// Returns the HexGeom object associated with this expansion.
-        const SpatialDomains::GeometrySharedPtr HexExp::v_GetGeom() const
-        {
-            return m_geom;
-        }
-
-        
-        /// Returns the HexGeom object associated with this expansion.
-        const SpatialDomains::Geometry3DSharedPtr& HexExp::v_GetGeom3D() const
-        {
-            return m_geom;
-        }
-
-        
-        int HexExp::v_GetCoordim()
-        {
-            return m_geom->GetCoordim();
-        }
-
-        
         StdRegions::Orientation HexExp::v_GetFaceOrient(int face)
         {
-            return m_geom->GetFaceOrient(face);
+            return GetGeom3D()->GetFaceOrient(face);
         }
 
         
         bool HexExp::v_GetFaceDGForwards(const int i) const
         {
-            StdRegions::Orientation fo = m_geom->GetFaceOrient(i);
+            StdRegions::Orientation fo = GetGeom3D()->GetFaceOrient(i);
             
             return fo == StdRegions::eDir1FwdDir1_Dir2FwdDir2 || 
                    fo == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||

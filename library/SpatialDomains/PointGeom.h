@@ -38,7 +38,7 @@
 
 
 #include <StdRegions/StdRegions.hpp>
-#include <SpatialDomains/Geometry1D.h>
+#include <SpatialDomains/Geometry0D.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 
@@ -55,7 +55,7 @@ namespace Nektar
         typedef std::vector< PointGeomSharedPtr >::iterator PointGeomVectorIter;
         typedef std::map<int, PointGeomSharedPtr> PointGeomMap;
 
-        class PointGeom: public Geometry1D //???Geometry0D???
+        class PointGeom: public Geometry0D
         {
             public:
                 SPATIAL_DOMAINS_EXPORT PointGeom();
@@ -69,6 +69,8 @@ namespace Nektar
             protected:
                 static const int                kNverts = 1;
                 SpatialDomains::VertexComponentSharedPtr m_verts[kNverts];
+                virtual void v_GenGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
 
             private:
 

@@ -48,10 +48,8 @@ namespace Nektar
             StdExpansion  (StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),2,Ba,Bb),
             StdExpansion2D(StdRegions::StdTriData::getNumberOfCoefficients(Ba.GetNumModes(),(Bb.GetNumModes())),Ba,Bb),
             StdNodalTriExp(Ba,Bb,Ntype),
-            Expansion     (),
-            Expansion2D   (),
-            m_geom(geom),
-            m_metricinfo(m_geom->GetGeomFactors(m_base)),
+            Expansion     (geom),
+            Expansion2D   (geom),
             m_matrixManager(
                     boost::bind(&NodalTriExp::CreateMatrix, this, _1),
                     std::string("NodalTriExpMatrix")),
@@ -65,10 +63,8 @@ namespace Nektar
             StdExpansion(T),
             StdExpansion2D(T),
             StdRegions::StdNodalTriExp(T),
-            Expansion   (),
-            Expansion2D (),
-            m_geom(T.m_geom),
-            m_metricinfo(T.m_metricinfo),
+            Expansion   (T),
+            Expansion2D (T),
             m_matrixManager(T.m_matrixManager),
             m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {

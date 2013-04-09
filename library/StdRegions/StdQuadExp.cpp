@@ -1500,7 +1500,7 @@ namespace Nektar
         }
         
         //up to here
-        void StdQuadExp::MultiplyByQuadratureMetric(
+        void StdQuadExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray)
         {         

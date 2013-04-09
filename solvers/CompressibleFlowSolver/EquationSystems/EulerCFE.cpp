@@ -88,10 +88,10 @@ namespace Nektar
             ASSERTL0(false, "Implicit CFE not set up.");
         }
         
-        m_checkpointFuncs["Mach"] = boost::bind(&EulerCFE::CPMach, this, _1, _2);
+        //m_checkpointFuncs["Mach"] = boost::bind(&EulerCFE::CPMach, this, _1, _2);
         m_checkpointFuncs["Sensor"] = boost::bind(&EulerCFE::CPSensor, this, _1, _2);
-        m_checkpointFuncs["Entropy"] = boost::bind(&EulerCFE::CPEntropy, this, _1, _2);
-        m_checkpointFuncs["VarP"] = boost::bind(&EulerCFE::CPVarP, this, _1, _2);
+        //m_checkpointFuncs["Entropy"] = boost::bind(&EulerCFE::CPEntropy, this, _1, _2);
+        //m_checkpointFuncs["VarP"] = boost::bind(&EulerCFE::CPVarP, this, _1, _2);
     }
     
     /**
@@ -296,7 +296,7 @@ namespace Nektar
      
     void EulerCFE::CPSensor(
         const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-        Array<OneD, NekDouble> &outarray)
+                                Array<OneD, NekDouble> &outarray)
     {
         const int npts = m_fields[0]->GetTotPoints();
         outarray = Array<OneD, NekDouble>(GetNcoeffs());
@@ -307,11 +307,12 @@ namespace Nektar
             physfield[i] = Array<OneD, NekDouble>(npts);
             m_fields[i]->BwdTrans(inarray[i], physfield[i]);
         }
-
+        cout << "npts in EulerCfe() = "<< npts << endl;
         Array<OneD, NekDouble> sensor(npts,0.0);
         GetSensor(physfield, sensor);
         m_fields[0]->FwdTrans(sensor, outarray);
     }
+    
     void EulerCFE::CPVarP(
                           const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                           Array<OneD, NekDouble> &outarray)

@@ -83,6 +83,10 @@ namespace Nektar
         {
             ASSERTL0(false, "Implicit CFE not set up.");
         }
+        
+        m_checkpointFuncs["Sensor"] = boost::bind(&EulerArtificialDiffusionCFE::CPSensor, this, _1, _2);
+        
+        m_checkpointFuncs["ArtificialDynamicViscosity"] = boost::bind(&EulerArtificialDiffusionCFE::CPArtificialDynamicViscosity, this, _1, _2);
 
     }
 
@@ -112,22 +116,41 @@ namespace Nektar
     }
 
     void EulerArtificialDiffusionCFE::DoOdeRhs(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-              Array<OneD,       Array<OneD, NekDouble> > &outarray,
-        const NekDouble                                   time)
+                                               const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                                               Array<OneD,       Array<OneD, NekDouble> > &outarray,
+                                               const NekDouble                                   time)
     {
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
-                
+        
         Array<OneD, Array<OneD, NekDouble> > advVel;
-                
-        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
-                
+        Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
+        Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
+        
         for (i = 0; i < nvariables; ++i)
         {
-            Vmath::Neg(npoints, outarray[i], 1);
+            outarrayAdv[i] = Array<OneD, NekDouble>(npoints, 0.0);
+            outarrayDiff[i] = Array<OneD, NekDouble>(npoints, 0.0);
         }
+        
+        m_advection->Advect(nvariables, m_fields, advVel, inarray, outarrayAdv);
+        
+        for (i = 0; i < nvariables; ++i)
+        {
+            Vmath::Neg(npoints, outarrayAdv[i], 1);
+        }
+        
+        m_diffusion->Diffuse(nvariables, m_fields, inarray, outarrayDiff);
+        
+        for (i = 0; i < nvariables; ++i)
+        {
+            Vmath::Vadd(npoints,
+                        outarrayAdv[i], 1,
+                        outarrayDiff[i], 1,
+                        outarray[i], 1);
+        }
+        
     }
 
     void EulerArtificialDiffusionCFE::DoOdeProjection(
@@ -210,4 +233,45 @@ namespace Nektar
             cnt += m_fields[0]->GetBndCondExpansions()[n]->GetExpSize();
         }
     }
+    
+    void EulerArtificialDiffusionCFE::CPSensor(
+                            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                            Array<OneD, NekDouble> &outarray)
+    {
+        const int npts = m_fields[0]->GetTotPoints();
+        outarray = Array<OneD, NekDouble>(GetNcoeffs());
+        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+2);
+        
+        for (int i = 0; i < m_spacedim+2; ++i)
+        {
+            physfield[i] = Array<OneD, NekDouble>(npts);
+            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
+        }
+        
+        Array<OneD, NekDouble> sensor(npts,0.0);
+        GetSensor(physfield, sensor);
+        m_fields[0]->FwdTrans(sensor, outarray);
+    }
+    
+    void EulerArtificialDiffusionCFE::CPArtificialDynamicViscosity(
+                        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                              Array<OneD, NekDouble> &outarray)
+    {
+        const int npts = m_fields[0]->GetTotPoints();
+        outarray = Array<OneD, NekDouble>(GetNcoeffs());
+        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+2);
+        
+        for (int i = 0; i < m_spacedim+2; ++i)
+        {
+            physfield[i] = Array<OneD, NekDouble>(npts);
+            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
+        }
+        
+        Array<OneD, NekDouble> muvar(npts,0.0);
+        GetArtificialDynamicViscosity(physfield, muvar);
+        
+        m_fields[0]->FwdTrans(muvar, outarray);
+    }
+
+
 }

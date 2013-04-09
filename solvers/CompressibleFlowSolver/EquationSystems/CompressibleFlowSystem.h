@@ -170,7 +170,7 @@ namespace Nektar
             const Array<OneD, const Array<OneD,       NekDouble> > &physarray,
                   Array<OneD,                         NekDouble>   &Sensor);
         void GetArtificialDynamicViscosity(
-            const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+            const Array<OneD,  Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                    NekDouble  > &mu_var);
         void SetVarPOrderElmt(
             const Array<OneD, const Array<OneD, NekDouble> > &physfield,

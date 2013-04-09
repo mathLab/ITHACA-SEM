@@ -1556,33 +1556,50 @@ namespace Nektar
             int nEdges=GetNedges();
             int nFaces=GetNfaces();
 
-            int nedgemodes, nfacemodes;
-            nedgemodes=GetEdgeNcoeffs(eid)-2;
-            nfacemodes=GetFaceIntNcoeffs(fid);
+            int nedgemodes=0;
+            int nfacemodes=0;
+            int nedgemodestotal=0;
+            int nfacemodestotal=0;
+
+            for(eid=0; eid < nEdges; ++eid)
+            {
+                nedgemodes=GetEdgeNcoeffs(eid)-2;
+                nedgemodestotal+=nedgemodes;
+            }
+
+            for(fid=0; fid < nFaces; ++fid)
+            {
+                nfacemodes=GetFaceIntNcoeffs(fid);
+                nfacemodestotal+=nfacemodes;
+            }
 
             Array<OneD, unsigned int> 
-                edgemodearray(nEdges*nedgemodes);
+                edgemodearray(nedgemodestotal);
             Array<OneD, unsigned int> 
-                facemodearray(nFaces*nfacemodes);
-            
+                facemodearray(nfacemodestotal);
+
+            int offset=0;
             //create array of edge modes
             for(eid=0; eid < nEdges; ++eid)
             {
                 Array<OneD, unsigned int> edgearray=GetEdgeInverseBoundaryMap(eid);
                 nedgemodes=GetEdgeNcoeffs(eid)-2;
-                Vmath::Vcopy(nedgemodes, &edgearray[0], 1, &edgemodearray[eid*nedgemodes], 1);
+                Vmath::Vcopy(nedgemodes, &edgearray[0], 1, &edgemodearray[offset], 1);
+                offset+=nedgemodes;
             }
 
+            offset=0;
             //create array of face modes
             for(fid=0; fid < nFaces; ++fid)
             {
                 Array<OneD, unsigned int> facearray=GetFaceInverseBoundaryMap(fid);
                 nfacemodes=GetFaceIntNcoeffs(fid);
-                Vmath::Vcopy(nfacemodes, &facearray[0], 1, &facemodearray[fid*nfacemodes], 1);
+                Vmath::Vcopy(nfacemodes, &facearray[0], 1, &facemodearray[offset], 1);
+                offset+=nfacemodes;
             }
             
-            int nedgemodestotal=nedgemodes*nEdges;
-            int nfacemodestotal=nfacemodes*nFaces;
+            //nedgemodestotal=nedgemodes*nEdges;
+            //nfacemodestotal=nfacemodes*nFaces;
 
             //vertex-edge/face
             for (i=0; i<nVerts; ++i)

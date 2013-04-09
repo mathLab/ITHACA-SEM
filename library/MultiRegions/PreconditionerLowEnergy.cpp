@@ -1480,22 +1480,30 @@ namespace Nektar
             ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs,
                      "Output array is greater than the nGlobHomBndDofs");
 
+            //vectors of length number of non-dirichlet boundary dofs
             NekVector<NekDouble> F_GlobBnd(nGlobHomBndDofs,pInput,eWrapper);
             NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,pOutput,
                                           eWrapper);
-            
+            //Block transformation matrix
             DNekScalBlkMat &R = *m_RBlk;
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
             Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
 
-            // offset input data by Dirichlet boundary conditions.
+            // Allocated array of size number of global boundary dofs and copy
+            // the input array to the tmp array offset by Dirichlet boundary
+            // conditions.
             Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
             Vmath::Vcopy(nGlobHomBndDofs, pInput.get(), 1, tmp.get() + nDirBndDofs, 1);
-
+            
+            //Global boundary dofs (with zeroed dirichlet values) to local boundary dofs
             Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), tmp.get(), m_map.get(), pLocal.get());
+
+            //Multiply by the block transformation matrix
             F_LocBnd=R*F_LocBnd;
+
+            //Assemble local boundary to global non-dirichlet boundary
             m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
         }
 
@@ -1563,22 +1571,30 @@ namespace Nektar
             ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs,
                      "Output array is greater than the nGlobHomBndDofs");
 
+            //vectors of length number of non-dirichlet boundary dofs
             NekVector<NekDouble> F_GlobBnd(nGlobHomBndDofs,pInput,eWrapper);
             NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,pOutput,
                                           eWrapper);
-            
+            //Block inverse transformation matrix
             DNekScalBlkMat &invR = *m_InvRBlk;
 
             Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
             Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
 
-            // offset input data by Dirichlet boundary conditions.
+            // Allocated array of size number of global boundary dofs and copy
+            // the input array to the tmp array offset by Dirichlet boundary
+            // conditions.
             Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
             Vmath::Vcopy(nGlobHomBndDofs, pInput.get(), 1, tmp.get() + nDirBndDofs, 1);
 
+            //Global boundary dofs (with zeroed dirichlet values) to local boundary dofs
             Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), tmp.get(), m_map.get(), pLocal.get());
+
+            //Multiply by block inverse transformation matrix
             F_LocBnd=invR*F_LocBnd;
+
+            //Assemble local boundary to global non-dirichlet boundary
             m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
 
 	}

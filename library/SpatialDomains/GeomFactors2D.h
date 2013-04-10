@@ -78,18 +78,6 @@ namespace Nektar
             
             /// Set up the tangent vectors
             virtual void v_ComputeTangents();
-
-            /// Set up quadrature metrics for 2D expansions.
-            virtual void v_SetUpQuadratureMetrics(
-                StdRegions::ExpansionType shape,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
-
-            /// Set up Laplacian metrics for 2D expansions.
-            virtual void v_SetUpLaplacianMetrics(
-                StdRegions::ExpansionType shape,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
         };
 
         /// Shared pointer to GeomFactors2D object.

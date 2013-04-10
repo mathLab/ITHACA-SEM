@@ -111,7 +111,7 @@ namespace Nektar
             map<int, vector<pair<int, int> > > m_extraDirDofs;
             
             void SetUpUniversalC0ContMap(const ExpList &locExp);
-
+            
             /// Calculate the bandwith of the full matrix system.
             void CalculateFullSystemBandWidth();
 
@@ -183,6 +183,7 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual const Array<OneD, const int>& v_GetExtraDirEdges();
 
+            MULTI_REGIONS_EXPORT virtual AssemblyMapSharedPtr v_XxtLinearSpaceMap(const ExpList &locexp);
         };
 
 

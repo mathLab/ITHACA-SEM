@@ -439,6 +439,7 @@ namespace Nektar
             vComm->AllReduce(vExchange, Nektar::LibUtilities::ReduceSum);
             
             eps       = vExchange[2];
+
             if(m_rhs_magnitude == NekConstants::kNekUnsetDouble)
             {
                 m_rhs_magnitude = 1.0/vExchange[2];

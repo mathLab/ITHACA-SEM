@@ -43,11 +43,13 @@ namespace Nektar
     namespace MultiRegions
     {
         std::string Preconditioner::lookupIds[7] = {
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Null",MultiRegions::eNull),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Diagonal",MultiRegions::eDiagonal),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Linear",MultiRegions::eLinear),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LowEnergy",MultiRegions::eLowEnergy),
-                LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block",MultiRegions::eBlock),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Null",MultiRegions::eNull),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Diagonal",MultiRegions::eDiagonal),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpaceWithDiagonal",MultiRegions::eLinearWithDiagonal),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpace",MultiRegions::eLinear),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LowEnergyBlock",MultiRegions::eLowEnergy),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpaceWithLowEnergyBlock",MultiRegions::eLLE),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block",MultiRegions::eBlock),
         };
         std::string Preconditioner::def = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Preconditioner","Diagonal");
 
@@ -94,11 +96,35 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal,"Method does not exist" );
 	}
 
+
+
+        /**
+         * \brief Apply a preconditioner to the conjugate gradient
+         * method with an ouptut for non-vertex degrees of freedom
+         */ 
+        void Preconditioner::v_DoPreconditionerWithNonVertOutput(
+                      const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput,
+                      const Array<OneD, NekDouble>& pNonVertOutput)
+
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
+	}
+
         /**
          * \brief Transform from original basis to low energy basis
          */ 
         void Preconditioner::v_DoTransformToLowEnergy(
-            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pInOut,
+            int offset)
+        {
+	}
+
+        /**
+         * \brief Transform from original basis to low energy basis
+         */ 
+        void Preconditioner::v_DoTransformToLowEnergy(
+            const Array<OneD, NekDouble>& pInOut,
             Array<OneD, NekDouble>& pOutput)
         {
 	}
@@ -112,28 +138,28 @@ namespace Nektar
             Vmath::Smul(pInput.num_elements(),1.0,pInput, 1, pInput, 1);
 	}
 
+        /**
+         * \brief Multiply by the block inverse transformation matrix
+         */ 
+        void Preconditioner::v_DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput)
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
+	}
+
+        /**
+         * \brief Multiply by the block transposed inverse transformation matrix
+         */ 
+        void Preconditioner::v_DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput)
+        {
+            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
+	}
+
         void Preconditioner::v_BuildPreconditioner()
         {
-	}
-
-        /**
-         * \brief Get the transformation matrix \f$\mathbf{R}\f$
-         */ 
-        const Array<OneD, const DNekScalMatSharedPtr>& Preconditioner::v_GetTransformationMatrix() const
-	{
-            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-            static Array<OneD,DNekScalMatSharedPtr> result;
-            return result;
-	}
-
-        /**
-         * \brief Get the transposed transformation matrix \f$\mathbf{R}^{T}\f$
-         */
-        const Array<OneD, const DNekScalMatSharedPtr>& Preconditioner::v_GetTransposedTransformationMatrix() const
-	{
-            NEKERROR(ErrorUtil::efatal,"Method does not exist" );
-            static Array<OneD,DNekScalMatSharedPtr> result;
-            return result;
 	}
 
         /**
@@ -143,13 +169,6 @@ namespace Nektar
         DNekScalBlkMatSharedPtr Preconditioner::
         v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
 	{
-            //boost::shared_ptr<MultiRegions::ExpList> 
-            //    expList=((m_linsys.lock())->GetLocMat()).lock();
-         
-            //StdRegions::StdExpansionSharedPtr locExpansion;                
-            //locExpansion = expList->GetExp(offset);
-
-            //DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
 	    return loc_mat;
 	}
 

@@ -64,7 +64,7 @@ namespace Nektar
             }
 
             /// Name of class
-            static std::string className1;
+            static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerLowEnergy(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
@@ -78,12 +78,8 @@ namespace Nektar
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
             PreconditionerType                          m_preconType;
-	    StdRegions::StdExpansionSharedPtr           vExp;
 
-            DNekMatSharedPtr                            m_preconditioner;
-	    DNekScalBlkMatSharedPtr                     GloBlkMat;
 	    DNekBlkMatSharedPtr                         BlkMat;
-
             DNekScalMatSharedPtr                        bnd_mat;
 
 	    DNekScalMatSharedPtr                        m_TetR;
@@ -98,27 +94,25 @@ namespace Nektar
 
             DNekScalBlkMatSharedPtr                     m_RBlk;
             DNekScalBlkMatSharedPtr                     m_RTBlk;
+            DNekScalBlkMatSharedPtr                     m_InvRBlk;
+            DNekScalBlkMatSharedPtr                     m_InvRTBlk;
+
             DNekScalBlkMatSharedPtr                     m_S1Blk;
 
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
-            Array<OneD, int>                            vertModeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     edgeModeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     faceModeLocation;
-
-            Array<OneD, Array<OneD, unsigned int> >     MatEdgeLocation;
-            Array<OneD, Array<OneD, unsigned int> >     MatFaceLocation;
-
-            Array<OneD,DNekScalMatSharedPtr> m_transformationMatrix;
-            Array<OneD,DNekScalMatSharedPtr> m_transposedTransformationMatrix;
+            DNekScalMatSharedPtr Rtet;
+            DNekScalMatSharedPtr RTtet;
+            DNekScalMatSharedPtr InvRtet;
+            DNekScalMatSharedPtr InvRTtet;
+            DNekScalMatSharedPtr Rprismmod;
+            DNekScalMatSharedPtr RTprismmod;
+            DNekScalMatSharedPtr InvRprism;
+            DNekScalMatSharedPtr InvRTprism;
 
             Array<OneD, NekDouble>      m_locToGloSignMult;
 
 	private:
-
-	    void SetUpLowEnergyBasis(void);
-
-	    void LowEnergyPreconditioner(void);
 
             void SetUpReferenceElements(void);
 
@@ -126,30 +120,42 @@ namespace Nektar
 
             void SetupBlockTransformationMatrix(void);
 
+            void ModifyPrismTransformationMatrix(
+                LocalRegions::TetExpSharedPtr TetExp,
+                LocalRegions::PrismExpSharedPtr PrismExp,
+                DNekMatSharedPtr Rmodprism,
+                DNekMatSharedPtr RTmodprism);
+
             SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
 
             virtual void v_InitObject();
 
             virtual void v_DoPreconditioner(                
-                      const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput);
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
-	    virtual const Array<OneD,const DNekScalMatSharedPtr>& 
-                v_GetTransformationMatrix() const;
-            
-	    virtual const Array<OneD,const DNekScalMatSharedPtr>& 
-                v_GetTransposedTransformationMatrix() const;
-            
+            virtual void v_DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
+
             virtual void v_DoTransformToLowEnergy(
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput);
 
             virtual void v_DoTransformFromLowEnergy(
-                Array<OneD, NekDouble>& pInput);
+                Array<OneD, NekDouble>& pInOut);
 
+            virtual void v_DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+            
             virtual void v_BuildPreconditioner();
-
+            
             virtual DNekScalBlkMatSharedPtr
                 v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
         };

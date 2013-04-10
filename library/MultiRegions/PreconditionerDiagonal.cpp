@@ -79,23 +79,20 @@ namespace Nektar
 
         void PreconditionerDiagonal::v_BuildPreconditioner()
         {
-            if(m_preconType == MultiRegions::eDiagonal)
+            GlobalSysSolnType solvertype = 
+                m_locToGloMap->GetGlobalSysSolnType();
+            if (solvertype == eIterativeFull)
             {
-                GlobalSysSolnType solvertype = 
-                    m_locToGloMap->GetGlobalSysSolnType();
-                if (solvertype == eIterativeFull)
-                {
-                    DiagonalPreconditionerSum();
-                }
-                else if(solvertype == eIterativeStaticCond ||
-                        solvertype == eIterativeMultiLevelStaticCond)
-                {
-                    StaticCondDiagonalPreconditionerSum();
-                }
-                else
-                {
-                    ASSERTL0(0,"Unsupported solver type");
-                }
+                DiagonalPreconditionerSum();
+            }
+            else if(solvertype == eIterativeStaticCond ||
+                    solvertype == eIterativeMultiLevelStaticCond)
+            {
+                StaticCondDiagonalPreconditionerSum();
+            }
+            else
+            {
+                ASSERTL0(0,"Unsupported solver type");
             }
         }
         
@@ -199,7 +196,8 @@ namespace Nektar
                 m_locToGloMap->GetGlobalSysSolnType();
             switch (m_preconType)
             {
-                case MultiRegions::eDiagonal:
+            case MultiRegions::eDiagonal:
+            case MultiRegions::eLinearWithDiagonal:
                 {
                     int nGlobal = solvertype == eIterativeFull ?
                         m_locToGloMap->GetNumGlobalCoeffs() :

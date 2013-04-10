@@ -1648,40 +1648,77 @@ namespace Nektar
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
                 }
-				break;
-			case StdRegions::eHybridDGHelmholtz:
-			case StdRegions::eHybridDGLamToU:
-			case StdRegions::eHybridDGLamToQ0:
-			case StdRegions::eHybridDGLamToQ1:
-			case StdRegions::eHybridDGHelmBndLam:
-				{
-					NekDouble one    = 1.0;
+                break;
+            case StdRegions::eHybridDGHelmholtz:
+            case StdRegions::eHybridDGLamToU:
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGHelmBndLam:
+                {
+                    NekDouble one    = 1.0;
+                    
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            case StdRegions::eInvHybridDGHelmholtz:
+                {
+                    NekDouble one = 1.0;
+                    
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekMatSharedPtr mat = GenMatrix(hkey);
+                    
+                    mat->Invert();
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
 
-					DNekMatSharedPtr mat = GenMatrix(mkey);
-					returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
-				}
-				break;
-			case StdRegions::eInvHybridDGHelmholtz:
-				{
-					NekDouble one = 1.0;
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconR:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
 
-					MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
-					DNekMatSharedPtr mat = GenMatrix(hkey);
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
 
-					mat->Invert();
-					returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
-				}
-				break;
-			default:
-				{
-					//ASSERTL0(false, "Missing definition for " + (*StdRegions::MatrixTypeMap[mkey.GetMatrixType()]));
-					NekDouble        one = 1.0;
-					DNekMatSharedPtr mat = GenMatrix(mkey);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconRT:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
 
-					returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
-				}
-				break;
-			}
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr RT=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,RT);
+                }
+                break;
+            default:
+                {
+                    //ASSERTL0(false, "Missing definition for " + (*StdRegions::MatrixTypeMap[mkey.GetMatrixType()]));
+                    NekDouble        one = 1.0;
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
+                    
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            }
 
             return returnval;
         }
@@ -1699,7 +1736,8 @@ namespace Nektar
             int nint = m_ncoeffs - nbdry;
 
             unsigned int exp_size[] = {nbdry, nint};
-            int nblks;
+            int nblks = 2;
+            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
 
             NekDouble factor = 1.0;
             MatrixStorage AMatStorage = eFULL;
@@ -1711,13 +1749,6 @@ namespace Nektar
                 // use Deformed case for both regular and deformed geometries
                 factor = 1.0;
                 goto UseLocRegionsMatrix;
-                break;
-            case StdRegions::ePreconR:
-            case StdRegions::ePreconRT:
-                goto UsePreconMatrix;
-                break;
-            case StdRegions::ePreconLinearSpace:
-                goto UsePreconLinearSpaceMatrix;
                 break;
             default:
                 if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
@@ -1735,9 +1766,6 @@ namespace Nektar
                 break;
             UseStdRegionsMatrix:
                 {
-                    nblks = 2;
-                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
-
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
                     DNekBlkMatSharedPtr  mat = GetStdStaticCondMatrix(mkey);
@@ -1753,9 +1781,6 @@ namespace Nektar
                 break;
             UseLocRegionsMatrix:
                 {
-                    nblks = 2;
-                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
-
                     int i,j;
                     NekDouble            invfactor = 1.0/factor;
                     NekDouble            one = 1.0;
@@ -1813,45 +1838,6 @@ namespace Nektar
 
                 }
                 break;
-            UsePreconMatrix:
-                {
-                    nblks = 2;
-                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
-
-                    NekDouble one = 1.0;
-                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
-                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
-                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
-                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
-                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
-                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
-
-                    DNekScalMatSharedPtr Atmp;
-                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
-
-                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R));
-                    returnval->SetBlock(0,1,Blk01);
-                    returnval->SetBlock(1,0,Blk10);
-                    returnval->SetBlock(1,1,Blk11);
-                }
-                break;
-                UsePreconLinearSpaceMatrix:
-                {
-                    int nverts=GetNverts();
-                    unsigned int vert_size[] = {nverts, nverts};
-                    nblks=1;
-                    returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, vert_size, vert_size); 
-
-                    NekDouble one = 1.0;
-                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
-                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
-                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
-
-                    DNekScalMatSharedPtr Atmp;
-                    DNekMatSharedPtr R=BuildVertexMatrix(A);
-
-                    returnval->SetBlock(0,0,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R));
-                }
             }
             return returnval;
         }
@@ -2117,128 +2103,5 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
 
-        /**
-	 * \brief Build inverse and inverse transposed transformation matrix: \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
-	 *
-	 * \f\mathbf{R^{-T}}=[\left[\begin{array}{ccc} \mathbf{I} & -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
-	 *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
-	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
-	 *
-	 */
-        void TetExp::SetUpInverseTransformationMatrix(
-            const DNekMatSharedPtr & m_transformationmatrix,
-            DNekMatSharedPtr m_inversetransformationmatrix,
-            DNekMatSharedPtr m_inversetransposedtransformationmatrix)
-	{
-            int i,j,n, eid=0, fid=0;
-            int nCoeffs=NumBndryCoeffs();
-            NekDouble MatrixValue;
-            NekDouble zero=0.0;
-            DNekMat &R = (*m_transformationmatrix);
-            // Define storage for vertex transpose matrix and zero all entries
-            MatrixStorage storage = eFULL;
-            m_inversetransformationmatrix = 
-                MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs,nCoeffs,zero,storage);
-            DNekMat &InvR = (*m_inversetransformationmatrix);
-            //transposed inverse transformation matrix
-            m_inversetransposedtransformationmatrix = 
-                MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs,nCoeffs,zero,storage);
-            DNekMat &InvRT = (*m_inversetransposedtransformationmatrix);
-
-            int nVerts=GetNverts();
-            int nEdges=GetNedges();
-            int nFaces=GetNfaces();
-
-            //Set up map between element vertex, edge or face on the reference
-            //element and modes in the matrix
-            //Array<OneD, int > vertModeLocation(nVerts);
-            //Array<OneD, Array<OneD, unsigned int> > edgeModeLocation(nEdges);
-            //Array<OneD, Array<OneD, unsigned int> > faceModeLocation(nFaces);
-
-            //mapping arrays for vertices, edges and faces
-            //GetInverseBoundaryMaps(vertModeLocation,edgeModeLocation,faceModeLocation);
-
-            int nedgemodes, nfacemodes;
-            nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
-            nfacemodes=GetFaceIntNcoeffs(fid);//edgeModeLocation[eid].num_elements();
-
-            Array<OneD, unsigned int> 
-                edgemodearray(nEdges*nedgemodes);
-            Array<OneD, unsigned int> 
-                facemodearray(nFaces*nfacemodes);
-            
-            //create array of edge modes
-            for(eid=0; eid < nEdges; ++eid)
-            {
-                Array<OneD, unsigned int> edgearray=GetEdgeInverseBoundaryMap(eid);
-                nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
-                Vmath::Vcopy(nedgemodes, &edgearray[0], 1, &edgemodearray[eid*nedgemodes], 1);
-            }
-
-            //create array of face modes
-            for(fid=0; fid < nFaces; ++fid)
-            {
-                Array<OneD, unsigned int> facearray=GetEdgeInverseBoundaryMap(eid);
-                nfacemodes=GetFaceIntNcoeffs(fid);//faceModeLocation[fid].num_elements();
-                Vmath::Vcopy(nfacemodes, &facearray[0], 1, &facemodearray[fid*nfacemodes], 1);
-            }
-            
-            int nedgemodestotal=nedgemodes*nEdges;
-            int nfacemodestotal=nfacemodes*nFaces;
-
-            //vertex-edge/face
-            for (i=0; i<nVerts; ++i)
-            {
-                for(j=0; j<nedgemodestotal; ++j)
-                {
-                    InvR.SetValue(
-                        GetVertexMap(i),edgemodearray[j],
-                        -R(GetVertexMap(i),edgemodearray[j]));
-                    InvRT.SetValue(
-                        edgemodearray[j],GetVertexMap(i),
-                        -R(GetVertexMap(i),edgemodearray[j]));
-                }
-                for(j=0; j<nfacemodestotal; ++j)
-                {
-                    InvR.SetValue(
-                        GetVertexMap(i),facemodearray[j],
-                        -R(GetVertexMap(i),facemodearray[j]));
-                    InvRT.SetValue(
-                        facemodearray[j],GetVertexMap(i),
-                        -R(GetVertexMap(i),facemodearray[j]));
-                    for(n=0; n<nedgemodestotal; ++n)
-                    {
-                        MatrixValue=InvR.GetValue(
-                            GetVertexMap(i),facemodearray[j])
-                            +R(GetVertexMap(i),edgemodearray[n])
-                            *R(edgemodearray[n],facemodearray[j]);
-                        InvR.SetValue(
-                            GetVertexMap(i),facemodearray[j],MatrixValue);
-                        InvRT.SetValue(
-                            facemodearray[j],GetVertexMap(i),MatrixValue);
-                    }
-                }
-            }
-            
-            //edge-face contributions
-            for (i=0; i<nedgemodestotal; ++i)
-            {
-                for(j=0; j<nfacemodestotal; ++j)
-                {
-                    InvR.SetValue(
-                        edgemodearray[i],facemodearray[j],
-                        -R(edgemodearray[i],facemodearray[j]));
-                    InvRT.SetValue(
-                        facemodearray[j],edgemodearray[i],
-                        -R(edgemodearray[i],facemodearray[j]));
-                }
-            }
-            
-            for (i = 0; i < nCoeffs; ++i)
-            {
-                InvR.SetValue(i,i,1.0);
-                InvRT.SetValue(i,i,1.0);
-            }
-	}
     }//end of namespace
 }//end of namespace

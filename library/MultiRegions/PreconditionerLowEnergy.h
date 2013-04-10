@@ -77,8 +77,6 @@ namespace Nektar
 
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
-            PreconditionerType                          m_preconType;
-
 	    DNekBlkMatSharedPtr                         BlkMat;
             DNekScalMatSharedPtr                        bnd_mat;
 

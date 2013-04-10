@@ -65,7 +65,8 @@ namespace Nektar
             }
 
             /// Name of class
-            static std::string className;
+            static std::string className1;
+            static std::string className2;
 
             MULTI_REGIONS_EXPORT PreconditionerBlock(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
@@ -79,13 +80,11 @@ namespace Nektar
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
             PreconditionerType                          m_preconType;
-	    StdRegions::StdExpansionSharedPtr           vExp;
 
-            DNekMatSharedPtr                            m_preconditioner;
-	    DNekScalBlkMatSharedPtr                     GloBlkMat;
 	    DNekBlkMatSharedPtr                         BlkMat;
 
             DNekScalMatSharedPtr                        bnd_mat;
+            DNekScalBlkMatSharedPtr                     m_S1Blk;
 
             boost::shared_ptr<AssemblyMap>              m_locToGloMap;
 
@@ -100,6 +99,8 @@ namespace Nektar
             virtual void v_DoPreconditioner(                
                 const Array<OneD, NekDouble>& pInput,
                 Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_BuildPreconditioner();
         };
     }
 }

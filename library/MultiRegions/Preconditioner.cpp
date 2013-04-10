@@ -42,14 +42,15 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        std::string Preconditioner::lookupIds[7] = {
+        std::string Preconditioner::lookupIds[8] = {
             LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Null",MultiRegions::eNull),
             LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Diagonal",MultiRegions::eDiagonal),
             LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpaceWithDiagonal",MultiRegions::eLinearWithDiagonal),
             LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpace",MultiRegions::eLinear),
             LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LowEnergyBlock",MultiRegions::eLowEnergy),
             LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpaceWithLowEnergyBlock",MultiRegions::eLLE),
-            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block",MultiRegions::eBlock),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block2D",MultiRegions::eBlock2D),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block3D",MultiRegions::eBlock3D),
         };
         std::string Preconditioner::def = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Preconditioner","Diagonal");
 

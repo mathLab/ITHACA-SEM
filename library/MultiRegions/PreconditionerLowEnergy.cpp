@@ -73,17 +73,16 @@ namespace Nektar
         void PreconditionerLowEnergy::v_InitObject()
         {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
-
-            if(solvertype != eIterativeStaticCond)
-            {
-                ASSERTL0(0,"Solver type not valid");
-            }
-
+            ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond,"Solver type not valid");
+            
+            //Sets up reference element and builds transformation matrix
             SetUpReferenceElements();
-            SetupBlockTransformationMatrix();
-            CreateMultiplicityMap();
 
-            //
+            //Set up block transformation matrix
+            SetupBlockTransformationMatrix();
+
+            //Sets up multiplicity map for transformation from global to local
+            CreateMultiplicityMap();
 	}
 
         /**

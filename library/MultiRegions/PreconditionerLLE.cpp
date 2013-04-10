@@ -127,19 +127,19 @@ namespace Nektar
             Array<OneD, NekDouble> OutputInverseMultiply(pOutput.num_elements());
 
             //Apply Low Energy preconditioner
-            m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
+            //m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
 
             //Transform from low energy to original basis
-            m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(OutputLowEnergy, OutputInverseMultiply);
+            //m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(OutputLowEnergy, OutputInverseMultiply);
 
             //Transform input from low energy to original basis
-            //m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(pInput, InputLinear);
+            m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(pInput, InputLinear);
 
             //Apply linear space preconditioner
-            //m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear,OutputInverseMultiply);
+            m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear,NullNekDouble1DArray);
 
             //Transform back to low energy basis
-            m_lowEnergyPrecon->DoTransformToLowEnergy(OutputInverseMultiply,pOutput);
+            m_lowEnergyPrecon->DoTransformToLowEnergy(OutputLinear,pOutput);
         }
 
     }

@@ -1598,9 +1598,6 @@ namespace Nektar
                 offset+=nfacemodes;
             }
             
-            //nedgemodestotal=nedgemodes*nEdges;
-            //nfacemodestotal=nfacemodes*nFaces;
-
             //vertex-edge/face
             for (i=0; i<nVerts; ++i)
             {

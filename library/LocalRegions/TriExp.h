@@ -251,15 +251,13 @@ namespace Nektar
                                   Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
 
+            virtual void v_ComputeLaplacianMetric();
+
         private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
             TriExp();
-
-            void MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
-                                            Array<OneD, NekDouble> &outarray);
-
         };
 
         // type defines for use of TriExp in a boost vector

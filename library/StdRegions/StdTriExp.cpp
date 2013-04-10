@@ -1686,7 +1686,7 @@ namespace Nektar
         // Private helper functions
         //---------------------------------------
         
-        void StdTriExp::MultiplyByQuadratureMetric(
+        void StdTriExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
         {
@@ -1707,7 +1707,8 @@ namespace Nektar
                 
             switch(m_base[1]->GetPointsType())
             {
-                // Legendre inner product 
+                // Legendre inner product
+                case LibUtilities::ePolyEvenlySpaced:
                 case LibUtilities::eGaussLobattoLegendre: 
                     for(i = 0; i < nquad1; ++i)
                     {

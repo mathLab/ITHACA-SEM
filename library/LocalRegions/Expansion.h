@@ -99,12 +99,14 @@ namespace Nektar
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
                 MetricMap m_metrics;
 
+                void ComputeLaplacianMetric();
+                void ComputeQuadratureMetric();
+
                 virtual void v_MultiplyByQuadratureMetric(
                                 const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,       NekDouble> &outarray);
 
-                void ComputeLaplacianMetric();
-                void ComputeQuadratureMetric();
+                virtual void v_ComputeLaplacianMetric() {};
 
                 virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
 

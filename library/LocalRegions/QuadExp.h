@@ -257,6 +257,8 @@ namespace Nektar
                               Array<OneD,       NekDouble> &outarray,
                         const StdRegions::StdMatrixKey &mkey);
             
+            virtual void v_ComputeLaplacianMetric();
+
         private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;

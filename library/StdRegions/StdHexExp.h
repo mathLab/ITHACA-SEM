@@ -309,7 +309,7 @@ namespace Nektar
                           Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
 
-            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
+            STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
         };

@@ -2089,7 +2089,7 @@ namespace Nektar
             return cnt;
         }
 
-        void StdTetExp::MultiplyByQuadratureMetric(
+        void StdTetExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {

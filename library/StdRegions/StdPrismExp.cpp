@@ -1962,7 +1962,7 @@ namespace Nektar
                 (Q+1)*(p*R + 1-(p-2)*(p-1)/2); // Skip along rows    (p-direction)
         }
 
-        void StdPrismExp::MultiplyByQuadratureMetric(
+        void StdPrismExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {

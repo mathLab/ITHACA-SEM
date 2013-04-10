@@ -273,7 +273,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_CreateStdMatrix(
                 const StdMatrixKey &mkey);
             
-            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
+            STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
 

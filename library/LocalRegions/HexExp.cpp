@@ -1593,109 +1593,75 @@ namespace Nektar
         {
             if(mkey.GetNVarCoeff() == 0)
             {
-                // This implementation is only valid when there are no coefficients
-                // associated to the Laplacian operator
-                if(m_metricinfo->IsUsingLaplMetrics())       
+                // This implementation is only valid when there are no
+                // coefficients associated to the Laplacian operator
+                if (m_metrics.count(MetricLaplacian00) == 0)
                 {
-                    ASSERTL0(false,"Finish implementing HexExp for Lap metrics");
-/*                  int       nquad0  = m_base[0]->GetNumPoints();
-                    int       nquad1  = m_base[1]->GetNumPoints();
-                    int       nquad2  = m_base[2]->GetNumPoints();
-                    int       nqtot   = nquad0*nquad1*nquad2; 
-                    int       nmodes0 = m_base[0]->GetNumModes();
-                    int       nmodes1 = m_base[1]->GetNumModes();
-                    int       nmodes2 = m_base[2]->GetNumModes();
-                    int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                    
-                    const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-                    const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-                    const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
-                    const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
-                    const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-                    const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
-                    const Array<TwoD, const NekDouble>& metric = m_metricinfo->GetLaplacianMetrics(); 
-                    
-                    // Allocate temporary storage
-                    Array<OneD,NekDouble> wsp0(4*wspsize);
-                    Array<OneD,NekDouble> wsp1(wsp0+wspsize);
-                    Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-                    Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
-                    
-                    if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-                    {  
-                        // LAPLACIAN MATRIX OPERATION
-                        // wsp0 = u       = B   * u_hat 
-                        // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
-                        // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                        StdHexExp::BwdTrans_SumFacKernel(base0,base1,base2,inarray,wsp0,wsp1,true,true,true);
-                        StdExpansion3D::PhysTensorDeriv(wsp0,wsp1,wsp2,wsp3);
-                    }
-                    else
-                    {
-                        StdExpansion3D::PhysTensorDeriv(inarray,wsp1,wsp2,wsp3);                    
-                    }
-                    
-                    // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                    // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                    // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
-                    // especially for this purpose
-                    if(!m_metricinfo->LaplacianMetricIsZero(1))
-                    {
-                        Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
-                        Vmath::Vvtvvtp(nqtot,&metric[1][0],1,&wsp1[0],1,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
-                    }
-                    else
-                    {
-                        // special implementation in case g1 = 0 (which should hold for undistorted quads)
-                        // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
-                        // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
-                        Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
-                        Vmath::Vmul(nqtot,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
-                    }
-                    
-                    // outarray = m = (D_xi1 * B)^T * k 
-                    // wsp1     = n = (D_xi2 * B)^T * l 
-                    IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp0,outarray,wsp1,false,true,true);
-                    IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp2,wsp1,    wsp0,true,false,true);
-//                    IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp2,wsp1,    wsp0,true,true,false);
-                    
-                    // outarray = outarray + wsp1
-                    //          = L * u_hat
-                    Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);      
-*/                }
+                    ComputeLaplacianMetric();
+                }
+
+                int       nquad0  = m_base[0]->GetNumPoints();
+                int       nquad1  = m_base[1]->GetNumPoints();
+                int       nquad2  = m_base[2]->GetNumPoints();
+                int       nqtot   = nquad0*nquad1*nquad2;
+
+                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+                const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
+                const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+                const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
+                const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
+                const Array<OneD, const NekDouble>& metric00 = m_metrics[MetricLaplacian00];
+                const Array<OneD, const NekDouble>& metric01 = m_metrics[MetricLaplacian01];
+                const Array<OneD, const NekDouble>& metric02 = m_metrics[MetricLaplacian02];
+                const Array<OneD, const NekDouble>& metric11 = m_metrics[MetricLaplacian11];
+                const Array<OneD, const NekDouble>& metric12 = m_metrics[MetricLaplacian12];
+                const Array<OneD, const NekDouble>& metric22 = m_metrics[MetricLaplacian22];
+
+                // Allocate temporary storage
+                Array<OneD,NekDouble> wsp0(7*nqtot);
+                Array<OneD,NekDouble> wsp1(wsp0+1*nqtot);
+                Array<OneD,NekDouble> wsp2(wsp0+2*nqtot);
+                Array<OneD,NekDouble> wsp3(wsp0+3*nqtot);
+                Array<OneD,NekDouble> wsp4(wsp0+4*nqtot);
+                Array<OneD,NekDouble> wsp5(wsp0+5*nqtot);
+                Array<OneD,NekDouble> wsp6(wsp0+6*nqtot);
+
+                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
+                {
+                    // LAPLACIAN MATRIX OPERATION
+                    // wsp0 = u       = B   * u_hat
+                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
+                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
+                    BwdTrans_SumFacKernel(base0,base1,base2,inarray,wsp0,wsp1,true,true,true);
+                    StdExpansion3D::PhysTensorDeriv(wsp0,wsp1,wsp2,wsp3);
+                }
                 else
                 {
-                    int nquad0  = m_base[0]->GetNumPoints();
-                    int nquad1  = m_base[1]->GetNumPoints();
-                    int nquad2  = m_base[2]->GetNumPoints();
-                    int nqtot   = nquad0*nquad1*nquad2;
-                    int nmodes0 = m_base[0]->GetNumModes();
-                    int nmodes1 = m_base[1]->GetNumModes();
-                    int nmodes2 = m_base[2]->GetNumModes();
-                    int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
-                                      nquad0*nquad1*(nquad2+nmodes0)+
-                                      nmodes0*nmodes1*nquad2);
-                    
-                    const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
-                    const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
-                    const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
-
-                    Array<OneD,NekDouble> wsp (wspsize);
-                    Array<OneD,NekDouble> wsp1(nqtot);
-                    
-                    // Backwards transform to obtain u = B * u_hat.
-                    if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
-                         m_base[2]->Collocation()))
-                    {
-                        BwdTrans_SumFacKernel           (base0,base1,base2,inarray,
-                                                         wsp1,wsp,true,true,true);
-                        LaplacianMatrixOp_MatFree_Kernel(wsp1, outarray, wsp);
-                    }
-                    else
-                    {
-                        LaplacianMatrixOp_MatFree_Kernel(wsp1, outarray, wsp);
-                    }
+                    StdExpansion3D::PhysTensorDeriv(inarray,wsp1,wsp2,wsp3);
                 }
+
+                // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+                // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
+                // especially for this purpose
+                Vmath::Vvtvvtp(nqtot,&metric00[0],1,&wsp1[0],1,&metric01[0],1,&wsp2[0],1,&wsp4[0],1);
+                Vmath::Vvtvp  (nqtot,&metric02[0],1,&wsp3[0],1,&wsp4[0],1,&wsp4[0],1);
+                Vmath::Vvtvvtp(nqtot,&metric01[0],1,&wsp1[0],1,&metric11[0],1,&wsp2[0],1,&wsp5[0],1);
+                Vmath::Vvtvp  (nqtot,&metric12[0],1,&wsp3[0],1,&wsp5[0],1,&wsp5[0],1);
+                Vmath::Vvtvvtp(nqtot,&metric02[0],1,&wsp1[0],1,&metric12[0],1,&wsp2[0],1,&wsp6[0],1);
+                Vmath::Vvtvp  (nqtot,&metric22[0],1,&wsp3[0],1,&wsp6[0],1,&wsp6[0],1);
+
+                // outarray = m = (D_xi1 * B)^T * k
+                // wsp1     = n = (D_xi2 * B)^T * l
+                IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp4,outarray,wsp0,false,true,true);
+                IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp5,wsp1,    wsp0,true,false,true);
+                IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp6,wsp2,    wsp0,true,true,false);
+
+                // outarray = outarray + wsp1
+                //          = L * u_hat
+                Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
+                Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
             }
             else
             {
@@ -2265,38 +2231,6 @@ namespace Nektar
         }
         
 
-        void HexExp::MultiplyByQuadratureMetric(
-                const Array<OneD, const NekDouble>& inarray,
-                      Array<OneD, NekDouble> &outarray)
-        {        
-            if(m_metricinfo->IsUsingQuadMetrics())
-            {
-                const Array<OneD, const NekDouble> &metric
-                    = m_metricinfo->GetQuadratureMetrics();
-
-                Vmath::Vmul(metric.num_elements(), metric, 1, inarray, 1, outarray, 1);
-            }
-            else
-            {
-                const int nqtot = m_base[0]->GetNumPoints() *
-                                  m_base[1]->GetNumPoints() *
-                                  m_base[2]->GetNumPoints();
-                const Array<OneD, const NekDouble> &jac
-                    = m_metricinfo->GetJac();
-
-                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                {
-                    Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);
-                }
-                else
-                {
-                    Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
-                }
-
-                StdHexExp::MultiplyByQuadratureMetric(outarray, outarray);
-            }
-        }
-        
         void HexExp::LaplacianMatrixOp_MatFree_Kernel(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
@@ -2396,5 +2330,38 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);     
         }
+
+        void HexExp::v_ComputeLaplacianMetric()
+        {
+            if (m_metrics.count(MetricQuadrature) == 0)
+            {
+                ComputeQuadratureMetric();
+            }
+
+            const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
+            const unsigned int nqtot = GetTotPoints();
+            const unsigned int dim = 2;
+            const unsigned int pts =
+                        (type == SpatialDomains::eRegular ||
+                         type == SpatialDomains::eMovingRegular) ? 1 : nqtot;
+            const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
+                                       {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
+                                       {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
+            };
+
+            for (unsigned int i = 0; i < dim; ++i)
+            {
+                for (unsigned int j = i; j < dim; ++j)
+                {
+                    m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
+                    Vmath::Vcopy(nqtot, &m_metricinfo->GetGmat()[i*dim+j][0], 1,
+                                        &m_metrics[m[i][j]][0], 1);
+                    MultiplyByQuadratureMetric(m_metrics[m[i][j]],
+                                               m_metrics[m[i][j]]);
+
+                }
+            }
+        }
+
     }//end of namespace
 }//end of namespace

@@ -69,12 +69,6 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> > d1,
                 const Array<OneD, Array<OneD, NekDouble> > d2,
                 const Array<OneD, Array<OneD, NekDouble> > d3);
-
-            /// Set up quadrature metrics for 2D expansions.
-            virtual void v_SetUpQuadratureMetrics(
-                StdRegions::ExpansionType shape,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
         };
 
         /// Shared pointer to GeomFactors3D object.

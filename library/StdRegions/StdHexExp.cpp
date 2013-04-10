@@ -2489,7 +2489,7 @@ namespace Nektar
         }
 
 
-        void StdHexExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+        void StdHexExp::v_MultiplyByStdQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
         {
             int    i;

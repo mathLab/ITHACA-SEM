@@ -155,18 +155,6 @@ namespace Nektar
             // Based upon these derivatives, calculate:
             // 1. The (determinant of the) jacobian and the differentation      metrics
             SetUpJacGmat3D(m_deriv[0],m_deriv[1],m_deriv[2]);
-
-            // 2. the jacobian muliplied with the quadrature weights
-            if(QuadMetrics)
-            {
-                SetUpQuadratureMetrics(shape,tbasis);
-            }
-            // 3. A combination of the metrics above that allows
-            //    for more efficient evaluation of the laplacian
-            if(LaplMetrics)
-            {
-                SetUpLaplacianMetrics (shape,tbasis);
-            }
         }
 
         /**
@@ -275,7 +263,7 @@ namespace Nektar
          * @brief Set up the m_weightedjac array, which holds the Jacobian at
          * each quadrature point multipled by the quadrature weight.
          */
-        void GeomFactors3D::v_SetUpQuadratureMetrics(
+/*        void GeomFactors3D::v_SetUpQuadratureMetrics(
             StdRegions::ExpansionType                              shape,
             const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
@@ -462,5 +450,6 @@ namespace Nektar
                 }
             }
         }
+        */
     }
 }

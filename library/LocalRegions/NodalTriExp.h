@@ -159,9 +159,6 @@ namespace Nektar
             DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
-            void MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
-                                            Array<OneD, NekDouble> &outarray);      
-
             void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> &outarray);
             void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 

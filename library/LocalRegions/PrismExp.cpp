@@ -1738,39 +1738,6 @@ namespace Nektar
             return returnval;
         }
         
-        void PrismExp::MultiplyByQuadratureMetric(
-            const Array<OneD, const NekDouble>& inarray,
-                  Array<OneD,       NekDouble>& outarray)
-        {
-  
-            if(m_metricinfo->IsUsingQuadMetrics())
-            {
-                const Array<OneD, const NekDouble> &metric 
-                    = m_metricinfo->GetQuadratureMetrics();
-                    
-                Vmath::Vmul(metric.num_elements(), metric, 1, inarray, 1,
-                            outarray, 1);
-            }
-            else
-            {
-                const int nqtot = m_base[0]->GetNumPoints() *
-                                  m_base[1]->GetNumPoints() *
-                                  m_base[2]->GetNumPoints();
-                const Array<OneD, const NekDouble> &jac 
-                    = m_metricinfo->GetJac();
-                
-                if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-                {
-                    Vmath::Vmul(nqtot, jac, 1, inarray, 1, outarray, 1);
-                }
-                else
-                {
-                    Vmath::Smul(nqtot, jac[0], inarray, 1, outarray, 1);
-                }
-
-                StdPrismExp::MultiplyByQuadratureMetric(outarray, outarray);
-            }
-        }
         
         /**
          * @brief Calculate the Laplacian multiplication in a matrix-free

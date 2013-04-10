@@ -1311,14 +1311,14 @@ namespace Nektar
                     int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
                                       nquad2*nmodes0*nmodes1*(nmodes1+1)/2+
                                       nquad2*nquad1*nmodes0);
-                    
+
                     const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
                     const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
                     const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
 
                     Array<OneD,NekDouble> wsp (wspsize);
                     Array<OneD,NekDouble> wsp1(nqtot);
-                    
+
                     // Backwards transform to obtain u = B * u_hat.
                     if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
                          m_base[2]->Collocation()))
@@ -1517,23 +1517,7 @@ namespace Nektar
                                 + gmat[3][0]*(lap01 + Transpose(lap01))
                                 + gmat[6][0]*(lap02 + Transpose(lap02))
                                 + gmat[7][0]*(lap12 + Transpose(lap12));
-/*
-                        (*lap) = (gmat[0][0]*gmat[0][0] + gmat[3][0]*gmat[3][0]
-                                        + gmat[6][0]*gmat[6][0])*lap00
-                               + (gmat[1][0]*gmat[1][0] + gmat[4][0]*gmat[4][0]
-                                        + gmat[7][0]*gmat[7][0])*lap11
-                               + (gmat[2][0]*gmat[2][0] + gmat[5][0]*gmat[5][0]
-                                        + gmat[8][0]*gmat[8][0])*lap22
-                               + (gmat[0][0]*gmat[1][0] + gmat[3][0]*gmat[4][0]
-                                        + gmat[6][0]*gmat[7][0])
-                                 *(lap01 + Transpose(lap01))
-                               + (gmat[0][0]*gmat[2][0] + gmat[3][0]*gmat[5][0]
-                                        + gmat[6][0]*gmat[8][0])
-                                 *(lap02 + Transpose(lap02))
-                               + (gmat[1][0]*gmat[2][0] + gmat[4][0]*gmat[5][0]
-                                        + gmat[7][0]*gmat[8][0])
-                                 *(lap12 + Transpose(lap12));
-*/
+
                         returnval = MemoryManager<DNekScalMat>
                                                 ::AllocateSharedPtr(jac,lap);
                     }
@@ -1861,7 +1845,7 @@ namespace Nektar
             // wsp2 = du_dxi2 = D_xi2 * inarray = D_xi2 * u
             // wsp2 = du_dxi3 = D_xi3 * inarray = D_xi3 * u
             StdExpansion3D::PhysTensorDeriv(inarray,wsp1,wsp2,wsp3);
-ASSERTL0(false, "TODO: Fix this.");
+
             const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
             const Array<OneD, const NekDouble>& z0   = m_base[0]->GetZ();
             const Array<OneD, const NekDouble>& z1   = m_base[1]->GetZ();
@@ -2075,6 +2059,5 @@ ASSERTL0(false, "TODO: Fix this.");
 
            return geom;
        }
-
     }//end of namespace
 }//end of namespace

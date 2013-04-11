@@ -29,8 +29,6 @@
 
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
-#include <SpatialDomains/SpatialData.h>
-
 using namespace Nektar;
 
 int main(int argc, char *argv[])

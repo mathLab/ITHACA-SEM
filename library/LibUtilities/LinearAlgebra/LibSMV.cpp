@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Interpreter.hpp
+// File: LibSMV.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,67 +29,32 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Wrapper around interp.y functions for function interpretation
+// Description: wrapper of functions around SMV routines
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
+#ifdef NEKTAR_USING_SMV
 
-#include <cstdio>
+#include <LibUtilities/LinearAlgebra/LibSMV.hpp>
 
-extern "C" 
+
+// Translations for using Fortran version of SMV
+namespace Smv
 {
-    // -- Routines from initial.y:
 
-    void   yy_initialize (void);
-    double yy_interpret  (const char*);
-    
-    void   yy_vec_init   (const char*, const char*);
-    void   yy_vec_interp (const int, ...);
-    
-    void   yy_help       (void);
-    void   yy_show       (void);
-}
-
-namespace Nektar
-{
-    class Interpret 
+    /// \brief LibSmv matrix-vector multiply: Y = Y + A*X where A is [m x k]-matrix
+    template <typename T>
+      void Smvn (const int& m, const T* a,    const T* x,    T* y)
     {
-    public:
-        
-        Interpret()
-        {
-            yy_initialise();
-        }
+        F77NAME(smv) (m,a,x,y);
+    }
 
-        ~Interpret()
-        {
+    /// Explicit instantiation with type double:
 
-        }
-        
-        void SetVector (const char* v, const char* f)
-        { 
-            yy_vec_init (v, f); 
-        }
-        
-        void EvaluateVector (const int n ... )
-        { 
-            yy_vec_interp (n ... ); 
-        }
-        
-        double EvaluateDoubleValue (const char* s)
-        { 
-            return yy_interpret (s); 
-        }
+    template LIB_UTILITIES_EXPORT  void Smvn  (const int& m,
+                                const double* a, const double* x, double* y);
 
-        int EvaluateIntValue (const char* s)
-        { 
-            return static_cast<int>(yy_interpret (s)); 
-        }
-        
-    private:
-        
-    };
+
+}
 
 #endif

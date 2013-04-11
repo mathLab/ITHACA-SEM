@@ -1112,6 +1112,10 @@ namespace Nektar
             return NullDNekScalBlkMatSharedPtr;
         }
 
+        void StdExpansion::v_DropLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+        }
 
         StdRegions::Orientation StdExpansion::v_GetFaceOrient(int face)
 

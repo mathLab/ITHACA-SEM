@@ -76,6 +76,8 @@ namespace Nektar
 
         virtual void v_SetInitialConditions();
 
+        virtual std::string v_GetCellVarName(unsigned int idx);
+
     private:
         NekDouble C_m;
         NekDouble g_Na;

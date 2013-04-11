@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    StdRegions::ExpansionType regionShape = StdRegions::eTetrahedron;
+    LibUtilities::ShapeType regionShape = LibUtilities::eTetrahedron;
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
     int bType_z_val = atoi(argv[3]);
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     }
 
     // Check to see that correct Expansions are used
-    if( regionShape == StdRegions::eTetrahedron ) 
+    if( regionShape == LibUtilities::eTetrahedron ) 
     {
         if( (bType_x == LibUtilities::eOrtho_B) || (bType_x == LibUtilities::eModified_B) ) {
             NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B or Modified_B");
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     
     StdRegions::StdExpansion *ste;
     
-    if( regionShape == StdRegions::eTetrahedron ) 
+    if( regionShape == LibUtilities::eTetrahedron ) 
     {
         const LibUtilities::PointsKey   pointsKey_x( Qx, Qtype_x );
         const LibUtilities::PointsKey   pointsKey_y( Qy, Qtype_y );

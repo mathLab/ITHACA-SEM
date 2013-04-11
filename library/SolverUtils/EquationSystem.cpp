@@ -87,10 +87,11 @@ namespace Nektar
         EquationSystem::EquationSystem( const LibUtilities::SessionReaderSharedPtr& pSession)
             : m_comm (pSession->GetComm()),
               m_session (pSession),
-              m_lambda (0)
+              m_lambda (0),
+              m_fieldMetaDataMap(LibUtilities::NullFieldMetaDataMap)
         {
         }
-
+        
         /**
          * @brief Initialisation object for EquationSystem.
          */
@@ -104,8 +105,6 @@ namespace Nektar
 
             // Read the geometry and the expansion information
             m_graph = SpatialDomains::MeshGraph::Read(m_session);
-
-            m_UseContCoeff = false;
 
             // Also read and store the boundary conditions
             m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
@@ -531,16 +530,6 @@ namespace Nektar
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 
-            // Read in spatial data
-            int nq = m_fields[0]->GetNpoints();
-            m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>
-                                  ::AllocateSharedPtr(m_session, nq);
-            m_spatialParameters->Read(m_filename);
-
-            Array<OneD, NekDouble> x(nq), y(nq), z(nq);
-            m_fields[0]->GetCoords(x, y, z);
-            m_spatialParameters->EvaluateParameters(x, y, z);
-
             if (m_session->DefinesFunction("BodyForce"))
             {
                 m_forces    = Array<OneD, MultiRegions::ExpListSharedPtr>(v_GetForceDimension());
@@ -754,16 +743,15 @@ namespace Nektar
             {
                 std::string filename
                     = m_session->GetFunctionFilename(pFunctionName, pFieldName);
-                
 #if 0 
                 ImportFld(filename,m_fields);
 #else
-                std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+                std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
                 Vmath::Zero(vCoeffs.num_elements(),vCoeffs,1);
                 
-                m_graph->Import(filename,FieldDef,FieldData);
+                LibUtilities::Import(filename,FieldDef,FieldData);
                 
                 int idx = -1;
                 
@@ -1204,9 +1192,9 @@ namespace Nektar
             std::string pInfile, 
             SpatialDomains::MeshGraphSharedPtr pGraph)
         {
-    	    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+    	    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
     	    std::vector<std::vector<NekDouble>   > FieldData;
-    	    pGraph->Import(pInfile, FieldDef,FieldData);
+            LibUtilities::Import(pInfile, FieldDef,FieldData);
        	    int nvar= m_spacedim;
             
       	    // Copy data to m_velocity
@@ -1807,7 +1795,7 @@ namespace Nektar
             Array<OneD, std::string> &variables)
         {
 
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                 = field->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -1821,7 +1809,14 @@ namespace Nektar
                     field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
                 }            
             }
-            m_graph->Write(outname, FieldDef, FieldData);
+
+            // Update time in field info if required
+            if(m_fieldMetaDataMap.find("Time") != m_fieldMetaDataMap.end())
+            {
+                m_fieldMetaDataMap["Time"] =  m_time; 
+            }
+
+            LibUtilities::Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
         }
 
         /**
@@ -1834,10 +1829,10 @@ namespace Nektar
             const std::string &infile, 
             Array<OneD, MultiRegions::ExpListSharedPtr> &pFields)
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < pFields.num_elements(); ++j)
@@ -1870,10 +1865,10 @@ namespace Nektar
             MultiRegions::ExpListSharedPtr &pField, 
             std::string &pFieldName)
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
 
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
             int idx = -1;
 
             Vmath::Zero(pField->GetNcoeffs(),pField->UpdateCoeffs(),1);
@@ -1913,10 +1908,10 @@ namespace Nektar
             ASSERTL0(fieldStr.size() <= coeffs.num_elements(),
                      "length of fieldstr should be the same as pFields");
         
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
             std::vector<std::vector<NekDouble> > FieldData;
         
-            m_graph->Import(infile,FieldDef,FieldData);
+            LibUtilities::Import(infile,FieldDef,FieldData);
 
             // Copy FieldData into m_fields
             for(int j = 0; j < fieldStr.size(); ++j)
@@ -2159,17 +2154,16 @@ namespace Nektar
                         {
                             out << "\tProjection Type : Flux Reconstruction HU"             <<endl;
                         }
-                        else if (AdvectionType == "FRc")
+                        else if (AdvectionType == "FRcmin")
                         {
                             out << "\tProjection Type : Flux Reconstruction c = c-min"      <<endl;
                         }
-                        else if (AdvectionType == "FRc")
+                        else if (AdvectionType == "FRcinf")
                         {
                             out << "\tProjection Type : Flux Reconstruction c = c-infinity" <<endl;
                         }
                         break;
                     }
-                    
                     case MultiRegions::eMixed_CG_Discontinuous:
                     {
                         out << "\tProjection Type : Mixed CG/DG" << endl;
@@ -2191,6 +2185,55 @@ namespace Nektar
             else if (m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
             {
                 out << "\tProjection Type : Mixed Continuous Galerkin and Discontinuous" <<endl;
+            }
+            
+            if (m_session->DefinesSolverInfo("DiffusionType"))
+            {
+                std::string DiffusionType;
+                DiffusionType = m_session->GetSolverInfo("DiffusionType");
+                switch (m_projectionType)
+                {
+                    case MultiRegions::eGalerkin:
+                    {
+                        break;
+                    }
+                        
+                    case MultiRegions::eDiscontinuous:
+                    {
+                        if (DiffusionType == "LDG" || DiffusionType == "LDGNS")
+                        {
+                            out << "\tDiffusion Type  : LDG"    <<endl;
+                        }
+                        else if (DiffusionType == "LFRDG" || DiffusionType == "LFRDGNS")
+                        {
+                            out << "\tDiffusion Type  : LFRDG"  <<endl;
+                        }
+                        else if (DiffusionType == "LFRSD" || DiffusionType == "LFRSDNS")
+                        {
+                            out << "\tDiffusion Type  : LFRSD"  <<endl;
+                        }
+                        else if (DiffusionType == "LFRHU" || DiffusionType == "LFRHUNS")
+                        {
+                            out << "\tDiffusion Type  : LFRHU"  <<endl;
+                        }
+                        else if (DiffusionType == "LFRcmin" || DiffusionType == "LFRcminNS")
+                        {
+                            out << "\tDiffusion Type  : LFR c = c-min"      <<endl;
+                        }
+                        else if (DiffusionType == "LFRcinf" || DiffusionType == "LFRcinfNS")
+                        {
+                            out << "\tDiffusion Type  : LFR c = c-infinity" <<endl;
+                        }
+                        break;
+                    }
+                    case MultiRegions::eMixed_CG_Discontinuous:
+                    {
+                        break;
+                    }
+                        
+                    default:
+                        break;
+                }
             }
         }
 

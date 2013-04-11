@@ -147,7 +147,6 @@ namespace Nektar
 
         // Variables
         //  0   V    membrane potential
-        //  1   -    unused
         //  2   m    fast sodium current m gate
         //  3   h    fast sodium current h gate
         //  4   j    fast sodium current j gate
@@ -575,4 +574,33 @@ namespace Nektar
         Vmath::Fill(m_nq, 1.488,      m_cellSol[19], 1);
         Vmath::Fill(m_nq, 1.488,      m_cellSol[20], 1);
     }
+
+    std::string CourtemancheRamirezNattel98::v_GetCellVarName(unsigned int idx)
+    {
+        switch (idx)
+        {
+            case 0:  return "u";
+            case 1:  return "m";
+            case 2:  return "h";
+            case 3:  return "j";
+            case 4:  return "o_a";
+            case 5:  return "o_i";
+            case 6:  return "u_a";
+            case 7:  return "u_i";
+            case 8:  return "x_r";
+            case 9: return "x_s";
+            case 10: return "d";
+            case 11: return "f";
+            case 12: return "f_Ca";
+            case 13: return "U";
+            case 14: return "V";
+            case 15: return "W";
+            case 16: return "Na_i";
+            case 17: return "Ca_i";
+            case 18: return "K_i";
+            case 19: return "Ca_rel";
+            case 20: return "Ca_up";
+        }
+    }
+
 }

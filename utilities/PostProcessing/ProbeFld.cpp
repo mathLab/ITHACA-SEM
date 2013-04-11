@@ -35,9 +35,9 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import field file.
     string fieldfile(argv[2]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
     //----------------------------------------------
@@ -53,8 +53,8 @@ int main(int argc, char *argv[])
         pointstype.push_back(ptype);
     }
     graphShPt->SetExpansions(fielddef,pointstype);
-	bool useFFT = false;
-	bool dealiasing = false;
+    bool useFFT = false;
+    bool dealiasing = false;
     //----------------------------------------------
 
 

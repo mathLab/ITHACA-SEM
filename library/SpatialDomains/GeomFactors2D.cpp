@@ -148,7 +148,7 @@ namespace Nektar
                 m_coords[i] = Coords[i];
             }
 
-            StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
+            LibUtilities::ShapeType shape = Coords[0]->DetShapeType();
 
             // The quadrature points of the mapping
             // (as specified in Coords)
@@ -976,7 +976,7 @@ namespace Nektar
          * each quadrature point multipled by the quadrature weight.
          */
         void GeomFactors2D::v_SetUpQuadratureMetrics(
-                  StdRegions::ExpansionType                        shape,
+             LibUtilities::ShapeType                        shape,
             const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             ASSERTL1(tbasis.num_elements() == m_expDim,
@@ -1008,7 +1008,7 @@ namespace Nektar
             // Multiply the jacobian with the quadrature weights
             switch(shape)
             {
-                case StdRegions::eQuadrilateral:
+            case LibUtilities::eQuadrilateral:
                 {
                     for (i = 0; i < nquad1; ++i)
                     {
@@ -1025,18 +1025,18 @@ namespace Nektar
                     break;
                 }
 
-                case StdRegions::eTriangle:
+            case LibUtilities::eTriangle:
                 {
                     for(i = 0; i < nquad1; ++i)
                     {
                         Vmath::Vmul(nquad0,m_weightedjac.get()+i*nquad0,1,
                                     w0.get(),1,m_weightedjac.get()+i*nquad0,1);
                     }
-
+                    
                     switch(tbasis[1]->GetPointsType())
                     {
                         case LibUtilities::ePolyEvenlySpaced:
-                        case LibUtilities::eGaussLobattoLegendre:
+                    case LibUtilities::eGaussLobattoLegendre:
                         {
                             const Array<OneD, const NekDouble>& z1 =
                                 tbasis[1]->GetZ();
@@ -1047,7 +1047,7 @@ namespace Nektar
                             }
                             break;
                         }
-                        case LibUtilities::eGaussRadauMAlpha1Beta0:
+                    case LibUtilities::eGaussRadauMAlpha1Beta0:
                         {
                             for (i = 0; i < nquad1; ++i)
                             {
@@ -1056,7 +1056,7 @@ namespace Nektar
                             }
                             break;
                         }
-                        default:
+                    default:
                         {
                             m_isUsingQuadMetrics = false;
                             m_weightedjac = Array<OneD, NekDouble>();
@@ -1065,7 +1065,7 @@ namespace Nektar
                     }
                     break;
                 }
-                default:
+            default:
                 {
                     ASSERTL0(false,"Invalid shape type");
                 }
@@ -1075,7 +1075,7 @@ namespace Nektar
         /**
          *
          */
-        void GeomFactors2D::v_SetUpLaplacianMetrics(StdRegions::ExpansionType shape,
+        void GeomFactors2D::v_SetUpLaplacianMetrics(LibUtilities::ShapeType shape,
                                                   const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis)
         {
             ASSERTL1(tbasis.num_elements() == m_expDim,"Inappropriate dimension of tbasis");
@@ -1094,7 +1094,7 @@ namespace Nektar
 
             switch(shape)
             {
-            case StdRegions::eQuadrilateral:
+            case LibUtilities::eQuadrilateral:
                 {
                     if(( m_type == eRegular)||
                        ( m_type == eMovingRegular))
@@ -1143,7 +1143,7 @@ namespace Nektar
                     Vmath::Vmul(nqtot,&m_weightedjac[0],1,&m_laplacianmetrics[2][0],1,&m_laplacianmetrics[2][0],1);
                 }
                 break;
-            case StdRegions::eTriangle:
+            case LibUtilities::eTriangle:
                 {
                     Array<OneD, NekDouble> dEta_dXi[2] = {Array<OneD, NekDouble>(nqtot,1.0),
                                                           Array<OneD, NekDouble>(nqtot,1.0)};

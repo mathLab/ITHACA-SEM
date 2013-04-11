@@ -553,7 +553,7 @@ namespace Nektar
                (mattype == eForwardsCoeffSpaceZ1D)||(mattype == eForwardsPhysSpaceZ1D))
             {
                 StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
-                                                StdSeg.DetExpansionType(),
+                                                StdSeg.DetShapeType(),
                                                 StdSeg);
                 
                 loc_mat = StdSeg.GetStdMatrix(matkey);				
@@ -561,7 +561,7 @@ namespace Nektar
             else
             {
                 StdRegions::StdMatrixKey matkey(StdRegions::eBwdTrans,
-                                                StdSeg.DetExpansionType(),
+                                                StdSeg.DetShapeType(),
                                                 StdSeg);
                 
                 loc_mat = StdSeg.GetStdMatrix(matkey);
@@ -576,9 +576,9 @@ namespace Nektar
             return BlkMatrix;
         }
         
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpListHomogeneous2D::v_GetFieldDefinitions()
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> ExpListHomogeneous2D::v_GetFieldDefinitions()
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> returnval;
             // Set up Homogeneous length details.
             Array<OneD,LibUtilities::BasisSharedPtr> HomoBasis(2);
 			HomoBasis[0] = m_homogeneousBasis_y;
@@ -592,7 +592,7 @@ namespace Nektar
             return returnval;
         }
 
-        void  ExpListHomogeneous2D::v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
+        void  ExpListHomogeneous2D::v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
         {
             // Set up Homogeneous length details.
             Array<OneD,LibUtilities::BasisSharedPtr> HomoBasis(2);
@@ -606,7 +606,7 @@ namespace Nektar
             m_lines[0]->GeneralGetFieldDefinitions(fielddef,2, HomoBasis,HomoLen);
         }
         
-        void ExpListHomogeneous2D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
+        void ExpListHomogeneous2D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
             int i,k;
             
@@ -635,13 +635,13 @@ namespace Nektar
             }
         }
 	
-        void ExpListHomogeneous2D::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
+        void ExpListHomogeneous2D::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
             v_AppendFieldData(fielddef,fielddata,m_coeffs);
         }
         
         //Extract the data in fielddata into the m_coeff list
-        void ExpListHomogeneous2D::v_ExtractDataToCoeffs(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
+        void ExpListHomogeneous2D::v_ExtractDataToCoeffs(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, std::string &field)
         {
             int i,k;
             int offset = 0;
@@ -680,7 +680,6 @@ namespace Nektar
 					Vmath::Vcopy(datalen,&fielddata[offset],1,&m_coeffs[m_coeff_offset[eid] + k*ncoeffs_per_line],1);
 					offset += datalen;
 				}
-			
             }
         }
 
@@ -978,8 +977,8 @@ namespace Nektar
             
             StdRegions::StdQuadExp StdQuad(m_paddingBasis_y->GetBasisKey(),m_paddingBasis_z->GetBasisKey());
             
-            StdRegions::StdMatrixKey matkey1(StdRegions::eFwdTrans,StdQuad.DetExpansionType(),StdQuad);
-            StdRegions::StdMatrixKey matkey2(StdRegions::eBwdTrans,StdQuad.DetExpansionType(),StdQuad);
+            StdRegions::StdMatrixKey matkey1(StdRegions::eFwdTrans,StdQuad.DetShapeType(),StdQuad);
+            StdRegions::StdMatrixKey matkey2(StdRegions::eBwdTrans,StdQuad.DetShapeType(),StdQuad);
             
             MatFwdPAD = StdQuad.GetStdMatrix(matkey1);
             MatBwdPAD = StdQuad.GetStdMatrix(matkey2);

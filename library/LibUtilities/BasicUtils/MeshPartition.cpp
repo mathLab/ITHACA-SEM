@@ -62,7 +62,7 @@ namespace Nektar
     namespace LibUtilities
     {
         MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession) :
-                m_comm(pSession->GetComm()->GetRowComm())
+                m_comm(pSession->GetComm())
         {
             ReadMesh(pSession);
         }
@@ -74,9 +74,9 @@ namespace Nektar
 
         void MeshPartition::PartitionMesh()
         {
-            ASSERTL0(m_comm->GetSize() > 1,
+            ASSERTL0(m_comm->GetRowComm()->GetSize() > 1,
                      "Partitioning only necessary in parallel case.");
-            ASSERTL0(m_meshElements.size() >= m_comm->GetSize(),
+            ASSERTL0(m_meshElements.size() >= m_comm->GetRowComm()->GetSize(),
                      "Too few elements for this many processes.");
 
             CreateGraph(m_mesh);
@@ -96,7 +96,7 @@ namespace Nektar
 
             vNew.LinkEndChild(vElmtNektar);
 
-            std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(m_comm->GetRank()) + ".xml";
+            std::string vFilename = pSession->GetSessionName() + "_P" + boost::lexical_cast<std::string>(m_comm->GetRowComm()->GetRank()) + ".xml";
             vNew.SaveFile(vFilename.c_str());
         }
 
@@ -228,15 +228,28 @@ namespace Nektar
                     MeshCurved c;
                     ASSERTL0(x->Attribute("ID", &c.id),
                              "Failed to get attribute ID");
-                    ASSERTL0(x->Attribute("EDGEID", &c.edgeid),
-                             "Failed to get attribute EDGEID");
                     c.type = std::string(x->Attribute("TYPE"));
                     ASSERTL0(!c.type.empty(),
                              "Failed to get attribute TYPE");
                     ASSERTL0(x->Attribute("NUMPOINTS", &c.npoints),
                              "Failed to get attribute NUMPOINTS");
                     c.data = x->FirstChild()->ToText()->Value();
-                    m_meshCurved[c.id] = c;
+                    c.entitytype = x->Value()[0];
+                    if (c.entitytype == "E")
+                    {
+                        ASSERTL0(x->Attribute("EDGEID", &c.entityid),
+                             "Failed to get attribute EDGEID");
+                    }
+                    else if (c.entitytype == "F")
+                    {
+                        ASSERTL0(x->Attribute("FACEID", &c.entityid),
+                             "Failed to get attribute FACEID");
+                    }
+                    else
+                    {
+                        ASSERTL0(false, "Unknown curve type.");
+                    }
+                    m_meshCurved[std::make_pair(c.entitytype, c.id)] = c;
                     x = x->NextSiblingElement();
                 }
             }
@@ -323,7 +336,7 @@ namespace Nektar
             BoostVertexIterator    vertit, vertit_end;
             Array<OneD, int> part(nGraphVerts,0);
 
-            if (m_comm->GetRank() == 0)
+            if (m_comm->GetRowComm()->GetRank() == 0)
             {
                 int acnt = 0;
                 int vcnt = 0;
@@ -347,21 +360,36 @@ namespace Nektar
                 }
 
                 // Call Metis and partition graph
-                int npart = m_comm->GetSize();
+                int npart = m_comm->GetRowComm()->GetSize();
                 int vol = 0;
 
                 try
                 {
-                    // Attempt partitioning using METIS.
-                    Metis::PartGraphVKway(nGraphVerts, xadj, adjncy, vwgt, vsize, npart, vol, part);
-
-                    // Check METIS produced a valid partition and fix if not.
-                    CheckPartitions(part);
-
-                    // Distribute partitioning to all processes.
-                    for (i = 1; i < m_comm->GetSize(); ++i)
+					//////////////////////////////////////////////////////
+					// On a cartesian communicator do mesh partiotion just on the first column
+					// so there is no doubt the partitions are all the same in all the columns
+					if(m_comm->GetColumnComm()->GetRank() == 0)
+					{
+						// Attempt partitioning using METIS.
+						Metis::PartGraphVKway(nGraphVerts, xadj, adjncy, vwgt, vsize, npart, vol, part);
+						// Check METIS produced a valid partition and fix if not.
+						CheckPartitions(part);
+						// distribute among columns
+						for (i = 1; i < m_comm->GetColumnComm()->GetSize(); ++i)
+						{
+							m_comm->GetColumnComm()->Send(i, part);
+						}
+					}
+					else 
+					{
+						m_comm->GetColumnComm()->Recv(0, part);
+					}
+					m_comm->GetColumnComm()->Block();
+					//////////////////////////////////
+					// distribute among rows
+                    for (i = 1; i < m_comm->GetRowComm()->GetSize(); ++i)
                     {
-                        m_comm->Send(i, part);
+                        m_comm->GetRowComm()->Send(i, part);
                     }
                 }
                 catch (...)
@@ -372,7 +400,7 @@ namespace Nektar
             }
             else
             {
-                m_comm->Recv(0, part);
+                m_comm->GetRowComm()->Recv(0, part);
             }
 
             // Create boost subgraph for this process's partitions
@@ -384,7 +412,7 @@ namespace Nektar
                   vertit != vertit_end;
                   ++vertit, ++i)
             {
-                if (part[i] == m_comm->GetRank())
+                if (part[i] == m_comm->GetRowComm()->GetRank())
                 {
                     pGraph[*vertit].partition = part[i];
                     pGraph[*vertit].partid = boost::num_vertices(pLocalPartition);
@@ -398,7 +426,7 @@ namespace Nektar
         {
             unsigned int       i     = 0;
             unsigned int       cnt   = 0;
-            const unsigned int npart = m_comm->GetSize();
+            const unsigned int npart = m_comm->GetRowComm()->GetSize();
             bool               valid = true;
 
             // Check that every process has at least one element assigned
@@ -583,15 +611,26 @@ namespace Nektar
 
             if (m_dim >= 2)
             {
-                std::map<int, MeshCurved>::const_iterator vItCurve;
-                for (vItCurve = m_meshCurved.begin(); vItCurve != m_meshCurved.end(); ++vItCurve)
+                std::map<MeshCurvedKey, MeshCurved>::const_iterator vItCurve;
+                for (vItCurve  = m_meshCurved.begin(); 
+                     vItCurve != m_meshCurved.end(); 
+                     ++vItCurve)
                 {
                     MeshCurved c = vItCurve->second;
-                    if (vEdges.find(c.edgeid) != vEdges.end())
+                    
+                    if (vEdges.find(c.entityid) != vEdges.end() || 
+                        vFaces.find(c.entityid) != vFaces.end())
                     {
-                        x = new TiXmlElement("E");
+                        x = new TiXmlElement(c.entitytype);
                         x->SetAttribute("ID", c.id);
-                        x->SetAttribute("EDGEID", c.edgeid);
+                        if (c.entitytype == "E")
+                        {
+                            x->SetAttribute("EDGEID", c.entityid);
+                        }
+                        else
+                        {
+                            x->SetAttribute("FACEID", c.entityid);
+                        }
                         x->SetAttribute("TYPE", c.type);
                         x->SetAttribute("NUMPOINTS", c.npoints);
                         y = new TiXmlText(c.data);

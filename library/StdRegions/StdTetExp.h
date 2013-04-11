@@ -47,39 +47,6 @@ namespace Nektar
     {
         class StdMatrixKey;
 
-        namespace StdTetData
-        {
-            /**
-             * Adds up the number of cells in a truncated Nc by Nc by Nc
-             * pyramid, where the longest Na rows and longest Nb columns are
-             * kept. Example: (Na, Nb, Nc) = (3, 4, 5); The number of
-             * coefficients is the sum of the elements of the following
-             * matrix:
-             *
-             * |5  4  3  2  0|
-             * |4  3  2  0   |
-             * |3  2  0      |
-             * |0  0         |
-             * |0            |
-             * 
-             * Sum = 28 = number of tet coefficients.
-             */
-            inline int getNumberOfCoefficients(int Na, int Nb, int Nc)
-            {
-                int nCoef = 0;
-                for (int a = 0; a < Na; ++a)
-                {
-                    for (int b = 0; b < Nb - a; ++b)
-                    {
-                        for (int c = 0; c < Nc - a - b; ++c)
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                return nCoef;
-            }
-        }
 
         class StdTetExp : virtual public StdExpansion3D
         {
@@ -100,13 +67,10 @@ namespace Nektar
             STD_REGIONS_EXPORT StdTetExp(const StdTetExp &T);
             STD_REGIONS_EXPORT ~StdTetExp();
 
-            ExpansionType DetExpansionType() const
+            LibUtilities::ShapeType DetShapeType() const
             {
-                return eTetrahedron;
+                return LibUtilities::eTetrahedron;
             }
-
-
-
 
 
             /** \brief Single Point Evaluation */
@@ -238,7 +202,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int  v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int  v_GetNedges() const;
             STD_REGIONS_EXPORT virtual int  v_GetNfaces() const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int  v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_GetEdgeNcoeffs(const int i) const;

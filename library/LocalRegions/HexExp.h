@@ -160,7 +160,7 @@ namespace Nektar
                 std::string var = "v");
 
             LOCAL_REGIONS_EXPORT virtual 
-                StdRegions::ExpansionType v_DetExpansionType() const;
+                LibUtilities::ShapeType v_DetShapeType() const;
     
             LOCAL_REGIONS_EXPORT virtual const
                 SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
@@ -274,7 +274,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual 
                 DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(
                 const MatrixKey &mkey);
-                            
+
+            LOCAL_REGIONS_EXPORT void v_DropLocStaticCondMatrix(
+                const MatrixKey &mkey);
+
         private:
             SpatialDomains::Geometry3DSharedPtr   m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;

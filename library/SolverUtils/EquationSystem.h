@@ -40,7 +40,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <SpatialDomains/SpatialData.h>
+#include <LibUtilities/BasicUtils/FieldIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
@@ -290,6 +290,11 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline Array<
             OneD, MultiRegions::ExpListSharedPtr> &UpdateForces();
             
+
+            /// Get hold of FieldInfoMap so it can be updated
+            SOLVER_UTILS_EXPORT inline LibUtilities::FieldMetaDataMap 
+                &UpdateFieldMetaDataMap();
+
             /// Return final time
             SOLVER_UTILS_EXPORT inline NekDouble GetFinalTime();
             
@@ -400,7 +405,6 @@ namespace Nektar
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
-            SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
             /// Filename.
             std::string                                 m_filename;
             /// Name of the session.
@@ -450,9 +454,11 @@ namespace Nektar
             /// singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
             
+            /// Map to identify relevant solver info to dump in output fields
+            LibUtilities::FieldMetaDataMap            m_fieldMetaDataMap;
+
             /// Number of Quadrature points used to work out the error
             int  m_NumQuadPointsError;
-            bool m_UseContCoeff;
             
             /// Parameter for homogeneous expansions
             enum HomogeneousType

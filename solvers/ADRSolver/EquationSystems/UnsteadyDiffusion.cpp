@@ -57,7 +57,15 @@ namespace Nektar
         m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
 
+        m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
+        if(m_useSpecVanVisc)
+        {
+            m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
+            m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
+        }
+
         int npoints = m_fields[0]->GetNpoints();
+
         if(m_session->DefinesParameter("d00"))
         {
             m_varcoeff[StdRegions::eVarCoeffD00]
@@ -78,12 +86,14 @@ namespace Nektar
         {
             case MultiRegions::eDiscontinuous:
             {
-                string diffName;
+                std::string diffName;
         
                 m_session->LoadSolverInfo("DiffusionType", diffName, "LDG");
-                m_diffusion = SolverUtils::GetDiffusionFactory().CreateInstance(diffName, diffName);
-                m_diffusion->SetFluxVector(&UnsteadyDiffusion::GetFluxVector, this);
-                m_diffusion->InitObject(m_session);
+                m_diffusion = SolverUtils::GetDiffusionFactory().
+                    CreateInstance(diffName, diffName);
+                m_diffusion->SetFluxVector(&UnsteadyDiffusion::
+                                           GetFluxVector, this);
+                m_diffusion->InitObject(m_session, m_fields);
                 break;
             }
         
@@ -130,14 +140,8 @@ namespace Nektar
               Array<OneD,        Array<OneD, NekDouble> > &outarray,
         const NekDouble time)
     {
-        // Counter variable
-        int i;
-        
         // Number of fields (variables of the problem)
         int nVariables = inarray.num_elements();
-        
-        // Number of solution points
-        int nSolutionPts = GetNpoints();
         
         // RHS computation using the new advection base class
         m_diffusion->Diffuse(nVariables, 
@@ -168,7 +172,7 @@ namespace Nektar
             {
                 // Just copy over array
                 int npoints = GetNpoints();
-
+                
                 for(i = 0; i < nvariables; ++i)
                 {
                     Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
@@ -205,11 +209,12 @@ namespace Nektar
         const NekDouble lambda)
     {
         StdRegions::ConstFactorMap factors;
+
         int nvariables = inarray.num_elements();
         int npoints    = m_fields[0]->GetNpoints();
         factors[StdRegions::eFactorLambda] = 1.0 / lambda / m_epsilon;
         factors[StdRegions::eFactorTau]    = 1.0;
-        
+
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
         // outarray = output: nabla^2 \hat{Y}

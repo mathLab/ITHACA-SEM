@@ -45,6 +45,7 @@
 #include <MultiRegions/GlobalMatrix.h>  // for GlobalMatrix, etc
 #include <MultiRegions/GlobalMatrixKey.h>  // for GlobalMatrixKey
 
+#include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
@@ -422,7 +423,7 @@ namespace Nektar
             // matrix multiplies
             const Array<OneD, const bool>  doBlockMatOp
                 = m_globalOptParam->DoBlockMatOp(StdRegions::eIProductWRTBase);
-            const Array<OneD, StdRegions::ExpansionType> shape = m_globalOptParam->GetShapeList();
+            const Array<OneD, LibUtilities::ShapeType> shape = m_globalOptParam->GetShapeList();
             const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
 
             Array<OneD,NekDouble> tmp_outarray;
@@ -717,14 +718,14 @@ namespace Nektar
             DNekScalMatSharedPtr    loc_mat;
             DNekScalBlkMatSharedPtr BlkMatrix;
             map<int,int> elmt_id;
-            StdRegions::ExpansionType ExpType = gkey.GetExpansionType();
+            LibUtilities::ShapeType ShapeType = gkey.GetShapeType();
 
-            if(ExpType != StdRegions::eNoExpansionType)
+            if(ShapeType != LibUtilities::eNoShapeType)
             {
                 for(i = 0 ; i < (*m_exp).size(); ++i)
                 {
-                    if((*m_exp)[m_offset_elmt_id[i]]->DetExpansionType()
-                       == ExpType)
+                    if((*m_exp)[m_offset_elmt_id[i]]->DetShapeType()
+                       == ShapeType)
                     {
                         elmt_id[n_exp++] = m_offset_elmt_id[i];
                     }
@@ -833,7 +834,7 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
-                                               (*m_exp)[eid]->DetExpansionType(),
+                                               (*m_exp)[eid]->DetShapeType(),
                                                *(*m_exp)[eid],
                                                gkey.GetConstFactors(),
                                                varcoeffs );
@@ -877,7 +878,7 @@ namespace Nektar
             {
                 if(doBlockMatOp[n])
                 {
-                    const StdRegions::ExpansionType vType
+                    const LibUtilities::ShapeType vType
                                     = m_globalOptParam->GetShapeList()[n];
                     const MultiRegions::GlobalMatrixKey vKey(gkey, vType);
                     if (cnt < m_offset_elmt_id.num_elements())
@@ -909,7 +910,7 @@ namespace Nektar
                         }
 
                         StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
-                                                      (*m_exp)[eid]->DetExpansionType(),
+                                                      (*m_exp)[eid]->DetShapeType(),
                                                       *((*m_exp)[eid]),
                                                       gkey.GetConstFactors(),varcoeffs);
 
@@ -984,8 +985,8 @@ namespace Nektar
                 }
             }
 
-            map< pair< int,  int>, NekDouble > spcoomat;
-            pair<int,int> coord;
+            COOMatType spcoomat;
+            CoordType  coord;
 
             int nvarcoeffs = mkey.GetNVarCoeffs();
             int eid;
@@ -1007,7 +1008,7 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                              (*m_exp)[eid]->DetExpansionType(),
+                                              (*m_exp)[eid]->DetShapeType(),
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
@@ -1061,7 +1062,7 @@ namespace Nektar
             }
 
             return MemoryManager<GlobalMatrix>
-                ::AllocateSharedPtr(glob_rows,glob_cols,spcoomat);
+                ::AllocateSharedPtr(m_session,glob_rows,glob_cols,spcoomat);
         }
 
 
@@ -1127,7 +1128,7 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                              (*m_exp)[eid]->DetExpansionType(),
+                                              (*m_exp)[eid]->DetShapeType(),
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
@@ -1269,7 +1270,7 @@ namespace Nektar
             // matrix multiplies
             const Array<OneD, const bool>  doBlockMatOp
                 = m_globalOptParam->DoBlockMatOp(StdRegions::eBwdTrans);
-            const Array<OneD, StdRegions::ExpansionType> shape = m_globalOptParam->GetShapeList();
+            const Array<OneD, LibUtilities::ShapeType> shape = m_globalOptParam->GetShapeList();
             const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
 
             Array<OneD,NekDouble> tmp_outarray;
@@ -1515,8 +1516,8 @@ namespace Nektar
 
                     if(i>0)
                     {
-                        if ( ((*m_exp)[i]->DetExpansionType())
-                                        !=((*m_exp)[i-1]->DetExpansionType()) )
+                        if ( ((*m_exp)[i]->DetShapeType())
+                                        !=((*m_exp)[i-1]->DetShapeType()) )
                         {
                             dumpNewView = true;
                         }
@@ -1527,8 +1528,8 @@ namespace Nektar
                     }
                     if(i<(*m_exp).size()-1)
                     {
-                        if ( ((*m_exp)[i]->DetExpansionType())
-                                        !=((*m_exp)[i+1]->DetExpansionType()) )
+                        if ( ((*m_exp)[i]->DetShapeType())
+                                        !=((*m_exp)[i+1]->DetShapeType()) )
                         {
                             closeView = true;
                         }
@@ -1866,6 +1867,21 @@ namespace Nektar
             return sqrt(err);
         }
 		
+
+        NekDouble ExpList::v_Integral(const Array<OneD, const NekDouble> &inarray)
+        {
+            NekDouble err = 0.0;
+            int       i   = 0;
+
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                err += (*m_exp)[m_offset_elmt_id[i]]->Integral(inarray+m_phys_offset[i]);
+            }
+            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
+
+            return err;
+        }
+
         Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
             ASSERTL0(false,
@@ -1949,7 +1965,7 @@ namespace Nektar
             return sqrt(err);
         }
 
-        void  ExpList::GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, 
+        void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
 												  int NumHomoDir, 
 												  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
 												  std::vector<NekDouble> &HomoLen,
@@ -1965,22 +1981,22 @@ namespace Nektar
             switch((*m_exp)[0]->GetShapeDimension())
             {
             case 1:
-                startenum = (int) SpatialDomains::eSegment;
-                endenum   = (int) SpatialDomains::eSegment;
+                startenum = (int) LibUtilities::eSegment;
+                endenum   = (int) LibUtilities::eSegment;
                 break;
             case 2:
-                startenum = (int) SpatialDomains::eTriangle;
-                endenum   = (int) SpatialDomains::eQuadrilateral;
+                startenum = (int) LibUtilities::eTriangle;
+                endenum   = (int) LibUtilities::eQuadrilateral;
                 break;
             case 3:
-                startenum = (int) SpatialDomains::eTetrahedron;
-                endenum   = (int) SpatialDomains::eHexahedron;
+                startenum = (int) LibUtilities::eTetrahedron;
+                endenum   = (int) LibUtilities::eHexahedron;
                 break;
             }
 
             for(s = startenum; s <= endenum; ++s)
             {
-                SpatialDomains::GeomShapeType         shape;
+                LibUtilities::ShapeType               shape;
                 std::vector<unsigned int>             elementIDs;
                 std::vector<LibUtilities::BasisType>  basis;
                 std::vector<unsigned int>             numModes;
@@ -1992,12 +2008,12 @@ namespace Nektar
 
                 for(int i = 0; i < (*m_exp).size(); ++i)
                 {
-                    if((*m_exp)[i]->GetGeom()->GetGeomShapeType() == (SpatialDomains::GeomShapeType) s)
+                    if((*m_exp)[i]->GetGeom()->GetShapeType() == (LibUtilities::ShapeType) s)
                     {
                         elementIDs.push_back((*m_exp)[i]->GetGeom()->GetGlobalID());
                         if(first)
                         {
-                            shape = (SpatialDomains::GeomShapeType) s;
+                            shape = (LibUtilities::ShapeType) s;
                             for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
                             {
                                 basis.push_back((*m_exp)[i]->GetBasis(j)->GetBasisType());
@@ -2037,7 +2053,7 @@ namespace Nektar
 
                 if(elementIDs.size() > 0)
                 {
-                    SpatialDomains::FieldDefinitionsSharedPtr fdef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
+                    LibUtilities::FieldDefinitionsSharedPtr fdef  = MemoryManager<LibUtilities::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
                     fielddef.push_back(fdef);
                 }
             }
@@ -2046,26 +2062,26 @@ namespace Nektar
         //
         // Virtual functions
         //
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpList::v_GetFieldDefinitions()
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> ExpList::v_GetFieldDefinitions()
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> returnval;
             v_GetFieldDefinitions(returnval);
             return returnval;
         }
 
-        void  ExpList::v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
+        void  ExpList::v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
         {
             GeneralGetFieldDefinitions(fielddef);
         }
 
         //Append the element data listed in elements
         //fielddef->m_ElementIDs onto fielddata
-        void ExpList::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
+        void ExpList::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
             v_AppendFieldData(fielddef,fielddata,m_coeffs);
         }
         
-        void ExpList::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
+        void ExpList::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
             int i;
             // Determine mapping from element ids to location in
@@ -2089,7 +2105,7 @@ namespace Nektar
         
         /// Extract the data in fielddata into the coeffs
         void ExpList::ExtractDataToCoeffs(
-                                   SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                   LibUtilities::FieldDefinitionsSharedPtr &fielddef,
                                    std::vector<NekDouble> &fielddata,
                                    std::string &field,
                                    Array<OneD, NekDouble> &coeffs)
@@ -2111,7 +2127,7 @@ namespace Nektar
          * @param coeffs     Resulting coefficient array.
          */
         void ExpList::v_ExtractDataToCoeffs(
-            SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+            LibUtilities::FieldDefinitionsSharedPtr   &fielddef,
             std::vector<NekDouble>                    &fielddata,
             std::string                               &field,
             Array<OneD, NekDouble>                    &coeffs)
@@ -2131,13 +2147,8 @@ namespace Nektar
                 offset += datalen;
             }
             
-            if(i == fielddef->m_fields.size())
-            {
-                cerr << "Field (" << field << ") not found in data file; "
-                     << "Setting it to zero. " << endl;
-                Vmath::Zero(coeffs.num_elements(),coeffs,1);
-                return;
-            }
+            ASSERTL0(i != fielddef->m_fields.size(),
+                     "Field (" + field + ") not found in file.");
 
             // Determine mapping from element ids to location in expansion list
             map<int, int> elmtToExpId;

@@ -1669,7 +1669,7 @@ namespace Nektar
                 // get matrix inverse
                 LocalRegions::MatrixKey  lapkey(
                     StdRegions::eInvLaplacianWithUnityMean,  
-                    (*m_exp)[eid]->DetExpansionType(), *(*m_exp)[eid]);
+                    (*m_exp)[eid]->DetShapeType(), *(*m_exp)[eid]);
                 DNekScalMatSharedPtr lapsys = 
                     boost::dynamic_pointer_cast<LocalRegions::Expansion>(
                         (*m_exp)[eid])->GetLocMatrix(lapkey);
@@ -1689,6 +1689,10 @@ namespace Nektar
          *                      should be evaluated.
          * @param   bndCondExpansions   List of boundary conditions.
          * @param   bndConditions   Information about the boundary conditions.
+         *
+         * This will only be undertaken for time dependent
+         * boundary conditions unless time == 0.0 which is the
+         * case when the method is called from the constructor.
          */
         void DisContField2D::v_EvaluateBoundaryConditions(const NekDouble time,
                                                           const NekDouble x2_in,
@@ -1740,10 +1744,9 @@ namespace Nektar
                              cout << "Boundary condition from file:" 
                                   << filebcs << endl;
 
-                             std::vector<SpatialDomains::
-                                         FieldDefinitionsSharedPtr> FieldDef;
+                             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
-                             m_graph->Import(filebcs,FieldDef, FieldData);
+                             Import(filebcs,FieldDef, FieldData);
 
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
@@ -1788,10 +1791,9 @@ namespace Nektar
                              cout << "Boundary condition from file: "
                                   << filebcs << endl;
 
-                             std::vector<SpatialDomains::
-                                         FieldDefinitionsSharedPtr> FieldDef;
+                             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                              std::vector<std::vector<NekDouble> > FieldData;
-                             m_graph->Import(filebcs,FieldDef, FieldData);
+                             LibUtilities::Import(filebcs,FieldDef, FieldData);
 
                              // copy FieldData into locExpList
                              locExpList->ExtractDataToCoeffs(
@@ -1842,11 +1844,10 @@ namespace Nektar
                             int len = var.length();
                             var = var.substr(len-1,len);
 
-                            std::vector<SpatialDomains::
-                                        FieldDefinitionsSharedPtr> FieldDef;
+                            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                             std::vector<std::vector<NekDouble> >   FieldData;
 
-                            m_graph->Import(filebcs,FieldDef, FieldData);
+                            Import(filebcs,FieldDef, FieldData);
 
                             // copy FieldData into locExpList
                             locExpList->ExtractDataToCoeffs(

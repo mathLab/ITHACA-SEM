@@ -56,6 +56,17 @@ int main(int argc, char *argv[])
             {
                 fname = fname.substr(0,fdot);
             }
+            else if (ending == ".gz")
+            {
+                fname = fname.substr(0,fdot);
+                fdot = fname.find_last_of('.');
+                ASSERTL0(fdot != std::string::npos,
+                         "Error: expected file extension before .gz.");
+                ending = fname.substr(fdot);
+                ASSERTL0(ending == ".xml",
+                         "Compressed non-xml files are not supported.");
+                continue;
+            }
             else if (ending == ".xml")
             {
                 continue;
@@ -76,11 +87,11 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Import field file.
         string fieldfile(argv[n]);
-        vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+        vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
         vector<vector<NekDouble> > fielddata;
-        graphShPt->Import(fieldfile,fielddef,fielddata);
+        LibUtilities::Import(fieldfile,fielddef,fielddata);
         bool useFFT = false;
-		bool dealiasing = false;
+        bool dealiasing = false;
         //----------------------------------------------
 
         //----------------------------------------------

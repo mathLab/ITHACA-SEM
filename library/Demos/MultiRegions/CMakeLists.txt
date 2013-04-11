@@ -6,7 +6,7 @@ SET(LinkLibraries
     optimized LibUtilities debug LibUtilities-g
     optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
     optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
-    optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}
+    optimized ${ZLIB_LIBRARY_RELEASE} debug ${ZLIB_LIBRARY_DEBUG}
     optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
     optimized sbtk    debug sbtk
 )
@@ -110,6 +110,7 @@ ADD_NEKTAR_TEST(Helmholtz2D_HDG_P7_Modes_AllBCs)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_ml)
+ADD_NEKTAR_TEST(Helmholtz3D_CG_Hex_AllBCs_iter_sc_cont)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Tet)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism)
 ADD_NEKTAR_TEST(Helmholtz3D_CG_Prism_iter_ml)

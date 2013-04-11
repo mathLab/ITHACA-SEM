@@ -88,7 +88,6 @@ namespace Nektar
         // Read the geometry and the expansion information
         m_graph = SpatialDomains::MeshGraph::Read(m_session);
         m_domainsize = m_graph->GetDomain().size();
-        m_UseContCoeff = false;
 		
         // Also read and store the boundary conditions
         m_boundaryConditions = MemoryManager<SpatialDomains::BoundaryConditions>
@@ -269,15 +268,6 @@ namespace Nektar
             m_fields[1] = m_vessels[1];
         }
 	
-        // Read in spatial data
-        int nq = m_fields[0]->GetNpoints();
-        m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>::AllocateSharedPtr(m_session, nq);
-        m_spatialParameters->Read(m_filename);
-		
-        Array<OneD, NekDouble> x(nq), y(nq), z(nq);
-        m_fields[0]->GetCoords(x,y,z);
-        m_spatialParameters->EvaluateParameters(x,y,z);
-		
         // Zero all physical fields initially.
         ZeroPhysFields();
 		

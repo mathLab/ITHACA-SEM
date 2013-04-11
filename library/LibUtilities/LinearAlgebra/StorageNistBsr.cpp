@@ -407,12 +407,14 @@ namespace Nektar
     }
 
 
-    // General non-symmetric BSR multiply --- haven't been tested yet!
+    /// General non-symmetric BSR multiply using light NIST Sparse BLAS API
     template<typename DataType>
     void StorageNistBsr<DataType>::MultiplyLight(
             const DataVectorType &in,
                   DataVectorType &out)
     {
+        ASSERTL0(false, "StorageNistBsr::MultiplyLight() routine hasn't been tested to work");
+
         //using light API of NIST Sparse Blas
         SparseBlas::BSR_VecMult_CAB_double(
                             m_blkRows,
@@ -428,12 +430,14 @@ namespace Nektar
     }
 
 
-    // Symmetric BSR multiply --- haven't been tested yet!
+    /// Symmetric BSR multiply using light NIST Sparse BLAS API
     template<typename DataType>
     void StorageNistBsr<DataType>::MultiplyLightSymm(
                 const DataVectorType &in,
                       DataVectorType &out)
     {
+        ASSERTL0(false, "StorageNistBsr::MultiplyLightSymm() routine hasn't been tested to work");
+
         SparseBlas::BSRsymm_VecMult_CAB_double(
                             m_blkRows,
                             m_blkCols,

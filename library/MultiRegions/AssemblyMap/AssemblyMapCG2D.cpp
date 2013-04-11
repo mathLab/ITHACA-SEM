@@ -85,8 +85,7 @@ namespace Nektar
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                             &bndConditions,
-                const vector<map<int,int> >& periodicVerticesId,
-                const map<int,int>& periodicEdgesId,
+                const PeriodicMap& periodicEdgesId,
                 const bool checkIfSystemSingular) :
             AssemblyMapCG(pSession)
         {
@@ -94,7 +93,6 @@ namespace Nektar
                                       locExp,
                                       bndCondExp,
                                       bndConditions,
-                                      periodicVerticesId,
                                       periodicEdgesId,
                                       checkIfSystemSingular);
 
@@ -141,8 +139,7 @@ namespace Nektar
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
-                const vector<map<int,int> >& periodicVerticesId,
-                const map<int,int>& periodicEdgesId,
+                const PeriodicMap& periodicEdgesId,
                 const bool checkIfSystemSingular)
         {
             int i,j,k;
@@ -192,7 +189,7 @@ namespace Nektar
             Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> > bndConditionsVec(1,bndConditions);
             nGraphVerts = SetUp2DGraphC0ContMap(locExp,
                                                 bndCondExp,bndConditionsVec,
-                                                periodicVerticesId,periodicEdgesId,
+                                                periodicEdgesId,
                                                 Dofs,
                                                 ReorderedGraphVertId,
                                                 firstNonDirGraphVertId,
@@ -331,7 +328,7 @@ namespace Nektar
                 // Loop over all edges (and vertices) of element i
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
-                    map<int,int>::const_iterator it;
+                    PeriodicMap::const_iterator it;
                     
                     nEdgeInteriorCoeffs = locExpansion->GetEdgeNcoeffs(j)-2;
                     edgeOrient          = (locExpansion->GetGeom2D())->GetEorient(j);
@@ -346,7 +343,8 @@ namespace Nektar
                      * edges so that the sign array is correctly populated.
                      */ 
                     it = periodicEdgesId.find(meshEdgeId);
-                    if (it != periodicEdgesId.end() && it->second < 0)
+                    if (it != periodicEdgesId.end() &&
+                        it->second.orient == StdRegions::eBackwards)
                     {
                         if (edgeOrient == StdRegions::eForwards)
                         {
@@ -540,8 +538,7 @@ namespace Nektar
                 const ExpList  &locExp,
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >  &bndConditions,
-                const vector<map<int,int> >& periodicVerticesId,
-                const map<int,int>& periodicEdgesId,
+                const PeriodicMap& periodicEdgesId,
                 Array<OneD, map<int,int> > &Dofs,
                 Array<OneD, map<int,int> > &ReorderedGraphVertId,
                 int          &firstNonDirGraphVertId,
@@ -789,6 +786,35 @@ namespace Nektar
 
             m_numLocalBndCoeffs = 0;
 
+            /// - Local periodic vertices/edges.
+#if 0
+            PeriodicMap::iterator pIt;
+            for (pIt = periodicMap.begin(); pIt = periodicMap.end(); ++pIt)
+            {
+                if (!pIt->second.local)
+                {
+                    // The edge mapped to is on another process.
+                    meshEdgeId = pIt->first;
+                    edgeTempGraphVertId[meshEdgeId];
+                }
+                
+                meshEdgeId  = mapConstIt->first;
+                meshEdgeId2 = abs(mapConstIt->second);
+
+                if(meshEdgeId < meshEdgeId2)
+                {
+                    ASSERTL0(ReorderedGraphVertId[1].count(meshEdgeId) == 0,
+                             "This periodic boundary edge has been specified before");
+                    ASSERTL0(ReorderedGraphVertId[1].count(meshEdgeId2) == 0,
+                             "This periodic boundary edge has been specified before");
+
+                    edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
+                    edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
+                }
+            }
+#endif
+            
+#if 0
             /// - Periodic vertices
             for(k = 0; k < periodicVerticesId.size(); ++k)
             {
@@ -884,7 +910,8 @@ namespace Nektar
                     edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
                 }
             }
-
+#endif
+            
             /// - All other vertices and edges
             int elmtid;
             for(i = 0; i < locExpVector.size(); ++i)

@@ -81,7 +81,7 @@ namespace Nektar
                                                                 &bndContraint,
                 const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const map<int,int> &periodicEdges);
+                const PeriodicMap &periodicEdges);
 
             /// Constructor for trace map for three-dimensional expansion.
             MULTI_REGIONS_EXPORT AssemblyMapDG(

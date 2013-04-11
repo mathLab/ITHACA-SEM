@@ -118,12 +118,7 @@ namespace Nektar
             /**
              * @brief A map which identifies pairs of periodic edges.
              */
-            map<int,int> m_periodicEdges;
-	    
-            /**
-             * @brief A map identifying pairs of periodic vertices.
-             */
-            vector<map<int,int> > m_periodicVertices;
+            PeriodicMap m_periodicEdges;
             
             /**
              * @brief Auxiliary map for periodic boundary conditions.
@@ -195,6 +190,7 @@ namespace Nektar
              * @brief Obtain a copy of the periodic edges and vertices for this
              * field.
              */
+#if 0
             virtual void v_GetPeriodicEdges(
                 vector<map<int,int> > &periodicVertices,
                 map<int,int>          &periodicEdges)
@@ -202,7 +198,7 @@ namespace Nektar
                 periodicVertices = m_periodicVertices;
                 periodicEdges    = m_periodicEdges;
             }
-            
+#endif            
             virtual ExpListSharedPtr &v_GetTrace()
             {
                 if(m_trace == NullExpListSharedPtr)

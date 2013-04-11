@@ -132,7 +132,6 @@ namespace Nektar
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
-                                    m_periodicVertices,
                                     m_periodicEdges,
                                     CheckIfSingularSystem,
                                     variable);
@@ -181,7 +180,6 @@ namespace Nektar
                     ::AllocateSharedPtr(m_session, m_ncoeffs,*this,
                                         m_bndCondExpansions,
                                         m_bndConditions,
-                                        m_periodicVertices,
                                         m_periodicEdges,
                                         CheckIfSingularSystem,
                                         variable);

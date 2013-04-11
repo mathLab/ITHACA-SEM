@@ -66,7 +66,6 @@ namespace Nektar
             m_traceMap           (In.m_traceMap),
             m_boundaryEdges      (In.m_boundaryEdges),
             m_periodicEdges      (In.m_periodicEdges),
-            m_periodicVertices   (In.m_periodicVertices),
             m_perEdgeToExpMap    (In.m_perEdgeToExpMap),
             m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
         {
@@ -244,7 +243,6 @@ namespace Nektar
                     m_trace             = In.m_trace;
                     m_traceMap          = In.m_traceMap;
                     m_periodicEdges     = In.m_periodicEdges;
-                    m_periodicVertices  = In.m_periodicVertices;
                     m_boundaryEdges     = In.m_boundaryEdges;
                     m_perEdgeToExpMap   = In.m_perEdgeToExpMap;
                     m_leftAdjacentEdges = In.m_leftAdjacentEdges;
@@ -255,7 +253,6 @@ namespace Nektar
                     m_trace             = In.m_trace;
                     m_traceMap          = In.m_traceMap;
                     m_periodicEdges     = In.m_periodicEdges;
-                    m_periodicVertices  = In.m_periodicVertices;
                     m_boundaryEdges     = In.m_boundaryEdges;
                     m_perEdgeToExpMap   = In.m_perEdgeToExpMap;
                     m_leftAdjacentEdges = In.m_leftAdjacentEdges;
@@ -431,7 +428,7 @@ namespace Nektar
             {
                 for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
                 {
-                    map<int,int>::iterator it = m_periodicEdges.find(
+                    PeriodicMap::iterator it = m_periodicEdges.find(
                         (*m_exp)[n]->GetGeom2D()->GetEid(e));
                         
                     if (it != m_periodicEdges.end())
@@ -583,13 +580,19 @@ namespace Nektar
                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
+            SpatialDomains::MeshGraph2DSharedPtr graph2D =
+                boost::dynamic_pointer_cast<
+                    SpatialDomains::MeshGraph2D>(m_graph);
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
-            
-            vector<pair<int, int> > locBndReg;
-            map<int,int> doneBndReg;
 
-            int                       region1ID, region2ID;
-            SpatialDomains::Composite comp1, comp2;
+            // Unique collection of pairs of periodic composites (i.e. if
+            // composites 1 and 2 are periodic then this map will contain either
+            // the pair (1,2) or (2,1) but not both).
+            map<int,int>                     perComps;
+            //map<int,vector<int> >            allVerts;
+            map<int,StdRegions::Orientation> allEdges;
+            
+            int region1ID, region2ID, i, j, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
             // Construct list of all periodic pairs local to this process.
@@ -609,149 +612,257 @@ namespace Nektar
                     SpatialDomains::PeriodicBoundaryCondition>(
                         locBCond)->m_connectedBoundaryRegion;
 
-                if (doneBndReg.count(region1ID))
-                {
-                    locBndReg.push_back(std::make_pair(region1ID, region2ID));
+                ASSERTL0(it->second->size() == 1,
+                         "Boundary region "+boost::lexical_cast<string>(
+                             region1ID)+" should only contain 1 composite.");
 
-                    SpatialDomains::BoundaryRegion::iterator bnd1It, bnd2It;
+                // Construct set containing all periodic edges on this process
+                SpatialDomains::Composite c = it->second->at(0);
+                for (i = 0; i < c->size(); ++i)
+                {
+                    SpatialDomains::SegGeomSharedPtr segGeom =
+                        boost::dynamic_pointer_cast<
+                            SpatialDomains::SegGeom>((*c)[i]);
+                    ASSERTL0(segGeom, "Unable to cast to shared ptr");
+
+                    SpatialDomains::ElementEdgeVectorSharedPtr elmt =
+                        graph2D->GetElementsFromEdge(segGeom);
+                    ASSERTL0(elmt->size() == 1,
+                             "The periodic boundaries belong to "
+                             "more than one element of the mesh");
+
+                    SpatialDomains::Geometry2DSharedPtr geom =
+                        boost::dynamic_pointer_cast<SpatialDomains::Geometry2D>(
+                            (*elmt)[0]->m_Element);
+                    
+                    allEdges[(*c)[i]->GetGlobalID()] = 
+                        geom->GetEorient((*elmt)[0]->m_EdgeIndx);
+
+                    //vector<int> vertList(2);
+                    //vertList[0] = geom->GetVid(0);
+                    //vertList[1] = geom->GetVid(1);
+                    //allVerts[(*c)[i]->GetGlobalID()] = vertList;
+                }
+                
+                // See if we already have either region1 or region2 stored in
+                // perComps map.
+                if (perComps.count(region1ID) == 0)
+                {
+                    if (perComps.count(region2ID) == 0)
+                    {
+                        perComps[region1ID] = region2ID;
+                    }
+                    else
+                    {
+                        std::stringstream ss;
+                        ss << "Boundary region " << region2ID << " should be "
+                           << "periodic with " << perComps[region2ID] << " but "
+                           << "found " << region1ID << " instead!";
+                        ASSERTL0(perComps[region2ID] == region1ID, ss.str());
+                    }
                 }
                 else
                 {
                     std::stringstream ss;
                     ss << "Boundary region " << region1ID << " should be "
-                       << "periodic with " << doneBndReg[region1ID] << " but "
+                       << "periodic with " << perComps[region1ID] << " but "
                        << "found " << region2ID << " instead!";
-                    ASSERTL0(doneBndReg[region1ID] == region2ID, ss.str());
+                    ASSERTL0(perComps[region1ID] == region1ID, ss.str());
                 }
             }
 
+            // Process local edge list to obtain relative edge orientations.
+            LibUtilities::CommSharedPtr vCommRow =
+                m_session->GetComm()->GetRowComm();
+            int              n = vCommRow->GetSize();
+            int              p = vCommRow->GetRank();
+            int              totEdges;
+            Array<OneD, int> edgecounts(n,0);
+            Array<OneD, int> edgeoffset(n,0);
 
-            /*
-            int region1ID;
-            int region2ID;
+            edgecounts[p] = allEdges.size();
+            vCommRow->AllReduce(edgecounts, LibUtilities::ReduceSum);
 
-
-            SpatialDomains::SegGeomSharedPtr segmentGeom1;
-            SpatialDomains::SegGeomSharedPtr segmentGeom2;
-
-            SpatialDomains::ElementEdgeVectorSharedPtr element1;
-            SpatialDomains::ElementEdgeVectorSharedPtr element2;
-
-            StdRegions::Orientation orient1;
-            StdRegions::Orientation orient2;
-
-
-            // This std::map is a check so that the periodic pairs
-            // are not treated twice
-            map<int, int> doneBndRegions;
-
-            int nbnd = bregions.size();
-
-            for(i = 0; i < nbnd; ++i)
+            edgeoffset[0] = 0;
+            for (i = 1; i < n; ++i)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
-                if(locBCond->GetBoundaryConditionType()
-                     != SpatialDomains::ePeriodic)
+                edgeoffset[i] = edgeoffset[i-1] + edgecounts[i-1];
+            }
+
+            totEdges = Vmath::Vsum(n, edgecounts, 1);
+            Array<OneD, int> edgeIds   (totEdges, 0);
+            Array<OneD, int> edgeOrient(totEdges, 0);
+            //Array<OneD, int> edgeVerts (totEdges, 0);
+
+            map<int, StdRegions::Orientation>::iterator sIt;
+
+            for (i = 0, sIt = allEdges.begin(); sIt != allEdges.end(); ++sIt)
+            {
+                edgeIds   [edgeoffset[p] + i  ] = sIt->first;
+                edgeOrient[edgeoffset[p] + i  ] = sIt->second;
+                //edgeVerts [edgeoffset[p] + i++] = allVerts[sIt->first].size();
+            }
+
+            vCommRow->AllReduce(edgeIds,    LibUtilities::ReduceSum);
+            vCommRow->AllReduce(edgeOrient, LibUtilities::ReduceSum);
+            //vCommRow->AllReduce(edgeVerts,  LibUtilities::ReduceSum);
+
+            //int nTotVerts = Vmath::Vsum(totEdges, edgeVerts, 1);
+
+            // Calculate number of vertices on each processor.
+            //Array<OneD, int> procVerts(n,0);
+            //for (i = 0; i < n; ++i)
+            //{
+            //    procVerts[i] = Vmath::Vsum(
+            //        edgecounts[i], edgeVerts + edgeoffset[i], 1);
+            //}
+            
+            //Array<OneD, int> vertIds(nTotVerts, 0);
+            //for (i = 0, sIt = allEdges.begin(); sIt != allEdges.end(); ++sIt)
+            //{
+            //    for (j = 0; j < allVerts[sIt->first].size(); ++j)
+            //    {
+            //        vertIds[procVerts[p] + i++] = allVerts[sIt->first][j];
+            //    }
+            //}
+
+            //vCommRow->AllReduce(vertIds, LibUtilities::ReduceSum);
+
+            // For simplicity's sake create a map of edge id -> orientation.
+            map<int, StdRegions::Orientation> orientMap;
+            //map<int, vector<int> >            vertMap;
+
+            for (cnt = i = 0; i < totEdges; ++i)
+            {
+                ASSERTL0(orientMap.count(edgeIds[i]) == 0,
+                         "Already found edge in orientation map!");
+                orientMap[edgeIds[i]] = (StdRegions::Orientation)edgeOrient[i];
+
+                /*
+                vector<int> verts(edgeVerts[i]);
+
+                for (j = 0; j < edgeVerts[i]; ++j)
                 {
-                    continue;
+                    verts[j] = vertIds[cnt++];
+                }
+                vertMap[edgeIds[i]] = verts[j];
+                */
+            }
+            
+            // Go through list of composites and figure out which edges are
+            // parallel from original ordering in session file. This includes
+            // composites which are not necessarily on this process.
+            LibUtilities::CompositeOrdering compOrder =
+                m_session->GetCompositeOrdering();
+            SpatialDomains::CompositeMap    compMap   =
+                m_graph->GetComposites();
+            
+            map<int,int>::iterator cIt, pIt;
+            map<int,int>::const_iterator oIt;
+            for (cIt = perComps.begin(); cIt != perComps.end(); ++cIt)
+            {
+                SpatialDomains::Composite c[2];
+                const int   id1  = cIt->first;
+                const int   id2  = cIt->second;
+                std::string id1s = boost::lexical_cast<string>(id1);
+                std::string id2s = boost::lexical_cast<string>(id2);
+
+                if (compMap.count(id1) > 0)
+                {
+                    c[0] = compMap[id1];
+                }
+                
+                if (compMap.count(id2) > 0)
+                {
+                    c[1] = compMap[id2];
                 }
 
-                region1ID = i;
-                region2ID = (boost::static_pointer_cast<
-                             SpatialDomains::PeriodicBoundaryCondition
-                             >(locBCond))->m_connectedBoundaryRegion;
+                ASSERTL0(c[0] || c[1], "Both composites not found on this process!");
 
-                map<int,int> periodicVertices;
-                
-                SpatialDomains::BoundaryRegion::iterator bnd1It, bnd2It;
-                for(bnd1It =  bregions[region1ID]->begin(),
-                    bnd2It =  bregions[region2ID]->begin();
-                    bnd1It != bregions[region1ID]->end();
-                    ++bnd1It, ++bnd2It)
+                // Loop over composite ordering to construct list of all
+                // periodic edges regardless of whether they are on this
+                // process.
+                map<int,int> compPairs;
+
+                ASSERTL0(compOrder.count(id1) > 0,
+                         "Unable to find composite "+id1s+"in order map.");
+                ASSERTL0(compOrder.count(id2) > 0,
+                         "Unable to find composite "+id2s+"in order map.");
+                ASSERTL0(compOrder[id1].size() == compOrder[id2].size(),
+                         "Periodic composites "+id1s+" and "+id2s+
+                         " should have the same number of elements.");
+                ASSERTL0(compOrder[id1].size() > 0,
+                         "Periodic composites "+id1s+" and "+id2s+
+                         " are empty!");
+
+                // TODO: Add more checks.
+                for (i = 0; i < compOrder[id1].size(); ++i)
                 {
-                    comp1 = bnd1It->second;
-                    comp2 = bnd2It->second;
+                    int eId1 = compOrder[id1][i];
+                    int eId2 = compOrder[id2][i];
 
-                    
-                    
-                            for(k = 0; k < comp1->size(); k++)
-                            {
-                                if(!(segmentGeom1
-                                     = boost::dynamic_pointer_cast<
-                                     SpatialDomains::SegGeom>((*comp1)[k]))
-                                   || !(segmentGeom2
-                                        = boost::dynamic_pointer_cast<
-                                        SpatialDomains::SegGeom>((*comp2)[k]))
-                                   )
-                                {
-                                    ASSERTL0(false,"dynamic cast to a SegGeom "
-                                             "failed");
-                                }
+                    ASSERTL0(compPairs.count(eId1) == 0,
+                             "Already paired.");
 
-                                element1 = boost::dynamic_pointer_cast<
-                                    SpatialDomains::MeshGraph2D>(m_graph)
-                                        ->GetElementsFromEdge(segmentGeom1);
-                                element2 = boost::dynamic_pointer_cast<
-                                    SpatialDomains::MeshGraph2D>(m_graph)
-                                        ->GetElementsFromEdge(segmentGeom2);
-
-                                ASSERTL0(element1->size() == 1,
-                                         "The periodic boundaries belong to "
-                                         "more than one element of the mesh");
-                                ASSERTL0(element2->size() == 1,
-                                         "The periodic boundaries belong to "
-                                         "more than one element of the mesh");
-
-                                orient1 = (boost::dynamic_pointer_cast<
-                                           SpatialDomains::Geometry2D>(
-                                               (*element1)[0]->m_Element)
-                                           )->GetEorient((*element1)[0]
-                                                         ->m_EdgeIndx);
-                                orient2 = (boost::dynamic_pointer_cast<
-                                           SpatialDomains::Geometry2D>(
-                                               (*element2)[0]->m_Element)
-                                           )->GetEorient((*element2)[0]
-                                                         ->m_EdgeIndx);
-
-                                if(orient1!=orient2)
-                                {
-                                    // Extract the periodic edges.
-                                    m_periodicEdges[segmentGeom1->GetEid()]
-                                        = segmentGeom2->GetEid();
-                                    m_periodicEdges[segmentGeom2->GetEid()]
-                                        = segmentGeom1->GetEid();
-                                    
-                                    // Extract the periodic vertices.
-                                    periodicVertices[segmentGeom1->GetVid(0)]
-                                        = segmentGeom2->GetVid(0);
-                                    periodicVertices[segmentGeom1->GetVid(1)]
-                                        = segmentGeom2->GetVid(1);
-                                }
-                                else
-                                {
-                                    m_periodicEdges[segmentGeom1->GetEid()]
-                                        = -segmentGeom2->GetEid();
-                                    m_periodicEdges[segmentGeom2->GetEid()]
-                                        = segmentGeom1->GetEid();
-                                    
-                                    periodicVertices[segmentGeom1->GetVid(0)]
-                                        = segmentGeom2->GetVid(1);
-                                    periodicVertices[segmentGeom1->GetVid(1)]
-                                        = segmentGeom2->GetVid(0);
-                                }
-                            }
-                        }
-                        m_periodicVertices.push_back(periodicVertices);
-                    }
-                    else
+                    if (compPairs.count(eId2) != 0)
                     {
-                        ASSERTL0(doneBndRegions[region1ID]==region2ID,
-                                 "Boundary regions are not mutually periodic");
+                        ASSERTL0(compPairs[eId2] == eId1, "Pairing incorrect");
                     }
-                    doneBndRegions[region2ID] = region1ID;
+                    compPairs[eId1] = eId2;
+                }
+
+                // Construct set of all edges that we have locally on this
+                // processor.
+                set<int> locEdges;
+                set<int>::iterator sIt;
+                for (i = 0; i < 2; ++i)
+                {
+                    if (c[i]->size() > 0)
+                    {
+                        for (j = 0; j < c[i]->size(); ++j)
+                        {
+                            locEdges.insert(c[i]->at(j)->GetGlobalID());
+                        }
+                    }
+                }
+
+                // Loop over all edges in the geometry composite.
+                for (pIt = compPairs.begin(); pIt != compPairs.end(); ++pIt)
+                {
+                    int  ids  [2] = {pIt->first, pIt->second};
+                    bool local[2] = {locEdges.count(pIt->first) > 0,
+                                     locEdges.count(pIt->second) > 0};
+
+                    ASSERTL0(orientMap.count(ids[0]) > 0 &&
+                             orientMap.count(ids[1]) > 0,
+                             "Unable to find edge in orientation map.");
+                    
+                    if (!local[0] && !local[1])
+                    {
+                        // Neither edge is stored on this process.
+                        continue;
+                    }
+
+                    for (i = 0; i > 2; ++i)
+                    {
+                        if (!local[i])
+                        {
+                            continue;
+                        }
+
+                        int other = (i+1) % 2;
+
+                        StdRegions::Orientation o =
+                            orientMap[i] == orientMap[other] ?
+                                StdRegions::eBackwards :
+                                StdRegions::eForwards;
+                        
+                        PeriodicEntity ent(ids  [other], o,
+                                           local[other]);
+                        m_periodicEdges[ids[i]] = ent;
+                    }
                 }
             }
-            */
         }
 
         bool DisContField2D::IsLeftAdjacentEdge(const int n, const int e)
@@ -841,7 +952,7 @@ namespace Nektar
             int nexp = GetExpSize();
             int cnt, n, e, npts, phys_offset;
             Array<OneD,NekDouble> e_tmp;
-            map<int,int>::iterator it2;
+            PeriodicMap::iterator it2;
             boost::unordered_map<int,pair<int,int> >::iterator it3;
 
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
@@ -882,7 +993,7 @@ namespace Nektar
                     
                     if (it2 != m_periodicEdges.end())
                     {
-                        it3 = m_perEdgeToExpMap.find(abs(it2->second));
+                        it3 = m_perEdgeToExpMap.find(it2->second.id);
 
                         ASSERTL2(fwd, "Periodic edge in non-forward space?");
                         ASSERTL2(it3 != m_perEdgeToExpMap.end(),
@@ -897,8 +1008,8 @@ namespace Nektar
                          * that for varying polynomial order this condition will
                          * not work (needs some kind of interpolation here).
                          */
-                        if (it2->second                       < 0 || 
-                            m_periodicEdges[abs(it2->second)] < 0)
+                        if (it2->second.orient == StdRegions::eBackwards || 
+                            m_periodicEdges[it2->second.id].orient == StdRegions::eBackwards)
                         {
                             Vmath::Reverse(elmtToTrace[n][e]->GetTotPoints(),
                                            &Fwd[offset], 1, &Bwd[offset2], 1);

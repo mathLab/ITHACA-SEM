@@ -115,6 +115,9 @@ namespace Nektar
                 const DNekScalMatSharedPtr &r_bnd, 
                 const StdRegions::MatrixType matrixType);
 
+            LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(
+                const DNekScalMatSharedPtr & m_transformationmatrix);
+
             LOCAL_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildVertexMatrix(
                 const DNekScalMatSharedPtr &r_bnd); 
 

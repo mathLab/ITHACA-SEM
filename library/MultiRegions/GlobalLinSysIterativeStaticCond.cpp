@@ -210,7 +210,6 @@ namespace Nektar
             
             NekVector<NekDouble> V_GlobHomBndTmp(nGlobHomBndDofs,0.0);
 
-            
             // set up normalisation factor for right hand side on first SC level
             if(scLevel == 0)
             {
@@ -225,7 +224,7 @@ namespace Nektar
                     DNekScalBlkMat &BinvD      = *m_BinvD;
                     DNekScalBlkMat &SchurCompl = *m_S1Blk;
                     
-                    //include dirichlet boundary forcing
+                    //include dirichlet boundary forcing 
                     pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
                     V_LocBnd = BinvD*F_Int + SchurCompl*V_LocBnd;
                     
@@ -247,10 +246,11 @@ namespace Nektar
                 pLocToGloMap->AssembleBnd(V_LocBnd,V_GlobHomBndTmp,
                                           nDirBndDofs);
                 F_HomBnd = F_HomBnd - V_GlobHomBndTmp;
+
                 
                 //transform from original basis to low energy
                 Array<OneD, NekDouble> tmp;
-                m_precon->DoTransformToLowEnergy(F,tmp=F+nDirBndDofs);
+                m_precon->DoTransformToLowEnergy(F,nDirBndDofs);
 
                 // For parallel multi-level static condensation some
                 // processors may have different levels to others. This

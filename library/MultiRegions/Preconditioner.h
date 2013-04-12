@@ -76,12 +76,29 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
+            inline void DoPreconditionerWithNonVertOutput(
+                         const Array<OneD, NekDouble>& pInput,
+                         Array<OneD, NekDouble>& pOutput,
+                         const Array<OneD, NekDouble>& pNonVertOutput);
+
 	    inline void DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
+
+            inline void DoTransformToLowEnergy(
                 const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput);
+                Array<OneD, NekDouble>& pOutput);
 
 	    inline void DoTransformFromLowEnergy(
-                Array<OneD, NekDouble>& pInput);
+                Array<OneD, NekDouble>& pInOut);
+
+            inline void DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+            
+            inline void DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);                
 
 	    inline void BuildPreconditioner();
 
@@ -89,13 +106,7 @@ namespace Nektar
 
             Array<OneD, NekDouble> AssembleStaticCondGlobalDiagonals();
 
-            const inline Array<OneD, const DNekScalMatSharedPtr> 
-                &GetTransformationMatrix(void) const;
-            
-            const inline Array<OneD, const DNekScalMatSharedPtr> 
-                &GetTransposedTransformationMatrix(void) const;
-            
-            inline const DNekScalBlkMatSharedPtr&
+             inline const DNekScalBlkMatSharedPtr&
                 GetBlockTransformedSchurCompl() const;
             
             inline const DNekScalBlkMatSharedPtr&
@@ -141,20 +152,31 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
 
-	    virtual void v_DoTransformToLowEnergy(
+            virtual void v_DoPreconditionerWithNonVertOutput(
                 const Array<OneD, NekDouble>& pInput,
-		      Array<OneD, NekDouble>& pOutput);
+                Array<OneD, NekDouble>& pOutput,
+                const Array<OneD, NekDouble>& pNonVertOutput);
+            
+	    virtual void v_DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
+
+            virtual void v_DoTransformToLowEnergy(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
 
 	    virtual void v_DoTransformFromLowEnergy(
                 Array<OneD, NekDouble>& pInput);
 
+            virtual void v_DoMultiplybyInverseTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
+            virtual void v_DoMultiplybyInverseTransposedTransformationMatrix(
+                const Array<OneD, NekDouble>& pInput,
+                Array<OneD, NekDouble>& pOutput);
+
 	    virtual void v_BuildPreconditioner();
-
-            virtual const Array<OneD, const DNekScalMatSharedPtr>& 
-                v_GetTransformationMatrix(void) const;
-
-            virtual const Array<OneD, const DNekScalMatSharedPtr>& 
-                v_GetTransposedTransformationMatrix(void) const;
 
             static std::string lookupIds[];
             static std::string def;
@@ -167,24 +189,6 @@ namespace Nektar
         inline void Preconditioner::InitObject()
         {
             v_InitObject();
-        }
-
-        /**
-         *
-         */
-        inline const Array<OneD,const DNekScalMatSharedPtr>& 
-            Preconditioner::GetTransformationMatrix() const
-        {
-            return v_GetTransformationMatrix();
-        }
-
-        /**
-         *
-         */
-        inline const Array<OneD,const DNekScalMatSharedPtr>& 
-            Preconditioner::GetTransposedTransformationMatrix() const
-        {
-            return v_GetTransposedTransformationMatrix();
         }
 
         /**
@@ -206,6 +210,28 @@ namespace Nektar
 	    v_DoPreconditioner(pInput,pOutput);
         }
         
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoPreconditionerWithNonVertOutput(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput,
+            const Array<OneD, NekDouble>& pNonVertOutput)
+        {
+            v_DoPreconditionerWithNonVertOutput(pInput,pOutput,pNonVertOutput);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoTransformToLowEnergy(
+            Array<OneD, NekDouble>& pInOut,
+            int offset)
+        {
+	    v_DoTransformToLowEnergy(pInOut,offset);
+        }
+
         /**
          *
          */
@@ -223,6 +249,26 @@ namespace Nektar
             Array<OneD, NekDouble>& pInput)
         {
 	    v_DoTransformFromLowEnergy(pInput);
+        }
+
+        /**
+         *
+         */
+        inline void Preconditioner::DoMultiplybyInverseTransformationMatrix(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+            v_DoMultiplybyInverseTransformationMatrix(pInput,pOutput);
+        }
+           
+        /**
+         *
+         */
+        inline void Preconditioner::DoMultiplybyInverseTransposedTransformationMatrix(
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput)
+        {
+            v_DoMultiplybyInverseTransposedTransformationMatrix(pInput,pOutput);
         }
 
         /**

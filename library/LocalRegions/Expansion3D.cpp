@@ -1442,7 +1442,7 @@ namespace Nektar
 
                 //create array of edge modes
                 Array<OneD, unsigned int> inedgearray=GetEdgeInverseBoundaryMap(eid);
-                nedgemodes=GetEdgeNcoeffs(eid)-2;//edgeModeLocation[eid].num_elements();
+                nedgemodes=GetEdgeNcoeffs(eid)-2;
                 Array<OneD, unsigned int> edgemodearray(nedgemodes);
 
                 Vmath::Vcopy(nedgemodes, &inedgearray[0], 
@@ -1526,6 +1526,124 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"unkown matrix type" );
                 return NullDNekMatSharedPtr;
             }
+	}
+
+        /**
+	 * \brief Build inverse and inverse transposed transformation matrix: \f$\mathbf{R^{-1}}\f$ and \f$\mathbf{R^{-T}}\f$
+	 *
+	 * \f\mathbf{R^{-T}}=[\left[\begin{array}{ccc} \mathbf{I} & -\mathbf{R}_{ef} & -\mathbf{R}_{ve}+\mathbf{R}_{ve}\mathbf{R}_{vf} \\
+	 *  0 & \mathbf{I} & \mathbf{R}_{ef} \\
+	 *  0 & 0 & \mathbf{I}} \end{array}\right]\f]
+	 *
+	 */
+        DNekMatSharedPtr Expansion3D::v_BuildInverseTransformationMatrix(
+            const DNekScalMatSharedPtr & m_transformationmatrix)
+	{
+            int i,j,n, eid=0, fid=0;
+            int nCoeffs=NumBndryCoeffs();
+            NekDouble MatrixValue;
+            NekDouble zero=0.0;
+            DNekScalMat &R = (*m_transformationmatrix);
+            // Define storage for vertex transpose matrix and zero all entries
+            MatrixStorage storage = eFULL;
+
+            //inverse transformation matrix
+            DNekMatSharedPtr m_inversetransformationmatrix = 
+                MemoryManager<DNekMat>::AllocateSharedPtr(nCoeffs,nCoeffs,zero,storage);
+            DNekMat &InvR = (*m_inversetransformationmatrix);
+
+            int nVerts=GetNverts();
+            int nEdges=GetNedges();
+            int nFaces=GetNfaces();
+
+            int nedgemodes=0;
+            int nfacemodes=0;
+            int nedgemodestotal=0;
+            int nfacemodestotal=0;
+
+            for(eid=0; eid < nEdges; ++eid)
+            {
+                nedgemodes=GetEdgeNcoeffs(eid)-2;
+                nedgemodestotal+=nedgemodes;
+            }
+
+            for(fid=0; fid < nFaces; ++fid)
+            {
+                nfacemodes=GetFaceIntNcoeffs(fid);
+                nfacemodestotal+=nfacemodes;
+            }
+
+            Array<OneD, unsigned int> 
+                edgemodearray(nedgemodestotal);
+            Array<OneD, unsigned int> 
+                facemodearray(nfacemodestotal);
+
+            int offset=0;
+            //create array of edge modes
+            for(eid=0; eid < nEdges; ++eid)
+            {
+                Array<OneD, unsigned int> edgearray=GetEdgeInverseBoundaryMap(eid);
+                nedgemodes=GetEdgeNcoeffs(eid)-2;
+                Vmath::Vcopy(nedgemodes, &edgearray[0], 1, &edgemodearray[offset], 1);
+                offset+=nedgemodes;
+            }
+
+            offset=0;
+            //create array of face modes
+            for(fid=0; fid < nFaces; ++fid)
+            {
+                Array<OneD, unsigned int> facearray=GetFaceInverseBoundaryMap(fid);
+                nfacemodes=GetFaceIntNcoeffs(fid);
+                Vmath::Vcopy(nfacemodes, &facearray[0], 1, &facemodearray[offset], 1);
+                offset+=nfacemodes;
+            }
+            
+            //nedgemodestotal=nedgemodes*nEdges;
+            //nfacemodestotal=nfacemodes*nFaces;
+
+            //vertex-edge/face
+            for (i=0; i<nVerts; ++i)
+            {
+                for(j=0; j<nedgemodestotal; ++j)
+                {
+                    InvR.SetValue(
+                        GetVertexMap(i),edgemodearray[j],
+                        -R(GetVertexMap(i),edgemodearray[j]));
+                }
+                for(j=0; j<nfacemodestotal; ++j)
+                {
+                    InvR.SetValue(
+                        GetVertexMap(i),facemodearray[j],
+                        -R(GetVertexMap(i),facemodearray[j]));
+                    for(n=0; n<nedgemodestotal; ++n)
+                    {
+                        MatrixValue=InvR.GetValue(
+                            GetVertexMap(i),facemodearray[j])
+                            +R(GetVertexMap(i),edgemodearray[n])
+                            *R(edgemodearray[n],facemodearray[j]);
+                        InvR.SetValue(
+                            GetVertexMap(i),facemodearray[j],MatrixValue);
+                    }
+                }
+            }
+            
+            //edge-face contributions
+            for (i=0; i<nedgemodestotal; ++i)
+            {
+                for(j=0; j<nfacemodestotal; ++j)
+                {
+                    InvR.SetValue(
+                        edgemodearray[i],facemodearray[j],
+                        -R(edgemodearray[i],facemodearray[j]));
+                }
+            }
+            
+            for (i = 0; i < nCoeffs; ++i)
+            {
+                InvR.SetValue(i,i,1.0);
+            }
+
+            return m_inversetransformationmatrix;
 	}
 
         Array<OneD, unsigned int>

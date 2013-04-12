@@ -53,7 +53,7 @@ namespace Nektar
                 = GetPreconFactory().RegisterCreatorFunction(
                     "Block",
                     PreconditionerBlock::create,
-                    "Block Preconditioning");
+                    "Block Diagonal Preconditioning");
  
        /**
          * @class Block Preconditioner

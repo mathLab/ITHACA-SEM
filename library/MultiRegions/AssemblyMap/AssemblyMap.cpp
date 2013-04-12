@@ -585,6 +585,13 @@ namespace Nektar
             static Array<OneD, const int> result;
             return result;
         }
+        
+        boost::shared_ptr<AssemblyMap> AssemblyMap::v_XxtLinearSpaceMap(const ExpList &locexp)
+        {
+            ASSERTL0(false, "Not defined for this sub class");
+            static boost::shared_ptr<AssemblyMap> result;
+            return result;
+        }
 
         LibUtilities::CommSharedPtr AssemblyMap::GetComm()
         {
@@ -740,6 +747,11 @@ namespace Nektar
         const Array<OneD, const int>& AssemblyMap::GetExtraDirEdges()
         {
             return v_GetExtraDirEdges();
+        }
+
+        boost::shared_ptr<AssemblyMap> AssemblyMap::XxtLinearSpaceMap(const ExpList &locexp)
+        {
+            return v_XxtLinearSpaceMap(locexp);
         }
 
         int AssemblyMap::GetLocalToGlobalBndMap(const int i) const
@@ -1111,6 +1123,7 @@ namespace Nektar
         {
             return m_preconType;
         }
+
 
         void AssemblyMap::GlobalToLocalBndWithoutSign(
                     const Array<OneD, const NekDouble>& global,

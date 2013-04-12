@@ -67,6 +67,7 @@ namespace Nektar
     {
         for(int i = 0; i < m_fields.num_elements(); ++i)
         {
+            Vmath::Zero(m_fields[i]->GetNcoeffs(),m_fields[i]->UpdateCoeffs(),1); // zero field so initial conditions are zero
             m_fields[i]->HelmSolve(m_fields[i]->GetPhys(),
                                    m_fields[i]->UpdateCoeffs(),
                                    NullFlagList,

@@ -940,13 +940,10 @@ namespace Nektar
                                     &m_jac[0], 1, &m_DFC1[i][0][0], 1);
                         
                         // Computing total first order derivatives
-                        Vmath::Vadd(nSolutionPts, 
-                                    &m_DFC1[i][0][0], 1, 
-                                    &m_DU1[i][0][0], 1, 
-                                    &m_D1[i][0][0], 1);
+                        Vmath::Vadd(nSolutionPts, &m_DFC1[i][0][0], 1, 
+                                    &m_DU1[i][0][0], 1, &m_D1[i][0][0], 1);
 
-                        Vmath::Vcopy(nSolutionPts,
-                                     &m_D1[i][0][0], 1,
+                        Vmath::Vcopy(nSolutionPts, &m_D1[i][0][0], 1,
                                      &m_tmp1[i][0][0], 1);
                     }
 
@@ -1037,12 +1034,11 @@ namespace Nektar
                                     auxArray2 = m_tmp2[i][j] + phys_offset);
                             }
                             
-                            Vmath::Vadd(nSolutionPts,
-                                        auxArray1 = m_tmp1[i][j], 1,
-                                        auxArray2 = m_tmp2[i][j], 1,
-                                        m_DU1[i][j], 1);
+                            Vmath::Vadd(nSolutionPts, &m_tmp1[i][j][0], 1,
+                                        &m_tmp2[i][j][0], 1,
+                                        &m_DU1[i][j][0], 1);
                             
-                            // Multiply by the metric terms
+                            // Divide by the metric jacobian
                             Vmath::Vdiv(nSolutionPts, &m_DU1[i][j][0], 1,
                                         &m_jac[0], 1, &m_DU1[i][j][0], 1);
                             
@@ -1094,8 +1090,7 @@ namespace Nektar
                         // Computing the physical first-order derivatives
                         for (j = 0; j < nDim; ++j)
                         {
-                            Vmath::Vadd(nSolutionPts, 
-                                        &m_DU1[i][j][0], 1,
+                            Vmath::Vadd(nSolutionPts, &m_DU1[i][j][0], 1,
                                         &m_DFC1[i][j][0], 1, 
                                         &m_D1[i][j][0], 1);
                         }
@@ -1103,8 +1098,7 @@ namespace Nektar
                                            
                     // Computing interface numerical fluxes for m_D1 
                     // in physical space 
-                    v_NumFluxforVector(fields, inarray, m_D1, 
-                                       m_IF2);
+                    v_NumFluxforVector(fields, inarray, m_D1, m_IF2);
 
                     // Computing the standard second-order discontinuous 
                     // derivatives 
@@ -1150,7 +1144,7 @@ namespace Nektar
                         Vmath::Vadd(nSolutionPts, &m_divFD[i][0], 1,
                                     &m_divFC[i][0], 1, &outarray[i][0], 1);
                          
-                        // Multiplying by the metric terms to get back into 
+                        // Dividing by the jacobian to get back into 
                         // physical space
                         Vmath::Vdiv(nSolutionPts, &outarray[i][0], 1,
                                     &m_jac[0], 1, &outarray[i][0], 1);

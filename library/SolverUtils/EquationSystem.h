@@ -97,6 +97,13 @@ namespace Nektar
             {
                 return m_sessionName;
             }
+
+
+            /// Reset Session name
+            SOLVER_UTILS_EXPORT void ResetSessionName(std::string newname)
+            {
+                m_sessionName = newname;
+            }
             
             /// Get Session name
             SOLVER_UTILS_EXPORT LibUtilities::SessionReaderSharedPtr GetSession()

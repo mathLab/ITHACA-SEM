@@ -20,6 +20,8 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_SOLVER_EXECUTABLE(IncNavierStokesSolver solvers 
 			${IncNavierStokesSolverSource})
 
+    SUBDIRS(Utilities)      
+
     ADD_NEKTAR_TEST(Channel_Flow_3modes)
     ADD_NEKTAR_TEST(Channel_Flow_8modes_Body_Force)
     ADD_NEKTAR_TEST(Channel_Flow_8modes)

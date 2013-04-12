@@ -773,6 +773,18 @@ namespace Nektar
         }
 
 
+
+        /**
+         *
+         */
+        void SessionReader::SetVariable(const unsigned int &idx, 
+                                        std::string newname) 
+        {
+            ASSERTL0(idx < m_variables.size(), "Variable index out of range.");
+            m_variables[idx] = newname;
+        }
+
+
         /**
          *
          */

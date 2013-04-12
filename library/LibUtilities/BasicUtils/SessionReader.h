@@ -284,6 +284,9 @@ namespace Nektar
             /// Returns the name of the variable specified by the given index.
             LIB_UTILITIES_EXPORT const std::string& GetVariable(
                 const unsigned int &idx) const;
+            LIB_UTILITIES_EXPORT void SetVariable(const unsigned int &idx, 
+                                                  std::string newname);
+
             /// Returns the names of all variables.
             LIB_UTILITIES_EXPORT std::vector<std::string> GetVariables() const;
 

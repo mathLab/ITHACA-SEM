@@ -1021,9 +1021,7 @@ namespace Nektar
     }
     
 
-
-
-    NekDouble IncNavierStokes::GetCFLEstimate(int &elmtid)
+    Array<OneD, NekDouble> IncNavierStokes::GetElmtCFLVals(void)
     { 
         int n_element = m_fields[0]->GetExpSize(); 
         
@@ -1061,6 +1059,16 @@ namespace Nektar
             cfl[el] =  m_timestep*(stdVelocity[el] * cLambda *
                                    (ExpOrder[el]-1) * (ExpOrder[el]-1));
         }
+        
+        return cfl;
+    }
+    
+    
+    NekDouble IncNavierStokes::GetCFLEstimate(int &elmtid)
+    { 
+        int n_element = m_fields[0]->GetExpSize(); 
+
+        Array<OneD, NekDouble> cfl = GetElmtCFLVals();
         
         elmtid = Vmath::Imax(n_element,cfl,1);
         NekDouble CFL = cfl[elmtid];

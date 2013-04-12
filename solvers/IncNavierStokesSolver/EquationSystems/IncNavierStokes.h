@@ -118,7 +118,9 @@ namespace Nektar
                                      Array<OneD, Array<OneD, NekDouble> > &numflux);
 
         NekDouble GetSubstepTimeStep();
-
+        
+        Array<OneD, NekDouble> GetElmtCFLVals(void);
+        
         NekDouble GetCFLEstimate(int &elmtid);
         
         // Mapping of the real convective field on the standard element.

@@ -72,9 +72,22 @@ namespace Nektar
         protected:
             DiffusionLFR(std::string diffType);
             
-            Array<OneD, Array<OneD, NekDouble> >               m_traceNormals;
-            LibUtilities::SessionReaderSharedPtr               m_session;
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_iuFluxO1;
+            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
+            LibUtilities::SessionReaderSharedPtr m_session;
+            
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_IF1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DU1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DFC1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_BD1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_D1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DD1;
+            Array<OneD, Array<OneD, NekDouble> >               m_IF2;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DFC2;
+            Array<OneD, Array<OneD, NekDouble> >               m_divFD;
+            Array<OneD, Array<OneD, NekDouble> >               m_divFC;
+            
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_tmp1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_tmp2;
 
             std::string m_diffType;
             

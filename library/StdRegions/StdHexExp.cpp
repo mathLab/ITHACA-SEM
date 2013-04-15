@@ -1394,7 +1394,9 @@ namespace Nektar
                                 swap( maparray[i + j*nummodesA],
                                      maparray[i+nummodesA*nummodesB
                                               -nummodesA -j*nummodesA] );
-                                swap( signarray[i] , signarray[i+nummodesA]);
+                                swap( signarray[i + j*nummodesA],
+                                     signarray[i+nummodesA*nummodesB
+                                              -nummodesA -j*nummodesA]);
                             }
                         }
                     }

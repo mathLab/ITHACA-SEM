@@ -80,7 +80,8 @@ namespace Nektar
             : ExpList2D(pSession,graph2D,DeclareCoeffPhysArrays,variable),
               m_bndCondExpansions(),
               m_bndConditions(),
-              m_trace(NullExpListSharedPtr)
+              m_trace(NullExpListSharedPtr),
+              m_periodicEdges()
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
 
@@ -584,6 +585,13 @@ namespace Nektar
                     SpatialDomains::MeshGraph2D>(m_graph);
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
+            LibUtilities::CommSharedPtr     vComm     =
+                m_session->GetComm()->GetRowComm();
+            LibUtilities::CompositeOrdering compOrder =
+                m_session->GetCompositeOrdering();
+            SpatialDomains::CompositeMap    compMap   =
+                m_graph->GetComposites();
+            
             // Unique collection of pairs of periodic composites (i.e. if
             // composites 1 and 2 are periodic then this map will contain either
             // the pair (1,2) or (2,1) but not both).
@@ -616,7 +624,10 @@ namespace Nektar
                              region1ID)+" should only contain 1 composite.");
 
                 // Construct set containing all periodic edges on this process
-                SpatialDomains::Composite c = it->second->at(0);
+                SpatialDomains::Composite c = it->second->begin()->second;
+
+                vector<int> tmpOrder;
+                
                 for (i = 0; i < c->size(); ++i)
                 {
                     SpatialDomains::SegGeomSharedPtr segGeom =
@@ -637,10 +648,22 @@ namespace Nektar
                     allEdges[(*c)[i]->GetGlobalID()] = 
                         geom->GetEorient((*elmt)[0]->m_EdgeIndx);
 
+                    // In serial mesh partitioning will not have occurred so
+                    // need to fill composite ordering map manually.
+                    if (vComm->GetSize() == 1)
+                    {
+                        tmpOrder.push_back((*c)[i]->GetGlobalID());
+                    }
+                    
                     //vector<int> vertList(2);
                     //vertList[0] = geom->GetVid(0);
                     //vertList[1] = geom->GetVid(1);
                     //allVerts[(*c)[i]->GetGlobalID()] = vertList;
+                }
+
+                if (vComm->GetSize() == 1)
+                {
+                    compOrder[it->second->begin()->first] = tmpOrder;
                 }
                 
                 // See if we already have either region1 or region2 stored in
@@ -671,16 +694,14 @@ namespace Nektar
             }
 
             // Process local edge list to obtain relative edge orientations.
-            LibUtilities::CommSharedPtr vCommRow =
-                m_session->GetComm()->GetRowComm();
-            int              n = vCommRow->GetSize();
-            int              p = vCommRow->GetRank();
+            int              n = vComm->GetSize();
+            int              p = vComm->GetRank();
             int              totEdges;
             Array<OneD, int> edgecounts(n,0);
             Array<OneD, int> edgeoffset(n,0);
 
             edgecounts[p] = allEdges.size();
-            vCommRow->AllReduce(edgecounts, LibUtilities::ReduceSum);
+            vComm->AllReduce(edgecounts, LibUtilities::ReduceSum);
 
             edgeoffset[0] = 0;
             for (i = 1; i < n; ++i)
@@ -698,13 +719,13 @@ namespace Nektar
             for (i = 0, sIt = allEdges.begin(); sIt != allEdges.end(); ++sIt)
             {
                 edgeIds   [edgeoffset[p] + i  ] = sIt->first;
-                edgeOrient[edgeoffset[p] + i  ] = sIt->second;
+                edgeOrient[edgeoffset[p] + i++] = sIt->second;
                 //edgeVerts [edgeoffset[p] + i++] = allVerts[sIt->first].size();
             }
 
-            vCommRow->AllReduce(edgeIds,    LibUtilities::ReduceSum);
-            vCommRow->AllReduce(edgeOrient, LibUtilities::ReduceSum);
-            //vCommRow->AllReduce(edgeVerts,  LibUtilities::ReduceSum);
+            vComm->AllReduce(edgeIds,    LibUtilities::ReduceSum);
+            vComm->AllReduce(edgeOrient, LibUtilities::ReduceSum);
+            //vComm->AllReduce(edgeVerts,  LibUtilities::ReduceSum);
 
             //int nTotVerts = Vmath::Vsum(totEdges, edgeVerts, 1);
 
@@ -725,7 +746,7 @@ namespace Nektar
             //    }
             //}
 
-            //vCommRow->AllReduce(vertIds, LibUtilities::ReduceSum);
+            //vComm->AllReduce(vertIds, LibUtilities::ReduceSum);
 
             // For simplicity's sake create a map of edge id -> orientation.
             map<int, StdRegions::Orientation> orientMap;
@@ -751,10 +772,6 @@ namespace Nektar
             // Go through list of composites and figure out which edges are
             // parallel from original ordering in session file. This includes
             // composites which are not necessarily on this process.
-            LibUtilities::CompositeOrdering compOrder =
-                m_session->GetCompositeOrdering();
-            SpatialDomains::CompositeMap    compMap   =
-                m_graph->GetComposites();
             
             map<int,int>::iterator cIt, pIt;
             map<int,int>::const_iterator oIt;
@@ -784,9 +801,9 @@ namespace Nektar
                 map<int,int> compPairs;
 
                 ASSERTL0(compOrder.count(id1) > 0,
-                         "Unable to find composite "+id1s+"in order map.");
+                         "Unable to find composite "+id1s+" in order map.");
                 ASSERTL0(compOrder.count(id2) > 0,
-                         "Unable to find composite "+id2s+"in order map.");
+                         "Unable to find composite "+id2s+" in order map.");
                 ASSERTL0(compOrder[id1].size() == compOrder[id2].size(),
                          "Periodic composites "+id1s+" and "+id2s+
                          " should have the same number of elements.");

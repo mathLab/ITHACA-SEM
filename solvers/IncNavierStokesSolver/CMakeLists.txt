@@ -4,8 +4,8 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_INCNAVIERSTOKES
 
 IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     SET(IncNavierStokesSolverSource 
-       ./EquationSystems/CoupledLinearNS.cpp
-       ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
+#       ./EquationSystems/CoupledLinearNS.cpp
+#       ./EquationSystems/CoupledLocalToGlobalC0ContMap.cpp
        ./EquationSystems/IncNavierStokes.cpp
        ./EquationSystems/VelocityCorrectionScheme.cpp
        ./AdvectionTerms/AdjointAdvection.cpp

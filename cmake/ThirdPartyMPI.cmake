@@ -5,24 +5,40 @@ CMAKE_DEPENDENT_OPTION(THIRDPARTY_BUILD_GSMPI
     "NEKTAR_USE_MPI" OFF)
 
 IF( NEKTAR_USE_MPI )
-    INCLUDE (FindMPI)
-    MARK_AS_ADVANCED(MPI_LIBRARY)
-    MARK_AS_ADVANCED(MPI_EXTRA_LIBRARY)
-    MARK_AS_ADVANCED(file_cmd)
+    # First check to see if our compiler has MPI built in to avoid linking libraries etc.
+    INCLUDE (CheckIncludeFiles)
+    INCLUDE (CheckFunctionExists)
+    CHECK_INCLUDE_FILES  (mpi.h    HAVE_MPI_H)
+    CHECK_FUNCTION_EXISTS(MPI_Send HAVE_MPI_SEND)
+
+    IF (NOT "${HAVE_MPI_H}" OR NOT "${HAVE_MPI_SEND}")
+        INCLUDE (FindMPI)
+        MARK_AS_ADVANCED(MPI_LIBRARY)
+        MARK_AS_ADVANCED(MPI_EXTRA_LIBRARY)
+        MARK_AS_ADVANCED(file_cmd)
+        INCLUDE_DIRECTORIES( ${MPI_INCLUDE_PATH} )
+        SET(MPI_BUILTIN OFF BOOL INTERNAL)
+        MESSAGE(STATUS "Found MPI: ${MPI_LIBRARY}")
+    ELSE()
+        SET(MPI_BUILTIN ON BOOL INTERNAL)
+        MESSAGE(STATUS "Found MPI: built in")
+    ENDIF()
+
     ADD_DEFINITIONS(-DNEKTAR_USE_MPI)
-    INCLUDE_DIRECTORIES( ${MPI_INCLUDE_PATH} )
-    
+
     IF (THIRDPARTY_BUILD_GSMPI)
         EXTERNALPROJECT_ADD(
             gsmpi-1.1
             PREFIX ${TPSRC}
-            URL ${TPURL}/gsmpi-1.1.tar.bz2
-            URL_MD5 "f2c1f7695f361c6d87365e2ea63aece1"
+            URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/test/gsmpi-1.1.tar.bz2
+            URL_MD5 560213b57aa379ebda2d027296eefc07
             DOWNLOAD_DIR ${TPSRC}
             CONFIGURE_COMMAND 
                 ${CMAKE_COMMAND}
-                -DCMAKE_BUILD_TYPE:STRING=Debug 
-                -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist 
+                -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
+                -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+                -DCMAKE_BUILD_TYPE:STRING=Debug
+                -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist
                 ${TPSRC}/src/gsmpi-1.1
         )
         SET(GSMPI_LIBRARY gsmpi CACHE FILEPATH
@@ -37,6 +53,5 @@ IF( NEKTAR_USE_MPI )
         INCLUDE (FindGSMPI)
         INCLUDE (FindXXT)
     ENDIF (THIRDPARTY_BUILD_GSMPI)
-
 ENDIF( NEKTAR_USE_MPI )
 

@@ -58,7 +58,6 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >&)> DiffusionFluxVecCB;
         
         typedef boost::function<void (
-            const int, 
             const Array<OneD, Array<OneD, NekDouble> >&,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)> 
@@ -73,7 +72,8 @@ namespace Nektar
         {
         public:
             SOLVER_UTILS_EXPORT void InitObject(
-                LibUtilities::SessionReaderSharedPtr               pSession);
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
                         
             SOLVER_UTILS_EXPORT void Diffuse(
                 const int nConvectiveFields,
@@ -90,7 +90,7 @@ namespace Nektar
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVectorNS(FuncPointerT func, ObjectPointerT obj)
             {
-                m_fluxVectorNS = boost::bind(func, obj, _1, _2, _3, _4);
+                m_fluxVectorNS = boost::bind(func, obj, _1, _2, _3);
             }
             
             template<typename FuncPointerT, typename ObjectPointerT>
@@ -106,7 +106,8 @@ namespace Nektar
             
         protected:
             virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr              pSession)
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
             {
                 
             };

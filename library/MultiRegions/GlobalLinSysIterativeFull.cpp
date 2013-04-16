@@ -100,8 +100,8 @@ namespace Nektar
          *
          * @param           pInput      RHS of linear system, \f$b\f$.
          * @param           pOutput     On input, values of dirichlet degrees
-         *                              of freedom. On output, the solution
-         *                              \f$x\f$.
+         *                              of freedom with initial guess on other values.
+         *                              On output, the solution \f$x\f$.
          * @param           pLocToGloMap    Local to global mapping.
          * @param           pDirForcing Precalculated Dirichlet forcing.
          */
@@ -155,8 +155,10 @@ namespace Nektar
                 }
                 if (vCG)
                 {
-                    SolveLinearSystem(
-                        nGlobDofs, tmp, pOutput, pLocToGloMap, nDirDofs);
+                    Array<OneD, NekDouble> out(nGlobDofs,0.0);
+                    // solve for perturbation from intiial guess in pOutput
+                    SolveLinearSystem(nGlobDofs, tmp, out, pLocToGloMap, nDirDofs);
+                    Vmath::Vadd(nGlobDofs,out,1,pOutput,1,out,1);
                 }
                 else
                 {

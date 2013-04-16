@@ -41,6 +41,7 @@
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/MultiRegions.hpp>
 #include <StdRegions/StdExpansion.h>
+#include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/GlobalOptimizationParameters.h>

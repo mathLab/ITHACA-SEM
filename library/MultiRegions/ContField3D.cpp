@@ -574,7 +574,7 @@ namespace Nektar
           }
           else
           {
-              return matrixIter->second->GetMatrix()->GetNumNonZeroEntries();
+              return matrixIter->second->GetNumNonZeroEntries();
           }
           
           return 0;

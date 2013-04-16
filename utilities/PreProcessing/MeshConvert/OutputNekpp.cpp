@@ -37,6 +37,13 @@
 #include <string>
 using namespace std;
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+namespace io = boost::iostreams;
+
+#include <tinyxml/tinyxml.h>
+
 #include "MeshElements.h"
 #include "OutputNekpp.h"
 
@@ -51,7 +58,8 @@ namespace Nektar
 
         OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
         {
-            
+            config["z"] = ConfigOption(true, "0",
+                "Compress output file and append a .gz extension.");
         }
 
         OutputNekpp::~OutputNekpp()
@@ -89,8 +97,29 @@ namespace Nektar
             WriteXmlExpansions(root);
             WriteXmlConditions(root);
             
-            // Save the XML file.
-            doc.SaveFile(config["outfile"].as<string>());
+            // Extract the output filename and extension
+            string filename = config["outfile"].as<string>();
+
+            // Compress output and append .gz extension
+            if (config["z"].as<bool>())
+            {
+                filename += ".gz";
+                ofstream fout(filename.c_str(),
+                              std::ios_base::out | std::ios_base::binary);
+
+                std::stringstream decompressed;
+                decompressed << doc;
+                io::filtering_streambuf<io::output> out;
+                out.push(io::gzip_compressor());
+                out.push(fout);
+                io::copy(decompressed, out);
+
+                fout.close();
+            }
+            else
+            {
+                doc.SaveFile(filename);
+            }
         }
 
         void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot)

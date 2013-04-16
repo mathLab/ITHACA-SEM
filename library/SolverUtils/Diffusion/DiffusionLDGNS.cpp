@@ -377,12 +377,10 @@ namespace Nektar
             GetBndCondExpansions().num_elements();
             for (j = 0; j < nBndRegions; ++j)
             {
-                //cout<<"bcRegion = "<< j << endl;
                 nBndEdges = fields[nScalars]->
                 GetBndCondExpansions()[j]->GetExpSize();
                 for (e = 0; e < nBndEdges; ++e)
                 {
-                    //cout<<"bcEdge = "<< e << endl;
                     nBndEdgePts = fields[nScalars]->
                     GetBndCondExpansions()[j]->GetExp(e)->GetNumPoints(0);
                     
@@ -425,20 +423,13 @@ namespace Nektar
                                     &tmp2[id2], 1,
                                     &scalarVariables[nScalars-1][id2], 1);
                         */
-                         
+                        
                         // Multiply by constant factor (gamma-1)/R 
                         Vmath::Smul(nBndEdgePts, (m_gamma - 1)/m_gasConstant,
                                     &scalarVariables[nScalars-1][id2], 1,
                                     &scalarVariables[nScalars-1][id2], 1);
                     }
-                    /*
-                    for (int bb = 0; bb < nBndEdgePts; ++bb)
-                    {
-                        cout<<"T-bcs = "<<scalarVariables[nScalars-1][id2+bb]<<endl;
-                    }
-                    int num;
-                    cin>>num;
-                    */
+
                     // For Dirichlet boundary condition: uflux = u_bcs
                     if (fields[nScalars]->GetBndConditions()[j]->
                         GetBoundaryConditionType() == 
@@ -458,13 +449,6 @@ namespace Nektar
                                      &uplus[nScalars-1][id2], 1, 
                                      &penaltyfluxO1[nScalars-1][id2], 1);
                     }
-                    /*
-                    for (int bb = 0; bb < nBndEdgePts; ++bb)
-                    {
-                        cout<<"PenaltyFlux = "<<penaltyfluxO1[nScalars-1][id2+bb]<<endl;
-                    }
-                    cin>>num;
-                     */
                 }
             }
         }
@@ -582,11 +566,9 @@ namespace Nektar
             // Extract the physical values of the solution at the boundaries
             fields[var]->ExtractTracePhys(qfield, qtemp);
             
-            //cout<<"var = "<< var << endl;
             // Loop on the boundary regions to apply appropriate bcs
             for (i = 0; i < nBndRegions; ++i)
             {
-                //cout<<"bcRegion = "<< i << endl;
                 // Number of boundary regions related to region 'i'
                 nBndEdges = fields[var]->
                 GetBndCondExpansions()[i]->GetExpSize();
@@ -594,7 +576,6 @@ namespace Nektar
                 // Weakly impose bcs by modifying flux values
                 for (e = 0; e < nBndEdges; ++e)
                 {
-                    //cout<<"bcEdge = "<< e << endl;
                     nBndEdgePts = fields[var]->
                     GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
                     
@@ -632,14 +613,6 @@ namespace Nektar
                                     &penaltyflux[id2], 1);
                          */
                     }
-                    /*
-                    for (int bb = 0; bb < nBndEdgePts; ++bb)
-                    {
-                        cout<<"2nd - bcs = "<<penaltyflux[id2+bb]<<endl;
-                    }
-                    int num;
-                    cin>>num;
-                     */
                 }
             }
         }

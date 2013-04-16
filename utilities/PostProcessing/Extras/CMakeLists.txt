@@ -8,3 +8,8 @@ ADD_UTILITIES_EXECUTABLE(Linf         util-extra Linf.cpp)
 ADD_UTILITIES_EXECUTABLE(MoveMesh   util-extra MoveMesh.cpp)
 ADD_UTILITIES_EXECUTABLE(SplitFld   util-extra SplitFld.cpp)
 ADD_UTILITIES_EXECUTABLE(SplitModes   util-extra SplitModes.cpp)
+
+IF (NEKTAR_USE_VTK)
+    ADD_UTILITIES_EXECUTABLE(VtkToPng util-extra VtkToPng.cpp)
+    TARGET_LINK_LIBRARIES(VtkToPng vtkCommon vtksys vtkViews vtkWidgets vtkRendering vtkIO)
+ENDIF (NEKTAR_USE_VTK)

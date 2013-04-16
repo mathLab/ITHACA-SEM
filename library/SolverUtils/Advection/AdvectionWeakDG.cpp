@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Advection/AdvectionWeakDG.h>
+#include <iostream>
+#include <iomanip>
 
 namespace Nektar
 {
@@ -53,6 +55,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
+            //cout<<setprecision(16);
             int i, j;
             int nVelDim         = fields[0]->GetCoordim(0);
             int nPointsTot      = fields[0]->GetTotPoints();

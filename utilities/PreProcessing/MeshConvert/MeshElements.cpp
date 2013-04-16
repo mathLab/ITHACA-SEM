@@ -432,11 +432,6 @@ namespace Nektar
         
         SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-                
             // Create edge vertices.
             SpatialDomains::VertexComponentSharedPtr p[2];
             p[0] = vertex[0]->GetGeom(coordDim);
@@ -533,11 +528,6 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-
             SpatialDomains::SegGeomSharedPtr         edges[3];
             SpatialDomains::VertexComponentSharedPtr verts[3];
             
@@ -780,11 +770,6 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-
             SpatialDomains::SegGeomSharedPtr         edges[4];
             SpatialDomains::VertexComponentSharedPtr verts[4];
             
@@ -927,11 +912,6 @@ namespace Nektar
         
         SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-            
             SpatialDomains::TriGeomSharedPtr tfaces[4];
             
             for (int i = 0; i < 4; ++i)
@@ -1328,11 +1308,6 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Prism::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-
             SpatialDomains::Geometry2DSharedPtr faces[5];
             
             for (int i = 0; i < 5; ++i)
@@ -1632,11 +1607,6 @@ namespace Nektar
         
         SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-
             SpatialDomains::QuadGeomSharedPtr faces[6];
             
             for (int i = 0; i < 6; ++i)

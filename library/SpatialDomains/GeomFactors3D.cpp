@@ -308,6 +308,15 @@ namespace Nektar
             const Array<OneD, const NekDouble>& w1 = tbasis[1]->GetW();
             const Array<OneD, const NekDouble>& w2 = tbasis[2]->GetW();
 
+            if (w0.num_elements() == 0 ||
+                w1.num_elements() == 0 ||
+                w2.num_elements() == 0)
+            {
+                m_isUsingQuadMetrics = false;
+                m_weightedjac = Array<OneD, NekDouble>();
+                return;
+            }
+
             // Multiply the jacobian with the quadrature weights
             switch(shape)
             {

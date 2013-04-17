@@ -40,8 +40,6 @@ int main(int argc, char *argv[])
     vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
     LibUtilities::Import(fieldfile,fielddef,fielddata);
-    bool useFFT = false;
-    bool dealiasing = false;
     //----------------------------------------------
 
     //----------------------------------------------
@@ -61,17 +59,7 @@ int main(int argc, char *argv[])
         break;
         case 2:
         {
-            MultiRegions::ContField2DSharedPtr originalfield =
-                MemoryManager<MultiRegions::ContField2D>
-                ::AllocateSharedPtr(vSession,graphShPt,vSession->GetVariable(0));
-            m_locToGlobalMap = originalfield->GetLocalToGlobalMap();
-            
-            exp[0] =  originalfield;
-            
-            exp[1] = MemoryManager<MultiRegions::ContField2D>
-                ::AllocateSharedPtr(*originalfield, graphShPt, 
-                                    vSession->GetVariable(0));
-            
+            ASSERTL0(false,"Expansion dimension not recognised");
         }
         break;
         case 3:
@@ -221,7 +209,6 @@ int main(int argc, char *argv[])
 
                     const SpatialDomains::GeomFactorsSharedPtr m_metricinfo=bc->GetMetricInfo();
 
-                    SpatialDomains::GeomType type=m_metricinfo->GetGtype();
                     const Array<OneD, const Array<OneD, NekDouble> > normals
                                 = elmt->GetFaceNormal(boundary);
 

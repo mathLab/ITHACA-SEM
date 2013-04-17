@@ -2082,9 +2082,8 @@ namespace Nektar
         const int nElements  = m_fields[0]->GetExpSize();
         const int ploc       = m_fields[0]->GetExpSize();
         
-        const double mu_0 = 0.00001794;
-        const double S_Kappa = -1.5;
-        const double Kappa = 0;
+        const double S_Kappa = -2.0;
+        const double Kappa = 0.1;
         int PointCount = 0;
         int nTotQuadPoints  = GetTotPoints();
         
@@ -2100,6 +2099,10 @@ namespace Nektar
         {
             int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
             
+            //Array<OneD, NekDouble> one2D(nQuadPointsElement, 1.0);
+            //NekDouble Area = m_fields[0]->GetExp(e)->Integral(one2D);
+            //double mu_0 = sqrt(Area)/pOrderElmt[e];
+            double mu_0 = 10.0;
             for (int n = 0; n < nQuadPointsElement; n++)
             {
                 if (Sensor[n+PointCount] < (S_Kappa-Kappa))

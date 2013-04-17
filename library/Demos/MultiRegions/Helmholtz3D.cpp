@@ -44,6 +44,17 @@
 
 using namespace Nektar;
 
+//#define TIMING
+#ifdef TIMING
+#include <time.h>
+#define Timing(s) \
+ fprintf(stdout,"%s Took %g seconds\n",s,(clock()-st)/cps); \
+ st = clock();
+#else
+#define Timing(s) \
+ /* Nothing */
+#endif
+
 int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr vSession
@@ -57,6 +68,8 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  xc0,xc1,xc2;
     StdRegions::ConstFactorMap factors;
     FlagList flags;
+    NekDouble    cps = (double)CLOCKS_PER_SEC;
+    NekDouble    st;
 
     if(argc < 2)
     {
@@ -105,6 +118,8 @@ int main(int argc, char *argv[])
             ::AllocateSharedPtr(vSession, graph3D, vSession->GetVariable(0));
         //----------------------------------------------
 
+        Timing("Read files and define exp ..");
+
         //----------------------------------------------
         // Set up coordinates of mesh for Forcing function evaluation
         coordim = Exp->GetCoordim(0);
@@ -146,6 +161,17 @@ int main(int argc, char *argv[])
         Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
         Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors);
         //----------------------------------------------
+        Timing("Helmholtz Solve ..");
+
+#ifdef TIMING
+        for(i = 0; i < 20; ++i)
+        {
+            Vmath::Zero(Exp->GetNcoeffs(),Exp->UpdateCoeffs(),1);
+            Exp->HelmSolve(Fce->GetPhys(), Exp->UpdateCoeffs(), flags, factors);
+        }
+
+        Timing("20 Helmholtz Solves:... ");
+#endif
 
         //----------------------------------------------
         // Backward Transform Solution to get solved values at

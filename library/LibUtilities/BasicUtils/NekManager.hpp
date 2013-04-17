@@ -211,7 +211,17 @@ namespace Nektar
                         }
                     }
                 }
-                
+
+                void DeleteObject(typename boost::call_traits<KeyType>::const_reference key)
+                {
+                    typename ValueContainer::iterator found = m_values->find(key);
+
+                    if( found != m_values->end() )
+                    {
+                        m_values->erase(found);
+                    }
+                }
+
                 static void ClearManager(std::string whichPool = "")
                 {
                     typename ValueContainerPool::iterator x;

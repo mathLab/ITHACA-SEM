@@ -413,6 +413,10 @@ namespace Nektar
             std::vector<std::string> ParseCommandLineArguments(
                 int argc, char *argv[]);
 
+            /// Loads an xml file into a tinyxml doc and decompresses if needed
+            LIB_UTILITIES_EXPORT void LoadDoc(
+                const std::string &pFilename,
+                TiXmlDocument* pDoc) const;
             /// Creates an XML document from a list of input files.
             LIB_UTILITIES_EXPORT TiXmlDocument *MergeDoc(
                 const std::vector<std::string> &pFilenames) const;

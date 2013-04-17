@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>NS, Couette flow, mixed bcs, WeakDG advection and LDG diffusion, SEM</description>
+    <description>NS, Couette flow, mixed bcs, FRHU advection and LDG diffusion, SEM</description>
     <executable>CompressibleFlowSolver</executable>
-    <parameters>Couette_WeakDG_LDG_SEM.xml</parameters>
+    <parameters>Couette_FRHU_LDG_SEM.xml</parameters>
     <files>
-        <file description="Session File">Couette_WeakDG_LDG_SEM.xml</file>
+        <file description="Session File">Couette_FRHU_LDG_SEM.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

@@ -297,7 +297,7 @@ namespace Nektar
         int nTracePts = GetTraceTotPoints();
         int nvariables      = physarray.num_elements();
         
-        // get physical values of the forward trace
+        // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
         for (i = 0; i < nvariables; ++i)
         {
@@ -325,12 +325,7 @@ namespace Nektar
                 Vmath::Neg(npts, &Fwd[i+1][id2], 1);
             }
                         
-            // Imposition of the temperature
-            //Fwd[nvariables-1][id2] = m_gasConstant * Fwd[0][id2] * m_Twall / 
-            //                            (m_gamma - 1);
-            
-            
-            // copy boundary adjusted values into the boundary expansion
+            // Copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nvariables; ++i)
             {
                 Vmath::Vcopy(npts, &Fwd[i][id2], 1, 
@@ -559,11 +554,13 @@ namespace Nektar
             for (i = 0; i < npts; i++)
             {
                 pnt = id2+i;
+                
+                // Subsonic flows
                 if(Mach[pnt] < 0.99)
                 {
                     // + Characteristic from boundary
-                    cPlus = sqrt(gamma * /*m_pressure*/m_pInf / /*m_density*/m_rhoInf);
-                    rPlus = /*m_velocity*/VnInf[pnt] + 2.0 * cPlus * gammaMinusOneInv;
+                    cPlus = sqrt(gamma * m_pInf / m_rhoInf);
+                    rPlus = VnInf[pnt] + 2.0 * cPlus * gammaMinusOneInv;
                     
                     // - Characteristic from inside
                     cMinus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
@@ -573,25 +570,31 @@ namespace Nektar
                     VelNorm = 0.5 * (rPlus + rMinus);
                     cb      = 0.25 * gammaMinusOne * (rPlus - rMinus);
                     
-                    // Boundary Velocity
-                    VDelta  = VelNorm - /*m_velocity*/VnInf[pnt];
+                    VDelta  = VelNorm - VnInf[pnt];
                     
-                    ub      = /*m_velocity*/VnInf[pnt] * m_traceNormals[0][pnt] + 
+                    // Boundary velocities
+                    ub      = VnInf[pnt] * m_traceNormals[0][pnt] + 
                                 VDelta * m_traceNormals[0][pnt];
-                    vb      = /*m_velocity*/VnInf[pnt] * m_traceNormals[1][pnt] + 
+                    vb      = VnInf[pnt] * m_traceNormals[1][pnt] + 
                                 VDelta * m_traceNormals[1][pnt];
-                    
-                    sb      = /*m_pressure*/m_pInf / (pow(/*m_density*/m_rhoInf, gamma));
+                    // Boundary entropy 
+                    sb      = m_pInf / (pow(m_rhoInf, gamma));
+    
+                    // Boundary density
                     rhob    = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
+                    
+                    // Boundary pressure
                     pb      = rhob * cb * cb * gammaInv;
                     
+                    // Boundary rhou/rhov
                     rhoub   = rhob * ub;
                     rhovb   = rhob * vb;
                     
+                    // Boundary energy
                     rhoeb   = pb * gammaMinusOneInv + 
                                 0.5 * (rhoub * ub + rhovb * vb);
                     
-                    // Extrapolation
+                    // Extrapolation for subsonic cases
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
                             UpdatePhys())[id1+i] = 2.0 * rhob - Fwd[0][pnt];
                     
@@ -604,18 +607,20 @@ namespace Nektar
                     (m_fields[3]->GetBndCondExpansions()[bcRegion]->
                             UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[3][pnt];
                 }
+                // Supersonic flows
                 else
                 {
+                    // Imposition for supersonic cases
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = /*m_density*/m_rhoInf;
+                            UpdatePhys())[id1+i] = m_rhoInf;
                     (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = /*m_density * m_velocity*/m_rhoInf * m_uInf;
+                            UpdatePhys())[id1+i] = m_rhoInf * m_uInf;
                     (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = /*0.0*/ m_rhoInf * m_vInf;
+                            UpdatePhys())[id1+i] = m_rhoInf * m_vInf;
                     (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = /*m_pressure / (m_gamma-1.0) + 
-                                0.5 * m_density * m_velocity * m_velocity*/m_pInf / (gamma - 1) + 
-                                0.5 * m_rhoInf * (m_uInf * m_uInf + m_vInf * m_vInf);
+                            UpdatePhys())[id1+i] = 
+                                m_pInf / (gamma - 1) + 0.5 * m_rhoInf * 
+                                (m_uInf * m_uInf + m_vInf * m_vInf);
                 }
             }
         }
@@ -716,49 +721,17 @@ namespace Nektar
             for (i = 0; i < npts; i++)
             {
                 pnt = id2+i;
-                /*
-                // Specific case for Couette flow
-                if(m_fields[0]->GetBndConditions()[bcRegion]->
-                   GetUserDefined().GetEquation() == "OutFlowCouette")
-                {
-                    NekDouble rho0      = 1.0;
-                    NekDouble Re        = 15;
-                    NekDouble mu        = m_viscLam;
-                    NekDouble u_average = 15.0*mu/4.0;
-                    NekDouble T0        = 300;
-                    NekDouble P         = m_GasConstant*rho0*T0;
-                    P                   = P - 1.5 / Re * rho0 * u_average * 
-                    u_average / 0.4 * 4.0;
-                    
-                    NekDouble sigma = 0.25;
-                    NekDouble K     = sigma*(1.0-0.1*0.1)*0.0006675/4.0;
-                    NekDouble L1    = K*(pressure[pnt]-P);
-                    
-                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[0][pnt];
-                    (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[1][pnt];
-                    (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[2][pnt];
-                    P = P - L1;
-                    NekDouble rhoe = P/(m_gamma-1.0) + 0.5*(Fwd[1][pnt]*Fwd[1][pnt] 
-                                                            + Fwd[2][pnt]*Fwd[2][pnt])/Fwd[0][pnt];
-                    (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhoe;
-                }
-                 */
+
                 // Subsonic flows
-                if (Mach[pnt] < 0.99 /*&& m_fields[0]->
-                        GetBndConditions()[bcRegion]->
-                        GetUserDefined().GetEquation() != "OutFlowSuperSonic"*/)
+                if (Mach[pnt] < 0.99)
                 {
                     // + Characteristic from inside
                     cPlus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
                     rPlus = Vn[pnt] + 2.0 * cPlus * gammaMinusOneInv;
                     
                     // - Characteristic from boundary
-                    cMinus = sqrt(gamma * /*m_pressure*/m_pInf / /*m_density*/m_rhoInf);
-                    rMinus = /*m_velocity*/ VnInf[pnt] - 2.0 * cMinus * gammaMinusOneInv;
+                    cMinus = sqrt(gamma * m_pInf / m_rhoInf);
+                    rMinus = VnInf[pnt] - 2.0 * cMinus * gammaMinusOneInv;
                     
                     // Boundary Variables
                     VelNorm = 0.5 * (rPlus + rMinus);
@@ -767,16 +740,23 @@ namespace Nektar
                     rhob    = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
                     pb      = rhob * cb * cb * gammaInv;
                     
-                    // Boundary Velocity
                     VDelta  = VelNorm - Vn[pnt];
-                    ub      = Fwd[1][pnt] / Fwd[0][pnt] + VDelta * m_traceNormals[0][pnt];
-                    vb      = Fwd[2][pnt] / Fwd[0][pnt] + VDelta * m_traceNormals[1][pnt];
+
+                    // Boundary velocities
+                    ub      = Fwd[1][pnt] / Fwd[0][pnt] + 
+                                VDelta * m_traceNormals[0][pnt];
+                    vb      = Fwd[2][pnt] / Fwd[0][pnt] + 
+                                VDelta * m_traceNormals[1][pnt];
                     
+                    // Boundary rhou/rhov
                     rhoub   = rhob * ub;
                     rhovb   = rhob * vb;
-                    rhoeb   = pb * gammaMinusOneInv + 0.5 * (rhoub * ub + rhovb * vb);
                     
-                    // Extrapolation
+                    // Boundary energy
+                    rhoeb   = pb * gammaMinusOneInv + 0.5 * 
+                                        (rhoub * ub + rhovb * vb);
+                    
+                    // Partial extrapolation for subsonic cases
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
                             UpdatePhys())[id1+i] = Fwd[0][pnt];//2.0*rhob - Fwd[0][pnt];
                     (m_fields[1]->GetBndCondExpansions()[bcRegion]->
@@ -794,6 +774,7 @@ namespace Nektar
                 // Supersonic flows
                 else
                 {
+                    // Extrapolation for supersonic cases
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
                                             UpdatePhys())[id1+i] = Fwd[0][pnt];
                     (m_fields[1]->GetBndCondExpansions()[bcRegion]->

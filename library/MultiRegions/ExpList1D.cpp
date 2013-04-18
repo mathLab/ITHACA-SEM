@@ -415,12 +415,11 @@ namespace Nektar
                     const std::string variable):
             ExpList()
         {
-            int i, j, id, elmtid=0;
-            map<int,int> EdgeDone;
-            map<int,int> NormalSet;
+            int i, j, id, elmtid = 0;
+            set<int> edgesDone;
 
-            SpatialDomains::Geometry1DSharedPtr SegGeom;
-            LocalRegions::SegExpSharedPtr Seg;
+            SpatialDomains::Geometry1DSharedPtr segGeom;
+            LocalRegions::SegExpSharedPtr seg;
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
@@ -433,67 +432,61 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey bkey = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
-                        SegGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
+                        segGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
 
-                        Seg = MemoryManager<LocalRegions::SegExp>
-                                            ::AllocateSharedPtr(bkey, SegGeom);
-                        EdgeDone[SegGeom->GetEid()] = elmtid;
-
-                        Seg->SetElmtId(elmtid++);
-                        (*m_exp).push_back(Seg);
+                        seg = MemoryManager<LocalRegions::SegExp>
+                                            ::AllocateSharedPtr(bkey, segGeom);
+                        edgesDone.insert(segGeom->GetEid());
+                        seg->SetElmtId(elmtid++);
+                        (*m_exp).push_back(seg);
                     }
                 }
             }
-            
-            // loop over all other edges and fill out other connectivities
+
+            map<int, pair<SpatialDomains::Geometry1DSharedPtr,
+                          LibUtilities::BasisKey> > edgeOrders;
+            map<int, pair<SpatialDomains::Geometry1DSharedPtr,
+                          LibUtilities::BasisKey> >::iterator it;
+
             for(i = 0; i < locexp.size(); ++i)
             {
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
                 {
-                    SegGeom = (locexp[i]->GetGeom2D())->GetEdge(j);
+                    segGeom = locexp[i]->GetGeom2D()->GetEdge(j);
+                    id      = segGeom->GetEid();
 
-                    id = SegGeom->GetEid();
-
-                    if(EdgeDone.count(id)==0)
+                    // Ignore Dirichlet edges
+                    if (edgesDone.count(id) != 0)
                     {
-                        LibUtilities::BasisKey EdgeBkey
-                                    = locexp[i]->DetEdgeBasisKey(j);
+                        continue;
+                    }
 
-                        Seg = MemoryManager<LocalRegions::SegExp>
-                                        ::AllocateSharedPtr(EdgeBkey, SegGeom);
-                        EdgeDone[id] = elmtid;
-
-                        /*
-                        if (periodicEdges.count(id) > 0)
-                        {
-                            EdgeDone[abs(periodicEdges.find(id)->second)] = elmtid;
-                        }
-                        */
-
-                        Seg->SetElmtId(elmtid++);
-                        (*m_exp).push_back(Seg);
+                    it = edgeOrders.find(id);
+                    
+                    if (it == edgeOrders.end())
+                    {
+                        edgeOrders.insert(std::make_pair(id, std::make_pair(
+                            segGeom, locexp[i]->DetEdgeBasisKey(j))));
                     }
                     else // variable modes/points
                     {
-                        LibUtilities::BasisKey EdgeBkey
-                                = locexp[i]->DetEdgeBasisKey(j);
+                        LibUtilities::BasisKey edge
+                            = locexp[i]->DetEdgeBasisKey(j);
+                        LibUtilities::BasisKey existing
+                            = it->second.second;
 
-                        if((*m_exp)[EdgeDone[id]]->GetNumPoints(0)
-                                >= EdgeBkey.GetNumPoints()
-                            && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
-                                >= EdgeBkey.GetNumModes())
+                        int np1 = edge    .GetNumPoints();
+                        int np2 = existing.GetNumPoints();
+                        int nm1 = edge    .GetNumModes ();
+                        int nm2 = existing.GetNumModes ();
+
+                        if (np2 >= np1 && nm2 >= nm1)
                         {
+                            continue;
                         }
-                        else if((*m_exp)[EdgeDone[id]]->GetNumPoints(0)
-                                <= EdgeBkey.GetNumPoints()
-                            && (*m_exp)[EdgeDone[id]]->GetBasisNumModes(0)
-                                <= EdgeBkey.GetNumModes())
+                        else if (np2 < np1 && nm2 < nm1)
                         {
-                            Seg = MemoryManager<LocalRegions::SegExp>
-                                    ::AllocateSharedPtr(EdgeBkey, SegGeom);
-                            Seg->SetElmtId(EdgeDone[id]);
-                            (*m_exp)[EdgeDone[id]] = Seg;
-                            NormalSet.erase(id);
+                            it->second.second = edge;
                         }
                         else
                         {
@@ -503,6 +496,14 @@ namespace Nektar
                         }
                     }
                 }
+            }
+
+            for (it = edgeOrders.begin(); it != edgeOrders.end(); ++it)
+            {
+                seg = MemoryManager<LocalRegions::SegExp>
+                    ::AllocateSharedPtr(it->second.second, it->second.first);
+                seg->SetElmtId(elmtid++);
+                (*m_exp).push_back(seg);
             }
 
             // Setup Default optimisation information.

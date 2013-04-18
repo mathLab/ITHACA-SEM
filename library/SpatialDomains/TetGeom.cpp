@@ -145,7 +145,7 @@ namespace Nektar
             // Check local coordinate is within [-1,1]^3 bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
                 locCoord[2] >= -(1+tol)                            &&
-                locCoord[0] + locCoord[1] + locCoord[2] <= tol)
+                locCoord[0] + locCoord[1] + locCoord[2] <= -(1+tol))
             {
                 return true;
             }

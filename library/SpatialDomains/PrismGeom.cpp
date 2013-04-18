@@ -341,7 +341,7 @@ namespace Nektar
 
                 // recover cartesian coordinate from collapsed coordinate. 
                 Lcoords[0] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 -1.0;            
-                Lcoords[1] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 -1.0;
+                // This is wrong: Lcoords[1] = (1.0+Lcoords[0])*(1.0-Lcoords[2])/2 -1.0;
 
 
                 // Perform newton iteration to find local coordinates 

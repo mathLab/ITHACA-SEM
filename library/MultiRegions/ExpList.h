@@ -379,6 +379,8 @@ namespace Nektar
                 v_WriteTecplotField(outfile,expansion);
             }
 
+            void  WriteTecplotConnectivity(std::ofstream &outfile);
+
             MULTI_REGIONS_EXPORT void WriteVtkHeader(std::ofstream &outfile);
             MULTI_REGIONS_EXPORT void WriteVtkFooter(std::ofstream &outfile);
 
@@ -1208,7 +1210,6 @@ namespace Nektar
         
         private:
             int   GetNumTecplotBlocks(void);
-            void  WriteTecplotConnectivity(std::ofstream &outfile);
             
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
             

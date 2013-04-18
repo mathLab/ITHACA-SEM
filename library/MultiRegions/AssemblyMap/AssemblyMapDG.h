@@ -51,6 +51,7 @@ namespace Nektar
         class AssemblyMapDG;
         typedef boost::shared_ptr<AssemblyMapDG>  AssemblyMapDGSharedPtr;
 
+        static PeriodicMap NullPerMap;
 
         ///
         class AssemblyMapDG: public AssemblyMap
@@ -137,7 +138,8 @@ namespace Nektar
             void SetUpUniversalDGMap(const ExpList &locExp);
 
             void SetUpUniversalTraceMap(const ExpList &locExp,
-                                        const ExpListSharedPtr trace);
+                                        const ExpListSharedPtr trace,
+                                        const PeriodicMap &perMap = NullPerMap);
 
             virtual int v_GetLocalToGlobalMap(const int i) const;
 

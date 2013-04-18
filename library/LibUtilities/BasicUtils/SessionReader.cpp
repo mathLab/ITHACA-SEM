@@ -1136,6 +1136,11 @@ namespace Nektar
             return m_compOrder;
         }
 
+        BndRegionOrdering SessionReader::GetBndRegionOrdering() const
+        {
+            return m_bndRegOrder;
+        }
+
         /**
          *
          */
@@ -1321,7 +1326,8 @@ namespace Nektar
                     MeshPartition>::AllocateSharedPtr(vSession);
                 vPartitioner->PartitionMesh();
                 vPartitioner->WriteLocalPartition(vSession);
-                
+                vPartitioner->GetCompositeOrdering(m_compOrder);
+                vPartitioner->GetBndRegionOrdering(m_bndRegOrder);
                 m_comm->Block();
 
                 m_filename = GetSessionNameRank() + ".xml";

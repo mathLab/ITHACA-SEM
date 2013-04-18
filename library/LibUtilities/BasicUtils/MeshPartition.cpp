@@ -100,8 +100,7 @@ namespace Nektar
             vNew.SaveFile(vFilename.c_str());
         }
 
-        void MeshPartition::GetCompositeOrdering(
-            std::map<int, std::vector<int> > &composites)
+        void MeshPartition::GetCompositeOrdering(CompositeOrdering &composites)
         {
             std::map<int, MeshEntity>::iterator it;
             for (it  = m_meshComposites.begin();
@@ -109,6 +108,11 @@ namespace Nektar
             {
                 composites[it->first] = it->second.list;
             }
+        }
+
+        void MeshPartition::GetBndRegionOrdering(BndRegionOrdering &bndRegs)
+        {
+            bndRegs = m_bndRegOrder;
         }
 
         void MeshPartition::ReadMesh(const LibUtilities::SessionReaderSharedPtr& pSession)
@@ -779,13 +783,13 @@ namespace Nektar
                                 vListStr += boost::lexical_cast<std::string>(vSeq[i]);
                             }
                         }
+                        int p = atoi(vItem->Attribute("ID"));
                         if (vListStr.length() == 0)
                         {
                             vBndRegions->RemoveChild(vItem);
                         }
                         else
                         {
-                            int p = atoi(vItem->Attribute("ID"));
                             vListStr = "C[" + vListStr + "]";
                             TiXmlText* vList = new TiXmlText(vListStr);
                             TiXmlElement* vNewElement = new TiXmlElement("B");
@@ -794,6 +798,10 @@ namespace Nektar
                             vNewBndRegions->LinkEndChild(vNewElement);
                             vBndRegionIdList.insert(p);
                         }
+
+                        // Store original order of boundary region.
+                        m_bndRegOrder[p] = vSeq;
+                        
                         vItem = vItem->NextSiblingElement();
                     }
                     vConditions->ReplaceChild(vBndRegions, *vNewBndRegions);

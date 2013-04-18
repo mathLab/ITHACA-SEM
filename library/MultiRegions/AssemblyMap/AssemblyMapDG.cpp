@@ -215,24 +215,7 @@ namespace Nektar
                 if((locSegExp = boost::dynamic_pointer_cast<LocalRegions::SegExp>(trace->GetExp(i))))
                 {
                     id = (locSegExp->GetGeom1D())->GetEid();
-
-                    /*
-                    if(periodicEdges.count(id) > 0)
-                    {
-                        if(MeshEdgeId.count(id) == 0)
-                        {
-                            id1 = abs(periodicEdges.find(id)->second);
-                            MeshEdgeId[id] = i;
-                            MeshEdgeId[id1] = i;
-                        }
-                    }
-                    else
-                    {
-                    */
                     MeshEdgeId[id] = i;
-                    /*
-                    }
-                    */
                 }
                 else
                 {
@@ -309,9 +292,6 @@ namespace Nektar
                 cnt += bndCondExp[i]->GetExpSize();
             }
 
-#if OLDMAP
-            m_bndCondCoeffsToGlobalCoeffsMap = Array<OneD,int >(cnt);
-#endif
             m_numLocalDirBndCoeffs = 0;
             m_numDirichletBndPhys  = 0;
 
@@ -324,18 +304,6 @@ namespace Nektar
                     {
                         SegGeom = locSegExp->GetGeom1D();
                         id = SegGeom->GetEid();
-
-#if OLDMAP
-                        id = SegGeom->GetEid();
-                        if(MeshEdgeId.count(id) > 0)
-                        {
-                            m_bndCondCoeffsToGlobalCoeffsMap[cnt+j] = MeshEdgeId.find(id)->second;
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"Failed to find edge map");
-                        }
-#endif
                     }
                     else
                     {
@@ -645,7 +613,7 @@ namespace Nektar
             // Now set up mapping from global coefficients to universal.
             ExpListSharedPtr tr = boost::dynamic_pointer_cast<ExpList>(trace);
             SetUpUniversalDGMap   (locExp);
-            SetUpUniversalTraceMap(locExp, tr);
+            SetUpUniversalTraceMap(locExp, tr, periodicEdges);
 
             m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
                                        m_localToGlobalBndMap.end());
@@ -1241,8 +1209,10 @@ namespace Nektar
             }
         }
 
-        void AssemblyMapDG::SetUpUniversalTraceMap(const ExpList         &locExp,
-                                                        const ExpListSharedPtr trace)
+        void AssemblyMapDG::SetUpUniversalTraceMap(
+            const ExpList         &locExp,
+            const ExpListSharedPtr trace,
+            const PeriodicMap     &perMap)
         {
             StdRegions::StdExpansionSharedPtr locExpansion;
             int i;
@@ -1288,7 +1258,7 @@ namespace Nektar
                     m_traceToUniversalMap[offset] = eid*maxQuad+1;
                 }
             }
-            else 
+            else
             {
                 for (int i = 0; i < trace->GetExpSize(); ++i)
                 {
@@ -1296,9 +1266,36 @@ namespace Nektar
                     offset = trace->GetPhys_Offset(i);
                     quad   = trace->GetExp(i)->GetTotPoints();
 
-                    for(int j = 0; j < quad; ++j)
+                    // Check to see if this edge/face is periodic. If it is,
+                    // then we need to reverse the trace order of one edge only
+                    // in the universal map so that the data are reversed w.r.t
+                    // each other. We do this by using the minimum of the two
+                    // IDs.
+                    PeriodicMap::const_iterator it = perMap.find(eid);
+                    bool reverse = false;
+                    if (perMap.count(eid) > 0)
                     {
-                        m_traceToUniversalMap[j+offset] = eid*maxQuad+j+1;
+                        if (it->second.isLocal == false)
+                        {
+                            reverse = it->second.orient == StdRegions::eBackwards &&
+                                eid == min(eid, it->second.id);
+                            eid = min(eid, it->second.id);
+                        }
+                    }
+
+                    if (reverse)
+                    {
+                        for (int j = 0; j < quad; ++j)
+                        {
+                            m_traceToUniversalMap[j+offset] = eid*maxQuad+quad-j;
+                        }
+                    }
+                    else
+                    {
+                        for (int j = 0; j < quad; ++j)
+                        {
+                            m_traceToUniversalMap[j+offset] = eid*maxQuad+j+1;
+                        }
                     }
                 }
             }

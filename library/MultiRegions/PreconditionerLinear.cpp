@@ -147,9 +147,9 @@ namespace Nektar
                     
                     // Do solve without enforcing any boundary conditions. 
                     m_vertLinsys->SolveLinearSystem(m_vertLocToGloMap->GetNumLocalCoeffs(),
-                                                In,Out,m_vertLocToGloMap);
+                                                    In,Out,m_vertLocToGloMap);
                     
-
+                    
                     if(pNonVertOutput != NullNekDouble1DArray)
                     {
                         ASSERTL1(pNonVertOutput.num_elements() >= pOutput.num_elements(),"Non Vert output is not of sufficient length");

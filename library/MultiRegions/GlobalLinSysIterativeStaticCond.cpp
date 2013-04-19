@@ -498,47 +498,6 @@ namespace Nektar
             }
         }
 
-        /*void GlobalLinSysIterativeStaticCond::SetupLowEnergyTopLevel(
-                const boost::shared_ptr<AssemblyMap>& pLocToGloMap)
-        {
-            int n;
-            int n_exp = m_expList.lock()->GetNumElmts();
-
-            const Array<OneD,const unsigned int>& nbdry_size
-                    = pLocToGloMap->GetNumLocalBndCoeffsPerPatch();
-            const Array<OneD,const unsigned int>& nint_size
-                    = pLocToGloMap->GetNumLocalIntCoeffsPerPatch();
-
-            // Setup Block Matrix systems
-            MatrixStorage blkmatStorage = eDIAGONAL;
-            m_schurCompl = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nbdry_size, blkmatStorage);
-            m_BinvD      = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nbdry_size, nint_size , blkmatStorage);
-            m_C          = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nint_size , nbdry_size, blkmatStorage);
-            m_invD       = MemoryManager<DNekScalBlkMat>
-                    ::AllocateSharedPtr(nint_size , nint_size , blkmatStorage);
-
-            //Original schur complement matrix
-            m_S1Blk      = MemoryManager<DNekScalBlkMat>
-                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
-
-            for(n = 0; n < n_exp; ++n)
-            {
-                DNekScalMatSharedPtr tmp_mat;
-                DNekScalBlkMatSharedPtr loc_S1 = GlobalLinSys::v_GetStaticCondBlock(m_expList.lock()->GetOffset_Elmt_Id(n));
-
-                DNekScalBlkMatSharedPtr loc_schur = m_precon->TransformedSchurCompl(n,loc_S1);
-
-                m_schurCompl->SetBlock(n,n, tmp_mat = loc_schur->GetBlock(0,0));
-                m_BinvD     ->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(0,1));
-                m_C         ->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(1,0));
-                m_invD      ->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(1,1));
-                m_S1Blk->SetBlock(n,n, tmp_mat = loc_S1->GetBlock(0,0));
-	    }
-            }*/
-
         /**
          * Assemble the schur complement matrix from the block matrices stored
          * in #m_blkMatrices and the given local to global mapping information.

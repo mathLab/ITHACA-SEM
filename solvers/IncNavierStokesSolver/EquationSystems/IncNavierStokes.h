@@ -127,7 +127,7 @@ namespace Nektar
         // This function gives back the convective filed in the standard
         // element to calculate the stability region of the problem in a
         // unique way.
-        Array<OneD,NekDouble> GetStdVelocity(
+        Array<OneD,NekDouble> GetMaxStdVelocity(
             const Array<OneD, Array<OneD,NekDouble> > inarray);
 
 

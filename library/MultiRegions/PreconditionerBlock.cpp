@@ -95,6 +95,7 @@ namespace Nektar
                     break;
                 }
                 case MultiRegions::eBlock3D:
+                case MultiRegions::eLinearWithBlock:
                 {
                     BlockPreconditioner3D();
                     break;

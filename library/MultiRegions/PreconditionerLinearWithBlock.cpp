@@ -98,10 +98,11 @@ namespace Nektar
             Array<OneD, NekDouble> InputLinear(pInput.num_elements());
 
             //Apply Low Energy preconditioner
-            m_blockPrecon->DoPreconditioner(pInput, OutputBlock);
+            m_blockPrecon->DoPreconditioner(pInput, pOutput);
 
             //Apply linear space preconditioner
-            m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear,OutputBlock);
+            //m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, pOutput,OutputBlock);
+            //m_linSpacePrecon->DoPreconditioner(pInput, pOutput);
         }
 
     }

@@ -1806,6 +1806,11 @@ namespace Nektar
             return m_staticCondMatrixManager[mkey];
         }
 
+        void TetExp::v_DropLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            m_staticCondMatrixManager.DeleteObject(mkey);
+        }
+
         void TetExp::GeneralMatrixOp_MatOp(
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,

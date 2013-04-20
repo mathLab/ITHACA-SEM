@@ -99,7 +99,14 @@ namespace Nektar
         NekDouble                           m_vInf;
         NekDouble                           m_wInf;
         NekDouble                           m_gasConstant;
-      
+        NekDouble                           m_Twall;
+        std::string                         m_ViscosityType;
+        NekDouble                           m_mu;
+        NekDouble                           m_thermalConductivity;
+        NekDouble                           m_Cp;
+        NekDouble                           m_Prandtl;
+
+
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -112,7 +119,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         void GetViscousFluxVector(
-            const int                                           i,
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
@@ -127,6 +133,18 @@ namespace Nektar
         void SymmetryBoundary(
             int                                               bcRegion,
             int                                               cnt,
+            Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void InflowCFSBoundary(
+            int                                               bcRegion, 
+            int                                               cnt, 
+            Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void OutflowCFSBoundary(
+            int                                               bcRegion, 
+            int                                               cnt, 
+            Array<OneD, Array<OneD, NekDouble> >             &physarray);
+        void ExtrapOrder0Boundary(
+            int                                               bcRegion, 
+            int                                               cnt, 
             Array<OneD, Array<OneD, NekDouble> >             &physarray);
         void GetVelocityVector(
             const Array<OneD,       Array<OneD,       NekDouble> >&physfield,
@@ -166,6 +184,11 @@ namespace Nektar
         {
         }
 
+        NekDouble GetGasConstant()
+        {
+            return m_gasConstant;
+        }
+        
         NekDouble GetGamma()
         {
             return m_gamma;

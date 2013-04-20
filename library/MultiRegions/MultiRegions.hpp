@@ -139,6 +139,20 @@ namespace Nektar
             "FullLinearSpaceWithBlock"
         };
 
+        enum MatrixStorageType
+        {
+            eNistCSR,
+            eNistBSR,
+            eSmvBSR
+        };
+
+        const char* const MatrixStorageTypeMap[] =
+        {
+            "NistCSR",
+            "NistBSR",
+            "SmvBSR"
+        };
+
 
         typedef std::vector<SpatialDomains::BoundaryConditionType>  BndTypesVector;
         typedef std::vector<SpatialDomains::BoundaryConditionType>::iterator BndTypesVectorIter;

@@ -43,10 +43,10 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class PreconditionerLLE;
-        typedef boost::shared_ptr<PreconditionerLLE>  PreconditionerLLESharedPtr;
+        class PreconditionerLinearWithLowEnergy;
+        typedef boost::shared_ptr<PreconditionerLinearWithLowEnergy>  PreconditionerLinearWithLowEnergySharedPtr;
 
-        class PreconditionerLLE: public Preconditioner
+        class PreconditionerLinearWithLowEnergy: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
@@ -55,7 +55,7 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLLE>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinearWithLowEnergy>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
 	        return p;
             }
@@ -63,12 +63,12 @@ namespace Nektar
             /// Name of class
             static std::string className;
 
-            MULTI_REGIONS_EXPORT PreconditionerLLE(
+            MULTI_REGIONS_EXPORT PreconditionerLinearWithLowEnergy(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerLLE() {}
+            virtual ~PreconditionerLinearWithLowEnergy() {}
 
 	protected:
             //const boost::weak_ptr<GlobalLinSys>         m_linsys;

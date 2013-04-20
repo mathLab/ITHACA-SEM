@@ -32,8 +32,8 @@
 // Description: Preconditioner header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHLOWENERGY_H
-#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHLOWENERGY_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHBLOCK_H
+#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHBLOCK_H
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
@@ -43,10 +43,10 @@ namespace Nektar
 {
     namespace MultiRegions
     {
-        class PreconditionerLLE;
-        typedef boost::shared_ptr<PreconditionerLLE>  PreconditionerLLESharedPtr;
+        class PreconditionerLinearWithBlock;
+        typedef boost::shared_ptr<PreconditionerLinearWithBlock>  PreconditionerLinearWithBlockSharedPtr;
 
-        class PreconditionerLLE: public Preconditioner
+        class PreconditionerLinearWithBlock: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
@@ -55,7 +55,7 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLLE>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinearWithBlock>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
 	        return p;
             }
@@ -63,32 +63,21 @@ namespace Nektar
             /// Name of class
             static std::string className;
 
-            MULTI_REGIONS_EXPORT PreconditionerLLE(
+            MULTI_REGIONS_EXPORT PreconditionerLinearWithBlock(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerLLE() {}
+            virtual ~PreconditionerLinearWithBlock() {}
 
 	protected:
-            //const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
             PreconditionerSharedPtr m_linSpacePrecon;
-            PreconditionerSharedPtr m_lowEnergyPrecon;
+            PreconditionerSharedPtr m_blockPrecon;
 
 	private:
 
             virtual void v_InitObject();
-
-            virtual void v_DoTransformToLowEnergy(
-                Array<OneD, NekDouble>& pInOut,
-                int offset);
-
-            virtual void v_DoTransformFromLowEnergy(
-                Array<OneD, NekDouble>& pInput);
-
-            virtual DNekScalBlkMatSharedPtr
-                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,

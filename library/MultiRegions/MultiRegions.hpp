@@ -120,9 +120,10 @@ namespace Nektar
             eLinearWithDiagonal,
             eLinear,
 	    eLowEnergy,
-            eLLE,
+            eLinearWithLowEnergy,
             eBlock2D,
-            eBlock3D
+            eBlock3D,
+            eLinearWithBlock
         };
 
         const char* const PreconditionerTypeMap[] =
@@ -134,7 +135,8 @@ namespace Nektar
 	    "LowEnergyBlock",
             "FullLinearSpaceWithLowEnergyBlock",
             "Block2D",
-            "Block3D"
+            "Block3D",
+            "FullLinearSpaceWithBlock"
         };
 
 

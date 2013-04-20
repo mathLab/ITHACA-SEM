@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
-#include <MultiRegions/PreconditionerLLE.h>
+#include <MultiRegions/PreconditionerLinearWithLowEnergy.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <LocalRegions/MatrixKey.h>
 #include <math.h>

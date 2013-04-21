@@ -581,28 +581,29 @@ namespace Nektar
                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                 = bcs.GetBoundaryConditions();
-            SpatialDomains::MeshGraph2DSharedPtr graph2D =
-                boost::dynamic_pointer_cast<
+            SpatialDomains::MeshGraph2DSharedPtr graph2D
+                = boost::dynamic_pointer_cast<
                     SpatialDomains::MeshGraph2D>(m_graph);
             SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            LibUtilities::CommSharedPtr     vComm     =
+            LibUtilities::CommSharedPtr     vComm       =
                 m_session->GetComm()->GetRowComm();
-            LibUtilities::CompositeOrdering compOrder =
+            LibUtilities::CompositeOrdering compOrder   =
                 m_session->GetCompositeOrdering();
             LibUtilities::BndRegionOrdering bndRegOrder =
                 m_session->GetBndRegionOrdering();
-            SpatialDomains::CompositeMap    compMap   =
+            SpatialDomains::CompositeMap    compMap     =
                 m_graph->GetComposites();
             
             // Unique collection of pairs of periodic composites (i.e. if
             // composites 1 and 2 are periodic then this map will contain either
             // the pair (1,2) or (2,1) but not both).
             map<int,int>                     perComps;
-            //map<int,vector<int> >            allVerts;
+            map<int,vector<int> >            allVerts;
+            set<int>                         locVerts;
             map<int,StdRegions::Orientation> allEdges;
             
-            int region1ID, region2ID, i, j, cnt;
+            int region1ID, region2ID, i, j, k, cnt;
             SpatialDomains::BoundaryConditionShPtr locBCond;
 
             // Construct list of all periodic pairs local to this process.
@@ -673,10 +674,12 @@ namespace Nektar
                         tmpOrder.push_back((*c)[i]->GetGlobalID());
                     }
                     
-                    //vector<int> vertList(2);
-                    //vertList[0] = geom->GetVid(0);
-                    //vertList[1] = geom->GetVid(1);
-                    //allVerts[(*c)[i]->GetGlobalID()] = vertList;
+                    vector<int> vertList(2);
+                    vertList[0] = segGeom->GetVid(0);
+                    vertList[1] = segGeom->GetVid(1);
+                    allVerts[(*c)[i]->GetGlobalID()] = vertList;
+                    locVerts.insert(vertList[0]);
+                    locVerts.insert(vertList[1]);
                 }
 
                 if (vComm->GetSize() == 1)
@@ -717,6 +720,7 @@ namespace Nektar
             int              totEdges;
             Array<OneD, int> edgecounts(n,0);
             Array<OneD, int> edgeoffset(n,0);
+            Array<OneD, int> vertoffset(n,0);
 
             edgecounts[p] = allEdges.size();
             vComm->AllReduce(edgecounts, LibUtilities::ReduceSum);
@@ -730,45 +734,52 @@ namespace Nektar
             totEdges = Vmath::Vsum(n, edgecounts, 1);
             Array<OneD, int> edgeIds   (totEdges, 0);
             Array<OneD, int> edgeOrient(totEdges, 0);
-            //Array<OneD, int> edgeVerts (totEdges, 0);
+            Array<OneD, int> edgeVerts (totEdges, 0);
 
             map<int, StdRegions::Orientation>::iterator sIt;
 
             for (i = 0, sIt = allEdges.begin(); sIt != allEdges.end(); ++sIt)
             {
                 edgeIds   [edgeoffset[p] + i  ] = sIt->first;
-                edgeOrient[edgeoffset[p] + i++] = sIt->second;
-                //edgeVerts [edgeoffset[p] + i++] = allVerts[sIt->first].size();
+                edgeOrient[edgeoffset[p] + i  ] = sIt->second;
+                edgeVerts [edgeoffset[p] + i++] = allVerts[sIt->first].size();
             }
 
             vComm->AllReduce(edgeIds,    LibUtilities::ReduceSum);
             vComm->AllReduce(edgeOrient, LibUtilities::ReduceSum);
-            //vComm->AllReduce(edgeVerts,  LibUtilities::ReduceSum);
-            
-            //int nTotVerts = Vmath::Vsum(totEdges, edgeVerts, 1);
+            vComm->AllReduce(edgeVerts,  LibUtilities::ReduceSum);
+
+            int nTotVerts = Vmath::Vsum(totEdges, edgeVerts, 1);
 
             // Calculate number of vertices on each processor.
-            //Array<OneD, int> procVerts(n,0);
-            //for (i = 0; i < n; ++i)
-            //{
-            //    procVerts[i] = Vmath::Vsum(
-            //        edgecounts[i], edgeVerts + edgeoffset[i], 1);
-            //}
+            Array<OneD, int> procVerts(n,0);
+            for (i = 0; i < n; ++i)
+            {
+                procVerts[i] = Vmath::Vsum(
+                    edgecounts[i], edgeVerts + edgeoffset[i], 1);
+            }
+
+            vertoffset[0] = 0;
+
+            for (i = 1; i < n; ++i)
+            {
+                vertoffset[i] = vertoffset[i-1] + procVerts[i-1];
+            }
+
+            Array<OneD, int> vertIds(nTotVerts, 0);
+            for (i = 0, sIt = allEdges.begin(); sIt != allEdges.end(); ++sIt)
+            {
+                for (j = 0; j < allVerts[sIt->first].size(); ++j)
+                {
+                    vertIds[vertoffset[p] + i++] = allVerts[sIt->first][j];
+                }
+            }
+
+            vComm->AllReduce(vertIds, LibUtilities::ReduceSum);
             
-            //Array<OneD, int> vertIds(nTotVerts, 0);
-            //for (i = 0, sIt = allEdges.begin(); sIt != allEdges.end(); ++sIt)
-            //{
-            //    for (j = 0; j < allVerts[sIt->first].size(); ++j)
-            //    {
-            //        vertIds[procVerts[p] + i++] = allVerts[sIt->first][j];
-            //    }
-            //}
-
-            //vComm->AllReduce(vertIds, LibUtilities::ReduceSum);
-
             // For simplicity's sake create a map of edge id -> orientation.
             map<int, StdRegions::Orientation> orientMap;
-            //map<int, vector<int> >            vertMap;
+            map<int, vector<int> >            vertMap;
 
             for (cnt = i = 0; i < totEdges; ++i)
             {
@@ -776,23 +787,28 @@ namespace Nektar
                          "Already found edge in orientation map!");
                 orientMap[edgeIds[i]] = (StdRegions::Orientation)edgeOrient[i];
 
-                /*
                 vector<int> verts(edgeVerts[i]);
 
                 for (j = 0; j < edgeVerts[i]; ++j)
                 {
                     verts[j] = vertIds[cnt++];
                 }
-                vertMap[edgeIds[i]] = verts[j];
-                */
+                vertMap[edgeIds[i]] = verts;
             }
-
+            
             // Go through list of composites and figure out which edges are
             // parallel from original ordering in session file. This includes
             // composites which are not necessarily on this process.
-            
             map<int,int>::iterator cIt, pIt;
             map<int,int>::const_iterator oIt;
+
+            // Store temporary map of periodic vertices which will hold all
+            // periodic vertices on the entire mesh so that doubly periodic
+            // vertices can be counted properly across partitions. Local
+            // vertices are copied into m_periodicVerts at the end of the
+            // function.
+            PeriodicMap periodicVerts;
+                
             for (cIt = perComps.begin(); cIt != perComps.end(); ++cIt)
             {
                 SpatialDomains::Composite c[2];
@@ -875,12 +891,6 @@ namespace Nektar
                     ASSERTL0(orientMap.count(ids[0]) > 0 &&
                              orientMap.count(ids[1]) > 0,
                              "Unable to find edge in orientation map.");
-                    
-                    if (!local[0] && !local[1])
-                    {
-                        // Neither edge is stored on this process.
-                        continue;
-                    }
 
                     for (i = 0; i < 2; ++i)
                     {
@@ -898,19 +908,147 @@ namespace Nektar
                         
                         PeriodicEntity ent(ids  [other], o,
                                            local[other]);
-                        m_periodicEdges[ids[i]] = ent;
+                        m_periodicEdges[ids[i]].push_back(ent);
+                    }
+
+                    for (i = 0; i < 2; ++i)
+                    {
+                        int other = (i+1) % 2;
+
+                        StdRegions::Orientation o =
+                            orientMap[ids[i]] == orientMap[ids[other]] ?
+                                StdRegions::eBackwards :
+                            StdRegions::eForwards;
+
+                        // Determine periodic vertices.
+                        vector<int> perVerts1 = vertMap[ids[i]];
+                        vector<int> perVerts2 = vertMap[ids[other]];
+
+                        map<int, pair<int, bool> > tmpMap;
+                        map<int, pair<int, bool> >::iterator mIt;
+                        if (o == StdRegions::eForwards)
+                        {
+                            tmpMap[perVerts1[0]] = make_pair(
+                                perVerts2[0], locVerts.count(perVerts2[0]) > 0);
+                            tmpMap[perVerts1[1]] = make_pair(
+                                perVerts2[1], locVerts.count(perVerts2[1]) > 0);
+                        }
+                        else
+                        {
+                            tmpMap[perVerts1[0]] = make_pair(
+                                perVerts2[1], locVerts.count(perVerts2[1]) > 0);
+                            tmpMap[perVerts1[1]] = make_pair(
+                                perVerts2[0], locVerts.count(perVerts2[0]) > 0);
+                        }
+
+                        for (mIt = tmpMap.begin(); mIt != tmpMap.end(); ++mIt)
+                        {
+                            // See if this vertex has been recorded already.
+                            PeriodicEntity ent2(mIt->second.first,
+                                                StdRegions::eNoOrientation,
+                                                mIt->second.second);
+                            PeriodicMap::iterator perIt = periodicVerts.find(
+                                mIt->first);
+
+                            if (perIt == periodicVerts.end())
+                            {
+                                periodicVerts[mIt->first].push_back(ent2);
+                                perIt = periodicVerts.find(mIt->first);
+                            }
+                            else
+                            {
+                                bool doAdd = true;
+                                for (j = 0; j < perIt->second.size(); ++j)
+                                {
+                                    if (perIt->second[j].id == mIt->second.first)
+                                    {
+                                        doAdd = false;
+                                        break;
+                                    }
+                                }
+
+                                if (doAdd)
+                                {
+                                    perIt->second.push_back(ent2);
+                                }
+                            }
+                        }
                     }
                 }
             }
 
+            // Loop over all periodic vertices to complete connectivity
+            // information.
+            PeriodicMap::iterator perIt, perIt2;
+            for (perIt  = periodicVerts.begin();
+                 perIt != periodicVerts.end(); ++perIt)
+            {
+                // Loop over associated vertices.
+                for (i = 0; i < perIt->second.size(); ++i)
+                {
+                    perIt2 = periodicVerts.find(perIt->second.at(i).id);
+                    ASSERTL0(perIt2 != periodicVerts.end(),
+                             "Couldn't find periodic vertex.");
+                    
+                    for (j = 0; j < perIt2->second.size(); ++j)
+                    {
+                        if (perIt2->second.at(j).id == perIt->first)
+                        {
+                            continue;
+                        }
+
+                        bool doAdd = true;
+                        for (k = 0; k < perIt->second.size(); ++k)
+                        {
+                            if (perIt2->second.at(j).id == perIt->second.at(k).id)
+                            {
+                                doAdd = false;
+                                break;
+                            }
+                        }
+
+                        if (doAdd)
+                        {
+                            perIt->second.push_back(perIt2->second.at(j));
+                        }
+                    }
+                }
+            }
+
+            // Do one final loop over periodic vertices to remove non-local
+            // vertices from map.
+            for (perIt  = periodicVerts.begin();
+                 perIt != periodicVerts.end(); ++perIt)
+            {
+                if (locVerts.count(perIt->first) > 0)
+                {
+                    m_periodicVerts.insert(*perIt);
+                }
+            }
+
+#if 0
             cout << "Found " << m_periodicEdges.size() << " periodic edges" << endl;
             
             PeriodicMap::iterator asd;
             for (asd = m_periodicEdges.begin(); asd != m_periodicEdges.end(); ++asd)
             {
-                cout << asd->first << " <-> " << asd->second.id
-                     << " " << StdRegions::OrientationMap[asd->second.orient] << endl;
+                cout << asd->first << " <-> " << asd->second.at(0).id
+                     << " " << StdRegions::OrientationMap[asd->second.at(0).orient] << endl;
             }
+
+            cout << "RANK: " << vComm->GetRank() << " found " << m_periodicVerts.size() << " periodic verts" << endl;
+            for (asd = m_periodicVerts.begin(); asd != m_periodicVerts.end(); ++asd)
+            {
+                cout << "RANK: " << vComm->GetRank() << " " << asd->first << " <-> ";
+                for (i = 0; i < asd->second.size(); ++i)
+                {
+                    cout << "(" << asd->second.at(i).id
+                         << "," << asd->second.at(i).isLocal
+                         << ") ";
+                }
+                cout << endl;
+            }
+#endif
         }
 
         bool DisContField2D::IsLeftAdjacentEdge(const int n, const int e)
@@ -1043,11 +1181,12 @@ namespace Nektar
                     
                     if (it2 != m_periodicEdges.end())
                     {
-                        it3 = m_perEdgeToExpMap.find(it2->second.id);
+                        const PeriodicEntity &ent = it2->second.at(0);
+                        it3 = m_perEdgeToExpMap.find(ent.id);
 
                         if (it3 == m_perEdgeToExpMap.end())
                         {
-                            if (parallel && !it2->second.isLocal)
+                            if (parallel && !ent.isLocal)
                             {
                                 continue;
                             }
@@ -1069,7 +1208,7 @@ namespace Nektar
                          * varying polynomial order this condition will not work
                          * (needs some kind of interpolation here).
                          */
-                        if (it2->second.orient == StdRegions::eBackwards)
+                        if (ent.orient == StdRegions::eBackwards)
                         {
                             Vmath::Reverse(elmtToTrace[n][e]->GetTotPoints(),
                                            &Fwd[offset], 1, &Bwd[offset2], 1);

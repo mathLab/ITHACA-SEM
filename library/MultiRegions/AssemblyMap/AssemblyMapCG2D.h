@@ -51,8 +51,6 @@ namespace Nektar
         typedef boost::shared_ptr<AssemblyMapCG2D>  AssemblyMapCG2DSharedPtr;
         typedef boost::shared_ptr<ExpList>  ExpListSharedPtr;
 
-        static PeriodicMap NullPeriodicMap;
-        
         /// Constructs mappings for the C0 scalar continuous Galerkin formulation.
         class AssemblyMapCG2D: public AssemblyMapCG
         {
@@ -70,10 +68,10 @@ namespace Nektar
                                    const ExpList &locExp,
                                    const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
+                                   const PeriodicMap& periodicVertsId,
                                    const PeriodicMap& periodicEdgesId,
                                    const bool checkIfSystemSingular,
                                    const std::string variable = "DefaultVar");
-
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
@@ -97,6 +95,7 @@ namespace Nektar
                                        const Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
                                        &bndConditions,
                                        const PeriodicMap& periodicEdgesId,
+                                       const PeriodicMap& periodicVertsId,
                                        Array<OneD, map<int,int> > &Dofs,
                                        Array<OneD, map<int,int> > &ReorderedGraphVertId,
                                        int          &firstNonDirGraphVertID,
@@ -118,6 +117,7 @@ namespace Nektar
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
                                            const PeriodicMap& periodicEdgesId = NullPeriodicMap,
+                                           const PeriodicMap& periodicVertsId = NullPeriodicMap,
                                            const bool checkIfSystemSingular = false);
         };
 

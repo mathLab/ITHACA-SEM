@@ -2883,7 +2883,7 @@ namespace Nektar
             const std::string& variable)
         {
             SpatialDomains::BoundaryConditionCollection::const_iterator collectionIter = collection.find(regionId);
-            ASSERTL1(collectionIter != collection.end(), "Unable to locate collection.");
+            ASSERTL1(collectionIter != collection.end(), "Unable to locate collection "+boost::lexical_cast<string>(regionId));
             const SpatialDomains::BoundaryConditionMapShPtr boundaryConditionMap = (*collectionIter).second;
             SpatialDomains::BoundaryConditionMap::const_iterator conditionMapIter = boundaryConditionMap->find(variable);
             ASSERTL1(conditionMapIter != boundaryConditionMap->end(), "Unable to locate condition map.");

@@ -121,6 +121,11 @@ namespace Nektar
             PeriodicMap m_periodicEdges;
             
             /**
+             * @brief A map which identifies groups of periodic vertices.
+             */
+            PeriodicMap m_periodicVerts;
+            
+            /**
              * @brief Auxiliary map for periodic boundary conditions.
              * 
              * Takes geometry IDs of periodic edges to a pair (n,e), where n

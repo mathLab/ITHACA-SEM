@@ -1226,9 +1226,9 @@ namespace Nektar
             int nTracePhys = trace->GetTotPoints();
 
             // Initialise the trace to universal maps.
-            m_traceToUniversalMap       = 
+            m_traceToUniversalMap       =
                 Nektar::Array<OneD, int>(nTracePhys, -1);
-            m_traceToUniversalMapUnique = 
+            m_traceToUniversalMapUnique =
                 Nektar::Array<OneD, int>(nTracePhys, -1);
 
             // Assume that each element of the expansion is of the same
@@ -1278,11 +1278,12 @@ namespace Nektar
                     bool reverse = false;
                     if (perMap.count(eid) > 0)
                     {
-                        if (it->second.isLocal == false)
+                        PeriodicEntity ent = it->second.at(0);
+                        if (ent.isLocal == false)
                         {
-                            reverse = it->second.orient == StdRegions::eBackwards &&
-                                eid == min(eid, it->second.id);
-                            eid = min(eid, it->second.id);
+                            reverse = ent.orient == StdRegions::eBackwards &&
+                                eid == min(eid, ent.id);
+                            eid = min(eid, ent.id);
                         }
                     }
 

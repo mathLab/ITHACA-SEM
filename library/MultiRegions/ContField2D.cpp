@@ -132,6 +132,7 @@ namespace Nektar
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
+                                    m_periodicVerts,
                                     m_periodicEdges,
                                     CheckIfSingularSystem,
                                     variable);
@@ -181,8 +182,13 @@ namespace Nektar
                                         m_bndCondExpansions,
                                         m_bndConditions,
                                         m_periodicEdges,
+<<<<<<< HEAD
                                         CheckIfSingularSystem,
                                         variable);
+=======
+                                        m_periodicVerts,
+                                        CheckIfSingularSystem);
+>>>>>>> Implemented 2D CG parallel periodic BCs.
             }
             else
             {

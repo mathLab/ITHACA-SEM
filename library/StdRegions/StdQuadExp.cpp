@@ -1418,7 +1418,7 @@ namespace Nektar
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
             int j,k;
             
-            int cuttoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
             
             // project onto modal  space.
@@ -1432,9 +1432,9 @@ namespace Nektar
             {
                 for(k = 0; k < nmodes_b; ++k)
                 {
-                    if(j + k >= cuttoff)
+                    if(j + k >= cutoff)
                     {
-                        orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cuttoff+1)*(j+k-cuttoff+1)))));
+                        orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+1)*(j+k-cutoff+1)))));
                     }
                 }
             }
@@ -1442,29 +1442,24 @@ namespace Nektar
             int nmodes = max(nmodes_a,nmodes_b);
 
             Array<OneD, NekDouble> fac(nmodes,0.0);
-            for(j = cuttoff; j < nmodes; ++j)
+            for(j = cutoff; j < nmodes; ++j)
             {
-                fac[j] = exp(-(j-nmodes)*(j-nmodes)/((NekDouble) (j-cuttoff+1.0)*(j-cuttoff+1.0)));
+                fac[j] = exp(-(j-nmodes)*(j-nmodes)/((NekDouble) (j-cutoff+1.0)*(j-cutoff+1.0)));
             }
 
-            for(j = cuttoff; j  < nmodes_a; ++j)
-            {
-                for(k =  0; k < cuttoff; ++k)
-                {
-                    orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*fac[j]);
-                }
-                for(k = cuttoff; k < nmodes_b; ++k)
-                {
-                    orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*fac[j]*fac[k]);
-                }
-                    
-            }
 
-            for(j = 0; j  < nmodes_a; ++j)
+            for(j = 0; j < nmodes_a; ++j)
             {
-                for(k = cuttoff; k < nmodes_b; ++k)
+                for(k = 0; k < nmodes_b; ++k)
                 {
-                    orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*fac[k]);
+                    if(j >= cutoff)
+                    {
+                        if((j >= cutoff)||(k >= cutoff))
+                        {
+                            orthocoeffs[j*nmodes_b + k] *= (1.0+SvvDiffCoeff*exp(-fac[j]*fac[k]));
+                            
+                        }
+                    }
                 }
             }
 #endif

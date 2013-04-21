@@ -1370,7 +1370,7 @@ namespace Nektar
                         Array<OneD,NekDouble> &outarray,
                   const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNVarCoeff() == 0)
+            if(mkey.GetNVarCoeff() == 0 && !mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
             {
                 // This implementation is only valid when there are no coefficients
                 // associated to the Laplacian operator
@@ -1553,7 +1553,7 @@ namespace Nektar
             case StdRegions::eLaplacian:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
-                        mkey.GetNVarCoeff())
+                       (mkey.GetNVarCoeff() > 0)||(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio)))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);

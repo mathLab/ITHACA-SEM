@@ -2041,6 +2041,65 @@ namespace Nektar
                     ASSERTL0(false, "Quadrature point type not supported for this element.");
                     break;
             }
+        
         }
+        
+        void StdPrismExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                               const StdMatrixKey &mkey)
+        {
+            // Generate an orthonogal expansion
+            int qa = m_base[0]->GetNumPoints();
+            int qb = m_base[1]->GetNumPoints();
+            int qc = m_base[2]->GetNumPoints();
+            int nmodes_a = m_base[0]->GetNumModes();
+            int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes_c = m_base[2]->GetNumModes();
+            // Declare orthogonal basis. 
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+            LibUtilities::PointsKey pc(qc,m_base[2]->GetPointsType());
+            
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
+            LibUtilities::BasisKey Bc(LibUtilities::eOrtho_B,nmodes_c,pc);
+            StdPrismExp OrthoExp(Ba,Bb,Bc);
+            
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
+            int i,j,k;
+            
+            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            
+            // project onto modal  space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+            
+            //  Filter just trilinear space
+            int nmodes = max(nmodes_a,nmodes_b);
+            nmodes = max(nmodes,nmodes_c);
+            
+            Array<OneD, NekDouble> fac(nmodes,1.0);
+            for(j = cutoff; j < nmodes; ++j)
+            {
+                fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
+            }
+            
+            for(i = 0; i < nmodes_a; ++i)
+            {
+                for(j = 0; j < nmodes_b; ++j)
+                {
+                    for(k =  0; k +j < nmodes_c; ++k)
+                    {
+                        if((i >= cutoff)||(j +k >= cutoff))
+                        {
+                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]*fac[j+k]*fac[j+k]));
+                        }
+                    }
+                }
+            }
+            
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }                        
+        
     }//end namespace
 }//end namespace

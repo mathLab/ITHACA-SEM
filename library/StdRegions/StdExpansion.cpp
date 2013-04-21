@@ -34,7 +34,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
 #include <StdRegions/StdExpansion.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for BasisManager, etc
 
@@ -301,8 +300,9 @@ namespace Nektar
             Array<OneD, NekDouble> wsp(ntot);
 
             Vmath::Vmul(ntot, m_phys, 1, m_phys, 1, wsp, 1);
-            val   = sqrt(v_Integral(wsp));
 
+            val   = sqrt(v_Integral(wsp));
+            
             return val;
         }
 

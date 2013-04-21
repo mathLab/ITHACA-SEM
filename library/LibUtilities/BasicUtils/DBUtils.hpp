@@ -38,6 +38,8 @@
 
 #include <LibUtilities/BasicUtils/VmathArray.hpp> 
 
+using namespace std;
+
 namespace DBUtils
 {
     using namespace Nektar;
@@ -62,7 +64,7 @@ namespace DBUtils
         {
             ASSERTL1(stop <= in.num_elements(), "Stop value is outside array range ");
             
-            for(i = start; i < in.num_elements(); ++i)
+            for(i = start; i < stop; ++i)
             {
                 cout << in[i] << endl;
             }

@@ -34,6 +34,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+
+
 #include <StdRegions/StdTetExp.h>
 
 namespace Nektar
@@ -180,7 +182,7 @@ namespace Nektar
             int Qx = wx.num_elements();
             int Qy = wy.num_elements();
             int Qz = wz.num_elements();
-
+            
             if( fxyz.num_elements() != Qx*Qy*Qz ) {
                 cerr << "TripleTetrahedralInnerProduct expected "
                      << fxyz.num_elements()
@@ -2172,6 +2174,55 @@ namespace Nektar
             }
         }
 
+        void StdTetExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                             const StdMatrixKey &mkey)
+        {
+            int qa = m_base[0]->GetNumPoints();
+            int qb = m_base[1]->GetNumPoints();
+            int qc = m_base[2]->GetNumPoints();
+            int nmodes_a = m_base[0]->GetNumModes();
+            int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes_c = m_base[2]->GetNumModes();
 
+            // Declare orthogonal basis. 
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+            LibUtilities::PointsKey pc(qc,m_base[2]->GetPointsType());
+            
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,nmodes_b,pb);
+            LibUtilities::BasisKey Bc(LibUtilities::eOrtho_C,nmodes_c,pc);
+            StdTetExp OrthoExp(Ba,Bb,Bc);
+            
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            int i,j,k;
+            
+            int cnt;
+            int cuttoff = (int) (mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio)*nmodes_a);
+            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            
+            // project onto physical space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+            
+            // apply SVV filter. 
+            for(cnt = i = 0; i < nmodes_a; ++i)
+            {
+                for(cnt = j = 0; j < nmodes_b-j; ++j)
+                {
+                    for(k = 0; k < nmodes_c-j-k; ++k)
+                    {
+                        if(i + j + k >= cuttoff)
+                        {
+                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(i+j+k-nmodes_a)*(i+j+k-nmodes_a)/((NekDouble)((i+j+k-cuttoff+1)*(i+j+k-cuttoff+1)))));
+                        }
+                        cnt++;
+                    }
+                }
+            }
+            
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }
+    
     }//end namespace
 }//end namespace

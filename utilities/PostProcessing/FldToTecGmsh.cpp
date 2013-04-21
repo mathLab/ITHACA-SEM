@@ -26,16 +26,16 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
 
-    if(argc < 3)
+    if(argc < 4)
     {
         fprintf(stderr,"Usage: %s meshfile fieldfile\n",argv[0]);
         exit(1);
     }
 
     bool Extrude2DWithHomogeneous = false;
-	
-	bool SingleModePlot=false;
-	bool HalfModePlot=false;
+    
+    bool SingleModePlot=false;
+    bool HalfModePlot=false;
 
 	
     int nExtraPoints, nExtraPlanes;

@@ -99,7 +99,11 @@ namespace Nektar
             int m_maxStaticCondLevel;
             map<int, vector<pair<int, int> > > m_extraDirDofs;
             
-            void SetUpUniversalC0ContMap(const ExpList &locExp);
+            void SetUpUniversalC0ContMap(
+                const ExpList     &locExp,
+                const PeriodicMap &perVerts = NullPeriodicMap,
+                const PeriodicMap &perEdges = NullPeriodicMap,
+                const PeriodicMap &perFaces = NullPeriodicMap);
 
             /// Calculate the bandwith of the full matrix system.
             void CalculateFullSystemBandWidth();

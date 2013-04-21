@@ -133,6 +133,7 @@ namespace Nektar
                                     m_bndCondExpansions,
                                     m_bndConditions,
                                     m_periodicEdges,
+                                    m_periodicVerts,
                                     CheckIfSingularSystem);
 
         }
@@ -180,6 +181,7 @@ namespace Nektar
                                         m_bndCondExpansions,
                                         m_bndConditions,
                                         m_periodicEdges,
+                                        m_periodicVerts,
                                         CheckIfSingularSystem);
             }
             else

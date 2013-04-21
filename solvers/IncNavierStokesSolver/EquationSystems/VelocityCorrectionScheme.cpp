@@ -740,12 +740,14 @@ namespace Nektar
                                   accelerationTerm,    1);
             }
         }
-        
+      
+#if 0   
         // Adding acceleration term to HOPBCs
         Vmath::Svtvp(cnt, -1.0/m_timestep,
                           accelerationTerm,  1,
                           m_pressureHBCs[0], 1,
                           m_pressureHBCs[0], 1);
+#endif
 
         // Extrapolate to n+1
         Vmath::Smul(cnt, StifflyStable_Betaq_Coeffs[nint-1][nint-1],

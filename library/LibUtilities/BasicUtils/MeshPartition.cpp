@@ -111,6 +111,49 @@ namespace Nektar
 
             // Read mesh vertices
             vSubElement = pSession->GetElement("Nektar/Geometry/Vertex");
+
+            NekDouble xscale,yscale,zscale;
+
+            // check to see if any scaling parameters are in
+            // attributes and determine these values
+            LibUtilities::AnalyticExpressionEvaluator expEvaluator;
+            //LibUtilities::ExpressionEvaluator expEvaluator;
+            const char *xscal =  vSubElement->Attribute("XSCALE");
+            if(!xscal)
+            {
+                xscale = 1.0;
+            }
+            else
+            {
+                std::string xscalstr = xscal;
+                int expr_id = expEvaluator.DefineFunction("",xscalstr);
+                xscale = expEvaluator.Evaluate(expr_id);
+            }
+
+            const char *yscal =  vSubElement->Attribute("YSCALE");
+            if(!yscal)
+            {
+                yscale = 1.0;
+            }
+            else
+            {
+                std::string yscalstr = yscal;
+                int expr_id = expEvaluator.DefineFunction("",yscalstr);
+                yscale = expEvaluator.Evaluate(expr_id);
+            }
+
+            const char *zscal = vSubElement->Attribute("ZSCALE");
+            if(!zscal)
+            {
+                zscale = 1.0;
+            }
+            else
+            {
+                std::string zscalstr = zscal;
+                int expr_id = expEvaluator.DefineFunction("",zscalstr);
+                zscale = expEvaluator.Evaluate(expr_id);
+            }
+
             x = vSubElement->FirstChildElement();
             i = 0;
             while(x)
@@ -123,9 +166,9 @@ namespace Nektar
                 std::vector<std::string> vCoords;
                 std::string vCoordStr = x->FirstChild()->ToText()->Value();
                 boost::split(vCoords, vCoordStr, boost::is_any_of("\t "));
-                v.x = atof(vCoords[0].c_str());
-                v.y = atof(vCoords[1].c_str());
-                v.z = atof(vCoords[2].c_str());
+                v.x = atof(vCoords[0].c_str())*xscale;
+                v.y = atof(vCoords[1].c_str())*yscale;
+                v.z = atof(vCoords[2].c_str())*zscale;
                 m_meshVertices[v.id] = v;
                 x = x->NextSiblingElement();
             }

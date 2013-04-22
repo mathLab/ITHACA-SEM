@@ -133,12 +133,12 @@ namespace Nektar
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
 
             virtual void v_GetPeriodicEdges(
-                vector<map<int,int> > &periodicVertices,
-                map<int,int>          &periodicEdges)
+                PeriodicMap &periodicVerts,
+                PeriodicMap &periodicEdges)
                                             
             {
                 m_planes[0]->GetPeriodicEdges(
-                    periodicVertices,periodicEdges);
+                    periodicVerts,periodicEdges);
             }
 
         private:

@@ -132,7 +132,7 @@ namespace Nektar
              */
             boost::unordered_map<int,pair<int,int> > m_perFaceToExpMap;
             
-            void SetUpDG();
+            void SetUpDG(const std::string = "DefaultVar");
             bool SameTypeOfBoundaryConditions(const DisContField3D &In);
             void GenerateBoundaryConditionExpansion(
                 const SpatialDomains::MeshGraphSharedPtr &graph3D,

@@ -59,8 +59,7 @@ namespace Nektar
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapCG(
-                                    const LibUtilities::SessionReaderSharedPtr &pSession);
-
+                                               const LibUtilities::SessionReaderSharedPtr &pSession, const std::string variable = "DefaultVar");
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.

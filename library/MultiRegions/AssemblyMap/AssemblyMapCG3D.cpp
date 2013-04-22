@@ -63,8 +63,8 @@ namespace Nektar
          *
          */
         AssemblyMapCG3D::AssemblyMapCG3D(
-                const LibUtilities::SessionReaderSharedPtr &pSession):
-            AssemblyMapCG(pSession)
+                                         const LibUtilities::SessionReaderSharedPtr &pSession, const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
         }
 
@@ -82,8 +82,9 @@ namespace Nektar
                                                                 &bndConditions,
                 const map<int,int>& periodicVerticesId,
                 const map<int,int>& periodicEdgesId,
-                const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId):
-            AssemblyMapCG(pSession)
+                const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId,
+                const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,

@@ -69,7 +69,8 @@ namespace Nektar
                                                                 &bndConstraint,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const map<int,int> &periodicVertices);
+                const map<int,int> &periodicVertices,
+                const std::string variable = "DefaultVar");
 
             /// Constructor for trace map for two-dimensional expansion.
             MULTI_REGIONS_EXPORT AssemblyMapDG(
@@ -81,7 +82,8 @@ namespace Nektar
                                                                 &bndContraint,
                 const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const map<int,int> &periodicEdges);
+                const map<int,int> &periodicEdges,
+                const std::string variable = "DefaultVar");
 
             /// Constructor for trace map for three-dimensional expansion.
             MULTI_REGIONS_EXPORT AssemblyMapDG(
@@ -93,7 +95,8 @@ namespace Nektar
                                                                 &bndConstraint,
                 const Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndCond,
-                const map<int,PeriodicFace> &periodicFaces);
+                const map<int,PeriodicFace> &periodicFaces,
+                const std::string variable = "DefaultVar");
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapDG();

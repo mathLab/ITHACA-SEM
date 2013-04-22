@@ -63,8 +63,8 @@ namespace Nektar
          *
          */
         AssemblyMapCG::AssemblyMapCG(
-                const LibUtilities::SessionReaderSharedPtr &pSession):
-            AssemblyMap(pSession)
+                                     const LibUtilities::SessionReaderSharedPtr &pSession, const std::string variable):
+            AssemblyMap(pSession,variable)
         {
             pSession->LoadParameter("MaxStaticCondLevel",m_maxStaticCondLevel,100);
         }

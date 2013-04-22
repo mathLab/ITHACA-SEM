@@ -67,8 +67,8 @@ namespace Nektar
          *
          */
         AssemblyMapCG2D::AssemblyMapCG2D(
-                const LibUtilities::SessionReaderSharedPtr &pSession):
-            AssemblyMapCG(pSession)
+                                         const LibUtilities::SessionReaderSharedPtr &pSession, const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
         }
 
@@ -87,8 +87,9 @@ namespace Nektar
                                                             &bndConditions,
                 const vector<map<int,int> >& periodicVerticesId,
                 const map<int,int>& periodicEdgesId,
-                const bool checkIfSystemSingular) :
-            AssemblyMapCG(pSession)
+                const bool checkIfSystemSingular,
+                const std::string variable) :
+            AssemblyMapCG(pSession,variable)
         {
             SetUp2DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
@@ -109,8 +110,9 @@ namespace Nektar
         AssemblyMapCG2D::AssemblyMapCG2D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const int numLocalCoeffs,
-                const ExpList &locExp):
-            AssemblyMapCG(pSession)
+                const ExpList &locExp,
+                const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
             SetUp2DExpansionC0ContMap(numLocalCoeffs, locExp);
             CalculateBndSystemBandWidth();

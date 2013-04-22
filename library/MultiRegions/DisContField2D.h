@@ -139,7 +139,7 @@ namespace Nektar
              */
             vector<bool> m_leftAdjacentEdges;
 
-            void SetUpDG();
+            void SetUpDG(const std::string  = "DefaultVar");
             bool SameTypeOfBoundaryConditions(const DisContField2D &In);
             void GenerateBoundaryConditionExpansion(
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,

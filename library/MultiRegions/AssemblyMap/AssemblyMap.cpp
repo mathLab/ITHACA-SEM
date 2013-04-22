@@ -89,7 +89,7 @@ namespace Nektar
         {
         }
 
-        AssemblyMap::AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession):
+        AssemblyMap::AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession, const std::string variable):
             m_session(pSession),
             m_comm(pSession->GetComm()),
             m_hash(0),
@@ -97,12 +97,12 @@ namespace Nektar
             m_numGlobalBndCoeffs(0),
             m_numLocalDirBndCoeffs(0),
             m_numGlobalDirBndCoeffs(0),
-            m_solnType(pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln")),
             m_bndSystemBandWidth(0),
-            m_preconType(pSession->GetSolverInfoAsEnum<PreconditionerType>("Preconditioner")),
             m_gsh(0),
             m_bndGsh(0)
         {
+            m_solnType = pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln");
+            m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>("Preconditioner");
         }
 
 

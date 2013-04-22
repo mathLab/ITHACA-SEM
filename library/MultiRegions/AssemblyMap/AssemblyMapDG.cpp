@@ -75,8 +75,9 @@ namespace Nektar
             const ExpList &locExp,
             const Array<OneD, const MultiRegions::ExpListSharedPtr> &bndCondExp,
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndCond,
-            const map<int,int> &periodicVertices)
-        : AssemblyMap(pSession)
+            const map<int,int> &periodicVertices,
+            const std::string variable)
+            : AssemblyMap(pSession,variable)
         {
             int i,j;
             int cnt, vid, gid;
@@ -189,8 +190,9 @@ namespace Nektar
                                                const ExpList &locExp,
                                                const Array<OneD, MultiRegions::ExpListSharedPtr> &bndCondExp,
                                                const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
-                                               const map<int,int> &periodicEdges) :
-                AssemblyMap(pSession)
+                                     const map<int,int> &periodicEdges,
+                                     const std::string variable) :
+            AssemblyMap(pSession,variable)
         {
 
 
@@ -661,8 +663,9 @@ namespace Nektar
             const ExpList                                             &locExp,
             const Array<OneD, MultiRegions::ExpListSharedPtr>         &bndCondExp,
             const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
-            const map<int,PeriodicFace>                               &periodicFaces):
-            AssemblyMap(pSession)
+            const map<int,PeriodicFace>                               &periodicFaces,
+            const std::string variable):
+            AssemblyMap(pSession,variable)
         {
             int i,j,k,cnt,eid, id, id1, order_e,gid;
             int ntrace_exp = trace->GetExpSize();

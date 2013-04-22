@@ -134,7 +134,8 @@ namespace Nektar
                                     m_bndConditions,
                                     m_periodicVertices,
                                     m_periodicEdges,
-                                    CheckIfSingularSystem);
+                                    CheckIfSingularSystem,
+                                    variable);
 
         }
 
@@ -182,7 +183,8 @@ namespace Nektar
                                         m_bndConditions,
                                         m_periodicVertices,
                                         m_periodicEdges,
-                                        CheckIfSingularSystem);
+                                        CheckIfSingularSystem,
+                                        variable);
             }
             else
             {

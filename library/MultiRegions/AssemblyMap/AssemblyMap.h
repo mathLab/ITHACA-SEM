@@ -64,7 +64,7 @@ namespace Nektar
         	/// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMap();
             /// Constructor with a communicator
-            MULTI_REGIONS_EXPORT AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession);
+            MULTI_REGIONS_EXPORT AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession, const std::string variable = "DefaultVar");
 
             /// Constructor for next level in multi-level static condensation.
             MULTI_REGIONS_EXPORT AssemblyMap(AssemblyMap* oldLevelMap,

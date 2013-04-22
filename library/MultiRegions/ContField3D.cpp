@@ -126,7 +126,7 @@ namespace Nektar
                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
                 m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
                     m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
-                    m_periodicVertices, m_periodicEdges, m_periodicFaces);
+                    m_periodicVertices, m_periodicEdges, m_periodicFaces,variable);
             }
             else
             {

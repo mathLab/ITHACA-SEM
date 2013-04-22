@@ -57,7 +57,7 @@ namespace Nektar
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapCG2D(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession);
+                                                 const LibUtilities::SessionReaderSharedPtr &pSession, const std::string variable = "DefaultVar");
 
 
             /// Constructor for the 2D expansion mappings with boundary
@@ -70,7 +70,8 @@ namespace Nektar
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                                    const vector<map<int,int> >& periodicVerticesId,
                                    const map<int,int>& periodicEdgesId,
-                                   const bool checkIfSystemSingular);
+                                   const bool checkIfSystemSingular,
+                                   const std::string variable = "DefaultVar");
 
 
             /// General constructor for expansions of all dimensions without
@@ -78,7 +79,8 @@ namespace Nektar
             MULTI_REGIONS_EXPORT AssemblyMapCG2D(
                                    const LibUtilities::SessionReaderSharedPtr &pSession,
                                    const int numLocalCoeffs,
-                                   const ExpList &locExp);
+                                   const ExpList &locExp,
+                                   const std::string variable = "DefaultVar");
 
 
             /// Destructor.

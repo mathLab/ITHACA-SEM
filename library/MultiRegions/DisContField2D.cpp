@@ -100,7 +100,7 @@ namespace Nektar
 
             if (SetUpJustDG)
             {
-                SetUpDG();
+                SetUpDG(variable);
             }
             else
             {
@@ -335,7 +335,7 @@ namespace Nektar
         /**
          * @brief Set up all DG member variables and maps.
          */
-        void DisContField2D::SetUpDG()
+        void DisContField2D::SetUpDG(const std::string variable)
         {
             // Check for multiple calls
             if (m_trace != NullExpListSharedPtr)
@@ -361,7 +361,8 @@ namespace Nektar
             m_traceMap = MemoryManager<AssemblyMapDG>::
                 AllocateSharedPtr(m_session, graph2D, trace, *this,
                                   m_bndCondExpansions, m_bndConditions,
-                                  m_periodicEdges);
+                                  m_periodicEdges,
+                                  variable);
                 
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();

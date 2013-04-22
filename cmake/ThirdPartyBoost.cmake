@@ -40,10 +40,10 @@ IF (THIRDPARTY_BUILD_BOOST)
             INSTALL_COMMAND ""
             BUILD_IN_SOURCE 1
         )
-
+    
         # If building ThirdParty zlib, force zlib build before boost
         IF (THIRDPARTY_BUILD_ZLIB)
-            ADD_DEPENDENCIES(boost zlib)
+             ADD_DEPENDENCIES(boost zlib-1.2.7)
         ENDIF(THIRDPARTY_BUILD_ZLIB)
 
         # Set up CMake variables
@@ -95,15 +95,15 @@ ELSE (THIRDPARTY_BUILD_BOOST)
         IF (DEFINED TEST_ENV)
             SET(Boost_NO_SYSTEM_PATHS ON)
             SET(BOOST_ROOT $ENV{BOOST_HOME})
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams zlib date_time
+            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time
                 filesystem system program_options regex )
         ELSE ()
             SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/boost)
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
+            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
             SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/../ThirdParty/boost)
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
+            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
             SET(BOOST_ROOT ${CMAKE_SOURCE_DIR}/ThirdParty/dist)
-            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
+            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time filesystem system program_options regex)
         ENDIF()
     ELSE()
         FIND_PACKAGE( Boost COMPONENTS thread iostreams zlib date_time filesystem system program_options regex)
@@ -128,9 +128,6 @@ ELSE (THIRDPARTY_BUILD_BOOST)
     ENDIF ()
     IF (Boost_REGEX_FOUND)
         MESSAGE(STATUS "Found Boost regex library: ${Boost_REGEX_LIBRARY}")
-    ENDIF ()
-    IF (Boost_ZLIB_FOUND)
-        MESSAGE(STATUS "-- Found Boost zlib library: ${Boost_ZLIB_LIBRARY}")
     ENDIF ()
 ENDIF (THIRDPARTY_BUILD_BOOST)
 

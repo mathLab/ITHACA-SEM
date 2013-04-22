@@ -14,7 +14,7 @@ MACRO(ADD_SOLVER_EXECUTABLE name component source)
             ${NEKTAR++_LIBRARIES}
             ${Boost_THREAD_LIBRARY} 
             ${Boost_IOSTREAMS_LIBRARY} 
-            ${Boost_ZLIB_LIBRARY}  
+            ${ZLIB_LIBRARY}  
             ${Boost_DATE_TIME_LIBRARY}      
             ${Boost_PROGRAM_OPTIONS_LIBRARY} 
             optimized ${TINYXML_LIB} debug ${TINYXML_LIB}

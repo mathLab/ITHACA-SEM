@@ -179,14 +179,26 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/PointerWrapper.h
     ./LinearAlgebra/ScaledMatrix.hpp
     ./LinearAlgebra/Space.h
-    ./LinearAlgebra/SparseBlas.hpp
-    ./LinearAlgebra/SparseStandardMatrix.hpp
     ./LinearAlgebra/StandardMatrix.hpp
     ./LinearAlgebra/TransF77.hpp
+
+    ./LinearAlgebra/NistSparseBlas.hpp
+    ./LinearAlgebra/StorageSmvBsr.hpp
+    ./LinearAlgebra/StorageNistBsr.hpp
+    ./LinearAlgebra/StorageNistCsr.hpp
+    ./LinearAlgebra/NistSparseDescriptors.hpp
+    ./LinearAlgebra/SparseDiagBlkMatrix.hpp
+    ./LinearAlgebra/SparseMatrix.hpp
+    ./LinearAlgebra/SparseMatrixFwd.hpp
+    ./LinearAlgebra/SparseUtils.hpp
 )
 
+IF(NEKTAR_USING_SMV)
+    SET(LinearAlgebraHeaders ${LinearAlgebraHeaders} ./LinearAlgebra/LibSMV.hpp)
+ENDIF(NEKTAR_USING_SMV)
+
 SET(LinearAlgebraSources
-	./LinearAlgebra/blas.cpp
+    ./LinearAlgebra/blas.cpp
     ./LinearAlgebra/BlockMatrix.cpp
     ./LinearAlgebra/MatrixBase.cpp
     ./LinearAlgebra/MatrixFuncs.cpp
@@ -195,7 +207,17 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/NekVector.cpp
     ./LinearAlgebra/ScaledMatrix.cpp
     ./LinearAlgebra/StandardMatrix.cpp
+    ./LinearAlgebra/SparseUtils.cpp
+    ./LinearAlgebra/StorageSmvBsr.cpp
+    ./LinearAlgebra/StorageNistBsr.cpp
+    ./LinearAlgebra/StorageNistCsr.cpp
+    ./LinearAlgebra/SparseDiagBlkMatrix.cpp
+    ./LinearAlgebra/SparseMatrix.cpp
 )
+
+IF(NEKTAR_USING_SMV)
+    SET(LinearAlgebraSources ${LinearAlgebraSources} ./LinearAlgebra/LibSMV.cpp)
+ENDIF(NEKTAR_USING_SMV)
 
 SET(MemoryHeaders
 	./Memory/ThreadSpecificPool.hpp

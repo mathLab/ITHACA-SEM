@@ -232,6 +232,9 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT void v_ComputeConditionNumberOfMatrix(
                 const DNekScalMatSharedPtr & mat);
 
+            LOCAL_REGIONS_EXPORT void v_DropLocStaticCondMatrix(
+                        const MatrixKey &mkey);
+
         private:
             SpatialDomains::Geometry3DSharedPtr m_geom;
             SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;

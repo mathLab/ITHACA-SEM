@@ -175,8 +175,8 @@ namespace Nektar
 
             // Add up hash values if parallel
             int hash = m_hash;
-            m_comm->AllReduce(hash, 
-                              LibUtilities::ReduceSum);
+
+            m_comm->GetRowComm()->AllReduce(hash, LibUtilities::ReduceSum);
             m_hash = hash;
         }
 

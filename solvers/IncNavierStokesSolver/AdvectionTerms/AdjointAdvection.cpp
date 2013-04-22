@@ -479,49 +479,48 @@ namespace Nektar
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
-				
-                
-                if(m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"||
-                                                                   m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))
+                if ((m_session->DefinesSolverInfo("HOMOGENEOUS") &&
+                    (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D" ||
+                     m_session->GetSolverInfo("HOMOGENEOUS")=="1D" ||
+                     m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D")) &&
+                    nvar==4)
                 {
                     // w-component must be ignored and set to zero.
-                    if(j!=nvar-2)
+                    if (j != nvar - 2)
                     {
                         // p component (it is 4th variable of the 3D and corresponds 3nd variable of 2D)
-                        if(j==nvar-1)
-                        {
-                            s=2;
-                        }
-                        else 
-                        {
-                            s=j;	
-                        }
+                        s = (j == nvar - 1) ? 2 : j;
 			
                         //extraction of the 2D
-                        m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                       FieldDef[i]->m_fields[s],m_base[j]->UpdateCoeffs());
-                        
-                        //Put zero on higher modes
-                        int ncplane=(m_base[0]->GetNcoeffs())/m_npointsZ;
-                        if(m_npointsZ>2)
-                        {
-                            Vmath::Zero(ncplane*(m_npointsZ-2),&m_base[j]->UpdateCoeffs()[2*ncplane],1);
-                        }
-			
-			
-			
+                        m_base[j]->ExtractDataToCoeffs(
+                                            FieldDef[i],
+                                            FieldData[i],
+                                            FieldDef[i]->m_fields[s],
+                                            m_base[j]->UpdateCoeffs());
+                    }
+
+                    // Put zero on higher modes
+                    int ncplane = (m_base[0]->GetNcoeffs()) / m_npointsZ;
+
+                    if (m_npointsZ > 2)
+                    {
+                        Vmath::Zero(ncplane*(m_npointsZ-2),
+                                    &m_base[j]->UpdateCoeffs()[2*ncplane],1);
                     }
                 }
-                //2D cases
+                //2D cases and Homogeneous1D Base Flows
                 else
                 {
-                    bool flag = FieldDef[i]->m_fields[j]
-                        == m_session->GetVariable(j);
+                    bool flag = FieldDef[i]->m_fields[j] ==
+                                                    m_session->GetVariable(j);
+
                     ASSERTL1(flag, (std::string("Order of ") + pInfile
                                     + std::string(" data and that defined in "
                                                   "m_boundaryconditions differs")).c_str());
                     
-                    m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i], FieldDef[i]->m_fields[j], m_base[j]->UpdateCoeffs());
+                    m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
+                                                   FieldDef[i]->m_fields[j],
+                                                   m_base[j]->UpdateCoeffs());
                 }
             }
             

@@ -268,15 +268,6 @@ namespace Nektar
             m_fields[1] = m_vessels[1];
         }
 	
-        // Read in spatial data
-        int nq = m_fields[0]->GetNpoints();
-        m_spatialParameters = MemoryManager<SpatialDomains::SpatialParameters>::AllocateSharedPtr(m_session, nq);
-        m_spatialParameters->Read(m_filename);
-		
-        Array<OneD, NekDouble> x(nq), y(nq), z(nq);
-        m_fields[0]->GetCoords(x,y,z);
-        m_spatialParameters->EvaluateParameters(x,y,z);
-		
         // Zero all physical fields initially.
         ZeroPhysFields();
 		

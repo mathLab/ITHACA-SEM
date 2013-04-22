@@ -52,6 +52,9 @@ namespace Nektar
             
             static std::string                   type[];
             
+            Array<OneD, NekDouble>               m_jac;
+            Array<OneD, Array<OneD, NekDouble> > m_gmat;
+            
             Array<OneD, Array<OneD, NekDouble> > m_Q2D_e0; 
             Array<OneD, Array<OneD, NekDouble> > m_Q2D_e1; 
             Array<OneD, Array<OneD, NekDouble> > m_Q2D_e2; 
@@ -69,6 +72,7 @@ namespace Nektar
         protected:
             DiffusionLFRNS(std::string diffType);
             
+            Array<OneD, Array<OneD, NekDouble> > m_traceVel;
             Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
             LibUtilities::SessionReaderSharedPtr m_session;
             NekDouble                            m_gamma;
@@ -79,6 +83,21 @@ namespace Nektar
             NekDouble                            m_thermalConductivity;
             NekDouble                            m_rhoInf;
             NekDouble                            m_pInf;
+            
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_IF1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DU1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DFC1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_BD1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_D1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DD1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_viscTensor;
+            Array<OneD, Array<OneD, NekDouble> >               m_viscFlux;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DFC2;
+            Array<OneD, Array<OneD, NekDouble> >               m_divFD;
+            Array<OneD, Array<OneD, NekDouble> >               m_divFC;
+            
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_tmp1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_tmp2;
             
             std::string m_diffType;
             

@@ -2344,7 +2344,11 @@ namespace Nektar
         {
             return m_staticCondMatrixManager[mkey];
         }
-        
+
+        void HexExp::v_DropLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            m_staticCondMatrixManager.DeleteObject(mkey);
+        }
 
         void HexExp::MultiplyByQuadratureMetric(
                 const Array<OneD, const NekDouble>& inarray,

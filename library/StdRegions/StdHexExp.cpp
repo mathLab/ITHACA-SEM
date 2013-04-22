@@ -1211,12 +1211,12 @@ namespace Nektar
          * Only for basis type Modified_A or GLL_LAGRANGE in all directions.
          */
         void StdHexExp::v_GetFaceToElementMap(
-                                              const int                  fid,
-                                              const Orientation          faceOrient,
-                                              Array<OneD, unsigned int> &maparray,
-                                              Array<OneD,          int> &signarray,
-                                              int                        nummodesA,
-                                              int                        nummodesB)
+            const int                  fid,
+            const Orientation          faceOrient,
+            Array<OneD, unsigned int> &maparray,
+            Array<OneD,          int> &signarray,
+            int                        nummodesA,
+            int                        nummodesB)
         {
             int i,j;
             const int nummodes0 = m_base[0]->GetNumModes();

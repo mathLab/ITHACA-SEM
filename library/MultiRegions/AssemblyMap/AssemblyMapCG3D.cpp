@@ -528,7 +528,9 @@ namespace Nektar
             int faceCnt;
 
             m_numNonDirVertexModes = 0;
-            m_numNonDirEdgeModes   = 0;
+            m_numNonDirEdges   = 0;
+            m_numNonDirFaces   = 0;
+            m_numNonDirFaceModes   = 0;
             m_numNonDirFaceModes   = 0;
 
             m_numLocalBndCoeffs = 0;

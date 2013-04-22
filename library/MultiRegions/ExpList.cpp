@@ -1330,12 +1330,13 @@ namespace Nektar
         {
             static int start = 0;
             // start search at previous element or 0 
-            for (int i = start; i < (*m_exp).size(); ++i)
+/*            for (int i = start; i < (*m_exp).size(); ++i)
             {
                 if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord,tol))
                 {
                     start = i;
-                    return i;
+                    cout << "Found in element " << i << endl;
+                    //return i;
                 }
             }
 
@@ -1344,10 +1345,57 @@ namespace Nektar
                 if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord,tol))
                 {
                     start = i;
-                    return i;
+                    cout << "Found in element " << i << endl;
+                    //return i;
                 }
             }
             return -1;
+*/
+            std::vector<int> vFound;
+            for (int i = 0; i < (*m_exp).size(); ++i)
+            {
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord,tol))
+                {
+                    vFound.push_back(i);
+                }
+            }
+
+            if (vFound.empty()) {
+                return -1;
+            }
+
+            std::vector<NekDouble> vAvgDist;
+            for (int i = 0; i < vFound.size(); ++i)
+            {
+                SpatialDomains::VertexComponent p;
+                p.SetX(gloCoord[0]);
+                p.SetY(gloCoord[1]);
+                p.SetZ(gloCoord[2]);
+                NekDouble d = 0.0;
+                const int nvert = (*m_exp)[vFound[i]]->GetGeom()->GetNumVerts();
+                for (int j = 0; j < nvert; ++j)
+                {
+                    SpatialDomains::VertexComponentSharedPtr v;
+                    switch ((*m_exp)[vFound[i]]->GetGeom()->GetShapeDim())
+                    {
+                        case 1:
+                            v = (*m_exp)[vFound[i]]->GetGeom1D()->GetVertex(j);
+                            break;
+                        case 2:
+                            v = (*m_exp)[vFound[i]]->GetGeom2D()->GetVertex(j);
+                            break;
+//                        case 3:
+//                            v = (*m_exp)[vFound[i]]->GetGeom3D()->GetVertex(j);
+//                            break;
+                    }
+
+                    d += v->dist(p);
+                }
+                vAvgDist.push_back(d / nvert);
+            }
+
+            int min_i = Vmath::Imin(vAvgDist.size(), &vAvgDist[0], 1);
+            return vFound[min_i];
         }
 
 

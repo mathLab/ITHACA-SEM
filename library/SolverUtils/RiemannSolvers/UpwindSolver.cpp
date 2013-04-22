@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/RiemannSolvers/UpwindSolver.h>
+#include <iostream>
+#include <iomanip>
 
 namespace Nektar
 {

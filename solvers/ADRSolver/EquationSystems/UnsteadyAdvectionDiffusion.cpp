@@ -131,15 +131,13 @@ namespace Nektar
             }
         }
         
-        if (m_explicitDiffusion)
-        {
-            m_ode.DefineOdeRhs    (&UnsteadyAdvectionDiffusion::DoOdeRhs,        this);
+        m_ode.DefineImplicitSolve (&UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
+        m_ode.DefineOdeRhs        (&UnsteadyAdvectionDiffusion::DoOdeRhs,        this);
+        
+        if (m_projectionType == MultiRegions::eDiscontinuous &&
+            m_explicitDiffusion == 1)
+        {    
             m_ode.DefineProjection(&UnsteadyAdvectionDiffusion::DoOdeProjection, this);
-        }
-        else
-        {
-            m_ode.DefineImplicitSolve(
-                &UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
         }
     }
 	
@@ -162,9 +160,10 @@ namespace Nektar
         // Auxiliary variable to compute the normal velocity
         Array<OneD, NekDouble> tmp(nTracePts);
         
+        m_traceVn = Array<OneD, NekDouble>(nTracePts, 0.0);
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
-        
+
         // Compute the normal velocity
         for (int i = 0; i < m_velocity.num_elements(); ++i)
         {
@@ -215,13 +214,14 @@ namespace Nektar
         if (m_projectionType == MultiRegions::eDiscontinuous)
         {
             m_diffusion->Diffuse(nVariables, m_fields, inarray, outarrayDiff);
-            
+
             for (int i = 0; i < nVariables; ++i)
             {
                 Vmath::Vadd(nSolutionPts, &outarray[i][0], 1, 
                             &outarrayDiff[i][0], 1, &outarray[i][0], 1);
             }
         }
+        
     }
     
     /**
@@ -240,7 +240,6 @@ namespace Nektar
         int i;
         int nvariables = inarray.num_elements();
         SetBoundaryConditions(time);
-        
         switch(m_projectionType)
         {
             case MultiRegions::eDiscontinuous:

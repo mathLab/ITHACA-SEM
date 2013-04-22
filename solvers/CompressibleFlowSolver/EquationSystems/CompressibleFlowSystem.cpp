@@ -861,76 +861,65 @@ namespace Nektar
     {
         int i, j, nq = m_fields[0]->GetTotPoints();
         
-        Array<OneD, NekDouble> pressure(nq);
-        Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
-        
-        NekDouble OneDptscale = 2; // Factor to rescale 1d points in dealiasing.
-        
         if(m_specHP_dealiasing)
         {
+            NekDouble OneDptscale = 2; // Factor to rescale 1d points in dealiasing.
             // Get number of points to dealias a cubic non-linearity.
-            int npoints_interp = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
+            nq = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
+            
+            Array<OneD, NekDouble> pressure(nq);
+            Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
+
             
             int n_fields = m_spacedim + 2;
             
             Array<OneD, Array<OneD, NekDouble> >  physfield_interp (n_fields);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                         flux_interp (n_fields);
-            Array<OneD, NekDouble> pressure_interp(npoints_interp);
+            Array<OneD, NekDouble> pressure_interp(nq);
             Array<OneD, Array<OneD, NekDouble> > velocity_interp(m_spacedim);
+            
             
             for(i = 0; i < n_fields; ++ i)
             {
-                physfield_interp[i] = Array<OneD, NekDouble>(npoints_interp);
+                physfield_interp[i] = Array<OneD, NekDouble>(nq);
                 flux_interp[i] =  Array<OneD, Array<OneD, NekDouble> >
                                                                 (m_spacedim);
+                // Interpolation to higher space.
+                m_fields[0]->PhysInterp1DScaled(OneDptscale,physfield[i],
+                                                physfield_interp[i] );
                 
                 for (j = 0; j < m_spacedim; ++j)
                 {
-                    flux_interp[i][j] =  Array<OneD, NekDouble>(npoints_interp);
+                    flux_interp[i][j] =  Array<OneD, NekDouble>(nq);
                 }
             }
-                
+            
             // Flux vector for the rho equation.
             for (i = 0; i < m_spacedim; ++i)
             {
                 velocity[i] = Array<OneD, NekDouble>(nq);
-                velocity_interp[i] = Array<OneD, NekDouble>(npoints_interp);
                 
-                // Interpolation to higher space.
-                m_fields[0]->PhysInterp1DScaled(OneDptscale,physfield[i+1],
-                                                physfield_interp[i+1] );
-                
-                // Galerkin project solution back to origianl space.
+                // Galerkin project solution back to original space.
                 m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
                                         physfield_interp[i+1],flux[0][i]);
             }
             
-            GetVelocityVector(physfield, velocity);
-            GetPressure      (physfield, velocity, pressure);
-            
-            // Interpolation to higher space.
-            for (i = 0; i < m_spacedim; ++i)
-            {
-                m_fields[0]->PhysInterp1DScaled(OneDptscale,velocity[i],
-                                                velocity_interp[i]);
-            }
-            
-            m_fields[0]->PhysInterp1DScaled(OneDptscale,pressure,
-                                            pressure_interp);
+            GetVelocityVector(physfield_interp, velocity);
+            GetPressure      (physfield_interp, velocity, pressure);
             
             // Evaluation of flux vector for the velocity fields.
             for (i = 0; i < m_spacedim; ++i)
             {
                 for (j = 0; j < m_spacedim; ++j)
                 {
-                    Vmath::Vmul(npoints_interp, velocity_interp[j], 1,
-                                physfield_interp[i+1],1, flux_interp[i+1][j], 1);
+                    Vmath::Vmul(nq, velocity[j], 1,physfield_interp[i+1],1,
+                                flux_interp[i+1][j], 1);
                 }
             
                 // Add pressure to appropriate field
-                Vmath::Vadd(npoints_interp, flux_interp[i+1][i], 1,
-                            pressure_interp,1, flux_interp[i+1][i], 1);
+                Vmath::Vadd(nq, flux_interp[i+1][i], 1,
+                            pressure,1, flux_interp[i+1][i], 1);
             }
             
             // Galerkin project solution back to origianl space.
@@ -944,28 +933,28 @@ namespace Nektar
                 }
                 
             }
-            
-            // Interpolation to higher space.
-            m_fields[0]->PhysInterp1DScaled(OneDptscale,physfield[m_spacedim+1],
-                                            physfield_interp[m_spacedim+1] );
+
 
             // Evaluation of flux vector for energy.
-            Vmath::Vadd(npoints_interp, physfield_interp[m_spacedim+1], 1,
-                        pressure_interp, 1, pressure_interp, 1);
+            Vmath::Vadd(nq, physfield_interp[m_spacedim+1], 1,
+                        pressure, 1, pressure, 1);
             for (j = 0; j < m_spacedim; ++j)
             {
-                Vmath::Vmul(npoints_interp, velocity_interp[j], 1,
-                            pressure_interp, 1,flux_interp[m_spacedim+1][j], 1);
+                Vmath::Vmul(nq, velocity[j], 1,
+                            pressure, 1,flux_interp[m_spacedim+1][j], 1);
                 
                 // Galerkin project solution back to origianl space.
                 m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
                             flux_interp[m_spacedim+1][j],flux[m_spacedim+1][j]);
 
             }
+            
         }
         else
         {
-           
+            Array<OneD, NekDouble> pressure(nq);
+            Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
+            
             // Flux vector for the rho equation.
             for (i = 0; i < m_spacedim; ++i)
             {
@@ -1423,7 +1412,8 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &velocity,
               Array<OneD,                   NekDouble>   &pressure)
     {
-        int       npts  = m_fields[0]->GetTotPoints();
+        //int       npts  = m_fields[0]->GetTotPoints();
+        int npts = physfield[0].num_elements();
         NekDouble alpha = -0.5;
         
         // Calculate ||\rho v||^2.
@@ -1451,7 +1441,9 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
               Array<OneD, Array<OneD, NekDouble> > &velocity)
     {
-        const int npts = m_fields[0]->GetTotPoints();
+        //const int npts = m_fields[0]->GetTotPoints();
+        
+        const int npts = physfield[0].num_elements();
         
         for (int i = 0; i < m_spacedim; ++i)
         {

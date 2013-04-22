@@ -822,6 +822,8 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp;
 			
 				// Calculate modal energies.
+			
+				//calcuation of the perturbation energy using non-linear NS equations
 				if(m_session->DefinesSolverInfo("CalculatePerturbationEnergy") && m_session->GetSolverInfo("CalculatePerturbationEnergy")=="True")
 			    {
 					SetUpBaseFields(m_graph);

@@ -451,6 +451,15 @@ namespace Nektar
 
             InvRprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRtmp);
+
+            for(int i=0; i<InvRprism->GetRows(); ++i)
+            {
+                for(int j=0; j<InvRprism->GetRows(); ++j)
+                {
+                    cout<<(*InvRprism)(i,j)<<" ";
+                }
+                cout<<endl;
+            }
             
             InvRTprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRTtmp);

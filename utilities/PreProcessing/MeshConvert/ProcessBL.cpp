@@ -96,11 +96,11 @@ namespace Nektar
             // splitting to occur in either y-direction of the prism.
             map<int, int> splitEls;
 
-	    // Set up map to determin the vertices of each layer from the 3D
+	    // Set up map to determine the vertices of each layer from the 3D
 	    // array of collapsed co-ordinates.
 	    int vertMap[6] = {
                 0, nq-1, 2*nq-1, nq, nq*(nq-1)*(nl+1),
-                1+nq+nq*(nq-1)*(nl+1)};
+                nq+nq*(nq-1)*(nl+1)};
 	    
 	    // Set up map which takes an edge (in nektar++ ordering) and returns
             // their offset and stride in the 3d array of collapsed quadrature
@@ -312,17 +312,19 @@ namespace Nektar
                     {
                         int fid = it->first;
                         int bl  = it->second;
+
                         if (j == 0)
                         {
+                            // For first layer reuse existing 2D element.
                             ElementSharedPtr e = m->element[m->expDim-1][bl];
-                            e->SetVertex(0, nodeList[prismFaceNodes[fid][0]]);
-                            e->SetVertex(1, nodeList[prismFaceNodes[fid][1]]);
-                            e->SetVertex(2, nodeList[prismFaceNodes[fid][2]]);
-                            e->SetVertex(3, nodeList[prismFaceNodes[fid][3]]);
-                            elmt->SetBoundaryLink(fid,bl);
+                            for (int k = 0; k < 4; ++k)
+                            {
+                                e->SetVertex(k, nodeList[prismFaceNodes[fid][k]]);
+                            }
                         }
                         else
                         {
+                            // For all other layers create new element.
                             vector<NodeSharedPtr> qNodeList(4);
                             for (int k = 0; k < 4; ++k)
                             {
@@ -333,7 +335,6 @@ namespace Nektar
                             ElmtConfig bconf(eQuadrilateral, 1, true, true, false);
                             ElementSharedPtr boundaryElmt = GetElementFactory().
                                 CreateInstance(eQuadrilateral,bconf,qNodeList,tagBE);
-                            elmt->SetBoundaryLink(fid,m->element[m->expDim-1].size());
                             m->element[m->expDim-1].push_back(boundaryElmt);
                         }
                     }
@@ -341,7 +342,7 @@ namespace Nektar
                     m->element[m->expDim].push_back(elmt);
                 }
             }
-            
+
             // Re-process mesh to eliminate duplicate vertices and edges.
             ProcessVertices();
             ProcessEdges();

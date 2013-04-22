@@ -382,7 +382,7 @@ namespace Nektar
                 }
                 
                 nComposite++;
-                
+
                 // create Tets second 
                 for(i = 0; i < nelements; ++i)
                 {                
@@ -398,28 +398,28 @@ namespace Nektar
             }
             else // 2D Zone
             {
-                cout << " (2D) "<<  endl;
+                cout << " (2D)" << endl;
 
-                // find ids of VertNodes from m->vertexSet so that we can identify 
+                // find ids of VertNodes from m->vertexSet so that we can identify
                 for(i = 0; i < Nodes.size(); ++i)
                 {
-                    pair<NodeSet::iterator,bool> testIns =
-                        m->vertexSet.insert(Nodes[i]);
+                    NodeSet::iterator it = m->vertexSet.find(Nodes[i]);
                     
-                    if (testIns.second)
+                    if (it == m->vertexSet.end())
                     {
                         ASSERTL0(false,"Failed to find face vertex in 3D list");
                     }
                     else
                     {
-                        Nodes[i]->SetID((*testIns.first)->GetID());
+                        Nodes[i] = *it;
                     }
                 }
 
                 for(i = 0; i < nelements; ++i)
-                {                
+                {
                     GenElement2D(Nodes,i,ElementFaces[i],FaceNodes,nComposite);
                 }
+
                 nComposite++;
             }
         }

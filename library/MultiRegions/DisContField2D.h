@@ -195,15 +195,14 @@ namespace Nektar
              * @brief Obtain a copy of the periodic edges and vertices for this
              * field.
              */
-#if 0
             virtual void v_GetPeriodicEdges(
-                vector<map<int,int> > &periodicVertices,
-                map<int,int>          &periodicEdges)
+                PeriodicMap &periodicVerts,
+                PeriodicMap &periodicEdges)
             {
-                periodicVertices = m_periodicVertices;
-                periodicEdges    = m_periodicEdges;
+                periodicVerts = m_periodicVerts;
+                periodicEdges = m_periodicEdges;
             }
-#endif            
+
             virtual ExpListSharedPtr &v_GetTrace()
             {
                 if(m_trace == NullExpListSharedPtr)

@@ -2804,8 +2804,8 @@ namespace Nektar
 		/**
          */
         void ExpList::v_GetPeriodicEdges(
-            vector<map<int,int> > &periodicVertices,
-            map<int,int>          &periodicEdges)
+            PeriodicMap &periodicVerts,
+            PeriodicMap &periodicEdges)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");

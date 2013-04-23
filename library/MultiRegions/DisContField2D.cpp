@@ -363,7 +363,7 @@ namespace Nektar
 
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
-                
+
             // Scatter trace segments to 2D elements. For each element, we find
             // the trace segment associated to each edge. The element then
             // retains a pointer to the trace space segments, to ensure
@@ -430,7 +430,7 @@ namespace Nektar
                 {
                     PeriodicMap::iterator it = m_periodicEdges.find(
                         (*m_exp)[n]->GetGeom2D()->GetEid(e));
-                        
+
                     if (it != m_periodicEdges.end())
                     {
                         m_perEdgeToExpMap[it->first] = make_pair(n, e);
@@ -633,8 +633,8 @@ namespace Nektar
                 }
                 else
                 {
-                    cId1 = bndRegOrder.find(region1ID)->second.at(0);
-                    cId2 = bndRegOrder.find(region2ID)->second.at(0);
+                    cId1 = bndRegOrder.find(region1ID)->second[0];
+                    cId2 = bndRegOrder.find(region2ID)->second[0];
                 }
                 
                 ASSERTL0(it->second->size() == 1,
@@ -985,13 +985,13 @@ namespace Nektar
                 // Loop over associated vertices.
                 for (i = 0; i < perIt->second.size(); ++i)
                 {
-                    perIt2 = periodicVerts.find(perIt->second.at(i).id);
+                    perIt2 = periodicVerts.find(perIt->second[i].id);
                     ASSERTL0(perIt2 != periodicVerts.end(),
                              "Couldn't find periodic vertex.");
                     
                     for (j = 0; j < perIt2->second.size(); ++j)
                     {
-                        if (perIt2->second.at(j).id == perIt->first)
+                        if (perIt2->second[j].id == perIt->first)
                         {
                             continue;
                         }
@@ -999,7 +999,7 @@ namespace Nektar
                         bool doAdd = true;
                         for (k = 0; k < perIt->second.size(); ++k)
                         {
-                            if (perIt2->second.at(j).id == perIt->second.at(k).id)
+                            if (perIt2->second[j].id == perIt->second[k].id)
                             {
                                 doAdd = false;
                                 break;
@@ -1008,7 +1008,7 @@ namespace Nektar
 
                         if (doAdd)
                         {
-                            perIt->second.push_back(perIt2->second.at(j));
+                            perIt->second.push_back(perIt2->second[j]);
                         }
                     }
                 }
@@ -1031,8 +1031,8 @@ namespace Nektar
             PeriodicMap::iterator asd;
             for (asd = m_periodicEdges.begin(); asd != m_periodicEdges.end(); ++asd)
             {
-                cout << asd->first << " <-> " << asd->second.at(0).id
-                     << " " << StdRegions::OrientationMap[asd->second.at(0).orient] << endl;
+                cout << asd->first << " <-> " << asd->second[0].id
+                     << " " << StdRegions::OrientationMap[asd->second[0].orient] << endl;
             }
 
             cout << "RANK: " << vComm->GetRank() << " found " << m_periodicVerts.size() << " periodic verts" << endl;
@@ -1041,8 +1041,8 @@ namespace Nektar
                 cout << "RANK: " << vComm->GetRank() << " " << asd->first << " <-> ";
                 for (i = 0; i < asd->second.size(); ++i)
                 {
-                    cout << "(" << asd->second.at(i).id
-                         << "," << asd->second.at(i).isLocal
+                    cout << "(" << asd->second[i].id
+                         << "," << asd->second[i].isLocal
                          << ") ";
                 }
                 cout << endl;
@@ -1065,7 +1065,6 @@ namespace Nektar
             {
                 // Boundary edge (1 connected element). Do nothing in
                 // serial.
-                //it = m_boundaryEdges.find(elmtToTrace[n][e]->GetElmtId());
                 it = m_boundaryEdges.find(traceEl->GetElmtId());
                 
                 // If the edge does not have a boundary condition set on
@@ -1148,8 +1147,8 @@ namespace Nektar
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
             bool parallel = m_session->GetComm()->GetRowComm()->GetSize() > 1;
+            bool fwd;
             
-            bool fwd = true;
             for(cnt = n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
@@ -1180,7 +1179,7 @@ namespace Nektar
                     
                     if (it2 != m_periodicEdges.end())
                     {
-                        const PeriodicEntity &ent = it2->second.at(0);
+                        const PeriodicEntity &ent = it2->second[0];
                         it3 = m_perEdgeToExpMap.find(ent.id);
 
                         if (it3 == m_perEdgeToExpMap.end())

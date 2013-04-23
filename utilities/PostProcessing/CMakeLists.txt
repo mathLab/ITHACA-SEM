@@ -1,7 +1,7 @@
 ADD_UTILITIES_EXECUTABLE(AddModeTo2DFld    util AddModeTo2DFld.cpp)
 ADD_UTILITIES_EXECUTABLE(CombinePartitions util-extra CombinePartitions.cpp)
 ADD_UTILITIES_EXECUTABLE(ExtractMeanModeFromHomo1DFld  util ExtractMeanModeFromHomo1DFld.cpp)
-#ADD_UTILITIES_EXECUTABLE(ExtractSurface2DCFS  util ExtractSurface2DCFS.cpp)
+ADD_UTILITIES_EXECUTABLE(ExtractSurface2DCFS  util ExtractSurface2DCFS.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddFalknerSkanBL   util-extra FldAddFalknerSkanBL.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddFld         util FldAddFld.cpp)
 ADD_UTILITIES_EXECUTABLE(FldAddVort        util FldAddVort.cpp)

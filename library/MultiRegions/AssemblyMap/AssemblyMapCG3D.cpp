@@ -80,18 +80,18 @@ namespace Nektar
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
-                const map<int,int>& periodicVerticesId,
-                const map<int,int>& periodicEdgesId,
-                const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId):
+                const PeriodicMap &periodicVerts,
+                const PeriodicMap &periodicEdges,
+                const PeriodicMap &periodicFaces):
             AssemblyMapCG(pSession)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
                                       bndCondExp,
                                       bndConditions,
-                                      periodicVerticesId,
-                                      periodicEdgesId,
-                                      periodicFacesId);
+                                      periodicVerts,
+                                      periodicEdges,
+                                      periodicFaces);
 
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
@@ -167,9 +167,9 @@ namespace Nektar
             const ExpList &locExp,
             const Array<OneD, const ExpListSharedPtr> &bndCondExp,
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-            const map<int,int>& periodicVerticesId,
-            const map<int,int>& periodicEdgesId,
-            const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId)
+            const PeriodicMap &periodicVerts,
+            const PeriodicMap &periodicEdges,
+            const PeriodicMap &periodicFaces)
         {
             int i,j,k,l;
             int cnt = 0;
@@ -514,7 +514,8 @@ namespace Nektar
             m_numLocalBndCoeffs = 0;
 
             /// - Periodic vertices
-            for(mapConstIt  = periodicVerticesId.begin(); 
+#if 0
+            for(mapConstIt  = periodicVertId.begin(); 
                 mapConstIt != periodicVerticesId.end(); mapConstIt++)
             {
                 meshVertId  = mapConstIt->first;
@@ -689,7 +690,7 @@ namespace Nektar
                     faceTempGraphVertId[meshFaceId2] = tempGraphVertId++;
                 }
             }
-
+#endif
 
             /// - All other vertices and edges
             for(i = 0; i < locExpVector.size(); ++i)

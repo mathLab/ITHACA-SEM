@@ -84,9 +84,6 @@ namespace Nektar
             // See if we have boundary regions defined.
             TiXmlElement *boundaryRegionsElement = boundaryRegions->FirstChildElement("B");
 
-            // Sequential counter for the composite numbers.
-            int nextBoundaryRegionNumber = -1;
-
             while (boundaryRegionsElement)
             {
                 /// All elements are of the form: "<B ID="#"> ... </B>", with

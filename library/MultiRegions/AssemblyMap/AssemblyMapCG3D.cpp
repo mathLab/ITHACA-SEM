@@ -514,183 +514,112 @@ namespace Nektar
             m_numLocalBndCoeffs = 0;
 
             /// - Periodic vertices
-#if 0
-            for(mapConstIt  = periodicVertId.begin(); 
-                mapConstIt != periodicVerticesId.end(); mapConstIt++)
+            PeriodicMap::const_iterator pIt;
+            for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
             {
-                meshVertId  = mapConstIt->first;
-                meshVertId2 = mapConstIt->second;
+                meshVertId = pIt->first;
 
-                if(vertReorderedGraphVertId.count(meshVertId) == 0)
+                // This periodic vertex is joined to a Dirichlet condition.
+                if (vertReorderedGraphVertId.count(pIt->first) != 0)
                 {
-
-                    if(vertReorderedGraphVertId.count(meshVertId2) == 0)
+                    for (i = 0; i < pIt->second.size(); ++i)
                     {
-
-                        if(vertTempGraphVertId.count(meshVertId) == 0)
+                        meshVertId2 = pIt->second[i].id;
+                        if (vertReorderedGraphVertId.count(meshVertId2) == 0 &&
+                            pIt->second[i].isLocal)
                         {
-                            vertTempGraphVertId[meshVertId]  = tempGraphVertId;
-                            if(vertTempGraphVertId.count(meshVertId2) == 0)
-                            {
-                                vertTempGraphVertId[meshVertId2] = tempGraphVertId++;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"Unexplained Periodicity connectivity");
-                            }
+                            vertReorderedGraphVertId[meshVertId2] =
+                                vertReorderedGraphVertId[meshVertId];
                         }
-                        else
-                        {
-                            if(vertTempGraphVertId.count(meshVertId2) == 0)
-                            {
-                                ASSERTL0(false,"Unexplained Periodicity connectivity");
-                            }
-                            else // Doubly periodic region
-                            {
-                                int id1 = vertTempGraphVertId[meshVertId];
-                                int id2 = vertTempGraphVertId[meshVertId2];
-                                int id;
+                    }
+                    continue;
+                }
 
-                                if(id1 != id2)
-                                {
-                                    // Reset any values set to
-                                    // id2 to id1. In addition
-                                    // if local id is greater
-                                    // than id2 decrement list
-                                    for(mapIt = vertTempGraphVertId.begin();
-                                        mapIt != vertTempGraphVertId.end(); mapIt++)
-                                    {
-                                        id = mapIt->second;
-                                        if(id == id2)
-                                        {
-                                            vertTempGraphVertId[mapIt->first] = id1;
-                                        }
-                                        else if (id > id2)
-                                        {
-                                            vertTempGraphVertId[mapIt->first] = id-1;
-                                        }
-                                    }
-                                    tempGraphVertId--;
-                                }
-                            }
+                // One of the attached vertices is Dirichlet.
+                bool isDirichlet = false;
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    if (!pIt->second[i].isLocal)
+                    {
+                        continue;
+                    }
+
+                    meshVertId2 = pIt->second[i].id;
+                    if (vertReorderedGraphVertId.count(meshVertId2) > 0)
+                    {
+                        isDirichlet = true;
+                        break;
+                    }
+                }
+
+                if (isDirichlet)
+                {
+                    vertReorderedGraphVertId[meshVertId] =
+                        vertReorderedGraphVertId[pIt->second[i].id];
+
+                    for (j = 0; j < pIt->second.size(); ++j)
+                    {
+                        meshVertId2 = pIt->second[i].id;
+                        if (j == i || !pIt->second[j].isLocal ||
+                            vertReorderedGraphVertId.count(meshVertId2) > 0)
+                        {
+                            continue;
                         }
 
+                        vertReorderedGraphVertId[meshVertId2] =
+                            vertReorderedGraphVertId[pIt->second[i].id];
                     }
-                    else
+
+                    continue;
+                }
+
+                // Otherwise, see if a vertex ID has already been set.
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    if (!pIt->second[i].isLocal)
                     {
-                        vertReorderedGraphVertId[meshVertId] = vertReorderedGraphVertId[meshVertId2];
+                        continue;
                     }
+
+                    if (vertTempGraphVertId.count(pIt->second[i].id) > 0)
+                    {
+                        break;
+                    }
+                }
+
+                if (i == pIt->second.size())
+                {
+                    vertTempGraphVertId[meshVertId] = tempGraphVertId++;
                 }
                 else
                 {
-                    if(vertReorderedGraphVertId.count(meshVertId2) == 0)
-                    {
-                        vertReorderedGraphVertId[meshVertId2] = vertReorderedGraphVertId[meshVertId];
-                    }
-                }
-            }
-
-            /// - Periodic edges
-            for(mapConstIt  = periodicEdgesId.begin(); 
-                mapConstIt != periodicEdgesId.end(); 
-                mapConstIt++)
-            {
-                meshEdgeId  = mapConstIt->first;
-                meshEdgeId2 = mapConstIt->second;
-
-                if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)
-                {
-                    if(edgeReorderedGraphVertId.count(meshEdgeId2) == 0)
-                    {
-                        if(edgeTempGraphVertId.count(meshEdgeId) == 0)
-                        {
-                            edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
-                            if(edgeTempGraphVertId.count(meshEdgeId2) == 0)
-                            {
-                                edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"Unexplained Periodicity connectivity");
-                            }
-                        }
-                        else
-                        {
-                            if(edgeTempGraphVertId.count(meshEdgeId2) == 0)
-                            {
-                                ASSERTL0(false,"Unexplained Periodicity connectivity");
-                            }
-                            else // Doubly periodic region
-                            {
-                                int id1 = edgeTempGraphVertId[meshEdgeId];
-                                int id2 = edgeTempGraphVertId[meshEdgeId2];
-                                int id;
-
-                                if(id1 != id2)
-                                {
-                                    // Reset any values set to
-                                    // id2 to id1. In addition
-                                    // if local id is greater
-                                    // than id2 decrement list
-                                    for(mapIt = edgeTempGraphVertId.begin();
-                                        mapIt != edgeTempGraphVertId.end(); mapIt++)
-                                    {
-                                        id = mapIt->second;
-                                        if(id == id2)
-                                        {
-                                            edgeTempGraphVertId[mapIt->first] = id1;
-                                        }
-                                        else if (id > id2)
-                                        {
-                                            edgeTempGraphVertId[mapIt->first] = id-1;
-                                        }
-                                    }
-                                    tempGraphVertId--;
-                                }
-                            }
-                        }
-                    }
-                    else
-                    {
-                        edgeReorderedGraphVertId[meshEdgeId] = edgeReorderedGraphVertId[meshEdgeId2];
-                    }
-                }
-                else
-                {
-                    if(edgeReorderedGraphVertId.count(meshEdgeId2) == 0)
-                    {
-                        edgeReorderedGraphVertId[meshEdgeId2] = edgeReorderedGraphVertId[meshEdgeId];
-                    }
-                    /*
-                    else
-                    {
-                        ASSERTL0(edgeReorderedGraphVertId[meshEdgeId2] == edgeReorderedGraphVertId[meshEdgeId],
-                                 "These values should be equal");
-                    }
-                    */
+                    vertTempGraphVertId[meshVertId] = vertTempGraphVertId[pIt->second[i].id];
                 }
             }
 
             /// - Periodic faces
-            for(mapFaceIt  = periodicFacesId.begin(); 
-                mapFaceIt != periodicFacesId.end(); 
-                mapFaceIt++)
+            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
             {
-                meshFaceId  = mapFaceIt->first;
-                meshFaceId2 = mapFaceIt->second.first;
-
-                if(meshFaceId < meshFaceId2)
+                if (!pIt->second[0].isLocal)
                 {
+                    // The edge mapped to is on another process.
+                    meshFaceId = pIt->first;
                     ASSERTL0(faceReorderedGraphVertId.count(meshFaceId) == 0,
-                             "This periodic boundary face has been specified before");
-                    ASSERTL0(faceReorderedGraphVertId.count(meshFaceId2) == 0,
-                             "This periodic boundary face has been specified before");
+                             "This periodic boundary edge has been specified before");
+                    edgeTempGraphVertId[meshFaceId]  = tempGraphVertId++;
+                }
+                else if (pIt->first < pIt->second[0].id)
+                {
+                    ASSERTL0(faceReorderedGraphVertId.count(pIt->first) == 0,
+                             "This periodic boundary edge has been specified before");
+                    ASSERTL0(faceReorderedGraphVertId.count(pIt->second[0].id) == 0,
+                             "This periodic boundary edge has been specified before");
 
-                    faceTempGraphVertId[meshFaceId]  = tempGraphVertId;
-                    faceTempGraphVertId[meshFaceId2] = tempGraphVertId++;
+                    edgeTempGraphVertId[pIt->first]        = tempGraphVertId;
+                    edgeTempGraphVertId[pIt->second[0].id] = tempGraphVertId++;
                 }
             }
-#endif
+            
 
             /// - All other vertices and edges
             for(i = 0; i < locExpVector.size(); ++i)

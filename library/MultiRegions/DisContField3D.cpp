@@ -40,6 +40,7 @@
 #include <SpatialDomains/MeshGraph3D.h>
 
 #include <boost/assign/std/vector.hpp>
+#include <boost/tuple/tuple.hpp>
 
 using namespace boost::assign;
 
@@ -923,19 +924,40 @@ namespace Nektar
             quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 3,0,1,2;
             quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 1,2,3,0;
             quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 1,0,3,2;
+
+            StdRegions::Orientation eF = StdRegions::eForwards;
+            StdRegions::Orientation eB = StdRegions::eBackwards;
             
+            map<StdRegions::Orientation,
+                vector<StdRegions::Orientation> > quadOrientMap;
+            quadOrientMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += eF,eF,eF,eF;
+            quadOrientMap[StdRegions::eDir1FwdDir1_Dir2BwdDir2] += eF,eB,eF,eB;
+            quadOrientMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += eB,eF,eB,eF;
+            quadOrientMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += eB,eB,eB,eB;
+            quadOrientMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += eF,eF,eF,eF;
+            quadOrientMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += eF,eB,eF,eB;
+            quadOrientMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += eB,eF,eB,eF;
+            quadOrientMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += eB,eB,eB,eB;
+
             map<StdRegions::Orientation, vector<int> > triVertMap;
             triVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2;
             triVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 1,0,2;
 
             map<StdRegions::Orientation, vector<int> > triEdgeMap;
-            triVertMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2;
-            triVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 0,2,1;
+            triEdgeMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += 0,1,2;
+            triEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 0,2,1;
+
+            map<StdRegions::Orientation,
+                vector<StdRegions::Orientation> > triOrientMap;
+            triOrientMap[StdRegions::eDir1FwdDir1_Dir2FwdDir2] += eF,eF,eF;
+            triOrientMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += eB,eF,eF;
 
             vmap[3] = triVertMap;
             vmap[4] = quadVertMap;
             emap[3] = triEdgeMap;
             emap[4] = quadEdgeMap;
+            omap[3] = triOrientMap;
+            omap[4] = quadOrientMap;
 
             for (cIt = perComps.begin(); cIt != perComps.end(); ++cIt)
             {
@@ -1071,23 +1093,27 @@ namespace Nektar
                             vector<int> per1 = vertEdgeMap[j][ids[i]];
                             vector<int> per2 = vertEdgeMap[j][ids[other]];
 
-                            map<int, pair<int, bool> > tmpMap;
-                            map<int, pair<int, bool> >::iterator mIt;
+                            map<int, boost::tuple<
+                                int, bool, StdRegions::Orientation> > tmpMap;
+                            map<int, boost::tuple<
+                                int, bool, StdRegions::Orientation> >::iterator mIt;
 
                             for (k = 0; k < nFaceVerts; ++k)
                             {
                                 int v = j == 0 ? vmap[nFaceVerts][o][k] :
                                     emap[nFaceVerts][o][k];
-                                tmpMap[per1[k]] = make_pair(
-                                    per2[v], locVertEdge[j].count(per2[v]) > 0);
+                                tmpMap[per1[k]] = boost::make_tuple(
+                                    per2[v], locVertEdge[j].count(per2[v]) > 0,
+                                    j == 0 ? StdRegions::eNoOrientation :
+                                       omap[nFaceVerts][o][k]);
                             }
 
                             for (mIt = tmpMap.begin(); mIt != tmpMap.end(); ++mIt)
                             {
                                 // See if this vertex has been recorded already.
-                                PeriodicEntity ent2(mIt->second.first,
-                                                    StdRegions::eNoOrientation,
-                                                    mIt->second.second);
+                                PeriodicEntity ent2(boost::get<0>(mIt->second),
+                                                    boost::get<2>(mIt->second),
+                                                    boost::get<1>(mIt->second));
                                 PeriodicMap::iterator perIt = periodicVertEdge[j].find(
                                     mIt->first);
                                 
@@ -1101,7 +1127,7 @@ namespace Nektar
                                     bool doAdd = true;
                                     for (k = 0; k < perIt->second.size(); ++k)
                                     {
-                                        if (perIt->second[k].id == mIt->second.first)
+                                        if (perIt->second[k].id == boost::get<0>(mIt->second))
                                         {
                                             doAdd = false;
                                             break;

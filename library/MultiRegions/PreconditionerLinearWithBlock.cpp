@@ -93,20 +93,17 @@ namespace Nektar
             const Array<OneD, NekDouble>& pInput,
             Array<OneD, NekDouble>& pOutput)
         {
-            int nGlobalin = pInput.num_elements();
-            int nGlobalout = pOutput.num_elements();
+            int nGlobal = pInput.num_elements();
 
-            Array<OneD, NekDouble> OutputBlock(nGlobalin, 0.0);
-            Array<OneD, NekDouble> OutputLinear(nGlobalout, 0.0);
-            Array<OneD, NekDouble> InputLinear(nGlobalin, 0.0);
+            Array<OneD, NekDouble> OutputBlock(nGlobal, 0.0);
+            Array<OneD, NekDouble> OutputLinear(nGlobal, 0.0);
+            Array<OneD, NekDouble> InputLinear(nGlobal, 0.0);
 
             //Apply Low Energy preconditioner
             m_blockPrecon->DoPreconditioner(pInput, OutputBlock);
 
             //Apply linear space preconditioner
-            m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, pOutput,OutputBlock);
-
-            //m_linSpacePrecon->DoPreconditioner(pInput, pOutput);
+            m_linSpacePrecon->DoPreconditionerWithNonVertOutput(pInput, pOutput,OutputBlock);
         }
 
     }

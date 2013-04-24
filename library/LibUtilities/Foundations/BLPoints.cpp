@@ -54,7 +54,6 @@ namespace Nektar
             unsigned int npts = m_pointsKey.GetNumPoints(); 
 
 	    // Derived power coefficient.
-	    //NekDouble rn = powf(2.0/BLPoints::delta_star,1.0/(npts-2.0));
             NekDouble r = BLPoints::delta_star;
             NekDouble a = 2.0 * (1.0-r) / (1.0 - pow(r,(double)npts));
             m_points[0][0] = -1.0;

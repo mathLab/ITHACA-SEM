@@ -131,7 +131,7 @@ namespace Nektar
             m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
 
             //Transform input from low energy to original basis
-            m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(pInput, pInputLinear);
+            m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(pInput, InputLinear);
 
             //Apply linear space preconditioner
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear,OutputLowEnergy);

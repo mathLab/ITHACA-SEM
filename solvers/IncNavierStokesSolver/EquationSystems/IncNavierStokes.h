@@ -117,6 +117,22 @@ namespace Nektar
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
                                      Array<OneD, Array<OneD, NekDouble> > &numflux);
 
+        AdvectionTermSharedPtr GetAdvObject(void)
+        {
+            return m_advObject;
+        }
+
+
+        int GetNConvectiveFields(void)
+        {
+            return m_nConvectiveFields;  
+        }
+
+        Array<OneD, int> &GetVelocity(void)
+        {
+            return  m_velocity; 
+        }
+
         NekDouble GetSubstepTimeStep();
         
         Array<OneD, NekDouble> GetElmtCFLVals(void);

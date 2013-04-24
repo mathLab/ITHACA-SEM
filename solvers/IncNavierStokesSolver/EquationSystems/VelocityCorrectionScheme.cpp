@@ -33,7 +33,6 @@
 // Navier Stokes equations
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <LibUtilities/BasicUtils/DBUtil.hpp>
 #include <IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 

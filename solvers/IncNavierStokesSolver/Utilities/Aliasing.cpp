@@ -36,48 +36,51 @@ int main(int argc, char *argv[])
         IncNavierStokesSharedPtr IncNav = boost::dynamic_pointer_cast
             <IncNavierStokes>(EqSys);
         
-        DoAdvection(fields,nConvectiveFields, fields, NonLinear,0.0);
-
-        // Reset Pressure field with CFL values
+        IncNav->SetInitialConditions(0.0,false);
         Array<OneD, MultiRegions::ExpListSharedPtr> fields = IncNav->UpdateFields();
-        int i,n,nquad,cnt;
-        int nfields = fields.num_elements();
-        int nexp = fields[n]->GetExpSize();
         
-        int elmtid = Vmath::Imax(nexp,cfl,1);
-
-        cout << "Max CFL: "<< cfl[elmtid] << " In element " << elmtid << endl;
+        int i;
+        int nConvectiveFields = IncNav->GetNConvectiveFields();
+        int nphys = fields[0]->GetTotPoints();
+        Array<OneD, Array<OneD, NekDouble> > VelFields(nConvectiveFields);
+        Array<OneD, Array<OneD, NekDouble> > NonLinear(nConvectiveFields);
+        Array<OneD, Array<OneD, NekDouble> > NonLinearDealiased(nConvectiveFields);
         
-
-        for(n = 0; n < nfields; ++n)
+        for(i = 0; i < nConvectiveFields; ++i)
         {
-            if(session->GetVariable(n) == "p")
-            {
-                break;
-            }
+            VelFields[i] = fields[i]->UpdatePhys();
+            NonLinear[i] = Array<OneD, NekDouble> (nphys);
+            NonLinearDealiased[i] = Array<OneD, NekDouble> (nphys);
         }
 
-        ASSERTL0(n != nfields, "Could not find field named p in m_fields");
-        
-        Array<OneD, NekDouble> phys = fields[n]->UpdatePhys();
+        // calculate non-linear terms without dealiasing
+        IncNav->GetAdvObject()->SetSpecHPDealiasing(false);
+        IncNav->GetAdvObject()->DoAdvection(fields,nConvectiveFields, 
+                                            IncNav->GetVelocity(), VelFields, 
+                                            NonLinear, 0.0);
 
-        cnt = 0; 
-        for(i = 0; i < fields[n]->GetExpSize(); ++i)
+
+        // calculate non-linear terms with dealiasing
+        IncNav->GetAdvObject()->SetSpecHPDealiasing(true);
+        IncNav->GetAdvObject()->DoAdvection(fields,nConvectiveFields, 
+                                            IncNav->GetVelocity(), VelFields, 
+                                            NonLinearDealiased, 0.0);
+
+        // Evaulate Difference and put into fields;
+        for(i = 0; i < nConvectiveFields; ++i)
         {
-            nquad = fields[n]->GetExp(i)->GetTotPoints();
-            Vmath::Fill(nquad,cfl[i],&phys[cnt],1);
-            cnt += nquad; 
+            Vmath::Vsub(nphys,NonLinearDealiased[i],1,NonLinear[i],1,NonLinear[i],1);
+            fields[i]->FwdTrans_IterPerExp(NonLinear[i],fields[i]->UpdateCoeffs());
+            // Need to reset varibale name for output
+            string name = "NL_Aliasing_"+session->GetVariable(i);
+            session->SetVariable(i,name.c_str());
         }
 
-        fields[n]->FwdTrans_IterPerExp(fields[n]->GetPhys(),fields[n]->UpdateCoeffs());
-        
-        // Need to reset varibale name for output
-        session->SetVariable(n,"CFL");
 
         // Reset session name for output file
         std::string outname = IncNav->GetSessionName();
         
-        outname += "_CFLStep";
+        outname += "_NonLinear_Aliasing";
         IncNav->ResetSessionName(outname);
         IncNav->Output();
 

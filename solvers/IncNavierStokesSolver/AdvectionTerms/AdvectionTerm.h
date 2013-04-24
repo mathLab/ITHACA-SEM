@@ -87,6 +87,11 @@ namespace Nektar
         {
             return m_specHP_dealiasing; 
         }
+
+        void SetSpecHPDealiasing(bool value)
+        {
+            m_specHP_dealiasing = value; 
+        }
 	protected:
         LibUtilities::SessionReaderSharedPtr        m_session;
         /// Name of the session

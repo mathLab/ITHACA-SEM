@@ -53,6 +53,18 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
             m_session = pSession;
+            
+            // Setting up the normals
+            int i;
+            int nDim = pFields[0]->GetCoordim(0);
+            int nTracePts = pFields[0]->GetTrace()->GetTotPoints();
+            
+            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
+            for(i = 0; i < nDim; ++i)
+            {
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+            }
+            pFields[0]->GetTrace()->GetNormals(m_traceNormals);
         }
         
         void DiffusionLDG::v_Diffuse(
@@ -161,13 +173,7 @@ namespace Nektar
             Array<OneD, NekDouble > Vn      (nTracePts, 0.0);
             Array<OneD, NekDouble > fluxtemp(nTracePts, 0.0);
             
-            // Setting up the normals
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for(i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
-            }
-            fields[0]->GetTrace()->GetNormals(m_traceNormals);
+
             
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
@@ -315,6 +321,7 @@ namespace Nektar
             
             Array<OneD, NekDouble > uterm(nTracePts);
             
+            /*
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
             for(i = 0; i < nDim; ++i)
@@ -322,6 +329,7 @@ namespace Nektar
                 m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
+            */
             
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
@@ -422,6 +430,7 @@ namespace Nektar
             Array<OneD, NekDouble > qtemp(nTracePts);
             int cnt = 0;
             
+            /*
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
             for(i = 0; i < nDim; ++i)
@@ -429,6 +438,7 @@ namespace Nektar
                 m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
+            */
             
             fields[var]->ExtractTracePhys(qfield, qtemp);
             

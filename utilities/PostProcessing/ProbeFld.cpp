@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
         Exp[j]->BwdTrans(Exp[j]->GetCoeffs(),Exp[j]->UpdatePhys());
     }
     //----------------------------------------------
-
+    
     //----------------------------------------------
     // Probe data fields
     NekDouble N     = atoi(argv[3]);
@@ -213,7 +213,6 @@ int main(int argc, char *argv[])
     NekDouble dx    = atof(argv[7])/(N>1 ? (N-1) : 1);
     NekDouble dy    = atof(argv[8])/(N>1 ? (N-1) : 1);
     NekDouble dz    = atof(argv[9])/(N>1 ? (N-1) : 1);
-
     Array<OneD, NekDouble> gloCoord(3,0.0);
 
     for (int i = 0; i < N; ++i)
@@ -222,7 +221,6 @@ int main(int argc, char *argv[])
         gloCoord[1] = y0 + i*dy;
         gloCoord[2] = z0 + i*dz;
         cout << gloCoord[0] << "   " << gloCoord[1] << "   " << gloCoord[2];
-
         int ExpId =  Exp[0]->GetExpIndex(gloCoord,NekConstants::kGeomFactorsTol);
         for (int j = 0; j < nfields; ++j)
         {

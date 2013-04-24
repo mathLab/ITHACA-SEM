@@ -379,7 +379,8 @@ namespace Nektar
                 v_WriteTecplotField(outfile,expansion);
             }
 
-            void  WriteTecplotConnectivity(std::ofstream &outfile);
+            MULTI_REGIONS_EXPORT void  WriteTecplotConnectivity(
+                                std::ofstream &outfile);
 
             MULTI_REGIONS_EXPORT void WriteVtkHeader(std::ofstream &outfile);
             MULTI_REGIONS_EXPORT void WriteVtkFooter(std::ofstream &outfile);

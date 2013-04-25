@@ -1017,7 +1017,7 @@ namespace Nektar
                             {
                                 int tmp = nq0-1+nq0*j+nq01*k;
                                 normals[j+k*nq1]         =
-                                    (gmat[0][tmp]+gmat[1][tmp]+gmat[1][tmp])*
+                                    (gmat[0][tmp]+gmat[1][tmp]+gmat[2][tmp])*
                                         jac[tmp];
                                 normals[nqtot+j+k*nq1]   =
                                     (gmat[3][tmp]+gmat[4][tmp]+gmat[5][tmp])*

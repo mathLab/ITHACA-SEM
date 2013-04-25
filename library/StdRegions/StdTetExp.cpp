@@ -1090,12 +1090,6 @@ namespace Nektar
             const Array<OneD, const NekDouble>& xi,
             const Array<OneD, const NekDouble>& physvals)
         {
-            // Validation checks
-            ASSERTL0(xi[0] + xi[1] + xi[2] <= -1 + NekConstants::kNekZeroTol,
-                     "Coordinate outside bounds of tetrahedron.");
-            ASSERTL0(xi[0] >= -1 && xi[1] >= -1 && xi[2] >= -1,
-                     "Coordinate outside bounds of tetrahedron.");
-
             Array<OneD, NekDouble> eta = Array<OneD, NekDouble>(3);
 
             if( fabs(xi[2]-1.0) < NekConstants::kNekZeroTol)
@@ -1124,15 +1118,6 @@ namespace Nektar
                 eta[1] = 2.0*(1.0+xi[1])/(1.0-xi[2]) - 1.0;
                 eta[2] = xi[2];
             }
-
-            ASSERTL0((eta[0] + NekConstants::kNekZeroTol >= -1) ||
-                     (eta[1] + NekConstants::kNekZeroTol >= -1) ||
-                     (eta[2] + NekConstants::kNekZeroTol >= -1),
-                     "Eta Coordinate outside bounds of tetrahedron.");
-            ASSERTL0((eta[0] - NekConstants::kNekZeroTol <= 1) ||
-                     (eta[1] - NekConstants::kNekZeroTol <= 1) ||
-                     (eta[2] - NekConstants::kNekZeroTol <= 1),
-                     "Eta Coordinate outside bounds of tetrahedron.");
 
             return StdExpansion3D::v_PhysEvaluate(eta, physvals);
         }

@@ -397,7 +397,6 @@ namespace Nektar
         m_fieldMetaDataMap["Kinvis"] = m_kinvis;
         m_fieldMetaDataMap["TimeStep"] = m_timestep;
 
-#if 1
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->LocalToGlobal();
@@ -405,16 +404,6 @@ namespace Nektar
             m_fields[i]->GlobalToLocal();
             m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
                                   m_fields[i]->UpdatePhys());
-        }
-#endif        
-        cout << "After" << endl;
-        for(int i = 0; i < m_nConvectiveFields+1; ++i)
-        {
-            NekDouble l2 = m_fields[i]->L2();
-            if(m_comm->GetRank() == 0)
-            {
-                cout << l2 << endl;
-            }
         }
 
         //insert white noise in initial condition

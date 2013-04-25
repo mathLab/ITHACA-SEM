@@ -384,15 +384,6 @@ namespace Nektar
 
         UnsteadySystem::v_DoInitialise();
 
-        for(int i = 0; i < m_nConvectiveFields+1; ++i)
-        {
-            NekDouble l2 = m_fields[i]->L2();
-            if(m_comm->GetRank() == 0)
-            {
-                cout << l2 << endl;
-            }
-        }
-
         // Set up Field Meta Data for output files
         m_fieldMetaDataMap["Kinvis"] = m_kinvis;
         m_fieldMetaDataMap["TimeStep"] = m_timestep;

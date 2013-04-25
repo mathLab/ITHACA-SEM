@@ -821,35 +821,42 @@ namespace Nektar
                 Array<OneD, NekDouble> energy_tmp(locsize,0.0);
                 Array<OneD, NekDouble> tmp;
 			
-				// Calculate modal energies.
+                // Calculate modal energies.
 			
-				//calcuation of the perturbation energy using non-linear NS equations
-				if(m_session->DefinesSolverInfo("CalculatePerturbationEnergy") && m_session->GetSolverInfo("CalculatePerturbationEnergy")=="True")
-			    {
-					SetUpBaseFields(m_graph);
-					string file = m_session->GetFunctionFilename("BaseFlow", 0);
-					ImportFldBase(file,m_graph);
-					for(int i = 0; i < m_nConvectiveFields; ++i)
-					{
-						Vmath::Vsub(m_fields[i]->GetNcoeffs(),m_fields[i]->GetCoeffs(),1,m_base[i]->GetCoeffs(),1,m_fields[i]->UpdateCoeffs(),1);
-						
-						energy_tmp = m_fields[i]->HomogeneousEnergy();
-						Vmath::Vadd(locsize,energy_tmp,1,energy,1,energy,1);
-						
-						Vmath::Vadd(m_fields[i]->GetNcoeffs(),m_fields[i]->GetCoeffs(),1,m_base[i]->GetCoeffs(),1,m_fields[i]->UpdateCoeffs(),1);
-						
-					}
-					
-				}
+                // calcuation of the perturbation energy using non-linear NS
+                // equations
+                if(m_session->DefinesSolverInfo("CalculatePerturbationEnergy")
+                    && m_session->GetSolverInfo("CalculatePerturbationEnergy") 
+                        == "True")
+                {
+                    SetUpBaseFields(m_graph);
+                    string file = m_session->GetFunctionFilename("BaseFlow", 0);
+                    ImportFldBase(file,m_graph);
+                    for(int i = 0; i < m_nConvectiveFields; ++i)
+                    {
+                        Vmath::Vsub(m_fields[i]->GetNcoeffs(),
+                                    m_fields[i]->GetCoeffs(),1,
+                                    m_base[i]->GetCoeffs(),1,
+                                    m_fields[i]->UpdateCoeffs(),1);
+
+                        energy_tmp = m_fields[i]->HomogeneousEnergy();
+                        Vmath::Vadd(locsize,energy_tmp,1,energy,1,energy,1);
+
+                        Vmath::Vadd(m_fields[i]->GetNcoeffs(),
+                                    m_fields[i]->GetCoeffs(),1,
+                                    m_base[i]->GetCoeffs(),1,
+                                    m_fields[i]->UpdateCoeffs(),1);
+                    }
+                }
                 else
-				{
-					for(int i = 0; i < m_nConvectiveFields; ++i)
-					{
-				
-						energy_tmp = m_fields[i]->HomogeneousEnergy();
-						Vmath::Vadd(locsize,energy_tmp,1,energy,1,energy,1);
-					}
-				}                
+                {
+                    for(int i = 0; i < m_nConvectiveFields; ++i)
+                    {
+                        energy_tmp = m_fields[i]->HomogeneousEnergy();
+                        Vmath::Vadd(locsize,energy_tmp,1,energy,1,energy,1);
+                    }
+                }
+
                 // Send to root process.
                 if (colrank == 0)
                 {

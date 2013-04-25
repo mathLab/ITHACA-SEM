@@ -1110,9 +1110,10 @@ namespace Nektar
             
             // The number of variables can be different from the dimension 
             // of the base flow
-			int nvariables = m_session->GetVariables().size();
-			m_base = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);            
-			if (m_projectionType == MultiRegions::eGalerkin||m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
+            int nvariables = m_session->GetVariables().size();
+            m_base = Array<OneD, MultiRegions::ExpListSharedPtr>(nvariables);
+            if (m_projectionType == MultiRegions::eGalerkin ||
+                m_projectionType == MultiRegions::eMixed_CG_Discontinuous)
             {
                 switch (m_expdim)
                 {
@@ -1127,71 +1128,74 @@ namespace Nektar
                     }
                         break;
                     case 2:
-					{
-						if(m_HomogeneousType == eHomogeneous1D)
-						{
-							if(m_SingleMode)
-							{
-								const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
-								const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-								
-								for(i = 0 ; i < m_base.num_elements(); i++)
-								{								
-									m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+                    {
+                        if(m_HomogeneousType == eHomogeneous1D)
+                        {
+                            if(m_SingleMode)
+                            {
+                                const LibUtilities::PointsKey PkeyZ(m_npointsZ,
+                                        LibUtilities::eFourierSingleModeSpaced);
+                                const LibUtilities::BasisKey  BkeyZ(
+                                        LibUtilities::eFourier,
+                                        m_npointsZ,PkeyZ);
+
+                                for(i = 0 ; i < m_base.num_elements(); i++)
+                                {
+                                    m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
                                     ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
-									m_base[i]->SetWaveSpace(true);
-									
-									
-								} 
-							}
-							else if(m_HalfMode)
-							{
-								//1 plane field (half mode expansion)
-								const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierSingleModeSpaced);
-								const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourierHalfModeRe,m_npointsZ,PkeyZ);
-								
-								for(i = 0 ; i < m_base.num_elements(); i++)
-								{																
-									m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+                                    m_base[i]->SetWaveSpace(true);
+                                }
+                            }
+                            else if(m_HalfMode)
+                            {
+                                //1 plane field (half mode expansion)
+                                const LibUtilities::PointsKey PkeyZ(m_npointsZ,
+                                        LibUtilities::eFourierSingleModeSpaced);
+                                const LibUtilities::BasisKey  BkeyZ(
+                                        LibUtilities::eFourierHalfModeRe,
+                                        m_npointsZ,PkeyZ);
+
+                                for(i = 0 ; i < m_base.num_elements(); i++)
+                                {
+                                    m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
                                     ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
-									m_base[i]->SetWaveSpace(true);
-									
-								} 
-								
-							}
-							else 
-							{
-								const LibUtilities::PointsKey PkeyZ(m_npointsZ,LibUtilities::eFourierEvenlySpaced);
-								const LibUtilities::BasisKey  BkeyZ(LibUtilities::eFourier,m_npointsZ,PkeyZ);
-								
-								
-								for(i = 0 ; i < m_base.num_elements(); i++)
-								{
-									m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
+                                    m_base[i]->SetWaveSpace(true);
+                                }
+                            }
+                            else
+                            {
+                                const LibUtilities::PointsKey PkeyZ(m_npointsZ,
+                                        LibUtilities::eFourierEvenlySpaced);
+                                const LibUtilities::BasisKey  BkeyZ(
+                                        LibUtilities::eFourier,m_npointsZ,
+                                        PkeyZ);
+
+                                for(i = 0 ; i < m_base.num_elements(); i++)
+                                {
+                                    m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
                                     ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
-									m_base[i]->SetWaveSpace(false);
-								} 
-								
-							}
-						}
-						else
-						{
-							i = 0;
-							MultiRegions::ContField2DSharedPtr firstbase =
-                            MemoryManager<MultiRegions::ContField2D>
-                            ::AllocateSharedPtr(m_session,mesh,
+                                    m_base[i]->SetWaveSpace(false);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            i = 0;
+                            MultiRegions::ContField2DSharedPtr firstbase =
+                                MemoryManager<MultiRegions::ContField2D>
+                                ::AllocateSharedPtr(m_session,mesh,
                                                 m_session->GetVariable(i));
-							m_base[0]=firstbase;
-							
-							for(i = 1 ; i < m_base.num_elements(); i++)
-							{
-								m_base[i] = MemoryManager<MultiRegions::ContField2D>
+                            m_base[0]=firstbase;
+
+                            for(i = 1 ; i < m_base.num_elements(); i++)
+                            {
+                                m_base[i] = MemoryManager<MultiRegions::ContField2D>
                                 ::AllocateSharedPtr(*firstbase,mesh,
                                                     m_session->GetVariable(i));
-							}
-						}
-					}                        
-					break;
+                            }
+                        }
+                    }
+                    break;
                     case 3:
                     {
                         MultiRegions::ContField3DSharedPtr firstbase =
@@ -1202,7 +1206,7 @@ namespace Nektar
                         for(i = 1 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::ContField3D>
-                                ::AllocateSharedPtr(*firstbase, m_graph, 
+                                ::AllocateSharedPtr(*firstbase, m_graph,
                                                     m_session->GetVariable(0));
                         }
                     }
@@ -1253,38 +1257,34 @@ namespace Nektar
             std::string pInfile, 
             SpatialDomains::MeshGraphSharedPtr pGraph)
         {
-    	    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
-			std::vector<std::vector<NekDouble> > FieldData;
-			
-			//Get Homogeneous
-			
-			LibUtilities::Import(pInfile,FieldDef,FieldData);
-			
-			int nvar = m_session->GetVariables().size();			
-			if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
-			{
-				std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
-			}
-			// copy FieldData into m_fields
-			for(int j = 0; j < nvar; ++j)
-			{
-				for(int i = 0; i < FieldDef.size(); ++i)
-				{
-					
-                    bool flag = FieldDef[i]->m_fields[j]
-					== m_session->GetVariable(j);
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+            std::vector<std::vector<NekDouble> > FieldData;
+
+            //Get Homogeneous
+            LibUtilities::Import(pInfile,FieldDef,FieldData);
+
+            int nvar = m_session->GetVariables().size();
+            if(m_session->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
+            }
+            // copy FieldData into m_fields
+            for(int j = 0; j < nvar; ++j)
+            {
+                for(int i = 0; i < FieldDef.size(); ++i)
+                {
+                    bool flag = FieldDef[i]->m_fields[j] ==
+                                m_session->GetVariable(j);
                     ASSERTL1(flag, (std::string("Order of ") + pInfile
                                     + std::string(" data and that defined in "
-                                                  "m_boundaryconditions differs")).c_str());
-                    
+                                    "m_boundaryconditions differs")).c_str());
+
                     m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
                                                    FieldDef[i]->m_fields[j],
-                                                   m_base[j]->UpdateCoeffs());					
-				}
-								
-			}
-			
-        }	      	    
+                                                   m_base[j]->UpdateCoeffs());
+                }
+            }
+        }
 
         /**
          * 

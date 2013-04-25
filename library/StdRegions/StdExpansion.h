@@ -865,6 +865,11 @@ namespace Nektar
                 return v_GetLocStaticCondMatrix(mkey);
             }
 
+            STD_REGIONS_EXPORT void DropLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey)
+            {
+                return v_DropLocStaticCondMatrix(mkey);
+            }
+
             StdRegions::Orientation GetFaceOrient(int face)
             {
                 return v_GetFaceOrient(face);
@@ -1293,9 +1298,12 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray);
 
-	    STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, const Array<OneD, const NekDouble> &Fz, Array< OneD, NekDouble> &outarray);
+            STD_REGIONS_EXPORT virtual void v_NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, const Array<OneD, const NekDouble> &Fz, Array< OneD, NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
+
+            STD_REGIONS_EXPORT virtual void v_DropLocStaticCondMatrix(const LocalRegions::MatrixKey &mkey);
+
 
             STD_REGIONS_EXPORT virtual StdRegions::Orientation v_GetFaceOrient(int face);
 

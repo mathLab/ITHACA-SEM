@@ -31,6 +31,8 @@ IF( NEKTAR_USE_MPI )
         SET(XXT_LIBRARY xxt CACHE FILEPATH
             "XXT path" FORCE)
         MARK_AS_ADVANCED(XXT_LIBRARY)
+        MESSAGE(STATUS "Build GSMPI: ${TPSRC}/dist/lib/lib${GSMPI_LIBRARY}.a")
+        MESSAGE(STATUS "Build XXT: ${TPSRC}/dist/lib/lib${XXT_LIBRARY}.a")
     ELSE (THIRDPARTY_BUILD_GSMPI)
         INCLUDE (FindGSMPI)
         INCLUDE (FindXXT)

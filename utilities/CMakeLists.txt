@@ -8,9 +8,10 @@ MACRO(ADD_UTILITIES_EXECUTABLE name component source)
     # add them here.
     TARGET_LINK_LIBRARIES(${name}
 	        ${NEKTAR++_LIBRARIES}
+            ${Boost_SYSTEM_LIBRARY}
 	        ${Boost_THREAD_LIBRARY}
             ${Boost_IOSTREAMS_LIBRARY}
-	        ${Boost_ZLIB_LIBRARY}
+	        ${ZLIB_LIBRARY}
             ${Boost_DATE_TIME_LIBRARY}
             ${Boost_PROGRAM_OPTIONS_LIBRARY} 
             optimized ${TINYXML_LIB} debug ${TINYXML_LIB}

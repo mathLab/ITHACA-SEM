@@ -712,30 +712,14 @@ namespace Nektar
                 // u3 = u*u*u
                 Vmath::Vmul(npoints, &physfieldu[0], 1, &u2[0], 1, &u3[0], 1);
 
-                if (m_spatialParameters->Exists("a"))
-                {
-                    Vmath::Vmul(npoints, &m_spatialParameters->GetData("a")->GetPhys()[0], 1, &physfieldu[0], 1, &Ru[0], 1);
-                    Vmath::Vvtvm(npoints, &m_spatialParameters->GetData("a")->GetPhys()[0], 1, &u2[0], 1, &Ru[0], 1, &Ru[0], 1);
-                    Vmath::Svtvm(npoints, -1.0, &u2[0], 1, &Ru[0], 1, &Ru[0], 1);
-                }
-                else
-                {
-                    // Ru = au
-                    Vmath::Smul(npoints, mA, &physfieldu[0], 1, &Ru[0], 1);
-                    // Ru = (-1-a)u*u + au
-                    Vmath::Svtvp(npoints, (-1.0-mA), &u2[0], 1, &Ru[0], 1, &Ru[0], 1);
-                }
+                // Ru = au
+                Vmath::Smul(npoints, mA, &physfieldu[0], 1, &Ru[0], 1);
+                // Ru = (-1-a)u*u + au
+                Vmath::Svtvp(npoints, (-1.0-mA), &u2[0], 1, &Ru[0], 1, &Ru[0], 1);
                 // Ru = u*u*u - (1+a)u*u + au
                 Vmath::Vadd(npoints, &u3[0], 1, &Ru[0], 1, &Ru[0], 1);
                 // Ru = k(u*u*u - (1+a)u*u + au)
-                if (m_spatialParameters->Exists("k"))
-                {
-                    Vmath::Vmul(npoints, &m_spatialParameters->GetData("k")->GetPhys()[0], 1, &Ru[0], 1, &Ru[0], 1);
-                }
-                else
-                {
-                    Vmath::Smul(npoints, mK, &Ru[0], 1, &Ru[0], 1);
-                }
+                Vmath::Smul(npoints, mK, &Ru[0], 1, &Ru[0], 1);
                 // Ru = k(u*u*u - (1+a)u*u + au) + uv
                 Vmath::Vvtvp(npoints, &physfieldu[0], 1, &physfieldv[0], 1, &Ru[0], 1, &Ru[0], 1);
                 // Ru = -k(u*u*u - (1+a)u*u + au) - uv
@@ -755,24 +739,9 @@ namespace Nektar
                 Vmath::Sadd(npoints, mEps, &Rv[0], 1, &Rv[0], 1);
 
                 // Ru = (-a-1) + u
-                if (m_spatialParameters->Exists("a"))
-                {
-                    Vmath::Vsub(npoints, &physfieldu[0], 1, &m_spatialParameters->GetData("a")->GetPhys()[0], 1, &Ru[0], 1);
-                    Vmath::Sadd(npoints, -1.0, &physfieldu[0], 1, &Ru[0], 1);
-                }
-                else
-                {
-                    Vmath::Sadd(npoints, (-mA-1), &physfieldu[0], 1, &Ru[0], 1);
-                }
+                Vmath::Sadd(npoints, (-mA-1), &physfieldu[0], 1, &Ru[0], 1);
                 // Ru = k(u-a-1)
-                if (m_spatialParameters->Exists("k"))
-                {
-                    Vmath::Vmul(npoints, &m_spatialParameters->GetData("k")->GetPhys()[0], 1, &Ru[0], 1, &Ru[0], 1);
-                }
-                else
-                {
-                    Vmath::Smul(npoints, mK, &Ru[0], 1, &Ru[0], 1);
-                }
+                Vmath::Smul(npoints, mK, &Ru[0], 1, &Ru[0], 1);
                 // Ru = ku(u-a-1) + v
                 Vmath::Vvtvp(npoints, &physfieldu[0], 1, &Ru[0], 1, &physfieldv[0], 1, &Ru[0], 1);
                 // Ru = -ku(u-a-1)-v

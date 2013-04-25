@@ -502,6 +502,12 @@ namespace Nektar
             
             m_hash = boost::hash_range(
                 m_localToGlobalMap.begin(), m_localToGlobalMap.end());
+
+            // Add up hash values if parallel
+            int hash = m_hash;
+            m_comm->GetRowComm()->AllReduce(hash, 
+                              LibUtilities::ReduceSum);
+            m_hash = hash;
         }
 
         /**

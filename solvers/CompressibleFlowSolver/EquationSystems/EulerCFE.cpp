@@ -141,6 +141,7 @@ namespace Nektar
               Array<OneD,       Array<OneD, NekDouble> > &outarray,
         const NekDouble                                   time)
     {
+        //cout<<setprecision(16);
         int i;
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();

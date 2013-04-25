@@ -1244,17 +1244,14 @@ namespace Nektar
             int                        nummodesA,
             int                        nummodesB)
         {
-            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
-            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
-            const LibUtilities::BasisType bType2 = GetEdgeBasisType(4);
-            
-            ASSERTL1(bType0 == bType1,
+            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");
-            ASSERTL1(bType0 == LibUtilities::eModified_A && 
-                     bType2 == LibUtilities::eModified_B,
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A && 
+                     GetEdgeBasisType(4) == LibUtilities::eModified_B,
                      "Method only implemented for Modified_A BasisType"
-                     "(x and y direction) and Modified_B BasisType (z direction)");
+                     "(x and y direction) and Modified_B BasisType (z "
+                     "direction)");
 
             int i, j, p, q, r, nFaceCoeffs, idx = 0;
 

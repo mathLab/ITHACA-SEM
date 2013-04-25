@@ -45,6 +45,7 @@
 #include <MultiRegions/GlobalMatrix.h>  // for GlobalMatrix, etc
 #include <MultiRegions/GlobalMatrixKey.h>  // for GlobalMatrixKey
 
+#include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
@@ -984,8 +985,8 @@ namespace Nektar
                 }
             }
 
-            map< pair< int,  int>, NekDouble > spcoomat;
-            pair<int,int> coord;
+            COOMatType spcoomat;
+            CoordType  coord;
 
             int nvarcoeffs = mkey.GetNVarCoeffs();
             int eid;
@@ -1061,7 +1062,7 @@ namespace Nektar
             }
 
             return MemoryManager<GlobalMatrix>
-                ::AllocateSharedPtr(glob_rows,glob_cols,spcoomat);
+                ::AllocateSharedPtr(m_session,glob_rows,glob_cols,spcoomat);
         }
 
 
@@ -1440,181 +1441,199 @@ namespace Nektar
         void ExpList::WriteToFile(std::ofstream &out, OutputFormat format,
                                 std::string var)
         {
-            if(format==eTecplot)
+            switch(format)
             {
-                int i;
-
-                Array<OneD, const NekDouble> phys = m_phys;
-
-                if(m_physState == false)
+            case eTecplot:
+            case eTecplotZones:
                 {
-                    BwdTrans(m_coeffs,m_phys);
+                    int i;
+                    
+                    Array<OneD, const NekDouble> phys = m_phys;
+                    
+                    if(m_physState == false)
+                    {
+                        BwdTrans(m_coeffs,m_phys);
+                    }
+                    
+                    (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
+                    (*m_exp)[0]->WriteToFile(out,eTecplot,true,var);
+                    
+                    for(i= 1; i < (*m_exp).size(); ++i)
+                    {
+                        (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
+                        (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
+                    }
                 }
-
-                (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
-                (*m_exp)[0]->WriteToFile(out,eTecplot,true,var);
-
-                for(i= 1; i < (*m_exp).size(); ++i)
+                break;
+            case eTecplotSingleBlock:
                 {
+                    if(m_physState == false)
+                    {
+                        BwdTrans(m_coeffs,m_phys);
+                    }
+                    WriteTecplotHeader(out,var);
+                    WriteTecplotZone(out);
+                    WriteTecplotField(out);
+                    WriteTecplotConnectivity(out);
+                }
+                break;
+            case eGnuplot:
+                {
+                    int i;
+                    
+                    Array<OneD, const NekDouble> phys = m_phys;
+                    
+                    if(m_physState == false)
+                    {
+                        BwdTrans(m_coeffs,m_phys);
+                    }
+                    
+                    (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
+                    (*m_exp)[0]->WriteToFile(out,eGnuplot,true,var);
+                    
+                    for(i= 1; i < (*m_exp).size(); ++i)
+                    {
                     (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
                     (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
-                }
-            }
-            else if(format==eGnuplot)
-            {
-                int i;
-
-                Array<OneD, const NekDouble> phys = m_phys;
-
-                if(m_physState == false)
-                {
-                    BwdTrans(m_coeffs,m_phys);
-                }
-
-                (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
-                (*m_exp)[0]->WriteToFile(out,eGnuplot,true,var);
-
-                for(i= 1; i < (*m_exp).size(); ++i)
-                {
-                    (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
-                    (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
-                }
-            }
-            else if(format==eGmsh)
-            {
-
-                out<<"View.MaxRecursionLevel = 4;"<<endl;
-                out<<"View.TargetError = 0.00;"<<endl;
-                out<<"View.AdaptVisualizationGrid = 1;"<<endl;
-
-                int i,j,k;
-                int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
-                int nDumpCoeffs =  nElementalCoeffs*nElementalCoeffs;
-                Array<TwoD, int> exponentMap(nDumpCoeffs,3,0);
-                int cnt = 0;
-                for(i = 0; i < nElementalCoeffs; i++)
-                {
-                    for(j = 0; j < nElementalCoeffs; j++)
-                    {
-                        exponentMap[cnt][0] = j;
-                        exponentMap[cnt++][1] = i;
                     }
                 }
-
-                PutCoeffsInToElmtExp();
-                bool dumpNewView = true;
-                bool closeView = false;
-                for(i= 0; i < (*m_exp).size(); ++i)
+                break;
+            case eGmsh:
                 {
-                    if(nElementalCoeffs != (*m_exp)[i]->GetBasisNumModes(0))
+                    
+                    out<<"View.MaxRecursionLevel = 4;"<<endl;
+                    out<<"View.TargetError = 0.00;"<<endl;
+                    out<<"View.AdaptVisualizationGrid = 1;"<<endl;
+                    
+                    int i,j,k;
+                    int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
+                    int nDumpCoeffs =  nElementalCoeffs*nElementalCoeffs;
+                    Array<TwoD, int> exponentMap(nDumpCoeffs,3,0);
+                    int cnt = 0;
+                    for(i = 0; i < nElementalCoeffs; i++)
                     {
-                        ASSERTL0(false,"Not all elements have the same number "
-                                       "of expansions, this will probably lead "
-                                       "to a corrupt Gmsh-output file.")
-                    }
-
-                    if(i>0)
-                    {
-                        if ( ((*m_exp)[i]->DetShapeType())
-                                        !=((*m_exp)[i-1]->DetShapeType()) )
+                        for(j = 0; j < nElementalCoeffs; j++)
                         {
-                            dumpNewView = true;
-                        }
-                        else
-                        {
-                            dumpNewView = false;
-                        }
-                    }
-                    if(i<(*m_exp).size()-1)
-                    {
-                        if ( ((*m_exp)[i]->DetShapeType())
-                                        !=((*m_exp)[i+1]->DetShapeType()) )
-                        {
-                            closeView = true;
-                        }
-                        else
-                        {
-                            closeView = false;
+                            exponentMap[cnt][0] = j;
+                            exponentMap[cnt++][1] = i;
                         }
                     }
-                    else
+                    
+                    PutCoeffsInToElmtExp();
+                    bool dumpNewView = true;
+                    bool closeView = false;
+                    for(i= 0; i < (*m_exp).size(); ++i)
                     {
-                            closeView = true;
-                    }
-
-                    if(dumpNewView)
-                    {
-                        out<<"View \" \" {"<<endl;
-                    }
-
-                    (*m_exp)[i]->WriteToFile(out,eGmsh,false);
-
-                    if(closeView)
-                    {
-                        out<<"INTERPOLATION_SCHEME"<<endl;
-                        out<<"{"<<endl;
-                        for(k=0; k < nDumpCoeffs; k++)
+                        if(nElementalCoeffs != (*m_exp)[i]->GetBasisNumModes(0))
                         {
-                            out<<"{";
-                            for(j = 0; j < nDumpCoeffs; j++)
+                            ASSERTL0(false,"Not all elements have the same number "
+                                     "of expansions, this will probably lead "
+                                     "to a corrupt Gmsh-output file.")
+                                }
+                        
+                        if(i>0)
+                        {
+                            if ( ((*m_exp)[i]->DetShapeType())
+                                 !=((*m_exp)[i-1]->DetShapeType()) )
                             {
-                                if(k==j)
+                            dumpNewView = true;
+                            }
+                            else
+                            {
+                                dumpNewView = false;
+                            }
+                        }
+                        if(i<(*m_exp).size()-1)
+                        {
+                            if ( ((*m_exp)[i]->DetShapeType())
+                                 !=((*m_exp)[i+1]->DetShapeType()) )
+                            {
+                                closeView = true;
+                            }
+                            else
+                            {
+                                closeView = false;
+                            }
+                        }
+                        else
+                        {
+                            closeView = true;
+                        }
+                        
+                        if(dumpNewView)
+                        {
+                            out<<"View \" \" {"<<endl;
+                        }
+                        
+                        (*m_exp)[i]->WriteToFile(out,eGmsh,false);
+                        
+                        if(closeView)
+                        {
+                            out<<"INTERPOLATION_SCHEME"<<endl;
+                            out<<"{"<<endl;
+                            for(k=0; k < nDumpCoeffs; k++)
+                            {
+                                out<<"{";
+                                for(j = 0; j < nDumpCoeffs; j++)
                                 {
-                                    out<<"1.00";
+                                    if(k==j)
+                                    {
+                                        out<<"1.00";
+                                    }
+                                    else
+                                    {
+                                        out<<"0.00";
+                                    }
+                                    if(j < nDumpCoeffs - 1)
+                                    {
+                                        out<<", ";
+                                    }
+                                }
+                                if(k < nDumpCoeffs - 1)
+                                {
+                                    out<<"},"<<endl;
                                 }
                                 else
                                 {
-                                    out<<"0.00";
+                                    out<<"}"<<endl<<"}"<<endl;
                                 }
-                                if(j < nDumpCoeffs - 1)
+                            }
+                            
+                            out<<"{"<<endl;
+                            for(k=0; k < nDumpCoeffs; k++)
+                            {
+                                out<<"{";
+                                for(j = 0; j < 3; j++)
                                 {
-                                    out<<", ";
+                                    out<<exponentMap[k][j];
+                                    if(j < 2)
+                                    {
+                                        out<<", ";
+                                    }
                                 }
-                            }
-                            if(k < nDumpCoeffs - 1)
-                            {
-                                out<<"},"<<endl;
-                            }
-                            else
-                            {
-                                out<<"}"<<endl<<"}"<<endl;
-                            }
-                        }
-
-                        out<<"{"<<endl;
-                        for(k=0; k < nDumpCoeffs; k++)
-                        {
-                            out<<"{";
-                            for(j = 0; j < 3; j++)
-                            {
-                                out<<exponentMap[k][j];
-                                if(j < 2)
+                                if(k < nDumpCoeffs - 1)
                                 {
-                                    out<<", ";
+                                    out<<"},"<<endl;
+                                }
+                                else
+                                {
+                                    out<<"}"<<endl<<"};"<<endl;
                                 }
                             }
-                            if(k < nDumpCoeffs - 1)
-                            {
-                                out<<"},"<<endl;
-                            }
-                            else
-                            {
-                                out<<"}"<<endl<<"};"<<endl;
-                            }
+                            out<<"};"<<endl;
                         }
-                        out<<"};"<<endl;
                     }
+                    out<<"Combine ElementsFromAllViews;"<<endl;
+                    out<<"View.Name = \"\";"<<endl;
                 }
-                out<<"Combine ElementsFromAllViews;"<<endl;
-                out<<"View.Name = \"\";"<<endl;
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested "
-                                "type of output");
+                break;
+            default:
+                {
+                    ASSERTL0(false, "Output routine not implemented for requested "
+                             "type of output");
+                }
             }
         }
-
 
         /**
          * Write Tecplot Files Header
@@ -1622,12 +1641,12 @@ namespace Nektar
          * @param   var                 variables names
          */
         void ExpList::v_WriteTecplotHeader(std::ofstream &outfile,
-                        std::string var)
+                                           std::string var)
         {
 
             int coordim  = GetExp(0)->GetCoordim();
             outfile << "Variables = x";
-
+            
             if(coordim == 2)
             {
                 outfile << ", y";
@@ -1647,8 +1666,140 @@ namespace Nektar
          */
         void ExpList::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
         {
-            (*m_exp)[expansion]->WriteTecplotZone(outfile);
+            if(expansion == -1) //write as full block zeon
+            {
+                int i,j;
+                int coordim   = GetCoordim(0);
+                int totpoints = GetTotPoints();
+                
+                Array<OneD,NekDouble> coords[3];
+                
+                coords[0] = Array<OneD,NekDouble>(totpoints);
+                coords[1] = Array<OneD,NekDouble>(totpoints);
+                coords[2] = Array<OneD,NekDouble>(totpoints);
+                
+                GetCoords(coords[0],coords[1],coords[2]);
+                
+                outfile << "Zone, N=" << GetTotPoints() << ", E="<<
+                    GetNumTecplotBlocks() << ", F=FEBlock" ;
+                
+                switch((*m_exp)[0]->GetNumBases())
+                {
+                case 1:
+                    ASSERTL0(false,"Not set up for this type of output");
+                    break;
+                case 2:
+                    outfile << ", ET=QUADRILATERAL" << std::endl;
+                    break;
+                case 3:
+                    outfile << ", ET=BRICK" << std::endl;
+                    break;
+                }
+                
+                // write out coordinates in block format 
+                for(j = 0; j < coordim; ++j)
+                {
+                    for(i = 0; i < totpoints; ++i)
+                    {
+                        outfile << coords[j][i] << " ";
+                        if((!(i % 1000))&&i)
+                        {
+                            outfile << std::endl;
+                        }
+                    }
+                    outfile << std::endl;
+                }
+                
+            }
+            else
+            {
+                (*m_exp)[expansion]->WriteTecplotZone(outfile);
+            }
         }
+
+        int  ExpList::GetNumTecplotBlocks(void)
+        {
+            int returnval = 0;
+
+            if((*m_exp)[0]->GetNumBases() == 2)
+            {
+                for(int i = 0; i < (*m_exp).size(); ++i)
+                {
+                    returnval += ((*m_exp)[i]->GetNumPoints(0)-1)*((*m_exp)[i]->GetNumPoints(1)-1);
+                }
+            }
+            else
+            {
+                for(int i = 0; i < (*m_exp).size(); ++i)
+                {
+                    returnval += ((*m_exp)[i]->GetNumPoints(0)-1)*((*m_exp)[i]->GetNumPoints(1)-1)*((*m_exp)[i]->GetNumPoints(2)-1);
+                }
+            }
+
+            return returnval;
+        }
+
+        
+        void  ExpList::WriteTecplotConnectivity(std::ofstream &outfile)
+        {
+            int i,j,k,l;
+            int nbase = (*m_exp)[0]->GetNumBases();
+            int cnt = 0;
+            
+            for(int i = 0; i < (*m_exp).size(); ++i)
+            {
+                if(nbase == 2)
+                {
+                    int np0 = (*m_exp)[i]->GetNumPoints(0);
+                    int np1 = (*m_exp)[i]->GetNumPoints(1);
+                    
+                    for(j = 1; j < np1; ++j)
+                    {
+                        for(k = 1; k < np0; ++k)
+                        {
+                            outfile << cnt + (j-1)*np0 + k  << " ";
+                            outfile << cnt + (j-1)*np0 + k +1 << " ";
+                            outfile << cnt + j*np0 + k +1 << " ";
+                            outfile << cnt + j*np0 + k    << endl;
+                        }
+                    }
+                    
+                    cnt += np0*np1;
+                }
+                else if(nbase == 3)
+                {
+                    int np0 = (*m_exp)[i]->GetNumPoints(0);
+                    int np1 = (*m_exp)[i]->GetNumPoints(1);
+                    int np2 = (*m_exp)[i]->GetNumPoints(2);
+                    
+                    for(j = 1; j < np2; ++j)
+                    {
+                        for(k = 1; k < np1; ++k)
+                        {
+                            for(l = 1; l < np0; ++l)
+                            {
+                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l  << " ";
+                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l +1 << " ";
+                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l +1 << " ";
+                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l  << " ";
+
+                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l  << " ";
+                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l +1 << " ";
+                                outfile << cnt + j*np0*np1 +  k*np0 + l +1 << " ";
+                                outfile << cnt + j*np0*np1 +  k*np0 + l  << endl;
+                            }
+                        }
+                    }
+                    cnt += np0*np1*np2;
+                }
+                else
+                {
+                    ASSERTL0(false,"Not set up for this dimension");
+                }
+
+            }
+        }
+
 
         /**
          * Write Tecplot Files Field
@@ -1657,8 +1808,31 @@ namespace Nektar
          */
         void ExpList::v_WriteTecplotField(std::ofstream &outfile, int expansion)
         {
-            (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]);
-            (*m_exp)[expansion]->WriteTecplotField(outfile);
+
+            if(expansion == -1)
+            {
+                int totpoints = GetTotPoints();
+                if(m_physState == false)
+                {
+                    BwdTrans(m_coeffs,m_phys);
+                }
+                
+                for(int i = 0; i < totpoints; ++i)
+                {
+                    outfile << m_phys[i] << " ";
+                    if((!(i % 1000))&&i)
+                    {
+                        outfile << std::endl;
+                    }
+                }
+                outfile << std::endl;
+                
+            }
+            else
+            {
+                (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]);
+                (*m_exp)[expansion]->WriteTecplotField(outfile);
+            }
         }
 
 
@@ -1866,6 +2040,21 @@ namespace Nektar
             return sqrt(err);
         }
 		
+
+        NekDouble ExpList::v_Integral(const Array<OneD, const NekDouble> &inarray)
+        {
+            NekDouble err = 0.0;
+            int       i   = 0;
+
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                err += (*m_exp)[m_offset_elmt_id[i]]->Integral(inarray+m_phys_offset[i]);
+            }
+            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
+
+            return err;
+        }
+
         Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
             ASSERTL0(false,
@@ -2131,13 +2320,8 @@ namespace Nektar
                 offset += datalen;
             }
             
-            if(i == fielddef->m_fields.size())
-            {
-                cerr << "Field (" << field << ") not found in data file; "
-                     << "Setting it to zero. " << endl;
-                Vmath::Zero(coeffs.num_elements(),coeffs,1);
-                return;
-            }
+            ASSERTL0(i != fielddef->m_fields.size(),
+                     "Field (" + field + ") not found in file.");
 
             // Determine mapping from element ids to location in expansion list
             map<int, int> elmtToExpId;

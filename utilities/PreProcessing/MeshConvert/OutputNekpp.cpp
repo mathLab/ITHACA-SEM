@@ -37,6 +37,13 @@
 #include <string>
 using namespace std;
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+namespace io = boost::iostreams;
+
+#include <tinyxml/tinyxml.h>
+
 #include "MeshElements.h"
 #include "OutputNekpp.h"
 
@@ -51,7 +58,8 @@ namespace Nektar
 
         OutputNekpp::OutputNekpp(MeshSharedPtr m) : OutputModule(m)
         {
-            
+            config["z"] = ConfigOption(true, "0",
+                "Compress output file and append a .gz extension.");
         }
 
         OutputNekpp::~OutputNekpp()
@@ -89,8 +97,29 @@ namespace Nektar
             WriteXmlExpansions(root);
             WriteXmlConditions(root);
             
-            // Save the XML file.
-            doc.SaveFile(config["outfile"].as<string>());
+            // Extract the output filename and extension
+            string filename = config["outfile"].as<string>();
+
+            // Compress output and append .gz extension
+            if (config["z"].as<bool>())
+            {
+                filename += ".gz";
+                ofstream fout(filename.c_str(),
+                              std::ios_base::out | std::ios_base::binary);
+
+                std::stringstream decompressed;
+                decompressed << doc;
+                io::filtering_streambuf<io::output> out;
+                out.push(io::gzip_compressor());
+                out.push(fout);
+                io::copy(decompressed, out);
+
+                fout.close();
+            }
+            else
+            {
+                doc.SaveFile(filename);
+            }
         }
 
         void OutputNekpp::WriteXmlNodes(TiXmlElement * pRoot)
@@ -229,12 +258,13 @@ namespace Nektar
                     curved->LinkEndChild(e);
                 }
             }
-
+#if 0 
             // 2D elements in 3-space, output face curvature information
             if (m->expDim == 2 && m->spaceDim == 3)
             {
                 vector<ElementSharedPtr>::iterator it;
-                for (it = m->element[m->expDim].begin(); it != m->element[m->expDim].end(); ++it)
+                for (it  = m->element[m->expDim].begin();
+                     it != m->element[m->expDim].end(); ++it)
                 {
                     // Only generate face curve if there are volume nodes
                     if ((*it)->GetVolumeNodes().size() > 0)
@@ -243,44 +273,35 @@ namespace Nektar
                         e->SetAttribute("ID",        facecnt++);
                         e->SetAttribute("FACEID",    (*it)->GetId());
                         e->SetAttribute("NUMPOINTS", (*it)->GetNodeCount());
+                        e->SetAttribute("TYPE",
+                           LibUtilities::kPointsTypeStr[(*it)->GetCurveType()]);
 
-                        // Quad use PolyEvenlySpaced points, tri uses
-                        // NodalTriEvenlySpaced points
-                        if ((*it)->GetVertexCount() == 4)
-                        {
-                            e->SetAttribute("TYPE", "PolyEvenlySpaced");
-                        }
-                        else
-                        {
-                            e->SetAttribute("TYPE", "NodalTriEvenlySpaced");
-                        }
                         TiXmlText * t0 = new TiXmlText((*it)->GetXmlCurveString());
                         e->LinkEndChild(t0);
                         curved->LinkEndChild(e);
                     }
                 }
             }
-
-            // This code is commented out until face nodes are fully supported
-            // in Nektar++.
-            /*
-            FaceSet::iterator it2;
-            for (it2 = m->faceSet.begin(); it2 != m->faceSet.end(); ++it2)
+            else if (m->expDim == 3)
             {
-                if ((*it2)->faceNodes.size() > 0)
+                FaceSet::iterator it2;
+                for (it2 = m->faceSet.begin(); it2 != m->faceSet.end(); ++it2)
                 {
-                    TiXmlElement * f = new TiXmlElement( "F" );
-                    f->SetAttribute("ID",       facecnt++);
-                    f->SetAttribute("FACEID",   (*it2)->id);
-                    f->SetAttribute("NUMPOINTS",(*it2)->GetNodeCount());
-                    f->SetAttribute("TYPE",
-                        LibUtilities::kPointsTypeStr[(*it2)->curveType]);
-                    TiXmlText * t0 = new TiXmlText((*it2)->GetXmlCurveString());
-                    f->LinkEndChild(t0);
-                    curved->LinkEndChild(f);
+                    if ((*it2)->faceNodes.size() > 0)
+                    {
+                        TiXmlElement * f = new TiXmlElement( "F" );
+                        f->SetAttribute("ID",       facecnt++);
+                        f->SetAttribute("FACEID",   (*it2)->id);
+                        f->SetAttribute("NUMPOINTS",(*it2)->GetNodeCount());
+                        f->SetAttribute("TYPE",
+                                        LibUtilities::kPointsTypeStr[(*it2)->curveType]);
+                        TiXmlText * t0 = new TiXmlText((*it2)->GetXmlCurveString());
+                        f->LinkEndChild(t0);
+                        curved->LinkEndChild(f);
+                    }
                 }
             }
-            */
+#endif
             pRoot->LinkEndChild( curved );
         }
 
@@ -371,7 +392,7 @@ namespace Nektar
                     exp->SetAttribute("COMPOSITE", "C["
                         + boost::lexical_cast<std::string>(it->second->id)
                         + "]");
-                    exp->SetAttribute("NUMMODES",7);
+                    exp->SetAttribute("NUMMODES",4);
                     exp->SetAttribute("TYPE","MODIFIED");
                     
                     if (m->fields.size() == 0)

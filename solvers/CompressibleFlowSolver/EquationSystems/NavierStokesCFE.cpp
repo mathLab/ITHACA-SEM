@@ -171,7 +171,7 @@ namespace Nektar
         
         // Diffusion term in physical rhs form
         m_diffusion->Diffuse(nvariables, m_fields, inarrayDiff, outarrayDiff);
-        
+            
         for (i = 0; i < nvariables; ++i)
         {
             Vmath::Vadd(npoints, 

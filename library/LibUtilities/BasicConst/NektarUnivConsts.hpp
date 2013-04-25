@@ -49,6 +49,7 @@ namespace Nektar
         static const NekDouble kGeomRightAngleTol = 1e-14;
         static const NekDouble kNekSqrtTol = 1.0e-16;
         static const NekDouble kNekIterativeTol = 1e-09;
+        static const NekDouble kNekSparseNonZeroTol = 1e-16;
     }
 } //end of namespace
 

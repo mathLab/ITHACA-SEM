@@ -224,9 +224,8 @@ int main(int argc, char *argv[])
         {
             Exp[i]->PhysDeriv(Exp[i]->GetPhys(), grad[i*nfields],grad[i*nfields+1]);
         }
-        // Ux.Vy - Uy.Vx
-        Vmath::Vmul (nq,grad[1],1,grad[nfields],1,outfield[0],1);
-        Vmath::Vvtvm(nq,grad[0],1,grad[nfields+1],1,outfield[0],1,outfield[0],1);
+        // W_z = Vx - Uy
+        Vmath::Vsub(nq,grad[1*nfields+0],1,grad[0*nfields+1],1,outfield[0],1);
     }
     else
     {
@@ -235,15 +234,12 @@ int main(int argc, char *argv[])
             Exp[i]->PhysDeriv(Exp[i]->GetPhys(), grad[i*nfields],grad[i*nfields+1],grad[i*nfields+2]);
         }
 
-        // W_x = Vy.Wz - Vz.Wy
-        Vmath::Vmul (nq,grad[nfields+2],1,grad[2*nfields+1],1,outfield[0],1);
-        Vmath::Vvtvm(nq,grad[nfields+1],1,grad[2*nfields+2],1,outfield[0],1,outfield[0],1);
-        // W_y = Wx.Uz - Ux.Wz
-        Vmath::Vmul (nq,grad[0],1,grad[2*nfields+2],1,outfield[1],1);
-        Vmath::Vvtvm(nq,grad[2*nfields],1,grad[2],1,outfield[1],1,outfield[1],1);
-        // W_z = Ux.Vy - Uy.Vx
-        Vmath::Vmul (nq,grad[1],1,grad[nfields],1,outfield[2],1);
-        Vmath::Vvtvm(nq,grad[0],1,grad[nfields+1],1,outfield[2],1,outfield[2],1);
+        // W_x = Wy - Vz
+        Vmath::Vsub(nq,grad[2*nfields+1],1,grad[1*nfields+2],1,outfield[0],1);
+        // W_y = Uz - Wx
+        Vmath::Vsub(nq,grad[0*nfields+2],1,grad[2*nfields+0],1,outfield[1],1);
+        // W_z = Vx - Uy
+        Vmath::Vsub(nq,grad[1*nfields+0],1,grad[0*nfields+1],1,outfield[2],1);
     }
 
     for (i = 0; i < addfields; ++i)

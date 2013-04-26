@@ -179,7 +179,6 @@ namespace Nektar
             int meshEdgeId;
             int meshEdgeId2;
             int meshFaceId;
-            int meshFaceId2;
             int globalId;
             int nEdgeInteriorCoeffs;
             int nFaceInteriorCoeffs;
@@ -1276,6 +1275,9 @@ namespace Nektar
 
                     pIt = periodicEdges.find(meshEdgeId);
 
+                    // See if this edge is periodic. If it is, then we map all
+                    // edges to the one with lowest ID, and align all
+                    // coefficients to this edge orientation.
                     if (pIt != periodicEdges.end())
                     {
                         int minId  = pIt->second[0].id;
@@ -1325,6 +1327,7 @@ namespace Nektar
 
                     pIt = periodicFaces.find(meshFaceId);
 
+                    // See if this face is periodic.
                     if (pIt != periodicFaces.end() &&
                         pIt->second[0].orient != StdRegions::eDir1FwdDir1_Dir2FwdDir2 &&
                         meshFaceId == min(meshFaceId, pIt->second[0].id))

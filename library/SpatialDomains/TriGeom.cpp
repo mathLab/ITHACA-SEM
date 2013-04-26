@@ -389,8 +389,6 @@ namespace Nektar
             const VertexComponentVector &face1,
             const VertexComponentVector &face2)
         {
-            StdRegions::Orientation returnval = StdRegions::eNoOrientation;
-            
             int i, j, vmap[3] = {-1,-1,-1};
             NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
            
@@ -436,13 +434,13 @@ namespace Nektar
                 switch (vmap[0])
                 {
                     case 0:
-                        returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+                        return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
                         break;
                     case 1:
-                        returnval = StdRegions::eDir1FwdDir2_Dir2BwdDir1;
+                        return StdRegions::eDir1FwdDir2_Dir2BwdDir1;
                         break;
                     case 2:
-                        returnval = StdRegions::eDir1BwdDir1_Dir2BwdDir2;
+                        return StdRegions::eDir1BwdDir1_Dir2BwdDir2;
                         break;
                 }
             }
@@ -451,18 +449,19 @@ namespace Nektar
                 switch (vmap[0])
                 {
                     case 0:
-                        returnval = StdRegions::eDir1FwdDir2_Dir2FwdDir1;
+                        return StdRegions::eDir1FwdDir2_Dir2FwdDir1;
                         break;
                     case 1:
-                        returnval = StdRegions::eDir1BwdDir1_Dir2FwdDir2;
+                        return StdRegions::eDir1BwdDir1_Dir2FwdDir2;
                         break;
                     case 2:
-                        returnval = StdRegions::eDir1BwdDir2_Dir2BwdDir1;
+                        return StdRegions::eDir1BwdDir2_Dir2BwdDir1;
                         break;
                 }
             }
-            
-            return returnval;
+
+            ASSERTL0(false, "Unable to determine triangle orientation");
+            return StdRegions::eNoOrientation;
         }
         
 

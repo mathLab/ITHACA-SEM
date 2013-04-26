@@ -64,7 +64,8 @@ int main(int argc, char *argv[])
                 vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[1]);
 
                 // choose points to be at evenly spaced points at
-                const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
+                // nplanes points
+                const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
 
@@ -90,10 +91,11 @@ int main(int argc, char *argv[])
 				vSession->LoadParameter("HomModesZ",nzlines,fielddef[0]->m_numModes[2]);
 
                 // choose points to be at evenly spaced points at
-                const LibUtilities::PointsKey PkeyY(nylines+1,LibUtilities::ePolyEvenlySpaced);
+                // nplanes points
+                const LibUtilities::PointsKey PkeyY(nylines,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  BkeyY(fielddef[0]->m_basis[1],nylines,PkeyY);
 
-                const LibUtilities::PointsKey PkeyZ(nzlines+1,LibUtilities::ePolyEvenlySpaced);
+                const LibUtilities::PointsKey PkeyZ(nzlines,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  BkeyZ(fielddef[0]->m_basis[2],nzlines,PkeyZ);
 
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
@@ -136,8 +138,8 @@ int main(int argc, char *argv[])
 				vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[2]);
 
                 // choose points to be at evenly spaced points at
-                // nplanes + 1 points
-                const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
+                // nplanes points
+                const LibUtilities::PointsKey Pkey(nplanes,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[2],nplanes,Pkey);
                 NekDouble lz = fielddef[0]->m_homogeneousLengths[0];
 

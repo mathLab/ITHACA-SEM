@@ -246,6 +246,22 @@ namespace Nektar
             return 4;
         }
 
+        int TetGeom::v_GetDir(const int faceidx, const int facedir) const
+        {
+            if (faceidx == 0)
+            {
+                return facedir;
+            }
+            else if (faceidx == 1)
+            {
+                return 2 * facedir;
+            }
+            else
+            {
+                return 1 + facedir;
+            }
+        }
+
         int TetGeom::v_GetVertexEdgeMap(const int i, const int j) const
 	{
 	    const unsigned int VertexEdgeConnectivity[][3] = {

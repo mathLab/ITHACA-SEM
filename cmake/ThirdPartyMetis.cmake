@@ -6,7 +6,7 @@ IF (THIRDPARTY_BUILD_METIS)
     EXTERNALPROJECT_ADD(
         modmetis-5.1.0
         PREFIX ${TPSRC}
-        URL http://ae-nektar.ae.ic.ac.uk/~dmoxey/test/metis-5.1.0.tar.gz
+        URL http://xyloid.org/metis-5.1.0.tar.gz
         URL_MD5 "c48620f7b5b1cebebc00ccbf73fca5d0"
         DOWNLOAD_DIR ${TPSRC}
         CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist -DCMAKE_C_FLAGS:STRING=-fPIC -DGKLIB_PATH:PATH=${TPSRC}/src/modmetis-5.1.0/GKlib ${TPSRC}/src/modmetis-5.1.0

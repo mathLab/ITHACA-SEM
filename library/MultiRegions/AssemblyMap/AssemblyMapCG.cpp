@@ -210,20 +210,9 @@ namespace Nektar
                     pIt = perEdges.find(meshEdgeId);
                     if (pIt != perEdges.end())
                     {
-                        if (nDim == 2)
+                        for (k = 0; k < pIt->second.size(); ++k)
                         {
-                            PeriodicEntity ent = pIt->second[0];
-                            if (ent.isLocal == false)
-                            {
-                                meshEdgeId = min(meshEdgeId, ent.id);
-                            }
-                        }
-                        else
-                        {
-                            for (k = 0; k < pIt->second.size(); ++k)
-                            {
-                                meshEdgeId = min(meshEdgeId, pIt->second[k].id);
-                            }
+                            meshEdgeId = min(meshEdgeId, pIt->second[k].id);
                         }
                     }
 
@@ -254,11 +243,7 @@ namespace Nektar
                     pIt = perFaces.find(meshFaceId);
                     if (pIt != perFaces.end())
                     {
-                        PeriodicEntity ent = pIt->second[0];
-                        if (ent.isLocal == false)
-                        {
-                            meshFaceId = min(meshFaceId, ent.id);
-                        }
+                        meshFaceId = min(meshFaceId, pIt->second[0].id);
                     }
 
                     for(k = 0; k < dof; ++k)

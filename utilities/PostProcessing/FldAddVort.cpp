@@ -27,13 +27,13 @@ int main(int argc, char *argv[])
 
     //----------------------------------------------
     // Read in mesh from input file
-    string meshfile(argv[argc-2]);
+    string meshfile(argv[argc-3]);
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);//meshfile);
     //----------------------------------------------
 
     //----------------------------------------------
     // Import field file.
-    string fieldfile(argv[argc-1]);
+    string fieldfile(argv[argc-2]);
     vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
     LibUtilities::Import(fieldfile,fielddef,fielddata);

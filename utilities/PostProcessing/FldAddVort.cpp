@@ -45,32 +45,32 @@ int main(int argc, char *argv[])
     // Define Expansion
     int expdim  = graphShPt->GetMeshDimension();
     int nfields = fielddef[0]->m_fields.size();
-    int addfields = (nfields == 3)? 3:1;
+    int addfields = (nfields == 4)? 3:1;
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp(nfields + addfields);
-	
+
     switch(expdim)
     {
     case 1:
         {
             ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 2,"Quasi-3D approach is only set up for 1 or 2 homogeneous directions");
-            
+
             if(fielddef[0]->m_numHomogeneousDir == 1)
             {
                 MultiRegions::ExpList2DHomogeneous1DSharedPtr Exp2DH1;
 
                 // Define Homogeneous expansion
                 //int nplanes = fielddef[0]->m_numModes[1];
-                int nplanes; 
+                int nplanes;
                 vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[1]);
-                
+
                 // choose points to be at evenly spaced points at
                 const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
-                
+
                 Exp2DH1 = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(vSession,Bkey,ly,useFFT,dealiasing,graphShPt);
                 Exp[0] = Exp2DH1;
-                
+
                 for(i = 1; i < nfields; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList2DHomogeneous1D>::AllocateSharedPtr(*Exp2DH1);
@@ -79,29 +79,29 @@ int main(int argc, char *argv[])
             else if(fielddef[0]->m_numHomogeneousDir == 2)
             {
                 MultiRegions::ExpList3DHomogeneous2DSharedPtr Exp3DH2;
-		
+
                 // Define Homogeneous expansion
                 //int nylines = fielddef[0]->m_numModes[1];
                 //int nzlines = fielddef[0]->m_numModes[2];
-				
+
 				int nylines;
 				int nzlines;
 				vSession->LoadParameter("HomModesY",nylines,fielddef[0]->m_numModes[1]);
 				vSession->LoadParameter("HomModesZ",nzlines,fielddef[0]->m_numModes[2]);
-		
+
                 // choose points to be at evenly spaced points at
                 const LibUtilities::PointsKey PkeyY(nylines+1,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  BkeyY(fielddef[0]->m_basis[1],nylines,PkeyY);
-                
+
                 const LibUtilities::PointsKey PkeyZ(nzlines+1,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  BkeyZ(fielddef[0]->m_basis[2],nzlines,PkeyZ);
-                
+
                 NekDouble ly = fielddef[0]->m_homogeneousLengths[0];
                 NekDouble lz = fielddef[0]->m_homogeneousLengths[1];
-		
+
                 Exp3DH2 = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(vSession,BkeyY,BkeyZ,ly,lz,useFFT,dealiasing,graphShPt);
                 Exp[0] = Exp3DH2;
-		
+
                 for(i = 1; i < nfields; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList3DHomogeneous2D>::AllocateSharedPtr(*Exp3DH2);
@@ -131,8 +131,8 @@ int main(int argc, char *argv[])
 
                 // Define Homogeneous expansion
                 //int nplanes = fielddef[0]->m_numModes[2];
-				
-				int nplanes; 
+
+				int nplanes;
 				vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[2]);
 
                 // choose points to be at evenly spaced points at
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
                 Exp2D = MemoryManager<MultiRegions::ExpList2D>
                                                         ::AllocateSharedPtr(vSession,graphShPt);
                 Exp[0] =  Exp2D;
-                
+
                 for(i = 1; i < nfields + addfields; ++i)
                 {
                     Exp[i] = MemoryManager<MultiRegions::ExpList2D>
@@ -201,12 +201,12 @@ int main(int argc, char *argv[])
     //----------------------------------------------
 
     //----------------------------------------------
-    // Compute gradients of fields 
-    ASSERTL0(nfields >= 2, "Need two fields (u,v) to add reentricity");
+    // Compute gradients of fields
+    ASSERTL0(nfields >= 3, "Need two fields (u,v) to add reentricity");
     int nq = Exp[0]->GetNpoints();
     Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
     Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
-    
+
     for(i = 0; i < nfields*nfields; ++i)
     {
         grad[i] = Array<OneD, NekDouble>(nq);
@@ -216,9 +216,9 @@ int main(int argc, char *argv[])
     {
         outfield[i] = Array<OneD, NekDouble>(nq);
     }
-    
+
     // Calculate Gradient & Vorticity
-    if(nfields == 2)
+    if(nfields == 3)
     {
         for(i = 0; i < nfields; ++i)
         {
@@ -245,21 +245,21 @@ int main(int argc, char *argv[])
         Vmath::Vmul (nq,grad[1],1,grad[nfields],1,outfield[2],1);
         Vmath::Vvtvm(nq,grad[0],1,grad[nfields+1],1,outfield[2],1,outfield[2],1);
     }
-    
+
     for (i = 0; i < addfields; ++i)
     {
         Exp[nfields + i]->FwdTrans(outfield[i], Exp[nfields+i]->UpdateCoeffs());
     }
-    
+
     //-----------------------------------------------
     // Write solution to file with additional computed fields
     string   out(argv[argc-1]);
     std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
         = Exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-    
+
     vector<string > outname;
-    
+
     if(addfields == 1)
     {
         outname.push_back("W_z");

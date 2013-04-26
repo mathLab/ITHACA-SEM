@@ -345,7 +345,7 @@ namespace Nektar
                      * DisContField2D::GetPeriodicEdges. We must therefore
                      * reverse the orientation of precisely one of the two
                      * edges so that the sign array is correctly populated.
-                     */ 
+                     */
                     it = periodicEdgesId.find(meshEdgeId);
                     if (it                    != periodicEdgesId.end()  &&
                         it->second[0].orient  == StdRegions::eBackwards &&

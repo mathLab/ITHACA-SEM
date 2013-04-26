@@ -377,7 +377,7 @@ namespace Nektar
                     }
                 }
             }
-           
+
             // Use the mapping to determine the eight alignment options between
             // faces.
             if (vmap[1] == (vmap[0]+1) % 4)
@@ -388,13 +388,13 @@ namespace Nektar
                         return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
                         break;
                     case 1:
-                        return StdRegions::eDir1FwdDir2_Dir2BwdDir1;
+                        return StdRegions::eDir1BwdDir2_Dir2FwdDir1;
                         break;
                     case 2:
                         return StdRegions::eDir1BwdDir1_Dir2BwdDir2;
                         break;
                     case 3:
-                        return StdRegions::eDir1BwdDir2_Dir2FwdDir1;
+                        return StdRegions::eDir1FwdDir2_Dir2BwdDir1;
                         break;
                 }
             }

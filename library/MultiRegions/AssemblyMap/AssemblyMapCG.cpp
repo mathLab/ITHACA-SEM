@@ -220,7 +220,6 @@ namespace Nektar
                         }
                         else
                         {
-                            ASSERTL0(false, "not implemented yet");
                             for (k = 0; k < pIt->second.size(); ++k)
                             {
                                 meshEdgeId = min(meshEdgeId, pIt->second[k].id);
@@ -251,6 +250,16 @@ namespace Nektar
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
                     dof = locExpansion->GetFaceIntNcoeffs(j);
                     meshFaceId = (locExpansion->GetGeom3D())->GetFid(j);
+
+                    pIt = perFaces.find(meshFaceId);
+                    if (pIt != perFaces.end())
+                    {
+                        PeriodicEntity ent = pIt->second[0];
+                        if (ent.isLocal == false)
+                        {
+                            meshFaceId = min(meshFaceId, ent.id);
+                        }
+                    }
 
                     for(k = 0; k < dof; ++k)
                     {

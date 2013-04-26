@@ -686,7 +686,7 @@ namespace Nektar
                          LibUtilities::BasisKey QuadBa
                                  = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,0);
                          LibUtilities::BasisKey QuadBb
-                                 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,0);
+                                 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,1);
 
                          quad = MemoryManager<LocalRegions::QuadExp>
                              ::AllocateSharedPtr(QuadBa,QuadBb,

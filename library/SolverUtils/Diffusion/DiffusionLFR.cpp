@@ -86,6 +86,70 @@ namespace Nektar
             v_SetupMetrics(pSession, pFields);
             v_SetupCFunctions(pSession, pFields);
             v_SetupInterpolationMatrices(pSession, pFields);
+            
+            // Initialising arrays
+            int i, j;
+            int nConvectiveFields = pFields.num_elements();
+            int nDim         = pFields[0]->GetCoordim(0);
+            int nSolutionPts = pFields[0]->GetTotPoints();
+            int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
+            
+            m_IF1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
+                                                            nConvectiveFields);
+            m_DU1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
+                                                            nConvectiveFields);
+            m_DFC1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
+                                                            nConvectiveFields);
+            m_BD1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
+                                                            nConvectiveFields);
+            m_D1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
+                                                            nConvectiveFields);
+            m_DD1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
+                                                            nConvectiveFields);
+            m_IF2 = Array<OneD, Array<OneD, NekDouble> >   (nConvectiveFields);
+            m_DFC2 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
+                                                            nConvectiveFields);
+            m_divFD = Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            m_divFC = Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            
+            m_tmp1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
+                                                            nConvectiveFields);
+            m_tmp2 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
+                                                            nConvectiveFields);
+            
+
+            
+            for (i = 0; i < nConvectiveFields; ++i)
+            {
+                m_IF1[i]  = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                m_DU1[i]  = Array<OneD, Array<OneD, NekDouble> >(nDim);                
+                m_DFC1[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                m_BD1[i]  = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                m_D1[i]   = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                m_DD1[i]  = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                m_IF2[i]  = Array<OneD, NekDouble>(nTracePts, 0.0);
+                m_DFC2[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                m_divFD[i]  = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+                m_divFC[i]  = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+
+                m_tmp1[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                m_tmp2[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
+
+                for (j = 0; j < nDim; ++j)
+                {
+                    m_IF1[i][j]  = Array<OneD, NekDouble>(nTracePts, 0.0);
+                    m_DU1[i][j]  = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+                    m_DFC1[i][j] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+                    m_BD1[i][j] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+                    m_D1[i][j]   = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+                    m_DD1[i][j]  = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+                    m_DFC2[i][j] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+                    
+                    m_tmp1[i][j]  = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+                    m_tmp2[i][j]  = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+                }
+            }
+
         }
         
         /**
@@ -108,22 +172,54 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
-            int n;
-            int nquad0, nquad1, nquad2;
-            int nElements = pFields[0]->GetExpSize();            
-            int nDim      = pFields[0]->GetCoordim(0);
-            Array<OneD, LibUtilities::BasisSharedPtr> base;
-            Array<OneD, NekDouble> auxArray1;
+            int i, n;
+            int nquad0, nquad1;
+            int phys_offset;
+            int nLocalSolutionPts;
+            int nElements    = pFields[0]->GetExpSize();            
+            int nDimensions  = pFields[0]->GetCoordim(0);
+            int nSolutionPts = pFields[0]->GetTotPoints();
+            int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
             
-            switch (nDim)
+            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
+            for(i = 0; i < nDimensions; ++i)
+            {
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+            }
+            pFields[0]->GetTrace()->GetNormals(m_traceNormals);
+            
+            Array<TwoD, const NekDouble> gmat;
+            Array<OneD, const NekDouble> jac;
+            
+            m_jac  = Array<OneD, NekDouble>(nSolutionPts);
+            
+            Array<OneD, NekDouble> auxArray1;
+            Array<OneD, LibUtilities::BasisSharedPtr> base;
+            
+            switch (nDimensions)
             {
                 case 1:
                 {
-                    // nothing to do for 1D problems
+                    for (n = 0; n < nElements; ++n) 
+                    {
+                        nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
+                        phys_offset = pFields[0]->GetPhys_Offset(n);
+                        jac = pFields[0]->GetExp(n)->GetGeom1D()->GetJac();
+                        for (i = 0; i < nLocalSolutionPts; ++i)
+                        {
+                            m_jac[i+phys_offset] = jac[0];
+                        }
+                    }
                     break;
                 }
                 case 2:
                 {
+                    m_gmat = Array<OneD, Array<OneD, NekDouble> >(4);
+                    m_gmat[0] = Array<OneD, NekDouble>(nSolutionPts);
+                    m_gmat[1] = Array<OneD, NekDouble>(nSolutionPts);
+                    m_gmat[2] = Array<OneD, NekDouble>(nSolutionPts);
+                    m_gmat[3] = Array<OneD, NekDouble>(nSolutionPts);
+                    
                     m_Q2D_e0 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     m_Q2D_e1 = Array<OneD, Array<OneD, NekDouble> >(nElements);
                     m_Q2D_e2 = Array<OneD, Array<OneD, NekDouble> >(nElements);
@@ -142,13 +238,43 @@ namespace Nektar
                         
                         // Extract the Q factors at each edge point
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
-                                                0, auxArray1 = m_Q2D_e0[n]);
+                            0, auxArray1 = m_Q2D_e0[n]);
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
-                                                1, auxArray1 = m_Q2D_e1[n]);
+                            1, auxArray1 = m_Q2D_e1[n]);
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
-                                                2, auxArray1 = m_Q2D_e2[n]);
+                            2, auxArray1 = m_Q2D_e2[n]);
                         pFields[0]->GetExp(n)->GetEdgeQFactors(
-                                                3, auxArray1 = m_Q2D_e3[n]);
+                            3, auxArray1 = m_Q2D_e3[n]);
+                        
+                        nLocalSolutionPts = pFields[0]->GetExp(n)->GetTotPoints();
+                        phys_offset = pFields[0]->GetPhys_Offset(n);
+                        
+                        jac  = pFields[0]->GetExp(n)->GetGeom2D()->GetJac();
+                        gmat = pFields[0]->GetExp(n)->GetGeom2D()->GetGmat();
+                        
+                        if (pFields[0]->GetExp(n)->GetGeom2D()->GetGtype()
+                            == SpatialDomains::eDeformed)
+                        {
+                            for (i = 0; i < nLocalSolutionPts; ++i)
+                            {
+                                m_jac[i+phys_offset]     = jac[i];
+                                m_gmat[0][i+phys_offset] = gmat[0][i];
+                                m_gmat[1][i+phys_offset] = gmat[1][i];
+                                m_gmat[2][i+phys_offset] = gmat[2][i];
+                                m_gmat[3][i+phys_offset] = gmat[3][i];
+                            }
+                        }
+                        else
+                        {
+                            for (i = 0; i < nLocalSolutionPts; ++i)
+                            {
+                                m_jac[i+phys_offset]     = jac[0];
+                                m_gmat[0][i+phys_offset] = gmat[0][0];
+                                m_gmat[1][i+phys_offset] = gmat[1][0];
+                                m_gmat[2][i+phys_offset] = gmat[2][0];
+                                m_gmat[3][i+phys_offset] = gmat[3][0];
+                            }  
+                        }
                     }
                     break;
                 }
@@ -203,9 +329,9 @@ namespace Nektar
                     
                     for (n = 0; n < nElements; ++n)
                     {
-                        base      = pFields[0]->GetExp(n)->GetBase();
-                        nquad0    = base[0]->GetNumPoints();
-                        nmodes0   = base[0]->GetNumModes();
+                        base    = pFields[0]->GetExp(n)->GetBase();
+                        nquad0  = base[0]->GetNumPoints();
+                        nmodes0 = base[0]->GetNumModes();
                         Array<OneD, const NekDouble> z0;
                         Array<OneD, const NekDouble> w0;
                         
@@ -728,7 +854,7 @@ namespace Nektar
                     {                                                      
                         for (n = 0; n < nElements; ++n)
                         {
-                            base    = pFields[0]->GetExp(n)->GetBase();
+                            base = pFields[0]->GetExp(n)->GetBase();
                             Array<OneD, NekDouble> coords_m(3, 0.0);
                             Array<OneD, NekDouble> coords_p(3, 0.0);
                             coords_m[0] = -1.0;
@@ -736,7 +862,6 @@ namespace Nektar
                             
                             m_Ixm = base[0]->GetI(coords_m);;
                             m_Ixp = base[0]->GetI(coords_p);;
-                            
                         }
                         break;
                     }
@@ -769,12 +894,11 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            //cout<<setprecision(16);
-            int i, j, n, z;
-            int nLocalSolutionPts, phys_offset;
-            Array<TwoD, const NekDouble> gmat;
-            Array<OneD, const NekDouble> jac;
-            Array<OneD,       NekDouble> auxArray1, auxArray2, auxArray3;
+            int i, j, n;
+            int phys_offset;
+            //Array<TwoD, const NekDouble> gmat;
+            //Array<OneD, const NekDouble> jac;
+            Array<OneD,       NekDouble> auxArray1, auxArray2;
                         
             LibUtilities::BasisSharedPtr Basis;
             Basis = fields[0]->GetExp(0)->GetBasis(0);
@@ -782,82 +906,17 @@ namespace Nektar
             int nElements    = fields[0]->GetExpSize();            
             int nDim         = fields[0]->GetCoordim(0);                        
             int nSolutionPts = fields[0]->GetTotPoints();
-            int nTracePts    = fields[0]->GetTrace()->GetTotPoints();
-            
-            // Setting up the normals
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for (i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
-            }
-            fields[0]->GetTrace()->GetNormals(m_traceNormals);
-                        
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > iuFluxO1(
-                                                            nConvectiveFields);
-            for (i = 0; i < nConvectiveFields; ++i)
-            {
-                iuFluxO1[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
-
-                for (j = 0; j < nDim; ++j)
-                {
-                    iuFluxO1[i][j] = Array<OneD, NekDouble>(nTracePts, 0.0);
-                }
-            }
-
+                   
             // Compute interface numerical fluxes for inarray in physical space 
-            v_NumFluxforScalar(fields, inarray, iuFluxO1);
+            v_NumFluxforScalar(fields, inarray, m_IF1);
 
             switch(nDim)
             {
                 // 1D problems 
                 case 1:
-                {
-                    // Variable initialisation
-                    Array<OneD, Array<OneD, NekDouble> > DinarrayO1(
-                                                            nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> > DCorrFluxO1(
-                                                            nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> > stdDCorrFluxO1(
-                                                            nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> > derivativesO1(
-                                                            nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> >iqFluxO2(
-                                                            nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> > stdDCorrFluxO2(
-                                                            nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> > DderivativesO1(
-                                                            nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> > DCorrFluxO2(
-                                                            nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> > derivativesO2(
-                                                            nConvectiveFields);
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >tmp(
-                                                            nConvectiveFields);
-                    
+                {   
                     for (i = 0; i < nConvectiveFields; ++i)
                     {
-                        DinarrayO1[i]     = Array<OneD, NekDouble>(
-                                                            nSolutionPts, 0.0);
-                        DCorrFluxO1[i]    = Array<OneD, NekDouble>(
-                                                            nSolutionPts, 0.0);
-                        stdDCorrFluxO1[i] = Array<OneD, NekDouble>(
-                                                            nSolutionPts, 0.0);
-                        derivativesO1[i]  = Array<OneD, NekDouble>(
-                                                            nSolutionPts, 0.0);
-                        iqFluxO2[i]       = Array<OneD, NekDouble>(
-                                                            nTracePts, 0.0);
-                        stdDCorrFluxO2[i] = Array<OneD, NekDouble>(
-                                                            nSolutionPts, 0.0);
-                        DderivativesO1[i] = Array<OneD, NekDouble>(
-                                                            nSolutionPts, 0.0);
-                        DCorrFluxO2[i]    = Array<OneD, NekDouble>(
-                                                            nSolutionPts, 0.0);
-                        derivativesO2[i]  = Array<OneD, NekDouble>(
-                                                            nSolutionPts, 0.0);
-                        
-                        tmp[i] = Array<OneD, Array<OneD, NekDouble> >(1);
-                        tmp[i][0] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
-
                         // Computing the physical first-order discountinuous 
                         // derivative
                         for (n = 0; n < nElements; n++)
@@ -866,43 +925,31 @@ namespace Nektar
                             
                             fields[i]->GetExp(n)->PhysDeriv(0, 
                                 auxArray1 = inarray[i] + phys_offset, 
-                                auxArray2 = DinarrayO1[i] + phys_offset);
+                                auxArray2 = m_DU1[i][0] + phys_offset);
                         }
                         
                         // Computing the standard first-order correction 
                         // derivative
                         v_DerCFlux_1D(nConvectiveFields, fields, inarray[i], 
-                                      iuFluxO1[i][0], stdDCorrFluxO1[i]);
+                                      m_IF1[i][0], m_DFC1[i][0]);
+
+                        // Back to the physical space using global operations
+                        Vmath::Vdiv(nSolutionPts, &m_DFC1[i][0][0], 1, 
+                                    &m_jac[0], 1, &m_DFC1[i][0][0], 1);
+                        Vmath::Vdiv(nSolutionPts, &m_DFC1[i][0][0], 1, 
+                                    &m_jac[0], 1, &m_DFC1[i][0][0], 1);
                         
-                        // Computing the first-order derivative of the auxiliary
-                        // equation(s) in the physical space
-                        for (n = 0; n < nElements; n++) 
-                        {
-                            nLocalSolutionPts = fields[0]->
-                                                    GetExp(n)->GetTotPoints();
-                            phys_offset = fields[0]->GetPhys_Offset(n);
-                            jac = fields[0]->GetExp(n)->GetGeom1D()->GetJac();
-                            
-                            Vmath::Smul(nLocalSolutionPts, 
-                                        (1/jac[0])*(1/jac[0]), 
-                                        &stdDCorrFluxO1[i][phys_offset], 1, 
-                                        &DCorrFluxO1[i][phys_offset], 1);
-                            
-                            Vmath::Vadd(nLocalSolutionPts, 
-                                        &DCorrFluxO1[i][phys_offset], 1, 
-                                        &DinarrayO1[i][phys_offset], 1, 
-                                        &derivativesO1[i][phys_offset], 1);
-                            
-                            Vmath::Vcopy(nLocalSolutionPts,
-                                         &derivativesO1[i][phys_offset], 1,
-                                         &tmp[i][0]
-                                         [phys_offset], 1);
-                        }
+                        // Computing total first order derivatives
+                        Vmath::Vadd(nSolutionPts, &m_DFC1[i][0][0], 1, 
+                                    &m_DU1[i][0][0], 1, &m_D1[i][0][0], 1);
+
+                        Vmath::Vcopy(nSolutionPts, &m_D1[i][0][0], 1,
+                                     &m_tmp1[i][0][0], 1);
                     }
 
-                    // Computing interface numerical fluxes for derivativesO1 
+                    // Computing interface numerical fluxes for m_D1 
                     // in physical space 
-                    v_NumFluxforVector(fields, inarray, tmp, iqFluxO2);
+                    v_NumFluxforVector(fields, inarray, m_tmp1, m_IF2);
                                          
                     for (i = 0; i < nConvectiveFields; ++i)
                     {
@@ -913,559 +960,198 @@ namespace Nektar
                             phys_offset = fields[0]->GetPhys_Offset(n);
 
                             fields[i]->GetExp(n)->PhysDeriv(0, 
-                                auxArray1 = derivativesO1[i] + phys_offset, 
-                                auxArray2 = DderivativesO1[i] + phys_offset);
+                                auxArray1 = m_D1[i][0] + phys_offset, 
+                                auxArray2 = m_DD1[i][0] + phys_offset);
                         }
                         
                         // Computing the standard second-order correction 
                         // derivative
-                        v_DerCFlux_1D(nConvectiveFields,
-                                      fields, 
-                                      derivativesO1[i], 
-                                      iqFluxO2[i],
-                                      stdDCorrFluxO2[i]);
-                        
-                        // Computing the second-order derivative
-                        for (n = 0; n < nElements; n++) 
-                        {
-                            nLocalSolutionPts = fields[0]->
-                                                    GetExp(n)->GetTotPoints();
-                            phys_offset = fields[0]->GetPhys_Offset(n);
-                            jac = fields[0]->GetExp(n)->GetGeom1D()->GetJac();
-                            
-                            Vmath::Smul(nLocalSolutionPts, 
-                                        (1/jac[0])*(1/jac[0]),
-                                        &stdDCorrFluxO2[i][phys_offset], 1, 
-                                        &DCorrFluxO2[i][phys_offset], 1);
-                                                        
-                            Vmath::Vadd(nLocalSolutionPts, 
-                                        &DCorrFluxO2[i][phys_offset], 1, 
-                                        &DderivativesO1[i][phys_offset], 1, 
-                                        &outarray[i][phys_offset], 1); 
-                        }
+                        v_DerCFlux_1D(nConvectiveFields, fields, m_D1[i][0], 
+                                      m_IF2[i], m_DFC2[i][0]);
+
+                        // Back to the physical space using global operations
+                        Vmath::Vdiv(nSolutionPts, &m_DFC2[i][0][0], 1, 
+                                    &m_jac[0], 1, &m_DFC2[i][0][0], 1);
+                        Vmath::Vdiv(nSolutionPts, &m_DFC2[i][0][0], 1, 
+                                    &m_jac[0], 1, &m_DFC2[i][0][0], 1);
+                                                
+                        // Adding the total divergence to outarray (RHS)
+                        Vmath::Vadd(nSolutionPts, &m_DFC2[i][0][0], 1, 
+                                    &m_DD1[i][0][0], 1, &outarray[i][0], 1);
                     }
                     break;
                 }
                 // 2D problems 
                 case 2:
-                { 
-                    // Variable initialisation
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  
-                                        stdDinarrayO1(nConvectiveFields);
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  
-                                        DinarrayO1(nConvectiveFields);
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                                        stdDCorrFluxO1(nConvectiveFields);
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                        DCorrFluxO1(nConvectiveFields);
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                        derivativesO1(nConvectiveFields);
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                        BderivativesO1(nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> >
-                                        iqFluxO2(nConvectiveFields);
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                        stdDderivativesO1(nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> > 
-                                        divFD(nConvectiveFields);
-                    Array<OneD, Array<OneD, NekDouble> > 
-                                        divFC(nConvectiveFields);
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                        tmp(nConvectiveFields);
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                        tmp1(nConvectiveFields);
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                        tmp2(nConvectiveFields);
-                    
-                    for (i = 0; i < nConvectiveFields; ++i)
-                    {
-                        stdDinarrayO1[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                nDim);
-                        DinarrayO1[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                nDim);
-                        stdDCorrFluxO1[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                nDim);
-                        DCorrFluxO1[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                nDim);
-                        derivativesO1[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                nDim);
-                        BderivativesO1[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                nDim);
-                        tmp[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                nDim);
-                        tmp1[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                nDim);
-                        tmp2[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                nDim);
-                        
-                        stdDderivativesO1[i] = 
-                        Array<OneD, Array<OneD, NekDouble> >(nDim); 
-                        iqFluxO2[i] = Array<OneD, NekDouble>(nTracePts, 0.0);
-                        divFD[i] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
-                        divFC[i] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
-
-                        for (j = 0; j < nDim; ++j)
-                        {
-                            stdDinarrayO1[i][j] = 
-                            Array<OneD, NekDouble>(nSolutionPts, 0.0);
-                            DinarrayO1[i][j] = 
-                            Array<OneD, NekDouble>(nSolutionPts, 0.0);
-                            stdDCorrFluxO1[i][j] = 
-                            Array<OneD, NekDouble>(nSolutionPts, 0.0);
-                            DCorrFluxO1[i][j] = 
-                            Array<OneD, NekDouble>(nSolutionPts, 0.0); 
-                            derivativesO1[i][j] = 
-                            Array<OneD, NekDouble>(nSolutionPts, 0.0);
-                            BderivativesO1[i][j] = 
-                            Array<OneD, NekDouble>(nSolutionPts, 0.0);
-                            tmp[i][j] = 
-                            Array<OneD, NekDouble>(nSolutionPts, 0.0);
-                            tmp1[i][j] = 
-                            Array<OneD, NekDouble>(nSolutionPts, 0.0);
-                            tmp2[i][j] = 
-                            Array<OneD, NekDouble>(nSolutionPts, 0.0);
-                            stdDderivativesO1[i][j] = 
-                            Array<OneD, NekDouble>(nSolutionPts, 0.0);
-                        }
-                    }
-                    /*
+                {                       
                     for(i = 0; i < nConvectiveFields; ++i)
                     {               
                         for (j = 0; j < nDim; ++j)
-                        {
-                            // Computing the physical first-order discountinuous
-                            // derivatives 
-                            for (n = 0; n < nElements; n++)
+                        {                             
+                            // Temporary vectors
+                            Array<OneD, NekDouble> u1_hat(nSolutionPts, 0.0);
+                            Array<OneD, NekDouble> u2_hat(nSolutionPts, 0.0);
+                             
+                            if (j == 0) 
                             {
-                                phys_offset = fields[0]->GetPhys_Offset(n);
-
-                                fields[i]->GetExp(n)->PhysDeriv(j, 
-                                auxArray1 = inarray[i] + phys_offset, 
-                                auxArray2 = DinarrayO1[i][j] + phys_offset); 
+                                Vmath::Vmul(nSolutionPts, &inarray[i][0], 1,
+                                            &m_gmat[0][0], 1, &u1_hat[0], 1);
+                                     
+                                Vmath::Vmul(nSolutionPts, &u1_hat[0], 1, 
+                                            &m_jac[0], 1, &u1_hat[0], 1);
+                                     
+                                Vmath::Vmul(nSolutionPts, &inarray[i][0], 1,
+                                            &m_gmat[1][0], 1, &u2_hat[0], 1);
+                                     
+                                Vmath::Vmul(nSolutionPts, &u2_hat[0], 1, 
+                                            &m_jac[0], 1, &u2_hat[0], 1);
                             }
-                                                    
-                            // Computing the standard first-order correction 
-                            // derivatives
-                            v_DerCFlux_2D(nConvectiveFields, j, fields, 
-                                          inarray[i], iuFluxO1[i][j], 
-                                          stdDCorrFluxO1[i][j]);
-                        }
-                     */
-                    
-                    for(i = 0; i < nConvectiveFields; ++i)
-                    {               
-                        for (j = 0; j < nDim; ++j)
-                        {
-                            // Computing the physical first-order discountinuous
-                            // derivatives 
+                            else if (j == 1)
+                            {
+                                Vmath::Vmul(nSolutionPts, &inarray[i][0], 1,
+                                            &m_gmat[2][0], 1, &u1_hat[0], 1);
+                                     
+                                Vmath::Vmul(nSolutionPts, &u1_hat[0], 1, 
+                                            &m_jac[0], 1, &u1_hat[0], 1);
+                                     
+                                Vmath::Vmul(nSolutionPts, &inarray[i][0], 1,
+                                            &m_gmat[3][0], 1, &u2_hat[0], 1);
+                                     
+                                Vmath::Vmul(nSolutionPts, &u2_hat[0], 1, 
+                                            &m_jac[0], 1, &u2_hat[0], 1);
+                            }
+
                             for (n = 0; n < nElements; n++)
                             { 
-                                // Discontinuous flux
-                                nLocalSolutionPts = fields[0]->GetExp(n)->
-                                GetTotPoints();
                                 phys_offset = fields[0]->GetPhys_Offset(n);
-                                
-                                jac  = fields[0]->GetExp(n)->GetGeom2D()->
-                                GetJac();
-                                gmat = fields[0]->GetExp(n)->GetGeom2D()->
-                                GetGmat();
-                                
-                                // Temporary vectors
-                                Array<OneD, NekDouble> u1_hat(
-                                                    nLocalSolutionPts, 0.0);
-                                Array<OneD, NekDouble> u2_hat(
-                                                    nLocalSolutionPts, 0.0);
-                                
-                                switch (j)
-                                {
-                                    case 0:
-                                    {
-                                        if (fields[0]->GetExp(n)->GetGeom2D()->
-                                            GetGtype() == 
-                                            SpatialDomains::eDeformed)
-                                        {
-                                            for (z = 0; z < nLocalSolutionPts; 
-                                                 z++)
-                                            {
-                                                u1_hat[z] =
-                                                (inarray[i][z+phys_offset]
-                                                 * gmat[0][z]) * jac[z];
-                                                
-                                                u2_hat[z] =
-                                                (inarray[i][z+phys_offset]
-                                                 * gmat[1][z]) * jac[z];
-                                            }
-                                        }
-                                        else
-                                        {
-                                            for (z = 0; z < nLocalSolutionPts; 
-                                                 z++)
-                                            {
-                                                u1_hat[z] =
-                                                (inarray[i][z+phys_offset]
-                                                 * gmat[0][0]) * jac[0];
-                                                
-                                                u2_hat[z] =
-                                                (inarray[i][z+phys_offset]
-                                                 * gmat[1][0])*jac[0];
-                                            }
-                                        }
-                                        break;
-                                    }
-                                    case 1:
-                                    {
-                                        if (fields[0]->GetExp(n)->GetGeom2D()->
-                                            GetGtype() == 
-                                            SpatialDomains::eDeformed)
-                                        {
-                                            for (z = 0; z < nLocalSolutionPts; 
-                                                 z++)
-                                            {
-                                                u1_hat[z] =
-                                                (inarray[i][z+phys_offset]
-                                                 * gmat[2][z]) * jac[z];
-                                                
-                                                u2_hat[z] =
-                                                (inarray[i][z+phys_offset]
-                                                 * gmat[3][z]) * jac[z];
-                                            }
-                                        }
-                                        else
-                                        {
-                                            for (z = 0; z < nLocalSolutionPts; 
-                                                 z++)
-                                            {
-                                                u1_hat[z] =
-                                                (inarray[i][z+phys_offset]
-                                                 * gmat[2][0]) * jac[0];
-                                                
-                                                u2_hat[z] =
-                                                (inarray[i][z+phys_offset]
-                                                 * gmat[3][0])*jac[0];
-                                            }
-                                        }
-                                        break;
-                                    }
-                                }
-                                
+
                                 fields[i]->GetExp(n)->StdPhysDeriv(0,
-                                    auxArray1 = u1_hat,
-                                    auxArray2 = tmp1[i][j] + phys_offset);
+                                    auxArray1 = u1_hat + phys_offset,
+                                    auxArray2 = m_tmp1[i][j] + phys_offset);
                                 
                                 fields[i]->GetExp(n)->StdPhysDeriv(1,
-                                    auxArray1 = u2_hat,
-                                    auxArray2 = tmp2[i][j] + phys_offset);
-                                
-                                
-                                /*fields[i]->GetExp(n)->PhysDeriv(j,
-                                 auxArray1 = inarray[i] + phys_offset,
-                                 auxArray2 = DinarrayO1[i][j] + phys_offset);*/ 
+                                    auxArray1 = u2_hat + phys_offset,
+                                    auxArray2 = m_tmp2[i][j] + phys_offset);
                             }
                             
-                            Vmath::Vadd(nSolutionPts,
-                                        auxArray1 = tmp1[i][j], 1,
-                                        auxArray2 = tmp2[i][j], 1,
-                                        DinarrayO1[i][j], 1);
+                            Vmath::Vadd(nSolutionPts, &m_tmp1[i][j][0], 1,
+                                        &m_tmp2[i][j][0], 1,
+                                        &m_DU1[i][j][0], 1);
                             
-                            // Multiply by the metric terms
-                            for (n = 0; n < nElements; ++n)
-                            {
-                                nLocalSolutionPts = fields[0]->
-                                GetExp(n)->GetTotPoints();
-                                phys_offset = fields[0]->GetPhys_Offset(n);
-                                
-                                jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                                gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
-                                                                
-                                if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype()
-                                    == SpatialDomains::eDeformed)
-                                {
-                                    for (z = 0; z < nLocalSolutionPts; z++)
-                                    {
-                                        DinarrayO1[i][j][phys_offset + z] =
-                                        DinarrayO1[i][j][phys_offset + z]/jac[z];
-                                    }
-                                }
-                                else
-                                {
-                                    Vmath::Smul(nLocalSolutionPts, 1/jac[0],
-                                                auxArray1 = DinarrayO1[i][j]
-                                                + phys_offset, 1,
-                                                auxArray2 = DinarrayO1[i][j]
-                                                + phys_offset, 1);
-                                }
-                            }
-                            
+                            // Divide by the metric jacobian
+                            Vmath::Vdiv(nSolutionPts, &m_DU1[i][j][0], 1,
+                                        &m_jac[0], 1, &m_DU1[i][j][0], 1);
                             
                             // Computing the standard first-order correction 
                             // derivatives
                             v_DerCFlux_2D(nConvectiveFields, j, fields, 
-                                          inarray[i], iuFluxO1[i][j], 
-                                          stdDCorrFluxO1[i][j]);
+                                          inarray[i], m_IF1[i][j], 
+                                          m_DFC1[i][j]);
                         }
                         
                         // Multiplying derivatives by B matrix to get auxiliary 
                         // variables
-                        for (n = 0; n < nElements; n++)
-                        {
-                            nLocalSolutionPts = fields[0]->GetExp(n)->
-                                                                GetTotPoints();
-                            phys_offset = fields[0]->GetPhys_Offset(n);
-                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
-                            jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
+                        for (j = 0; j < nSolutionPts; ++j)
+                        {   
+                            // std(q1)
+                            m_BD1[i][0][j] = 
+                            (m_gmat[0][j]*m_gmat[0][j] + 
+                             m_gmat[2][j]*m_gmat[2][j]) *
+                            m_DFC1[i][0][j] +
+                            (m_gmat[1][j]*m_gmat[0][j] + 
+                             m_gmat[3][j]*m_gmat[2][j]) *
+                            m_DFC1[i][1][j];
                             
-                            if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype() 
-                                == SpatialDomains::eDeformed)
-                                
-                            {                                
-                                for (j = 0; j < nLocalSolutionPts; ++j)
-                                {   
-                                    // std(q1)
-                                    BderivativesO1[i][0][phys_offset+j] =  
-                                    (gmat[0][j]*gmat[0][j] + 
-                                     gmat[2][j]*gmat[2][j]) *
-                                    stdDCorrFluxO1[i][0][phys_offset+j] +
-                                    (gmat[1][j]*gmat[0][j] + 
-                                     gmat[3][j]*gmat[2][j]) *
-                                    stdDCorrFluxO1[i][1][phys_offset+j];
-                                    
-                                    // std(q2)
-                                    BderivativesO1[i][1][phys_offset+j] =  
-                                    (gmat[1][j]*gmat[0][j] + 
-                                     gmat[3][j]*gmat[2][j]) *
-                                    stdDCorrFluxO1[i][0][phys_offset+j] +
-                                    (gmat[1][j]*gmat[1][j] + 
-                                     gmat[3][j]*gmat[3][j]) *
-                                    stdDCorrFluxO1[i][1][phys_offset+j];
-                                }
-                            }
-                            else
-                            {                                
-                                // std(q1)
-                                Vmath::Smul(nLocalSolutionPts, 
-                                (gmat[0][0]*gmat[0][0] + gmat[2][0]*gmat[2][0]), 
-                                &stdDCorrFluxO1[i][0][phys_offset], 1, 
-                                &BderivativesO1[i][0][phys_offset], 1);
-                                
-                                Vmath::Smul(nLocalSolutionPts, 
-                                (gmat[1][0]*gmat[0][0] + gmat[3][0]*gmat[2][0]), 
-                                &stdDCorrFluxO1[i][1][phys_offset], 1, 
-                                &tmp[i][0][phys_offset], 1);
-                                
-                                Vmath::Vadd(nLocalSolutionPts,
-                                &BderivativesO1[i][0][phys_offset], 1,
-                                &tmp[i][0][phys_offset], 1,
-                                &BderivativesO1[i][0][phys_offset], 1);
-                                
-                                // std(q2)
-                                Vmath::Smul(nLocalSolutionPts, 
-                                (gmat[1][0]*gmat[0][0] + gmat[3][0]*gmat[2][0]), 
-                                &stdDCorrFluxO1[i][0][phys_offset], 1, 
-                                &BderivativesO1[i][1][phys_offset], 1);
-                                
-                                Vmath::Smul(nLocalSolutionPts, 
-                                (gmat[1][0]*gmat[1][0] + gmat[3][0]*gmat[3][0]), 
-                                &stdDCorrFluxO1[i][1][phys_offset], 1, 
-                                &tmp[i][1][phys_offset], 1);
-                                
-                                Vmath::Vadd(nLocalSolutionPts,
-                                &BderivativesO1[i][1][phys_offset], 1,
-                                &tmp[i][1][phys_offset], 1,
-                                &BderivativesO1[i][1][phys_offset], 1);
-                            }
+                            // std(q2)
+                            m_BD1[i][1][j] =  
+                            (m_gmat[1][j]*m_gmat[0][j] + 
+                             m_gmat[3][j]*m_gmat[2][j]) *
+                            m_DFC1[i][0][j] +
+                            (m_gmat[1][j]*m_gmat[1][j] + 
+                             m_gmat[3][j]*m_gmat[3][j]) *
+                            m_DFC1[i][1][j];
                         }
-                        
+                                                
                         // Multiplying derivatives by A^(-1) to get back 
                         // into the physical space 
-                        for (n = 0; n < nElements; ++n)
+                        for (j = 0; j < nSolutionPts; j++)
                         {
-                            nLocalSolutionPts = fields[0]->GetExp(n)->
-                                                            GetTotPoints();
-                            phys_offset = fields[0]->GetPhys_Offset(n);
-                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
+                            // q1 = A11^(-1)*std(q1) + A12^(-1)*std(q2)
+                            m_DFC1[i][0][j] = 
+                            m_gmat[3][j] * m_BD1[i][0][j] - 
+                            m_gmat[2][j] * m_BD1[i][1][j];
                             
-                            if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype() 
-                                == SpatialDomains::eDeformed)
-                            {
-                                for (j = 0; j < nLocalSolutionPts; j++)
-                                {
-                                    // q1 = A11^(-1)*std(q1) + A12^(-1)*std(q2)
-                                    stdDCorrFluxO1[i][0][phys_offset+j] = 
-                                    gmat[3][j] * 
-                                    BderivativesO1[i][0][phys_offset+j] - 
-                                    gmat[2][j] * 
-                                    BderivativesO1[i][1][phys_offset+j];
-                                    
-                                    // q2 = A21^(-1)*std(q1) + A22^(-1)*std(q2)
-                                    stdDCorrFluxO1[i][1][phys_offset+j] = 
-                                    gmat[0][j] * 
-                                    BderivativesO1[i][1][phys_offset+j] - 
-                                    gmat[1][j] * 
-                                    BderivativesO1[i][0][phys_offset+j];
-                                }
-                            }
-                            else
-                            {
-                                // q1
-                                Vmath::Smul(nLocalSolutionPts, gmat[3][0], 
-                                        &BderivativesO1[i][0][phys_offset], 1, 
-                                        &stdDCorrFluxO1[i][0][phys_offset], 1);
-                                
-                                Vmath::Smul(nLocalSolutionPts, gmat[2][0], 
-                                        &BderivativesO1[i][1][phys_offset], 1, 
-                                        &tmp[i][0][phys_offset], 1);
-                                
-                                Vmath::Vsub(nLocalSolutionPts, 
-                                        &stdDCorrFluxO1[i][0][phys_offset], 1,
-                                        &tmp[i][0][phys_offset], 1,
-                                        &stdDCorrFluxO1[i][0][phys_offset], 1);
-                                
-                                // q2
-                                Vmath::Smul(nLocalSolutionPts, gmat[1][0], 
-                                        &BderivativesO1[i][0][phys_offset], 1, 
-                                        &stdDCorrFluxO1[i][1][phys_offset], 1);
-                                
-                                Vmath::Smul(nLocalSolutionPts, gmat[0][0], 
-                                        &BderivativesO1[i][1][phys_offset], 1, 
-                                        &tmp[i][1][phys_offset], 1);
-                                
-                                Vmath::Vsub(nLocalSolutionPts, 
-                                        &tmp[i][1][phys_offset], 1,
-                                        &stdDCorrFluxO1[i][1][phys_offset], 1,
-                                        &stdDCorrFluxO1[i][1][phys_offset], 1);
-                            }
+                            // q2 = A21^(-1)*std(q1) + A22^(-1)*std(q2)
+                            m_DFC1[i][1][j] = 
+                            m_gmat[0][j] * m_BD1[i][1][j] - 
+                            m_gmat[1][j] * m_BD1[i][0][j];
                         }
-                        
+                                                
                         // Computing the physical first-order derivatives
                         for (j = 0; j < nDim; ++j)
                         {
-                            Vmath::Vadd(nSolutionPts, 
-                                        &DinarrayO1[i][j][0], 1,
-                                        &stdDCorrFluxO1[i][j][0], 1, 
-                                        &derivativesO1[i][j][0], 1);
+                            Vmath::Vadd(nSolutionPts, &m_DU1[i][j][0], 1,
+                                        &m_DFC1[i][j][0], 1, 
+                                        &m_D1[i][j][0], 1);
                         }
                     }
                                            
-                    // Computing interface numerical fluxes for derivativesO1 
+                    // Computing interface numerical fluxes for m_D1 
                     // in physical space 
-                    v_NumFluxforVector(fields, inarray, derivativesO1, 
-                                       iqFluxO2);
+                    v_NumFluxforVector(fields, inarray, m_D1, m_IF2);
 
                     // Computing the standard second-order discontinuous 
                     // derivatives 
                     for (i = 0; i < nConvectiveFields; ++i)
                     {
+                        Array<OneD, NekDouble> f_hat(nSolutionPts, 0.0);
+                        Array<OneD, NekDouble> g_hat(nSolutionPts, 0.0);
+                        
+                        for (j = 0; j < nSolutionPts; j++)
+                        {
+                            f_hat[j] = (m_D1[i][0][j] * m_gmat[0][j] + 
+                            m_D1[i][1][j] * m_gmat[2][j])*m_jac[j];
+                            
+                            g_hat[j] = (m_D1[i][0][j] * m_gmat[1][j] + 
+                            m_D1[i][1][j] * m_gmat[3][j])*m_jac[j];
+                        }
+
                         for (n = 0; n < nElements; n++)
                         {
-                            // Get number of solution points and phys_offset
-                            nLocalSolutionPts = fields[0]->GetExp(n)->
-                                                                GetTotPoints();
                             phys_offset = fields[0]->GetPhys_Offset(n);
-                        
-                            // Get jacobian and gmats
-                            jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
-                        
-                            // Temporary vectors
-                            Array<OneD, NekDouble>f_hat(nLocalSolutionPts, 0.0);
-                            Array<OneD, NekDouble>g_hat(nLocalSolutionPts, 0.0);
-                        
-                            if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype()
-                                == SpatialDomains::eDeformed)
-                            {
-                                for (j = 0; j < nLocalSolutionPts; j++)
-                                {
-                                    f_hat[j] = 
-                                    (derivativesO1[i][0][j+phys_offset] * 
-                                     gmat[0][j] + 
-                                     derivativesO1[i][1][j+phys_offset] * 
-                                     gmat[2][j])*jac[j];
-                                
-                                    g_hat[j] = 
-                                    (derivativesO1[i][0][j+phys_offset] * 
-                                     gmat[1][j] + 
-                                     derivativesO1[i][1][j+phys_offset] * 
-                                     gmat[3][j])*jac[j];
-                                }
-                            }
-                            else
-                            {
-                                for (j = 0; j < nLocalSolutionPts; j++)
-                                {
-                                    f_hat[j] = 
-                                    (derivativesO1[i][0][j+phys_offset] * 
-                                     gmat[0][0] + 
-                                     derivativesO1[i][1][j+phys_offset] * 
-                                     gmat[2][0])*jac[0];
-                                
-                                    g_hat[j] = 
-                                    (derivativesO1[i][0][j+phys_offset] * 
-                                     gmat[1][0] + 
-                                     derivativesO1[i][1][j+phys_offset] * 
-                                     gmat[3][0])*jac[0];
-                                }
-                            }
-                        
+
                             fields[0]->GetExp(n)->StdPhysDeriv(0, 
-                            auxArray1 = f_hat, 
-                            auxArray2 = stdDderivativesO1[i][0] + phys_offset); 
+                            auxArray1 = f_hat + phys_offset, 
+                            auxArray2 = m_DD1[i][0] + phys_offset); 
                         
                             fields[0]->GetExp(n)->StdPhysDeriv(1, 
-                            auxArray1 = g_hat, 
-                            auxArray2 = stdDderivativesO1[i][1] + phys_offset);
+                            auxArray1 = g_hat + phys_offset, 
+                            auxArray2 = m_DD1[i][1] + phys_offset);
                         }
                         
                         // Divergence of the standard discontinuous flux
                         Vmath::Vadd(nSolutionPts, 
-                                    auxArray1 = stdDderivativesO1[i][0], 1,
-                                    auxArray2 = stdDderivativesO1[i][1], 1, 
-                                    auxArray3 = divFD[i], 1);
+                                    &m_DD1[i][0][0], 1,
+                                    &m_DD1[i][1][0], 1, 
+                                    &m_divFD[i][0], 1);
                         
                         // Divergence of the standard correction flux
-                        v_DivCFlux_2D(nConvectiveFields,
-                                      fields, 
-                                      derivativesO1[i][0], 
-                                      derivativesO1[i][1], 
-                                      iqFluxO2[i], 
-                                      divFC[i]);
+                        v_DivCFlux_2D(nConvectiveFields, fields, 
+                                      m_D1[i][0], m_D1[i][1], 
+                                      m_IF2[i], m_divFC[i]);
                         
                         // Divergence of the standard final flux
-                        Vmath::Vadd(nSolutionPts, 
-                                    auxArray1 = divFD[i], 1,
-                                    auxArray2 = divFC[i], 1, 
-                                    auxArray3 = outarray[i], 1);
-                                                
-                        // Multiplying by the metric terms to get back into 
+                        Vmath::Vadd(nSolutionPts, &m_divFD[i][0], 1,
+                                    &m_divFC[i][0], 1, &outarray[i][0], 1);
+                         
+                        // Dividing by the jacobian to get back into 
                         // physical space
-                        for (n = 0; n < nElements; ++n)
-                        {
-                            nLocalSolutionPts = fields[0]->
-                            GetExp(n)->GetTotPoints();
-                            phys_offset = fields[0]->GetPhys_Offset(n);
-                            
-                            jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                            gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
-                            
-                            if (fields[0]->GetExp(n)->GetGeom2D()->GetGtype() 
-                                == SpatialDomains::eDeformed)
-                            {
-                                for (j = 0; j < nLocalSolutionPts; j++)
-                                {
-                                    outarray[i][phys_offset + j] = 
-                                    outarray[i][phys_offset + j]/jac[j];
-                                }
-                            }
-                            else
-                            {
-                                Vmath::Smul(nLocalSolutionPts, 1/jac[0], 
-                                    auxArray1 = outarray[i] + phys_offset, 1, 
-                                    auxArray2 = outarray[i] + phys_offset, 1);
-                            }
-                        }
+                        Vmath::Vdiv(nSolutionPts, &outarray[i][0], 1,
+                                    &m_jac[0], 1, &outarray[i][0], 1);
                     }//Close loop on nConvectiveFields
                     break;
                 }   
-                // 3D-Problems 
+                // 3D problems 
                 case 3:
                 {
                     ASSERTL0(false, "3D FRDG case not implemented yet");
@@ -1483,21 +1169,12 @@ namespace Nektar
             int nTracePts  = fields[0]->GetTrace()->GetTotPoints();
             int nvariables = fields.num_elements();
             int nDim       = fields[0]->GetCoordim(0);  
-            NekDouble time = 0.0;
             
             Array<OneD, NekDouble > Fwd     (nTracePts);
             Array<OneD, NekDouble > Bwd     (nTracePts);
             Array<OneD, NekDouble > Vn      (nTracePts, 0.0);
             Array<OneD, NekDouble > fluxtemp(nTracePts, 0.0);
-                        
-            // Setting up the normals
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for(i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
-            }
-            fields[0]->GetTrace()->GetNormals(m_traceNormals);
-            
+                                    
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
             {
@@ -1523,7 +1200,7 @@ namespace Nektar
                     // edge::eForward, if V*n<0 <=> V*n_F<0, pick uflux = uBwd
                     // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick uflux = uBwd
                     
-                    fields[i]->GetTrace()->Upwind(/*m_traceNormals[j]*/Vn, Fwd, Bwd, fluxtemp);
+                    fields[i]->GetTrace()->Upwind(Vn, Fwd, Bwd, fluxtemp);
                     
                     // Imposing weak boundary condition with flux
                     // if Vn >= 0, uflux = uBwd at Neumann, i.e.,
@@ -1549,12 +1226,6 @@ namespace Nektar
                     // edge::eForward, uBwd \(\tan_{\xi}^Fwd \cdot \vec{n})
                     // edge::eBackward, uBwd \(\tan_{\xi}^Bwd \cdot \vec{n})
                     
-                    /*
-                    Vmath::Vmul(nTracePts, 
-                                m_traceNormals[j], 1, 
-                                fluxtemp, 1, 
-                                uflux[i][j], 1);
-                    */
                     Vmath::Vcopy(nTracePts, 
                                  fluxtemp, 1, 
                                  uflux[i][j], 1);
@@ -1571,11 +1242,10 @@ namespace Nektar
                   Array<OneD,       NekDouble>                &penaltyflux)
         {
             // Variable initialisation
-            int i, j, e, id1, id2;
+            int i, e, id1, id2;
             int nBndEdgePts, nBndEdges;
             int cnt         = 0;
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
-            int nDim = fields[0]->GetCoordim(0);  
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
             
             // Extract physical values of the fields at the trace space
@@ -1647,15 +1317,7 @@ namespace Nektar
             Array<OneD, NekDouble > qBwd     (nTracePts);
             Array<OneD, NekDouble > qfluxtemp(nTracePts, 0.0);            
             Array<OneD, NekDouble > uterm(nTracePts);
-            
-            // Setting up the normals
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for(i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
-            }
-            fields[0]->GetTrace()->GetNormals(m_traceNormals);
-            
+                        
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
             {
@@ -1685,7 +1347,7 @@ namespace Nektar
                     // edge::eBackward, if V*n<0 <=> V*n_B>=0, pick 
                     // qflux = qFwd = q+
                     
-                    fields[i]->GetTrace()->Upwind(/*m_traceNormals[j]*/Vn, qBwd, qFwd, qfluxtemp);
+                    fields[i]->GetTrace()->Upwind(Vn, qBwd, qFwd, qfluxtemp);
                     
                     Vmath::Vmul(nTracePts, 
                                 m_traceNormals[j], 1, 
@@ -1745,24 +1407,15 @@ namespace Nektar
                   Array<OneD,       NekDouble>                &penaltyflux,
             NekDouble                                          C11)
         {
-            int i, j, e, id1, id2;
+            int i, e, id1, id2;
             int nBndEdges, nBndEdgePts;
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
-            int nDim        = fields[0]->GetCoordim(0);
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
             
             Array<OneD, NekDouble > uterm(nTracePts);
             Array<OneD, NekDouble > qtemp(nTracePts);
             int cnt = 0;
-            
-            // Setting up the normals
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for(i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
-            }
-            fields[0]->GetTrace()->GetNormals(m_traceNormals);
-            
+                        
             fields[var]->ExtractTracePhys(qfield, qtemp);
             
             for (i = 0; i < nBndRegions; ++i)
@@ -1828,7 +1481,7 @@ namespace Nektar
             int i, n;
             int nLocalSolutionPts, phys_offset;
             
-            Array<OneD,       NekDouble> auxArray1, auxArray2, auxArray3;
+            Array<OneD,       NekDouble> auxArray1, auxArray2;
             Array<TwoD, const NekDouble> gmat;
             Array<OneD, const NekDouble> jac;
             
@@ -1861,7 +1514,6 @@ namespace Nektar
             {
                 Array<OneD, NekDouble> interpolatedFlux_m(nElements);
                 Array<OneD, NekDouble> interpolatedFlux_p(nElements);
-                
                 
                 for (n = 0; n < nElements; ++n)
                 {
@@ -1908,22 +1560,16 @@ namespace Nektar
                 JumpR[0][n] = JumpR[0][n] * jac[0];
                 
                 // Left jump multiplied by left derivative of C function
-                Vmath::Smul(nLocalSolutionPts, 
-                            JumpL[0][n], 
-                            auxArray1 = m_dGL_xi1[n], 1, 
-                            DCL, 1);
+                Vmath::Smul(nLocalSolutionPts, JumpL[0][n], 
+                            &m_dGL_xi1[n][0], 1, &DCL[0], 1);
                 
                 // Right jump multiplied by right derivative of C function
-                Vmath::Smul(nLocalSolutionPts, 
-                            JumpR[0][n], 
-                            auxArray1 = m_dGR_xi1[n], 1, 
-                            DCR, 1);
+                Vmath::Smul(nLocalSolutionPts, JumpR[0][n], 
+                            &m_dGR_xi1[n][0], 1, &DCR[0], 1);
                 
                 // Assembling derivative of the correction flux
-                Vmath::Vadd(nLocalSolutionPts, 
-                            DCL, 1, 
-                            DCR, 1, 
-                            auxArray1 = derCFlux + phys_offset, 1);
+                Vmath::Vadd(nLocalSolutionPts, &DCL[0], 1, &DCR[0], 1, 
+                            &derCFlux[phys_offset], 1);
             }
         }
         
@@ -1952,9 +1598,7 @@ namespace Nektar
             Array<TwoD, const NekDouble> gmat;
             Array<OneD, const NekDouble> jac;
             
-            int nElements   = fields[0]->GetExpSize();
-            int nDim = fields[0]->GetCoordim(0);  
-            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
+            int nElements = fields[0]->GetExpSize();
             
             int trace_offset, phys_offset;
             int nLocalSolutionPts;
@@ -1965,15 +1609,7 @@ namespace Nektar
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
-            
-            // Setting up the normals
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for (i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
-            }
-            fields[0]->GetTrace()->GetNormals(m_traceNormals);
-            
+                        
             // Loop on the elements
             for (n = 0; n < nElements; ++n)
             {
@@ -1982,7 +1618,6 @@ namespace Nektar
                 nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
                 
                 jac  = fields[0]->GetExp(n)->GetGeom2D()->GetJac();
-                gmat = fields[0]->GetExp(n)->GetGeom2D()->GetGmat();
                 
                 base = fields[0]->GetExp(n)->GetBase();
                 nquad0 = base[0]->GetNumPoints();
@@ -2007,8 +1642,8 @@ namespace Nektar
                                                 elmtToTrace[n][e]->GetElmtId());
                     
                     // Get the normals of edge 'e'
-                    const Array<OneD, const Array<OneD, NekDouble> > &normals = 
-                    fields[0]->GetExp(n)->GetEdgeNormal(e);
+                    //const Array<OneD, const Array<OneD, NekDouble> > &normals = 
+                    //fields[0]->GetExp(n)->GetEdgeNormal(e);
                     
                     // Extract the edge values of the volumetric fluxes 
                     // on edge 'e' and order them accordingly to the order 
@@ -2016,12 +1651,7 @@ namespace Nektar
                     fields[0]->GetExp(n)->GetEdgePhysVals(e, elmtToTrace[n][e],
                                                           flux + phys_offset,
                                                           auxArray1 = tmparray);
-                    
-                    // Splitting inarray into the 'j' direction
-                    /*Vmath::Vmul(nEdgePts, 
-                     &m_traceNormals[direction][trace_offset], 1,
-                     &tmparray[0], 1, &tmparray[0], 1);*/
-                                        
+                                                            
                     // Compute the fluxJumps per each edge 'e' and each 
                     // flux point
                     Array<OneD, NekDouble> fluxJumps(nEdgePts, 0.0);
@@ -2143,24 +1773,16 @@ namespace Nektar
                 // component of the flux x and y already. So I should not 
                 // need to sum E0-E2 to get the derivative wrt xi2 and E1-E3 
                 // to get the derivative wrt xi1
-                /*
-                 derCFlux[phys_offset+i] = divCFluxE0[i] + divCFluxE1[i] + 
-                 divCFluxE2[i] + divCFluxE3[i];
-                 */
                 
                 if (direction == 0)
                 {
-                    for (i = 0; i < nLocalSolutionPts; ++i)
-                    {
-                        derCFlux[phys_offset+i] = divCFluxE3[i] + divCFluxE1[i];
-                    }
+                    Vmath::Vadd(nLocalSolutionPts, &divCFluxE1[0], 1, 
+                                &divCFluxE3[0], 1, &derCFlux[phys_offset], 1);
                 }
                 else if (direction == 1)
                 {
-                    for (i = 0; i < nLocalSolutionPts; ++i)
-                    {
-                        derCFlux[phys_offset+i] = divCFluxE0[i] + divCFluxE2[i];
-                    }
+                    Vmath::Vadd(nLocalSolutionPts, &divCFluxE0[0], 1, 
+                                &divCFluxE2[0], 1, &derCFlux[phys_offset], 1);
                 }
             }
         }
@@ -2188,9 +1810,7 @@ namespace Nektar
         {                   
             int n, e, i, j, cnt;
             
-            int nElements   = fields[0]->GetExpSize();
-            int nDim = fields[0]->GetCoordim(0);  
-            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
+            int nElements = fields[0]->GetExpSize();
             
             int nLocalSolutionPts;
             int nEdgePts;  
@@ -2204,15 +1824,7 @@ namespace Nektar
             
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
-            
-            // Setting up the normals
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for(i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
-            }
-            fields[0]->GetTrace()->GetNormals(m_traceNormals);
-            
+                        
             // Loop on the elements
             for(n = 0; n < nElements; ++n)
             {
@@ -2220,7 +1832,7 @@ namespace Nektar
                 phys_offset = fields[0]->GetPhys_Offset(n);
                 nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
                 
-                base = fields[0]->GetExp(n)->GetBase();
+                base   = fields[0]->GetExp(n)->GetBase();
                 nquad0 = base[0]->GetNumPoints();
                 nquad1 = base[1]->GetNumPoints();
                 
@@ -2357,13 +1969,14 @@ namespace Nektar
                 }
                 
                 // Sum each edge contribution
-                for (i = 0; i < nLocalSolutionPts; ++i)
-                {
-                    divCFlux[phys_offset + i] = divCFluxE0[i] + 
-                    divCFluxE1[i] +
-                    divCFluxE2[i] + 
-                    divCFluxE3[i];
-                }
+                Vmath::Vadd(nLocalSolutionPts, &divCFluxE0[0], 1, 
+                            &divCFluxE1[0], 1, &divCFlux[phys_offset], 1);
+                
+                Vmath::Vadd(nLocalSolutionPts, &divCFlux[phys_offset], 1, 
+                            &divCFluxE2[0], 1, &divCFlux[phys_offset], 1);
+                
+                Vmath::Vadd(nLocalSolutionPts, &divCFlux[phys_offset], 1, 
+                            &divCFluxE3[0], 1, &divCFlux[phys_offset], 1);
             }
         } 
         

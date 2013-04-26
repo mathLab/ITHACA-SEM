@@ -2132,6 +2132,16 @@ namespace Nektar
                             returnval.push_back(bkey1);
                         }
                         break;
+                    case LibUtilities::eHexahedron:
+                        {
+                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                            LibUtilities::BasisKey bkey(LibUtilities::eGLL_Lagrange, nummodes, pkey);
+                            
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                            returnval.push_back(bkey);
+                        }
+                        break;
                     default:
                         {
                             ASSERTL0(false, "Expansion not defined in switch  for this shape");

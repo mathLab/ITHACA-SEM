@@ -52,6 +52,9 @@ namespace Nektar
             
             static std::string                   type[];
             
+            Array<OneD, NekDouble>               m_jac;
+            Array<OneD, Array<OneD, NekDouble> > m_gmat;
+            
             Array<OneD, Array<OneD, NekDouble> > m_Q2D_e0; 
             Array<OneD, Array<OneD, NekDouble> > m_Q2D_e1; 
             Array<OneD, Array<OneD, NekDouble> > m_Q2D_e2; 
@@ -65,14 +68,27 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > m_dGR_xi3;
             DNekMatSharedPtr                     m_Ixm;
             DNekMatSharedPtr                     m_Ixp;
-            
+                        
         protected:
             DiffusionLFR(std::string diffType);
             
-            Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
-            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
-            LibUtilities::SessionReaderSharedPtr              m_session;
+            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
+            LibUtilities::SessionReaderSharedPtr m_session;
             
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_IF1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DU1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DFC1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_BD1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_D1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DD1;
+            Array<OneD, Array<OneD, NekDouble> >               m_IF2;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DFC2;
+            Array<OneD, Array<OneD, NekDouble> >               m_divFD;
+            Array<OneD, Array<OneD, NekDouble> >               m_divFC;
+            
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_tmp1;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_tmp2;
+
             std::string m_diffType;
             
             virtual void v_InitObject(
@@ -92,7 +108,7 @@ namespace Nektar
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
             
             virtual void v_Diffuse(
-                const int                                          nConvective,
+                const int                                     nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
@@ -138,7 +154,7 @@ namespace Nektar
                       Array<OneD,       NekDouble>               &derCFlux);
             
             virtual void v_DivCFlux_2D(
-                const int                                      nConvectiveFields,
+                const int                                     nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&fields,
                 const Array<OneD, const NekDouble>               &fluxX1, 
                 const Array<OneD, const NekDouble>               &fluxX2, 

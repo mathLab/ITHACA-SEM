@@ -68,7 +68,9 @@ namespace Nektar
         Element::Element(ElmtConfig   pConf,
                          unsigned int pNumNodes,
                          unsigned int pGotNodes) 
-            : m_conf(pConf), m_geom()
+            : m_conf(pConf), 
+              curveType(LibUtilities::ePolyEvenlySpaced),
+              m_geom()
         {
             if (pNumNodes != pGotNodes)
             {
@@ -160,6 +162,12 @@ namespace Nektar
         bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2)
         {
             return *p1 < *p2;
+        }
+
+        std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n)
+        {
+            os << n->x << " " << n->y << " " << n->z;
+            return os;
         }
 
         /**
@@ -425,11 +433,6 @@ namespace Nektar
         
         SpatialDomains::GeometrySharedPtr Line::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-                
             // Create edge vertices.
             SpatialDomains::VertexComponentSharedPtr p[2];
             p[0] = vertex[0]->GetGeom(coordDim);
@@ -483,6 +486,7 @@ namespace Nektar
             m_tag     = "T";
             m_dim     = 2;
             m_taglist = pTagList;
+            curveType = LibUtilities::eNodalTriEvenlySpaced;
             int n     = m_conf.order-1;
 
             // Create a map to relate edge nodes to a pair of vertices
@@ -525,11 +529,6 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Triangle::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-
             SpatialDomains::SegGeomSharedPtr         edges[3];
             SpatialDomains::VertexComponentSharedPtr verts[3];
             
@@ -772,11 +771,6 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Quadrilateral::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-
             SpatialDomains::SegGeomSharedPtr         edges[4];
             SpatialDomains::VertexComponentSharedPtr verts[4];
             
@@ -919,11 +913,6 @@ namespace Nektar
         
         SpatialDomains::GeometrySharedPtr Tetrahedron::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-            
             SpatialDomains::TriGeomSharedPtr tfaces[4];
             
             for (int i = 0; i < 4; ++i)
@@ -1320,11 +1309,6 @@ namespace Nektar
 
         SpatialDomains::GeometrySharedPtr Prism::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-
             SpatialDomains::Geometry2DSharedPtr faces[5];
             
             for (int i = 0; i < 5; ++i)
@@ -1624,11 +1608,6 @@ namespace Nektar
         
         SpatialDomains::GeometrySharedPtr Hexahedron::GetGeom(int coordDim)
         {
-            if (m_geom)
-            {
-                return m_geom;
-            }
-
             SpatialDomains::QuadGeomSharedPtr faces[6];
             
             for (int i = 0; i < 6; ++i)

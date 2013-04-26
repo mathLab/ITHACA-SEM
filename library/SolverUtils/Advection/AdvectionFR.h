@@ -74,7 +74,8 @@ namespace Nektar
         protected:
             AdvectionFR(std::string advType);
             
-            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
+            Array<OneD, Array<OneD, NekDouble> >               m_traceNormals;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fluxvector;
             
             std::string m_advType;
             

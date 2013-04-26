@@ -1542,7 +1542,7 @@ namespace Nektar
 
             m_numGlobalCoeffs = globalId;
 
-            SetUpUniversalC0ContMap(locExp);
+            SetUpUniversalC0ContMap(locExp, periodicVerts, periodicEdges, periodicFaces);
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation

@@ -40,8 +40,9 @@ using namespace std;
 #include "ProcessBL.h"
 
 #include <LibUtilities/Foundations/BLPoints.h>
-#include <LocalRegions/PrismExp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/BasicUtils/ParseUtils.hpp>
+#include <LocalRegions/PrismExp.h>
 
 namespace Nektar
 {
@@ -59,7 +60,7 @@ namespace Nektar
                 "Number of layers to refine.");
             config["nq"]         = ConfigOption(false, "5",
                 "Number of points in high order elements.");
-            config["surf"]       = ConfigOption(false, "-1",
+            config["surf"]       = ConfigOption(false, "",
                 "Tag identifying surface connected to prism.");
             config["r"]          = ConfigOption(false, "2.0",
                 "Ratio to use in geometry progression.");
@@ -81,7 +82,6 @@ namespace Nektar
             int nodeId  = m->vertexSet.size();
             int nl      = config["layers"].as<int>();
             int nq      = config["nq"].    as<int>();
-            int surf    = config["surf"].  as<int>();
 
             LibUtilities::BLPoints::delta_star = config["r"].as<NekDouble>();
 
@@ -132,9 +132,13 @@ namespace Nektar
             boost::unordered_map<int, vector<NodeSharedPtr> > edgeMap;
             boost::unordered_map<int, vector<NodeSharedPtr> >::iterator eIt;
 
-            int surfTag = config["surf"].as<int>();
-            if (surfTag != -1)
+            string surf = config["surf"].as<string>();
+            if (surf.size() > 0)
             {
+                vector<unsigned int> surfs;
+                ParseUtils::GenerateSeqVector(surf.c_str(), surfs);
+                sort(surfs.begin(), surfs.end());
+
                 // If surface is defined, process list of elements to find those
                 // that are connected to it.
                 for (int i = 0; i < m->element[m->expDim].size(); ++i)
@@ -152,9 +156,16 @@ namespace Nektar
 
                         ElementSharedPtr bEl  = m->element[m->expDim-1][bl];
                         vector<int>      tags = bEl->GetTagList();
+                        vector<int>      inter;
 
-                        if (find(tags.begin(), tags.end(), surfTag) !=
-                            tags.end())
+                        sort(tags.begin(), tags.end());
+                        set_intersection(surfs.begin(), surfs.end(),
+                                         tags .begin(), tags .end(),
+                                         back_inserter(inter));
+                        ASSERTL0(inter.size() <= 1,
+                                 "Intersection of surfaces wrong");
+
+                        if (inter.size() == 1)
                         {
                             if (el->GetConf().e != ePrism)
                             {
@@ -355,7 +366,8 @@ namespace Nektar
                             ElementSharedPtr e = m->element[m->expDim-1][bl];
                             for (int k = 0; k < 4; ++k)
                             {
-                                e->SetVertex(k, nodeList[prismFaceNodes[fid][k]]);
+                                e->SetVertex(
+                                    k, nodeList[prismFaceNodes[fid][k]]);
                             }
                         }
                         else
@@ -368,9 +380,10 @@ namespace Nektar
                             }
                             vector<int> tagBE;
                             tagBE = m->element[m->expDim-1][bl]->GetTagList();
-                            ElmtConfig bconf(eQuadrilateral, 1, true, true, false);
+                            ElmtConfig bconf(eQuadrilateral,1,true,true,false);
                             ElementSharedPtr boundaryElmt = GetElementFactory().
-                                CreateInstance(eQuadrilateral,bconf,qNodeList,tagBE);
+                                CreateInstance(eQuadrilateral,bconf,
+                                               qNodeList,tagBE);
                             m->element[m->expDim-1].push_back(boundaryElmt);
                         }
                     }

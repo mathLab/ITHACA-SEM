@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     Array<OneD,NekDouble>  fce;
     Array<OneD,NekDouble>  xc0,xc1,xc2;
 
-    if(argc < 4)
+    if(argc < 3)
     {
         fprintf(stderr,"Usage: %s meshfile fieldfile\n",argv[0]);
         exit(1);

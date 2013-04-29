@@ -138,30 +138,31 @@ namespace Nektar
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
 
-            // find min, max point and check if within twice this distance other false
-            // this is advisable since GetLocCoord is expensive for non regular elements. 
+            // find min, max point and check if within twice this
+            // distance other false this is advisable since
+            // GetLocCoord is expensive for non regular elements.
             if(GetGtype() !=  eRegular)
             {
-	      int i;
-	      Array<OneD, NekDouble> pts; 
-	      NekDouble mincoord, maxcoord,diff;
-
-	      v_FillGeom();
-
-	      for(i = 0; i < 3; ++i)
-	      {
-		pts = m_xmap[i]->GetPhys();
-		mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
-		maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
-		
-		diff = maxcoord - mincoord; 
-
-		if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
-		  {
-		    return false;
-		  }
-	      }
-             }
+                int i;
+                Array<OneD, NekDouble> pts; 
+                NekDouble mincoord, maxcoord,diff;
+                
+                v_FillGeom();
+                
+                for(i = 0; i < 3; ++i)
+                {
+                    pts = m_xmap[i]->GetPhys();
+                    mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
+                    
+                    diff = maxcoord - mincoord; 
+                    
+                    if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
+                    {
+                        return false;
+                    }
+                }
+            }
             
             // Convert to the local (eta) coordinates.
             Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);

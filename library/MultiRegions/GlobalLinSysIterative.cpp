@@ -464,10 +464,10 @@ namespace Nektar
 
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
 
-            //m_lowEnergyPrecon = GetPreconFactory().CreateInstance("LowEnergyBlock",GetSharedThisPtr(),plocToGloMap);
+            m_lowEnergyPrecon = GetPreconFactory().CreateInstance("LowEnergyBlock",GetSharedThisPtr(),plocToGloMap);
 
-            /*MultiRegions::PreconditionerType Type = plocToGloMap->GetPreconType();
-            if(Type == MultiRegions::eLinearWithLowEnergy)
+            MultiRegions::PreconditionerType Type = plocToGloMap->GetPreconType();
+            /*if(Type == MultiRegions::eLinearWithLowEnergy)
             {
                 Array<OneD, NekDouble> tmp2 (nNonDir, 0.0);
                 
@@ -480,13 +480,8 @@ namespace Nektar
                 }
             }
             else
-            {
-            cout << "nonLLE" << endl;
-            for(int i=nDir; i<nGlobal; ++i)
-            {
-                cout<<w_A[i]<<endl;
-            }
-            }*/
+            {*/
+            //}
 
             v_DoMatrixMultiply(w_A, s_A);
 

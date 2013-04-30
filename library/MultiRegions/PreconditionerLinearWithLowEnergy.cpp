@@ -124,6 +124,7 @@ namespace Nektar
             int nGlobal = pInput.num_elements();
 
             Array<OneD, NekDouble> OutputLowEnergy(nGlobal, 0.0);
+            Array<OneD, NekDouble> tmp(nGlobal, 0.0);
             Array<OneD, NekDouble> OutputLinear(nGlobal, 0.0);
             Array<OneD, NekDouble> InputLinear(nGlobal, 0.0);
 
@@ -134,10 +135,13 @@ namespace Nektar
             m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(pInput, InputLinear);
 
             //Apply linear space preconditioner
-            m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear,OutputLowEnergy);
+            m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear, tmp);
 
-            //Transform back to low energy basis
-            m_lowEnergyPrecon->DoTransformToLowEnergy(OutputLinear,pOutput);
+            m_lowEnergyPrecon->DoMultiplybyInverseTransposedTransformationMatrix(OutputLinear,pOutput);
+            //m_lowEnergyPrecon->DoTransformToLowEnergy(InputLinear,pOutput);
+
+            Vmath::Vadd(nGlobal,pOutput,1,OutputLowEnergy,1,pOutput,1);
+
         }
 
     }

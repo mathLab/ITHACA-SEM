@@ -973,7 +973,7 @@ namespace Nektar
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
-                        if(uniqueEdgeMap.count(meshEdgeId)==0)
+                        if(uniqueEdgeMap.count(meshEdgeId)==0 && dof > 0)
                         {
                             uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
 
@@ -1012,7 +1012,7 @@ namespace Nektar
 
                     if(faceDirMap.count(meshFaceId)==0)
                     {
-                        if(uniqueFaceMap.count(meshFaceId)==0)
+                        if(uniqueFaceMap.count(meshFaceId)==0 && dof > 0)
                         {
                             uniqueFaceMap[meshFaceId]=facematrixlocation;
 
@@ -1604,6 +1604,41 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
+            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
+            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+
+            ASSERTL1(pInput.num_elements() >= nGlobHomBndDofs,
+                     "Input array is greater than the nGlobHomBndDofs");
+            ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs,
+                     "Output array is greater than the nGlobHomBndDofs");
+
+            //vectors of length number of non-dirichlet boundary dofs
+            NekVector<NekDouble> F_GlobBnd(nGlobHomBndDofs,pInput,eWrapper);
+            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,pOutput,
+                                          eWrapper);
+            //Block inverse transformation matrix
+            DNekScalBlkMat &invRT = *m_InvRTBlk;
+
+            Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
+            NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
+            Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+
+            // Allocated array of size number of global boundary dofs and copy
+            // the input array to the tmp array offset by Dirichlet boundary
+            // conditions.
+            Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
+            Vmath::Vcopy(nGlobHomBndDofs, pInput.get(), 1, tmp.get() + nDirBndDofs, 1);
+
+            //Global boundary dofs (with zeroed dirichlet values) to local boundary dofs
+            Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), tmp.get(), m_map.get(), pLocal.get());
+
+            //Multiply by block inverse transformation matrix
+            F_LocBnd=invRT*F_LocBnd;
+
+            //Assemble local boundary to global non-dirichlet boundary
+            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
 	}
 
 
@@ -1680,14 +1715,17 @@ namespace Nektar
          */
         void PreconditionerLowEnergy::CreateMultiplicityMap(void)
         {
-            const Array<OneD, const int> &vMap
-                                    = m_locToGloMap->GetLocalToGlobalBndMap();
-
-            const Array< OneD, const NekDouble > &sign = m_locToGloMap->GetLocalToGlobalBndSign();
-
             unsigned int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
             unsigned int nEntries   = m_locToGloMap->GetNumLocalBndCoeffs();
             unsigned int i;
+            
+            const Array<OneD, const int> &vMap
+                = m_locToGloMap->GetLocalToGlobalBndMap();
+
+            const Array< OneD, const NekDouble > &sign 
+                = m_locToGloMap->GetLocalToGlobalBndSign();
+
+            bool m_signChange=m_locToGloMap->GetSignChange();
 
             // Count the multiplicity of each global DOF on this process
             Array<OneD, NekDouble> vCounts(nGlobalBnd, 0.0);
@@ -1703,11 +1741,17 @@ namespace Nektar
             m_locToGloSignMult = Array<OneD, NekDouble>(nEntries);
             for (i = 0; i < nEntries; ++i)
             {
-                m_locToGloSignMult[i] = sign[i]*1.0/vCounts[vMap[i]];
+                if(m_signChange)
+                {
+                    m_locToGloSignMult[i] = sign[i]*1.0/vCounts[vMap[i]];
+                }
+                else
+                {
+                    m_locToGloSignMult[i] = 1.0/vCounts[vMap[i]];
+                }
             }
-
         }
-
+        
     }
 }
 

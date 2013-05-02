@@ -1438,26 +1438,17 @@ namespace Nektar
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
+                    }
 
-                        // loop over all elements and set expansion
-                        for(k = 0; k < fielddef.size(); ++k)
-                        {
-                            for(h = 0; h < fielddef[k]->m_fields.size(); ++h)
-                            {
-                                if(fielddef[k]->m_fields[h] == field)
-                                {
-                                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
-                                    LibUtilities::BasisKeyVector def;
-
-                                    for(g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
-                                    {
-                                        ExpansionShPtr tmpexp =
-                                                MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                                        (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
-                                    }
-                                }
-                            }
-                        }
+                    // loop over all elements and set expansion
+                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
+                    LibUtilities::BasisKeyVector def;
+                                
+                    for(k = 0; k < fielddef[i]->m_elementIDs.size(); ++k)
+                    {
+                        ExpansionShPtr tmpexp =
+                            MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
+                        (*expansionMap)[fielddef[i]->m_elementIDs[k]] = tmpexp;
                     }
                 }
             }

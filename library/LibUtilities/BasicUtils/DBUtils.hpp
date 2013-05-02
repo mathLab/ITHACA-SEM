@@ -160,7 +160,7 @@ namespace DBUtils
             const int n,
             Array<OneD, const T> &in,
             std::ostream &out,
-            MultiRegions::AssemblyMapSharedPtr &map)
+            MultiRegions::AssemblyMapCGSharedPtr &map)
     {
         Array<OneD, NekDouble> vExchange(1);
         Array<OneD, int> m_map = map->GetGlobalToUniversalMapUnique();

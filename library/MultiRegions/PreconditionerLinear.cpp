@@ -171,6 +171,7 @@ namespace Nektar
                             pOutput[val-nDirFull] = Out[LocToGlo[i]];
                         }
                     }
+
                 }
                 break;
             default:

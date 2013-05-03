@@ -1393,6 +1393,7 @@ namespace Nektar
                 
                 tmp_mat=BlkMat->GetBlock(i,i);
                 tmp_mat->Invert();
+
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
         }

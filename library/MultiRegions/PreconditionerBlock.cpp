@@ -608,7 +608,7 @@ namespace Nektar
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
-                        if(uniqueEdgeMap.count(meshEdgeId)==0)
+                        if(uniqueEdgeMap.count(meshEdgeId)==0 && dof > 0)
                         {
                             uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
 
@@ -998,6 +998,7 @@ namespace Nektar
                 
                 tmp_mat=BlkMat->GetBlock(i,i);
                 tmp_mat->Invert();
+
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
         }

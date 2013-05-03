@@ -73,8 +73,7 @@ namespace Nektar
         // Type of advection and diffusion classes to be used
         switch(m_projectionType)
         {
-                
-                // Discontinuous field 
+            // Discontinuous field 
             case MultiRegions::eDiscontinuous:
             {
                 // Advection term
@@ -82,12 +81,12 @@ namespace Nektar
                 string riemName; 
                 m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
                 m_advection = SolverUtils::GetAdvectionFactory().
-                CreateInstance(advName, advName);
+                    CreateInstance(advName, advName);
                 m_advection->SetFluxVector(&UnsteadyAdvectionDiffusion::
                                            GetFluxVectorAdv, this);
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
-                CreateInstance(riemName);
+                    CreateInstance(riemName);
                 m_riemannSolver->AddScalar("Vn", &UnsteadyAdvectionDiffusion::
                                            GetNormalVelocity, this);
                 m_advection->SetRiemannSolver(m_riemannSolver);
@@ -97,13 +96,13 @@ namespace Nektar
                 std::string diffName;
                 m_session->LoadSolverInfo("DiffusionType", diffName, "LDG");
                 m_diffusion = SolverUtils::GetDiffusionFactory().
-                CreateInstance(diffName, diffName);
+                    CreateInstance(diffName, diffName);
                 m_diffusion->SetFluxVector(&UnsteadyAdvectionDiffusion::
                                            GetFluxVectorDiff, this);
                 m_diffusion->InitObject(m_session, m_fields);
                 break;
             }
-                // Continuous field 
+            // Continuous field 
             case MultiRegions::eGalerkin:
             case MultiRegions::eMixed_CG_Discontinuous:
             {
@@ -112,7 +111,7 @@ namespace Nektar
                 m_session->LoadSolverInfo("AdvectionType", advName, 
                                           "NonConservative");
                 m_advection = SolverUtils::GetAdvectionFactory().
-                CreateInstance(advName, advName);
+                    CreateInstance(advName, advName);
                 m_advection->SetFluxVector(&UnsteadyAdvectionDiffusion::
                                            GetFluxVectorAdv, this);
                 

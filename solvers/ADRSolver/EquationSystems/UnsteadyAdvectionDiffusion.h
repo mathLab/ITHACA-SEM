@@ -108,16 +108,6 @@ namespace Nektar
             NekDouble time,
             NekDouble lambda);
         
-        /// Evaluate the flux at each solution point
-        //virtual void v_GetFluxVector(
-        //    const int i, 
-        //    Array<OneD, Array<OneD, NekDouble> > &physfield, 
-        //    Array<OneD, Array<OneD, NekDouble> > &flux);
-        
-        //virtual void v_NumericalFlux(
-        //    Array<OneD, Array<OneD, NekDouble> > &physfield, 
-        //    Array<OneD, Array<OneD, NekDouble> > &numflux);
-        
         /// Get the normal velocity
         Array<OneD, NekDouble> &GetNormalVelocity();
         

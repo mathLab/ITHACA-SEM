@@ -482,12 +482,11 @@ namespace Nektar
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
-                // Load a 2D base flow into a 3D Homogeneous session
-                if ((m_session->DefinesSolverInfo("HOMOGENEOUS") &&
-                    (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D" ||
-                     m_session->GetSolverInfo("HOMOGENEOUS")=="1D" ||
-                     m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D")) &&
-                    nvar==4)
+                if((m_session->DefinesSolverInfo("HOMOGENEOUS") &&
+                   (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D" ||
+                    m_session->GetSolverInfo("HOMOGENEOUS")=="1D" ||
+                    m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D")) &&
+                     m_MultipleModes==false)
                 {
                     // w-component must be ignored and set to zero.
                     if (j != nvar - 2)

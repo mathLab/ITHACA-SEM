@@ -9,6 +9,7 @@ SET(MeshConvertHeaders
     OutputGmsh.h
     OutputNekpp.h
     ProcessBL.h
+    ProcessCyl.h
     ProcessJac.h
     ProcessSpherigon.h
     ProcessTetSplit.h
@@ -26,6 +27,7 @@ SET(MeshConvertSources
     OutputGmsh.cpp
     OutputNekpp.cpp
     ProcessBL.cpp
+    ProcessCyl.cpp
     ProcessJac.cpp
     ProcessSpherigon.cpp
     ProcessTetSplit.cpp

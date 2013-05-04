@@ -1746,7 +1746,7 @@ namespace Nektar
             int nbase = (*m_exp)[0]->GetNumBases();
             int cnt = 0;
             
-            for(int i = 0; i < (*m_exp).size(); ++i)
+            for(i = 0; i < (*m_exp).size(); ++i)
             {
                 if(nbase == 2)
                 {

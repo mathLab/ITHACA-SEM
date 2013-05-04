@@ -172,7 +172,7 @@ namespace Nektar
                             st >> tag;
                             tags.push_back(tag);
                         }
-                        tags.push_back(elm_type);
+                        tags.resize(1);
                         
                         // Read element node list
                         vector<NodeSharedPtr> nodeList;

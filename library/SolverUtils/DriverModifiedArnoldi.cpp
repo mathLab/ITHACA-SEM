@@ -141,6 +141,12 @@ namespace Nektar
          
             // Normalise first vector in sequence
             alpha[0] = std::sqrt(Vmath::Dot(ntot, &Kseq[0][0], 1, &Kseq[0][0], 1));
+			
+            if (m_comm->GetRank() == 0)
+            {
+                m_comm->AllReduce(alpha[0], Nektar::LibUtilities::ReduceSum);
+            }
+			
             //alpha[0] = std::sqrt(alpha[0]);
             Vmath::Smul(ntot, 1.0/alpha[0], Kseq[0], 1, Kseq[0], 1);
 
@@ -153,6 +159,13 @@ namespace Nektar
              
                 // Normalise
                 alpha[i] = std::sqrt(Vmath::Dot(ntot, &Kseq[i][0], 1, &Kseq[i][0], 1));
+				
+                if (m_comm->GetRank() == 0)
+                {
+                    m_comm->AllReduce(alpha[i],
+                                      Nektar::LibUtilities::ReduceSum);
+                }
+				
                 //alpha[i] = std::sqrt(alpha[i]);
                 Vmath::Smul(ntot, 1.0/alpha[i], Kseq[i], 1, Kseq[i], 1);
              

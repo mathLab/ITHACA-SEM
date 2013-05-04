@@ -369,15 +369,18 @@ namespace Nektar
                 v_WriteTecplotHeader(outfile,var);
             }
 
-            void WriteTecplotZone(std::ofstream &outfile, int expansion)
+            void WriteTecplotZone(std::ofstream &outfile, int expansion = -1)
             {
                 v_WriteTecplotZone(outfile,expansion);
             }
 
-            void WriteTecplotField(std::ofstream &outfile, int expansion)
+            void WriteTecplotField(std::ofstream &outfile, int expansion = -1)
             {
                 v_WriteTecplotField(outfile,expansion);
             }
+
+            MULTI_REGIONS_EXPORT void  WriteTecplotConnectivity(
+                                std::ofstream &outfile);
 
             MULTI_REGIONS_EXPORT void WriteVtkHeader(std::ofstream &outfile);
             MULTI_REGIONS_EXPORT void WriteVtkFooter(std::ofstream &outfile);
@@ -1208,6 +1211,7 @@ namespace Nektar
                                                                                    unsigned int index, const std::string& variable);
         
         private:
+            int   GetNumTecplotBlocks(void);
             
             virtual const Array<OneD,const SpatialDomains::BoundaryConditionShPtr> &v_GetBndConditions();
             

@@ -93,7 +93,6 @@ namespace Nektar
             v_SetupInterpolationMatrices(pSession, pFields);
             
             // Initialising the fluxvector
-            int i, j;
             int nConvectiveFields = pFields.num_elements();
             int nDimensions  = pFields[0]->GetCoordim(0);
             int nSolutionPts = pFields[0]->GetTotPoints();

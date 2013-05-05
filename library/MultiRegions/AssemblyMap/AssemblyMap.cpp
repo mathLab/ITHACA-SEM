@@ -89,7 +89,8 @@ namespace Nektar
         {
         }
 
-        AssemblyMap::AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession, const std::string variable):
+        AssemblyMap::AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession, 
+                                 const std::string variable):
             m_session(pSession),
             m_comm(pSession->GetComm()),
             m_hash(0),
@@ -101,11 +102,47 @@ namespace Nektar
             m_gsh(0),
             m_bndGsh(0)
         {
+            // Default value from Solver Info
             m_solnType = pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln");
             m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>("Preconditioner");
+
+            // Override values with data from GlobalSysSolnInfo section 
+            if(pSession->DefinesGlobalSysSolnInfo(variable,"GlobalSysSoln"))
+            {
+                std::string sysSoln = pSession->GetGlobalSysSolnInfo(variable,"GlobalSysSoln");
+                m_solnType = pSession->GetValueAsEnum<GlobalSysSolnType>("GlobalSysSoln",sysSoln);
+            }
+            
+            if(pSession->DefinesGlobalSysSolnInfo(variable,"Preconditioner"))
+            {
+                std::string precon = pSession->GetGlobalSysSolnInfo(variable,"Preconditioner");
+                m_preconType = pSession->GetValueAsEnum<PreconditionerType>("Preconditioner",precon);
+            }
+            
+            if(pSession->DefinesGlobalSysSolnInfo(variable,"IterativeSolverTolerance"))
+            {
+                m_iterativeTolerance = boost::lexical_cast<NekDouble>(pSession->GetGlobalSysSolnInfo(variable,"IterativeSolverTolerance").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("IterativeSolverTolerance",
+                                        m_iterativeTolerance,
+                                        NekConstants::kNekIterativeTol);
+            }
+
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
+            {
+                m_successiveRHS = boost::lexical_cast<int>(pSession->GetGlobalSysSolnInfo(variable,"SuccessiveRHS").c_str());
+            }
+            else
+            {
+                pSession->LoadParameter("SuccessiveRHS",
+                                        m_successiveRHS,0);
+            }
+
         }
-
-
+        
         /** 
          * Create a new level of mapping using the information in
          * multiLevelGraph and performing the following steps:
@@ -1106,24 +1143,31 @@ namespace Nektar
             return m_patchMapFromPrevLevel;
         }
 
-        bool AssemblyMap::AtLastLevel() const
+        bool AssemblyMap::AtLastLevel(void) const
         {
             return !( m_nextLevelLocalToGlobalMap.get() );
         }
 
 
-        GlobalSysSolnType
-                    AssemblyMap::GetGlobalSysSolnType() const
+        GlobalSysSolnType AssemblyMap::GetGlobalSysSolnType(void) const
         {
             return m_solnType;
         }
 
-        PreconditionerType
-                    AssemblyMap::GetPreconType() const
+        PreconditionerType  AssemblyMap::GetPreconType(void) const
         {
             return m_preconType;
         }
 
+        NekDouble AssemblyMap::GetIterativeTolerance(void) const
+        {
+            return m_iterativeTolerance;
+        }
+
+        int AssemblyMap::GetSuccessiveRHS(void) const
+        {
+            return m_successiveRHS;
+        }
 
         void AssemblyMap::GlobalToLocalBndWithoutSign(
                     const Array<OneD, const NekDouble>& global,

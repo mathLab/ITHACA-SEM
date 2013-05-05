@@ -1416,7 +1416,7 @@ namespace Nektar
         void MeshGraph::SetExpansions(
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
         {
-            int i, j, k, g, h, cnt, id;
+            int i, j, k, cnt, id;
             GeometrySharedPtr geom;
 
             ExpansionMapShPtr expansionMap;

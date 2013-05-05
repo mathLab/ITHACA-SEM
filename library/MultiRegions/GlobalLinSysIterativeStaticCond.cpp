@@ -672,6 +672,7 @@ namespace Nektar
                         }
                     }
 
+#if 0 // Is this just a debugging leftover?
                     if (verbose)
                     {
                         cout << "sizes of local matrices in order: " << endl;
@@ -681,6 +682,7 @@ namespace Nektar
                         }
                         cout << endl;
                     }
+#endif
 
                     MatrixStorage matStorage = eFULL;
 
@@ -723,6 +725,7 @@ namespace Nektar
                     matBytes      = m_sparseSchurCompl->GetMemoryFootprint();
                     bsruBlockBytes = m_sparseSchurCompl->GetMemoryFootprint(0);
 
+#if 0 // Is this just a debugging leftover?
                     if (verbose)
                     {
                         cout << "Local matrix memory, bytes = " << matBytes;
@@ -745,6 +748,7 @@ namespace Nektar
                             std::cout << " ("<< bsruBlockBytes/1024 <<" KB)" << std::endl;
                         }
                     }
+#endif
                     break;
                 }
                 default:

@@ -60,30 +60,23 @@ namespace Nektar
         {
             LibUtilities::SessionReaderSharedPtr vSession
                                             = pExpList.lock()->GetSession();
-            vSession->LoadParameter("IterativeSolverTolerance",
-                                    m_tolerance,
-                                    NekConstants::kNekIterativeTol);
+
+            m_tolerance = pLocToGloMap->GetIterativeTolerance();
 
             LibUtilities::CommSharedPtr vComm = m_expList.lock()->GetComm()->GetRowComm();
-            m_root = (vComm->GetRank())? false : true;
-            
+            m_root    = (vComm->GetRank())? false : true;
             m_verbose = (vSession->DefinesCmdLineArgument("verbose"))? true :false;
             
-            std::string successiveRhs;
-            vSession->LoadSolverInfo("SuccessiveRHS",  successiveRhs );
-            try
+            int successiveRHS;
+            
+            if((successiveRHS = pLocToGloMap->GetSuccessiveRHS()))
             {
-                int solutionsToStore = boost::lexical_cast<int>(successiveRhs);
-                m_prevLinSol.set_capacity(solutionsToStore);
+                m_prevLinSol.set_capacity(successiveRHS);
                 m_useProjection = true;
-                if(m_verbose)
-                {
-                    std::cout << "Using successive rhs projection with " << solutionsToStore << " solutions to be stored" << std::endl;
-                }
             }
-            catch(...)
+            else
             {
-                // lexical_cast will throw bad_lexical_cast if successiveRhs is not integer-valued
+                m_useProjection = false;
             }
         }
 

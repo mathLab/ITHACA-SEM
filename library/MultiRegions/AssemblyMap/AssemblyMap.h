@@ -281,12 +281,14 @@ namespace Nektar
 
             /// Returns true if this is the last level in the multi-level
             /// static condensation.
-            MULTI_REGIONS_EXPORT bool AtLastLevel() const;
+            MULTI_REGIONS_EXPORT bool AtLastLevel(void) const;
             /// Returns the method of solving global systems.
-            MULTI_REGIONS_EXPORT GlobalSysSolnType  GetGlobalSysSolnType() const;
-            MULTI_REGIONS_EXPORT PreconditionerType  GetPreconType() const;
+            MULTI_REGIONS_EXPORT GlobalSysSolnType  GetGlobalSysSolnType(void) const;
+            MULTI_REGIONS_EXPORT PreconditionerType GetPreconType(void) const;
+            MULTI_REGIONS_EXPORT NekDouble          GetIterativeTolerance(void) const;
+            MULTI_REGIONS_EXPORT int                GetSuccessiveRHS(void) const;
 
-            MULTI_REGIONS_EXPORT int GetLowestStaticCondLevel() const
+            MULTI_REGIONS_EXPORT int GetLowestStaticCondLevel(void) const
             {
                 return m_lowestStaticCondLevel;
             }
@@ -357,8 +359,15 @@ namespace Nektar
             /// The bandwith of the global bnd system
             int m_bndSystemBandWidth;
 
+            /// Type type of preconditioner to use in iterative solver. 
             PreconditionerType m_preconType;
 
+            /// Tolerance for iterative solver 
+            NekDouble  m_iterativeTolerance;
+
+            /// sucessive RHS  for iterative solver 
+            int  m_successiveRHS;
+            
             Gs::gs_data * m_gsh;
             Gs::gs_data * m_bndGsh;
 

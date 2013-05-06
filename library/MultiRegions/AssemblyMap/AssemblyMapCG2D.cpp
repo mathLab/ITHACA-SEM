@@ -659,7 +659,7 @@ namespace Nektar
                 else if (bndCondExp.num_elements() == 0)
                 {
                     // All boundaries are periodic.
-                    meshVertId = locExpVector[0].GetGeom2D()->GetVid(0);
+                    meshVertId = locExpVector[0]->GetGeom2D()->GetVid(0);
                 }
                 else
                 {
@@ -677,10 +677,14 @@ namespace Nektar
 
             vCommRow->AllReduce(meshVertId, LibUtilities::ReduceSum);
 
+            // When running in parallel, we need to ensure that the singular
+            // mesh vertex is communicated to any periodic vertices, otherwise
+            // the system may diverge.
             if(systemSingular == true && checkIfSystemSingular && maxBCIdx != p)
             {
                 // Scan through all periodic vertices
-                for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
+                for (pIt  = periodicVerts.begin();
+                     pIt != periodicVerts.end(); ++pIt)
                 {
                     if (ReorderedGraphVertId[0].count(pIt->first) != 0)
                     {

@@ -199,6 +199,7 @@ namespace Nektar
             Array<OneD, int>                    edgeInteriorSign;
             Array<OneD, unsigned int>           faceInteriorMap;
             Array<OneD, int>                    faceInteriorSign;
+            PeriodicMap::const_iterator pIt;
 
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
 
@@ -467,6 +468,7 @@ namespace Nektar
             // Note: we find the process with maximum boundary regions to ensure
             // we do not try to set a Dirichlet vertex on a partition with no
             // intersection with the boundary.
+            meshVertId = 0;
             if(systemSingular == true && maxBCIdx == p)
             {
                 if(m_session->DefinesParameter("SingularElement"))
@@ -478,6 +480,11 @@ namespace Nektar
                              "SingularElement Parameter is too large");
                     
                     meshVertId = locExpVector[s_eid]->GetGeom3D()->GetVid(0);
+                }
+                else if (bndCondExp.num_elements() == 0)
+                {
+                    // All boundaries are periodic.
+                    meshVertId = locExpVector[0]->GetGeom3D()->GetVid(0);
                 }
                 else
                 {
@@ -496,6 +503,36 @@ namespace Nektar
                 }
             }
             
+            m_comm->AllReduce(meshVertId, LibUtilities::ReduceSum);
+
+            // When running in parallel, we need to ensure that the singular
+            // mesh vertex is communicated to any periodic vertices, otherwise
+            // the system may diverge.
+            if(systemSingular == true && maxBCIdx != p)
+            {
+                // Scan through all periodic vertices
+                for (pIt  = periodicVerts.begin();
+                     pIt != periodicVerts.end(); ++pIt)
+                {
+                    if (vertReorderedGraphVertId.count(pIt->first) != 0)
+                    {
+                        continue;
+                    }
+
+                    for (i = 0; i < pIt->second.size(); ++i)
+                    {
+                        if (pIt->second[i].isLocal ||
+                            pIt->second[i].id != meshVertId)
+                        {
+                            continue;
+                        }
+
+                        // Mark this periodic vertex as Dirichlet.
+                        vertReorderedGraphVertId[pIt->first] =
+                            graphVertId++;
+                    }
+                }
+            }
 
             m_numLocalDirBndCoeffs = nLocDirBndCondDofs + nExtraDirichlet;
             firstNonDirGraphVertId = graphVertId;
@@ -542,7 +579,6 @@ namespace Nektar
             m_numLocalBndCoeffs = 0;
 
             /// - Periodic vertices
-            PeriodicMap::const_iterator pIt;
             for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
             {
                 meshVertId = pIt->first;
@@ -621,7 +657,8 @@ namespace Nektar
                 }
                 else
                 {
-                    vertTempGraphVertId[meshVertId] = vertTempGraphVertId[pIt->second[i].id];
+                    vertTempGraphVertId[meshVertId] =
+                        vertTempGraphVertId[pIt->second[i].id];
                 }
             }
 

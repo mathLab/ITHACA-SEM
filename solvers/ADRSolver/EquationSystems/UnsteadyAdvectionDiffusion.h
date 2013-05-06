@@ -37,6 +37,9 @@
 #define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_UNSTEADYADVECTIONDIFFUSION_H
 
 #include <SolverUtils/UnsteadySystem.h>
+#include <SolverUtils/RiemannSolvers/RiemannSolver.h>
+#include <SolverUtils/Advection/Advection.h>
+#include <SolverUtils/Diffusion/Diffusion.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -46,45 +49,77 @@ namespace Nektar
     {
     public:
         friend class MemoryManager<UnsteadyAdvectionDiffusion>;
-
+        
         /// Creates an instance of this class
         static EquationSystemSharedPtr create(
-                const LibUtilities::SessionReaderSharedPtr& pSession) {
-            EquationSystemSharedPtr p = MemoryManager<UnsteadyAdvectionDiffusion>::AllocateSharedPtr(pSession);
+            const LibUtilities::SessionReaderSharedPtr& pSession) {
+            EquationSystemSharedPtr p = 
+            MemoryManager<UnsteadyAdvectionDiffusion>::
+            AllocateSharedPtr(pSession);
             p->InitObject();
             return p;
         }
         /// Name of class
         static std::string className;
-
+        
+        /// Destructor
         virtual ~UnsteadyAdvectionDiffusion();
-
+        
     protected:
+        SolverUtils::RiemannSolverSharedPtr     m_riemannSolver;
+        SolverUtils::AdvectionSharedPtr         m_advection;
+        SolverUtils::DiffusionSharedPtr         m_diffusion;        
+        Array<OneD, Array<OneD, NekDouble> >    m_velocity;
+        Array<OneD, NekDouble>                  m_traceVn;
+        
+        /// Session reader
         UnsteadyAdvectionDiffusion(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
-
-        virtual void DoOdeRhs(const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                          Array<OneD,        Array<OneD, NekDouble> >&outarray,
-                    const NekDouble time);
-
-        virtual void DoImplicitSolve(const Array<OneD, const Array<OneD,      NekDouble> >&inarray,
-                      Array<OneD, Array<OneD, NekDouble> >&outarray,
-                      NekDouble time,
-                      NekDouble lambda);
-
+            const LibUtilities::SessionReaderSharedPtr& pSession);
+        
+        /// Evaluate the flux at each solution point for the advection part
+        void GetFluxVectorAdv(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+        
+        /// Evaluate the flux at each solution point for the diffusion part
+        void GetFluxVectorDiff(
+            const int i, 
+            const int j,
+            const Array<OneD, Array<OneD, NekDouble> > &physfield,
+                  Array<OneD, Array<OneD, NekDouble> > &derivatives,
+                  Array<OneD, Array<OneD, NekDouble> > &flux);
+        
+        /// Compute the RHS
+        virtual void DoOdeRhs(
+            const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+                  Array<OneD,        Array<OneD, NekDouble> >&outarray,
+            const NekDouble time);
+        
+        /// Perform the projection
+        void DoOdeProjection(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,       Array<OneD, NekDouble> > &outarray,
+            const NekDouble time);
+        
+        /// Solve implicitly the diffusion term
+        virtual void DoImplicitSolve(
+            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                  Array<OneD,       Array<OneD, NekDouble> >&outarray,
+            NekDouble time,
+            NekDouble lambda);
+        
+        /// Get the normal velocity
+        Array<OneD, NekDouble> &GetNormalVelocity();
+        
+        /// Initialise the object
         virtual void v_InitObject();
-
-        virtual void v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &flux);
-
-        virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux);
-
-        // Print Summary
+        
+        /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
-
+        
     private:
         NekDouble m_waveFreq;
         NekDouble m_epsilon;
-        Array<OneD, Array<OneD, NekDouble> > m_velocity;
     };
 }
 

@@ -641,7 +641,7 @@ namespace Nektar
              SpatialDomains::Composite comp;
              SpatialDomains::TriGeomSharedPtr TriangleGeom;
              SpatialDomains::QuadGeomSharedPtr QuadrilateralGeom;
-
+             
              LocalRegions::TriExpSharedPtr tri;
              LocalRegions::NodalTriExpSharedPtr Ntri;
              LibUtilities::PointsType TriNb;
@@ -661,9 +661,9 @@ namespace Nektar
                              SpatialDomains::TriGeom>((*compIt->second)[j])))
                      {
                          LibUtilities::BasisKey TriBa
-                                     = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,0);
+                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,0,variable);
                          LibUtilities::BasisKey TriBb
-                                     = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,1);
+                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(TriangleGeom,1,variable);
 
                          if(graph3D->GetExpansions().begin()->second->m_basisKeyVector[0]
                                  .GetBasisType() == LibUtilities::eGLL_Lagrange)
@@ -696,9 +696,9 @@ namespace Nektar
                               SpatialDomains::QuadGeom>((*compIt->second)[j])))
                      {
                          LibUtilities::BasisKey QuadBa
-                                 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,0);
+                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,0,variable);
                          LibUtilities::BasisKey QuadBb
-                                 = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,1);
+                             = boost::dynamic_pointer_cast<SpatialDomains::MeshGraph3D>(graph3D)->GetFaceBasisKey(QuadrilateralGeom,1,variable);
 
                          quad = MemoryManager<LocalRegions::QuadExp>
                              ::AllocateSharedPtr(QuadBa,QuadBb,

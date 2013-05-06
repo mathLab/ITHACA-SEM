@@ -378,7 +378,7 @@ namespace Nektar
         int Geometry::v_GetNumFaces() const
         {
             NEKERROR(ErrorUtil::efatal,
-                "This function is only valid for shape type geometries");
+                     "This function is only valid for shape type geometries");
             return 0;
         }
 

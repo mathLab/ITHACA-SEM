@@ -78,7 +78,7 @@ namespace Nektar
             const std::string                          &variable,
             const bool                                  SetUpJustDG,
             const bool                                  DeclareCoeffPhysArrays)
-            : ExpList2D(pSession,graph2D,DeclareCoeffPhysArrays,variable),
+            : ExpList2D(pSession,graph2D,DeclareCoeffPhysArrays),
               m_bndCondExpansions(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr)

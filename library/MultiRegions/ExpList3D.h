@@ -70,10 +70,11 @@ namespace Nektar
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList3D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
-                        const SpatialDomains::MeshGraphSharedPtr &graph3D);
+                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                        const std::string  &variable = "DefaultVar");
 
             /// Sets up a list of local expansions based on an expansion vector
-            ExpList3D(const SpatialDomains::ExpansionMap &expansions);
+            MULTI_REGIONS_EXPORT  ExpList3D(const SpatialDomains::ExpansionMap &expansions);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3D();

@@ -164,7 +164,8 @@ namespace Nektar
          *                      and the spectral/hp element expansion.
          */
         ExpList3D::ExpList3D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                const SpatialDomains::MeshGraphSharedPtr &graph3D) :
+                             const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                             const std::string  &variable) :
             ExpList(pSession,graph3D)
         {
             LocalRegions::TetExpSharedPtr   tet;
@@ -173,7 +174,7 @@ namespace Nektar
             LocalRegions::PyrExpSharedPtr   pyramid;
 
             const SpatialDomains::ExpansionMap &expansions
-                                        = graph3D->GetExpansions();
+                                        = graph3D->GetExpansions(variable);
 
             SpatialDomains::ExpansionMap::const_iterator expIt;
             for (expIt = expansions.begin(); expIt != expansions.end(); ++expIt)

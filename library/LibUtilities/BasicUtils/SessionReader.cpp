@@ -1600,6 +1600,11 @@ namespace Nektar
 
             TiXmlElement *GlobalSys = conditions->FirstChildElement("GLOBALSYSSOLNINFO");
 
+            if(!GlobalSys)
+            {
+                return;
+            }
+
             TiXmlElement *VarInfo   = GlobalSys->FirstChildElement("V");
             
             while (VarInfo)

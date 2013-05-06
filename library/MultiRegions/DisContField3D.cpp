@@ -70,7 +70,7 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr   &graph3D,
             const std::string                          &variable,
             const bool                                  SetUpJustDG)
-            : ExpList3D          (pSession,graph3D),
+            : ExpList3D          (pSession,graph3D,variable),
               m_bndCondExpansions(),
               m_bndConditions    (),
               m_trace(NullExpListSharedPtr)

@@ -116,8 +116,12 @@ namespace Nektar
                 {
                     // Extract the composites from the string and return them in a list.
                     BoundaryRegionShPtr boundaryRegion(MemoryManager<BoundaryRegion>::AllocateSharedPtr());
-                    m_meshGraph->GetCompositeList(indxStr, *boundaryRegion);
 
+                    ASSERTL0(m_boundaryRegions.count(indx) == 0,
+                             "Boundary region "+indxStr+ " defined more than "
+                             "once!");
+                    
+                    m_meshGraph->GetCompositeList(indxStr, *boundaryRegion);
                     m_boundaryRegions[indx] = boundaryRegion;
                 }
 

@@ -1201,6 +1201,7 @@ namespace Nektar
             const ExpListSharedPtr trace,
             const PeriodicMap     &perMap)
         {
+            Array<OneD, int> tmp;
             StdRegions::StdExpansionSharedPtr locExpansion;
             int i;
             int maxQuad = 0, quad = 0, nDim = 0, eid = 0, offset = 0;
@@ -1278,44 +1279,44 @@ namespace Nektar
                     {
                         if (nDim == 2)
                         {
-                            RealignTraceElement(m_traceToUniversalMap+offset,
-                                                it->second[0].orient,
-                                                quad);
+                            RealignTraceElement(
+                                tmp = m_traceToUniversalMap+offset,
+                                it->second[0].orient, quad);
                         }
                         else
                         {
-                            RealignTraceElement(m_traceToUniversalMap+offset,
-                                                it->second[0].orient,
-                                                trace->GetExp(i)->GetNumPoints(0),
-                                                trace->GetExp(i)->GetNumPoints(1));
+                            RealignTraceElement(
+                                tmp = m_traceToUniversalMap+offset,
+                                it->second[0].orient,
+                                trace->GetExp(i)->GetNumPoints(0),
+                                trace->GetExp(i)->GetNumPoints(1));
                         }
                     }
                 }
             }
 
-            Array<OneD, long> tmp(nTracePhys);
+            Array<OneD, long> tmp2(nTracePhys);
             for (int i = 0; i < nTracePhys; ++i)
             {
-                tmp[i] = m_traceToUniversalMap[i];
+                tmp2[i] = m_traceToUniversalMap[i];
             }
-            m_traceGsh = Gs::Init(tmp, m_comm);
-            Gs::Unique(tmp, m_comm);
+            m_traceGsh = Gs::Init(tmp2, m_comm);
+            Gs::Unique(tmp2, m_comm);
             for (int i = 0; i < nTracePhys; ++i)
             {
-                m_traceToUniversalMapUnique[i] = tmp[i];
+                m_traceToUniversalMapUnique[i] = tmp2[i];
             }
         }
 
         void AssemblyMapDG::RealignTraceElement(
-            Array<OneD, int>        toAlign,
-            StdRegions::Orientation orient,
-            int                     nquad1,
-            int                     nquad2)
+            Array<OneD, int>        &toAlign,
+            StdRegions::Orientation  orient,
+            int                      nquad1,
+            int                      nquad2)
         {
             if (orient == StdRegions::eBackwards)
             {
                 ASSERTL1(nquad2 == 0, "nquad2 != 0 for reorienation");
-
                 for (int i = 0; i < nquad1/2; ++i)
                 {
                     swap(toAlign[i], toAlign[nquad1-1-i]);
@@ -1327,6 +1328,7 @@ namespace Nektar
 
                 Array<OneD, int> tmp(nquad1*nquad2);
 
+                // Copy transpose.
                 if (orient == StdRegions::eDir1FwdDir2_Dir2FwdDir1 ||
                     orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
                     orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||

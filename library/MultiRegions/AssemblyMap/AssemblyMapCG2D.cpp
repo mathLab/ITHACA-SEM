@@ -85,8 +85,8 @@ namespace Nektar
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                             &bndConditions,
-                const PeriodicMap& periodicEdgesId,
                 const PeriodicMap& periodicVertsId,
+                const PeriodicMap& periodicEdgesId,
                 const bool checkIfSystemSingular,
                 const std::string variable) :
             AssemblyMapCG(pSession,variable)
@@ -95,8 +95,8 @@ namespace Nektar
                                       locExp,
                                       bndCondExp,
                                       bndConditions,
-                                      periodicEdgesId,
                                       periodicVertsId,
+                                      periodicEdgesId,
                                       checkIfSystemSingular);
 
             CalculateBndSystemBandWidth();
@@ -143,8 +143,8 @@ namespace Nektar
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
-                const PeriodicMap& periodicEdgesId,
                 const PeriodicMap& periodicVertsId,
+                const PeriodicMap& periodicEdgesId,
                 const bool checkIfSystemSingular)
         {
             int i,j,k;
@@ -194,8 +194,8 @@ namespace Nektar
             Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> > bndConditionsVec(1,bndConditions);
             nGraphVerts = SetUp2DGraphC0ContMap(locExp,
                                                 bndCondExp,bndConditionsVec,
-                                                periodicEdgesId,
                                                 periodicVertsId,
+                                                periodicEdgesId,
                                                 Dofs,
                                                 ReorderedGraphVertId,
                                                 firstNonDirGraphVertId,
@@ -545,8 +545,8 @@ namespace Nektar
                 const ExpList  &locExp,
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >  &bndConditions,
-                const PeriodicMap& periodicEdges,
                 const PeriodicMap& periodicVerts,
+                const PeriodicMap& periodicEdges,
                 Array<OneD, map<int,int> > &Dofs,
                 Array<OneD, map<int,int> > &ReorderedGraphVertId,
                 int          &firstNonDirGraphVertId,

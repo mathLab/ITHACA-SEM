@@ -185,10 +185,10 @@ namespace Nektar
             virtual int v_GetFullSystemBandWidth() const;
 
             void RealignTraceElement(
-                Array<OneD, int>        toAlign,
-                StdRegions::Orientation orient,
-                int                     nquad1,
-                int                     nquad2 = 0);
+                Array<OneD, int>        &toAlign,
+                StdRegions::Orientation  orient,
+                int                      nquad1,
+                int                      nquad2 = 0);
         }; // class
 
 

@@ -126,12 +126,12 @@ namespace Nektar
             PeriodicMap m_periodicVerts;
             
             /**
-             * @brief Auxiliary map for periodic boundary conditions.
-             * 
-             * Takes geometry IDs of periodic edges to a pair (n,e), where n
-             * is the expansion containing the edge and e the local edge number.
+             * @brief A vector indicating degress of freedom which need to be
+             * copied from forwards to backwards space in case of a periodic
+             * boundary condition.
              */
-            boost::unordered_map<int,pair<int,int> > m_perEdgeToExpMap;
+            vector<int> m_periodicFwdCopy;
+            vector<int> m_periodicBwdCopy;
 
             /*
              * @brief A map identifying which edges are left- and right-adjacent

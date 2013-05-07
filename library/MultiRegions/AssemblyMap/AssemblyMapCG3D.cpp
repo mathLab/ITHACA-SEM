@@ -440,8 +440,6 @@ namespace Nektar
             // Find the process rank with the maximum number of boundary regions
             int maxBCIdx = Vmath::Imax(n, bccounts, 1);
 
-            systemSingular = false;
-            
             // If the system is singular, the process with the maximum number of
             // BCs will set a Dirichlet vertex to make system non-singular.
             // Note: we find the process with maximum boundary regions to ensure

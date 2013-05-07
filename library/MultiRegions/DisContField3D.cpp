@@ -355,7 +355,6 @@ namespace Nektar
                         LocalRegions::Expansion2D>(m_trace->GetExp(i));
                     
                 int offset = m_trace->GetPhys_Offset(i);
-                
                 if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                 {
                     traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
@@ -483,7 +482,7 @@ namespace Nektar
 
                         if (ent.orient == StdRegions::eDir1BwdDir1_Dir2FwdDir2 ||
                             ent.orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
-                            ent.orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
+                            ent.orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||
                             ent.orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
                         {
                             // Reverse x direction
@@ -499,16 +498,16 @@ namespace Nektar
 
                         if (ent.orient == StdRegions::eDir1FwdDir1_Dir2BwdDir2 ||
                             ent.orient == StdRegions::eDir1BwdDir1_Dir2BwdDir2 ||
-                            ent.orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1 ||
+                            ent.orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1 ||
                             ent.orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
                         {
                             // Reverse y direction
                             for (int j = 0; j < nquad1; ++j)
                             {
-                                for (int i = 0; i < nquad2; ++i)
+                                for (int i = 0; i < nquad2/2; ++i)
                                 {
-                                    swap(tmpFwd[offset2 + i*nquad1 + j],
-                                         tmpFwd[offset2 + (nquad2-i-1)*nquad1 + j]);
+                                    swap(tmpFwd[i*nquad1 + j],
+                                         tmpFwd[(nquad2-i-1)*nquad1 + j]);
                                 }
                             }
                         }
@@ -1149,12 +1148,12 @@ namespace Nektar
                         if (tmpVec[0].size() == 3)
                         {
                             o = SpatialDomains::TriGeom::GetFaceOrientation(
-                                tmpVec[other], tmpVec[i]);
+                                tmpVec[i], tmpVec[other]);
                         }
                         else
                         {
                             o = SpatialDomains::QuadGeom::GetFaceOrientation(
-                                tmpVec[other], tmpVec[i]);
+                                tmpVec[i], tmpVec[other]);
                         }
 
                         // Record face ID, orientation and whether other face is
@@ -1175,12 +1174,12 @@ namespace Nektar
                         if (tmpVec[0].size() == 3)
                         {
                             o = SpatialDomains::TriGeom::GetFaceOrientation(
-                                tmpVec[other], tmpVec[i]);
+                                tmpVec[i], tmpVec[other]);
                         }
                         else
                         {
                             o = SpatialDomains::QuadGeom::GetFaceOrientation(
-                                tmpVec[other], tmpVec[i]);
+                                tmpVec[i], tmpVec[other]);
                         }
 
                         if (nFaceVerts == 3)
@@ -1258,12 +1257,12 @@ namespace Nektar
                         if (tmpVec[0].size() == 3)
                         {
                             o = SpatialDomains::TriGeom::GetFaceOrientation(
-                                tmpVec[other], tmpVec[i]);
+                                tmpVec[i], tmpVec[other]);
                         }
                         else
                         {
                             o = SpatialDomains::QuadGeom::GetFaceOrientation(
-                                tmpVec[other], tmpVec[i]);
+                                tmpVec[i], tmpVec[other]);
                         }
 
                         vector<int> per1 = edgeMap[ids[i]];
@@ -1471,44 +1470,6 @@ namespace Nektar
                     m_periodicEdges.insert(*perIt);
                 }
             }
-
-#if 0
-            cout << "Found " << m_periodicFaces.size() << " periodic faces" << endl;
-
-            PeriodicMap::iterator asd;
-            for (asd = m_periodicFaces.begin(); asd != m_periodicFaces.end(); ++asd)
-            {
-                cout << asd->first << " <-> " << asd->second[0].id
-                     << " " << asd->second[0].orient << " " << asd->second[0].isLocal << endl;
-            }
-
-            cout << "RANK: " << vComm->GetRank() << " found " << m_periodicVerts.size() << " periodic verts" << endl;
-            for (asd = m_periodicVerts.begin(); asd != m_periodicVerts.end(); ++asd)
-            {
-                cout << "RANK: " << vComm->GetRank() << " " << asd->first << " <-> ";
-                for (i = 0; i < asd->second.size(); ++i)
-                {
-                    cout << "(" << asd->second[i].id
-                         << "," << asd->second[i].isLocal
-                         << ") ";
-                }
-                cout << endl;
-            }
-
-            cout << "RANK: " << vComm->GetRank() << " found " << m_periodicEdges.size() << " periodic edges" << endl;
-            for (asd = m_periodicEdges.begin(); asd != m_periodicEdges.end(); ++asd)
-            {
-                cout << "RANK: " << vComm->GetRank() << " " << asd->first << " <-> ";
-                for (i = 0; i < asd->second.size(); ++i)
-                {
-                    cout << "(" << asd->second[i].id
-                         << "," << asd->second[i].orient
-                         << "," << asd->second[i].isLocal
-                         << ") ";
-                }
-                cout << endl;
-            }
-#endif
         }
 
         bool DisContField3D::IsLeftAdjacentFace(const int n, const int e)
@@ -1527,13 +1488,13 @@ namespace Nektar
                 // Boundary edge (1 connected element). Do nothing in
                 // serial.
                 it = m_boundaryFaces.find(traceEl->GetElmtId());
-                
+
                 // If the edge does not have a boundary condition set on
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryFaces.end())
                 {
                     fwd = m_traceMap->
-                        GetTraceToUniversalMapUnique(offset) > 0;
+                        GetTraceToUniversalMapUnique(offset) >= 0;
                 }
             }
             else if (traceEl->GetLeftAdjacentElementFace () != -1 &&
@@ -1618,6 +1579,10 @@ namespace Nektar
                     fwd = m_leftAdjacentFaces[cnt];
                     if (fwd)
                     {
+                        if (n == 3 && e == 5)
+                        {
+                            cout << "FO = " << (*m_exp)[n]->GetGeom3D()->GetFaceOrient(e) << endl;
+                        }
                         (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Fwd + offset);

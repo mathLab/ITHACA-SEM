@@ -132,8 +132,8 @@ namespace Nektar
                 ::AllocateSharedPtr(m_session,m_ncoeffs,*this,
                                     m_bndCondExpansions,
                                     m_bndConditions,
-                                    m_periodicEdges,
                                     m_periodicVerts,
+                                    m_periodicEdges,
                                     CheckIfSingularSystem);
 
         }
@@ -180,8 +180,8 @@ namespace Nektar
                     ::AllocateSharedPtr(m_session, m_ncoeffs,*this,
                                         m_bndCondExpansions,
                                         m_bndConditions,
-                                        m_periodicEdges,
                                         m_periodicVerts,
+                                        m_periodicEdges,
                                         CheckIfSingularSystem);
             }
             else

@@ -64,9 +64,11 @@ namespace Nektar
             m_globalBndMat       (In.m_globalBndMat),
             m_trace              (In.m_trace),
             m_traceMap           (In.m_traceMap),
+            m_periodicVerts      (In.m_periodicVerts),
             m_boundaryEdges      (In.m_boundaryEdges),
             m_periodicEdges      (In.m_periodicEdges),
-            m_perEdgeToExpMap    (In.m_perEdgeToExpMap),
+            m_periodicFwdCopy    (In.m_periodicFwdCopy),
+            m_periodicBwdCopy    (In.m_periodicBwdCopy),
             m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
         {
         }
@@ -81,7 +83,10 @@ namespace Nektar
               m_bndCondExpansions(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
-              m_periodicEdges()
+              m_periodicEdges(),
+              m_periodicVerts(),
+              m_periodicFwdCopy(),
+              m_periodicBwdCopy()
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
 
@@ -244,8 +249,10 @@ namespace Nektar
                     m_trace             = In.m_trace;
                     m_traceMap          = In.m_traceMap;
                     m_periodicEdges     = In.m_periodicEdges;
+                    m_periodicVerts     = In.m_periodicVerts;
+                    m_periodicFwdCopy   = In.m_periodicFwdCopy;
+                    m_periodicBwdCopy   = In.m_periodicBwdCopy;
                     m_boundaryEdges     = In.m_boundaryEdges;
-                    m_perEdgeToExpMap   = In.m_perEdgeToExpMap;
                     m_leftAdjacentEdges = In.m_leftAdjacentEdges;
                 }
                 else 
@@ -254,8 +261,10 @@ namespace Nektar
                     m_trace             = In.m_trace;
                     m_traceMap          = In.m_traceMap;
                     m_periodicEdges     = In.m_periodicEdges;
+                    m_periodicVerts     = In.m_periodicVerts;
+                    m_periodicFwdCopy   = In.m_periodicFwdCopy;
+                    m_periodicBwdCopy   = In.m_periodicBwdCopy;
                     m_boundaryEdges     = In.m_boundaryEdges;
-                    m_perEdgeToExpMap   = In.m_perEdgeToExpMap;
                     m_leftAdjacentEdges = In.m_leftAdjacentEdges;
                     
                     // set elmt edges to point to robin bc edges if required.
@@ -398,8 +407,17 @@ namespace Nektar
                         LocalRegions::Expansion1D>(m_trace->GetExp(i));
                     
                 int offset = m_trace->GetPhys_Offset(i);
-                    
-                if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
+                int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
+                PeriodicMap::iterator pIt = m_periodicEdges.find(
+                    traceGeomId);
+
+                if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal &&
+                    traceGeomId == min(pIt->second[0].id, traceGeomId))
+                {
+                    traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
+                        traceEl->GetLeftAdjacentElementEdge());
+                }
+                else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                 {
                     traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
                         traceEl->GetLeftAdjacentElementEdge());
@@ -424,6 +442,8 @@ namespace Nektar
             }
                 
             // Set up information for periodic boundary conditions.
+            boost::unordered_map<int,pair<int,int> > perEdgeToExpMap;
+            boost::unordered_map<int,pair<int,int> >::iterator it2;
             for (cnt = n = 0; n < m_exp->size(); ++n)
             {
                 for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
@@ -433,7 +453,7 @@ namespace Nektar
 
                     if (it != m_periodicEdges.end())
                     {
-                        m_perEdgeToExpMap[it->first] = make_pair(n, e);
+                        perEdgeToExpMap[it->first] = make_pair(n, e);
                     }
                 }
             }
@@ -446,6 +466,77 @@ namespace Nektar
                 for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j, ++cnt)
                 {
                     m_leftAdjacentEdges[cnt] = IsLeftAdjacentEdge(i, j);
+                }
+            }
+
+            // Set up mapping to copy Fwd of periodic bcs to Bwd of other edge.
+            cnt = 0;
+            for (int n = 0; n < m_exp->size(); ++n)
+            {
+                for (int e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                {
+                    int edgeGeomId = (*m_exp)[n]->GetGeom2D()->GetEid(e);
+                    int offset = m_trace->GetPhys_Offset(
+                        elmtToTrace[n][e]->GetElmtId());
+
+                    // Check to see if this face is periodic.
+                    PeriodicMap::iterator it = m_periodicEdges.find(edgeGeomId);
+
+                    if (it != m_periodicEdges.end())
+                    {
+                        const PeriodicEntity &ent = it->second[0];
+                        it2 = perEdgeToExpMap.find(ent.id);
+
+                        if (it2 == perEdgeToExpMap.end())
+                        {
+                            if (m_session->GetComm()->GetRowComm()->GetSize() > 1 &&
+                                !ent.isLocal)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                ASSERTL1(false, "Periodic edge not found!");
+                            }
+                        }
+
+                        ASSERTL1(m_leftAdjacentEdges[cnt],
+                                 "Periodic edge in non-forward space?");
+
+                        int offset2 = m_trace->GetPhys_Offset(
+                            elmtToTrace[it2->second.first][it2->second.second]->
+                                GetElmtId());
+
+                        // Calculate relative orientations between edges to
+                        // calculate copying map.
+                        int nquad = elmtToTrace[n][e]->GetNumPoints(0);
+
+                        vector<int> tmpBwd(nquad);
+                        vector<int> tmpFwd(nquad);
+
+                        if (ent.orient == StdRegions::eForwards)
+                        {
+                            for (int i = 0; i < nquad; ++i)
+                            {
+                                tmpBwd[i] = offset2 + i;
+                                tmpFwd[i] = offset  + i;
+                            }
+                        }
+                        else
+                        {
+                            for (int i = 0; i < nquad; ++i)
+                            {
+                                tmpBwd[i] = offset2 + i;
+                                tmpFwd[i] = offset  + nquad - i - 1;
+                            }
+                        }
+
+                        for (int i = 0; i < nquad; ++i)
+                        {
+                            m_periodicFwdCopy.push_back(tmpFwd[i]);
+                            m_periodicBwdCopy.push_back(tmpBwd[i]);
+                        }
+                    }
                 }
             }
         }
@@ -1024,30 +1115,6 @@ namespace Nektar
                     m_periodicVerts.insert(*perIt);
                 }
             }
-
-#if 0
-            cout << "Found " << m_periodicEdges.size() << " periodic edges" << endl;
-            
-            PeriodicMap::iterator asd;
-            for (asd = m_periodicEdges.begin(); asd != m_periodicEdges.end(); ++asd)
-            {
-                cout << asd->first << " <-> " << asd->second[0].id
-                     << " " << StdRegions::OrientationMap[asd->second[0].orient] << endl;
-            }
-
-            cout << "RANK: " << vComm->GetRank() << " found " << m_periodicVerts.size() << " periodic verts" << endl;
-            for (asd = m_periodicVerts.begin(); asd != m_periodicVerts.end(); ++asd)
-            {
-                cout << "RANK: " << vComm->GetRank() << " " << asd->first << " <-> ";
-                for (i = 0; i < asd->second.size(); ++i)
-                {
-                    cout << "(" << asd->second[i].id
-                         << "," << asd->second[i].isLocal
-                         << ") ";
-                }
-                cout << endl;
-            }
-#endif
         }
 
         bool DisContField2D::IsLeftAdjacentEdge(const int n, const int e)
@@ -1071,8 +1138,20 @@ namespace Nektar
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryEdges.end())
                 {
-                    fwd = m_traceMap->
-                        GetTraceToUniversalMapUnique(offset) > 0;
+                    int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
+                    PeriodicMap::iterator pIt = m_periodicEdges.find(
+                        traceGeomId);
+
+                    if (pIt != m_periodicEdges.end() &&
+                        !pIt->second[0].isLocal)
+                    {
+                        fwd = traceGeomId != min(traceGeomId, pIt->second[0].id);
+                    }
+                    else
+                    {
+                        fwd = m_traceMap->
+                            GetTraceToUniversalMapUnique(offset) >= 0;
+                    }
                 }
             }
             else if (traceEl->GetLeftAdjacentElementEdge () != -1 &&
@@ -1087,7 +1166,7 @@ namespace Nektar
             {
                 ASSERTL2(false, "Unconnected trace element!");
             }
-
+            
             return fwd;
         }
             
@@ -1173,50 +1252,6 @@ namespace Nektar
                                                      field + phys_offset,
                                                      e_tmp = Bwd + offset);
                     }
-                    
-                    // Check to see if this edge is periodic.
-                    it2 = m_periodicEdges.find(edgeGeomId);
-                    
-                    if (it2 != m_periodicEdges.end())
-                    {
-                        const PeriodicEntity &ent = it2->second[0];
-                        it3 = m_perEdgeToExpMap.find(ent.id);
-
-                        if (it3 == m_perEdgeToExpMap.end())
-                        {
-                            if (parallel && !ent.isLocal)
-                            {
-                                continue;
-                            }
-                            else
-                            {
-                                ASSERTL1(false, "Periodic edge not found!");
-                            }
-                        }
-                        
-                        ASSERTL1(fwd, "Periodic edge in non-forward space?");
-                        
-                        int offset2 = m_trace->GetPhys_Offset(
-                            elmtToTrace[it3->second.first][it3->second.second]->
-                                GetElmtId());
-                        
-                        /*
-                         * Copy fwd -> bwd space. If edges are backwards with
-                         * respect to each other, reverse data. Note that for
-                         * varying polynomial order this condition will not work
-                         * (needs some kind of interpolation here).
-                         */
-                        if (ent.orient == StdRegions::eBackwards)
-                        {
-                            Vmath::Reverse(elmtToTrace[n][e]->GetTotPoints(),
-                                           &Fwd[offset], 1, &Bwd[offset2], 1);
-                        }
-                        else
-                        {
-                            Vmath::Vcopy  (elmtToTrace[n][e]->GetTotPoints(),
-                                           &Fwd[offset], 1, &Bwd[offset2], 1);
-                        }
-                    }
                 }
             }
             
@@ -1266,6 +1301,12 @@ namespace Nektar
                     ASSERTL0(false,
                              "Method not set up for this boundary condition.");
                 }
+            }
+            
+            // Copy any periodic boundary conditions.
+            for (n = 0; n < m_periodicFwdCopy.size(); ++n)
+            {
+                Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
             }
             
             // Do parallel exchange for forwards/backwards spaces.

@@ -6,7 +6,7 @@ IF (THIRDPARTY_BUILD_METIS)
     EXTERNALPROJECT_ADD(
         modmetis-5.1.0
         PREFIX ${TPSRC}
-        URL http://www.nektar.info/thirdparty/modmetis-5.1.0.tar.bz2
+        URL ${TPURL}/modmetis-5.1.0.tar.bz2
         URL_MD5 "8f8313a768e4611d1748d10f88f3d702"
         DOWNLOAD_DIR ${TPSRC}
         CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist -DCMAKE_C_FLAGS:STRING=-fPIC -DGKLIB_PATH:PATH=${TPSRC}/src/modmetis-5.1.0/GKlib ${TPSRC}/src/modmetis-5.1.0

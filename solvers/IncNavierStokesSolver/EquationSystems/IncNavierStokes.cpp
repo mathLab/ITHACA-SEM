@@ -961,7 +961,8 @@ namespace Nektar
                     
                     U = m_fields[fieldid]->UpdatePhys() + offset;
                     
-                    Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (BndExp[n]->GetExp(i));
+                    Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> 
+                        (BndExp[n]->GetExp(i));
                     
                     boundary = m_fieldsBCToTraceID[fieldid][cnt];
                     
@@ -970,7 +971,8 @@ namespace Nektar
                     Array<OneD, NekDouble> ubc(nq);
                     elmt->GetEdgePhysVals(boundary,Bc,U,ubc);
                     
-                    Vmath::Vmul(nq,&m_fieldsRadiationFactor[fieldid][cnt1 + BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
+                    Vmath::Vmul(nq,&m_fieldsRadiationFactor[fieldid][cnt1 + 
+                             BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);
 
                     Bvals = BndExp[n]->UpdateCoeffs()+BndExp[n]->GetCoeff_Offset(i);
 
@@ -1029,8 +1031,7 @@ namespace Nektar
         
         Array<OneD, NekDouble> tstep      (n_element, 0.0);
         Array<OneD, NekDouble> stdVelocity(n_element, 0.0);
-        Array<OneD, Array<OneD, NekDouble> > velfields(
-                                                    m_velocity.num_elements());
+        Array<OneD, Array<OneD, NekDouble> > velfields(m_velocity.num_elements());
         
         for(int i = 0; i < m_velocity.num_elements(); ++i)
         {
@@ -1046,6 +1047,8 @@ namespace Nektar
         }
         
         NekDouble TimeStep = Vmath::Vmin(n_element, tstep, 1);
+        m_comm->AllReduce(TimeStep,LibUtilities::ReduceMin);        
+        
         return TimeStep;
     }
     

@@ -325,10 +325,10 @@ namespace Nektar
             }
             
             
+            int elmtid;
+            NekDouble cfl = GetCFLEstimate(elmtid);
             if(m_cflsteps && !((n+1)%m_cflsteps) && m_comm->GetRank() == 0)
             {
-                int elmtid;
-                NekDouble cfl = GetCFLEstimate(elmtid);
                 cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
             }
             
@@ -1100,10 +1100,18 @@ namespace Nektar
         Array<OneD, NekDouble> cfl = GetElmtCFLVals();
         
         elmtid = Vmath::Imax(n_element,cfl,1);
-        NekDouble CFL = cfl[elmtid];
+        NekDouble CFL,CFL_loc;
+
+        CFL = CFL_loc = cfl[elmtid];
+        m_comm->AllReduce(CFL,LibUtilities::ReduceMax);
 
         // unshuffle elmt id if data is not stored in consecutive order. 
         elmtid = m_fields[0]->GetOffset_Elmt_Id(elmtid);
+        if(CFL != CFL_loc)
+        {
+            elmtid = -1;
+        }
+        m_comm->AllReduce(elmtid,LibUtilities::ReduceMax);
         
         if(m_HomogeneousType == eHomogeneous1D) // express element id with respect to plane
         {

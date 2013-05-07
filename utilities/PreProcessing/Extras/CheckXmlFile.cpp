@@ -98,6 +98,19 @@ int main(int argc, char *argv[])
                 zc[i] = z;
                 
             }
+
+            for (int i = 0; i < nverts; ++i)
+            {
+                for (int j = i+1; j < nverts; ++j)
+                {
+                    if ((xc[i]-xc[j])*(xc[i]-xc[j]) +
+                        (yc[i]-yc[j])*(yc[i]-yc[j]) +
+                        (zc[i]-zc[j])*(zc[i]-zc[j]) < 1e-10)
+                    {
+                        cout << "Duplicate vertices: " << i << " " << j << endl;
+                    }
+                }
+            }
             
             std::map<int,SpatialDomains::TetGeomSharedPtr>::iterator tetIter;
             int cnt = 0;

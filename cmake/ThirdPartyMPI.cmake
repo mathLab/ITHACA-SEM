@@ -31,7 +31,7 @@ IF( NEKTAR_USE_MPI )
         EXTERNALPROJECT_ADD(
             gsmpi-1.1.1
             PREFIX ${TPSRC}
-            URL http://xyloid.org/gsmpi-1.1.1.tar.bz2
+            URL ${TPURL}/gsmpi-1.1.1.tar.bz2
             URL_MD5 48a6006437e094f6cccce65dcf79f967
             DOWNLOAD_DIR ${TPSRC}
             CONFIGURE_COMMAND 

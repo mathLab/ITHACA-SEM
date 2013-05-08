@@ -56,7 +56,7 @@ TARGET_LINK_LIBRARIES(StdRegions
         ${Boost_DATE_TIME_LIBRARY}
         ${Boost_PROGRAM_OPTIONS_LIBRARY}
         ${Boost_SYSTEM_LIBRARY}
-        ${Boost_ZLIB_LIBRARY}
+        ${ZLIB_LIBRARY}
 	)
 
 SET_LAPACK_LINK_LIBRARIES(StdRegions)

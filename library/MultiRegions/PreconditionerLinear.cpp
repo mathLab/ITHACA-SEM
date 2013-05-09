@@ -107,15 +107,18 @@ namespace Nektar
             v_DoPreconditionerWithNonVertOutput(pInput,pOutput,NullNekDouble1DArray);
         }
 
+        /**
+         *
+         */
         void PreconditionerLinear::v_DoPreconditionerWithNonVertOutput(
-                                                                       const Array<OneD, NekDouble>& pInput,
-                                                                       Array<OneD, NekDouble>& pOutput,
-                                                                       const Array<OneD, NekDouble>& pNonVertOutput)
+            const Array<OneD, NekDouble>& pInput,
+            Array<OneD, NekDouble>& pOutput,
+            const Array<OneD, NekDouble>& pNonVertOutput)
         {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
             switch(solvertype)
             {
-            case MultiRegions::eIterativeStaticCond:
+                case MultiRegions::eIterativeStaticCond:
                 {
                     int i,val;
                     int nloc = m_vertLocToGloMap->GetNumLocalCoeffs();
@@ -125,13 +128,12 @@ namespace Nektar
 
                     // Global to local for linear solver (different from above)
                     Array<OneD, int> LocToGlo = m_vertLocToGloMap->GetLocalToGlobalMap();
-
+                    
                     // number of Dir coeffs in from full problem
                     int nDirFull = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-
+                    
                     Array<OneD,NekDouble> In(nglo,0.0);
                     Array<OneD,NekDouble> Out(nglo,0.0);
-                    
 
                     // Gather rhs
                     for(i = 0; i < nloc; ++i)
@@ -142,10 +144,11 @@ namespace Nektar
                             In[LocToGlo[i]] = pInput[val-nDirFull];
                         }
                     }
-
+                    
                     // Do solve without enforcing any boundary conditions. 
                     m_vertLinsys->SolveLinearSystem(m_vertLocToGloMap->GetNumLocalCoeffs(),
-                                                In,Out,m_vertLocToGloMap);
+                                                    In,Out,m_vertLocToGloMap);
+                    
                     
                     if(pNonVertOutput != NullNekDouble1DArray)
                     {
@@ -159,8 +162,6 @@ namespace Nektar
                         Vmath::Vcopy(pInput.num_elements(),pInput,1,pOutput,1);
                     }
 
-
-
                     // Scatter back soln from linear solve
                     for(i = 0; i < nloc; ++i)
                     {
@@ -170,6 +171,7 @@ namespace Nektar
                             pOutput[val-nDirFull] = Out[LocToGlo[i]];
                         }
                     }
+
                 }
                 break;
             default:

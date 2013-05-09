@@ -49,11 +49,17 @@ namespace Nektar
         /**
          * Registers the class with the Factory.
          */
-        string PreconditionerBlock::className
+        string PreconditionerBlock::className1
                 = GetPreconFactory().RegisterCreatorFunction(
-                    "Block",
+                    "Block2D",
                     PreconditionerBlock::create,
-                    "Block Diagonal Preconditioning");
+                    "2D Block Diagonal Preconditioning");
+
+        string PreconditionerBlock::className2
+                = GetPreconFactory().RegisterCreatorFunction(
+                    "Block3D",
+                    PreconditionerBlock::create,
+                    "3D Block Diagonal Preconditioning");
  
        /**
          * @class Block Preconditioner
@@ -67,15 +73,40 @@ namespace Nektar
 	                 const AssemblyMapSharedPtr &pLocToGloMap)
            : Preconditioner(plinsys, pLocToGloMap),
              m_linsys(plinsys),
+             m_preconType(pLocToGloMap->GetPreconType()),
              m_locToGloMap(pLocToGloMap)
          {
 	 }
 
         void PreconditionerBlock::v_InitObject()
         {
-            BlockPreconditioner3D();
+            GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
+            ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond,"Solver type not valid");
 	}
 
+
+        void PreconditionerBlock::v_BuildPreconditioner()
+        {
+            switch (m_preconType)
+            {
+                case MultiRegions::eBlock2D:
+                {
+                    BlockPreconditioner2D();
+                    break;
+                }
+                case MultiRegions::eBlock3D:
+                case MultiRegions::eLinearWithBlock:
+                {
+                    BlockPreconditioner3D();
+                    break;
+                }
+                default:
+                {
+                    ASSERTL0(0,"Unknown preconditioner");
+                    break;
+                }
+            }
+        }
 
        /**
 	 * \brief Construct a block preconditioner from
@@ -95,17 +126,14 @@ namespace Nektar
             StdRegions::StdExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
-
             int i, j, k, nel;
             int nVerts, nEdges; 
-            int eid, n, cnt;
-            int nedgemodes;
+            int eid, n, cnt, nedgemodes;
             NekDouble zero = 0.0;
 
             int vMap1, vMap2, sign1, sign2;
             int m, v, eMap1, eMap2;
             int offset, globalrow, globalcol, nCoeffs;
-            NekDouble vertValue;
 
             //matrix storage
             MatrixStorage storage = eFULL;
@@ -115,14 +143,14 @@ namespace Nektar
             //local element static condensed matrices
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
-            
+
             DNekMatSharedPtr m_VertBlk;
             DNekMatSharedPtr m_EdgeBlk;
 
             int nDirBnd = m_locToGloMap->GetNumGlobalDirBndCoeffs();
             int nNonDirVerts  = m_locToGloMap->GetNumNonDirVertexModes();
 
-	    //Vertex, edge and face preconditioner matrices
+	    //Vertex and edge preconditioner matrices
             DNekMatSharedPtr VertBlk = MemoryManager<DNekMat>::
                 AllocateSharedPtr(nNonDirVerts,nNonDirVerts,zero,vertstorage);
 
@@ -130,17 +158,35 @@ namespace Nektar
             Array<OneD, long> m_VertBlockToUniversalMap(nNonDirVerts,-1);
 
             int n_exp = expList->GetNumElmts();
+            int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
+            
+            //set the number of blocks in the matrix
+            Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs);
+            n_blks[0]=nNonDirVerts;
 
             map<int,int> edgeDirMap;
+            map<int,int> uniqueEdgeMap;
+
+            //this should be of size total number of local edges
+            Array<OneD, int> m_edgemodeoffset(nNonDirEdgeIDs,0);
+            Array<OneD, int> m_edgeglobaloffset(nNonDirEdgeIDs,0);
 
             const Array<OneD, const ExpListSharedPtr>& bndCondExp = expList->GetBndCondExpansions();
             StdRegions::StdExpansion1DSharedPtr bndCondFaceExp;
             LocalRegions::SegExpSharedPtr       bndSegExp;
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>& 
                 bndConditions = expList->GetBndConditions();
-
+            
             int meshVertId;
             int meshEdgeId;
+
+            /*const Array<OneD, const int> &extradiredges
+                = m_locToGloMap->GetExtraDirEdges();
+            for(i=0; i<extradiredges.num_elements(); ++i)
+            {
+                meshEdgeId=extradiredges[i];
+                edgeDirMap[meshEdgeId] = 1;
+                }*/
 
             //Determine which boundary edges and faces have dirichlet values
             for(i = 0; i < bndCondExp.num_elements(); i++)
@@ -163,6 +209,9 @@ namespace Nektar
             int maxEdgeDof=0;
             int nlocalNonDirEdges=0;
 
+            int edgematrixlocation=0;
+            int ntotaledgeentries=0;
+
             // Loop over all the elements in the domain and compute max edge
             // DOF. Reduce across all processes to get universal maximum.
             for(cnt=n=0; n < n_exp; ++n)
@@ -175,49 +224,48 @@ namespace Nektar
                 {
                     dof    = locExpansion->GetEdgeNcoeffs(j)-2;
                     maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
-                    meshEdgeId = (locExpansion->GetGeom2D())->GetEid(j);
+                    meshEdgeId = locExpansion->GetGeom2D()->GetEid(j);
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
-                        nlocalNonDirEdges++;
+                        if(uniqueEdgeMap.count(meshEdgeId)==0)
+                        {
+                            uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
+
+                            m_edgeglobaloffset[edgematrixlocation]+=ntotaledgeentries;
+
+                            m_edgemodeoffset[edgematrixlocation]=dof*dof;
+
+                            ntotaledgeentries+=dof*dof;
+
+                            n_blks[1+edgematrixlocation++]=dof;
+
+                        }
+
+                        nlocalNonDirEdges+=dof*dof;
                     }
                 }
             }
 
-            int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
-
-            //communicator
-            m_comm = expList->GetComm()->GetRowComm();
+            m_comm = expList->GetComm();
             m_comm->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
 
             //Allocate arrays for block to universal map (number of expansions * p^2)
-            Array<OneD, long> m_EdgeBlockToUniversalMap(nNonDirEdgeIDs*maxEdgeDof*maxEdgeDof,-1);
+            Array<OneD, long> m_EdgeBlockToUniversalMap(ntotaledgeentries,-1);
 
-            Array<OneD, int> m_localEdgeToGlobalMatrixMap(nlocalNonDirEdges*maxEdgeDof*maxEdgeDof,-1);
+            Array<OneD, int> m_localEdgeToGlobalMatrixMap(nlocalNonDirEdges,-1);
 
             //Allocate arrays to store matrices (number of expansions * p^2)
-            Array<OneD, NekDouble> m_EdgeBlockArray(nlocalNonDirEdges*maxEdgeDof*maxEdgeDof,-1);
+            Array<OneD, NekDouble> m_EdgeBlockArray(nlocalNonDirEdges,-1);
 
-            //Set up mappings
-            map<int,int> uniqueEdgeMap;
-
-            //this should be of size total number of local edges
-            Array<OneD, unsigned int> m_edgemodeoffset(nNonDirEdgeIDs);
-
-            //set the number of blocks in the matrix
-            Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs);
-            n_blks[0]=nNonDirVerts;
-
-            int edgematrixlocation=0;
-            int ecnt;
             int edgematrixoffset=0;
             int vGlobal;
-            int ntotaledgeentries=0;
+            int nbndCoeffs=0;
 
-            for(ecnt=n=0; n < n_exp; ++n)
+            for(n=0; n < n_exp; ++n)
             {
                 nel = expList->GetOffset_Elmt_Id(n);
-                
+
                 locExpansion = expList->GetExp(nel);
 
                 //loop over the edges of the expansion
@@ -230,41 +278,32 @@ namespace Nektar
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
-                        //if this mesh id has not already been visited then we have
-                        //a new block location. Otherwise we point the array
-                        //location to the already assigned edge.
-                        if(uniqueEdgeMap.count(meshEdgeId)==0)
-                        {
-                            uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
-
-                            m_edgemodeoffset[edgematrixlocation]=nedgemodes*nedgemodes;
-
-                            ntotaledgeentries+=nedgemodes*nedgemodes;
-
-                            n_blks[1+edgematrixlocation++]=
-                                locExpansion->GetEdgeNcoeffs(j)-2;
-
-                        }
-
                         for(k=0; k<nedgemodes*nedgemodes; ++k)
                         {
-                            vGlobal=(uniqueEdgeMap[meshEdgeId])*nedgemodes*nedgemodes+k;
+                            vGlobal=m_edgeglobaloffset[uniqueEdgeMap[meshEdgeId]]+k;
 
-                            m_localEdgeToGlobalMatrixMap[edgematrixoffset+k]
-                                = (uniqueEdgeMap[meshEdgeId])*nedgemodes*nedgemodes+k;
+
+                            m_localEdgeToGlobalMatrixMap[edgematrixoffset+k]=vGlobal;
 
                             m_EdgeBlockToUniversalMap[vGlobal]
                                 = meshEdgeId * maxEdgeDof * maxEdgeDof + k + 1;
                         }
-                        edgematrixoffset+=maxEdgeDof*maxEdgeDof;
+                        edgematrixoffset+=nedgemodes*nedgemodes;
                     }
                 }
+                nbndCoeffs=+locExpansion->NumBndryCoeffs();
             }
 
             edgematrixoffset=0;
 
             BlkMat = MemoryManager<DNekBlkMat>
                     ::AllocateSharedPtr(n_blks, n_blks, blkmatStorage);
+
+            const Array<OneD,const unsigned int>& nbdry_size
+                    = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+
+            m_S1Blk      = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
 
             //Here we loop over the expansion and build the block low energy
             //preconditioner as well as the block versions of the transformation
@@ -294,14 +333,7 @@ namespace Nektar
                 //for each vertex
                 for (v=0; v<nVerts; ++v)
                 {
-                    DNekScalMatSharedPtr tmp_mat;
-                    DNekMatSharedPtr m_locMat = 
-                        MemoryManager<DNekMat>::AllocateSharedPtr
-                        (nVerts,nVerts,zero,storage);
-
                     vMap1=locExpansion->GetVertexMap(v);
-
-                    meshVertId = locExpansion->GetGeom2D()->GetVid(v);
                     
                     //Get vertex map
                     globalrow = m_locToGloMap->
@@ -321,19 +353,19 @@ namespace Nektar
                             //offset for dirichlet conditions
                             if (globalcol == globalrow)
                             {
+                                meshVertId = locExpansion->GetGeom2D()->GetVid(v);
+
                                 //modal connectivity between elements
                                 sign1 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + vMap1);
                                 sign2 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + vMap2);
-                                cout<<globalrow<<endl;
-                                vertValue = vertArray[globalrow]
-                                      + sign1*sign2*S(vMap1,vMap2);
-
-                                vertArray[globalrow] = vertValue;
+                                
+                                vertArray[globalrow]
+                                    += sign1*sign2*S(vMap1,vMap2);
 
                                 m_VertBlockToUniversalMap[globalrow]
-                                = meshVertId * nVerts * nVerts + 1;
+                                = meshVertId * maxEdgeDof * maxEdgeDof + 1;
                             }
                         }
                     }
@@ -368,12 +400,14 @@ namespace Nektar
                                 sign2 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + eMap2);
 
-                                NekDouble globalEdgeValue = sign1*sign2*S(eMap1,eMap2);
+                                NekDouble globalEdgeValue = 
+                                    sign1*sign2*S(eMap1,eMap2);
 
-                                m_EdgeBlockArray[edgematrixoffset+v*nedgemodes+m]=globalEdgeValue;
+                                m_EdgeBlockArray[edgematrixoffset+v*nedgemodes+m]=
+                                    globalEdgeValue;
                             }
                         }
-                        edgematrixoffset+=maxEdgeDof*maxEdgeDof;
+                        edgematrixoffset+=nedgemodes*nedgemodes;
                     }
                 }
 
@@ -389,26 +423,23 @@ namespace Nektar
                          m_localEdgeToGlobalMatrixMap.get(), 
                          m_GlobalEdgeBlock.get());
 
-            //Exchange edge data over different processes
-            if(nNonDirVerts != 0)
+            //Exchange vertex data over different processes
+            if(nNonDirVerts!=0)
             {
                 Gs::gs_data *tmp = Gs::Init(m_VertBlockToUniversalMap, m_comm);
                 Gs::Gather(vertArray, Gs::gs_add, tmp);
             }
 
             //Exchange edge data over different processes
-            if(nNonDirEdgeIDs != 0)
-            {
-                Gs::gs_data *tmp1 = Gs::Init(m_EdgeBlockToUniversalMap, m_comm);
-                Gs::Gather(m_GlobalEdgeBlock, Gs::gs_add, tmp1);
-            }
+            Gs::gs_data *tmp1 = Gs::Init(m_EdgeBlockToUniversalMap, m_comm);
+            Gs::Gather(m_GlobalEdgeBlock, Gs::gs_add, tmp1);
 
             // Populate vertex block
             for (int i = 0; i < nNonDirVerts; ++i)
             {
-                VertBlk->SetValue(i,i,1.0/vertArray[i]);
+                  VertBlk->SetValue(i,i,1.0/vertArray[i]);
             }
-            
+
             //Set the first block to be the diagonal of the vertex space
             BlkMat->SetBlock(0,0, VertBlk);
 
@@ -428,37 +459,29 @@ namespace Nektar
                         m_gmat->SetValue(v,m,EdgeValue);
                     }
                 }
-    
+
                 BlkMat->SetBlock(1+loc,1+loc, m_gmat);
 
                 offset+=m_edgemodeoffset[loc];
             }
 
             int totblks=BlkMat->GetNumberOfBlockRows();
-
             for (i=1; i< totblks; ++i)
             {
                 unsigned int nmodes=BlkMat->GetNumberOfRowsInBlockRow(i);
                 DNekMatSharedPtr tmp_mat = 
                     MemoryManager<DNekMat>::AllocateSharedPtr
                     (nmodes,nmodes,zero,storage);
-
+                
                 tmp_mat=BlkMat->GetBlock(i,i);
-                for (j=0; j<tmp_mat->GetRows(); ++j)
-                {
-                    for (k=0; k<tmp_mat->GetRows(); ++k)
-                    {
-                        cout<<(*tmp_mat)(j,k)<<" ";
-                    }
-                    cout<<endl;
-                }
-                cout<<endl;
-
                 tmp_mat->Invert();
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
         }
-
+        
+        /**
+         *
+         */
         void PreconditionerBlock::BlockPreconditioner3D()
         {
             boost::shared_ptr<MultiRegions::ExpList> 
@@ -466,7 +489,6 @@ namespace Nektar
             StdRegions::StdExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
-
             int i, j, k, nel;
             int nVerts, nEdges,nFaces; 
             int eid, fid, n, cnt, nedgemodes, nfacemodes;
@@ -475,7 +497,6 @@ namespace Nektar
             int vMap1, vMap2, sign1, sign2;
             int m, v, eMap1, eMap2, fMap1, fMap2;
             int offset, globalrow, globalcol, nCoeffs;
-            NekDouble vertValue;
 
             //matrix storage
             MatrixStorage storage = eFULL;
@@ -485,7 +506,7 @@ namespace Nektar
             //local element static condensed matrices
             DNekScalBlkMatSharedPtr loc_mat;
             DNekScalMatSharedPtr    bnd_mat;
-            
+
             DNekMatSharedPtr m_VertBlk;
             DNekMatSharedPtr m_EdgeBlk;
             DNekMatSharedPtr m_FaceBlk;
@@ -503,7 +524,7 @@ namespace Nektar
             int n_exp = expList->GetNumElmts();
             int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
             int nNonDirFaceIDs=m_locToGloMap->GetNumNonDirFaces();
-
+            
             //set the number of blocks in the matrix
             Array<OneD,unsigned int> n_blks(1+nNonDirEdgeIDs+nNonDirFaceIDs);
             n_blks[0]=nNonDirVerts;
@@ -514,20 +535,27 @@ namespace Nektar
             map<int,int> uniqueFaceMap;
 
             //this should be of size total number of local edges
-            Array<OneD, unsigned int> m_edgemodeoffset(nNonDirEdgeIDs);
-            Array<OneD, unsigned int> m_facemodeoffset(nNonDirFaceIDs);
+            Array<OneD, int> m_edgemodeoffset(nNonDirEdgeIDs,0);
+            Array<OneD, int> m_facemodeoffset(nNonDirFaceIDs,0);
 
-            Array<OneD, unsigned int> m_edgeglobaloffset(nNonDirEdgeIDs);
-            Array<OneD, unsigned int> m_faceglobaloffset(nNonDirFaceIDs);
+            Array<OneD, int> m_edgeglobaloffset(nNonDirEdgeIDs,0);
+            Array<OneD, int> m_faceglobaloffset(nNonDirFaceIDs,0);
 
             const Array<OneD, const ExpListSharedPtr>& bndCondExp = expList->GetBndCondExpansions();
             StdRegions::StdExpansion2DSharedPtr bndCondFaceExp;
-            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>& 
-                bndConditions = expList->GetBndConditions();
+            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>& bndConditions = expList->GetBndConditions();
 
             int meshVertId;
             int meshEdgeId;
             int meshFaceId;
+
+            const Array<OneD, const int> &extradiredges
+                = m_locToGloMap->GetExtraDirEdges();
+            for(i=0; i<extradiredges.num_elements(); ++i)
+            {
+                meshEdgeId=extradiredges[i];
+                edgeDirMap[meshEdgeId] = 1;
+            }
 
             //Determine which boundary edges and faces have dirichlet values
             for(i = 0; i < bndCondExp.num_elements(); i++)
@@ -580,7 +608,7 @@ namespace Nektar
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
-                        if(uniqueEdgeMap.count(meshEdgeId)==0)
+                        if(uniqueEdgeMap.count(meshEdgeId)==0 && dof > 0)
                         {
                             uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
 
@@ -589,9 +617,8 @@ namespace Nektar
                             m_edgemodeoffset[edgematrixlocation]=dof*dof;
 
                             ntotaledgeentries+=dof*dof;
-
+                            
                             n_blks[1+edgematrixlocation++]=dof;
-
                         }
 
                         nlocalNonDirEdges+=dof*dof;
@@ -601,6 +628,7 @@ namespace Nektar
 
             int facematrixlocation=0;
             int ntotalfaceentries=0;
+
             // Loop over all the elements in the domain and compute max face
             // DOF. Reduce across all processes to get universal maximum.
             for(cnt=n=0; n < n_exp; ++n)
@@ -618,7 +646,7 @@ namespace Nektar
 
                     if(faceDirMap.count(meshFaceId)==0)
                     {
-                        if(uniqueFaceMap.count(meshFaceId)==0)
+                        if(uniqueFaceMap.count(meshFaceId)==0 && dof > 0)
                         {
                             uniqueFaceMap[meshFaceId]=facematrixlocation;
 
@@ -629,7 +657,6 @@ namespace Nektar
                             ntotalfaceentries+=dof*dof;
                             
                             n_blks[1+nNonDirEdgeIDs+facematrixlocation++]=dof;
-                            
                         }
                         nlocalNonDirFaces+=dof*dof;
                     }
@@ -638,7 +665,6 @@ namespace Nektar
             }
 
             m_comm = expList->GetComm();
-            //m_comm = expList->GetComm()->GetRowComm(); 2D
             m_comm->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
             m_comm->AllReduce(maxFaceDof, LibUtilities::ReduceMax);
 
@@ -653,17 +679,15 @@ namespace Nektar
             Array<OneD, NekDouble> m_EdgeBlockArray(nlocalNonDirEdges,-1);
             Array<OneD, NekDouble> m_FaceBlockArray(nlocalNonDirFaces,-1);
 
-            int ecnt;
-            int fcnt;
             int edgematrixoffset=0;
             int facematrixoffset=0;
             int vGlobal;
             int nbndCoeffs=0;
 
-            for(ecnt=fcnt=n=0; n < n_exp; ++n)
+            for(n=0; n < n_exp; ++n)
             {
                 nel = expList->GetOffset_Elmt_Id(n);
-                
+
                 locExpansion = expList->GetExp(nel);
 
                 //loop over the edges of the expansion
@@ -679,6 +703,7 @@ namespace Nektar
                         for(k=0; k<nedgemodes*nedgemodes; ++k)
                         {
                             vGlobal=m_edgeglobaloffset[uniqueEdgeMap[meshEdgeId]]+k;
+
 
                             m_localEdgeToGlobalMatrixMap[edgematrixoffset+k]=vGlobal;
 
@@ -722,6 +747,12 @@ namespace Nektar
             BlkMat = MemoryManager<DNekBlkMat>
                     ::AllocateSharedPtr(n_blks, n_blks, blkmatStorage);
 
+            const Array<OneD,const unsigned int>& nbdry_size
+                    = m_locToGloMap->GetNumLocalBndCoeffsPerPatch();
+
+            m_S1Blk      = MemoryManager<DNekScalBlkMat>
+                ::AllocateSharedPtr(nbdry_size, nbdry_size , blkmatStorage);
+
             //Here we loop over the expansion and build the block low energy
             //preconditioner as well as the block versions of the transformation
             //matrices.
@@ -751,14 +782,7 @@ namespace Nektar
                 //for each vertex
                 for (v=0; v<nVerts; ++v)
                 {
-                    DNekScalMatSharedPtr tmp_mat;
-                    DNekMatSharedPtr m_locMat = 
-                        MemoryManager<DNekMat>::AllocateSharedPtr
-                        (nVerts,nVerts,zero,storage);
-
                     vMap1=locExpansion->GetVertexMap(v);
-
-                    meshVertId = locExpansion->GetGeom3D()->GetVid(v);
                     
                     //Get vertex map
                     globalrow = m_locToGloMap->
@@ -778,19 +802,19 @@ namespace Nektar
                             //offset for dirichlet conditions
                             if (globalcol == globalrow)
                             {
+                                meshVertId = locExpansion->GetGeom3D()->GetVid(v);
+
                                 //modal connectivity between elements
                                 sign1 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + vMap1);
                                 sign2 = m_locToGloMap->
                                     GetLocalToGlobalBndSign(cnt + vMap2);
                                 
-                                vertValue = vertArray[globalrow]
-                                      + sign1*sign2*S(vMap1,vMap2);
-
-                                vertArray[globalrow] = vertValue;
+                                vertArray[globalrow]
+                                    += sign1*sign2*S(vMap1,vMap2);
 
                                 m_VertBlockToUniversalMap[globalrow]
-                                = meshVertId * nVerts * nVerts + 1;
+                                = meshVertId * maxEdgeDof * maxEdgeDof + 1;
                             }
                         }
                     }
@@ -806,8 +830,7 @@ namespace Nektar
                         (nedgemodes,nedgemodes,zero,storage);
                     
                     meshEdgeId = locExpansion->GetGeom3D()->GetEid(eid);
-                    Array<OneD, unsigned int> edgemodearray = 
-                        locExpansion->GetEdgeInverseBoundaryMap(eid);
+                    Array<OneD, unsigned int> edgemodearray = locExpansion->GetEdgeInverseBoundaryMap(eid);
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
@@ -845,12 +868,10 @@ namespace Nektar
 
                     meshFaceId = locExpansion->GetGeom3D()->GetFid(fid);
                     
-                    Array<OneD, unsigned int> facemodearray = 
-                        locExpansion->GetFaceInverseBoundaryMap(fid);
+                    Array<OneD, unsigned int> facemodearray = locExpansion->GetFaceInverseBoundaryMap(fid);
 
                     if(faceDirMap.count(meshFaceId)==0)
                     {
-                        
                         for (v=0; v<nfacemodes; ++v)
                         {
                             fMap1=facemodearray[v];
@@ -868,7 +889,7 @@ namespace Nektar
                                 // Get the face-face value from the low energy matrix (S2)
                                 NekDouble globalFaceValue = sign1*sign2*S(fMap1,fMap2);
 
-                                //test here with local to global map
+                                //local face value to global face value
                                 m_FaceBlockArray[facematrixoffset+v*nfacemodes+m]=globalFaceValue;
                             }
                         }
@@ -896,34 +917,27 @@ namespace Nektar
                          m_localFaceToGlobalMatrixMap.get(), 
                          m_GlobalFaceBlock.get());
 
-            //Exchange edge data over different processes
-            if(nNonDirVerts != 0)
+            //Exchange vertex data over different processes
+            if(nNonDirVerts!=0)
             {
                 Gs::gs_data *tmp = Gs::Init(m_VertBlockToUniversalMap, m_comm);
                 Gs::Gather(vertArray, Gs::gs_add, tmp);
             }
 
             //Exchange edge data over different processes
-            if(nNonDirEdgeIDs != 0)
-            {
-                Gs::gs_data *tmp1 = Gs::Init(m_EdgeBlockToUniversalMap, m_comm);
-                Gs::Gather(m_GlobalEdgeBlock, Gs::gs_add, tmp1);
-            }
+            Gs::gs_data *tmp1 = Gs::Init(m_EdgeBlockToUniversalMap, m_comm);
+            Gs::Gather(m_GlobalEdgeBlock, Gs::gs_add, tmp1);
 
             //Exchange face data over different processes
-            if(nNonDirFaceIDs != 0)
-            {
-                Gs::gs_data *tmp2 = Gs::Init(m_FaceBlockToUniversalMap, m_comm);
-                Gs::Gather(m_GlobalFaceBlock, Gs::gs_add, tmp2);
-            }
-
+            Gs::gs_data *tmp2 = Gs::Init(m_FaceBlockToUniversalMap, m_comm);
+            Gs::Gather(m_GlobalFaceBlock, Gs::gs_add, tmp2);
 
             // Populate vertex block
             for (int i = 0; i < nNonDirVerts; ++i)
             {
-                VertBlk->SetValue(i,i,1.0/vertArray[i]);
+                  VertBlk->SetValue(i,i,1.0/vertArray[i]);
             }
-            
+
             //Set the first block to be the diagonal of the vertex space
             BlkMat->SetBlock(0,0, VertBlk);
 
@@ -931,8 +945,6 @@ namespace Nektar
             //Build the edge matrices from the vector
             for(int loc=0; loc<nNonDirEdgeIDs; ++loc)
             {
-                nedgemodes=n_blks[1+loc];
-
                 DNekMatSharedPtr m_gmat = 
                     MemoryManager<DNekMat>::AllocateSharedPtr
                     (nedgemodes,nedgemodes,zero,storage);
@@ -945,7 +957,7 @@ namespace Nektar
                         m_gmat->SetValue(v,m,EdgeValue);
                     }
                 }
-    
+
                 BlkMat->SetBlock(1+loc,1+loc, m_gmat);
 
                 offset+=m_edgemodeoffset[loc];
@@ -977,31 +989,20 @@ namespace Nektar
 
             
             int totblks=BlkMat->GetNumberOfBlockRows();
-
             for (i=1; i< totblks; ++i)
             {
                 unsigned int nmodes=BlkMat->GetNumberOfRowsInBlockRow(i);
                 DNekMatSharedPtr tmp_mat = 
                     MemoryManager<DNekMat>::AllocateSharedPtr
                     (nmodes,nmodes,zero,storage);
-
+                
                 tmp_mat=BlkMat->GetBlock(i,i);
-                for (j=0; j<tmp_mat->GetRows(); ++j)
-                {
-                    for (k=0; k<tmp_mat->GetRows(); ++k)
-                    {
-                        //cout<<(*tmp_mat)(j,k)<<" ";
-                    }
-                    //cout<<endl;
-                }
-
                 tmp_mat->Invert();
+
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
-            cout<<endl;
         }
 
-  
         /**
          *
          */
@@ -1009,37 +1010,14 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
-            GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
-            switch(solvertype)
-            {
-                case MultiRegions::eIterativeFull:
-                {
-                    int nGlobal = m_locToGloMap->GetNumGlobalCoeffs();
-                    int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-                    int nNonDir = nGlobal-nDir;
-                    DNekScalBlkMat &M = (*GloBlkMat);
-                    
-                    NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
-                    NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
-                    z = M * r;
-                }
-                break;
-                case MultiRegions::eIterativeStaticCond:
-                {
-                    int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
-                    int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
-                    int nNonDir = nGlobal-nDir;
-                    DNekBlkMat &M = (*BlkMat);
-                    
-                    NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
-                    NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
-                    z = M * r;
-                }
-                break;
-                default:
-                    ASSERTL0(0,"Unknown preconditioner");
-                    break;
-	    }
+            int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobal = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nNonDir = nGlobal-nDir;
+            DNekBlkMat &M = (*BlkMat);
+            
+            NekVector<NekDouble> r(nNonDir,pInput,eWrapper);
+            NekVector<NekDouble> z(nNonDir,pOutput,eWrapper);
+            z = M * r;
         }
     }
 }

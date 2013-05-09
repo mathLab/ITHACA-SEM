@@ -73,17 +73,16 @@ namespace Nektar
         void PreconditionerLowEnergy::v_InitObject()
         {
             GlobalSysSolnType solvertype=m_locToGloMap->GetGlobalSysSolnType();
-
-            if(solvertype != eIterativeStaticCond)
-            {
-                ASSERTL0(0,"Solver type not valid");
-            }
-
+            ASSERTL0(solvertype == MultiRegions::eIterativeStaticCond,"Solver type not valid");
+            
+            //Sets up reference element and builds transformation matrix
             SetUpReferenceElements();
-            SetupBlockTransformationMatrix();
-            CreateMultiplicityMap();
 
-            //
+            //Set up block transformation matrix
+            SetupBlockTransformationMatrix();
+
+            //Sets up multiplicity map for transformation from global to local
+            CreateMultiplicityMap();
 	}
 
         /**
@@ -452,10 +451,9 @@ namespace Nektar
 
             InvRprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRtmp);
-            
+
             InvRTprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,InvRTtmp);
-
         }
 
        /**
@@ -975,7 +973,7 @@ namespace Nektar
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
-                        if(uniqueEdgeMap.count(meshEdgeId)==0)
+                        if(uniqueEdgeMap.count(meshEdgeId)==0 && dof > 0)
                         {
                             uniqueEdgeMap[meshEdgeId]=edgematrixlocation;
 
@@ -1014,7 +1012,7 @@ namespace Nektar
 
                     if(faceDirMap.count(meshFaceId)==0)
                     {
-                        if(uniqueFaceMap.count(meshFaceId)==0)
+                        if(uniqueFaceMap.count(meshFaceId)==0 && dof > 0)
                         {
                             uniqueFaceMap[meshFaceId]=facematrixlocation;
 
@@ -1395,6 +1393,7 @@ namespace Nektar
                 
                 tmp_mat=BlkMat->GetBlock(i,i);
                 tmp_mat->Invert();
+
                 BlkMat->SetBlock(i,i,tmp_mat);
             }
         }
@@ -1544,6 +1543,7 @@ namespace Nektar
             //Multiply by the block transposed transformation matrix
             V_LocBnd=RT*V_LocBnd;
 
+
             //Assemble local boundary to global boundary
             Vmath::Assmb(nLocBndDofs, m_locToGloSignMult.get(),pLocal.get(), m_map.get(), tmp.get());
 
@@ -1606,6 +1606,35 @@ namespace Nektar
                 const Array<OneD, NekDouble>& pInput,
                       Array<OneD, NekDouble>& pOutput)
         {
+            int nGlobBndDofs       = m_locToGloMap->GetNumGlobalBndCoeffs();
+            int nDirBndDofs        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBndDofs    = nGlobBndDofs - nDirBndDofs;
+            int nLocBndDofs        = m_locToGloMap->GetNumLocalBndCoeffs();
+
+            ASSERTL1(pInput.num_elements() >= nGlobHomBndDofs,
+                     "Input array is greater than the nGlobHomBndDofs");
+            ASSERTL1(pOutput.num_elements() >= nGlobHomBndDofs,
+                     "Output array is greater than the nGlobHomBndDofs");
+
+            //vectors of length number of non-dirichlet boundary dofs
+            NekVector<NekDouble> F_GlobBnd(nGlobHomBndDofs,pInput,eWrapper);
+            NekVector<NekDouble> F_HomBnd(nGlobHomBndDofs,pOutput,
+                                          eWrapper);
+            //Block inverse transformation matrix
+            DNekScalBlkMat &invRT = *m_InvRTBlk;
+
+            Array<OneD, NekDouble> pLocal(nLocBndDofs, 0.0);
+            NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
+            Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
+
+            m_locToGloMap->GlobalToLocalBnd(pInput,pLocal, nDirBndDofs);
+
+            //Multiply by the block transposed transformation matrix
+            F_LocBnd=invRT*F_LocBnd;
+
+            m_locToGloMap->AssembleBnd(pLocal,pOutput, nDirBndDofs);
+
+            Vmath::Vmul(nGlobHomBndDofs,pOutput,1,m_multiplicity,1,pOutput,1);
 	}
 
 
@@ -1682,14 +1711,17 @@ namespace Nektar
          */
         void PreconditionerLowEnergy::CreateMultiplicityMap(void)
         {
-            const Array<OneD, const int> &vMap
-                                    = m_locToGloMap->GetLocalToGlobalBndMap();
-
-            const Array< OneD, const NekDouble > &sign = m_locToGloMap->GetLocalToGlobalBndSign();
-
             unsigned int nGlobalBnd = m_locToGloMap->GetNumGlobalBndCoeffs();
             unsigned int nEntries   = m_locToGloMap->GetNumLocalBndCoeffs();
             unsigned int i;
+            
+            const Array<OneD, const int> &vMap
+                = m_locToGloMap->GetLocalToGlobalBndMap();
+
+            const Array< OneD, const NekDouble > &sign 
+                = m_locToGloMap->GetLocalToGlobalBndSign();
+
+            bool m_signChange=m_locToGloMap->GetSignChange();
 
             // Count the multiplicity of each global DOF on this process
             Array<OneD, NekDouble> vCounts(nGlobalBnd, 0.0);
@@ -1705,11 +1737,31 @@ namespace Nektar
             m_locToGloSignMult = Array<OneD, NekDouble>(nEntries);
             for (i = 0; i < nEntries; ++i)
             {
-                m_locToGloSignMult[i] = sign[i]*1.0/vCounts[vMap[i]];
+                if(m_signChange)
+                {
+                    m_locToGloSignMult[i] = sign[i]*1.0/vCounts[vMap[i]];
+                }
+                else
+                {
+                    m_locToGloSignMult[i] = 1.0/vCounts[vMap[i]];
+                }
             }
 
-        }
+            int nDirBnd        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBnd    = nGlobalBnd - nDirBnd;
+            int nLocBnd        = m_locToGloMap->GetNumLocalBndCoeffs();
 
+            //Set up multiplicity array for inverse transposed transformation matrix
+            Array<OneD,NekDouble> tmp(nGlobHomBnd,1.0);
+            m_multiplicity = Array<OneD,NekDouble>(nGlobHomBnd,1.0);
+            Array<OneD,NekDouble> loc(nLocBnd,1.0);
+
+            m_locToGloMap->GlobalToLocalBnd(tmp,loc, nDirBnd);
+            m_locToGloMap->AssembleBnd(loc,m_multiplicity, nDirBnd);
+            Vmath::Sdiv(nGlobHomBnd,1.0,m_multiplicity,1,m_multiplicity,1);
+
+        }
+        
     }
 }
 

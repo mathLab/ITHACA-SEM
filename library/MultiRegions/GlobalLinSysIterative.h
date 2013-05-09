@@ -74,7 +74,7 @@ namespace Nektar
             PreconditionerSharedPtr                     m_precon;
 
             MultiRegions::PreconditionerType            m_precontype;
-
+            PreconditionerSharedPtr m_lowEnergyPrecon;
             
             int                                         m_totalIterations;
 

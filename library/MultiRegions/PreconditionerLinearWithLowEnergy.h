@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File PreconditionerBlock.h
+// File Preconditioner.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,28 +29,24 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Block Preconditioner header
+// Description: Preconditioner header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERBLOCK_H
-#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERBLOCK_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHLOWENERGY_H
+#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHLOWENERGY_H
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
-#include <LocalRegions/TetExp.h>
-#include <LocalRegions/PrismExp.h>
-
 
 namespace Nektar
 {
-
     namespace MultiRegions
     {
-        class PreconditionerBlock;
-        typedef boost::shared_ptr<PreconditionerBlock>  PreconditionerBlockSharedPtr;
+        class PreconditionerLinearWithLowEnergy;
+        typedef boost::shared_ptr<PreconditionerLinearWithLowEnergy>  PreconditionerLinearWithLowEnergySharedPtr;
 
-        class PreconditionerBlock: public Preconditioner
+        class PreconditionerLinearWithLowEnergy: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
@@ -59,48 +55,47 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-	        PreconditionerSharedPtr p = MemoryManager<PreconditionerBlock>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinearWithLowEnergy>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
 	        return p;
             }
 
             /// Name of class
-            static std::string className1;
-            static std::string className2;
+            static std::string className;
 
-            MULTI_REGIONS_EXPORT PreconditionerBlock(
+            MULTI_REGIONS_EXPORT PreconditionerLinearWithLowEnergy(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerBlock() {}
+            virtual ~PreconditionerLinearWithLowEnergy() {}
 
 	protected:
+            //const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
-            const boost::weak_ptr<GlobalLinSys>         m_linsys;
-
-            PreconditionerType                          m_preconType;
-
-	    DNekBlkMatSharedPtr                         BlkMat;
-
-            DNekScalMatSharedPtr                        bnd_mat;
-            DNekScalBlkMatSharedPtr                     m_S1Blk;
-
-            boost::shared_ptr<AssemblyMap>              m_locToGloMap;
+            PreconditionerSharedPtr m_linSpacePrecon;
+            PreconditionerSharedPtr m_lowEnergyPrecon;
 
 	private:
 
-	    void BlockPreconditioner2D(void);
-
-	    void BlockPreconditioner3D(void);
-
             virtual void v_InitObject();
 
+            virtual void v_DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
+
+            virtual void v_DoTransformFromLowEnergy(
+                Array<OneD, NekDouble>& pInput);
+
+            virtual DNekScalBlkMatSharedPtr
+                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
+
             virtual void v_DoPreconditioner(                
-                const Array<OneD, NekDouble>& pInput,
-                Array<OneD, NekDouble>& pOutput);
+                      const Array<OneD, NekDouble>& pInput,
+		      Array<OneD, NekDouble>& pOutput);
 
             virtual void v_BuildPreconditioner();
+
         };
     }
 }

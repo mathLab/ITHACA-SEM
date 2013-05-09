@@ -529,7 +529,9 @@ namespace Nektar
             int faceCnt;
 
             m_numNonDirVertexModes = 0;
-            m_numNonDirEdgeModes   = 0;
+            m_numNonDirEdges   = 0;
+            m_numNonDirFaces   = 0;
+            m_numNonDirFaceModes   = 0;
             m_numNonDirFaceModes   = 0;
 
             m_numLocalBndCoeffs = 0;
@@ -761,8 +763,6 @@ namespace Nektar
                 localVertOffset+=nVerts;
             }
 
-
-
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
@@ -782,6 +782,11 @@ namespace Nektar
                                 boost::add_vertex(boostGraphObj);
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                                 m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
+
+                                if(nEdgeInteriorCoeffs > 0)
+                                {
+                                    m_numNonDirEdges++;
+                                }
                             }
                             localEdges[localEdgeOffset+edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
                             vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = nEdgeInteriorCoeffs;
@@ -813,6 +818,11 @@ namespace Nektar
                                 boost::add_vertex(boostGraphObj);
                                 faceTempGraphVertId[meshFaceId] = tempGraphVertId++;
                                 m_numNonDirFaceModes+=nFaceInteriorCoeffs;
+
+                                if(nFaceInteriorCoeffs > 0)
+                                {
+                                    m_numNonDirFaces++;
+                                }
                             }
                             localFaces[localFaceOffset+faceCnt++] = faceTempGraphVertId[meshFaceId];
                             vwgts_map[ faceTempGraphVertId[meshFaceId] ] = nFaceInteriorCoeffs;
@@ -828,8 +838,7 @@ namespace Nektar
             }
 
             // Number of non dirichlet edges and faces
-            m_numNonDirEdges=edgeTempGraphVertId.size();
-            m_numNonDirFaces=faceTempGraphVertId.size();
+            //m_numNonDirEdges=n_eblks;
 
             localVertOffset=0;
             localEdgeOffset=0;

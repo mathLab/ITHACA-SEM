@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/VDmathArray.hpp>
-#include <MultiRegions/PreconditionerLLE.h>
+#include <MultiRegions/PreconditionerLinearWithBlock.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <LocalRegions/MatrixKey.h>
 #include <math.h>
@@ -47,20 +47,20 @@ namespace Nektar
          * Registers the class with the Factory.
          */
 
-        string PreconditionerLLE::className
+        string PreconditionerLinearWithBlock::className
                 = GetPreconFactory().RegisterCreatorFunction(
-                    "FullLinearSpaceWithLowEnergyBlock",
-                    PreconditionerLLE::create,
-                    "Full Linear space and low energy block preconditioning");
+                    "FullLinearSpaceWithBlock",
+                    PreconditionerLinearWithBlock::create,
+                    "Full Linear space and 3D block preconditioning");
  
        /**
-         * @class PreconditionerLLE
+         * @class PreconditionerLinearWithBlock
          *
          * This class implements preconditioning for the conjugate 
 	 * gradient matrix solver.
 	 */
         
-        PreconditionerLLE::PreconditionerLLE(
+        PreconditionerLinearWithBlock::PreconditionerLinearWithBlock(
             const boost::shared_ptr<GlobalLinSys> &plinsys,
             const AssemblyMapSharedPtr &pLocToGloMap)
             : Preconditioner(plinsys, pLocToGloMap)
@@ -70,76 +70,56 @@ namespace Nektar
         /**
          *
          */ 
-        void PreconditionerLLE::v_InitObject()
+        void PreconditionerLinearWithBlock::v_InitObject()
         {
             m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap);
-            m_lowEnergyPrecon = GetPreconFactory().CreateInstance("LowEnergyBlock",m_linsys.lock(),m_locToGloMap);
+            m_blockPrecon = GetPreconFactory().CreateInstance("Block3D",m_linsys.lock(),m_locToGloMap);
         }
 
         /**
          *
          */
-        void PreconditionerLLE::v_DoTransformToLowEnergy(
-            Array<OneD, NekDouble>& pInOut,
-            int offset)
+        void PreconditionerLinearWithBlock::v_BuildPreconditioner()
         {
-            m_lowEnergyPrecon->DoTransformToLowEnergy(pInOut,offset);
-        }
-
-        /**
-         *
-         */
-        void PreconditionerLLE::v_DoTransformFromLowEnergy(
-            Array<OneD, NekDouble>& pInput)
-        {
-            m_lowEnergyPrecon->DoTransformFromLowEnergy(pInput);
-        }
-
-
-        DNekScalBlkMatSharedPtr PreconditionerLLE::
-        v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat)
-	{
-            DNekScalBlkMatSharedPtr returnval;
-            returnval=m_lowEnergyPrecon->TransformedSchurCompl(offset,loc_mat);
-            return returnval;
-        }
-
-        /**
-         *
-         */
-        void PreconditionerLLE::v_BuildPreconditioner()
-        {
-            m_lowEnergyPrecon->BuildPreconditioner();
             m_linSpacePrecon->BuildPreconditioner();
+            m_blockPrecon->BuildPreconditioner();
 	}
 
 
         /**
          *
          */
-        void PreconditionerLLE::v_DoPreconditioner(
+        void PreconditionerLinearWithBlock::v_DoPreconditioner(
             const Array<OneD, NekDouble>& pInput,
             Array<OneD, NekDouble>& pOutput)
         {
-            Array<OneD, NekDouble> OutputLowEnergy(pOutput.num_elements());
-            Array<OneD, NekDouble> OutputLinear(pOutput.num_elements());
-            Array<OneD, NekDouble> InputLinear(pInput.num_elements());
-            Array<OneD, NekDouble> OutputInverseMultiply(pOutput.num_elements());
+            int nGlobal = pInput.num_elements();
+
+            Array<OneD, NekDouble> OutputBlock(nGlobal, 0.0);
+            Array<OneD, NekDouble> OutputLinear(nGlobal, 0.0);
+            Array<OneD, NekDouble> InputLinear(nGlobal, 0.0);
 
             //Apply Low Energy preconditioner
-            m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
+            m_blockPrecon->DoPreconditioner(pInput, OutputBlock);
 
-            //Transform from low energy to original basis
-            m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(OutputLowEnergy, OutputInverseMultiply);
+            cout<<"After Block preconditioning"<<endl;
+            for(int i=0; i<pOutput.num_elements(); ++i)
+            {
+                cout<<OutputBlock[i]<<endl;
+            }
+            cout<<endl;
 
-            //Transform input from low energy to original basis
-            //m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(pInput, InputLinear);
 
             //Apply linear space preconditioner
-            //m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear,OutputInverseMultiply);
+            m_linSpacePrecon->DoPreconditionerWithNonVertOutput(pInput, pOutput,OutputBlock);
 
-            //Transform back to low energy basis
-            m_lowEnergyPrecon->DoTransformToLowEnergy(OutputInverseMultiply,pOutput);
+            cout<<"After Linear space preconditioning"<<endl;
+            for(int i=0; i<pOutput.num_elements(); ++i)
+            {
+                cout<<pOutput[i]<<endl;
+            }
+            cout<<endl;
+
         }
 
     }

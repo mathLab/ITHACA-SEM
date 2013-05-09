@@ -1239,8 +1239,13 @@ namespace Nektar
                     MatEdgeLocation[eid]=
                         GetEdgeInverseBoundaryMap(m_geom->GetVertexEdgeMap(vid,eid));
                     nmodes=MatEdgeLocation[eid].num_elements();
-                    Vmath::Vcopy(nmodes, &MatEdgeLocation[eid][0], 
-                                 1, &edgemodearray[offset], 1);
+                    
+                    if(nmodes)
+                    {
+                        Vmath::Vcopy(nmodes, &MatEdgeLocation[eid][0], 
+                                     1, &edgemodearray[offset], 1);
+                    }
+
                     offset+=nmodes;
                 }
 
@@ -1251,8 +1256,12 @@ namespace Nektar
                     MatFaceLocation[fid]=
                         GetFaceInverseBoundaryMap(m_geom->GetVertexFaceMap(vid,fid));
                     nmodes=MatFaceLocation[fid].num_elements();
-                    Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 
-                                 1, &facemodearray[offset], 1);
+                    
+                    if(nmodes)
+                    {
+                        Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 
+                                     1, &facemodearray[offset], 1);
+                    }
                     offset+=nmodes;                    
                 }
 
@@ -1350,10 +1359,13 @@ namespace Nektar
 
 
                 // Invert edge-face coupling matrix
-                Sefef.Invert();
+                if(efRow)
+                {
+                    Sefef.Invert();
 
-                //R_{v}=-S_{v,ef}inv(S_{ef,ef})
-                Sveft=-Svef*Sefef;
+                    //R_{v}=-S_{v,ef}inv(S_{ef,ef})
+                    Sveft=-Svef*Sefef;
+                }
 
                 // Populate R with R_{ve} components
                 for(n=0; n<edgemodearray.num_elements(); ++n)
@@ -1445,8 +1457,11 @@ namespace Nektar
                 nedgemodes=GetEdgeNcoeffs(eid)-2;
                 Array<OneD, unsigned int> edgemodearray(nedgemodes);
 
-                Vmath::Vcopy(nedgemodes, &inedgearray[0], 
-                             1, &edgemodearray[0], 1);
+                if(nedgemodes)
+                {
+                    Vmath::Vcopy(nedgemodes, &inedgearray[0], 
+                                 1, &edgemodearray[0], 1);
+                }
 
                 int offset=0;
                 //create array of face modes
@@ -1455,8 +1470,12 @@ namespace Nektar
                     MatFaceLocation[fid]=
                         GetFaceInverseBoundaryMap(m_geom->GetEdgeFaceMap(eid,fid));
                     nmodes=MatFaceLocation[fid].num_elements();
-                    Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 
-                                 1, &facemodearray[offset], 1);
+                    
+                    if(nmodes)
+                    {
+                        Vmath::Vcopy(nmodes, &MatFaceLocation[fid][0], 
+                                     1, &facemodearray[offset], 1);
+                    }
                     offset+=nmodes;
                 }
 
@@ -1488,11 +1507,14 @@ namespace Nektar
                     }
                 }
 
-                // Invert edge-face coupling matrix
-                Meff.Invert();
-
-                // trans(R_{ef})=-S_{ef}*(inv(S_{ff})
-                Meft=-Mef*Meff;
+                if (efCol)
+                {
+                    // Invert edge-face coupling matrix
+                    Meff.Invert();
+                    
+                    // trans(R_{ef})=-S_{ef}*(inv(S_{ff})
+                    Meft=-Mef*Meff;
+                }
                 
                 //Populate transformation matrix with Meft
                 for(n=0; n<Meft.GetRows(); ++n)
@@ -1579,12 +1601,19 @@ namespace Nektar
                 facemodearray(nfacemodestotal);
 
             int offset=0;
+
             //create array of edge modes
             for(eid=0; eid < nEdges; ++eid)
             {
                 Array<OneD, unsigned int> edgearray=GetEdgeInverseBoundaryMap(eid);
                 nedgemodes=GetEdgeNcoeffs(eid)-2;
-                Vmath::Vcopy(nedgemodes, &edgearray[0], 1, &edgemodearray[offset], 1);
+
+                //Only copy if there are edge modes
+                if(nedgemodes)
+                {
+                    Vmath::Vcopy(nedgemodes, &edgearray[0], 1, &edgemodearray[offset], 1);
+                }
+
                 offset+=nedgemodes;
             }
 
@@ -1594,13 +1623,16 @@ namespace Nektar
             {
                 Array<OneD, unsigned int> facearray=GetFaceInverseBoundaryMap(fid);
                 nfacemodes=GetFaceIntNcoeffs(fid);
-                Vmath::Vcopy(nfacemodes, &facearray[0], 1, &facemodearray[offset], 1);
+
+                //Only copy if there are face modes
+                if(nfacemodes)
+                {
+                    Vmath::Vcopy(nfacemodes, &facearray[0], 1, &facemodearray[offset], 1);
+                }
+
                 offset+=nfacemodes;
             }
             
-            //nedgemodestotal=nedgemodes*nEdges;
-            //nfacemodestotal=nfacemodes*nFaces;
-
             //vertex-edge/face
             for (i=0; i<nVerts; ++i)
             {

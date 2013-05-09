@@ -204,7 +204,6 @@ namespace Nektar
                         m_locToGloMap->GetNumGlobalBndCoeffs();
                     int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                     int nNonDir = nGlobal-nDir;
-                    
                     Vmath::Vmul(nNonDir, &pInput[0], 1, &m_diagonals[0], 1, &pOutput[0], 1);
                     
                     break;

@@ -453,8 +453,6 @@ namespace Nektar
 
             m_totalIterations = 1;
 
-            // If iteration is progressing calculate first iteration details
-
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
 
             v_DoMatrixMultiply(w_A, s_A);

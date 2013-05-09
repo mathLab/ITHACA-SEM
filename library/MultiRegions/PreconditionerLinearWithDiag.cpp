@@ -96,6 +96,7 @@ namespace Nektar
             
             Array<OneD, NekDouble> OutputDiag(pOutput.num_elements());
             m_diagonalPrecon->DoPreconditioner(pInput, OutputDiag);
+
             // Since linear preconditioner just copies other entries
             // this will only modify the linear space degrees of
             // freedom

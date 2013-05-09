@@ -77,8 +77,6 @@ namespace Nektar
 
             const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
-            PreconditionerType                          m_preconType;
-
 	    DNekBlkMatSharedPtr                         BlkMat;
             DNekScalMatSharedPtr                        bnd_mat;
 
@@ -111,6 +109,7 @@ namespace Nektar
             DNekScalMatSharedPtr InvRTprism;
 
             Array<OneD, NekDouble>      m_locToGloSignMult;
+            Array<OneD, NekDouble>      m_multiplicity;
 
 	private:
 

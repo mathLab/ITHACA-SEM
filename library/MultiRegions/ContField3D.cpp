@@ -481,6 +481,7 @@ namespace Nektar
           int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
           Array<OneD,NekDouble> wsp(contNcoeffs);
           IProductWRTBase(inarray,wsp,eGlobal);
+
           // Note -1.0 term necessary to invert forcing function to
           // be consistent with matrix definition
           Vmath::Neg(contNcoeffs, wsp, 1);

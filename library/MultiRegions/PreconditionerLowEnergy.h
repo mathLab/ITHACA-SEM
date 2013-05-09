@@ -109,6 +109,7 @@ namespace Nektar
             DNekScalMatSharedPtr InvRTprism;
 
             Array<OneD, NekDouble>      m_locToGloSignMult;
+            Array<OneD, NekDouble>      m_multiplicity;
 
 	private:
 

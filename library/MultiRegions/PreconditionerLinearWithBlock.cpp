@@ -102,8 +102,24 @@ namespace Nektar
             //Apply Low Energy preconditioner
             m_blockPrecon->DoPreconditioner(pInput, OutputBlock);
 
+            cout<<"After Block preconditioning"<<endl;
+            for(int i=0; i<pOutput.num_elements(); ++i)
+            {
+                cout<<OutputBlock[i]<<endl;
+            }
+            cout<<endl;
+
+
             //Apply linear space preconditioner
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput(pInput, pOutput,OutputBlock);
+
+            cout<<"After Linear space preconditioning"<<endl;
+            for(int i=0; i<pOutput.num_elements(); ++i)
+            {
+                cout<<pOutput[i]<<endl;
+            }
+            cout<<endl;
+
         }
 
     }

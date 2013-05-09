@@ -460,28 +460,7 @@ namespace Nektar
 
             m_totalIterations = 1;
 
-            // If iteration is progressing calculate first iteration details
-
             m_precon->DoPreconditioner(r_A, tmp = w_A + nDir);
-
-            m_lowEnergyPrecon = GetPreconFactory().CreateInstance("LowEnergyBlock",GetSharedThisPtr(),plocToGloMap);
-
-            MultiRegions::PreconditionerType Type = plocToGloMap->GetPreconType();
-            /*if(Type == MultiRegions::eLinearWithLowEnergy)
-            {
-                Array<OneD, NekDouble> tmp2 (nNonDir, 0.0);
-                
-                m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(w_A+nDir, tmp2);
-                
-                cout << "LLE" << endl;
-                for(int i=0; i<tmp2.num_elements(); ++i)
-                {
-                    cout<<tmp2[i]<<endl;
-                }
-            }
-            else
-            {*/
-            //}
 
             v_DoMatrixMultiply(w_A, s_A);
 

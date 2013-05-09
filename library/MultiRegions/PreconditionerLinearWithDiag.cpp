@@ -109,6 +109,12 @@ namespace Nektar
             // freedom
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput(pInput, pOutput,OutputDiag);
             cout<<"After Linear space preconditioning"<<endl;
+            for(int i=0; i<pOutput.num_elements(); ++i)
+            {
+                cout<<pOutput[i]<<endl;
+            }
+            cout<<endl;
+
         }
 
     }

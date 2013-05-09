@@ -131,14 +131,6 @@ namespace Nektar
             //Apply Low Energy preconditioner
             m_lowEnergyPrecon->DoPreconditioner(pInput, OutputLowEnergy);
 
-            cout<<"Output Low Energy"<<endl;
-            for(int i=0; i<nGlobal; ++i)
-            {
-                cout<<OutputLowEnergy[i]<<endl;
-            }
-            cout<<endl;
-
-
             //Transform input from low energy to original basis
             m_lowEnergyPrecon->DoMultiplybyInverseTransformationMatrix(pInput, InputLinear);
 
@@ -146,16 +138,8 @@ namespace Nektar
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput(InputLinear, OutputLinear, tmp);
             //m_linSpacePrecon->DoPreconditioner(InputLinear, OutputLinear);
 
-
             m_lowEnergyPrecon->DoMultiplybyInverseTransposedTransformationMatrix(OutputLinear,pOutput);
             //m_lowEnergyPrecon->DoTransformToLowEnergy(OutputLinear,pOutput);
-
-            cout<<"pOutput"<<endl;
-            for(int i=0; i<nGlobal; ++i)
-            {
-                cout<<pOutput[i]<<endl;
-            }
-
 
             Vmath::Vadd(nGlobal,pOutput,1,OutputLowEnergy,1,pOutput,1);
         }

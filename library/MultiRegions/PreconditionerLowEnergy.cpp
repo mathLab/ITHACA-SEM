@@ -1543,6 +1543,7 @@ namespace Nektar
             //Multiply by the block transposed transformation matrix
             V_LocBnd=RT*V_LocBnd;
 
+
             //Assemble local boundary to global boundary
             Vmath::Assmb(nLocBndDofs, m_locToGloSignMult.get(),pLocal.get(), m_map.get(), tmp.get());
 
@@ -1626,20 +1627,14 @@ namespace Nektar
             NekVector<NekDouble> F_LocBnd(nLocBndDofs,pLocal,eWrapper);
             Array<OneD, int> m_map = m_locToGloMap->GetLocalToGlobalBndMap();
 
-            // Allocated array of size number of global boundary dofs and copy
-            // the input array to the tmp array offset by Dirichlet boundary
-            // conditions.
-            Array<OneD,NekDouble> tmp(nGlobBndDofs,0.0);
-            Vmath::Vcopy(nGlobHomBndDofs, pInput.get(), 1, tmp.get() + nDirBndDofs, 1);
+            m_locToGloMap->GlobalToLocalBnd(pInput,pLocal, nDirBndDofs);
 
-            //Global boundary dofs (with zeroed dirichlet values) to local boundary dofs
-            Vmath::Gathr(m_map.num_elements(), m_locToGloSignMult.get(), tmp.get(), m_map.get(), pLocal.get());
-
-            //Multiply by block inverse transformation matrix
+            //Multiply by the block transposed transformation matrix
             F_LocBnd=invRT*F_LocBnd;
 
-            //Assemble local boundary to global non-dirichlet boundary
-            m_locToGloMap->AssembleBnd(F_LocBnd,F_HomBnd,nDirBndDofs);
+            m_locToGloMap->AssembleBnd(pLocal,pOutput, nDirBndDofs);
+
+            Vmath::Vmul(nGlobHomBndDofs,pOutput,1,m_multiplicity,1,pOutput,1);
 	}
 
 
@@ -1751,6 +1746,20 @@ namespace Nektar
                     m_locToGloSignMult[i] = 1.0/vCounts[vMap[i]];
                 }
             }
+
+            int nDirBnd        = m_locToGloMap->GetNumGlobalDirBndCoeffs();
+            int nGlobHomBnd    = nGlobalBnd - nDirBnd;
+            int nLocBnd        = m_locToGloMap->GetNumLocalBndCoeffs();
+
+            //Set up multiplicity array for inverse transposed transformation matrix
+            Array<OneD,NekDouble> tmp(nGlobHomBnd,1.0);
+            m_multiplicity = Array<OneD,NekDouble>(nGlobHomBnd,1.0);
+            Array<OneD,NekDouble> loc(nLocBnd,1.0);
+
+            m_locToGloMap->GlobalToLocalBnd(tmp,loc, nDirBnd);
+            m_locToGloMap->AssembleBnd(loc,m_multiplicity, nDirBnd);
+            Vmath::Sdiv(nGlobHomBnd,1.0,m_multiplicity,1,m_multiplicity,1);
+
         }
         
     }

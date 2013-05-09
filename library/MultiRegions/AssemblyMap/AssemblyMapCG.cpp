@@ -510,7 +510,7 @@ namespace Nektar
             {
                 Vmath::Scatr(m_numLocalCoeffs, local.get(), m_localToGlobalMap.get(), global.get());
             }
-            
+
             // ensure all values are unique by calling a max 
             Gs::Gather(global, Gs::gs_max, m_gsh);
         }

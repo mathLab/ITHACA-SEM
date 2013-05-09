@@ -878,10 +878,10 @@ namespace Nektar
                 numflux[i] = Array<OneD, NekDouble>(nTracePts);
                 fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
-            
+
             // Computing the interface flux at each trace point
             m_riemann->Solve(Fwd, Bwd, numflux);
-            
+
             // Divergence of the flux (computing the RHS)  
             switch(nDimensions)
             {
@@ -953,7 +953,7 @@ namespace Nektar
                                 Array<OneD, NekDouble>(nSolutionPts);
                         }
                     }
-
+                    
                     // Get the advection flux vector (solver specific)
                     m_fluxVector(inarray, fluxvector);
 

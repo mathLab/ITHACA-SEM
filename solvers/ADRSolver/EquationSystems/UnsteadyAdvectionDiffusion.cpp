@@ -39,21 +39,27 @@
 
 namespace Nektar
 {
-    string UnsteadyAdvectionDiffusion::className = GetEquationSystemFactory().RegisterCreatorFunction("UnsteadyAdvectionDiffusion", UnsteadyAdvectionDiffusion::create);
-
+    string UnsteadyAdvectionDiffusion::className = GetEquationSystemFactory().
+    RegisterCreatorFunction("UnsteadyAdvectionDiffusion", 
+                            UnsteadyAdvectionDiffusion::create);
+    
     UnsteadyAdvectionDiffusion::UnsteadyAdvectionDiffusion(
-            const LibUtilities::SessionReaderSharedPtr& pSession)
-        : UnsteadySystem(pSession)
+        const LibUtilities::SessionReaderSharedPtr& pSession)
+    : UnsteadySystem(pSession)
     {
     }
-
+    
+    /**
+     * @brief Initialisation object for the unsteady linear advection 
+     * diffusion equation.
+     */
     void UnsteadyAdvectionDiffusion::v_InitObject()
     {
         UnsteadySystem::v_InitObject();
-
+        
         m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
         m_session->LoadParameter("epsilon",    m_epsilon,  0.0);
-
+        
         // Define Velocity fields
         m_velocity = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
         std::vector<std::string> vel;
@@ -61,74 +67,224 @@ namespace Nektar
         vel.push_back("Vy");
         vel.push_back("Vz");
         vel.resize(m_spacedim);
-
+        
         EvaluateFunction(vel, m_velocity, "AdvectionVelocity");
-
+        
+        // Type of advection and diffusion classes to be used
+        switch(m_projectionType)
+        {
+            // Discontinuous field 
+            case MultiRegions::eDiscontinuous:
+            {
+                // Advection term
+                string advName;
+                string riemName; 
+                m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
+                m_advection = SolverUtils::GetAdvectionFactory().
+                    CreateInstance(advName, advName);
+                m_advection->SetFluxVector(&UnsteadyAdvectionDiffusion::
+                                           GetFluxVectorAdv, this);
+                m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
+                m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
+                    CreateInstance(riemName);
+                m_riemannSolver->AddScalar("Vn", &UnsteadyAdvectionDiffusion::
+                                           GetNormalVelocity, this);
+                m_advection->SetRiemannSolver(m_riemannSolver);
+                m_advection->InitObject      (m_session, m_fields);
+                
+                // Diffusion term
+                std::string diffName;
+                m_session->LoadSolverInfo("DiffusionType", diffName, "LDG");
+                m_diffusion = SolverUtils::GetDiffusionFactory().
+                    CreateInstance(diffName, diffName);
+                m_diffusion->SetFluxVector(&UnsteadyAdvectionDiffusion::
+                                           GetFluxVectorDiff, this);
+                m_diffusion->InitObject(m_session, m_fields);
+                break;
+            }
+            // Continuous field 
+            case MultiRegions::eGalerkin:
+            case MultiRegions::eMixed_CG_Discontinuous:
+            {
+                // Advection term
+                std::string advName;
+                m_session->LoadSolverInfo("AdvectionType", advName, 
+                                          "NonConservative");
+                m_advection = SolverUtils::GetAdvectionFactory().
+                    CreateInstance(advName, advName);
+                m_advection->SetFluxVector(&UnsteadyAdvectionDiffusion::
+                                           GetFluxVectorAdv, this);
+                
+                // In case of Galerkin explicit diffusion gives an error
+                if (m_explicitDiffusion)
+                {
+                    ASSERTL0(false, "Explicit Galerkin diffusion not set up.");
+                }
+                // In case of Galerkin implicit diffusion: do nothing
+                break;
+            }
+            default:
+            {
+                ASSERTL0(false, "Unsupported projection type.");
+                break;
+            }
+        }
+        
         m_ode.DefineImplicitSolve (&UnsteadyAdvectionDiffusion::DoImplicitSolve, this);
         m_ode.DefineOdeRhs        (&UnsteadyAdvectionDiffusion::DoOdeRhs,        this);
+        
+        if (m_projectionType == MultiRegions::eDiscontinuous &&
+            m_explicitDiffusion == 1)
+        {    
+            m_ode.DefineProjection(&UnsteadyAdvectionDiffusion::DoOdeProjection, this);
+        }
     }
 	
-
+    /**
+     * @brief Unsteady linear advection diffusion equation destructor.
+     */
     UnsteadyAdvectionDiffusion::~UnsteadyAdvectionDiffusion()
     {
-
     }
+    
+    /**
+     * @brief Get the normal velocity for the unsteady linear advection 
+     * diffusion equation.
+     */
+    Array<OneD, NekDouble> &UnsteadyAdvectionDiffusion::GetNormalVelocity()
+    {
+        // Number of trace (interface) points
+        int nTracePts = GetTraceNpoints();
+        
+        // Auxiliary variable to compute the normal velocity
+        Array<OneD, NekDouble> tmp(nTracePts);
+        
+        m_traceVn = Array<OneD, NekDouble>(nTracePts, 0.0);
+        // Reset the normal velocity
+        Vmath::Zero(nTracePts, m_traceVn, 1);
 
+        // Compute the normal velocity
+        for (int i = 0; i < m_velocity.num_elements(); ++i)
+        {
+            m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
+            
+            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, tmp, 1, m_traceVn, 1, 
+                         m_traceVn, 1);
+        }
+        return m_traceVn;
+    }
+    
+    /* @brief Compute the right-hand side for the unsteady linear advection 
+     * diffusion problem.
+     * 
+     * @param inarray    Given fields.
+     * @param outarray   Calculated solution.
+     * @param time       Time.
+     */
     void UnsteadyAdvectionDiffusion::DoOdeRhs(
-            const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
-                  Array<OneD,        Array<OneD, NekDouble> >&outarray,
-            const NekDouble time)
+        const Array<OneD, const  Array<OneD, NekDouble> >&inarray,
+              Array<OneD,        Array<OneD, NekDouble> >&outarray,
+        const NekDouble time)
+    {  
+        // Number of fields (variables of the problem)
+        int nVariables = inarray.num_elements();
+        
+        // Number of solution points
+        int nSolutionPts = GetNpoints();
+        
+        Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nVariables);
+        
+        for (int i = 0; i < nVariables; ++i)
+        {
+            outarrayDiff[i] = Array<OneD, NekDouble>(nSolutionPts, 0.0);
+        }
+        
+        // RHS computation using the new advection base class
+        m_advection->Advect(nVariables, m_fields, m_velocity, 
+                            inarray, outarray);
+        
+        // Negate the RHS
+        for (int i = 0; i < nVariables; ++i)
+        {
+            Vmath::Neg(nSolutionPts, outarray[i], 1);
+        }
+        
+        // No explicit diffusion for CG
+        if (m_projectionType == MultiRegions::eDiscontinuous)
+        {
+            m_diffusion->Diffuse(nVariables, m_fields, inarray, outarrayDiff);
+
+            for (int i = 0; i < nVariables; ++i)
+            {
+                Vmath::Vadd(nSolutionPts, &outarray[i][0], 1, 
+                            &outarrayDiff[i][0], 1, &outarray[i][0], 1);
+            }
+        }
+        
+    }
+    
+    /**
+     * @brief Compute the projection for the unsteady advection 
+     * diffusion problem.
+     * 
+     * @param inarray    Given fields.
+     * @param outarray   Calculated solution.
+     * @param time       Time.
+     */
+    void UnsteadyAdvectionDiffusion::DoOdeProjection(
+        const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+              Array<OneD,       Array<OneD, NekDouble> > &outarray,
+        const NekDouble time)
     {
         int i;
         int nvariables = inarray.num_elements();
-        int npoints = GetNpoints();
-
-        switch (m_projectionType)
+        SetBoundaryConditions(time);
+        switch(m_projectionType)
         {
-        case MultiRegions::eDiscontinuous:
+            case MultiRegions::eDiscontinuous:
             {
-                int ncoeffs    = GetNcoeffs();
-                Array<OneD, Array<OneD, NekDouble> > WeakAdv(nvariables);
+                // Just copy over array
+                int npoints = GetNpoints();
                 
-                WeakAdv[0] = Array<OneD, NekDouble>(ncoeffs*nvariables);
-                for(i = 1; i < nvariables; ++i)
-                {
-                    WeakAdv[i] = WeakAdv[i-1] + ncoeffs;
-                }
-
-                WeakDGAdvection(inarray, WeakAdv,true,true);
-
                 for(i = 0; i < nvariables; ++i)
                 {
-                    m_fields[i]->MultiplyByElmtInvMass(WeakAdv[i],
-                                                       WeakAdv[i]);
-                    m_fields[i]->BwdTrans(WeakAdv[i],outarray[i]);
-                    Vmath::Neg(npoints,outarray[i],1);
+                    Vmath::Vcopy(npoints, inarray[i], 1, outarray[i], 1);
                 }
-
                 break;
             }
-        case MultiRegions::eGalerkin:
-        case MultiRegions::eMixed_CG_Discontinuous:
+            case MultiRegions::eGalerkin:
+            case MultiRegions::eMixed_CG_Discontinuous:
             {
-                // Calculate -V\cdot Grad(u);
+                Array<OneD, NekDouble> coeffs(m_fields[0]->GetNcoeffs());
+                
                 for(i = 0; i < nvariables; ++i)
                 {
-                    AdvectionNonConservativeForm(m_velocity,
-                                                 inarray[i],
-                                                 outarray[i]);
-                    Vmath::Neg(npoints,outarray[i],1);
+                    m_fields[i]->FwdTrans(inarray[i], coeffs);
+                    m_fields[i]->BwdTrans_IterPerExp(coeffs, outarray[i]);
                 }
+                break;
+            }
+            default:
+            {
+                ASSERTL0(false, "Unknown projection scheme");
                 break;
             }
         }
     }
-
+    
+    
+    /* @brief Compute the diffusion term implicitly. 
+     * 
+     * @param inarray    Given fields.
+     * @param outarray   Calculated solution.
+     * @param time       Time.
+     * @param lambda     Diffusion coefficient.
+     */
     void UnsteadyAdvectionDiffusion::DoImplicitSolve(
-            const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                  Array<OneD, Array<OneD, NekDouble> >&outarray,
-            const NekDouble time,
-            const NekDouble lambda)
+        const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+              Array<OneD,       Array<OneD, NekDouble> >&outarray,
+        const NekDouble time,
+        const NekDouble lambda)
     {
         int nvariables = inarray.num_elements();
         int nq = m_fields[0]->GetNpoints();
@@ -138,12 +294,12 @@ namespace Nektar
         
         Array<OneD, Array< OneD, NekDouble> > F(nvariables);
         F[0] = Array<OneD, NekDouble> (nq*nvariables);
-
-        for(int n = 1; n < nvariables; ++n)
+        
+        for (int n = 1; n < nvariables; ++n)
         {
             F[n] = F[n-1] + nq;
         }
-
+        
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}
         // outarray = output: nabla^2 \hat{Y}
@@ -151,62 +307,69 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             // Multiply 1.0/timestep/lambda
-            Vmath::Smul(nq, -factors[StdRegions::eFactorLambda], inarray[i], 1, F[i], 1);
+            Vmath::Smul(nq, -factors[StdRegions::eFactorLambda], 
+                        inarray[i], 1, F[i], 1);
         }
         
         //Setting boundary conditions
         SetBoundaryConditions(time);
-	
+        
         for (int i = 0; i < nvariables; ++i)
         {
             // Solve a system of equations with Helmholtz solver
-            m_fields[i]->HelmSolve(F[i],m_fields[i]->UpdateCoeffs(),NullFlagList,factors);
-            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),outarray[i]);
+            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), 
+                                   NullFlagList, factors);
+            
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(), outarray[i]);
         }
     }
-
-    void UnsteadyAdvectionDiffusion::v_GetFluxVector(const int i, Array<OneD, Array<OneD, NekDouble> > &physfield,
-                           Array<OneD, Array<OneD, NekDouble> > &flux)
+    
+    /**
+     * @brief Return the flux vector for the advection part.
+     * 
+     * @param physfield   Fields.
+     * @param flux        Resulting flux.
+     */
+    void UnsteadyAdvectionDiffusion::GetFluxVectorAdv(
+        const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+              Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
-        ASSERTL1(flux.num_elements() == m_velocity.num_elements(),"Dimension of flux array and velocity array do not match");
-
-        for(int j = 0; j < flux.num_elements(); ++j)
-          {
-            Vmath::Vmul(GetNpoints(),physfield[i],1,
-                m_velocity[j],1,flux[j],1);
-          }
+        ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
+                 "Dimension of flux array and velocity array do not match");
+        
+        for (int i = 0; i < flux.num_elements(); ++i)
+        {
+            for (int j = 0; j < flux[0].num_elements(); ++j)
+            {
+                Vmath::Vmul(GetNpoints(), physfield[i], 1, m_velocity[j], 1,
+                            flux[i][j], 1);
+            }
+        }
     }
-
-
-    void UnsteadyAdvectionDiffusion::v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, Array<OneD, Array<OneD, NekDouble> > &numflux)
+    
+    /**
+     * @brief Return the flux vector for the diffusion part.
+     *      
+     * @param i           Equation number.
+     * @param j           Spatial direction.
+     * @param physfield   Fields.
+     * @param derivatives First order derivatives.
+     * @param flux        Resulting flux.
+     */
+    void UnsteadyAdvectionDiffusion::GetFluxVectorDiff(
+        const int i, 
+        const int j,
+        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+              Array<OneD, Array<OneD, NekDouble> > &derivatives,
+              Array<OneD, Array<OneD, NekDouble> > &flux)
     {
-        int i;
-
-        int nTraceNumPoints = GetTraceNpoints();
-        int nvel = m_spacedim; //m_velocity.num_elements();
-
-        Array<OneD, NekDouble > Fwd(nTraceNumPoints);
-        Array<OneD, NekDouble > Bwd(nTraceNumPoints);
-        Array<OneD, NekDouble > Vn (nTraceNumPoints,0.0);
-
-        // Get Edge Velocity - Could be stored if time independent
-        for(i = 0; i < nvel; ++i)
+        for (int k = 0; k < flux.num_elements(); ++k)
         {
-            m_fields[0]->ExtractTracePhys(m_velocity[i], Fwd);
-            Vmath::Vvtvp(nTraceNumPoints,m_traceNormals[i],1,Fwd,1,Vn,1,Vn,1);
+            Vmath::Zero(GetNpoints(), flux[k], 1);
         }
-
-        for(i = 0; i < numflux.num_elements(); ++i)
-        {
-            m_fields[i]->GetFwdBwdTracePhys(physfield[i],Fwd,Bwd);
-            //evaulate upwinded m_fields[i]
-            m_fields[i]->GetTrace()->Upwind(Vn,Fwd,Bwd,numflux[i]);
-            // calculate m_fields[i]*Vn
-            Vmath::Vmul(nTraceNumPoints,numflux[i],1,Vn,1,numflux[i],1);
-        }
+        Vmath::Vcopy(GetNpoints(), physfield[i], 1, flux[j], 1);
     }
-
-
+    
     void UnsteadyAdvectionDiffusion::v_PrintSummary(std::ostream &out)
     {
         UnsteadySystem::v_PrintSummary(out);

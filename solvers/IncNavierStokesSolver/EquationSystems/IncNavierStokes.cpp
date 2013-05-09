@@ -286,6 +286,16 @@ namespace Nektar
         m_integrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep, fields, m_time, m_integrationOps);
 
 	               
+        for(i = 0; i < m_fields.num_elements(); ++i)
+        {
+            NekDouble l2 =  m_fields[i]->L2();
+            if(m_comm->GetRank() == 0)
+            {
+                cout << l2 << endl;
+            }
+        }
+        cout << "Initital Conditions" << endl;
+
         std::vector<SolverUtils::FilterSharedPtr>::iterator x;
         for (x = m_filters.begin(); x != m_filters.end(); ++x)
         {
@@ -310,6 +320,15 @@ namespace Nektar
             m_time += m_timestep;
             
             timer.Stop();
+            
+            for(i = 0; i < m_fields.num_elements(); ++i)
+            {
+                NekDouble l2 =  m_fields[i]->L2();
+                if(m_comm->GetRank() == 0)
+                {
+                    cout << l2 << endl;
+                }
+            }
 
             // Write out current time step
             if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)

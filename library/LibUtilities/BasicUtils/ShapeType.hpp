@@ -190,6 +190,40 @@ namespace Nektar
             }
         }
 
+
+        inline int GetNumberOfCoefficients(ShapeType shape, std::vector<unsigned int> &modes, int offset)
+        {
+            int returnval; 
+            switch(shape)
+            {
+            case eSegment:
+                returnval = modes[offset];
+                break;
+            case eTriangle:
+                returnval = StdTriData::getNumberOfCoefficients(modes[offset],modes[offset+1]);
+                break;
+            case eQuadrilateral:
+                returnval = modes[offset]*modes[offset+1];
+                break;
+            case eTetrahedron:
+                returnval = StdTetData::getNumberOfCoefficients(modes[offset],modes[offset+1],modes[offset+2]);
+                break;
+            case ePyramid:
+                returnval = StdPyrData::getNumberOfCoefficients(modes[offset],modes[offset+1],modes[offset+2]);
+                break;
+            case ePrism:
+                returnval = StdPrismData::getNumberOfCoefficients(modes[offset],modes[offset+1],modes[offset+2]);
+                break;
+            case eHexahedron:
+                returnval = modes[offset]*modes[offset+1]*modes[offset+2];
+                break;
+            default:
+                ASSERTL0(false,"Unknown Shape Type");
+                break;
+            }
+
+            return returnval;
+        }
     }
 }
 

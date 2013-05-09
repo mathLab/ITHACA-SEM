@@ -97,24 +97,10 @@ namespace Nektar
             Array<OneD, NekDouble> OutputDiag(pOutput.num_elements());
             m_diagonalPrecon->DoPreconditioner(pInput, OutputDiag);
 
-            cout<<"After diagonal preconditioning"<<endl;
-            for(int i=0; i<pOutput.num_elements(); ++i)
-            {
-                cout<<OutputDiag[i]<<endl;
-            }
-            cout<<endl;
-
             // Since linear preconditioner just copies other entries
             // this will only modify the linear space degrees of
             // freedom
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput(pInput, pOutput,OutputDiag);
-            cout<<"After Linear space preconditioning"<<endl;
-            for(int i=0; i<pOutput.num_elements(); ++i)
-            {
-                cout<<pOutput[i]<<endl;
-            }
-            cout<<endl;
-
         }
 
     }

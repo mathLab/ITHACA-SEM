@@ -1108,7 +1108,7 @@ namespace Nektar
         m_comm->AllReduce(CFL,LibUtilities::ReduceMax);
 
         // unshuffle elmt id if data is not stored in consecutive order. 
-        elmtid = m_fields[0]->GetOffset_Elmt_Id(elmtid);
+        elmtid = m_fields[0]->GetExp(elmtid)->GetGeom()->GetGlobalID();
         if(CFL != CFL_loc)
         {
             elmtid = -1;

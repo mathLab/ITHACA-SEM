@@ -420,6 +420,11 @@ namespace Nektar
                             }
                             
                             m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
+                            // Call the trace on all fields to ensure DG setup. 
+                            for(i = 1; i < m_fields.num_elements(); ++i)
+                            {
+                                m_fields[i]->GetTrace();
+                            }
                         }
                         break;
                     }

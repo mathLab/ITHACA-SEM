@@ -74,7 +74,8 @@ namespace Nektar
          */
         ContField3D::ContField3D(const LibUtilities::SessionReaderSharedPtr &pSession,
                                  const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                 const std::string &variable):
+                                 const std::string &variable,
+                                 const bool CheckIfSingularSystem):
                 DisContField3D(pSession,graph3D,variable,false),
                 m_globalMat(MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
                 m_globalLinSysManager(
@@ -85,7 +86,8 @@ namespace Nektar
             
             m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
                 m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
-                m_periodicVertices,m_periodicEdges,m_periodicFaces, variable);
+                m_periodicVertices,m_periodicEdges,m_periodicFaces, 
+                CheckIfSingularSystem, variable);
         }
 
 
@@ -114,7 +116,8 @@ namespace Nektar
          */
         ContField3D::ContField3D(const ContField3D &In,
                                  const SpatialDomains::MeshGraphSharedPtr &graph3D,
-                                 const std::string &variable):
+                                 const std::string &variable,
+                                 const bool CheckIfSingularSystem):
 	    DisContField3D(In,graph3D,variable,false),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(boost::bind(&ContField3D::GenGlobalLinSys, this, _1),
@@ -126,7 +129,8 @@ namespace Nektar
                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
                 m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
                     m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
-                    m_periodicVertices, m_periodicEdges, m_periodicFaces,variable);
+                    m_periodicVertices, m_periodicEdges, m_periodicFaces,
+                    CheckIfSingularSystem,variable);
             }
             else
             {

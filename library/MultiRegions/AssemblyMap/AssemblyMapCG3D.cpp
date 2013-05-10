@@ -83,6 +83,7 @@ namespace Nektar
                 const map<int,int>& periodicVerticesId,
                 const map<int,int>& periodicEdgesId,
                 const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId,
+                const bool checkIfSystemSingular,
                 const std::string variable):
             AssemblyMapCG(pSession,variable)
         {
@@ -92,7 +93,8 @@ namespace Nektar
                                       bndConditions,
                                       periodicVerticesId,
                                       periodicEdgesId,
-                                      periodicFacesId);
+                                      periodicFacesId,
+                                      checkIfSystemSingular);
 
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
@@ -170,7 +172,8 @@ namespace Nektar
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
             const map<int,int>& periodicVerticesId,
             const map<int,int>& periodicEdgesId,
-            const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId)
+            const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId,
+            const bool checkIfSystemSingular)
         {
             int i,j,k,l;
             int cnt = 0;
@@ -210,7 +213,7 @@ namespace Nektar
             map<int,int>::const_iterator mapConstIt;
             map<int,pair<int, StdRegions::Orientation> >::const_iterator mapFaceIt;
 
-            bool systemSingular = true;
+            bool systemSingular = (checkIfSystemSingular)? true: false;
 
             /**
              * STEP 1: Order the Dirichlet vertices and edges first
@@ -249,7 +252,8 @@ namespace Nektar
                         nLocDirBndCondDofs += bndCondFaceExp->GetNcoeffs();
                     }
                     if (bndConditions[i]->GetBoundaryConditionType() !=
-                        SpatialDomains::eNeumann)
+                        SpatialDomains::eNeumann &&
+                        checkIfSystemSingular == true)
                     {
                         systemSingular = false;
                     }

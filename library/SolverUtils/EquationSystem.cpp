@@ -360,7 +360,7 @@ namespace Nektar
                                 {
                                     m_fields[i] = MemoryManager<MultiRegions::ContField2D>
                                         ::AllocateSharedPtr(m_session, m_graph, m_session->GetVariable(i),
-                                                            DeclareCoeffPhysArrays, m_checkIfSystemSingular[0]);
+                                                            DeclareCoeffPhysArrays, m_checkIfSystemSingular[i]);
                                     
                                 }
                             }
@@ -387,7 +387,8 @@ namespace Nektar
                         MultiRegions::ContField3DSharedPtr firstfield =
                             MemoryManager<MultiRegions::ContField3D>
                             ::AllocateSharedPtr(m_session, m_graph, 
-                                                m_session->GetVariable(i));
+                                                m_session->GetVariable(i),
+                                                m_checkIfSystemSingular[i]);
 
                         m_fields[0] = firstfield;
                         for(i = 1; i < m_fields.num_elements(); i++)
@@ -397,13 +398,15 @@ namespace Nektar
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::ContField3D>
                                     ::AllocateSharedPtr(*firstfield, m_graph,
-                                                        m_session->GetVariable(i));
+                                                        m_session->GetVariable(i),
+                                                        m_checkIfSystemSingular[i]);
                             }
                             else
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::ContField3D>
                                     ::AllocateSharedPtr(m_session, m_graph, 
-                                                        m_session->GetVariable(i)); 
+                                                        m_session->GetVariable(i),
+                                                        m_checkIfSystemSingular[i]); 
                             }
                         }
                         
@@ -739,9 +742,6 @@ namespace Nektar
             {
                 std::string filename
                     = m_session->GetFunctionFilename(pFunctionName, pFieldName);
-#if 0 
-                ImportFld(filename,m_fields);
-#else
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
                 std::vector<std::vector<NekDouble> > FieldData;
                 Array<OneD, NekDouble> vCoeffs(m_fields[0]->GetNcoeffs());
@@ -766,7 +766,7 @@ namespace Nektar
                     
                     if(idx >= 0 )
                     {
-                        m_fields[0]->ExtractDataToCoeffs(FieldDef[i], 
+                        m_fields[idx]->ExtractDataToCoeffs(FieldDef[i], 
                                                          FieldData[i],
                                                          FieldDef[i]->m_fields[idx],
                                                          vCoeffs);
@@ -779,7 +779,6 @@ namespace Nektar
 
 
                 m_fields[0]->BwdTrans_IterPerExp(vCoeffs, pArray);
-#endif
             }
         }
 

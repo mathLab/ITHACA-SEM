@@ -1579,10 +1579,6 @@ namespace Nektar
                     fwd = m_leftAdjacentFaces[cnt];
                     if (fwd)
                     {
-                        if (n == 3 && e == 5)
-                        {
-                            cout << "FO = " << (*m_exp)[n]->GetGeom3D()->GetFaceOrient(e) << endl;
-                        }
                         (*m_exp)[n]->GetFacePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Fwd + offset);

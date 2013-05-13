@@ -1015,14 +1015,14 @@ namespace Nektar
                         coeff[i*NumModesElementMax+j] = 0.0;
                     }
                 }
-                */
+                
                 
                 for (int i = 0; i < coeff.num_elements(); i++)
                 {
                     cout << i << "  ::  " << coeff[i] << endl;
                 }
                 cout << endl;
-                
+                */
                 LibUtilities::InterpCoeff2D(
                     bkey_ortho0, bkey_ortho1, coeff,
                     bkey0,       bkey1,       FaceExp->UpdateCoeffs());

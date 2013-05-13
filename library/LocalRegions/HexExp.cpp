@@ -815,6 +815,70 @@ namespace Nektar
         {
             return m_geom->GetCoordim();
         }
+        
+        void HexExp::v_ExtractDataToCoeffs(const NekDouble *data,
+                                        const std::vector<unsigned int > &nummodes,
+                                           int mode_offset,
+                                           NekDouble *coeffs)
+        {
+            int order_data0 = nummodes[mode_offset];
+            int order_data1 = nummodes[mode_offset + 1];
+            int order_data2 = nummodes[mode_offset + 2];
+        
+            int order0      = m_base[0]->GetNumModes();
+            int order1      = m_base[1]->GetNumModes();
+            int order2      = m_base[2]->GetNumModes();
+        
+            int fillorder0  = std::min(order0,order_data0);
+            int fillorder1  = std::min(order1,order_data1);
+            int fillorder2  = std::min(order2,order_data2);
+            
+            switch(m_base[0]->GetBasisType())
+            {
+                case LibUtilities::eModified_A:
+                {
+                    int i;
+                    int cnt_data = 0;
+                    int cnt_coeff = 0;
+                    
+                    ASSERTL1(m_base[1]->GetBasisType() == LibUtilities::eModified_A,
+                             "Extraction routine not set up for this basis");
+                    
+                    Vmath::Zero(m_ncoeffs,coeffs,1);
+                    
+                    for(i = 0; i < fillorder0; ++i)
+                    {
+                        Vmath::Vcopy(fillorder1*fillorder2,
+                                     data + cnt_data,1,
+                                     coeffs +cnt_coeff,1);
+                        
+                        cnt_data  += (order_data1*order_data2);
+                        cnt_coeff += (order1*order2);
+                    }
+                }
+                    break;
+                case LibUtilities::eGLL_Lagrange:
+                {
+                    // Assume that input is also Gll_Lagrange but no way to check;
+                    LibUtilities::PointsKey p0(nummodes[0],LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::PointsKey p1(nummodes[1],LibUtilities::eGaussLobattoLegendre);
+                    LibUtilities::Interp2D(p0,p1,data, m_base[0]->GetPointsKey(),
+                                           m_base[1]->GetPointsKey(),coeffs);
+                }
+                    break;
+                case LibUtilities::eGauss_Lagrange:
+                {
+                    // Assume that input is also Gll_Lagrange but no way to check;
+                    LibUtilities::PointsKey p0(nummodes[0],LibUtilities::eGaussGaussLegendre);
+                    LibUtilities::PointsKey p1(nummodes[1],LibUtilities::eGaussGaussLegendre);
+                    LibUtilities::Interp2D(p0,p1,data, m_base[0]->GetPointsKey(),
+                                           m_base[1]->GetPointsKey(),coeffs);
+                }
+                    break;
+                default:
+                    ASSERTL0(false,"basis is either not set up or not hierarchicial");
+            }
+        }
 
         
         StdRegions::Orientation HexExp::v_GetFaceOrient(int face)

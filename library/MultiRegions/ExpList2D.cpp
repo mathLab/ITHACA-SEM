@@ -441,7 +441,7 @@ namespace Nektar
             ExpList()
         {
             int i, j, id, elmtid=0;
-            map<int,int> FaceDone;
+            set<int> facesDone;
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
             SpatialDomains::QuadGeomSharedPtr FaceQuadGeom;
             SpatialDomains::TriGeomSharedPtr FaceTriGeom;
@@ -453,21 +453,21 @@ namespace Nektar
             for(i = 0; i < bndCond.num_elements(); ++i)
             {
                 if(bndCond[i]->GetBoundaryConditionType()
-                                            == SpatialDomains::eDirichlet)
+                   == SpatialDomains::eDirichlet)
                 {
                     for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
                         LibUtilities::BasisKey bkey0 = bndConstraint[i]
-                                    ->GetExp(j)->GetBasis(0)->GetBasisKey();
+                        ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         LibUtilities::BasisKey bkey1 = bndConstraint[i]
-                                    ->GetExp(j)->GetBasis(1)->GetBasisKey();
+                        ->GetExp(j)->GetBasis(1)->GetBasisKey();
                         FaceGeom = bndConstraint[i]->GetExp(j)->GetGeom2D();
-
+                        
                         //if face is a quad
                         if((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
                         {
                             FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
-                            FaceDone[FaceGeom->GetFid()] = elmtid;
+                            facesDone.insert(FaceQuadGeom->GetFid());
                             FaceQuadExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceQuadExp);
                         }
@@ -475,102 +475,73 @@ namespace Nektar
                         else if((FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom)))
                         {
                             FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
-                            FaceDone[FaceGeom->GetFid()] = elmtid;
+                            facesDone.insert(FaceTriGeom->GetFid());
                             FaceTriExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceTriExp);
                         }
                         else
                         {
-                            ASSERTL0(false,"dynamic cast to a proper face geometry failed"); 
+                            ASSERTL0(false,"dynamic cast to a proper face geometry failed");
                         }
                     }
                 }
             }
             
-            // loop over all other faces and fill out other connectivities
+            map<int, pair<SpatialDomains::Geometry2DSharedPtr,
+            pair<LibUtilities::BasisKey,
+            LibUtilities::BasisKey> > > faceOrders;
+            map<int, pair<SpatialDomains::Geometry2DSharedPtr,
+            pair<LibUtilities::BasisKey,
+            LibUtilities::BasisKey> > >::iterator it;
+            
             for(i = 0; i < locexp.size(); ++i)
             {
                 for(j = 0; j < locexp[i]->GetNfaces(); ++j)
                 {
-                    FaceGeom = (locexp[i]->GetGeom3D())->GetFace(j);
-
-                    id = FaceGeom->GetFid();
-
-                    if(FaceDone.count(id)==0)
+                    FaceGeom = locexp[i]->GetGeom3D()->GetFace(j);
+                    id       = FaceGeom->GetFid();
+                    
+                    if(facesDone.count(id) != 0)
                     {
-                        LibUtilities::BasisKey bkey0 = locexp[i]->DetFaceBasisKey(j,0);
-                        LibUtilities::BasisKey bkey1 = locexp[i]->DetFaceBasisKey(j,1);
-                        
-                        //if face is a quad
-                        if((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
-                        {
-                            FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
-                            
-                            FaceDone[id] = elmtid;
-                            FaceQuadExp->SetElmtId(elmtid++);
-                            (*m_exp).push_back(FaceQuadExp);
-                        }
-                        //if face is a triangle
-                        else if((FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom)))
-                        {
-                            FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
-                            
-                            FaceDone[id] = elmtid;
-                            FaceTriExp->SetElmtId(elmtid++);
-                            (*m_exp).push_back(FaceTriExp);
-                        }
-                        else
-                        {
-                            ASSERTL0(false,"dynamic cast to a proper face geometry failed"); 
-                        }
+                        continue;
                     }
-                    //variable modes/points
-                    //if for the current edge we have more modes/points at least in one direction
-                    //we replace the old edge in the trace expansion with the current one
-                    else
+                    it = faceOrders.find(id);
+                    
+                    if (it == faceOrders.end())
                     {
-                        LibUtilities::BasisKey bkey0 = locexp[i]->DetFaceBasisKey(j,0);
-                        LibUtilities::BasisKey bkey1 = locexp[i]->DetFaceBasisKey(j,1);
+                        LibUtilities::BasisKey face_dir0
+                        = locexp[i]->DetFaceBasisKey(j,0);
+                        LibUtilities::BasisKey face_dir1
+                        = locexp[i]->DetFaceBasisKey(j,1);
                         
-                        if( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
-                                >= bkey0.GetNumPoints()
-                             || (*m_exp)[FaceDone[id]]->GetNumPoints(1)
-                                >= bkey1.GetNumPoints())
-                            && ((*m_exp)[FaceDone[id]]->GetBasisNumModes(0)
-                                >= bkey0.GetNumModes()
-                                || (*m_exp)[FaceDone[id]]->GetBasisNumModes(1)
-                                >= bkey1.GetNumModes()) )
+                        faceOrders.insert(std::make_pair(id, std::make_pair(FaceGeom,std::make_pair(face_dir0,face_dir1))));
+                    }
+                    else // variable modes/points
+                    {
+                        LibUtilities::BasisKey face0     = locexp[i]->DetFaceBasisKey(j,0);
+                        LibUtilities::BasisKey face1     = locexp[i]->DetFaceBasisKey(j,1);
+                        LibUtilities::BasisKey existing0 = it->second.second.first;
+                        LibUtilities::BasisKey existing1 = it->second.second.second;
+                        
+                        int np11 = face0    .GetNumPoints();
+                        int np12 = face1    .GetNumPoints();
+                        int np21 = existing0.GetNumPoints();
+                        int np22 = existing1.GetNumPoints();
+                        int nm11 = face0    .GetNumModes ();
+                        int nm12 = face1    .GetNumModes ();
+                        int nm21 = existing0.GetNumModes ();
+                        int nm22 = existing1.GetNumModes ();
+                        
+                        if ((np22 >= np12 || np21 >= np11) &&
+                            (nm22 >= nm12 || nm21 >= nm11))
                         {
+                            continue;
                         }
-                        else if( ((*m_exp)[FaceDone[id]]->GetNumPoints(0)
-                                <= bkey0.GetNumPoints()
-                                  || (*m_exp)[FaceDone[id]]->GetNumPoints(1)
-                                <= bkey1.GetNumPoints())
-                            && ((*m_exp)[FaceDone[id]]->GetBasisNumModes(0)
-                                <= bkey0.GetNumModes()
-                                || (*m_exp)[FaceDone[id]]->GetBasisNumModes(1)
-                                <= bkey1.GetNumModes()) )
+                        else if((np22 < np12 || np21 < np11) &&
+                                (nm22 < nm12 || nm21 < nm11))
                         {
-                            //if face is a quad
-                            
-                            if((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
-                            {
-                                FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
-                                FaceQuadExp->SetElmtId(FaceDone[id]);
-                                (*m_exp)[FaceDone[id]] = FaceQuadExp;
-                                
-                            }
-                            //if face is a triangle
-                            else if((FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom)))
-                            {
-                                FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
-                                FaceTriExp->SetElmtId(FaceDone[id]);
-                                (*m_exp)[FaceDone[id]] = FaceTriExp;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"dynamic cast to a proper face geometry failed"); 
-                            }
+                            it->second.second.first  = face0;
+                            it->second.second.second = face1;
                         }
                         else
                         {
@@ -581,15 +552,40 @@ namespace Nektar
                     }
                 }
             }
-
+            
+            for (it = faceOrders.begin(); it != faceOrders.end(); ++it)
+            {
+                FaceGeom = it->second.first;
+                
+                if ((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
+                {
+                    FaceQuadExp = MemoryManager<LocalRegions::QuadExp>
+                    ::AllocateSharedPtr(it->second.second.first,
+                                        it->second.second.second,
+                                        FaceQuadGeom);
+                    FaceQuadExp->SetElmtId(elmtid++);
+                    (*m_exp).push_back(FaceQuadExp);
+                }
+                else if ((FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom)))
+                {
+                    FaceTriExp = MemoryManager<LocalRegions::TriExp>
+                    ::AllocateSharedPtr(it->second.second.first,
+                                        it->second.second.second,
+                                        FaceTriGeom);
+                    FaceTriExp->SetElmtId(elmtid++);
+                    (*m_exp).push_back(FaceTriExp);
+                }
+            }
+            
             // Setup Default optimisation information.
             int nel = GetExpSize();
+            
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-                ::AllocateSharedPtr(nel);
-
+            ::AllocateSharedPtr(nel);
+            
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();
-
+            
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {

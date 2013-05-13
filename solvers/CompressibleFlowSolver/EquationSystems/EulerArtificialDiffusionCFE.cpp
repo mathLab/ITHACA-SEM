@@ -85,7 +85,7 @@ namespace Nektar
         }
         
         m_checkpointFuncs["Sensor"] = boost::bind(&EulerArtificialDiffusionCFE::CPSensor, this, _1, _2);
-        
+        //m_checkpointFuncs["Mach"] = boost::bind(&EulerArtificialDiffusionCFE::CPMach, this, _1, _2);
         m_checkpointFuncs["ArtificialDynamicViscosity"] = boost::bind(&EulerArtificialDiffusionCFE::CPArtificialDynamicViscosity, this, _1, _2);
 
     }
@@ -271,6 +271,32 @@ namespace Nektar
         Array<OneD, NekDouble> sensor(npts,0.0);
         GetSensor(physfield, sensor);
         m_fields[0]->FwdTrans(sensor, outarray);
+    }
+    
+    void EulerArtificialDiffusionCFE::CPMach(
+                          const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                          Array<OneD, NekDouble> &outarray)
+    {
+        const int npts = m_fields[0]->GetTotPoints();
+        outarray = Array<OneD, NekDouble>(GetNcoeffs());
+        
+        Array<OneD, Array<OneD, NekDouble> > physfield(m_spacedim+2);
+        
+        for (int i = 0; i < m_spacedim+2; ++i)
+        {
+            physfield[i] = Array<OneD, NekDouble>(npts);
+            m_fields[i]->BwdTrans(inarray[i], physfield[i]);
+        }
+        
+        Array<OneD, NekDouble> pressure(npts);
+        Array<OneD, NekDouble> soundspeed(npts);
+        Array<OneD, NekDouble> mach(npts);
+        
+        GetPressure(physfield, pressure);
+        GetSoundSpeed(physfield, pressure, soundspeed);
+        GetMach(physfield, soundspeed, mach);
+        
+        m_fields[0]->FwdTrans(mach, outarray);
     }
     
     void EulerArtificialDiffusionCFE::CPArtificialDynamicViscosity(

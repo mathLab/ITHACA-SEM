@@ -101,6 +101,10 @@ namespace Nektar
     void CPSensor(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
           Array<OneD, NekDouble> &outarray);
     
+    void CPMach(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                Array<OneD, NekDouble> &outarray);
+
+      
     void CPArtificialDynamicViscosity(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
                                       Array<OneD,                   NekDouble> &outarray);

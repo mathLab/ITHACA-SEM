@@ -1420,6 +1420,7 @@ namespace Nektar
 
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
         Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
+        Vmath::Vsqrt(npts,mach, 1, mach, 1);
         Vmath::Vdiv(npts, mach, 1, soundspeed,   1, mach, 1);
     }
     
@@ -1679,7 +1680,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physarray,
               Array<OneD,                   NekDouble>   &Sensor)
     {
-    
+        
         int i, e, nCoeffsElement, NumModesElement, NumModesCuttOff, NumModesCuttOff_Dir1, NumModesCuttOff_Dir2, nQuadPointsElement;
         NekDouble SensorNumerator, SensorDenominator;
         
@@ -1857,11 +1858,17 @@ namespace Nektar
                             SolPElementPhys[i] = SolP[CoeffsCount+i];
                         }
                     
-                        m_fields[0]->GetExp(e)->FwdTrans(SolPElementPhys, SolPElementCoeffs);
+                        StdRegions::StdTriExpSharedPtr     m_OrthoTriExp;
                     
-                        LibUtilities::InterpCoeff2D(
-                                    TriBa0,TriBa1,SolPElementCoeffs,
-                                    TriBa0Ortho, TriBa1Ortho, OrthoElementCoeffs);
+                        m_OrthoTriExp =  MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(TriBa0Ortho,TriBa1Ortho);
+                    
+                        m_OrthoTriExp->FwdTrans(SolPElementPhys, OrthoElementCoeffs);
+                    
+                        //m_fields[0]->GetExp(e)->FwdTrans(SolPElementPhys, SolPElementCoeffs);
+                    
+                        //LibUtilities::InterpCoeff2D(
+                        //            TriBa0,TriBa1,SolPElementCoeffs,
+                        //            TriBa0Ortho, TriBa1Ortho, OrthoElementCoeffs);
                         
                         // Start filtering process as described by C. Biotto page 93-95
                     
@@ -1878,15 +1885,15 @@ namespace Nektar
                                 NumModesCuttOff_Dir2 -= 1.0;
                             }
                         }
+                    
+                        //LibUtilities::InterpCoeff2D(
+                        //                            TriBa0Ortho, TriBa1Ortho, OrthoElementCoeffs,
+                        //                            TriBa0,TriBa1,SolPElementCoeffs);
                         
-                        LibUtilities::InterpCoeff2D(
-                                                    TriBa0Ortho, TriBa1Ortho, OrthoElementCoeffs,
-                                                    TriBa0,TriBa1,SolPElementCoeffs);
-                        
-                        
+                        m_OrthoTriExp->BwdTrans(OrthoElementCoeffs, SolPmOneElementPhys);
                         // Backward transformation from Modified Coefficient space to Modified Physical space (Outcome is the solution points at P = p - 1 on the Modified basis).
                         
-                        m_fields[0]->GetExp(e)->BwdTrans(SolPElementCoeffs,SolPmOneElementPhys);
+                        //m_fields[0]->GetExp(e)->BwdTrans(SolPElementCoeffs,SolPmOneElementPhys);
             
                         for (int i = 0; i < nQuadPointsElement; i++)
                         {
@@ -2082,8 +2089,8 @@ namespace Nektar
         const int nElements  = m_fields[0]->GetExpSize();
         const int ploc       = m_fields[0]->GetExpSize();
         
-        const double S_Kappa = -2.0;
-        const double Kappa = 0.1;
+        const double S_Kappa = -1.9;
+        const double Kappa = 0.0;
         int PointCount = 0;
         int nTotQuadPoints  = GetTotPoints();
         
@@ -2102,7 +2109,7 @@ namespace Nektar
             //Array<OneD, NekDouble> one2D(nQuadPointsElement, 1.0);
             //NekDouble Area = m_fields[0]->GetExp(e)->Integral(one2D);
             //double mu_0 = sqrt(Area)/pOrderElmt[e];
-            double mu_0 = 10.0;
+            double mu_0 = 35.0;
             for (int n = 0; n < nQuadPointsElement; n++)
             {
                 if (Sensor[n+PointCount] < (S_Kappa-Kappa))
@@ -2124,8 +2131,8 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::SetVarPOrderElmt(
-                    const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                          Array<OneD,                    NekDouble  > &PolyOrder)
+                                                  const Array<OneD, const Array<OneD, NekDouble> > &physfield,
+                                                  Array<OneD,                    NekDouble  > &PolyOrder)
     {
         int e, cnt;
         NekDouble s_0, s_ds, s_sm, s_fl;
@@ -2149,15 +2156,24 @@ namespace Nektar
         int MinOrderShock       = 4;
         
         // print composite list
-        /*
-        for (int e = 0; e < nElements; e++)
-        {
-            cout <<"<C ID=\"" << e+1 << "\"> Q\"[" << e << "]\" </C>"<< endl;
-        }
-        */
+        
+        
+        
         
         if(m_expdim == 2)
         {
+            
+            std::ofstream m_file( "VariablePComposites2D.txt", std::ios_base::app);
+            
+            for (int e = 0; e < nElements; e++)
+            {
+                m_file << "<C ID=\"" << e+1 << "\"> Q[" << e << "] </C>"<< endl;
+            }
+            
+            m_file.close();
+            
+            std::ofstream m_file2( "VariablePExpansions2D.txt", std::ios_base::app);
+            
             for (e = 0; e < nElements; e++)
             {
                 nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
@@ -2174,7 +2190,7 @@ namespace Nektar
                 //geom = m_quadGeoms[m_fields[0]->GetExp(e)->GetElmtId()];
                 
                 for (int i = 0; i < nQuadPointsElement; i++)
-                {    
+                {
                     se[npCount + i] = (Sensor[npCount + i]);
                     
                     if (se[npCount + i] > s_ds)
@@ -2210,12 +2226,89 @@ namespace Nektar
                     }
                     
                 }
-
-                //cout << "<E COMPOSITE= \"C[" << e+1 << "]\" NUMMODES=\"" << PolyOrder[npCount + 1] << "\" TYPE=\"MODIFIED\" FIELDS=\"rho,rhou,rhov,E\" />" << endl;
+                
+                m_file2 << "<E COMPOSITE= \"C[" << e+1 << "]\" NUMMODES=\"" << PolyOrder[npCount + 1] << "\" TYPE=\"MODIFIED\" FIELDS=\"rho,rhou,rhov,E\" />" << endl;
                 
                 npCount += nQuadPointsElement;
             }
+            
+            m_file2.close();
         }
+        
+        if(m_expdim == 3)
+        {
+            std::ofstream m_file3( "VariablePComposites3D.txt", std::ios_base::app);
+            
+            for (int e = 0; e < nElements; e++)
+            {
+                m_file3 << "<C ID=\"" << e+1 << "\"> H[" << e << "] </C>"<< endl;
+            }
+            
+            m_file3.close();
+            
+            std::ofstream m_file4( "VariablePExpansions3D.txt", std::ios_base::app);
+            
+            for (e = 0; e < nElements; e++)
+            {
+                nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
+                
+                // -------------------------cylinder sensor values-------------------------------
+                // Ideally, these threshold values could be given in the Session File
+                s_0 =  -6.0;
+                
+                s_ds = s_0*log10(PolyOrder[e]);
+                s_sm = -7.5;
+                s_fl = -9;
+                
+                // Define thresholds
+                //geom = m_quadGeoms[m_fields[0]->GetExp(e)->GetElmtId()];
+                
+                for (int i = 0; i < nQuadPointsElement; i++)
+                {
+                    se[npCount + i] = (Sensor[npCount + i]);
+                    
+                    if (se[npCount + i] > s_ds)
+                    {
+                        if (PolyOrder[npCount + i] > MinOrderShock)
+                        {
+                            PolyOrder[npCount + i] = PolyOrder[npCount + i] - 1;
+                        }
+                        else if(PolyOrder[e] < MinOrderShock)
+                        {
+                            PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
+                        }
+                        
+                    }
+                    else if(se[npCount + i] > s_sm && se[npCount + i] < s_ds)
+                    {
+                        if (PolyOrder[npCount + i] < MaxOrder)
+                        {
+                            PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
+                        }
+                    }
+                    else if(se[npCount + i] > s_fl && se[npCount + i] < s_sm)
+                    {
+                        
+                    }
+                    else if(se[npCount + i] < s_fl)
+                    {
+                        if (PolyOrder[npCount + i] > MinOrder)
+                        {
+                            PolyOrder[npCount + i] = PolyOrder[npCount + i] - 1;
+                        }
+                        
+                    }
+                    
+                }
+                
+                m_file4 << "<E COMPOSITE= \"C[" << e+1 << "]\" NUMMODES=\"" << PolyOrder[npCount + 1] << "\" TYPE=\"MODIFIED\" FIELDS=\"rho,rhou,rhov,rhow,E\" />" << endl;
+                //m_file4 << "<E COMPOSITE= \"C[" << e+1 << "]\" NUMMODES=\"4\" TYPE=\"MODIFIED\" FIELDS=\"rho,rhou,rhov,rhow,E\" />" << endl;
+                npCount += nQuadPointsElement;
+            }
+            
+            m_file4.close();
+        }
+        
     }
 
      

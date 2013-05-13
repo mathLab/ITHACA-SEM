@@ -493,6 +493,29 @@ namespace Nektar
                     doCheckTime = false;
                 }
                 
+                // Convergence to steady state check file --------------------
+                
+                std::ofstream m_file10( "Convergence.txt", std::ios_base::app);
+                
+                m_file10 << step <<" ";
+                
+                Array<OneD, NekDouble> RhoConv(m_fields[0]->GetPhys().num_elements(),0.0);
+                m_fields[0]->BwdTrans(m_fields[0]->GetCoeffs(),RhoConv);
+                
+                for (int i = 0; i < m_fields[0]->GetPhys().num_elements(); i++)
+                {
+                 
+                    m_file10 << RhoConv[i] << " ";
+                    if (i == m_fields[0]->GetPhys().num_elements()-1)
+                    {
+                        m_file10 << endl;
+                    }
+                }
+                
+                m_file10.close();
+                
+                // -----------------------------------------------------------
+            
                 // Step advance
                 ++step;
             }

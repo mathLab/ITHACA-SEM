@@ -100,6 +100,21 @@ namespace Nektar
             vNew.SaveFile(vFilename.c_str());
         }
 
+        void MeshPartition::GetCompositeOrdering(CompositeOrdering &composites)
+        {
+            std::map<int, MeshEntity>::iterator it;
+            for (it  = m_meshComposites.begin();
+                 it != m_meshComposites.end(); ++it)
+            {
+                composites[it->first] = it->second.list;
+            }
+        }
+
+        void MeshPartition::GetBndRegionOrdering(BndRegionOrdering &bndRegs)
+        {
+            bndRegs = m_bndRegOrder;
+        }
+
         void MeshPartition::ReadMesh(const LibUtilities::SessionReaderSharedPtr& pSession)
         {
             TiXmlElement* x;
@@ -739,7 +754,7 @@ namespace Nektar
 
             if (pSession->DefinesElement("Nektar/Conditions"))
             {
-                std::map<int, int> vBndRegionIdList;
+                std::set<int> vBndRegionIdList;
                 TiXmlElement* vConditions    = new TiXmlElement(*pSession->GetElement("Nektar/Conditions"));
                 TiXmlElement* vBndRegions    = vConditions->FirstChildElement("BOUNDARYREGIONS");
                 TiXmlElement* vBndConditions = vConditions->FirstChildElement("BOUNDARYCONDITIONS");
@@ -749,7 +764,6 @@ namespace Nektar
                 {
                     TiXmlElement* vNewBndRegions = new TiXmlElement("BOUNDARYREGIONS");
                     vItem = vBndRegions->FirstChildElement();
-                    int p = 0;
                     while (vItem)
                     {
                         std::string vSeqStr = vItem->FirstChild()->ToText()->Value();
@@ -769,6 +783,7 @@ namespace Nektar
                                 vListStr += boost::lexical_cast<std::string>(vSeq[i]);
                             }
                         }
+                        int p = atoi(vItem->Attribute("ID"));
                         if (vListStr.length() == 0)
                         {
                             vBndRegions->RemoveChild(vItem);
@@ -781,8 +796,12 @@ namespace Nektar
                             vNewElement->SetAttribute("ID", p);
                             vNewElement->LinkEndChild(vList);
                             vNewBndRegions->LinkEndChild(vNewElement);
-                            vBndRegionIdList[atoi(vItem->Attribute("ID"))] = p++;
+                            vBndRegionIdList.insert(p);
                         }
+
+                        // Store original order of boundary region.
+                        m_bndRegOrder[p] = vSeq;
+                        
                         vItem = vItem->NextSiblingElement();
                     }
                     vConditions->ReplaceChild(vBndRegions, *vNewBndRegions);
@@ -793,10 +812,10 @@ namespace Nektar
                     vItem = vBndConditions->FirstChildElement();
                     while (vItem)
                     {
-                        std::map<int, int>::iterator x;
+                        std::set<int>::iterator x;
                         if ((x = vBndRegionIdList.find(atoi(vItem->Attribute("REF")))) != vBndRegionIdList.end())
                         {
-                            vItem->SetAttribute("REF", x->second);
+                            vItem->SetAttribute("REF", *x);
                         }
                         else
                         {

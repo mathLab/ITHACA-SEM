@@ -68,8 +68,8 @@ namespace Nektar
                                    const ExpList &locExp,
                                    const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                                    const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                   const vector<map<int,int> >& periodicVerticesId,
-                                   const map<int,int>& periodicEdgesId,
+                                   const PeriodicMap& periodicVertsId,
+                                   const PeriodicMap& periodicEdgesId,
                                    const bool checkIfSystemSingular);
 
 
@@ -93,8 +93,8 @@ namespace Nektar
                                        const Array<OneD, const MultiRegions::ExpListSharedPtr>  &bndCondExp,
                                        const Array<OneD, Array<OneD, const SpatialDomains::BoundaryConditionShPtr> >
                                        &bndConditions,
-                                       const vector<map<int,int> >& periodicVerticesId,
-                                       const map<int,int>& periodicEdgesId,
+                                       const PeriodicMap& periodicVertsId,
+                                       const PeriodicMap& periodicEdgesId,
                                        Array<OneD, map<int,int> > &Dofs,
                                        Array<OneD, map<int,int> > &ReorderedGraphVertId,
                                        int          &firstNonDirGraphVertID,
@@ -115,8 +115,8 @@ namespace Nektar
                                                NullExpListSharedPtrArray,
                                            const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions =
                                                SpatialDomains::NullBoundaryConditionShPtrArray,
-                                           const vector<map<int,int> >& periodicVerticesId = NullVecIntIntMap,
-                                           const map<int,int>& periodicEdgesId = NullIntIntMap,
+                                           const PeriodicMap& periodicVertsId = NullPeriodicMap,
+                                           const PeriodicMap& periodicEdgesId = NullPeriodicMap,
                                            const bool checkIfSystemSingular = false);
         };
 

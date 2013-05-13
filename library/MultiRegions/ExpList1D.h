@@ -101,7 +101,7 @@ namespace Nektar
                                             ::BoundaryConditionShPtr>  &bndCond,
                       const StdRegions::StdExpansionVector &locexp,
                       const SpatialDomains::MeshGraphSharedPtr &graph2D,
-                      const map<int,int> &periodicEdges,
+                      const PeriodicMap &periodicEdges,
                       const bool DeclareCoeffPhysArrays = true,
                       const std::string variable = "DefaultVar");
             

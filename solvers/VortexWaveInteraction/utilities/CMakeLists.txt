@@ -27,6 +27,6 @@ ADD_SOLVER_EXECUTABLE(MoveMeshToCriticalLayer solvers
 ADD_SOLVER_EXECUTABLE(ExpandMeshByRotation solvers 
 		     ${ExpandMeshByRotationSource})
 
-ADD_SOLVER_EXECUTABLE(MeshMove solvers 
+ADD_SOLVER_EXECUTABLE(MeshMove solvers
 		     ${MeshMoveSource})
                         

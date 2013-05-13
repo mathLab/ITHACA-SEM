@@ -329,95 +329,96 @@ namespace Nektar
             return m_xmap[i]->PhysEvaluate(Lcoord);
         }
 
+        StdRegions::Orientation QuadGeom::GetFaceOrientation(
+            const QuadGeom &face1,
+            const QuadGeom &face2)
+        {
+            return GetFaceOrientation(face1.m_verts, face2.m_verts);
+        }
 
-       /**
-        * TODO: implement eight different case of face orientation
-        */
-       StdRegions::Orientation QuadGeom::GetFaceOrientation(
-           const QuadGeom &face1,
-           const QuadGeom &face2)
-       {
-           StdRegions::Orientation returnval = 
-               StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+        StdRegions::Orientation QuadGeom::GetFaceOrientation(
+            const VertexComponentVector &face1,
+            const VertexComponentVector &face2)
+        {
+            int i, j, vmap[4] = {-1,-1,-1,-1};
+            NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
+           
+            // For periodic faces, we calculate the vector between the centre
+            // points of the two faces. (For connected faces this will be
+            // zero). We can then use this to determine alignment later in the
+            // algorithm.
+            for (i = 0; i < 4; ++i)
+            {
+                cx += (*face2[i])(0) - (*face1[i])(0);
+                cy += (*face2[i])(1) - (*face1[i])(1);
+                cz += (*face2[i])(2) - (*face1[i])(2);
+            }
+            cx /= 4;
+            cy /= 4;
+            cz /= 4;
 
-           int i, j, map[4] = {-1,-1,-1,-1};
-           NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
-           
-           // For periodic faces, we calculate the vector between the centre
-           // points of the two faces. (For connected faces this will be
-           // zero). We can then use this to determine alignment later in the
-           // algorithm.
-           for (i = 0; i < 4; ++i)
-           {
-               cx += (*face2.m_verts[i])(0) - (*face1.m_verts[i])(0);
-               cy += (*face2.m_verts[i])(1) - (*face1.m_verts[i])(1);
-               cz += (*face2.m_verts[i])(2) - (*face1.m_verts[i])(2);
-           }
-           cx /= 4;
-           cy /= 4;
-           cz /= 4;
-           
-           // Now construct a mapping which takes us from the vertices of one
-           // face to the other. That is, vertex j of face2 corresponds to
-           // vertex map[j] of face1.
-           for (i = 0; i < 4; ++i)
-           {
-               x = (*face1.m_verts[i])(0);
-               y = (*face1.m_verts[i])(1);
-               z = (*face1.m_verts[i])(2);
-               for (j = 0; j < 4; ++j)
-               {
-                   x1 = (*face2.m_verts[j])(0)-cx;
-                   y1 = (*face2.m_verts[j])(1)-cy;
-                   z1 = (*face2.m_verts[j])(2)-cz;
-                   if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-5)
-                   {
-                       map[j] = i;
-                       break;
-                   }
-               }
-           }
-           
-           // Use the mapping to determine the eight alignment options between
-           // faces.
-           if (map[1] == (map[0]+1) % 4)
-           {
-               switch (map[0])
-               {
-                   case 0:
-                       returnval = StdRegions::eDir1FwdDir1_Dir2FwdDir2;
-                       break;
-                   case 1:
-                       returnval = StdRegions::eDir1FwdDir2_Dir2BwdDir1;
-                       break;
-                   case 2:
-                       returnval = StdRegions::eDir1BwdDir1_Dir2BwdDir2;
-                       break;
-                   case 3:
-                       returnval = StdRegions::eDir1BwdDir2_Dir2FwdDir1;
-                       break;
-               }
-           }
-           else 
-           {
-               switch (map[0])
-               {
-                   case 0:
-                       returnval = StdRegions::eDir1FwdDir2_Dir2FwdDir1;
-                       break;
-                   case 1:
-                       returnval = StdRegions::eDir1BwdDir1_Dir2FwdDir2;
-                       break;
-                   case 2:
-                       returnval = StdRegions::eDir1BwdDir2_Dir2BwdDir1;
-                       break;
-                   case 3:
-                       returnval = StdRegions::eDir1FwdDir1_Dir2BwdDir2;
-                       break;
-               }
-           }
+            // Now construct a mapping which takes us from the vertices of one
+            // face to the other. That is, vertex j of face2 corresponds to
+            // vertex vmap[j] of face1.
+            for (i = 0; i < 4; ++i)
+            {
+                x = (*face1[i])(0);
+                y = (*face1[i])(1);
+                z = (*face1[i])(2);
+                for (j = 0; j < 4; ++j)
+                {
+                    x1 = (*face2[j])(0)-cx;
+                    y1 = (*face2[j])(1)-cy;
+                    z1 = (*face2[j])(2)-cz;
+                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-5)
+                    {
+                        vmap[j] = i;
+                        break;
+                    }
+                }
+            }
 
-	   return returnval;
+            // Use the mapping to determine the eight alignment options between
+            // faces.
+            if (vmap[1] == (vmap[0]+1) % 4)
+            {
+                switch (vmap[0])
+                {
+                    case 0:
+                        return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
+                        break;
+                    case 1:
+                        return StdRegions::eDir1BwdDir2_Dir2FwdDir1;
+                        break;
+                    case 2:
+                        return StdRegions::eDir1BwdDir1_Dir2BwdDir2;
+                        break;
+                    case 3:
+                        return StdRegions::eDir1FwdDir2_Dir2BwdDir1;
+                        break;
+                }
+            }
+            else
+            {
+                switch (vmap[0])
+                {
+                    case 0:
+                        return StdRegions::eDir1FwdDir2_Dir2FwdDir1;
+                        break;
+                    case 1:
+                        return StdRegions::eDir1BwdDir1_Dir2FwdDir2;
+                        break;
+                    case 2:
+                        return StdRegions::eDir1BwdDir2_Dir2BwdDir1;
+                        break;
+                    case 3:
+                        return StdRegions::eDir1FwdDir1_Dir2BwdDir2;
+                        break;
+                }
+            }
+
+            ASSERTL0(false, "unable to determine face orientation");
+            return StdRegions::eDir1FwdDir1_Dir2FwdDir2;
        }
 
 

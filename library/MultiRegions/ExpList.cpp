@@ -2977,18 +2977,20 @@ namespace Nektar
 		/**
          */
         void ExpList::v_GetPeriodicEdges(
-            vector<map<int,int> > &periodicVertices,
-            map<int,int>          &periodicEdges)
+            PeriodicMap &periodicVerts,
+            PeriodicMap &periodicEdges)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
-        SpatialDomains::BoundaryConditionShPtr ExpList::GetBoundaryCondition(const SpatialDomains::BoundaryConditionCollection& collection,
-                                                                             unsigned int index, const std::string& variable)
+        SpatialDomains::BoundaryConditionShPtr ExpList::GetBoundaryCondition(
+            const SpatialDomains::BoundaryConditionCollection& collection,
+            unsigned int regionId,
+            const std::string& variable)
         {
-            SpatialDomains::BoundaryConditionCollection::const_iterator collectionIter = collection.find(index);
-            ASSERTL1(collectionIter != collection.end(), "Unable to locate collection.");
+            SpatialDomains::BoundaryConditionCollection::const_iterator collectionIter = collection.find(regionId);
+            ASSERTL1(collectionIter != collection.end(), "Unable to locate collection "+boost::lexical_cast<string>(regionId));
             const SpatialDomains::BoundaryConditionMapShPtr boundaryConditionMap = (*collectionIter).second;
             SpatialDomains::BoundaryConditionMap::const_iterator conditionMapIter = boundaryConditionMap->find(variable);
             ASSERTL1(conditionMapIter != boundaryConditionMap->end(), "Unable to locate condition map.");

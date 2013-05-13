@@ -435,7 +435,7 @@ namespace Nektar
             const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>  &bndCond,
             const StdRegions::StdExpansionVector &locexp,
             const SpatialDomains::MeshGraphSharedPtr &graph3D,
-            const map<int,PeriodicFace> &periodicFaces,
+            const PeriodicMap &periodicFaces,
             const bool DeclareCoeffPhysArrays, 
             const std::string variable):
             ExpList()
@@ -510,12 +510,6 @@ namespace Nektar
                             FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
                             
                             FaceDone[id] = elmtid;
-                            /*
-                            if (periodicFaces.count(id) > 0)
-                            {
-                                FaceDone[periodicFaces.find(id)->second.first] = elmtid;
-                            }
-                            */
                             FaceQuadExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceQuadExp);
                         }
@@ -525,12 +519,6 @@ namespace Nektar
                             FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
                             
                             FaceDone[id] = elmtid;
-                            /*
-                            if (periodicFaces.count(id) > 0)
-                            {
-                                FaceDone[periodicFaces.find(id)->second.first] = elmtid;
-                            }
-                            */
                             FaceTriExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceTriExp);
                         }
@@ -1034,101 +1022,3 @@ namespace Nektar
 
     } //end of namespace
 } //end of namespace
-
-/**
-* $Log: ExpList2D.cpp,v $
-* Revision 1.36  2010/01/28 15:20:46  abolis
-* Time-Dependent boundary conditions
-*
-* Revision 1.35  2009/12/18 18:53:14  bnelson
-* Fixed windows compiler warnings.
-*
-* Revision 1.34  2009/12/15 18:09:03  cantwell
-* Split GeomFactors into 1D, 2D and 3D
-* Added generation of tangential basis into GeomFactors
-* Updated ADR2DManifold solver to use GeomFactors for tangents
-* Added <GEOMINFO> XML session section support in MeshGraph
-* Fixed const-correctness in VmathArray
-* Cleaned up LocalRegions code to generate GeomFactors
-* Removed GenSegExp
-* Temporary fix to SubStructuredGraph
-* Documentation for GlobalLinSys and GlobalMatrix classes
-*
-* Revision 1.33  2009/11/25 14:51:29  pvos
-* Updates for added Timings directory
-*
-* Revision 1.32  2009/11/23 22:11:07  cantwell
-* Documentation.
-*
-* Revision 1.31  2009/11/19 23:30:36  cantwell
-* Documentation for ExpList2D and GlobalMatrixKey
-* Updated doxygen pages.
-*
-* Revision 1.30  2009/11/02 19:15:43  cantwell
-* Moved ContField1D to inherit from DisContField1D.
-* Moved ContField3D to inherit from DisContField3D.
-* Incorporated GenExpList1D functionality into ExpList1D.
-* Tidied up and added documentation to various classes.
-* Moved Namespace documentation and introductions to separate files along with
-* doxygen configuration.
-* Added option to use system ZLIB library instead of libboost_zlib on UNIX.
-* Added extra search paths to FindMetis.cmake and FindNektar++.cmake.
-* Updated Linux compiling instructions.
-* Updated regDemo to use Helmholtz2D-g when built as debug.
-*
-* Revision 1.29  2009/09/06 22:28:45  sherwin
-* Updates for Navier-Stokes solver
-*
-* Revision 1.28  2009/05/10 23:17:12  sherwin
-* Updated mainly to handle doubly periodic meshes which required modification to vertex handling from a numbering perspective
-*
-* Revision 1.27  2009/04/27 15:02:04  pvos
-* From h-to-p efficiently updates
-*
-* Revision 1.26  2009/04/20 16:14:06  sherwin
-* Updates for optimising bandwidth of DG solver and allowing write import on explist
-*
-* Revision 1.25  2009/03/04 14:17:38  pvos
-* Removed all methods that take and Expansion as argument
-*
-* Revision 1.24  2009/01/12 10:26:35  pvos
-* Added input tags for nodal expansions
-*
-* Revision 1.23  2009/01/06 21:05:57  sherwin
-* Added virtual function calls for BwdTrans, FwdTrans and IProductWRTBase from the class ExpList. Introduced _IterPerExp versions of these methods in ExpList.cpp§
-*
-* Revision 1.22  2008/09/23 18:21:00  pvos
-* Updates for working ProjectContField3D demo
-*
-* Revision 1.21  2008/08/14 22:15:51  sherwin
-* Added LocalToglobalMap and DGMap and depracted LocalToGlobalBndryMap1D,2D. Made DisContField classes compatible with updated ContField formats
-*
-* Revision 1.20  2008/07/12 17:31:39  sherwin
-* Added m_phys_offset and rename m_exp_offset to m_coeff_offset
-*
-* Revision 1.19  2008/05/10 18:27:33  sherwin
-* Modifications necessary for QuadExp Unified DG Solver
-*
-* Revision 1.18  2008/04/02 22:19:54  pvos
-* Update for 2D local to global mapping
-*
-* Revision 1.17  2008/03/18 14:14:13  pvos
-* Update for nodal triangular helmholtz solver
-*
-* Revision 1.16  2008/03/12 15:25:45  pvos
-* Clean up of the code
-*
-* Revision 1.15  2007/12/06 22:52:30  pvos
-* 2D Helmholtz solver updates
-*
-* Revision 1.14  2007/07/20 02:04:12  bnelson
-* Replaced boost::shared_ptr with Nektar::ptr
-*
-* Revision 1.13  2007/06/07 15:54:19  pvos
-* Modificications to make Demos/MultiRegions/ProjectCont2D work correctly.
-* Also made corrections to various ASSERTL2 calls
-*
-* Revision 1.12  2007/06/05 16:36:55  pvos
-* Updated Explist2D ContExpList2D and corresponding demo-codes
-*
-**/

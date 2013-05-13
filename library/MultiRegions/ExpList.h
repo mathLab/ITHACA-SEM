@@ -722,10 +722,10 @@ namespace Nektar
             }
 
             void GetPeriodicEdges(
-                                  vector<map<int,int> > &periodicVertices,
-                                  map<int,int>          &periodicEdges)
+                PeriodicMap &periodicVerts,
+                PeriodicMap &periodicEdges)
             {
-                v_GetPeriodicEdges(periodicVertices, periodicEdges);
+                v_GetPeriodicEdges(periodicVerts, periodicEdges);
             }
 
             std::vector<LibUtilities::FieldDefinitionsSharedPtr>
@@ -1224,8 +1224,8 @@ namespace Nektar
             
             
             virtual void v_GetPeriodicEdges(
-                vector<map<int,int> > &periodicVertices,
-                map<int,int>          &periodicEdges);
+                PeriodicMap &periodicVerts,
+                PeriodicMap &periodicEdges);
 
             // Homogeneous direction wrapper functions. 
             virtual LibUtilities::BasisSharedPtr  v_GetHomogeneousBasis(void)

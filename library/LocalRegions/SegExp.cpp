@@ -92,6 +92,7 @@ namespace Nektar
         {
         }
 
+
         //----------------------------
         // Integration Methods
         //----------------------------
@@ -616,6 +617,21 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         //-----------------------------
         // Evaluation functions
         //-----------------------------
+
+
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble SegExp::v_StdPhysEvaluate(
+                                            const Array<OneD, const NekDouble> &Lcoord,
+                                            const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdSegExp::v_PhysEvaluate(Lcoord,physvals);
+        }
+
 
         NekDouble SegExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord)
         {

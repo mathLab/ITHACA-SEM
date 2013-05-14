@@ -106,7 +106,7 @@ namespace Nektar
             int nx = fx.num_elements();
             int ny = gy.num_elements();
             int nz = hz.num_elements();
-
+            
             // Multiply by integration constants...
             // Hadamard multiplication refers to elementwise multiplication of
             // two vectors.

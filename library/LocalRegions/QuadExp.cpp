@@ -82,6 +82,7 @@ namespace Nektar
         }
 
 
+
         NekDouble QuadExp::v_Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -650,6 +651,20 @@ namespace Nektar
             }
         }
 
+
+
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble QuadExp::v_StdPhysEvaluate(
+                                            const Array<OneD, const NekDouble> &Lcoord,
+                                            const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdQuadExp::v_PhysEvaluate(Lcoord,physvals);
+        }
 
         NekDouble QuadExp::v_PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {

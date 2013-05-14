@@ -82,6 +82,7 @@ namespace Nektar
         }
 
 
+
         NekDouble TriExp::v_Integral(const Array<OneD, const NekDouble> &inarray)
         {
             int    nquad0 = m_base[0]->GetNumPoints();
@@ -663,6 +664,19 @@ namespace Nektar
             }
         }
 
+
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble TriExp::v_StdPhysEvaluate(
+                                             const Array<OneD, const NekDouble> &Lcoord,
+                                             const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdTriExp::v_PhysEvaluate(Lcoord,physvals);
+        }
 
         NekDouble TriExp::v_PhysEvaluate(const Array<OneD, const NekDouble> &coord)
         {

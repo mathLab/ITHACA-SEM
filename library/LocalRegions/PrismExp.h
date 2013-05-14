@@ -120,6 +120,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Lcoords, 
                       Array<OneD,       NekDouble> &coords);
 
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
+                                 const Array<OneD, const NekDouble> &Lcoord,
+                                 const Array<OneD, const NekDouble> &physvals);
+
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble> &coord);
 

@@ -177,6 +177,10 @@ namespace Nektar
                         const Array<OneD, const NekDouble> &gloCoord,
                               NekDouble tol = 0.0);
 
+                SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
+                                             const Array<OneD, const NekDouble> &gloCoord, 
+                                             Array<OneD, NekDouble> &locCoord,
+                                             NekDouble                     tol = 0.0);
             private:
                 bool                            m_ownData;
         };

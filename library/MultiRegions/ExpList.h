@@ -568,7 +568,17 @@ namespace Nektar
 
             /// This function returns the index of the local elemental
             /// expansion containing the arbitrary point given by \a gloCoord.
-            MULTI_REGIONS_EXPORT int GetExpIndex(const Array<OneD, const NekDouble> &gloCoord, NekDouble tol = 0.0);
+            MULTI_REGIONS_EXPORT int GetExpIndex(const Array<OneD, const NekDouble> &gloCoord, 
+                                                 NekDouble tol = 0.0);
+
+            /** This function returns the index and the Local
+             * Cartesian Coordinates \a locCoords of the local
+             * elemental expansion containing the arbitrary point
+             * given by \a gloCoords.
+             **/ 
+            MULTI_REGIONS_EXPORT int GetExpIndex(const Array<OneD, const NekDouble> &gloCoords, 
+                                                 Array<OneD, NekDouble> &locCoords,
+                                                 NekDouble tol = 0.0);
 
             /// Get the start offset position for a global list of #m_coeffs
             /// correspoinding to element n.

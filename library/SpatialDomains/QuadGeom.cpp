@@ -880,10 +880,19 @@ namespace Nektar
         }
  
 
+        bool QuadGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+
+        }
         /**
          *
          */
-        bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        bool QuadGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord,
+                                       Array<OneD, NekDouble> &locCoord,
+                                       NekDouble tol)
         {
             ASSERTL1(gloCoord.num_elements() >= 2,
                  "Two dimensional geometry expects at least two coordinates.");

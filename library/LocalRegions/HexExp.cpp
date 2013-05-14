@@ -520,6 +520,22 @@ namespace Nektar
         //-----------------------------
         // Evaluation functions
         //-----------------------------
+
+
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble HexExp::v_StdPhysEvaluate(
+                                            const Array<OneD, const NekDouble> &Lcoord,
+                                            const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdHexExp::v_PhysEvaluate(Lcoord,physvals);
+        }
+
+
         /**
          * \brief Interpolate the solution at given coordinates
 	 *

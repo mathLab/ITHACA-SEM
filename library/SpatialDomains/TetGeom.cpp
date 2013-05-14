@@ -134,6 +134,19 @@ namespace Nektar
         bool TetGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
         {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+
+        }
+
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry and return local caretsian coordinates
+         */
+        bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+                                      Array<OneD, NekDouble> &locCoord,
+                                      NekDouble tol)
+        {
             // Validation checks
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
@@ -165,13 +178,12 @@ namespace Nektar
             }
             
             // Convert to the local (eta) coordinates.
-            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
             v_GetLocCoords(gloCoord, locCoord);
             
-            // Check local coordinate is within [-1,1]^3 bounds.
+            // Check local coordinate is within cartesian bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
                 locCoord[2] >= -(1+tol)                            &&
-                locCoord[0] + locCoord[1] + locCoord[2] <= -(1+tol))
+                locCoord[0] + locCoord[1] + locCoord[2] <= -1+tol)
             {
                 return true;
             }
@@ -179,6 +191,8 @@ namespace Nektar
             return false;
         }
 
+
+        /// Get Local cartesian points 
         void TetGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble>& coords,
                   Array<OneD,       NekDouble>& Lcoords)

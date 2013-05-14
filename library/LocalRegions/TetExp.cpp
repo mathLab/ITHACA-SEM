@@ -100,7 +100,7 @@ namespace Nektar
         {
         }
 
-
+        
         //-----------------------------
         // Integration Methods
         //-----------------------------
@@ -455,6 +455,22 @@ namespace Nektar
         //-----------------------------
         // Evaluation functions
         //-----------------------------
+
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble TetExp::v_StdPhysEvaluate(
+                                            const Array<OneD, const NekDouble> &Lcoord,
+                                            const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdTetExp::v_PhysEvaluate(Lcoord,physvals);
+        }
+
+
+
         /**
          * @param   coord       Physical space coordinate
          * @returns Evaluation of expansion at given coordinate.
@@ -482,7 +498,7 @@ namespace Nektar
             m_geom->GetLocCoords(coord,Lcoord);
 
             // Evaluate point in local (eta) coordinates.
-            return StdExpansion3D::v_PhysEvaluate(Lcoord,physvals);
+            return StdTetExp::v_PhysEvaluate(Lcoord,physvals);
         }
 
 

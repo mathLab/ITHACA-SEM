@@ -918,6 +918,10 @@ namespace Nektar
             }
 
             // virtual functions related to LocalRegions
+            STD_REGIONS_EXPORT NekDouble StdPhysEvaluate(
+                                            const Array<OneD, const NekDouble> &Lcoord,
+                                            const Array<OneD, const NekDouble> &physvals);
+
 
             STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
                                                 boost::shared_ptr<StdExpansion>    &EdgeExp,
@@ -1608,6 +1612,10 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(StdRegions::Orientation dir);
 			
+            STD_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
+                                                   const Array<OneD, const NekDouble> &Lcoord,
+                                                   const Array<OneD, const NekDouble> &physvals);
+
             STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fx,

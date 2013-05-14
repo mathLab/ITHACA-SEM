@@ -1328,11 +1328,21 @@ namespace Nektar
                                  const Array<OneD, const NekDouble> &gloCoord,
                                  NekDouble tol)
         {
+            Array<OneD, NekDouble> Lcoords(gloCoord.num_elements()); 
+            
+            return GetExpIndex(gloCoord,Lcoords,tol);
+        }
+        
+
+        int ExpList::GetExpIndex(const Array<OneD, const NekDouble> &gloCoords,
+                                 Array<OneD, NekDouble> &locCoords,
+                                 NekDouble tol)
+        {
             static int start = 0;
             // start search at previous element or 0 
             for (int i = start; i < (*m_exp).size(); ++i)
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord,tol))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords,locCoords, tol))
                 {
                     start = i;
                     return i;
@@ -1341,7 +1351,7 @@ namespace Nektar
 
             for (int i = 0; i < start; ++i)
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord,tol))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
                 {
                     start = i;
                     return i;

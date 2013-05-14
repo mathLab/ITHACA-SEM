@@ -221,9 +221,17 @@ namespace Nektar
 
         bool Geometry::ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
-                      NekDouble tol)
+                NekDouble tol)
         {
             return v_ContainsPoint(gloCoord,tol);
+        }
+
+        bool Geometry::ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                Array<OneD, NekDouble> &locCoord,
+                NekDouble tol)
+        {
+            return v_ContainsPoint(gloCoord,locCoord, tol);
         }
 
         int Geometry::GetVertexEdgeMap(int i, int j) const
@@ -392,6 +400,17 @@ namespace Nektar
         bool Geometry::v_ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
                       NekDouble tol)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function has not been defined for this geometry");
+            return false;
+        }
+
+
+        bool Geometry::v_ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                Array<OneD, NekDouble> &locCoord,
+                NekDouble tol)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function has not been defined for this geometry");

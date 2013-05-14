@@ -1028,6 +1028,13 @@ namespace Nektar
         {
             v_SetUpPhysTangents(exp2d, edge);
         }
+
+        NekDouble StdExpansion::StdPhysEvaluate(const Array<OneD, const NekDouble> &Lcoord,
+                                                const Array<OneD, const NekDouble> &physvals)
+        {
+            return v_StdPhysEvaluate(Lcoord,physvals);
+        }
+
         void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fx,
@@ -1155,6 +1162,14 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
         
+
+        NekDouble StdExpansion::v_StdPhysEvaluate(const Array<OneD, const NekDouble> &Lcoord,
+                                                  const Array<OneD, const NekDouble> &physvals)
+            
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            return 0;
+        }
 
         void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
                                                     boost::shared_ptr<StdExpansion>    &EdgeExp,

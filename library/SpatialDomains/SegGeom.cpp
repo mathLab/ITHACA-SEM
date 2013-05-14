@@ -423,8 +423,21 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry.
+         */
+        bool SegGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+
+        }
+
         bool SegGeom::v_ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
+                Array<OneD, NekDouble> &locCoord,
                 NekDouble tol)
         {
             Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);

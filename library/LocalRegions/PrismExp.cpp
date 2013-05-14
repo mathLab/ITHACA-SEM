@@ -85,6 +85,7 @@ namespace Nektar
         }
 
 
+
         //-------------------------------
         // Integration Methods
         //-------------------------------
@@ -555,6 +556,19 @@ namespace Nektar
             {
                 coords[i] = m_geom->GetCoord(i,Lcoords);
             }
+        }
+
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble PrismExp::v_StdPhysEvaluate(
+                                              const Array<OneD, const NekDouble> &Lcoord,
+                                              const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdPrismExp::v_PhysEvaluate(Lcoord,physvals);
         }
 
         NekDouble PrismExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord)

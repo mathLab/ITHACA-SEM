@@ -961,13 +961,12 @@ namespace Nektar
          *
          */
         bool TriGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
-                                      Array<OneD, NekDouble> &locCoord,
+                                      Array<OneD, NekDouble> &stdCoord,
                                       NekDouble tol)
         {
             ASSERTL1(gloCoord.num_elements() >= 2,
                     "Two dimensional geometry expects at least two coordinates.");
 
-            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
             GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -(1+tol) && stdCoord[1] >= -(1+tol)
                     && stdCoord[0] + stdCoord[1] <= tol)

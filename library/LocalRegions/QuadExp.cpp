@@ -349,7 +349,10 @@ namespace Nektar
                     }
                 }
 
-                if (m_ncoeffs > 4) {
+                int nBoundaryDofs = NumBndryCoeffs();
+                int nInteriorDofs = m_ncoeffs - nBoundaryDofs;
+
+                if (nInteriorDofs > 0) {
                     Array<OneD, NekDouble> tmp0(m_ncoeffs);
                     Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
@@ -364,9 +367,6 @@ namespace Nektar
                     // note: this block alreay contains the inverse matrix
                     MatrixKey             masskey(StdRegions::eMass,DetShapeType(),*this);
                     DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
-
-                    int nBoundaryDofs = NumBndryCoeffs();
-                    int nInteriorDofs = m_ncoeffs - nBoundaryDofs;
 
                     Array<OneD, NekDouble> rhs(nInteriorDofs);
                     Array<OneD, NekDouble> result(nInteriorDofs);

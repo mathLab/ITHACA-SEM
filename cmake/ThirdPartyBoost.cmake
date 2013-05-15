@@ -29,7 +29,7 @@ IF (THIRDPARTY_BUILD_BOOST)
             URL ${TPURL}/boost_1_49_0.tar.bz2
             URL_MD5 "0d202cb811f934282dea64856a175698"
             DOWNLOAD_DIR ${TPSRC}
-            CONFIGURE_COMMAND ./bootstrap.sh --prefix=${TPSRC}/dist
+            CONFIGURE_COMMAND CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} ./bootstrap.sh --prefix=${TPSRC}/dist
             BUILD_COMMAND NO_BZIP2=1 ./b2
                             variant=release
                             link=shared 
@@ -88,13 +88,16 @@ IF (THIRDPARTY_BUILD_BOOST)
 ELSE (THIRDPARTY_BUILD_BOOST)
     SET(Boost_DEBUG 0)
     SET(Boost_NO_BOOST_CMAKE ON)
-
     #If the user has not set BOOST_ROOT, look in a couple common places first.
     IF( NOT BOOST_ROOT )
-        SET(TEST_ENV $ENV{BOOST_HOME})
-        IF (DEFINED TEST_ENV)
-            SET(Boost_NO_SYSTEM_PATHS ON)
+        SET(TEST_ENV1 $ENV{BOOST_HOME})
+        SET(TEST_ENV2 $ENV{BOOST_DIR})
+        IF (DEFINED TEST_ENV1)
             SET(BOOST_ROOT $ENV{BOOST_HOME})
+            FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time
+                filesystem system program_options regex )
+        ELSEIF (DEFINED TEST_ENV2)
+            SET(BOOST_ROOT $ENV{BOOST_DIR})
             FIND_PACKAGE( Boost QUIET COMPONENTS thread iostreams date_time
                 filesystem system program_options regex )
         ELSE ()

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessBL.h
+//  File: ProcessTetSplit.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Refine boundary layer of elements.
+//  Description: Split prisms -> tets
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -48,17 +48,17 @@ namespace Nektar
          * method. For now it simply prints a list of elements which have
          * negative Jacobian.
          */
-        class ProcessBL : public ProcessModule
+        class ProcessTetSplit : public ProcessModule
         {
         public:
             /// Creates an instance of this class
             static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<ProcessBL>::AllocateSharedPtr(m);
+                return MemoryManager<ProcessTetSplit>::AllocateSharedPtr(m);
             }
             static ModuleKey className;
             
-            ProcessBL(MeshSharedPtr m);
-            virtual ~ProcessBL();
+            ProcessTetSplit(MeshSharedPtr m);
+            virtual ~ProcessTetSplit();
             
             /// Write mesh to output file.
             virtual void Process();

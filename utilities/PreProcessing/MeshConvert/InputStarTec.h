@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: ProcessBL.h
+//  File: InputStarTec.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,39 +29,64 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Refine boundary layer of elements.
+//  Description: Tecplot (ascii .dat) converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
-#define UTILITIES_PREPROCESSING_MESHCONVERT_PROCESSJAC
+#ifndef UTILITIES_PREPROCESSING_MESHCONVERT_INPUTVTK
+#define UTILITIES_PREPROCESSING_MESHCONVERT_INPUTTEC
 
 #include "Module.h"
+#include "MeshElements.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        /**
-         * @brief This processing module calculates the Jacobian of elements
-         * using %SpatialDomains::GeomFactors and the %Element::GetGeom
-         * method. For now it simply prints a list of elements which have
-         * negative Jacobian.
-         */
-        class ProcessBL : public ProcessModule
+        /// Converter for VTK files.
+        class InputTec : public InputModule
         {
         public:
             /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) {
-                return MemoryManager<ProcessBL>::AllocateSharedPtr(m);
+            static ModuleSharedPtr create(MeshSharedPtr m) {
+                return MemoryManager<InputTec>::AllocateSharedPtr(m);
             }
             static ModuleKey className;
-            
-            ProcessBL(MeshSharedPtr m);
-            virtual ~ProcessBL();
-            
-            /// Write mesh to output file.
+
+            InputTec(MeshSharedPtr m);
+            virtual ~InputTec();
+
+            /// Populate and validate required data structures.
             virtual void Process();
+
+            void ReadZone(int &nComposite);
+
+        protected:
+            
+            void GenElement3D(vector<NodeSharedPtr> &Nodes,
+                              int i, vector<int> &ElementFaces, 
+                              vector<vector<int> >&FaceNodes,
+                              int ncomposite,
+                              bool DoOrient);
+
+
+            void GenElement2D(vector<NodeSharedPtr> &Nodes,
+                              int i, vector<int> &ElementFaces, 
+                              vector<vector<int> >&FaceNodes,
+                              int ncomposite); 
+
+
+            Array<OneD, int> SortEdgeNodes(vector<NodeSharedPtr> &Nodes,
+                                           vector<int> &ElementFaces, 
+                                           vector<vector<int> >&FaceNodes);
+
+            Array<OneD, int> SortFaceNodes(vector<NodeSharedPtr> &Nodes,
+                                           vector<int> &ElementFaces, 
+                                           vector<vector<int> >&FaceNodes);
+
+            void ResetNodes(vector<NodeSharedPtr> &Nodes,
+                            Array<OneD, vector<int> >&ElementFaces,
+                            vector<vector<int> >&FaceNodes);
         };
     }
 }

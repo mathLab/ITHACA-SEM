@@ -224,7 +224,7 @@ namespace Nektar
             int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
             
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
-            for(i = 0; i < nDimensions; ++i)
+            for (i = 0; i < nDimensions; ++i)
             {
                 m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
             }
@@ -957,6 +957,13 @@ namespace Nektar
             int nDim         = fields[0]->GetCoordim(0);
             int nScalars     = inarray.num_elements();
             int nSolutionPts = fields[0]->GetTotPoints();
+            int nCoeffs      = fields[0]->GetNcoeffs();
+            
+            Array<OneD, Array<OneD, NekDouble> > outarrayCoeff(nConvectiveFields);
+            for (i = 0; i < nConvectiveFields; ++i)
+            {
+                outarrayCoeff[i]  = Array<OneD, NekDouble>(nCoeffs);
+            }
             
             // Compute interface numerical fluxes for inarray in physical space 
             v_NumericalFluxO1(fields, inarray, m_IF1);
@@ -1034,6 +1041,13 @@ namespace Nektar
                         // Adding the total divergence to outarray (RHS)
                         Vmath::Vadd(nSolutionPts, &m_DFC2[i][0][0], 1, 
                                     &m_DD1[i][0][0], 1, &outarray[i][0], 1);
+                        
+                        // Primitive Dealiasing 1D
+                        if(!(Basis->Collocation()))
+                        {
+                            fields[i]->FwdTrans(outarray[i], outarrayCoeff[i]);
+                            fields[i]->BwdTrans(outarrayCoeff[i], outarray[i]);
+                        }
                     }
                     break;
                 }
@@ -1207,6 +1221,13 @@ namespace Nektar
                         // physical space
                         Vmath::Vdiv(nSolutionPts, &outarray[i][0], 1,
                                     &m_jac[0], 1, &outarray[i][0], 1);
+                        
+                        // Primitive Dealiasing 2D
+                        if(!(Basis->Collocation()))
+                        {
+                            fields[i]->FwdTrans(outarray[i], outarrayCoeff[i]);
+                            fields[i]->BwdTrans(outarrayCoeff[i], outarray[i]);
+                        }
                     }
                     break;
                 }   
@@ -1239,7 +1260,7 @@ namespace Nektar
             Array<OneD, NekDouble > fluxtemp(nTracePts, 0.0);
 
             // Get the normal velocity Vn
-            for(i = 0; i < nDim; ++i)
+            for (i = 0; i < nDim; ++i)
             {
                 fields[0]->ExtractTracePhys(inarray[i], m_traceVel[i]);
                 Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, 
@@ -1503,7 +1524,7 @@ namespace Nektar
             Array<OneD, NekDouble > qfluxtemp(nTracePts, 0.0);
             
             // Get the normal velocity Vn
-            for(i = 0; i < nDim; ++i)
+            for (i = 0; i < nDim; ++i)
             {
                 fields[0]->ExtractTracePhys(ufield[i], m_traceVel[i]);
                 Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, 
@@ -1590,17 +1611,15 @@ namespace Nektar
                     // In case of Dirichlet bcs: 
                     // uflux = g_D
                     // qflux = q+
-                    if(fields[var]->GetBndConditions()[i]->
+                    if (fields[var]->GetBndConditions()[i]->
                        GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
-                        Vmath::Vmul(nBndEdgePts, 
-                                    &m_traceNormals[dir][id2], 1, 
-                                    &qtemp[id2], 1, 
-                                    &penaltyflux[id2], 1);
+                        Vmath::Vmul(nBndEdgePts, &m_traceNormals[dir][id2], 1, 
+                                    &qtemp[id2], 1, &penaltyflux[id2], 1);
                     }
                     // 3.4) In case of Neumann bcs: 
                     // uflux = u+
-                    else if((fields[var]->GetBndConditions()[i])->
+                    else if ((fields[var]->GetBndConditions()[i])->
                         GetBoundaryConditionType() == SpatialDomains::eNeumann)
                     {
                         ASSERTL0(false, 
@@ -1769,14 +1788,6 @@ namespace Nektar
             Array<OneD, LibUtilities::BasisSharedPtr> base;
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
-            
-            // Setting up the normals
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for (i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
-            }
-            fields[0]->GetTrace()->GetNormals(m_traceNormals);
             
             // Loop on the elements
             for (n = 0; n < nElements; ++n)
@@ -1998,15 +2009,7 @@ namespace Nektar
             
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
             &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
-            
-            // Setting up the normals
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for(i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
-            }
-            fields[0]->GetTrace()->GetNormals(m_traceNormals);
-            
+                        
             // Loop on the elements
             for(n = 0; n < nElements; ++n)
             {

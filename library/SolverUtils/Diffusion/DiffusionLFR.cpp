@@ -182,7 +182,7 @@ namespace Nektar
             int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
             
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
-            for(i = 0; i < nDimensions; ++i)
+            for (i = 0; i < nDimensions; ++i)
             {
                 m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
             }
@@ -886,8 +886,11 @@ namespace Nektar
             }
         }
 
-
-        
+        /**
+         * @brief Calculate FR Diffusion for the linear problems
+         * using an LDG interface flux.
+         *
+         */
         void DiffusionLFR::v_Diffuse(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -906,6 +909,13 @@ namespace Nektar
             int nElements    = fields[0]->GetExpSize();            
             int nDim         = fields[0]->GetCoordim(0);                        
             int nSolutionPts = fields[0]->GetTotPoints();
+            int nCoeffs      = fields[0]->GetNcoeffs();
+            
+            Array<OneD, Array<OneD, NekDouble> > outarrayCoeff(nConvectiveFields);
+            for (i = 0; i < nConvectiveFields; ++i)
+            {
+                outarrayCoeff[i]  = Array<OneD, NekDouble>(nCoeffs);
+            }
                    
             // Compute interface numerical fluxes for inarray in physical space 
             v_NumFluxforScalar(fields, inarray, m_IF1);
@@ -978,6 +988,13 @@ namespace Nektar
                         // Adding the total divergence to outarray (RHS)
                         Vmath::Vadd(nSolutionPts, &m_DFC2[i][0][0], 1, 
                                     &m_DD1[i][0][0], 1, &outarray[i][0], 1);
+                        
+                        // Primitive Dealiasing 1D
+                        if (!(Basis->Collocation()))
+                        {
+                            fields[i]->FwdTrans(outarray[i], outarrayCoeff[i]);
+                            fields[i]->BwdTrans(outarrayCoeff[i], outarray[i]);
+                        }
                     }
                     break;
                 }
@@ -1148,6 +1165,13 @@ namespace Nektar
                         // physical space
                         Vmath::Vdiv(nSolutionPts, &outarray[i][0], 1,
                                     &m_jac[0], 1, &outarray[i][0], 1);
+                        
+                        // Primitive Dealiasing 2D
+                        if (!(Basis->Collocation()))
+                        {
+                            fields[i]->FwdTrans(outarray[i], outarrayCoeff[i]);
+                            fields[i]->BwdTrans(outarrayCoeff[i], outarray[i]);
+                        }
                     }//Close loop on nConvectiveFields
                     break;
                 }   
@@ -1160,6 +1184,10 @@ namespace Nektar
             }
         }
         
+        /**
+         * @brief Builds the numerical flux for the 1st order derivatives
+         *
+         */
         void DiffusionLFR::v_NumFluxforScalar(
             const Array<OneD, MultiRegions::ExpListSharedPtr>        &fields,
             const Array<OneD, Array<OneD, NekDouble> >               &ufield,
@@ -1176,7 +1204,7 @@ namespace Nektar
             Array<OneD, NekDouble > fluxtemp(nTracePts, 0.0);
                                     
             // Get the normal velocity Vn
-            for(i = 0; i < nDim; ++i)
+            for (i = 0; i < nDim; ++i)
             {
                 Vmath::Svtvp(nTracePts, 1.0, m_traceNormals[i], 1, 
                              Vn, 1, Vn, 1);
@@ -1226,15 +1254,15 @@ namespace Nektar
                     // edge::eForward, uBwd \(\tan_{\xi}^Fwd \cdot \vec{n})
                     // edge::eBackward, uBwd \(\tan_{\xi}^Bwd \cdot \vec{n})
                     
-                    Vmath::Vcopy(nTracePts, 
-                                 fluxtemp, 1, 
-                                 uflux[i][j], 1);
+                    Vmath::Vcopy(nTracePts, fluxtemp, 1, uflux[i][j], 1);
                 }
             }
         }
         
-        
-        
+        /**
+         * @brief Imposes appropriate bcs for the 1st order derivatives
+         *
+         */
         void DiffusionLFR::v_WeakPenaltyforScalar(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const int                                          var,
@@ -1297,6 +1325,10 @@ namespace Nektar
             }
         }
         
+        /**
+         * @brief Build the numerical flux for the 2nd order derivatives
+         *
+         */
         void DiffusionLFR::v_NumFluxforVector(
             const Array<OneD, MultiRegions::ExpListSharedPtr>        &fields,
             const Array<OneD, Array<OneD, NekDouble> >               &ufield,
@@ -1349,9 +1381,7 @@ namespace Nektar
                     
                     fields[i]->GetTrace()->Upwind(Vn, qBwd, qFwd, qfluxtemp);
                     
-                    Vmath::Vmul(nTracePts, 
-                                m_traceNormals[j], 1, 
-                                qfluxtemp, 1, 
+                    Vmath::Vmul(nTracePts, m_traceNormals[j], 1, qfluxtemp, 1, 
                                 qfluxtemp, 1);
                     
                     /*
@@ -1376,17 +1406,14 @@ namespace Nektar
                     // Imposing weak boundary condition with flux
                     if (fields[0]->GetBndCondExpansions().num_elements())
                     {
-                        v_WeakPenaltyforVector(fields, i, j, 
-                                               qfield[i][j], 
+                        v_WeakPenaltyforVector(fields, i, j, qfield[i][j], 
                                                qfluxtemp, C11);
                     }
                     
                     // q_hat \cdot n = (q_xi \cdot n_xi) or (q_eta \cdot n_eta)
                     // n_xi = n_x * tan_xi_x + n_y * tan_xi_y + n_z * tan_xi_z
                     // n_xi = n_x * tan_eta_x + n_y * tan_eta_y + n_z*tan_eta_z
-                    Vmath::Vadd(nTracePts, 
-                                qfluxtemp, 1, 
-                                qflux[i], 1, 
+                    Vmath::Vadd(nTracePts, qfluxtemp, 1, qflux[i], 1, 
                                 qflux[i], 1);
                 }
             }
@@ -1395,9 +1422,8 @@ namespace Nektar
         
         
         /**
-         * Diffusion: Imposing weak boundary condition for q with flux
-         *  uflux = g_D  on Dirichlet boundary condition
-         *  uflux = u_Fwd  on Neumann boundary condition
+         * @brief Imposes appropriate bcs for the 2nd order derivatives
+         *
          */
         void DiffusionLFR::v_WeakPenaltyforVector(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -1438,24 +1464,19 @@ namespace Nektar
                     
                     // For Dirichlet boundary condition: 
                     //qflux = q+ - C_11 (u+ -    g_D) (nx, ny)
-                    if(fields[var]->GetBndConditions()[i]->
+                    if (fields[var]->GetBndConditions()[i]->
                        GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                     {
-                        Vmath::Vmul(nBndEdgePts, 
-                                    &m_traceNormals[dir][id2], 1, 
-                                    &qtemp[id2], 1, 
-                                    &penaltyflux[id2], 1);
+                        Vmath::Vmul(nBndEdgePts, &m_traceNormals[dir][id2], 1, 
+                                    &qtemp[id2], 1, &penaltyflux[id2], 1);
                     }
                     // For Neumann boundary condition: qflux = g_N
-                    else if((fields[var]->GetBndConditions()[i])->
-                            GetBoundaryConditionType() == SpatialDomains::eNeumann)
+                    else if ((fields[var]->GetBndConditions()[i])->
+                        GetBoundaryConditionType() == SpatialDomains::eNeumann)
                     {
-                        Vmath::Vmul(nBndEdgePts,
-                                    &m_traceNormals[dir][id2], 1, 
-                                    &(fields[var]->
-                                      GetBndCondExpansions()[i]->
-                                      GetPhys())[id1], 1, 
-                                    &penaltyflux[id2], 1);
+                        Vmath::Vmul(nBndEdgePts, &m_traceNormals[dir][id2], 1, 
+                                    &(fields[var]->GetBndCondExpansions()[i]->
+                                      GetPhys())[id1], 1, &penaltyflux[id2], 1);
                     }
                 }
             }
@@ -1768,12 +1789,8 @@ namespace Nektar
                     }
                 }
                 
-                
-                // Sum all the edge contributions since I am passing the 
-                // component of the flux x and y already. So I should not 
-                // need to sum E0-E2 to get the derivative wrt xi2 and E1-E3 
-                // to get the derivative wrt xi1
-                
+                // Summing the component of the flux for calculating the
+                // derivatives per each direction
                 if (direction == 0)
                 {
                     Vmath::Vadd(nLocalSolutionPts, &divCFluxE1[0], 1, 
@@ -1956,8 +1973,7 @@ namespace Nektar
                                 for (j = 0; j < nquad0; ++j)
                                 {
                                     cnt = (nquad0*nquad1 - nquad0) + j - i*nquad0;
-                                    divCFluxE3[cnt] = fluxJumps[i] * m_dGL_xi1[n][j];
-                                    
+                                    divCFluxE3[cnt] = fluxJumps[i] * m_dGL_xi1[n][j];   
                                 }
                             }
                             break;

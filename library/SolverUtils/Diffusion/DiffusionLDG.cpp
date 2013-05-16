@@ -170,9 +170,7 @@ namespace Nektar
             Array<OneD, NekDouble > Bwd     (nTracePts);
             Array<OneD, NekDouble > Vn      (nTracePts, 0.0);
             Array<OneD, NekDouble > fluxtemp(nTracePts, 0.0);
-            
 
-            
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
             {

@@ -1670,7 +1670,7 @@ namespace Nektar
                      (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_C),
                      "Mapping not defined for this type of basis");
 
-            int localDOF;
+            int localDOF = 0;
             switch(localVertexId)
             {
                 case 0:

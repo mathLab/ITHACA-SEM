@@ -119,7 +119,6 @@ namespace Nektar
         m_Cp      = m_gamma / (m_gamma - 1.0) * m_gasConstant;
         m_Prandtl = m_Cp * m_mu / m_thermalConductivity;
 
-
         // Type of advection class to be used
         switch(m_projectionType)
         {
@@ -861,95 +860,97 @@ namespace Nektar
     {
         int i, j, nq = m_fields[0]->GetTotPoints();
         
-        if(m_specHP_dealiasing)
+        // Spectral HP dealiasing
+        if (m_specHP_dealiasing)
         {
             int nvariables = m_fields.num_elements();
-            NekDouble OneDptscale = 2; // Factor to rescale 1d points in dealiasing.
-            // Get number of points to dealias a cubic non-linearity.
+            
+            // Factor to rescale 1d points in dealiasing
+            NekDouble OneDptscale = 2; 
+            
+            // Get number of points to dealias a cubic non-linearity
             nq = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
           
             Array<OneD, NekDouble> pressure(nq);
             Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
             
-            Array<OneD, Array<OneD, NekDouble> >  physfield_interp (nvariables);
+            Array<OneD, Array<OneD, NekDouble> > physfield_interp (nvariables);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                                                        flux_interp (nvariables);
             
-            for(i = 0; i < nvariables; ++ i)
+            for (i = 0; i < nvariables; ++ i)
             {
                 physfield_interp[i] = Array<OneD, NekDouble>(nq);
-                flux_interp[i] =  Array<OneD, Array<OneD, NekDouble> >
-                                                                (m_spacedim);
-                // Interpolation to higher space.
-                m_fields[0]->PhysInterp1DScaled(OneDptscale,physfield[i],
-                                                physfield_interp[i] );
+                flux_interp[i] = Array<OneD, Array<OneD, NekDouble> >(
+                                                                m_spacedim);
+                // Interpolation to higher space
+                m_fields[0]->PhysInterp1DScaled(OneDptscale, physfield[i], 
+                                                physfield_interp[i]);
                 
                 for (j = 0; j < m_spacedim; ++j)
                 {
-                    flux_interp[i][j] =  Array<OneD, NekDouble>(nq);
+                    flux_interp[i][j] = Array<OneD, NekDouble>(nq);
                 }
             }
             
-            // Flux vector for the rho equation.
+            // Flux vector for the rho equation
             for (i = 0; i < m_spacedim; ++i)
             {
                 velocity[i] = Array<OneD, NekDouble>(nq);
                 
-                // Galerkin project solution back to original space.
-                m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
-                                        physfield_interp[i+1],flux[0][i]);
+                // Galerkin project solution back to original space
+                m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale, 
+                                            physfield_interp[i+1], flux[0][i]);
             }
             
             GetVelocityVector(physfield_interp, velocity);
             GetPressure      (physfield_interp, velocity, pressure);
             
-            // Evaluation of flux vector for the velocity fields.
+            // Evaluation of flux vector for the velocity fields
             for (i = 0; i < m_spacedim; ++i)
             {
                 for (j = 0; j < m_spacedim; ++j)
                 {
-                    Vmath::Vmul(nq, velocity[j], 1,physfield_interp[i+1],1,
+                    Vmath::Vmul(nq, velocity[j], 1, physfield_interp[i+1], 1,
                                 flux_interp[i+1][j], 1);
                 }
             
                 // Add pressure to appropriate field
-                Vmath::Vadd(nq, flux_interp[i+1][i], 1,
-                            pressure,1, flux_interp[i+1][i], 1);
+                Vmath::Vadd(nq, flux_interp[i+1][i], 1, pressure,1, 
+                            flux_interp[i+1][i], 1);
             }
             
-            // Galerkin project solution back to origianl space.
-            
+            // Galerkin project solution back to origianl space
             for (i = 0; i < m_spacedim; ++i)
             {
                 for (j = 0; j < m_spacedim; ++j)
                 {
-                    m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
-                                            flux_interp[i+1][j],flux[i+1][j]);
+                    m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale, 
+                                            flux_interp[i+1][j], flux[i+1][j]);
                 }
-                
             }
 
-
-            // Evaluation of flux vector for energy.
-            Vmath::Vadd(nq, physfield_interp[m_spacedim+1], 1,
-                        pressure, 1, pressure, 1);
+            // Evaluation of flux vector for energy
+            Vmath::Vadd(nq, physfield_interp[m_spacedim+1], 1, pressure, 1, 
+                        pressure, 1);
+            
             for (j = 0; j < m_spacedim; ++j)
             {
-                Vmath::Vmul(nq, velocity[j], 1,
-                            pressure, 1,flux_interp[m_spacedim+1][j], 1);
+                Vmath::Vmul(nq, velocity[j], 1, pressure, 1, 
+                            flux_interp[m_spacedim+1][j], 1);
                 
-                // Galerkin project solution back to origianl space.
-                m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
-                            flux_interp[m_spacedim+1][j],flux[m_spacedim+1][j]);
-
+                // Galerkin project solution back to origianl space
+                m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale, 
+                    flux_interp[m_spacedim+1][j], flux[m_spacedim+1][j]);
             }
         }
+        // Without spectral HP dealiasing
         else
         {
             Array<OneD, NekDouble> pressure(nq);
             Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
             
-            // Flux vector for the rho equation.
+            // Flux vector for the rho equation
             for (i = 0; i < m_spacedim; ++i)
             {
                 velocity[i] = Array<OneD, NekDouble>(nq);
@@ -959,7 +960,7 @@ namespace Nektar
             GetVelocityVector(physfield, velocity);
             GetPressure      (physfield, velocity, pressure);
             
-            // Flux vector for the velocity fields.
+            // Flux vector for the velocity fields
             for (i = 0; i < m_spacedim; ++i)
             {
                 for (j = 0; j < m_spacedim; ++j)
@@ -969,16 +970,16 @@ namespace Nektar
                 }
                 
                 // Add pressure to appropriate field
-                Vmath::Vadd(nq, flux[i+1][i], 1, pressure, 1,
-                            flux[i+1][i], 1);
+                Vmath::Vadd(nq, flux[i+1][i], 1, pressure, 1, flux[i+1][i], 1);
             }
             
             // Flux vector for energy.
             Vmath::Vadd(nq, physfield[m_spacedim+1], 1, pressure, 1,
                         pressure, 1);
+            
             for (j = 0; j < m_spacedim; ++j)
             {
-                Vmath::Vmul(nq, velocity[j], 1, pressure, 1,
+                Vmath::Vmul(nq, velocity[j], 1, pressure, 1, 
                             flux[m_spacedim+1][j], 1);
             }
         }
@@ -997,85 +998,84 @@ namespace Nektar
         int nvariables = m_fields.num_elements();
         int nPts = m_fields[0]->GetTotPoints();
         
-        if(m_specHP_dealiasing)
+        // Spectral HP dealiasing
+        if (m_specHP_dealiasing)
         {
             int variables_phys = physfield.num_elements();
-            NekDouble OneDptscale = 2; // Factor to rescale 1d points in dealiasing.
-            // Get number of points to dealias a cubic non-linearity.
+            
+            // Factor to rescale 1d points in dealiasing.
+            NekDouble OneDptscale = 2;
+            
+            // Get number of points to dealias a cubic non-linearity
             nPts = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
             int nvariables_aux = derivativesO1[0].num_elements();
             
-            Array<OneD, Array<OneD, NekDouble> >physfield_interp(variables_phys);
+            Array<OneD, Array<OneD, NekDouble> >
+                physfield_interp(variables_phys);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-            derivativesO1_interp (m_spacedim);
+                derivativesO1_interp (m_spacedim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-            viscousTensor_interp (m_spacedim);
+                viscousTensor_interp (m_spacedim);
            
-            for(i = 0; i < m_spacedim; ++ i)
+            for (i = 0; i < m_spacedim; ++ i)
             {
-                viscousTensor_interp[i] =  Array<OneD, Array<OneD, NekDouble> >
-                (nvariables);
-                
+                viscousTensor_interp[i] = Array<OneD, Array<OneD, NekDouble> >(
+                                                                nvariables);
                 for (j = 0; j < nvariables; ++j)
                 {
-                    viscousTensor_interp[i][j] =  Array<OneD, NekDouble>(nPts);
+                    viscousTensor_interp[i][j] = Array<OneD, NekDouble>(nPts);
                 }
             }
-            
-            // Note: the value below is referred to 20˚C
-            //NekDouble thermalConductivity = /*0.0257*/0.0000257;
             
             // Stokes hypotesis
             NekDouble lambda = -0.66666;
             
             // Auxiliary variables
-            Array<OneD, NekDouble > mu          (nPts, 0.0);
-            Array<OneD, NekDouble > mu2         (nPts, 0.0);
-            Array<OneD, NekDouble > divVel      (nPts, 0.0);
-            Array<OneD, NekDouble > pressure    (nPts, 0.0);
-            Array<OneD, NekDouble > temperature (nPts, 0.0);
+            Array<OneD, NekDouble > mu         (nPts, 0.0);
+            Array<OneD, NekDouble > mu2        (nPts, 0.0);
+            Array<OneD, NekDouble > divVel     (nPts, 0.0);
+            Array<OneD, NekDouble > pressure   (nPts, 0.0);
+            Array<OneD, NekDouble > temperature(nPts, 0.0);
             
             // Set up wrapper to fields data storage
             Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
-            Array<OneD, Array<OneD, NekDouble> >fields_interp (nvariables);
+            Array<OneD, Array<OneD, NekDouble> > fields_interp(nvariables);
             
             // Reorder storage to list time-integrated fields first
-            for(i = 0; i < nvariables; ++i)
+            for (i = 0; i < nvariables; ++i)
             {
                 fields[i] = m_fields[i]->UpdatePhys();
                 fields_interp[i] = Array<OneD, NekDouble> (nPts);
             }
             
-                       
-            for(i = 0; i < nvariables; ++i)
+            for (i = 0; i < nvariables; ++i)
             {
-                // Interpolation to higher space.
+                // Interpolation to higher space
                 m_fields[0]->PhysInterp1DScaled(OneDptscale,fields[i],
                                             fields_interp[i] );
             }
             
-            for(i = 0; i < variables_phys; ++i)
+            for (i = 0; i < variables_phys; ++i)
             {
                 physfield_interp[i] = Array<OneD, NekDouble> (nPts);
-                // Interpolation to higher space.
-                m_fields[0]->PhysInterp1DScaled(OneDptscale,physfield[i],
-                                                physfield_interp[i] );
+                
+                // Interpolation to higher space
+                m_fields[0]->PhysInterp1DScaled(OneDptscale, physfield[i],
+                                                physfield_interp[i]);
             }
             
-            for(i = 0; i < m_spacedim; ++i)
+            for (i = 0; i < m_spacedim; ++i)
             {
-                derivativesO1_interp[i] = Array<OneD, Array<OneD, NekDouble> >
-                (nvariables_aux);
+                derivativesO1_interp[i] = Array<OneD, Array<OneD, NekDouble> >(
+                                                                nvariables_aux);
                 
                 for (j = 0; j < nvariables_aux; ++j)
                 {
-                    derivativesO1_interp[i][j] =  Array<OneD, NekDouble>(nPts);
-                    m_fields[0]->PhysInterp1DScaled(OneDptscale,
-                                derivativesO1[i][j],derivativesO1_interp[i][j]);
+                    derivativesO1_interp[i][j] = Array<OneD, NekDouble>(nPts);
+                    m_fields[0]->PhysInterp1DScaled(OneDptscale, 
+                            derivativesO1[i][j], derivativesO1_interp[i][j]);
                 }
-                
             }
-            
             
             // Thermodynamic related quantities
             GetPressure(fields_interp, pressure);
@@ -1101,11 +1101,10 @@ namespace Nektar
             // Velocity divergence
             for (j = 0; j < m_spacedim; ++j)
             {
-                Vmath::Vadd(nPts, &divVel[0], 1,
+                Vmath::Vadd(nPts, &divVel[0], 1, 
                             &derivativesO1_interp[j][j][0], 1,
                             &divVel[0], 1);
             }
-            
             
             // Velocity divergence scaled by lambda * mu
             Vmath::Smul(nPts, lambda, &divVel[0], 1, &divVel[0], 1);
@@ -1135,8 +1134,7 @@ namespace Nektar
             {
                 // Sxy = (du/dy + dv/dx)
                 Vmath::Vadd(nPts, &derivativesO1_interp[0][1][0], 1,
-                            &derivativesO1_interp[1][0][0], 1,
-                            &Sxy[0], 1);
+                            &derivativesO1_interp[1][0][0], 1, &Sxy[0], 1);
                 
                 // Sxy = mu * (du/dy + dv/dx)
                 Vmath::Vmul(nPts, &mu[0], 1, &Sxy[0], 1, &Sxy[0], 1);
@@ -1145,18 +1143,15 @@ namespace Nektar
             {
                 // Sxy = (du/dy + dv/dx)
                 Vmath::Vadd(nPts, &derivativesO1_interp[0][1][0], 1,
-                            &derivativesO1_interp[1][0][0], 1,
-                            &Sxy[0], 1);
+                            &derivativesO1_interp[1][0][0], 1, &Sxy[0], 1);
                 
                 // Sxz = (du/dz + dw/dx)
                 Vmath::Vadd(nPts, &derivativesO1_interp[0][2][0], 1,
-                            &derivativesO1_interp[2][0][0], 1,
-                            &Sxz[0], 1);
+                            &derivativesO1_interp[2][0][0], 1, &Sxz[0], 1);
                 
                 // Syz = (dv/dz + dw/dy)
                 Vmath::Vadd(nPts, &derivativesO1_interp[1][2][0], 1,
-                            &derivativesO1_interp[2][1][0], 1,
-                            &Syz[0], 1);
+                            &derivativesO1_interp[2][1][0], 1, &Syz[0], 1);
                 
                 // Sxy = mu * (du/dy + dv/dx)
                 Vmath::Vmul(nPts, &mu[0], 1, &Sxy[0], 1, &Sxy[0], 1);
@@ -1192,8 +1187,7 @@ namespace Nektar
                 
                 // k * dT/dx
                 Vmath::Smul(nPts, m_thermalConductivity,
-                            &derivativesO1_interp[0][2][0], 1,
-                            &tmp1[0], 1);
+                            &derivativesO1_interp[0][2][0], 1, &tmp1[0], 1);
                 
                 // STx = u * Sxx + (K / mu) * dT/dx
                 Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
@@ -1334,7 +1328,7 @@ namespace Nektar
                 Vmath::Vadd(nPts, &STz[0], 1, &tmp3[0], 1, &STz[0], 1);
             }
             
-            switch(m_spacedim)
+            switch (m_spacedim)
             {
                 case 1:
                 {
@@ -1418,36 +1412,33 @@ namespace Nektar
                 }
             }
             
-            for(i = 0; i < m_spacedim; ++i)
+            for (i = 0; i < m_spacedim; ++i)
             {
                 for (j = 1; j < nvariables; ++j)
                 {
-                    m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
-                                 viscousTensor_interp[i][j],viscousTensor[i][j]);
+                    m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale, 
+                        viscousTensor_interp[i][j], viscousTensor[i][j]);
                 }
             }
-
         }
+        // Without spectral HP dealiasing
         else
-        {
-            // Note: the value below is referred to 20˚C
-            //NekDouble thermalConductivity = /*0.0257*/0.0000257;
-        
+        {        
             // Stokes hypotesis
             NekDouble lambda = -0.66666;
         
             // Auxiliary variables
-            Array<OneD, NekDouble > mu          (nPts, 0.0);
-            Array<OneD, NekDouble > mu2         (nPts, 0.0);
-            Array<OneD, NekDouble > divVel      (nPts, 0.0);
-            Array<OneD, NekDouble > pressure    (nPts, 0.0);
-            Array<OneD, NekDouble > temperature (nPts, 0.0);
+            Array<OneD, NekDouble > mu         (nPts, 0.0);
+            Array<OneD, NekDouble > mu2        (nPts, 0.0);
+            Array<OneD, NekDouble > divVel     (nPts, 0.0);
+            Array<OneD, NekDouble > pressure   (nPts, 0.0);
+            Array<OneD, NekDouble > temperature(nPts, 0.0);
                 
             // Set up wrapper to fields data storage
             Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
         
             // Reorder storage to list time-integrated fields first
-            for(i = 0; i < nvariables; ++i)
+            for (i = 0; i < nvariables; ++i)
             {
                 fields[i] = m_fields[i]->UpdatePhys();
             }
@@ -1492,8 +1483,7 @@ namespace Nektar
                 tmp[j] = Array<OneD, NekDouble>(nPts, 0.0);
                 Sgg[j] = Array<OneD, NekDouble>(nPts, 0.0);
             
-                Vmath::Vmul(nPts, &mu2[0], 1,
-                            &derivativesO1[j][j][0], 1,
+                Vmath::Vmul(nPts, &mu2[0], 1, &derivativesO1[j][j][0], 1,
                             &tmp[j][0], 1);
             
                 Vmath::Vadd(nPts, &tmp[j][0], 1, &divVel[0], 1, &Sgg[j][0], 1);
@@ -1509,8 +1499,7 @@ namespace Nektar
             {
                 // Sxy = (du/dy + dv/dx)
                 Vmath::Vadd(nPts, &derivativesO1[0][1][0], 1,
-                            &derivativesO1[1][0][0], 1,
-                            &Sxy[0], 1);
+                            &derivativesO1[1][0][0], 1, &Sxy[0], 1);
             
                 // Sxy = mu * (du/dy + dv/dx)
                 Vmath::Vmul(nPts, &mu[0], 1, &Sxy[0], 1, &Sxy[0], 1);
@@ -1519,18 +1508,15 @@ namespace Nektar
             {
                 // Sxy = (du/dy + dv/dx)
                 Vmath::Vadd(nPts, &derivativesO1[0][1][0], 1,
-                            &derivativesO1[1][0][0], 1,
-                            &Sxy[0], 1);
+                            &derivativesO1[1][0][0], 1, &Sxy[0], 1);
             
                 // Sxz = (du/dz + dw/dx)
                 Vmath::Vadd(nPts, &derivativesO1[0][2][0], 1,
-                            &derivativesO1[2][0][0], 1,
-                            &Sxz[0], 1);
+                            &derivativesO1[2][0][0], 1, &Sxz[0], 1);
             
                 // Syz = (dv/dz + dw/dy)
                 Vmath::Vadd(nPts, &derivativesO1[1][2][0], 1,
-                            &derivativesO1[2][1][0], 1,
-                            &Syz[0], 1);
+                            &derivativesO1[2][1][0], 1, &Syz[0], 1);
             
                 // Sxy = mu * (du/dy + dv/dx)
                 Vmath::Vmul(nPts, &mu[0], 1, &Sxy[0], 1, &Sxy[0], 1);
@@ -1589,8 +1575,7 @@ namespace Nektar
             
                 // k * dT/dx
                 Vmath::Smul(nPts, m_thermalConductivity,
-                            &derivativesO1[0][2][0], 1,
-                            &tmp2[0], 1);
+                            &derivativesO1[0][2][0], 1, &tmp2[0], 1);
             
                 // STx = u * Sxx + v * Sxy + K * dT/dx
                 Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
@@ -1612,8 +1597,7 @@ namespace Nektar
                         
                 // k * dT/dy
                 Vmath::Smul(nPts, m_thermalConductivity,
-                            &derivativesO1[1][2][0], 1,
-                            &tmp2[0], 1);
+                            &derivativesO1[1][2][0], 1, &tmp2[0], 1);
             
                 // STy = v * Syy + u * Sxy + K * dT/dy
                 Vmath::Vadd(nPts, &STy[0], 1, &tmp1[0], 1, &STy[0], 1);
@@ -1641,8 +1625,7 @@ namespace Nektar
             
                 // k * dT/dx
                 Vmath::Smul(nPts, m_thermalConductivity,
-                            &derivativesO1[0][2][0], 1,
-                            &tmp3[0], 1);
+                            &derivativesO1[0][2][0], 1, &tmp3[0], 1);
             
                 // STx = u * Sxx + v * Sxy + w * Sxz + (K / mu) * dT/dx
                 Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
@@ -1657,11 +1640,11 @@ namespace Nektar
                 Vmath::Zero(nPts, &tmp3[0], 1);
             
                 // v * Syy
-                Vmath::Vmul(nPts, &physfield[1][0], 1,
+                Vmath::Vmul(nPts, &physfield[1][0], 1, 
                             &Sgg[1][0], 1, &STy[0], 1);
             
                 // u * Sxy
-                Vmath::Vmul(nPts, &physfield[0][0], 1,
+                Vmath::Vmul(nPts, &physfield[0][0], 1, 
                             &Sxy[0], 1, &tmp1[0], 1);
             
                 // w * Syz
@@ -1670,8 +1653,7 @@ namespace Nektar
                         
                 // k * dT/dy
                 Vmath::Smul(nPts, m_thermalConductivity,
-                            &derivativesO1[1][2][0], 1,
-                            &tmp3[0], 1);
+                            &derivativesO1[1][2][0], 1, &tmp3[0], 1);
             
                 // STy = v * Syy + u * Sxy + w * Syz + K * dT/dy
                 Vmath::Vadd(nPts, &STy[0], 1, &tmp1[0], 1, &STy[0], 1);
@@ -1699,8 +1681,7 @@ namespace Nektar
                         
                 // k * dT/dz
                 Vmath::Smul(nPts, m_thermalConductivity,
-                            &derivativesO1[2][2][0], 1,
-                            &tmp3[0], 1);
+                            &derivativesO1[2][2][0], 1, &tmp3[0], 1);
             
                 // STz = w * Szz + u * Sxz + v * Syz + K * dT/dz
                 Vmath::Vadd(nPts, &STz[0], 1, &tmp1[0], 1, &STz[0], 1);
@@ -1708,7 +1689,7 @@ namespace Nektar
                 Vmath::Vadd(nPts, &STz[0], 1, &tmp3[0], 1, &STz[0], 1);
             }
         
-            switch(m_spacedim)
+            switch (m_spacedim)
             {
                 case 1:
                 {
@@ -1806,19 +1787,19 @@ namespace Nektar
         int       npts  = m_fields[0]->GetTotPoints();
         NekDouble alpha = -0.5;
         
-        // Calculate ||rho v||^2.
+        // Calculate ||rho v||^2
         Vmath::Vmul(npts, physfield[1], 1, physfield[1], 1, pressure, 1);
         for (int i = 1; i < m_spacedim; ++i)
         {
             Vmath::Vvtvp(npts, physfield[1+i], 1, physfield[1+i], 1, 
                                pressure,       1, pressure,       1);
         }
-        // Divide by rho to get rho*||v||^2.
+        // Divide by rho to get rho*||v||^2
         Vmath::Vdiv (npts, pressure, 1, physfield[0], 1, pressure, 1);
         // pressure <- E - 0.5*pressure
         Vmath::Svtvp(npts,     alpha, 
                      pressure, 1, physfield[m_spacedim+1], 1, pressure, 1);
-        // Multiply by (gamma-1).
+        // Multiply by (gamma-1)
         Vmath::Smul (npts, m_gamma-1, pressure, 1, pressure, 1);
     }
     
@@ -1869,7 +1850,6 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
               Array<OneD, Array<OneD, NekDouble> > &velocity)
     {
-        //const int npts = m_fields[0]->GetTotPoints();
         const int npts = physfield[0].num_elements();
         
         for (int i = 0; i < m_spacedim; ++i)
@@ -1891,7 +1871,6 @@ namespace Nektar
         Array<OneD,                         NekDouble  > &pressure,
         Array<OneD,                         NekDouble  > &temperature)
     {
-        //const int nq = m_fields[0]->GetTotPoints();
         const int nq = physfield[0].num_elements();
         
         Vmath::Vdiv(nq, pressure, 1, physfield[0], 1, temperature, 1);
@@ -1956,11 +1935,10 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
              Array<OneD,                    NekDouble  > &mu)
     {
-        //const int npts       = m_fields[0]->GetTotPoints();
         const int npts = physfield[0].num_elements();
         
-        const double mu_star = 0.00001794;
-        const double T_star  = 288.15;
+        NekDouble mu_star = m_mu;
+        NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
         Vmath::Zero(npts, mu, 1);
         
         Array<OneD, NekDouble > pressure         (npts, 0.0);

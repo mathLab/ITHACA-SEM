@@ -455,17 +455,25 @@ namespace Nektar
                 fields = IntScheme[min(step, numMultiSteps-1)]->TimeIntegrate(
                     m_timestep, u, m_ode);
                 timer.Stop();
-                
+
+                NekDouble elapsed = timer.TimePerTest(1);
                 m_time  += m_timestep;
-                intTime += timer.TimePerTest(1);
+                intTime += elapsed;
 		
                 // Write out status information
                 if (m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_infosteps))
                 {
-                    cout << "Steps: "     << setw(8)  << left << step+1 << " "
-                         << "Time: "      << setw(12) << left << m_time << " "
-                         << "Time-step: " << setw(12) << left << m_timestep;
+                    cout << "Steps: " << setw(8)  << left << step+1 << " "
+                         << "Time: "  << setw(12) << left << m_time;
+
+                    if (m_cflSafetyFactor)
+                    {
+                        cout << " Time-step: " << setw(12)
+                             << left << m_timestep;
+                    }
+
+                    cout << " CPU Time: " << setw(8) << left << elapsed;
                     cout << endl;
                 }
                 

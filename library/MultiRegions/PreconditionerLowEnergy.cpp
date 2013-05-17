@@ -550,14 +550,13 @@ namespace Nektar
             // matrix create the inverse matrices
             Rhextmp=HexExp->BuildInverseTransformationMatrix(Rhex);
             //Inverse transposed transformation matrix
-            RThextmp=TetExp->BuildInverseTransformationMatrix(RThex);
+            RThextmp=HexExp->BuildInverseTransformationMatrix(Rhex);
             RThextmp->Transpose();
 
             Rinvhex = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,Rhextmp);
             RTinvhex = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RThextmp);
-
 
             /*
              * Create transformation matrices for the prismatic element
@@ -1047,7 +1046,7 @@ namespace Nektar
             //Transposed transformation matrix
             transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
             transposedtransmatrixmap[LibUtilities::ePrism]=RTprism;
-            transposedtransmatrixmap[LibUtilities::eHexahedron]=Rhex;
+            transposedtransmatrixmap[LibUtilities::eHexahedron]=RThex;
 
             int n_exp = expList->GetNumElmts();
             int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();

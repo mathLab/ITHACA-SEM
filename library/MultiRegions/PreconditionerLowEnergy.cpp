@@ -1830,8 +1830,10 @@ namespace Nektar
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
             transmatrixmap[LibUtilities::eTetrahedron]=Rtet;
             transmatrixmap[LibUtilities::ePrism]=Rprism;
+            transmatrixmap[LibUtilities::eHexahedron]=Rhex;
             transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
             transposedtransmatrixmap[LibUtilities::ePrism]=RTprism;
+            transposedtransmatrixmap[LibUtilities::eHexahedron]=RThex;
 
             DNekScalMat &S1 = (*m_S1);
             

@@ -1176,5 +1176,39 @@ namespace Nektar
                 coeffs[map[i]] = vEdgeCoeffs[i]*sign[i];
             }
         }
+
+        DNekMatSharedPtr Expansion2D::v_BuildVertexMatrix(
+            const DNekScalMatSharedPtr &r_bnd)
+        {
+            NekDouble zero = 0.0;
+            MatrixStorage storage = eFULL;
+            DNekMatSharedPtr m_vertexmatrix;
+
+            int nVerts, vid1, vid2, vMap1, vMap2;
+            NekDouble VertexValue;
+
+            nVerts=GetNverts();
+
+            m_vertexmatrix = 
+                MemoryManager<DNekMat>::AllocateSharedPtr(
+                    nVerts, nVerts, zero, storage);
+            DNekMat &VetexMat = (*m_vertexmatrix);
+
+            for(vid1=0; vid1<nVerts; ++vid1)
+            {
+                vMap1=GetVertexMap(vid1);
+
+                for(vid2=0; vid2<nVerts; ++vid2)
+                {
+                    vMap2=GetVertexMap(vid2);
+                    VertexValue=(*r_bnd)(vMap1,vMap2);
+                    VetexMat.SetValue(vid1,vid2,VertexValue);
+                }
+            }
+
+            return m_vertexmatrix;
+        }
+
+
     }
 }

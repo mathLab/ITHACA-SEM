@@ -1505,6 +1505,17 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
             default:
                 {
                     NekDouble        one = 1.0;
@@ -2163,12 +2174,10 @@ namespace Nektar
         Array<OneD, unsigned int>
         TriExp::v_GetEdgeInverseBoundaryMap(int eid)
         {
-            int nEdges;
-            int cnt, n, i, j;
+            int n, j;
             int nEdgeCoeffs;
             
             int nBndCoeffs=NumBndryCoeffs();
-            int nCoeffs=GetNcoeffs();
 
             Array<OneD,unsigned int> bmap(nBndCoeffs);
             GetBoundaryMap(bmap);

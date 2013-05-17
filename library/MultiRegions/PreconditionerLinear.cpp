@@ -88,9 +88,8 @@ namespace Nektar
 
             // Generate XXT system. 
             GlobalLinSysKey preconKey(StdRegions::ePreconLinearSpace,
-                                              m_vertLocToGloMap,
-                                              (m_linsys.lock())->GetKey().GetConstFactors());
-
+                                      m_vertLocToGloMap,
+                                      (m_linsys.lock())->GetKey().GetConstFactors());
 
             m_vertLinsys = MemoryManager<GlobalLinSysXxtFull>::
                 AllocateSharedPtr(preconKey,expList,m_vertLocToGloMap);

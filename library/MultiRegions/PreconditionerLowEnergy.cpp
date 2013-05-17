@@ -57,7 +57,7 @@ namespace Nektar
        /**
          * @class PreconditionerLowEnergy
          *
-         * This class implements low energy preconditioning for the conjugate 
+         * This class implements low energy preconditioning for the conjugate
 	 * gradient matrix solver.
 	 */
         

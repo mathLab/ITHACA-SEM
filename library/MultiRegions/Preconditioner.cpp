@@ -49,8 +49,7 @@ namespace Nektar
             LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpace",MultiRegions::eLinear),
             LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","LowEnergyBlock",MultiRegions::eLowEnergy),
             LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpaceWithLowEnergyBlock",MultiRegions::eLinearWithLowEnergy),
-            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block2D",MultiRegions::eBlock2D),
-            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block3D",MultiRegions::eBlock3D),
+            LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","Block",MultiRegions::eBlock),
             LibUtilities::SessionReader::RegisterEnumValue("Preconditioner","FullLinearSpaceWithBlock",MultiRegions::eLinearWithBlock),
         };
         std::string Preconditioner::def = LibUtilities::SessionReader::RegisterDefaultSolverInfo("Preconditioner","Diagonal");

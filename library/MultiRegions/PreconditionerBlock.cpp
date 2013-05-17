@@ -49,18 +49,11 @@ namespace Nektar
         /**
          * Registers the class with the Factory.
          */
-        string PreconditionerBlock::className1
+        string PreconditionerBlock::className
                 = GetPreconFactory().RegisterCreatorFunction(
-                    "Block2D",
+                    "Block",
                     PreconditionerBlock::create,
-                    "2D Block Diagonal Preconditioning");
-
-        string PreconditionerBlock::className2
-                = GetPreconFactory().RegisterCreatorFunction(
-                    "Block3D",
-                    PreconditionerBlock::create,
-                    "3D Block Diagonal Preconditioning");
- 
+                    "Block Diagonal Preconditioning");
        /**
          * @class Block Preconditioner
          *
@@ -87,25 +80,26 @@ namespace Nektar
 
         void PreconditionerBlock::v_BuildPreconditioner()
         {
-            switch (m_preconType)
+
+            boost::shared_ptr<MultiRegions::ExpList> 
+                expList=((m_linsys.lock())->GetLocMat()).lock();
+            StdRegions::StdExpansionSharedPtr locExpansion;
+            locExpansion = expList->GetExp(0);
+            int nDim = locExpansion->GetShapeDimension();
+
+            if (nDim == 1)
             {
-                case MultiRegions::eBlock2D:
-                {
-                    BlockPreconditioner2D();
-                    break;
-                }
-                case MultiRegions::eBlock3D:
-                case MultiRegions::eLinearWithBlock:
-                {
-                    BlockPreconditioner3D();
-                    break;
-                }
-                default:
-                {
-                    ASSERTL0(0,"Unknown preconditioner");
-                    break;
-                }
+                ASSERTL0(0,"Unknown preconditioner");
             }
+            else if (nDim == 2)
+            {
+                BlockPreconditioner2D();
+            }
+            else if (nDim ==3)
+            {
+                BlockPreconditioner3D();
+            }
+
         }
 
        /**
@@ -179,14 +173,6 @@ namespace Nektar
             
             int meshVertId;
             int meshEdgeId;
-
-            /*const Array<OneD, const int> &extradiredges
-                = m_locToGloMap->GetExtraDirEdges();
-            for(i=0; i<extradiredges.num_elements(); ++i)
-            {
-                meshEdgeId=extradiredges[i];
-                edgeDirMap[meshEdgeId] = 1;
-                }*/
 
             //Determine which boundary edges and faces have dirichlet values
             for(i = 0; i < bndCondExp.num_elements(); i++)

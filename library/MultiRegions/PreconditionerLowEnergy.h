@@ -40,6 +40,7 @@
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 #include <LocalRegions/TetExp.h>
 #include <LocalRegions/PrismExp.h>
+#include <LocalRegions/HexExp.h>
 
 
 namespace Nektar
@@ -101,12 +102,18 @@ namespace Nektar
 
             DNekScalMatSharedPtr Rtet;
             DNekScalMatSharedPtr RTtet;
-            DNekScalMatSharedPtr InvRtet;
-            DNekScalMatSharedPtr InvRTtet;
-            DNekScalMatSharedPtr Rprismmod;
-            DNekScalMatSharedPtr RTprismmod;
-            DNekScalMatSharedPtr InvRprism;
-            DNekScalMatSharedPtr InvRTprism;
+            DNekScalMatSharedPtr Rinvtet;
+            DNekScalMatSharedPtr RTinvtet;
+
+            DNekScalMatSharedPtr Rhex;
+            DNekScalMatSharedPtr RThex;
+            DNekScalMatSharedPtr Rinvhex;
+            DNekScalMatSharedPtr RTinvhex;
+
+            DNekScalMatSharedPtr Rprism;
+            DNekScalMatSharedPtr RTprism;
+            DNekScalMatSharedPtr Rinvprism;
+            DNekScalMatSharedPtr RTinvprism;
 
             Array<OneD, NekDouble>      m_locToGloSignMult;
             Array<OneD, NekDouble>      m_multiplicity;
@@ -127,6 +134,7 @@ namespace Nektar
 
             SpatialDomains::TetGeomSharedPtr CreateRefTetGeom(void);
             SpatialDomains::PrismGeomSharedPtr CreateRefPrismGeom(void);
+            SpatialDomains::HexGeomSharedPtr CreateRefHexGeom(void);
 
             virtual void v_InitObject();
 

@@ -181,9 +181,9 @@ namespace Nektar
          */
         SpatialDomains::TetGeomSharedPtr PreconditionerLowEnergy::CreateRefTetGeom()
         {
-            /////////////////////////
-            // Set up Tetrahedron  //
-            /////////////////////////
+            /////////////////////////////////
+            // Set up Tetrahedron vertices //
+            /////////////////////////////////
 
 	    int i,j;
 	    const int three=3;
@@ -268,6 +268,92 @@ namespace Nektar
         }
 
         /**
+         *\brief Sets up the reference hexahedral element needed to construct
+         *a low energy basis
+         */
+        SpatialDomains::HexGeomSharedPtr PreconditionerLowEnergy::CreateRefHexGeom()
+        {
+            ////////////////////////////////
+            // Set up Hexahedron vertices //
+            ////////////////////////////////
+
+	    const int three=3;
+
+            const int nVerts = 8;
+            const double point[][3] = {
+                {0,0,0}, {1,0,0}, {1,1,0}, {0,1,0},
+                {0,0,1}, {1,0,1}, {1,1,1}, {0,1,1}
+            };
+
+            // Populate the list of verts
+            SpatialDomains::VertexComponentSharedPtr verts[8];
+            for( int i = 0; i < nVerts; ++i ) {
+                verts[i] = MemoryManager<SpatialDomains::VertexComponent>
+                    ::AllocateSharedPtr(three,  i,   point[i][0],
+                                        point[i][1], point[i][2]);
+            }
+
+            /////////////////////////////
+            // Set up Hexahedron Edges //
+            /////////////////////////////
+
+            // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
+            const int nEdges = 12;
+            const int vertexConnectivity[][2] = {
+                {0,1}, {1,2}, {2,3}, {0,3}, {0,4}, {1,5},
+                {2,6}, {3,7}, {4,5}, {5,6}, {6,7}, {4,7}
+            };
+
+            // Populate the list of edges
+            SpatialDomains::SegGeomSharedPtr edges[nEdges];
+            for( int i = 0; i < nEdges; ++i ) {
+                SpatialDomains::VertexComponentSharedPtr vertsArray[2];
+                for( int j = 0; j < 2; ++j ) {
+                    vertsArray[j] = verts[vertexConnectivity[i][j]];
+                }
+                edges[i] = MemoryManager<SpatialDomains::SegGeom>::
+                    AllocateSharedPtr( i, three, vertsArray);
+            }
+
+            /////////////////////////////
+            // Set up Hexahedron faces //
+            /////////////////////////////
+
+            const int nFaces = 6;
+            const int edgeConnectivity[][4] = {
+                {0,1,2,3}, {0,5,8,4}, {1,6,9,5},
+                {2,7,10,6}, {3,7,11,4}, {8,9,10,11}
+            };
+            const bool isEdgeFlipped[][4] = {
+                {0,0,0,1}, {0,0,1,1}, {0,0,1,1},
+                {0,0,1,1}, {0,0,1,1}, {0,0,0,1}
+            };
+
+            // Populate the list of faces
+            SpatialDomains::QuadGeomSharedPtr faces[nFaces];
+            for( int i = 0; i < nFaces; ++i ) {
+                SpatialDomains::SegGeomSharedPtr edgeArray[4];
+                StdRegions::Orientation eorientArray[4];
+                for( int j = 0; j < 4; ++j ) {
+                    edgeArray[j]    = edges[edgeConnectivity[i][j]];
+                    eorientArray[j] = isEdgeFlipped[i][j] ? 
+                        StdRegions::eBackwards : StdRegions::eForwards;
+                }
+                faces[i] = MemoryManager<SpatialDomains::QuadGeom>::AllocateSharedPtr(i, edgeArray,
+                                                                      eorientArray);
+            }
+
+            SpatialDomains::HexGeomSharedPtr geom =
+                MemoryManager<SpatialDomains::HexGeom>::AllocateSharedPtr
+                (faces);
+            
+            geom->SetOwnData();
+
+            return geom;
+        }
+
+
+        /**
 	 * \brief Sets up the reference elements needed by the preconditioner
 	 *
          * Sets up reference elements which are used to preconditioning the
@@ -287,9 +373,9 @@ namespace Nektar
             DNekScalBlkMatSharedPtr RtetBlk, RprismBlk;
             DNekScalBlkMatSharedPtr RTtetBlk, RTprismBlk;
 
-            DNekScalMatSharedPtr Rprism;
-            DNekScalMatSharedPtr RTprism;
-            DNekMatSharedPtr InvRtmp, InvRTtmp;
+            DNekScalMatSharedPtr Rprismoriginal;
+            DNekScalMatSharedPtr RTprismoriginal;
+            DNekMatSharedPtr Rtettmp, RTtettmp, Rhextmp, RThextmp, Rprismtmp, RTprismtmp ;
 
             /*
              * Set up a Tetrahral & prismatic element which comprises
@@ -300,6 +386,7 @@ namespace Nektar
              */
             SpatialDomains::TetGeomSharedPtr tetgeom=CreateRefTetGeom();
             SpatialDomains::PrismGeomSharedPtr prismgeom=CreateRefPrismGeom();
+            SpatialDomains::HexGeomSharedPtr hexgeom=CreateRefHexGeom();
 
             //Expansion as specified in the input file - here we need to alter
             //this so we can read in different exapansions for different element
@@ -342,6 +429,24 @@ namespace Nektar
                 ::AllocateSharedPtr(PrismBa,PrismBb,PrismBc,
                                     prismgeom);
 
+            //Bases for prismatic element
+            const LibUtilities::BasisKey HexBa(
+                LibUtilities::eModified_A, nummodes,
+                LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey HexBb(
+                LibUtilities::eModified_A, nummodes,
+                LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+            const LibUtilities::BasisKey HexBc(
+                LibUtilities::eModified_A, nummodes,
+                LibUtilities::PointsKey(nummodes+1,LibUtilities::eGaussLobattoLegendre));
+            
+            //Create reference prismatic expansion
+            LocalRegions::HexExpSharedPtr HexExp;
+            
+            HexExp = MemoryManager<LocalRegions::HexExp>
+                ::AllocateSharedPtr(HexBa,HexBb,HexBc,
+                                    hexgeom);
+            
 
             // retrieve variable coefficient
             if(m_linSysKey.GetNVarCoeffs() > 0)
@@ -354,6 +459,11 @@ namespace Nektar
                     vVarCoeffMap[x->first] = x->second + cnt;
                 }
             }
+
+            /*
+             * Matrix keys - for each element type there are two matrix keys
+             * corresponding to the transformation matrix R and its transpose
+             */
 
             //Matrix keys for tetrahedral element transformation matrix
             LocalRegions::MatrixKey TetR
@@ -371,25 +481,7 @@ namespace Nektar
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
-            //Get tetrahedral transformation matrix
-            Rtet = TetExp->GetLocMatrix(TetR);
-
-            //Get tetrahedral transposed transformation matrix
-            RTtet = TetExp->GetLocMatrix(TetRT);
-
-            //Inverse transformation matrix
-            InvRtmp=TetExp->BuildInverseTransformationMatrix(Rtet);
-
-            //Inverse transposed transformation matrix
-            InvRTtmp=TetExp->BuildInverseTransformationMatrix(Rtet);
-            InvRTtmp->Transpose();
-            InvRtet = MemoryManager<DNekScalMat>
-                ::AllocateSharedPtr(1.0,InvRtmp);
-            
-            InvRTtet = MemoryManager<DNekScalMat>
-                ::AllocateSharedPtr(1.0,InvRTtmp);
-
-            //Matrix keys for Prism element transformation matrix
+            //Matrix keys for prismatic element transformation matrix
             LocalRegions::MatrixKey PrismR
                 (StdRegions::ePreconR,
                  LibUtilities::ePrism,
@@ -397,7 +489,7 @@ namespace Nektar
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
-            //Matrix keys for Prism element transposed transformation matrix
+            //Matrix keys for prismatic element transposed transformation matrix
             LocalRegions::MatrixKey PrismRT
                 (StdRegions::ePreconRT,
                  LibUtilities::ePrism,
@@ -405,13 +497,78 @@ namespace Nektar
                  m_linSysKey.GetConstFactors(),
                  vVarCoeffMap);
 
+            //Matrix keys for hexahedral element transformation matrix
+            LocalRegions::MatrixKey HexR
+                (StdRegions::ePreconR,
+                 LibUtilities::eHexahedron,
+                 *HexExp,
+                 m_linSysKey.GetConstFactors(),
+                 vVarCoeffMap);
+
+            //Matrix keys for hexahedral element transposed transformation
+            //matrix
+            LocalRegions::MatrixKey HexRT
+                (StdRegions::ePreconRT,
+                 LibUtilities::eHexahedron,
+                 *HexExp,
+                 m_linSysKey.GetConstFactors(),
+                 vVarCoeffMap);
+
+            /*
+             * Create transformation matrices for the tetrahedral element
+             */
+
+            //Get tetrahedral transformation matrix
+            Rtet = TetExp->GetLocMatrix(TetR);
+
+            //Get tetrahedral transposed transformation matrix
+            RTtet = TetExp->GetLocMatrix(TetRT);
+
+            // Using the transformation matrix and the inverse transformation
+            // matrix create the inverse matrices
+            Rtettmp=TetExp->BuildInverseTransformationMatrix(Rtet);
+
+            //Inverse transposed transformation matrix
+            RTtettmp=TetExp->BuildInverseTransformationMatrix(Rtet);
+            RTtettmp->Transpose();
+
+            Rinvtet = MemoryManager<DNekScalMat>
+                ::AllocateSharedPtr(1.0,Rtettmp);
+            RTinvtet = MemoryManager<DNekScalMat>
+                ::AllocateSharedPtr(1.0,RTtettmp);
+
+            /*
+             * Create transformation matrices for the hexahedral element
+             */
+
+            //Get hexahedral transformation matrix
+            Rhex = HexExp->GetLocMatrix(HexR);
+            //Get hexahedral transposed transformation matrix
+            RThex = HexExp->GetLocMatrix(HexRT);
+
+            // Using the transformation matrix and the inverse transformation
+            // matrix create the inverse matrices
+            Rhextmp=HexExp->BuildInverseTransformationMatrix(Rhex);
+            //Inverse transposed transformation matrix
+            RThextmp=TetExp->BuildInverseTransformationMatrix(RThex);
+            RThextmp->Transpose();
+
+            Rinvhex = MemoryManager<DNekScalMat>
+                ::AllocateSharedPtr(1.0,Rhextmp);
+            RTinvhex = MemoryManager<DNekScalMat>
+                ::AllocateSharedPtr(1.0,RThextmp);
+
+
+            /*
+             * Create transformation matrices for the prismatic element
+             */
+
             //Get prism transformation matrix
-            Rprism = PrismExp->GetLocMatrix(PrismR);
-
+            Rprismoriginal = PrismExp->GetLocMatrix(PrismR);
             //Get prism transposed transformation matrix
-            RTprism = PrismExp->GetLocMatrix(PrismRT);
+            RTprismoriginal = PrismExp->GetLocMatrix(PrismRT);
 
-            unsigned int  nRows=Rprism->GetRows();
+            unsigned int  nRows=Rprismoriginal->GetRows();
             NekDouble zero=0.0;
             DNekMatSharedPtr Rtmpprism = MemoryManager<DNekMat>::
                 AllocateSharedPtr(nRows,nRows,zero,eFULL);
@@ -419,13 +576,13 @@ namespace Nektar
                 AllocateSharedPtr(nRows,nRows,zero,eFULL);
             NekDouble Rvalue, RTvalue;
 
-            //Modified Prism - copy values from the primsm transformation matrix
+            //Copy values from the prism transformation matrix
             for(i=0; i<nRows; ++i)
             {
                 for(j=0; j<nRows; ++j)
                 {
-                    Rvalue=(*Rprism)(i,j);
-                    RTvalue=(*RTprism)(i,j);
+                    Rvalue=(*Rprismoriginal)(i,j);
+                    RTvalue=(*RTprismoriginal)(i,j);
                     Rtmpprism->SetValue(i,j,Rvalue);
                     RTtmpprism->SetValue(i,j,RTvalue);
                 }
@@ -436,24 +593,24 @@ namespace Nektar
             //transformation matrix.
             ModifyPrismTransformationMatrix(TetExp,PrismExp,Rtmpprism,RTtmpprism);
 
-            Rprismmod = MemoryManager<DNekScalMat>
+            Rprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,Rtmpprism);
             
-            RTprismmod = MemoryManager<DNekScalMat>
+            RTprism = MemoryManager<DNekScalMat>
                 ::AllocateSharedPtr(1.0,RTtmpprism);
 
             //Inverse transformation matrix
-            InvRtmp=PrismExp->BuildInverseTransformationMatrix(Rprismmod);
+            Rprismtmp=PrismExp->BuildInverseTransformationMatrix(Rprism);
 
             //Inverse transposed transformation matrix
-            InvRTtmp=PrismExp->BuildInverseTransformationMatrix(Rprismmod);
-            InvRTtmp->Transpose();
+            RTprismtmp=PrismExp->BuildInverseTransformationMatrix(Rprism);
+            RTprismtmp->Transpose();
 
-            InvRprism = MemoryManager<DNekScalMat>
-                ::AllocateSharedPtr(1.0,InvRtmp);
+            Rinvprism = MemoryManager<DNekScalMat>
+                ::AllocateSharedPtr(1.0,Rprismtmp);
 
-            InvRTprism = MemoryManager<DNekScalMat>
-                ::AllocateSharedPtr(1.0,InvRTtmp);
+            RTinvprism = MemoryManager<DNekScalMat>
+                ::AllocateSharedPtr(1.0,RTprismtmp);
         }
 
        /**
@@ -761,19 +918,23 @@ namespace Nektar
 
            //Transformation matrix map
            transmatrixmap[LibUtilities::eTetrahedron]=Rtet;
-           transmatrixmap[LibUtilities::ePrism]=Rprismmod;
+           transmatrixmap[LibUtilities::ePrism]=Rprism;
+           transmatrixmap[LibUtilities::eHexahedron]=Rhex;
 
            //Transposed transformation matrix map
            transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
-           transposedtransmatrixmap[LibUtilities::ePrism]=RTprismmod;
+           transposedtransmatrixmap[LibUtilities::ePrism]=RTprism;
+           transposedtransmatrixmap[LibUtilities::eHexahedron]=RThex;
 
            //Inverse transfomation map
-           invtransmatrixmap[LibUtilities::eTetrahedron]=InvRtet;
-           invtransmatrixmap[LibUtilities::ePrism]=InvRprism;
+           invtransmatrixmap[LibUtilities::eTetrahedron]=Rinvtet;
+           invtransmatrixmap[LibUtilities::ePrism]=Rinvprism;
+           invtransmatrixmap[LibUtilities::eHexahedron]=Rinvhex;
 
            //Inverse transposed transformation map
-           invtransposedtransmatrixmap[LibUtilities::eTetrahedron]=InvRTtet;
-           invtransposedtransmatrixmap[LibUtilities::ePrism]=InvRTprism;
+           invtransposedtransmatrixmap[LibUtilities::eTetrahedron]=RTinvtet;
+           invtransposedtransmatrixmap[LibUtilities::ePrism]=RTinvprism;
+           invtransposedtransmatrixmap[LibUtilities::eHexahedron]=RTinvhex;
 
            MatrixStorage blkmatStorage = eDIAGONAL;
            
@@ -880,11 +1041,13 @@ namespace Nektar
 
             //Transformation matrix
             transmatrixmap[LibUtilities::eTetrahedron]=Rtet;
-            transmatrixmap[LibUtilities::ePrism]=Rprismmod;
+            transmatrixmap[LibUtilities::ePrism]=Rprism;
+            transmatrixmap[LibUtilities::eHexahedron]=Rhex;
 
             //Transposed transformation matrix
             transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
-            transposedtransmatrixmap[LibUtilities::ePrism]=RTprismmod;
+            transposedtransmatrixmap[LibUtilities::ePrism]=RTprism;
+            transposedtransmatrixmap[LibUtilities::eHexahedron]=Rhex;
 
             int n_exp = expList->GetNumElmts();
             int nNonDirEdgeIDs=m_locToGloMap->GetNumNonDirEdges();
@@ -1666,9 +1829,9 @@ namespace Nektar
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transmatrixmap;
             map<LibUtilities::ShapeType,DNekScalMatSharedPtr> transposedtransmatrixmap;
             transmatrixmap[LibUtilities::eTetrahedron]=Rtet;
-            transmatrixmap[LibUtilities::ePrism]=Rprismmod;
+            transmatrixmap[LibUtilities::ePrism]=Rprism;
             transposedtransmatrixmap[LibUtilities::eTetrahedron]=RTtet;
-            transposedtransmatrixmap[LibUtilities::ePrism]=RTprismmod;
+            transposedtransmatrixmap[LibUtilities::ePrism]=RTprism;
 
             DNekScalMat &S1 = (*m_S1);
             

@@ -65,8 +65,7 @@ namespace Nektar
             }
 
             /// Name of class
-            static std::string className1;
-            static std::string className2;
+            static std::string className;
 
             MULTI_REGIONS_EXPORT PreconditionerBlock(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,

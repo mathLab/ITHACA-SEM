@@ -117,7 +117,7 @@ namespace Nektar
             m_HomoDirec			= 0;
             m_useFFT			= false;
             m_dealiasing		= false;
-            m_specHP_dealiasing		= false;
+            m_specHP_dealiasing = false;
             m_SingleMode		= false;
             m_HalfMode			= false;
             m_MultipleModes		= false;
@@ -219,10 +219,10 @@ namespace Nektar
                 m_session->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
             }
             
-            if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
-            {
-                m_specHP_dealiasing = true;
-            }
+            //if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+            //{
+            //    m_specHP_dealiasing = true;
+            //}
         
             // Options to determine type of projection from file or directly 
             // from constructor

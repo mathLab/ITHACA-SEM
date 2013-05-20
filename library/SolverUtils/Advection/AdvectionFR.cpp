@@ -92,10 +92,6 @@ namespace Nektar
             v_SetupCFunctions(pSession, pFields);
             v_SetupInterpolationMatrices(pSession, pFields);
             
-            // Initialising the fluxvector
-            int nConvectiveFields = pFields.num_elements();
-            int nDimensions  = pFields[0]->GetCoordim(0);
-            int nSolutionPts = pFields[0]->GetTotPoints();
         }
         
         /**
@@ -854,7 +850,7 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
             int i, j, n;
-            int nLocalSolutionPts, phys_offset;
+            int phys_offset;
             
             Array<OneD, NekDouble> auxArray1, auxArray2;
             

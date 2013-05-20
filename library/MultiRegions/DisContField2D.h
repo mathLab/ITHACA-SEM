@@ -116,14 +116,15 @@ namespace Nektar
             std::set<int> m_boundaryEdges;
             
             /**
+             * @brief A map which identifies groups of periodic vertices.
+             */
+            PeriodicMap m_periodicVerts;
+
+            /**
              * @brief A map which identifies pairs of periodic edges.
              */
             PeriodicMap m_periodicEdges;
             
-            /**
-             * @brief A map which identifies groups of periodic vertices.
-             */
-            PeriodicMap m_periodicVerts;
             
             /**
              * @brief A vector indicating degress of freedom which need to be

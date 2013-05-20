@@ -41,7 +41,7 @@ namespace Nektar
     namespace StdRegions
     {
         StdNodalTriExp::StdNodalTriExp():
-`            StdTriExp(),
+            StdTriExp(),
             m_nodalPointsKey()
         {
         }

@@ -557,10 +557,10 @@ namespace Nektar
                 int mdswitch,
                 bool doInteriorMap)
         {
-            int i,j,k,l,m;
+            int i,j,k,l;
             int cnt = 0;
             int meshVertId, meshVertId2;
-            int meshEdgeId, meshEdgeId2;
+            int meshEdgeId;
             int graphVertId = 0;
             StdRegions::StdExpansion2DSharedPtr  locExpansion;
             LocalRegions::SegExpSharedPtr        bndSegExp;

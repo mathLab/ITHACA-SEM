@@ -64,8 +64,8 @@ namespace Nektar
             m_globalBndMat       (In.m_globalBndMat),
             m_trace              (In.m_trace),
             m_traceMap           (In.m_traceMap),
-            m_periodicVerts      (In.m_periodicVerts),
             m_boundaryEdges      (In.m_boundaryEdges),
+            m_periodicVerts      (In.m_periodicVerts),
             m_periodicEdges      (In.m_periodicEdges),
             m_periodicFwdCopy    (In.m_periodicFwdCopy),
             m_periodicBwdCopy    (In.m_periodicBwdCopy),
@@ -83,8 +83,8 @@ namespace Nektar
               m_bndCondExpansions(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
-              m_periodicEdges(),
               m_periodicVerts(),
+              m_periodicEdges(),
               m_periodicFwdCopy(),
               m_periodicBwdCopy()
         {
@@ -1237,7 +1237,6 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
-            bool parallel = m_session->GetComm()->GetRowComm()->GetSize() > 1;
             bool fwd;
             
             for(cnt = n = 0; n < nexp; ++n)
@@ -1248,7 +1247,6 @@ namespace Nektar
                 {
                     int offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
-                    int edgeGeomId = (*m_exp)[n]->GetGeom2D()->GetEid(e);
 
                     fwd = m_leftAdjacentEdges[cnt];
 

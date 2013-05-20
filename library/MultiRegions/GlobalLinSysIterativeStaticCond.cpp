@@ -542,9 +542,6 @@ namespace Nektar
                     GetSolverInfoAsEnum<LocalMatrixStorageStrategy>(
                                        "LocalMatrixStorageStrategy");
 
-            bool verbose = (m_expList.lock()->GetSession()->
-                    DefinesCmdLineArgument("verbose"))? true : false;
-
             switch(storageStrategy)
             {
                 case MultiRegions::eContiguous:
@@ -629,18 +626,6 @@ namespace Nektar
                             partitions.push_back(make_pair(1,loc_lda));
                         }
                     }
-
-#if 0 // Is this just a debugging leftover?
-                    if (verbose)
-                    {
-                        cout << "sizes of local matrices in order: " << endl;
-                        for (int i = 0; i < partitions.size(); i++)
-                        {
-                            cout << " (" << partitions[i].first << ", " << partitions[i].second << ")";
-                        }
-                        cout << endl;
-                    }
-#endif
 
                     MatrixStorage matStorage = eFULL;
 

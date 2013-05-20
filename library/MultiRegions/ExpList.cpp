@@ -2315,7 +2315,7 @@ namespace Nektar
             std::string                               &field,
             Array<OneD, NekDouble>                    &coeffs)
         {     	
-            int i, cnt, expId;
+            int i, expId;
             int offset       = 0;
             int modes_offset = 0;
             int datalen      = fielddata.size()/fielddef->m_fields.size();

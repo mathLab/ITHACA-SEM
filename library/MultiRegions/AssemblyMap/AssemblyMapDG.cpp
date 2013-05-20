@@ -631,7 +631,7 @@ namespace Nektar
             const ExpList                                             &locExp,
             const Array<OneD, MultiRegions::ExpListSharedPtr>         &bndCondExp,
             const Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndCond,
-            const PeriodicMap                                         &periodicFaces):
+            const PeriodicMap                                         &periodicFaces,
             const std::string variable):
             AssemblyMap(pSession,variable)
         {

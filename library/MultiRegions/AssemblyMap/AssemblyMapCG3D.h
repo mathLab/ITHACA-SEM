@@ -66,17 +66,11 @@ namespace Nektar
                 const ExpList &locExp,
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-<<<<<<< HEAD
-                const map<int,int>& periodicVerticesId,
-                const map<int,int>& periodicEdgesId,
-                const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId,
-                const bool checkIfSystemSingular,
-                const std::string variable = "DefaultVar");
-=======
                 const PeriodicMap &periodicVerts,
                 const PeriodicMap &periodicEdges,
-                const PeriodicMap &periodicFaces);
->>>>>>> First working version of parallel periodic boundary conditions in 3D DG.
+                const PeriodicMap &periodicFaces,
+                const bool checkIfSystemSingular,
+                const std::string variable = "DefaultVar");
             
 
             /// General constructor for expansions of all dimensions without

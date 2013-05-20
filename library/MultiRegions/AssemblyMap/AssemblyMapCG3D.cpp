@@ -82,7 +82,7 @@ namespace Nektar
                                                                 &bndConditions,
                 const PeriodicMap &periodicVerts,
                 const PeriodicMap &periodicEdges,
-                const PeriodicMap &periodicFaces):
+                const PeriodicMap &periodicFaces,
                 const bool checkIfSystemSingular,
                 const std::string variable):
             AssemblyMapCG(pSession,variable)

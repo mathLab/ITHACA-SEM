@@ -201,7 +201,7 @@ namespace Nektar
                     {
                         m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
                     }
-                    
+                 
                 }
                 break;
             default:

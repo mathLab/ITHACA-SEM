@@ -370,7 +370,7 @@ namespace Nektar
                                   m_bndCondExpansions, m_bndConditions,
                                   m_periodicEdges,
                                   variable);
-                
+
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
 
@@ -840,14 +840,25 @@ namespace Nektar
             vComm->AllReduce(edgeOrient, LibUtilities::ReduceSum);
             vComm->AllReduce(edgeVerts,  LibUtilities::ReduceSum);
 
-            int nTotVerts = Vmath::Vsum(totEdges, edgeVerts, 1);
-
             // Calculate number of vertices on each processor.
             Array<OneD, int> procVerts(n,0);
-            for (i = 0; i < n; ++i)
+            int nTotVerts;
+
+            // Note if there are no periodic faces at all calling Vsum will
+            // cause a segfault.
+            if (perComps.size() > 0)
             {
-                procVerts[i] = Vmath::Vsum(
-                    edgecounts[i], edgeVerts + edgeoffset[i], 1);
+                nTotVerts = Vmath::Vsum(totEdges, edgeVerts, 1);
+
+                for (i = 0; i < n; ++i)
+                {
+                    procVerts[i] = Vmath::Vsum(
+                        edgecounts[i], edgeVerts + edgeoffset[i], 1);
+                }
+            }
+            else
+            {
+                nTotVerts = 0;
             }
 
             vertoffset[0] = 0;

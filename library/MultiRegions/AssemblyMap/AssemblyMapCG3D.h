@@ -71,7 +71,6 @@ namespace Nektar
                 const PeriodicMap &periodicFaces,
                 const bool checkIfSystemSingular,
                 const std::string variable = "DefaultVar");
-            
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.

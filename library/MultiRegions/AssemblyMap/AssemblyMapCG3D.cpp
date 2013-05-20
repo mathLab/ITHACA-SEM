@@ -95,7 +95,6 @@ namespace Nektar
                                       periodicEdges,
                                       periodicFaces,
                                       checkIfSystemSingular);
-
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
         }

@@ -41,6 +41,13 @@ IF (THIRDPARTY_BUILD_BOOST)
             BUILD_IN_SOURCE 1
         )
     
+        IF (APPLE)
+            EXTERNALPROJECT_ADD_STEP(boost patch-install-path
+                COMMAND sed -i ".bak" "s|-install_name \"|&${TPSRC}/dist/lib/|" ${TPSRC}/src/boost/tools/build/v2/tools/darwin.jam
+                DEPENDERS build
+                DEPENDEES download)
+        ENDIF (APPLE)
+
         # If building ThirdParty zlib, force zlib build before boost
         IF (THIRDPARTY_BUILD_ZLIB)
              ADD_DEPENDENCIES(boost zlib-1.2.7)

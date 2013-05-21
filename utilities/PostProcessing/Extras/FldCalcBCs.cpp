@@ -312,9 +312,9 @@ cout<<"g="<<g<<"  coeff f0="<<fields[lastfield]->GetPlane(0)->GetCoeff(g)<<" f1=
     //declarecoeffsphysarray?????????!!!! true?!      
 
     outfieldxtmp = MemoryManager<MultiRegions::ExpList1D>
-                ::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);    
+        ::AllocateSharedPtr(*(bregions.find(lastIregion)->second), graphShPt, true);    
     outfieldytmp = MemoryManager<MultiRegions::ExpList1D>
-    		::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);
+        ::AllocateSharedPtr(*(bregions.find(lastIregion)->second), graphShPt, true);
 
     outfieldx = MemoryManager<MultiRegions::ContField1D>
                                 ::AllocateSharedPtr(vSession, *outfieldxtmp);
@@ -726,8 +726,8 @@ cout<<"layer region="<<Ireg<<endl;
             int Nregcoeffs;  
 
             for(
-       	        regIt= bregions[Ireg]->begin();
-       	        regIt !=bregions[Ireg]->end();
+       	        regIt= bregions.find(Ireg)->second->begin();
+       	        regIt !=bregions.find(Ireg)->second->end();
        	        ++regIt)
        	    {
                 Icompreg=regIt->second;

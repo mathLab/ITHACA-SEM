@@ -135,13 +135,15 @@ namespace Nektar
             const DNekScalBlkMatSharedPtr pC,
             const DNekScalBlkMatSharedPtr pInvD,
             const boost::shared_ptr<AssemblyMap>
-            &pLocToGloMap)
+            &pLocToGloMap,
+            const PreconditionerSharedPtr pPrecon)
             : GlobalLinSysIterative(pKey, pExpList, pLocToGloMap),
               m_schurCompl ( pSchurCompl ),
               m_BinvD      ( pBinvD ),
               m_C          ( pC ),
               m_invD       ( pInvD ),
-              m_locToGloMap( pLocToGloMap )
+              m_locToGloMap( pLocToGloMap ),
+              m_precon     ( pPrecon )
         {
             // Construct this level
             Initialise(pLocToGloMap);
@@ -225,13 +227,15 @@ namespace Nektar
                 Set_Rhs_Magnitude(F_GlobBnd);
             }
             
+            DNekScalBlkMatSharedPtr sc = scLevel == 0 ? m_S1Blk : m_schurCompl;
+
             if(nGlobHomBndDofs)
             {
                 // construct boundary forcing
                 if( nIntDofs  && ((!dirForcCalculated) && (atLastLevel)) )
                 {
                     DNekScalBlkMat &BinvD      = *m_BinvD;
-                    DNekScalBlkMat &SchurCompl = *m_S1Blk;
+                    DNekScalBlkMat &SchurCompl = *sc;
                     
                     //include dirichlet boundary forcing 
                     pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
@@ -242,7 +246,7 @@ namespace Nektar
                 {
                     //include dirichlet boundary forcing
                     //DNekScalBlkMat &SchurCompl = *m_schurCompl;
-                    DNekScalBlkMat &SchurCompl = *m_S1Blk;
+                    DNekScalBlkMat &SchurCompl = *sc;
                     pLocToGloMap->GlobalToLocalBnd(V_GlobBnd,V_LocBnd);
                     V_LocBnd = SchurCompl*V_LocBnd;
                 }
@@ -383,7 +387,9 @@ namespace Nektar
             v_GetStaticCondBlock(unsigned int n)
         {
             DNekScalBlkMatSharedPtr schurComplBlock;
-            DNekScalMatSharedPtr    localMat = m_S1Blk->GetBlock(n,n);
+            int  scLevel           = m_locToGloMap->GetStaticCondLevel();
+            DNekScalBlkMatSharedPtr sc = scLevel == 0 ? m_S1Blk : m_schurCompl;
+            DNekScalMatSharedPtr    localMat = sc->GetBlock(n,n);
             int nbdry    = localMat->GetRows();
             int nblks    = 1;
             unsigned int esize[1] = {nbdry};
@@ -954,7 +960,7 @@ namespace Nektar
             m_schurCompl.reset();
 
             m_recursiveSchurCompl = MemoryManager<GlobalLinSysIterativeStaticCond>::
-                AllocateSharedPtr(m_linSysKey,m_expList,blkMatrices[0],blkMatrices[1],blkMatrices[2],blkMatrices[3],pLocToGloMap);
+                AllocateSharedPtr(m_linSysKey,m_expList,blkMatrices[0],blkMatrices[1],blkMatrices[2],blkMatrices[3],pLocToGloMap,m_precon);
         }
 
 

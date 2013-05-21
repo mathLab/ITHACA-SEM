@@ -353,7 +353,7 @@ namespace Nektar
                 LocalRegions::Expansion2DSharedPtr traceEl = 
                     boost::dynamic_pointer_cast<
                         LocalRegions::Expansion2D>(m_trace->GetExp(i));
-                    
+
                 int offset = m_trace->GetPhys_Offset(i);
                 if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                 {
@@ -372,8 +372,8 @@ namespace Nektar
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        m_boundaryFaces.insert(m_trace->GetOffset_Elmt_Id(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e)));
+                        m_boundaryFaces.insert(
+                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                     }
                 }
                 cnt += m_bndCondExpansions[n]->GetExpSize();

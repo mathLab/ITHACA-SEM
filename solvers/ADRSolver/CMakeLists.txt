@@ -125,6 +125,7 @@ IF( NEKTAR_SOLVER_ADR )
 
     IF (NEKTAR_USE_MPI)
         ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_par)
+        ADD_NEKTAR_TEST(Advection3D_m12_DG_prism_par)
         ADD_NEKTAR_TEST(Advection3D_m12_DG_tet_par)
         ADD_NEKTAR_TEST(Advection3D_m12_DG_hex_periodic_par)
         ADD_NEKTAR_TEST(ImDiffusion_Quad_Periodic_m7_par)

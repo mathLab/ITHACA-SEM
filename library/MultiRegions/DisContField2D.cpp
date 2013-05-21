@@ -435,8 +435,8 @@ namespace Nektar
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        m_boundaryEdges.insert(m_trace->GetOffset_Elmt_Id(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e)));
+                        m_boundaryEdges.insert(
+                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                     }
                 }
                 cnt += m_bndCondExpansions[n]->GetExpSize();

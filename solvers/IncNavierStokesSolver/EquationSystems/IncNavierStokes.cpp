@@ -323,11 +323,10 @@ namespace Nektar
                 WriteModalEnergy();
             }
             
-            
-            int elmtid;
-            NekDouble cfl = GetCFLEstimate(elmtid);
             if(m_cflsteps && !((n+1)%m_cflsteps) && m_comm->GetRank() == 0)
             {
+                int elmtid;
+                NekDouble cfl = GetCFLEstimate(elmtid);
                 cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
             }
             

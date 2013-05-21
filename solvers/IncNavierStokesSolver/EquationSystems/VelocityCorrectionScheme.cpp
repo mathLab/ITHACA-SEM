@@ -721,7 +721,7 @@ namespace Nektar
             }
         }
       
-#if 0   
+#if 1
         // Adding acceleration term to HOPBCs
         Vmath::Svtvp(cnt, -1.0/m_timestep,
                           accelerationTerm,  1,
@@ -1268,7 +1268,7 @@ namespace Nektar
                     VBndExp[n]->GetExp(i)->BwdTrans(VBndExp[n]->GetCoeffs() + VBndExp[n]->GetCoeff_Offset(i),vbc);
                     
                     
-                        // Get edge values and put into Nu,Nv
+                    // Get edge values and put into Nu,Nv
                     elmt->GetEdgePhysVals(boundary,Pbc,Nu,N1);
                     elmt->GetEdgePhysVals(boundary,Pbc,Nv,N2);
                     
@@ -1359,17 +1359,20 @@ namespace Nektar
                     boundary = m_pressureBCtoTraceID[cnt];
                     
                     // Get velocity bc
-                    UBndExp[n]->GetExp(i)->BwdTrans(UBndExp[n]->GetCoeffs() + UBndExp[n]->GetCoeff_Offset(i),ubc);
-                    VBndExp[n]->GetExp(i)->BwdTrans(VBndExp[n]->GetCoeffs() + VBndExp[n]->GetCoeff_Offset(i),vbc);
-                    WBndExp[n]->GetExp(i)->BwdTrans(WBndExp[n]->GetCoeffs() + WBndExp[n]->GetCoeff_Offset(i),wbc);
+                    UBndExp[n]->GetExp(i)->BwdTrans(UBndExp[n]->GetCoeffs() + 
+                                                    UBndExp[n]->GetCoeff_Offset(i),ubc);
+                    VBndExp[n]->GetExp(i)->BwdTrans(VBndExp[n]->GetCoeffs() + 
+                                                    VBndExp[n]->GetCoeff_Offset(i),vbc);
+                    WBndExp[n]->GetExp(i)->BwdTrans(WBndExp[n]->GetCoeffs() + 
+                                                    WBndExp[n]->GetCoeff_Offset(i),wbc);
                     
-                    // Get edge values and put into Nu,Nv
+                    // Get edge values and put into N1,N2,N3
                     elmt->GetFacePhysVals(boundary,Pbc,Nu,N1);
                     elmt->GetFacePhysVals(boundary,Pbc,Nv,N2);
                     elmt->GetFacePhysVals(boundary,Pbc,Nw,N3);
                     
                     
-                    // Take different as Forward Euler but N1,N2
+                    // Take different as Forward Euler but N1,N2,N3
                     // actually contain the integration of the
                     // previous steps from the time integration
                     // scheme.

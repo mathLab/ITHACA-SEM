@@ -323,11 +323,15 @@ namespace Nektar
                 WriteModalEnergy();
             }
             
-            if(m_cflsteps && !((n+1)%m_cflsteps) && m_comm->GetRank() == 0)
+            if(m_cflsteps && !((n+1)%m_cflsteps))
             {
                 int elmtid;
                 NekDouble cfl = GetCFLEstimate(elmtid);
-                cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
+
+                if(m_comm->GetRank() == 0)
+                {
+                    cout << "CFL (zero plane): "<< cfl << " (in elmt " << elmtid << ")" << endl;
+                }
             }
             
             // dump data in m_fields->m_coeffs to file. 
@@ -1112,6 +1116,7 @@ namespace Nektar
         {
             elmtid = -1;
         }
+
         m_comm->AllReduce(elmtid,LibUtilities::ReduceMax);
         
         if(m_HomogeneousType == eHomogeneous1D) // express element id with respect to plane

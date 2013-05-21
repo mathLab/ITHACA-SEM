@@ -225,7 +225,7 @@ namespace Nektar
                                               std::string var = "v");
             
             virtual void v_WriteTecplotField(std::ofstream &outfile,
-                                             int expansion);
+                                             int expansion = -1);
             
             virtual void v_WriteVtkPieceData(std::ofstream &outfile, int expansion,
                                              std::string var);

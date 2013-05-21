@@ -145,7 +145,7 @@ namespace Nektar
             // Check local coordinate is within [-1,1]^3 bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
                 locCoord[2] >= -(1+tol)                            &&
-                locCoord[0] + locCoord[1] + locCoord[2] <= tol)
+                locCoord[0] + locCoord[1] + locCoord[2] <= -(1+tol))
             {
                 return true;
             }
@@ -244,6 +244,22 @@ namespace Nektar
         int TetGeom::v_GetNumFaces() const
         {
             return 4;
+        }
+
+        int TetGeom::v_GetDir(const int faceidx, const int facedir) const
+        {
+            if (faceidx == 0)
+            {
+                return facedir;
+            }
+            else if (faceidx == 1)
+            {
+                return 2 * facedir;
+            }
+            else
+            {
+                return 1 + facedir;
+            }
         }
 
         int TetGeom::v_GetVertexEdgeMap(const int i, const int j) const

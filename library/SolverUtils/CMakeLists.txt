@@ -70,7 +70,11 @@ TARGET_LINK_LIBRARIES(SolverUtils
   optimized LocalRegions   debug LocalRegions-g
   optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
   ${Boost_THREAD_LIBRARY}
+  ${Boost_IOSTREAMS_LIBRARY}
   ${Boost_DATE_TIME_LIBRARY}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${Boost_SYSTEM_LIBRARY}
+  ${ZLIB_LIBRARY}
   )
 SET_LAPACK_LINK_LIBRARIES(SolverUtils)
 

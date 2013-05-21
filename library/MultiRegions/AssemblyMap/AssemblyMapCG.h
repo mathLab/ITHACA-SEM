@@ -97,9 +97,15 @@ namespace Nektar
             int m_numNonDirFaceModes;
             /// Maximum static condensation level.
             int m_maxStaticCondLevel;
+            /// Map indicating degrees of freedom which are Dirichlet but whose
+            /// value is stored on another processor.
             map<int, vector<pair<int, int> > > m_extraDirDofs;
-            
-            void SetUpUniversalC0ContMap(const ExpList &locExp);
+
+            void SetUpUniversalC0ContMap(
+                const ExpList     &locExp,
+                const PeriodicMap &perVerts = NullPeriodicMap,
+                const PeriodicMap &perEdges = NullPeriodicMap,
+                const PeriodicMap &perFaces = NullPeriodicMap);
 
             /// Calculate the bandwith of the full matrix system.
             void CalculateFullSystemBandWidth();

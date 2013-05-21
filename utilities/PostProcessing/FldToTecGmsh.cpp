@@ -507,13 +507,27 @@ int main(int argc, char *argv[])
 
             ofstream outfile(fname.c_str());
 
-            Exp[0]->WriteTecplotHeader(outfile,var);
-            for(int i = 0; i < Exp[0]->GetNumElmts(); ++i)
+            if(expdim == 3)
             {
-                Exp[0]->WriteTecplotZone(outfile,i);
+
+                Exp[0]->WriteTecplotHeader(outfile,var);
+                Exp[0]->WriteTecplotZone(outfile);
                 for(int j = 0; j < Exp.num_elements(); ++j)
                 {
-                    Exp[j]->WriteTecplotField(outfile,i);
+                    Exp[j]->WriteTecplotField(outfile);
+                }
+                Exp[0]->WriteTecplotConnectivity(outfile);
+            }
+            else
+            {
+                Exp[0]->WriteTecplotHeader(outfile,var);
+                for(int i = 0; i < Exp[0]->GetNumElmts(); ++i)
+                {
+                    Exp[0]->WriteTecplotZone(outfile,i);
+                    for(int j = 0; j < Exp.num_elements(); ++j)
+                    {
+                        Exp[j]->WriteTecplotField(outfile,i);
+                    }
                 }
             }
 

@@ -80,18 +80,18 @@ namespace Nektar
                 const Array<OneD, const ExpListSharedPtr> &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                                 &bndConditions,
-                const map<int,int>& periodicVerticesId,
-                const map<int,int>& periodicEdgesId,
-                const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId):
+                const PeriodicMap &periodicVerts,
+                const PeriodicMap &periodicEdges,
+                const PeriodicMap &periodicFaces):
             AssemblyMapCG(pSession)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
                                       bndCondExp,
                                       bndConditions,
-                                      periodicVerticesId,
-                                      periodicEdgesId,
-                                      periodicFacesId);
+                                      periodicVerts,
+                                      periodicEdges,
+                                      periodicFaces);
 
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
@@ -167,9 +167,9 @@ namespace Nektar
             const ExpList &locExp,
             const Array<OneD, const ExpListSharedPtr> &bndCondExp,
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-            const map<int,int>& periodicVerticesId,
-            const map<int,int>& periodicEdgesId,
-            const map<int,pair<int, StdRegions::Orientation> >& periodicFacesId)
+            const PeriodicMap &periodicVerts,
+            const PeriodicMap &periodicEdges,
+            const PeriodicMap &periodicFaces)
         {
             int i,j,k,l;
             int cnt = 0;
@@ -179,7 +179,6 @@ namespace Nektar
             int meshEdgeId;
             int meshEdgeId2;
             int meshFaceId;
-            int meshFaceId2;
             int globalId;
             int nEdgeInteriorCoeffs;
             int nFaceInteriorCoeffs;
@@ -196,6 +195,7 @@ namespace Nektar
             Array<OneD, int>                    edgeInteriorSign;
             Array<OneD, unsigned int>           faceInteriorMap;
             Array<OneD, int>                    faceInteriorSign;
+            PeriodicMap::const_iterator pIt;
 
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
 
@@ -445,6 +445,7 @@ namespace Nektar
             // Note: we find the process with maximum boundary regions to ensure
             // we do not try to set a Dirichlet vertex on a partition with no
             // intersection with the boundary.
+            meshVertId = 0;
             if(systemSingular == true && maxBCIdx == p)
             {
                 if(m_session->DefinesParameter("SingularElement"))
@@ -455,7 +456,12 @@ namespace Nektar
                     ASSERTL1(s_eid < locExpVector.size(),
                              "SingularElement Parameter is too large");
                     
-                    meshVertId = locExpVector[s_eid]->GetGeom2D()->GetVid(0);
+                    meshVertId = locExpVector[s_eid]->GetGeom3D()->GetVid(0);
+                }
+                else if (bndCondExp.num_elements() == 0)
+                {
+                    // All boundaries are periodic.
+                    meshVertId = locExpVector[0]->GetGeom3D()->GetVid(0);
                 }
                 else
                 {
@@ -465,7 +471,7 @@ namespace Nektar
                             bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
                     
                     //first vertex 0 of the edge
-                    meshVertId = bndCondFaceExp->GetGeom2D()->GetVid(0);
+                    meshVertId = bndCondFaceExp->GetGeom3D()->GetVid(0);
                 }
 
                 if(vertReorderedGraphVertId.count(meshVertId) == 0)
@@ -474,6 +480,36 @@ namespace Nektar
                 }
             }
             
+            m_comm->AllReduce(meshVertId, LibUtilities::ReduceSum);
+
+            // When running in parallel, we need to ensure that the singular
+            // mesh vertex is communicated to any periodic vertices, otherwise
+            // the system may diverge.
+            if(systemSingular == true && maxBCIdx != p)
+            {
+                // Scan through all periodic vertices
+                for (pIt  = periodicVerts.begin();
+                     pIt != periodicVerts.end(); ++pIt)
+                {
+                    if (vertReorderedGraphVertId.count(pIt->first) != 0)
+                    {
+                        continue;
+                    }
+
+                    for (i = 0; i < pIt->second.size(); ++i)
+                    {
+                        if (pIt->second[i].isLocal ||
+                            pIt->second[i].id != meshVertId)
+                        {
+                            continue;
+                        }
+
+                        // Mark this periodic vertex as Dirichlet.
+                        vertReorderedGraphVertId[pIt->first] =
+                            graphVertId++;
+                    }
+                }
+            }
 
             m_numLocalDirBndCoeffs = nLocDirBndCondDofs + nExtraDirichlet;
             firstNonDirGraphVertId = graphVertId;
@@ -514,182 +550,195 @@ namespace Nektar
             m_numLocalBndCoeffs = 0;
 
             /// - Periodic vertices
-            for(mapConstIt  = periodicVerticesId.begin(); 
-                mapConstIt != periodicVerticesId.end(); mapConstIt++)
+            for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
             {
-                meshVertId  = mapConstIt->first;
-                meshVertId2 = mapConstIt->second;
+                meshVertId = pIt->first;
 
-                if(vertReorderedGraphVertId.count(meshVertId) == 0)
+                // This periodic vertex is joined to a Dirichlet condition.
+                if (vertReorderedGraphVertId.count(pIt->first) != 0)
                 {
-
-                    if(vertReorderedGraphVertId.count(meshVertId2) == 0)
+                    for (i = 0; i < pIt->second.size(); ++i)
                     {
-
-                        if(vertTempGraphVertId.count(meshVertId) == 0)
+                        meshVertId2 = pIt->second[i].id;
+                        if (vertReorderedGraphVertId.count(meshVertId2) == 0 &&
+                            pIt->second[i].isLocal)
                         {
-                            vertTempGraphVertId[meshVertId]  = tempGraphVertId;
-                            if(vertTempGraphVertId.count(meshVertId2) == 0)
-                            {
-                                vertTempGraphVertId[meshVertId2] = tempGraphVertId++;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"Unexplained Periodicity connectivity");
-                            }
+                            vertReorderedGraphVertId[meshVertId2] =
+                                vertReorderedGraphVertId[meshVertId];
                         }
-                        else
-                        {
-                            if(vertTempGraphVertId.count(meshVertId2) == 0)
-                            {
-                                ASSERTL0(false,"Unexplained Periodicity connectivity");
-                            }
-                            else // Doubly periodic region
-                            {
-                                int id1 = vertTempGraphVertId[meshVertId];
-                                int id2 = vertTempGraphVertId[meshVertId2];
-                                int id;
+                    }
+                    continue;
+                }
 
-                                if(id1 != id2)
-                                {
-                                    // Reset any values set to
-                                    // id2 to id1. In addition
-                                    // if local id is greater
-                                    // than id2 decrement list
-                                    for(mapIt = vertTempGraphVertId.begin();
-                                        mapIt != vertTempGraphVertId.end(); mapIt++)
-                                    {
-                                        id = mapIt->second;
-                                        if(id == id2)
-                                        {
-                                            vertTempGraphVertId[mapIt->first] = id1;
-                                        }
-                                        else if (id > id2)
-                                        {
-                                            vertTempGraphVertId[mapIt->first] = id-1;
-                                        }
-                                    }
-                                    tempGraphVertId--;
-                                }
-                            }
+                // One of the attached vertices is Dirichlet.
+                bool isDirichlet = false;
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    if (!pIt->second[i].isLocal)
+                    {
+                        continue;
+                    }
+
+                    meshVertId2 = pIt->second[i].id;
+                    if (vertReorderedGraphVertId.count(meshVertId2) > 0)
+                    {
+                        isDirichlet = true;
+                        break;
+                    }
+                }
+
+                if (isDirichlet)
+                {
+                    vertReorderedGraphVertId[meshVertId] =
+                        vertReorderedGraphVertId[pIt->second[i].id];
+
+                    for (j = 0; j < pIt->second.size(); ++j)
+                    {
+                        meshVertId2 = pIt->second[i].id;
+                        if (j == i || !pIt->second[j].isLocal ||
+                            vertReorderedGraphVertId.count(meshVertId2) > 0)
+                        {
+                            continue;
                         }
 
+                        vertReorderedGraphVertId[meshVertId2] =
+                            vertReorderedGraphVertId[pIt->second[i].id];
                     }
-                    else
+
+                    continue;
+                }
+
+                // Otherwise, see if a vertex ID has already been set.
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    if (!pIt->second[i].isLocal)
                     {
-                        vertReorderedGraphVertId[meshVertId] = vertReorderedGraphVertId[meshVertId2];
+                        continue;
                     }
+
+                    if (vertTempGraphVertId.count(pIt->second[i].id) > 0)
+                    {
+                        break;
+                    }
+                }
+
+                if (i == pIt->second.size())
+                {
+                    vertTempGraphVertId[meshVertId] = tempGraphVertId++;
                 }
                 else
                 {
-                    if(vertReorderedGraphVertId.count(meshVertId2) == 0)
-                    {
-                        vertReorderedGraphVertId[meshVertId2] = vertReorderedGraphVertId[meshVertId];
-                    }
+                    vertTempGraphVertId[meshVertId] =
+                        vertTempGraphVertId[pIt->second[i].id];
                 }
             }
 
             /// - Periodic edges
-            for(mapConstIt  = periodicEdgesId.begin(); 
-                mapConstIt != periodicEdgesId.end(); 
-                mapConstIt++)
+            for (pIt = periodicEdges.begin(); pIt != periodicEdges.end(); ++pIt)
             {
-                meshEdgeId  = mapConstIt->first;
-                meshEdgeId2 = mapConstIt->second;
+                meshEdgeId = pIt->first;
 
-                if(edgeReorderedGraphVertId.count(meshEdgeId) == 0)
+                // This periodic edge is joined to a Dirichlet condition.
+                if (edgeReorderedGraphVertId.count(pIt->first) != 0)
                 {
-                    if(edgeReorderedGraphVertId.count(meshEdgeId2) == 0)
+                    for (i = 0; i < pIt->second.size(); ++i)
                     {
-                        if(edgeTempGraphVertId.count(meshEdgeId) == 0)
+                        meshEdgeId2 = pIt->second[i].id;
+                        if (edgeReorderedGraphVertId.count(meshEdgeId2) == 0 &&
+                            pIt->second[i].isLocal)
                         {
-                            edgeTempGraphVertId[meshEdgeId]  = tempGraphVertId;
-                            if(edgeTempGraphVertId.count(meshEdgeId2) == 0)
-                            {
-                                edgeTempGraphVertId[meshEdgeId2] = tempGraphVertId++;
-                            }
-                            else
-                            {
-                                ASSERTL0(false,"Unexplained Periodicity connectivity");
-                            }
+                            edgeReorderedGraphVertId[meshEdgeId2] =
+                                edgeReorderedGraphVertId[meshEdgeId];
                         }
-                        else
-                        {
-                            if(edgeTempGraphVertId.count(meshEdgeId2) == 0)
-                            {
-                                ASSERTL0(false,"Unexplained Periodicity connectivity");
-                            }
-                            else // Doubly periodic region
-                            {
-                                int id1 = edgeTempGraphVertId[meshEdgeId];
-                                int id2 = edgeTempGraphVertId[meshEdgeId2];
-                                int id;
+                    }
+                    continue;
+                }
 
-                                if(id1 != id2)
-                                {
-                                    // Reset any values set to
-                                    // id2 to id1. In addition
-                                    // if local id is greater
-                                    // than id2 decrement list
-                                    for(mapIt = edgeTempGraphVertId.begin();
-                                        mapIt != edgeTempGraphVertId.end(); mapIt++)
-                                    {
-                                        id = mapIt->second;
-                                        if(id == id2)
-                                        {
-                                            edgeTempGraphVertId[mapIt->first] = id1;
-                                        }
-                                        else if (id > id2)
-                                        {
-                                            edgeTempGraphVertId[mapIt->first] = id-1;
-                                        }
-                                    }
-                                    tempGraphVertId--;
-                                }
-                            }
-                        }
-                    }
-                    else
+                // One of the attached edges is Dirichlet.
+                bool isDirichlet = false;
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    if (!pIt->second[i].isLocal)
                     {
-                        edgeReorderedGraphVertId[meshEdgeId] = edgeReorderedGraphVertId[meshEdgeId2];
+                        continue;
                     }
+
+                    meshEdgeId2 = pIt->second[i].id;
+                    if (edgeReorderedGraphVertId.count(meshEdgeId2) > 0)
+                    {
+                        isDirichlet = true;
+                        break;
+                    }
+                }
+
+                if (isDirichlet)
+                {
+                    edgeReorderedGraphVertId[meshEdgeId] =
+                        edgeReorderedGraphVertId[pIt->second[i].id];
+
+                    for (j = 0; j < pIt->second.size(); ++j)
+                    {
+                        meshEdgeId2 = pIt->second[i].id;
+                        if (j == i || !pIt->second[j].isLocal ||
+                            edgeReorderedGraphVertId.count(meshEdgeId2) > 0)
+                        {
+                            continue;
+                        }
+
+                        edgeReorderedGraphVertId[meshEdgeId2] =
+                            edgeReorderedGraphVertId[pIt->second[i].id];
+                    }
+
+                    continue;
+                }
+
+                // Otherwise, see if a edge ID has already been set.
+                for (i = 0; i < pIt->second.size(); ++i)
+                {
+                    if (!pIt->second[i].isLocal)
+                    {
+                        continue;
+                    }
+
+                    if (edgeTempGraphVertId.count(pIt->second[i].id) > 0)
+                    {
+                        break;
+                    }
+                }
+
+                if (i == pIt->second.size())
+                {
+                    edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                 }
                 else
                 {
-                    if(edgeReorderedGraphVertId.count(meshEdgeId2) == 0)
-                    {
-                        edgeReorderedGraphVertId[meshEdgeId2] = edgeReorderedGraphVertId[meshEdgeId];
-                    }
-                    /*
-                    else
-                    {
-                        ASSERTL0(edgeReorderedGraphVertId[meshEdgeId2] == edgeReorderedGraphVertId[meshEdgeId],
-                                 "These values should be equal");
-                    }
-                    */
+                    edgeTempGraphVertId[meshEdgeId] = edgeTempGraphVertId[pIt->second[i].id];
                 }
             }
 
             /// - Periodic faces
-            for(mapFaceIt  = periodicFacesId.begin(); 
-                mapFaceIt != periodicFacesId.end(); 
-                mapFaceIt++)
+            for (pIt = periodicFaces.begin(); pIt != periodicFaces.end(); ++pIt)
             {
-                meshFaceId  = mapFaceIt->first;
-                meshFaceId2 = mapFaceIt->second.first;
-
-                if(meshFaceId < meshFaceId2)
+                if (!pIt->second[0].isLocal)
                 {
+                    // The edge mapped to is on another process.
+                    meshFaceId = pIt->first;
                     ASSERTL0(faceReorderedGraphVertId.count(meshFaceId) == 0,
-                             "This periodic boundary face has been specified before");
-                    ASSERTL0(faceReorderedGraphVertId.count(meshFaceId2) == 0,
-                             "This periodic boundary face has been specified before");
+                             "This periodic boundary edge has been specified before");
+                    faceTempGraphVertId[meshFaceId]  = tempGraphVertId++;
+                }
+                else if (pIt->first < pIt->second[0].id)
+                {
+                    ASSERTL0(faceReorderedGraphVertId.count(pIt->first) == 0,
+                             "This periodic boundary edge has been specified before");
+                    ASSERTL0(faceReorderedGraphVertId.count(pIt->second[0].id) == 0,
+                             "This periodic boundary edge has been specified before");
 
-                    faceTempGraphVertId[meshFaceId]  = tempGraphVertId;
-                    faceTempGraphVertId[meshFaceId2] = tempGraphVertId++;
+                    faceTempGraphVertId[pIt->first]        = tempGraphVertId;
+                    faceTempGraphVertId[pIt->second[0].id] = tempGraphVertId++;
                 }
             }
-
+            
 
             /// - All other vertices and edges
             for(i = 0; i < locExpVector.size(); ++i)
@@ -740,8 +789,6 @@ namespace Nektar
                 localVertOffset+=nVerts;
             }
 
-
-
             for(i = 0; i < locExpVector.size(); ++i)
             {
                 if((locExpansion = boost::dynamic_pointer_cast<StdRegions::StdExpansion3D>(
@@ -784,7 +831,7 @@ namespace Nektar
                     for(j = 0; j < nFaces; ++j)
                     {
                         nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j);
-                        meshFaceId = (locExpansion->GetGeom3D())->GetFid(j);
+                        meshFaceId = locExpansion->GetGeom3D()->GetFid(j);
                         if(faceReorderedGraphVertId.count(meshFaceId) == 0)
                         {
                             if(faceTempGraphVertId.count(meshFaceId) == 0)
@@ -1261,6 +1308,33 @@ namespace Nektar
                     edgeOrient          = (locExpansion->GetGeom3D())->GetEorient(j);
                     meshEdgeId          = (locExpansion->GetGeom3D())->GetEid(j);
 
+                    pIt = periodicEdges.find(meshEdgeId);
+
+                    // See if this edge is periodic. If it is, then we map all
+                    // edges to the one with lowest ID, and align all
+                    // coefficients to this edge orientation.
+                    if (pIt != periodicEdges.end())
+                    {
+                        int minId  = pIt->second[0].id;
+                        int minIdK = 0;
+                        for (k = 1; k < pIt->second.size(); ++k)
+                        {
+                            if (pIt->second[k].id < minId)
+                            {
+                                minId  = min(minId, pIt->second[k].id);
+                                minIdK = k;
+                            }
+                        }
+
+                        if (pIt->second[minIdK].orient == StdRegions::eBackwards &&
+                            meshEdgeId != min(minId, meshEdgeId))
+                        {
+                            edgeOrient = edgeOrient == StdRegions::eForwards ?
+                                StdRegions::eBackwards :
+                                StdRegions::eForwards;
+                        }
+                    }
+
                     locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
 
                     // Set the global DOF's for the interior modes of edge j
@@ -1282,20 +1356,45 @@ namespace Nektar
 
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    map<int, pair<int, StdRegions::Orientation> >::const_iterator it;
-                    
                     nFaceInteriorCoeffs = locExpansion->GetFaceIntNcoeffs(j);
                     faceOrient          = (locExpansion->GetGeom3D())->GetFaceOrient(j);
                     meshFaceId          = (locExpansion->GetGeom3D())->GetFid(j);
-                    
-                    /*
-                    it = periodicFaces.find(meshFaceId);
-                    if (it == periodicFaces.begin())
+
+                    pIt = periodicFaces.find(meshFaceId);
+
+                    // See if this face is periodic.
+                    if (pIt != periodicFaces.end() &&
+                        pIt->second[0].orient != StdRegions::eDir1FwdDir1_Dir2FwdDir2 &&
+                        meshFaceId == min(meshFaceId, pIt->second[0].id))
                     {
-                        
+                        int tmp1 = (int)faceOrient            - 5;
+                        int tmp2 = (int)pIt->second[0].orient - 5;
+
+                        int flipDir1Map[8] = {2,3,0,1,6,7,4,5};
+                        int flipDir2Map[8] = {1,0,3,2,5,4,7,6};
+                        int transposeMap[8] = {4,5,6,7,0,1,2,3};
+
+                        // Reverse orientation in direction 1.
+                        if (tmp2 == 2 || tmp2 == 3 || tmp2 == 6 || tmp2 == 7)
+                        {
+                            tmp1 = flipDir1Map[tmp1];
+                        }
+
+                        // Reverse orientation in direction 2
+                        if (tmp2 % 2 == 1)
+                        {
+                            tmp1 = flipDir2Map[tmp1];
+                        }
+
+                        // Transpose orientation
+                        if (tmp2 > 3)
+                        {
+                            tmp1 = transposeMap[tmp1];
+                        }
+
+                        faceOrient = (StdRegions::Orientation)(tmp1+5);
                     }
-                    */
-                    
+
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
 
                     // Set the global DOF's for the interior modes of face j
@@ -1438,7 +1537,7 @@ namespace Nektar
 
             m_numGlobalCoeffs = globalId;
 
-            SetUpUniversalC0ContMap(locExp);
+            SetUpUniversalC0ContMap(locExp, periodicVerts, periodicEdges, periodicFaces);
 
             // Set up the local to global map for the next level when using
             // multi-level static condensation

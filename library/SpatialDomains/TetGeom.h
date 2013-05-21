@@ -75,7 +75,8 @@ namespace Nektar
                 const int i, const int j) const;
 	    virtual int v_GetEdgeFaceMap(
                 const int i, const int j) const;
-            
+	    virtual int v_GetDir(const int faceidx, const int facedir) const;
+
         private:
             void SetUpLocalEdges();
             void SetUpLocalVertices();

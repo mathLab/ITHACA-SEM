@@ -413,6 +413,22 @@ namespace Nektar
 	    return EdgeFaceConnectivity[i][j];
 	}
 
+        int HexGeom::v_GetDir(const int faceidx, const int facedir) const
+        {
+            if (faceidx == 0 || faceidx == 1)
+            {
+                return facedir;
+            }
+            else if (faceidx == 1 || faceidx == 3)
+            {
+                return 2 * facedir;
+            }
+            else
+            {
+                return 1 + facedir;
+            }
+        }
+
         void HexGeom::SetUpLocalEdges()
         {
             // find edge 0

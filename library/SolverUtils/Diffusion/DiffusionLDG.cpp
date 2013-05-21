@@ -73,7 +73,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            //cout<<setprecision(16);
             int i, j, k;
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
@@ -82,15 +81,14 @@ namespace Nektar
             
             Array<OneD, NekDouble>  qcoeffs(nCoeffs);
             Array<OneD, NekDouble>  temp   (nCoeffs);
-            
+
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nDim);
+
             Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
-            
+
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux  (nDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfieldStd(nDim);
-
-            
 
             for (j = 0; j < nDim; ++j)
             {
@@ -116,8 +114,9 @@ namespace Nektar
                         
             // Compute q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
+
             v_NumFluxforScalar(fields, inarray, flux);
-            
+
             for (j = 0; j < nDim; ++j)
             {
                 for (i = 0; i < nConvectiveFields; ++i)
@@ -134,7 +133,7 @@ namespace Nektar
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
             v_NumFluxforVector(fields, inarray, qfield, flux[0]);
-            
+
             for (i = 0; i < nConvectiveFields; ++i)
             {
                 tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);

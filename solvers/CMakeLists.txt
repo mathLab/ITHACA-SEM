@@ -12,6 +12,7 @@ MACRO(ADD_SOLVER_EXECUTABLE name component source)
     # add them here.
     TARGET_LINK_LIBRARIES(${name}
             ${NEKTAR++_LIBRARIES}
+            ${Boost_SYSTEM_LIBRARY}
             ${Boost_THREAD_LIBRARY} 
             ${Boost_IOSTREAMS_LIBRARY} 
             ${ZLIB_LIBRARY}  

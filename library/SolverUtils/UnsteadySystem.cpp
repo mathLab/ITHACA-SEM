@@ -247,7 +247,6 @@ namespace Nektar
                     
                     u = IntScheme[0]->InitializeScheme(
                         m_timestep, fields, m_time, m_ode);
-                    
                     break;
                 }
                 case LibUtilities::eAdamsBashforthOrder2:
@@ -429,7 +428,7 @@ namespace Nektar
             int       step          = 0;
             NekDouble intTime       = 0.0;
             NekDouble lastCheckTime = 0.0;
-            
+
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
             {

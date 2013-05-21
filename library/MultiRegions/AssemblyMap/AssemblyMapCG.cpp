@@ -98,7 +98,10 @@ namespace Nektar
          * processors.
          */
         void AssemblyMapCG::SetUpUniversalC0ContMap(
-                const ExpList &locExp)
+            const ExpList     &locExp,
+            const PeriodicMap &perVerts,
+            const PeriodicMap &perEdges,
+            const PeriodicMap &perFaces)
         {
             StdRegions::StdExpansionSharedPtr locExpansion;
             int nDim = 0;
@@ -117,13 +120,14 @@ namespace Nektar
             int elementId;
             int vGlobalId;
             int maxBndGlobalId = 0;
-            StdRegions::Orientation         edgeOrient;
-            StdRegions::Orientation         faceOrient;
-            Array<OneD, unsigned int>           edgeInteriorMap;
-            Array<OneD, int>                    edgeInteriorSign;
-            Array<OneD, unsigned int>           faceInteriorMap;
-            Array<OneD, int>                    faceInteriorSign;
-            Array<OneD, unsigned int>           interiorMap;
+            StdRegions::Orientation     edgeOrient;
+            StdRegions::Orientation     faceOrient;
+            Array<OneD, unsigned int>   edgeInteriorMap;
+            Array<OneD, int>            edgeInteriorSign;
+            Array<OneD, unsigned int>   faceInteriorMap;
+            Array<OneD, int>            faceInteriorSign;
+            Array<OneD, unsigned int>   interiorMap;
+            PeriodicMap::const_iterator pIt;
 
             const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
@@ -174,8 +178,18 @@ namespace Nektar
                 // Loop over all vertices of element i
                 for(j = 0; j < locExpansion->GetNverts(); ++j)
                 {
-                    meshVertId   = (locExpansion->GetGeom())->GetVid(j);
-                    vGlobalId    = m_localToGlobalMap[cnt+locExpansion->GetVertexMap(j)];
+                    meshVertId = locExpansion->GetGeom()->GetVid(j);
+                    vGlobalId  = m_localToGlobalMap[cnt+locExpansion->GetVertexMap(j)];
+
+                    pIt = perVerts.find(meshVertId);
+                    if (pIt != perVerts.end())
+                    {
+                        for (k = 0; k < pIt->second.size(); ++k)
+                        {
+                            meshVertId = min(meshVertId, pIt->second[k].id);
+                        }
+                    }
+                    
                     m_globalToUniversalMap[vGlobalId] = meshVertId + 1;
                     m_globalToUniversalBndMap[vGlobalId]=m_globalToUniversalMap[vGlobalId];
                     maxBndGlobalId = (vGlobalId > maxBndGlobalId ? vGlobalId : maxBndGlobalId);
@@ -184,17 +198,27 @@ namespace Nektar
                 // Loop over all edges of element i
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
-                    edgeOrient = (locExpansion->GetGeom())->GetEorient(j);
-                    locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
-                    dof = locExpansion->GetEdgeNcoeffs(j)-2;
                     if (nDim == 2)
                     {
-                        meshEdgeId   = (locExpansion->GetGeom2D())->GetEid(j);
+                        meshEdgeId = locExpansion->GetGeom2D()->GetEid(j);
                     }
                     else
                     {
-                        meshEdgeId   = (locExpansion->GetGeom3D())->GetEid(j);
+                        meshEdgeId = locExpansion->GetGeom3D()->GetEid(j);
                     }
+
+                    pIt = perEdges.find(meshEdgeId);
+                    if (pIt != perEdges.end())
+                    {
+                        for (k = 0; k < pIt->second.size(); ++k)
+                        {
+                            meshEdgeId = min(meshEdgeId, pIt->second[k].id);
+                        }
+                    }
+
+                    edgeOrient = locExpansion->GetGeom()->GetEorient(j);
+                    locExpansion->GetEdgeInteriorMap(j,edgeOrient,edgeInteriorMap,edgeInteriorSign);
+                    dof = locExpansion->GetEdgeNcoeffs(j)-2;
 
                     // Set the global DOF's for the interior modes of edge j
                     for(k = 0; k < dof; ++k)
@@ -215,6 +239,12 @@ namespace Nektar
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
                     dof = locExpansion->GetFaceIntNcoeffs(j);
                     meshFaceId = (locExpansion->GetGeom3D())->GetFid(j);
+
+                    pIt = perFaces.find(meshFaceId);
+                    if (pIt != perFaces.end())
+                    {
+                        meshFaceId = min(meshFaceId, pIt->second[0].id);
+                    }
 
                     for(k = 0; k < dof; ++k)
                     {

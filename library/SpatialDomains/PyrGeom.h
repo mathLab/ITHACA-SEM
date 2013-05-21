@@ -66,6 +66,7 @@ namespace Nektar
                       Array<OneD,       NekDouble> &Lcoords);
             virtual int v_GetNumVerts() const;
             virtual int v_GetNumEdges() const;
+            virtual int v_GetDir(const int faceidx, const int facedir) const;
 
         private:
             void SetUpLocalEdges();

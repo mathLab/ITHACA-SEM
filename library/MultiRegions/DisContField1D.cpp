@@ -261,24 +261,24 @@ namespace Nektar
             SpatialDomains::BoundaryConditions &bcs,
             const std::string variable)
         {
-            int i;
             int cnt  = 0;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                                                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                                                 = bcs.GetBoundaryConditions();
+            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            int nbnd = bregions.size();
             // count the number of non-periodic boundary points
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
                 const SpatialDomains::BoundaryConditionShPtr boundaryCondition =
-                        GetBoundaryCondition(bconditions, i, variable);
+                        GetBoundaryCondition(bconditions, it->first, variable);
                 if( boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                    for (bregionIt  = it->second->begin();
+                         bregionIt != it->second->end(); bregionIt++)
                     {
                         cnt += bregionIt->second->size();
                     }
@@ -314,23 +314,24 @@ namespace Nektar
             const std::string variable,
             int subdomain)
         {
-            int i;
             int cnt  = 0;
 			
             const SpatialDomains::BoundaryRegionCollection &bregions
 			= bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
 			= bcs.GetBoundaryConditions();
+            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 			
-            int nbnd = bregions.size();
             // count the number of non-periodic boundary points
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                const SpatialDomains::BoundaryConditionShPtr boundaryCondition = GetBoundaryCondition(bconditions, i, variable);
+                const SpatialDomains::BoundaryConditionShPtr boundaryCondition =
+                    GetBoundaryCondition(bconditions, it->first, variable);
                 if( boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                    for (bregionIt  = it->second->begin();
+                         bregionIt != it->second->end(); bregionIt++)
                     {
                         cnt += bregionIt->second->size();
                     }
@@ -362,6 +363,7 @@ namespace Nektar
             const std::string variable,
             map<int,int>& periodicVertices)
         {
+            /*
             int i,k;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
@@ -444,6 +446,7 @@ namespace Nektar
                     doneBndRegions[region2ID] = region1ID;
                 }
             }
+            */
         }
 
         /**
@@ -467,32 +470,34 @@ namespace Nektar
             Array<OneD, SpatialDomains
                 ::BoundaryConditionShPtr> &bndConditions)
         {
-            int i,k;
+            int k;
             int cnt  = 0;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                                                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                                                 = bcs.GetBoundaryConditions();
+            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
             SpatialDomains::VertexComponentSharedPtr vert;
 
-            int nbnd = bregions.size();
-
-            cnt=0;
+            cnt = 0;
             // list Dirichlet boundaries first
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
-                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet 
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eJunction
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eBifurcation
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eMerging)
+                locBCond = GetBoundaryCondition(
+                    bconditions, it->first, variable);
+
+                if (locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet   ||
+                    locBCond->GetBoundaryConditionType() == SpatialDomains::eJunction    ||
+                    locBCond->GetBoundaryConditionType() == SpatialDomains::eBifurcation ||
+                    locBCond->GetBoundaryConditionType() == SpatialDomains::eMerging)
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                    for (bregionIt  = it->second->begin();
+                         bregionIt != it->second->end(); bregionIt++)
                     {
                         for(k = 0; k < bregionIt->second->size(); k++)
                         {
@@ -517,17 +522,19 @@ namespace Nektar
             } // end if Dirichlet
 
             // then, list the other (non-periodic) boundaries
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
+                locBCond = GetBoundaryCondition(
+                    bconditions, it->first, variable);
 
                 switch(locBCond->GetBoundaryConditionType())
                 {
-                case SpatialDomains::eNeumann:
-                case SpatialDomains::eRobin:
+                    case SpatialDomains::eNeumann:
+                    case SpatialDomains::eRobin:
                     {
                         SpatialDomains::BoundaryRegion::iterator bregionIt;
-                        for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                        for (bregionIt  = it->second->begin();
+                             bregionIt != it->second->end(); bregionIt++)
                         {
                             for(k = 0; k < bregionIt->second->size(); k++)
                             {
@@ -549,11 +556,12 @@ namespace Nektar
                             }
                         }
                     }
-                case SpatialDomains::eDirichlet: // do nothing for these types
-				case SpatialDomains::eJunction: 
-				case SpatialDomains::eBifurcation:
-				case SpatialDomains::eMerging:
-				case SpatialDomains::ePeriodic:
+                    // do nothing for these types
+                    case SpatialDomains::eDirichlet:
+                    case SpatialDomains::eJunction: 
+                    case SpatialDomains::eBifurcation:
+                    case SpatialDomains::eMerging:
+                    case SpatialDomains::ePeriodic:
                     break;
                 default:
                     ASSERTL0(false,"This type of BC not implemented yet");
@@ -583,14 +591,15 @@ namespace Nektar
             Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions,
             int subdomain)
         {
-            int i,k;
+            int k;
             int cnt  = 0;
 			
             const SpatialDomains::BoundaryRegionCollection &bregions
 				= bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
 				= bcs.GetBoundaryConditions();
-			
+            SpatialDomains::BoundaryRegionCollection::const_iterator it, it1, it2;
+
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
             SpatialDomains::VertexComponentSharedPtr vert;
@@ -599,18 +608,24 @@ namespace Nektar
             int firstcondition = subdomain*2;
             int secondcondition = subdomain*2+1;
             cnt = 0;
+
+            it1 = bregions.find(firstcondition);
+            it2 = bregions.find(firstcondition+secondcondition+1);
 			
             // list Dirichlet boundaries first
-            for(i = firstcondition; i < secondcondition+1; ++i)
+            for (it = it1; it != it2; ++it)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
-                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet 
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eJunction
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eBifurcation
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eMerging)
+                locBCond = GetBoundaryCondition(
+                    bconditions, it->first, variable);
+
+                if (locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet   ||
+                    locBCond->GetBoundaryConditionType() == SpatialDomains::eJunction    ||
+                    locBCond->GetBoundaryConditionType() == SpatialDomains::eBifurcation ||
+                    locBCond->GetBoundaryConditionType() == SpatialDomains::eMerging)
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                    for (bregionIt  = it->second->begin();
+                         bregionIt != it->second->end(); bregionIt++)
                     {
                         for(k = 0; k < bregionIt->second->size(); k++)
                         {
@@ -630,17 +645,19 @@ namespace Nektar
             } // end if Dirichlet
 			
             // then, list the other (non-periodic) boundaries
-            for(i = firstcondition; i < secondcondition+1; ++i)
+            for (it = it1; it != it2; ++it)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
+                locBCond = GetBoundaryCondition(
+                    bconditions, it->first, variable);
 				
                 switch(locBCond->GetBoundaryConditionType())
                 {
-					case SpatialDomains::eNeumann:
-					case SpatialDomains::eRobin:
+                    case SpatialDomains::eNeumann:
+                    case SpatialDomains::eRobin:
                     {
                         SpatialDomains::BoundaryRegion::iterator bregionIt;
-                        for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                        for (bregionIt  = it->second->begin();
+                             bregionIt != it->second->end(); bregionIt++)
                         {
                             for(k = 0; k < bregionIt->second->size(); k++)
                             {

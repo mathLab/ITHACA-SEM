@@ -52,8 +52,6 @@ namespace Nektar
         typedef boost::shared_ptr<AssemblyMap>  AssemblyMapSharedPtr;
         static AssemblyMapSharedPtr NullAssemblyMapSharedPtr;
 
-
-
         /// Base class for constructing local to global mapping of degrees of
         /// freedom.
         class AssemblyMap

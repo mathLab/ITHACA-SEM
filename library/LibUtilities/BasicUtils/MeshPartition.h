@@ -47,6 +47,8 @@ namespace Nektar
     namespace LibUtilities
     {
         class SessionReader;
+        typedef std::map<int, std::vector<unsigned int> > CompositeOrdering;
+        typedef std::map<int, std::vector<unsigned int> > BndRegionOrdering;
 
         class MeshPartition
         {
@@ -59,13 +61,17 @@ namespace Nektar
             LIB_UTILITIES_EXPORT void PartitionMesh();
             LIB_UTILITIES_EXPORT void WriteLocalPartition(
                     SessionReaderSharedPtr& pSession);
+            LIB_UTILITIES_EXPORT void GetCompositeOrdering(
+                    CompositeOrdering &composites);
+            LIB_UTILITIES_EXPORT void GetBndRegionOrdering(
+                    BndRegionOrdering &composites);
 
         private:
             struct MeshEntity
             {
                 int id;
                 char type;
-                std::vector<int> list;
+                std::vector<unsigned int> list;
             };
 
             struct MeshVertex
@@ -172,6 +178,8 @@ namespace Nektar
             std::map<int, MeshEntity>           m_meshComposites;
             std::vector<unsigned int>           m_domain;
 
+            BndRegionOrdering                   m_bndRegOrder;
+            
             BoostSubGraph                       m_mesh;
             BoostSubGraph                       m_localPartition;
 

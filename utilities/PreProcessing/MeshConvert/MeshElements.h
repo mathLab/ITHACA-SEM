@@ -94,6 +94,18 @@ namespace Nektar
             Node() : id(0), x(0.0), y(0.0), z(0.0), m_geom() {}
             ~Node() {}
 
+            /// Reset the local id;
+            void SetID(int pId)
+            {
+                id = pId;
+            }
+
+            /// Get the local id;
+            unsigned int GetID(void)
+            {
+                return id;
+            }
+
             /// Define node ordering based on ID.
             bool operator<(const Node& pSrc)
             {
@@ -161,6 +173,13 @@ namespace Nektar
                 return x*pSrc.x + y*pSrc.y + z*pSrc.z;
             }
 
+
+            Node curl(const Node &pSrc) const
+            {
+                return Node(id, y*pSrc.z - z*pSrc.y, 
+                            z*pSrc.x-x*pSrc.z, x*pSrc.y-y*pSrc.x);
+            }
+
             /// Generate a %SpatialDomains::VertexComponent for this node.
             SpatialDomains::VertexComponentSharedPtr GetGeom(int coordDim)
             {
@@ -191,6 +210,7 @@ namespace Nektar
 
         bool operator==(NodeSharedPtr const &p1, NodeSharedPtr const &p2);
         bool operator< (NodeSharedPtr const &p1, NodeSharedPtr const &p2);
+        std::ostream &operator<<(std::ostream &os, const NodeSharedPtr &n);
 
         /**
          * @brief Defines a hash function for nodes.
@@ -259,11 +279,6 @@ namespace Nektar
             /// Generate a SpatialDomains::SegGeom object for this edge.
             SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
             {
-                if (m_geom)
-                {
-                    return m_geom;
-                }
-                
                 // Create edge vertices.
                 SpatialDomains::VertexComponentSharedPtr p[2];
                 p[0] = n1->GetGeom(coordDim);
@@ -305,6 +320,8 @@ namespace Nektar
             std::vector<NodeSharedPtr> edgeNodes;
             /// Distributions of points along edge.
             LibUtilities::PointsType curveType;
+            /// Element(s) which are linked to this edge.
+            vector<pair<ElementSharedPtr, int> > elLink; 
 
         private:
             SpatialDomains::SegGeomSharedPtr m_geom;
@@ -398,35 +415,103 @@ namespace Nektar
             {
                 std::stringstream s;
                 std::string str;
-                for (int k = 0; k < vertexList.size(); ++k) {
-                    s << std::scientific << std::setprecision(8) << "    "
-                      <<  vertexList[k]->x << "  " << vertexList[k]->y
-                      << "  " << vertexList[k]->z << "    ";
+                
+                // Treat 2D point distributions differently to 3D.
+                if (curveType == LibUtilities::eNodalTriFekete       || 
+                    curveType == LibUtilities::eNodalTriEvenlySpaced ||
+                    curveType == LibUtilities::eNodalTriElec)
+                {
+                    vector<NodeSharedPtr> tmp;
+                    int n = edgeList[0]->GetNodeCount();
+                    
+                    tmp.insert(tmp.end(), vertexList.begin(), vertexList.end());
+                    for (int k = 0; k < edgeList.size(); ++k) 
+                    {
+                        tmp.insert(tmp.end(), edgeList[k]->edgeNodes.begin(),
+                                   edgeList[k]->edgeNodes.end());
+                        if (edgeList[k]->n1 != vertexList[k])
+                        {
+                            // If edge orientation is reversed relative to node
+                            // ordering, we need to reverse order of nodes.
+                            std::reverse(tmp.begin() + 3 + k*(n-2),
+                                         tmp.begin() + 3 + (k+1)*(n-2));
+                        }
+                    }
+                    tmp.insert(tmp.end(), faceNodes.begin(), faceNodes.end());
+                    
+                    for (int k = 0; k < tmp.size(); ++k) {
+                        s << std::scientific << std::setprecision(8) << "    "
+                          <<  tmp[k]->x << "  " << tmp[k]->y
+                          << "  " << tmp[k]->z << "    ";
+                    }
+                    
+                    return s.str();
                 }
-                for (int k = 0; k < edgeList.size(); ++k) {
-                    for (int i = 0; i < edgeList[k]->edgeNodes.size(); ++i)
-                    s << std::scientific << std::setprecision(8) << "    "
-                      << edgeList[k]->edgeNodes[i]->x << "  "
-                      << edgeList[k]->edgeNodes[i]->y << "  "
-                      << edgeList[k]->edgeNodes[i]->z << "    ";
+                else
+                {
+                    // Write out in 2D tensor product order.
+                    ASSERTL0(vertexList.size() == 4,
+                             "Face nodes of tensor product only supported "
+                             "for quadrilaterals.");
+                    
+                    int n = (int)sqrt((double)GetNodeCount());
+                    vector<NodeSharedPtr> tmp(n*n);
+                    
+                    ASSERTL0(n*n == GetNodeCount(), "Wrong number of modes?");
+                    
+                    // Write vertices
+                    tmp[0]       = vertexList[0];
+                    tmp[n-1]     = vertexList[1];
+                    tmp[n*n-1]   = vertexList[2];
+                    tmp[n*(n-1)] = vertexList[3];
+                    
+                    // Write edge-interior
+                    int skips[4][2] = {{0,1}, {n-1,n}, {n*(n-1),1}, {0,n}};
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        bool reverseEdge = edgeList[i]->n1 == vertexList[i];
+                        
+                        if (reverseEdge)
+                        {
+                            for (int j = n-2; j > 0; --j)
+                            {
+                                tmp[skips[i][0] + j*skips[i][1]] = 
+                                    edgeList[i]->edgeNodes[j];
+                            }
+                        }
+                        else
+                        {
+                            for (int j = 1; j < n-1; ++j)
+                            {
+                                tmp[skips[i][0] + j*skips[i][1]] = 
+                                    edgeList[i]->edgeNodes[j];
+                            }
+                        }
+                    }
+                    
+                    // Write interior
+                    for (int i = 1; i < n-1; ++i)
+                    {
+                        for (int j = 1; j < n-1; ++j)
+                        {
+                            tmp[i*n+j] = faceNodes[(i-2)*(n-2)+(j-2)];
+                        }
+                    }
+
+                    for (int k = 0; k < tmp.size(); ++k) {
+                        s << std::scientific << std::setprecision(8) << "    "
+                          <<  tmp[k]->x << "  " << tmp[k]->y
+                          << "  " << tmp[k]->z << "    ";
+                    }
+                    
+                    return s.str();
                 }
-                for (int k = 0; k < faceNodes.size(); ++k) {
-                    s << std::scientific << std::setprecision(8) << "    "
-                      <<  faceNodes[k]->x << "  " << faceNodes[k]->y
-                      << "  " << faceNodes[k]->z << "    ";
-                }
-                return s.str();
             }
 
             /// Generate either SpatialDomains::TriGeom or
             /// SpatialDomains::QuadGeom for this element.
             SpatialDomains::Geometry2DSharedPtr GetGeom(int coordDim)
             {
-                if (m_geom)
-                {
-                    return m_geom;
-                }
-                
                 int nEdge = edgeList.size();
                 
                 SpatialDomains::SegGeomSharedPtr edges[4];
@@ -605,6 +690,15 @@ namespace Nektar
             /// Access the list of volume nodes.
             std::vector<NodeSharedPtr> GetVolumeNodes() const {
                 return volumeNodes;
+            }
+            void SetVolumeNodes(std::vector<NodeSharedPtr> &nodes) {
+                volumeNodes = nodes;
+            }
+            LibUtilities::PointsType GetCurveType() const {
+                return curveType;
+            }
+            void SetCurveType(LibUtilities::PointsType cT) {
+                curveType = cT;
             }
             /// Returns the total number of nodes (vertices, edge nodes and
             /// face nodes and volume nodes).
@@ -1008,6 +1102,8 @@ namespace Nektar
             std::vector<FaceSharedPtr> face;
             /// List of element volume nodes.
             std::vector<NodeSharedPtr> volumeNodes;
+            /// Volume curve type
+            LibUtilities::PointsType curveType;
             /// Pointer to the corresponding edge if element is a 2D boundary.
             EdgeSharedPtr m_edgeLink;
             /// Pointer to the corresponding face if element is a 3D boundary.
@@ -1116,40 +1212,40 @@ namespace Nektar
             Mesh() : verbose(false) {}
             
             /// Verbose flag
-            bool                       verbose;
+            bool                            verbose;
             /// Dimension of the expansion.
-            unsigned int               expDim;
+            unsigned int                    expDim;
             /// Dimension of the space in which the mesh is defined.
-            unsigned int               spaceDim;
+            unsigned int                    spaceDim;
             /// List of mesh nodes.
-            std::vector<NodeSharedPtr> node;
+            std::vector<NodeSharedPtr>      node;
             /// Set of element vertices.
-            NodeSet                    vertexSet;
+            NodeSet                         vertexSet;
             /// Set of element edges.
-            EdgeSet                    edgeSet;
+            EdgeSet                         edgeSet;
             /// Set of element faces.
-            FaceSet                    faceSet;
+            FaceSet                         faceSet;
             /// Map for elements.
-            ElementMap                 element;
+            ElementMap                      element;
             /// Map for composites.
-            CompositeMap               composite;
+            CompositeMap                    composite;
             /// Boundary conditions maps tag to condition.
-            ConditionMap               condition;
+            ConditionMap                    condition;
             /// List of fields names.
-            std::vector<std::string>   fields;
+            std::vector<std::string>        fields;
             /// Map of vertex normals.
             boost::unordered_map<int, Node> vertexNormals;
-            /// Set of all pairs of element ID and face number on which to apply
-            /// spherigon surface smoothing.
-            set<pair<int,int> > spherigonFaces;
+            /// Set of all pairs of element ID and edge/face number on which to
+            /// apply spherigon surface smoothing.
+            set<pair<int,int> >             spherigonSurfs;
             /// Returns the total number of elements in the mesh with
             /// dimension expDim.
-            unsigned int               GetNumElements();
+            unsigned int                    GetNumElements();
             /// Returns the total number of elements in the mesh with
             /// dimension < expDim.
-            unsigned int               GetNumBndryElements();
+            unsigned int                    GetNumBndryElements();
             /// Returns the total number of entities in the mesh.
-            unsigned int               GetNumEntities();
+            unsigned int                    GetNumEntities();
         };
         /// Shared pointer to a mesh.
         typedef boost::shared_ptr<Mesh> MeshSharedPtr;
@@ -1222,8 +1318,14 @@ namespace Nektar
                 std::vector<NodeSharedPtr> pNodeList,
                 std::vector<int>           pTagList) 
             {
-                return boost::shared_ptr<Element>(
+                ElementSharedPtr e = boost::shared_ptr<Element>(
                     new Triangle(pConf, pNodeList, pTagList));
+                vector<EdgeSharedPtr> edges = e->GetEdgeList();
+                for (int i = 0; i < edges.size(); ++i)
+                {
+                    edges[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                }
+                return e;
             }
             /// Element type
             static ElementType type;
@@ -1252,8 +1354,14 @@ namespace Nektar
                 std::vector<NodeSharedPtr> pNodeList, 
                 std::vector<int>           pTagList) 
             {
-                return boost::shared_ptr<Element>(
+                ElementSharedPtr e = boost::shared_ptr<Element>(
                     new Quadrilateral(pConf, pNodeList, pTagList));
+                vector<EdgeSharedPtr> edges = e->GetEdgeList();
+                for (int i = 0; i < edges.size(); ++i)
+                {
+                    edges[i]->elLink.push_back(pair<ElementSharedPtr, int>(e,i));
+                }
+                return e;
             }
             /// Element type
             static ElementType type;

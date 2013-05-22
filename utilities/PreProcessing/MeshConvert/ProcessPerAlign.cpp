@@ -49,15 +49,15 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey ProcessPerAlign::className = 
+        ModuleKey ProcessPerAlign::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "peralign"),
                 ProcessPerAlign::create);
-        
+
         /**
          * @class ProcessPerAlign
          */
-      
+
         /**
          * @brief Default constructor.
          */
@@ -70,13 +70,13 @@ namespace Nektar
             config["dir"]   = ConfigOption(false, "",
                 "Direction in which to align (either x, y, or z)");
         }
-      
+
         /**
          * @brief Destructor.
          */
         ProcessPerAlign::~ProcessPerAlign()
         {
-            
+
         }
 
         void ProcessPerAlign::Process()
@@ -125,7 +125,7 @@ namespace Nektar
 
             CompositeSharedPtr c1 = it1->second;
             CompositeSharedPtr c2 = it2->second;
-            
+
             if (c1->items.size() != c2->items.size())
             {
                 cerr << "Surfaces " << surf1 << " and " << surf2 << " have "
@@ -135,7 +135,7 @@ namespace Nektar
 
             c1->reorder = false;
             c2->reorder = false;
-            
+
             // Loop over elements, calculate centroids of elements in c2.
             map<int, Node> centroidMap;
             map<int, Node>::iterator it;
@@ -161,7 +161,7 @@ namespace Nektar
                 }
                 centroid /= (NekDouble)c1->items[i]->GetVertexCount();
                 bool found = false;
-                
+
                 for (it = centroidMap.begin(); it != centroidMap.end(); ++it)
                 {
                     if (elmtDone.count(it->first) > 0)

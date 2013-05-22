@@ -46,15 +46,15 @@ namespace Nektar
         {
         public:
             /// Creates an instance of this class
-            static boost::shared_ptr<Module> create(MeshSharedPtr m) 
+            static boost::shared_ptr<Module> create(MeshSharedPtr m)
             {
                 return MemoryManager<ProcessPerAlign>::AllocateSharedPtr(m);
             }
             static ModuleKey className;
-            
+
             ProcessPerAlign(MeshSharedPtr m);
             virtual ~ProcessPerAlign();
-            
+
             /// Write mesh to output file.
             virtual void Process();
         };

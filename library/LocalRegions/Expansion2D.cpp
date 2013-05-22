@@ -38,6 +38,7 @@
 #include <SpatialDomains/Geometry2D.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <LocalRegions/MatrixKey.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
@@ -213,12 +214,172 @@ namespace Nektar
                 }
             }
             
-            // add data to outarray if forward edge normal is outwards
-            for(i = 0; i < order_e; ++i)
+            // Implementation for all the basis except Gauss points
+            if(EdgeExp->GetBasis(0)->GetBasisType() != LibUtilities::eGauss_Lagrange)
             {
-                outarray[((*map)[i].index)] += ((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                // add data to outarray if forward edge normal is outwards
+                for(i = 0; i < order_e; ++i)
+                {
+                    //int nn = ((*map)[i].index);
+                    outarray[((*map)[i].index)] += ((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                }
+            }
+            else
+            {
+                LibUtilities::BasisSharedPtr BASE;
+                
+                int nCoeffs0 = m_base[0]->GetNumModes();
+                const LibUtilities::PointsKey BS_p0(nCoeffs0,LibUtilities::eGaussGaussLegendre);
+                const LibUtilities::BasisKey  BS_k0(LibUtilities::eGauss_Lagrange,nCoeffs0,BS_p0);
+                
+                int nCoeffs1 = m_base[1]->GetNumModes();
+                const LibUtilities::PointsKey BS_p1(nCoeffs1,LibUtilities::eGaussGaussLegendre);
+                const LibUtilities::BasisKey  BS_k1(LibUtilities::eGauss_Lagrange,nCoeffs1,BS_p1);
+                
+                int j;
+                DNekMatSharedPtr        m_Ixm;
+                Array<OneD, NekDouble> coords(3, 0.0);
+                
+                
+                // add data to outarray if forward edge normal is outwards
+                switch(edge)
+                {
+                    case 0:
+                        BASE  = LibUtilities::BasisManager()[BS_k1];
+                        coords[0] = -1;
+                        m_Ixm = BASE->GetI(coords);
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs1; j++)
+                            {
+                                outarray[((*map)[i].index) + j*order_e] +=
+                                (m_Ixm->GetPtr())[j]*((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    case 1:
+                        BASE  = LibUtilities::BasisManager()[BS_k0];
+                        coords[0] = 1;
+                        m_Ixm = BASE->GetI(coords);
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs0; j++)
+                            {
+                                outarray[((*map)[i].index) - j] +=
+                                (m_Ixm->GetPtr())[order_e -1 -j]*((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    case 2:
+                        BASE  = LibUtilities::BasisManager()[BS_k1];
+                        coords[0] = 1;
+                        m_Ixm = BASE->GetI(coords);
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs1; j++)
+                            {
+                                outarray[((*map)[i].index) - j*order_e] +=
+                                (m_Ixm->GetPtr())[order_e -1 -j]*((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    case 3:
+                        BASE  = LibUtilities::BasisManager()[BS_k0];
+                        coords[0] = -1;
+                        m_Ixm = BASE->GetI(coords);
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs0; j++)
+                            {
+                                outarray[((*map)[i].index) + j] +=
+                                (m_Ixm->GetPtr())[j]*((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    default:
+                        ASSERTL0(false,"edge value (< 3) is out of range");
+                        break;
+                }
+                
+                /*DNekMatSharedPtr mat_gauss;
+                
+                switch(edge)
+                {
+                    case 0:
+                    {
+                        StdRegions::StdMatrixKey key0(StdRegions::eGaussDG0,
+                                                      DetShapeType(),*this);
+                        
+                        mat_gauss = m_stdMatrixManager[key0];
+                        
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs1; j++)
+                            {
+                                outarray[((*map)[i].index) + j*order_e] +=
+                                (mat_gauss->GetPtr())[j]*((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    }
+                    case 1:
+                    {
+                        StdRegions::StdMatrixKey key1(StdRegions::eGaussDG1,
+                                                      DetShapeType(),*this);
+                        
+                        mat_gauss = m_stdMatrixManager[key1];
+                        
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs0; j++)
+                            {
+                                outarray[((*map)[i].index) - j] +=
+                                (mat_gauss->GetPtr())[order_e -1 -j]*((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    }
+                    case 2:
+                    {
+                        StdRegions::StdMatrixKey key2(StdRegions::eGaussDG2,
+                                                      DetShapeType(),*this);
+                        
+                        mat_gauss = m_stdMatrixManager[key2];
+                        
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs1; j++)
+                            {
+                                outarray[((*map)[i].index) - j*order_e] +=
+                                (mat_gauss->GetPtr())[order_e -1 -j]*((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    }
+                    case 3:
+                    {
+                        StdRegions::StdMatrixKey key3(StdRegions::eGaussDG3,
+                                                      DetShapeType(),*this);
+                        
+                        mat_gauss = m_stdMatrixManager[key3];
+                        
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs0; j++)
+                            {
+                                outarray[((*map)[i].index) + j] +=
+                                (mat_gauss->GetPtr())[j]*((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    }
+                    default:
+                        ASSERTL0(false,"edge value (< 3) is out of range");
+                        break;
+                }*/
             }
         }
+        
 
         void Expansion2D::SetTraceToGeomOrientation(Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,  Array<OneD, NekDouble> &inout)
         {
@@ -789,7 +950,91 @@ namespace Nektar
                         Vmath::Vcopy(ncoeffs,&ulam[0],1,&(Qmat.GetPtr())[0]+j*ncoeffs,1);
                     }
                 }
-                break;            
+                break;
+            /*case StdRegions::eGaussDG0:
+                {
+                    NekDouble one = 1.0;
+                    LibUtilities::BasisSharedPtr BASE0;
+                    
+                    int nCoeffs1 = m_base[1]->GetNumModes();
+                    const LibUtilities::PointsKey BS_p1(nCoeffs1,LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::BasisKey  BS_k1(LibUtilities::eGauss_Lagrange,nCoeffs1,BS_p1);
+                    
+                    DNekMatSharedPtr        m_Ix0;
+                    Array<OneD, NekDouble> coords(3, 0.0);
+                    
+                    BASE0  = LibUtilities::BasisManager()[BS_k1];
+                    coords[0] = -1;
+                    m_Ix0 = BASE0->GetI(coords);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(one,nCoeffs1);
+                    DNekMat &Qmat = *returnval;
+                    Vmath::Vcopy(nCoeffs1,&(m_Ix0->GetPtr()),1,&(Qmat.GetPtr()),1);
+
+                }
+            case StdRegions::eGaussDG1:
+                {
+                    NekDouble one = 1.0;
+                    LibUtilities::BasisSharedPtr BASE1;
+                    
+                    int nCoeffs0 = m_base[0]->GetNumModes();
+                    const LibUtilities::PointsKey BS_p0(nCoeffs0,LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::BasisKey  BS_k0(LibUtilities::eGauss_Lagrange,nCoeffs0,BS_p0);
+                    
+                    DNekMatSharedPtr        m_Ix1;
+                    Array<OneD, NekDouble> coords(3, 0.0);
+                    
+                    BASE1  = LibUtilities::BasisManager()[BS_k0];
+                    coords[0] = 1;
+                    m_Ix1 = BASE1->GetI(coords);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(one,nCoeffs0);
+                    DNekMat &Qmat = *returnval;
+                    Vmath::Vcopy(nCoeffs0,&(m_Ix1->GetPtr()),1,&(Qmat.GetPtr()),1);
+
+                }
+            case StdRegions::eGaussDG2:
+                {
+                    NekDouble one = 1.0;
+                    LibUtilities::BasisSharedPtr BASE2;
+                    
+                    int nCoeffs1 = m_base[1]->GetNumModes();
+                    const LibUtilities::PointsKey BS_p1(nCoeffs1,LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::BasisKey  BS_k1(LibUtilities::eGauss_Lagrange,nCoeffs1,BS_p1);
+                    
+                    DNekMatSharedPtr        m_Ix2;
+                    Array<OneD, NekDouble> coords(3, 0.0);
+                    
+                    BASE2  = LibUtilities::BasisManager()[BS_k1];
+                    coords[0] = 1;
+                    m_Ix2 = BASE2->GetI(coords);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(one,nCoeffs1);
+                    DNekMat &Qmat = *returnval;
+                    Vmath::Vcopy(nCoeffs1,&(m_Ix2->GetPtr()),1,&(Qmat.GetPtr()),1);
+
+                }
+            case StdRegions::eGaussDG3:
+                {
+                    NekDouble one = 1.0;
+                    LibUtilities::BasisSharedPtr BASE3;
+                    
+                    int nCoeffs0 = m_base[0]->GetNumModes();
+                    const LibUtilities::PointsKey BS_p0(nCoeffs0,LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::BasisKey  BS_k0(LibUtilities::eGauss_Lagrange,nCoeffs0,BS_p0);
+                    
+                    DNekMatSharedPtr        m_Ix3;
+                    Array<OneD, NekDouble> coords(3, 0.0);
+                    
+                    BASE3  = LibUtilities::BasisManager()[BS_k0];
+                    coords[0] = -1;
+                    m_Ix3 = BASE3->GetI(coords);
+                    
+                    returnval = MemoryManager<DNekMat>::AllocateSharedPtr(one,nCoeffs0);
+                    DNekMat &Qmat = *returnval;
+                    Vmath::Vcopy(nCoeffs0,&(m_Ix3->GetPtr()),1,&(Qmat.GetPtr()),1);
+
+                }*/
             // Matrix K (P23)
             case StdRegions::eHybridDGHelmBndLam:
                 {

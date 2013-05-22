@@ -726,6 +726,14 @@ namespace Nektar
         }
         
         
+        void TriExp::v_GetEdgeInterpVals(
+                const int edge,const Array<OneD, const NekDouble> &inarray,
+                Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "Routine not implemented for triangular elements");
+        }
+        
         void TriExp::v_GetEdgeQFactors(
                 const int edge, 
                 Array<OneD, NekDouble> &outarray)

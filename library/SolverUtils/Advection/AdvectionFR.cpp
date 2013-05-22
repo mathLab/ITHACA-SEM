@@ -809,14 +809,14 @@ namespace Nektar
                             coords_m[0] = -1.0;
                             coords_p[0] =  1.0;
                             
-                            m_Ixm = base[0]->GetI(coords_m);;
-                            m_Ixp = base[0]->GetI(coords_p);;
+                            m_Ixm = base[0]->GetI(coords_m);
+                            m_Ixp = base[0]->GetI(coords_p);
                         }
                         break;
                     }
                     case 2:
                     {
-                        ASSERTL0(false,"2DFR Gauss points not implemented yet");
+                        // Implemented via QuadExp::GetEdgeInterpVals
                         
                         break;
                     }
@@ -859,8 +859,8 @@ namespace Nektar
             
             Array<OneD, NekDouble> auxArray1, auxArray2;
             
-            LibUtilities::BasisSharedPtr Basis;
-            Basis = fields[0]->GetExp(0)->GetBasis(0);
+            Array<OneD, LibUtilities::BasisSharedPtr> Basis;
+            Basis = fields[0]->GetExp(0)->GetBase();
             
             int nElements       = fields[0]->GetExpSize();            
             int nDimensions     = fields[0]->GetCoordim(0);
@@ -1001,9 +1001,24 @@ namespace Nektar
                                     DfluxvectorX2, 1, divFD, 1);
 
                         // Divergence of the correction flux
-                        v_DivCFlux_2D(nConvectiveFields, fields,
-                                      fluxvector[i][0], fluxvector[i][1],
-                                      numflux[i], divFC);
+                        
+                        if (Basis[0]->GetPointsType() ==
+                            LibUtilities::eGaussGaussLegendre &&
+                            Basis[1]->GetPointsType() ==
+                            LibUtilities::eGaussGaussLegendre)
+                        {
+                            v_DivCFlux_2D_Gauss(nConvectiveFields, fields,
+                                          f_hat, g_hat,
+                                          numflux[i], divFC);
+                        }
+                        else
+                        {
+                           
+                            v_DivCFlux_2D(nConvectiveFields, fields,
+                                            fluxvector[i][0], fluxvector[i][1],
+                                            numflux[i], divFC);
+
+                        }
                         
                         // Divergence of the final flux
                         Vmath::Vadd(nSolutionPts, divFD, 1, divFC, 1,
@@ -1333,7 +1348,381 @@ namespace Nektar
                 Vmath::Vadd(nLocalSolutionPts, &divCFlux[phys_offset], 1, 
                             &divCFluxE3[0], 1, &divCFlux[phys_offset], 1);
             }
-        }        
+        }
+        
+        /**
+         * @brief Compute the divergence of the corrective flux for 2D problems
+         *        where POINTSTYPE="GaussLobattoLegendre"
+         *
+         * @param nConvectiveFields   Number of fields.
+         * @param fields              Pointer to fields.
+         * @param fluxX1              X1-volumetric flux in physical space.
+         * @param fluxX2              X2-volumetric flux in physical space.
+         * @param numericalFlux       Interface flux in physical space.
+         * @param divCFlux            Divergence of the corrective flux.
+         *
+         * \todo: Switch on shapes eventually here.
+         */
+        
+        void AdvectionFR::v_DivCFlux_2D_Gauss(
+            const int nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, const NekDouble> &fluxX1,
+            const Array<OneD, const NekDouble> &fluxX2,
+            const Array<OneD, const NekDouble> &numericalFlux,
+            Array<OneD,       NekDouble> &divCFlux)
+        {
+            int n, e, i, j, cnt;
+            
+            int nElements   = fields[0]->GetExpSize();
+            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
+            
+            int nLocalSolutionPts;
+            int nEdgePts;
+            int trace_offset;
+            int phys_offset;
+            int nquad0;
+            int nquad1;
+            
+            NekDouble fac;
+            
+            Array<OneD, NekDouble> auxArray1, auxArray2;
+            Array<OneD, LibUtilities::BasisSharedPtr> base;
+            
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+            &elmtToTrace = fields[0]->GetTraceMap()->GetElmtToTrace();
+            
+            // Loop on the elements
+            for(n = 0; n < nElements; ++n)
+            {
+                // Offset of the element on the global vector
+                phys_offset = fields[0]->GetPhys_Offset(n);
+                nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
+                
+                base = fields[0]->GetExp(n)->GetBase();
+                nquad0 = base[0]->GetNumPoints();
+                nquad1 = base[1]->GetNumPoints();
+                
+                Array<OneD, NekDouble> divCFluxE0(nLocalSolutionPts, 0.0);
+                Array<OneD, NekDouble> divCFluxE1(nLocalSolutionPts, 0.0);
+                Array<OneD, NekDouble> divCFluxE2(nLocalSolutionPts, 0.0);
+                Array<OneD, NekDouble> divCFluxE3(nLocalSolutionPts, 0.0);
+                
+                // Loop on the edges
+                for(e = 0; e < fields[0]->GetExp(n)->GetNedges(); ++e)
+                {
+                    // Number of edge points of edge e
+                    nEdgePts = fields[0]->GetExp(n)->GetEdgeNumPoints(e);
+                    
+                    Array<OneD, NekDouble> fluxN     (nEdgePts, 0.0);
+                    Array<OneD, NekDouble> fluxT     (nEdgePts, 0.0);
+                    Array<OneD, NekDouble> fluxN_R   (nEdgePts, 0.0);
+                    Array<OneD, NekDouble> fluxN_D   (nEdgePts, 0.0);
+                    Array<OneD, NekDouble> fluxJumps (nEdgePts, 0.0);
+                    
+                    // Offset of the trace space correspondent to edge e
+                    trace_offset = fields[0]->GetTrace()->GetPhys_Offset(
+                                                elmtToTrace[n][e]->GetElmtId());
+                    
+                    // Get the normals of edge e
+                    const Array<OneD, const Array<OneD, NekDouble> > &normals =
+                    fields[0]->GetExp(n)->GetEdgeNormal(e);
+                    
+                    // Extract the trasformed normal flux at each edge
+                    switch (e)
+                    {
+                        case 0:
+                            // Extract the edge values of transformed flux-y on
+                            // edge e and order them accordingly to the order of
+                            // the trace space
+                            fields[0]->GetExp(n)->GetEdgePhysVals(
+                                                        e, elmtToTrace[n][e],
+                                                        fluxX2 + phys_offset,
+                                                        auxArray1 = fluxN_D);
+                            
+                            Vmath::Neg   (nEdgePts, fluxN_D, 1);
+                            
+                            // Extract the physical Rieamann flux at each edge
+                            Vmath::Vcopy(nEdgePts,
+                                         &numericalFlux[trace_offset], 1,
+                                         &fluxN[0], 1);
+                            
+                            // Check the ordering of vectors
+                            if (fields[0]->GetExp(n)->GetEorient(e) ==
+                                StdRegions::eBackwards)
+                            {
+                                Vmath::Reverse(nEdgePts,
+                                               auxArray1 = fluxN, 1,
+                                               auxArray2 = fluxN, 1);
+                                
+                                Vmath::Reverse(nEdgePts,
+                                               auxArray1 = fluxN_D, 1,
+                                               auxArray2 = fluxN_D, 1);
+                            }
+                            
+                            // Transform Riemann Fluxes in the standard element
+                            for (i = 0; i < nquad0; ++i)
+                            {
+                                // Multiply Riemann Flux by Q factors
+                                fluxN_R[i] = (m_Q2D_e0[n][i]) * fluxN[i];
+                            }
+                            
+                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                            -1.0 : 1.0;
+                            
+                            for (i = 0; i < nEdgePts; ++i)
+                            {
+                                if (m_traceNormals[0][trace_offset+i]
+                                    != fac*normals[0][i] ||
+                                    m_traceNormals[1][trace_offset+i]
+                                    != fac*normals[1][i])
+                                {
+                                    fluxN_R[i] = -fluxN_R[i];
+                                }
+                            }
+                            
+                            // Subtract to the Riemann flux the discontinuous
+                            // flux
+                            Vmath::Vsub(nEdgePts,
+                                        &fluxN_R[0], 1,
+                                        &fluxN_D[0], 1, &fluxJumps[0], 1);
+                            
+                            // Multiplicate the flux jumps for the correction
+                            // function
+                            for (i = 0; i < nquad0; ++i)
+                            {
+                                for (j = 0; j < nquad1; ++j)
+                                {
+                                    cnt = i + j*nquad0;
+                                    divCFluxE0[cnt] =
+                                                -fluxJumps[i] * m_dGL_xi2[n][j];
+                                }
+                            }
+                            break;
+                        case 1:
+                            // Extract the edge values of transformed flux-x on
+                            // edge e and order them accordingly to the order of
+                            // the trace space
+                            fields[0]->GetExp(n)->GetEdgePhysVals(
+                                                        e, elmtToTrace[n][e],
+                                                        fluxX1 + phys_offset,
+                                                        auxArray1 = fluxN_D);
+                            
+                            // Extract the physical Rieamann flux at each edge
+                            Vmath::Vcopy(nEdgePts,
+                                         &numericalFlux[trace_offset], 1,
+                                         &fluxN[0], 1);
+                            
+                            // Check the ordering of vectors
+                            if (fields[0]->GetExp(n)->GetEorient(e) ==
+                                StdRegions::eBackwards)
+                            {
+                                Vmath::Reverse(nEdgePts,
+                                               auxArray1 = fluxN, 1,
+                                               auxArray2 = fluxN, 1);
+                                
+                                Vmath::Reverse(nEdgePts,
+                                               auxArray1 = fluxN_D, 1,
+                                               auxArray2 = fluxN_D, 1);
+                            }
+                            
+                            // Transform Riemann Fluxes in the standard element
+                            for (i = 0; i < nquad1; ++i)
+                            {
+                                // Multiply Riemann Flux by Q factors
+                                fluxN_R[i] = (m_Q2D_e1[n][i]) * fluxN[i];
+                            }
+                            
+                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                            -1.0 : 1.0;
+                            
+                            for (i = 0; i < nEdgePts; ++i)
+                            {
+                                if (m_traceNormals[0][trace_offset+i]
+                                    != fac*normals[0][i] ||
+                                    m_traceNormals[1][trace_offset+i]
+                                    != fac*normals[1][i])
+                                {
+                                    fluxN_R[i] = -fluxN_R[i];
+                                }
+                            }
+                            
+                            // Subtract to the Riemann flux the discontinuous
+                            // flux
+                            Vmath::Vsub(nEdgePts,
+                                        &fluxN_R[0], 1,
+                                        &fluxN_D[0], 1, &fluxJumps[0], 1);
+                            
+                            // Multiplicate the flux jumps for the correction
+                            // function
+                            for (i = 0; i < nquad1; ++i)
+                            {
+                                for (j = 0; j < nquad0; ++j)
+                                {
+                                    cnt = (nquad0)*i + j;
+                                    divCFluxE1[cnt] =
+                                                fluxJumps[i] * m_dGR_xi1[n][j];
+                                }
+                            }
+                            break;
+                        case 2:
+                            
+                            // Extract the edge values of transformed flux-y on
+                            // edge e and order them accordingly to the order of
+                            // the trace space
+                            
+                            fields[0]->GetExp(n)->GetEdgePhysVals(
+                                                        e, elmtToTrace[n][e],
+                                                        fluxX2 + phys_offset,
+                                                        auxArray1 = fluxN_D);
+                            
+                            // Extract the physical Rieamann flux at each edge
+                            Vmath::Vcopy(nEdgePts,
+                                         &numericalFlux[trace_offset], 1,
+                                         &fluxN[0], 1);
+                            
+                            // Check the ordering of vectors
+                            if (fields[0]->GetExp(n)->GetEorient(e) ==
+                                StdRegions::eBackwards)
+                            {
+                                Vmath::Reverse(nEdgePts,
+                                               auxArray1 = fluxN, 1,
+                                               auxArray2 = fluxN, 1);
+                                
+                                Vmath::Reverse(nEdgePts,
+                                               auxArray1 = fluxN_D, 1,
+                                               auxArray2 = fluxN_D, 1);
+                            }
+                            
+                            // Transform Riemann Fluxes in the standard element
+                            for (i = 0; i < nquad0; ++i)
+                            {
+                                // Multiply Riemann Flux by Q factors
+                                fluxN_R[i] = (m_Q2D_e2[n][i]) * fluxN[i];
+                            }
+                            
+                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                            -1.0 : 1.0;
+                            
+                            for (i = 0; i < nEdgePts; ++i)
+                            {
+                                if (m_traceNormals[0][trace_offset+i]
+                                    != fac*normals[0][i] ||
+                                    m_traceNormals[1][trace_offset+i]
+                                    != fac*normals[1][i])
+                                {
+                                    fluxN_R[i] = -fluxN_R[i];
+                                }
+                            }
+                            
+                            // Subtract to the Riemann flux the discontinuous
+                            // flux
+                            
+                            Vmath::Vsub(nEdgePts,
+                                        &fluxN_R[0], 1,
+                                        &fluxN_D[0], 1, &fluxJumps[0], 1);
+                            
+                            // Multiplicate the flux jumps for the correction
+                            // function
+                            for (i = 0; i < nquad0; ++i)
+                            {
+                                for (j = 0; j < nquad1; ++j)
+                                {
+                                    cnt = (nquad0 - 1) + j*nquad0 - i;
+                                    divCFluxE2[cnt] =
+                                                fluxJumps[i] * m_dGR_xi2[n][j];
+                                }
+                            }
+                            break;
+                        case 3:
+                            // Extract the edge values of transformed flux-x on
+                            // edge e and order them accordingly to the order of
+                            // the trace space
+                            
+                            fields[0]->GetExp(n)->GetEdgePhysVals(
+                                                        e, elmtToTrace[n][e],
+                                                        fluxX1 + phys_offset,
+                                                        auxArray1 = fluxN_D);
+                            Vmath::Neg   (nEdgePts, fluxN_D, 1);
+                            
+                            // Extract the physical Rieamann flux at each edge
+                            Vmath::Vcopy(nEdgePts,
+                                         &numericalFlux[trace_offset], 1,
+                                         &fluxN[0], 1);
+                            
+                            // Check the ordering of vectors
+                            if (fields[0]->GetExp(n)->GetEorient(e) ==
+                                StdRegions::eBackwards)
+                            {
+                                Vmath::Reverse(nEdgePts,
+                                               auxArray1 = fluxN, 1,
+                                               auxArray2 = fluxN, 1);
+                                
+                                Vmath::Reverse(nEdgePts,
+                                               auxArray1 = fluxN_D, 1,
+                                               auxArray2 = fluxN_D, 1);
+                            }
+                            
+                            // Transform Riemann Fluxes in the standard element
+                            for (i = 0; i < nquad1; ++i)
+                            {
+                                // Multiply Riemann Flux by Q factors
+                                fluxN_R[i] = (m_Q2D_e3[n][i]) * fluxN[i];
+                            }
+                            
+                            fac = fields[0]->GetExp(n)->EdgeNormalNegated(e) ?
+                            -1.0 : 1.0;
+                            
+                            for (i = 0; i < nEdgePts; ++i)
+                            {
+                                if (m_traceNormals[0][trace_offset+i]
+                                    != fac*normals[0][i] ||
+                                    m_traceNormals[1][trace_offset+i]
+                                    != fac*normals[1][i])
+                                {
+                                    fluxN_R[i] = -fluxN_R[i];
+                                }
+                            }
+                            
+                            // Subtract to the Riemann flux the discontinuous
+                            // flux
+                            
+                            Vmath::Vsub(nEdgePts,
+                                        &fluxN_R[0], 1,
+                                        &fluxN_D[0], 1, &fluxJumps[0], 1);
+                            
+                            // Multiplicate the flux jumps for the correction
+                            // function
+                            for (i = 0; i < nquad1; ++i)
+                            {
+                                for (j = 0; j < nquad0; ++j)
+                                {
+                                    cnt = (nquad0*nquad1 - nquad0) + j
+                                            - i*nquad0;
+                                    divCFluxE3[cnt] =
+                                                -fluxJumps[i] * m_dGL_xi1[n][j];
+                                }
+                            }
+                            break;
+                        default:
+                            ASSERTL0(false,"edge value (< 3) is out of range");
+                            break;
+                    }
+                }
+                
+                
+                // Sum each edge contribution
+                Vmath::Vadd(nLocalSolutionPts, &divCFluxE0[0], 1,
+                            &divCFluxE1[0], 1, &divCFlux[phys_offset], 1);
+                
+                Vmath::Vadd(nLocalSolutionPts, &divCFlux[phys_offset], 1,
+                            &divCFluxE2[0], 1, &divCFlux[phys_offset], 1);
+                
+                Vmath::Vadd(nLocalSolutionPts, &divCFlux[phys_offset], 1,
+                            &divCFluxE3[0], 1, &divCFlux[phys_offset], 1);
+            }
+        }
+
         
         /**
          * @brief Compute the divergence of the corrective flux for 3D problems.

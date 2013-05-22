@@ -36,7 +36,7 @@
 
 #include <MultiRegions/DisContField1D.h>
 #include <StdRegions/StdSegExp.h>
-
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
@@ -756,6 +756,9 @@ namespace Nektar
             // Number of solution points of each element
             int nLocalSolutionPts;
             
+            // Number of coeffients points of each element
+            int nLocalCoeffPts;
+            
             // Initial index of each element
             int phys_offset;
             
@@ -770,7 +773,7 @@ namespace Nektar
             
             // Basis shared pointer
             LibUtilities::BasisSharedPtr Basis;
-
+            
             // Set forward and backard state to zero
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
@@ -788,13 +791,13 @@ namespace Nektar
                 Array<OneD, NekDouble> tmp(nLocalSolutionPts, 0.0);
                 
                 // Partition the field vector in local vectors
-                Vmath::Vcopy(nLocalSolutionPts, 
-                             (&field[phys_offset]), 1,
-                             (&tmp[0]), 1);
+                //tmp = field + (n * nLocalSolutionPts);
+                Vmath::Vcopy(nLocalSolutionPts,
+                             &(field[0]) + n*nLocalSolutionPts,1,&(tmp[0]),1);
                 
                 // Basis definition on each element
                 Basis = (*m_exp)[n]->GetBasis(0);
-
+                
                 for (p = 0; p < 2; ++p)
                 {
                     // Coordinate vector for interpolation routine
@@ -811,35 +814,34 @@ namespace Nektar
                     }
                     
                     // Set the x-coordinate of the standard interface point
-                    interface_coord[0] = -1.0;
-
+                    interface_coord[0] = vertex_coord;
+                    
                     // Implementation for every points except Gauss points
                     if (Basis->GetPointsType() != LibUtilities::eGaussGaussLegendre)
                     {
                         if(vertex_coord >= 0.0)
                         {
                             Fwd[interface_offset] = field[phys_offset+nLocalSolutionPts-1];
-                        }			 
-                        if(vertex_coord < 0.0) 
+                        }
+                        if(vertex_coord < 0.0)
                         {
                             Bwd[interface_offset] = field[phys_offset];
                         }
                     }
-                    // Implementation for Gauss points 
-                    // (it doesn't work for WeakDG)
+                    // Implementation for Gauss points
                     else
                     {
                         StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
-                     
+                        
                         if(vertex_coord >= 0.0)
                         {
-                            Fwd[interface_offset] = 
+                            Fwd[interface_offset] =
                             //(*m_exp)[n]->PhysEvaluate(interface_coord, tmp);
                             StdSeg.PhysEvaluate(interface_coord, tmp);
-                        }					 
-                        if(vertex_coord < 0.0) 
+                        }
+                        if(vertex_coord < 0.0)
                         {
-                            Bwd[interface_offset] = 
+                            Bwd[interface_offset] =
                             //(*m_exp)[n]->PhysEvaluate(interface_coord, tmp);
                             StdSeg.PhysEvaluate(interface_coord, tmp);
                         }
@@ -946,31 +948,95 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fn, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            int p, n, offset, t_offset;
-            NekDouble vertnorm = 0.0;
+            int p,n,offset, t_offset;
+            double vertnorm =0.0;
             
-            for (n = 0; n < GetExpSize(); ++n)
+            // Basis shared pointer
+            LibUtilities::BasisSharedPtr Basis;
+            
+            for(n = 0; n < GetExpSize(); ++n)
             {
+                // Basis definition on each element
+                Basis = (*m_exp)[n]->GetBasis(0);
+                
+                // Number of coefficients on each element
+                int e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
+                
                 offset = GetCoeff_Offset(n);
-		
-                for(p = 0; p < 2; ++p)
+                
+                // Implementation for every points except Gauss points
+                if (Basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
                 {
-                    vertnorm = 0.0;
-                    for (int i = 0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
+                    for(p = 0; p < 2; ++p)
                     {
-                        vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
+                        vertnorm = 0.0;
+                        for (int i=0; i<((*m_exp)[n]->
+                                         GetVertexNormal(p)).num_elements(); i++)
+                        {
+                            vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
+                        }
+                        
+                        t_offset = GetTrace()->GetPhys_Offset(n+p);
+                        
+                        if(vertnorm >= 0.0)
+                        {
+                            outarray[offset+(*m_exp)[n]->GetVertexMap(1)] +=
+                            Fn[t_offset];
+                        }
+                        
+                        if(vertnorm < 0.0)
+                        {
+                            outarray[offset] -= Fn[t_offset];
+                        }
                     }
+                }
+                else
+                {
+                    DNekMatSharedPtr                     m_Ixm;
+                    LibUtilities::BasisSharedPtr BASE;
+                    const LibUtilities::PointsKey
+                            BS_p(e_ncoeffs,LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::BasisKey
+                            BS_k(LibUtilities::eGauss_Lagrange,e_ncoeffs,BS_p);
                     
-                    t_offset = GetTrace()->GetPhys_Offset(n+p);
+                    BASE  = LibUtilities::BasisManager()[BS_k];
                     
-                    if (vertnorm >= 0.0) 
+                    Array<OneD, NekDouble> coords(3, 0.0);
+                    
+                    int j;
+                    
+                    for(p = 0; p < 2; ++p)
                     {
-                        outarray[offset+(*m_exp)[n]->GetVertexMap(1)] += Fn[t_offset];
-                    }
-                    
-                    if (vertnorm < 0.0) 
-                    {
-                        outarray[offset] -= Fn[t_offset];
+                        vertnorm = 0.0;
+                        for (int i=0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
+                        {
+                            vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
+                            coords[0] = vertnorm ;
+                        }
+                        
+                        t_offset = GetTrace()->GetPhys_Offset(n+p);
+                        
+                        if(vertnorm >= 0.0)
+                        {
+                            m_Ixm = BASE->GetI(coords);
+                            
+                            
+                            for(j = 0; j < e_ncoeffs; j++)
+                            {
+                                outarray[offset + j]  += (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                            }
+                        }
+                        
+                        if(vertnorm < 0.0)
+                        {
+                            
+                            m_Ixm = BASE->GetI(coords);
+                            
+                            for(j = 0; j < e_ncoeffs; j++)
+                            {
+                                outarray[offset + j] -= (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                            }
+                        }
                     }
                 }
             }

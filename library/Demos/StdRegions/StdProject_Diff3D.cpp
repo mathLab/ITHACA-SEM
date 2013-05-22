@@ -86,6 +86,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr,"\t Modified_C = 6\n");
         fprintf(stderr,"\t Fourier    = 7\n");
         fprintf(stderr,"\t Lagrange   = 8\n");
+        fprintf(stderr,"\t Gauss Lagrange = 9\n");
         fprintf(stderr,"\t Legendre   = 10\n");
         fprintf(stderr,"\t Chebyshev  = 11\n");
         fprintf(stderr,"\t Nodal tri (Electro) = 12\n");

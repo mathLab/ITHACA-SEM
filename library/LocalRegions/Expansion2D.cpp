@@ -246,8 +246,8 @@ namespace Nektar
                 {
                     case 0:
                         BASE  = LibUtilities::BasisManager()[BS_k1];
-                        coords[0] = -1;
-                        m_Ixm = BASE->GetI(coords);
+                        coords[1] = -1;
+                        m_Ixm = BASE->GetI(coords+1);
                         for(i = 0; i < order_e; ++i)
                         {
                             for(j = 0; j < nCoeffs1; j++)
@@ -272,8 +272,8 @@ namespace Nektar
                         break;
                     case 2:
                         BASE  = LibUtilities::BasisManager()[BS_k1];
-                        coords[0] = 1;
-                        m_Ixm = BASE->GetI(coords);
+                        coords[1] = 1;
+                        m_Ixm = BASE->GetI(coords+1);
                         for(i = 0; i < order_e; ++i)
                         {
                             for(j = 0; j < nCoeffs1; j++)

@@ -41,10 +41,6 @@ Preconditioner.cpp
 PreconditionerDiagonal.cpp
 PreconditionerLowEnergy.cpp
 PreconditionerBlock.cpp
-PreconditionerLinear.cpp
-PreconditionerLinearWithLowEnergy.cpp
-PreconditionerLinearWithDiag.cpp
-PreconditionerLinearWithBlock.cpp
 SubStructuredGraph.cpp
 
 )
@@ -88,10 +84,6 @@ Preconditioner.h
 PreconditionerDiagonal.h
 PreconditionerLowEnergy.h
 PreconditionerBlock.h
-PreconditionerLinear.h
-PreconditionerLinearWithLowEnergy.h
-PreconditionerLinearWithDiag.h
-PreconditionerLinearWithBlock.h
 SubStructuredGraph.h
 )
 
@@ -109,11 +101,19 @@ IF(NEKTAR_USE_MPI)
         GlobalLinSysXxt.h
         GlobalLinSysXxtFull.h
         GlobalLinSysXxtStaticCond.h
+        PreconditionerLinear.cpp
+        PreconditionerLinearWithLowEnergy.cpp
+        PreconditionerLinearWithDiag.cpp
+        PreconditionerLinearWithBlock.cpp
     )
     SET(MULTI_REGIONS_SOURCES ${MULTI_REGIONS_SOURCES}
         GlobalLinSysXxt.cpp
         GlobalLinSysXxtFull.cpp
         GlobalLinSysXxtStaticCond.cpp
+        PreconditionerLinear.h
+        PreconditionerLinearWithLowEnergy.h
+        PreconditionerLinearWithDiag.h
+        PreconditionerLinearWithBlock.h
     )
 ENDIF(NEKTAR_USE_MPI)
 

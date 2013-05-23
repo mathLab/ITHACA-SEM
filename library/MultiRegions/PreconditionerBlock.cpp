@@ -233,7 +233,7 @@ namespace Nektar
                 }
             }
 
-            m_comm = expList->GetComm();
+            m_comm = expList->GetComm()->GetRowComm();
             m_comm->AllReduce(maxEdgeDof, LibUtilities::ReduceMax);
 
             //Allocate arrays for block to universal map (number of expansions * p^2)

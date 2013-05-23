@@ -742,7 +742,7 @@ namespace Nektar
             
             // Implementation for all the basis except Gauss points
             if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre
-                && m_base[1]->GetPointsType() != LibUtilities::eGaussGaussLegendre )
+                && m_base[1]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
             {
                 // get points in Cartesian orientation
                 switch(edge)
@@ -751,14 +751,16 @@ namespace Nektar
                         Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
                         break;
                     case 1:
-                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,&(outarray[0]),1);
+                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),
+                                     nquad0,&(outarray[0]),1);
                         break;
                     case 2:
                         Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1),1,
                                      &(outarray[0]),1);
                         break;
                     case 3:
-                        Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,&(outarray[0]),1);
+                        Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,
+                                     &(outarray[0]),1);
                         break;
                     default:
                         ASSERTL0(false,"edge value (< 3) is out of range");
@@ -1980,7 +1982,8 @@ namespace Nektar
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
                     mat->Invert();
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                    returnval =
+                         MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
             case StdRegions::eInterpGaussEdge0:
@@ -1992,7 +1995,8 @@ namespace Nektar
                         // edge 0
                         coords[1] = -1.0;
                         m_Ixb = m_base[1]->GetI(coords+1);
-                        returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixb);
+                        returnval =
+                        MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixb);
                     }
                 break;
             case StdRegions::eInterpGaussEdge1:
@@ -2004,7 +2008,8 @@ namespace Nektar
                     // edge 1
                     coords[0] = 1.0;
                     m_Ixr = m_base[0]->GetI(coords);
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixr);
+                    returnval =
+                       MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixr);
                 }
                 break;
             case StdRegions::eInterpGaussEdge2:
@@ -2016,7 +2021,8 @@ namespace Nektar
                     // edge 2
                     coords[1] = 1.0;
                     m_Ixt = m_base[1]->GetI(coords+1);
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixt);
+                    returnval =
+                       MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixt);
                 }
                 break;
             case StdRegions::eInterpGaussEdge3:
@@ -2028,7 +2034,8 @@ namespace Nektar
                     // edge 3
                     coords[0] = -1.0;
                     m_Ixl = m_base[0]->GetI(coords);
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixl);
+                    returnval =
+                       MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixl);
                 }
                 break;
             default:
@@ -2036,7 +2043,8 @@ namespace Nektar
                     NekDouble        one = 1.0;
                     DNekMatSharedPtr mat = GenMatrix(mkey);
 
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                    returnval =
+                         MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
             }

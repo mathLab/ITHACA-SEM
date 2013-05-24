@@ -137,14 +137,8 @@ namespace Nektar
             eHybridDGLamToU,
             eFwdTrans,
             ePreconditioner,
-            eInterpGaussEdge0,
-            eInterpGaussEdge1,
-            eInterpGaussEdge2,
-            eInterpGaussEdge3,
-            eGaussDG0,
-            eGaussDG1,
-            eGaussDG2,
-            eGaussDG3,
+            eInterpGaussEdge,
+            eGaussDG,
             SIZE_MatrixType
         };
 
@@ -187,14 +181,8 @@ namespace Nektar
             "HybridDGLamToU",
             "FwdTrans",
             "Preconditioner",
-            "InterpGaussEdge0",
-            "InterpGaussEdge1",
-            "InterpGaussEdge2",
-            "InterpGaussEdge3",
-            "GaussDG0",
-            "GaussDG1",
-            "GaussDG2",
-            "GaussDG3"
+            "InterpGaussEdge",
+            "GaussDG"
         };
 
         enum VarCoeffType
@@ -234,7 +222,8 @@ namespace Nektar
             eFactorTau,
             eFactorTime,
             eFactorSVVCutoffRatio,
-            eFactorSVVDiffCoeff
+            eFactorSVVDiffCoeff,
+            eFactorGaussEdge
         };
 
         const char* const ConstFactorTypeMap[] = {
@@ -242,7 +231,8 @@ namespace Nektar
             "FactorTau",
             "FactorTime",
             "FactorSVVCutoffRatio",
-            "FactorSVVDiffCoeff"
+            "FactorSVVDiffCoeff",
+            "FactorGaussEdge"
         };
         typedef std::map<ConstFactorType, NekDouble> ConstFactorMap;
         static ConstFactorMap NullConstFactorMap;

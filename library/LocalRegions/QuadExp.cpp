@@ -800,16 +800,20 @@ namespace Nektar
              int i;
              int nq0 = m_base[0]->GetNumPoints();
              int nq1 = m_base[1]->GetNumPoints();
-             DNekScalMatSharedPtr mat_gauss;
-            
+
+             StdRegions::ConstFactorMap factors;
+             factors[StdRegions::eFactorGaussEdge] = edge;
+
+             StdRegions::StdMatrixKey key(
+                 StdRegions::eInterpGaussEdge,
+                 DetShapeType(),*this,factors);
+             
+             DNekScalMatSharedPtr mat_gauss = m_matrixManager[key];
+
              switch(edge)
              {
              case 0:
                  {
-                     StdRegions::StdMatrixKey key0(StdRegions::eInterpGaussEdge0,
-                                              DetShapeType(),*this);
-                     
-                     mat_gauss = m_matrixManager[key0];
                      for(i = 0; i < nq0; i++)
                      {
                          outarray[i] = Blas::Ddot(nq1,
@@ -820,9 +824,6 @@ namespace Nektar
                  }
              case 1:
                  {
-                     StdRegions::StdMatrixKey key1(StdRegions::eInterpGaussEdge1,
-                                                DetShapeType(),*this);
-                     mat_gauss = m_matrixManager[key1];
                      for(i = 0; i < nq1; i++)
                      {
                          outarray[i] =  Blas::Ddot(nq0,
@@ -833,9 +834,6 @@ namespace Nektar
                  }
              case 2:
                  {
-                     StdRegions::StdMatrixKey key2(StdRegions::eInterpGaussEdge2,
-                                                   DetShapeType(),*this);
-                     mat_gauss = m_matrixManager[key2];
                      for(i = 0; i < nq0; i++)
                      {
                          outarray[i] = Blas::Ddot(nq1,
@@ -846,9 +844,6 @@ namespace Nektar
                  }
              case 3:
                  {
-                     StdRegions::StdMatrixKey key3(StdRegions::eInterpGaussEdge3,
-                                                   DetShapeType(),*this);
-                     mat_gauss = m_matrixManager[key3];
                      for(i = 0; i < nq1; i++)
                      {
                          outarray[i] =  Blas::Ddot(nq0,
@@ -1986,57 +1981,46 @@ namespace Nektar
                          MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
-            case StdRegions::eInterpGaussEdge0:
-                    {
-                        NekDouble one = 1.0;
-                        DNekMatSharedPtr m_Ixb;
-                        Array<OneD, NekDouble> coords(3, 0.0);
-                        
-                        // edge 0
-                        coords[1] = -1.0;
-                        m_Ixb = m_base[1]->GetI(coords+1);
-                        returnval =
-                        MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixb);
-                    }
-                break;
-            case StdRegions::eInterpGaussEdge1:
+            case StdRegions::eInterpGaussEdge:
+            {
+                NekDouble one = 1.0;
+                DNekMatSharedPtr m_Ix;
+                Array<OneD, NekDouble> coords(3, 0.0);
+                StdRegions::ConstFactorMap factors = mkey.GetConstFactors();
+                int edge = (int)factors[StdRegions::eFactorGaussEdge];
+
+
+                switch(edge)
                 {
-                    NekDouble one = 1.0;
-                    DNekMatSharedPtr m_Ixr;
-                    Array<OneD, NekDouble> coords(3, 0.0);
-                    
-                    // edge 1
+                case 0:
+                    coords[1] = -1.0;
+                    m_Ix = m_base[1]->GetI(coords+1);
+                    returnval =
+                        MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ix);
+                    break;
+                case 1:
                     coords[0] = 1.0;
-                    m_Ixr = m_base[0]->GetI(coords);
+                    m_Ix = m_base[0]->GetI(coords);
                     returnval =
-                       MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixr);
-                }
-                break;
-            case StdRegions::eInterpGaussEdge2:
-                {
-                    NekDouble one = 1.0;
-                    DNekMatSharedPtr m_Ixt;
-                    Array<OneD, NekDouble> coords(3, 0.0);
-                    
-                    // edge 2
+                        MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ix);
+                    break;
+                case 2:
                     coords[1] = 1.0;
-                    m_Ixt = m_base[1]->GetI(coords+1);
+                    m_Ix = m_base[1]->GetI(coords+1);
                     returnval =
-                       MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixt);
-                }
-                break;
-            case StdRegions::eInterpGaussEdge3:
-                {
-                    NekDouble one = 1.0;
-                    DNekMatSharedPtr m_Ixl;
-                    Array<OneD, NekDouble> coords(3, 0.0);
-                    
-                    // edge 3
+                       MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ix);
+                    break;
+                case 3:
                     coords[0] = -1.0;
-                    m_Ixl = m_base[0]->GetI(coords);
+                    m_Ix = m_base[0]->GetI(coords);
                     returnval =
-                       MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ixl);
+                       MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ix);
+                    break;
+                default:
+                    ASSERTL0(false,"edge value (< 3) is out of range");
+                    break;
                 }
+            }
                 break;
             default:
                 {

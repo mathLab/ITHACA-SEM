@@ -231,17 +231,18 @@ namespace Nektar
                 int nCoeffs0, nCoeffs1;
                 int j;
                 
-                DNekMatSharedPtr mat_gauss;
+                StdRegions::ConstFactorMap factors;
+                factors[StdRegions::eFactorGaussEdge] = edge;
+                StdRegions::StdMatrixKey key(StdRegions::eGaussDG,
+                                             DetShapeType(),*this,factors);
+                
+                DNekMatSharedPtr mat_gauss = m_stdMatrixManager[key];
                 
                 switch(edge)
                 {
                     case 0:
                     {
                         nCoeffs1 = m_base[1]->GetNumModes();
-                        StdRegions::StdMatrixKey key0(StdRegions::eGaussDG0,
-                                                      DetShapeType(),*this);
-                        
-                        mat_gauss = m_stdMatrixManager[key0];
                         
                         for(i = 0; i < order_e; ++i)
                         {
@@ -252,15 +253,11 @@ namespace Nektar
                                     ((*map)[i].sign)*EdgeExp->GetCoeff(i);
                             }
                         }
-                        break;
                     }
+                        break;
                     case 1:
                     {
                         nCoeffs0 = m_base[0]->GetNumModes();
-                        StdRegions::StdMatrixKey key1(StdRegions::eGaussDG1,
-                                                      DetShapeType(),*this);
-                        
-                        mat_gauss = m_stdMatrixManager[key1];
                         
                         for(i = 0; i < order_e; ++i)
                         {
@@ -271,15 +268,11 @@ namespace Nektar
                                     ((*map)[i].sign)*EdgeExp->GetCoeff(i);
                             }
                         }
-                        break;
                     }
+                        break;
                     case 2:
                     {
                         nCoeffs1 = m_base[1]->GetNumModes();
-                        StdRegions::StdMatrixKey key2(StdRegions::eGaussDG2,
-                                                      DetShapeType(),*this);
-                        
-                        mat_gauss = m_stdMatrixManager[key2];
                         
                         for(i = 0; i < order_e; ++i)
                         {
@@ -290,15 +283,11 @@ namespace Nektar
                                     ((*map)[i].sign)*EdgeExp->GetCoeff(i);
                             }
                         }
-                        break;
                     }
+                        break;
                     case 3:
                     {
                         nCoeffs0 = m_base[0]->GetNumModes();
-                        StdRegions::StdMatrixKey key3(StdRegions::eGaussDG3,
-                                                      DetShapeType(),*this);
-                        
-                        mat_gauss = m_stdMatrixManager[key3];
                         
                         for(i = 0; i < order_e; ++i)
                         {
@@ -309,8 +298,8 @@ namespace Nektar
                                     ((*map)[i].sign)*EdgeExp->GetCoeff(i);
                             }
                         }
-                        break;
                     }
+                        break;
                     default:
                         ASSERTL0(false,"edge value (< 3) is out of range");
                         break;

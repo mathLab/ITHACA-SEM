@@ -509,110 +509,94 @@ namespace Nektar
                     }
                 }
                 break;
-            case StdRegions::eGaussDG0:
+            case StdRegions::eGaussDG:
                 {
-                    NekDouble one = 1.0;
-                    LibUtilities::BasisSharedPtr BASE0;
-                     
-                    int nCoeffs1 = m_base[1]->GetNumModes();
-                    const LibUtilities::PointsKey
-                            BS_p1(nCoeffs1,LibUtilities::eGaussGaussLegendre);
-                    const LibUtilities::BasisKey
-                            BS_k1(LibUtilities::eGauss_Lagrange,nCoeffs1,BS_p1);
-             
-                    DNekMatSharedPtr        m_Ix0;
-                    Array<OneD, NekDouble> coords(3, 0.0);
-                     
-                    BASE0  = LibUtilities::BasisManager()[BS_k1];
-                    coords[1] = -1;
-                    m_Ix0 = BASE0->GetI(coords+1);
-                     
-                    returnval =
-                        MemoryManager<DNekMat>::AllocateSharedPtr(one,nCoeffs1);
-                    DNekMat &Qmat = *returnval;
-                    Vmath::Vcopy(nCoeffs1,&(m_Ix0->GetPtr())[0],1,
-                                 &(Qmat.GetPtr())[0],1);
-                    
-                }
-              break;      
-            case StdRegions::eGaussDG1:
-                {
-                    NekDouble one = 1.0;
-                    LibUtilities::BasisSharedPtr BASE1;
-                     
                     int nCoeffs0 = m_base[0]->GetNumModes();
-                    const LibUtilities::PointsKey
-                            BS_p0(nCoeffs0,LibUtilities::eGaussGaussLegendre);
-                    const LibUtilities::BasisKey
-                            BS_k0(LibUtilities::eGauss_Lagrange,nCoeffs0,BS_p0);
-                     
-                    DNekMatSharedPtr        m_Ix1;
-                    Array<OneD, NekDouble> coords(3, 0.0);
-                     
-                    BASE1  = LibUtilities::BasisManager()[BS_k0];
-                    coords[0] = 1;
-                    m_Ix1 = BASE1->GetI(coords);
-                     
-                    returnval =
-                        MemoryManager<DNekMat>::AllocateSharedPtr(one,nCoeffs0);
-                    DNekMat &Qmat = *returnval;
-                    Vmath::Vcopy(nCoeffs0,&(m_Ix1->GetPtr())[0],1,
-                                 &(Qmat.GetPtr())[0],1);
-                    
-                }
-              break;      
-            case StdRegions::eGaussDG2:
-                {
-                    NekDouble one = 1.0;
-                    LibUtilities::BasisSharedPtr BASE2;
-                     
                     int nCoeffs1 = m_base[1]->GetNumModes();
+                    
                     const LibUtilities::PointsKey
-                            BS_p1(nCoeffs1,LibUtilities::eGaussGaussLegendre);
+                        BS_p0(nCoeffs0,LibUtilities::eGaussGaussLegendre);
                     const LibUtilities::BasisKey
-                            BS_k1(LibUtilities::eGauss_Lagrange,nCoeffs1,BS_p1);
-                     
-                    DNekMatSharedPtr        m_Ix2;
-                    Array<OneD, NekDouble> coords(3, 0.0);
-                     
-                    BASE2  = LibUtilities::BasisManager()[BS_k1];
-                    coords[1] = 1;
-                    m_Ix2 = BASE2->GetI(coords+1);
-                     
-                    returnval =
-                        MemoryManager<DNekMat>::AllocateSharedPtr(one,nCoeffs1);
-                    DNekMat &Qmat = *returnval;
-                    Vmath::Vcopy(nCoeffs1,&(m_Ix2->GetPtr())[0],1,
-                                    &(Qmat.GetPtr())[0],1);
-                     
-                }
-               break;     
-            case StdRegions::eGaussDG3:
-                {
+                        BS_k0(LibUtilities::eGauss_Lagrange,nCoeffs0,BS_p0);
+                    const LibUtilities::PointsKey
+                        BS_p1(nCoeffs1,LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::BasisKey
+                        BS_k1(LibUtilities::eGauss_Lagrange,nCoeffs1,BS_p1);
+                    
+                    
                     NekDouble one = 1.0;
-                    LibUtilities::BasisSharedPtr BASE3;
-                     
-                    int nCoeffs0 = m_base[0]->GetNumModes();
-                    const LibUtilities::PointsKey
-                            BS_p0(nCoeffs0,LibUtilities::eGaussGaussLegendre);
-                    const LibUtilities::BasisKey
-                            BS_k0(LibUtilities::eGauss_Lagrange,nCoeffs0,BS_p0);
-                     
-                    DNekMatSharedPtr        m_Ix3;
+                    DNekMatSharedPtr        m_Ix;
+                    LibUtilities::BasisSharedPtr BASE;
                     Array<OneD, NekDouble> coords(3, 0.0);
+                    StdRegions::ConstFactorMap factors = mkey.GetConstFactors();
+                    int edge = (int)factors[StdRegions::eFactorGaussEdge];
+
+                    switch (edge)
+                    {
+                    case 0:
+                        {
+                            BASE  = LibUtilities::BasisManager()[BS_k1];
+                            coords[1] = -1;
+                            m_Ix = BASE->GetI(coords+1);
+                            
+                            returnval =
+                                MemoryManager<DNekMat>::AllocateSharedPtr
+                                                                (one,nCoeffs1);
+                            DNekMat &Qmat0 = *returnval;
+                            Vmath::Vcopy(nCoeffs1,&(m_Ix->GetPtr())[0],1,
+                                         &(Qmat0.GetPtr())[0],1);
+                        }
+                        break;
+                    case 1:
+                        {
+                            BASE  = LibUtilities::BasisManager()[BS_k0];
+                            coords[0] = 1;
+                            m_Ix = BASE->GetI(coords);
                      
-                    BASE3  = LibUtilities::BasisManager()[BS_k0];
-                    coords[0] = -1;
-                    m_Ix3 = BASE3->GetI(coords);
+                            returnval =
+                                MemoryManager<DNekMat>::AllocateSharedPtr
+                                                                (one,nCoeffs0);
+                            DNekMat &Qmat1 = *returnval;
+                            Vmath::Vcopy(nCoeffs0,&(m_Ix->GetPtr())[0],1,
+                                         &(Qmat1.GetPtr())[0],1);
+                        }
+                        break;
+                    case 2:
+                        {
+                            BASE  = LibUtilities::BasisManager()[BS_k1];
+                            coords[1] = 1;
+                            m_Ix = BASE->GetI(coords+1);
                      
-                    returnval =
-                        MemoryManager<DNekMat>::AllocateSharedPtr(one,nCoeffs0);
-                    DNekMat &Qmat = *returnval;
-                    Vmath::Vcopy(nCoeffs0,&(m_Ix3->GetPtr())[0],1,
-                                    &(Qmat.GetPtr())[0],1);
+                            returnval =
+                                MemoryManager<DNekMat>::AllocateSharedPtr
+                                                                (one,nCoeffs1);
+                            DNekMat &Qmat2 = *returnval;
+                            Vmath::Vcopy(nCoeffs1,&(m_Ix->GetPtr())[0],1,
+                                         &(Qmat2.GetPtr())[0],1);
+                        }
+                        break;
+                    case 3:
+                        {
+                            BASE  = LibUtilities::BasisManager()[BS_k0];
+                            coords[0] = -1;
+                            m_Ix = BASE->GetI(coords);
                      
+                            returnval =
+                                MemoryManager<DNekMat>::AllocateSharedPtr
+                                                                (one,nCoeffs0);
+                            DNekMat &Qmat3 = *returnval;
+                            Vmath::Vcopy(nCoeffs0,&(m_Ix->GetPtr())[0],1,
+                                        &(Qmat3.GetPtr())[0],1);
+                        }
+                        break;
+                    default:
+                        {
+                            ASSERTL0(false,"edge value (< 3) is out of range");
+                        }
+                        break;
+                    }
+                    break;
                 }
-               break;     
             default:
                 {
                     NEKERROR(ErrorUtil::efatal, "This type of matrix can not be created using a general approach");

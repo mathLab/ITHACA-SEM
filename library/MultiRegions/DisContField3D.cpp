@@ -852,19 +852,27 @@ namespace Nektar
 
             // Note if there are no periodic faces at all calling Vsum will
             // cause a segfault.
-            if (perComps.size() > 0)
+            if (totFaces > 0)
             {
                 // Calculate number of vertices on each processor.
                 nTotVerts = Vmath::Vsum(totFaces, faceVerts, 1);
-                for (i = 0; i < n; ++i)
-                {
-                    procVerts[i] = Vmath::Vsum(
-                        facecounts[i], faceVerts + faceoffset[i], 1);
-                }
             }
             else
             {
                 nTotVerts = 0;
+            }
+
+            for (i = 0; i < n; ++i)
+            {
+                if (facecounts[i] > 0)
+                {
+                    procVerts[i] = Vmath::Vsum(
+                        facecounts[i], faceVerts + faceoffset[i], 1);
+                }
+                else
+                {
+                    procVerts[i] = 0;
+                }
             }
 
             // vertoffset is defined in the same manner as edgeoffset

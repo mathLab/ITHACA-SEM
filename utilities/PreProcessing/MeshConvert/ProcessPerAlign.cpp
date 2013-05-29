@@ -87,19 +87,22 @@ namespace Nektar
 
             if (surf1 == -1)
             {
-                cerr << "surf1 must be set to a positive integer." << endl;
+                cerr << "WARNING: surf1 must be set to a positive integer. "
+                     << "Skipping periodic alignment." << endl;
                 return;
             }
 
             if (surf2 == -1)
             {
-                cerr << "surf2 must be set to a positive integer." << endl;
+                cerr << "WARNING: surf2 must be set to a positive integer. "
+                     << "Skipping periodic alignment." << endl;
                 return;
             }
 
             if (dir != "x" && dir != "y" && dir != "z")
             {
-                cerr << "dir must be set to either x, y or z" << endl;
+                cerr << "WARNING: dir must be set to either x, y or z. "
+                     << "Skipping periodic alignment." << endl;
                 return;
             }
 
@@ -113,13 +116,15 @@ namespace Nektar
 
             if (it1 == m->composite.end())
             {
-                cerr << "Couldn't find surface " << surf1 << endl;
+                cerr << "WARNING: Couldn't find surface " << surf1
+                     << ". Skipping periodic alignment." << endl;
                 return;
             }
 
             if (it2 == m->composite.end())
             {
-                cerr << "Couldn't find surface " << surf2 << endl;
+                cerr << "WARNING: Couldn't find surface " << surf2 << ", "
+                     << "skipping periodic alignment." << endl;
                 return;
             }
 
@@ -128,8 +133,9 @@ namespace Nektar
 
             if (c1->items.size() != c2->items.size())
             {
-                cerr << "Surfaces " << surf1 << " and " << surf2 << " have "
-                     << "different numbers of elements" << endl;
+                cerr << "WARNING: Surfaces " << surf1 << " and " << surf2
+                     << " have different numbers of elements. Skipping periodic"
+                     << " alignment." << endl;
                 return;
             }
 
@@ -170,7 +176,7 @@ namespace Nektar
                     }
 
                     Node dx = it->second - centroid;
-                    if (fabs((dx.x*vec[0] + dx.y*vec[1] + dx.z*vec[2])/
+                    if (fabs(fabs(dx.x*vec[0] + dx.y*vec[1] + dx.z*vec[2])/
                              sqrt(dx.abs2()) - 1.0) < 1e-6)
                     {
                         // Found match
@@ -183,8 +189,9 @@ namespace Nektar
 
                 if (!found)
                 {
-                    cerr << "Unable to find matching edge for surface element "
-                         << c1->items[i]->GetId() << endl;
+                    cerr << "WARNING: Could not find matching edge for surface "
+                         << "element " << c1->items[i]->GetId() << ". "
+                         << "Skipping periodic alignment." << endl;
                     return;
                 }
             }

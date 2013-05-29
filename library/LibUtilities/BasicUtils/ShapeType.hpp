@@ -103,6 +103,23 @@ namespace Nektar
             }
         }
 
+        namespace StdQuadData
+        {
+            inline int getNumberOfCoefficients(int Na, int Nb)
+            {
+                return Na*Nb;
+            }
+        }
+
+
+
+        namespace StdHexData
+        {
+            inline int getNumberOfCoefficients( int Na, int Nb, int Nc ) 
+            {
+                return Na*Nb*Nc;
+            }
+        }
 
         namespace StdTetData
         {

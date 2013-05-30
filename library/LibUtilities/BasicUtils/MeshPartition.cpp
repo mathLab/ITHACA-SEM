@@ -466,7 +466,7 @@ namespace Nektar
                     for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
                     {
                         int elmtId = m_meshComposites[cId].list[j];
-                        m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] ] = weight;
+                        m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] ] = weight*weight;
                     }
                 }
             } // for i

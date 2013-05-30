@@ -1154,7 +1154,7 @@ namespace Nektar
          */
         class Composite {
         public:
-            Composite() {}
+            Composite() : reorder(true) {}
 
             /// Generate the list of IDs of elements within this composite.
             std::string GetXmlString(bool doSort=true);
@@ -1163,6 +1163,8 @@ namespace Nektar
             unsigned int id;
             /// Element type tag.
             std::string tag;
+            /// Determines whether items can be reordered.
+            bool reorder;
             /// List of elements in this composite.
             std::vector<ElementSharedPtr> items;
         };

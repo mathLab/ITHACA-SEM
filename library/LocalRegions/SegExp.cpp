@@ -1283,6 +1283,11 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             return m_staticCondMatrixManager[mkey];
         }
 
+        void SegExp::v_DropLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            m_staticCondMatrixManager.DeleteObject(mkey);
+        }
+
         DNekScalMatSharedPtr SegExp::v_GetLocMatrix(const MatrixKey &mkey)
         {
             return m_matrixManager[mkey];

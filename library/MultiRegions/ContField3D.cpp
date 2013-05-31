@@ -116,7 +116,7 @@ namespace Nektar
         ContField3D::ContField3D(const ContField3D &In,
                                  const SpatialDomains::MeshGraphSharedPtr &graph3D,
                                  const std::string &variable,
-                                 const bool CheckIfSingularSystem = false):
+                                 const bool CheckIfSingularSystem):
 	    DisContField3D(In,graph3D,variable,false),
             m_globalMat   (MemoryManager<GlobalMatrixMap>::AllocateSharedPtr()),
             m_globalLinSysManager(boost::bind(&ContField3D::GenGlobalLinSys, this, _1),

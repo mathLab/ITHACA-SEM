@@ -295,53 +295,62 @@ namespace Nektar
             }
         }
 
-        /** Construct a linear space assemblyMapCG from the full map  */
-        AssemblyMapSharedPtr AssemblyMapCG::v_XxtLinearSpaceMap(const ExpList &locexp)
+        /**
+         * @brief Construct an AssemblyMapCG object which corresponds to the
+         * linear space of the current object.
+         *
+         * This function is used in an XXT solve to apply a linear space
+         * preconditioner in the conjugate gradient solve.
+         */
+        AssemblyMapSharedPtr AssemblyMapCG::v_XxtLinearSpaceMap(
+            const ExpList &locexp)
         {
             AssemblyMapCGSharedPtr returnval;
-            
-            int i,j;
+
+            int i, j;
             int nverts = 0;
-            const boost::shared_ptr<StdRegions::StdExpansionVector> exp = locexp.GetExp();
+            const boost::shared_ptr<StdRegions::StdExpansionVector> exp
+                = locexp.GetExp();
             int nelmts = exp->size();
 
-            // Get Default Map and turn off any searched values. 
-            returnval = MemoryManager<AssemblyMapCG>::AllocateSharedPtr(m_session);
-            returnval->m_solnType   = eXxtFullMatrix;
-            returnval->m_preconType = eNull;
+            // Get Default Map and turn off any searched values.
+            returnval = MemoryManager<AssemblyMapCG>
+                ::AllocateSharedPtr(m_session);
+            returnval->m_solnType           = eXxtFullMatrix;
+            returnval->m_preconType         = eNull;
             returnval->m_maxStaticCondLevel = 0;
-            returnval->m_signChange = false;
-            returnval->m_comm = m_comm; // CHECK wit CHRIS
+            returnval->m_signChange         = false;
+            returnval->m_comm               = m_comm;
 
-            // Count the number of vertices 
-            for(i = 0; i < nelmts; ++i)
+            // Count the number of vertices
+            for (i = 0; i < nelmts; ++i)
             {
                 nverts += (*exp)[i]->GetNverts();
             }
-            
-            returnval->m_numLocalCoeffs = nverts; 
-            
-            returnval->m_localToGlobalMap = Array<OneD, int>(nverts,-1);
+
+            returnval->m_numLocalCoeffs   = nverts;
+            returnval->m_localToGlobalMap = Array<OneD, int>(nverts, -1);
 
             // Store original global ids in this map
-            returnval->m_localToGlobalBndMap = Array<OneD, int>(nverts,-1);
+            returnval->m_localToGlobalBndMap = Array<OneD, int>(nverts, -1);
 
             int cnt  = 0;
             int cnt1 = 0;
-            Array<OneD,int> GlobCoeffs(m_numGlobalCoeffs,-1); 
-            
+            Array<OneD, int> GlobCoeffs(m_numGlobalCoeffs, -1);
+
             // Set up local to global map;
-            for(i = 0; i < nelmts; ++i)
+            for (i = 0; i < nelmts; ++i)
             {
-                for(j = 0; j < (*exp)[i]->GetNverts(); ++j)
+                for (j = 0; j < (*exp)[i]->GetNverts(); ++j)
                 {
-                    returnval->m_localToGlobalMap[cnt] = 
-                        returnval->m_localToGlobalBndMap[cnt] = 
+                    returnval->m_localToGlobalMap[cnt] =
+                        returnval->m_localToGlobalBndMap[cnt] =
                         m_localToGlobalMap[cnt1 + (*exp)[i]->GetVertexMap(j)];
                     GlobCoeffs[returnval->m_localToGlobalMap[cnt]] = 1;
 
                     // Set up numLocalDirBndCoeffs
-                    if(returnval->m_localToGlobalMap[cnt] < m_numGlobalDirBndCoeffs)
+                    if (returnval->m_localToGlobalMap[cnt] <
+                            m_numGlobalDirBndCoeffs)
                     {
                         returnval->m_numLocalDirBndCoeffs++;
                     }
@@ -351,43 +360,48 @@ namespace Nektar
             }
 
             cnt = 0;
-            // reset up global numbering and count number of dofs
-            for(i = 0; i < m_numGlobalCoeffs; ++i)
+            // Reset global numbering and count number of dofs
+            for (i = 0; i < m_numGlobalCoeffs; ++i)
             {
-                if(GlobCoeffs[i] != -1)
+                if (GlobCoeffs[i] != -1)
                 {
                     GlobCoeffs[i] = cnt++;
                 }
             }
-            
-            // Setup number of globalCoeffs; 
+
+            // Set up number of globalCoeffs;
             returnval->m_numGlobalCoeffs = cnt;
 
-            // Setup number of  globalDirBndcoeffs 
-            for(i = 0; i < m_numGlobalDirBndCoeffs; ++i)
+            // Set up number of global Dirichlet boundary coefficients
+            for (i = 0; i < m_numGlobalDirBndCoeffs; ++i)
             {
-                if(GlobCoeffs[i] != -1)
+                if (GlobCoeffs[i] != -1)
                 {
                     returnval->m_numGlobalDirBndCoeffs++;
                 }
             }
 
-            // Universal map;
-            if(m_globalToUniversalMap.num_elements())
+            // Set up global to universal map
+            if (m_globalToUniversalMap.num_elements())
             {
-                LibUtilities::CommSharedPtr vCommRow = m_session->GetComm()->GetRowComm();
+                LibUtilities::CommSharedPtr vCommRow
+                    = m_session->GetComm()->GetRowComm();
                 int nglocoeffs = returnval->m_numGlobalCoeffs;
-                returnval->m_globalToUniversalMap = Array<OneD, int> (nglocoeffs);
-                returnval->m_globalToUniversalMapUnique = Array<OneD, int> (nglocoeffs);
-                // reset localtoglobal and setup universal map
-                for(i = 0; i < nverts; ++i)
+                returnval->m_globalToUniversalMap
+                    = Array<OneD, int> (nglocoeffs);
+                returnval->m_globalToUniversalMapUnique
+                    = Array<OneD, int> (nglocoeffs);
+
+                // Reset local to global map and setup universal map
+                for (i = 0; i < nverts; ++i)
                 {
                     cnt = returnval->m_localToGlobalMap[i];
                     returnval->m_localToGlobalMap[i] = GlobCoeffs[cnt];
-                    
-                    returnval->m_globalToUniversalMap[GlobCoeffs[cnt]] = m_globalToUniversalMap[cnt];
+
+                    returnval->m_globalToUniversalMap[GlobCoeffs[cnt]] =
+                        m_globalToUniversalMap[cnt];
                 }
-                
+
                 Nektar::Array<OneD, long> tmp(nglocoeffs);
                 Vmath::Zero(nglocoeffs, tmp, 1);
                 for (unsigned int i = 0; i < nglocoeffs; ++i)
@@ -398,23 +412,21 @@ namespace Nektar
                 Gs::Unique(tmp, vCommRow);
                 for (unsigned int i = 0; i < nglocoeffs; ++i)
                 {
-                    returnval->m_globalToUniversalMapUnique[i] = (tmp[i] >= 0 ? 1 : 0);
+                    returnval->m_globalToUniversalMapUnique[i]
+                        = (tmp[i] >= 0 ? 1 : 0);
                 }
-            }                
-            else // not sure this option is ever needed. 
+            }
+            else // not sure this option is ever needed.
             {
-                for(i = 0; i < nverts; ++i)
+                for (i = 0; i < nverts; ++i)
                 {
                     cnt = returnval->m_localToGlobalMap[i];
                     returnval->m_localToGlobalMap[i] = GlobCoeffs[cnt];
                 }
-
             }
-
 
             return returnval;
         }
-
 
         /**
          * The bandwidth calculated here corresponds to what is referred to as

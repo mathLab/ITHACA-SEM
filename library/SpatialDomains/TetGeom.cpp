@@ -39,11 +39,17 @@
 #include <StdRegions/StdTetExp.h>
 #include <SpatialDomains/SegGeom.h>
 
-
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        const unsigned int TetGeom::VertexEdgeConnectivity[4][3] = {
+            {0,2,3},{0,1,4},{1,2,5},{3,4,5}};
+        const unsigned int TetGeom::VertexFaceConnectivity[4][3] = {
+            {0,1,3},{0,1,2},{0,2,3},{1,2,3}};
+        const unsigned int TetGeom::EdgeFaceConnectivity  [6][2] = {
+            {0,1},{0,2},{0,3},{1,3},{1,2},{2,3}};
+
         TetGeom::TetGeom()
         {
             m_shapeType = LibUtilities::eTetrahedron;
@@ -264,25 +270,16 @@ namespace Nektar
 
         int TetGeom::v_GetVertexEdgeMap(const int i, const int j) const
 	{
-	    const unsigned int VertexEdgeConnectivity[][3] = {
-	        {0,2,3},{0,1,4},{1,2,5},{3,4,5}};
-
 	    return VertexEdgeConnectivity[i][j];
 	}
 
         int TetGeom::v_GetVertexFaceMap(const int i, const int j) const
 	{
-	    const unsigned int VertexFaceConnectivity[][3] = {
-	        {0,1,3},{0,1,2},{0,2,3},{1,2,3}};
-
 	    return VertexFaceConnectivity[i][j];
 	}
 
         int TetGeom::v_GetEdgeFaceMap(const int i, const int j) const
 	{
-	    const unsigned int EdgeFaceConnectivity[][2] = {
-	      {0,1},{0,2},{0,3},{1,3},{1,2},{2,3}};
-
 	    return EdgeFaceConnectivity[i][j];
 	}
 

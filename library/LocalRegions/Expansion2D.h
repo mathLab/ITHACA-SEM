@@ -135,6 +135,8 @@ namespace Nektar
                     const Array<OneD, const NekDouble>  &varcoeff,
                     Array<OneD,NekDouble> &outarray);
 
+            Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
+            
         private:
             std::vector<ExpansionWeakPtr> m_edgeExp;
             std::vector<bool> m_requireNeg;

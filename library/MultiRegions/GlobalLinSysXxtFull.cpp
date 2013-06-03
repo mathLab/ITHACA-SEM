@@ -204,8 +204,9 @@ namespace Nektar
             // First construct a map of the number of local DOFs in each block
             // and the number of matrix entries for each block
 
+            // Dimension of matrix is just the linear vertex space
             if(m_linSysKey.GetMatrixType() == StdRegions::ePreconLinearSpace)
-            {// Dimension of matrix is just the linear vertex space
+            {
                 for (n = 0; n < nElmt; ++n)
                 {
                     i = vExp->GetOffset_Elmt_Id(n);

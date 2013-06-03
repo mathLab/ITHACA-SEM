@@ -86,11 +86,11 @@ namespace Nektar
 	}
         
 
-       /**
+        /**
 	 * \brief Construct the low energy preconditioner from
 	 * \f$\mathbf{S}_{2}\f$
 	 *
-	 *\f[\mathbf{M}^{-1}=\left[\begin{array}{ccc}
+	 * \f[\mathbf{M}^{-1}=\left[\begin{array}{ccc}
 	 *  Diag[(\mathbf{S_{2}})_{vv}] & & \\ & (\mathbf{S}_{2})_{eb} & \\ & &
 	 *  (\mathbf{S}_{2})_{fb} \end{array}\right] \f]
 	 *
@@ -699,10 +699,10 @@ namespace Nektar
 
 
        /**
-         * Set a block transformation matrices for each element type. These are
-         * neeed in routines that transform the schur complement matrix to and
-         * from the low energy basis.
-         */
+        * Set a block transformation matrices for each element type. These are
+        * needed in routines that transform the schur complement matrix to and
+        * from the low energy basis.
+        */
        void PreconditionerLowEnergy::SetupBlockTransformationMatrix()
        {
            boost::shared_ptr<MultiRegions::ExpList> 
@@ -778,7 +778,7 @@ namespace Nektar
 
 
         /**
-         * \brief transform the solution vector vector to low energy
+         * \brief Transform the solution vector vector to low energy.
          *
          * As the conjugate gradient system is solved for the low energy basis,
          * the solution vector \f$\mathbf{x}\f$ must be transformed to the low
@@ -819,7 +819,7 @@ namespace Nektar
         }
 
         /**
-         * \brief transform the solution vector vector to low energy
+         * \brief Transform the solution vector vector to low energy.
          *
          * As the conjugate gradient system is solved for the low energy basis,
          * the solution vector \f$\mathbf{x}\f$ must be transformed to the low
@@ -1652,13 +1652,16 @@ namespace Nektar
                 ::AllocateSharedPtr(1.0,RTprismtmp);
         }
 
-       /**
+        /**
+         * \brief Modify the prism transformation matrix to align with the
+         * tetrahedral modes.
+         *
          * This routine replaces the edge and triangular face components of the
-         * prismatic vertex transformation matrices (\f$\mathbf{R}_{ve} &
-         * \mathbf{R}_{vf}\f) with the corresponding components from the
+         * prismatic vertex transformation matrices \f$\mathbf{R}_{ve}\f$ and
+         * \f$\mathbf{R}_{vf}\f$ with the corresponding components from the
          * tetrahedral transformation matrices. Additionally, triangular face
          * components in the prismatic edge transformation matrix
-         * (\f$\mathbf{R}_{ef}\f) with the corresponding component from the
+         * \f$\mathbf{R}_{ef}\f$ with the corresponding component from the
          * tetrahedral transformation matrix.
          */
         void PreconditionerLowEnergy::ModifyPrismTransformationMatrix(

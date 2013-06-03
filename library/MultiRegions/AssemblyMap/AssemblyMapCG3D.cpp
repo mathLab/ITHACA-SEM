@@ -257,8 +257,8 @@ namespace Nektar
             }
 
             // Number of dirichlet edges and faces
-            m_numDirEdges=edgeReorderedGraphVertId.size();
-            m_numDirFaces=faceReorderedGraphVertId.size();
+            m_numDirEdges = edgeReorderedGraphVertId.size();
+            m_numDirFaces = faceReorderedGraphVertId.size();
 
             /**
              * STEP 1.5: Exchange Dirichlet mesh vertices between processes and
@@ -361,16 +361,16 @@ namespace Nektar
                 }
             }
 
-            //Low Energy preconditioner needs to know how many extra dirichlet
-            //edges are on this process
-            int m_extradiredges=extraDirEdgeIds.size();
-            m_extraDirEdges = Array<OneD, int>(m_extradiredges,-1);
-            i=0;
-            for(mapConstIt  = extraDirEdgeIds.begin(); 
-                mapConstIt != extraDirEdgeIds.end(); mapConstIt++)
+            // Low Energy preconditioner needs to know how many extra Dirichlet
+            // edges are on this process.
+            int m_extradiredges = extraDirEdgeIds.size();
+            m_extraDirEdges = Array<OneD, int>(m_extradiredges, -1);
+            i = 0;
+            for (mapConstIt  = extraDirEdgeIds.begin();
+                 mapConstIt != extraDirEdgeIds.end(); mapConstIt++)
             {
-                meshEdgeId=mapConstIt->first;
-                m_extraDirEdges[i++]=meshEdgeId;
+                meshEdgeId = mapConstIt->first;
+                m_extraDirEdges[i++] = meshEdgeId;
             }
 
             for (i = 0; i < n; ++i)
@@ -564,12 +564,12 @@ namespace Nektar
             int faceCnt;
 
             m_numNonDirVertexModes = 0;
-            m_numNonDirEdges   = 0;
-            m_numNonDirFaces   = 0;
+            m_numNonDirEdges       = 0;
+            m_numNonDirFaces       = 0;
             m_numNonDirFaceModes   = 0;
             m_numNonDirFaceModes   = 0;
 
-            m_numLocalBndCoeffs = 0;
+            m_numLocalBndCoeffs    = 0;
 
             /// - Periodic vertices
             for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
@@ -884,9 +884,6 @@ namespace Nektar
                 }
                 localFaceOffset+=nFaces;
             }
-
-            // Number of non dirichlet edges and faces
-            //m_numNonDirEdges=n_eblks;
 
             localVertOffset=0;
             localEdgeOffset=0;

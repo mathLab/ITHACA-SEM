@@ -1018,7 +1018,7 @@ namespace Nektar
             }
 
             // Number of dirichlet edges
-            m_numNonDirEdges=edgeTempGraphVertId.size();
+            m_numNonDirEdges = edgeTempGraphVertId.size();
 
             if(doInteriorMap)
             {

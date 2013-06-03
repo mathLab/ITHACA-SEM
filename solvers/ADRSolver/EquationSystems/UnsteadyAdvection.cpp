@@ -56,14 +56,10 @@ namespace Nektar
     {
         // Call to the initialisation object of UnsteadySystem
         UnsteadySystem::v_InitObject();
-                
-        // Define the normal velocity fields
-        if (m_fields[0]->GetTrace())
-        {
-            m_traceVn  = Array<OneD, NekDouble>(GetTraceNpoints());
-        }
         
-        // Read the advection velocities from session file 
+        m_session->LoadParameter("wavefreq",   m_waveFreq, 0.0);
+        // Read the advection velocities from session file
+        
         std::vector<std::string> vel;
         vel.push_back("Vx");
         vel.push_back("Vy");
@@ -102,6 +98,12 @@ namespace Nektar
             // Discontinuous field 
             case MultiRegions::eDiscontinuous:
             {
+                // Define the normal velocity fields
+                if (m_fields[0]->GetTrace())
+                {
+                    m_traceVn  = Array<OneD, NekDouble>(GetTraceNpoints());
+                }
+                
                 string advName;
                 string riemName;
                 m_session->LoadSolverInfo(

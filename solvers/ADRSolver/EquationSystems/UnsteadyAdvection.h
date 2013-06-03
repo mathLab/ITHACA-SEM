@@ -103,6 +103,9 @@ namespace Nektar
         
         /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
+        
+    private:
+        NekDouble m_waveFreq;
     };
 }
 

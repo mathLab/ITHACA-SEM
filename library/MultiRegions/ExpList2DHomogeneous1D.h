@@ -50,11 +50,14 @@ namespace Nektar
         class ExpList2DHomogeneous1D;
 
         /// Shared pointer to an ExpList2DHomogeneous1D object.
-        typedef boost::shared_ptr<ExpList2DHomogeneous1D>      ExpList2DHomogeneous1DSharedPtr;
+        typedef boost::shared_ptr<ExpList2DHomogeneous1D>
+            ExpList2DHomogeneous1DSharedPtr;
         /// Vector of pointers to ExpList2DHomogeneous1D objects.
-        typedef std::vector< ExpList2DHomogeneous1DSharedPtr > ExpList2DHomogeneous1DVector;
+        typedef std::vector< ExpList2DHomogeneous1DSharedPtr >
+            ExpList2DHomogeneous1DVector;
         /// Iterator for the vector of ExpList2DHomogeneous1D pointers.
-        typedef std::vector< ExpList2DHomogeneous1DSharedPtr >::iterator ExpList2DHomogeneous1DVectorIter;
+        typedef std::vector< ExpList2DHomogeneous1DSharedPtr >::iterator
+            ExpList2DHomogeneous1DVectorIter;
 
         /// Abstraction of a two-dimensional multi-elemental expansion which
         /// is merely a collection of local expansions.
@@ -66,21 +69,21 @@ namespace Nektar
 
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                   const LibUtilities::BasisKey &HomoBasis,
-                                   const NekDouble lz,
-								   const bool useFFT,
-								   const bool dealiasing,
-                                   const SpatialDomains::MeshGraphSharedPtr &graph1D);
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const LibUtilities::BasisKey &HomoBasis,
+                const NekDouble lz,
+                const bool useFFT,
+                const bool dealiasing,
+                const SpatialDomains::MeshGraphSharedPtr &graph1D);
 
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                   const LibUtilities::BasisKey &HomoBasis,
-                                   const NekDouble lhom,
-								   const bool useFFT,
-								   const bool dealiasing,
-                                   const boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
-                                   const Array<OneD, ExpListSharedPtr> &planes);
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const LibUtilities::BasisKey &HomoBasis,
+                const NekDouble lhom,
+                const bool useFFT,
+                const bool dealiasing,
+                const boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
+                const Array<OneD, ExpListSharedPtr> &planes);
 
             /// Copy constructor.
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(const ExpList2DHomogeneous1D &In);
@@ -90,14 +93,15 @@ namespace Nektar
 
             /// This function calculates the coordinates of all the elemental
             /// quadrature points \f$\boldsymbol{x}_i\f$.
-            inline void GetCoords(Array<OneD, NekDouble> &coord_0,
-                                  Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
-                                  Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
+            inline void GetCoords(
+                Array<OneD, NekDouble> &coord_0,
+                Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
+                Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 
             MULTI_REGIONS_EXPORT void GetCoords(const int eid,
-                           Array<OneD, NekDouble> &xc0,
-                           Array<OneD, NekDouble> &xc1,
-                           Array<OneD, NekDouble> &xc2);
+                Array<OneD, NekDouble> &xc0,
+                Array<OneD, NekDouble> &xc1,
+                Array<OneD, NekDouble> &xc2);
 			
         protected:
 
@@ -108,22 +112,27 @@ namespace Nektar
 
             //  virtual functions
 
-            virtual void v_GetCoords(Array<OneD, NekDouble> &coord_0,
-                                     Array<OneD, NekDouble> &coord_1,
-                                     Array<OneD, NekDouble> &coord_2);
+            virtual void v_GetCoords(
+                Array<OneD, NekDouble> &coord_0,
+                Array<OneD, NekDouble> &coord_1,
+                Array<OneD, NekDouble> &coord_2);
             
-            virtual void v_WriteTecplotZone(std::ofstream &outfile,
-                                            int expansion);
+            virtual void v_WriteTecplotZone(
+                std::ofstream &outfile,
+                int expansion);
 
 
-            virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+            virtual void v_WriteVtkPieceHeader(
+                std::ofstream &outfile,
+                int expansion);
 
         private:
         };
 
-        inline void ExpList2DHomogeneous1D::GetCoords(Array<OneD, NekDouble> &coord_0,
-                                                      Array<OneD, NekDouble> &coord_1,
-                                                      Array<OneD, NekDouble> &coord_2)
+        inline void ExpList2DHomogeneous1D::GetCoords(
+                Array<OneD, NekDouble> &coord_0,
+                Array<OneD, NekDouble> &coord_1,
+                Array<OneD, NekDouble> &coord_2)
 
         {
             v_GetCoords(coord_0,coord_1,coord_2);

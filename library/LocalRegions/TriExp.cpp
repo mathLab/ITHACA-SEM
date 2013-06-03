@@ -146,9 +146,16 @@ namespace Nektar
 
                     if(out_d2.num_elements())
                     {
-                        Vmath::Vmul  (nqtot,&gmat[4][0],1,&diff0[0],1, &out_d2[0], 1);
-                        Vmath::Vvtvp (nqtot,&gmat[5][0],1,&diff1[0],1, &out_d2[0], 1,
+                        if (m_geom->GetCoordim() == 3)
+                        {
+                            Vmath::Vmul  (nqtot,&gmat[4][0],1,&diff0[0],1, &out_d2[0], 1);
+                            Vmath::Vvtvp (nqtot,&gmat[5][0],1,&diff1[0],1, &out_d2[0], 1,
                                       &out_d2[0],1);
+                        }
+                        else
+                        {
+                            Vmath::Zero  (nqtot, out_d2, 1);
+                        }
                     }
                 }
                 else // regular geometry
@@ -167,8 +174,15 @@ namespace Nektar
 
                     if(out_d2.num_elements())
                     {
-                        Vmath::Smul (nqtot, gmat[4][0], diff0, 1, out_d2, 1);
-                        Blas::Daxpy (nqtot, gmat[5][0], diff1, 1, out_d2, 1);
+                        if (m_geom->GetCoordim() == 3)
+                        {
+                            Vmath::Smul (nqtot, gmat[4][0], diff0, 1, out_d2, 1);
+                            Blas::Daxpy (nqtot, gmat[5][0], diff1, 1, out_d2, 1);
+                        }
+                        else
+                        {
+                            Vmath::Zero (nqtot, out_d2, 1);
+                        }
                     }
                 }
             }
@@ -333,7 +347,10 @@ namespace Nektar
                 }
             }
 
-            if (m_ncoeffs > 6) {
+            int nBoundaryDofs = NumBndryCoeffs();
+            int nInteriorDofs = m_ncoeffs - nBoundaryDofs;
+
+            if (nInteriorDofs > 0) {
                 Array<OneD, NekDouble> tmp0(m_ncoeffs);
                 Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
@@ -348,9 +365,6 @@ namespace Nektar
                 // note: this block alreay contains the inverse matrix
                 MatrixKey             masskey(StdRegions::eMass,DetShapeType(),*this);
                 DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
-
-                int nBoundaryDofs = NumBndryCoeffs();
-                int nInteriorDofs = m_ncoeffs - nBoundaryDofs;
 
                 Array<OneD, NekDouble> rhs(nInteriorDofs);
                 Array<OneD, NekDouble> result(nInteriorDofs);
@@ -1491,6 +1505,17 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
             default:
                 {
                     NekDouble        one = 1.0;
@@ -1629,6 +1654,12 @@ namespace Nektar
         {
             return m_staticCondMatrixManager[mkey];
         }
+
+        void TriExp::v_DropLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            m_staticCondMatrixManager.DeleteObject(mkey);
+        }
+
 
 
         void TriExp::v_MassMatrixOp(const Array<OneD, const NekDouble> &inarray,

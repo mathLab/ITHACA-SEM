@@ -106,17 +106,17 @@ namespace Nektar
             /**
              * @brief A map which identifies pairs of periodic faces.
              */
-            map<int, PeriodicFace> m_periodicFaces;
+            PeriodicMap m_periodicFaces;
             
             /**
-             * @brief A map which identifies pairs of periodic edges.
+             * @brief A map which identifies groups of periodic edges.
              */
-            map<int, int> m_periodicEdges;
+            PeriodicMap m_periodicEdges;
 	    
             /**
-             * @brief A map identifying pairs of periodic vertices.
+             * @brief A map which identifies groups of periodic vertices.
              */
-            map<int, int> m_periodicVertices;
+            PeriodicMap m_periodicVerts;
             
             /*
              * @brief A map identifying which faces are left- and right-adjacent
@@ -125,12 +125,12 @@ namespace Nektar
             vector<bool> m_leftAdjacentFaces;
 
             /**
-             * @brief Auxiliary map for periodic boundary conditions.
-             * 
-             * Takes geometry IDs of periodic edges to a pair (n,e), where n
-             * is the expansion containing the edge and e the local edge number.
+             * @brief A vector indicating degress of freedom which need to be
+             * copied from forwards to backwards space in case of a periodic
+             * boundary condition.
              */
-            boost::unordered_map<int,pair<int,int> > m_perFaceToExpMap;
+            vector<int> m_periodicFwdCopy;
+            vector<int> m_periodicBwdCopy;
             
             void SetUpDG();
             bool SameTypeOfBoundaryConditions(const DisContField3D &In);
@@ -184,13 +184,13 @@ namespace Nektar
              * field.
              */
             virtual void v_GetPeriodicFaces(
-                map<int,int>          &periodicVertices,
-                map<int,int>          &periodicEdges,
-                map<int,PeriodicFace> &periodicFaces)
+                PeriodicMap &periodicVerts,
+                PeriodicMap &periodicEdges,
+                PeriodicMap &periodicFaces)
             {
-                periodicVertices = m_periodicVertices;
-                periodicEdges    = m_periodicEdges;
-                periodicFaces    = m_periodicFaces;
+                periodicVerts = m_periodicVerts;
+                periodicEdges = m_periodicEdges;
+                periodicFaces = m_periodicFaces;
             }
 
             virtual ExpListSharedPtr &v_GetTrace()

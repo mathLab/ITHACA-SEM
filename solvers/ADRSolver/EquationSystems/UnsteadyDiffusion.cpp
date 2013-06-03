@@ -86,12 +86,14 @@ namespace Nektar
         {
             case MultiRegions::eDiscontinuous:
             {
-                string diffName;
+                std::string diffName;
         
                 m_session->LoadSolverInfo("DiffusionType", diffName, "LDG");
-                m_diffusion = SolverUtils::GetDiffusionFactory().CreateInstance(diffName, diffName);
-                m_diffusion->SetFluxVector(&UnsteadyDiffusion::GetFluxVector, this);
-                m_diffusion->InitObject(m_session);
+                m_diffusion = SolverUtils::GetDiffusionFactory().
+                    CreateInstance(diffName, diffName);
+                m_diffusion->SetFluxVector(&UnsteadyDiffusion::
+                                           GetFluxVector, this);
+                m_diffusion->InitObject(m_session, m_fields);
                 break;
             }
         

@@ -34,6 +34,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/FieldIO.h>
+#include "zlib.h"
+
+// Buffer size for zlib compression/decompression
+#define CHUNK 16384
 
 namespace Nektar
 {
@@ -265,81 +269,21 @@ namespace Nektar
                 }
                 elemTag->SetAttribute("ID", idString);
 
-                // Write binary data
                 std::string compressedDataString;
+                ASSERTL0(Z_OK == Deflate(fielddata[f], compressedDataString),
+                        "Failed to compress field data.");
+
+                // If the string length is not divisible by 3,
+                // pad it. There is a bug in transform_width
+                // that will make it reference past the end
+                // and crash.
+                switch (compressedDataString.length() % 3)
                 {
-                    // Serialize the fielddata vector to the stringstream.
-                    std::stringstream archiveStringStream(std::string((char*) &fielddata[f][0], sizeof(fielddata[f][0]) / sizeof(char) * fielddata[f].size()));
-
-                    // Compress the serialized data.
-                    std::stringstream compressedData;
-                    {
-                        boost::iostreams::filtering_streambuf<boost::iostreams::input>   out;
-                        out.push(boost::iostreams::zlib_compressor());
-                        out.push(archiveStringStream);
-                        boost::iostreams::copy(out, compressedData);
-
-                        // try decompressing to see if compression accurate
-                        try
-                        {
-                            std::stringstream elementDecompressedData;
-                            boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-                            in.push(boost::iostreams::zlib_decompressor());
-                            in.push(compressedData);
-                            
-                            boost::iostreams::copy(in, elementDecompressedData);
-                        }
-                        catch (boost::iostreams::zlib_error e)
-                        {
-                            if (e.error() == boost::iostreams::zlib::stream_end)
-                            {
-                                cout <<  "Stream end zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::stream_error)
-                            {
-                                cout <<   "Stream zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::version_error)
-                            {
-                                cout << "Version zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::data_error)
-                            {
-                                cout <<  "Data zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::mem_error)
-                            {
-                                cout << "Memory zlib error";
-                            }
-                            else if (e.error() == boost::iostreams::zlib::buf_error)
-                            {
-                                cout <<"Buffer zlib error";
-                            }
-                            else
-                            {
-                                cout <<  "Unknown zlib error";
-                            }
-
-                            cout << endl << "Retrying compression will not check again" << endl;
-                            compressedData.clear();
-                            compressedData.str("");
-                            boost::iostreams::copy(out, compressedData);
-                        }
-                    }
-
-                    // If the string length is not divisible by 3,
-                    // pad it. There is a bug in transform_width
-                    // that will make it reference past the end
-                    // and crash.
-                    switch (compressedData.str().length() % 3)
-                    {
-                    case 1:
-                        compressedData << '\0';
-                    case 2:
-                        compressedData << '\0';
-                        break;
-                    }
-                    compressedDataString = compressedData.str();
+                case 1:
+                    compressedDataString += '\0';
+                case 2:
+                    compressedDataString += '\0';
+                    break;
                 }
 
                 // Convert from binary to base64.
@@ -754,53 +698,13 @@ namespace Nektar
                     typedef boost::archive::iterators::transform_width<
                             boost::archive::iterators::binary_from_base64<
                             std::string::const_iterator>, 8, 6 > binary_t;
-                    std::stringstream elementCompressedData(std::string(binary_t(elementStr.begin()), binary_t(elementStr.end())));
+                    std::string vCompressed(binary_t(elementStr.begin()),
+                                            binary_t(elementStr.end()));
 
-                    // Decompress the binary data.
-                    std::stringstream elementDecompressedData;
-                    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-                    in.push(boost::iostreams::zlib_decompressor());
-                    in.push(elementCompressedData);
-                    try
-                    {
-                        boost::iostreams::copy(in, elementDecompressedData);
-                    }
-                    catch (boost::iostreams::zlib_error e)
-                    {
-                        if (e.error() == boost::iostreams::zlib::stream_end)
-                        {
-                            ASSERTL0(false, "Stream end zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::stream_error)
-                        {
-                            ASSERTL0(false, "Stream zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::version_error)
-                        {
-                            ASSERTL0(false, "Version zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::data_error)
-                        {
-                            ASSERTL0(false, "Data zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::mem_error)
-                        {
-                            ASSERTL0(false, "Memory zlib error");
-                        }
-                        else if (e.error() == boost::iostreams::zlib::buf_error)
-                        {
-                            ASSERTL0(false, "Buffer zlib error");
-                        }
-                        else
-                        {
-                            ASSERTL0(false, "Unknown zlib error");
-                        }
-                    }
+                    std::vector<NekDouble> elementFieldData;
+                    ASSERTL0(Z_OK == Inflate(vCompressed, elementFieldData),
+                            "Failed to decompress field data.");
 
-                    // Deserialize the array.
-                    std::string vData = elementDecompressedData.str();
-                    NekDouble* readFieldData = (NekDouble*) vData.c_str();
-                    std::vector<NekDouble> elementFieldData(readFieldData, readFieldData + elementDecompressedData.str().length() * sizeof(*elementDecompressedData.str().c_str()) / sizeof(NekDouble));
                     fielddata.push_back(elementFieldData);
 
                     int datasize = CheckFieldDefinition(fielddefs[cntdumps]);
@@ -814,6 +718,121 @@ namespace Nektar
             }
         }
 
+
+        /**
+         * Compress a vector of NekDouble values into a string using zlib.
+         */
+        int Deflate(std::vector<NekDouble>& in,
+                        string& out)
+        {
+            int ret;
+            unsigned have;
+            z_stream strm;
+            unsigned char* input = (unsigned char*)(&in[0]);
+            string buffer;
+            buffer.resize(CHUNK);
+
+            /* allocate deflate state */
+            strm.zalloc = Z_NULL;
+            strm.zfree = Z_NULL;
+            strm.opaque = Z_NULL;
+            ret = deflateInit(&strm, Z_DEFAULT_COMPRESSION);
+
+            ASSERTL0(ret == Z_OK, "Error initializing Zlib.");
+
+            strm.avail_in = in.size() * sizeof(NekDouble) / sizeof(char);
+            strm.next_in = input;
+
+            // Deflate input until output buffer is no longer full.
+            do {
+                strm.avail_out = CHUNK;
+                strm.next_out = (unsigned char*)(&buffer[0]);
+
+                ret = deflate(&strm, Z_FINISH);
+
+                // Deflate can return Z_OK, Z_STREAM_ERROR, Z_BUF_ERROR or
+                // Z_STREAM_END. All, except Z_STREAM_ERROR are ok.
+                ASSERTL0(ret != Z_STREAM_ERROR, "Zlib stream error");
+
+                have = CHUNK - strm.avail_out;
+                out += buffer.substr(0, have);
+
+            } while (strm.avail_out == 0);
+
+            // Check all input was processed.
+            ASSERTL0(strm.avail_in == 0, "Not all input was used.");
+
+            // Check stream is complete.
+            ASSERTL0(ret == Z_STREAM_END, "Stream not finished");
+
+            // Clean-up and return
+            (void)deflateEnd(&strm);
+            return Z_OK;
+        }
+
+
+        /**
+         * Decompress a zlib-compressed string into a vector of NekDouble
+         * values.
+         */
+        int Inflate(std::string& in,
+                    std::vector<NekDouble>& out)
+        {
+            int ret;
+            unsigned have;
+            z_stream strm;
+            string buffer;
+            buffer.resize(CHUNK);
+            string output;
+
+            strm.zalloc = Z_NULL;
+            strm.zfree = Z_NULL;
+            strm.opaque = Z_NULL;
+            strm.avail_in = 0;
+            strm.next_in = Z_NULL;
+            ret = inflateInit(&strm);
+            ASSERTL0(ret == Z_OK, "Error initializing zlib decompression.");
+
+            strm.avail_in = in.size();
+            strm.next_in = (unsigned char*)(&in[0]);
+
+            do {
+                strm.avail_out = CHUNK;
+                strm.next_out = (unsigned char*)(&buffer[0]);
+
+                ret = inflate(&strm, Z_NO_FLUSH);
+
+                ASSERTL0(ret != Z_STREAM_ERROR, "Stream error occured.");
+
+                switch (ret) {
+                    case Z_NEED_DICT:
+                        ret = Z_DATA_ERROR;     /* and fall through */
+                    case Z_DATA_ERROR:
+                    case Z_MEM_ERROR:
+                        (void)inflateEnd(&strm);
+                        return ret;
+                }
+
+                have = CHUNK - strm.avail_out;
+                output += buffer.substr(0, have);
+
+            } while (strm.avail_out == 0);
+
+            (void)inflateEnd(&strm);
+
+            if (ret == Z_STREAM_END)
+            {
+                NekDouble* readFieldData = (NekDouble*) output.c_str();
+                unsigned int len = output.size() * sizeof(*output.c_str())
+                                                 / sizeof(NekDouble);
+                out.assign( readFieldData, readFieldData + len);
+                return Z_OK;
+            }
+            else
+            {
+                return Z_DATA_ERROR;
+            }
+        }
 
         /**
          *

@@ -179,22 +179,26 @@ namespace Nektar
         {
             int n,m;
 			
-			const Array<OneD, const NekDouble> y = m_homogeneousBasis_y->GetZ();
+            const Array<OneD, const NekDouble> y = m_homogeneousBasis_y->GetZ();
             const Array<OneD, const NekDouble> z = m_homogeneousBasis_z->GetZ();
 			
 
             for(n = 0; n < m_nz; ++n)
             {
-				for(m = 0; m < m_ny; ++m)
-				{
-					m_lines[m+(n*m_ny)]->EvaluateBoundaryConditions(time,0.5*m_lhom_y*(1.0+y[m]),0.5*m_lhom_z*(1.0+z[n]));
-				}
+                for(m = 0; m < m_ny; ++m)
+                {
+                    m_lines[m+(n*m_ny)]->EvaluateBoundaryConditions(time,0.5*m_lhom_y*(1.0+y[m]),0.5*m_lhom_z*(1.0+z[n]));
+                }
             }
             
             // Fourier transform coefficient space boundary values
             for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+                if(time == 0.0 || m_bndConditions[n]->GetUserDefined() == 
+                   SpatialDomains::eTimeDependent)
+                {
+                    m_bndCondExpansions[n]->HomogeneousFwdTrans(m_bndCondExpansions[n]->GetCoeffs(),m_bndCondExpansions[n]->UpdateCoeffs());
+                }
             }    
         }
         

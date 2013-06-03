@@ -40,9 +40,10 @@
 #include <LibUtilities/LinearAlgebra/NekVector.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/NekLinSys.hpp>
-#include <LibUtilities/LinearAlgebra/SparseStandardMatrix.hpp>
+
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/BasicConst/NektarUnivTypeDefs.hpp>
+
 namespace Nektar
 {
     typedef NekVector<NekDouble>                DNekVec;
@@ -65,8 +66,6 @@ namespace Nektar
             DNekScalBlkMat;
     typedef NekMatrix<NekMatrix<NekMatrix<NekMatrix<NekDouble, StandardMatrixTag>, ScaledMatrixTag>, BlockMatrixTag>, BlockMatrixTag>
             BlkMatDNekScalBlkMat;
-    typedef NekSparseMatrix<NekDouble>
-            DNekSparseMat;
 
     typedef boost::shared_ptr<DNekMat>          DNekMatSharedPtr;
     typedef boost::shared_ptr<DNekScalMat>      DNekScalMatSharedPtr;
@@ -75,7 +74,6 @@ namespace Nektar
     typedef boost::shared_ptr<DNekScalBlkMat>      DNekScalBlkMatSharedPtr;
     typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
     typedef boost::shared_ptr<BlkMatDNekScalBlkMat>  BlkMatDNekScalBlkMatSharedPtr;
-    typedef boost::shared_ptr<DNekSparseMat>     DNekSparseMatSharedPtr;
 
 
     static DNekMatSharedPtr NullDNekMatSharedPtr;
@@ -91,42 +89,3 @@ namespace Nektar
 }
 
 #endif //NEKTAR_LIB_UTILITIES_NEK_TYPEDEFS_HPP
-
-/**
-    $Log: NekTypeDefs.hpp,v $
-    Revision 1.11  2008/11/01 19:15:28  bnelson
-    Updated matrices so the storage policy is no longer a template parameter.  Removed the template parameter from the LinearSystem class.
-
-    Revision 1.10  2008/03/12 15:22:45  pvos
-    Clean up of the code
-
-    Revision 1.9  2007/10/03 11:37:50  sherwin
-    Updates relating to static condensation implementation
-
-    Revision 1.8  2007/07/26 08:40:49  sherwin
-    Update to use generalised i/o hooks in Helmholtz1D
-
-    Revision 1.7  2007/07/22 23:03:28  bnelson
-    Backed out Nektar::ptr.
-
-    Revision 1.6  2007/07/20 00:24:13  bnelson
-    Replaced boost::shared_ptr with Nektar::ptr
-
-    Revision 1.5  2007/07/13 09:02:21  sherwin
-    Mods for Helmholtz solver
-
-    Revision 1.4  2007/06/10 23:42:16  bnelson
-    Matrix updates.
-
-    Revision 1.3  2007/02/24 09:08:41  sherwin
-    Updated to include definition of NekLinSysSharedPtr
-
-    Revision 1.2  2007/02/17 01:11:27  bnelson
-    *** empty log message ***
-
-    Revision 1.1  2007/01/23 23:21:26  sherwin
-    Modes so that we can use Lapack: definitions and added NekTypeDefs.hpp
-
- **/
-
-

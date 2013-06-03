@@ -54,13 +54,28 @@ namespace Nektar
             unsigned int npts = m_pointsKey.GetNumPoints(); 
 
 	    // Derived power coefficient.
-	    NekDouble rn = powf(2.0/BLPoints::delta_star,1.0/(npts-2.0));
-            
+            NekDouble r = BLPoints::delta_star;
+            NekDouble a = 2.0 * (1.0-r) / (1.0 - pow(r,(double)npts));
             m_points[0][0] = -1.0;
             
 	    for (unsigned int i = 1; i < npts; ++i)
             {
-                m_points[0][i] = -1.0 + delta_star*pow(rn,(NekDouble)i-1.0);
+                m_points[0][i] = m_points[0][i-1] + a*pow(r,(double)i);
+            }
+            m_points[0][npts-1] = 1.0;
+            
+            if (m_pointsKey.GetPointsType() == eBoundaryLayerPointsRev)
+            {
+                vector<NekDouble> tmp(npts);
+                for (unsigned int i = 0; i < npts; ++i)
+                {
+                    tmp[i] = - m_points[0][npts-1-i];
+                }
+                
+                for (unsigned int i = 0; i < npts; ++i)
+                {
+                    m_points[0][i] = tmp[i];
+                }
             }
         }
 

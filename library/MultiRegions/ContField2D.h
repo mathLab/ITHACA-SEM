@@ -96,6 +96,10 @@ namespace Nektar
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray) const;
 
+            inline void LocalToGlobal(
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,       NekDouble> &outarray) const;
+
             /// Assembles the global coefficients \f$\boldsymbol{\hat{u}}_g\f$
             /// from the local coefficients \f$\boldsymbol{\hat{u}}_l\f$.
             inline void Assemble();
@@ -350,6 +354,13 @@ namespace Nektar
             m_locToGloMap->GlobalToLocal(inarray,outarray);
         }
 
+        inline void ContField2D::LocalToGlobal(
+                const Array<OneD, const NekDouble> &inarray,
+                Array<OneD,NekDouble> &outarray) const 
+        {
+            m_locToGloMap->LocalToGlobal(inarray, outarray);
+        }
+
         /**
          * This operation is evaluated as:
          * \f{tabbing}
@@ -538,7 +549,7 @@ namespace Nektar
             }
             else
             {
-                return matrixIter->second->GetMatrix()->GetNumNonZeroEntries();
+                return matrixIter->second->GetNumNonZeroEntries();
             }
 
             return 0;

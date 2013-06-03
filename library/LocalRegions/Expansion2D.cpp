@@ -1176,5 +1176,75 @@ namespace Nektar
                 coeffs[map[i]] = vEdgeCoeffs[i]*sign[i];
             }
         }
+
+        DNekMatSharedPtr Expansion2D::v_BuildVertexMatrix(
+            const DNekScalMatSharedPtr &r_bnd)
+        {
+            MatrixStorage storage = eFULL;
+            DNekMatSharedPtr m_vertexmatrix;
+
+            int nVerts, vid1, vid2, vMap1, vMap2;
+            NekDouble VertexValue;
+
+            nVerts = GetNverts();
+
+            m_vertexmatrix =
+                MemoryManager<DNekMat>::AllocateSharedPtr(
+                    nVerts, nVerts, 0.0, storage);
+            DNekMat &VertexMat = (*m_vertexmatrix);
+
+            for (vid1 = 0; vid1 < nVerts; ++vid1)
+            {
+                vMap1 = GetVertexMap(vid1);
+
+                for (vid2 = 0; vid2 < nVerts; ++vid2)
+                {
+                    vMap2 = GetVertexMap(vid2);
+                    VertexValue = (*r_bnd)(vMap1, vMap2);
+                    VertexMat.SetValue(vid1, vid2, VertexValue);
+                }
+            }
+
+            return m_vertexmatrix;
+        }
+
+        Array<OneD, unsigned int> Expansion2D::v_GetEdgeInverseBoundaryMap(
+            int eid)
+        {
+            int n, j;
+            int nEdgeCoeffs;
+            int nBndCoeffs = NumBndryCoeffs();
+
+            Array<OneD, unsigned int> bmap(nBndCoeffs);
+            GetBoundaryMap(bmap);
+
+            // Map from full system to statically condensed system (i.e reverse
+            // GetBoundaryMap)
+            map<int, int> invmap;
+            for (j = 0; j < nBndCoeffs; ++j)
+            {
+                invmap[bmap[j]] = j;
+            }
+
+            // Number of interior edge coefficients
+            nEdgeCoeffs = GetEdgeNcoeffs(eid) - 2;
+
+            const SpatialDomains::Geometry2DSharedPtr &geom = GetGeom2D();
+
+            Array<OneD, unsigned int> edgemaparray(nEdgeCoeffs);
+            Array<OneD, unsigned int> maparray    (nEdgeCoeffs);
+            Array<OneD, int>          signarray   (nEdgeCoeffs, 1);
+            StdRegions::Orientation eOrient      = geom->GetEorient(eid);
+
+            // maparray is the location of the edge within the matrix
+            GetEdgeInteriorMap(eid, eOrient, maparray, signarray);
+
+            for (n = 0; n < nEdgeCoeffs; ++n)
+            {
+                edgemaparray[n] = invmap[maparray[n]];
+            }
+
+            return edgemaparray;
+        }
     }
 }

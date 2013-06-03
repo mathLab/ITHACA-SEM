@@ -83,6 +83,8 @@ namespace Nektar
                 GetFaceOrient(const int i) const;
             SPATIAL_DOMAINS_EXPORT StdRegions::StdExpansion3DSharedPtr
                 GetXmap(const int i);
+            SPATIAL_DOMAINS_EXPORT int
+                GetDir(const int faceidx, const int facedir) const;
 
         protected:
             VertexComponentVector                            m_verts;
@@ -130,6 +132,8 @@ namespace Nektar
             virtual const LibUtilities::BasisSharedPtr
                                                 v_GetBasis(const int i, 
                                                            const int j);
+            virtual int                         v_GetDir(const int faceidx,
+                                                    const int facedir) const = 0;
 
             //---------------------------------------
             // Element connection functions

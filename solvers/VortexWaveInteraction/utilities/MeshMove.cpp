@@ -426,7 +426,7 @@ int main(int argc, char *argv[])
     MultiRegions::ExpList1DSharedPtr yexp;
 
     yexp = MemoryManager<MultiRegions::ExpList1D>
-    		::AllocateSharedPtr(*(bregions[lastIregion]), graphShPt, true);
+        ::AllocateSharedPtr(*(bregions.find(lastIregion)->second), graphShPt, true);
     Cont_y = MemoryManager<MultiRegions::ContField1D>
                                 ::AllocateSharedPtr(vSession, *yexp);  
     //--------------------------------------

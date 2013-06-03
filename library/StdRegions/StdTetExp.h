@@ -256,7 +256,6 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetBoundaryMap(
                     Array<OneD, unsigned int>& outarray);
 
-
             //---------------------------------------
             // Wrapper functions
             //---------------------------------------

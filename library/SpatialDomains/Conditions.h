@@ -81,8 +81,9 @@ namespace Nektar
             eRterminal,
             eCRterminal,
             eRCRterminal,
-            eInflowCFE,
-            eOutflowCFE,
+            eInflowCFS,
+            eOutflowCFS,
+            eExtrapOrder0,
             eNoUserDefined
         };
 
@@ -112,6 +113,9 @@ namespace Nektar
                 known_type["TimeDependent"] = eTimeDependent;
                 known_type["Radiation"] = eRadiation;
                 known_type["IsentropicVortex"] = eIsentropicVortex;
+                known_type["InflowCFS"] = eInflowCFS;
+                known_type["OutflowCFS"] = eOutflowCFS;
+                known_type["ExtrapOrder0"] = eExtrapOrder0;
                 known_type["NoUserDefined"] = eNoUserDefined;
 
                 std::map<const std::string, BndUserDefinedType>::const_iterator it = known_type.find(userDefined);
@@ -300,7 +304,7 @@ namespace Nektar
         typedef std::map<int, Composite> BoundaryRegion;
         typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
         typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
-        typedef std::vector<BoundaryRegionShPtr> BoundaryRegionCollection;
+        typedef std::map<int, BoundaryRegionShPtr> BoundaryRegionCollection;
 
         typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
         typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;

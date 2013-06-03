@@ -1046,6 +1046,15 @@ namespace Nektar
                 return GetBasisNumModes(2);
             }
         }
+
+        int StdPrismExp::v_GetTotalEdgeIntNcoeffs() const
+        {
+            int P = GetBasisNumModes(0)-2;
+            int Q = GetBasisNumModes(1)-2;
+            int R = GetBasisNumModes(2)-2;
+
+            return 2*P+3*Q+3*R;
+	}
         
         int StdPrismExp::v_GetFaceNcoeffs(const int i) const
         {
@@ -1086,6 +1095,17 @@ namespace Nektar
                 return Qi * Ri;
             }
         }
+
+        int StdPrismExp::v_GetTotalFaceIntNcoeffs() const
+        {
+            int Pi = GetBasisNumModes(0) - 2;
+            int Qi = GetBasisNumModes(1) - 2;
+            int Ri = GetBasisNumModes(2) - 2;
+
+            return Pi * Qi +
+                Pi * (2*Ri - Pi - 1) +
+                2* Qi * Ri;
+	}
         
         int StdPrismExp::v_GetFaceNumPoints(const int i) const
         {
@@ -1244,17 +1264,14 @@ namespace Nektar
             int                        nummodesA,
             int                        nummodesB)
         {
-            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
-            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
-            const LibUtilities::BasisType bType2 = GetEdgeBasisType(4);
-            
-            ASSERTL1(bType0 == bType1,
+            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");
-            ASSERTL1(bType0 == LibUtilities::eModified_A && 
-                     bType2 == LibUtilities::eModified_B,
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A && 
+                     GetEdgeBasisType(4) == LibUtilities::eModified_B,
                      "Method only implemented for Modified_A BasisType"
-                     "(x and y direction) and Modified_B BasisType (z direction)");
+                     "(x and y direction) and Modified_B BasisType (z "
+                     "direction)");
 
             int i, j, p, q, r, nFaceCoeffs, idx = 0;
 

@@ -6,6 +6,8 @@ SET(SOLVER_UTILS_SOURCES
   Diffusion/Diffusion.cpp
   Diffusion/DiffusionLDG.cpp
   Diffusion/DiffusionLDGNS.cpp
+  Diffusion/DiffusionLFR.cpp
+  Diffusion/DiffusionLFRNS.cpp
   Driver.cpp
   DriverArnoldi.cpp
   DriverModifiedArnoldi.cpp
@@ -18,6 +20,7 @@ SET(SOLVER_UTILS_SOURCES
   Filters/FilterThresholdMax.cpp
   RiemannSolvers/RiemannSolver.cpp
   RiemannSolvers/UpwindSolver.cpp
+  RiemannSolvers/UpwindLDGSolver.cpp
   UnsteadySystem.cpp
 )
 
@@ -29,6 +32,8 @@ SET(SOLVER_UTILS_HEADERS
   Diffusion/Diffusion.h
   Diffusion/DiffusionLDG.h
   Diffusion/DiffusionLDGNS.h
+  Diffusion/DiffusionLFR.h
+  Diffusion/DiffusionLFRNS.h
   Driver.h
   DriverArnoldi.h
   DriverModifiedArnoldi.h
@@ -41,6 +46,7 @@ SET(SOLVER_UTILS_HEADERS
   Filters/FilterThresholdMax.h
   RiemannSolvers/RiemannSolver.h
   RiemannSolvers/UpwindSolver.h
+  RiemannSolvers/UpwindLDGSolver.h
   SolverUtils.hpp
   SolverUtilsDeclspec.h
   UnsteadySystem.h
@@ -64,7 +70,11 @@ TARGET_LINK_LIBRARIES(SolverUtils
   optimized LocalRegions   debug LocalRegions-g
   optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
   ${Boost_THREAD_LIBRARY}
+  ${Boost_IOSTREAMS_LIBRARY}
   ${Boost_DATE_TIME_LIBRARY}
+  ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${Boost_SYSTEM_LIBRARY}
+  ${ZLIB_LIBRARY}
   )
 SET_LAPACK_LINK_LIBRARIES(SolverUtils)
 

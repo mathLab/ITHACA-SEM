@@ -35,15 +35,26 @@ int main(int argc, char *argv[])
             exit(1);
         }
         TiXmlElement *nektar = docInput.FirstChildElement("NEKTAR");
+        
+        // load up root processor's meta data
+        if(n == 0 && nektar->FirstChildElement("FIELDMETADATA"))
+        {
+            TiXmlElement *metadata = nektar->FirstChildElement("FIELDMETADATA");
+            if(metadata)
+            {
+                master->LinkEndChild(new TiXmlElement(*metadata));
+            }
+        }
+
+        // load the elements from seperate files. 
         TiXmlElement *elements = nektar->FirstChildElement("ELEMENTS");
         while (elements)
         {
             master->LinkEndChild(new TiXmlElement(*elements));
             elements = elements->NextSiblingElement();
         }
-
     }
-
+    
     docOutput.LinkEndChild(master);
     if (!docOutput.SaveFile(argv[2]))
     {

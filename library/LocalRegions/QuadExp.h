@@ -213,6 +213,9 @@ namespace Nektar
                 DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(
                         const MatrixKey &mkey);
 
+            LOCAL_REGIONS_EXPORT void v_DropLocStaticCondMatrix(
+                        const MatrixKey &mkey);
+
 
             //---------------------------------------
             // Operators
@@ -260,7 +263,7 @@ namespace Nektar
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray,
                         const StdRegions::StdMatrixKey &mkey);
-            
+
         private:
             SpatialDomains::Geometry2DSharedPtr  m_geom;
             SpatialDomains::GeomFactorsSharedPtr m_metricinfo;

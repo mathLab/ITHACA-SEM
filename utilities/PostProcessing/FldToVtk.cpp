@@ -56,6 +56,17 @@ int main(int argc, char *argv[])
             {
                 fname = fname.substr(0,fdot);
             }
+            else if (ending == ".gz")
+            {
+                fname = fname.substr(0,fdot);
+                fdot = fname.find_last_of('.');
+                ASSERTL0(fdot != std::string::npos,
+                         "Error: expected file extension before .gz.");
+                ending = fname.substr(fdot);
+                ASSERTL0(ending == ".xml",
+                         "Compressed non-xml files are not supported.");
+                continue;
+            }
             else if (ending == ".xml")
             {
                 continue;

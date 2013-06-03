@@ -555,7 +555,43 @@ namespace Nektar
             return 0;
         }
 
+        int AssemblyMap::v_GetNumDirEdges() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
 
+        int AssemblyMap::v_GetNumDirFaces() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        int AssemblyMap::v_GetNumNonDirEdges() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        int AssemblyMap::v_GetNumNonDirFaces() const
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            return 0;
+        }
+
+        const Array<OneD, const int>& AssemblyMap::v_GetExtraDirEdges()
+        {
+            ASSERTL0(false, "Not defined for this type of mapping.");
+            static Array<OneD, const int> result;
+            return result;
+        }
+        
+        boost::shared_ptr<AssemblyMap> AssemblyMap::v_XxtLinearSpaceMap(const ExpList &locexp)
+        {
+            ASSERTL0(false, "Not defined for this sub class");
+            static boost::shared_ptr<AssemblyMap> result;
+            return result;
+        }
 
         LibUtilities::CommSharedPtr AssemblyMap::GetComm()
         {
@@ -688,11 +724,40 @@ namespace Nektar
             return v_GetNumNonDirFaceModes();
         }
 
+        int AssemblyMap::GetNumDirEdges() const
+        {
+            return v_GetNumDirEdges();
+        }
+
+        int AssemblyMap::GetNumDirFaces() const
+        {
+            return v_GetNumDirFaces();
+        }
+
+        int AssemblyMap::GetNumNonDirEdges() const
+        {
+            return v_GetNumNonDirEdges();
+        }
+
+        int AssemblyMap::GetNumNonDirFaces() const
+        {
+            return v_GetNumNonDirFaces();
+        }
+
+        const Array<OneD, const int>& AssemblyMap::GetExtraDirEdges()
+        {
+            return v_GetExtraDirEdges();
+        }
+
+        boost::shared_ptr<AssemblyMap> AssemblyMap::XxtLinearSpaceMap(const ExpList &locexp)
+        {
+            return v_XxtLinearSpaceMap(locexp);
+        }
+
         int AssemblyMap::GetLocalToGlobalBndMap(const int i) const
         {
             return m_localToGlobalBndMap[i];
         }
-
 
         const Array<OneD,const int>&
                     AssemblyMap::GetLocalToGlobalBndMap(void)
@@ -888,8 +953,36 @@ namespace Nektar
             {
                 Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), tmp.get());
             }
+
+            UniversalAssembleBnd(tmp);
             Vmath::Vcopy(m_numGlobalBndCoeffs-offset, tmp.get()+offset, 1, global.get(), 1);
         }
+        
+        void AssemblyMap::LocalBndToGlobal(
+                    const NekVector<NekDouble>& loc,
+                    NekVector<NekDouble>& global) const
+        {
+            LocalBndToGlobal(loc.GetPtr(), global.GetPtr());
+        }
+
+
+        void AssemblyMap::LocalBndToGlobal(
+                    const Array<OneD, const NekDouble>& loc,
+                    Array<OneD,NekDouble>& global)  const
+        {
+            ASSERTL1(loc.num_elements() >= m_numLocalBndCoeffs,"Local vector is not of correct dimension");
+            ASSERTL1(global.num_elements() >= m_numGlobalBndCoeffs,"Global vector is not of correct dimension");
+
+            if(m_signChange)
+            {
+                Vmath::Scatr(m_numLocalBndCoeffs, m_localToGlobalBndSign.get(), loc.get(), m_localToGlobalBndMap.get(), global.get());
+            }
+            else
+            {
+                Vmath::Scatr(m_numLocalBndCoeffs, loc.get(), m_localToGlobalBndMap.get(), global.get());
+            }
+        }
+
 
         void AssemblyMap::AssembleBnd(
                     const NekVector<NekDouble>& loc,
@@ -1031,6 +1124,7 @@ namespace Nektar
         {
             return m_preconType;
         }
+
 
         void AssemblyMap::GlobalToLocalBndWithoutSign(
                     const Array<OneD, const NekDouble>& global,

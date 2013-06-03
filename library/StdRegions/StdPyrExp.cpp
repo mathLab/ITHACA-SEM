@@ -920,14 +920,15 @@ namespace Nektar
             const int nummodes2 = m_base[2]->GetNumModes();
             //int nummodesA, nummodesB, P, Q;
 
-            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
-            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
-            const LibUtilities::BasisType bType2 = GetEdgeBasisType(4);
-            
-            ASSERTL1( (bType0==bType1),
-                      "Method only implemented if BasisType is indentical in x and y directions");
-            ASSERTL1( (bType0==LibUtilities::eModified_A) && (bType1==LibUtilities::eModified_A) && (bType2==LibUtilities::eModified_C),
-                      "Method only implemented for Modified_A BasisType (x and y direction) and Modified_C BasisType (z direction)");
+            ASSERTL1( GetEdgeBasisType(0) == GetEdgeBasisType(1),
+                      "Method only implemented if BasisType is indentical in "
+                      "x and y directions");
+            ASSERTL1( GetEdgeBasisType(0) == LibUtilities::eModified_A &&
+                      GetEdgeBasisType(1) == LibUtilities::eModified_A &&
+                      GetEdgeBasisType(4) == LibUtilities::eModified_C,
+                      "Method only implemented for Modified_A BasisType (x "
+                      "and y direction) and Modified_C BasisType (z "
+                      "direction)");
 
             bool isQuad = true;
 

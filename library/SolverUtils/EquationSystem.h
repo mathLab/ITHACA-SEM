@@ -41,7 +41,6 @@
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <LibUtilities/BasicUtils/FieldIO.h>
-#include <SpatialDomains/SpatialData.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 
@@ -406,7 +405,6 @@ namespace Nektar
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
-            SpatialDomains::SpatialParametersSharedPtr  m_spatialParameters;
             /// Filename.
             std::string                                 m_filename;
             /// Name of the session.

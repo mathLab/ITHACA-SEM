@@ -89,6 +89,15 @@ namespace Nektar
       }
 
 
+      /**
+       * @brief Returns the element coordinate direction corresponding to a
+       * given face coordinate direction
+       */
+      int Geometry3D::GetDir(const int faceidx, const int facedir) const
+      {
+          return v_GetDir(faceidx, facedir);
+      }
+
       //---------------------------------------
       // 3D Geometry Methods
       //---------------------------------------

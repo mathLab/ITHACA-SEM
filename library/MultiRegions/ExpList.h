@@ -887,6 +887,11 @@ namespace Nektar
                 return v_GetPlane(n);
             }
             
+            int GetNumPlanes()
+            {
+                return v_GetNumPlanes();
+            }
+            
         protected:
             boost::shared_ptr<DNekMat> GenGlobalMatrixFull(
                 const GlobalLinSysKey &mkey,
@@ -908,7 +913,12 @@ namespace Nektar
             /// The total number of quadrature points. #m_npoints
             /// \f$=Q_{\mathrm{tot}}=\sum_{e=1}^{{N_{\mathrm{el}}}}N^{e}_Q\f$
             int m_npoints;
-
+            
+            virtual int v_GetNumPlanes()
+            {
+                return 1;
+            }
+            
             /**
              * \brief Concatenation of all local expansion coefficients.
              *

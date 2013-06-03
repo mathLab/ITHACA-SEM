@@ -178,6 +178,7 @@ namespace Nektar
              * are stored as the coefficients of the one-dimensional
              * expansion.
              */ 
+            
             Array<OneD,MultiRegions::ExpListSharedPtr>   m_bndCondExpansions;
             
             Array<OneD, MultiRegions::ExpListSharedPtr> m_trace;
@@ -218,7 +219,7 @@ namespace Nektar
             
             virtual ExpListSharedPtr &v_GetTrace()
             {
-                m_planes[0]->GetTrace();
+               return m_planes[0]->GetTrace();
             }
             
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap()

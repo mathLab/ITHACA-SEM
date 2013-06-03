@@ -406,13 +406,22 @@ namespace Nektar
         }
 
         /*
-         * Calculates element weights based on
+         * Calculate element weights based on
          *   - element type (Q,T,H,P,R,A)
-         *   - nummodes in expansion which this element belongs to via composite
+         *   - nummodes in expansion which this element belongs to via composite.
+         *
+         * For each element we prepare two vertex weightings, one associated
+         * with the number of matrix elements associated with it (to balance
+         * matrix multiplication work) and another associated
+         * with all work which scales linearly with the number of its 
+         * coefficients: communication, vector updates etc.
+         *
+         * \todo Refactor this code to explicitly represent performance model
+         * and flexibly generate graph vertex weights depending on perf data.
          */
         void MeshPartition::WeightElements()
         {
-            std::vector<unsigned int> weight(m_numFields, 1);
+            std::vector<unsigned int> weight(2*m_numFields, 1);
             for (int i = 0; i < m_meshElements.size(); ++i)
             {
                 m_vertWeights.push_back( weight );
@@ -425,10 +434,13 @@ namespace Nektar
 
                 for (NummodesPerField::iterator it = npf.begin(); it != npf.end(); ++it)
                 {
-                    ASSERTL0(it->second.size() == m_dim, "Number of directional " \
-                        "modes in expansion spec for composite id = " + 
+                    ASSERTL0(it->second.size() == m_dim,
+                        " Number of directional" \
+                        " modes in expansion spec for composite id = " + 
                         boost::lexical_cast<std::string>(cId) +
-                        "and field " + boost::lexical_cast<std::string>(it->first) + " does not correspond to mesh dimension");
+                        " and field " +
+                        boost::lexical_cast<std::string>(it->first) +
+                        " does not correspond to mesh dimension");
 
                     int na = it->second[0];
                     int nb = it->second[1];
@@ -466,7 +478,8 @@ namespace Nektar
                     for (unsigned int j = 0; j < m_meshComposites[cId].list.size(); ++j)
                     {
                         int elmtId = m_meshComposites[cId].list[j];
-                        m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] ] = weight*weight;
+                        m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] * 2 + 0 ] = weight;
+                        m_vertWeights[elmtId][ m_fieldNameToId[ it->first ] * 2 + 1 ] = weight*weight;
                     }
                 }
             } // for i
@@ -524,7 +537,7 @@ namespace Nektar
                 BoostAdjacencyIterator adjvertit, adjvertit_end;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
-                Array<OneD, int> vwgt(nGraphVerts*m_numFields, 1);
+                Array<OneD, int> vwgt(nGraphVerts*2*m_numFields, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
                 for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                       vertit != vertit_end;
@@ -540,7 +553,7 @@ namespace Nektar
                     xadj[++vcnt] = acnt;
 
                     // populate vertex multi-weights
-                    for (i = 0; i < m_numFields; i++)
+                    for (i = 0; i < 2*m_numFields; i++)
                     {
                         vwgt[pGraph[*vertit].id * m_numFields + i] = pGraph[*vertit].weight[i];
                     }
@@ -553,29 +566,29 @@ namespace Nektar
 
                 try
                 {
-					//////////////////////////////////////////////////////
-					// On a cartesian communicator do mesh partiotion just on the first column
-					// so there is no doubt the partitions are all the same in all the columns
-					if(m_comm->GetColumnComm()->GetRank() == 0)
-					{
-						// Attempt partitioning using METIS.
-                        int ncon = m_numFields;
-						Metis::PartGraphVKway(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
-						// Check METIS produced a valid partition and fix if not.
-						CheckPartitions(part);
-						// distribute among columns
-						for (i = 1; i < m_comm->GetColumnComm()->GetSize(); ++i)
-						{
-							m_comm->GetColumnComm()->Send(i, part);
-						}
-					}
-					else 
-					{
-						m_comm->GetColumnComm()->Recv(0, part);
-					}
-					m_comm->GetColumnComm()->Block();
-					//////////////////////////////////
-					// distribute among rows
+                    //////////////////////////////////////////////////////
+                    // On a cartesian communicator do mesh partiotion just on the first column
+                    // so there is no doubt the partitions are all the same in all the columns
+                    if(m_comm->GetColumnComm()->GetRank() == 0)
+                    {
+                        // Attempt partitioning using METIS.
+                        int ncon = 2*m_numFields;
+                        Metis::PartGraphVKway(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
+                        // Check METIS produced a valid partition and fix if not.
+                        CheckPartitions(part);
+                        // distribute among columns
+                        for (i = 1; i < m_comm->GetColumnComm()->GetSize(); ++i)
+                        {
+                            m_comm->GetColumnComm()->Send(i, part);
+                        }
+                    }
+                    else 
+                    {
+                        m_comm->GetColumnComm()->Recv(0, part);
+                    }
+                    m_comm->GetColumnComm()->Block();
+                    //////////////////////////////////
+                    // distribute among rows
                     for (i = 1; i < m_comm->GetRowComm()->GetSize(); ++i)
                     {
                         m_comm->GetRowComm()->Send(i, part);

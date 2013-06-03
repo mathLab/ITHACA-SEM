@@ -82,6 +82,10 @@ namespace Nektar
             void SetUpLocalVertices();
             void SetUpEdgeOrientation();
             void SetUpFaceOrientation();
+
+	    static const unsigned int VertexEdgeConnectivity[4][3];
+            static const unsigned int VertexFaceConnectivity[4][3];
+            static const unsigned int EdgeFaceConnectivity  [6][2];
         };
 
         typedef boost::shared_ptr<TetGeom> TetGeomSharedPtr;

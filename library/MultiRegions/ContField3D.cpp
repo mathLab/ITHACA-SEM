@@ -90,7 +90,7 @@ namespace Nektar
 
 
         /**
-         * Given a mesh \a graph2D, containing information about the domain and
+         * Given a mesh \a graph3D, containing information about the domain and
          * the spectral/hp element expansion, this constructor fills the list
          * of local expansions #m_exp with the proper expansions, calculates
          * the total number of quadrature points \f$\boldsymbol{x}_i\f$ and
@@ -107,7 +107,7 @@ namespace Nektar
          * @param   In          Existing ContField2D object used to provide the
          *                      local to global mapping information and
          *                      global solution type.
-         * @param   graph2D     A mesh, containing information about the domain
+         * @param   graph3D     A mesh, containing information about the domain
          *                      and the spectral/hp element expansion.
          * @param   bcs         The boundary conditions.
          * @param   bc_loc
@@ -124,11 +124,9 @@ namespace Nektar
             if(!SameTypeOfBoundaryConditions(In))
             {
                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
-
                 m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
                     m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
                     m_periodicVerts, m_periodicEdges, m_periodicFaces);
-
             }
             else
             {
@@ -483,6 +481,7 @@ namespace Nektar
           int contNcoeffs = m_locToGloMap->GetNumGlobalCoeffs();
           Array<OneD,NekDouble> wsp(contNcoeffs);
           IProductWRTBase(inarray,wsp,eGlobal);
+
           // Note -1.0 term necessary to invert forcing function to
           // be consistent with matrix definition
           Vmath::Neg(contNcoeffs, wsp, 1);

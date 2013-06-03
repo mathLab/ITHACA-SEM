@@ -1,8 +1,10 @@
 SET(SOLVER_UTILS_SOURCES
   Advection/Advection.cpp
   Advection/AdvectionFR.cpp
+  Advection/AdvectionFR3DHomogeneous1D.cpp
   Advection/AdvectionNonConservative.cpp
   Advection/AdvectionWeakDG.cpp
+  Advection/AdvectionWeakDG3DHomogeneous1D.cpp
   Diffusion/Diffusion.cpp
   Diffusion/DiffusionLDG.cpp
   Diffusion/DiffusionLDGNS.cpp

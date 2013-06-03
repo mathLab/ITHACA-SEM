@@ -51,7 +51,8 @@ namespace Nektar
     {
         typedef boost::function<void (
             const Array<OneD, Array<OneD, NekDouble> >&,
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)> AdvectionFluxVecCB;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >&)> 
+                AdvectionFluxVecCB;
         
         class Advection
         {

@@ -67,6 +67,12 @@ namespace Nektar
                                           Array<OneD, Array<OneD, NekDouble> > &q1,
                                           Array<OneD, Array<OneD, NekDouble> > &qBar1);
             
+            void CalcAverage(const int i,
+                             const Array<OneD, const Array<OneD, NekDouble> > &q1,
+                             const Array<OneD, const Array<OneD, NekDouble> > &qMeanIN, 
+                             Array<OneD, Array<OneD, NekDouble> > &qMeanOUT);
+            
+            
         protected:
             /// Constructor
             SOLVER_UTILS_EXPORT DriverSteadyState(const LibUtilities::SessionReaderSharedPtr pSession);
@@ -87,6 +93,7 @@ namespace Nektar
             NekDouble m_Delta;
             NekDouble m_Delta0;
             NekDouble m_X;
+            NekDouble m_X0;
             NekDouble m_dt;
             NekDouble m_cst1;
             NekDouble m_cst2;
@@ -120,6 +127,9 @@ namespace Nektar
             
             NekDouble mult;
             NekDouble coeff;
+            
+            bool FirstIterOfAverage;
+            NekDouble m_AverageCoeff;
             
             std::ofstream m_file;
         };

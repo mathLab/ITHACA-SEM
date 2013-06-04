@@ -215,15 +215,14 @@ namespace Nektar
             }
             
             // Implementation for all the basis except Gauss points
-            if(EdgeExp->GetBasis(0)->GetBasisType()
-               != LibUtilities::eGauss_Lagrange)
+            if(EdgeExp->GetBasis(0)->GetBasisType() !=
+                   LibUtilities::eGauss_Lagrange)
             {
                 // add data to outarray if forward edge normal is outwards
                 for(i = 0; i < order_e; ++i)
                 {
-                    //int nn = ((*map)[i].index);
-                    outarray[((*map)[i].index)] +=
-                                        ((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                    outarray[(*map)[i].index] +=
+                        (*map)[i].sign*EdgeExp->GetCoeff(i);
                 }
             }
             else
@@ -248,13 +247,13 @@ namespace Nektar
                         {
                             for(j = 0; j < nCoeffs1; j++)
                             {
-                                outarray[((*map)[i].index) + j*order_e] +=
-                                (mat_gauss->GetPtr())[j]*
-                                    ((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                                outarray[(*map)[i].index + j*order_e] +=
+                                    mat_gauss->GetPtr()[j]*
+                                    (*map)[i].sign*EdgeExp->GetCoeff(i);
                             }
                         }
-                    }
                         break;
+                    }
                     case 1:
                     {
                         nCoeffs0 = m_base[0]->GetNumModes();
@@ -263,13 +262,13 @@ namespace Nektar
                         {
                             for(j = 0; j < nCoeffs0; j++)
                             {
-                                outarray[((*map)[i].index) - j] +=
-                                (mat_gauss->GetPtr())[order_e -1 -j]*
-                                    ((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                                outarray[(*map)[i].index - j] +=
+                                    mat_gauss->GetPtr()[order_e - 1 -j]*
+                                    (*map)[i].sign*EdgeExp->GetCoeff(i);
                             }
                         }
-                    }
                         break;
+                    }
                     case 2:
                     {
                         nCoeffs1 = m_base[1]->GetNumModes();
@@ -278,13 +277,13 @@ namespace Nektar
                         {
                             for(j = 0; j < nCoeffs1; j++)
                             {
-                                outarray[((*map)[i].index) - j*order_e] +=
-                                (mat_gauss->GetPtr())[order_e -1 -j]*
-                                    ((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                                outarray[(*map)[i].index - j*order_e] +=
+                                    mat_gauss->GetPtr()[order_e - 1 - j]*
+                                    (*map)[i].sign*EdgeExp->GetCoeff(i);
                             }
                         }
-                    }
                         break;
+                    }
                     case 3:
                     {
                         nCoeffs0 = m_base[0]->GetNumModes();
@@ -293,13 +292,13 @@ namespace Nektar
                         {
                             for(j = 0; j < nCoeffs0; j++)
                             {
-                                outarray[((*map)[i].index) + j] +=
-                                (mat_gauss->GetPtr())[j]*
-                                    ((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                                outarray[(*map)[i].index + j] +=
+                                    mat_gauss->GetPtr()[j]*
+                                    (*map)[i].sign*EdgeExp->GetCoeff(i);
                             }
                         }
-                    }
                         break;
+                    }
                     default:
                         ASSERTL0(false,"edge value (< 3) is out of range");
                         break;

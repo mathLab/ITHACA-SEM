@@ -936,7 +936,7 @@ namespace Nektar
                                     &DfluxvectorX1[0], 1, &outarray[i][0], 1);
                         
                         // Primitive Dealiasing 1D
-                        if (!(Basis->Collocation()))
+                        if (!(Basis[0]->Collocation()))
                         {
                             fields[i]->FwdTrans(outarray[i], outarrayCoeff[i]);
                             fields[i]->BwdTrans(outarrayCoeff[i], outarray[i]);
@@ -1015,8 +1015,6 @@ namespace Nektar
                                 numflux[i], divFC);
 
                         }
-                        v_DivCFlux_2D(nConvectiveFields, fields,
-                                      numflux[i], divFC);
                         
                         // Divergence of the final flux
                         Vmath::Vadd(nSolutionPts, divFD, 1, divFC, 1,
@@ -1027,7 +1025,7 @@ namespace Nektar
                                     &m_jac[0], 1, &outarray[i][0], 1);
 
                         // Primitive Dealiasing 2D
-                        if (!(Basis->Collocation()))
+                        if (!(Basis[0]->Collocation()))
                         {
                             fields[i]->FwdTrans(outarray[i], outarrayCoeff[i]);
                             fields[i]->BwdTrans(outarrayCoeff[i], outarray[i]);

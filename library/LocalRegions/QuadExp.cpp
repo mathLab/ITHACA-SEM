@@ -72,7 +72,7 @@ namespace Nektar
             m_geom(T.m_geom),
             m_metricinfo(T.m_metricinfo),
             m_matrixManager(T.m_matrixManager),
-        m_staticCondMatrixManager(T.m_staticCondMatrixManager)
+            m_staticCondMatrixManager(T.m_staticCondMatrixManager)
         {
         }
 
@@ -741,8 +741,8 @@ namespace Nektar
             int nquad1 = m_base[1]->GetNumPoints();
             
             // Implementation for all the basis except Gauss points
-            if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre
-                && m_base[1]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
+            if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre &&
+                m_base[1]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
             {
                 // get points in Cartesian orientation
                 switch(edge)
@@ -770,7 +770,6 @@ namespace Nektar
             else
             {
                 QuadExp::v_GetEdgeInterpVals(edge, inarray, outarray);
-                
             }
             
             // Interpolate if required
@@ -812,53 +811,51 @@ namespace Nektar
 
              switch(edge)
              {
-             case 0:
+                 case 0:
                  {
-                     for(i = 0; i < nq0; i++)
+                     for (i = 0; i < nq0; i++)
                      {
-                         outarray[i] = Blas::Ddot(nq1,
-                                    mat_gauss->GetOwnedMatrix()->GetPtr().get(),
-                                                  1, &inarray[i], nq0);
+                         outarray[i] = Blas::Ddot(
+                             nq1, mat_gauss->GetOwnedMatrix()->GetPtr().get(),
+                             1, &inarray[i], nq0);
                      }
-                 break;
+                     break;
                  }
-             case 1:
+                 case 1:
                  {
-                     for(i = 0; i < nq1; i++)
+                     for (i = 0; i < nq1; i++)
                      {
-                         outarray[i] =  Blas::Ddot(nq0,
-                                    mat_gauss->GetOwnedMatrix()->GetPtr().get(),
-                                                 1,&inarray[i * nq0], 1);
+                         outarray[i] =  Blas::Ddot(
+                             nq0, mat_gauss->GetOwnedMatrix()->GetPtr().get(),
+                             1, &inarray[i * nq0], 1);
                      }
-                 break;
+                     break;
                  }
-             case 2:
+                 case 2:
                  {
-                     for(i = 0; i < nq0; i++)
+                     for (i = 0; i < nq0; i++)
                      {
-                         outarray[i] = Blas::Ddot(nq1,
-                                    mat_gauss->GetOwnedMatrix()->GetPtr().get(),
-                                                  1,&inarray[i], nq0);
+                         outarray[i] = Blas::Ddot(
+                             nq1, mat_gauss->GetOwnedMatrix()->GetPtr().get(),
+                             1, &inarray[i], nq0);
                      }
-                 break;
+                     break;
                  }
-             case 3:
+                 case 3:
                  {
-                     for(i = 0; i < nq1; i++)
+                     for (i = 0; i < nq1; i++)
                      {
-                         outarray[i] =  Blas::Ddot(nq0,
-                                    mat_gauss->GetOwnedMatrix()->GetPtr().get(),
-                                                  1,&inarray[i * nq0], 1);
+                         outarray[i] =  Blas::Ddot(
+                             nq0, mat_gauss->GetOwnedMatrix()->GetPtr().get(),
+                             1, &inarray[i * nq0], 1);
                      }
-                 break;
+                     break;
                  }
-            default:
-                ASSERTL0(false,"edge value (< 3) is out of range");
-             break;
+                 default:
+                     ASSERTL0(false,"edge value (< 3) is out of range");
+                     break;
              }
         }
-
-
     
         void QuadExp::v_GetEdgeQFactors(
                 const int edge,
@@ -1982,45 +1979,18 @@ namespace Nektar
                 }
                 break;
             case StdRegions::eInterpGaussEdge:
-            {
-                NekDouble one = 1.0;
-                DNekMatSharedPtr m_Ix;
-                Array<OneD, NekDouble> coords(3, 0.0);
-                StdRegions::ConstFactorMap factors = mkey.GetConstFactors();
-                int edge = (int)factors[StdRegions::eFactorGaussEdge];
-
-
-                switch(edge)
                 {
-                case 0:
-                    coords[1] = -1.0;
-                    m_Ix = m_base[1]->GetI(coords+1);
+                    DNekMatSharedPtr m_Ix;
+                    Array<OneD, NekDouble> coords(1, 0.0);
+                    StdRegions::ConstFactorMap factors = mkey.GetConstFactors();
+                    int edge = (int)factors[StdRegions::eFactorGaussEdge];
+
+                    coords[0] = (edge == 0 || edge == 3) ? -1.0 : 1.0;
+
+                    m_Ix = m_base[(edge + 1) % 2]->GetI(coords);
                     returnval =
-                        MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ix);
-                    break;
-                case 1:
-                    coords[0] = 1.0;
-                    m_Ix = m_base[0]->GetI(coords);
-                    returnval =
-                        MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ix);
-                    break;
-                case 2:
-                    coords[1] = 1.0;
-                    m_Ix = m_base[1]->GetI(coords+1);
-                    returnval =
-                       MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ix);
-                    break;
-                case 3:
-                    coords[0] = -1.0;
-                    m_Ix = m_base[0]->GetI(coords);
-                    returnval =
-                       MemoryManager<DNekScalMat>::AllocateSharedPtr(one,m_Ix);
-                    break;
-                default:
-                    ASSERTL0(false,"edge value (< 3) is out of range");
-                    break;
+                        MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,m_Ix);
                 }
-            }
                 break;
             default:
                 {

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File Preconditioner.h
+// File PreconditionerLinearWithDiag.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,61 +29,56 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Preconditioner header
+// Description: Preconditioner header for diagonal with linear sub space
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERDIAGONAL_H
-#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERDIAGONAL_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHDIAG_H
+#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHDIAG_H
+
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
+#include <MultiRegions/PreconditionerLinear.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
-
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-        class PreconditionerDiagonal;
-        typedef boost::shared_ptr<PreconditionerDiagonal>  PreconditionerDiagonalSharedPtr;
+        class PreconditionerLinearWithDiag;
+        typedef boost::shared_ptr<PreconditionerLinearWithDiag>  PreconditionerLinearWithDiagSharedPtr;
 
-        class PreconditionerDiagonal: public Preconditioner
+        class PreconditionerLinearWithDiag: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
             static PreconditionerSharedPtr create(
                         const boost::shared_ptr<GlobalLinSys> &plinsys,
                         const boost::shared_ptr<AssemblyMap>
-                                                               &pLocToGloMap)
+                        &pLocToGloMap)
             {
-	        PreconditionerSharedPtr p = MemoryManager<PreconditionerDiagonal>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinearWithDiag>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
 	        return p;
             }
 
             /// Name of class
             static std::string className;
-            static std::string className1;
 
-            MULTI_REGIONS_EXPORT PreconditionerDiagonal(
+            MULTI_REGIONS_EXPORT PreconditionerLinearWithDiag(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerDiagonal() {}
+            virtual ~PreconditionerLinearWithDiag() {}
 
 	protected:
+            //const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
-            Array<OneD, NekDouble>                      m_diagonals;
-
-            PreconditionerType                          m_preconType;
-            StdRegions::StdExpansionSharedPtr           vExp;
+            PreconditionerSharedPtr m_linSpacePrecon;
+            PreconditionerSharedPtr m_diagonalPrecon;
 
 	private:
-
-            void DiagonalPreconditionerSum(void);
-
-	    void StaticCondDiagonalPreconditionerSum(void);
 
             virtual void v_InitObject();
 
@@ -93,9 +88,7 @@ namespace Nektar
 
             virtual void v_BuildPreconditioner();
 
-            static std::string lookupIds[];
-            static std::string def;
-	};
+        };
     }
 }
 

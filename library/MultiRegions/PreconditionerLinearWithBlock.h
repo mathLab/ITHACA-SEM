@@ -32,22 +32,21 @@
 // Description: Preconditioner header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERDIAGONAL_H
-#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERDIAGONAL_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHBLOCK_H
+#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHBLOCK_H
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
-
 namespace Nektar
 {
     namespace MultiRegions
     {
-        class PreconditionerDiagonal;
-        typedef boost::shared_ptr<PreconditionerDiagonal>  PreconditionerDiagonalSharedPtr;
+        class PreconditionerLinearWithBlock;
+        typedef boost::shared_ptr<PreconditionerLinearWithBlock>  PreconditionerLinearWithBlockSharedPtr;
 
-        class PreconditionerDiagonal: public Preconditioner
+        class PreconditionerLinearWithBlock: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
@@ -56,34 +55,27 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-	        PreconditionerSharedPtr p = MemoryManager<PreconditionerDiagonal>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinearWithBlock>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
 	        return p;
             }
 
             /// Name of class
             static std::string className;
-            static std::string className1;
 
-            MULTI_REGIONS_EXPORT PreconditionerDiagonal(
+            MULTI_REGIONS_EXPORT PreconditionerLinearWithBlock(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerDiagonal() {}
+            virtual ~PreconditionerLinearWithBlock() {}
 
 	protected:
 
-            Array<OneD, NekDouble>                      m_diagonals;
-
-            PreconditionerType                          m_preconType;
-            StdRegions::StdExpansionSharedPtr           vExp;
+            PreconditionerSharedPtr m_linSpacePrecon;
+            PreconditionerSharedPtr m_blockPrecon;
 
 	private:
-
-            void DiagonalPreconditionerSum(void);
-
-	    void StaticCondDiagonalPreconditionerSum(void);
 
             virtual void v_InitObject();
 
@@ -93,9 +85,7 @@ namespace Nektar
 
             virtual void v_BuildPreconditioner();
 
-            static std::string lookupIds[];
-            static std::string def;
-	};
+        };
     }
 }
 

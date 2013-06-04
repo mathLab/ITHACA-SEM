@@ -136,7 +136,9 @@ namespace Nektar
             eHybridDGLamToQ2,
             eHybridDGLamToU,
             eFwdTrans,
-            ePreconditioner,
+            ePreconR,
+            ePreconRT,
+            ePreconLinearSpace,
             eInterpGaussEdge,
             eGaussDG,
             SIZE_MatrixType
@@ -180,7 +182,9 @@ namespace Nektar
             "HybridDGLamToQ2",
             "HybridDGLamToU",
             "FwdTrans",
-            "Preconditioner",
+            "PreconR",
+            "PreconRT",
+            "PreconLinearSpace",
             "InterpGaussEdge",
             "GaussDG"
         };

@@ -33,21 +33,24 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-
 #include <SpatialDomains/PrismGeom.h>
 #include <SpatialDomains/Geometry1D.h>
 #include <SpatialDomains/Geometry2D.h>
 #include <StdRegions/StdPrismExp.h>
 #include <SpatialDomains/SegGeom.h>
-#include <SpatialDomains/QuadGeom.h>
 #include <SpatialDomains/MeshComponents.h>
 #include <SpatialDomains/GeomFactors3D.h>
-
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
+        const unsigned int PrismGeom::VertexEdgeConnectivity[6][3] = {
+            {0,3,4},{0,1,5},{1,2,6},{2,3,7},{4,5,8},{6,7,8}};
+        const unsigned int PrismGeom::VertexFaceConnectivity[6][3] = {
+            {0,1,4},{0,1,2},{0,2,3},{0,3,4},{1,2,4},{2,3,4}};
+        const unsigned int PrismGeom::EdgeFaceConnectivity  [9][2] = {
+            {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},{2,4}};
         
         PrismGeom::PrismGeom()
         {
@@ -181,6 +184,11 @@ namespace Nektar
         int PrismGeom::v_GetNumEdges() const
         {
             return 9;
+        }
+
+        int PrismGeom::v_GetNumFaces() const
+        {
+            return 5;
         }
 
         int PrismGeom::v_GetDir(const int faceidx, const int facedir) const
@@ -361,6 +369,21 @@ namespace Nektar
                 NewtonIterationForLocCoord(coords,Lcoords);
             }
         }
+        
+        int PrismGeom::v_GetVertexEdgeMap(const int i, const int j) const
+	{
+	    return VertexEdgeConnectivity[i][j];
+	}
+        
+        int PrismGeom::v_GetVertexFaceMap(const int i, const int j) const
+	{
+	    return VertexFaceConnectivity[i][j];
+	}
+        
+        int PrismGeom::v_GetEdgeFaceMap(const int i, const int j) const
+	{
+	    return EdgeFaceConnectivity[i][j];
+	}
 
         void PrismGeom::SetUpLocalEdges(){
             // find edge 0

@@ -554,43 +554,43 @@ namespace Nektar
                         {
                             // Use the iterator from above, which must point to the variable.
                             attr = attr->Next();
-							
+                            
                             if (attr)
                             {
                                 int P = 0;
-								int D1 = 0;
-								int D2 = 0;
-								
-								std::string userDefined;
-								
+                                int D1 = 0;
+                                int D2 = 0;
+				
+                                std::string userDefined;
+				
                                 while(attr) {
-									
-									attrName = attr->Name();
+                                    
+                                    attrName = attr->Name();
 									
                                     if (attrName=="P") {
-										
+                                        
                                         // Do stuff for the user defined attribute
                                         attrData = attr->Value();	
                                         m_session->SubstituteExpressions(attrData);
                                         P = atoi(attrData.c_str());
                                     }
-									else if (attrName=="D1") {
+                                    else if (attrName=="D1") {
+                                        
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();
+                                        m_session->SubstituteExpressions(attrData);
+                                        D1 = atoi(attrData.c_str());
+					
+                                    }
+                                    else if (attrName=="D2") {
+                                        
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();
+                                        m_session->SubstituteExpressions(attrData);
+                                        D2 = atoi(attrData.c_str());
 										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D1 = atoi(attrData.c_str());
-										
-									}
-									else if (attrName=="D2") {
-										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D2 = atoi(attrData.c_str());
-										
-									}
-									attr = attr->Next();
+                                    }
+                                    attr = attr->Next();
                                 }
 								
                                 BoundaryConditionShPtr bifurcationCondition(MemoryManager<BifurcationBoundaryCondition>::AllocateSharedPtr(P, D1, D2));
@@ -612,41 +612,41 @@ namespace Nektar
                             if (attr)
                             {
                                 int P = 0;
-								int D1 = 0;
-								int D2 = 0;
-								
-								std::string userDefined;
+                                int D1 = 0;
+                                int D2 = 0;
+				
+                                std::string userDefined;
 								
                                 while(attr) {
-									
-									attrName = attr->Name();
-									
+                                    
+                                    attrName = attr->Name();
+                                    
                                     if (attrName=="P") {
-										
+                                        
                                         // Do stuff for the user defined attribute
                                         attrData = attr->Value();	
                                         m_session->SubstituteExpressions(attrData);
                                         P = atoi(attrData.c_str());
                                     }
-									else if (attrName=="D1") {
-										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D1 = atoi(attrData.c_str());
-										
-									}
-									else if (attrName=="D2") {
-										
-										// Do stuff for the user defined attribute
-										attrData = attr->Value();
-										m_session->SubstituteExpressions(attrData);
-										D2 = atoi(attrData.c_str());
-										
-									}
-									attr = attr->Next();
+                                    else if (attrName=="D1") {
+                                        
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();
+                                        m_session->SubstituteExpressions(attrData);
+                                        D1 = atoi(attrData.c_str());
+					
+                                    }
+                                    else if (attrName=="D2") {
+                                        
+                                        // Do stuff for the user defined attribute
+                                        attrData = attr->Value();
+                                        m_session->SubstituteExpressions(attrData);
+                                        D2 = atoi(attrData.c_str());
+					
+                                    }
+                                    attr = attr->Next();
                                 }
-								
+				
                                 BoundaryConditionShPtr mergingCondition(MemoryManager<MergingBoundaryCondition>::AllocateSharedPtr(P, D1, D2));
                                 (*boundaryConditions)[*iter]  = mergingCondition;
                             }

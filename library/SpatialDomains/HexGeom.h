@@ -89,6 +89,10 @@ namespace Nektar
             void SetUpLocalVertices();
             void SetUpEdgeOrientation();
             void SetUpFaceOrientation();
+
+	    static const unsigned int VertexEdgeConnectivity[ 8][3];
+	    static const unsigned int VertexFaceConnectivity[ 8][3];
+	    static const unsigned int EdgeFaceConnectivity  [12][2];
         };
 
         typedef boost::shared_ptr<HexGeom> HexGeomSharedPtr;

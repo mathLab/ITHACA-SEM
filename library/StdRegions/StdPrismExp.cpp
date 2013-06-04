@@ -1046,6 +1046,15 @@ namespace Nektar
                 return GetBasisNumModes(2);
             }
         }
+
+        int StdPrismExp::v_GetTotalEdgeIntNcoeffs() const
+        {
+            int P = GetBasisNumModes(0)-2;
+            int Q = GetBasisNumModes(1)-2;
+            int R = GetBasisNumModes(2)-2;
+
+            return 2*P+3*Q+3*R;
+	}
         
         int StdPrismExp::v_GetFaceNcoeffs(const int i) const
         {
@@ -1086,6 +1095,17 @@ namespace Nektar
                 return Qi * Ri;
             }
         }
+
+        int StdPrismExp::v_GetTotalFaceIntNcoeffs() const
+        {
+            int Pi = GetBasisNumModes(0) - 2;
+            int Qi = GetBasisNumModes(1) - 2;
+            int Ri = GetBasisNumModes(2) - 2;
+
+            return Pi * Qi +
+                Pi * (2*Ri - Pi - 1) +
+                2* Qi * Ri;
+	}
         
         int StdPrismExp::v_GetFaceNumPoints(const int i) const
         {

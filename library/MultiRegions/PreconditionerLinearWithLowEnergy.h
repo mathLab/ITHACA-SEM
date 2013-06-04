@@ -32,22 +32,21 @@
 // Description: Preconditioner header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERDIAGONAL_H
-#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERDIAGONAL_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHLOWENERGY_H
+#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEARWITHLOWENERGY_H
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
 
-
 namespace Nektar
 {
     namespace MultiRegions
     {
-        class PreconditionerDiagonal;
-        typedef boost::shared_ptr<PreconditionerDiagonal>  PreconditionerDiagonalSharedPtr;
+        class PreconditionerLinearWithLowEnergy;
+        typedef boost::shared_ptr<PreconditionerLinearWithLowEnergy>  PreconditionerLinearWithLowEnergySharedPtr;
 
-        class PreconditionerDiagonal: public Preconditioner
+        class PreconditionerLinearWithLowEnergy: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
@@ -56,36 +55,40 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-	        PreconditionerSharedPtr p = MemoryManager<PreconditionerDiagonal>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinearWithLowEnergy>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
 	        return p;
             }
 
             /// Name of class
             static std::string className;
-            static std::string className1;
 
-            MULTI_REGIONS_EXPORT PreconditionerDiagonal(
+            MULTI_REGIONS_EXPORT PreconditionerLinearWithLowEnergy(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerDiagonal() {}
+            virtual ~PreconditionerLinearWithLowEnergy() {}
 
 	protected:
+            //const boost::weak_ptr<GlobalLinSys>         m_linsys;
 
-            Array<OneD, NekDouble>                      m_diagonals;
-
-            PreconditionerType                          m_preconType;
-            StdRegions::StdExpansionSharedPtr           vExp;
+            PreconditionerSharedPtr m_linSpacePrecon;
+            PreconditionerSharedPtr m_lowEnergyPrecon;
 
 	private:
 
-            void DiagonalPreconditionerSum(void);
-
-	    void StaticCondDiagonalPreconditionerSum(void);
-
             virtual void v_InitObject();
+
+            virtual void v_DoTransformToLowEnergy(
+                Array<OneD, NekDouble>& pInOut,
+                int offset);
+
+            virtual void v_DoTransformFromLowEnergy(
+                Array<OneD, NekDouble>& pInput);
+
+            virtual DNekScalBlkMatSharedPtr
+                v_TransformedSchurCompl(int offset, const boost::shared_ptr<DNekScalBlkMat > &loc_mat);
 
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,
@@ -93,9 +96,7 @@ namespace Nektar
 
             virtual void v_BuildPreconditioner();
 
-            static std::string lookupIds[];
-            static std::string def;
-	};
+        };
     }
 }
 

@@ -93,7 +93,6 @@ namespace Nektar
         {
         }
 
-
         /**
 	 * \brief Destructor
 	 */
@@ -158,10 +157,10 @@ namespace Nektar
          * @param   out_d2      Derivative in third coordinate direction.
          */
         void TetExp::v_PhysDeriv(
-                 const Array<OneD, const NekDouble> & inarray,
-                       Array<OneD,NekDouble> &out_d0,
-                       Array<OneD,NekDouble> &out_d1,
-                       Array<OneD,NekDouble> &out_d2)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &out_d0,
+                  Array<OneD,       NekDouble> &out_d1,
+                  Array<OneD,       NekDouble> &out_d2)
         {
             int  TotPts = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*
                 m_base[2]->GetNumPoints();
@@ -172,7 +171,7 @@ namespace Nektar
             Array<OneD,NekDouble> Diff2 = Diff1 + TotPts;
             
             StdTetExp::v_PhysDeriv(inarray, Diff0, Diff1, Diff2);
-
+            
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
                 if(out_d0.num_elements())
@@ -181,7 +180,7 @@ namespace Nektar
                     Vmath::Vvtvp (TotPts,&gmat[1][0],1,&Diff1[0],1, &out_d0[0], 1,&out_d0[0],1);
                     Vmath::Vvtvp (TotPts,&gmat[2][0],1,&Diff2[0],1, &out_d0[0], 1,&out_d0[0],1);
                 }
-
+                
                 if(out_d1.num_elements())
                 {
                     Vmath::Vmul  (TotPts,&gmat[3][0],1,&Diff0[0],1, &out_d1[0], 1);
@@ -245,7 +244,7 @@ namespace Nektar
             else
             {
                 IProductWRTBase(inarray,outarray);
-
+                
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
                                               DetShapeType(),*this);
@@ -1565,46 +1564,6 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, helm);
                 }
                 break;
-             case StdRegions::ePreconditioner:
-                {
-                    LibUtilities::BasisKey TetBa = m_base[0]->GetBasisKey();
-		    LibUtilities::BasisKey TetBb = m_base[1]->GetBasisKey();
-		    LibUtilities::BasisKey TetBc = m_base[2]->GetBasisKey();
-
-		    SpatialDomains::TetGeomSharedPtr EquilateralTetGeom=CreateEquilateralTetGeom();
-
-		    //create TetExp with equilateral Tet geometry object
-                    TetExp eqtet(TetBa,TetBb,TetBc,EquilateralTetGeom);
-		
-		    int nquad0 = m_base[0]->GetNumPoints();
-		    int nquad1 = m_base[1]->GetNumPoints();
-		    int nquad2 = m_base[2]->GetNumPoints();
-
-		    int nq=nquad0*nquad1*nquad2;
-		    Array<OneD,NekDouble> coords[3];
-
-		    coords[0] = Array<OneD,NekDouble>(nq);
-		    coords[1] = Array<OneD,NekDouble>(nq);
-		    coords[2] = Array<OneD,NekDouble>(nq);
-		    eqtet.GetCoords(coords[0],coords[1],coords[2]);
-
-                    NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
-                    MatrixKey masskey(StdRegions::eMass, mkey.GetShapeType(), eqtet);
-                    DNekScalMat &MassMat = *(eqtet.m_matrixManager[masskey]);
-                    MatrixKey lapkey(StdRegions::eLaplacian, mkey.GetShapeType(), eqtet, mkey.GetConstFactors(), mkey.GetVarCoeffs());
-                    DNekScalMat &LapMat = *(eqtet.m_matrixManager[lapkey]);
-
-                    int rows = LapMat.GetRows();
-                    int cols = LapMat.GetColumns();
-
-                    DNekMatSharedPtr helm = MemoryManager<DNekMat>::AllocateSharedPtr(rows, cols);
-
-                    NekDouble one = 1.0;
-                    (*helm) = LapMat + factor*MassMat;
-
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one, helm);
-                }
-                break;
             case StdRegions::eIProductWRTBase:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
@@ -1620,40 +1579,77 @@ namespace Nektar
                         returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(jac,mat);
                     }
                 }
-				break;
-			case StdRegions::eHybridDGHelmholtz:
-			case StdRegions::eHybridDGLamToU:
-			case StdRegions::eHybridDGLamToQ0:
-			case StdRegions::eHybridDGLamToQ1:
-			case StdRegions::eHybridDGHelmBndLam:
-				{
-					NekDouble one    = 1.0;
+                break;
+            case StdRegions::eHybridDGHelmholtz:
+            case StdRegions::eHybridDGLamToU:
+            case StdRegions::eHybridDGLamToQ0:
+            case StdRegions::eHybridDGLamToQ1:
+            case StdRegions::eHybridDGHelmBndLam:
+                {
+                    NekDouble one    = 1.0;
+                    
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            case StdRegions::eInvHybridDGHelmholtz:
+                {
+                    NekDouble one = 1.0;
+                    
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekMatSharedPtr mat = GenMatrix(hkey);
+                    
+                    mat->Invert();
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
 
-					DNekMatSharedPtr mat = GenMatrix(mkey);
-					returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
-				}
-				break;
-			case StdRegions::eInvHybridDGHelmholtz:
-				{
-					NekDouble one = 1.0;
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconR:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
 
-					MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
-					DNekMatSharedPtr mat = GenMatrix(hkey);
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
 
-					mat->Invert();
-					returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
-				}
-				break;
-			default:
-				{
-					//ASSERTL0(false, "Missing definition for " + (*StdRegions::MatrixTypeMap[mkey.GetMatrixType()]));
-					NekDouble        one = 1.0;
-					DNekMatSharedPtr mat = GenMatrix(mkey);
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconRT:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
 
-					returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
-				}
-				break;
-			}
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr RT=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,RT);
+                }
+                break;
+            default:
+                {
+                    //ASSERTL0(false, "Missing definition for " + (*StdRegions::MatrixTypeMap[mkey.GetMatrixType()]));
+                    NekDouble        one = 1.0;
+                    DNekMatSharedPtr mat = GenMatrix(mkey);
+                    
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            }
 
             return returnval;
         }
@@ -1672,16 +1668,15 @@ namespace Nektar
 
             unsigned int exp_size[] = {nbdry, nint};
             int nblks = 2;
-            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
+            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
+
             NekDouble factor = 1.0;
             MatrixStorage AMatStorage = eFULL;
-
+            
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eLaplacian:
-            case StdRegions::ePreconditioner:
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
-
                 // use Deformed case for both regular and deformed geometries
                 factor = 1.0;
                 goto UseLocRegionsMatrix;
@@ -1773,6 +1768,7 @@ namespace Nektar
                     returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
 
                 }
+                break;
             }
             return returnval;
         }
@@ -2042,84 +2038,6 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
-
-        SpatialDomains::TetGeomSharedPtr TetExp::CreateEquilateralTetGeom()
-        {
-	    int i,j;
-	    const int three=3;
-            const int nVerts = 4;
-            const NekDouble point[][3] = {
-	      {-1,-1/sqrt(NekDouble(3)),-1/sqrt(NekDouble(6))},
-	      {1,-1/sqrt(NekDouble(3)),-1/sqrt(NekDouble(6))},
-	      {0,2/sqrt(NekDouble(3)),-1/sqrt(NekDouble(6))},
-	      {0,0,3/sqrt(NekDouble(6))}};
-        
-            boost::shared_ptr<SpatialDomains::VertexComponent> verts[4];
-	    for(i=0; i < nVerts; ++i)
-	    {
-	        verts[i] =  MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr( three, i, point[i][0], point[i][1], point[i][2] );
-	    }
-
-            //////////////////////////////
-            // Set up Tetrahedron Edges //
-            //////////////////////////////
-
-           // SegGeom (int id, const int coordim), EdgeComponent(id, coordim)
-           const int nEdges = 6;
-           const int vertexConnectivity[][2] = {
-             {0,1},{1,2},{0,2},{0,3},{1,3},{2,3}
-           };
-
-           // Populate the list of edges
-	   SpatialDomains::SegGeomSharedPtr edges[nEdges];
-           for(i=0; i < nEdges; ++i)
-	   {
-               boost::shared_ptr<SpatialDomains::VertexComponent> vertsArray[2];
-	       for(j=0; j<2; ++j)
-	       {
-                   vertsArray[j] = verts[vertexConnectivity[i][j]];
-	       }
-
-               edges[i] = MemoryManager<SpatialDomains::SegGeom>
-                                ::AllocateSharedPtr(i, three, vertsArray);
-           }
-
-           //////////////////////////////
-           // Set up Tetrahedron faces //
-           //////////////////////////////
- 
-	   const int nFaces = 4;
-           const int edgeConnectivity[][3] = {
-                 {0,1,2}, {0,4,3}, {1,5,4}, {2,5,3}
-                 };
-           const bool isEdgeFlipped[][3] = {
-                 {0,0,1}, {0,0,1}, {0,0,1}, {0,0,1}
-                 };
-
-           // Populate the list of faces
-	   SpatialDomains::TriGeomSharedPtr faces[nFaces];
-           for(i=0; i < nFaces; ++i)
-	   {
-	       SpatialDomains::SegGeomSharedPtr edgeArray[3];
-	       StdRegions::Orientation eorientArray[3];
-               for(j=0; j < 3; ++j)
-	       {
-                   edgeArray[j] = edges[edgeConnectivity[i][j]];
-                   eorientArray[j] = isEdgeFlipped[i][j] ? StdRegions::eBackwards : StdRegions::eForwards;
-	       }
-           
-
-	       faces[i] = MemoryManager<SpatialDomains::TriGeom>
-                                ::AllocateSharedPtr(i, edgeArray, eorientArray);
-	   }
-
-           SpatialDomains::TetGeomSharedPtr geom =
-                         MemoryManager<SpatialDomains::TetGeom>::AllocateSharedPtr(faces);
-
-	   geom->SetOwnData();
-
-           return geom;
-       }
 
     }//end of namespace
 }//end of namespace

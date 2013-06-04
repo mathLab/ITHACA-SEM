@@ -32,22 +32,24 @@
 // Description: Preconditioner header
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERDIAGONAL_H
-#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERDIAGONAL_H
+#ifndef NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEAR_H
+#define NEKTAR_LIB_MULTIREGIONS_PRECONDITIONERLINEAR_H
 #include <MultiRegions/GlobalLinSys.h>
 #include <MultiRegions/Preconditioner.h>
 #include <MultiRegions/MultiRegionsDeclspec.h>
 #include <MultiRegions/AssemblyMap/AssemblyMapCG.h>
+#include <LocalRegions/TetExp.h>
+#include <LocalRegions/PrismExp.h>
 
 
 namespace Nektar
 {
     namespace MultiRegions
     {
-        class PreconditionerDiagonal;
-        typedef boost::shared_ptr<PreconditionerDiagonal>  PreconditionerDiagonalSharedPtr;
+        class PreconditionerLinear;
+        typedef boost::shared_ptr<PreconditionerLinear>  PreconditionerLinearSharedPtr;
 
-        class PreconditionerDiagonal: public Preconditioner
+        class PreconditionerLinear: public Preconditioner
 	{
         public:
             /// Creates an instance of this class
@@ -56,46 +58,43 @@ namespace Nektar
                         const boost::shared_ptr<AssemblyMap>
                                                                &pLocToGloMap)
             {
-	        PreconditionerSharedPtr p = MemoryManager<PreconditionerDiagonal>::AllocateSharedPtr(plinsys,pLocToGloMap);
+	        PreconditionerSharedPtr p = MemoryManager<PreconditionerLinear>::AllocateSharedPtr(plinsys,pLocToGloMap);
 	        p->InitObject();
 	        return p;
             }
 
             /// Name of class
-            static std::string className;
             static std::string className1;
 
-            MULTI_REGIONS_EXPORT PreconditionerDiagonal(
+            MULTI_REGIONS_EXPORT PreconditionerLinear(
                          const boost::shared_ptr<GlobalLinSys> &plinsys,
 	                 const AssemblyMapSharedPtr &pLocToGloMap);
 
             MULTI_REGIONS_EXPORT
-            virtual ~PreconditionerDiagonal() {}
+            virtual ~PreconditionerLinear() {}
 
+        
 	protected:
-
-            Array<OneD, NekDouble>                      m_diagonals;
-
-            PreconditionerType                          m_preconType;
-            StdRegions::StdExpansionSharedPtr           vExp;
+            GlobalLinSysSharedPtr                       m_vertLinsys;
+            boost::shared_ptr<AssemblyMap>              m_vertLocToGloMap;
 
 	private:
 
-            void DiagonalPreconditionerSum(void);
-
-	    void StaticCondDiagonalPreconditionerSum(void);
-
             virtual void v_InitObject();
 
+
+            virtual void v_DoPreconditionerWithNonVertOutput(
+                                  const Array<OneD, NekDouble>& pInput,
+                                  Array<OneD, NekDouble>& pOutput,
+                                  const Array<OneD, NekDouble>& pNonVertOutput);
+            
             virtual void v_DoPreconditioner(                
                       const Array<OneD, NekDouble>& pInput,
 		      Array<OneD, NekDouble>& pOutput);
-
+		      
             virtual void v_BuildPreconditioner();
 
-            static std::string lookupIds[];
-            static std::string def;
-	};
+        };
     }
 }
 

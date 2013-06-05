@@ -127,7 +127,7 @@ namespace Nektar
             int nq1 = m_base[1]->GetNumPoints();
             Array<OneD, NekDouble> wsp1(nq1);
 
-            DNekMatSharedPtr I = m_base[0]->GetI(coords);;
+            DNekMatSharedPtr I = m_base[0]->GetI(coords);
 
             ASSERTL2(coords[0] > -1 - NekConstants::kNekZeroTol, "coord[0] < -1");
             ASSERTL2(coords[0] <  1 + NekConstants::kNekZeroTol, "coord[0] >  1");

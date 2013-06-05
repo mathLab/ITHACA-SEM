@@ -158,6 +158,10 @@ namespace Nektar
                         const StdRegions::StdExpansionSharedPtr &EdgeExp,
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(
+                        const int edge,
+                        const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD, NekDouble>      &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
                         const int edge,
                         Array<OneD, NekDouble> &outarray);
@@ -276,13 +280,15 @@ namespace Nektar
             void MultiplyByQuadratureMetric(
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray);
+            
         };
 
         // type defines for use of QuadExp in a boost vector
         typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
         typedef std::vector< QuadExpSharedPtr > QuadExpVector;
         typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
-
+        
+        
     }
 }
 

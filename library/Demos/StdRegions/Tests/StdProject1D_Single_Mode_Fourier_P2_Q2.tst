@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>StdProject1D Segment single mode Fourier basis P=2 Q=8</description>
+    <description>StdProject1D Segment single mode Fourier basis P=2 Q=2</description>
     <executable>StdProject1D</executable>
-    <parameters>12 2 8</parameters>
+    <parameters>13 2 2</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-12">0</value>

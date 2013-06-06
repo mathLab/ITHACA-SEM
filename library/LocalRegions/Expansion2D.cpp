@@ -38,6 +38,7 @@
 #include <SpatialDomains/Geometry2D.h>
 #include <LibUtilities/Foundations/InterpCoeff.h>
 #include <LocalRegions/MatrixKey.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
@@ -215,12 +216,98 @@ namespace Nektar
                 }
             }
             
-            // add data to outarray if forward edge normal is outwards
-            for(i = 0; i < order_e; ++i)
+            // Implementation for all the basis except Gauss points
+            if(EdgeExp->GetBasis(0)->GetBasisType() !=
+                   LibUtilities::eGauss_Lagrange)
             {
-                outarray[((*map)[i].index)] += ((*map)[i].sign)*EdgeExp->GetCoeff(i);
+                // add data to outarray if forward edge normal is outwards
+                for(i = 0; i < order_e; ++i)
+                {
+                    outarray[(*map)[i].index] +=
+                        (*map)[i].sign*EdgeExp->GetCoeff(i);
+                }
+            }
+            else
+            {
+                int nCoeffs0, nCoeffs1;
+                int j;
+                
+                StdRegions::ConstFactorMap factors;
+                factors[StdRegions::eFactorGaussEdge] = edge;
+                StdRegions::StdMatrixKey key(StdRegions::eGaussDG,
+                                             DetShapeType(),*this,factors);
+                
+                DNekMatSharedPtr mat_gauss = m_stdMatrixManager[key];
+                
+                switch(edge)
+                {
+                    case 0:
+                    {
+                        nCoeffs1 = m_base[1]->GetNumModes();
+                        
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs1; j++)
+                            {
+                                outarray[(*map)[i].index + j*order_e] +=
+                                    mat_gauss->GetPtr()[j]*
+                                    (*map)[i].sign*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    }
+                    case 1:
+                    {
+                        nCoeffs0 = m_base[0]->GetNumModes();
+                        
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs0; j++)
+                            {
+                                outarray[(*map)[i].index - j] +=
+                                    mat_gauss->GetPtr()[order_e - 1 -j]*
+                                    (*map)[i].sign*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    }
+                    case 2:
+                    {
+                        nCoeffs1 = m_base[1]->GetNumModes();
+                        
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs1; j++)
+                            {
+                                outarray[(*map)[i].index - j*order_e] +=
+                                    mat_gauss->GetPtr()[order_e - 1 - j]*
+                                    (*map)[i].sign*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    }
+                    case 3:
+                    {
+                        nCoeffs0 = m_base[0]->GetNumModes();
+                        
+                        for(i = 0; i < order_e; ++i)
+                        {
+                            for(j = 0; j < nCoeffs0; j++)
+                            {
+                                outarray[(*map)[i].index + j] +=
+                                    mat_gauss->GetPtr()[j]*
+                                    (*map)[i].sign*EdgeExp->GetCoeff(i);
+                            }
+                        }
+                        break;
+                    }
+                    default:
+                        ASSERTL0(false,"edge value (< 3) is out of range");
+                        break;
+                }
             }
         }
+        
 
         void Expansion2D::SetTraceToGeomOrientation(Array<OneD,StdRegions::StdExpansionSharedPtr> &EdgeExp,  Array<OneD, NekDouble> &inout)
         {
@@ -791,8 +878,8 @@ namespace Nektar
                         Vmath::Vcopy(ncoeffs,&ulam[0],1,&(Qmat.GetPtr())[0]+j*ncoeffs,1);
                     }
                 }
-                break;            
-            // Matrix K (P23)
+                break;
+                        // Matrix K (P23)
             case StdRegions::eHybridDGHelmBndLam:
                 {
                     int i,j,e,cnt;

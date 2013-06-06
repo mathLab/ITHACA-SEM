@@ -82,7 +82,8 @@ namespace Nektar
                                                                 &bndConditions,
                 const PeriodicMap &periodicVerts,
                 const PeriodicMap &periodicEdges,
-                const PeriodicMap &periodicFaces):
+                const PeriodicMap &periodicFaces,
+                const bool checkIfSystemSingular):
             AssemblyMapCG(pSession)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs,
@@ -91,7 +92,8 @@ namespace Nektar
                                       bndConditions,
                                       periodicVerts,
                                       periodicEdges,
-                                      periodicFaces);
+                                      periodicFaces,
+                                      checkIfSystemSingular);
 
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
@@ -169,7 +171,8 @@ namespace Nektar
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
             const PeriodicMap &periodicVerts,
             const PeriodicMap &periodicEdges,
-            const PeriodicMap &periodicFaces)
+            const PeriodicMap &periodicFaces,
+            const bool checkIfSystemSingular)
         {
             int i,j,k,l;
             int cnt = 0;
@@ -462,7 +465,7 @@ namespace Nektar
             // we do not try to set a Dirichlet vertex on a partition with no
             // intersection with the boundary.
             meshVertId = 0;
-            if(systemSingular == true && maxBCIdx == p)
+            if(systemSingular == true && checkIfSystemSingular && maxBCIdx == p)
             {
                 if(m_session->DefinesParameter("SingularElement"))
                 {
@@ -487,7 +490,7 @@ namespace Nektar
                             bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
                     
                     //first vertex 0 of the edge
-                    meshVertId = bndCondFaceExp->GetGeom3D()->GetVid(0);
+                    meshVertId = bndCondFaceExp->GetGeom2D()->GetVid(0);
                 }
 
                 if(vertReorderedGraphVertId.count(meshVertId) == 0)

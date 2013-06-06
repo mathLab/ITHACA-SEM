@@ -401,23 +401,27 @@ namespace Nektar
                         MultiRegions::ContField3DSharedPtr firstfield =
                             MemoryManager<MultiRegions::ContField3D>
                             ::AllocateSharedPtr(m_session, m_graph, 
-                                                m_session->GetVariable(i));
+                                                m_session->GetVariable(i),
+                                                m_checkIfSystemSingular[0]);
 
                         m_fields[0] = firstfield;
                         for(i = 1; i < m_fields.num_elements(); i++)
                         {
-                            
-                            if(m_graph->SameExpansions(m_session->GetVariable(0),m_session->GetVariable(i)))
+                            if(m_graph->SameExpansions(
+                                        m_session->GetVariable(0),
+                                        m_session->GetVariable(i)))
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::ContField3D>
                                     ::AllocateSharedPtr(*firstfield, m_graph,
-                                                        m_session->GetVariable(i));
+                                                    m_session->GetVariable(i),
+                                                    m_checkIfSystemSingular[i]);
                             }
                             else
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::ContField3D>
                                     ::AllocateSharedPtr(m_session, m_graph, 
-                                                        m_session->GetVariable(i)); 
+                                                    m_session->GetVariable(i),
+                                                    m_checkIfSystemSingular[i]);
                             }
                         }
                         

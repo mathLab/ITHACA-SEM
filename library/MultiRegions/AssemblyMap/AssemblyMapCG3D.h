@@ -68,7 +68,8 @@ namespace Nektar
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
                 const PeriodicMap &periodicVerts,
                 const PeriodicMap &periodicEdges,
-                const PeriodicMap &periodicFaces);
+                const PeriodicMap &periodicFaces,
+                const bool checkIfSystemSingular);
             
 
             /// General constructor for expansions of all dimensions without
@@ -91,7 +92,8 @@ namespace Nektar
                 SpatialDomains::NullBoundaryConditionShPtrArray,
                 const PeriodicMap &periodicVerts = NullPeriodicMap,
                 const PeriodicMap &periodicEdges = NullPeriodicMap,
-                const PeriodicMap &periodicFaces = NullPeriodicMap);
+                const PeriodicMap &periodicFaces = NullPeriodicMap,
+                const bool checkIfSystemSingular = false);
         }; // class
     } // end of namespace
 } // end of namespace

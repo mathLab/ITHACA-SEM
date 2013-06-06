@@ -413,11 +413,16 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
                 switch(m_base[0]->GetBasisType())
                 {
-                case LibUtilities::eGauss_Lagrange:
                 case LibUtilities::eGLL_Lagrange:
                     {
                         offset = 1;
                     }
+                    break;
+                case LibUtilities::eGauss_Lagrange:
+                {
+                    int nInteriorDofs = m_ncoeffs;
+                    offset = 0;
+                }
                     break;
                 case LibUtilities::eModified_A:
                 case LibUtilities::eModified_B:
@@ -431,29 +436,39 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
                 fill(outarray.get(), outarray.get()+m_ncoeffs, 0.0 );
 
-                outarray[GetVertexMap(0)] = inarray[0];
-                outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
-
-                if(m_ncoeffs>2)
+                if(m_base[0]->GetBasisType() != LibUtilities::eGauss_Lagrange)
                 {
-                    //  ideally, we would like to have tmp0 to be replaced by
-                    //  outarray (currently MassMatrixOp does not allow aliasing)
-                    Array<OneD, NekDouble> tmp0(m_ncoeffs); 
-                    Array<OneD, NekDouble> tmp1(m_ncoeffs);
+                
+                    outarray[GetVertexMap(0)] = inarray[0];
+                    outarray[GetVertexMap(1)] = inarray[m_base[0]->GetNumPoints()-1];
 
-                    StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetShapeType(),*this);
-                    MassMatrixOp(outarray,tmp0,stdmasskey);
-                    v_IProductWRTBase(inarray,tmp1);
+                    if(m_ncoeffs>2)
+                    {
+                        // ideally, we would like to have tmp0 to be replaced
+                        // by outarray (currently MassMatrixOp does not allow
+                        // aliasing)
+                        Array<OneD, NekDouble> tmp0(m_ncoeffs);
+                        Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
-                    Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
+                        StdRegions::StdMatrixKey  stdmasskey(StdRegions::eMass,DetShapeType(),*this);
+                        MassMatrixOp(outarray,tmp0,stdmasskey);
+                        v_IProductWRTBase(inarray,tmp1);
 
-                    // get Mass matrix inverse (only of interior DOF)
-                    MatrixKey             masskey(StdRegions::eMass, DetShapeType(),*this);
-                    DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
+                        Vmath::Vsub(m_ncoeffs, tmp1, 1, tmp0, 1, tmp1, 1);
 
-                    Blas::Dgemv('N',nInteriorDofs,nInteriorDofs, matsys->Scale(), 
-                                &((matsys->GetOwnedMatrix())->GetPtr())[0],
-                                nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);
+                        // get Mass matrix inverse (only of interior DOF)
+                        MatrixKey             masskey(StdRegions::eMass, DetShapeType(),*this);
+                        DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
+
+                        Blas::Dgemv('N',nInteriorDofs,nInteriorDofs, matsys->Scale(),
+                                    &((matsys->GetOwnedMatrix())->GetPtr())[0],
+                                    nInteriorDofs,tmp1.get()+offset,1,0.0,outarray.get()+offset,1);
+                    }
+                }
+                else
+                {
+                    SegExp::v_FwdTrans(inarray, outarray);
+                    
                 }
             }
         }
@@ -1664,7 +1679,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 }
                 break;
             case LibUtilities::eGLL_Lagrange:
-
+            case LibUtilities::eGauss_Lagrange:
                 for(m = 0; m < m_ncoeffs; ++m)
                 {
                     outarray[m_ncoeffs-1-m] = inarray[m];

@@ -34,7 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <StdRegions/StdQuadExp.h>
-#include <StdRegions/StdSegExp.h>       // for StdSegExp, etc
+#include <StdRegions/StdSegExp.h>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
@@ -696,10 +697,12 @@ namespace Nektar
         int StdQuadExp::v_NumBndryCoeffs() const
         {
             ASSERTL1(GetBasisType(0) == LibUtilities::eModified_A ||
-                     GetBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     GetBasisType(0) == LibUtilities::eGLL_Lagrange||
+                     GetBasisType(0) == LibUtilities::eGauss_Lagrange,
                      "BasisType is not a boundary interior form");
             ASSERTL1(GetBasisType(1) == LibUtilities::eModified_A ||
-                     GetBasisType(1) == LibUtilities::eGLL_Lagrange,
+                     GetBasisType(1) == LibUtilities::eGLL_Lagrange||
+                     GetBasisType(0) == LibUtilities::eGauss_Lagrange,
                       "BasisType is not a boundary interior form");
 
             return 4 + 2*(GetBasisNumModes(0)-2) + 2*(GetBasisNumModes(1)-2);
@@ -787,6 +790,7 @@ namespace Nektar
             switch(Btype1)
             {
             case LibUtilities::eGLL_Lagrange:
+            case LibUtilities::eGauss_Lagrange:        
                 value1 = nummodes0;
                 break;
             case LibUtilities::eModified_A:
@@ -806,6 +810,7 @@ namespace Nektar
             switch(Btype0)
             {
             case LibUtilities::eGLL_Lagrange:
+            case LibUtilities::eGauss_Lagrange:        
                 value2 = value1+nummodes0-1;
                 break;
             case LibUtilities::eModified_A:
@@ -823,7 +828,7 @@ namespace Nektar
             }
 
 
-            if(Btype1 == LibUtilities::eGLL_Lagrange)
+            if(Btype1 == LibUtilities::eGLL_Lagrange || Btype1 == LibUtilities::eGauss_Lagrange )
             {
                 for(i = nummodes0*(nummodes1-1);i < GetNcoeffs(); i++)
                 { 
@@ -1295,6 +1300,31 @@ namespace Nektar
                     (*Mat) = Imass*Iprod;
                 }
                 break;
+            case eGaussDG:
+                {
+                    ConstFactorMap factors = mkey.GetConstFactors();
+
+                    int edge    = (int)factors[StdRegions::eFactorGaussEdge];
+                    int dir     = (edge + 1) % 2;
+                    int nCoeffs = m_base[dir]->GetNumModes();
+
+                    const LibUtilities::PointsKey BS_p(
+                        nCoeffs, LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::BasisKey  BS_k(
+                        LibUtilities::eGauss_Lagrange, nCoeffs, BS_p);
+
+                    Array<OneD, NekDouble> coords(1, 0.0);
+                    coords[0] = (edge == 0 || edge == 3) ? -1.0 : 1.0;
+
+                    LibUtilities::BasisSharedPtr basis =
+                        LibUtilities::BasisManager()[BS_k];
+                    DNekMatSharedPtr             m_Ix  = basis->GetI(coords);
+
+                    Mat = MemoryManager<DNekMat>::AllocateSharedPtr(
+                        1.0, nCoeffs);
+                    Vmath::Vcopy(nCoeffs, m_Ix->GetPtr(), 1, Mat->GetPtr(), 1);
+                    break;
+                }
             default:
                 {
                     Mat = StdExpansion::CreateGeneralMatrix(mkey);

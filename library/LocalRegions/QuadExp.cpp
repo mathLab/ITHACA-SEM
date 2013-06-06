@@ -52,12 +52,12 @@ namespace Nektar
              StdExpansion2D(Ba.GetNumModes()*Bb.GetNumModes(),Ba,Bb),
              StdQuadExp    (Ba,Bb),
              Expansion     (),
-            m_geom(geom),
-            m_metricinfo(m_geom->GetGeomFactors(m_base)),
-            m_matrixManager(
+             m_geom(geom),
+             m_metricinfo(m_geom->GetGeomFactors(m_base)),
+             m_matrixManager(
                     boost::bind(&QuadExp::CreateMatrix, this, _1),
                     std::string("QuadExpMatrix")),
-            m_staticCondMatrixManager(
+             m_staticCondMatrixManager(
                     boost::bind(&QuadExp::CreateStaticCondMatrix, this, _1),
                     std::string("QuadExpStaticCondMatrix"))
         {
@@ -739,39 +739,51 @@ namespace Nektar
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
-
-            // get points in Cartesian orientation
-            switch(edge)
+            
+            // Implementation for all the basis except Gauss points
+            if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre &&
+                m_base[1]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
             {
-            case 0:
-                Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
-                break;
-            case 1:
-                Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),nquad0,&(outarray[0]),1);
-                break;
-            case 2:
-                Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1),1,
-                             &(outarray[0]),1);
-                break;
-            case 3:
-                Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,&(outarray[0]),1);
-                break;
-            default:
-                ASSERTL0(false,"edge value (< 3) is out of range");
-                break;
+                // get points in Cartesian orientation
+                switch(edge)
+                {
+                    case 0:
+                        Vmath::Vcopy(nquad0,&(inarray[0]),1,&(outarray[0]),1);
+                        break;
+                    case 1:
+                        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1),
+                                     nquad0,&(outarray[0]),1);
+                        break;
+                    case 2:
+                        Vmath::Vcopy(nquad0,&(inarray[0])+nquad0*(nquad1-1),1,
+                                     &(outarray[0]),1);
+                        break;
+                    case 3:
+                        Vmath::Vcopy(nquad1,&(inarray[0]),nquad0,
+                                     &(outarray[0]),1);
+                        break;
+                    default:
+                        ASSERTL0(false,"edge value (< 3) is out of range");
+                        break;
+                }
             }
-
+            else
+            {
+                QuadExp::v_GetEdgeInterpVals(edge, inarray, outarray);
+            }
+            
             // Interpolate if required
-            if(m_base[edge%2]->GetPointsKey() != EdgeExp->GetBasis(0)->GetPointsKey())
+            if(m_base[edge%2]->GetPointsKey() !=
+               EdgeExp->GetBasis(0)->GetPointsKey())
             {
                 Array<OneD,NekDouble> outtmp(max(nquad0,nquad1));
 				
                 outtmp = outarray;
 				
                 LibUtilities::Interp1D(m_base[edge%2]->GetPointsKey(),outtmp,
-                                       EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
+                                EdgeExp->GetBasis(0)->GetPointsKey(),outarray);
             }
-
+            
             //Reverse data if necessary
             if(GetCartesianEorient(edge) == StdRegions::eBackwards)
             {
@@ -780,8 +792,73 @@ namespace Nektar
             }
         }
         
+        void QuadExp::v_GetEdgeInterpVals(const int edge,
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD,NekDouble> &outarray)
+        {
+             int i;
+             int nq0 = m_base[0]->GetNumPoints();
+             int nq1 = m_base[1]->GetNumPoints();
+
+             StdRegions::ConstFactorMap factors;
+             factors[StdRegions::eFactorGaussEdge] = edge;
+
+             StdRegions::StdMatrixKey key(
+                 StdRegions::eInterpGaussEdge,
+                 DetShapeType(),*this,factors);
+             
+             DNekScalMatSharedPtr mat_gauss = m_matrixManager[key];
+
+             switch(edge)
+             {
+                 case 0:
+                 {
+                     for (i = 0; i < nq0; i++)
+                     {
+                         outarray[i] = Blas::Ddot(
+                             nq1, mat_gauss->GetOwnedMatrix()->GetPtr().get(),
+                             1, &inarray[i], nq0);
+                     }
+                     break;
+                 }
+                 case 1:
+                 {
+                     for (i = 0; i < nq1; i++)
+                     {
+                         outarray[i] =  Blas::Ddot(
+                             nq0, mat_gauss->GetOwnedMatrix()->GetPtr().get(),
+                             1, &inarray[i * nq0], 1);
+                     }
+                     break;
+                 }
+                 case 2:
+                 {
+                     for (i = 0; i < nq0; i++)
+                     {
+                         outarray[i] = Blas::Ddot(
+                             nq1, mat_gauss->GetOwnedMatrix()->GetPtr().get(),
+                             1, &inarray[i], nq0);
+                     }
+                     break;
+                 }
+                 case 3:
+                 {
+                     for (i = 0; i < nq1; i++)
+                     {
+                         outarray[i] =  Blas::Ddot(
+                             nq0, mat_gauss->GetOwnedMatrix()->GetPtr().get(),
+                             1, &inarray[i * nq0], 1);
+                     }
+                     break;
+                 }
+                 default:
+                     ASSERTL0(false,"edge value (< 3) is out of range");
+                     break;
+             }
+        }
+    
         void QuadExp::v_GetEdgeQFactors(
-                const int edge, 
+                const int edge,
                 Array<OneD, NekDouble> &outarray)
         {
             int i;
@@ -798,109 +875,218 @@ namespace Nektar
             Array<OneD, NekDouble> g3(max(nquad0, nquad1), 0.0);
             
             if (m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {   
-                switch (edge)
+            {
+                // Implementation for all the basis except Gauss points
+                if (m_base[0]->GetPointsType()
+                    != LibUtilities::eGaussGaussLegendre
+                    && m_base[1]->GetPointsType() !=
+                    LibUtilities::eGaussGaussLegendre)
                 {
-                    case 0:
-                        Vmath::Vcopy(nquad0, &(gmat[1][0]), 1, &(g1[0]), 1);
-                        Vmath::Vcopy(nquad0, &(gmat[3][0]), 1, &(g3[0]), 1);
-                        Vmath::Vcopy(nquad0, &(jac[0]),     1, &(j[0]),  1);
-                        
-                        for (i = 0; i < nquad0; ++i)
-                        {
-                            outarray[i] = j[i]*sqrt(g1[i]*g1[i] + g3[i]*g3[i]);
-                        }
-                        break;
-                    case 1:
-                        Vmath::Vcopy(nquad1, 
-                                     &(gmat[0][0])+(nquad0-1), nquad0, 
-                                     &(g0[0]), 1);
-                        
-                        Vmath::Vcopy(nquad1, 
-                                     &(gmat[2][0])+(nquad0-1), nquad0, 
-                                     &(g2[0]), 1);
-                        
-                        Vmath::Vcopy(nquad1, 
-                                     &(jac[0])+(nquad0-1), nquad0, 
-                                     &(j[0]), 1);
-                        
-                        for (i = 0; i < nquad0; ++i)
-                        {
-                            outarray[i] = j[i]*sqrt(g0[i]*g0[i] + g2[i]*g2[i]);
-                        }
-                        break;
-                    case 2:
-                        
-                        Vmath::Vcopy(nquad0, 
-                                     &(gmat[1][0])+(nquad0*nquad1-1), -1, 
-                                     &(g1[0]), 1);
-                        
-                        Vmath::Vcopy(nquad0, 
-                                     &(gmat[3][0])+(nquad0*nquad1-1), -1, 
-                                     &(g3[0]), 1);
-                        
-                        Vmath::Vcopy(nquad0, 
-                                     &(jac[0])+(nquad0*nquad1-1), -1, 
-                                     &(j[0]), 1);
-                        
-                        for (i = 0; i < nquad0; ++i)
-                        {
-                            outarray[i] = j[i]*sqrt(g1[i]*g1[i] + g3[i]*g3[i]);
-                        }
-                        break;
-                    case 3:
-                        
-                        Vmath::Vcopy(nquad1, 
-                                     &(gmat[0][0])+nquad0*(nquad1-1), -nquad0, 
-                                     &(g0[0]), 1);
-                        
-                        Vmath::Vcopy(nquad1, 
-                                     &(gmat[2][0])+nquad0*(nquad1-1), -nquad0, 
-                                     &(g2[0]), 1);
-                        
-                        Vmath::Vcopy(nquad1, 
-                                     &(jac[0])+nquad0*(nquad1-1), -nquad0, 
-                                     &(j[0]), 1);
-                        
-                        for (i = 0; i < nquad0; ++i)
-                        {
-                            outarray[i] = j[i]*sqrt(g0[i]*g0[i] + g2[i]*g2[i]);
-                        }
-                        break;
-                    default:
-                        ASSERTL0(false,"edge value (< 3) is out of range");
-                        break;
+                    switch (edge)
+                    {
+                        case 0:
+                            Vmath::Vcopy(nquad0, &(gmat[1][0]),
+                                         1, &(g1[0]), 1);
+                            Vmath::Vcopy(nquad0, &(gmat[3][0]),
+                                         1, &(g3[0]), 1);
+                            Vmath::Vcopy(nquad0, &(jac[0]),1, &(j[0]),  1);
+                            
+                            for (i = 0; i < nquad0; ++i)
+                            {
+                                outarray[i] = j[i]*sqrt(g1[i]*g1[i]
+                                                                 + g3[i]*g3[i]);
+                            }
+                            break;
+                        case 1:
+                            Vmath::Vcopy(nquad1,
+                                         &(gmat[0][0])+(nquad0-1), nquad0,
+                                         &(g0[0]), 1);
+                            
+                            Vmath::Vcopy(nquad1,
+                                         &(gmat[2][0])+(nquad0-1), nquad0,
+                                         &(g2[0]), 1);
+                            
+                            Vmath::Vcopy(nquad1,
+                                         &(jac[0])+(nquad0-1), nquad0,
+                                         &(j[0]), 1);
+                            
+                            for (i = 0; i < nquad0; ++i)
+                            {
+                                outarray[i] = j[i]*sqrt(g0[i]*g0[i] +
+                                                                   g2[i]*g2[i]);
+                            }
+                            break;
+                        case 2:
+                            
+                            Vmath::Vcopy(nquad0,
+                                         &(gmat[1][0])+(nquad0*nquad1-1), -1,
+                                         &(g1[0]), 1);
+                            
+                            Vmath::Vcopy(nquad0,
+                                         &(gmat[3][0])+(nquad0*nquad1-1), -1,
+                                         &(g3[0]), 1);
+                            
+                            Vmath::Vcopy(nquad0,
+                                         &(jac[0])+(nquad0*nquad1-1), -1,
+                                         &(j[0]), 1);
+                            
+                            for (i = 0; i < nquad0; ++i)
+                            {
+                                outarray[i] = j[i]*sqrt(g1[i]*g1[i]
+                                                                 + g3[i]*g3[i]);
+                            }
+                            break;
+                        case 3:
+                            
+                            Vmath::Vcopy(nquad1,
+                                         &(gmat[0][0])+nquad0*(nquad1-1),
+                                         -nquad0,&(g0[0]), 1);
+                            
+                            Vmath::Vcopy(nquad1,
+                                         &(gmat[2][0])+nquad0*(nquad1-1),
+                                         -nquad0,&(g2[0]), 1);
+                            
+                            Vmath::Vcopy(nquad1,
+                                         &(jac[0])+nquad0*(nquad1-1), -nquad0,
+                                         &(j[0]), 1);
+                            
+                            for (i = 0; i < nquad0; ++i)
+                            {
+                                outarray[i] = j[i]*sqrt(g0[i]*g0[i] +
+                                                        g2[i]*g2[i]);
+                            }
+                            break;
+                        default:
+                            ASSERTL0(false,"edge value (< 3) is out of range");
+                            break;
+                    }
+                }
+                else
+                {
+                    int nqtot =  nquad0 * nquad1;
+                    Array<OneD, NekDouble> tmp_gmat0(nqtot, 0.0);
+                    Array<OneD, NekDouble> tmp_gmat1(nqtot, 0.0);
+                    Array<OneD, NekDouble> tmp_gmat2(nqtot, 0.0);
+                    Array<OneD, NekDouble> tmp_gmat3(nqtot, 0.0);
+                    Array<OneD, NekDouble> g0_edge(max(nquad0, nquad1), 0.0);
+                    Array<OneD, NekDouble> g1_edge(max(nquad0, nquad1), 0.0);
+                    Array<OneD, NekDouble> g2_edge(max(nquad0, nquad1), 0.0);
+                    Array<OneD, NekDouble> g3_edge(max(nquad0, nquad1), 0.0);
+                    Array<OneD, NekDouble> jac_edge(max(nquad0, nquad1), 0.0);
+                    
+                    switch (edge)
+                    {
+                        case 0:
+                            Vmath::Vmul(nqtot,&(gmat[1][0]),1,&jac[0],1,
+                                        &(tmp_gmat1[0]),1);
+                            Vmath::Vmul(nqtot,&(gmat[3][0]),1,&jac[0],1,
+                                        &(tmp_gmat3[0]),1);
+                            QuadExp::v_GetEdgeInterpVals(edge, tmp_gmat1,
+                                                         g1_edge);
+                            QuadExp::v_GetEdgeInterpVals(edge, tmp_gmat3,
+                                                         g3_edge);
+                            
+                            for (i = 0; i < nquad0; ++i)
+                            {
+                                outarray[i] = sqrt(g1_edge[i]*g1_edge[i] +
+                                                   g3_edge[i]*g3_edge[i]);
+                            }
+                            break;
+                            
+                        case 1:
+                            Vmath::Vmul(nqtot,&(gmat[0][0]),1,&jac[0],1,
+                                        &(tmp_gmat0[0]),1);
+                            Vmath::Vmul(nqtot,&(gmat[2][0]),1,&jac[0],1,
+                                        &(tmp_gmat2[0]),1);
+                            QuadExp::v_GetEdgeInterpVals(edge, tmp_gmat0,
+                                                         g0_edge);
+                            QuadExp::v_GetEdgeInterpVals(edge, tmp_gmat2,
+                                                         g2_edge);
+                            
+                            
+                            for (i = 0; i < nquad1; ++i)
+                            {
+                                outarray[i] = sqrt(g0_edge[i]*g0_edge[i]
+                                                   + g2_edge[i]*g2_edge[i]);
+                            }
+                            
+                            break;
+                        case 2:
+                
+                            Vmath::Vmul(nqtot,&(gmat[1][0]),1,&jac[0],1,
+                                        &(tmp_gmat1[0]),1);
+                            Vmath::Vmul(nqtot,&(gmat[3][0]),1,&jac[0],1,
+                                        &(tmp_gmat3[0]),1);
+                            QuadExp::v_GetEdgeInterpVals(edge,tmp_gmat1,g1_edge);
+                            QuadExp::v_GetEdgeInterpVals(edge,tmp_gmat3,g3_edge);
+                            
+                            
+                            for (i = 0; i < nquad0; ++i)
+                            {
+                                outarray[i] = sqrt(g1_edge[i]*g1_edge[i]
+                                                   + g3_edge[i]*g3_edge[i]);
+                            }
+                            
+                            Vmath::Reverse(nquad0,&outarray[0],1,&outarray[0],1);
+                            
+                            break;
+                        case 3:
+                            Vmath::Vmul(nqtot,&(gmat[0][0]),1,&jac[0],1,
+                                        &(tmp_gmat0[0]),1);
+                            Vmath::Vmul(nqtot,&(gmat[2][0]),1,&jac[0],1,
+                                        &(tmp_gmat2[0]),1);
+                            QuadExp::v_GetEdgeInterpVals(edge,tmp_gmat0,g0_edge);
+                            QuadExp::v_GetEdgeInterpVals(edge,tmp_gmat2,g2_edge);
+                            
+                            
+                            for (i = 0; i < nquad1; ++i)
+                            {
+                                outarray[i] = sqrt(g0_edge[i]*g0_edge[i] +
+                                                   g2_edge[i]*g2_edge[i]);
+                            }
+                            
+                            Vmath::Reverse(nquad1,&outarray[0],1,&outarray[0],1);
+                            
+                            break;
+                        default:
+                            ASSERTL0(false,"edge value (< 3) is out of range");
+                            break;
+                    }
                 }
             }
             else
             {
+                
                 switch (edge)
                 {
                     case 0:
+                        
+                        
+                        
                         for (i = 0; i < nquad0; ++i)
                         {
-                            outarray[i] = jac[0]*sqrt(gmat[1][0]*gmat[1][0] + 
+                            outarray[i] = jac[0]*sqrt(gmat[1][0]*gmat[1][0] +
                                                       gmat[3][0]*gmat[3][0]);
                         }
                         break;
                     case 1:
                         for (i = 0; i < nquad1; ++i)
                         {
-                            outarray[i] = jac[0]*sqrt(gmat[0][0]*gmat[0][0] + 
+                            outarray[i] = jac[0]*sqrt(gmat[0][0]*gmat[0][0] +
                                                       gmat[2][0]*gmat[2][0]);
                         }
                         break;
                     case 2:
                         for (i = 0; i < nquad0; ++i)
                         {
-                            outarray[i] = jac[0]*sqrt(gmat[1][0]*gmat[1][0] + 
+                            outarray[i] = jac[0]*sqrt(gmat[1][0]*gmat[1][0] +
                                                       gmat[3][0]*gmat[3][0]);
                         }
                         break;
                     case 3:
                         for (i = 0; i < nquad1; ++i)
                         {
-                            outarray[i] = jac[0]*sqrt(gmat[0][0]*gmat[0][0] + 
+                            outarray[i] = jac[0]*sqrt(gmat[0][0]*gmat[0][0] +
                                                       gmat[2][0]*gmat[2][0]);
                         }
                         break;
@@ -915,14 +1101,16 @@ namespace Nektar
         void QuadExp::v_ComputeEdgeNormal(const int edge)
         {
             int i;
-            const SpatialDomains::GeomFactorsSharedPtr & geomFactors = GetGeom()->GetMetricInfo();
+            const SpatialDomains::GeomFactorsSharedPtr & geomFactors =
+            GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> & gmat = geomFactors->GetGmat();
             const Array<OneD, const NekDouble> & jac  = geomFactors->GetJac();
             int nqe = m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
 
-            m_edgeNormals[edge] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
+            m_edgeNormals[edge] = Array<OneD, Array<OneD, NekDouble> >
+                                                                    (vCoordDim);
             Array<OneD, Array<OneD, NekDouble> > &normal = m_edgeNormals[edge];
             for (i = 0; i < vCoordDim; ++i)
             {
@@ -930,7 +1118,8 @@ namespace Nektar
             }
 
             // Regular geometry case
-            if((type == SpatialDomains::eRegular)||(type == SpatialDomains::eMovingRegular))
+            if((type == SpatialDomains::eRegular)||
+               (type == SpatialDomains::eMovingRegular))
             {
                 NekDouble fac;
                 // Set up normals
@@ -979,97 +1168,180 @@ namespace Nektar
             else   // Set up deformed normals
             {
                 int j;
-
+                
                 int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
                 int nquad1 = geomFactors->GetPointsKey(1).GetNumPoints();
-
+                
                 LibUtilities::PointsKey from_key;
-
+                
                 Array<OneD,NekDouble> normals(vCoordDim*max(nquad0,nquad1),0.0);
                 Array<OneD,NekDouble> edgejac(vCoordDim*max(nquad0,nquad1),0.0);
-
+                
                 // Extract Jacobian along edges and recover local
                 // derivates (dx/dr) for polynomial interpolation by
                 // multiplying m_gmat by jacobian
-                switch(edge)
+                
+                // Implementation for all the basis except Gauss points
+                if(m_base[0]->GetPointsType() !=
+                   LibUtilities::eGaussGaussLegendre
+                   && m_base[1]->GetPointsType() !=
+                   LibUtilities::eGaussGaussLegendre)
                 {
-                case 0:
-                    for(j = 0; j < nquad0; ++j)
+                    switch(edge)
                     {
-                        edgejac[j] = jac[j];
-                        for(i = 0; i < vCoordDim; ++i)
-                        {
-                           normals[i*nquad0+j] = -gmat[2*i+1][j]*edgejac[j];
-                        }
-                   }
-                    from_key = geomFactors->GetPointsKey(0);
-                    break;
-                case 1:
-                    for(j = 0; j < nquad1; ++j)
-                    {
-                        edgejac[j] = jac[nquad0*j+nquad0-1];
-                        for(i = 0; i < vCoordDim; ++i)
-                        {
-                            normals[i*nquad1+j]  = gmat[2*i][nquad0*j + nquad0-1]*edgejac[j];
-                        }
+                        case 0:
+                            for(j = 0; j < nquad0; ++j)
+                            {
+                                edgejac[j] = jac[j];
+                                for(i = 0; i < vCoordDim; ++i)
+                                {
+                                    normals[i*nquad0+j] =
+                                    -gmat[2*i+1][j]*edgejac[j];
+                                }
+                            }
+                            from_key = geomFactors->GetPointsKey(0);
+                            break;
+                        case 1:
+                            for(j = 0; j < nquad1; ++j)
+                            {
+                                edgejac[j] = jac[nquad0*j+nquad0-1];
+                                for(i = 0; i < vCoordDim; ++i)
+                                {
+                                    normals[i*nquad1+j]  =
+                                    gmat[2*i][nquad0*j + nquad0-1]*edgejac[j];
+                                }
+                            }
+                            from_key = geomFactors->GetPointsKey(1);
+                            break;
+                        case 2:
+                            for(j = 0; j < nquad0; ++j)
+                            {
+                                edgejac[j] = jac[nquad0*(nquad1-1)+j];
+                                for(i = 0; i < vCoordDim; ++i)
+                                {
+                                    normals[i*nquad0+j] =
+                                    (gmat[2*i+1][nquad0*(nquad1-1)+j])
+                                                                *edgejac[j];
+                                }
+                            }
+                            from_key = geomFactors->GetPointsKey(0);
+                            break;
+                        case 3:
+                            for(j = 0; j < nquad1; ++j)
+                            {
+                                edgejac[j] = jac[nquad0*j];
+                                for(i = 0; i < vCoordDim; ++i)
+                                {
+                                    normals[i*nquad1+j] =
+                                    -gmat[2*i][nquad0*j]*edgejac[j];
+                                }
+                            }
+                            from_key = geomFactors->GetPointsKey(1);
+                            break;
+                        default:
+                            ASSERTL0(false,"edge is out of range (edge < 3)");
                     }
-                    from_key = geomFactors->GetPointsKey(1);
-                    break;
-                case 2:
-                    for(j = 0; j < nquad0; ++j)
-                    {
-                        edgejac[j] = jac[nquad0*(nquad1-1)+j];
-                        for(i = 0; i < vCoordDim; ++i)
-                        {
-                            normals[i*nquad0+j] = (gmat[2*i+1][nquad0*(nquad1-1)+j])*edgejac[j];
-                        }
-                    }
-                    from_key = geomFactors->GetPointsKey(0);
-                    break;
-                case 3:
-                    for(j = 0; j < nquad1; ++j)
-                    {
-                        edgejac[j] = jac[nquad0*j];
-                        for(i = 0; i < vCoordDim; ++i)
-                        {
-                            normals[i*nquad1+j] = -gmat[2*i][nquad0*j]*edgejac[j];
-                        }
-                    }
-                    from_key = geomFactors->GetPointsKey(1);
-                    break;
-                default:
-                    ASSERTL0(false,"edge is out of range (edge < 3)");
                 }
-
+                else
+                {
+                    int nqtot =  nquad0 * nquad1;
+                    Array<OneD,  NekDouble> tmp_gmat(nqtot, 0.0);
+                    Array<OneD,  NekDouble> tmp_gmat_edge(nqe, 0.0);
+                    
+                    switch(edge)
+                    {
+                        case 0:
+                            for(j = 0; j < nquad0; ++j)
+                            {
+                                for(i = 0; i < vCoordDim; ++i)
+                                {
+                                    Vmath::Vmul(nqtot,&(gmat[2*i+1][0]),
+                                                1,&jac[0],1,&(tmp_gmat[0]),1);
+                                    QuadExp::v_GetEdgeInterpVals(edge,
+                                                        tmp_gmat,tmp_gmat_edge);
+                                    normals[i*nquad0+j] = -tmp_gmat_edge[j];
+                                }
+                            }
+                            from_key = geomFactors->GetPointsKey(0);
+                            break;
+                        case 1:
+                            for(j = 0; j < nquad1; ++j)
+                            {
+                                for(i = 0; i < vCoordDim; ++i)
+                                {
+                                    Vmath::Vmul(nqtot,&(gmat[2*i][0]),
+                                                1,&jac[0],1,&(tmp_gmat[0]),1);
+                                    QuadExp::v_GetEdgeInterpVals(edge,
+                                                        tmp_gmat,tmp_gmat_edge);
+                                    normals[i*nquad1+j]  = tmp_gmat_edge[j];
+                                }
+                            }
+                            from_key = geomFactors->GetPointsKey(1);
+                            break;
+                        case 2:
+                            for(j = 0; j < nquad0; ++j)
+                            {
+                                for(i = 0; i < vCoordDim; ++i)
+                                {
+                                    Vmath::Vmul(nqtot,&(gmat[2*i+1][0]),
+                                                1,&jac[0],1,&(tmp_gmat[0]),1);
+                                    QuadExp::v_GetEdgeInterpVals(edge,
+                                                        tmp_gmat,tmp_gmat_edge);
+                                    normals[i*nquad0+j] = tmp_gmat_edge[j];
+                                }
+                            }
+                            from_key = geomFactors->GetPointsKey(0);
+                            break;
+                        case 3:
+                            for(j = 0; j < nquad1; ++j)
+                            {
+                                for(i = 0; i < vCoordDim; ++i)
+                                {
+                                    Vmath::Vmul(nqtot,&(gmat[2*i][0]),
+                                                1,&jac[0],1,&(tmp_gmat[0]),1);
+                                    QuadExp::v_GetEdgeInterpVals(edge,
+                                                        tmp_gmat,tmp_gmat_edge);
+                                    normals[i*nquad1+j] = -tmp_gmat_edge[j];
+                                }
+                            }
+                            from_key = geomFactors->GetPointsKey(1);
+                            break;
+                        default:
+                            ASSERTL0(false,"edge is out of range (edge < 3)");
+                    }
+                }
+                
                 int nq  = from_key.GetNumPoints();
                 Array<OneD,NekDouble> work(nqe,0.0);
-
+                
                 // interpolate Jacobian and invert
-                LibUtilities::Interp1D(from_key,jac,m_base[0]->GetPointsKey(),work);
+                LibUtilities::Interp1D(from_key,jac,
+                                       m_base[0]->GetPointsKey(),work);
                 Vmath::Sdiv(nq,1.0,&work[0],1,&work[0],1);
-
+                
                 // interpolate
                 for(i = 0; i < GetCoordim(); ++i)
                 {
-                    LibUtilities::Interp1D(from_key,&normals[i*nq],m_base[0]->GetPointsKey(),&normal[i][0]);
+                    LibUtilities::Interp1D(from_key,&normals[i*nq],
+                                       m_base[0]->GetPointsKey(),&normal[i][0]);
                     Vmath::Vmul(nqe,work,1,normal[i],1,normal[i],1);
                 }
-
+                
                 //normalise normal vectors
                 Vmath::Zero(nqe,work,1);
                 for(i = 0; i < GetCoordim(); ++i)
                 {
                     Vmath::Vvtvp(nqe,normal[i],1, normal[i],1,work,1,work,1);
                 }
-
+                
                 Vmath::Vsqrt(nqe,work,1,work,1);
                 Vmath::Sdiv(nqe,1.0,work,1,work,1);
-
+                
                 for(i = 0; i < GetCoordim(); ++i)
                 {
                     Vmath::Vmul(nqe,normal[i],1,work,1,normal[i],1);
                 }
-
+                
                 // Reverse direction so that points are in
                 // anticlockwise direction if edge >=2
                 if(edge >= 2)
@@ -1093,7 +1365,8 @@ namespace Nektar
         }
 
 
-        void QuadExp::v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar, std::string var)
+        void QuadExp::v_WriteToFile(std::ofstream &outfile,
+                       OutputFormat format, const bool dumpVar, std::string var)
         {
             if(format==eTecplot)
             {
@@ -1177,13 +1450,18 @@ namespace Nektar
                 int nModes0 = m_base[0]->GetNumModes();
                 int nModes1 = m_base[1]->GetNumModes();
 
-                const LibUtilities::PointsKey Pkey1Gmsh(nModes0,LibUtilities::eGaussLobattoLegendre);
-                const LibUtilities::PointsKey Pkey2Gmsh(nModes1,LibUtilities::eGaussLobattoLegendre);
-                const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),nModes0,Pkey1Gmsh);
-                const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),nModes1,Pkey2Gmsh);
+                const LibUtilities::PointsKey Pkey1Gmsh(nModes0,
+                                           LibUtilities::eGaussLobattoLegendre);
+                const LibUtilities::PointsKey Pkey2Gmsh(nModes1,
+                                            LibUtilities::eGaussLobattoLegendre);
+                const LibUtilities::BasisKey  Bkey1Gmsh(m_base[0]->GetBasisType(),
+                                                        nModes0,Pkey1Gmsh);
+                const LibUtilities::BasisKey  Bkey2Gmsh(m_base[1]->GetBasisType(),
+                                                        nModes1,Pkey2Gmsh);
 
                 StdRegions::StdQuadExpSharedPtr EGmsh;
-                EGmsh = MemoryManager<StdRegions::StdQuadExp>::AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh);
+                EGmsh = MemoryManager<StdRegions::StdQuadExp>::
+                                         AllocateSharedPtr(Bkey1Gmsh,Bkey2Gmsh);
 
                 int nMonomialPolynomials = EGmsh->GetNcoeffs();
 
@@ -1212,12 +1490,14 @@ namespace Nektar
                     }
                 }
 
-                NekMatrix<NekDouble> vdm(nMonomialPolynomials,nMonomialPolynomials);
+                NekMatrix<NekDouble> vdm(nMonomialPolynomials,
+                                                          nMonomialPolynomials);
                 for(i = 0 ; i < nMonomialPolynomials; i++)
                 {
                     for(j = 0 ; j < nMonomialPolynomials; j++)
                     {
-                        vdm(i,j) = pow(x[i],exponentMap[j][0])*pow(y[i],exponentMap[j][1]);
+                        vdm(i,j) = pow(x[i],exponentMap[j][0])*
+                                                    pow(y[i],exponentMap[j][1]);
                     }
                 }
 
@@ -1694,7 +1974,22 @@ namespace Nektar
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
                     mat->Invert();
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                    returnval =
+                         MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            case StdRegions::eInterpGaussEdge:
+                {
+                    DNekMatSharedPtr m_Ix;
+                    Array<OneD, NekDouble> coords(1, 0.0);
+                    StdRegions::ConstFactorMap factors = mkey.GetConstFactors();
+                    int edge = (int)factors[StdRegions::eFactorGaussEdge];
+
+                    coords[0] = (edge == 0 || edge == 3) ? -1.0 : 1.0;
+
+                    m_Ix = m_base[(edge + 1) % 2]->GetI(coords);
+                    returnval =
+                        MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,m_Ix);
                 }
                 break;
             case StdRegions::ePreconLinearSpace:
@@ -1713,7 +2008,8 @@ namespace Nektar
                     NekDouble        one = 1.0;
                     DNekMatSharedPtr mat = GenMatrix(mkey);
 
-                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                    returnval =
+                         MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
             }

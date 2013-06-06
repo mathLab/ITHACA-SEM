@@ -406,7 +406,7 @@ namespace Nektar
                     boost::dynamic_pointer_cast<
                         LocalRegions::Expansion1D>(m_trace->GetExp(i));
                     
-                int offset = m_trace->GetPhys_Offset(i);
+                int offset      = m_trace->GetPhys_Offset(i);
                 int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
                 PeriodicMap::iterator pIt = m_periodicEdges.find(
                     traceGeomId);

@@ -354,7 +354,11 @@ namespace Nektar
                     boost::dynamic_pointer_cast<
                         LocalRegions::Expansion2D>(m_trace->GetExp(i));
 
-                int offset = m_trace->GetPhys_Offset(i);
+                int offset      = m_trace->GetPhys_Offset(i);
+                int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
+                PeriodicMap::iterator pIt = m_periodicFaces.find(
+                    traceGeomId);
+
                 if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
                 {
                     if (traceGeomId != min(pIt->second[0].id, traceGeomId))
@@ -1510,6 +1514,10 @@ namespace Nektar
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryFaces.end())
                 {
+                    int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
+                    PeriodicMap::iterator pIt = m_periodicFaces.find(
+                        traceGeomId);
+
                     if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
                     {
                         fwd = traceGeomId == min(traceGeomId,pIt->second[0].id);

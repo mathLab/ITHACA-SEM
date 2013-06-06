@@ -933,6 +933,7 @@ namespace Nektar
                     if (m_negatedNormals[i])
                     {
                         m_requireNeg[i] = true;
+                        continue;
                     }
                     
                     Expansion2DSharedPtr faceExp = m_faceExp[i].lock();

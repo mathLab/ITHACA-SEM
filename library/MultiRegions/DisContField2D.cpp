@@ -411,11 +411,13 @@ namespace Nektar
                 PeriodicMap::iterator pIt = m_periodicEdges.find(
                     traceGeomId);
 
-                if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal &&
-                    traceGeomId == min(pIt->second[0].id, traceGeomId))
+                if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal)
                 {
-                    traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
-                        traceEl->GetLeftAdjacentElementEdge());
+                    if (traceGeomId != min(pIt->second[0].id, traceGeomId))
+                    {
+                        traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
+                            traceEl->GetLeftAdjacentElementEdge());
+                    }
                 }
                 else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                 {
@@ -659,9 +661,14 @@ namespace Nektar
 
         /**
          * @brief Determine the periodic edges and vertices for the given graph.
-         * 
+         *
+         * Note that much of this routine is the same as the three-dimensional
+         * version, which therefore has much better documentation.
+         *
          * @param   bcs         Information about the boundary conditions.
          * @param   variable    Specifies the field.
+         *
+         * @see DisContField3D::FindPeriodicFaces
          */
         void DisContField2D::FindPeriodicEdges(
             const SpatialDomains::BoundaryConditions &bcs,
@@ -843,7 +850,7 @@ namespace Nektar
             Array<OneD, int> procVerts(n,0);
             int nTotVerts;
 
-            // Note if there are no periodic faces at all calling Vsum will
+            // Note if there are no periodic edges at all calling Vsum will
             // cause a segfault.
             if (totEdges > 0)
             {
@@ -1136,7 +1143,7 @@ namespace Nektar
 
         bool DisContField2D::IsLeftAdjacentEdge(const int n, const int e)
         {
-            set<int>::iterator     it;
+            set<int>::iterator it;
             LocalRegions::Expansion1DSharedPtr traceEl = 
                 boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(
                     (m_traceMap->GetElmtToTrace())[n][e]);
@@ -1159,10 +1166,9 @@ namespace Nektar
                     PeriodicMap::iterator pIt = m_periodicEdges.find(
                         traceGeomId);
 
-                    if (pIt != m_periodicEdges.end() &&
-                        !pIt->second[0].isLocal)
+                    if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal)
                     {
-                        fwd = traceGeomId != min(traceGeomId, pIt->second[0].id);
+                        fwd = traceGeomId == min(traceGeomId,pIt->second[0].id);
                     }
                     else
                     {
@@ -1242,9 +1248,6 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
-            bool parallel = m_session->GetComm()->GetRowComm()->GetSize() > 1;
-            bool fwd;
-            
             for(cnt = n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
@@ -1255,9 +1258,7 @@ namespace Nektar
                         elmtToTrace[n][e]->GetElmtId());
                     int edgeGeomId = (*m_exp)[n]->GetGeom2D()->GetEid(e);
 
-                    fwd = m_leftAdjacentEdges[cnt];
-
-                    if (fwd)
+                    if (m_leftAdjacentEdges[cnt])
                     {
                         (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
@@ -1325,7 +1326,7 @@ namespace Nektar
             {
                 Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
             }
-            
+
             // Do parallel exchange for forwards/backwards spaces.
             m_traceMap->UniversalTraceAssemble(Fwd);
             m_traceMap->UniversalTraceAssemble(Bwd);

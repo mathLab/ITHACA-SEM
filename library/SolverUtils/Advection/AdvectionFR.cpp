@@ -1338,7 +1338,7 @@ namespace Nektar
         
         /**
          * @brief Compute the divergence of the corrective flux for 2D problems
-         *        where POINTSTYPE="GaussLobattoLegendre"
+         *        where POINTSTYPE="GaussGaussLegendre"
          *
          * @param nConvectiveFields   Number of fields.
          * @param fields              Pointer to fields.

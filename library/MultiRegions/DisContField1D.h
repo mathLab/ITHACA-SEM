@@ -131,10 +131,10 @@ namespace Nektar
             
             /// Generate a associative map of periodic vertices in a mesh.
             void GetPeriodicVertices(
-                                const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                const SpatialDomains::BoundaryConditions &bcs,
-                                const std::string variable,
-                                      map<int,int>& periodicVertices);
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const SpatialDomains::BoundaryConditions &bcs,
+                const std::string variable,
+                      map<int,int>& periodicVertices);
 
             virtual ExpListSharedPtr &v_GetTrace()
             {

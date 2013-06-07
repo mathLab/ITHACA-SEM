@@ -734,6 +734,43 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                 coords[i] = m_geom->GetCoord(i,Lcoords);
             }
         }
+        
+        // Get vertex value from the 1D Phys space.
+        void SegExp::v_GetVertexPhysVals(
+            const int vertex,
+            const Array<OneD, const NekDouble> &inarray,
+                  NekDouble &outarray)
+        {
+            int     nquad = m_base[0]->GetNumPoints();
+            
+            if (m_base[0]->GetPointsType() != LibUtilities::eGaussGaussLegendre)
+            {
+                switch (vertex)
+                {
+                    case 0:
+                        outarray = inarray[0];
+                        break;
+                    case 1:
+                        outarray = inarray[nquad - 1];
+                        break;
+                }
+            }
+            else
+            {
+                StdRegions::ConstFactorMap factors;
+                factors[StdRegions::eFactorGaussVertex] = vertex;
+                
+                StdRegions::StdMatrixKey key(
+                    StdRegions::eInterpGauss,
+                    DetShapeType(),*this,factors);
+                
+                DNekScalMatSharedPtr mat_gauss = m_matrixManager[key];
+                
+                outarray = Blas::Ddot(nquad, mat_gauss->GetOwnedMatrix()
+                                      ->GetPtr().get(), 1, &inarray[0], 1);
+            }
+        }
+
 
         //-----------------------------
         // Helper functions
@@ -1480,6 +1517,21 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
+            case StdRegions::eInterpGauss:
+                {
+                    DNekMatSharedPtr m_Ix;
+                    Array<OneD, NekDouble> coords(1, 0.0);
+                    StdRegions::ConstFactorMap factors = mkey.GetConstFactors();
+                    int vertex = (int)factors[StdRegions::eFactorGaussVertex];
+                    
+                    coords[0] = (vertex == 0) ? -1.0 : 1.0;
+                    
+                    m_Ix = m_base[0]->GetI(coords);
+                    returnval =
+                        MemoryManager<DNekScalMat>::AllocateSharedPtr(1.0,m_Ix);
+                }
+                break;
+                    
             UseLocRegionsMatrix:
                 {
                     DNekMatSharedPtr mat = GenMatrix(mkey);

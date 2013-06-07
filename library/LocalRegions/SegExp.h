@@ -141,6 +141,11 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                     const Array<OneD, const NekDouble>& Lcoords,
                           Array<OneD,NekDouble> &coords);
+            
+            LOCAL_REGIONS_EXPORT virtual void v_GetVertexPhysVals(
+                    const int vertex,
+                    const Array<OneD, const NekDouble> &inarray,
+                          NekDouble &outarray);
 
             //-----------------------------
             // Helper functions

@@ -804,7 +804,7 @@ namespace Nektar
              factors[StdRegions::eFactorGaussEdge] = edge;
 
              StdRegions::StdMatrixKey key(
-                 StdRegions::eInterpGaussEdge,
+                 StdRegions::eInterpGauss,
                  DetShapeType(),*this,factors);
              
              DNekScalMatSharedPtr mat_gauss = m_matrixManager[key];
@@ -1978,7 +1978,7 @@ namespace Nektar
                          MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
-            case StdRegions::eInterpGaussEdge:
+            case StdRegions::eInterpGauss:
                 {
                     DNekMatSharedPtr m_Ix;
                     Array<OneD, NekDouble> coords(1, 0.0);

@@ -102,11 +102,7 @@ namespace Nektar
             virtual void v_SetupCFunctions(
                 LibUtilities::SessionReaderSharedPtr               pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
-            
-            virtual void v_SetupInterpolationMatrices(
-                LibUtilities::SessionReaderSharedPtr               pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
-            
+
             virtual void v_Diffuse(
                 const int                                     nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

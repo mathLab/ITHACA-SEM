@@ -787,22 +787,11 @@ namespace Nektar
                 // Set the number of solution points of each element
                 nLocalSolutionPts = (*m_exp)[n]->GetNumPoints(0);
                 
-                // Temporary vector for interpolation routine
-                Array<OneD, NekDouble> tmp(nLocalSolutionPts, 0.0);
-                
-                // Partition the field vector in local vectors
-                //tmp = field + (n * nLocalSolutionPts);
-                Vmath::Vcopy(nLocalSolutionPts,
-                             &(field[0]) + n*nLocalSolutionPts,1,&(tmp[0]),1);
-                
                 // Basis definition on each element
                 Basis = (*m_exp)[n]->GetBasis(0);
                 
                 for (p = 0; p < 2; ++p)
                 {
-                    // Coordinate vector for interpolation routine
-                    Array<OneD, NekDouble> interface_coord(3, 0.0);
-                    
                     vertex_coord       = 0.0;
                     interface_offset   = (*m_exp)[n]->GetGeom1D()->GetVid(p);
                     subdomain_offset   = (*m_exp)[0]->GetGeom1D()->GetVid(0);
@@ -813,37 +802,41 @@ namespace Nektar
                         vertex_coord += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
                     }
                     
-                    // Set the x-coordinate of the standard interface point
-                    interface_coord[0] = vertex_coord;
-                    
                     // Implementation for every points except Gauss points
                     if (Basis->GetPointsType() != LibUtilities::eGaussGaussLegendre)
                     {
                         if(vertex_coord >= 0.0)
                         {
-                            Fwd[interface_offset] = field[phys_offset+nLocalSolutionPts-1];
+                            Fwd[interface_offset] =
+                                        field[phys_offset+nLocalSolutionPts-1];
                         }
                         if(vertex_coord < 0.0)
                         {
-                            Bwd[interface_offset] = field[phys_offset];
+                            Bwd[interface_offset] =
+                                        field[phys_offset];
                         }
                     }
                     // Implementation for Gauss points
                     else
                     {
-                        StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
+                        // Temporary vector for interpolation routine
+                        Array<OneD, NekDouble> tmp(nLocalSolutionPts, 0.0);
+                        
+                        // Partition the field vector in local vectors
+                        // tmp = field + (n * nLocalSolutionPts);
+                        Vmath::Vcopy(nLocalSolutionPts,
+                                     &(field[0]) + n*nLocalSolutionPts,1,
+                                     &(tmp[0]),1);
                         
                         if(vertex_coord >= 0.0)
-                        {
-                            Fwd[interface_offset] =
-                            //(*m_exp)[n]->PhysEvaluate(interface_coord, tmp);
-                            StdSeg.PhysEvaluate(interface_coord, tmp);
+                        {   
+                           (*m_exp)[n]->GetVertexPhysVals(1, tmp,
+                                                Fwd[interface_offset]);
                         }
                         if(vertex_coord < 0.0)
-                        {
-                            Bwd[interface_offset] =
-                            //(*m_exp)[n]->PhysEvaluate(interface_coord, tmp);
-                            StdSeg.PhysEvaluate(interface_coord, tmp);
+                        {   
+                            (*m_exp)[n]->GetVertexPhysVals(0, tmp,
+                                                Bwd[interface_offset]);
                         }
                     }
                 }
@@ -1008,7 +1001,8 @@ namespace Nektar
                     for(p = 0; p < 2; ++p)
                     {
                         vertnorm = 0.0;
-                        for (int i=0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
+                        for (int i=0; i<((*m_exp)[n]->
+                             GetVertexNormal(p)).num_elements(); i++)
                         {
                             vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
                             coords[0] = vertnorm ;
@@ -1023,18 +1017,19 @@ namespace Nektar
                             
                             for(j = 0; j < e_ncoeffs; j++)
                             {
-                                outarray[offset + j]  += (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                                outarray[offset + j]  +=
+                                    (m_Ixm->GetPtr())[j] * Fn[t_offset];
                             }
                         }
                         
                         if(vertnorm < 0.0)
                         {
-                            
                             m_Ixm = BASE->GetI(coords);
                             
                             for(j = 0; j < e_ncoeffs; j++)
                             {
-                                outarray[offset + j] -= (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                                outarray[offset + j] -=
+                                    (m_Ixm->GetPtr())[j] * Fn[t_offset];
                             }
                         }
                     }

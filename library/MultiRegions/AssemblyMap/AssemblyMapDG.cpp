@@ -1319,7 +1319,7 @@ namespace Nektar
                     swap(toAlign[i], toAlign[nquad1-1-i]);
                 }
             }
-            else
+            else if (orient != StdRegions::eForwards)
             {
                 ASSERTL1(nquad2 != 0, "nquad2 == 0 for reorienation");
 

@@ -117,6 +117,14 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux);
             
+            virtual void v_DivCFlux_2D_Gauss(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, const NekDouble> &fluxX1,
+                const Array<OneD, const NekDouble> &fluxX2,
+                const Array<OneD, const NekDouble> &numericalFlux,
+                Array<OneD,       NekDouble> &divCFlux);
+            
             virtual void v_DivCFlux_3D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

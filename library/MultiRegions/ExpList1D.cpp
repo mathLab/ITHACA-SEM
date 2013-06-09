@@ -954,7 +954,7 @@ namespace Nektar
 
                 // Get the physical data offset for this expansion.
                 offset = m_phys_offset[i];
-                
+
                 // Process each point in the expansion.
                 for(j = 0; j < e_npoints; ++j)
                 {

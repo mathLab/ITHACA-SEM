@@ -726,6 +726,14 @@ namespace Nektar
         }
         
         
+        void TriExp::v_GetEdgeInterpVals(
+                const int edge,const Array<OneD, const NekDouble> &inarray,
+                Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "Routine not implemented for triangular elements");
+        }
+        
         void TriExp::v_GetEdgeQFactors(
                 const int edge, 
                 Array<OneD, NekDouble> &outarray)
@@ -1503,6 +1511,17 @@ namespace Nektar
 
                     mat->Invert();
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
                 }
                 break;
             default:

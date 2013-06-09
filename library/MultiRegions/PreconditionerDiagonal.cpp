@@ -75,26 +75,27 @@ namespace Nektar
 
         void PreconditionerDiagonal::v_InitObject()
         {
-	    if(m_preconType == MultiRegions::eDiagonal)
-	    {
- 	        GlobalSysSolnType solvertype = 
-                    m_locToGloMap->GetGlobalSysSolnType();
-                if (solvertype == eIterativeFull)
-                {
-                    DiagonalPreconditionerSum();
-                }
-                else if(solvertype == eIterativeStaticCond ||
-                        solvertype == eIterativeMultiLevelStaticCond)
-                {
-                    StaticCondDiagonalPreconditionerSum();
-                }
-                else
-                {
-                    ASSERTL0(0,"Unsupported solver type");
-                }
-	    }
 	}
 
+        void PreconditionerDiagonal::v_BuildPreconditioner()
+        {
+            GlobalSysSolnType solvertype = 
+                m_locToGloMap->GetGlobalSysSolnType();
+            if (solvertype == eIterativeFull)
+            {
+                DiagonalPreconditionerSum();
+            }
+            else if(solvertype == eIterativeStaticCond ||
+                    solvertype == eIterativeMultiLevelStaticCond)
+            {
+                StaticCondDiagonalPreconditionerSum();
+            }
+            else
+            {
+                ASSERTL0(0,"Unsupported solver type");
+            }
+        }
+        
         /**
          * Diagonal preconditioner computed by summing the relevant elements of
          * the local matrix system.
@@ -116,20 +117,20 @@ namespace Nektar
              DNekScalMatSharedPtr loc_mat;
              Array<OneD, NekDouble> vOutput(nGlobal,0.0);
 
-             int loc_lda;
+             int loc_row;
              int nElmt = expList->GetNumElmts();
              for(n = cnt = 0; n < nElmt; ++n)
              {
                  loc_mat = (m_linsys.lock())->GetBlock(expList->GetOffset_Elmt_Id(n));
-                 loc_lda = loc_mat->GetRows();
+                 loc_row = loc_mat->GetRows();
 
-                 for(i = 0; i < loc_lda; ++i)
+                 for(i = 0; i < loc_row; ++i)
                  {
                      gid1 = m_locToGloMap->GetLocalToGlobalMap(cnt + i) - nDir;
                      sign1 =  m_locToGloMap->GetLocalToGlobalSign(cnt + i);
                      if(gid1 >= 0)
                      {
-                         for(j = 0; j < loc_lda; ++j)
+                         for(j = 0; j < loc_row; ++j)
                          {
                              gid2 = m_locToGloMap->GetLocalToGlobalMap(cnt + j)
                                                                     - nDir;
@@ -147,7 +148,7 @@ namespace Nektar
                          }
                      }
                  }
-                 cnt   += loc_lda;
+                 cnt   += loc_row;
              }
 
              // Assemble diagonal contributions across processes
@@ -195,14 +196,14 @@ namespace Nektar
                 m_locToGloMap->GetGlobalSysSolnType();
             switch (m_preconType)
             {
-                case MultiRegions::eDiagonal:
+            case MultiRegions::eDiagonal:
+            case MultiRegions::eLinearWithDiagonal:
                 {
                     int nGlobal = solvertype == eIterativeFull ?
                         m_locToGloMap->GetNumGlobalCoeffs() :
                         m_locToGloMap->GetNumGlobalBndCoeffs();
                     int nDir    = m_locToGloMap->GetNumGlobalDirBndCoeffs();
                     int nNonDir = nGlobal-nDir;
-                    
                     Vmath::Vmul(nNonDir, &pInput[0], 1, &m_diagonals[0], 1, &pOutput[0], 1);
                     
                     break;

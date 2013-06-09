@@ -78,6 +78,11 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         
+        /// Evaluate the flux at each solution point using dealiasing
+        void GetFluxVectorDeAlias(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+        
         /// Compute the RHS
         void DoOdeRhs(
             const Array<OneD,  const  Array<OneD, NekDouble> > &inarray,

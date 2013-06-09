@@ -428,6 +428,7 @@ namespace Nektar
             int       step          = 0;
             NekDouble intTime       = 0.0;
             NekDouble lastCheckTime = 0.0;
+            NekDouble cpuTime       = 0.0;
 
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
@@ -456,9 +457,10 @@ namespace Nektar
                     m_timestep, u, m_ode);
                 timer.Stop();
 
-                NekDouble elapsed = timer.TimePerTest(1);
+                const NekDouble elapsed = timer.TimePerTest(1);
                 m_time  += m_timestep;
                 intTime += elapsed;
+                cpuTime += elapsed;
 		
                 // Write out status information
                 if (m_session->GetComm()->GetRank() == 0 && 
@@ -473,8 +475,11 @@ namespace Nektar
                              << left << m_timestep;
                     }
 
-                    cout << " CPU Time: " << setw(8) << left << elapsed;
-                    cout << endl;
+                    stringstream ss;
+                    ss << cpuTime << "s";
+                    cout << " CPU Time: " << setw(8) << left << ss.str() << endl;
+
+                    cpuTime = 0.0;
                 }
                 
                 // Transform data into coefficient space

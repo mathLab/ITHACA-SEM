@@ -477,7 +477,8 @@ namespace Nektar
 
                     stringstream ss;
                     ss << cpuTime << "s";
-                    cout << " CPU Time: " << setw(8) << left << ss.str() << endl;
+                    cout << " CPU Time: " << setw(8) << left
+                         << ss.str() << endl;
 
                     cpuTime = 0.0;
                 }

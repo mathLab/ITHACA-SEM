@@ -33,8 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <StdRegions/StdSegExp.h>
-#include <LibUtilities/Foundations/ManagerAccess.h>
+#include <StdRegions/StdSegExp.h> 
 
 namespace Nektar
 {

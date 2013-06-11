@@ -114,11 +114,13 @@ namespace Nektar
                 {
                     m_advection->SetFluxVector(
                         &UnsteadyAdvection::GetFluxVectorDeAlias, this);
+
                 }
                 else 
                 {
                     m_advection->SetFluxVector(
                         &UnsteadyAdvection::GetFluxVector, this);
+
                 }
                 m_session->LoadSolverInfo(
                     "UpwindType", riemName, "Upwind");
@@ -164,6 +166,7 @@ namespace Nektar
     Array<OneD, NekDouble> &UnsteadyAdvection::GetNormalVelocity()
     {
         // Number of trace (interface) points
+        int i;
         int nTracePts = GetTraceNpoints();
 
         // Auxiliary variable to compute the normal velocity
@@ -171,17 +174,61 @@ namespace Nektar
 
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
-        
+    
         // Compute the normal velocity
-        for (int i = 0; i < m_velocity.num_elements(); ++i)
+        
+        // For 3DHomogenoeus1D
+        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
-            m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int n_planes = nPointsTot/nPointsTot_plane;
             
-            Vmath::Vvtvp(nTracePts, 
-                         m_traceNormals[i], 1, 
-                         tmp, 1, 
-                         m_traceVn, 1, 
-                         m_traceVn, 1);
+            Array<OneD, Array<OneD, NekDouble> >
+                advVel_plane(m_velocity.num_elements());
+            
+            for (i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                advVel_plane[i] = Array<OneD, NekDouble>(nPointsTot_plane);
+                Vmath::Vcopy(nPointsTot_plane,
+                             &m_velocity[i][m_planeNumber*nPointsTot_plane ], 1,
+                             &advVel_plane[i][0], 1);
+            }
+
+            for (i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                m_fields[0]->GetPlane(m_planeNumber)->ExtractTracePhys(
+                                                    advVel_plane[i], tmp);
+                
+                Vmath::Vvtvp(nTracePts,
+                             m_traceNormals[i], 1,
+                             tmp, 1,
+                             m_traceVn, 1,
+                             m_traceVn, 1);
+            }
+            
+            if(m_planeNumber == n_planes - 1)
+            {
+                m_planeNumber = 0;
+            }
+            else
+            {
+                m_planeNumber = m_planeNumber + 1;
+            }
+            
+        }
+        else  // For general case
+        {
+            for (i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
+            
+                Vmath::Vvtvp(nTracePts,
+                             m_traceNormals[i], 1,
+                             tmp, 1,
+                             m_traceVn, 1,
+                             m_traceVn, 1);
+            }
         }
         
         return m_traceVn;
@@ -290,7 +337,7 @@ namespace Nektar
         ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
                  "Dimension of flux array and velocity array do not match");
 
-        int nq = GetNpoints();
+        int nq = physfield[0].num_elements();
 
         for (int i = 0; i < flux.num_elements(); ++i)
         {
@@ -318,7 +365,7 @@ namespace Nektar
                  "Dimension of flux array and velocity array do not match");
         
         int i, j;
-        int nq = GetNpoints();
+        int nq = physfield[0].num_elements();
         int nVariables = physfield.num_elements();
         
         // Factor to rescale 1d points in dealiasing

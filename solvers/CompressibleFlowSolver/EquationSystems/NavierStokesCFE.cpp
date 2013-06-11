@@ -116,7 +116,7 @@ namespace Nektar
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
         
-        Array<OneD, Array<OneD, NekDouble> > advVel;
+        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
         Array<OneD, Array<OneD, NekDouble> > outarrayAdv(nvariables);
         Array<OneD, Array<OneD, NekDouble> > outarrayDiff(nvariables);
 

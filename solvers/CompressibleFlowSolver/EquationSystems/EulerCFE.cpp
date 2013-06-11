@@ -146,7 +146,7 @@ namespace Nektar
         int nvariables = inarray.num_elements();
         int npoints    = GetNpoints();
 
-        Array<OneD, Array<OneD, NekDouble> > advVel;
+        Array<OneD, Array<OneD, NekDouble> > advVel(m_spacedim);
         
         m_advection->Advect(nvariables, m_fields, advVel, inarray, outarray);
 

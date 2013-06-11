@@ -49,7 +49,7 @@ namespace Nektar
             {
                 return AdvectionSharedPtr(new AdvectionWeakDG3DHomogeneous1D());
             }
-            
+                        
             static std::string type;
             
         protected:
@@ -57,13 +57,15 @@ namespace Nektar
             
             Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
             
+            SolverUtils::AdvectionSharedPtr m_planeAdv;
+            
             virtual void v_Advect(
                 const int                                          nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
-        }; 
+        };
     }
 }
     

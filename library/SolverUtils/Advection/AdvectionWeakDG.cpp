@@ -55,8 +55,11 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
+            int num;
             int i, j;
-            int nVelDim         = fields[0]->GetCoordim(0);
+            int nVel            = advVel.num_elements();
+            int nExpDim         = fields[0]->GetCoordim(0);
+            int spaceDim        = max(nVel, nExpDim);
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
@@ -70,21 +73,44 @@ namespace Nektar
 
             for (i = 0; i < nConvectiveFields; ++i)
             {
-                fluxvector[i] = Array<OneD, Array<OneD, NekDouble> >(nVelDim);
-                for(j = 0; j < nVelDim; ++j)
+                fluxvector[i] = Array<OneD, Array<OneD, NekDouble> >(spaceDim);
+                for(j = 0; j < spaceDim ; ++j)
                 {
-                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot);
+                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
                 }
             }
+            
+            /*
+            for (j = 0; j < nPointsTot; ++j)
+            {
+                cout << "inarray" << "  "<<  j << "  "<< inarray[0][j]<<  "  " << endl;
+            }
 
+            cin >> num;
+            */
+             
             m_fluxVector(inarray, fluxvector);
+            
+            /*
+            for (j = 0; j < nPointsTot; ++j)
+            {
+                cout << "fluxvector0" << "  "<<  j << "  "<< fluxvector[0][1][j]<<  "  " << endl;
+            }
 
+            cin >> num;
+            
+            for (j = 0; j < nPointsTot; ++j)
+            {
+                cout << "fluxvector1" << "  "<<  j << "  "<< fluxvector[0][0][j]<<  "  " << endl;
+            }
+            */ 
+            
             // Get the advection part (without numerical flux)
             for(i = 0; i < nConvectiveFields; ++i)
             {
                 tmp[i] = Array<OneD,NekDouble>(nCoeffs, 0.0);
                 
-                for (j = 0; j < nVelDim; ++j)
+                for (j = 0; j < nExpDim; ++j)
                 {
                     fields[i]->IProductWRTDerivBase(j, fluxvector[i][j], 
                                                        outarray[i]);
@@ -105,7 +131,28 @@ namespace Nektar
                 fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
             
+            /*
+            for (j = 0; j < nTracePointsTot; ++j)
+            {
+                cout << "Fwd" << "  "<<  j << "  "<< Fwd[0][j]<<  "  " << endl;
+            }
+            cin >> num;
+            for (j = 0; j < nTracePointsTot; ++j)
+            {
+                cout << "Bwd" << "  "<<  j << "  "<< Bwd[0][j]<<  "  " << endl;
+            }
+            cin >> num;
+            */
+             
             m_riemann->Solve(Fwd, Bwd, numflux);
+            
+            /*
+            for (j = 0; j < nTracePointsTot; ++j)
+            {
+                cout << "numflux" << "  "<<  j << "  "<< numflux[0][j]<<  "  " << endl;
+            }
+            cin >> num;
+            */ 
             
             // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
             for(i = 0; i < nConvectiveFields; ++i)
@@ -115,6 +162,15 @@ namespace Nektar
                 fields[i]->MultiplyByElmtInvMass(tmp[i], tmp[i]);
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
+            
+            /*
+            for (j = 0; j < nPointsTot; ++j)
+            {
+                cout << "outarray" << "  "<<  j << "  "<< outarray[0][j]<<  "  " << endl;
+            }
+            cin >> num;
+            */
+            
         }
     }
 }

@@ -68,15 +68,20 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
 
-            template<typename FuncPointerT, typename ObjectPointerT> 
+            template<typename FuncPointerT, typename ObjectPointerT>
             void SetFluxVector(FuncPointerT func, ObjectPointerT obj)
             {
                 m_fluxVector = boost::bind(func, obj, _1, _2);
             }
-            
+                        
             inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)
             {
                 m_riemann = riemann;
+            }
+            
+            void SetFluxVectorVec(AdvectionFluxVecCB fluxVector)
+            {
+                m_fluxVector = fluxVector;
             }
             
         protected:
@@ -94,8 +99,8 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray)=0;
             
-            AdvectionFluxVecCB     m_fluxVector;
-            RiemannSolverSharedPtr m_riemann;
+            AdvectionFluxVecCB          m_fluxVector;
+            RiemannSolverSharedPtr      m_riemann;
         }; 
         
         /// A shared pointer to an EquationSystem object
@@ -103,7 +108,8 @@ namespace Nektar
         
         /// Datatype of the NekFactory used to instantiate classes derived
         /// from the Advection class.
-        typedef LibUtilities::NekFactory<std::string, Advection, std::string> AdvectionFactory;
+        typedef LibUtilities::NekFactory<std::string, Advection,
+            std::string> AdvectionFactory;
         SOLVER_UTILS_EXPORT AdvectionFactory& GetAdvectionFactory();
     }
 }

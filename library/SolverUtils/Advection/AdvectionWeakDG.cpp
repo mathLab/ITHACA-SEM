@@ -125,9 +125,9 @@ namespace Nektar
             
             for(i = 0; i < nConvectiveFields; ++i)
             {
-                Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot);
-                Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot);
-                numflux[i] = Array<OneD, NekDouble>(nTracePointsTot);
+                Fwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                Bwd[i]     = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
+                numflux[i] = Array<OneD, NekDouble>(nTracePointsTot, 0.0);
                 fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
             

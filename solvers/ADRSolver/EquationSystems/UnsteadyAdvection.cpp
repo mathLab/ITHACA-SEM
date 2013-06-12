@@ -189,7 +189,7 @@ namespace Nektar
             
             for (i = 0; i < m_velocity.num_elements(); ++i)
             {
-                advVel_plane[i] = Array<OneD, NekDouble>(nPointsTot_plane);
+                advVel_plane[i] = Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
                 Vmath::Vcopy(nPointsTot_plane,
                              &m_velocity[i][m_planeNumber*nPointsTot_plane ], 1,
                              &advVel_plane[i][0], 1);

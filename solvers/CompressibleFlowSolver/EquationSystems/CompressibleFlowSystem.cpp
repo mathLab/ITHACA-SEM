@@ -240,6 +240,16 @@ namespace Nektar
     { 
         int i;
         int nTracePts = GetTraceTotPoints();
+        
+        // For 3DHomogenoeus1D
+        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+        {
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int n_planes = nPointsTot/nPointsTot_plane;
+            nTracePts = nTracePts * n_planes;
+        }
+        
         int nvariables      = physarray.num_elements();
         
         // get physical values of the forward trace

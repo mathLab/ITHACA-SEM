@@ -219,7 +219,7 @@ namespace Nektar
             
             virtual ExpListSharedPtr &v_GetTrace()
             {
-               return m_planes[0]->GetTrace();
+                return m_planes[0]->GetTrace();
             }
             
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
@@ -245,6 +245,13 @@ namespace Nektar
            {
                return map<int, RobinBCInfoSharedPtr>();
            }
+            
+           virtual void v_ExtractTracePhys(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray);
+            
+           virtual void v_ExtractTracePhys(
+                      Array<OneD,       NekDouble> &outarray);
 
         private:
             // virtual functions

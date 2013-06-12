@@ -470,6 +470,49 @@ namespace Nektar
             }
         }
         
+        void DisContField3DHomogeneous1D::v_ExtractTracePhys(
+                        Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL1(m_physState == true,
+                     "Field must be in physical state to extract trace space.");
+            
+            v_ExtractTracePhys(m_phys, outarray);
+        }
+        
+        /**
+         * @brief This method extracts the trace (edges in 2D) for each plane 
+         * from the field @a inarray and puts the values in @a outarray.
+         *
+         * It assumes the field is C0 continuous so that it can overwrite the
+         * edge data when visited by the two adjacent elements.
+         *
+         * @param inarray   An array containing the 2D data from which we wish
+         *                  to extract the edge data.
+         * @param outarray  The resulting edge information.
+         */
+        void DisContField3DHomogeneous1D::v_ExtractTracePhys(
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
+        {
+            int nPoints_plane = m_planes[0]->GetTotPoints();
+            int nTracePts = m_planes[0]->GetTrace()->GetTotPoints();
+            
+            for (int i = 0; i < m_planes.num_elements(); ++i)
+            {
+                Array<OneD, NekDouble> inarray_plane(nPoints_plane, 0.0);
+                Array<OneD, NekDouble> outarray_plane(nPoints_plane, 0.0);
+                
+                Vmath::Vcopy(nPoints_plane,
+                             &inarray[i*nPoints_plane], 1,
+                             &inarray_plane[0], 1);
+                
+                m_planes[i]->ExtractTracePhys(inarray_plane, outarray_plane);
+                
+                Vmath::Vcopy(nTracePts,
+                             &outarray_plane[0], 1,
+                             &outarray[i*nTracePts], 1);
+            }
+        }
         
         /**
         * @brief Set up all DG member variables and maps.

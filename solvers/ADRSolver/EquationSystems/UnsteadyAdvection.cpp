@@ -176,9 +176,8 @@ namespace Nektar
         Vmath::Zero(nTracePts, m_traceVn, 1);
     
         // Compute the normal velocity
-        
         // For 3DHomogenoeus1D
-        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
             int nPointsTot = m_fields[0]->GetTotPoints();
             int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
@@ -337,14 +336,45 @@ namespace Nektar
         ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
                  "Dimension of flux array and velocity array do not match");
 
+        int i , j;
         int nq = physfield[0].num_elements();
-
-        for (int i = 0; i < flux.num_elements(); ++i)
+        
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            for (int j = 0; j < flux[0].num_elements(); ++j)
+            Array<OneD, Array<OneD, NekDouble> >
+                advVel_plane(m_velocity.num_elements());
+            
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int n_planes = nPointsTot/nPointsTot_plane;
+            
+            for (int i = 0; i < m_velocity.num_elements(); ++i)
             {
-                Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
+                advVel_plane[i] = Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
+            
+                Vmath::Vcopy(nPointsTot_plane,
+                            &m_velocity[i][m_planeNumber*nPointsTot_plane], 1,
+                            &advVel_plane[i][0], 1);
+            }
+            
+            for (int i = 0; i < flux.num_elements(); ++i)
+            {
+                for (j = 0; j < flux[0].num_elements(); ++j)
+                {
+                    Vmath::Vmul(nq, physfield[i], 1, advVel_plane[j], 1,
+                                flux[i][j], 1);
+                }
+            }
+        }
+        else
+        {
+            for (i = 0; i < flux.num_elements(); ++i)
+            {
+                for (j = 0; j < flux[0].num_elements(); ++j)
+                {
+                    Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
                             flux[i][j], 1);
+                }
             }
         }
     }
@@ -369,57 +399,131 @@ namespace Nektar
         int nVariables = physfield.num_elements();
         
         // Factor to rescale 1d points in dealiasing
-        NekDouble OneDptscale = 2; 
+        NekDouble OneDptscale = 2;
+        
+        Array<OneD, Array<OneD, NekDouble> >
+            advVel_plane(m_velocity.num_elements());
         
         // Get number of points to dealias a cubic non-linearity
-        nq = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
+        // For 3DHomogenoeus1D
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+        {
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int n_planes = nPointsTot/nPointsTot_plane;
+            
+            nq = m_fields[0]->GetPlane(0)->Get1DScaledTotPoints(OneDptscale);
+        
+            for (i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                advVel_plane[i] = Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
+                
+                Vmath::Vcopy(nPointsTot_plane,
+                             &m_velocity[i][m_planeNumber*nPointsTot_plane], 1,
+                             &advVel_plane[i][0], 1);
+            }
+            
+        }
+        else // For general case
+        {
+            nq = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
+        }
         
         // Initialisation of higher-space variables
         Array<OneD, Array<OneD, NekDouble> >physfieldInterp(nVariables);
-        Array<OneD, Array<OneD, NekDouble> >velocityInterp(m_spacedim);
+        Array<OneD, Array<OneD, NekDouble> >velocityInterp(m_expdim);
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > >fluxInterp(nVariables);
         
         // Interpolation to higher space of physfield
         for (i = 0; i < nVariables; ++i)
         {
             physfieldInterp[i] = Array<OneD, NekDouble>(nq);
-            fluxInterp[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-            for (j = 0; j < m_spacedim; ++j)
+            fluxInterp[i] = Array<OneD, Array<OneD, NekDouble> >(m_expdim);
+            for (j = 0; j < m_expdim; ++j)
             {
                 fluxInterp[i][j] = Array<OneD, NekDouble>(nq);
             }
             
-            m_fields[0]->PhysInterp1DScaled(OneDptscale, physfield[i], 
-                                            physfieldInterp[i]);
+            // For 3DHomogenoeus1D
+            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+            {
+                m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
+                    OneDptscale, physfield[i], physfieldInterp[i]);
+            }
+            else // For general case
+            {
+                m_fields[0]->PhysInterp1DScaled(
+                    OneDptscale, physfield[i], physfieldInterp[i]);
+            }
         }
         
         // Interpolation to higher space of velocity
-        for (j = 0; j < m_spacedim; ++j)
+        for (j = 0; j < m_expdim; ++j)
         {
             velocityInterp[j] = Array<OneD, NekDouble>(nq);
-
-            m_fields[0]->PhysInterp1DScaled(OneDptscale, m_velocity[j], 
-                                            velocityInterp[j]);
+            
+            // For 3DHomogenoeus1D
+            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+            {
+                m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
+                    OneDptscale, advVel_plane[j], velocityInterp[j]);
+            }
+            else // / For general case
+            {
+                m_fields[0]->PhysInterp1DScaled(
+                    OneDptscale, m_velocity[j], velocityInterp[j]);
+            }
         }
         
         // Evaluation of flux vector in the higher space
-        for (i = 0; i < flux.num_elements(); ++i)
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            for (j = 0; j < flux[0].num_elements(); ++j)
+            // Evaluation of flux vector in the higher space
+            for (i = 0; i < flux.num_elements(); ++i)
             {
-                Vmath::Vmul(nq, physfieldInterp[i], 1, velocityInterp[j], 1, 
-                            fluxInterp[i][j], 1);
+                for (j = 0; j < m_expdim; ++j)
+                {
+                    Vmath::Vmul(nq, physfieldInterp[i], 1, velocityInterp[j], 1,
+                                fluxInterp[i][j], 1);
+                }
             }
-        }
-                
-        // Galerkin project solution back to original space
-        for (i = 0; i < nVariables; ++i)
-        {
-            for (j = 0; j < m_spacedim; ++j)
+            
+            // Galerkin project solution back to original space
+            for (i = 0; i < nVariables; ++i)
             {
-                m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale, 
-                                                            fluxInterp[i][j],
-                                                            flux[i][j]);
+                for (j = 0; j < m_expdim; ++j)
+                {
+                    m_fields[0]->GetPlane(0)->PhysGalerkinProjection1DScaled(
+                        OneDptscale, fluxInterp[i][j], flux[i][j]);
+                }
+                
+                Vmath::Vmul(physfield[i].num_elements(),
+                            physfield[i], 1,
+                            m_velocity[2], 1,
+                            flux[i][2], 1);
+            }
+
+        }
+        else
+        {
+            // Evaluation of flux vector in the higher space
+            for (i = 0; i < flux.num_elements(); ++i)
+            {
+                for (j = 0; j < flux[0].num_elements(); ++j)
+                {
+                    Vmath::Vmul(nq, physfieldInterp[i], 1, velocityInterp[j], 1,
+                                fluxInterp[i][j], 1);
+                }
+            }
+            
+            // Galerkin project solution back to original space
+            for (i = 0; i < nVariables; ++i)
+            {
+                for (j = 0; j < m_spacedim; ++j)
+                {
+                    m_fields[0]->PhysGalerkinProjection1DScaled(
+                        OneDptscale, fluxInterp[i][j], flux[i][j]);
+                }
             }
         }
     }

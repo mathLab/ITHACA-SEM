@@ -78,24 +78,37 @@ namespace Nektar
             m_planeAdv->SetFluxVectorVec(m_fluxVector);
             
             
-            Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
-                                                    fields_plane(num_planes);
+            Array<OneD, Array<OneD, NekDouble> > fluxvector(nConvectiveFields);
+            for (j = 0; j < nConvectiveFields; j ++)
+            {
+                fluxvector[j] = Array<OneD, NekDouble>(nPointsTot);
+            }
             
+            
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
+                fluxvector_homo(num_planes);
+            Array<OneD, Array<OneD, NekDouble> >
+                outarray_homo(nConvectiveFields);
+            Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
+                fields_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                                    inarray_plane(num_planes);
+                inarray_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                                    outarray_plane(num_planes);
+                outarray_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                                    advVel_plane(num_planes);
+                advVel_plane(num_planes);
             
             for (i = 0; i < num_planes; ++i)
             {
                 fields_plane[i] = Array<OneD, MultiRegions::ExpListSharedPtr>
-                                                            (nConvectiveFields);
+                    (nConvectiveFields);
                 inarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
-                                                            (nConvectiveFields);
+                    (nConvectiveFields);
                 outarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
-                                                            (nConvectiveFields);
+                    (nConvectiveFields);
+                fluxvector_homo[i] =
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                        (nConvectiveFields);
                 advVel_plane[i] = Array<OneD, Array<OneD, NekDouble> >(nVel);
                 
                 for (j = 0; j < nConvectiveFields; j ++)
@@ -115,9 +128,11 @@ namespace Nektar
                 {
                     advVel_plane[i][j] = Array<OneD, NekDouble>
                                                         (nPointsTot_plane, 0.0);
-                    Vmath::Vcopy(nPointsTot_plane,
-                                 &advVel[j][i * nPointsTot_plane], 1,
-                                 &advVel_plane[i][j][0], 1);
+                    if (advVel[j].num_elements() != 0 )
+                    {   Vmath::Vcopy(nPointsTot_plane,
+                                     &advVel[j][i * nPointsTot_plane], 1,
+                                     &advVel_plane[i][j][0], 1);
+                    }
                 }
              
                 m_planeAdv->Advect(nConvectiveFields, fields_plane[i],
@@ -127,67 +142,41 @@ namespace Nektar
                 
                 for (j = 0; j < nConvectiveFields; j ++)
                 {
+                    fluxvector_homo[i][j] =
+                        Array<OneD, Array<OneD, NekDouble> >(nVel);
+                    
+                    for (int k = 0; k < nVel ; ++k)
+                    {
+                        fluxvector_homo[i][j][k] =
+                            Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
+                    }
+                    
                     Vmath::Vcopy(nPointsTot_plane,
                                  &outarray_plane[i][j][0], 1,
                                  &outarray[j][i * nPointsTot_plane], 1);
                 }
-            }
-            
-            
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                fluxvector(nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> >
-                outarray_homo(nConvectiveFields);
-            
-            for (i = 0; i < nConvectiveFields; ++i)
-            {
-                outarray_homo[i] = Array<OneD, NekDouble>(nPointsTot, 0.0);
                 
-                fluxvector[i] = Array<OneD, Array<OneD, NekDouble> >(nVel);
-                for(j = 0; j < nVel ; ++j)
+                m_fluxVector(inarray_plane[i], fluxvector_homo[i]);
+                
+                for ( j = 0; j < nConvectiveFields; ++j)
                 {
-                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                    Vmath::Vcopy(nPointsTot_plane,
+                                 &fluxvector_homo[i][j][2][0], 1,
+                                 &fluxvector[j][i * nPointsTot_plane], 1);
                 }
             }
             
-            m_fluxVector(inarray, fluxvector);
-            
             for (int i = 0; i < nConvectiveFields; ++i)
             {
-                fields[0]->PhysDeriv(2, fluxvector[i][2], outarray_homo[i]);
+                outarray_homo[i] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+
+                fields[0]->PhysDeriv(2, fluxvector[i], outarray_homo[i]);
                
                 Vmath::Vadd(nPointsTot,
                             outarray[i], 1,
                             outarray_homo[i], 1,
                             outarray[i], 1);
             }
-            
-            /*
-            for (j = 0; j < nPointsTot; ++j)
-            {
-                cout << "outarray_homo" << "  " << outarray_homo[0][j] << endl;
-            }
-            
-             cin >> num;
-            
-            int z = 0;
-            i = 1;
-            cout << "plane  0" << endl;
-            for (j = 0; j < nPointsTot; ++j)
-            {
-                cout << "outarray" << "  "<<  z << "  "<< outarray[0][j] << endl;
-                if (j == (i * nPointsTot_plane - 1) && i < num_planes)
-                {
-                    cout << "plane" << "  " << i << endl;
-                    i++;
-                    z = -1;
-                    cin >> num;
-                }
-                
-                z++;
-            }
-            */
-            
         }
     }
 }

@@ -423,6 +423,16 @@ namespace Nektar
         int nvariables      = physarray.num_elements();
         int nTraceNumPoints = GetTraceTotPoints();
         Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
+        
+        // For 3DHomogenoeus1D
+        int n_planes;
+        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+        {
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            n_planes = nPointsTot/nPointsTot_plane;
+            nTraceNumPoints = nTraceNumPoints * n_planes;
+        }
 
         // Get physical values of the forward trace (from exp to phys)
         for (int i = 0; i < nvariables; ++i)
@@ -431,16 +441,37 @@ namespace Nektar
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
 
-        for(int e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
-            GetExpSize(); ++e)
+        int id2, id2_plane, e_max;
+        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        
+        for(int e = 0; e < e_max; ++e)
         {
             int npoints = m_fields[0]->
                 GetBndCondExpansions()[bcRegion]->GetExp(e)->GetTotPoints();
             int id1  = m_fields[0]->
                 GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
-            int id2 = m_fields[0]->
-                GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                    GetBndCondTraceToGlobalTraceMap(cnt++));
+            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+            {
+                int cnt_plane = cnt/n_planes;
+                int e_plane;
+                int e_max_plane = e_max/n_planes;
+                int nTracePts_plane = GetTraceTotPoints();
+                
+                int planeID = floor((e + 0.5 )/ e_max_plane );
+                e_plane = e - e_max_plane*planeID;
+                
+                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                       m_fields[0]->GetTraceMap()->
+                            GetBndCondCoeffsToGlobalCoeffsMap(
+                                cnt_plane + e_plane));
+                id2 = id2_plane + planeID*nTracePts_plane;
+            }
+            else
+            {
+                id2 = m_fields[0]->
+                    GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                        GetBndCondTraceToGlobalTraceMap(cnt++));
+            }
 
             Array<OneD,NekDouble> x(npoints, 0.0);
             Array<OneD,NekDouble> y(npoints, 0.0);
@@ -869,6 +900,16 @@ namespace Nektar
         int nTraceNumPoints = GetTraceTotPoints();
         Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
         
+        // For 3DHomogenoeus1D
+        int n_planes;
+        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+        {
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            n_planes = nPointsTot/nPointsTot_plane;
+            nTraceNumPoints = nTraceNumPoints * n_planes;
+        }
+        
         // Get physical values of the forward trace (from exp to phys)
         for (int i = 0; i < nvariables; ++i)
         {
@@ -876,20 +917,39 @@ namespace Nektar
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
         
-        for(int e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
-            GetExpSize(); ++e)
+        int id2, id2_plane, e_max;
+        
+        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        
+        for(int e = 0; e < e_max; ++e)
         {
             
             int npoints = m_fields[0]->
             GetBndCondExpansions()[bcRegion]->GetExp(e)->GetTotPoints();
             int id1  = m_fields[0]->
             GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
-            //int id2  = m_fields[0]->
-            //  GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
-            //      GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-            int id2 = m_fields[0]->
-            GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                                       GetBndCondTraceToGlobalTraceMap(cnt++));
+            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+            {
+                int cnt_plane = cnt/n_planes;
+                int e_plane;
+                int e_max_plane = e_max/n_planes;
+                int nTracePts_plane = GetTraceTotPoints();
+                
+                int planeID = floor((e + 0.5 )/ e_max_plane );
+                e_plane = e - e_max_plane*planeID;
+                
+                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                                m_fields[0]->GetTraceMap()->
+                                    GetBndCondCoeffsToGlobalCoeffsMap(
+                                        cnt_plane + e_plane));
+                id2 = id2_plane + planeID*nTracePts_plane;
+            }
+            else
+            {
+                id2 = m_fields[0]->
+                        GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                            GetBndCondTraceToGlobalTraceMap(cnt++));
+            }
             
             Array<OneD,NekDouble> x0(npoints, 0.0);
             Array<OneD,NekDouble> x1(npoints, 0.0);

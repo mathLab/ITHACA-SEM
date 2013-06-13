@@ -249,10 +249,10 @@ namespace Nektar
             int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
             
             n_planes = nPointsTot/nPointsTot_plane;
-            nTracePts = nTracePts * n_planes;
+            nTracePts = nTracePts*n_planes;
         }
         
-        int nvariables      = physarray.num_elements();
+        int nvariables = physarray.num_elements();
         
         // get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
@@ -288,8 +288,8 @@ namespace Nektar
                 
                 id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
                                 m_fields[0]->GetTraceMap()->
-                                GetBndCondCoeffsToGlobalCoeffsMap(cnt_plane
-                                                                  + e_plane));
+                                    GetBndCondCoeffsToGlobalCoeffsMap(
+                                        cnt_plane + e_plane));
                 id2 = id2_plane + planeID*nTracePts_plane;
                 
             }
@@ -297,63 +297,35 @@ namespace Nektar
             {
                 id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]->GetTraceMap()->
-                                    GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+                            GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             }
             
             // For 2D/3D, define: v* = v - 2(v.n)n
             Array<OneD, NekDouble> tmp(npts, 0.0);
 
             // Calculate (v.n)
-            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+            for (i = 0; i < m_spacedim; ++i)
             {
-                for (i = 0; i < m_spacedim; ++i)
-                {
-                    Vmath::Vvtvp(npts,
-                                 &Fwd[1+i][id2], 1,
-                                 &m_traceNormals[i][id2_plane], 1,
-                                 &tmp[0], 1,
-                                 &tmp[0], 1);
-                }
-            }
-            else
-            {
-                for (i = 0; i < m_spacedim; ++i)
-                {
-                    Vmath::Vvtvp(npts,
-                                 &Fwd[1+i][id2], 1,
-                                 &m_traceNormals[i][id2], 1,
-                                 &tmp[0], 1,
-                                 &tmp[0], 1);    
-                }
+                Vmath::Vvtvp(npts,
+                             &Fwd[1+i][id2], 1,
+                             &m_traceNormals[i][id2], 1,
+                             &tmp[0], 1,
+                             &tmp[0], 1);
             }
 
             // Calculate 2.0(v.n)
             Vmath::Smul(npts, -2.0, &tmp[0], 1, &tmp[0], 1);
             
             // Calculate v* = v - 2.0(v.n)n
-            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+            for (i = 0; i < m_spacedim; ++i)
             {
-                for (i = 0; i < m_spacedim; ++i)
-                {
-                    Vmath::Vvtvp(npts,
-                                 &tmp[0], 1,
-                                 &m_traceNormals[i][id2_plane], 1,
-                                 &Fwd[1+i][id2], 1,
-                                 &Fwd[1+i][id2], 1);
-                }
-
-            }
-            else
-            {
-                for (i = 0; i < m_spacedim; ++i)
-                {
-                    Vmath::Vvtvp(npts,
+                Vmath::Vvtvp(npts,
                              &tmp[0], 1,
                              &m_traceNormals[i][id2], 1,
                              &Fwd[1+i][id2], 1,
                              &Fwd[1+i][id2], 1);
-                }
             }
+            
             // copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nvariables; ++i)
             {
@@ -374,13 +346,15 @@ namespace Nektar
     { 
         int i;
         int nTracePts = GetTraceTotPoints();
+        int n_planes;
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
             int nPointsTot = m_fields[0]->GetTotPoints();
             int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int n_planes = nPointsTot/nPointsTot_plane;
+            
+            n_planes = nPointsTot/nPointsTot_plane;
             nTracePts = nTracePts * n_planes;
         }
         
@@ -397,17 +371,40 @@ namespace Nektar
         // Adjust the physical values of the trace to 
         // take user defined boundaries into account
         int e, id1, id2, npts;
+        int id2_plane, e_max;
         
-        for (e = 0; e < m_fields[0]->
-            GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        
+        for (e = 0; e < e_max; ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetTotPoints();
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
-            id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
-                        m_fields[0]->GetTraceMap()->
+            
+            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+            {
+                int cnt_plane = cnt/n_planes;
+                int e_plane;
+                int e_max_plane = e_max/n_planes;
+                int nTracePts_plane = GetTraceTotPoints();
+                
+                int planeID = floor((e + 0.5 )/ e_max_plane );
+                e_plane = e - e_max_plane*planeID;
+                
+                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                                m_fields[0]->GetTraceMap()->
+                                    GetBndCondCoeffsToGlobalCoeffsMap(
+                                        cnt_plane + e_plane));
+                id2 = id2_plane + planeID*nTracePts_plane;
+                
+            }
+            else
+            {
+                id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                          m_fields[0]->GetTraceMap()->
                             GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+            }
             
             for (i = 0; i < m_spacedim; i++)
             {
@@ -434,13 +431,15 @@ namespace Nektar
     {  
         int i;
         int nTracePts = GetTraceTotPoints();
+        int n_planes;
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
             int nPointsTot = m_fields[0]->GetTotPoints();
             int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int n_planes = nPointsTot/nPointsTot_plane;
+            
+            n_planes = nPointsTot/nPointsTot_plane;
             nTracePts = nTracePts * n_planes;
         }
         
@@ -455,16 +454,40 @@ namespace Nektar
         }
         
         int e, id1, id2, npts;
+        int id2_plane, e_max;
         
-        for(e = 0; e < m_fields[0]->
-            GetBndCondExpansions()[bcRegion]->GetExpSize(); ++e)
+        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        
+        for(e = 0; e < e_max; ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetTotPoints();
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
-            id2  = m_fields[0]->GetTrace()->GetPhys_Offset(m_fields[0]->
-                GetTraceMap()->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+            
+            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+            {
+                int cnt_plane = cnt/n_planes;
+                int e_plane;
+                int e_max_plane = e_max/n_planes;
+                int nTracePts_plane = GetTraceTotPoints();
+                
+                int planeID = floor((e + 0.5 )/ e_max_plane );
+                e_plane = e - e_max_plane*planeID;
+                
+                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                                m_fields[0]->GetTraceMap()->
+                                    GetBndCondCoeffsToGlobalCoeffsMap(
+                                        cnt_plane + e_plane));
+                id2 = id2_plane + planeID*nTracePts_plane;
+                
+            }
+            else
+            {
+                id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                            m_fields[0]->GetTraceMap()->
+                                GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+            }
             
             switch(m_spacedim)
             {
@@ -477,41 +500,41 @@ namespace Nektar
                 }
                 case 2:
                 {
-                    Array<OneD, NekDouble> tmp_t(npts);
+                    Array<OneD, NekDouble> tmp_t(npts, 0.0);
                     
-                    Vmath::Vmul(npts, 
-                                &Fwd[1][id2], 1, 
-                                &m_traceNormals[1][id2], 1, 
+                    Vmath::Vmul(npts,
+                                &Fwd[1][id2], 1,
+                                &m_traceNormals[1][id2], 1,
                                 &tmp_t[0], 1);
                     
-                    Vmath::Vvtvm(npts, 
-                                 &Fwd[2][id2], 1, 
-                                 &m_traceNormals[0][id2], 1, 
-                                 &tmp_t[0], 1, 
+                    Vmath::Vvtvm(npts,
+                                 &Fwd[2][id2], 1,
+                                 &m_traceNormals[0][id2], 1,
+                                 &tmp_t[0], 1,
                                  &tmp_t[0], 1);
                     
                     Array<OneD, NekDouble> tmp_n(npts, 0.0);
                     
                     // rotate back to Cartesian
-                    Vmath::Vmul(npts, 
-                                &tmp_t[0], 1, 
-                                &m_traceNormals[1][id2], 1, 
+                    Vmath::Vmul(npts,
+                                &tmp_t[0], 1,
+                                &m_traceNormals[1][id2], 1,
                                 &Fwd[1][id2], 1);
                     
-                    Vmath::Vvtvm(npts, 
+                    Vmath::Vvtvm(npts,
                                  &tmp_n[0], 1,
-                                 &m_traceNormals[0][id2], 1, 
-                                 &Fwd[1][id2], 1, 
+                                 &m_traceNormals[0][id2], 1,
+                                 &Fwd[1][id2], 1,
                                  &Fwd[1][id2], 1);
                     
-                    Vmath::Vmul(npts, 
-                                &tmp_t[0], 1, 
+                    Vmath::Vmul(npts,
+                                &tmp_t[0], 1,
                                 &m_traceNormals[0][id2], 1,
                                 &Fwd[2][id2], 1);
-                    Vmath::Vvtvp(npts, 
-                                 &tmp_n[0], 1, 
-                                 &m_traceNormals[1][id2], 1, 
-                                 &Fwd[2][id2], 1, 
+                    Vmath::Vvtvp(npts,
+                                 &tmp_n[0], 1,
+                                 &m_traceNormals[1][id2], 1,
+                                 &Fwd[2][id2], 1,
                                  &Fwd[2][id2], 1);
                     break;
                 }
@@ -551,13 +574,14 @@ namespace Nektar
     {
         int i;
         int nTracePts              = GetTraceTotPoints();
+        int n_planes;
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
             int nPointsTot = m_fields[0]->GetTotPoints();
             int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int n_planes = nPointsTot/nPointsTot_plane;
+            n_planes = nPointsTot/nPointsTot_plane;
             nTracePts = nTracePts * n_planes;
         }
         
@@ -641,23 +665,46 @@ namespace Nektar
                 
         // Auxiliary variables
         int e, id1, id2, npts, pnt;
+        int id2_plane, e_max;
         NekDouble cPlus, rPlus, cMinus, rMinus;
         NekDouble VelNorm, VelNormRef, VDelta;
         NekDouble rhob, rhoub, rhovb, rhoeb;
         NekDouble ub, vb, cb, sb, pb;
         
+        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        
         // Loop on bcRegions
-        for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
-             GetExpSize(); ++e)
+        for (e = 0; e_max; ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetNumPoints(0);
             
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
-            id2 = m_fields[0]->GetTrace()->
-                GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                    GetBndCondTraceToGlobalTraceMap(cnt++));
+            
+            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+            {
+                int cnt_plane = cnt/n_planes;
+                int e_plane;
+                int e_max_plane = e_max/n_planes;
+                int nTracePts_plane = GetTraceTotPoints();
+                
+                int planeID = floor((e + 0.5 )/ e_max_plane );
+                e_plane = e - e_max_plane*planeID;
+                
+                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                                m_fields[0]->GetTraceMap()->
+                                    GetBndCondCoeffsToGlobalCoeffsMap(
+                                        cnt_plane + e_plane));
+                id2 = id2_plane + planeID*nTracePts_plane;
+                
+            }
+            else
+            {
+                id2 = m_fields[0]->GetTrace()->
+                    GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                        GetBndCondTraceToGlobalTraceMap(cnt++));
+            }
             
             // Loop on the points of the bcRegion
             for (i = 0; i < npts; i++)
@@ -747,6 +794,7 @@ namespace Nektar
     {
         int i;
         int nTracePts               = GetTraceTotPoints();
+        int n_planes;
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
@@ -819,22 +867,45 @@ namespace Nektar
         
         // Auxiliary variables 
         int e, id1, id2, npts, pnt;
+        int e_max, id2_plane;
         NekDouble cPlus, rPlus, cMinus, rMinus;
         NekDouble VelNorm, VelNormRef, VDelta;
         NekDouble rhob, rhoub, rhovb, rhoeb;
         NekDouble ub, vb, cb, sb, pb;
         
+        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        
         // Loop on the bcRegions
-        for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
-             GetExpSize(); ++e)
+        for (e = 0; e_max; ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetNumPoints(0);
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e) ;
-            id2  = m_fields[0]->GetTrace()->
-                GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                    GetBndCondTraceToGlobalTraceMap(cnt++));
+            
+            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+            {
+                int cnt_plane = cnt/n_planes;
+                int e_plane;
+                int e_max_plane = e_max/n_planes;
+                int nTracePts_plane = GetTraceTotPoints();
+                
+                int planeID = floor((e + 0.5 )/ e_max_plane );
+                e_plane = e - e_max_plane*planeID;
+                
+                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                        m_fields[0]->GetTraceMap()->
+                            GetBndCondCoeffsToGlobalCoeffsMap(
+                                cnt_plane + e_plane));
+                id2 = id2_plane + planeID*nTracePts_plane;
+            }
+            else
+            {
+
+                id2  = m_fields[0]->GetTrace()->
+                            GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                                GetBndCondTraceToGlobalTraceMap(cnt++));
+            }
             
             // Loop on points of bcRegion 'e'
             for (i = 0; i < npts; i++)
@@ -921,6 +992,7 @@ namespace Nektar
         int id1, id2, npts;
         
         int nTracePts  = GetTraceTotPoints();
+        int n_planes;
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
@@ -942,17 +1014,39 @@ namespace Nektar
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
 
+        int id2_plane, e_max;
+        
+        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        
         // Loop on bcRegions
-        for (e = 0; e < m_fields[0]->GetBndCondExpansions()[bcRegion]->
-             GetExpSize(); ++e)
+        for (e = 0; e_max; ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetNumPoints(0);
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e) ;
-            id2  = m_fields[0]->GetTrace()->
-                GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                    GetBndCondTraceToGlobalTraceMap(cnt++));
+            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+            {
+                int cnt_plane = cnt/n_planes;
+                int e_plane;
+                int e_max_plane = e_max/n_planes;
+                int nTracePts_plane = GetTraceTotPoints();
+                
+                int planeID = floor((e + 0.5 )/ e_max_plane );
+                e_plane = e - e_max_plane*planeID;
+                
+                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                                m_fields[0]->GetTraceMap()->
+                                    GetBndCondCoeffsToGlobalCoeffsMap(
+                                        cnt_plane + e_plane));
+                id2 = id2_plane + planeID*nTracePts_plane;
+            }
+            else
+            {
+                id2  = m_fields[0]->GetTrace()->
+                            GetPhys_Offset(m_fields[0]->GetTraceMap()->
+                                GetBndCondTraceToGlobalTraceMap(cnt++));
+            }
             
             // Loop on points of bcRegion 'e'
             for (i = 0; i < npts; i++)

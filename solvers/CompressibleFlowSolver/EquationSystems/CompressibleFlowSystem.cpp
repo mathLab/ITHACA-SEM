@@ -1083,7 +1083,7 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
         int i, j; 
-        int nq = m_fields[0]->GetTotPoints();
+        int nq = physfield[0].num_elements();
         
         Array<OneD, NekDouble> pressure(nq);
         Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
@@ -1136,7 +1136,7 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux)
     {
         int i, j;
-        int nq = m_fields[0]->GetTotPoints();
+        int nq = physfield.num_elements();
         int nvariables = m_fields.num_elements();
             
         // Factor to rescale 1d points in dealiasing
@@ -2008,7 +2008,7 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD,                   NekDouble>   &pressure)
     {
-        int       npts  = m_fields[0]->GetTotPoints();
+        int       npts  = physfield[0].num_elements();
         NekDouble alpha = -0.5;
         
         // Calculate ||rho v||^2
@@ -2045,7 +2045,6 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &velocity,
               Array<OneD,                   NekDouble>   &pressure)
     {
-        //int       npts  = m_fields[0]->GetTotPoints();
         int npts = physfield[0].num_elements();
         NekDouble alpha = -0.5;
         

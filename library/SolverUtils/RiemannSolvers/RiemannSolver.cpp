@@ -162,7 +162,7 @@ namespace Nektar
                 {
                     const int vx = (int)velLoc[0];
                     const int vy = (int)velLoc[1];
-                    const int nq = normals[0].num_elements();
+                    const int nq = inarray[0].num_elements();
                     
                     Vmath::Vmul (nq, inarray [vx], 1, normals [0],  1,
                                      outarray[vx], 1);
@@ -191,7 +191,7 @@ namespace Nektar
                     const int vx = (int)velLoc[0];
                     const int vy = (int)velLoc[1];
                     const int vz = (int)velLoc[2];
-                    const int nq = normals[0].num_elements();
+                    const int nq = inarray[0].num_elements();
 
                     // Generate matrices if they don't already exist.
                     if (m_rotMat.num_elements() == 0)
@@ -290,7 +290,7 @@ namespace Nektar
                     const int vx = (int)velLoc[0];
                     const int vy = (int)velLoc[1];
                     const int vz = (int)velLoc[2];
-                    const int nq = normals[0].num_elements();
+                    const int nq = normals[0].num_elements()/6;
                     
                     Vmath::Vvtvvtp(nq, inarray [vx], 1, m_rotMat[0],  1,
                                        inarray [vy], 1, m_rotMat[3],  1,

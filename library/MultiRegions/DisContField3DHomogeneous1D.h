@@ -219,7 +219,7 @@ namespace Nektar
             
             virtual ExpListSharedPtr &v_GetTrace()
             {
-            return m_planes[0]->GetTrace();
+                return m_planes[0]->GetTrace();
             }
             
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap()

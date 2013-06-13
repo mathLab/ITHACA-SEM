@@ -97,14 +97,22 @@ namespace Nektar
             int nConvectiveFields = pFields.num_elements();
             int nDimensions  = pFields[0]->GetCoordim(0);
             int nSolutionPts = pFields[0]->GetTotPoints();
+            int spaceDim;
+            
+            spaceDim = nDimensions;
+            
+            if (pSession->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                spaceDim = 3;
+            }
             
             m_fluxvector = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
                                                             nConvectiveFields);
             for (i = 0; i < nConvectiveFields; ++i)
             {
                 m_fluxvector[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                            nDimensions);
-                for (j = 0; j < nDimensions; ++j)
+                                                            spaceDim);
+                for (j = 0; j < spaceDim; ++j)
                 {
                     m_fluxvector[i][j] = Array<OneD, NekDouble>(nSolutionPts);
                 }

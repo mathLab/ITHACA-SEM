@@ -73,7 +73,6 @@ namespace Nektar
             m_advType(advType)
         {
             string advName;
-            m_planeAdv = GetAdvectionFactory().CreateInstance(advName, advName);
             
             if (m_advType == "FRDG3DHomogeneous1D")
             {
@@ -95,8 +94,39 @@ namespace Nektar
             {
                  advName = "FRcinf";
             }
-
+            
+            m_planeAdv = GetAdvectionFactory().CreateInstance(advName, advName);
         }
+        
+        /**
+         * @brief Initiliase AdvectionFR3DHomogeneous1D objects and store them
+         * before starting the time-stepping.
+         *
+         * This routine calls the virtual functions #v_SetupMetrics,
+         * #v_SetupCFunctions and #v_SetupInterpolationMatrices to
+         * initialise the objects needed by AdvectionFR.
+         *
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         */
+        void AdvectionFR3DHomogeneous1D::v_InitObject(
+                LibUtilities::SessionReaderSharedPtr        pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+        {
+            int nConvectiveFields = pFields.num_elements();
+            
+            Array<OneD, MultiRegions::ExpListSharedPtr>
+                pFields_plane0(nConvectiveFields);
+            
+            for (int i = 0; i < nConvectiveFields; ++i)
+            {
+                pFields_plane0[i] = pFields[i]->GetPlane(0);
+            }
+            
+            m_planeAdv->InitObject(pSession, pFields_plane0);
+        }
+
+        
         
         /**
          * @brief Compute the advection term at each time-step using the Flux
@@ -134,7 +164,6 @@ namespace Nektar
             m_planeAdv->SetRiemannSolver(m_riemann);
             m_planeAdv->SetFluxVectorVec(m_fluxVector);
             
-            
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nConvectiveFields);
             for (j = 0; j < nConvectiveFields; j ++)
             {
@@ -143,37 +172,37 @@ namespace Nektar
             
             
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
-            fluxvector_homo(num_planes);
+                fluxvector_homo(num_planes);
             Array<OneD, Array<OneD, NekDouble> >
-            outarray_homo(nConvectiveFields);
+                outarray_homo(nConvectiveFields);
             Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
-            fields_plane(num_planes);
+                fields_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-            inarray_plane(num_planes);
+                inarray_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-            outarray_plane(num_planes);
+                outarray_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-            advVel_plane(num_planes);
+                advVel_plane(num_planes);
             
             for (i = 0; i < num_planes; ++i)
             {
                 fields_plane[i] = Array<OneD, MultiRegions::ExpListSharedPtr>
-                (nConvectiveFields);
+                    (nConvectiveFields);
                 inarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
-                (nConvectiveFields);
+                    (nConvectiveFields);
                 outarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
-                (nConvectiveFields);
+                    (nConvectiveFields);
                 fluxvector_homo[i] =
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                (nConvectiveFields);
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                        (nConvectiveFields);
                 advVel_plane[i] = Array<OneD, Array<OneD, NekDouble> >(nVel);
                 
                 for (j = 0; j < nConvectiveFields; j ++)
                 {
                     fields_plane[i][j]= fields[j]->GetPlane(i);
-                    inarray_plane[i][j] = Array<OneD, NekDouble>
+                        inarray_plane[i][j] = Array<OneD, NekDouble>
                     (nPointsTot_plane, 0.0);
-                    outarray_plane[i][j] = Array<OneD, NekDouble>
+                        outarray_plane[i][j] = Array<OneD, NekDouble>
                     (nPointsTot_plane, 0.0);
                     
                     Vmath::Vcopy(nPointsTot_plane,
@@ -184,7 +213,7 @@ namespace Nektar
                 for (j = 0; j < nVel; j ++)
                 {
                     advVel_plane[i][j] = Array<OneD, NekDouble>
-                    (nPointsTot_plane, 0.0);
+                        (nPointsTot_plane, 0.0);
                     if (advVel[j].num_elements() != 0 )
                     {   Vmath::Vcopy(nPointsTot_plane,
                                      &advVel[j][i * nPointsTot_plane], 1,

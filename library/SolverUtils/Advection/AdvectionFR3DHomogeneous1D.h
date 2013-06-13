@@ -62,6 +62,10 @@ namespace Nektar
             std::string m_advType;
             SolverUtils::AdvectionSharedPtr m_planeAdv;
             
+            virtual void v_InitObject(
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+            
             virtual void v_Advect(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

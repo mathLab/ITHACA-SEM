@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AdvectionFR3DHomogeneous1D.h
+// File: DiffusionLDGNS.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,51 +29,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: FR 3DHomogeneous1D advection 3DHomogeneous1D class.
+// Description: LDGNS diffusion 3DHomogeneous1D class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_ADVECTIONFR3DHOMOGENEOUS1D
-#define NEKTAR_SOLVERUTILS_ADVECTIONFR3DHOMOGENEOUS1D
-
-#include <SolverUtils/Advection/Advection.h>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <SolverUtils/Diffusion/DiffusionLDGNS3DHomogeneous1D.h>
+#include <iostream>
+#include <iomanip>
 
 namespace Nektar
 {
     namespace SolverUtils
     {
-        class AdvectionFR3DHomogeneous1D : public Advection
+        std::string DiffusionLDGNS3DHomogeneous1D ::type = GetDiffusionFactory().
+            RegisterCreatorFunction("LDGNS3DHomogeneous1D", DiffusionLDGNS3DHomogeneous1D ::create);
+        
+        DiffusionLDGNS3DHomogeneous1D ::DiffusionLDGNS3DHomogeneous1D ()
         {
-        public:
-            static AdvectionSharedPtr create(std::string advType)
-            {
-                return AdvectionSharedPtr(new AdvectionFR3DHomogeneous1D(
-                                                                    advType));
-            }
-            static std::string                   type[];
-            
-        protected:
-            AdvectionFR3DHomogeneous1D(std::string advType);
-            
-            Array<OneD, Array<OneD, NekDouble> >               m_traceNormals;
-            
-            std::string m_advType;
-            SolverUtils::AdvectionSharedPtr m_planeAdv;
-            
-            virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
-            
-            virtual void v_Advect(
-                const int nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);            
-        }; 
+        }
+        
+        void DiffusionLDGNS3DHomogeneous1D ::v_InitObject(
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+        {
+        }
+        
+        void DiffusionLDGNS3DHomogeneous1D ::v_Diffuse(
+            const int                                         nConvectiveFields,
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                  Array<OneD, Array<OneD, NekDouble> >        &outarray)
+        {
+ 
+        }
+        
     }
 }
-
-#endif

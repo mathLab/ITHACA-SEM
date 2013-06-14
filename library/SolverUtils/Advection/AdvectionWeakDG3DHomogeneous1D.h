@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AdvectionWeakDG.h
+// File: AdvectionWeakDG3DHomogeneous1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Weak DG advection class.
+// Description: Weak DG advection 3DHomogeneous1D class class .
 //
 ///////////////////////////////////////////////////////////////////////////////
 

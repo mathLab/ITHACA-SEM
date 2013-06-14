@@ -7,9 +7,13 @@ SET(SOLVER_UTILS_SOURCES
   Advection/AdvectionWeakDG3DHomogeneous1D.cpp
   Diffusion/Diffusion.cpp
   Diffusion/DiffusionLDG.cpp
+  Diffusion/DiffusionLDG3DHomogeneous1D.cpp
   Diffusion/DiffusionLDGNS.cpp
+  Diffusion/DiffusionLDGNS3DHomogeneous1D.cpp
   Diffusion/DiffusionLFR.cpp
+  Diffusion/DiffusionLFR3DHomogeneous1D.cpp
   Diffusion/DiffusionLFRNS.cpp
+  Diffusion/DiffusionLFRNS3DHomogeneous1D.cpp
   Driver.cpp
   DriverArnoldi.cpp
   DriverModifiedArnoldi.cpp
@@ -29,13 +33,19 @@ SET(SOLVER_UTILS_SOURCES
 SET(SOLVER_UTILS_HEADERS
   Advection/Advection.h
   Advection/AdvectionFR.h
+  Advection/AdvectionFR3DHomogeneous1D.h
   Advection/AdvectionNonConservative.h
   Advection/AdvectionWeakDG.h
+  Advection/AdvectionWeakDG3DHomogeneous1D.h
   Diffusion/Diffusion.h
   Diffusion/DiffusionLDG.h
+  Diffusion/DiffusionLDG3DHomogeneous1D.h
   Diffusion/DiffusionLDGNS.h
+  Diffusion/DiffusionLDGNS3DHomogeneous1D.h
   Diffusion/DiffusionLFR.h
+  Diffusion/DiffusionLFR3DHomogeneous1D.h
   Diffusion/DiffusionLFRNS.h
+  Diffusion/DiffusionLFRNS3DHomogeneous1D.h
   Driver.h
   DriverArnoldi.h
   DriverModifiedArnoldi.h

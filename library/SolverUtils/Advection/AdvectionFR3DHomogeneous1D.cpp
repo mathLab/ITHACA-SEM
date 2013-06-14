@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AdvectionFR.cpp
+// File: AdvectionFR3DHomogeneous1D.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: FR advection class.
+// Description: FR advection 3DHomogeneous1D class.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -130,7 +130,7 @@ namespace Nektar
         
         /**
          * @brief Compute the advection term at each time-step using the Flux
-         * Reconstruction approach (FR).
+         * Reconstruction approach (FR) looping on the planes.
          *
          * @param nConvectiveFields   Number of fields.
          * @param fields              Pointer to fields.

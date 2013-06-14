@@ -167,7 +167,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nConvectiveFields);
             for (j = 0; j < nConvectiveFields; j ++)
             {
-                fluxvector[j] = Array<OneD, NekDouble>(nPointsTot);
+                fluxvector[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
             }
             
             
@@ -252,7 +252,7 @@ namespace Nektar
                 }
             }
             
-            for (int i = 0; i < nConvectiveFields; ++i)
+            for (i = 0; i < nConvectiveFields; ++i)
             {
                 outarray_homo[i] = Array<OneD, NekDouble>(nPointsTot, 0.0);
                 

@@ -56,8 +56,9 @@ namespace Nektar
             DiffusionLDG3DHomogeneous1D ();
             
             Array<OneD, Array<OneD, NekDouble> >              m_traceNormals;
-            Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
             LibUtilities::SessionReaderSharedPtr              m_session;
+            
+            SolverUtils::DiffusionSharedPtr                   m_planeDiff;
             
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,

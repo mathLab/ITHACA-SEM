@@ -82,10 +82,21 @@ namespace Nektar
                 m_fluxVector = boost::bind(func, obj, _1, _2, _3, _4, _5);
             }
             
+            
+            void SetFluxVectorVec(DiffusionFluxVecCB fluxVector)
+            {
+                m_fluxVector = fluxVector;
+            }
+            
             template<typename FuncPointerT, typename ObjectPointerT> 
             void SetFluxVectorNS(FuncPointerT func, ObjectPointerT obj)
             {
                 m_fluxVectorNS = boost::bind(func, obj, _1, _2, _3);
+            }
+            
+            void SetFluxVectorVecNS(DiffusionFluxVecCBNS fluxVector)
+            {
+                m_fluxVectorNS = fluxVector;
             }
                         
             inline void SetRiemannSolver(RiemannSolverSharedPtr riemann)

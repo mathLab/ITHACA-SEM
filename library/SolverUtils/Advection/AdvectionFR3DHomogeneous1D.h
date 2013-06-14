@@ -56,10 +56,8 @@ namespace Nektar
             
         protected:
             AdvectionFR3DHomogeneous1D(std::string advType);
-            
-            Array<OneD, Array<OneD, NekDouble> >               m_traceNormals;
-            
             std::string m_advType;
+            
             SolverUtils::AdvectionSharedPtr m_planeAdv;
             
             virtual void v_InitObject(

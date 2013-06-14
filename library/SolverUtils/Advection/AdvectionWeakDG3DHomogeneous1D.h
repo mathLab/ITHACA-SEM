@@ -55,8 +55,6 @@ namespace Nektar
         protected:
             AdvectionWeakDG3DHomogeneous1D();
             
-            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
-            
             SolverUtils::AdvectionSharedPtr m_planeAdv;
             
             virtual void v_Advect(

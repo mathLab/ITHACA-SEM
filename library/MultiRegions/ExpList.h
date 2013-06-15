@@ -543,10 +543,17 @@ namespace Nektar
             }
 
             /// This function returns the transposition class
-            /// associaed with the homgeneous expansion.
+            /// associaed with the homogeneous expansion.
             LibUtilities::TranspositionSharedPtr GetTransposition(void)
             {
                 return v_GetTransposition();
+            }
+            
+            /// This function returns the Width of homogeneous direction
+            /// associaed with the homogeneous expansion.
+            NekDouble GetHomoLen(void)
+            {
+                return v_GetHomoLen();
             }
             
             /// This function returns a vector containing the wave
@@ -1310,6 +1317,7 @@ namespace Nektar
 
             virtual Array<OneD, const NekDouble> v_HomogeneousEnergy(void);
             virtual LibUtilities::TranspositionSharedPtr v_GetTransposition(void);
+            virtual NekDouble v_GetHomoLen(void);
             virtual Array<OneD, const unsigned int> v_GetZIDs(void);
             virtual Array<OneD, const unsigned int> v_GetYIDs(void);
             

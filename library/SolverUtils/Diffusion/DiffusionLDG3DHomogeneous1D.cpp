@@ -87,8 +87,7 @@ namespace Nektar
             int nPointsTot_plane = nPointsTot/num_planes;
             int nCoeffs_plane = nCoeffs/num_planes;
             
-            Array<OneD, Array<OneD, NekDouble> >
-                outarray_homo(nConvectiveFields);
+
             Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
                 fields_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
@@ -131,20 +130,60 @@ namespace Nektar
                                  &outarray_plane[i][j][0], 1,
                                  &outarray[j][i * nPointsTot_plane], 1);
                 }
+                
+                /*int num;
+                cout << "plane   " << i << endl;
+                for (j = 0; j < nPointsTot_plane; ++j)
+                {
+                    cout << "outarray" << "  "<<  j << "  "<< outarray_plane[i][0][j]<<  "  " << endl;
+                }
+                cin >> num;*/
             }
             
-            for  (i = 0; i < nConvectiveFields; ++i)
+            Array<OneD, Array<OneD, NekDouble> >
+                            fce(nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> >
+                            fce_homo(nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> >
+                            outarray_z(nConvectiveFields);
+
+            
+            NekDouble beta;
+            int Homolen = fields[0]->GetHomoLen();
+            
+            // Transform forcing function in half-physical space
+            for (j = 0; j < nConvectiveFields; j++)
             {
-                outarray_homo[i] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                fce[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                fce_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                outarray_z[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                fields[0]->HomogeneousFwdTrans(inarray[j], fce[j]);
+            }
+            
+            m_transpositionLDG = fields[0]->GetTransposition();
+
+            for (i = 0; i < num_planes; ++i)
+            {
+                beta = 2*M_PI*(m_transpositionLDG->GetK(i))/Homolen;
                 
-                // to change
-                fields[0]->PhysDeriv(2, inarray[i], outarray_homo[i]);
-                fields[0]->PhysDeriv(2, outarray_homo[i], outarray_homo[i]);
+                for (j = 0; j < nConvectiveFields; j++)
+                {
+                    Vmath::Smul(nPointsTot_plane,
+                                beta*beta ,
+                                &fce[j][0] + i*nPointsTot_plane, 1,
+                                &fce_homo[j][0] + i*nPointsTot_plane, 1);
+                }
+
+            }
+            
+            for  (j = 0; j < nConvectiveFields; ++j)
+            {
+                fields[0]->HomogeneousBwdTrans(fce_homo[j], outarray_z[j]);
                 
                 Vmath::Vsub(nPointsTot,
-                            outarray[i], 1,
-                            outarray_homo[i], 1,
-                            outarray[i], 1);
+                            outarray[j], 1,
+                            outarray_z[j], 1,
+                            outarray[j], 1);
             }
         }
     }

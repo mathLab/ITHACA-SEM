@@ -1098,6 +1098,11 @@ namespace Nektar
         {
             return m_transposition;
         }
+        
+        NekDouble ExpListHomogeneous1D::v_GetHomoLen(void)
+        {
+            return m_lhom;
+        }
 
         Array<OneD, const unsigned int> ExpListHomogeneous1D::v_GetZIDs(void)
         {

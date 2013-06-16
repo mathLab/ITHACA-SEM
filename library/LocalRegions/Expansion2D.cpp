@@ -73,6 +73,7 @@ namespace Nektar
                     if (m_negatedNormals[i])
                     {
                         m_requireNeg[i] = true;
+                        continue;
                     }
                     
                     Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<
@@ -142,6 +143,7 @@ namespace Nektar
                     if (m_negatedNormals[i])
                     {
                         m_requireNeg[i] = true;
+                        continue;
                     }
                     
                     Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<

@@ -59,7 +59,6 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr         m_session;
             
             SolverUtils::DiffusionSharedPtr              m_planeDiff;
-            
             LibUtilities::TranspositionSharedPtr         m_transpositionLDG;
             
             virtual void v_InitObject(

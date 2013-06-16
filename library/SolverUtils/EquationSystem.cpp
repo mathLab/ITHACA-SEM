@@ -2382,27 +2382,27 @@ namespace Nektar
                         
                     case MultiRegions::eDiscontinuous:
                     {
-                        if (AdvectionType == "WeakDG")
+                        if (AdvectionType == "WeakDG" || AdvectionType == "WeakDG3DHomogeneous1D")
                         {
                             out << "\tProjection Type : Weak Discontinuous Galerkin"        <<endl;
                         }
-                        else if (AdvectionType == "FRDG")
+                        else if (AdvectionType == "FRDG" || AdvectionType == "FRDG3DHomogeneous1D")
                         {
                             out << "\tProjection Type : Flux Reconstruction DG"             <<endl;
                         }
-                        else if (AdvectionType == "FRSD")
+                        else if (AdvectionType == "FRSD" || AdvectionType == "FRSD3DHomogeneous1D")
                         {
                             out << "\tProjection Type : Flux Reconstruction SD"             <<endl;
                         }
-                        else if (AdvectionType == "FRHU")
+                        else if (AdvectionType == "FRHU" || AdvectionType == "FRHU3DHomogeneous1D")
                         {
                             out << "\tProjection Type : Flux Reconstruction HU"             <<endl;
                         }
-                        else if (AdvectionType == "FRcmin")
+                        else if (AdvectionType == "FRcmin" || AdvectionType == "FRcmin3DHomogeneous1D")
                         {
                             out << "\tProjection Type : Flux Reconstruction c = c-min"      <<endl;
                         }
-                        else if (AdvectionType == "FRcinf")
+                        else if (AdvectionType == "FRcinf" || AdvectionType == "FRcinf3DHomogeneous1D")
                         {
                             out << "\tProjection Type : Flux Reconstruction c = c-infinity" <<endl;
                         }
@@ -2444,27 +2444,33 @@ namespace Nektar
                         
                     case MultiRegions::eDiscontinuous:
                     {
-                        if (DiffusionType == "LDG" || DiffusionType == "LDGNS")
+                        if (DiffusionType == "LDG" || DiffusionType == "LDGNS" ||
+                            DiffusionType == "LDG3DHomogeneous1D" || DiffusionType == "LDGNS3DHomogeneous1D")
                         {
                             out << "\tDiffusion Type  : LDG"    <<endl;
                         }
-                        else if (DiffusionType == "LFRDG" || DiffusionType == "LFRDGNS")
+                        else if (DiffusionType == "LFRDG" || DiffusionType == "LFRDGNS" ||
+                                 DiffusionType == "LFRDG3DHomogeneous1D" || DiffusionType == "LFRDGNS3DHomogeneous1D")
                         {
                             out << "\tDiffusion Type  : LFRDG"  <<endl;
                         }
-                        else if (DiffusionType == "LFRSD" || DiffusionType == "LFRSDNS")
+                        else if (DiffusionType == "LFRSD" || DiffusionType == "LFRSDNS" ||
+                                 DiffusionType == "LFRSD3DHomogeneous1D" || DiffusionType == "LFRSDNS3DHomogeneous1D")
                         {
                             out << "\tDiffusion Type  : LFRSD"  <<endl;
                         }
-                        else if (DiffusionType == "LFRHU" || DiffusionType == "LFRHUNS")
+                        else if (DiffusionType == "LFRHU" || DiffusionType == "LFRHUNS" ||
+                                 DiffusionType == "LFRHU3DHomogeneous1D" || DiffusionType == "LFRHUNS3DHomogeneous1D")
                         {
                             out << "\tDiffusion Type  : LFRHU"  <<endl;
                         }
-                        else if (DiffusionType == "LFRcmin" || DiffusionType == "LFRcminNS")
+                        else if (DiffusionType == "LFRcmin" || DiffusionType == "LFRcminNS" ||
+                                 DiffusionType == "LFRcmin3DHomogeneous1D" || DiffusionType == "LFRcminNS3DHomogeneous1D")
                         {
                             out << "\tDiffusion Type  : LFR c = c-min"      <<endl;
                         }
-                        else if (DiffusionType == "LFRcinf" || DiffusionType == "LFRcinfNS")
+                        else if (DiffusionType == "LFRcinf" || DiffusionType == "LFRcinfNS" ||
+                                 DiffusionType == "LFRcinf3DHomogeneous1D" || DiffusionType == "LFRcinfNS3DHomogeneous1D")
                         {
                             out << "\tDiffusion Type  : LFR c = c-infinity" <<endl;
                         }

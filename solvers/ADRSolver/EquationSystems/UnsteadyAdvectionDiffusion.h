@@ -72,6 +72,10 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >    m_velocity;
         Array<OneD, NekDouble>                  m_traceVn;
         
+        // Plane (used only for Discontinous projection
+        //        with 3DHomogenoeus1D expansion)
+        int m_planeNumber = 0;
+        
         /// Session reader
         UnsteadyAdvectionDiffusion(
             const LibUtilities::SessionReaderSharedPtr& pSession);

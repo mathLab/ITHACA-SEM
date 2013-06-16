@@ -54,7 +54,6 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
-            
             int nConvectiveFields = pFields.num_elements();
             
             Array<OneD, MultiRegions::ExpListSharedPtr>
@@ -74,7 +73,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int num;
             int i, j, k;
             int spaceDim = 3;
             int nPointsTot      = fields[0]->GetTotPoints();
@@ -87,7 +85,6 @@ namespace Nektar
             int nPointsTot_plane = nPointsTot/num_planes;
             int nCoeffs_plane = nCoeffs/num_planes;
             
-
             Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
                 fields_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
@@ -117,7 +114,6 @@ namespace Nektar
                                  &inarray_plane[i][j][0], 1);
                 }
                 
-                
                 m_planeDiff->Diffuse(nConvectiveFields,
                                      fields_plane[i],
                                      inarray_plane[i],
@@ -130,14 +126,6 @@ namespace Nektar
                                  &outarray_plane[i][j][0], 1,
                                  &outarray[j][i * nPointsTot_plane], 1);
                 }
-                
-                /*int num;
-                cout << "plane   " << i << endl;
-                for (j = 0; j < nPointsTot_plane; ++j)
-                {
-                    cout << "outarray" << "  "<<  j << "  "<< outarray_plane[i][0][j]<<  "  " << endl;
-                }
-                cin >> num;*/
             }
             
             Array<OneD, Array<OneD, NekDouble> >
@@ -147,7 +135,6 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >
                             outarray_z(nConvectiveFields);
 
-            
             NekDouble beta;
             int Homolen = fields[0]->GetHomoLen();
             

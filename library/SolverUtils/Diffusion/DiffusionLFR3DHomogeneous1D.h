@@ -82,6 +82,9 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
             LibUtilities::SessionReaderSharedPtr m_session;
             
+            SolverUtils::DiffusionSharedPtr              m_planeDiff;
+            LibUtilities::TranspositionSharedPtr         m_transpositionLDG;
+            
             std::string m_diffType;
             
             virtual void v_InitObject(

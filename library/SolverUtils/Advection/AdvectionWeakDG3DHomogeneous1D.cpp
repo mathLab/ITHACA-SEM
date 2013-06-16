@@ -61,7 +61,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int num;
             int i, j, k;
             int nVel = advVel.num_elements();
             int nPointsTot      = fields[0]->GetTotPoints();

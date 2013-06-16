@@ -152,27 +152,76 @@ namespace Nektar
      * diffusion equation.
      */
     Array<OneD, NekDouble> &UnsteadyAdvectionDiffusion::GetNormalVelocity()
-    {
+    {   
         // Number of trace (interface) points
+        int i;
         int nTracePts = GetTraceNpoints();
         
         // Auxiliary variable to compute the normal velocity
         Array<OneD, NekDouble> tmp(nTracePts);
-        
         m_traceVn = Array<OneD, NekDouble>(nTracePts, 0.0);
+        
         // Reset the normal velocity
         Vmath::Zero(nTracePts, m_traceVn, 1);
-
+        
         // Compute the normal velocity
-        for (int i = 0; i < m_velocity.num_elements(); ++i)
+        // For 3DHomogenoeus1D
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int n_planes = nPointsTot/nPointsTot_plane;
             
-            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, tmp, 1, m_traceVn, 1, 
-                         m_traceVn, 1);
+            Array<OneD, Array<OneD, NekDouble> >
+            advVel_plane(m_velocity.num_elements());
+            
+            for (i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                advVel_plane[i] = Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
+                Vmath::Vcopy(nPointsTot_plane,
+                             &m_velocity[i][m_planeNumber*nPointsTot_plane ], 1,
+                             &advVel_plane[i][0], 1);
+            }
+            
+            for (i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                m_fields[0]->GetPlane(m_planeNumber)->ExtractTracePhys(
+                                                        advVel_plane[i], tmp);
+                
+                Vmath::Vvtvp(nTracePts,
+                             m_traceNormals[i], 1,
+                             tmp, 1,
+                             m_traceVn, 1,
+                             m_traceVn, 1);
+            }
+            
+            if(m_planeNumber == n_planes - 1)
+            {
+                m_planeNumber = 0;
+            }
+            else
+            {
+                m_planeNumber = m_planeNumber + 1;
+            }
+            
         }
+        else  // For general case
+        {
+            for (i = 0; i < m_velocity.num_elements(); ++i)
+            {
+                m_fields[0]->ExtractTracePhys(m_velocity[i], tmp);
+                
+                Vmath::Vvtvp(nTracePts,
+                             m_traceNormals[i], 1,
+                             tmp, 1,
+                             m_traceVn, 1,
+                             m_traceVn, 1);
+            }
+        }
+        
         return m_traceVn;
     }
+
     
     /* @brief Compute the right-hand side for the unsteady linear advection 
      * diffusion problem.
@@ -337,16 +386,49 @@ namespace Nektar
         ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
                  "Dimension of flux array and velocity array do not match");
         
-        for (int i = 0; i < flux.num_elements(); ++i)
+        int i , j;
+        int nq = physfield[0].num_elements();
+        
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            for (int j = 0; j < flux[0].num_elements(); ++j)
+            Array<OneD, Array<OneD, NekDouble> >
+            advVel_plane(m_velocity.num_elements());
+            
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int n_planes = nPointsTot/nPointsTot_plane;
+            
+            for (int i = 0; i < m_velocity.num_elements(); ++i)
             {
-                Vmath::Vmul(GetNpoints(), physfield[i], 1, m_velocity[j], 1,
-                            flux[i][j], 1);
+                advVel_plane[i] = Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
+                
+                Vmath::Vcopy(nPointsTot_plane,
+                             &m_velocity[i][m_planeNumber*nPointsTot_plane], 1,
+                             &advVel_plane[i][0], 1);
+            }
+            
+            for (int i = 0; i < flux.num_elements(); ++i)
+            {
+                for (j = 0; j < flux[0].num_elements(); ++j)
+                {
+                    Vmath::Vmul(nq, physfield[i], 1, advVel_plane[j], 1,
+                                flux[i][j], 1);
+                }
+            }
+        }
+        else
+        {
+            for (i = 0; i < flux.num_elements(); ++i)
+            {
+                for (j = 0; j < flux[0].num_elements(); ++j)
+                {
+                    Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
+                                flux[i][j], 1);
+                }
             }
         }
     }
-    
+
     /**
      * @brief Return the flux vector for the diffusion part.
      *      

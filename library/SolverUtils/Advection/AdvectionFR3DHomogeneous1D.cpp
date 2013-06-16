@@ -147,8 +147,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            
-            int num;
             int i, j, k;
             int nVel = advVel.num_elements();
             int nPointsTot      = fields[0]->GetTotPoints();
@@ -169,7 +167,6 @@ namespace Nektar
             {
                 fluxvector[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
             }
-            
             
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
                 fluxvector_homo(num_planes);

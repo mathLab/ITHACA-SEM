@@ -152,17 +152,7 @@ namespace Nektar
                 fields[i]->MultiplyByElmtInvMass(tmp[i], tmp[i]);
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
-            
-             /*int num;
-             for (j = 0; j < nPts; ++j)
-             {
-             cout << "outarray" << "  "<<  j << "  "<< outarray[0][j]<<  "  " << endl;
-             }
-             cin >> num;*/
-             
         }
-        
-        
         
         void DiffusionLDG::v_NumFluxforScalar(
             const Array<OneD, MultiRegions::ExpListSharedPtr>        &fields,

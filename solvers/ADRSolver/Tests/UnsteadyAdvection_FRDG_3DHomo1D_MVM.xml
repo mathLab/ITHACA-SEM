@@ -58,7 +58,8 @@
             <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"           />
             <I PROPERTY="Projection"            VALUE="DisContinuous"               />
             <I PROPERTY="HOMOGENEOUS"           VALUE="1D"                          />
-            <I PROPERTY="AdvectionType"         VALUE="FRDG3DHomogeneous1D"       />
+            <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"                    />
+            <I PROPERTY="AdvectionType"         VALUE="FRDG3DHomogeneous1D"         />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"        />
             <I PROPERTY="UpwindType"            VALUE="Upwind"                      />
         </SOLVERINFO>

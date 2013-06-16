@@ -49,20 +49,21 @@
     </GEOMETRY>
 
     <EXPANSIONS>
-        <E COMPOSITE="C[0]" NUMMODES="10" FIELDS="u" TYPE="GLL_LAGRANGE" />
+        <E COMPOSITE="C[0]" NUMMODES="10" FIELDS="u" TYPE="MODIFIED" />
     </EXPANSIONS>
 
     <CONDITIONS>
 
         <SOLVERINFO>
-            <I PROPERTY="EQTYPE"                VALUE="UnsteadyDiffusion"           />
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvectionDiffusion"  />
             <I PROPERTY="Projection"            VALUE="DisContinuous"               />
             <I PROPERTY="HOMOGENEOUS"           VALUE="1D"                          />
-            <I PROPERTY="DiffusionAdvancement"  VALUE="Explicit"                    />
-            <I PROPERTY="DiffusionType"         VALUE="LDG3DHomogeneous1D"          />
+            <I PROPERTY="AdvectionType"         VALUE="FRHU3DHomogeneous1D"         />
+            <I PROPERTY="AdvectionAdvancement"  VALUE="Explicit"                    />
+            <I PROPERTY="DiffusionType"         VALUE="LFRHU3DHomogeneous1D"        />
+            <I PROPERTY="DiffusionnAdvancement"  VALUE="Explicit"                   />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"        />
             <I PROPERTY="UpwindType"            VALUE="Upwind"                      />
-            <I PROPERTY="USEFFT"                VALUE="FFTW"                        />
         </SOLVERINFO>
 
         <PARAMETERS>
@@ -87,20 +88,25 @@
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
                 <D VAR="u" USERDEFINEDTYPE="TimeDependent"
-                VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x))*sin(wavefreq*(y))*sin(2*wavefreq/LZ*(z))" />
+                VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(wavefreq*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
             </REGION>
         </BOUNDARYCONDITIONS>
         
+        <FUNCTION NAME="AdvectionVelocity">
+            <E VAR="Vx" VALUE="1.0" />
+            <E VAR="Vy" VALUE="1.0" />
+            <E VAR="Vz" VALUE="1.0" />
+        </FUNCTION>
+        
         <FUNCTION NAME="InitialConditions">
             <E VAR="u"
-            VALUE="sin(wavefreq*(x))*sin(wavefreq*(y))*sin(2*wavefreq/LZ*(z))" />
+            VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(wavefreq*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
         </FUNCTION>
         
         <FUNCTION NAME="ExactSolution">
             <E VAR="u"
-            VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x))*sin(wavefreq*(y))*sin(2*wavefreq/LZ*(z))" />
+            VALUE="exp(-2.0*wavefreq*wavefreq*t-4*wavefreq*wavefreq*t/LZ/LZ)*sin(wavefreq*(x-t))*sin(wavefreq*(y-t))*sin(2*wavefreq/LZ*(z-t))" />
         </FUNCTION>
-
 
     </CONDITIONS>
 

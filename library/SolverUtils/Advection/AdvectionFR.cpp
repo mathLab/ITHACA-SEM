@@ -77,9 +77,8 @@ namespace Nektar
          * @brief Initiliase AdvectionFR objects and store them before starting 
          * the time-stepping.
          * 
-         * This routine calls the virtual functions #v_SetupMetrics, 
-         * #v_SetupCFunctions and #v_SetupInterpolationMatrices to 
-         * initialise the objects needed by AdvectionFR. 
+         * This routine calls the virtual functions #v_SetupMetrics and 
+         * #v_SetupCFunctions to  initialise the objects needed by AdvectionFR. 
          * 
          * @param pSession  Pointer to session reader.
          * @param pFields   Pointer to fields.
@@ -90,7 +89,6 @@ namespace Nektar
         {
             v_SetupMetrics(pSession, pFields);
             v_SetupCFunctions(pSession, pFields);
-            v_SetupInterpolationMatrices(pSession, pFields);
             
             // Initialising the fluxvector
             int i, j;
@@ -786,67 +784,6 @@ namespace Nektar
         }
         
         /**
-         * @brief Setup the interpolation matrices to compute the solution 
-         * as well as the fluxes at the interfaces in case of Gauss points.
-         *
-         * @param pSession  Pointer to session reader.
-         * @param pFields   Pointer to fields.
-         *
-         * \todo Complete the implementation in a more efficient way.
-         */
-        void AdvectionFR::v_SetupInterpolationMatrices(
-            LibUtilities::SessionReaderSharedPtr        pSession,
-            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
-        {
-            LibUtilities::BasisSharedPtr Basis;
-            Basis = pFields[0]->GetExp(0)->GetBasis(0);
-            Array<OneD, LibUtilities::BasisSharedPtr> base;
-
-            if (Basis->GetPointsType() == LibUtilities::eGaussGaussLegendre)
-            {
-                int n;
-                int nElements   = pFields[0]->GetExpSize();            
-                int nDimensions = pFields[0]->GetCoordim(0);
-                
-                switch (nDimensions)
-                {
-                    case 1:
-                    {                                                      
-                        for (n = 0; n < nElements; ++n)
-                        {
-                            base    = pFields[0]->GetExp(n)->GetBase();
-                            Array<OneD, NekDouble> coords_m(3, 0.0);
-                            Array<OneD, NekDouble> coords_p(3, 0.0);
-                            coords_m[0] = -1.0;
-                            coords_p[0] =  1.0;
-                            
-                            m_Ixm = base[0]->GetI(coords_m);
-                            m_Ixp = base[0]->GetI(coords_p);
-                        }
-                        break;
-                    }
-                    case 2:
-                    {
-                        // Implemented via QuadExp::GetEdgeInterpVals
-                        
-                        break;
-                    }
-                    case 3:
-                    {
-                        ASSERTL0(false,"3DFR Gauss points not implemented yet");
-                        
-                        break;
-                    }
-                    default:
-                    {
-                        ASSERTL0(false,"Expansion dimension not recognised");
-                        break;
-                    }
-                }
-            }
-        }
-        
-        /**
          * @brief Compute the advection term at each time-step using the Flux
          * Reconstruction approach (FR).
          *
@@ -1068,66 +1005,32 @@ namespace Nektar
             int nElements       = fields[0]->GetExpSize();            
             int nSolutionPts    = fields[0]->GetTotPoints();
             
-            // Offsets for interface operations
-            int offsetStart, offsetEnd;
-
-            // Arrays to store the intercell numerical flux jumps
-            Array<OneD, Array<OneD, NekDouble> > JumpL(nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> > JumpR(nConvectiveFields);
-            
             // Arrays to store the derivatives of the correction flux
             Array<OneD, NekDouble> DCL(nSolutionPts/nElements, 0.0); 
             Array<OneD, NekDouble> DCR(nSolutionPts/nElements, 0.0);
             
-            // The dimension of each column of the jump arrays
-            for(i = 0; i < nConvectiveFields; ++i)
-            {
-                JumpL[i] = Array<OneD, NekDouble>(nElements);
-                JumpR[i] = Array<OneD, NekDouble>(nElements);
-            }
+            // Arrays to store the intercell numerical flux jumps
+            Array<OneD, NekDouble>  JumpL(nElements);
+            Array<OneD, NekDouble>  JumpR(nElements);
             
-            // Interpolation routine for Gauss points and fluxJumps computation
-            if (Basis->GetPointsType() == LibUtilities::eGaussGaussLegendre)
+            for (n = 0; n < nElements; ++n)
             {
-                Array<OneD, NekDouble> interpolatedFlux_m(nElements);
-                Array<OneD, NekDouble> interpolatedFlux_p(nElements);
+                nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
+                phys_offset = fields[0]->GetPhys_Offset(n);
                 
-
-                for (n = 0; n < nElements; ++n)
-                {
-                    nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
-                        
-                    Array<OneD, NekDouble> physvals(nLocalSolutionPts, 0.0);
-                    physvals = fluxX1 + n*nLocalSolutionPts;
-                        
-                    interpolatedFlux_m[n] = Blas::Ddot(
-                                                    nLocalSolutionPts,
-                                                    m_Ixm->GetPtr(), 1,
-                                                    physvals, 1);
-                        
-                    interpolatedFlux_p[n] = Blas::Ddot(
-                                                    nLocalSolutionPts, 
-                                                    m_Ixp->GetPtr(), 1, 
-                                                    physvals, 1);   
-                        
-                    JumpL[0][n] = numericalFlux[n]   - interpolatedFlux_m[n];
-                    JumpR[0][n] = numericalFlux[n+1] - interpolatedFlux_p[n];
-                }
-            }
-            
-            // FluxJumps computation without interpolation                  
-            else
-            {
-                for (n = 0; n < nElements; ++n)
-                {
-                    nLocalSolutionPts = fields[0]->GetExp(n)->GetTotPoints();
-                    
-                    offsetStart = fields[0]->GetPhys_Offset(n);
-                    offsetEnd   = offsetStart + nLocalSolutionPts - 1;
-                    
-                    JumpL[0][n] = numericalFlux[n]   - fluxX1[offsetStart];
-                    JumpR[0][n] = numericalFlux[n+1] - fluxX1[offsetEnd];
-                }
+                Array<OneD, NekDouble> tmparrayX1(nLocalSolutionPts, 0.0);
+                NekDouble tmpFluxVertex = 0;
+                Vmath::Vcopy(nLocalSolutionPts,
+                             &fluxX1[phys_offset], 1,
+                             &tmparrayX1[0], 1);
+                
+                fields[0]->GetExp(n)->GetVertexPhysVals(0, tmparrayX1,
+                                                        tmpFluxVertex);
+                JumpL[n] =  numericalFlux[n] - tmpFluxVertex;
+                
+                fields[0]->GetExp(n)->GetVertexPhysVals(1, tmparrayX1,
+                                                        tmpFluxVertex);
+                JumpR[n] =  numericalFlux[n+1] - tmpFluxVertex;
             }
             
             for (n = 0; n < nElements; ++n)
@@ -1136,11 +1039,11 @@ namespace Nektar
                 phys_offset       = fields[0]->GetPhys_Offset(n);
 
                 // Left jump multiplied by left derivative of C function
-                Vmath::Smul(nLocalSolutionPts, JumpL[0][n], &m_dGL_xi1[n][0], 1, 
+                Vmath::Smul(nLocalSolutionPts, JumpL[n], &m_dGL_xi1[n][0], 1,
                             &DCL[0], 1);
             
                 // Right jump multiplied by right derivative of C function
-                Vmath::Smul(nLocalSolutionPts, JumpR[0][n], &m_dGR_xi1[n][0], 1, 
+                Vmath::Smul(nLocalSolutionPts, JumpR[n], &m_dGR_xi1[n][0], 1,
                             &DCR[0], 1);
             
                 // Assembling divergence of the correction flux
@@ -1338,7 +1241,7 @@ namespace Nektar
         
         /**
          * @brief Compute the divergence of the corrective flux for 2D problems
-         *        where POINTSTYPE="GaussLobattoLegendre"
+         *        where POINTSTYPE="GaussGaussLegendre"
          *
          * @param nConvectiveFields   Number of fields.
          * @param fields              Pointer to fields.

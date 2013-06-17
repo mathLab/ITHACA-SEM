@@ -139,7 +139,7 @@ namespace Nektar
             ePreconR,
             ePreconRT,
             ePreconLinearSpace,
-            eInterpGaussEdge,
+            eInterpGauss,
             eGaussDG,
             SIZE_MatrixType
         };
@@ -185,7 +185,7 @@ namespace Nektar
             "PreconR",
             "PreconRT",
             "PreconLinearSpace",
-            "InterpGaussEdge",
+            "InterpGauss",
             "GaussDG"
         };
 
@@ -227,6 +227,7 @@ namespace Nektar
             eFactorTime,
             eFactorSVVCutoffRatio,
             eFactorSVVDiffCoeff,
+            eFactorGaussVertex,
             eFactorGaussEdge
         };
 
@@ -236,6 +237,7 @@ namespace Nektar
             "FactorTime",
             "FactorSVVCutoffRatio",
             "FactorSVVDiffCoeff",
+            "FactorGaussVertex",
             "FactorGaussEdge"
         };
         typedef std::map<ConstFactorType, NekDouble> ConstFactorMap;

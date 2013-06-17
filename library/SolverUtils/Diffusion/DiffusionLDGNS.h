@@ -66,7 +66,8 @@ namespace Nektar
             NekDouble                            m_thermalConductivity;
             NekDouble                            m_rhoInf;
             NekDouble                            m_pInf;
-
+            
+            int                                  m_spaceDim;
             
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,

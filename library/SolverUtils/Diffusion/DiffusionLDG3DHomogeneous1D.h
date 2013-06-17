@@ -55,9 +55,6 @@ namespace Nektar
         protected:
             DiffusionLDG3DHomogeneous1D ();
             
-            Array<OneD, Array<OneD, NekDouble> >         m_traceNormals;
-            LibUtilities::SessionReaderSharedPtr         m_session;
-            
             SolverUtils::DiffusionSharedPtr              m_planeDiff;
             LibUtilities::TranspositionSharedPtr         m_transpositionLDG;
             

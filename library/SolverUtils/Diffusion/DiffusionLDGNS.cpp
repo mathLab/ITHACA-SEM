@@ -68,10 +68,16 @@ namespace Nektar
             int i;
             int nDim = pFields[0]->GetCoordim(0);
             int nTracePts = pFields[0]->GetTrace()->GetTotPoints();
+            
+            m_spaceDim = nDim;
+            if (pSession->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                m_spaceDim = 3;
+            }
 
-            m_traceVel = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for(i = 0; i < nDim; ++i)
+            m_traceVel = Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
+            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
+            for(i = 0; i < m_spaceDim; ++i)
             {
                 m_traceVel[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
                 m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
@@ -97,7 +103,7 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
-        {   
+        {
             int i, j;
             int nDim      = fields[0]->GetCoordim(0);
             int nScalars  = inarray.num_elements();
@@ -109,13 +115,13 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > tmp2(nConvectiveFields);
             
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                                                    numericalFluxO1(nDim);
+                                                    numericalFluxO1(m_spaceDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                                                    derivativesO1(nDim);
+                                                    derivativesO1(m_spaceDim);
             
-            Array<OneD, Array<OneD, NekDouble> > fluxvector(nDim);            
+            Array<OneD, Array<OneD, NekDouble> > fluxvector(m_spaceDim);
             
-            for (j = 0; j < nDim; ++j)
+            for (j = 0; j < m_spaceDim; ++j)
             {
                 numericalFluxO1[j] = Array<OneD, Array<OneD, NekDouble> >(
                                                                     nScalars);
@@ -147,14 +153,14 @@ namespace Nektar
                     fields[i]->MultiplyByElmtInvMass(tmp1, tmp1);
                     fields[i]->BwdTrans             (tmp1, derivativesO1[j][i]);
                 }
-            }            
+            }
             
             // Initialisation viscous tensor
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > viscousTensor(
-                                                                        nDim);
+                                                                    m_spaceDim);
             Array<OneD, Array<OneD, NekDouble> > viscousFlux(nConvectiveFields);
             
-            for (j = 0; j < nDim; ++j)
+            for (j = 0; j < m_spaceDim; ++j)
             {
                 viscousTensor[j] = Array<OneD, Array<OneD, NekDouble> >(
                                                                     nScalars+1);
@@ -169,7 +175,7 @@ namespace Nektar
                 viscousFlux[i] = Array<OneD, NekDouble>(nPts, 0.0);
             }
             
-            m_fluxVectorNS(inarray, derivativesO1, viscousTensor); 
+            m_fluxVectorNS(inarray, derivativesO1, viscousTensor);
             
              // Compute u from q_{\eta} and q_{\xi}
              // Obtain numerical fluxes
@@ -245,7 +251,7 @@ namespace Nektar
             }
             
             // Splitting the numerical flux into the dimensions
-            for (j = 0; j < nDim; ++j)
+            for (j = 0; j < m_spaceDim; ++j)
             {
                 for (i = 0; i < nScalars; ++i)
                 {

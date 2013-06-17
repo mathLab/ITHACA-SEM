@@ -83,7 +83,7 @@ namespace Nektar
             /*
             for (j = 0; j < nPointsTot; ++j)
             {
-                cout << "inarray" << "  "<<  j << "  "<< inarray[0][j]<<  "  " << endl;
+                cout << "inarray" << "  "<<  j << "  "<< inarray[1][j]<<  "  " << endl;
             }
 
             cin >> num;
@@ -166,7 +166,7 @@ namespace Nektar
             /*
             for (j = 0; j < nPointsTot; ++j)
             {
-                cout << "outarray" << "  "<<  j << "  "<< outarray[0][j]<<  "  " << endl;
+                cout << "outarrayAdv" << "  "<<  j << "  "<< outarray[spaceDim + 1][j]<<  "  " << endl;
             }
             cin >> num;
             */

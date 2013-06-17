@@ -1273,7 +1273,7 @@ namespace Nektar
     {
         int i, j, k;
         int nvariables = m_fields.num_elements();
-        int nPts       = m_fields[0]->GetTotPoints();
+        int nPts       = physfield[0].num_elements();
              
         // Stokes hypotesis
         NekDouble lambda = -0.66666;
@@ -1289,9 +1289,40 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
         
         // Reorder storage to list time-integrated fields first
-        for (i = 0; i < nvariables; ++i)
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            fields[i] = m_fields[i]->UpdatePhys();
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int n_planes = nPointsTot/nPointsTot_plane;
+            
+            Array<OneD, Array<OneD, NekDouble> > fields_temp(nvariables);
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                fields[i] =  Array<OneD, NekDouble>(nPts, 0.0);
+                fields_temp[i] = m_fields[i]->UpdatePhys();   
+            
+                Vmath::Vcopy(nPts,
+                            &fields_temp[i][m_planeNumber*nPointsTot_plane], 1,
+                            &fields[i][0], 1);
+            }
+            
+            if(m_planeNumber == n_planes - 1)
+            {
+                m_planeNumber = 0;
+            }
+            else
+            {
+                m_planeNumber = m_planeNumber + 1;
+            }
+
+        }
+        else
+        {
+            for (i = 0; i < nvariables; ++i)
+            {
+                fields[i] = m_fields[i]->UpdatePhys();
+            }
         }
         
         // Thermodynamic related quantities
@@ -1326,7 +1357,7 @@ namespace Nektar
         Vmath::Smul(nPts, lambda, &divVel[0], 1, &divVel[0], 1);
         Vmath::Vmul(nPts, &mu[0], 1, &divVel[0], 1, &divVel[0], 1);
     
-        // Digonal terms of viscous stress tensor (Sxx, Syy, Szz)
+        // Diagonal terms of viscous stress tensor (Sxx, Syy, Szz)
         // Sjj = 2 * mu * du_j/dx_j - (2 / 3) * mu * sum_j(du_j/dx_j)
         for (j = 0; j < m_spacedim; ++j)
         {
@@ -1400,7 +1431,7 @@ namespace Nektar
             Vmath::Vmul(nPts, &physfield[0][0], 1, &Sgg[0][0], 1, &STx[0], 1);
             
             // k * dT/dx
-            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[0][2][0], 1, 
+            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[0][1][0], 1,
                         &tmp1[0], 1);
             
             // STx = u * Sxx + (K / mu) * dT/dx
@@ -1461,11 +1492,11 @@ namespace Nektar
             // v * Sxy
             Vmath::Vmul(nPts, &physfield[1][0], 1, &Sxy[0], 1, &tmp1[0], 1);
             
-            // v * Sxy
+            // v * Sxz
             Vmath::Vmul(nPts, &physfield[2][0], 1, &Sxz[0], 1, &tmp2[0], 1);
             
             // k * dT/dx
-            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[0][2][0], 1, 
+            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[0][3][0], 1,
                         &tmp3[0], 1);
             
             // STx = u * Sxx + v * Sxy + w * Sxz + (K / mu) * dT/dx
@@ -1490,7 +1521,7 @@ namespace Nektar
             Vmath::Vmul(nPts, &physfield[2][0], 1, &Syz[0], 1, &tmp2[0], 1);
                         
             // k * dT/dy
-            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[1][2][0], 1, 
+            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[1][3][0], 1,
                         &tmp3[0], 1);
             
             // STy = v * Syy + u * Sxy + w * Syz + K * dT/dy
@@ -1515,7 +1546,7 @@ namespace Nektar
             Vmath::Vmul(nPts, &physfield[1][0], 1, &Syz[0], 1, &tmp2[0], 1);
                         
             // k * dT/dz
-            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[2][2][0], 1, 
+            Vmath::Smul(nPts, m_thermalConductivity, &derivativesO1[2][3][0], 1,
                         &tmp3[0], 1);
             
             // STz = w * Szz + u * Sxz + v * Syz + K * dT/dz
@@ -1618,7 +1649,7 @@ namespace Nektar
     {
         int i, j, k;
         int nvariables = m_fields.num_elements();
-        int nPts       = m_fields[0]->GetTotPoints();
+        int nPts       = physfield[0].num_elements();
         
         int variables_phys = physfield.num_elements();
             
@@ -1626,7 +1657,15 @@ namespace Nektar
         NekDouble OneDptscale = 2;
             
         // Get number of points to dealias a cubic non-linearity
-        nPts = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+        {
+            nPts = m_fields[0]->GetPlane(0)->Get1DScaledTotPoints(OneDptscale);
+        }
+        else
+        {
+            nPts = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
+        }
+        
         int nvariables_aux = derivativesO1[0].num_elements();
             
         Array<OneD, Array<OneD, NekDouble> > physfield_interp(variables_phys);
@@ -1660,17 +1699,59 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > fields_interp(nvariables);
             
         // Reorder storage to list time-integrated fields first
-        for (i = 0; i < nvariables; ++i)
+        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            fields[i] = m_fields[i]->UpdatePhys();
-            fields_interp[i] = Array<OneD, NekDouble> (nPts);
-        }
+            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int n_planes = nPointsTot/nPointsTot_plane;
             
+            Array<OneD, Array<OneD, NekDouble> > fields_temp(nvariables);
+            
+            
+            for (i = 0; i < nvariables; ++i)
+            {
+                fields[i] =  Array<OneD, NekDouble>(nPts, 0.0);
+                fields_temp[i] = m_fields[i]->UpdatePhys();
+                
+                Vmath::Vcopy(nPts,
+                             &fields_temp[i][m_planeNumber*nPointsTot_plane], 1,
+                             &fields[i][0], 1);
+                
+                fields_interp[i] = Array<OneD, NekDouble> (nPts);
+                
+            }
+            
+            if(m_planeNumber == n_planes - 1)
+            {
+                m_planeNumber = 0;
+            }
+            else
+            {
+                m_planeNumber = m_planeNumber + 1;
+            }
+        }
+        else
+        {
+            for (i = 0; i < nvariables; ++i)
+            {
+                fields[i] = m_fields[i]->UpdatePhys();
+                fields_interp[i] = Array<OneD, NekDouble> (nPts);
+            }
+        }
+        
         for (i = 0; i < nvariables; ++i)
         {
             // Interpolation to higher space
-            m_fields[0]->PhysInterp1DScaled(OneDptscale,fields[i],
+            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+            {
+                m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
+                                        OneDptscale,fields[i], fields_interp[i]);
+            }
+            else
+            {
+                m_fields[0]->PhysInterp1DScaled(OneDptscale,fields[i],
                                             fields_interp[i] );
+            }
         }
             
         for (i = 0; i < variables_phys; ++i)
@@ -1678,8 +1759,16 @@ namespace Nektar
             physfield_interp[i] = Array<OneD, NekDouble> (nPts);
                 
             // Interpolation to higher space
-            m_fields[0]->PhysInterp1DScaled(OneDptscale, physfield[i],
+            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+            {
+                m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
+                                OneDptscale, physfield[i], physfield_interp[i]);
+            }
+            else
+            {
+                m_fields[0]->PhysInterp1DScaled(OneDptscale, physfield[i],
                                             physfield_interp[i]);
+            }
         }
             
         for (i = 0; i < m_spacedim; ++i)
@@ -1689,9 +1778,18 @@ namespace Nektar
             for (j = 0; j < nvariables_aux; ++j)
             {
                 derivativesO1_interp[i][j] = Array<OneD, NekDouble>(nPts);
-                m_fields[0]->PhysInterp1DScaled(OneDptscale, 
+                if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+                {
+                    m_fields[0]->GetPlane(0)->PhysInterp1DScaled(OneDptscale,
+                                                    derivativesO1[i][j],
+                                                    derivativesO1_interp[i][j]);
+                }
+                else
+                {
+                    m_fields[0]->PhysInterp1DScaled(OneDptscale,
                                                 derivativesO1[i][j], 
                                                 derivativesO1_interp[i][j]);
+                }
             }
         }
             
@@ -1803,7 +1901,7 @@ namespace Nektar
                 
             // k * dT/dx
             Vmath::Smul(nPts, m_thermalConductivity,
-                        &derivativesO1_interp[0][2][0], 1, &tmp1[0], 1);
+                        &derivativesO1_interp[0][1][0], 1, &tmp1[0], 1);
                 
             // STx = u * Sxx + (K / mu) * dT/dx
             Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
@@ -1875,7 +1973,7 @@ namespace Nektar
                 
             // k * dT/dx
             Vmath::Smul(nPts, m_thermalConductivity,
-                        &derivativesO1_interp[0][2][0], 1, &tmp3[0], 1);
+                        &derivativesO1_interp[0][3][0], 1, &tmp3[0], 1);
                 
             // STx = u * Sxx + v * Sxy + w * Sxz + (K / mu) * dT/dx
             Vmath::Vadd(nPts, &STx[0], 1, &tmp1[0], 1, &STx[0], 1);
@@ -1903,7 +2001,7 @@ namespace Nektar
                 
             // k * dT/dy
             Vmath::Smul(nPts, m_thermalConductivity,
-                        &derivativesO1_interp[1][2][0], 1, &tmp3[0], 1);
+                        &derivativesO1_interp[1][3][0], 1, &tmp3[0], 1);
                 
             // STy = v * Syy + u * Sxy + w * Syz + K * dT/dy
             Vmath::Vadd(nPts, &STy[0], 1, &tmp1[0], 1, &STy[0], 1);
@@ -1931,7 +2029,7 @@ namespace Nektar
                 
             // k * dT/dz
             Vmath::Smul(nPts, m_thermalConductivity,
-                        &derivativesO1_interp[2][2][0], 1, &tmp3[0], 1);
+                        &derivativesO1_interp[2][3][0], 1, &tmp3[0], 1);
                 
             // STz = w * Szz + u * Sxz + v * Syz + K * dT/dz
             Vmath::Vadd(nPts, &STz[0], 1, &tmp1[0], 1, &STz[0], 1);
@@ -1943,7 +2041,8 @@ namespace Nektar
         {
             case 1:
             {
-                int nq = m_fields[0]->GetTotPoints();
+                
+                int nq = physfield[0].num_elements();
                 // f_11v = f_rho = 0
                 Vmath::Zero(nq, &viscousTensor_interp[0][0][0], 1);
                     
@@ -1956,7 +2055,7 @@ namespace Nektar
             }
             case 2:
             {
-                int nq = m_fields[0]->GetTotPoints();
+                int nq = physfield[0].num_elements();
                 // f_11v = f_rho1 = 0
                 Vmath::Zero(nq, &viscousTensor_interp[0][0][0], 1);
                 // f_12v = f_rho2 = 0
@@ -1980,7 +2079,7 @@ namespace Nektar
             }
             case 3:
             {
-                int nq = m_fields[0]->GetTotPoints();
+                int nq = physfield[0].num_elements();
                 // f_11v = f_rho1 = 0
                 Vmath::Zero(nq, &viscousTensor_interp[0][0][0], 1);
                 // f_12v = f_rho2 = 0
@@ -2027,9 +2126,20 @@ namespace Nektar
         {
             for (j = 1; j < nvariables; ++j)
             {
-                m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale, 
+                if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+                {
+                    m_fields[0]->GetPlane(0)->PhysGalerkinProjection1DScaled(
+                                            OneDptscale,
+                                            viscousTensor_interp[i][j],
+                                            viscousTensor[i][j]);
+
+                }
+                else
+                {
+                    m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
                                                     viscousTensor_interp[i][j],
                                                     viscousTensor[i][j]);
+                }
             }
         }
     }

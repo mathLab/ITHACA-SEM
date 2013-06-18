@@ -105,9 +105,15 @@ namespace Nektar
             int nSolutionPts = pFields[0]->GetTotPoints();
             int nTracePts    = pFields[0]->GetTrace()->GetTotPoints();
             
-            m_traceVel = Array<OneD, Array<OneD, NekDouble> >(nDim);
+            m_spaceDim = nDim;
+            if (pSession->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                m_spaceDim = 3;
+            }
+
+            m_traceVel = Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
             
-            for (i = 0; i < nDim; ++i)
+            for (i = 0; i < m_spaceDim; ++i)
             {
                 m_traceVel[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
             }
@@ -135,12 +141,13 @@ namespace Nektar
             m_divFD = Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
             m_divFC = Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
             
-            m_D1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  (nDim);
-            m_viscTensor = Array<OneD, Array<OneD, Array<OneD, NekDouble> > > (
-                                                                        nDim);
+            m_D1 = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                                (m_spaceDim);
+            m_viscTensor = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                                (m_spaceDim);
             for (i = 0; i < nScalars; ++i)
             {
-                m_IF1[i]  = Array<OneD, Array<OneD, NekDouble> >(nDim);
+                m_IF1[i]  = Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
                 m_DU1[i]  = Array<OneD, Array<OneD, NekDouble> >(nDim);
                 m_DFC1[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
                 m_tmp1[i] = Array<OneD, Array<OneD, NekDouble> >(nDim);
@@ -173,7 +180,7 @@ namespace Nektar
                 }
             }
             
-            for (i = 0; i < nDim; ++i)
+            for (i = 0; i < m_spaceDim; ++i)
             {
                 m_D1[i] = Array<OneD, Array<OneD, NekDouble> >(nScalars);
 
@@ -183,7 +190,7 @@ namespace Nektar
                 }
             }
             
-            for (i = 0; i < nDim; ++i)
+            for (i = 0; i < m_spaceDim; ++i)
             {
                 m_viscTensor[i] = Array<OneD, Array<OneD, NekDouble> >(nScalars+1);
                 
@@ -226,7 +233,7 @@ namespace Nektar
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDimensions);
             for (i = 0; i < nDimensions; ++i)
             {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts, 0.0);
             }
             pFields[0]->GetTrace()->GetNormals(m_traceNormals);
             

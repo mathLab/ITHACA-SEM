@@ -79,8 +79,8 @@ namespace Nektar
         protected:
             DiffusionLFRNS3DHomogeneous1D(std::string diffType);
             
-            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
-            LibUtilities::SessionReaderSharedPtr m_session;
+            SolverUtils::DiffusionSharedPtr              m_planeDiff;
+            LibUtilities::TranspositionSharedPtr         m_transpositionLDGNS;
             
             std::string m_diffType;
             

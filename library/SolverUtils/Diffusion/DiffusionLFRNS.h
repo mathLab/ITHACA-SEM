@@ -69,6 +69,9 @@ namespace Nektar
             DNekMatSharedPtr                     m_Ixm;
             DNekMatSharedPtr                     m_Ixp;
             
+            int                                  m_spaceDim;
+
+            
         protected:
             DiffusionLFRNS(std::string diffType);
             

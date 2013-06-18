@@ -784,8 +784,6 @@ namespace Nektar
                 int faceNumber = loc_exp->GetLeftAdjacentElementFace();
                 
                 // Get the number of points and normals for this expansion.
-                cout << "FACE NUMBER = " << faceNumber << endl;
-                ASSERTL0(loc_elmt, "wut");
                 locnormals = loc_elmt->GetFaceNormal(faceNumber);
 
                 if (e_npoints != locnormals[0].num_elements())

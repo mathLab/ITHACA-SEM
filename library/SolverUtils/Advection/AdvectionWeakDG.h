@@ -52,18 +52,25 @@ namespace Nektar
             
             static std::string type;
             
+        protected:
+            AdvectionWeakDG();
+            
             virtual void v_Advect(
-                const int                                          nConvective,
+                const int                                         nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
             
-        protected:
-            AdvectionWeakDG();
+            virtual void v_FluxVec(
+                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
+            {
+                fluxvector = m_fluxvector;
+            };
+
             
-            Array<OneD, Array<OneD, NekDouble> > m_traceNormals;
-            
+            Array<OneD, Array<OneD, NekDouble> >               m_traceNormals;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fluxvector;
             
         };
     }

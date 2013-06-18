@@ -64,8 +64,8 @@ namespace Nektar
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
 
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
-                fluxvector(nConvectiveFields);
+            m_fluxvector = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                            (nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
 
             ASSERTL1(m_riemann, 
@@ -73,10 +73,10 @@ namespace Nektar
 
             for (i = 0; i < nConvectiveFields; ++i)
             {
-                fluxvector[i] = Array<OneD, Array<OneD, NekDouble> >(spaceDim);
+                m_fluxvector[i] = Array<OneD, Array<OneD, NekDouble> >(spaceDim);
                 for(j = 0; j < spaceDim ; ++j)
                 {
-                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                    m_fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
                 }
             }
             
@@ -88,22 +88,22 @@ namespace Nektar
 
             cin >> num;
             */
-             
-            m_fluxVector(inarray, fluxvector);
+            
+            m_fluxVector(inarray, m_fluxvector);
             
             /*
             for (j = 0; j < nPointsTot; ++j)
             {
-                cout << "fluxvector0" << "  "<<  j << "  "<< fluxvector[0][1][j]<<  "  " << endl;
+                cout << "fluxvector0" << "  "<<  j << "  "<< m_fluxvector[0][1][j]<<  "  " << endl;
             }
 
             cin >> num;
             
             for (j = 0; j < nPointsTot; ++j)
             {
-                cout << "fluxvector1" << "  "<<  j << "  "<< fluxvector[0][0][j]<<  "  " << endl;
+                cout << "fluxvector1" << "  "<<  j << "  "<< m_fluxvector[0][0][j]<<  "  " << endl;
             }
-            */ 
+            */
             
             // Get the advection part (without numerical flux)
             for(i = 0; i < nConvectiveFields; ++i)
@@ -112,7 +112,7 @@ namespace Nektar
                 
                 for (j = 0; j < nExpDim; ++j)
                 {
-                    fields[i]->IProductWRTDerivBase(j, fluxvector[i][j], 
+                    fields[i]->IProductWRTDerivBase(j, m_fluxvector[i][j],
                                                        outarray[i]);
                     Vmath::Vadd(nCoeffs, outarray[i], 1, tmp[i], 1, tmp[i], 1);
                 }

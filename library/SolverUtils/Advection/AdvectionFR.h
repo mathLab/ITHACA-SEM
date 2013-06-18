@@ -70,7 +70,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > m_dGR_xi3;
             DNekMatSharedPtr                     m_Ixm;
             DNekMatSharedPtr                     m_Ixp;
-
+            
         protected:
             AdvectionFR(std::string advType);
             
@@ -82,6 +82,20 @@ namespace Nektar
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+            
+            virtual void v_Advect(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, Array<OneD, NekDouble> >        &advVel,
+                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
+            
+            virtual void v_FluxVec(
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
+            {
+                fluxvector = m_fluxvector;
+            };
+
             
             virtual void v_SetupMetrics(
                 LibUtilities::SessionReaderSharedPtr              pSession,
@@ -95,12 +109,6 @@ namespace Nektar
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
             
-            virtual void v_Advect(
-                const int nConvectiveFields,
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &advVel,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);            
             
             virtual void v_DivCFlux_1D(
                 const int nConvectiveFields,

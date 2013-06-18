@@ -63,5 +63,12 @@ namespace Nektar
         {
             v_Advect(nConvectiveFields, fields, advVel, inarray, outarray);
         }
+        
+       void Advection::FluxVec(
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
+        {
+            v_FluxVec(fluxvector);
+        }
+
     }
 }

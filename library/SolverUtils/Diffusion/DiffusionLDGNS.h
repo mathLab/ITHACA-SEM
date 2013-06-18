@@ -67,6 +67,8 @@ namespace Nektar
             NekDouble                            m_rhoInf;
             NekDouble                            m_pInf;
             
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_viscTensor;
+            
             int                                  m_spaceDim;
             
             virtual void v_InitObject(
@@ -102,6 +104,12 @@ namespace Nektar
                 const int                                          dir,
                 const Array<OneD, const NekDouble>                &qfield,
                       Array<OneD,       NekDouble>                &penaltyflux);
+            
+            virtual void v_FluxVec(
+                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
+            {
+                //fluxvector = m_ViscosityType;
+            };
         }; 
     }
 }

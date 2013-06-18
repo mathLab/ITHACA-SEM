@@ -154,7 +154,7 @@ namespace Nektar
                                  &outarray[j][i * nPointsTot_plane], 1);
                 }
                 
-                m_fluxVector(inarray_plane[i], fluxvector_homo[i]);
+                m_planeAdv->FluxVec(fluxvector_homo[i]);
                 
                 for ( j = 0; j < nConvectiveFields; ++j)
                 {

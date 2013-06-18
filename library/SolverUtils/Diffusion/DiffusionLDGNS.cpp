@@ -156,17 +156,17 @@ namespace Nektar
             }
             
             // Initialisation viscous tensor
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > viscousTensor(
-                                                                    m_spaceDim);
+            m_viscTensor = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                                   (m_spaceDim);
             Array<OneD, Array<OneD, NekDouble> > viscousFlux(nConvectiveFields);
             
             for (j = 0; j < m_spaceDim; ++j)
             {
-                viscousTensor[j] = Array<OneD, Array<OneD, NekDouble> >(
+                m_viscTensor[j] = Array<OneD, Array<OneD, NekDouble> >(
                                                                     nScalars+1);
                 for (i = 0; i < nScalars+1; ++i)
                 {
-                    viscousTensor[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
+                    m_viscTensor[j][i] = Array<OneD, NekDouble>(nPts, 0.0);
                 }
             }
             
@@ -175,11 +175,11 @@ namespace Nektar
                 viscousFlux[i] = Array<OneD, NekDouble>(nPts, 0.0);
             }
             
-            m_fluxVectorNS(inarray, derivativesO1, viscousTensor);
+            m_fluxVectorNS(inarray, derivativesO1, m_viscTensor);
             
              // Compute u from q_{\eta} and q_{\xi}
              // Obtain numerical fluxes
-             v_NumericalFluxO2(fields, inarray, viscousTensor, viscousFlux);
+             v_NumericalFluxO2(fields, inarray, m_viscTensor, viscousFlux);
              
              for (i = 0; i < nConvectiveFields; ++i)
              {
@@ -189,7 +189,7 @@ namespace Nektar
                  {
                      //Vmath::Vcopy(nPts, qfield[j][i], 1, fluxvector[j], 1);
              
-                     fields[i]->IProductWRTDerivBase(j, viscousTensor[j][i], 
+                     fields[i]->IProductWRTDerivBase(j, m_viscTensor[j][i],
                                                      tmp1);
              
                      Vmath::Vadd(nCoeffs, tmp1, 1, tmp2[i], 1, tmp2[i], 1);

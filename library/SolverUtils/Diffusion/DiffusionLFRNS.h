@@ -69,9 +69,6 @@ namespace Nektar
             DNekMatSharedPtr                     m_Ixm;
             DNekMatSharedPtr                     m_Ixp;
             
-            int                                  m_spaceDim;
-
-            
         protected:
             DiffusionLFRNS(std::string diffType);
             
@@ -87,6 +84,7 @@ namespace Nektar
             NekDouble                            m_rhoInf;
             NekDouble                            m_pInf;
             
+            
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_IF1;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DU1;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_DFC1;
@@ -101,6 +99,8 @@ namespace Nektar
             
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_tmp1;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_tmp2;
+            
+            int                                  m_spaceDim;
             
             std::string m_diffType;
             
@@ -172,6 +172,14 @@ namespace Nektar
                 const Array<OneD, const NekDouble>               &fluxX2, 
                 const Array<OneD, const NekDouble>               &numericalFlux,
                       Array<OneD,       NekDouble>               &divCFlux);
+            
+            virtual void v_FluxVec(
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
+            {
+                fluxvector = m_viscTensor;
+            };
+            
+            
         }; 
     }
 }

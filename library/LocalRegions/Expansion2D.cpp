@@ -206,12 +206,12 @@ namespace Nektar
             }
             else
             {
-                EdgeExp->IProductWRTBase(Fn,EdgeExp->UpdateCoeffs());
+                EdgeExp->IProductWRTBase(Fn, EdgeExp->UpdateCoeffs());
             }
 
             if (m_requireNeg[edge])
             {
-                Vmath::Neg(order_e, Fn, 1);
+                Vmath::Neg(order_e, EdgeExp->UpdateCoeffs(), 1);
             }
             
             // Implementation for all the basis except Gauss points

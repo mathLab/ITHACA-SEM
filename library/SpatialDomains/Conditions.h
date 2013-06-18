@@ -304,7 +304,7 @@ namespace Nektar
         typedef std::map<int, Composite> BoundaryRegion;
         typedef boost::shared_ptr<BoundaryRegion> BoundaryRegionShPtr;
         typedef boost::shared_ptr<const BoundaryRegion> ConstBoundaryRegionShPtr;
-        typedef std::vector<BoundaryRegionShPtr> BoundaryRegionCollection;
+        typedef std::map<int, BoundaryRegionShPtr> BoundaryRegionCollection;
 
         typedef boost::shared_ptr<BoundaryConditionBase> BoundaryConditionShPtr;
         typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;

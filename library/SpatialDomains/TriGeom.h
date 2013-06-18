@@ -95,12 +95,17 @@ namespace Nektar
                         const Array<OneD, const NekDouble> &Lcoord);
 
                 /// Get the orientation of face1.
-                SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
-                            GetFaceOrientation(const TriGeom &face1,
-                                               const TriGeom &face2);
-
                 SPATIAL_DOMAINS_EXPORT static const int kNedges = 3;
                 SPATIAL_DOMAINS_EXPORT static const int kNverts = 3;
+
+                SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
+                    GetFaceOrientation(
+                        const TriGeom               &face1,
+                        const TriGeom               &face2);
+                SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
+                    GetFaceOrientation(
+                        const VertexComponentVector &face1,
+                        const VertexComponentVector &face2);
 
             protected:
                 VertexComponentVector           m_verts;

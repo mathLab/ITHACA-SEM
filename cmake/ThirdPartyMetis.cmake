@@ -4,12 +4,18 @@ SET(THIRDPARTY_BUILD_METIS ON CACHE BOOL
 IF (THIRDPARTY_BUILD_METIS)
     INCLUDE(ExternalProject)
     EXTERNALPROJECT_ADD(
-        modmetis-5.0.2
+        modmetis-5.1.0
         PREFIX ${TPSRC}
-        URL ${TPURL}/modmetis-5.0.2.tar.bz2
-        URL_MD5 "ffbdc6a50283934389a0b3b0c32b62c0"
+        URL ${TPURL}/modmetis-5.1.0.tar.bz2
+        URL_MD5 "8f8313a768e4611d1748d10f88f3d702"
         DOWNLOAD_DIR ${TPSRC}
-        CONFIGURE_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist -DCMAKE_C_FLAGS:STRING=-fPIC -DGKLIB_PATH:PATH=${TPSRC}/src/modmetis-5.0.2/GKlib ${TPSRC}/src/modmetis-5.0.2
+        CONFIGURE_COMMAND ${CMAKE_COMMAND}
+            -DCMAKE_C_COMPILER:FILEPATH=${CMAKE_C_COMPILER}
+            -DCMAKE_CXX_COMPILER:FILEPATH=${CMAKE_CXX_COMPILER}
+            -DCMAKE_INSTALL_PREFIX:PATH=${TPSRC}/dist
+            -DCMAKE_C_FLAGS:STRING=-fPIC
+            -DGKLIB_PATH:PATH=${TPSRC}/src/modmetis-5.1.0/GKlib
+            ${TPSRC}/src/modmetis-5.1.0
     )
     SET(METIS_LIB metis CACHE FILEPATH
         "METIS library" FORCE)

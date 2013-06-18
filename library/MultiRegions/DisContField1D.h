@@ -99,7 +99,7 @@ namespace Nektar
              * and consists of entries of the type LocalRegions#PointExp. Every
              * entry corresponds to a point on a single boundary region.
              */
-            Array<OneD,MultiRegions::ExpListSharedPtr>         m_bndCondExpansions;
+            Array<OneD,MultiRegions::ExpListSharedPtr>      m_bndCondExpansions;
 
             /// An array which contains the information about the boundary
             /// condition on the different boundary regions.
@@ -131,10 +131,10 @@ namespace Nektar
             
             /// Generate a associative map of periodic vertices in a mesh.
             void GetPeriodicVertices(
-                                const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                const SpatialDomains::BoundaryConditions &bcs,
-                                const std::string variable,
-                                      map<int,int>& periodicVertices);
+                const SpatialDomains::MeshGraphSharedPtr &graph1D,
+                const SpatialDomains::BoundaryConditions &bcs,
+                const std::string variable,
+                      map<int,int>& periodicVertices);
 
             virtual ExpListSharedPtr &v_GetTrace()
             {
@@ -206,12 +206,14 @@ namespace Nektar
                 return m_bndConditions;
             }
 
-            virtual MultiRegions::ExpListSharedPtr &v_UpdateBndCondExpansion(int i)
+            virtual MultiRegions::ExpListSharedPtr
+                &v_UpdateBndCondExpansion(int i)
             {
                 return m_bndCondExpansions[i];
             }
 
-            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr> &v_UpdateBndConditions()
+            virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
+                &v_UpdateBndConditions()
             {
                 return m_bndConditions;
             }

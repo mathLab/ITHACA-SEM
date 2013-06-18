@@ -347,7 +347,10 @@ namespace Nektar
                 }
             }
 
-            if (m_ncoeffs > 6) {
+            int nBoundaryDofs = NumBndryCoeffs();
+            int nInteriorDofs = m_ncoeffs - nBoundaryDofs;
+
+            if (nInteriorDofs > 0) {
                 Array<OneD, NekDouble> tmp0(m_ncoeffs);
                 Array<OneD, NekDouble> tmp1(m_ncoeffs);
 
@@ -362,9 +365,6 @@ namespace Nektar
                 // note: this block alreay contains the inverse matrix
                 MatrixKey             masskey(StdRegions::eMass,DetShapeType(),*this);
                 DNekScalMatSharedPtr  matsys = (m_staticCondMatrixManager[masskey])->GetBlock(1,1);
-
-                int nBoundaryDofs = NumBndryCoeffs();
-                int nInteriorDofs = m_ncoeffs - nBoundaryDofs;
 
                 Array<OneD, NekDouble> rhs(nInteriorDofs);
                 Array<OneD, NekDouble> result(nInteriorDofs);
@@ -725,6 +725,14 @@ namespace Nektar
 
         }
         
+        
+        void TriExp::v_GetEdgeInterpVals(
+                const int edge,const Array<OneD, const NekDouble> &inarray,
+                Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "Routine not implemented for triangular elements");
+        }
         
         void TriExp::v_GetEdgeQFactors(
                 const int edge, 
@@ -1503,6 +1511,17 @@ namespace Nektar
 
                     mat->Invert();
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
                 }
                 break;
             default:

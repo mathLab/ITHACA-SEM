@@ -90,9 +90,14 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &Lcoord);
   
             /// Get the orientation of face1.
-            SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation 
-                    GetFaceOrientation(const QuadGeom &face1,
-                                         const QuadGeom &face2);
+            SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
+                GetFaceOrientation(
+                    const QuadGeom              &face1,
+                    const QuadGeom              &face2);
+            SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
+                GetFaceOrientation(
+                    const VertexComponentVector &face1,
+                    const VertexComponentVector &face2);
 
             SPATIAL_DOMAINS_EXPORT static const int kNverts = 4;
             SPATIAL_DOMAINS_EXPORT static const int kNedges = 4;

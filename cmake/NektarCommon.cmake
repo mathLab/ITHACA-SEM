@@ -177,11 +177,13 @@ MACRO(ADD_NEKTAR_EXECUTABLE name component sources)
     ADD_DEPENDENCIES(${name} boost tinyxml zlib-1.2.7)
 
     IF( NEKTAR_USE_MPI )
-        TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
-        SET_TARGET_PROPERTIES(${name}
-            PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS}")
-        SET_TARGET_PROPERTIES(${name}
-            PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} ${MPI_LINK_FLAGS}")
+        IF (NOT MPI_BUILTIN)
+            TARGET_LINK_LIBRARIES(${name} ${MPI_LIBRARY} ${MPI_EXTRA_LIBRARY})
+            SET_TARGET_PROPERTIES(${name}
+                PROPERTIES LINK_FLAGS "${THE_LINK_FLAGS} ${MPI_LINK_FLAGS}")
+            SET_TARGET_PROPERTIES(${name}
+                PROPERTIES COMPILE_FLAGS "${THE_COMPILE_FLAGS} ${MPI_COMPILE_FLAGS}")
+        ENDIF()
     ENDIF( NEKTAR_USE_MPI )
 
     IF( ${CMAKE_SYSTEM} MATCHES "Linux.*" )
@@ -225,7 +227,7 @@ MACRO(ADD_NEKTAR_LIBRARY name component type)
 
     # NIST Sparse BLAS only static, so link into Nektar libraries directly.
     TARGET_LINK_LIBRARIES( ${name} ${NIST_SPARSE_BLAS} ${METIS_LIB})
-    ADD_DEPENDENCIES(${name} spblastk0.9b modmetis-5.0.2 boost tinyxml
+    ADD_DEPENDENCIES(${name} spblastk0.9b modmetis-5.1.0 boost tinyxml
         zlib-1.2.7)
     SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
     IF (NEKTAR_USE_MPI)

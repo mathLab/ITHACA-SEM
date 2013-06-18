@@ -70,6 +70,8 @@ namespace Nektar
     enum OutputFormat
     {
         eTecplot,
+        eTecplotZones,
+        eTecplotSingleBlock,
         eGmsh,
         eGnuplot
     };

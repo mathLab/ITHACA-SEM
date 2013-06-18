@@ -971,23 +971,52 @@ namespace Nektar
             return it->second;
         }
 
-        LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(Geometry2DSharedPtr face, const int flag, const std::string variable)
+        /**
+         * Retrieve the basis key for a given face direction.
+         */
+        LibUtilities::BasisKey MeshGraph3D:: GetFaceBasisKey(
+                    Geometry2DSharedPtr face,
+                    const int           facedir,
+                    const std::string   variable)
         {
+            // Retrieve the list of elements and the associated face index
+            // to which the face geometry belongs.
             ElementFaceVectorSharedPtr elements = GetElementsFromFace(face);
+
             ASSERTL0(elements->size() > 0, "No elements for the given face."
             		" Check all elements belong to the domain composite.");
+
             // Perhaps, a check should be done here to ensure that in case
-            // elements->size!=1, all elements to which the edge belongs have the same type
-            // and order of expansion such that no confusion can arise.
-            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element,variable);
+            // elements->size!=1, all elements to which the edge belongs have
+            // the same type and order of expansion such that no confusion can
+            // arise.
 
-            int nummodes = (int) expansion->m_basisKeyVector[0].GetNumModes();
+            // Get the Expansion structure detailing the basis keys used for
+            // this element.
+            ExpansionShPtr expansion = GetExpansion((*elements)[0]->m_Element,
+                                                    variable);
 
-            switch(expansion->m_basisKeyVector[0].GetBasisType())
+            // Retrieve the geometry object of the element as a Geometry3D.
+            Geometry3DSharedPtr geom3d =
+                    boost::dynamic_pointer_cast<SpatialDomains::Geometry3D>(
+                            expansion->m_geomShPtr);
+
+            // Use the geometry of the element to calculate the coordinate
+            // direction of the element which corresponds to the requested
+            // coordinate direction of the given face.
+            int dir = geom3d->GetDir((*elements)[0]->m_FaceIndx, facedir);
+
+            // Obtain the number of modes for the element basis key in this
+            // direction.
+            int nummodes = (int) expansion->m_basisKeyVector[dir].GetNumModes();
+
+            switch(expansion->m_basisKeyVector[dir].GetBasisType())
             {
             case LibUtilities::eModified_A:
+            case LibUtilities::eModified_B:
+            case LibUtilities::eModified_C:
                 {
-                    switch (flag)
+                    switch (facedir)
                     {
                     case 0:
                         {
@@ -997,8 +1026,16 @@ namespace Nektar
                         break;
                     case 1:
                         {
-                        	const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
-                            return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
+                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussLobattoLegendre);
+                            if (face->GetNumVerts() == 3)
+                            {
+                                // Triangle
+                                return LibUtilities::BasisKey(LibUtilities::eModified_B,nummodes,pkey);
+                            }
+                            else {
+                                // Quadrilateral
+                                return LibUtilities::BasisKey(LibUtilities::eModified_A,nummodes,pkey);
+                            }
                         }
                         break;
                     default:
@@ -1019,7 +1056,7 @@ namespace Nektar
                     }
                     else if(triangle)
                     {
-                        switch (flag)
+                        switch (facedir)
                         {
                         case 0:
                             {
@@ -1046,7 +1083,7 @@ namespace Nektar
                 break;
             case LibUtilities::eOrtho_A:
                 {
-                    switch (flag)
+                    switch (facedir)
                     {
                     case 0:
                         {

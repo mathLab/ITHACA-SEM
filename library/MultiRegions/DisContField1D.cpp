@@ -36,7 +36,7 @@
 
 #include <MultiRegions/DisContField1D.h>
 #include <StdRegions/StdSegExp.h>
-
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 namespace Nektar
 {
@@ -72,12 +72,13 @@ namespace Nektar
          *                      boundary conditions to enforce.
          * @param   solnType    Type of global system to use.
          */
-        DisContField1D::DisContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                       const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                       const std::string &variable):
-            ExpList1D(pSession,graph1D),
-            m_bndCondExpansions(),
-            m_bndConditions()
+        DisContField1D::DisContField1D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const SpatialDomains::MeshGraphSharedPtr &graph1D,
+            const std::string &variable)
+            : ExpList1D(pSession,graph1D),
+              m_bndCondExpansions(),
+              m_bndConditions()
         {
             SpatialDomains::BoundaryConditions bcs(m_session, graph1D);
 
@@ -91,15 +92,22 @@ namespace Nektar
             m_globalBndMat
                         = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
 
-            ExpList0DSharedPtr trace = MemoryManager<ExpList0D>::AllocateSharedPtr(
-                m_bndCondExpansions,m_bndConditions,*m_exp,graph1D,periodicVertices);
+            ExpList0DSharedPtr trace = MemoryManager<ExpList0D>::
+                AllocateSharedPtr(
+                    m_bndCondExpansions,
+                    m_bndConditions,
+                    *m_exp,graph1D,
+                    periodicVertices);
+            
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
-                AllocateSharedPtr(pSession,graph1D,trace,*this,
-                                  m_bndCondExpansions,m_bndConditions,periodicVertices);
+                AllocateSharedPtr(
+                    pSession,graph1D,trace,*this,
+                    m_bndCondExpansions,m_bndConditions,periodicVertices);
             
-            tmpBndSol = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
+            tmpBndSol = Array<OneD,NekDouble>
+                (m_traceMap->GetNumLocalBndCoeffs());
             
             // Scatter trace points to 1D elements. For each element, we find
             // the trace point associated to each vertex. The element then
@@ -122,9 +130,12 @@ namespace Nektar
                         if (TracePointGeom == ElmtPointGeom)
                         {
                             LocalRegions::Expansion1DSharedPtr exp1d
-                                = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>((*m_exp)[i]);
+                                = boost::dynamic_pointer_cast
+                                    <LocalRegions::Expansion1D>((*m_exp)[i]);
                             LocalRegions::Expansion0DSharedPtr exp0d
-                                = boost::dynamic_pointer_cast<LocalRegions::Expansion0D>(m_trace->GetExp(k));
+                                = boost::dynamic_pointer_cast
+                                    <LocalRegions::Expansion0D>
+                                        (m_trace->GetExp(k));
                             
                             exp0d->SetAdjacentElementExp(j,exp1d);
                             break;
@@ -144,21 +155,25 @@ namespace Nektar
          * @param	domain	Subdomain specified in the inputfile from
          *       	      	which the DisContField1D is set up
          */
-        DisContField1D::DisContField1D(const LibUtilities::SessionReaderSharedPtr &pSession,
-                                       const SpatialDomains::CompositeMap &domain,
-                                       const SpatialDomains::MeshGraphSharedPtr &graph1D,
-                                       const std::string &variable,
-                                       int i):
-            ExpList1D(pSession,domain,graph1D,i),
-            m_bndCondExpansions(),
-            m_bndConditions()
+        DisContField1D::DisContField1D(
+            const LibUtilities::SessionReaderSharedPtr &pSession,
+            const SpatialDomains::CompositeMap &domain,
+            const SpatialDomains::MeshGraphSharedPtr &graph1D,
+            const std::string &variable,
+            int i)
+            : ExpList1D(pSession,domain,graph1D,i),
+              m_bndCondExpansions(),
+              m_bndConditions()
         {			
             //1. a) Read in all boundary conditions specified in inputfile
             SpatialDomains::BoundaryConditions bcs(pSession, graph1D);
             
-            //1. b) Generate Boundary Condition Expansions from the read in ones only if the 
-            //      BC is in the currently processed subdomain
-            GenerateMultiDomainBoundaryConditionExpansion(graph1D,bcs,variable,i);
+            //1. b) Generate Boundary Condition Expansions from the read in ones
+            //      only if the BC is in the currently processed subdomain
+            GenerateMultiDomainBoundaryConditionExpansion(graph1D,
+                                                          bcs,
+                                                          variable,
+                                                          i);
             
             //1. c) Evaluate the boundary conditions
             EvaluateBoundaryConditions();
@@ -170,15 +185,27 @@ namespace Nektar
             
             m_globalBndMat = MemoryManager<GlobalLinSysMap>::AllocateSharedPtr();
             
-            ExpList0DSharedPtr traces = MemoryManager<ExpList0D>::AllocateSharedPtr(m_bndCondExpansions,m_bndConditions,*m_exp,graph1D,periodicVertices);
-            m_traces = Array<OneD,MultiRegions::ExpListSharedPtr> (domain.size());
+            ExpList0DSharedPtr traces =
+                MemoryManager<ExpList0D>::AllocateSharedPtr
+                    (m_bndCondExpansions,
+                     m_bndConditions,
+                     *m_exp,graph1D,
+                     periodicVertices);
+            
+            m_traces = Array<OneD,MultiRegions::ExpListSharedPtr>
+                (domain.size());
             m_traces[i] = boost::dynamic_pointer_cast<ExpList>(traces);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
-                AllocateSharedPtr(pSession,graph1D,traces,*this,
-                                  m_bndCondExpansions,m_bndConditions,periodicVertices);
+                AllocateSharedPtr(
+                    pSession,graph1D,
+                    traces,*this,
+                    m_bndCondExpansions,
+                    m_bndConditions,
+                    periodicVertices);
             
-            tmpBndSol = Array<OneD,NekDouble>(m_traceMap->GetNumLocalBndCoeffs());
+            tmpBndSol = Array<OneD,NekDouble>
+                (m_traceMap->GetNumLocalBndCoeffs());
             
             // Scatter trace points to 1D elements. For each element, we find
             // the trace point associated to each vertex. The element then
@@ -200,10 +227,13 @@ namespace Nektar
                         if (TracePointGeom == ElmtPointGeom)
                         {
                             LocalRegions::Expansion1DSharedPtr exp1d
-                                = boost::dynamic_pointer_cast<LocalRegions::Expansion1D>((*m_exp)[l]);
+                                = boost::dynamic_pointer_cast
+                            <LocalRegions::Expansion1D>((*m_exp)[l]);
                             
                             LocalRegions::Expansion0DSharedPtr exp0d
-                                = boost::dynamic_pointer_cast<LocalRegions::Expansion0D>(m_traces[i]->GetExp(k));
+                                = boost::dynamic_pointer_cast
+                                    <LocalRegions::Expansion0D>
+                                        (m_traces[i]->GetExp(k));
                             
                             exp0d->SetAdjacentElementExp(j,exp1d);
                             break;
@@ -261,24 +291,25 @@ namespace Nektar
             SpatialDomains::BoundaryConditions &bcs,
             const std::string variable)
         {
-            int i;
             int cnt  = 0;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                                                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                                                 = bcs.GetBoundaryConditions();
+            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
-            int nbnd = bregions.size();
             // count the number of non-periodic boundary points
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
                 const SpatialDomains::BoundaryConditionShPtr boundaryCondition =
-                        GetBoundaryCondition(bconditions, i, variable);
-                if( boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
+                        GetBoundaryCondition(bconditions, it->first, variable);
+                if (boundaryCondition->GetBoundaryConditionType() !=
+                    SpatialDomains::ePeriodic )
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                    for (bregionIt  = it->second->begin();
+                         bregionIt != it->second->end(); bregionIt++)
                     {
                         cnt += bregionIt->second->size();
                     }
@@ -314,32 +345,36 @@ namespace Nektar
             const std::string variable,
             int subdomain)
         {
-            int i;
             int cnt  = 0;
 			
             const SpatialDomains::BoundaryRegionCollection &bregions
 			= bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
 			= bcs.GetBoundaryConditions();
+            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 			
-            int nbnd = bregions.size();
             // count the number of non-periodic boundary points
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                const SpatialDomains::BoundaryConditionShPtr boundaryCondition = GetBoundaryCondition(bconditions, i, variable);
-                if( boundaryCondition->GetBoundaryConditionType() != SpatialDomains::ePeriodic )
+                const SpatialDomains::BoundaryConditionShPtr boundaryCondition =
+                    GetBoundaryCondition(bconditions, it->first, variable);
+                if (boundaryCondition->GetBoundaryConditionType() !=
+                    SpatialDomains::ePeriodic )
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                    for (bregionIt  = it->second->begin();
+                         bregionIt != it->second->end(); bregionIt++)
                     {
                         cnt += bregionIt->second->size();
                     }
                 }
             }			
 			
-            m_bndCondExpansions = Array<OneD,MultiRegions::ExpListSharedPtr>(2);
+            m_bndCondExpansions = Array<OneD,MultiRegions::
+                ExpListSharedPtr>(2);
 			
-            m_bndConditions = Array<OneD,SpatialDomains::BoundaryConditionShPtr>(2);
+            m_bndConditions = Array<OneD,SpatialDomains::
+                BoundaryConditionShPtr>(2);
             
             SetMultiDomainBoundaryConditionExpansion(graph1D,bcs,variable,
                                                      m_bndCondExpansions,
@@ -362,6 +397,7 @@ namespace Nektar
             const std::string variable,
             map<int,int>& periodicVertices)
         {
+            /*
             int i,k;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
@@ -444,6 +480,7 @@ namespace Nektar
                     doneBndRegions[region2ID] = region1ID;
                 }
             }
+            */
         }
 
         /**
@@ -467,36 +504,42 @@ namespace Nektar
             Array<OneD, SpatialDomains
                 ::BoundaryConditionShPtr> &bndConditions)
         {
-            int i,k;
+            int k;
             int cnt  = 0;
 
             const SpatialDomains::BoundaryRegionCollection &bregions
                                                 = bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
                                                 = bcs.GetBoundaryConditions();
+            SpatialDomains::BoundaryRegionCollection::const_iterator it;
 
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
             SpatialDomains::VertexComponentSharedPtr vert;
 
-            int nbnd = bregions.size();
-
-            cnt=0;
+            cnt = 0;
             // list Dirichlet boundaries first
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
-                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet 
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eJunction
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eBifurcation
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eMerging)
+                locBCond = GetBoundaryCondition(
+                    bconditions, it->first, variable);
+
+                if (locBCond->GetBoundaryConditionType() ==
+                        SpatialDomains::eDirichlet   ||
+                    locBCond->GetBoundaryConditionType() ==
+                        SpatialDomains::eJunction    ||
+                    locBCond->GetBoundaryConditionType() ==
+                        SpatialDomains::eBifurcation ||
+                    locBCond->GetBoundaryConditionType() ==
+                        SpatialDomains::eMerging)
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                    for (bregionIt  = it->second->begin();
+                         bregionIt != it->second->end(); bregionIt++)
                     {
-                        for(k = 0; k < bregionIt->second->size(); k++)
+                        for (k = 0; k < bregionIt->second->size(); k++)
                         {
-                            if((vert = boost::dynamic_pointer_cast
+                            if ((vert = boost::dynamic_pointer_cast
                                     <SpatialDomains::VertexComponent>(
                                          (*bregionIt->second)[k])))
                             {
@@ -509,7 +552,7 @@ namespace Nektar
                             else
                             {
                                 ASSERTL0(false,
-                                         "dynamic cast to a vertex failed");
+                                    "dynamic cast to a vertex failed");
                             }
                         }
                     }
@@ -517,19 +560,21 @@ namespace Nektar
             } // end if Dirichlet
 
             // then, list the other (non-periodic) boundaries
-            for(i = 0; i < nbnd; ++i)
+            for (it = bregions.begin(); it != bregions.end(); ++it)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
+                locBCond = GetBoundaryCondition(
+                    bconditions, it->first, variable);
 
                 switch(locBCond->GetBoundaryConditionType())
                 {
-                case SpatialDomains::eNeumann:
-                case SpatialDomains::eRobin:
+                    case SpatialDomains::eNeumann:
+                    case SpatialDomains::eRobin:
                     {
                         SpatialDomains::BoundaryRegion::iterator bregionIt;
-                        for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                        for (bregionIt  = it->second->begin();
+                             bregionIt != it->second->end(); bregionIt++)
                         {
-                            for(k = 0; k < bregionIt->second->size(); k++)
+                            for (k = 0; k < bregionIt->second->size(); k++)
                             {
                                 if((vert = boost::dynamic_pointer_cast
                                         <SpatialDomains::VertexComponent>(
@@ -537,23 +582,24 @@ namespace Nektar
                                 {
                                     locPointExp
                                         = MemoryManager<MultiRegions::ExpList0D>
-                                        ::AllocateSharedPtr(vert);
+                                            ::AllocateSharedPtr(vert);
                                     bndCondExpansions[cnt]  = locPointExp;
                                     bndConditions[cnt++]    = locBCond;
                                 }
                                 else
                                 {
                                     ASSERTL0(false,
-                                             "dynamic cast to a vertex failed");
+                                        "dynamic cast to a vertex failed");
                                 }
                             }
                         }
                     }
-                case SpatialDomains::eDirichlet: // do nothing for these types
-				case SpatialDomains::eJunction: 
-				case SpatialDomains::eBifurcation:
-				case SpatialDomains::eMerging:
-				case SpatialDomains::ePeriodic:
+                    // do nothing for these types
+                    case SpatialDomains::eDirichlet:
+                    case SpatialDomains::eJunction: 
+                    case SpatialDomains::eBifurcation:
+                    case SpatialDomains::eMerging:
+                    case SpatialDomains::ePeriodic:
                     break;
                 default:
                     ASSERTL0(false,"This type of BC not implemented yet");
@@ -583,14 +629,16 @@ namespace Nektar
             Array<OneD, SpatialDomains::BoundaryConditionShPtr> &bndConditions,
             int subdomain)
         {
-            int i,k;
+            int k;
             int cnt  = 0;
 			
             const SpatialDomains::BoundaryRegionCollection &bregions
 				= bcs.GetBoundaryRegions();
             const SpatialDomains::BoundaryConditionCollection &bconditions
 				= bcs.GetBoundaryConditions();
-			
+            SpatialDomains::BoundaryRegionCollection::const_iterator
+                it, it1, it2;
+
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
             SpatialDomains::VertexComponentSharedPtr vert;
@@ -599,30 +647,45 @@ namespace Nektar
             int firstcondition = subdomain*2;
             int secondcondition = subdomain*2+1;
             cnt = 0;
+
+            it1 = bregions.find(firstcondition);
+            it2 = bregions.find(firstcondition+secondcondition+1);
 			
             // list Dirichlet boundaries first
-            for(i = firstcondition; i < secondcondition+1; ++i)
+            for (it = it1; it != it2; ++it)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
-                if(locBCond->GetBoundaryConditionType() == SpatialDomains::eDirichlet 
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eJunction
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eBifurcation
-				   || locBCond->GetBoundaryConditionType()== SpatialDomains::eMerging)
+                locBCond = GetBoundaryCondition(
+                    bconditions, it->first, variable);
+
+                if (locBCond->GetBoundaryConditionType() ==
+                        SpatialDomains::eDirichlet   ||
+                    locBCond->GetBoundaryConditionType() ==
+                        SpatialDomains::eJunction    ||
+                    locBCond->GetBoundaryConditionType() ==
+                        SpatialDomains::eBifurcation ||
+                    locBCond->GetBoundaryConditionType() ==
+                        SpatialDomains::eMerging)
                 {
                     SpatialDomains::BoundaryRegion::iterator bregionIt;
-                    for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                    for (bregionIt  = it->second->begin();
+                         bregionIt != it->second->end(); bregionIt++)
                     {
                         for(k = 0; k < bregionIt->second->size(); k++)
                         {
-                            if((vert = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*bregionIt->second)[k])))
+                            if ((vert = boost::dynamic_pointer_cast
+                                    <SpatialDomains::VertexComponent>
+                                        ((*bregionIt->second)[k])))
                             {
-                                locPointExp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
+                                locPointExp =
+                                    MemoryManager<MultiRegions::ExpList0D>::
+                                        AllocateSharedPtr(vert);
                                 bndCondExpansions[cnt]  = locPointExp;
                                 bndConditions[cnt++]    = locBCond;
                             }
                             else
                             {
-                                ASSERTL0(false,"dynamic cast to a vertex failed");
+                                ASSERTL0(false,
+                                    "dynamic cast to a vertex failed");
                             }
                         }
                     }
@@ -630,31 +693,36 @@ namespace Nektar
             } // end if Dirichlet
 			
             // then, list the other (non-periodic) boundaries
-            for(i = firstcondition; i < secondcondition+1; ++i)
+            for (it = it1; it != it2; ++it)
             {
-                locBCond = GetBoundaryCondition(bconditions, i, variable);
+                locBCond = GetBoundaryCondition(
+                    bconditions, it->first, variable);
 				
-                switch(locBCond->GetBoundaryConditionType())
+                switch (locBCond->GetBoundaryConditionType())
                 {
-					case SpatialDomains::eNeumann:
-					case SpatialDomains::eRobin:
+                    case SpatialDomains::eNeumann:
+                    case SpatialDomains::eRobin:
                     {
                         SpatialDomains::BoundaryRegion::iterator bregionIt;
-                        for (bregionIt = bregions[i]->begin(); bregionIt != bregions[i]->end(); bregionIt++)
+                        for (bregionIt  = it->second->begin();
+                             bregionIt != it->second->end(); bregionIt++)
                         {
-                            for(k = 0; k < bregionIt->second->size(); k++)
+                            for (k = 0; k < bregionIt->second->size(); k++)
                             {
                                 if((vert = boost::dynamic_pointer_cast<
                                         SpatialDomains::VertexComponent>(
                                             (*bregionIt->second)[k])))
                                 {
-                                    locPointExp = MemoryManager<MultiRegions::ExpList0D>::AllocateSharedPtr(vert);
+                                    locPointExp =
+                                        MemoryManager<MultiRegions::ExpList0D>::
+                                            AllocateSharedPtr(vert);
                                     bndCondExpansions[cnt]  = locPointExp;
                                     bndConditions[cnt++]    = locBCond;
                                 }
                                 else
                                 {
-                                    ASSERTL0(false,"dynamic cast to a vertex failed");
+                                    ASSERTL0(false,
+                                        "dynamic cast to a vertex failed");
                                 }
                             }
                         }
@@ -694,10 +762,10 @@ namespace Nektar
             GlobalLinSysSharedPtr glo_matrix;
             GlobalLinSysMap::iterator matrixIter = m_globalBndMat->find(mkey);
 
-            if(matrixIter == m_globalBndMat->end())
+            if (matrixIter == m_globalBndMat->end())
             {
                 glo_matrix = GenGlobalBndLinSys(mkey,m_traceMap);
-                (*m_globalBndMat)[mkey] = glo_matrix;
+                 (*m_globalBndMat)[mkey] = glo_matrix;
             }
             else
             {
@@ -726,9 +794,10 @@ namespace Nektar
          * @param   Fwd     Forward state.
          * @param   Bwd     Backward state.
          */
-        void DisContField1D::v_GetFwdBwdTracePhys(const Array<OneD, const NekDouble> &field,
-                                                  Array<OneD,       NekDouble> &Fwd,
-                                                  Array<OneD,       NekDouble> &Bwd)
+        void DisContField1D::v_GetFwdBwdTracePhys(
+            const Array<OneD, const NekDouble> &field,
+                  Array<OneD,       NekDouble> &Fwd,
+                  Array<OneD,       NekDouble> &Bwd)
         {
             // Counter variables
             int  n, p, i;
@@ -738,6 +807,9 @@ namespace Nektar
             
             // Number of solution points of each element
             int nLocalSolutionPts;
+            
+            // Number of coeffients points of each element
+            int nLocalCoeffPts;
             
             // Initial index of each element
             int phys_offset;
@@ -753,7 +825,7 @@ namespace Nektar
             
             // Basis shared pointer
             LibUtilities::BasisSharedPtr Basis;
-
+            
             // Set forward and backard state to zero
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
@@ -767,64 +839,59 @@ namespace Nektar
                 // Set the number of solution points of each element
                 nLocalSolutionPts = (*m_exp)[n]->GetNumPoints(0);
                 
-                // Temporary vector for interpolation routine
-                Array<OneD, NekDouble> tmp(nLocalSolutionPts, 0.0);
-                
-                // Partition the field vector in local vectors
-                Vmath::Vcopy(nLocalSolutionPts, 
-                             (&field[phys_offset]), 1,
-                             (&tmp[0]), 1);
-                
                 // Basis definition on each element
                 Basis = (*m_exp)[n]->GetBasis(0);
-
+                
                 for (p = 0; p < 2; ++p)
                 {
-                    // Coordinate vector for interpolation routine
-                    Array<OneD, NekDouble> interface_coord(3, 0.0);
-                    
                     vertex_coord       = 0.0;
                     interface_offset   = (*m_exp)[n]->GetGeom1D()->GetVid(p);
                     subdomain_offset   = (*m_exp)[0]->GetGeom1D()->GetVid(0);
                     interface_offset  -= subdomain_offset;
                     
-                    for (i = 0; i < ((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
+                    for (i = 0;
+                         i < ((*m_exp)[n]->GetVertexNormal(p)).num_elements();
+                         i++)
                     {
                         vertex_coord += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
                     }
                     
-                    // Set the x-coordinate of the standard interface point
-                    interface_coord[0] = -1.0;
-
                     // Implementation for every points except Gauss points
-                    if (Basis->GetPointsType() != LibUtilities::eGaussGaussLegendre)
+                    if (Basis->GetPointsType() !=
+                        LibUtilities::eGaussGaussLegendre)
                     {
-                        if(vertex_coord >= 0.0)
+                        if (vertex_coord >= 0.0)
                         {
-                            Fwd[interface_offset] = field[phys_offset+nLocalSolutionPts-1];
-                        }			 
-                        if(vertex_coord < 0.0) 
+                            Fwd[interface_offset] =
+                                field[phys_offset+nLocalSolutionPts-1];
+                        }
+                        if (vertex_coord < 0.0)
                         {
-                            Bwd[interface_offset] = field[phys_offset];
+                            Bwd[interface_offset] =
+                                field[phys_offset];
                         }
                     }
-                    // Implementation for Gauss points 
-                    // (it doesn't work for WeakDG)
+                    // Implementation for Gauss points
                     else
                     {
-                        StdRegions::StdSegExp StdSeg(Basis->GetBasisKey());
-                     
-                        if(vertex_coord >= 0.0)
-                        {
-                            Fwd[interface_offset] = 
-                            //(*m_exp)[n]->PhysEvaluate(interface_coord, tmp);
-                            StdSeg.PhysEvaluate(interface_coord, tmp);
-                        }					 
-                        if(vertex_coord < 0.0) 
-                        {
-                            Bwd[interface_offset] = 
-                            //(*m_exp)[n]->PhysEvaluate(interface_coord, tmp);
-                            StdSeg.PhysEvaluate(interface_coord, tmp);
+                        // Temporary vector for interpolation routine
+                        Array<OneD, NekDouble> tmp(nLocalSolutionPts, 0.0);
+                        
+                        // Partition the field vector in local vectors
+                        // tmp = field + (n * nLocalSolutionPts);
+                        Vmath::Vcopy(nLocalSolutionPts,
+                                     &(field[0]) + n*nLocalSolutionPts,1,
+                                     &(tmp[0]),1);
+                        
+                        if (vertex_coord >= 0.0)
+                        {   
+                           (*m_exp)[n]->GetVertexPhysVals(1, tmp,
+                                                Fwd[interface_offset]);
+                        }
+                        if (vertex_coord < 0.0)
+                        {   
+                            (*m_exp)[n]->GetVertexPhysVals(0, tmp,
+                                                Bwd[interface_offset]);
                         }
                     }
                 }
@@ -835,44 +902,61 @@ namespace Nektar
             int id2         = 0;
             int firstVertex = (*m_exp)[0]->GetGeom1D()->GetVid(0);
             int lastVertex  = (*m_exp)[nElements-1]->GetGeom1D()->GetVid(1);
-            Array<OneD, NekDouble>  processed(m_bndCondExpansions.num_elements()+1, -1.0);
+            Array<OneD, NekDouble>  processed(
+                m_bndCondExpansions.num_elements()+1, -1.0);
             
             // Bug temporary fixed for Periodic boundary conditions
-            if(SpatialDomains::ePeriodic)
+            if (SpatialDomains::ePeriodic)
             {
                 int nTracePts      = Fwd.num_elements();
                 Fwd[0]             = Fwd[nTracePts-1];
                 Bwd[nTracePts-1]   = Bwd[0];
             }
             
-            for(n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {		
-                // Check if the current boundary condition belongs to the current subdomain
-                if((m_bndCondExpansions[n]->GetVertex()->GetVid() >= firstVertex) 
-                   && (m_bndCondExpansions[n]->GetVertex()->GetVid() <= lastVertex) 
-                   && (processed[n] != m_bndCondExpansions[n]->GetVertex()->GetVid()))
+                // Check if the current boundary condition
+                // belongs to the current subdomain
+                if ((m_bndCondExpansions[n]->GetVertex()->GetVid() >=
+                        firstVertex)
+                   && (m_bndCondExpansions[n]->GetVertex()->GetVid() <=
+                       lastVertex)
+                   && (processed[n] !=
+                       m_bndCondExpansions[n]->GetVertex()->GetVid()))
                 {
-                    if((m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
-                       || (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eJunction)
-                       || (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
-                       || (m_bndConditions[n]->GetBoundaryConditionType() == SpatialDomains::eMerging))
+                    if ((m_bndConditions[n]->GetBoundaryConditionType() ==
+                        SpatialDomains::eDirichlet) ||
+                        (m_bndConditions[n]->GetBoundaryConditionType() ==
+                         SpatialDomains::eJunction) ||
+                        (m_bndConditions[n]->GetBoundaryConditionType() ==
+                         SpatialDomains::eBifurcation) ||
+                        (m_bndConditions[n]->GetBoundaryConditionType() ==
+                         SpatialDomains::eMerging))
                     {
-                        if(m_bndCondExpansions[n]->GetVertex()->GetVid() == lastVertex)
+                        if (m_bndCondExpansions[n]->GetVertex()->GetVid() ==
+                           lastVertex)
                         {
                             id1            = 0; //GetCoeff_Offset(n)+1;
-                            id2            = m_bndCondExpansions[n]->GetVertex()->GetVid() - subdomain_offset;
-                            Bwd[id2]       = m_bndCondExpansions[n]->GetCoeff(id1);
-                            processed[n+1] = m_bndCondExpansions[n]->GetVertex()->GetVid();
+                            id2            =
+                                m_bndCondExpansions[n]->GetVertex()->GetVid()
+                                - subdomain_offset;
+                            Bwd[id2]       =
+                                m_bndCondExpansions[n]->GetCoeff(id1);
+                            processed[n+1] =
+                                m_bndCondExpansions[n]->GetVertex()->GetVid();
                         }
                         else
                         {
                             id1        = 0; //GetCoeff_Offset(n);
-                            id2        = m_bndCondExpansions[n]->GetVertex()->GetVid() - subdomain_offset;
+                            id2        =
+                                m_bndCondExpansions[n]->GetVertex()->GetVid()
+                                - subdomain_offset;
                             Fwd[id2]   = m_bndCondExpansions[n]->GetCoeff(id1);
                         }
                         
                         //Previous working version
-                        /*if(m_traceMap->GetBndExpAdjacentOrient(n) == eAdjacentEdgeIsForwards)
+                        /*if(m_traceMap->GetBndExpAdjacentOrient(n) == 
+                         eAdjacentEdgeIsForwards)
 						 {
                          id1 = 0; //GetCoeff_Offset(n)+1;
                          id2 = m_bndCondExpansions[n]->GetVertex()->GetVid();
@@ -887,7 +971,8 @@ namespace Nektar
                     }
                     else
                     {
-                        ASSERTL0(false, "Method not set up for non-Dirichlet conditions");
+                        ASSERTL0(false,
+                            "Method not set up for non-Dirichlet conditions");
                     }
                 }	 
             }			 
@@ -911,13 +996,13 @@ namespace Nektar
             int n,p,offset,phys_offset;
             
             ASSERTL1(outarray.num_elements() >= m_trace->GetExpSize(),
-                     "input array is of insufficient length");
+                "input array is of insufficient length");
             
-            for(n  = 0; n < nexp; ++n)
+            for (n  = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
 		
-                for(p = 0; p < (*m_exp)[n]->GetNverts(); ++p)
+                for (p = 0; p < (*m_exp)[n]->GetNverts(); ++p)
                 {
                     offset = m_trace->GetPhys_Offset(p+n);
                     outarray[offset] = inarray[phys_offset];
@@ -929,31 +1014,97 @@ namespace Nektar
             const Array<OneD, const NekDouble> &Fn, 
                   Array<OneD,       NekDouble> &outarray)
         {
-            int p, n, offset, t_offset;
-            NekDouble vertnorm = 0.0;
+            int p,n,offset, t_offset;
+            double vertnorm =0.0;
+            
+            // Basis shared pointer
+            LibUtilities::BasisSharedPtr Basis;
             
             for (n = 0; n < GetExpSize(); ++n)
             {
+                // Basis definition on each element
+                Basis = (*m_exp)[n]->GetBasis(0);
+                
+                // Number of coefficients on each element
+                int e_ncoeffs = (*m_exp)[n]->GetNcoeffs();
+                
                 offset = GetCoeff_Offset(n);
-		
-                for(p = 0; p < 2; ++p)
+                
+                // Implementation for every points except Gauss points
+                if (Basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
                 {
-                    vertnorm = 0.0;
-                    for (int i = 0; i<((*m_exp)[n]->GetVertexNormal(p)).num_elements(); i++)
+                    for(p = 0; p < 2; ++p)
                     {
-                        vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
+                        vertnorm = 0.0;
+                        for (int i=0; i<((*m_exp)[n]->
+                                         GetVertexNormal(p)).num_elements(); i++)
+                        {
+                            vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
+                        }
+                        
+                        t_offset = GetTrace()->GetPhys_Offset(n+p);
+                        
+                        if (vertnorm >= 0.0)
+                        {
+                            outarray[offset+(*m_exp)[n]->GetVertexMap(1)] +=
+                            Fn[t_offset];
+                        }
+                        
+                        if (vertnorm < 0.0)
+                        {
+                            outarray[offset] -= Fn[t_offset];
+                        }
                     }
+                }
+                else
+                {
+                    DNekMatSharedPtr                     m_Ixm;
+                    LibUtilities::BasisSharedPtr BASE;
+                    const LibUtilities::PointsKey
+                            BS_p(e_ncoeffs,LibUtilities::eGaussGaussLegendre);
+                    const LibUtilities::BasisKey
+                            BS_k(LibUtilities::eGauss_Lagrange,e_ncoeffs,BS_p);
                     
-                    t_offset = GetTrace()->GetPhys_Offset(n+p);
+                    BASE  = LibUtilities::BasisManager()[BS_k];
                     
-                    if (vertnorm >= 0.0) 
+                    Array<OneD, NekDouble> coords(3, 0.0);
+                    
+                    int j;
+                    
+                    for(p = 0; p < 2; ++p)
                     {
-                        outarray[offset+(*m_exp)[n]->GetVertexMap(1)] += Fn[t_offset];
-                    }
-                    
-                    if (vertnorm < 0.0) 
-                    {
-                        outarray[offset] -= Fn[t_offset];
+                        vertnorm = 0.0;
+                        for (int i=0; i<((*m_exp)[n]->
+                             GetVertexNormal(p)).num_elements(); i++)
+                        {
+                            vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
+                            coords[0] = vertnorm ;
+                        }
+                        
+                        t_offset = GetTrace()->GetPhys_Offset(n+p);
+                        
+                        if (vertnorm >= 0.0)
+                        {
+                            m_Ixm = BASE->GetI(coords);
+                            
+                            
+                            for (j = 0; j < e_ncoeffs; j++)
+                            {
+                                outarray[offset + j]  +=
+                                    (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                            }
+                        }
+                        
+                        if (vertnorm < 0.0)
+                        {
+                            m_Ixm = BASE->GetI(coords);
+                            
+                            for (j = 0; j < e_ncoeffs; j++)
+                            {
+                                outarray[offset + j] -=
+                                    (m_Ixm->GetPtr())[j] * Fn[t_offset];
+                            }
+                        }
                     }
                 }
             }
@@ -987,9 +1138,14 @@ namespace Nektar
             int NumDirBCs  = m_traceMap->GetNumLocalDirBndCoeffs();
             int e_ncoeffs,id;
 
-            GlobalMatrixKey HDGLamToUKey(StdRegions::eHybridDGLamToU,NullAssemblyMapSharedPtr,factors,varcoeff);
+            GlobalMatrixKey HDGLamToUKey(
+                StdRegions::eHybridDGLamToU,
+                NullAssemblyMapSharedPtr,
+                factors,
+                varcoeff);
 
-            const DNekScalBlkMatSharedPtr &HDGLamToU = GetBlockMatrix(HDGLamToUKey);
+            const DNekScalBlkMatSharedPtr &HDGLamToU =
+                GetBlockMatrix(HDGLamToUKey);
 
 			// Retrieve global trace space storage, \Lambda, from trace expansion
             Array<OneD,NekDouble> BndSol = tmpBndSol; //m_trace->UpdateCoeffs();
@@ -1007,7 +1163,7 @@ namespace Nektar
             // Evaluate Trace Forcing
             //----------------------------------
             // Determing <u_lam,f> terms using HDGLamToU matrix
-            for(cnt = n = 0; n < nexp; ++n)
+            for (cnt = n = 0; n < nexp; ++n)
             {
                 nbndry = (*m_exp)[n]->NumDGBndryCoeffs();
 
@@ -1028,9 +1184,10 @@ namespace Nektar
 
             cnt = 0;
             // Copy Dirichlet boundary conditions into trace space
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
+                if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                    SpatialDomains::eDirichlet)
                 {
                     id = m_traceMap->GetBndCondCoeffsToGlobalCoeffsMap(i);
                     BndSol[id] = m_bndCondExpansions[i]->GetCoeff(0);
@@ -1045,7 +1202,7 @@ namespace Nektar
             //----------------------------------
             // Solve trace problem
             //----------------------------------
-            if(GloBndDofs - NumDirBCs > 0)
+            if (GloBndDofs - NumDirBCs > 0)
             {
                 GlobalLinSysKey       key(StdRegions::eHybridDGHelmBndLam,
                                           m_traceMap,factors);
@@ -1060,8 +1217,8 @@ namespace Nektar
                                             NullAssemblyMapSharedPtr,
                                             factors);
 
-            const DNekScalBlkMatSharedPtr& InvHDGHelm
-                                                = GetBlockMatrix(invHDGhelmkey);
+            const DNekScalBlkMatSharedPtr& InvHDGHelm =
+                GetBlockMatrix(invHDGhelmkey);
             DNekVec out(m_ncoeffs,outarray,eWrapper);
             Vmath::Zero(m_ncoeffs,outarray,1);
 
@@ -1091,52 +1248,57 @@ namespace Nektar
             NekDouble x1;
             NekDouble x2;
 			
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
-                if(time == 0.0 || m_bndConditions[i]->GetUserDefined() == 
-                   SpatialDomains::eTimeDependent)
+                if (time == 0.0 || m_bndConditions[i]->GetUserDefined() ==
+                    SpatialDomains::eTimeDependent)
                 {
                     m_bndCondExpansions[i]->GetCoords(x0,x1,x2);
                     
-                    if(x2_in != NekConstants::kNekUnsetDouble && x3_in != NekConstants::kNekUnsetDouble)
+                    if (x2_in != NekConstants::kNekUnsetDouble && x3_in !=
+                        NekConstants::kNekUnsetDouble)
                     {
                         x1 = x2_in;
                         x2 = x3_in;
                     }
                     
-                    if(m_bndConditions[i]->GetBoundaryConditionType()
-                        == SpatialDomains::eDirichlet)
+                    if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                        SpatialDomains::eDirichlet)
                     {
                         m_bndCondExpansions[i]->SetCoeff(
-                                                         (boost::static_pointer_cast<SpatialDomains
-                                                          ::DirichletBoundaryCondition>(m_bndConditions[i])
-                                                          ->m_dirichletCondition).Evaluate(x0,x1,x2,time));
+                            (boost::static_pointer_cast<SpatialDomains
+                             ::DirichletBoundaryCondition>(m_bndConditions[i])
+                             ->m_dirichletCondition).Evaluate(x0,x1,x2,time));
                     }
-                    else if((m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eJunction)||
-                            (m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)||
-                            (m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eMerging))
+                    else if ((m_bndConditions[i]->GetBoundaryConditionType() ==
+                              SpatialDomains::eJunction) ||
+                             (m_bndConditions[i]->GetBoundaryConditionType() ==
+                              SpatialDomains::eBifurcation)||
+                             (m_bndConditions[i]->GetBoundaryConditionType() ==
+                              SpatialDomains::eMerging))
                     {
-                        //Do not update this conditions as they will be by the domain-linking Riemann solvers
+                        //Do not update this conditions as they will be
+                        //by the domain-linking Riemann solvers
                     }	
-                    else if(m_bndConditions[i]->GetBoundaryConditionType()
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
                             == SpatialDomains::eNeumann)
                     {
                         m_bndCondExpansions[i]->SetCoeff(
-                                                         (boost::static_pointer_cast<SpatialDomains
-                                                          ::NeumannBoundaryCondition>(m_bndConditions[i])
-                                                          ->m_neumannCondition).Evaluate(x0,x1,x2,time));
+                            (boost::static_pointer_cast<SpatialDomains
+                             ::NeumannBoundaryCondition>(m_bndConditions[i])
+                             ->m_neumannCondition).Evaluate(x0,x1,x2,time));
                     }
-                    else if(m_bndConditions[i]->GetBoundaryConditionType()
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
                             == SpatialDomains::eRobin)
                     {
                         m_bndCondExpansions[i]->SetCoeff(
-                                                         (boost::static_pointer_cast<SpatialDomains
-                                                          ::RobinBoundaryCondition>(m_bndConditions[i])
-                                                          ->m_robinFunction).Evaluate(x0,x1,x2,time));
+                            (boost::static_pointer_cast<SpatialDomains
+                             ::RobinBoundaryCondition>(m_bndConditions[i])
+                             ->m_robinFunction).Evaluate(x0,x1,x2,time));
                         
                         m_bndCondExpansions[i]->SetPhys(
-                                                        (boost::static_pointer_cast<SpatialDomains
-                                                         ::RobinBoundaryCondition>(m_bndConditions[i])
+                            (boost::static_pointer_cast<SpatialDomains
+                             ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinPrimitiveCoeff).Evaluate(x0,x1,x2,time));
                         
                     }
@@ -1159,7 +1321,7 @@ namespace Nektar
             int nbcs = m_bndConditions.num_elements();
 
             // make sure arrays are of sufficient length
-            if(ElmtID.num_elements() != nbcs)
+            if (ElmtID.num_elements() != nbcs)
             {
                 ElmtID = Array<OneD, int>(nbcs,-1);
             }
@@ -1168,26 +1330,26 @@ namespace Nektar
                 fill(ElmtID.get(), ElmtID.get()+nbcs, -1);
             }
 
-            if(VertID.num_elements() != nbcs)
+            if (VertID.num_elements() != nbcs)
             {
                 VertID = Array<OneD, int>(nbcs);
             }
 
             // setup map of all global ids along boundary
-            for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
+            for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 Vid =  m_bndCondExpansions[n]->GetGeom()->GetVid();
                 VertGID[Vid] = cnt++;
             }
 
             // Loop over elements and find verts that match;
-            for(cnt = n = 0; n < GetExpSize(); ++n)
+            for (cnt = n = 0; n < GetExpSize(); ++n)
             {
-                for(i = 0; i < (*m_exp)[n]->GetNverts(); ++i)
+                for (i = 0; i < (*m_exp)[n]->GetNverts(); ++i)
                 {
                     id = (*m_exp)[n]->GetGeom()->GetVid(i);
 
-                    if(VertGID.count(id) > 0)
+                    if (VertGID.count(id) > 0)
                     {
                         bid = VertGID.find(id)->second;
                         ASSERTL1(ElmtID[bid] == -1,"Edge already set");
@@ -1222,18 +1384,22 @@ namespace Nektar
             Array<OneD, int> ElmtID,VertID;
             GetBoundaryToElmtMap(ElmtID,VertID);
 
-            for(i = 0; i < m_bndCondExpansions.num_elements(); ++i)
+            for (i = 0; i < m_bndCondExpansions.num_elements(); ++i)
             {
                 MultiRegions::ExpListSharedPtr locExpList;
 
-                if(m_bndConditions[i]->GetBoundaryConditionType() == SpatialDomains::eRobin)
+                if (m_bndConditions[i]->GetBoundaryConditionType() ==
+                   SpatialDomains::eRobin)
                 {
                     int elmtid;
                     Array<OneD, NekDouble> Array_tmp;
 
                     locExpList = m_bndCondExpansions[i];
 
-                    RobinBCInfoSharedPtr rInfo = MemoryManager<RobinBCInfo>::AllocateSharedPtr(VertID[i],Array_tmp = locExpList->GetPhys());
+                    RobinBCInfoSharedPtr rInfo =
+                        MemoryManager<RobinBCInfo>::
+                            AllocateSharedPtr(
+                                VertID[i],Array_tmp = locExpList->GetPhys());
 
                     elmtid = ElmtID[i];
                     // make link list if necessary (not likely in

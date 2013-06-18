@@ -107,10 +107,9 @@ namespace Nektar
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
-
         StdRegions::StdQuadExpSharedPtr     m_OrthoQuadExp;
         StdRegions::StdHexExpSharedPtr      m_OrthoHexExp;
-        
+
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);
 
@@ -122,7 +121,14 @@ namespace Nektar
         void GetFluxVector(
             const Array<OneD, Array<OneD, NekDouble> >               &physfield,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+        void GetFluxVectorDeAlias(
+            const Array<OneD, Array<OneD, NekDouble> >         &physfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
         void GetViscousFluxVector(
+            const Array<OneD, Array<OneD, NekDouble> >         &physfield,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
+        void GetViscousFluxVectorDeAlias(
             const Array<OneD, Array<OneD, NekDouble> >         &physfield,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);

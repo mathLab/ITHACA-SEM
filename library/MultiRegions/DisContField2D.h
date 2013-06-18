@@ -118,20 +118,20 @@ namespace Nektar
             /**
              * @brief A map which identifies pairs of periodic edges.
              */
-            map<int,int> m_periodicEdges;
-	    
-            /**
-             * @brief A map identifying pairs of periodic vertices.
-             */
-            vector<map<int,int> > m_periodicVertices;
+            PeriodicMap m_periodicEdges;
             
             /**
-             * @brief Auxiliary map for periodic boundary conditions.
-             * 
-             * Takes geometry IDs of periodic edges to a pair (n,e), where n
-             * is the expansion containing the edge and e the local edge number.
+             * @brief A map which identifies groups of periodic vertices.
              */
-            boost::unordered_map<int,pair<int,int> > m_perEdgeToExpMap;
+            PeriodicMap m_periodicVerts;
+            
+            /**
+             * @brief A vector indicating degress of freedom which need to be
+             * copied from forwards to backwards space in case of a periodic
+             * boundary condition.
+             */
+            vector<int> m_periodicFwdCopy;
+            vector<int> m_periodicBwdCopy;
 
             /*
              * @brief A map identifying which edges are left- and right-adjacent
@@ -196,13 +196,13 @@ namespace Nektar
              * field.
              */
             virtual void v_GetPeriodicEdges(
-                vector<map<int,int> > &periodicVertices,
-                map<int,int>          &periodicEdges)
+                PeriodicMap &periodicVerts,
+                PeriodicMap &periodicEdges)
             {
-                periodicVertices = m_periodicVertices;
-                periodicEdges    = m_periodicEdges;
+                periodicVerts = m_periodicVerts;
+                periodicEdges = m_periodicEdges;
             }
-            
+
             virtual ExpListSharedPtr &v_GetTrace()
             {
                 if(m_trace == NullExpListSharedPtr)

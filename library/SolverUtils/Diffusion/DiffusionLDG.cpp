@@ -53,6 +53,18 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
             m_session = pSession;
+            
+            // Setting up the normals
+            int i;
+            int nDim = pFields[0]->GetCoordim(0);
+            int nTracePts = pFields[0]->GetTrace()->GetTotPoints();
+            
+            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
+            for(i = 0; i < nDim; ++i)
+            {
+                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
+            }
+            pFields[0]->GetTrace()->GetNormals(m_traceNormals);
         }
         
         void DiffusionLDG::v_Diffuse(
@@ -61,7 +73,6 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            //cout<<setprecision(16);
             int i, j, k;
             int nDim      = fields[0]->GetCoordim(0);
             int nPts      = fields[0]->GetTotPoints();
@@ -70,15 +81,14 @@ namespace Nektar
             
             Array<OneD, NekDouble>  qcoeffs(nCoeffs);
             Array<OneD, NekDouble>  temp   (nCoeffs);
-            
+
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nDim);
+
             Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
-            
+
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux  (nDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfield(nDim);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > qfieldStd(nDim);
-
-            
 
             for (j = 0; j < nDim; ++j)
             {
@@ -104,8 +114,9 @@ namespace Nektar
                         
             // Compute q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
+
             v_NumFluxforScalar(fields, inarray, flux);
-            
+
             for (j = 0; j < nDim; ++j)
             {
                 for (i = 0; i < nConvectiveFields; ++i)
@@ -122,7 +133,7 @@ namespace Nektar
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
             v_NumFluxforVector(fields, inarray, qfield, flux[0]);
-            
+
             for (i = 0; i < nConvectiveFields; ++i)
             {
                 tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
@@ -161,13 +172,7 @@ namespace Nektar
             Array<OneD, NekDouble > Vn      (nTracePts, 0.0);
             Array<OneD, NekDouble > fluxtemp(nTracePts, 0.0);
             
-            // Setting up the normals
-            m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
-            for(i = 0; i < nDim; ++i)
-            {
-                m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
-            }
-            fields[0]->GetTrace()->GetNormals(m_traceNormals);
+
             
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
@@ -315,6 +320,7 @@ namespace Nektar
             
             Array<OneD, NekDouble > uterm(nTracePts);
             
+            /*
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
             for(i = 0; i < nDim; ++i)
@@ -322,6 +328,7 @@ namespace Nektar
                 m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
+            */
             
             // Get the normal velocity Vn
             for(i = 0; i < nDim; ++i)
@@ -422,6 +429,7 @@ namespace Nektar
             Array<OneD, NekDouble > qtemp(nTracePts);
             int cnt = 0;
             
+            /*
             // Setting up the normals
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(nDim);
             for(i = 0; i < nDim; ++i)
@@ -429,6 +437,7 @@ namespace Nektar
                 m_traceNormals[i] = Array<OneD, NekDouble> (nTracePts);
             }
             fields[0]->GetTrace()->GetNormals(m_traceNormals);
+            */
             
             fields[var]->ExtractTracePhys(qfield, qtemp);
             

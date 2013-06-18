@@ -87,8 +87,15 @@ int main(int argc, char *argv[])
     string   outfile(strtok(argv[argc-1],"."));
     outfile +=  ".dat";
     ofstream outstrm(outfile.c_str());
-
-    Exp[0]->WriteToFile(outstrm,eTecplot,"Dummy");
+    if(expdim == 3)
+    {
+        Exp[0]->WriteToFile(outstrm,eTecplotSingleBlock,"Dummy");
+    }
+    else
+    {
+        Exp[0]->WriteToFile(outstrm,eTecplot,"Dummy");
+    }
+    
     outstrm.close();
     //----------------------------------------------
     return 0;

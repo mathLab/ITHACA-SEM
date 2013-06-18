@@ -40,7 +40,10 @@ int main(int argc, char *argv[])
         if(n == 0 && nektar->FirstChildElement("FIELDMETADATA"))
         {
             TiXmlElement *metadata = nektar->FirstChildElement("FIELDMETADATA");
-            master->LinkEndChild(new TiXmlElement(*metadata));
+            if(metadata)
+            {
+                master->LinkEndChild(new TiXmlElement(*metadata));
+            }
         }
 
         // load the elements from seperate files. 

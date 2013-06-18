@@ -77,6 +77,7 @@ namespace Nektar
             const bool fourierInited0 = PointsManager().RegisterCreator(PointsKey(0, eFourierEvenlySpaced), FourierPoints::Create);
             const bool fourierInitedSM0 = PointsManager().RegisterCreator(PointsKey(0, eFourierSingleModeSpaced), FourierSingleModePoints::Create);
             const bool BLInited0 = PointsManager().RegisterCreator(PointsKey(0, eBoundaryLayerPoints), BLPoints::Create);
+            const bool BLInited1 = PointsManager().RegisterCreator(PointsKey(0, eBoundaryLayerPointsRev), BLPoints::Create);
             const bool polyeInited10 =  PointsManager().RegisterCreator(PointsKey(0, ePolyEvenlySpaced), PolyEPoints::Create);
             const bool NodalTriInited0 =  PointsManager().RegisterCreator(PointsKey(0, eNodalTriElec), NodalTriElec::Create);
             const bool NodalTriInited1 =  PointsManager().RegisterCreator(PointsKey(0, eNodalTriFekete), NodalTriFekete::Create);

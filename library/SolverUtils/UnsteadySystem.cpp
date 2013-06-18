@@ -247,7 +247,6 @@ namespace Nektar
                     
                     u = IntScheme[0]->InitializeScheme(
                         m_timestep, fields, m_time, m_ode);
-                    
                     break;
                 }
                 case LibUtilities::eAdamsBashforthOrder2:
@@ -429,7 +428,8 @@ namespace Nektar
             int       step          = 0;
             NekDouble intTime       = 0.0;
             NekDouble lastCheckTime = 0.0;
-            
+            NekDouble cpuTime       = 0.0;
+
             while (step   < m_steps ||
                    m_time < m_fintime - NekConstants::kNekZeroTol)
             {
@@ -456,18 +456,31 @@ namespace Nektar
                 fields = IntScheme[min(step, numMultiSteps-1)]->TimeIntegrate(
                     m_timestep, u, m_ode);
                 timer.Stop();
-                
+
+                const NekDouble elapsed = timer.TimePerTest(1);
                 m_time  += m_timestep;
-                intTime += timer.TimePerTest(1);
+                intTime += elapsed;
+                cpuTime += elapsed;
 		
                 // Write out status information
                 if (m_session->GetComm()->GetRank() == 0 && 
                     !((step+1) % m_infosteps))
                 {
-                    cout << "Steps: "     << setw(8)  << left << step+1 << " "
-                         << "Time: "      << setw(12) << left << m_time << " "
-                         << "Time-step: " << setw(12) << left << m_timestep;
-                    cout << endl;
+                    cout << "Steps: " << setw(8)  << left << step+1 << " "
+                         << "Time: "  << setw(12) << left << m_time;
+
+                    if (m_cflSafetyFactor)
+                    {
+                        cout << " Time-step: " << setw(12)
+                             << left << m_timestep;
+                    }
+
+                    stringstream ss;
+                    ss << cpuTime << "s";
+                    cout << " CPU Time: " << setw(8) << left
+                         << ss.str() << endl;
+
+                    cpuTime = 0.0;
                 }
                 
                 // Transform data into coefficient space

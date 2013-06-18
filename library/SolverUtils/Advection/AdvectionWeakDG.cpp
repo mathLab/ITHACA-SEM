@@ -80,30 +80,7 @@ namespace Nektar
                 }
             }
             
-            /*
-            for (j = 0; j < nPointsTot; ++j)
-            {
-                cout << "inarray" << "  "<<  j << "  "<< inarray[1][j]<<  "  " << endl;
-            }
-
-            cin >> num;
-            */
-            
             m_fluxVector(inarray, m_fluxvector);
-            
-            /*
-            for (j = 0; j < nPointsTot; ++j)
-            {
-                cout << "fluxvector0" << "  "<<  j << "  "<< m_fluxvector[0][1][j]<<  "  " << endl;
-            }
-
-            cin >> num;
-            
-            for (j = 0; j < nPointsTot; ++j)
-            {
-                cout << "fluxvector1" << "  "<<  j << "  "<< m_fluxvector[0][0][j]<<  "  " << endl;
-            }
-            */
             
             // Get the advection part (without numerical flux)
             for(i = 0; i < nConvectiveFields; ++i)
@@ -131,28 +108,7 @@ namespace Nektar
                 fields[i]->GetFwdBwdTracePhys(inarray[i], Fwd[i], Bwd[i]);
             }
             
-            /*
-            for (j = 0; j < nTracePointsTot; ++j)
-            {
-                cout << "Fwd" << "  "<<  j << "  "<< Fwd[0][j]<<  "  " << endl;
-            }
-            cin >> num;
-            for (j = 0; j < nTracePointsTot; ++j)
-            {
-                cout << "Bwd" << "  "<<  j << "  "<< Bwd[0][j]<<  "  " << endl;
-            }
-            cin >> num;
-            */
-             
             m_riemann->Solve(Fwd, Bwd, numflux);
-            
-            /*
-            for (j = 0; j < nTracePointsTot; ++j)
-            {
-                cout << "numflux" << "  "<<  j << "  "<< numflux[0][j]<<  "  " << endl;
-            }
-            cin >> num;
-            */ 
             
             // Evaulate <\phi, \hat{F}\cdot n> - OutField[i]
             for(i = 0; i < nConvectiveFields; ++i)
@@ -163,14 +119,6 @@ namespace Nektar
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
             
-            /*
-            for (j = 0; j < nPointsTot; ++j)
-            {
-                cout << "outarrayAdv" << "  "<<  j << "  "<< outarray[spaceDim + 1][j]<<  "  " << endl;
-            }
-            cin >> num;
-            */
-            
         }
-    }
-}
+    }//end of namespace SolverUtils
+}//end of namespace Nektar

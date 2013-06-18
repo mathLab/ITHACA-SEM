@@ -619,7 +619,6 @@ namespace Nektar
                     
                     for (i = 0; i < m_spacedim; ++i)
                     {
-                        
                         m_traceNormals_tmp[i] =
                             Array<OneD, NekDouble> (GetTraceNpoints(), 0.0);
                         

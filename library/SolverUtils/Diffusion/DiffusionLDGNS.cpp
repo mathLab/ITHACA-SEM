@@ -602,6 +602,5 @@ namespace Nektar
                 }
             }
         }
-        
     }//end of namespace SolverUtils
 }//end of namespace Nektar

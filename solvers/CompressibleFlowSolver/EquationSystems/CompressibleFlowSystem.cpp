@@ -276,6 +276,7 @@ namespace Nektar
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
                 int cnt_plane = cnt/n_planes;
@@ -293,7 +294,7 @@ namespace Nektar
                 id2 = id2_plane + planeID*nTracePts_plane;
                 
             }
-            else
+            else // For general case
             {
                 id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]->GetTraceMap()->
@@ -382,6 +383,7 @@ namespace Nektar
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
                 int cnt_plane = cnt/n_planes;
@@ -399,7 +401,7 @@ namespace Nektar
                 id2 = id2_plane + planeID*nTracePts_plane;
                 
             }
-            else
+            else // For general case
             {
                 id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                           m_fields[0]->GetTraceMap()->
@@ -465,6 +467,7 @@ namespace Nektar
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
                 int cnt_plane = cnt/n_planes;
@@ -482,7 +485,7 @@ namespace Nektar
                 id2 = id2_plane + planeID*nTracePts_plane;
                 
             }
-            else
+            else // For general case
             {
                 id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
                             m_fields[0]->GetTraceMap()->
@@ -682,6 +685,7 @@ namespace Nektar
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
                 int cnt_plane = cnt/n_planes;
@@ -699,7 +703,7 @@ namespace Nektar
                 id2 = id2_plane + planeID*nTracePts_plane;
                 
             }
-            else
+            else // For general case
             {
                 id2 = m_fields[0]->GetTrace()->
                     GetPhys_Offset(m_fields[0]->GetTraceMap()->
@@ -883,6 +887,7 @@ namespace Nektar
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e) ;
             
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
                 int cnt_plane = cnt/n_planes;
@@ -899,7 +904,7 @@ namespace Nektar
                                 cnt_plane + e_plane));
                 id2 = id2_plane + planeID*nTracePts_plane;
             }
-            else
+            else // For general case
             {
 
                 id2  = m_fields[0]->GetTrace()->
@@ -1025,6 +1030,8 @@ namespace Nektar
                 GetExp(e)->GetNumPoints(0);
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e) ;
+            
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
                 int cnt_plane = cnt/n_planes;
@@ -1041,7 +1048,7 @@ namespace Nektar
                                         cnt_plane + e_plane));
                 id2 = id2_plane + planeID*nTracePts_plane;
             }
-            else
+            else // For general case
             {
                 id2  = m_fields[0]->GetTrace()->
                             GetPhys_Offset(m_fields[0]->GetTraceMap()->
@@ -1143,11 +1150,12 @@ namespace Nektar
         NekDouble OneDptscale = 2; 
             
         // Get number of points to dealias a cubic non-linearity
+        // For 3DHomogenoeus1D
         if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
             nq = m_fields[0]->GetPlane(0)->Get1DScaledTotPoints(OneDptscale);
         }
-        else
+        else // For general case
         {
             nq = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
         }
@@ -1165,13 +1173,14 @@ namespace Nektar
             flux_interp[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
             
             // Interpolation to higher space
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
             {
                 m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
                     OneDptscale, physfield[i], physfield_interp[i]);
 
             }
-            else
+            else // For general case
             {
                 m_fields[0]->PhysInterp1DScaled(
                     OneDptscale, physfield[i], physfield_interp[i]);
@@ -1189,12 +1198,13 @@ namespace Nektar
             velocity[i] = Array<OneD, NekDouble>(nq);
                 
             // Galerkin project solution back to original space
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
             {
                 m_fields[0]->GetPlane(0)->PhysGalerkinProjection1DScaled(
                     OneDptscale, physfield_interp[i+1], flux[0][i]);
             }
-            else
+            else // For general case
             {
                 m_fields[0]->PhysGalerkinProjection1DScaled(
                     OneDptscale, physfield_interp[i+1], flux[0][i]);
@@ -1223,12 +1233,13 @@ namespace Nektar
         {
             for (j = 0; j < m_spacedim; ++j)
             {
+                // For 3DHomogenoeus1D
                 if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
                 {
                     m_fields[0]->GetPlane(0)->PhysGalerkinProjection1DScaled(
                         OneDptscale, flux_interp[i+1][j], flux[i+1][j]);
                 }
-                else
+                else // For general case
                 {
                     m_fields[0]->PhysGalerkinProjection1DScaled(
                         OneDptscale, flux_interp[i+1][j], flux[i+1][j]);
@@ -1246,12 +1257,13 @@ namespace Nektar
                         flux_interp[m_spacedim+1][j], 1);
                 
             // Galerkin project solution back to origianl space
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
             {
                 m_fields[0]->GetPlane(0)->PhysGalerkinProjection1DScaled(
                     OneDptscale, flux_interp[i+1][j], flux[i+1][j]);
             }
-            else
+            else // For general case
             {
                 m_fields[0]->PhysGalerkinProjection1DScaled(
                                                 OneDptscale,
@@ -1289,6 +1301,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
         
         // Reorder storage to list time-integrated fields first
+        // For 3DHomogenoeus1D
         if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
             int nPointsTot = m_fields[0]->GetTotPoints();
@@ -1317,7 +1330,7 @@ namespace Nektar
             }
 
         }
-        else
+        else // For general case
         {
             for (i = 0; i < nvariables; ++i)
             {
@@ -1657,11 +1670,12 @@ namespace Nektar
         NekDouble OneDptscale = 2;
             
         // Get number of points to dealias a cubic non-linearity
+        // For 3DHomogenoeus1D
         if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
             nPts = m_fields[0]->GetPlane(0)->Get1DScaledTotPoints(OneDptscale);
         }
-        else
+        else // For general case
         {
             nPts = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
         }
@@ -1699,6 +1713,7 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > fields_interp(nvariables);
             
         // Reorder storage to list time-integrated fields first
+        // For 3DHomogenoeus1D
         if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
             int nPointsTot = m_fields[0]->GetTotPoints();
@@ -1730,7 +1745,7 @@ namespace Nektar
                 m_planeNumber = m_planeNumber + 1;
             }
         }
-        else
+        else // For general case
         {
             for (i = 0; i < nvariables; ++i)
             {
@@ -1742,12 +1757,13 @@ namespace Nektar
         for (i = 0; i < nvariables; ++i)
         {
             // Interpolation to higher space
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
             {
                 m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
                                         OneDptscale,fields[i], fields_interp[i]);
             }
-            else
+            else // For general case
             {
                 m_fields[0]->PhysInterp1DScaled(OneDptscale,fields[i],
                                             fields_interp[i] );
@@ -1759,12 +1775,13 @@ namespace Nektar
             physfield_interp[i] = Array<OneD, NekDouble> (nPts);
                 
             // Interpolation to higher space
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
             {
                 m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
                                 OneDptscale, physfield[i], physfield_interp[i]);
             }
-            else
+            else // For genearal case
             {
                 m_fields[0]->PhysInterp1DScaled(OneDptscale, physfield[i],
                                             physfield_interp[i]);
@@ -1778,13 +1795,14 @@ namespace Nektar
             for (j = 0; j < nvariables_aux; ++j)
             {
                 derivativesO1_interp[i][j] = Array<OneD, NekDouble>(nPts);
+                // For 3DHomogenoeus1D
                 if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
                 {
                     m_fields[0]->GetPlane(0)->PhysInterp1DScaled(OneDptscale,
                                                     derivativesO1[i][j],
                                                     derivativesO1_interp[i][j]);
                 }
-                else
+                else // For genearal case
                 {
                     m_fields[0]->PhysInterp1DScaled(OneDptscale,
                                                 derivativesO1[i][j], 
@@ -2126,15 +2144,16 @@ namespace Nektar
         {
             for (j = 1; j < nvariables; ++j)
             {
+                // Galerkin project solution back to origianl space
+                // For 3DHomogenoeus1D
                 if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
                 {
                     m_fields[0]->GetPlane(0)->PhysGalerkinProjection1DScaled(
                                             OneDptscale,
                                             viscousTensor_interp[i][j],
                                             viscousTensor[i][j]);
-
                 }
-                else
+                else // For genearal case
                 {
                     m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
                                                     viscousTensor_interp[i][j],
@@ -2144,7 +2163,6 @@ namespace Nektar
         }
     }
 
-    
     /**
      * @brief Calculate the pressure field \f$ p =
      * (\gamma-1)(E-\frac{1}{2}\rho\| \mathbf{v} \|^2) \f$ assuming an ideal 

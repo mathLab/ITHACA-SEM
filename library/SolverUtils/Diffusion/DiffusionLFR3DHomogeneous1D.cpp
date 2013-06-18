@@ -78,14 +78,17 @@ namespace Nektar
                     "LFRcinf3DHomogeneous1D", DiffusionLFR3DHomogeneous1D::create)};
         
         /**
-         * @brief DiffusionLFR uses the Flux Reconstruction (FR) approach to
-         * compute the diffusion term. The implementation is only for segments,
-         * quadrilaterals and hexahedra at the moment.
+         * @brief DiffusionLFR3DHomogeneous1D uses the 2D Flux Reconstruction (FR) 
+         * approach to compute the diffusion term looping on the planes in the z
+         * direction and adding the flux in z direction at the end.
+         * The implementation is only for segments, quadrilaterals and hexahedra 
+         * at the moment.
          *
          * \todo Extension to triangles, tetrahedra and other shapes.
          * (Long term objective)
          */
-        DiffusionLFR3DHomogeneous1D::DiffusionLFR3DHomogeneous1D(std::string diffType):m_diffType(diffType)
+        DiffusionLFR3DHomogeneous1D::DiffusionLFR3DHomogeneous1D
+                                    (std::string diffType):m_diffType(diffType)
         {
             string diffName;
             
@@ -114,8 +117,8 @@ namespace Nektar
         }
         
         /**
-         * @brief Initiliase DiffusionLFR objects and store them before starting
-         * the time-stepping.
+         * @brief Initiliase DiffusionLFRDiffusionLFR3DHomogeneous1D objects 
+         * and store them before starting the time-stepping.
          *
          * This routine calls the virtual functions #v_SetupMetrics,
          * #v_SetupCFunctions and #v_SetupInterpolationMatrices to
@@ -143,7 +146,7 @@ namespace Nektar
         
         /**
          * @brief Calculate FR Diffusion for the linear problems
-         * using an LDG interface flux.
+         * using an LDG interface flux and the the flux in the third direction.
          *
          */
         void DiffusionLFR3DHomogeneous1D::v_Diffuse(
@@ -193,12 +196,10 @@ namespace Nektar
                                  &inarray_plane[i][j][0], 1);
                 }
                 
-                
                 m_planeDiff->Diffuse(nConvectiveFields,
                                      fields_plane[i],
                                      inarray_plane[i],
                                      outarray_plane[i]);
-                
                 
                 for (j = 0; j < nConvectiveFields; j ++)
                 {
@@ -208,23 +209,21 @@ namespace Nektar
                 }
             }
             
-            Array<OneD, Array<OneD, NekDouble> >
-            fce(nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> >
-            fce_homo(nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> >
-            outarray_z(nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > flux(nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > flux_homo(nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > outarray_z(nConvectiveFields);
             
             NekDouble beta;
             int Homolen = fields[0]->GetHomoLen();
             
-            // Transform forcing function in half-physical space
             for (j = 0; j < nConvectiveFields; j++)
             {
-                fce[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                fce_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                flux[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                flux_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
                 outarray_z[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                fields[0]->HomogeneousFwdTrans(inarray[j], fce[j]);
+                
+                // Transform flux in Fourier space
+                fields[0]->HomogeneousFwdTrans(inarray[j], flux[j]);
             }
             
             m_transpositionLDG = fields[0]->GetTransposition();
@@ -235,17 +234,18 @@ namespace Nektar
                 
                 for (j = 0; j < nConvectiveFields; j++)
                 {
+                    // Derivative in Fourier space
                     Vmath::Smul(nPointsTot_plane,
                                 beta*beta ,
-                                &fce[j][0] + i*nPointsTot_plane, 1,
-                                &fce_homo[j][0] + i*nPointsTot_plane, 1);
+                                &flux[j][0] + i*nPointsTot_plane, 1,
+                                &flux_homo[j][0] + i*nPointsTot_plane, 1);
                 }
-                
             }
             
             for  (j = 0; j < nConvectiveFields; ++j)
             {
-                fields[0]->HomogeneousBwdTrans(fce_homo[j], outarray_z[j]);
+                // Transform back in physical space
+                fields[0]->HomogeneousBwdTrans(flux_homo[j], outarray_z[j]);
                 
                 Vmath::Vsub(nPointsTot,
                             outarray[j], 1,
@@ -253,5 +253,5 @@ namespace Nektar
                             outarray[j], 1);
             }
         }
-    }
-}
+    }//end of namespace SolverUtils
+}//end of namespace Nektar

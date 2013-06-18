@@ -103,12 +103,11 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray)=0;
             
-            virtual  void v_FluxVec(
+            virtual void v_FluxVec(
                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
             {
                 
             };
-            
             
             AdvectionFluxVecCB          m_fluxVector;
             RiemannSolverSharedPtr      m_riemann;

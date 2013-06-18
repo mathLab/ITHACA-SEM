@@ -450,6 +450,8 @@ namespace Nektar
                 GetBndCondExpansions()[bcRegion]->GetExp(e)->GetTotPoints();
             int id1  = m_fields[0]->
                 GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
+            
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
                 int cnt_plane = cnt/n_planes;
@@ -466,7 +468,7 @@ namespace Nektar
                                 cnt_plane + e_plane));
                 id2 = id2_plane + planeID*nTracePts_plane;
             }
-            else
+            else // For general case
             {
                 id2 = m_fields[0]->
                     GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->
@@ -923,11 +925,12 @@ namespace Nektar
         
         for(int e = 0; e < e_max; ++e)
         {
-            
             int npoints = m_fields[0]->
             GetBndCondExpansions()[bcRegion]->GetExp(e)->GetTotPoints();
             int id1  = m_fields[0]->
             GetBndCondExpansions()[bcRegion]->GetPhys_Offset(e);
+            
+            // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
                 int cnt_plane = cnt/n_planes;
@@ -944,7 +947,7 @@ namespace Nektar
                                         cnt_plane + e_plane));
                 id2 = id2_plane + planeID*nTracePts_plane;
             }
-            else
+            else // For general case
             {
                 id2 = m_fields[0]->
                         GetTrace()->GetPhys_Offset(m_fields[0]->GetTraceMap()->

@@ -42,14 +42,32 @@ namespace Nektar
     namespace SolverUtils
     {
         std::string DiffusionLDGNS3DHomogeneous1D ::type = GetDiffusionFactory().
-            RegisterCreatorFunction("LDGNS3DHomogeneous1D", DiffusionLDGNS3DHomogeneous1D ::create);
+            RegisterCreatorFunction("LDGNS3DHomogeneous1D",
+                                    DiffusionLDGNS3DHomogeneous1D ::create);
         
+        /**
+         * @brief DiffusionLDGNS3DHomogeneous1D uses the 2D WeakDG approach 
+         * to compute the diffusion term looping on the planes in the z
+         * direction and adding the flux in z direction at the end.
+         */
         DiffusionLDGNS3DHomogeneous1D ::DiffusionLDGNS3DHomogeneous1D ()
         {
             string diffName = "LDGNS";
-            m_planeDiff = GetDiffusionFactory().CreateInstance(diffName, diffName);
+            m_planeDiff = GetDiffusionFactory().CreateInstance(
+                                                            diffName, diffName);
         }
         
+        /**
+         * @brief Initiliase DiffusionLDGNS3DHomogeneous1D objects and store them
+         * before starting the time-stepping.
+         *
+         * This routine calls the virtual functions #v_SetupMetrics,
+         * #v_SetupCFunctions and #v_SetupInterpolationMatrices to
+         * initialise the objects needed by DiffusionLFR.
+         *
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         */
         void DiffusionLDGNS3DHomogeneous1D ::v_InitObject(
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
@@ -67,6 +85,13 @@ namespace Nektar
             m_planeDiff->InitObject(pSession, pFields_plane0);
         }
         
+        /**
+         * @brief Calculate WeakDG Diffusion for the Navier-Stokes (NS) equations
+         * using an LDG interface flux and the the flux in the third direction.
+         *
+         * The equations that need a diffusion operator are those related
+         * with the velocities and with the energy.
+         */
         void DiffusionLDGNS3DHomogeneous1D ::v_Diffuse(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -146,12 +171,10 @@ namespace Nektar
                     }
                 }
                 
-                
                 m_planeDiff->Diffuse(nConvectiveFields,
                                      fields_plane[i],
                                      inarray_plane[i],
                                      outarray_plane[i]);
-                
                 
                 for (j = 0; j < nConvectiveFields; j ++)
                 {
@@ -170,15 +193,22 @@ namespace Nektar
                 }
             }
             
-            Array<OneD, Array<OneD, NekDouble> >
-                fce(nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> >
-                fce_homo(nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> >
-                outarray_z(nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > flux(nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > flux_homo(nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > outarray_z(nConvectiveFields);
             
             NekDouble beta;
             int Homolen = fields[0]->GetHomoLen();
+            
+            for (j = 0; j < nConvectiveFields; j++)
+            {
+                flux[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                flux_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                outarray_z[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                
+                // Transform flux in Fourier space
+                fields[0]->HomogeneousFwdTrans(fluxvector[j], flux[j]);
+            }
             
             m_transpositionLDGNS = fields[0]->GetTransposition();
                 
@@ -188,24 +218,18 @@ namespace Nektar
                 
                 for (j = 0; j < nConvectiveFields; j++)
                 {
-                    fce[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                    fce_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                    outarray_z[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                    
-                    // Transform forcing function in half-physical space
-                    fields[0]->HomogeneousFwdTrans(fluxvector[j],
-                                                   fce[j]);
+                    // Derivative in Fourier space
                     Vmath::Smul(nPointsTot_plane,
                                 beta*beta ,
-                                &fce[j][0] + i*nPointsTot_plane, 1,
-                                &fce_homo[j][0] + i*nPointsTot_plane, 1);
+                                &flux[j][0] + i*nPointsTot_plane, 1,
+                                &flux_homo[j][0] + i*nPointsTot_plane, 1);
                 }
-                
             }
             
             for  (j = 0; j < nConvectiveFields; ++j)
             {
-                fields[0]->HomogeneousBwdTrans(fce_homo[j], outarray_z[j]);
+                // Transform back in physical space
+                fields[0]->HomogeneousBwdTrans(flux_homo[j], outarray_z[j]);
                 
                 Vmath::Vsub(nPointsTot,
                             outarray[j], 1,
@@ -213,5 +237,5 @@ namespace Nektar
                             outarray[j], 1);
             }
         }
-    }
-}
+    }//end of namespace SolverUtils
+}//end of namespace Nektar}

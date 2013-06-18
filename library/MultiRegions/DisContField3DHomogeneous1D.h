@@ -181,7 +181,7 @@ namespace Nektar
             
             Array<OneD,MultiRegions::ExpListSharedPtr>   m_bndCondExpansions;
             
-            Array<OneD, MultiRegions::ExpListSharedPtr> m_trace;
+            Array<OneD, MultiRegions::ExpListSharedPtr>  m_trace;
 
             /**
              * \brief An array which contains the information about
@@ -217,11 +217,13 @@ namespace Nektar
             /// Set up all DG member variables and maps
             MULTI_REGIONS_EXPORT void SetUpDG();
             
+            /// @todo Fix in another way considering all the planes
             virtual ExpListSharedPtr &v_GetTrace()
             {
                 return m_planes[0]->GetTrace();
             }
             
+            /// @todo Fix in another way considering all the planes
             virtual AssemblyMapDGSharedPtr &v_GetTraceMap()
             {
                 return m_planes[0]->GetTraceMap();

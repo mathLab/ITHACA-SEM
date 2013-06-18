@@ -339,6 +339,7 @@ namespace Nektar
         int i , j;
         int nq = physfield[0].num_elements();
         
+        // For 3DHomogenoeus1D
         if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
             Array<OneD, Array<OneD, NekDouble> >
@@ -366,7 +367,7 @@ namespace Nektar
                 }
             }
         }
-        else
+        else // For general case
         {
             for (i = 0; i < flux.num_elements(); ++i)
             {
@@ -468,7 +469,7 @@ namespace Nektar
                 m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
                     OneDptscale, advVel_plane[j], velocityInterp[j]);
             }
-            else // / For general case
+            else // For general case
             {
                 m_fields[0]->PhysInterp1DScaled(
                     OneDptscale, m_velocity[j], velocityInterp[j]);
@@ -476,6 +477,7 @@ namespace Nektar
         }
         
         // Evaluation of flux vector in the higher space
+        // For 3DHomogenoeus1D
         if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
             // Evaluation of flux vector in the higher space
@@ -504,7 +506,7 @@ namespace Nektar
             }
 
         }
-        else
+        else // For general case
         {
             // Evaluation of flux vector in the higher space
             for (i = 0; i < flux.num_elements(); ++i)

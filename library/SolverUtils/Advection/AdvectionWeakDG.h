@@ -68,7 +68,6 @@ namespace Nektar
                 fluxvector = m_fluxvector;
             };
 
-            
             Array<OneD, Array<OneD, NekDouble> >               m_traceNormals;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fluxvector;
             

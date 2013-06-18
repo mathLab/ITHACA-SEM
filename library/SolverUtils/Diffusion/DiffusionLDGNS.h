@@ -108,7 +108,7 @@ namespace Nektar
             virtual void v_FluxVec(
                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
             {
-                //fluxvector = m_ViscosityType;
+                fluxvector = m_viscTensor;
             };
         }; 
     }

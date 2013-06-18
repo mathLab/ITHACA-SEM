@@ -86,12 +86,21 @@ namespace Nektar
             int nPointsTot_plane = nPointsTot/num_planes;
             int nCoeffs_plane = nCoeffs/num_planes;
             
+            Array<OneD, Array<OneD, NekDouble> > fluxvector(nConvectiveFields);
+            
+            for (j = 0; j < nConvectiveFields; j ++)
+            {
+                fluxvector[j] = Array<OneD, NekDouble>(nPointsTot);
+            }
+
             Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
                 fields_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                 inarray_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                 outarray_plane(num_planes);
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
+                fluxvector_homo(num_planes);
             
             m_planeDiff->SetRiemannSolver(m_riemann);
             m_planeDiff->SetFluxVectorVecNS(m_fluxVectorNS);
@@ -104,6 +113,8 @@ namespace Nektar
                     (nVariables);
                 outarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
                     (nConvectiveFields);
+                fluxvector_homo[i] =
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(spaceDim);
                 
                 for (j = 0; j < nConvectiveFields; j ++)
                 {
@@ -122,6 +133,19 @@ namespace Nektar
                                  &inarray_plane[i][j][0], 1);
                 }
                 
+                for (j = 0; j < spaceDim ; ++j)
+                {
+                    fluxvector_homo[i][j] =
+                        Array<OneD, Array<OneD, NekDouble> > 
+                            (nConvectiveFields);
+                    
+                    for (int k = 0; k < nConvectiveFields ; ++k)
+                    {
+                        fluxvector_homo[i][j][k] =
+                            Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
+                    }
+                }
+                
                 
                 m_planeDiff->Diffuse(nConvectiveFields,
                                      fields_plane[i],
@@ -135,36 +159,42 @@ namespace Nektar
                                  &outarray_plane[i][j][0], 1,
                                  &outarray[j][i * nPointsTot_plane], 1);
                 }
+                
+                m_planeDiff->FluxVec(fluxvector_homo[i]);
+                
+                for ( j = 0; j < nConvectiveFields; ++j)
+                {
+                    Vmath::Vcopy(nPointsTot_plane,
+                                 &fluxvector_homo[i][2][j][0], 1,
+                                 &fluxvector[j][i * nPointsTot_plane], 1);
+                }
             }
             
-            /*
             Array<OneD, Array<OneD, NekDouble> >
-            fce(nConvectiveFields);
+                fce(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> >
-            fce_homo(nConvectiveFields);
+                fce_homo(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> >
-            outarray_z(nConvectiveFields);
+                outarray_z(nConvectiveFields);
             
             NekDouble beta;
             int Homolen = fields[0]->GetHomoLen();
             
-            // Transform forcing function in half-physical space
-            for (j = 0; j < nConvectiveFields; j++)
-            {
-                fce[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                fce_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                outarray_z[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                fields[0]->HomogeneousFwdTrans(inarray[j], fce[j]);
-            }
-            
             m_transpositionLDGNS = fields[0]->GetTransposition();
-            
+                
             for (i = 0; i < num_planes; ++i)
             {
                 beta = 2*M_PI*(m_transpositionLDGNS->GetK(i))/Homolen;
                 
                 for (j = 0; j < nConvectiveFields; j++)
                 {
+                    fce[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                    fce_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                    outarray_z[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                    
+                    // Transform forcing function in half-physical space
+                    fields[0]->HomogeneousFwdTrans(fluxvector[j],
+                                                   fce[j]);
                     Vmath::Smul(nPointsTot_plane,
                                 beta*beta ,
                                 &fce[j][0] + i*nPointsTot_plane, 1,
@@ -182,8 +212,6 @@ namespace Nektar
                             outarray_z[j], 1,
                             outarray[j], 1);
             }
-            */
-       
         }
     }
 }

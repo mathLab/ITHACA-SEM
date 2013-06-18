@@ -76,8 +76,8 @@ namespace Nektar
             m_planeAdv->SetRiemannSolver(m_riemann);
             m_planeAdv->SetFluxVectorVec(m_fluxVector);
             
-            
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nConvectiveFields);
+            
             for (j = 0; j < nConvectiveFields; j ++)
             {
                 fluxvector[j] = Array<OneD, NekDouble>(nPointsTot);

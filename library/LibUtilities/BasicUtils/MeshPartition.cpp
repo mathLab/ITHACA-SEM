@@ -65,8 +65,10 @@ namespace Nektar
         MeshPartition::MeshPartition(const LibUtilities::SessionReaderSharedPtr& pSession) :
                 m_numFields(0),
                 m_fieldNameToId(),
-                m_comm(pSession->GetComm())
+                m_comm(pSession->GetComm()),
+                m_weightingRequired(true)
         {
+            ReadConditions(pSession);
             ReadGeometry(pSession);
             ReadExpansions(pSession);
         }
@@ -83,7 +85,7 @@ namespace Nektar
             ASSERTL0(m_meshElements.size() >= m_comm->GetRowComm()->GetSize(),
                      "Too few elements for this many processes.");
 
-            WeightElements();
+            if (m_weightingRequired)  WeightElements();
             CreateGraph(m_mesh);
             PartitionGraph(m_mesh, m_localPartition);
         }
@@ -405,6 +407,56 @@ namespace Nektar
             ParseUtils::GenerateSeqVector(vSeqStr.c_str(), m_domain);
         }
 
+
+        void MeshPartition::ReadConditions(const SessionReaderSharedPtr& pSession)
+        {
+            TiXmlElement* solverInfoElement =
+                    pSession->GetElement("Nektar/Conditions/SolverInfo");
+            ASSERTL0(solverInfoElement, "Cannot read SolverInfo");
+
+            TiXmlElement* solverInfo = 
+                    solverInfoElement->FirstChildElement("I");
+            ASSERTL0(solverInfo, "Cannot read SolverInfo tags");
+
+            while (solverInfo)
+            {
+                // read the property name
+                ASSERTL0(solverInfo->Attribute("PROPERTY"),
+                         "Missing PROPERTY attribute in solver info "
+                         "section. ");
+                std::string solverProperty = 
+                    solverInfo->Attribute("PROPERTY");
+                ASSERTL0(!solverProperty.empty(),
+                         "Solver info properties must have a non-empty "
+                         "name. ");
+                // make sure that solver property is capitalised
+                std::string solverPropertyUpper =
+                    boost::to_upper_copy(solverProperty);
+
+
+                // read the value
+                ASSERTL0(solverInfo->Attribute("VALUE"),
+                        "Missing VALUE attribute in solver info section. ");
+                std::string solverValue    = solverInfo->Attribute("VALUE");
+                ASSERTL0(!solverValue.empty(),
+                         "Solver info properties must have a non-empty value");
+                // make sure that property value is capitalised
+                std::string propertyValueUpper =
+                    boost::to_upper_copy(solverValue);
+
+                if (solverPropertyUpper == "WEIGHTPARTITIONS") 
+                {
+                    if (propertyValueUpper == "UNIFORM")
+                    {
+                        m_weightingRequired = false;
+                    }
+                    return;
+                }
+                solverInfo = solverInfo->NextSiblingElement("I");
+            }
+        }
+
+
         /*
          * Calculate element weights based on
          *   - element type (Q,T,H,P,R,A)
@@ -497,7 +549,10 @@ namespace Nektar
                 BoostVertex v = boost::add_vertex(pGraph);
                 pGraph[v].id = p;
                 pGraph[v].partition = 0;
-                pGraph[v].weight = m_vertWeights[i];
+                if (m_weightingRequired)
+                {
+                    pGraph[v].weight = m_vertWeights[i];
+                }
 
                 // Process element entries and add graph edges
                 for (unsigned j = 0; j < m_meshElements[i].list.size(); ++j)
@@ -537,7 +592,7 @@ namespace Nektar
                 BoostAdjacencyIterator adjvertit, adjvertit_end;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
-                Array<OneD, int> vwgt(nGraphVerts*2*m_numFields, 1);
+                Array<OneD, int> vwgt(2*nGraphVerts*m_numFields, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
                 for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                       vertit != vertit_end;
@@ -552,12 +607,14 @@ namespace Nektar
                     }
                     xadj[++vcnt] = acnt;
 
-                    // populate vertex multi-weights
-                    for (i = 0; i < 2*m_numFields; i++)
+                    if (m_weightingRequired)
                     {
-                        vwgt[pGraph[*vertit].id * m_numFields + i] = pGraph[*vertit].weight[i];
+                        // populate vertex multi-weights
+                        for (i = 0; i < 2*m_numFields; i++)
+                        {
+                            vwgt[pGraph[*vertit].id * m_numFields + i] = pGraph[*vertit].weight[i];
+                        }
                     }
-
                 }
 
                 // Call Metis and partition graph

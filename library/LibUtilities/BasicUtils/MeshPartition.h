@@ -199,8 +199,11 @@ namespace Nektar
 
             CommSharedPtr                       m_comm;
 
+            bool                                m_weightingRequired;
+
             void ReadExpansions(const SessionReaderSharedPtr& pSession);
             void ReadGeometry(const SessionReaderSharedPtr& pSession);
+            void ReadConditions(const SessionReaderSharedPtr& pSession);
             void WeightElements();
             void CreateGraph(BoostSubGraph& pGraph);
             void PartitionGraph(BoostSubGraph& pGraph,

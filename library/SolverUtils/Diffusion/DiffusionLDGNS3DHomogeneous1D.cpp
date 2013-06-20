@@ -193,6 +193,7 @@ namespace Nektar
                 }
             }
             
+            /*
             Array<OneD, Array<OneD, NekDouble> > flux(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > flux_homo(nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > outarray_z(nConvectiveFields);
@@ -235,6 +236,21 @@ namespace Nektar
                             outarray[j], 1,
                             outarray_z[j], 1,
                             outarray[j], 1);
+            }
+            */
+            
+            Array<OneD, Array<OneD, NekDouble> > outarray_homo(nConvectiveFields);
+            
+            for (i = 0; i < nConvectiveFields; ++i)
+            {
+                outarray_homo[i] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                
+                fields[0]->PhysDeriv(2, fluxvector[i], outarray_homo[i]);
+                
+                Vmath::Vadd(nPointsTot,
+                            outarray[i], 1,
+                            outarray_homo[i], 1,
+                            outarray[i], 1);
             }
         }
     }//end of namespace SolverUtils

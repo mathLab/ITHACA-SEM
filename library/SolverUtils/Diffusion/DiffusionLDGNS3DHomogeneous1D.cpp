@@ -104,6 +104,9 @@ namespace Nektar
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();
             
+            DiffusionLDGNSSharedPtr diffLDGNS = boost::dynamic_pointer_cast<
+                DiffusionLDGNS>(m_planeDiff);
+            
             Array<OneD, unsigned int> planes;
             planes = fields[0]->GetZIDs();
             int num_planes = planes.num_elements();
@@ -112,16 +115,24 @@ namespace Nektar
             int nCoeffs_plane = nCoeffs/num_planes;
             
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nConvectiveFields);
-            
             for (j = 0; j < nConvectiveFields; j ++)
             {
                 fluxvector[j] = Array<OneD, NekDouble>(nPointsTot);
+            }
+            
+            Array<OneD, Array<OneD, NekDouble> > derivatives01_homo(nVariables);
+            for (i = 0; i < nVariables; ++i)
+            {
+                derivatives01_homo[i] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                fields[0]->PhysDeriv(2, inarray[i], derivatives01_homo[i]);
             }
 
             Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
                 fields_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                 inarray_plane(num_planes);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                derivatives01_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
                 outarray_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
@@ -135,6 +146,8 @@ namespace Nektar
                 fields_plane[i] = Array<OneD, MultiRegions::ExpListSharedPtr>
                     (nConvectiveFields);
                 inarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
+                    (nVariables);
+                derivatives01_plane[i] = Array<OneD, Array<OneD, NekDouble> >
                     (nVariables);
                 outarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
                     (nConvectiveFields);
@@ -156,6 +169,12 @@ namespace Nektar
                     Vmath::Vcopy(nPointsTot_plane,
                                  &inarray[j][i * nPointsTot_plane], 1,
                                  &inarray_plane[i][j][0], 1);
+                    
+                    derivatives01_plane[i][j] = Array<OneD, NekDouble>
+                        (nPointsTot_plane, 0.0);
+                    Vmath::Vcopy(nPointsTot_plane,
+                                 &derivatives01_homo[j][i * nPointsTot_plane], 1,
+                                 &derivatives01_plane[i][j][0], 1);
                 }
                 
                 for (j = 0; j < spaceDim ; ++j)
@@ -170,6 +189,9 @@ namespace Nektar
                             Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
                     }
                 }
+                
+                // Set the first order derivatives in 3rd direction 
+                diffLDGNS->SetHomoDerivs(derivatives01_plane[i]);
                 
                 m_planeDiff->Diffuse(nConvectiveFields,
                                      fields_plane[i],
@@ -192,52 +214,6 @@ namespace Nektar
                                  &fluxvector[j][i * nPointsTot_plane], 1);
                 }
             }
-            
-            /*
-            Array<OneD, Array<OneD, NekDouble> > flux(nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> > flux_homo(nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> > outarray_z(nConvectiveFields);
-            
-            NekDouble beta;
-            int Homolen = fields[0]->GetHomoLen();
-            
-            for (j = 0; j < nConvectiveFields; j++)
-            {
-                flux[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                flux_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                outarray_z[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                
-                // Transform flux in Fourier space
-                fields[0]->HomogeneousFwdTrans(fluxvector[j], flux[j]);
-            }
-            
-            m_transpositionLDGNS = fields[0]->GetTransposition();
-                
-            for (i = 0; i < num_planes; ++i)
-            {
-                beta = 2*M_PI*(m_transpositionLDGNS->GetK(i))/Homolen;
-                
-                for (j = 0; j < nConvectiveFields; j++)
-                {
-                    // Derivative in Fourier space
-                    Vmath::Smul(nPointsTot_plane,
-                                beta*beta ,
-                                &flux[j][0] + i*nPointsTot_plane, 1,
-                                &flux_homo[j][0] + i*nPointsTot_plane, 1);
-                }
-            }
-            
-            for  (j = 0; j < nConvectiveFields; ++j)
-            {
-                // Transform back in physical space
-                fields[0]->HomogeneousBwdTrans(flux_homo[j], outarray_z[j]);
-                
-                Vmath::Vsub(nPointsTot,
-                            outarray[j], 1,
-                            outarray_z[j], 1,
-                            outarray[j], 1);
-            }
-            */
             
             Array<OneD, Array<OneD, NekDouble> > outarray_homo(nConvectiveFields);
             

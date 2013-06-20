@@ -61,6 +61,7 @@
 #define NEKTAR_SOLVERUTILS_DIFFUSIONLFRNS3DHomogeneous1D
 
 #include <SolverUtils/Diffusion/Diffusion.h>
+#include <SolverUtils/Diffusion/DiffusionLFRNS.h>
 
 namespace Nektar
 {

@@ -74,6 +74,8 @@ namespace Nektar
             {
                 m_spaceDim = 3;
             }
+            
+            m_diffDim = m_spaceDim - nDim;
 
             m_traceVel = Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
             m_traceNormals = Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
@@ -153,6 +155,16 @@ namespace Nektar
                     fields[i]->MultiplyByElmtInvMass(tmp1, tmp1);
                     fields[i]->BwdTrans             (tmp1, derivativesO1[j][i]);
                 }
+            }
+            
+            // For 3D Homogeneous 1D only take derivatives in 3rd direction
+            if (m_diffDim == 1)
+            {
+                for (i = 0; i < nScalars; ++i)
+                {
+                    derivativesO1[2][i] = m_homoDerivs[i];
+                }
+                
             }
             
             // Initialisation viscous tensor

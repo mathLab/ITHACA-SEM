@@ -52,6 +52,11 @@ namespace Nektar
             
             static std::string type;
             
+            void SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
+            {
+                m_homoDerivs = deriv;
+            }
+            
         protected:
             DiffusionLDGNS();
             
@@ -69,7 +74,10 @@ namespace Nektar
             
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_viscTensor;
             
+            Array<OneD, Array<OneD, NekDouble> > m_homoDerivs;
+            
             int                                  m_spaceDim;
+            int                                  m_diffDim;
             
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,
@@ -110,7 +118,9 @@ namespace Nektar
             {
                 fluxvector = m_viscTensor;
             };
-        }; 
+        };
+        
+        typedef boost::shared_ptr<DiffusionLDGNS> DiffusionLDGNSSharedPtr;
     }
 }
 

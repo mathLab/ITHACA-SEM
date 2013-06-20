@@ -410,9 +410,15 @@ namespace Nektar
 
         void MeshPartition::ReadConditions(const SessionReaderSharedPtr& pSession)
         {
-            TiXmlElement* solverInfoElement =
+            if (!pSession->DefinesElement("Nektar/Conditions/SolverInfo"))
+            {
+                // No SolverInfo = no change of default action to weight
+                // mesh graph.
+                return;
+            }
+
+            TiXmlElement* solverInfoElement = 
                     pSession->GetElement("Nektar/Conditions/SolverInfo");
-            ASSERTL0(solverInfoElement, "Cannot read SolverInfo");
 
             TiXmlElement* solverInfo = 
                     solverInfoElement->FirstChildElement("I");

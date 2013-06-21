@@ -57,8 +57,16 @@ namespace Nektar
             DiffusionLDGNS3DHomogeneous1D ();
             
             SolverUtils::DiffusionSharedPtr              m_planeDiff;
-            LibUtilities::TranspositionSharedPtr         m_transpositionLDGNS;
             
+            int                                          spaceDim;
+            int                                          nPointsTot;
+            int                                          nCoeffs;
+            int                                          num_planes;
+            int                                          nPointsTot_plane;
+            int                                          nCoeffs_plane;
+            
+            Array<OneD, unsigned int>                    planes;
+    
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);

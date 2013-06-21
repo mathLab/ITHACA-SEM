@@ -83,6 +83,16 @@ namespace Nektar
             }
             
             m_planeDiff->InitObject(pSession, pFields_plane0);
+            
+            spaceDim = 3;
+            nPointsTot      = pFields[0]->GetTotPoints();
+            nCoeffs         = pFields[0]->GetNcoeffs();
+            
+            planes = pFields[0]->GetZIDs();
+            num_planes = planes.num_elements();
+            
+            nPointsTot_plane = nPointsTot/num_planes;
+            nCoeffs_plane = nCoeffs/num_planes;
         }
         
         /**
@@ -100,19 +110,9 @@ namespace Nektar
         {
             int i, j, k;
             int nVariables      = inarray.num_elements();
-            int spaceDim = 3;
-            int nPointsTot      = fields[0]->GetTotPoints();
-            int nCoeffs         = fields[0]->GetNcoeffs();
             
             DiffusionLDGNSSharedPtr diffLDGNS = boost::dynamic_pointer_cast<
                 DiffusionLDGNS>(m_planeDiff);
-            
-            Array<OneD, unsigned int> planes;
-            planes = fields[0]->GetZIDs();
-            int num_planes = planes.num_elements();
-            
-            int nPointsTot_plane = nPointsTot/num_planes;
-            int nCoeffs_plane = nCoeffs/num_planes;
             
             Array<OneD, Array<OneD, NekDouble> > fluxvector(nConvectiveFields);
             for (j = 0; j < nConvectiveFields; j ++)

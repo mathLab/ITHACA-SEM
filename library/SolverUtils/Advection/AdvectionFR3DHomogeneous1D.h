@@ -60,6 +60,14 @@ namespace Nektar
             
             SolverUtils::AdvectionSharedPtr m_planeAdv;
             
+            int                                 nPointsTot;
+            int                                 nCoeffs;
+            int                                 nPointsTot_plane;
+            int                                 nCoeffs_plane;
+            int                                 num_planes;
+            
+            Array<OneD, unsigned int>           planes;
+
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);

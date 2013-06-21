@@ -108,7 +108,7 @@ namespace Nektar
         
         // Plane (used only for Discontinous projection
         //        with 3DHomogenoeus1D expansion)
-        int m_planeNumber = 0;
+        int                                 m_planeNumber;
 
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);

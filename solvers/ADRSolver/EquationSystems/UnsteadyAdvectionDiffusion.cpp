@@ -47,6 +47,7 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr& pSession)
     : UnsteadySystem(pSession)
     {
+        m_planeNumber = 0;
     }
     
     /**

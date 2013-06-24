@@ -40,7 +40,7 @@
 
 namespace Nektar
 {
-    class FentonKarma2b: public CellModel
+    class FentonKarma: public CellModel
     {
         
     public:
@@ -49,7 +49,7 @@ namespace Nektar
                                          const LibUtilities::SessionReaderSharedPtr& pSession,
                                          const MultiRegions::ExpListSharedPtr& pField)
         {
-            return MemoryManager<FentonKarma2b>
+            return MemoryManager<FentonKarma>
             ::AllocateSharedPtr(pSession, pField);
         }
         
@@ -57,13 +57,14 @@ namespace Nektar
         static std::string className;
         
         /// Constructor
-        FentonKarma2b(
+        FentonKarma(
                                     const LibUtilities::SessionReaderSharedPtr& pSession,
                                     const MultiRegions::ExpListSharedPtr& pField);
         
         /// Destructor
-        virtual ~FentonKarma2b();
+        virtual ~FentonKarma();
         
+
     protected:
         /// Computes the reaction terms $f(u,v)$ and $g(u,v)$.
         virtual void v_Update(
@@ -77,27 +78,42 @@ namespace Nektar
         virtual void v_SetInitialConditions();
         
     private:
+
         NekDouble C_m;
-        NekDouble tauvplus;
-        NekDouble tauv1minus;
-        NekDouble tauy2minus;
-        NekDouble tauwplus;
-        NekDouble tauwminus;
-        NekDouble taud;
-        NekDouble tau0;
-        NekDouble taur;
-        NekDouble tausi;
+        NekDouble V_0;
+        NekDouble u_fi;
+        NekDouble u_c;
+        NekDouble u_v;
+        NekDouble u_r;
+        NekDouble g_fi_max;
+        NekDouble tau_d;
+        NekDouble tau_v1_minus;
+        NekDouble tau_v2_minus;
+        NekDouble tau_v_plus;
+        NekDouble tau_0;
+        NekDouble tau_r;
+        NekDouble tau_si;
+        NekDouble u_csi;
         NekDouble k1;
         NekDouble k2;
-        NekDouble vcsi;
-        NekDouble vc;
-        NekDouble vr;
-        NekDouble vv;
-        NekDouble vfi; 
-        
-       
+        NekDouble tau_w_minus;
+        NekDouble tau_w_plus;
 
-        
+        enum Variants {
+            eBR,
+            eMBR,
+            eMLR1,
+            eGP,
+            eCF1,
+            eCF2a,
+            eCF2b,
+            eCF2c,
+            eCF3
+        };
+        enum Variants model_variant;
+
+        static std::string lookupIds[];
+        static std::string def;
     };
     
 }

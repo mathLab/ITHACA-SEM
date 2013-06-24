@@ -12,7 +12,7 @@ IF( NEKTAR_SOLVER_CARDIAC_EP )
        ./CellModels/AlievPanfilov.cpp
        ./CellModels/CourtemancheRamirezNattel98.cpp
        ./CellModels/CourtemancheRamirezNattel98cAF.cpp
-       ./CellModels/FentonKarma2b.cpp
+       ./CellModels/FentonKarma.cpp
        ./CellModels/LuoRudy91.cpp
        ./CellModels/Fox02.cpp
        ./CellModels/Winslow99.cpp

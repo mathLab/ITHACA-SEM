@@ -84,15 +84,15 @@ namespace Nektar
             
             m_planeDiff->InitObject(pSession, pFields_plane0);
             
-            spaceDim = 3;
-            nPointsTot      = pFields[0]->GetTotPoints();
-            nCoeffs         = pFields[0]->GetNcoeffs();
+            spaceDim   = 3;
+            nPointsTot = pFields[0]->GetTotPoints();
+            nCoeffs    = pFields[0]->GetNcoeffs();
             
-            planes = pFields[0]->GetZIDs();
+            planes     = pFields[0]->GetZIDs();
             num_planes = planes.num_elements();
             
             nPointsTot_plane = nPointsTot/num_planes;
-            nCoeffs_plane = nCoeffs/num_planes;
+            nCoeffs_plane    = nCoeffs/num_planes;
         }
         
         /**
@@ -107,10 +107,10 @@ namespace Nektar
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
-        {
+        {            
             int i, j, k;
-            int nVariables      = inarray.num_elements();
-            
+            int nVariables = inarray.num_elements();
+               
             DiffusionLDGNSSharedPtr diffLDGNS = boost::dynamic_pointer_cast<
                 DiffusionLDGNS>(m_planeDiff);
             
@@ -126,7 +126,7 @@ namespace Nektar
                 derivatives01_homo[i] = Array<OneD, NekDouble>(nPointsTot, 0.0);
                 fields[0]->PhysDeriv(2, inarray[i], derivatives01_homo[i]);
             }
-
+            
             Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
                 fields_plane(num_planes);
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
@@ -227,7 +227,7 @@ namespace Nektar
                             outarray[i], 1,
                             outarray_homo[i], 1,
                             outarray[i], 1);
-            }
+            }    
         }
     }//end of namespace SolverUtils
 }//end of namespace Nektar}

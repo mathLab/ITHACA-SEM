@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <GEOMETRY DIM="2" SPACE="2">
+
+        <VERTEX>
+            <V ID="0"> -1.3   -1.2    0.0 </V>
+            <V ID="1">  0.1   -1.2    0.0 </V>
+            <V ID="2">  1.0   -1.0    0.0 </V>
+            <V ID="3"> -1.0    0.0    0.0 </V>
+            <V ID="4"> -0.4   -0.3    0.0 </V>
+            <V ID="5">  1.0    0.0    0.0 </V>
+            <V ID="6"> -1.0    1.0    0.0 </V>
+            <V ID="7">  0.3    1.2    0.0 </V>
+            <V ID="8">  1.0    1.0    0.0 </V>
+        </VERTEX>
+
+        <EDGE>
+            <E ID="0">  0 1  </E>
+            <E ID="1">  1 2  </E>
+            <E ID="2">  0 3  </E>
+            <E ID="3">  1 4  </E>
+            <E ID="4">  2 5  </E>
+            <E ID="5">  3 4  </E>
+            <E ID="6">  4 5  </E>
+            <E ID="7">  3 6  </E>
+            <E ID="8">  4 7  </E>
+            <E ID="9">  5 8  </E>
+            <E ID="10"> 6 7  </E>
+            <E ID="11"> 7 8  </E>
+        </EDGE>
+
+        <ELEMENT>
+            <Q ID="0"> 2 0 3 5 </Q>
+            <Q ID="1"> 4 6 3 1 </Q>
+            <Q ID="2"> 10 7 5 8 </Q>
+            <Q ID="3"> 11 8 6 9 </Q>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> Q[0-3] </C>
+            <C ID="1"> E[0,1,2,4,7,9,10,11] </C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="4" FIELDS="u" TYPE="GAUSS_LAGRANGE" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <PARAMETERS>
+            <P> TimeStep        = 0.000001          </P>
+            <P> NumSteps        = 100             </P>
+            <P> FinTime         = TimeStep*NumSteps </P>
+            <P> IO_CheckSteps   = 100000            </P>
+            <P> IO_InfoSteps    = 100000            </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyDiffusion"   />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="DiffusionType"         VALUE="LFRSD"               />
+            <I PROPERTY="DiffusionAdvancement"  VALUE="Explicit"            />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <D VAR="u" USERDEFINEDTYPE="TimeDependent"
+                VALUE="exp(-2.0*PI*PI*t)*sin(PI*x)*sin(PI*y)" />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="exp(-2.0*PI*PI*FinTime)*sin(PI*x)*sin(PI*y)" />
+        </FUNCTION>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="sin(PI*x)*sin(PI*y)" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>
+

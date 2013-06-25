@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<NEKTAR xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://www.nektar.info/schema/nektar.xsd">
+
+    <GEOMETRY DIM="2" SPACE="2">
+
+        <VERTEX>
+            <V ID="0"> -1.0   -1.0    0.0 </V>
+            <V ID="1">  0.0   -1.0    0.0 </V>
+            <V ID="2">  1.0   -1.0    0.0 </V>
+            <V ID="3"> -1.0    0.0    0.0 </V>
+            <V ID="4">  0.0    0.0    0.0 </V>
+            <V ID="5">  1.0    0.0    0.0 </V>
+            <V ID="6"> -1.0    1.0    0.0 </V>
+            <V ID="7">  0.0    1.0    0.0 </V>
+            <V ID="8">  1.0    1.0    0.0 </V>
+        </VERTEX>
+
+        <EDGE>
+            <E ID="0">  0 1  </E>
+            <E ID="1">  1 2  </E>
+            <E ID="2">  0 3  </E>
+            <E ID="3">  1 4  </E>
+            <E ID="4">  2 5  </E>
+            <E ID="5">  3 4  </E>
+            <E ID="6">  4 5  </E>
+            <E ID="7">  3 6  </E>
+            <E ID="8">  4 7  </E>
+            <E ID="9">  5 8  </E>
+            <E ID="10"> 6 7  </E>
+            <E ID="11"> 7 8  </E>
+        </EDGE>
+
+        <ELEMENT>
+            <Q ID="0"> 0   3   5   2  </Q>
+            <Q ID="1"> 1   4   6   3  </Q>
+            <Q ID="2"> 5   8   10  7  </Q>
+            <Q ID="3"> 6   9   11  8  </Q>
+        </ELEMENT>
+
+        <COMPOSITE>
+            <C ID="0"> Q[0-3]       </C>
+            <C ID="1"> E[2,7]       </C>
+            <C ID="2"> E[4,9]       </C>
+            <C ID="3"> E[0,1]       </C>
+            <C ID="4"> E[10,11]     </C>
+            <C ID="5"> E[3,5,6,8]   </C>
+        </COMPOSITE>
+
+        <DOMAIN> C[0] </DOMAIN>
+
+    </GEOMETRY>
+
+    <EXPANSIONS>
+        <E COMPOSITE="C[0]" NUMMODES="16" FIELDS="u" TYPE="GAUSS_LAGRANGE" />
+    </EXPANSIONS>
+
+    <CONDITIONS>
+
+        <PARAMETERS>
+            <P> FinTime         = 2.0              </P>
+            <P> TimeStep        = 0.004             </P>
+            <P> NumSteps        = FinTime/TimeStep  </P>
+            <P> IO_CheckSteps   = 100000            </P>
+            <P> IO_InfoSteps    = 100000            </P>
+            <P> advx            = 1.1                 </P>
+            <P> advy            = 1.1                 </P>
+        </PARAMETERS>
+
+        <SOLVERINFO>
+            <I PROPERTY="EQTYPE"                VALUE="UnsteadyAdvection"   />
+            <I PROPERTY="Projection"            VALUE="DisContinuous"       />
+            <I PROPERTY="AdvectionType"         VALUE="FRDG"                />
+            <I PROPERTY="UpwindType"            VALUE="Upwind"              />
+            <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
+        </SOLVERINFO>
+
+        <VARIABLES>
+            <V ID="0"> u </V>
+        </VARIABLES>
+
+        <BOUNDARYREGIONS>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
+        </BOUNDARYREGIONS>
+
+        <BOUNDARYCONDITIONS>
+            <REGION REF="0">
+                <P VAR="u" VALUE="-[1]" />
+            </REGION>
+            <REGION REF="1">
+                <P VAR="u" VALUE="[0]"  />
+            </REGION>
+            <REGION REF="2">
+                <P VAR="u" VALUE="-[3]" />
+            </REGION>
+            <REGION REF="3">
+                <P VAR="u" VALUE="[2]"  />
+            </REGION>
+        </BOUNDARYCONDITIONS>
+
+        <FUNCTION NAME="AdvectionVelocity">
+            <E VAR="Vx" VALUE="1.1" />
+            <E VAR="Vy" VALUE="1.1" />
+        </FUNCTION>
+
+        <FUNCTION NAME="InitialConditions">
+            <E VAR="u" VALUE="exp(-40.0*(x^2 + y^2))" />
+        </FUNCTION>
+        
+        <FUNCTION NAME="ExactSolution">
+            <E VAR="u" VALUE="exp(-40.0*((x - advx*t)^2 + (y - advy*t)^2))" />
+        </FUNCTION>
+
+    </CONDITIONS>
+
+</NEKTAR>
+

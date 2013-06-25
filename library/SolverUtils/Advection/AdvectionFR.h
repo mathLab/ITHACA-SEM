@@ -89,14 +89,7 @@ namespace Nektar
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
-            
-            virtual void v_FluxVec(
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
-            {
-                fluxvector = m_fluxvector;
-            };
-
-            
+                        
             virtual void v_SetupMetrics(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
@@ -104,11 +97,6 @@ namespace Nektar
             virtual void v_SetupCFunctions(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
-            
-            virtual void v_SetupInterpolationMatrices(
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
-            
             
             virtual void v_DivCFlux_1D(
                 const int nConvectiveFields,
@@ -125,6 +113,14 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux);
             
+            virtual void v_DivCFlux_2D_Gauss(
+                const int nConvectiveFields,
+                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                const Array<OneD, const NekDouble> &fluxX1,
+                const Array<OneD, const NekDouble> &fluxX2,
+                const Array<OneD, const NekDouble> &numericalFlux,
+                Array<OneD,       NekDouble> &divCFlux);
+            
             virtual void v_DivCFlux_3D(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -133,6 +129,12 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &fluxX3, 
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux);
+            
+            virtual void v_FluxVec(
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
+            {
+                fluxvector = m_fluxvector;
+            };
         }; 
     }
 }

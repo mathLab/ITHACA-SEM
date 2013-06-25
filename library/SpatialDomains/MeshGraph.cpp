@@ -2157,7 +2157,7 @@ namespace Nektar
                     {
                     case LibUtilities::eSegment:
                         {
-                            const LibUtilities::PointsKey pkey(nummodes+1, LibUtilities::eGaussGaussLegendre);
+                            const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
                             
                             returnval.push_back(bkey);
@@ -2165,7 +2165,7 @@ namespace Nektar
                         break;
                     case LibUtilities::eQuadrilateral:
                         {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussGaussLegendre);
+                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussGaussLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
                             
                             returnval.push_back(bkey);
@@ -2174,7 +2174,7 @@ namespace Nektar
                         break;
                     case LibUtilities::eHexahedron:
                         {
-                            const LibUtilities::PointsKey pkey(nummodes+1,LibUtilities::eGaussGaussLegendre);
+                            const LibUtilities::PointsKey pkey(nummodes,LibUtilities::eGaussGaussLegendre);
                             LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
                             
                             returnval.push_back(bkey);
@@ -2290,46 +2290,7 @@ namespace Nektar
             }
             break;
                     
-            case eGauss_Lagrange_SEM:
-            {
-                switch (shape)
-                {
-                    case LibUtilities::eSegment:
-                    {
-                        const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
-                        
-                        returnval.push_back(bkey);
-                    }
-                        break;
-                    case LibUtilities::eQuadrilateral:
-                    {
-                        const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
-                        
-                        returnval.push_back(bkey);
-                        returnval.push_back(bkey);
-                    }
-                        break;
-                    case LibUtilities::eHexahedron:
-                    {
-                        const LibUtilities::PointsKey pkey(nummodes, LibUtilities::eGaussGaussLegendre);
-                        LibUtilities::BasisKey bkey(LibUtilities::eGauss_Lagrange, nummodes, pkey);
-                            
-                        returnval.push_back(bkey);
-                        returnval.push_back(bkey);
-                        returnval.push_back(bkey);
-                    }
-                        break;
-                    default:
-                    {
-                        ASSERTL0(false, "Expansion not defined in switch  for this shape");
-                    }
-                        break;
-                }
-            }
-                break;
-
+            
             case eFourier:
             {
                 switch (shape)

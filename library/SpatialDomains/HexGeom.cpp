@@ -43,6 +43,16 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        const unsigned int HexGeom::VertexEdgeConnectivity[8][3] = {
+            {0,3,4},{0,1,5},{1,2,6},{2,3,7},
+            {4,8,11},{5,8,9},{6,9,10},{7,10,11}};
+        const unsigned int HexGeom::VertexFaceConnectivity[8][3] = {
+            {0,1,4},{0,1,2},{0,2,3},{0,3,4},
+            {1,4,5},{1,2,5},{2,3,5},{3,4,5}};
+        const unsigned int HexGeom::EdgeFaceConnectivity[12][2] = {
+            {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},
+            {1,5},{2,5},{3,5},{4,5}};
+
         HexGeom::HexGeom()
         {
             m_shapeType = LibUtilities::eHexahedron;
@@ -388,28 +398,16 @@ namespace Nektar
 
         int HexGeom::v_GetVertexEdgeMap(const int i, const int j) const
 	{
-	    const unsigned int VertexEdgeConnectivity[][3] = {
-	        {0,3,4},{0,1,5},{1,2,6},{2,3,7},
-                {4,8,11},{5,8,9},{6,9,10},{7,10,11}};
-
 	    return VertexEdgeConnectivity[i][j];
 	}
 
         int HexGeom::v_GetVertexFaceMap(const int i, const int j) const
 	{
-	    const unsigned int VertexFaceConnectivity[][3] = {
-	        {0,1,4},{0,1,2},{0,2,3},{0,3,4},
-	        {1,4,5},{1,2,5},{2,3,5},{3,4,5}};
-
 	    return VertexFaceConnectivity[i][j];
 	}
 
         int HexGeom::v_GetEdgeFaceMap(const int i, const int j) const
 	{
-	    const unsigned int EdgeFaceConnectivity[][2] = {
-                {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},
-	        {1,5},{2,5},{3,5},{4,5}};
-
 	    return EdgeFaceConnectivity[i][j];
 	}
 

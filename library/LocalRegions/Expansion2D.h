@@ -126,12 +126,17 @@ namespace Nektar
 
             virtual void v_AddRobinEdgeContribution(const int edgeid, const Array<OneD, const NekDouble> &primCoeffs, Array<OneD, NekDouble> &coeffs);
 
+            virtual DNekMatSharedPtr v_BuildVertexMatrix(
+                const DNekScalMatSharedPtr &r_bnd); 
+
             void GetPhysEdgeVarCoeffsFromElement(
                     const int edge,
                     StdRegions::StdExpansionSharedPtr &EdgeExp,
                     const Array<OneD, const NekDouble>  &varcoeff,
                     Array<OneD,NekDouble> &outarray);
 
+            Array<OneD, unsigned int> v_GetEdgeInverseBoundaryMap(int eid);
+            
         private:
             std::vector<ExpansionWeakPtr> m_edgeExp;
             std::vector<bool> m_requireNeg;

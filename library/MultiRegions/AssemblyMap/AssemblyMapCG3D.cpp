@@ -82,7 +82,8 @@ namespace Nektar
                                                                 &bndConditions,
                 const PeriodicMap &periodicVerts,
                 const PeriodicMap &periodicEdges,
-                const PeriodicMap &periodicFaces):
+                const PeriodicMap &periodicFaces,
+                const bool checkIfSystemSingular):
             AssemblyMapCG(pSession)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs,
@@ -91,7 +92,8 @@ namespace Nektar
                                       bndConditions,
                                       periodicVerts,
                                       periodicEdges,
-                                      periodicFaces);
+                                      periodicFaces,
+                                      checkIfSystemSingular);
 
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
@@ -169,7 +171,8 @@ namespace Nektar
             const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
             const PeriodicMap &periodicVerts,
             const PeriodicMap &periodicEdges,
-            const PeriodicMap &periodicFaces)
+            const PeriodicMap &periodicFaces,
+            const bool checkIfSystemSingular)
         {
             int i,j,k,l;
             int cnt = 0;
@@ -255,6 +258,10 @@ namespace Nektar
                     nLocBndCondDofs += bndCondFaceExp->GetNcoeffs();
                 }
             }
+
+            // Number of dirichlet edges and faces
+            m_numDirEdges = edgeReorderedGraphVertId.size();
+            m_numDirFaces = faceReorderedGraphVertId.size();
 
             /**
              * STEP 1.5: Exchange Dirichlet mesh vertices between processes and
@@ -357,6 +364,18 @@ namespace Nektar
                 }
             }
 
+            // Low Energy preconditioner needs to know how many extra Dirichlet
+            // edges are on this process.
+            int m_extradiredges = extraDirEdgeIds.size();
+            m_extraDirEdges = Array<OneD, int>(m_extradiredges, -1);
+            i = 0;
+            for (mapConstIt  = extraDirEdgeIds.begin();
+                 mapConstIt != extraDirEdgeIds.end(); mapConstIt++)
+            {
+                meshEdgeId = mapConstIt->first;
+                m_extraDirEdges[i++] = meshEdgeId;
+            }
+
             for (i = 0; i < n; ++i)
             {
                 vertcounts [i] = 0;
@@ -446,7 +465,7 @@ namespace Nektar
             // we do not try to set a Dirichlet vertex on a partition with no
             // intersection with the boundary.
             meshVertId = 0;
-            if(systemSingular == true && maxBCIdx == p)
+            if(systemSingular == true && checkIfSystemSingular && maxBCIdx == p)
             {
                 if(m_session->DefinesParameter("SingularElement"))
                 {
@@ -471,7 +490,7 @@ namespace Nektar
                             bndCondExp[bndCondExp.num_elements()-1]->GetExp(0));
                     
                     //first vertex 0 of the edge
-                    meshVertId = bndCondFaceExp->GetGeom3D()->GetVid(0);
+                    meshVertId = bndCondFaceExp->GetGeom2D()->GetVid(0);
                 }
 
                 if(vertReorderedGraphVertId.count(meshVertId) == 0)
@@ -547,7 +566,13 @@ namespace Nektar
             int edgeCnt;
             int faceCnt;
 
-            m_numLocalBndCoeffs = 0;
+            m_numNonDirVertexModes = 0;
+            m_numNonDirEdges       = 0;
+            m_numNonDirFaces       = 0;
+            m_numNonDirFaceModes   = 0;
+            m_numNonDirFaceModes   = 0;
+
+            m_numLocalBndCoeffs    = 0;
 
             /// - Periodic vertices
             for (pIt = periodicVerts.begin(); pIt != periodicVerts.end(); ++pIt)
@@ -808,6 +833,11 @@ namespace Nektar
                                 boost::add_vertex(boostGraphObj);
                                 edgeTempGraphVertId[meshEdgeId] = tempGraphVertId++;
                                 m_numNonDirEdgeModes+=nEdgeInteriorCoeffs;
+
+                                if(nEdgeInteriorCoeffs > 0)
+                                {
+                                    m_numNonDirEdges++;
+                                }
                             }
                             localEdges[localEdgeOffset+edgeCnt++] = edgeTempGraphVertId[meshEdgeId];
                             vwgts_map[ edgeTempGraphVertId[meshEdgeId] ] = nEdgeInteriorCoeffs;
@@ -839,6 +869,11 @@ namespace Nektar
                                 boost::add_vertex(boostGraphObj);
                                 faceTempGraphVertId[meshFaceId] = tempGraphVertId++;
                                 m_numNonDirFaceModes+=nFaceInteriorCoeffs;
+
+                                if(nFaceInteriorCoeffs > 0)
+                                {
+                                    m_numNonDirFaces++;
+                                }
                             }
                             localFaces[localFaceOffset+faceCnt++] = faceTempGraphVertId[meshFaceId];
                             vwgts_map[ faceTempGraphVertId[meshFaceId] ] = nFaceInteriorCoeffs;
@@ -1560,7 +1595,7 @@ namespace Nektar
 
             m_hash = boost::hash_range(m_localToGlobalMap.begin(), 
                                        m_localToGlobalMap.end());
-
+            
             // Add up hash values if parallel
             int hash = m_hash;
             m_comm->GetRowComm()->AllReduce(hash, 

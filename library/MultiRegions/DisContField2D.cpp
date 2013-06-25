@@ -406,16 +406,18 @@ namespace Nektar
                     boost::dynamic_pointer_cast<
                         LocalRegions::Expansion1D>(m_trace->GetExp(i));
                     
-                int offset = m_trace->GetPhys_Offset(i);
+                int offset      = m_trace->GetPhys_Offset(i);
                 int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
                 PeriodicMap::iterator pIt = m_periodicEdges.find(
                     traceGeomId);
 
-                if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal &&
-                    traceGeomId == min(pIt->second[0].id, traceGeomId))
+                if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal)
                 {
-                    traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
-                        traceEl->GetLeftAdjacentElementEdge());
+                    if (traceGeomId != min(pIt->second[0].id, traceGeomId))
+                    {
+                        traceEl->GetLeftAdjacentElementExp()->NegateEdgeNormal(
+                            traceEl->GetLeftAdjacentElementEdge());
+                    }
                 }
                 else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                 {
@@ -434,8 +436,8 @@ namespace Nektar
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        m_boundaryEdges.insert(m_trace->GetOffset_Elmt_Id(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e)));
+                        m_boundaryEdges.insert(
+                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                     }
                 }
                 cnt += m_bndCondExpansions[n]->GetExpSize();
@@ -659,9 +661,14 @@ namespace Nektar
 
         /**
          * @brief Determine the periodic edges and vertices for the given graph.
-         * 
+         *
+         * Note that much of this routine is the same as the three-dimensional
+         * version, which therefore has much better documentation.
+         *
          * @param   bcs         Information about the boundary conditions.
          * @param   variable    Specifies the field.
+         *
+         * @see DisContField3D::FindPeriodicFaces
          */
         void DisContField2D::FindPeriodicEdges(
             const SpatialDomains::BoundaryConditions &bcs,
@@ -843,23 +850,29 @@ namespace Nektar
             Array<OneD, int> procVerts(n,0);
             int nTotVerts;
 
-            // Note if there are no periodic faces at all calling Vsum will
+            // Note if there are no periodic edges at all calling Vsum will
             // cause a segfault.
-            if (perComps.size() > 0)
+            if (totEdges > 0)
             {
                 nTotVerts = Vmath::Vsum(totEdges, edgeVerts, 1);
-
-                for (i = 0; i < n; ++i)
-                {
-                    procVerts[i] = Vmath::Vsum(
-                        edgecounts[i], edgeVerts + edgeoffset[i], 1);
-                }
             }
             else
             {
                 nTotVerts = 0;
             }
 
+            for (i = 0; i < n; ++i)
+            {
+                if (edgecounts[i] > 0)
+                {
+                    procVerts[i] = Vmath::Vsum(
+                        edgecounts[i], edgeVerts + edgeoffset[i], 1);
+                }
+                else
+                {
+                    procVerts[i] = 0;
+                }
+            }
             vertoffset[0] = 0;
 
             for (i = 1; i < n; ++i)
@@ -1130,7 +1143,7 @@ namespace Nektar
 
         bool DisContField2D::IsLeftAdjacentEdge(const int n, const int e)
         {
-            set<int>::iterator     it;
+            set<int>::iterator it;
             LocalRegions::Expansion1DSharedPtr traceEl = 
                 boost::dynamic_pointer_cast<LocalRegions::Expansion1D>(
                     (m_traceMap->GetElmtToTrace())[n][e]);
@@ -1153,10 +1166,9 @@ namespace Nektar
                     PeriodicMap::iterator pIt = m_periodicEdges.find(
                         traceGeomId);
 
-                    if (pIt != m_periodicEdges.end() &&
-                        !pIt->second[0].isLocal)
+                    if (pIt != m_periodicEdges.end() && !pIt->second[0].isLocal)
                     {
-                        fwd = traceGeomId != min(traceGeomId, pIt->second[0].id);
+                        fwd = traceGeomId == min(traceGeomId,pIt->second[0].id);
                     }
                     else
                     {
@@ -1236,9 +1248,6 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 
-            bool parallel = m_session->GetComm()->GetRowComm()->GetSize() > 1;
-            bool fwd;
-            
             for(cnt = n = 0; n < nexp; ++n)
             {
                 phys_offset = GetPhys_Offset(n);
@@ -1249,9 +1258,7 @@ namespace Nektar
                         elmtToTrace[n][e]->GetElmtId());
                     int edgeGeomId = (*m_exp)[n]->GetGeom2D()->GetEid(e);
 
-                    fwd = m_leftAdjacentEdges[cnt];
-
-                    if (fwd)
+                    if (m_leftAdjacentEdges[cnt])
                     {
                         (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
@@ -1319,7 +1326,7 @@ namespace Nektar
             {
                 Bwd[m_periodicBwdCopy[n]] = Fwd[m_periodicFwdCopy[n]];
             }
-            
+
             // Do parallel exchange for forwards/backwards spaces.
             m_traceMap->UniversalTraceAssemble(Fwd);
             m_traceMap->UniversalTraceAssemble(Bwd);

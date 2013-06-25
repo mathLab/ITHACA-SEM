@@ -35,6 +35,7 @@
 
 
 #include <LocalRegions/PrismExp.h>
+#include <SpatialDomains/SegGeom.h>
 #include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
@@ -1593,7 +1594,6 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                     break;
                 }
-
                 case StdRegions::eHybridDGHelmholtz:
                 case StdRegions::eHybridDGLamToU:
                 case StdRegions::eHybridDGLamToQ0:
@@ -1640,7 +1640,50 @@ namespace Nektar
                     }
                     break;
                 }
-                default:
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+                    
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconR:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
+                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
+                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconRT:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
+                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
+                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            default:
                 {
                     NekDouble        one = 1.0;
                     DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1662,16 +1705,15 @@ namespace Nektar
             int nbdry = NumBndryCoeffs();
             int nint = m_ncoeffs - nbdry;
 
-            unsigned int exp_size[] = {nbdry, nint};
-            int nblks = 2;
-            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
             NekDouble factor = 1.0;
+            unsigned int exp_size[] = {nbdry, nint};
+            int nblks=2;
+            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); 
 
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eLaplacian:
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
-
                 // use Deformed case for both regular and deformed geometries
                 factor = 1.0;
                 goto UseLocRegionsMatrix;
@@ -1762,6 +1804,7 @@ namespace Nektar
                     returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
 
                 }
+                break;
             }
             return returnval;
         }
@@ -1971,5 +2014,6 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
+
     }//end of namespace
 }//end of namespace

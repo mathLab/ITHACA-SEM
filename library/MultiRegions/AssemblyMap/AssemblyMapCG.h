@@ -95,12 +95,23 @@ namespace Nektar
             int m_numNonDirEdgeModes;
             /// Number of non Dirichlet face modes
             int m_numNonDirFaceModes;
+            /// Number of Dirichlet edges
+            int m_numDirEdges;
+            /// Number of Dirichlet faces
+            int m_numDirFaces;
+            /// Number of Dirichlet edges
+            int m_numNonDirEdges;
+            /// Number of Dirichlet faces
+            int m_numNonDirFaces;
+            //Extra dirichlet edges in parallel
+            Array<OneD,int> m_extraDirEdges;
+
             /// Maximum static condensation level.
             int m_maxStaticCondLevel;
             /// Map indicating degrees of freedom which are Dirichlet but whose
             /// value is stored on another processor.
             map<int, vector<pair<int, int> > > m_extraDirDofs;
-
+            
             void SetUpUniversalC0ContMap(
                 const ExpList     &locExp,
                 const PeriodicMap &perVerts = NullPeriodicMap,
@@ -168,6 +179,17 @@ namespace Nektar
 
             MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaceModes() const;
 
+            MULTI_REGIONS_EXPORT virtual int v_GetNumDirEdges() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumDirFaces() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirEdges() const;
+
+            MULTI_REGIONS_EXPORT virtual int v_GetNumNonDirFaces() const;
+
+            MULTI_REGIONS_EXPORT virtual const Array<OneD, const int>& v_GetExtraDirEdges();
+
+            MULTI_REGIONS_EXPORT virtual AssemblyMapSharedPtr v_XxtLinearSpaceMap(const ExpList &locexp);
         };
 
 

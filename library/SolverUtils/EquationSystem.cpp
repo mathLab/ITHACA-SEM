@@ -117,7 +117,7 @@ namespace Nektar
             m_HomoDirec			= 0;
             m_useFFT			= false;
             m_dealiasing		= false;
-            m_specHP_dealiasing		= false;
+            m_specHP_dealiasing = false;
             m_SingleMode		= false;
             m_HalfMode			= false;
             m_MultipleModes		= false;
@@ -219,10 +219,10 @@ namespace Nektar
                 m_session->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
             }
             
-            if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
-            {
-                m_specHP_dealiasing = true;
-            }
+            //if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
+            //{
+            //    m_specHP_dealiasing = true;
+            //}
         
             // Options to determine type of projection from file or directly 
             // from constructor
@@ -401,14 +401,28 @@ namespace Nektar
                         MultiRegions::ContField3DSharedPtr firstfield =
                             MemoryManager<MultiRegions::ContField3D>
                             ::AllocateSharedPtr(m_session, m_graph, 
-                                                m_session->GetVariable(i));
+                                                m_session->GetVariable(i),
+                                                m_checkIfSystemSingular[0]);
 
                         m_fields[0] = firstfield;
                         for(i = 1; i < m_fields.num_elements(); i++)
                         {
-                            m_fields[i] = MemoryManager<MultiRegions::ContField3D>
-                                ::AllocateSharedPtr(*firstfield, m_graph, 
-                                                    m_session->GetVariable(i));
+                            if(m_graph->SameExpansions(
+                                        m_session->GetVariable(0),
+                                        m_session->GetVariable(i)))
+                            {
+                                m_fields[i] = MemoryManager<MultiRegions::ContField3D>
+                                    ::AllocateSharedPtr(*firstfield, m_graph,
+                                                    m_session->GetVariable(i),
+                                                    m_checkIfSystemSingular[i]);
+                            }
+                            else
+                            {
+                                m_fields[i] = MemoryManager<MultiRegions::ContField3D>
+                                    ::AllocateSharedPtr(m_session, m_graph, 
+                                                    m_session->GetVariable(i),
+                                                    m_checkIfSystemSingular[i]);
+                            }
                         }
                         
                         if(m_projectionType == MultiRegions::eMixed_CG_Discontinuous)

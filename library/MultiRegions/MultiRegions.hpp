@@ -117,22 +117,24 @@ namespace Nektar
         {
             eNull,    ///< No Solution type specified
             eDiagonal,
-            eInverseLinear,
+            eLinearWithDiagonal,
+            eLinear,
 	    eLowEnergy,
-            eLinearLowEnergy,
+            eLinearWithLowEnergy,
             eBlock,
-            eLocalLowEnergy
+            eLinearWithBlock
         };
 
         const char* const PreconditionerTypeMap[] =
         {
             "Null",
             "Diagonal",
-            "InverseLinear",
-	    "LowEnergy",
-	    "LinearLowEnergy",
+            "FullLinearSpaceWithDiagonal",
+            "FullLinearSpace",
+	    "LowEnergyBlock",
+            "FullLinearSpaceWithLowEnergyBlock",
             "Block",
-            "LocalLowEnergy"
+            "FullLinearSpaceWithBlock"
         };
 
         enum MatrixStorageType

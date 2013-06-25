@@ -141,15 +141,20 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                     const Array<OneD, const NekDouble>& Lcoords,
                           Array<OneD,NekDouble> &coords);
+            
+            LOCAL_REGIONS_EXPORT virtual void v_GetVertexPhysVals(
+                    const int vertex,
+                    const Array<OneD, const NekDouble> &inarray,
+                          NekDouble &outarray);
 
             //-----------------------------
             // Helper functions
             //-----------------------------
             LOCAL_REGIONS_EXPORT virtual void v_WriteToFile(
-                          std::ofstream &outfile,
-                          OutputFormat format,
-                    const bool dumpVar = true,
-                          std::string var = "v");
+                std::ofstream &outfile,
+                OutputFormat format,
+                const bool dumpVar = true,
+                std::string var = "v");
 
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
@@ -163,12 +168,12 @@ namespace Nektar
                     SpatialDomains::Geometry1DSharedPtr& v_GetGeom1D() const;
 
             LOCAL_REGIONS_EXPORT virtual void 
-                    v_SetCoeffsToOrientation(StdRegions::Orientation dir);
+                v_SetCoeffsToOrientation(StdRegions::Orientation dir);
 
             LOCAL_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(
-                    StdRegions::Orientation dir,
-                    Array<OneD, const NekDouble> &inarray,
-                    Array<OneD, NekDouble> &outarray);
+                StdRegions::Orientation dir,
+                Array<OneD, const NekDouble> &inarray,
+                Array<OneD, NekDouble> &outarray);
 
             LOCAL_REGIONS_EXPORT virtual int v_GetNumPoints(const int dir) const;
 
@@ -181,22 +186,23 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual int v_NumDGBndryCoeffs() const;
 
-            LOCAL_REGIONS_EXPORT virtual void v_ComputeVertexNormal(const int vertex);
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeVertexNormal(
+                 const int vertex);
 
             LOCAL_REGIONS_EXPORT virtual StdRegions::Orientation v_GetPorient(int point);
 
             LOCAL_REGIONS_EXPORT virtual SpatialDomains::GeomType  v_MetricInfoType();
 
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
-                    const NekDouble *data,
-                    const std::vector<unsigned int > &nummodes,
-                    const int mode_offset,
-                    NekDouble *coeffs);
+                const NekDouble *data,
+                const std::vector<unsigned int > &nummodes,
+                const int mode_offset,
+                      NekDouble *coeffs);
 
 
             LOCAL_REGIONS_EXPORT virtual void v_SetUpPhysTangents(
-                    const StdRegions::StdExpansionSharedPtr &exp2D,
-                    const int edge);
+                const StdRegions::StdExpansionSharedPtr &exp2D,
+                const int edge);
 
             LOCAL_REGIONS_EXPORT virtual const
                     Array<OneD, const NekDouble>&  v_GetPhysNormals(void);
@@ -245,6 +251,8 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual DNekScalBlkMatSharedPtr
                     v_GetLocStaticCondMatrix(const MatrixKey &mkey);
 
+            LOCAL_REGIONS_EXPORT void v_DropLocStaticCondMatrix(
+                        const MatrixKey &mkey);
 
         private:
             SpatialDomains::Geometry1DSharedPtr m_geom;

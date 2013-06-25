@@ -353,9 +353,21 @@ namespace Nektar
                 LocalRegions::Expansion2DSharedPtr traceEl = 
                     boost::dynamic_pointer_cast<
                         LocalRegions::Expansion2D>(m_trace->GetExp(i));
-                    
-                int offset = m_trace->GetPhys_Offset(i);
-                if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
+
+                int offset      = m_trace->GetPhys_Offset(i);
+                int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
+                PeriodicMap::iterator pIt = m_periodicFaces.find(
+                    traceGeomId);
+
+                if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
+                {
+                    if (traceGeomId != min(pIt->second[0].id, traceGeomId))
+                    {
+                        traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
+                            traceEl->GetLeftAdjacentElementFace());
+                    }
+                }
+                else if (m_traceMap->GetTraceToUniversalMapUnique(offset) < 0)
                 {
                     traceEl->GetLeftAdjacentElementExp()->NegateFaceNormal(
                         traceEl->GetLeftAdjacentElementFace());
@@ -372,8 +384,8 @@ namespace Nektar
                 {
                     for(e = 0; e < m_bndCondExpansions[n]->GetExpSize(); ++e)
                     {
-                        m_boundaryFaces.insert(m_trace->GetOffset_Elmt_Id(
-                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e)));
+                        m_boundaryFaces.insert(
+                            m_traceMap->GetBndCondTraceToGlobalTraceMap(cnt+e));
                     }
                 }
                 cnt += m_bndCondExpansions[n]->GetExpSize();
@@ -630,7 +642,8 @@ namespace Nektar
         }
 
         /**
-         * @brief Determine the perioidc edges and vertices for the given graph.
+         * @brief Determine the periodic faces, edges and vertices for the given
+         * graph.
          * 
          * @param   bcs         Information about the boundary conditions.
          * @param   variable    Specifies the field.
@@ -661,7 +674,7 @@ namespace Nektar
             // composites (i.e. if composites 1 and 2 are periodic then this map
             // will contain either the pair (1,2) or (2,1) but not both).
             //
-            // The thre maps allVerts, allCoord, allEdges and allOrient map a
+            // The three maps allVerts, allCoord, allEdges and allOrient map a
             // periodic face to a vector containing the vertex ids of the face;
             // their coordinates; the edge ids of the face; and their
             // orientation within that face respectively.
@@ -709,8 +722,8 @@ namespace Nektar
                 // From this identify composites by looking at the original
                 // boundary region ordering. Note that in serial the mesh
                 // partitioner is not run, so this map will be empty and
-                // therefore needs to be found from the corresponding boundary
-                // region.
+                // therefore needs to be populated by using the corresponding
+                // boundary region.
                 int cId1, cId2;
                 if (vComm->GetSize() == 1)
                 {
@@ -741,7 +754,7 @@ namespace Nektar
                     int faceId = (*c)[i]->GetGlobalID();
                     locFaces.insert(faceId);
 
-                    // In serial mesh partitioning will not have occurred so
+                    // In serial, mesh partitioning will not have occurred so
                     // need to fill composite ordering map manually.
                     if (vComm->GetSize() == 1)
                     {
@@ -852,19 +865,27 @@ namespace Nektar
 
             // Note if there are no periodic faces at all calling Vsum will
             // cause a segfault.
-            if (perComps.size() > 0)
+            if (totFaces > 0)
             {
                 // Calculate number of vertices on each processor.
                 nTotVerts = Vmath::Vsum(totFaces, faceVerts, 1);
-                for (i = 0; i < n; ++i)
-                {
-                    procVerts[i] = Vmath::Vsum(
-                        facecounts[i], faceVerts + faceoffset[i], 1);
-                }
             }
             else
             {
                 nTotVerts = 0;
+            }
+
+            for (i = 0; i < n; ++i)
+            {
+                if (facecounts[i] > 0)
+                {
+                    procVerts[i] = Vmath::Vsum(
+                        facecounts[i], faceVerts + faceoffset[i], 1);
+                }
+                else
+                {
+                    procVerts[i] = 0;
+                }
             }
 
             // vertoffset is defined in the same manner as edgeoffset
@@ -1493,8 +1514,19 @@ namespace Nektar
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryFaces.end())
                 {
-                    fwd = m_traceMap->
-                        GetTraceToUniversalMapUnique(offset) >= 0;
+                    int traceGeomId = traceEl->GetGeom2D()->GetGlobalID();
+                    PeriodicMap::iterator pIt = m_periodicFaces.find(
+                        traceGeomId);
+
+                    if (pIt != m_periodicFaces.end() && !pIt->second[0].isLocal)
+                    {
+                        fwd = traceGeomId == min(traceGeomId,pIt->second[0].id);
+                    }
+                    else
+                    {
+                        fwd = m_traceMap->
+                            GetTraceToUniversalMapUnique(offset) >= 0;
+                    }
                 }
             }
             else if (traceEl->GetLeftAdjacentElementFace () != -1 &&

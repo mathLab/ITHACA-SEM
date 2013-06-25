@@ -70,6 +70,7 @@ namespace Metis
 
     inline static void PartGraphVKway( 
             int&                              nVerts,
+            int&                              nVertConds,
             Nektar::Array<Nektar::OneD, int>& xadj,
             Nektar::Array<Nektar::OneD, int>& adjcy,
             Nektar::Array<Nektar::OneD, int>& vertWgt,
@@ -78,20 +79,18 @@ namespace Metis
             int&                              volume,
             Nektar::Array<Nektar::OneD, int>& part)
     {
-        int wgtflag = 0;
         int *vwgt = 0;
         int *vsize = 0;
         if (vertWgt.num_elements() > 0)
         {
-            wgtflag += 1;
             vwgt = &vertWgt[0];
         }
         if (vertSize.num_elements() > 0)
         {
-            wgtflag += 2;
             vsize = &vertSize[0];
         }
-        int ncon = 1;
+        // number of balancing conditions (size of vertex multi-weight)
+        int ncon = nVertConds;
         int options[METIS_NOPTIONS];
         METIS_SetDefaultOptions(options);
         METIS_PartGraphKway(&nVerts, &ncon, &xadj[0], &adjcy[0], vwgt, vsize,

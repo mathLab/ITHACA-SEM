@@ -830,7 +830,7 @@ namespace Nektar
                 return m_stdStaticCondMatrixManager[mkey];
             }
 			
-			inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
+	    inline IndexMapValuesSharedPtr GetIndexMap(const IndexMapKey &ikey)
             {
                 return m_IndexMapManager[ikey];
             }
@@ -991,23 +991,41 @@ namespace Nektar
                                       nummodesA,nummodesB);
             }
 
+
             /**
              * @brief Extract the physical values along edge \a edge from \a
              * inarray into \a outarray following the local edge orientation
              * and point distribution defined by defined in \a EdgeExp.
              */
             
-            void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetEdgePhysVals(const int edge, const Array<OneD,
+                                 const NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,inarray,outarray);
             }
 
-            void GetEdgePhysVals(const int edge, const boost::shared_ptr<StdExpansion> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetEdgePhysVals(const int edge,
+                                 const boost::shared_ptr<StdExpansion> &EdgeExp,
+                                 const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
             
+            void GetVertexPhysVals(const int vertex,
+                                   const Array<OneD, const NekDouble> &inarray,
+                                         NekDouble &outarray)
+            {
+                v_GetVertexPhysVals(vertex, inarray, outarray);
+            }
             
+            void GetEdgeInterpVals(const int edge,const Array<OneD,
+                                   const NekDouble> &inarray,
+                                         Array<OneD,NekDouble> &outarray)
+            {
+                v_GetEdgeInterpVals(edge, inarray, outarray);
+            }
             
             /**
              * @brief Extract the metric factors to compute the contravariant 
@@ -1439,6 +1457,28 @@ namespace Nektar
                 return v_GetSurfaceNormal(); 
             }
 
+
+            STD_REGIONS_EXPORT Array<OneD, unsigned int> 
+                GetEdgeInverseBoundaryMap(int eid)
+            {
+                return v_GetEdgeInverseBoundaryMap(eid);
+            }
+            
+            STD_REGIONS_EXPORT Array<OneD, unsigned int>
+                GetFaceInverseBoundaryMap(int fid)
+            {
+                return v_GetFaceInverseBoundaryMap(fid);
+            }
+
+            STD_REGIONS_EXPORT DNekMatSharedPtr BuildInverseTransformationMatrix(
+                const DNekScalMatSharedPtr & m_transformationmatrix)
+            {
+                return v_BuildInverseTransformationMatrix(
+                    m_transformationmatrix);
+            }
+
+
+
         protected:
 
 
@@ -1450,14 +1490,14 @@ namespace Nektar
             Array<OneD, NekDouble> m_phys;                    /**< Array containing expansion evaluated at the quad points */
             LibUtilities::NekManager<StdMatrixKey, DNekMat, StdMatrixKey::opLess> m_stdMatrixManager;
             LibUtilities::NekManager<StdMatrixKey, DNekBlkMat, StdMatrixKey::opLess> m_stdStaticCondMatrixManager;
-			LibUtilities::NekManager<IndexMapKey, IndexMapValues , IndexMapKey::opLess> m_IndexMapManager;
+	    LibUtilities::NekManager<IndexMapKey, IndexMapValues , IndexMapKey::opLess> m_IndexMapManager;
 			
             bool StdMatManagerAlreadyCreated(const StdMatrixKey &mkey)
             {
                 return m_stdMatrixManager.AlreadyCreated(mkey);
             }
 			
-			bool IndexMapManagerAlreadyCreated(const IndexMapKey &ikey)
+            bool IndexMapManagerAlreadyCreated(const IndexMapKey &ikey)
             {
                 return m_IndexMapManager.AlreadyCreated(ikey);
             }
@@ -1767,6 +1807,11 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
             
+            STD_REGIONS_EXPORT virtual void v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray);
+            
+            STD_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(const int edge,
+                const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray);
+            
             STD_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
                 const int edge,  
                 Array<OneD, NekDouble> &outarray);
@@ -1868,6 +1913,16 @@ namespace Nektar
 			
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetFaceNormal(const int face) const;
             STD_REGIONS_EXPORT virtual const NormalVector & v_GetSurfaceNormal() const;
+
+            STD_REGIONS_EXPORT virtual Array<OneD, unsigned int> 
+                v_GetEdgeInverseBoundaryMap(int eid);
+
+            STD_REGIONS_EXPORT virtual Array<OneD, unsigned int>
+                v_GetFaceInverseBoundaryMap(int fid);
+
+            STD_REGIONS_EXPORT virtual DNekMatSharedPtr v_BuildInverseTransformationMatrix(
+                    const DNekScalMatSharedPtr & m_transformationmatrix);
+
         };
 
 

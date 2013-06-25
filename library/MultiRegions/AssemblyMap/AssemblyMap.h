@@ -48,7 +48,9 @@ namespace Nektar
 {
     namespace MultiRegions
     {
+        // Forward declarations
         class AssemblyMap;
+        class ExpList;
         typedef boost::shared_ptr<AssemblyMap>  AssemblyMapSharedPtr;
         static AssemblyMapSharedPtr NullAssemblyMapSharedPtr;
 
@@ -237,6 +239,19 @@ namespace Nektar
             MULTI_REGIONS_EXPORT int GetNumNonDirEdgeModes() const;
 
             MULTI_REGIONS_EXPORT int GetNumNonDirFaceModes() const;
+
+            MULTI_REGIONS_EXPORT int GetNumDirEdges() const;
+
+            MULTI_REGIONS_EXPORT int GetNumDirFaces() const;
+
+            MULTI_REGIONS_EXPORT int GetNumNonDirEdges() const;
+
+            MULTI_REGIONS_EXPORT int GetNumNonDirFaces() const;
+
+            MULTI_REGIONS_EXPORT const Array<OneD, const int>& 
+                GetExtraDirEdges();
+
+            MULTI_REGIONS_EXPORT boost::shared_ptr<AssemblyMap> XxtLinearSpaceMap(const ExpList &locexp);
 
             /// Returns the bandwidth of the boundary system.
             MULTI_REGIONS_EXPORT int GetBndSystemBandWidth() const;
@@ -431,6 +446,20 @@ namespace Nektar
 
             virtual int v_GetNumNonDirFaceModes() const;
 
+            virtual int v_GetNumDirEdges() const;
+
+            virtual int v_GetNumDirFaces() const;
+
+            virtual int v_GetNumNonDirEdges() const;
+
+            virtual int v_GetNumNonDirFaces() const;
+            
+            virtual const Array<OneD, const int>& 
+                v_GetExtraDirEdges();
+            
+            /// Generate a linear space mapping from existing mapping 
+            virtual boost::shared_ptr<AssemblyMap> v_XxtLinearSpaceMap
+                (const ExpList &locexp);
         };
 
 

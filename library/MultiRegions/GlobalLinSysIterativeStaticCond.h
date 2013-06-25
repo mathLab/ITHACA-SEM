@@ -107,7 +107,8 @@ namespace Nektar
                 const DNekScalBlkMatSharedPtr         pBinvD,
                 const DNekScalBlkMatSharedPtr         pC,
                 const DNekScalBlkMatSharedPtr         pInvD,
-                const boost::shared_ptr<AssemblyMap> &locToGloMap);
+                const boost::shared_ptr<AssemblyMap> &locToGloMap,
+                const PreconditionerSharedPtr         pPrecon);
 
             virtual ~GlobalLinSysIterativeStaticCond();
 

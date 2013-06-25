@@ -93,11 +93,15 @@ namespace Nektar
         NekDouble tau_0;
         NekDouble tau_r;
         NekDouble tau_si;
+        NekDouble tau_y_plus;
+        NekDouble tau_y_minus;
         NekDouble u_csi;
         NekDouble k1;
         NekDouble k2;
         NekDouble tau_w_minus;
         NekDouble tau_w_plus;
+
+        bool isCF3;
 
         enum Variants {
             eBR,
@@ -108,7 +112,8 @@ namespace Nektar
             eCF2a,
             eCF2b,
             eCF2c,
-            eCF3
+            eCF3a,
+            eCF3b
         };
         enum Variants model_variant;
 

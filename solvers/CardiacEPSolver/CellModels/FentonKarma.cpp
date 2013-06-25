@@ -50,7 +50,7 @@ namespace Nektar
                                                     "Phenomenological Model.");
     
     // Register cell model variants
-    std::string FentonKarma::lookupIds[9] = {
+    std::string FentonKarma::lookupIds[10] = {
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "BR",   FentonKarma::eBR),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
@@ -68,7 +68,9 @@ namespace Nektar
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
                     "CF2c",  FentonKarma::eCF2c),
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
-                    "CF3",  FentonKarma::eCF3)
+                    "CF3a",  FentonKarma::eCF3a),
+            LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
+                    "CF3b",  FentonKarma::eCF3b)
     };
 
     // Register default variant
@@ -239,7 +241,7 @@ namespace Nektar
                 k1           = 10;
                 k2           = 1;
                 break;
-            case eCF3:
+            case eCF3a:
                 g_fi_max     = 13.3333;
                 tau_r        = 38;
                 tau_si       = 127;
@@ -249,6 +251,28 @@ namespace Nektar
                 tau_v2_minus = 300;
                 tau_w_plus   = 600;
                 tau_w_minus  = 40;
+                tau_y_plus   = 1000;
+                tau_y_minus  = 230;
+                u_c          = 0.25;
+                u_v          = 0.5;
+                u_r          = 0.25;
+                u_fi         = 0.25;
+                u_csi        = 0.7;
+                k1           = 60;
+                k2           = 0;
+                break;
+            case eCF3b:
+                g_fi_max     = 13.3333;
+                tau_r        = 38;
+                tau_si       = 127;
+                tau_0        = 8.3;
+                tau_v_plus   = 3.33;
+                tau_v1_minus = 20;
+                tau_v2_minus = 300;
+                tau_w_plus   = 600;
+                tau_w_minus  = 40;
+                tau_y_plus   = 1000;
+                tau_y_minus  = 230;
                 u_c          = 0.25;
                 u_v          = 0.5;
                 u_r          = 0.25;
@@ -261,11 +285,21 @@ namespace Nektar
 
         tau_d  = C_m/g_fi_max;
         
-        m_nvar = 3;
-        
+        isCF3 = (model_variant == eCF3a || model_variant == eCF3b);
+
         // List gates and concentrations
         m_gates.push_back(1);
         m_gates.push_back(2);
+        m_nvar = 3;
+
+        // Cherry-Fenton 2004 Model 3 has extra gating variable
+        if (isCF3)
+        {
+            m_gates.push_back(3);
+            m_nvar = 4;
+        }
+
+        ASSERTL0(!isCF3, "Cherry-Fenton model 3 not implemented yet.");
     }
     
     
@@ -296,23 +330,23 @@ namespace Nektar
         int i = 0;
 
         // Declare pointers
-        const NekDouble *u;
-        const NekDouble *v;
-        const NekDouble *w;
-        NekDouble *u_new;
-        NekDouble *v_new;
-        NekDouble *w_new;
-        NekDouble *v_tau;
-        NekDouble *w_tau;
+        const NekDouble *u = &inarray[0][0];
+        const NekDouble *v = &inarray[1][0];
+        const NekDouble *w = &inarray[2][0];
+        const NekDouble *y = isCF3 ? &inarray[3][0] : 0;
+        NekDouble *u_new   = &outarray[0][0];
+        NekDouble *v_new   = &outarray[1][0];
+        NekDouble *w_new   = &outarray[2][0];
+        NekDouble *y_new   = isCF3 ? &outarray[3][0] : 0;
+        NekDouble *v_tau   = &m_gates_tau[0][0];
+        NekDouble *w_tau   = &m_gates_tau[1][0];
+        NekDouble *y_tau   = isCF3 ? &m_gates_tau[2][0] : 0;
 
         // Temporary variables
         NekDouble J_fi, J_so, J_si, h1, h2, h3, alpha, beta;
 
         // Compute rates for each point in domain
-        for (i = 0, u = &inarray[0][0], v = &inarray[1][0], w = &inarray[2][0],
-                    u_new = &outarray[0][0], v_new = &outarray[1][0], w_new = &outarray[2][0],
-                    v_tau = &m_gates_tau[0][0], w_tau = &m_gates_tau[1][0];
-                i < n; ++i, ++u, ++v, ++w)
+        for (i = 0; i < n; ++i)
         {
             // Heavyside functions
             h1 = (*u < u_c) ? 0.0 : 1.0;
@@ -331,18 +365,27 @@ namespace Nektar
             *v_tau = 1.0 / (alpha + beta);
             *v_new = alpha * (*v_tau);
 
+            // y-gate
+            if (isCF3)
+            {
+                // TODO: implementation for y_tau and y_new
+            }
+
             // J_fi
             J_fi = -(*v)*h1*(1 - *u)*(*u - u_fi)/tau_d;
 
             // J_so
             // added extra (1-k2*v) term from Cherry&Fenton 2004
-            J_so = (*u)*(1-h3)*(1-k2*(*v))/tau_0 + h3/tau_r;
+            J_so = (*u)*(1-h3)*(1-k2*(*v))/tau_0 +
+                    (isCF3 ? h3*(*u)*(*y)/tau_r : h3/tau_r);
 
             // J_si
             J_si = -(*w)*(1 + tanh(k1*(*u - u_csi)))/(2.0*tau_si);
 
             // u
             *u_new = -J_fi - J_so - J_si;
+
+            ++u, ++v, ++w, ++u_new, ++v_new, ++w_new, ++v_tau, ++w_tau;
         }
     }
     
@@ -358,7 +401,10 @@ namespace Nektar
         Vmath::Fill(m_nq, 0.0,  m_cellSol[0],  1);
         Vmath::Fill(m_nq, 1.0,  m_cellSol[1],  1);
         Vmath::Fill(m_nq, 1.0,  m_cellSol[2],  1);
-      
+        if (isCF3)
+        {
+            Vmath::Fill(m_nq, 0.1,  m_cellSol[2],  1);
+        }
         
     }
 }

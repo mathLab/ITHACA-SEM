@@ -48,7 +48,7 @@ namespace Nektar
                                                     "FentonKarma",
                                                     FentonKarma::create,
                                                     "Phenomenological Model.");
-    
+
     // Register cell model variants
     std::string FentonKarma::lookupIds[10] = {
             LibUtilities::SessionReader::RegisterEnumValue("CellModelVariant",
@@ -406,5 +406,16 @@ namespace Nektar
             Vmath::Fill(m_nq, 0.1,  m_cellSol[2],  1);
         }
         
+    }
+
+    std::string FentonKarma::v_GetCellVarName(unsigned int idx)
+    {
+        switch (idx)
+        {
+            case 0:  return "u";
+            case 1:  return "v";
+            case 2:  return "w";
+            case 3:  return "y";
+        }
     }
 }

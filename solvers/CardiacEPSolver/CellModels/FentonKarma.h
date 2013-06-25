@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_FENTONKARMA2B_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_FENTONKARMA2B_H
+#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_FENTONKARMA_H
+#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_FENTONKARMA_H
 
 #include <CardiacEPSolver/CellModels/CellModel.h>
 
@@ -42,43 +42,42 @@ namespace Nektar
 {
     class FentonKarma: public CellModel
     {
-        
     public:
         /// Creates an instance of this class
         static CellModelSharedPtr create(
-                                         const LibUtilities::SessionReaderSharedPtr& pSession,
-                                         const MultiRegions::ExpListSharedPtr& pField)
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField)
         {
             return MemoryManager<FentonKarma>
             ::AllocateSharedPtr(pSession, pField);
         }
-        
+
         /// Name of class
         static std::string className;
-        
+
         /// Constructor
         FentonKarma(
-                                    const LibUtilities::SessionReaderSharedPtr& pSession,
-                                    const MultiRegions::ExpListSharedPtr& pField);
-        
+                const LibUtilities::SessionReaderSharedPtr& pSession,
+                const MultiRegions::ExpListSharedPtr& pField);
+
         /// Destructor
         virtual ~FentonKarma();
-        
 
     protected:
         /// Computes the reaction terms $f(u,v)$ and $g(u,v)$.
         virtual void v_Update(
-                              const Array<OneD, const Array<OneD, NekDouble> >&inarray,
-                              Array<OneD, Array<OneD, NekDouble> >&outarray,
-                              const NekDouble time);
-        
+                const Array<OneD, const Array<OneD, NekDouble> >&inarray,
+                      Array<OneD, Array<OneD, NekDouble> >&outarray,
+                const NekDouble time);
+
         /// Prints a summary of the model parameters.
         virtual void v_PrintSummary(std::ostream &out);
-        
-        virtual void v_SetInitialConditions();
-        
-    private:
 
+        virtual void v_SetInitialConditions();
+
+        virtual std::string v_GetCellVarName(unsigned int idx);
+
+    private:
         NekDouble C_m;
         NekDouble V_0;
         NekDouble u_fi;
@@ -120,7 +119,7 @@ namespace Nektar
         static std::string lookupIds[];
         static std::string def;
     };
-    
+
 }
 
 #endif

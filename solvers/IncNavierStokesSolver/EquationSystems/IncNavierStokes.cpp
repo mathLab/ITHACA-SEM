@@ -138,17 +138,20 @@ namespace Nektar
                     // defined then this is empty)
                     if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eNoUserDefined)
                     {
-                        if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent)
-                        {
-                            if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eRadiation)
-                            {
-                                if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eI)
-                                {
-                                    ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
-                                }
-                            }
-                        }
-                    }
+						if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eWall_Forces)
+						{	
+							if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent)
+							{
+								if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eRadiation)
+								{
+									if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eI)
+									{
+										ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
+									}
+								}
+							}
+						}
+					}
                 }
             }
             break;
@@ -978,7 +981,7 @@ namespace Nektar
                 }
                 cnt1 += BndExp[n]->GetTotPoints();
             }
-            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh) 
+            else if(type == SpatialDomains::eNoUserDefined ||type == SpatialDomains::eWall_Forces || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh) 
             {
                 cnt += BndExp[n]->GetExpSize();
             }

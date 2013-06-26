@@ -32,7 +32,7 @@
 // Description: Triangle routines built upon StdExpansion2D
 //
 ///////////////////////////////////////////////////////////////////////////////
-
+#include <LibUtilities/Foundations/InterpCoeff.h>
 #include <StdRegions/StdTriExp.h>
 #include <StdRegions/StdNodalTriExp.h>
 #include <StdRegions/StdSegExp.h>       // for StdSegExp, etc
@@ -1650,6 +1650,52 @@ namespace Nektar
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
+        
+        void StdTriExp::v_ReduceOrderCoeffs(int numMin,
+                                            const Array<OneD, const NekDouble> &inarray,
+                                            Array<OneD, NekDouble> &outarray)
+        {
+            int n_coeffs = m_coeffs.num_elements();
+            Array<OneD, NekDouble> coeff(n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp(n_coeffs,0.0);
+            Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> tmp2;
+            
+            int       nmodes0 = m_base[0]->GetNumModes();
+            int       nmodes1 = m_base[1]->GetNumModes();
+            int       numMax  = nmodes0;
+            int       i, numMin2;
+            
+            const LibUtilities::PointsKey Pkey0(nmodes0,LibUtilities::eGaussLobattoLegendre);
+            
+            const LibUtilities::PointsKey Pkey1(nmodes1,LibUtilities::eGaussLobattoLegendre);
+            
+            LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
+            LibUtilities::BasisKey b1(m_base[1]->GetBasisType(),nmodes1,Pkey1);
+            
+            LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
+            LibUtilities::BasisKey bortho1(LibUtilities::eOrtho_B,nmodes1,Pkey1);
+            
+            LibUtilities::InterpCoeff2D(
+                                        b0,b1,m_coeffs,
+                                        bortho0, bortho1, coeff);
+            
+            for (i = 0; i < n_coeffs; i++)
+            {
+                if (i == numMin)
+                {
+                    coeff[i] = 0.0;
+                    numMin += numMin2 - 1;
+                    numMin2 -= 1.0;
+                }
+            }
+            
+            LibUtilities::InterpCoeff2D(
+                                        b0,b1,coeff,
+                                        bortho0, bortho1,outarray);
+            
+        }
+
         
         void StdTriExp::v_HelmholtzMatrixOp_MatFree(
             const Array<OneD, const NekDouble> &inarray,

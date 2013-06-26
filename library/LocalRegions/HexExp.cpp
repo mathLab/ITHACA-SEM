@@ -2093,7 +2093,86 @@ namespace Nektar
                 StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
             }
         }
-
+        
+        /**
+         * Function is used to compute exactly the advective numerical flux on
+         * theinterface of two elements with different expansions, hence an
+         * appropriate number of Gauss points has to be used. The number of Gauss
+         * points has to be equal to the number used by the highest polynomial
+         * degree of the two adjacent elements
+         * @param   numMin     Is the reduced polynomial order
+         * @param   inarray    Input array of coefficients
+         * @param   dumpVar    Output array of reduced coefficients.
+         */
+        
+        void HexExp::v_ReduceOrderCoeffs(
+                                             int numMin,
+                                             const Array<OneD, const NekDouble> &inarray,
+                                             Array<OneD, NekDouble> &outarray)
+        {
+            int n_coeffs = m_coeffs.num_elements();
+            int       nmodes0 = m_base[0]->GetNumModes();
+            int       nmodes1 = m_base[1]->GetNumModes();
+            int       nmodes2 = m_base[2]->GetNumModes();
+            int       numMax  = nmodes0;
+            
+            Array<OneD, NekDouble> coeff(n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp1(nmodes0*nmodes1,0.0);
+            Array<OneD, NekDouble> coeff_tmp2(n_coeffs,0.0);
+            
+            Array<OneD, NekDouble> tmp;
+            Array<OneD, NekDouble> tmp2;
+            Array<OneD, NekDouble> tmp3;
+            Array<OneD, NekDouble> tmp4;
+            
+            Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp2,1);
+            
+            const LibUtilities::PointsKey Pkey0(nmodes0,LibUtilities::eGaussLobattoLegendre);
+            
+            const LibUtilities::PointsKey Pkey1(nmodes1,LibUtilities::eGaussLobattoLegendre);
+            
+            const LibUtilities::PointsKey Pkey2(nmodes2,LibUtilities::eGaussLobattoLegendre);
+            
+            LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
+            LibUtilities::BasisKey b1(m_base[1]->GetBasisType(),nmodes1,Pkey1);
+            LibUtilities::BasisKey b2(m_base[2]->GetBasisType(),nmodes2,Pkey2);
+            
+            LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
+            LibUtilities::BasisKey bortho1(LibUtilities::eOrtho_A,nmodes1,Pkey1);
+            LibUtilities::BasisKey bortho2(LibUtilities::eOrtho_A,nmodes2,Pkey2);
+            
+            LibUtilities::InterpCoeff3D(b0, b1, b2,
+                                        coeff_tmp2,
+                                        bortho0, bortho1, bortho2,
+                                        coeff);
+            
+            Vmath::Zero(n_coeffs,coeff_tmp2,1);
+            
+            int cnt = 0;
+            int cnt2 = 0;
+            for (int u = 0; u < numMin+1; ++u)
+            {
+                for (int i = 0; i < numMin; ++i)
+                {
+                    Vmath::Vcopy(numMin,
+                                 tmp  = coeff+cnt+cnt2,1,
+                                 tmp2 = coeff_tmp1+cnt,1);
+                    
+                    cnt = i*numMax;
+                }
+                
+                Vmath::Vcopy(nmodes0*nmodes1,
+                             tmp3 = coeff_tmp1,1,
+                             tmp4 = coeff_tmp2+cnt2,1);
+                
+                cnt2 = u*nmodes0*nmodes1;
+            }
+            
+            LibUtilities::InterpCoeff3D(bortho0, bortho1,bortho2,
+                                        coeff_tmp2,
+                                        b0,b1,b2,
+                                        outarray);
+        }
 
         void HexExp::v_HelmholtzMatrixOp_MatFree(
                 const Array<OneD, const NekDouble> &inarray,

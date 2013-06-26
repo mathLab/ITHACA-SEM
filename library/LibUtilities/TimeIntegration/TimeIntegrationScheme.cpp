@@ -1353,8 +1353,6 @@ namespace Nektar
                               solvector_new->UpdateSolutionVector(),
                               solvector_new->UpdateTimeVector(),op);
                 
-                CheckSteadyStateConvergence(solvector->GetSolutionVector(),
-                                            solvector_new->UpdateSolutionVector());
                 solvector = solvector_new;
             }
             return solvector->GetSolution();
@@ -1768,45 +1766,6 @@ namespace Nektar
             ASSERTL1(t_new.num_elements()==m_numsteps,"Non-matching number of steps."); 
 
             return true;
-        }
-        
-        /**
-         *@brief Writes the L2 norm of the difference between the solution at t0 = t and t1 = t+dt
-         as an indication of convergence to steady state. It outputs a txt file.
-         * @param y_old         solution vector at t0 = t
-         * @param y_new         solution vector at t1 = t + dt
-         */
-
-        NekDouble TimeIntegrationScheme::CheckSteadyStateConvergence(ConstTripleArray   &y_old,
-                                                                     TripleArray   &y_new)
-        {
-            
-            NekDouble L2NormConvergenceSum;
-            NekDouble L2NormSteadyState;
-            Array<OneD, NekDouble> L2NormConvergence(m_npoints,0.0);
-            
-            Vmath::Vsub(m_npoints,
-                        y_new[m_numsteps-1][0],1,
-                        y_old[m_numsteps-1][0],1,
-                        L2NormConvergence,1);
-            
-            Vmath::Vmul(m_npoints,
-                        L2NormConvergence,1,
-                        L2NormConvergence,1,
-                        L2NormConvergence,1);
-            
-            L2NormConvergenceSum = Vmath::Vsum(m_npoints,
-                                               L2NormConvergence,1);
-            
-            L2NormSteadyState = sqrt(L2NormConvergenceSum);
-            std::ofstream myfile;
-            myfile.open ("ConvergenceCheck.txt", std::ios_base::app);
-            
-            myfile << L2NormSteadyState << endl;
-            
-            myfile.close();
-            
-             return L2NormSteadyState;
         }
         
         std::ostream& operator<<(std::ostream& os, const TimeIntegrationSchemeSharedPtr& rhs)

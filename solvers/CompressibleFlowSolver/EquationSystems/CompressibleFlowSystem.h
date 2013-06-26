@@ -104,6 +104,8 @@ namespace Nektar
         NekDouble                           m_Twall;
         std::string                         m_ViscosityType;
         NekDouble                           m_mu;
+        NekDouble                           m_Skappa;
+        NekDouble                           m_Kappa;
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
@@ -192,6 +194,9 @@ namespace Nektar
         void GetSensor(
             const Array<OneD, const Array<OneD,       NekDouble> > &physarray,
                   Array<OneD,                         NekDouble>   &Sensor);
+        void GetAbsoluteVelocity(
+            const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                  Array<OneD,                   NekDouble>   &Vtot);
         void GetArtificialDynamicViscosity(
             const Array<OneD,  Array<OneD, NekDouble> > &physfield,
                   Array<OneD,                    NekDouble  > &mu_var);

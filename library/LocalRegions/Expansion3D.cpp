@@ -956,6 +956,7 @@ namespace Nektar
             if (n_coeffs != order_e) // Going to orthogonal space
             {
                 Array<OneD, NekDouble> coeff(n_coeffs);
+                Array<OneD, NekDouble> array(n_coeffs);
 
                 ASSERTL0(FaceExp->DetShapeType() == LibUtilities::eQuadrilateral,
                          "Triangular trace expansion not supported with "
@@ -963,71 +964,13 @@ namespace Nektar
 
                 FaceExp->FwdTrans(Fn,FaceExp->UpdateCoeffs());
                 
-                int NumModesElementMax  = sqrt(n_coeffs);
-                int NumModesElementMin  = sqrt(order_e);
+                int NumModesElementMax  = FaceExp->GetBasis(0)->GetNumModes();
+                int NumModesElementMin  = m_base[0]->GetNumModes();
                 
-                // Only implemented for hexes so far
-                LibUtilities::BasisKey bkey_ortho0(
-                    LibUtilities::eOrtho_A,
-                    FaceExp->GetBasis(0)->GetNumModes(),
-                    FaceExp->GetBasis(0)->GetPointsKey());
-                LibUtilities::BasisKey bkey_ortho1(
-                    LibUtilities::eOrtho_A,
-                    FaceExp->GetBasis(1)->GetNumModes(),
-                    FaceExp->GetBasis(1)->GetPointsKey());
-                LibUtilities::BasisKey bkey0(
-                    FaceExp->GetBasis(0)->GetBasisType(),
-                    FaceExp->GetBasis(0)->GetNumModes(),
-                    FaceExp->GetBasis(0)->GetPointsKey());
-                LibUtilities::BasisKey bkey1(
-                    FaceExp->GetBasis(1)->GetBasisType(),
-                    FaceExp->GetBasis(1)->GetNumModes(),
-                    FaceExp->GetBasis(1)->GetPointsKey());
-                LibUtilities::InterpCoeff2D(
-                    bkey0,       bkey1,       FaceExp->GetCoeffs(),
-                    bkey_ortho0, bkey_ortho1, coeff);
+                FaceExp->ReduceOrderCoeffs(NumModesElementMin,
+                                           FaceExp->GetCoeffs(),
+                                           FaceExp->UpdateCoeffs());
                 
-                // Cutting high frequencies
-                int NumModesCutOff = NumModesElementMin;
-                
-                for (i = 0; i < n_coeffs; i++)
-                {
-                    if (i == NumModesCutOff)
-                    {
-                        for(int s = NumModesCutOff;s<(i+NumModesElementMax-NumModesElementMin);s++)
-                        {
-                            coeff[s] = 0.0;
-                        }
-                        
-                        NumModesCutOff += NumModesElementMax;
-                    }
-                    
-                    if (i > NumModesElementMax*NumModesElementMin-1)
-                    {
-                        coeff[i] = 0.0;
-                    }
-                }
-                
-                /*
-                for (i = NumModesCutOff; i < NumModesElementMax; ++i)
-                {
-                    for (j = NumModesCutOff; j < NumModesElementMax; ++j)
-                    {
-                        coeff[i*NumModesElementMax+j] = 0.0;
-                    }
-                }
-                
-                
-                for (int i = 0; i < coeff.num_elements(); i++)
-                {
-                    cout << i << "  ::  " << coeff[i] << endl;
-                }
-                cout << endl;
-                */
-                LibUtilities::InterpCoeff2D(
-                    bkey_ortho0, bkey_ortho1, coeff,
-                    bkey0,       bkey1,       FaceExp->UpdateCoeffs());
-
                 StdRegions::StdMatrixKey masskey(
                     StdRegions::eMass, FaceExp->DetShapeType(), *FaceExp);
                 FaceExp->MassMatrixOp(

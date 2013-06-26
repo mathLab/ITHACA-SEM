@@ -115,6 +115,8 @@ namespace Nektar
         m_session->LoadParameter ("Twall",         m_Twall,         300.15);
         m_session->LoadSolverInfo("ViscosityType", m_ViscosityType, "Constant");
         m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
+        m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
+        m_session->LoadParameter ("Kappa",         m_Kappa,         0.0);
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
         
@@ -2202,8 +2204,8 @@ namespace Nektar
     }
 
     void CompressibleFlowSystem::GetSensor(
-            const Array<OneD, const Array<OneD, NekDouble> > &physarray,
-                  Array<OneD,                   NekDouble>   &Sensor)
+                const Array<OneD, const Array<OneD, NekDouble> > &physarray,
+                      Array<OneD,                   NekDouble>   &Sensor)
     {
         
         int i, e, nCoeffsElement, NumModesElement, NumModesCuttOff, NumModesCuttOff_Dir1, NumModesCuttOff_Dir2, nQuadPointsElement;
@@ -2228,368 +2230,188 @@ namespace Nektar
         
         // Getting the sensor for 2D elements. For now, this is only implemented for Quadrilateral elements
         
-        if(m_expdim == 2)
-        {
-            // filtering procedure for Quadrilateral elements described by Biotto page 94-95
-            
-            int CoeffsCount = 0;
-            
-            for (e = 0; e < nElements; e++)
-            {
-                nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-                nCoeffsElement     = m_fields[0]->GetExp(e)->GetNcoeffs();
-                
-                Array<OneD, NekDouble> OrthoElementPhys(nQuadPointsElement,0.0);
-                Array<OneD, NekDouble> OrthoElementCoeffs(nCoeffsElement,0.0);
-                
-                Array<OneD, NekDouble> SolPElementPhys(nQuadPointsElement,0.0);
-                Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,0.0);
-                
-                Array<OneD, NekDouble> SolPmOneElementPhys(nQuadPointsElement,0.0);
-                Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement,0.0);
-                
-                const LibUtilities::BasisKey  Ba0(
-                                    m_fields[0]->GetExp(e)->GetBasis(0)->GetBasisType(),
-                                    m_fields[0]->GetExp(e)->GetBasis(0)->GetNumModes(),
-                                    m_fields[0]->GetExp(e)->GetBasis(0)->GetPointsKey());
-                
-                const LibUtilities::BasisKey  Ba1(
-                                    m_fields[0]->GetExp(e)->GetBasis(1)->GetBasisType(),
-                                    m_fields[0]->GetExp(e)->GetBasis(1)->GetNumModes(),
-                                    m_fields[0]->GetExp(e)->GetBasis(1)->GetPointsKey());
-                
-                NumModesElement = ExpOrderElement[e];
-                
-                // create vector the save the solution points per element at P = p;
-                
-                for (int i = 0; i < nQuadPointsElement; i++)
-                {
-                    SolPElementPhys[i] = SolP[CoeffsCount+i];
-                }
-                
-                if(boost::dynamic_pointer_cast<LocalRegions::QuadExp>(m_fields[0]->GetExp(e)))
-                {
-                    const LibUtilities::BasisKey  Ba0Ortho(
-                                        LibUtilities::eOrtho_A,
-                                        m_fields[0]->GetExp(e)->GetBasis(0)->GetNumModes(),
-                                        m_fields[0]->GetExp(e)->GetBasis(0)->GetPointsKey());
-                    
-                    const LibUtilities::BasisKey  Ba1Ortho(
-                                        LibUtilities::eOrtho_A,
-                                        m_fields[0]->GetExp(e)->GetBasis(1)->GetNumModes(),
-                                        m_fields[0]->GetExp(e)->GetBasis(1)->GetPointsKey());
-                    
-                    m_fields[0]->GetExp(e)->FwdTrans(SolPElementPhys, SolPElementCoeffs);
-                    
-                    // Change from Modified to Orthogonal basis to start filtering on the orthogonal coefficient space
-                    
-                    LibUtilities::InterpCoeff2D(Ba0,Ba1,SolPElementCoeffs,
-                                                Ba0Ortho, Ba1Ortho,
-                                                OrthoElementCoeffs);
-                    
-                    // Start filtering process as described by C. Biotto page 93-95
-                    
-                    NumModesCuttOff = NumModesElement - 1;
-                    
-                    for (i = 0; i < nCoeffsElement; i++)
-                    {
-                        if (i == NumModesCuttOff || (i > nCoeffsElement-NumModesElement-1))
-                        {
-                            OrthoElementCoeffs[i] = 0.0;
-                            NumModesCuttOff += NumModesElement;
-                        }
-                    }
-                    
-                    LibUtilities::InterpCoeff2D(
-                                                Ba0Ortho, Ba1Ortho,
-                                                OrthoElementCoeffs,
-                                                Ba0,Ba1,SolPmOneElementCoeffs);
-                    
-                    
-                    // Backward transformation from Modified Coefficient space to Modified Physical space (Outcome is the solution points at P = p - 1 on the Modified basis).
-                    
-                    m_fields[0]->GetExp(e)->BwdTrans(SolPmOneElementCoeffs,SolPmOneElementPhys);
-                }
-                // Filtering for Triangular elements
-                else if(boost::dynamic_pointer_cast<LocalRegions::TriExp>(m_fields[0]->GetExp(e)))
-                {
-                    
-                    // Set-up of the Orthogonal basis for a Quadrilateral element which is needed to obtain the solution at P =  p - 1;
-                    const LibUtilities::BasisKey  Ba0Ortho(
-                                        LibUtilities::eOrtho_A,
-                                        m_fields[0]->GetExp(e)->GetBasis(0)->GetNumModes(),
-                                        m_fields[0]->GetExp(e)->GetBasis(0)->GetPointsKey());
-                    
-                    const LibUtilities::BasisKey  Ba1Ortho(
-                                        LibUtilities::eOrtho_B,
-                                        m_fields[0]->GetExp(e)->GetBasis(1)->GetNumModes(),
-                                        m_fields[0]->GetExp(e)->GetBasis(1)->GetPointsKey());
-                    
-                    StdRegions::StdTriExpSharedPtr     m_OrthoTriExp;
-                    
-                    m_OrthoTriExp =  MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(Ba0Ortho,Ba1Ortho);
-                    
-                    m_OrthoTriExp->FwdTrans(SolPElementPhys, OrthoElementCoeffs);
-                    
-                    // Start filtering process as described by C. Biotto page 93-95
-                    
-                    NumModesCuttOff_Dir1 = NumModesElement - 1;
-                    NumModesCuttOff_Dir2 = NumModesElement;
-                    
-                    
-                    for (i = 0; i < nCoeffsElement; i++)
-                    {
-                        if (i == NumModesCuttOff_Dir1)
-                        {
-                            OrthoElementCoeffs[i] = 0.0;
-                            NumModesCuttOff_Dir1 += NumModesCuttOff_Dir2 - 1;
-                            NumModesCuttOff_Dir2 -= 1.0;
-                        }
-                    }
-                    
-                    m_OrthoTriExp->BwdTrans(OrthoElementCoeffs, SolPmOneElementPhys);
-                }
-                
-                for (int i = 0; i < nQuadPointsElement; i++)
-                {
-                    SolPmOne[CoeffsCount+i] = SolPmOneElementPhys[i];
-                }
-                
-                NekDouble SolPmeanNumerator   = 0.0;
-                NekDouble SolPmeanDenumerator = 0.0;
-                
-                // Determining the norm of the numerator of the Sensor
-                
-                Vmath::Vsub(nQuadPointsElement, SolPElementPhys, 1, SolPmOneElementPhys, 1, SolNorm, 1);
-                Vmath::Vmul(nQuadPointsElement, SolNorm, 1, SolNorm, 1, SolNorm, 1);
-                
-                for (int i = 0; i < nQuadPointsElement; i++)
-                {
-                    SolPmeanNumerator   += SolNorm[i];
-                    SolPmeanDenumerator += SolPElementPhys[i];
-                }
-                
-                for (int i = 0; i < nQuadPointsElement; ++i)
-                {
-                    Sensor[CoeffsCount+i] = sqrt(SolPmeanNumerator/nQuadPointsElement)/sqrt(SolPmeanDenumerator/nQuadPointsElement);
-                    Sensor[CoeffsCount+i] = log10(Sensor[CoeffsCount+i]);
-                }
-                
-                CoeffsCount += nQuadPointsElement;
-            }
-        }
+        // filtering procedure for Quadrilateral elements described by Biotto page 94-95
+        int CoeffsCount = 0;
         
-        // Getting the sensor for 3D elements. For now, this is only implemented for Hexagon elements
-        // cout << "bug1" << endl;
-        if(m_expdim == 3)
+        for (e = 0; e < nElements; e++)
         {
-            int CoeffsCount = 0;
+            NumModesElement = ExpOrderElement[e];
             
-            for (e = 0; e < nElements; e++)
+            int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
+            int nCoeffsElement = m_fields[0]->GetExp(e)->GetNcoeffs();
+            int numCutOff = NumModesElement - 1;
+            
+            // Set-up of the Orthogonal basis for a Quadrilateral element which is
+            // needed to obtain thesolution at P =  p - 1;
+            
+            Array<OneD, NekDouble> SolPElementPhys(nQuadPointsElement,0.0);
+            Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,0.0);
+            
+            Array<OneD, NekDouble> SolPmOneElementPhys(nQuadPointsElement,0.0);
+            Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement,0.0);
+            
+            // create vector the save the solution points per element at P = p;
+            
+            for (int i = 0; i < nQuadPointsElement; i++)
             {
-                NumModesElement = ExpOrderElement[e];
-                
-                nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-                nCoeffsElement     = m_fields[0]->GetExp(e)->GetNcoeffs();
-                
-                Array<OneD, NekDouble> OrthoElementPhys(nQuadPointsElement,0.0);
-                Array<OneD, NekDouble> OrthoElementCoeffs(nCoeffsElement,0.0);
-                
-                Array<OneD, NekDouble> SolPElementPhys(nQuadPointsElement,0.0);
-                Array<OneD, NekDouble> SolPElementCoeffs(nCoeffsElement,0.0);
-                
-                Array<OneD, NekDouble> SolPmOneElementPhys(nQuadPointsElement,0.0);
-                Array<OneD, NekDouble> SolPmOneElementCoeffs(nCoeffsElement,0.0);
-                
-                // Set up
-                
-                const LibUtilities::BasisKey  Ba0(
-                                    m_fields[0]->GetExp(e)->GetBasis(0)->GetBasisType(),
-                                    m_fields[0]->GetExp(e)->GetBasis(0)->GetNumModes(),
-                                    m_fields[0]->GetExp(e)->GetBasis(0)->GetPointsKey());
-                
-                const LibUtilities::BasisKey  Ba1(
-                                    m_fields[0]->GetExp(e)->GetBasis(1)->GetBasisType(),
-                                    m_fields[0]->GetExp(e)->GetBasis(1)->GetNumModes(),
-                                    m_fields[0]->GetExp(e)->GetBasis(1)->GetPointsKey());
-                
-                const LibUtilities::BasisKey  Ba2(
-                                    m_fields[0]->GetExp(e)->GetBasis(2)->GetBasisType(),
-                                    m_fields[0]->GetExp(e)->GetBasis(2)->GetNumModes(),
-                                    m_fields[0]->GetExp(e)->GetBasis(2)->GetPointsKey());
-                
-                // create vector the save the solution points per element at P = p;
-                
-                for (int i = 0; i < nQuadPointsElement; i++)
-                {
-                    SolPElementPhys[i] = SolP[CoeffsCount+i];
-                }
-                
-                // Filtering for Hexahedral elements
-                
-                if(boost::dynamic_pointer_cast<LocalRegions::HexExp>(m_fields[0]->GetExp(e)))
-                {
-                    // Set-up of the Orthogonal basis for a Hexagon element
-                    // which is needed to obtain the solution at P =  p - 1;
-                    
-                    const LibUtilities::BasisKey  Ba0Ortho(
-                                        LibUtilities::eOrtho_A,
-                                        m_fields[0]->GetExp(e)->GetBasis(0)->GetNumModes(),
-                                        m_fields[0]->GetExp(e)->GetBasis(0)->GetPointsKey());
-                    
-                    const LibUtilities::BasisKey  Ba1Ortho(
-                                        LibUtilities::eOrtho_A,
-                                        m_fields[0]->GetExp(e)->GetBasis(1)->GetNumModes(),
-                                        m_fields[0]->GetExp(e)->GetBasis(1)->GetPointsKey());
-                    
-                    const LibUtilities::BasisKey  Ba2Ortho(
-                                        LibUtilities::eOrtho_A,
-                                        m_fields[0]->GetExp(e)->GetBasis(2)->GetNumModes(),
-                                        m_fields[0]->GetExp(e)->GetBasis(2)->GetPointsKey());
-                    
-                    // Change from Modified to Orthogonal basis
-                    
-                    m_fields[0]->GetExp(e)->FwdTrans(SolPElementPhys, SolPElementCoeffs);
-                    
-                    
-                    LibUtilities::InterpCoeff3D(Ba0,Ba1,Ba2,
-                                                SolPElementCoeffs,
-                                                Ba0Ortho,Ba1Ortho,Ba2Ortho,
-                                                OrthoElementCoeffs);
-                    
-                    // Start filtering process as described by C. Biotto page 93-95
-                    
-                    for (int i = 0; i < NumModesElement; i++)
-                    {
-                        NumModesCuttOff = NumModesElement - 1;
-                        
-                        if( i < NumModesCuttOff)
-                        {
-                            for (int j = 0; j < NumModesElement*NumModesElement; j++)
-                            {
-                                if (j == NumModesCuttOff)
-                                {
-                                    for (int s = NumModesCuttOff; s<(j+1); s++)
-                                    {
-                                        OrthoElementCoeffs[i*NumModesElement*NumModesElement+s] = 0.0;
-                                    }
-                                    
-                                    NumModesCuttOff += NumModesElement;
-                                }
-                                
-                                if (j > (NumModesElement*(NumModesElement-1)-1))
-                                {
-                                    OrthoElementCoeffs[i*NumModesElement*NumModesElement+j] = 0.0;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            for (int j = 0; j < NumModesElement*NumModesElement; j++)
-                            {
-                                OrthoElementCoeffs[i*NumModesElement*NumModesElement+j] = 0.0;
-                            }
-                        }
-                    }
-                    
-                    // To obtain the reduced solution (p - 1) on the Modified basis the coefficients are interpolated back from Orthogonal to Modified basis
-                    
-                    LibUtilities::InterpCoeff3D(Ba0Ortho,Ba1Ortho,Ba2Ortho,
-                                                OrthoElementCoeffs,
-                                                Ba0,Ba1,Ba2,
-                                                SolPmOneElementCoeffs);
-                    
-                    m_fields[0]->GetExp(e)->BwdTrans(SolPmOneElementCoeffs,SolPmOneElementPhys);
-                    
-                }
-                else
-                {
-                    ASSERTL0(false, "Only Hexes are supported.");
-                }
-                
-                for (int i = 0; i < nQuadPointsElement; i++)
-                {
-                    SolPmOne[CoeffsCount+i] = SolPmOneElementPhys[i];
-                }
-                
-                NekDouble SolPmeanNumerator     = 0.0;
-                NekDouble SolPmeanDenumerator   = 0.0;
-                
-                // Determining the norm of the numerator of the Sensor
-                
-                Vmath::Vsub(nQuadPointsElement,
-                            SolPElementPhys,1,
-                            SolPmOneElementPhys,1,
-                            SolNorm, 1);
-                Vmath::Vmul(nQuadPointsElement,
-                            SolNorm, 1,
-                            SolNorm, 1,
-                            SolNorm, 1);
-                
-                // Determining the Numerator and Denumerator of the Sensor
-                
-                for (int i = 0; i < nQuadPointsElement; i++)
-                {
-                    SolPmeanNumerator   += SolNorm[i];
-                    SolPmeanDenumerator += SolPElementPhys[i];
-                }
-                
-                // Calculating the Sensor value in each element
-                for (int i = 0; i < nQuadPointsElement; ++i)
-                {
-                    Sensor[CoeffsCount+i] = sqrt(SolPmeanNumerator/nQuadPointsElement)
-                    /sqrt(SolPmeanDenumerator/nQuadPointsElement);
-                    
-                    Sensor[CoeffsCount+i] = log10(Sensor[CoeffsCount+i]);
-                }
-                
-                CoeffsCount += nQuadPointsElement;
+                SolPElementPhys[i] = SolP[CoeffsCount+i];
             }
+            
+            m_fields[0]->GetExp(e)->FwdTrans(SolPElementPhys,
+                                             SolPElementCoeffs);
+            
+            // ReduceOrderCoeffs reduces the polynomial order of the solution that
+            // is represented by the coeffs given as an inarray. This is done by
+            // projecting the higher order solution onto the orthogonal basis and
+            // padding the higher order coefficients with zeros.
+            
+            m_fields[0]->GetExp(e)->ReduceOrderCoeffs(numCutOff,
+                                                      SolPElementCoeffs,
+                                                      SolPmOneElementCoeffs);
+            
+            m_fields[0]->GetExp(e)->BwdTrans(SolPmOneElementCoeffs,
+                                             SolPmOneElementPhys);
+            
+            for (int i = 0; i < nQuadPointsElement; i++)
+            {
+                SolPmOne[CoeffsCount+i] = SolPmOneElementPhys[i];
+            }
+            
+            NekDouble SolPmeanNumerator = 0.0;
+            NekDouble SolPmeanDenumerator = 0.0;
+            
+            // Determining the norm of the numerator of the Sensor
+            
+            Vmath::Vsub(nQuadPointsElement,
+                        SolPElementPhys, 1,
+                        SolPmOneElementPhys, 1,
+                        SolNorm, 1);
+            
+            Vmath::Vmul(nQuadPointsElement,
+                        SolNorm, 1,
+                        SolNorm, 1,
+                        SolNorm, 1);
+            
+            for (int i = 0; i < nQuadPointsElement; i++)
+            {
+                SolPmeanNumerator   += SolNorm[i];
+                SolPmeanDenumerator += SolPElementPhys[i];
+            }
+            
+            for (int i = 0; i < nQuadPointsElement; ++i)
+            {
+                Sensor[CoeffsCount+i] = sqrt(SolPmeanNumerator/nQuadPointsElement)
+                                            /sqrt(SolPmeanDenumerator/nQuadPointsElement);
+                
+                Sensor[CoeffsCount+i] = log10(Sensor[CoeffsCount+i]);
+            }
+            
+            CoeffsCount += nQuadPointsElement;
+            
         }
     }
-
+    
+    void CompressibleFlowSystem::GetAbsoluteVelocity(
+                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+                      Array<OneD,                   NekDouble>   &Vtot)
+    {
+        int nTotQuadPoints = GetTotPoints();
+        
+        // Getting the velocity vector on the 2D normal space
+        Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
+        
+        Vmath::Zero(Vtot.num_elements(), Vtot, 1);
+        
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            velocity[i] = Array<OneD, NekDouble>(nTotQuadPoints);
+        }
+        
+        GetVelocityVector(inarray, velocity);
+        
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            Vmath::Vvtvp(nTotQuadPoints,
+                         velocity[i], 1,
+                         velocity[i], 1,
+                         Vtot, 1,
+                         Vtot, 1);
+        }
+        
+        Vmath::Vsqrt(Vtot.num_elements(),Vtot,1,Vtot,1);
+    }
     
     void CompressibleFlowSystem::GetArtificialDynamicViscosity(
-            const Array<OneD, Array<OneD, NekDouble> > &physfield,
-            Array<OneD,             NekDouble  > &mu_var)
+                        const Array<OneD, Array<OneD, NekDouble> > &physfield,
+                              Array<OneD,             NekDouble  > &mu_var)
     {
         const int npts       = m_fields[0]->GetTotPoints();
         const int nElements  = m_fields[0]->GetExpSize();
         const int ploc       = m_fields[0]->GetExpSize();
-        
-        const double S_Kappa = -1.9;
-        const double Kappa = 0.0;
+    
         int PointCount = 0;
         int nTotQuadPoints  = GetTotPoints();
         
-        Array <OneD , NekDouble > S_e            (nTotQuadPoints , 0.0);
-        Array <OneD , NekDouble > se             (nTotQuadPoints , 0.0);
-        Array<OneD, NekDouble > Sensor           (nTotQuadPoints, 0.0);
+        Array <OneD , NekDouble > S_e               (nTotQuadPoints, 0.0);
+        Array <OneD , NekDouble > se                (nTotQuadPoints, 0.0);
+        Array <OneD, NekDouble > Sensor             (nTotQuadPoints, 0.0);
+        Array <OneD, NekDouble > absVelocity        (nTotQuadPoints, 0.0);
+        Array <OneD, NekDouble > soundspeed         (nTotQuadPoints, 0.0);
+        Array <OneD, NekDouble > pressure           (nTotQuadPoints, 0.0);
+        
+        GetAbsoluteVelocity   (physfield, absVelocity);
+        GetPressure      (physfield, pressure);
+        GetSoundSpeed    (physfield, pressure, soundspeed);
+        GetSensor        (physfield,Sensor);
         
         GetSensor(physfield,Sensor);
         
         Array<OneD,int> pOrderElmt = GetNumExpModesPerExp();
         
+        Array <OneD , NekDouble > Lambda(nTotQuadPoints, 1.0);
+        Vmath::Vadd(nTotQuadPoints,absVelocity,1,soundspeed,1,Lambda,1);
+        
+        // Determining the maximum wave speed in the element
+        NekDouble LambdaMax = Vmath::Vmax(nTotQuadPoints,Lambda,1);
+        NekDouble StdVMax = Vmath::Vmax(nTotQuadPoints,absVelocity,1);
+        
         for (int e = 0; e < nElements; e++)
         {
-            int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
+            // Threshold value specified in C. Biottos thesis.
+            // Based on a 1D shock tube problem S_k = log10(1/p^4)
+            // See  G.E. Barter and D.L. Darmofal. Shock Capturing with PDE-based
+            // artificial diffusion for DGFEM: Part 1 Formulation, Journal od
+            // Computational Physics 229 (2010) 1810-1827 for further reference
             
-            //Array<OneD, NekDouble> one2D(nQuadPointsElement, 1.0);
-            //NekDouble Area = m_fields[0]->GetExp(e)->Integral(one2D);
-            //double mu_0 = sqrt(Area)/pOrderElmt[e];
-            double mu_0 = 35.0;
+            //NekDouble S_Kappa = -4.0*log10(pOrderElmt[e]);
+            //const double Kappa = 0.5;
+            
+            // Adjustable depending on the coarsness of the mesh. Might want to
+            // move this variable into the session file
+           
+            
+            int nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
+            Array <OneD, NekDouble> one2D(nQuadPointsElement, 1.0);
+            NekDouble Area = m_fields[0]->GetExp(e)->Integral(one2D);
+            
+            NekDouble mu_max = (sqrt(Area)/pOrderElmt[e])*LambdaMax;
+            
             for (int n = 0; n < nQuadPointsElement; n++)
             {
-                if (Sensor[n+PointCount] < (S_Kappa-Kappa))
+                NekDouble mu_0 = (sqrt(Area)/pOrderElmt[e])*Lambda[n+PointCount];
+                
+                if (Sensor[n+PointCount] < (m_Skappa-m_Kappa))
                 {
                     mu_var[n+PointCount] = 0;
                 }
-                else if(Sensor[n+PointCount] >= (S_Kappa-Kappa)
-                        && Sensor[n+PointCount] <= (S_Kappa+Kappa))
+                else if(Sensor[n+PointCount] >= (m_Skappa-m_Kappa)
+                        && Sensor[n+PointCount] <= (m_Skappa+m_Kappa))
                 {
-                    mu_var[n+PointCount] = mu_0*(0.5*(1+sin(M_PI*(Sensor[n+PointCount]-S_Kappa)/(2*Kappa))));
+                    mu_var[n+PointCount] = mu_0*(0.5*(1+sin(
+                                           M_PI*(Sensor[n+PointCount]-m_Skappa-m_Kappa)
+                                                            /(2*m_Kappa))));
                 }
-                else if(Sensor[n+PointCount] > (S_Kappa+Kappa))
+                else if(Sensor[n+PointCount] > (m_Skappa+m_Kappa))
                 {
                     mu_var[n+PointCount] = mu_0;
                 }
@@ -2624,159 +2446,56 @@ namespace Nektar
         int MaxOrder            = 12;
         int MinOrderShock       = 4;
         
-        // print composite list in a txt file
-    
-        if(m_expdim == 2)
+        for (e = 0; e < nElements; e++)
         {
+            nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
             
-            std::ofstream m_file( "VariablePComposites2D.txt", std::ios_base::app);
+            // Define thresholds
+            // Ideally, these threshold values could be given in the Session File
             
-            for (int e = 0; e < nElements; e++)
+            s_0 =  -6.0;
+            s_ds = s_0*log10(PolyOrder[e]);
+            s_sm = -7.5;
+            s_fl = -9;
+            
+            
+            for (int i = 0; i < nQuadPointsElement; i++)
             {
-                m_file << "<C ID=\"" << e+1 << "\"> Q[" << e << "] </C>"<< endl;
-            }
-            
-            m_file.close();
-            
-            std::ofstream m_file2( "VariablePExpansions2D.txt", std::ios_base::app);
-            
-            for (e = 0; e < nElements; e++)
-            {
-                nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
+                se[npCount + i] = (Sensor[npCount + i]);
                 
-                // -------------------------cylinder sensor values-------------------------------
-                // Ideally, these threshold values could be given in the Session File
-                s_0 =  -6.0;
-                
-                s_ds = s_0*log10(PolyOrder[e]);
-                s_sm = -7.5;
-                s_fl = -9;
-                
-                // Define thresholds
-                //geom = m_quadGeoms[m_fields[0]->GetExp(e)->GetElmtId()];
-                
-                for (int i = 0; i < nQuadPointsElement; i++)
+                if (se[npCount + i] > s_ds)
                 {
-                    se[npCount + i] = (Sensor[npCount + i]);
-                    
-                    if (se[npCount + i] > s_ds)
+                    if (PolyOrder[npCount + i] > MinOrderShock)
                     {
-                        if (PolyOrder[npCount + i] > MinOrderShock)
-                        {
-                            PolyOrder[npCount + i] = PolyOrder[npCount + i] - 1;
-                        }
-                        else if(PolyOrder[e] < MinOrderShock)
-                        {
-                            PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
-                        }
-                        
+                        PolyOrder[npCount + i] = PolyOrder[npCount + i] - 1;
                     }
-                    else if(se[npCount + i] > s_sm && se[npCount + i] < s_ds)
+                    else if(PolyOrder[e] < MinOrderShock)
                     {
-                        if (PolyOrder[npCount + i] < MaxOrder)
-                        {
-                            PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
-                        }
-                    }
-                    else if(se[npCount + i] > s_fl && se[npCount + i] < s_sm)
-                    {
-                        
-                    }
-                    else if(se[npCount + i] < s_fl)
-                    {
-                        if (PolyOrder[npCount + i] > MinOrder)
-                        {
-                            PolyOrder[npCount + i] = PolyOrder[npCount + i] - 1;
-                        }
-                        
+                        PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
                     }
                     
                 }
-                
-                m_file2 << "<E COMPOSITE= \"C[" << e+1 << "]\" NUMMODES=\"" << PolyOrder[npCount + 1] << "\" TYPE=\"MODIFIED\" FIELDS=\"rho,rhou,rhov,E\" />" << endl;
-                
-                npCount += nQuadPointsElement;
-            }
-            
-            m_file2.close();
-        }
-        
-        if(m_expdim == 3)
-        {
-            std::ofstream m_file3( "VariablePComposites3D.txt", std::ios_base::app);
-            
-            for (int e = 0; e < nElements; e++)
-            {
-                m_file3 << "<C ID=\"" << e+1 << "\"> H[" << e << "] </C>"<< endl;
-            }
-            
-            m_file3.close();
-            
-            std::ofstream m_file4( "VariablePExpansions3D.txt", std::ios_base::app);
-            
-            for (e = 0; e < nElements; e++)
-            {
-                nQuadPointsElement = m_fields[0]->GetExp(e)->GetTotPoints();
-                
-                // -------------------------cylinder sensor values-------------------------------
-                // Ideally, these threshold values could be given in the Session File
-                s_0 =  -6.0;
-                
-                s_ds = s_0*log10(PolyOrder[e]);
-                s_sm = -7.5;
-                s_fl = -9;
-                
-                // Define thresholds
-                //geom = m_quadGeoms[m_fields[0]->GetExp(e)->GetElmtId()];
-                
-                for (int i = 0; i < nQuadPointsElement; i++)
+                else if(se[npCount + i] > s_sm && se[npCount + i] < s_ds)
                 {
-                    se[npCount + i] = (Sensor[npCount + i]);
-                    
-                    if (se[npCount + i] > s_ds)
+                    if (PolyOrder[npCount + i] < MaxOrder)
                     {
-                        if (PolyOrder[npCount + i] > MinOrderShock)
-                        {
-                            PolyOrder[npCount + i] = PolyOrder[npCount + i] - 1;
-                        }
-                        else if(PolyOrder[e] < MinOrderShock)
-                        {
-                            PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
-                        }
-                        
+                        PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
                     }
-                    else if(se[npCount + i] > s_sm && se[npCount + i] < s_ds)
-                    {
-                        if (PolyOrder[npCount + i] < MaxOrder)
-                        {
-                            PolyOrder[npCount + i] = PolyOrder[npCount + i] + 1;
-                        }
-                    }
-                    else if(se[npCount + i] > s_fl && se[npCount + i] < s_sm)
-                    {
-                        
-                    }
-                    else if(se[npCount + i] < s_fl)
-                    {
-                        if (PolyOrder[npCount + i] > MinOrder)
-                        {
-                            PolyOrder[npCount + i] = PolyOrder[npCount + i] - 1;
-                        }
-                        
-                    }
+                }
+                else if(se[npCount + i] > s_fl && se[npCount + i] < s_sm)
+                {
                     
                 }
-                
-                m_file4 << "<E COMPOSITE= \"C[" << e+1 << "]\" NUMMODES=\"" << PolyOrder[npCount + 1] << "\" TYPE=\"MODIFIED\" FIELDS=\"rho,rhou,rhov,rhow,E\" />" << endl;
-                //m_file4 << "<E COMPOSITE= \"C[" << e+1 << "]\" NUMMODES=\"4\" TYPE=\"MODIFIED\" FIELDS=\"rho,rhou,rhov,rhow,E\" />" << endl;
-                npCount += nQuadPointsElement;
+                else if(se[npCount + i] < s_fl)
+                {
+                    if (PolyOrder[npCount + i] > MinOrder)
+                    {
+                            PolyOrder[npCount + i] = PolyOrder[npCount + i] - 1;
+                    }
+                }
             }
-            
-            m_file4.close();
+            npCount += nQuadPointsElement;
         }
-        
     }
-
-     
 }
 

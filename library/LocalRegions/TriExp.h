@@ -264,6 +264,10 @@ namespace Nektar
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
+            LOCAL_REGIONS_EXPORT virtual void v_ReduceOrderCoeffs(
+                            int   numMin,
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,NekDouble> &outarray);
 
         private:
             SpatialDomains::Geometry2DSharedPtr m_geom;

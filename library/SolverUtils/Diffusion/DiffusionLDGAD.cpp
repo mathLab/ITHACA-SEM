@@ -137,10 +137,53 @@ namespace Nektar
                 }
             }
             
+            /*Array<OneD, NekDouble > FwdMuVar_Phys(nTracePts,0.0);
+            Array<OneD, NekDouble > BwdMuVar_Phys(nTracePts,0.0);
+            
+            fields[0]->GetFwdBwdTracePhys(muvar_phys,FwdMuVar_Phys,BwdMuVar_Phys);
+            
+            for(i = 0; i < nConvectiveFields; ++i)
+            {
+                for(int k=0; k<nTracePts; ++k)
+                {
+                    flux[0][i][k] = 0.5*(FwdMuVar_Phys[k]+BwdMuVar_Phys[k])*flux[0][i][k];
+                }
+            }*/
+            
             Array<OneD, NekDouble > FwdMuVar_Phys(nTracePts,0.0);
             Array<OneD, NekDouble > BwdMuVar_Phys(nTracePts,0.0);
             
             fields[0]->GetFwdBwdTracePhys(muvar_phys,FwdMuVar_Phys,BwdMuVar_Phys);
+            
+            int nBndRegions = fields[0]->GetBndCondExpansions().num_elements();
+            
+            int cnt = 0;
+            for (int i = 0; i < nBndRegions; ++i)
+            {
+                // Number of boundary expansion related to that region
+                int nBndEdges = fields[0]->
+                GetBndCondExpansions()[i]->GetExpSize();
+                
+                // Weakly impose boundary conditions by modifying flux values
+                for (int e = 0; e < nBndEdges ; ++e)
+                {
+                    // Number of points on the expansion
+                    int nBndEdgePts = fields[0]->
+                    GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                    
+                    int id1 = fields[0]->
+                    GetBndCondExpansions()[i]->GetPhys_Offset(e);
+                    
+                    int id2 = fields[0]->GetTrace()->
+                    GetPhys_Offset(fields[0]->GetTraceMap()->
+                                   GetBndCondTraceToGlobalTraceMap(cnt++));
+                    
+                    for (int k = 0; k < nBndEdgePts; ++k)
+                    {
+                        BwdMuVar_Phys[id2+k] = FwdMuVar_Phys[id2+k];
+                    }
+                }
+            }
             
             for(i = 0; i < nConvectiveFields; ++i)
             {
@@ -169,8 +212,6 @@ namespace Nektar
                 fields[i]->BwdTrans             (tmp[i], outarray[i]);
             }
         }
-        
-        
         
         void DiffusionLDGAD::v_NumFluxforScalar(
                                               const Array<OneD, MultiRegions::ExpListSharedPtr>        &fields,

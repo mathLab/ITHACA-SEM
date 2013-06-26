@@ -308,12 +308,11 @@ namespace Nektar
 			
 			NekDouble rho=(m_session->DefinesParameter("rho")) ? (m_session->GetParameter("rho")):1;
 			NekDouble kinvis=rho*m_session->GetParameter("Kinvis");
-			
-			pFields[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);
-			BndExp = pFields[0]->GetBndCondExpansions();
-			
+
 			if(m_isHomogeneous1D)
 			{
+				pFields[0]->GetPlane(0)->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);
+				BndExp = pFields[0]->GetPlane(0)->GetBndCondExpansions();
 				
 				m_homogeneousBasis=pFields[0]->GetHomogeneousBasis();				
 				Array<OneD, const NekDouble> w = m_homogeneousBasis->GetW();
@@ -333,7 +332,7 @@ namespace Nektar
 				{
 					cout << "Inside" << endl;
 
-					for(int i = 0; i <  BndExp[n]->GetPlane(0)->GetExpSize(); ++i, cnt++)
+					for(int i = 0; i <  BndExp[n]->GetExpSize(); ++i, cnt++)
 					{
 						// find element and face of this expansion.
 						elmtid = BoundarytoElmtID[cnt];
@@ -365,22 +364,25 @@ namespace Nektar
 						elmt->PhysDeriv(V,gradV[0],gradV[1],gradV[2]);
 						elmt->PhysDeriv(W,gradW[0],gradW[1],gradW[2]);
 
-						
 						// Get face 2D expansion from element expansion
 						bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> (BndExp[n]->GetExp(i));
 						
 						//number of points on the boundary 
 						int nbc = bc->GetTotPoints();
 						Array<OneD, NekDouble> Pb(nbc);
+						Array<OneD, NekDouble> Ub(nbc);
+
 						Array<OneD, NekDouble>  drag(nbc);
 						Array<OneD, NekDouble>  lift(nbc);
-						
-						
+						Array<OneD, NekDouble>  temp(nbc);
+						Array<OneD, NekDouble>  temp2(nbc);
+
 						//identify boundary of element looking at.
 						boundary = BoundarytoTraceID[cnt];
 						
 						elmt->GetEdgePhysVals(boundary,bc,P,Pb);
-						
+						elmt->GetEdgePhysVals(boundary,bc,U,Ub);
+
 						
 						for(int j = 0; j < dim; ++j)
 						{
@@ -402,16 +404,71 @@ namespace Nektar
 						const Array<OneD, Array<OneD, NekDouble> > &normals
 						= elmt->GetEdgeNormal(boundary);
 						
-						Vmath::Vmul(nbc,Pb,1,normals[0],1,drag,1);
-						Vmath::Vmul(nbc,Pb,1,normals[1],1,lift,1);
+						
+						//tangential viscous tractive forces
+						
+						//====drag terms=========
+						//-(du/dz+dw/dx)*nz (nz=1)
+						Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,temp,1);
+						Vmath::Neg(nbc,temp,1);
+						//-(du/dy+dv/dx)*ny
+						Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag,1);
+						Vmath::Neg(nbc,drag,1);
+						Vmath::Vmul(nbc,drag,1,normals[1],1,drag,1);
+						//-2*du/dx*nx-(du/dy+dv/dx)*ny
+						Vmath::Smul(nbc,-2.0,fgradU[0],1,fgradU[0],1);
+						Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
+						
+						//take back gradU as before
+						Vmath::Smul(nbc,-0.5,fgradU[0],1,fgradU[0],1);
+
+						Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
+						Vmath::Vadd(nbc,temp,1,drag,1,drag,1);
+						//multiply by viscosity
+						Vmath::Smul(nbc,kinvis,drag,1,drag,1);
+						//zero temporary storage vector
+						Vmath::Zero(nbc,temp,0);
+						Vmath::Zero(nbc,temp2,0);
+
+						
+						//========lift terms==============
+						//-(dv/dz+dw/dy)*ny
+						Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
+						Vmath::Neg(nbc,temp,1);
+						//-(du/dy+dv/dx)*nx
+						Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift,1);
+						Vmath::Neg(nbc,lift,1);
+						Vmath::Vmul(nbc,lift,1,normals[0],1,lift,1);
+						//-2*dv/dy*nx-(du/dy+dv/dx)
+						Vmath::Smul(nbc,-2.0,fgradV[1],1,fgradV[1],1);
+						Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
+						
+						Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
+
+						
+						Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
+						Vmath::Vadd(nbc,temp,1,lift,1,lift,1);
+						//multiply by viscosity
+						Vmath::Smul(nbc,kinvis,lift,1,lift,1);
+						
+						//normal tractive forces added
+						Vmath::Vvtvp(nbc,Pb,1,normals[0],1,drag,1,drag,1);
+						Vmath::Vvtvp(nbc,Pb,1,normals[1],1,lift,1,lift,1);
 						
 						D=D+bc->Integral(drag);
 						L=L+bc->Integral(lift);
+						
+						cout << "L " << L << endl;
+						cout << "D " << D << endl;
+
+
 					}
 					
 				}
 				else 
 				{
+					
+					cout << "not bb" << endl;
 					cnt += BndExp[n]->GetExpSize();
 				}
 			}
@@ -420,6 +477,9 @@ namespace Nektar
 		else {
 			//2D case
 			cout << "2D case" << endl;
+			pFields[0]->GetBoundaryToElmtMap(BoundarytoElmtID,BoundarytoTraceID);
+			BndExp = pFields[0]->GetBndCondExpansions();
+
 			// loop over the types of boundary conditions
 			for(cnt = n = 0; n < BndExp.num_elements(); ++n)
 			{ 
@@ -472,7 +532,8 @@ namespace Nektar
 						
 						Array<OneD, NekDouble>  drag(nbc);
 						Array<OneD, NekDouble>  lift(nbc);
-						
+						Array<OneD, NekDouble>  temp(nbc);
+
 						
 						//identify boundary of element looking at.
 						boundary = BoundarytoTraceID[cnt];
@@ -505,8 +566,10 @@ namespace Nektar
 						Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag,1);
 						Vmath::Neg(nbc,drag,1);
 						Vmath::Vmul(nbc,drag,1,normals[1],1,drag,1);
-						//-2*du/dx*nx-(du/dy+dv/dx)
-						Vmath::Svtvp(nbc,-2.0,fgradU[0],1,drag,1,drag,1);
+						//-2*du/dx*nx-(du/dy+dv/dx)*ny
+						Vmath::Smul(nbc,-2.0,fgradU[0],1,fgradU[0],1);
+						Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp,1);
+						Vmath::Vadd(nbc,temp,1,drag,1,drag,1);
 						//multiply by viscosity
 						Vmath::Smul(nbc,kinvis,drag,1,drag,1);
 						
@@ -516,7 +579,7 @@ namespace Nektar
 						Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift,1);
 						Vmath::Neg(nbc,lift,1);
 						Vmath::Vmul(nbc,lift,1,normals[0],1,lift,1);
-						//-2*du/dx*nx-(du/dy+dv/dx)
+						//-2*dv/dy*nx-(du/dy+dv/dx)
 						Vmath::Svtvp(nbc,-2.0,fgradV[1],1,lift,1,lift,1);
 						Vmath::Smul(nbc,kinvis,lift,1,lift,1);
 						
@@ -524,12 +587,7 @@ namespace Nektar
 						//normal tractive forces 
 						Vmath::Vvtvp(nbc,Pb,1,normals[0],1,drag,1,drag,1);
 						Vmath::Vvtvp(nbc,Pb,1,normals[1],1,lift,1,lift,1);
-												
 						
-						cout << "lift[0] " << lift[0]<< endl;
-						cout << "lift[1] " << lift[1]<< endl;
-						cout << "lift[2] " << lift[2]<< endl;
-						cout << "lift[3] " << lift[3]<< endl;
 
 						
 						D=D+bc->Integral(drag);

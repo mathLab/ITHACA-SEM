@@ -168,7 +168,7 @@ namespace Nektar
 			
 			
 			NekDouble rho=(m_session->DefinesParameter("rho")) ? (m_session->GetParameter("rho")):1;
-			NekDouble kinvis=rho*m_session->GetParameter("Kinvis");
+			NekDouble mu=rho*m_session->GetParameter("Kinvis");
 
 			//Homogeneous 1D case  Compute forces on all WALL boundaries
 			// This only has to be done on the zero (mean) Fourier mode. 
@@ -281,13 +281,8 @@ namespace Nektar
 						
 						
 						//a) DRAG TERMS
-						//
-						//-rho*kinvis*(2*du/dx*nx+(du/dy+dv/dx)*ny+(du/dz+dw/dx)*nz) 
-						//(nz:=1)
+						//-rho*kinvis*(2*du/dx*nx+(du/dy+dv/dx)*ny
 						
-						Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,temp,1);
-						Vmath::Neg(nbc,temp,1);
-
 						Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag,1);
 						Vmath::Neg(nbc,drag,1);
 						Vmath::Vmul(nbc,drag,1,normals[1],1,drag,1);
@@ -296,9 +291,8 @@ namespace Nektar
 						Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);						
 						Vmath::Smul(nbc,-0.5,fgradU[0],1,fgradU[0],1);
 
-						Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
-						Vmath::Vadd(nbc,temp,1,drag,1,drag,1);
-						Vmath::Smul(nbc,kinvis,drag,1,drag,1);
+						Vmath::Vadd(nbc,temp2,1,drag,1,drag,1);
+						Vmath::Smul(nbc,mu,drag,1,drag,1);
 						
 						//zero temporary storage vector
 						Vmath::Zero(nbc,temp,0);
@@ -306,12 +300,8 @@ namespace Nektar
 
 						
 						//b) LIFT TERMS
-					    //-rho*kinvis*(2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
-						//nz:=1
+					    //-rho*kinvis*(2*dv/dy*nx+(du/dy+dv/dx)*nx
 						
-						Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
-						Vmath::Neg(nbc,temp,1);
-
 						Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift,1);
 						Vmath::Neg(nbc,lift,1);
 						Vmath::Vmul(nbc,lift,1,normals[0],1,lift,1);
@@ -321,10 +311,8 @@ namespace Nektar
 						Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
 
 						
-						Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
-						Vmath::Vadd(nbc,temp,1,lift,1,lift,1);
-
-						Vmath::Smul(nbc,kinvis,lift,1,lift,1);
+						Vmath::Vadd(nbc,temp2,1,lift,1,lift,1);
+						Vmath::Smul(nbc,mu,lift,1,lift,1);
 
 						
 						
@@ -428,7 +416,7 @@ namespace Nektar
 						Vmath::Smul(nbc,-2.0,fgradU[0],1,fgradU[0],1);
 						Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp,1);
 						Vmath::Vadd(nbc,temp,1,drag,1,drag,1);
-						Vmath::Smul(nbc,kinvis,drag,1,drag,1);
+						Vmath::Smul(nbc,mu,drag,1,drag,1);
 						
 						
 						Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift,1);
@@ -437,7 +425,7 @@ namespace Nektar
 						Vmath::Smul(nbc,-2.0,fgradV[1],1,fgradV[1],1);
 						Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp,1);
 						Vmath::Vadd(nbc,temp,1,lift,1,lift,1);
-						Vmath::Smul(nbc,kinvis,lift,1,lift,1);
+						Vmath::Smul(nbc,mu,lift,1,lift,1);
 						
 						
 						Vmath::Vvtvp(nbc,Pb,1,normals[0],1,drag,1,drag,1);

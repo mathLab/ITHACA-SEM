@@ -315,7 +315,7 @@ namespace Nektar
             m_time += m_timestep;
             
             timer.Stop();
-            
+
             // Write out current time step
             if(m_infosteps && !((n+1)%m_infosteps) && m_comm->GetRank() == 0)
             {

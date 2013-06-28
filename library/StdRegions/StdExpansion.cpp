@@ -1539,8 +1539,17 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
         
-
         void StdExpansion::v_GetTracePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+
+            void StdExpansion::v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+        
+            void StdExpansion::v_GetEdgeInterpVals(const int edge,const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }

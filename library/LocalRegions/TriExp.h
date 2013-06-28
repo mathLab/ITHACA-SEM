@@ -164,6 +164,10 @@ namespace Nektar
                             const Array<OneD, const NekDouble> &inarray,
                             Array<OneD,NekDouble> &outarray,
                             StdRegions::Orientation  orient);
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(
+                            const int edge,
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
                             const int edge,
                             Array<OneD, NekDouble> &outarray);
@@ -269,12 +273,6 @@ namespace Nektar
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
-
-            //---------------------------------------
-            // Preconditioners
-            //---------------------------------------
-            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int> 
-                v_GetEdgeInverseBoundaryMap(int eid);
 
         private:
             SpatialDomains::Geometry2DSharedPtr m_geom;

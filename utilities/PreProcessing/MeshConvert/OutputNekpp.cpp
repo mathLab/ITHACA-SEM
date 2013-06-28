@@ -340,7 +340,8 @@ namespace Nektar
                             }
                         }
                     }
-                    
+
+                    doSort = doSort && it->second->reorder;
                     comp_tag->SetAttribute("ID", it->second->id);
                     comp_tag->LinkEndChild(
                         new TiXmlText(it->second->GetXmlString(doSort)));

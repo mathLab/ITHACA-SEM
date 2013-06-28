@@ -749,6 +749,14 @@ namespace Nektar
         }
         
         
+        void TriExp::v_GetEdgeInterpVals(
+                const int edge,const Array<OneD, const NekDouble> &inarray,
+                Array<OneD, NekDouble> &outarray)
+        {
+            ASSERTL0(false,
+                     "Routine not implemented for triangular elements");
+        }
+        
         void TriExp::v_GetEdgeQFactors(
                 const int edge, 
                 Array<OneD, NekDouble> &outarray)
@@ -1528,6 +1536,17 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
                 }
                 break;
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
             default:
                 {
                     NekDouble        one = 1.0;
@@ -2181,43 +2200,6 @@ namespace Nektar
 
                 StdTriExp::MultiplyByQuadratureMetric(outarray, outarray);
             }
-        }
-
-        Array<OneD, unsigned int>
-        TriExp::v_GetEdgeInverseBoundaryMap(int eid)
-        {
-            int n, j;
-            int nEdgeCoeffs;
-            
-            int nBndCoeffs=NumBndryCoeffs();
-
-            Array<OneD,unsigned int> bmap(nBndCoeffs);
-            GetBoundaryMap(bmap);
-
-            //map from full system to statically condensed system
-            //i.e reverse GetBoundaryMap
-            map<int,int> invmap;
-            for(j = 0; j < nBndCoeffs; ++j)
-            {
-                invmap[bmap[j]] = j;
-            }
-
-            //Number of interior edge coefficients
-            nEdgeCoeffs=GetEdgeNcoeffs(eid)-2;
-            
-            Array<OneD,unsigned int> edgemaparray(nEdgeCoeffs);
-            StdRegions::Orientation eOrient=m_geom->GetEorient(eid);
-            Array< OneD, unsigned int > maparray = Array<OneD, unsigned int>(nEdgeCoeffs);
-            Array< OneD, int > signarray = Array<OneD, int>(nEdgeCoeffs,1);
-            
-            //maparray is the location of the edge within the matrix
-            GetEdgeInteriorMap(eid,eOrient,maparray,signarray);
-            
-            for (n=0; n<nEdgeCoeffs; ++n)
-            {
-                edgemaparray[n]=invmap[maparray[n]];
-            }
-            return edgemaparray;
         }
     }
 }

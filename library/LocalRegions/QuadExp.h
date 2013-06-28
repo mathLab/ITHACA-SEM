@@ -167,6 +167,10 @@ namespace Nektar
                         const Array<OneD, const NekDouble> &inarray,
                         Array<OneD,       NekDouble> &outarray,
                         StdRegions::Orientation  orient);
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(
+                        const int edge,
+                        const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD, NekDouble>      &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
                         const int edge,
                         Array<OneD, NekDouble> &outarray);
@@ -273,12 +277,6 @@ namespace Nektar
                               Array<OneD,       NekDouble> &outarray,
                         const StdRegions::StdMatrixKey &mkey);
 
-            //---------------------------------------
-            // Preconditioners
-            //---------------------------------------
-            LOCAL_REGIONS_EXPORT Array<OneD, unsigned int> 
-                v_GetEdgeInverseBoundaryMap(int eid);
-
         private:
             SpatialDomains::Geometry2DSharedPtr  m_geom;
             SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
@@ -291,13 +289,15 @@ namespace Nektar
             void MultiplyByQuadratureMetric(
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,       NekDouble> &outarray);
+            
         };
 
         // type defines for use of QuadExp in a boost vector
         typedef boost::shared_ptr<QuadExp> QuadExpSharedPtr;
         typedef std::vector< QuadExpSharedPtr > QuadExpVector;
         typedef std::vector< QuadExpSharedPtr >::iterator QuadExpVectorIter;
-
+        
+        
     }
 }
 

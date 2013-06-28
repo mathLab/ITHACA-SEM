@@ -124,7 +124,7 @@ namespace Nektar
                                   std::string("GlobalLinSys"))
 
         {
-            if(!SameTypeOfBoundaryConditions(In))
+            if(!SameTypeOfBoundaryConditions(In) || CheckIfSingularSystem)
             {
                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
                 m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(

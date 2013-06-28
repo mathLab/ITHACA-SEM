@@ -157,10 +157,10 @@ namespace Nektar
          * @param   out_d2      Derivative in third coordinate direction.
          */
         void TetExp::v_PhysDeriv(
-            const Array<OneD, const NekDouble> & inarray,
-            Array<OneD,NekDouble> &out_d0,
-            Array<OneD,NekDouble> &out_d1,
-            Array<OneD,NekDouble> &out_d2)
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &out_d0,
+                  Array<OneD,       NekDouble> &out_d1,
+                  Array<OneD,       NekDouble> &out_d2)
         {
             int  TotPts = m_base[0]->GetNumPoints()*m_base[1]->GetNumPoints()*
                 m_base[2]->GetNumPoints();
@@ -898,7 +898,8 @@ namespace Nektar
             SpatialDomains::GeomType            type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
-            int nq= m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
+
+            int nq = m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
             
             m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);

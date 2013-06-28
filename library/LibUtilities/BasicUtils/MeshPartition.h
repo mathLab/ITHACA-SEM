@@ -120,12 +120,15 @@ namespace Nektar
                 std::vector<int> list;
             };
 
+            typedef std::vector<unsigned int>   MultiWeight;
+
             // Element in a mesh
             struct GraphVertexProperties
             {
-                int id;         ///< Universal ID of the vertex
-                int partition;  ///< Index of the partition to which it belongs
-                int partid;     ///< Global ID of the vertex in the partition
+                int id;             ///< Universal ID of the vertex
+                int partition;      ///< Index of the partition to which it belongs
+                int partid;         ///< Global ID of the vertex in the partition
+                MultiWeight weight; ///< Weightings to this graph vertex
             };
 
             // Face/Edge/Vertex between two adjacent elements
@@ -168,7 +171,11 @@ namespace Nektar
                         BoostGraph
                     >::adjacency_iterator BoostAdjacencyIterator;
 
+            typedef std::vector<unsigned int>       NumModes;
+            typedef std::map<std::string, NumModes> NummodesPerField;
+
             int                                 m_dim;
+            int                                 m_numFields;
 
             std::map<int, MeshVertex>           m_meshVertices;
             std::map<int, MeshEntity>           m_meshEdges;
@@ -178,14 +185,26 @@ namespace Nektar
             std::map<int, MeshEntity>           m_meshComposites;
             std::vector<unsigned int>           m_domain;
 
+            // hierarchial mapping: composite id -> field name -> integer list
+            // of directional nummodes described by expansion type clause.
+            std::map<int, NummodesPerField>     m_expansions;
+
+            std::map<std::string, int>          m_fieldNameToId;
+            std::vector<MultiWeight>            m_vertWeights;
+
             BndRegionOrdering                   m_bndRegOrder;
-            
+
             BoostSubGraph                       m_mesh;
             BoostSubGraph                       m_localPartition;
 
             CommSharedPtr                       m_comm;
 
-            void ReadMesh(const SessionReaderSharedPtr& pSession);
+            bool                                m_weightingRequired;
+
+            void ReadExpansions(const SessionReaderSharedPtr& pSession);
+            void ReadGeometry(const SessionReaderSharedPtr& pSession);
+            void ReadConditions(const SessionReaderSharedPtr& pSession);
+            void WeightElements();
             void CreateGraph(BoostSubGraph& pGraph);
             void PartitionGraph(BoostSubGraph& pGraph,
                                 BoostSubGraph& pLocalPartition);

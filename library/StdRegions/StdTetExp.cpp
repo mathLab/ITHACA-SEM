@@ -2208,6 +2208,5 @@ namespace Nektar
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
-    
     }//end namespace
 }//end namespace

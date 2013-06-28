@@ -51,7 +51,7 @@ namespace Nektar
                 = GetPreconFactory().RegisterCreatorFunction(
                     "FullLinearSpaceWithBlock",
                     PreconditionerLinearWithBlock::create,
-                    "Full Linear space and 3D block preconditioning");
+                    "Full Linear space and block preconditioning");
  
        /**
          * @class PreconditionerLinearWithBlock
@@ -73,7 +73,7 @@ namespace Nektar
         void PreconditionerLinearWithBlock::v_InitObject()
         {
             m_linSpacePrecon = GetPreconFactory().CreateInstance("FullLinearSpace",m_linsys.lock(),m_locToGloMap);
-            m_blockPrecon = GetPreconFactory().CreateInstance("Block3D",m_linsys.lock(),m_locToGloMap);
+            m_blockPrecon = GetPreconFactory().CreateInstance("Block",m_linsys.lock(),m_locToGloMap);
         }
 
         /**
@@ -102,24 +102,8 @@ namespace Nektar
             //Apply Low Energy preconditioner
             m_blockPrecon->DoPreconditioner(pInput, OutputBlock);
 
-            cout<<"After Block preconditioning"<<endl;
-            for(int i=0; i<pOutput.num_elements(); ++i)
-            {
-                cout<<OutputBlock[i]<<endl;
-            }
-            cout<<endl;
-
-
             //Apply linear space preconditioner
             m_linSpacePrecon->DoPreconditionerWithNonVertOutput(pInput, pOutput,OutputBlock);
-
-            cout<<"After Linear space preconditioning"<<endl;
-            for(int i=0; i<pOutput.num_elements(); ++i)
-            {
-                cout<<pOutput[i]<<endl;
-            }
-            cout<<endl;
-
         }
 
     }

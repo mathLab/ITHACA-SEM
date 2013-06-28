@@ -121,8 +121,7 @@ namespace Nektar
             eLinear,
 	    eLowEnergy,
             eLinearWithLowEnergy,
-            eBlock2D,
-            eBlock3D,
+            eBlock,
             eLinearWithBlock
         };
 
@@ -134,8 +133,7 @@ namespace Nektar
             "FullLinearSpace",
 	    "LowEnergyBlock",
             "FullLinearSpaceWithLowEnergyBlock",
-            "Block2D",
-            "Block3D",
+            "Block",
             "FullLinearSpaceWithBlock"
         };
 

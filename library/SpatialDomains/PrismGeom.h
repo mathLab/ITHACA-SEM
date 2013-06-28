@@ -62,7 +62,6 @@ namespace Nektar
             SPATIAL_DOMAINS_EXPORT static const std::string XMLElementType;
 
         protected:
-
             virtual void v_GenGeomFactors(
                  const Array<OneD, const LibUtilities::BasisSharedPtr> &tbasis);
             virtual void v_GetLocCoords(
@@ -84,12 +83,15 @@ namespace Nektar
                 const int i, const int j) const;
             virtual int v_GetDir(const int faceidx, const int facedir) const;
 
-
         private:
             void SetUpLocalEdges();
             void SetUpLocalVertices();
             void SetUpEdgeOrientation();
             void SetUpFaceOrientation();
+
+	    static const unsigned int VertexEdgeConnectivity[6][3];
+            static const unsigned int VertexFaceConnectivity[6][3];
+            static const unsigned int EdgeFaceConnectivity  [9][2];
         };
 
         typedef boost::shared_ptr<PrismGeom> PrismGeomSharedPtr;

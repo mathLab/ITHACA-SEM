@@ -695,6 +695,15 @@ namespace Nektar
         }
 
 
+        void TriExp::v_GetTracePhysVals(const int edge, 
+                                        const StdRegions::StdExpansionSharedPtr &EdgeExp,
+                                        const Array<OneD, const NekDouble> &inarray,
+                                        Array<OneD,NekDouble> &outarray,
+                                        StdRegions::Orientation  orient)
+        {
+            v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
+        }
+
         void TriExp::v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansionSharedPtr &EdgeExp,
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD,NekDouble> &outarray)

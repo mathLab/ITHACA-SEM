@@ -789,6 +789,20 @@ namespace Nektar
       
         /**
          * \brief Returns the physical values at the quadrature points of a face
+         * Wrapper function to v_GetFacePhysVals
+         */
+        void TetExp::v_GetTracePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
+        }
+
+        /**
+         * \brief Returns the physical values at the quadrature points of a face
          */
         void TetExp::v_GetFacePhysVals(
             const int                                face,

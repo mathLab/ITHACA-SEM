@@ -142,7 +142,8 @@ namespace Nektar
         
         TimeIntegrationSchemeSharedPtr TimeIntegrationScheme::Create(const TimeIntegrationSchemeKey &key)
         {
-            TimeIntegrationSchemeSharedPtr returnval(MemoryManager<TimeIntegrationScheme>::AllocateSharedPtr(key));
+            TimeIntegrationSchemeSharedPtr returnval
+(MemoryManager<TimeIntegrationScheme>::AllocateSharedPtr(key));
             return returnval;
         }
 
@@ -1346,6 +1347,7 @@ namespace Nektar
                 const TimeIntegrationSchemeKey& key = solvector->GetIntegrationSchemeKey();
                 
                 TimeIntegrationSolutionSharedPtr solvector_new = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(key,nvar,npoints); 
+                
                 
                 TimeIntegrate(timestep,solvector->GetSolutionVector(),
                               solvector->GetTimeVector(),

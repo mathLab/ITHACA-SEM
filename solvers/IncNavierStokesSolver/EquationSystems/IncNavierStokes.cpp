@@ -280,9 +280,8 @@ namespace Nektar
             fields[i]  = m_fields[i]->UpdatePhys();
         }
 		
-        // Initialise NS solver which is set up to use a GLM method
-        // with calls to EvaluateAdvection_SetPressureBCs and
-        // SolveUnsteadyStokesSystem
+        // Initialise NS solver which is set up to use a time advancement routines
+        // defined by either VelocityCorrectionScheme or the CoupledLinearNS
         m_integrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep, fields, m_time, m_integrationOps);
 
         std::vector<SolverUtils::FilterSharedPtr>::iterator x;
@@ -304,7 +303,14 @@ namespace Nektar
             }
 
             // Advance velocity fields
-            fields = m_integrationScheme[min(n,m_intSteps-1)]->TimeIntegrate(m_timestep, m_integrationSoln, m_integrationOps);
+            if(n < 1)
+            {
+                fields = m_integrationScheme[0]->TimeIntegrate(m_timestep, m_integrationSoln, m_integrationOps);
+            }
+            else
+            {
+                fields = m_integrationScheme[min(n,m_intSteps-1)]->TimeIntegrate(m_timestep, m_integrationSoln, m_integrationOps);
+            }
             
             m_time += m_timestep;
             
@@ -335,7 +341,7 @@ namespace Nektar
             }
             
             // dump data in m_fields->m_coeffs to file. 
-            if(m_checksteps && n&&(!((n+1)%m_checksteps)))
+            if(m_checksteps &&(!((n+1)%m_checksteps)))
             {
                 //WriteCheckpoint_Ouptput();
                 if(m_HomogeneousType == eHomogeneous1D)
@@ -357,11 +363,6 @@ namespace Nektar
                 }
                 else
                 {
-                    for(i = 0; i < m_nConvectiveFields; ++i)
-                    {
-                        m_fields[i]->SetPhys(fields[i]);
-                        m_fields[i]->SetPhysState(true);
-                    }
                     nchk++;
                     Checkpoint_Output(nchk);
                 }
@@ -382,9 +383,8 @@ namespace Nektar
             {
                 for (i = 0; i < m_nConvectiveFields; ++i)
                 {
-                    m_fields[i]->FwdTrans_IterPerExp(fields[i],
-                                                     m_fields[i]->UpdateCoeffs());
-                    m_fields[i]->SetPhysState(false);
+                    m_fields[i]->SetPhys(fields[i]);
+                    m_fields[i]->SetPhysState(true);
                 }
             }
             
@@ -942,7 +942,7 @@ namespace Nektar
         BndExp   = m_fields[fieldid]->GetBndCondExpansions();
         
         StdRegions::StdExpansionSharedPtr   elmt;
-        StdRegions::StdExpansion1DSharedPtr Bc;
+        StdRegions::StdExpansionSharedPtr Bc;
         
         int cnt;
         int elmtid,nq,offset, boundary;
@@ -962,16 +962,14 @@ namespace Nektar
                     offset = m_fields[fieldid]->GetPhys_Offset(elmtid);
                     
                     U = m_fields[fieldid]->UpdatePhys() + offset;
-                    
-                    Bc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion1D> 
-                        (BndExp[n]->GetExp(i));
+                    Bc = BndExp[n]->GetExp(i);
                     
                     boundary = m_fieldsBCToTraceID[fieldid][cnt];
                     
                     // Get edge values and put into ubc
                     nq = Bc->GetTotPoints();
                     Array<OneD, NekDouble> ubc(nq);
-                    elmt->GetEdgePhysVals(boundary,Bc,U,ubc);
+                    elmt->GetTracePhysVals(boundary,Bc,U,ubc);
                     
                     Vmath::Vmul(nq,&m_fieldsRadiationFactor[fieldid][cnt1 + 
                              BndExp[n]->GetPhys_Offset(i)],1,&ubc[0],1,&ubc[0],1);

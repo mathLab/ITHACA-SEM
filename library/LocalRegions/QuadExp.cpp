@@ -682,9 +682,10 @@ namespace Nektar
             return StdQuadExp::v_PhysEvaluate(Lcoord, physvals);
         }
 
-        // Get edge values from the 2D Phys space along an edge
-        // following a counter clockwise edge convention for definition
-        // of edgedir, Note that point distribution is given by QuadExp.
+            /** Get edge values from the 2D Phys space along an edge
+             * following a counter clockwise edge convention for definition
+             * of edgedir, Note that point distribution is given by QuadExp.
+             **/
         void QuadExp::v_GetEdgePhysVals(const int edge,
                                       const Array<OneD, const NekDouble> &inarray,
                                       Array<OneD,NekDouble> &outarray)
@@ -749,8 +750,20 @@ namespace Nektar
         }
 
 
-        void QuadExp::v_GetEdgePhysVals(const int edge, const StdRegions::StdExpansionSharedPtr &EdgeExp,
-                                      const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+        void QuadExp::v_GetTracePhysVals(const int edge,
+                                         const StdRegions::StdExpansionSharedPtr &EdgeExp,
+                                         const Array<OneD, const NekDouble> &inarray,
+                                         Array<OneD,NekDouble> &outarray,
+                                         StdRegions::Orientation  orient)
+        {
+            v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
+        }
+
+
+        void QuadExp::v_GetEdgePhysVals(const int edge, 
+                                        const StdRegions::StdExpansionSharedPtr &EdgeExp,
+                                        const Array<OneD, const NekDouble> &inarray, 
+                                        Array<OneD,NekDouble> &outarray)
         {
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();

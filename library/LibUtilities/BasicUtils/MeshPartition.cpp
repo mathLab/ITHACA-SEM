@@ -169,6 +169,50 @@ namespace Nektar
                 zscale = expEvaluator.Evaluate(expr_id);
             }
 
+
+
+            NekDouble xmove,ymove,zmove;
+
+            // check to see if any move parameters are in attributes
+            // and determine these values
+
+            //LibUtilities::ExpressionEvaluator expEvaluator;
+            const char *xmov =  vSubElement->Attribute("XMOVE");
+            if(!xmov)
+            {
+                xmove = 0.0;
+            }
+            else
+            {
+                std::string xmovstr = xmov;
+                int expr_id = expEvaluator.DefineFunction("",xmovstr);
+                xmove = expEvaluator.Evaluate(expr_id);
+            }
+
+            const char *ymov =  vSubElement->Attribute("YMOVE");
+            if(!ymov)
+            {
+                ymove = 0.0;
+            }
+            else
+            {
+                std::string ymovstr = ymov;
+                int expr_id = expEvaluator.DefineFunction("",ymovstr);
+                ymove = expEvaluator.Evaluate(expr_id);
+            }
+
+            const char *zmov = vSubElement->Attribute("ZMOVE");
+            if(!zmov)
+            {
+                zmove = 0.0;
+            }
+            else
+            {
+                std::string zmovstr = zmov;
+                int expr_id = expEvaluator.DefineFunction("",zmovstr);
+                zmove = expEvaluator.Evaluate(expr_id);
+            }
+
             x = vSubElement->FirstChildElement();
             i = 0;
             while(x)
@@ -181,9 +225,9 @@ namespace Nektar
                 std::vector<std::string> vCoords;
                 std::string vCoordStr = x->FirstChild()->ToText()->Value();
                 boost::split(vCoords, vCoordStr, boost::is_any_of("\t "));
-                v.x = atof(vCoords[0].c_str())*xscale;
-                v.y = atof(vCoords[1].c_str())*yscale;
-                v.z = atof(vCoords[2].c_str())*zscale;
+                v.x = atof(vCoords[0].c_str())*xscale + xmove;
+                v.y = atof(vCoords[1].c_str())*yscale + ymove;
+                v.z = atof(vCoords[2].c_str())*zscale + zmove;
                 m_meshVertices[v.id] = v;
                 x = x->NextSiblingElement();
             }

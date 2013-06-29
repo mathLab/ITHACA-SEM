@@ -802,11 +802,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-<<<<<<< HEAD
-            int i, j, n;
-=======
             int i, n;
->>>>>>> master
             int phys_offset;
             
             Array<OneD, NekDouble> auxArray1, auxArray2;

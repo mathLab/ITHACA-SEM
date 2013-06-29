@@ -209,20 +209,6 @@ namespace Nektar
                 m_npointsZ = 1; 
             }
             
-<<<<<<< HEAD
-=======
-            m_session->MatchSolverInfo("SPECTRALHPDEALIASING","True",m_specHP_dealiasing,false);
-            if(m_specHP_dealiasing == false)
-            {
-                m_session->MatchSolverInfo("SPECTRALHPDEALIASING","On",m_specHP_dealiasing,false);
-            }
-            
-            //if(m_session->DefinesSolverInfo("SPECTRALHPDEALIASING"))
-            //{
-            //    m_specHP_dealiasing = true;
-            //}
->>>>>>> master
-        
             // Options to determine type of projection from file or directly 
             // from constructor
             if(m_session->DefinesSolverInfo("PROJECTION"))
@@ -401,11 +387,7 @@ namespace Nektar
                             MemoryManager<MultiRegions::ContField3D>
                             ::AllocateSharedPtr(m_session, m_graph, 
                                                 m_session->GetVariable(i),
-<<<<<<< HEAD
                                                 m_checkIfSystemSingular[i]);
-=======
-                                                m_checkIfSystemSingular[0]);
->>>>>>> master
 
                         m_fields[0] = firstfield;
                         for(i = 1; i < m_fields.num_elements(); i++)
@@ -416,25 +398,15 @@ namespace Nektar
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::ContField3D>
                                     ::AllocateSharedPtr(*firstfield, m_graph,
-<<<<<<< HEAD
                                                         m_session->GetVariable(i),
                                                         m_checkIfSystemSingular[i]);
-=======
-                                                    m_session->GetVariable(i),
-                                                    m_checkIfSystemSingular[i]);
->>>>>>> master
                             }
                             else
                             {
                                 m_fields[i] = MemoryManager<MultiRegions::ContField3D>
                                     ::AllocateSharedPtr(m_session, m_graph, 
-<<<<<<< HEAD
                                                         m_session->GetVariable(i),
                                                         m_checkIfSystemSingular[i]); 
-=======
-                                                    m_session->GetVariable(i),
-                                                    m_checkIfSystemSingular[i]);
->>>>>>> master
                             }
                         }
                         

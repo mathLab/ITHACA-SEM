@@ -445,12 +445,13 @@ namespace Nektar
             /**
              * \brief Flag to determine if dealiasing is used for
              * homogeneous simulations.
-             *
-             * Note this needs to be defined here so we can initialise
-             * homogeneous expansions with the correct memory. This is
-             * not necessary for Spectral/hp dealiasing 
              */
             bool m_homogen_dealiasing;
+            /**
+             * \brief Flag to determine if dealisising is usde for the
+             * Spectral/hp element discretisation.
+             */
+            bool                                        m_specHP_dealiasing;
             /// Type of projection; e.g continuous or discontinuous.
             enum MultiRegions::ProjectionType           m_projectionType;
             /// Array holding trace normals for DG simulations in the forwards direction.

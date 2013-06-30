@@ -454,34 +454,6 @@ namespace Nektar
         Timer  timer;
         bool IsRoot = (m_comm->GetColumnComm()->GetRank())? false:true;
 
-#if 0
-        timer.Start();
-        for(int k = 0; k < 1000; ++k)
-        {
-            m_fields[0]->IProductWRTBase(m_fields[0]->GetPhys(),
-                                         m_fields[0]->UpdateCoeffs());
-
-        }
-        timer.Stop();
-        cout << "\t 1000 Iprods   : "<< timer.TimePerTest(1) << endl;
-#endif
-
-#if 0
-        timer.Start();
-        Array<OneD, NekDouble> out (m_fields[0]->GetTotPoints());
-        Array<OneD, NekDouble> out1(m_fields[0]->GetTotPoints());
-        Array<OneD, NekDouble> out2(m_fields[0]->GetTotPoints());
-        
-        for(int k = 0; k < 10000; ++k)
-        {
-            m_fields[0]->PhysDeriv(out,out1,out2);
-
-        }
-        timer.Stop();
-        cout << "\t 10000 Physderiv   : "<< timer.TimePerTest(1) << endl;
-        exit(1);
-#endif
-
         timer.Start();
         // evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
@@ -1387,7 +1359,6 @@ namespace Nektar
         Array<OneD, NekDouble> wk = Array<OneD, NekDouble>(physTot);
         int nvel = m_velocity.num_elements();
         
-#if 1
         Vmath::Zero(physTot,Forcing[0],1);
         
         for(i = 0; i < nvel; ++i)
@@ -1395,22 +1366,6 @@ namespace Nektar
             m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i], wk);
             Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
         }
-#else
-        if(nvel == 2)
-        {
-            m_fields[0]->PhysDeriv(fields[0],Forcing[0],NullNekDouble1DArray);
-            m_fields[1]->PhysDeriv(fields[1],NullNekDouble1DArray,wk);
-            Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
-        }
-        else
-        {
-            m_fields[0]->PhysDeriv(fields[0],Forcing[0],NullNekDouble1DArray,NullNekDouble1DArray);
-            m_fields[1]->PhysDeriv(fields[1],NullNekDouble1DArray,wk,NullNekDouble1DArray);
-            Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
-            m_fields[2]->PhysDeriv(fields[2],NullNekDouble1DArray,NullNekDouble1DArray,wk);
-            Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
-        }
-#endif  
         Vmath::Smul(physTot,1.0/aii_Dt,Forcing[0],1,Forcing[0],1);        
     }
     

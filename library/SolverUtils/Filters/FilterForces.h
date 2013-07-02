@@ -71,6 +71,8 @@ namespace Nektar
             virtual bool v_IsTimeDependent();
 
         private:
+			vector<unsigned int>                    m_boundaryRegionsIdList;    //IDs of boundary regions where we want the forces
+            vector<bool>                            m_boundaryRegionIsInList;   //Determines if a given Boundary Region is is m_boundaryRegionsIdList
             unsigned int                            m_index;
             unsigned int                            m_outputFrequency;
             unsigned int                            m_outputPlane; // plane to take history point from if using a homogeneous1D expansion
@@ -78,6 +80,8 @@ namespace Nektar
             std::string                             m_outputFile;
             std::ofstream                           m_outputStream;
 			LibUtilities::BasisSharedPtr            m_homogeneousBasis;
+            std::string                             m_BoundaryString;
+
 
         };
     }

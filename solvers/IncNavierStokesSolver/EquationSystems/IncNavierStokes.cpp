@@ -206,6 +206,9 @@ namespace Nektar
             {	
                 if(BndConds[n]->GetUserDefined() == SpatialDomains::eRadiation)
                 {
+                    ASSERTL0(BndConds[n]->GetBoundaryConditionType() == SpatialDomains::eRobin,
+                             "Radiation boundary condition must be of type Robin <R>");
+                    
                     if(Set == false)
                     {
                         m_fields[i]->GetBoundaryToElmtMap(m_fieldsBCToElmtID[i],m_fieldsBCToTraceID[i]);
@@ -302,15 +305,8 @@ namespace Nektar
                 SubStepAdvance(n);
             }
 
-            // Advance velocity fields
-            if(n < 1)
-            {
-                fields = m_integrationScheme[0]->TimeIntegrate(m_timestep, m_integrationSoln, m_integrationOps);
-            }
-            else
-            {
-                fields = m_integrationScheme[min(n,m_intSteps-1)]->TimeIntegrate(m_timestep, m_integrationSoln, m_integrationOps);
-            }
+
+            fields = m_integrationScheme[min(n,m_intSteps-1)]->TimeIntegrate(m_timestep, m_integrationSoln, m_integrationOps);
             
             m_time += m_timestep;
             
@@ -948,6 +944,7 @@ namespace Nektar
         int elmtid,nq,offset, boundary;
         Array<OneD, NekDouble> Bvals, U;
         int cnt1 = 0;
+
 
         for(cnt = n = 0; n < BndConds.num_elements(); ++n)
         {            

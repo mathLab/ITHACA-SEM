@@ -157,6 +157,7 @@ namespace Nektar
             m_globalToUniversalBndMapUnique(oldLevelMap->GetGlobalToUniversalBndMapUnique()),
             m_solnType(oldLevelMap->m_solnType),
             m_preconType(oldLevelMap->m_preconType),
+            m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
             m_gsh(oldLevelMap->m_gsh),
             m_bndGsh(oldLevelMap->m_bndGsh),
             m_lowestStaticCondLevel(oldLevelMap->m_lowestStaticCondLevel)

@@ -103,6 +103,8 @@ namespace Nektar
 
         Array<OneD, NekDouble> GetCellSolutionCoeffs(unsigned int idx);
 
+        Array<OneD, NekDouble> GetCellSolution(unsigned int idx);
+
     protected:
         /// Session
         LibUtilities::SessionReaderSharedPtr m_session;

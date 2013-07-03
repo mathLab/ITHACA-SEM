@@ -108,7 +108,8 @@ namespace Nektar
             m_session->LoadParameter("CFL", m_cflSafetyFactor, 0.0);
 
             // Set up time to be dumped in field information
-            m_fieldMetaDataMap["Time"] = m_time; 
+            m_fieldMetaDataMap["Time"] =
+                    boost::lexical_cast<std::string>(m_time);
 
             // Set up filters
             LibUtilities::FilterMap::const_iterator x;
@@ -810,7 +811,7 @@ namespace Nektar
                             iter = m_fieldMetaDataMap.find("Time");
                             if(iter != m_fieldMetaDataMap.end())
                             {
-                                time = iter->second; 
+                                time = boost::lexical_cast<NekDouble>(iter->second);
                             }
                         }
                         

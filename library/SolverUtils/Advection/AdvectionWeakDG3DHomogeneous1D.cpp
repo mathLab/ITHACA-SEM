@@ -64,14 +64,14 @@ namespace Nektar
             int i, j, k;
             int nVel = advVel.num_elements();
             int nPointsTot      = fields[0]->GetTotPoints();
-            int nCoeffs         = fields[0]->GetNcoeffs();
+            //int nCoeffs         = fields[0]->GetNcoeffs();
             
             Array<OneD, unsigned int> planes;
             planes = fields[0]->GetZIDs();
             int num_planes = planes.num_elements();
             
             int nPointsTot_plane = nPointsTot/num_planes;
-            int nCoeffs_plane = nCoeffs/num_planes;
+            //int nCoeffs_plane = nCoeffs/num_planes;
              
             m_planeAdv->SetRiemannSolver(m_riemann);
             m_planeAdv->SetFluxVectorVec(m_fluxVector);
@@ -143,7 +143,7 @@ namespace Nektar
                     fluxvector_homo[i][j] =
                         Array<OneD, Array<OneD, NekDouble> >(nVel);
                     
-                    for (int k = 0; k < nVel ; ++k)
+                    for (k = 0; k < nVel ; ++k)
                     {
                         fluxvector_homo[i][j][k] =
                             Array<OneD, NekDouble>(nPointsTot_plane, 0.0);

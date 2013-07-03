@@ -564,10 +564,8 @@ namespace Nektar
         // Pressure Forcing = Divergence Velocity; 
         timer.Start();
 
-        //        NekDouble aii_Dt_tmp = aii_Dt*(1.0 - exp(-0.1*ncalls*ncalls)) + m_timestep*exp(-0.1*ncalls*ncalls);
-        NekDouble aii_Dt_tmp = aii_Dt; 
         ncalls++;
-        SetUpPressureForcing(inarray, F, aii_Dt_tmp);
+        SetUpPressureForcing(inarray, F, aii_Dt);
         timer.Stop();
         if(m_showTimings&&IsRoot)
         {

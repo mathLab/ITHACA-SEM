@@ -392,6 +392,7 @@ namespace Nektar
             std::vector<SolverUtils::FilterSharedPtr>::iterator x;
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
+
                 (*x)->Update(m_fields, m_time);
             }
 

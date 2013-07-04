@@ -16,7 +16,7 @@ SET(SOLVER_UTILS_SOURCES
   EquationSystem.cpp
   Filters/Filter.cpp
   Filters/FilterCheckpoint.cpp
-  Filters/FilterForces.cpp
+  Filters/FilterAeroForces.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterThresholdMax.cpp
   RiemannSolvers/RiemannSolver.cpp
@@ -43,7 +43,7 @@ SET(SOLVER_UTILS_HEADERS
   EquationSystem.h
   Filters/Filter.h
   Filters/FilterCheckpoint.h
-  Filters/FilterForces.h
+  Filters/FilterAeroForces.h
   Filters/FilterHistoryPoints.h
   Filters/FilterThresholdMax.h
   RiemannSolvers/RiemannSolver.h

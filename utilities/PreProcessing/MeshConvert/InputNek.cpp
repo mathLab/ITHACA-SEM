@@ -630,11 +630,13 @@ namespace Nektar
                             }
                         }
 
+                        /*
                         f->curveType = LibUtilities::eNodalTriElec;
                         for (int j = 3+3*(N-2); j < Ntot; ++j)
                         {
                             f->faceNodes.push_back((*hoIt)->surfVerts[j]);
                         }
+                        */
                     }
                 }
             }

@@ -934,8 +934,8 @@ namespace Nektar
 
                     if (faceExp->GetRightAdjacentElementExp())
                     {
-                        if (faceExp->GetRightAdjacentElementExp()->GetGeom3D()->GetGlobalID() 
-                            == GetGeom3D()->GetGlobalID())
+                        if (faceExp->GetRightAdjacentElementExp()->GetGeom3D()
+                                ->GetGlobalID() == GetGeom3D()->GetGlobalID())
                         {
                             m_requireNeg[i] = true;
                         }
@@ -949,9 +949,11 @@ namespace Nektar
                 face, GetFaceOrient(face));
             StdRegions::IndexMapValuesSharedPtr map =
                 StdExpansion::GetIndexMap(ikey);
-            
-            int order_e = (*map).num_elements(); // Order of the element
-            int n_coeffs = FaceExp->GetCoeffs().num_elements(); // Order of the trace
+
+            // Order of the element
+            int order_e = (*map).num_elements();
+            // Order of the trace
+            int n_coeffs = FaceExp->GetCoeffs().num_elements();
             
             if (n_coeffs != order_e) // Going to orthogonal space
             {
@@ -1005,16 +1007,18 @@ namespace Nektar
             
             if (m_requireNeg[face])
             {
-                for(i = 0; i < order_e; ++i)
+                for (i = 0; i < order_e; ++i)
                 {
-                    outarray[(*map)[i].index] -= (*map)[i].sign*FaceExp->GetCoeff(i);
+                    outarray[(*map)[i].index] -=
+                        (*map)[i].sign*FaceExp->GetCoeff(i);
                 }
             }
             else
             {
-                for(i = 0; i < order_e; ++i)
+                for (i = 0; i < order_e; ++i)
                 {
-                    outarray[(*map)[i].index] += (*map)[i].sign*FaceExp->GetCoeff(i);
+                    outarray[(*map)[i].index] +=
+                        (*map)[i].sign*FaceExp->GetCoeff(i);
                 }
             }
         }

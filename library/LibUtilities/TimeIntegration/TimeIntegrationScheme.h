@@ -591,7 +591,6 @@ namespace Nektar
                                                    TripleArray                    &y_new  ,
                                                    SingleArray                    &t_new  ,
                                              const TimeIntegrationSchemeOperators &op) const;
-            
 
             LIB_UTILITIES_EXPORT bool CheckIfFirstStageEqualsOldSolution(const Array<OneD, const Array<TwoD, NekDouble> >& A,
                                                     const Array<OneD, const Array<TwoD, NekDouble> >& B,

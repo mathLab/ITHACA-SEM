@@ -1947,81 +1947,78 @@ namespace Nektar
         /**
          * Function is used to compute exactly the advective numerical flux on
          * theinterface of two elements with different expansions, hence an
-         * appropriate number of Gauss points has to be used. The number of Gauss
-         * points has to be equal to the number used by the highest polynomial
-         * degree of the two adjacent elements. Furthermore, this function is used
-         * To compute the sensor value in each element
+         * appropriate number of Gauss points has to be used. The number of
+         * Gauss points has to be equal to the number used by the highest
+         * polynomial degree of the two adjacent elements. Furthermore, this
+         * function is used to compute the sensor value in each element.
+         *
          * @param   numMin     Is the reduced polynomial order
          * @param   inarray    Input array of coefficients
          * @param   dumpVar    Output array of reduced coefficients.
          */
-        void TriExp::v_ReduceOrderCoeffs(int numMin,
-                                          const Array<OneD, const NekDouble> &inarray,
-                                          Array<OneD, NekDouble> &outarray)
+        void TriExp::v_ReduceOrderCoeffs(
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
         {
             int n_coeffs = m_coeffs.num_elements();
-            
-            int       nquad0  = m_base[0]->GetNumPoints();
-            int       nquad1  = m_base[1]->GetNumPoints();
-            int       nqtot   = nquad0*nquad1;
-            int       nmodes0 = m_base[0]->GetNumModes();
-            int       nmodes1 = m_base[1]->GetNumModes();
-            int       numMax  = nmodes0;
-            int       numMin2 = 0, i;
+            int nquad0   = m_base[0]->GetNumPoints();
+            int nquad1   = m_base[1]->GetNumPoints();
+            int nqtot    = nquad0*nquad1;
+            int nmodes0  = m_base[0]->GetNumModes();
+            int nmodes1  = m_base[1]->GetNumModes();
+            int numMax   = nmodes0;
+            int numMin2  = 0, i;
             
             Array<OneD, NekDouble> coeff(n_coeffs,0.0);
             Array<OneD, NekDouble> phys_tmp(nqtot,0.0);
-            Array<OneD, NekDouble> tmp;
-            Array<OneD, NekDouble> tmp2;
+            Array<OneD, NekDouble> tmp, tmp2;
 
             const LibUtilities::PointsKey Pkey0 = m_base[0]->GetPointsKey();
             const LibUtilities::PointsKey Pkey1 = m_base[1]->GetPointsKey();
             
-            LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),
-                                      nmodes0,
-                                      Pkey0);
-            LibUtilities::BasisKey b1(m_base[1]->GetBasisType(),
-                                      nmodes1,
-                                      Pkey1);
-            
-            LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,
-                                           nmodes0,
-                                           Pkey0);
-            LibUtilities::BasisKey bortho1(LibUtilities::eOrtho_B,
-                                           nmodes1,
-                                           Pkey1);
+            LibUtilities::BasisKey b0(
+                m_base[0]->GetBasisType(), nmodes0, Pkey0);
+            LibUtilities::BasisKey b1(
+                m_base[1]->GetBasisType(), nmodes1, Pkey1);
+            LibUtilities::BasisKey bortho0(
+                LibUtilities::eOrtho_A,    nmodes0, Pkey0);
+            LibUtilities::BasisKey bortho1(
+                LibUtilities::eOrtho_B,    nmodes1, Pkey1);
             
             // Check if it is also possible to use the same InterCoeff routine
-            // which is also used for Quadrilateral and Hexagonal shaped elements
+            // which is also used for Quadrilateral and Hexagonal shaped
+            // elements
             
-            // For now, set up the used basis on the standard element to calculate
-            // the phys values, set up the orthogonal basis to do a forward transform,
-            // to obtain the coefficients in orthogonal coefficient space
-            StdRegions::StdTriExpSharedPtr     m_OrthoTriExp;
-            StdRegions::StdTriExpSharedPtr     m_TriExp;
+            // For now, set up the used basis on the standard element to
+            // calculate the phys values, set up the orthogonal basis to do a
+            // forward transform, to obtain the coefficients in orthogonal
+            // coefficient space
+            StdRegions::StdTriExpSharedPtr m_OrthoTriExp;
+            StdRegions::StdTriExpSharedPtr m_TriExp;
             
-            m_TriExp =  MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(b0,b1);
-            m_OrthoTriExp =  MemoryManager<StdRegions::StdTriExp>::AllocateSharedPtr(bortho0,bortho1);
-        
-            m_TriExp->BwdTrans(inarray,phys_tmp);
+            m_TriExp      = MemoryManager<StdRegions::StdTriExp>
+                ::AllocateSharedPtr(b0,      b1);
+            m_OrthoTriExp = MemoryManager<StdRegions::StdTriExp>
+                ::AllocateSharedPtr(bortho0, bortho1);
+
+            m_TriExp     ->BwdTrans(inarray,phys_tmp);
             m_OrthoTriExp->FwdTrans(phys_tmp, coeff);
-            
+
             int cnt = 0;
 
             for (i = 0; i < n_coeffs; i++)
             {
                 if (i == numMin)
                 {
-                    coeff[i] = 0.0;
-                    numMin += numMin2 - 1;
-                    numMin2 -= 1.0;
+                    coeff[i]  = 0.0;
+                    numMin   += numMin2 - 1;
+                    numMin2  -= 1.0;
                 }
             }
-            
+
             m_OrthoTriExp->BwdTrans(coeff,phys_tmp);
-            m_TriExp->FwdTrans(phys_tmp, outarray);
-            
-            //Vmath::Vcopy(n_coeffs,coeff,1,outarray,1);
+            m_TriExp     ->FwdTrans(phys_tmp, outarray);
         }
 
         void TriExp::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,

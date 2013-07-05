@@ -36,7 +36,6 @@
 #include <LibUtilities/BasicUtils/VmathArray.hpp>
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <iostream>
-#include <fstream>
 #include <math.h>
 
 namespace Nektar

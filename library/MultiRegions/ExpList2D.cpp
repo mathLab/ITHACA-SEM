@@ -442,11 +442,12 @@ namespace Nektar
         {
             int i, j, id, elmtid=0;
             set<int> facesDone;
+
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
-            SpatialDomains::QuadGeomSharedPtr FaceQuadGeom;
-            SpatialDomains::TriGeomSharedPtr FaceTriGeom;
-            LocalRegions::QuadExpSharedPtr FaceQuadExp;
-            LocalRegions::TriExpSharedPtr FaceTriExp;
+            SpatialDomains::QuadGeomSharedPtr   FaceQuadGeom;
+            SpatialDomains::TriGeomSharedPtr    FaceTriGeom;
+            LocalRegions::QuadExpSharedPtr      FaceQuadExp;
+            LocalRegions::TriExpSharedPtr       FaceTriExp;
             
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
@@ -458,23 +459,27 @@ namespace Nektar
                     for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
                         LibUtilities::BasisKey bkey0 = bndConstraint[i]
-                        ->GetExp(j)->GetBasis(0)->GetBasisKey();
+                            ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         LibUtilities::BasisKey bkey1 = bndConstraint[i]
-                        ->GetExp(j)->GetBasis(1)->GetBasisKey();
+                            ->GetExp(j)->GetBasis(1)->GetBasisKey();
                         FaceGeom = bndConstraint[i]->GetExp(j)->GetGeom2D();
                         
                         //if face is a quad
-                        if((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
+                        if((FaceQuadGeom = boost::dynamic_pointer_cast<
+                            SpatialDomains::QuadGeom>(FaceGeom)))
                         {
-                            FaceQuadExp = MemoryManager<LocalRegions::QuadExp>::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
+                            FaceQuadExp = MemoryManager<LocalRegions::QuadExp>
+                                ::AllocateSharedPtr(bkey0, bkey1, FaceQuadGeom);
                             facesDone.insert(FaceQuadGeom->GetFid());
                             FaceQuadExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceQuadExp);
                         }
                         //if face is a triangle
-                        else if((FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom)))
+                        else if((FaceTriGeom = boost::dynamic_pointer_cast<
+                                 SpatialDomains::TriGeom>(FaceGeom)))
                         {
-                            FaceTriExp = MemoryManager<LocalRegions::TriExp>::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
+                            FaceTriExp = MemoryManager<LocalRegions::TriExp>
+                                ::AllocateSharedPtr(bkey0, bkey1, FaceTriGeom);
                             facesDone.insert(FaceTriGeom->GetFid());
                             FaceTriExp->SetElmtId(elmtid++);
                             (*m_exp).push_back(FaceTriExp);
@@ -488,12 +493,12 @@ namespace Nektar
             }
             
             map<int, pair<SpatialDomains::Geometry2DSharedPtr,
-            pair<LibUtilities::BasisKey,
-            LibUtilities::BasisKey> > > faceOrders;
+                          pair<LibUtilities::BasisKey,
+                               LibUtilities::BasisKey> > > faceOrders;
             map<int, pair<SpatialDomains::Geometry2DSharedPtr,
-            pair<LibUtilities::BasisKey,
-            LibUtilities::BasisKey> > >::iterator it;
-            
+                          pair<LibUtilities::BasisKey,
+                               LibUtilities::BasisKey> > >::iterator it;
+
             for(i = 0; i < locexp.size(); ++i)
             {
                 for(j = 0; j < locexp[i]->GetNfaces(); ++j)
@@ -510,19 +515,27 @@ namespace Nektar
                     if (it == faceOrders.end())
                     {
                         LibUtilities::BasisKey face_dir0
-                        = locexp[i]->DetFaceBasisKey(j,0);
+                            = locexp[i]->DetFaceBasisKey(j,0);
                         LibUtilities::BasisKey face_dir1
-                        = locexp[i]->DetFaceBasisKey(j,1);
-                        
-                        faceOrders.insert(std::make_pair(id, std::make_pair(FaceGeom,std::make_pair(face_dir0,face_dir1))));
+                            = locexp[i]->DetFaceBasisKey(j,1);
+
+                        faceOrders.insert(
+                            std::make_pair(
+                                id, std::make_pair(
+                                    FaceGeom,
+                                    std::make_pair(face_dir0, face_dir1))));
                     }
                     else // variable modes/points
                     {
-                        LibUtilities::BasisKey face0     = locexp[i]->DetFaceBasisKey(j,0);
-                        LibUtilities::BasisKey face1     = locexp[i]->DetFaceBasisKey(j,1);
-                        LibUtilities::BasisKey existing0 = it->second.second.first;
-                        LibUtilities::BasisKey existing1 = it->second.second.second;
-                        
+                        LibUtilities::BasisKey face0     =
+                            locexp[i]->DetFaceBasisKey(j,0);
+                        LibUtilities::BasisKey face1     =
+                            locexp[i]->DetFaceBasisKey(j,1);
+                        LibUtilities::BasisKey existing0 =
+                            it->second.second.first;
+                        LibUtilities::BasisKey existing1 =
+                            it->second.second.second;
+
                         int np11 = face0    .GetNumPoints();
                         int np12 = face1    .GetNumPoints();
                         int np21 = existing0.GetNumPoints();
@@ -531,7 +544,7 @@ namespace Nektar
                         int nm12 = face1    .GetNumModes ();
                         int nm21 = existing0.GetNumModes ();
                         int nm22 = existing1.GetNumModes ();
-                        
+
                         if ((np22 >= np12 || np21 >= np11) &&
                             (nm22 >= nm12 || nm21 >= nm11))
                         {
@@ -552,40 +565,42 @@ namespace Nektar
                     }
                 }
             }
-            
+
             for (it = faceOrders.begin(); it != faceOrders.end(); ++it)
             {
                 FaceGeom = it->second.first;
                 
-                if ((FaceQuadGeom = boost::dynamic_pointer_cast<SpatialDomains::QuadGeom>(FaceGeom)))
+                if ((FaceQuadGeom = boost::dynamic_pointer_cast<
+                     SpatialDomains::QuadGeom>(FaceGeom)))
                 {
                     FaceQuadExp = MemoryManager<LocalRegions::QuadExp>
-                    ::AllocateSharedPtr(it->second.second.first,
-                                        it->second.second.second,
-                                        FaceQuadGeom);
+                        ::AllocateSharedPtr(it->second.second.first,
+                                            it->second.second.second,
+                                            FaceQuadGeom);
                     FaceQuadExp->SetElmtId(elmtid++);
                     (*m_exp).push_back(FaceQuadExp);
                 }
-                else if ((FaceTriGeom = boost::dynamic_pointer_cast<SpatialDomains::TriGeom>(FaceGeom)))
+                else if ((FaceTriGeom = boost::dynamic_pointer_cast<
+                          SpatialDomains::TriGeom>(FaceGeom)))
                 {
                     FaceTriExp = MemoryManager<LocalRegions::TriExp>
-                    ::AllocateSharedPtr(it->second.second.first,
-                                        it->second.second.second,
-                                        FaceTriGeom);
+                        ::AllocateSharedPtr(it->second.second.first,
+                                            it->second.second.second,
+                                            FaceTriGeom);
                     FaceTriExp->SetElmtId(elmtid++);
                     (*m_exp).push_back(FaceTriExp);
                 }
             }
-            
+
             // Setup Default optimisation information.
             int nel = GetExpSize();
-            
+
             m_globalOptParam = MemoryManager<NekOptimize::GlobalOptParam>
-            ::AllocateSharedPtr(nel);
-            
+                ::AllocateSharedPtr(nel);
+
             // Set up offset information and array sizes
             SetCoeffPhysOffsets();
-            
+
             // Set up m_coeffs, m_phys.
             if(DeclareCoeffPhysArrays)
             {

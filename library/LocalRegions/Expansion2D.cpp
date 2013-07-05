@@ -52,13 +52,14 @@ namespace Nektar
         }
         
         void Expansion2D::v_AddEdgeNormBoundaryInt(
-            const int edge,
-            StdRegions::StdExpansionSharedPtr   &EdgeExp,
+            const int                           edge,
+            StdRegions::StdExpansionSharedPtr  &EdgeExp,
             const Array<OneD, const NekDouble> &Fx,  
             const Array<OneD, const NekDouble> &Fy,  
-            Array<OneD, NekDouble> &outarray)
+                  Array<OneD,       NekDouble> &outarray)
         {
-            ASSERTL1(GetCoordim() == 2,"Routine only set up for two-dimensions");
+            ASSERTL1(GetCoordim() == 2,
+                     "Routine only set up for two-dimensions");
 
             const Array<OneD, const Array<OneD, NekDouble> > normals
                                     = GetEdgeNormal(edge);
@@ -94,7 +95,8 @@ namespace Nektar
             // those modes on the edge common to both adjoining elements. This
             // is enforced here by taking the minimum size and padding with
             // zeros.
-            int nquad_e = min(EdgeExp->GetNumPoints(0), int(normals[0].num_elements()));
+            int nquad_e = min(EdgeExp->GetNumPoints(0),
+                              int(normals[0].num_elements()));
 
             Vmath::Zero(EdgeExp->GetNumPoints(0),EdgeExp->UpdatePhys(),1);
             Vmath::Vmul(nquad_e,normals[0],1,Fx,1,
@@ -124,12 +126,11 @@ namespace Nektar
             AddEdgeNormBoundaryInt(edge, EdgeExp, EdgeExp->GetPhys(), outarray);
         }
 
-		
         void Expansion2D::v_AddEdgeNormBoundaryInt(
-            const int edge,
+            const int                           edge,
             StdRegions::StdExpansionSharedPtr  &EdgeExp,
             const Array<OneD, const NekDouble> &Fn,  
-            Array<OneD, NekDouble> &outarray)
+            Array<OneD, NekDouble>             &outarray)
         {
             int i;
 
@@ -145,7 +146,7 @@ namespace Nektar
                         m_requireNeg[i] = true;
                         continue;
                     }
-                    
+
                     Expansion1DSharedPtr edgeExp = boost::dynamic_pointer_cast<
                         Expansion1D>(m_edgeExp[i].lock());
 
@@ -166,7 +167,7 @@ namespace Nektar
                 edge, GetEorient(edge));
             StdRegions::IndexMapValuesSharedPtr map =
                 StdExpansion::GetIndexMap(ikey);
-            
+
             // Order of the element
             int order_e = map->num_elements();
             // Order of the trace

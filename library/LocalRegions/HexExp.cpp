@@ -817,192 +817,140 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
         
-        void HexExp::v_ExtractDataToCoeffs(const NekDouble *data,
-                                        const std::vector<unsigned int > &nummodes,
-                                           int mode_offset,
-                                           NekDouble *coeffs)
+        void HexExp::v_ExtractDataToCoeffs(
+            const NekDouble                 *data,
+            const std::vector<unsigned int> &nummodes,
+            int                              mode_offset,
+            NekDouble                       *coeffs)
         {
-            int order_data  = nummodes[mode_offset];
-            int order_data0 = nummodes[mode_offset];
-            int order_data1 = nummodes[mode_offset + 1];
-            int order_data2 = nummodes[mode_offset + 2];
+            int order_data       = nummodes[mode_offset];
+            int order_data0      = nummodes[mode_offset];
+            int order_data1      = nummodes[mode_offset + 1];
+            int order_data2      = nummodes[mode_offset + 2];
             int data_coeffs_size = order_data0*order_data1*order_data2;
-            
-            int order       = m_base[0]->GetNumModes();
-            int order0      = m_base[0]->GetNumModes();
-            int order1      = m_base[1]->GetNumModes();
-            int order2      = m_base[2]->GetNumModes();
-            
-            int fillorder0  = std::min(order0,order_data0);
-            int fillorder1  = std::min(order1,order_data1);
-            int fillorder2  = std::min(order2,order_data2);
+
+            int order            = m_base[0]->GetNumModes();
+            int order0           = m_base[0]->GetNumModes();
+            int order1           = m_base[1]->GetNumModes();
+            int order2           = m_base[2]->GetNumModes();
+
+            int fillorder0       = std::min(order0,order_data0);
+            int fillorder1       = std::min(order1,order_data1);
+            int fillorder2       = std::min(order2,order_data2);
             
             switch(m_base[0]->GetBasisType())
             {
                 case LibUtilities::eModified_A:
                 {
-                    if (m_ncoeffs < data_coeffs_size) // The set number of modes in the xml file is smaller than the number of modes given in the input function
+                    // The set number of modes in the xml file is smaller than
+                    // the number of modes given in the input function
+                    if (m_ncoeffs < data_coeffs_size)
                     {
-                        // Hence, the lower order coefficients required can be obtained from the higher order coefficients given in the input file by using a InterpCoeff3D procedure
-                        
+                        // Hence, the lower order coefficients required can be
+                        // obtained from the higher order coefficients given in
+                        // the input file by using a InterpCoeff3D procedure.
                         Vmath::Zero(m_ncoeffs,coeffs,1);
                         
-                        Array<OneD, NekDouble> data_copy(data_coeffs_size,0.0);
-                        Array<OneD, NekDouble> coeffs_copy(m_ncoeffs,0.0);
-                        
+                        Array<OneD, NekDouble> data_copy  (data_coeffs_size);
+                        Array<OneD, NekDouble> coeffs_copy(m_ncoeffs);
+
                         for (int i = 0; i < data_coeffs_size; i++)
                         {
                             data_copy[i] = data[i];
                         }
-                        
+
                         for (int i = 0; i < m_ncoeffs; i++)
                         {
                             coeffs_copy[i] = coeffs[i];
                         }
                         
                         const LibUtilities::PointsKey Pkey0data(
-                                            order_data0+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
+                            order_data0+1, LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::PointsKey Pkey1data(
-                                            order_data1+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
+                            order_data1+1, LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::PointsKey Pkey2data(
-                                            order_data2+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
+                            order_data2+1, LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::PointsKey Pkey0coeff(
-                                            order0+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
+                            order0+1,      LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::PointsKey Pkey1coeff(
-                                            order1+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
+                            order1+1,      LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::PointsKey Pkey2coeff(
-                                            order2+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
+                            order2+1,      LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::BasisKey  HexBaData0(
-                                            LibUtilities::eModified_A,
-                                            order_data0,
-                                            Pkey0data);
-                        
+                            LibUtilities::eModified_A, order_data0, Pkey0data);
                         const LibUtilities::BasisKey  HexBaData1(
-                                            LibUtilities::eModified_A,
-                                            order_data1,
-                                            Pkey1data);
-                        
+                            LibUtilities::eModified_A, order_data1, Pkey1data);
                         const LibUtilities::BasisKey  HexBaData2(
-                                            LibUtilities::eModified_A,
-                                            order_data2,
-                                            Pkey2data);
-                        
+                            LibUtilities::eModified_A, order_data2, Pkey2data);
                         const LibUtilities::BasisKey  HexBaCoeffs0(
-                                            LibUtilities::eModified_A,
-                                            order0,
-                                            Pkey0coeff);
-                        
+                            LibUtilities::eModified_A, order0, Pkey0coeff);
                         const LibUtilities::BasisKey  HexBaCoeffs1(
-                                            LibUtilities::eModified_A,
-                                            order1,
-                                            Pkey1coeff);
-                        
+                            LibUtilities::eModified_A, order1, Pkey1coeff);
                         const LibUtilities::BasisKey  HexBaCoeffs2(
-                                            LibUtilities::eModified_A,
-                                            order2,
-                                            Pkey2coeff);
+                            LibUtilities::eModified_A, order2, Pkey2coeff);
                         
                         // Set up basiskeys for data
-                        
                         LibUtilities::InterpCoeff3D(
-                                            HexBaData0,
-                                            HexBaData1,
-                                            HexBaData2,
-                                            data_copy,
-                                            HexBaCoeffs0,
-                                            HexBaCoeffs1,
-                                            HexBaCoeffs2,
-                                            coeffs_copy);
-                        
+                            HexBaData0,   HexBaData1,   HexBaData2,   data_copy,
+                            HexBaCoeffs0, HexBaCoeffs1, HexBaCoeffs2, coeffs_copy);
+
                         for (int j = 0; j < m_ncoeffs; j++)
                         {
                             coeffs[j] = coeffs_copy[j];
                         }
-                        
                     }
-                    else if(m_ncoeffs >= data_coeffs_size) // The required number of modes (set in the xml file) is higher than the number of modes given in the input function
-
+                    // The required number of modes (set in the xml file) is
+                    // higher than the number of modes given in the input
+                    // function
+                    else if (m_ncoeffs >= data_coeffs_size)
                     {
-                        // Hence, the lower order solution has to be projected onto the orthogonal basis and placed into the correct order into the higher order coefficient space. When this is done, a back projection onto the modified basis has to be performed to obtain the lower order solution represented by the higher order coefficient space.
-                        
+                        // The lower order solution has to be projected onto the
+                        // orthogonal basis and placed into the correct order
+                        // into the higher order coefficient space. When this is
+                        // done, a back projection onto the modified basis has
+                        // to be performed to obtain the lower order solution
+                        // represented by the higher order coefficient space.
                         Vmath::Zero(m_ncoeffs,coeffs,1);
-                        
-                        Array<OneD, NekDouble> data_copy(data_coeffs_size,0.0);
+
+                        Array<OneD, NekDouble> data_copy (data_coeffs_size);
                         Array<OneD, NekDouble> data_ortho(data_coeffs_size,0.0);
-                        
                         Array<OneD, NekDouble> coeffs_copy(m_ncoeffs,0.0);
                         Array<OneD, NekDouble> coeffs_ortho(m_ncoeffs,0.0);
-                        
+
                         for (int i = 0; i < data_coeffs_size; i++)
                         {
                             data_copy[i] = data[i];
                         }
-                        
+
                         const LibUtilities::PointsKey Pkey0data(
-                                            order_data0+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
+                            order_data0+1, LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::PointsKey Pkey1data(
-                                            order_data1+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
+                            order_data1+1, LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::PointsKey Pkey2data(
-                                            order_data2+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
-                        // set up of the modified and orthogonal basis
-                        
+                            order_data2+1, LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::BasisKey  HexBaData0(
-                                            LibUtilities::eModified_A,
-                                            order_data0,
-                                            Pkey0data);
-                        
+                            LibUtilities::eModified_A, order_data0, Pkey0data);
                         const LibUtilities::BasisKey  HexBaData1(
-                                            LibUtilities::eModified_A,
-                                            order_data1,
-                                            Pkey1data);
-                        
+                            LibUtilities::eModified_A, order_data1, Pkey1data);
                         const LibUtilities::BasisKey  HexBaData2(
-                                            LibUtilities::eModified_A,
-                                            order_data2,
-                                            Pkey2data);
-                        
+                            LibUtilities::eModified_A, order_data2, Pkey2data);
                         const LibUtilities::BasisKey  HexBaData0Ortho(
-                                            LibUtilities::eOrtho_A,
-                                            order_data0,
-                                            Pkey0data);
-                        
+                            LibUtilities::eOrtho_A,    order_data0, Pkey0data);
                         const LibUtilities::BasisKey  HexBaData1Ortho(
-                                            LibUtilities::eOrtho_A,
-                                            order_data1,
-                                            Pkey1data);
-                        
+                            LibUtilities::eOrtho_A,    order_data1, Pkey1data);
                         const LibUtilities::BasisKey  HexBaData2Ortho(
-                                            LibUtilities::eOrtho_A,
-                                            order_data2,
-                                            Pkey2data);
-                        
-                        // interpolation of the lower order coefficients from modified to orthogonal basis
-                        
+                            LibUtilities::eOrtho_A,    order_data2, Pkey2data);
+
+                        // interpolation of the lower order coefficients from
+                        // modified to orthogonal basis
                         LibUtilities::InterpCoeff3D(
-                                            HexBaData0,HexBaData1,HexBaData2,data_copy,
-                                            HexBaData0Ortho, HexBaData1Ortho,HexBaData2Ortho, data_ortho);
-                        
-                        // Set up the new longer coefficient vector with the correctly
-                        // ordered lower order orthogonal basis coefficients
-                        
+                            HexBaData0, HexBaData1, HexBaData2, data_copy,
+                            HexBaData0Ortho, HexBaData1Ortho, HexBaData2Ortho,
+                            data_ortho);
+
+                        // Set up the new longer coefficient vector with the
+                        // correctly ordered lower order orthogonal basis
+                        // coefficients
                         for (int i = 0; i < order; i++)
                         {
                             int NumModesCuttOff = order_data;
@@ -1017,7 +965,6 @@ namespace Nektar
                                     for (int u = cnt; u < cnt+order; u++)
                                     {
                                         //filtering of the first modes
-                                        
                                         if (u < cnt+order_data && count == 0 && j < order_data*order)
                                         {
                                             coeffs_ortho[i*order*order+u] = data_ortho[i*order_data*order_data+u];
@@ -1050,59 +997,33 @@ namespace Nektar
                         }
                         
                         const LibUtilities::PointsKey Pkey0coeff(
-                                            order0+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
+                            order0+1, LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::PointsKey Pkey1coeff(
-                                            order1+1,
-                                            LibUtilities::eGaussLobattoLegendre);
+                            order1+1, LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::PointsKey Pkey2coeff(
-                                            order2+1,
-                                            LibUtilities::eGaussLobattoLegendre);
-                        
-                        
+                            order2+1, LibUtilities::eGaussLobattoLegendre);
                         const LibUtilities::BasisKey  HexBaCoeffs0(
-                                            LibUtilities::eModified_A,
-                                            order0,
-                                            Pkey0coeff);
-                        
+                            LibUtilities::eModified_A, order0, Pkey0coeff);
                         const LibUtilities::BasisKey  HexBaCoeffs1(
-                                            LibUtilities::eModified_A,
-                                            order1,
-                                            Pkey1coeff);
-                        
+                            LibUtilities::eModified_A, order1, Pkey1coeff);
                         const LibUtilities::BasisKey  HexBaCoeffs2(
-                                            LibUtilities::eModified_A,
-                                            order2,
-                                            Pkey2coeff);
-                        
-                        
+                            LibUtilities::eModified_A, order2, Pkey2coeff);
                         const LibUtilities::BasisKey  HexBaCoeffs0Ortho(
-                                            LibUtilities::eOrtho_A,
-                                            order0,
-                                            Pkey0coeff);
-                        
+                            LibUtilities::eOrtho_A, order0, Pkey0coeff);
                         const LibUtilities::BasisKey  HexBaCoeffs1Ortho(
-                                            LibUtilities::eOrtho_A,
-                                            order1,
-                                            Pkey1coeff);
-                        
+                            LibUtilities::eOrtho_A, order1, Pkey1coeff);
                         const LibUtilities::BasisKey  HexBaCoeffs2Ortho(
-                                            LibUtilities::eOrtho_A,
-                                            order2,
-                                            Pkey2coeff);
+                            LibUtilities::eOrtho_A, order2, Pkey2coeff);
                         
                         LibUtilities::InterpCoeff3D(
-                                            HexBaCoeffs0Ortho,HexBaCoeffs1Ortho,HexBaCoeffs2Ortho,coeffs_ortho,
-                                            HexBaCoeffs0, HexBaCoeffs1,HexBaCoeffs2, coeffs_copy);
-                        
-                        for (int j = 0; j < m_ncoeffs; j++)
-                        {
-                            coeffs[j] = coeffs_copy[j];
-                        }
+                            HexBaCoeffs0Ortho, HexBaCoeffs1Ortho,
+                            HexBaCoeffs2Ortho, coeffs_ortho, HexBaCoeffs0,
+                            HexBaCoeffs1, HexBaCoeffs2, coeffs_copy);
+
+                        Vmath::Vcopy(m_ncoeffs, &coeffs_copy[0], 1, coeffs, 1);
                     }
-                }
                     break;
+                }
                 case LibUtilities::eGLL_Lagrange:
                 {
                     ASSERTL0(false,"Not implemented yet for GLL points");
@@ -1113,7 +1034,7 @@ namespace Nektar
                     LibUtilities::Interp3D(p0,p1,p2,data, m_base[0]->GetPointsKey(),
                                            m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),coeffs);*/
                 }
-                    break;
+                break;
                 case LibUtilities::eGauss_Lagrange:
                 {
                     ASSERTL0(false,"Not implemented yet for Gauss Lagrange points");
@@ -1124,7 +1045,7 @@ namespace Nektar
                     LibUtilities::Interp3D(p0,p1,p2,data, m_base[0]->GetPointsKey(),
                                            m_base[1]->GetPointsKey(),m_base[2]->GetPointsKey(),coeffs);*/
                 }
-                    break;
+                break;
                 default:
                     ASSERTL0(false,"basis is either not set up or not hierarchicial");
             }
@@ -2095,61 +2016,62 @@ namespace Nektar
         }
         
         /**
-         * Function is used to compute exactly the advective numerical flux on
-         * theinterface of two elements with different expansions, hence an
-         * appropriate number of Gauss points has to be used. The number of Gauss
-         * points has to be equal to the number used by the highest polynomial
-         * degree of the two adjacent elements
+         * This function is used to compute exactly the advective numerical flux
+         * on the interface of two elements with different expansions, hence an
+         * appropriate number of Gauss points has to be used. The number of
+         * Gauss points has to be equal to the number used by the highest
+         * polynomial degree of the two adjacent elements
+         *
          * @param   numMin     Is the reduced polynomial order
          * @param   inarray    Input array of coefficients
          * @param   dumpVar    Output array of reduced coefficients.
          */
-        
         void HexExp::v_ReduceOrderCoeffs(
-                                             int numMin,
-                                             const Array<OneD, const NekDouble> &inarray,
-                                             Array<OneD, NekDouble> &outarray)
+            int                                 numMin,
+            const Array<OneD, const NekDouble> &inarray,
+                  Array<OneD,       NekDouble> &outarray)
         {
             int n_coeffs = m_coeffs.num_elements();
-            int       nmodes0 = m_base[0]->GetNumModes();
-            int       nmodes1 = m_base[1]->GetNumModes();
-            int       nmodes2 = m_base[2]->GetNumModes();
-            int       numMax  = nmodes0;
-            
-            Array<OneD, NekDouble> coeff(n_coeffs);
-            Array<OneD, NekDouble> coeff_tmp1(nmodes0*nmodes1,0.0);
-            Array<OneD, NekDouble> coeff_tmp2(n_coeffs,0.0);
-            
-            Array<OneD, NekDouble> tmp;
-            Array<OneD, NekDouble> tmp2;
-            Array<OneD, NekDouble> tmp3;
-            Array<OneD, NekDouble> tmp4;
+            int nmodes0  = m_base[0]->GetNumModes();
+            int nmodes1  = m_base[1]->GetNumModes();
+            int nmodes2  = m_base[2]->GetNumModes();
+            int numMax   = nmodes0;
+
+            Array<OneD, NekDouble> coeff     (n_coeffs);
+            Array<OneD, NekDouble> coeff_tmp1(nmodes0*nmodes1, 0.0);
+            Array<OneD, NekDouble> coeff_tmp2(n_coeffs,        0.0);
+            Array<OneD, NekDouble> tmp, tmp2, tmp3, tmp4;
             
             Vmath::Vcopy(n_coeffs,inarray,1,coeff_tmp2,1);
             
-            const LibUtilities::PointsKey Pkey0(nmodes0,LibUtilities::eGaussLobattoLegendre);
+            const LibUtilities::PointsKey Pkey0(
+                nmodes0, LibUtilities::eGaussLobattoLegendre);
+            const LibUtilities::PointsKey Pkey1(
+                nmodes1, LibUtilities::eGaussLobattoLegendre);
+            const LibUtilities::PointsKey Pkey2(
+                nmodes2, LibUtilities::eGaussLobattoLegendre);
             
-            const LibUtilities::PointsKey Pkey1(nmodes1,LibUtilities::eGaussLobattoLegendre);
+            LibUtilities::BasisKey b0(
+                m_base[0]->GetBasisType(), nmodes0, Pkey0);
+            LibUtilities::BasisKey b1(
+                m_base[1]->GetBasisType(), nmodes1, Pkey1);
+            LibUtilities::BasisKey b2(
+                m_base[2]->GetBasisType(), nmodes2, Pkey2);
+            LibUtilities::BasisKey bortho0(
+                LibUtilities::eOrtho_A,    nmodes0, Pkey0);
+            LibUtilities::BasisKey bortho1(
+                LibUtilities::eOrtho_A,    nmodes1, Pkey1);
+            LibUtilities::BasisKey bortho2(
+                LibUtilities::eOrtho_A,    nmodes2, Pkey2);
+
+            LibUtilities::InterpCoeff3D(
+                b0,      b1,      b2,      coeff_tmp2,
+                bortho0, bortho1, bortho2, coeff);
             
-            const LibUtilities::PointsKey Pkey2(nmodes2,LibUtilities::eGaussLobattoLegendre);
+            Vmath::Zero(n_coeffs, coeff_tmp2, 1);
             
-            LibUtilities::BasisKey b0(m_base[0]->GetBasisType(),nmodes0,Pkey0);
-            LibUtilities::BasisKey b1(m_base[1]->GetBasisType(),nmodes1,Pkey1);
-            LibUtilities::BasisKey b2(m_base[2]->GetBasisType(),nmodes2,Pkey2);
-            
-            LibUtilities::BasisKey bortho0(LibUtilities::eOrtho_A,nmodes0,Pkey0);
-            LibUtilities::BasisKey bortho1(LibUtilities::eOrtho_A,nmodes1,Pkey1);
-            LibUtilities::BasisKey bortho2(LibUtilities::eOrtho_A,nmodes2,Pkey2);
-            
-            LibUtilities::InterpCoeff3D(b0, b1, b2,
-                                        coeff_tmp2,
-                                        bortho0, bortho1, bortho2,
-                                        coeff);
-            
-            Vmath::Zero(n_coeffs,coeff_tmp2,1);
-            
-            int cnt = 0;
-            int cnt2 = 0;
+            int cnt = 0, cnt2 = 0;
+
             for (int u = 0; u < numMin+1; ++u)
             {
                 for (int i = 0; i < numMin; ++i)
@@ -2168,10 +2090,9 @@ namespace Nektar
                 cnt2 = u*nmodes0*nmodes1;
             }
             
-            LibUtilities::InterpCoeff3D(bortho0, bortho1,bortho2,
-                                        coeff_tmp2,
-                                        b0,b1,b2,
-                                        outarray);
+            LibUtilities::InterpCoeff3D(
+                bortho0, bortho1, bortho2, coeff_tmp2,
+                b0,      b1,      b2,      outarray);
         }
 
         void HexExp::v_HelmholtzMatrixOp_MatFree(

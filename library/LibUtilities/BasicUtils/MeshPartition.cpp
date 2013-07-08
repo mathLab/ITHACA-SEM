@@ -450,11 +450,12 @@ namespace Nektar
                 std::string propertyValueUpper =
                     boost::to_upper_copy(solverValue);
 
+                m_weightingRequired = false;
                 if (solverPropertyUpper == "WEIGHTPARTITIONS") 
                 {
-                    if (propertyValueUpper == "UNIFORM")
+                    if (propertyValueUpper != "UNIFORM")
                     {
-                        m_weightingRequired = false;
+                        m_weightingRequired = true;
                     }
                     return;
                 }

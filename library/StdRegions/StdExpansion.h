@@ -998,17 +998,31 @@ namespace Nektar
              * and point distribution defined by defined in \a EdgeExp.
              */
             
-            void GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetEdgePhysVals(const int edge, const Array<OneD,
+                                 const NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,inarray,outarray);
             }
 
-            void GetEdgePhysVals(const int edge, const boost::shared_ptr<StdExpansion> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetEdgePhysVals(const int edge,
+                                 const boost::shared_ptr<StdExpansion> &EdgeExp,
+                                 const Array<OneD, const NekDouble> &inarray,
+                                       Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
             
-            void GetEdgeInterpVals(const int edge,const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            void GetVertexPhysVals(const int vertex,
+                                   const Array<OneD, const NekDouble> &inarray,
+                                         NekDouble &outarray)
+            {
+                v_GetVertexPhysVals(vertex, inarray, outarray);
+            }
+            
+            void GetEdgeInterpVals(const int edge,const Array<OneD,
+                                   const NekDouble> &inarray,
+                                         Array<OneD,NekDouble> &outarray)
             {
                 v_GetEdgeInterpVals(edge, inarray, outarray);
             }
@@ -1792,6 +1806,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+            
+            STD_REGIONS_EXPORT virtual void v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray);
             
             STD_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(const int edge,
                 const Array<OneD, const NekDouble> &inarray,Array<OneD,NekDouble> &outarray);

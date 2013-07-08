@@ -133,25 +133,21 @@ namespace Nektar
                 // indeed implemented
                 
                 for(int n = 0; n < m_fields[0]->GetBndConditions().num_elements(); ++n)
-                {	
+                {    
                     // Time Dependent Boundary Condition (if no user
                     // defined then this is empty)
-                    if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eNoUserDefined)
-                    {
-						if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eWall_Forces)
-						{	
-							if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent)
-							{
-								if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eRadiation)
-								{
-									if(m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eI)
-									{
-										ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
-									}
-								}
-							}
-						}
-					}
+                    ASSERTL0 (
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eNoUserDefined ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eWall_Forces ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eTimeDependent ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eRadiation ||
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
+                            SpatialDomains::eI,
+                        "Unknown USERDEFINEDTYPE boundary condition");
                 }
             }
             break;
@@ -171,7 +167,7 @@ namespace Nektar
             }
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
-	
+    
         if (m_equationType == eUnsteadyLinearisedNS)// || m_equationType == eSteadyNavierStokes)
         {
             std::string vConvectiveType = "Linearised";
@@ -182,7 +178,7 @@ namespace Nektar
             }
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
-	
+    
         if(m_equationType == eUnsteadyStokes)
         {
             std::string vConvectiveType = "NoAdvection";
@@ -206,7 +202,7 @@ namespace Nektar
             BndConds = m_fields[i]->GetBndConditions();
             BndExp   = m_fields[i]->GetBndCondExpansions();
             for(int n = 0; n < BndConds.num_elements(); ++n)
-            {	
+            {    
                 if(BndConds[n]->GetUserDefined() == SpatialDomains::eRadiation)
                 {
                     if(Set == false)
@@ -223,7 +219,7 @@ namespace Nektar
             radpts = 0; // reset to use as a counter
 
             for(int n = 0; n < BndConds.num_elements(); ++n)
-            {	
+            {    
                 if(BndConds[n]->GetUserDefined() == SpatialDomains::eRadiation)
                 {
                     
@@ -263,7 +259,7 @@ namespace Nektar
         int i,n;
         int n_fields = m_fields.num_elements();
         static int nchk = 0;
-		
+        
         Timer timer;
 
         if(m_HomogeneousType == eHomogeneous1D)
@@ -275,20 +271,20 @@ namespace Nektar
                 m_fields[i]->SetPhysState(false);
             }
         }
-	
+    
         // Set up wrapper to fields data storage. 
         Array<OneD, Array<OneD, NekDouble> >  fields(m_nConvectiveFields);
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
             fields[i]  = m_fields[i]->UpdatePhys();
         }
-		
+        
         // Initialise NS solver which is set up to use a GLM method
         // with calls to EvaluateAdvection_SetPressureBCs and
         // SolveUnsteadyStokesSystem
         m_integrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep, fields, m_time, m_integrationOps);
 
-	               
+                   
         std::vector<SolverUtils::FilterSharedPtr>::iterator x;
         for (x = m_filters.begin(); x != m_filters.end(); ++x)
         {
@@ -392,12 +388,11 @@ namespace Nektar
             std::vector<SolverUtils::FilterSharedPtr>::iterator x;
             for (x = m_filters.begin(); x != m_filters.end(); ++x)
             {
-
                 (*x)->Update(m_fields, m_time);
             }
 
         }
-	
+    
         if(m_HomogeneousType == eHomogeneous1D)
         {
             for(i = 0 ; i< n_fields ; i++)
@@ -415,7 +410,7 @@ namespace Nektar
                 m_fields[i]->SetPhysState(true);
             }
         }
-	
+    
         
         if (m_energysteps)
         {
@@ -598,7 +593,7 @@ namespace Nektar
             {
                 for(int i = 0; i < m_nConvectiveFields; ++i)
                 {
-                    m_forces[i]->SetWaveSpace(true);	
+                    m_forces[i]->SetWaveSpace(true);    
                     m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),
                                           m_forces[i]->UpdatePhys());
                 }
@@ -824,9 +819,9 @@ namespace Nektar
                 Array<OneD, NekDouble> energy    (locsize,0.0);
                 Array<OneD, NekDouble> energy_tmp(locsize,0.0);
                 Array<OneD, NekDouble> tmp;
-			
+            
                 // Calculate modal energies.
-			
+            
                 // calcuation of the perturbation energy using non-linear NS
                 // equations
                 if(m_session->DefinesSolverInfo("CalculatePerturbationEnergy")
@@ -918,7 +913,7 @@ namespace Nektar
         for (int i = 0; i < nvariables; ++i)
         {
             for(int n = 0; n < m_fields[i]->GetBndConditions().num_elements(); ++n)
-            {	
+            {    
                 if(m_fields[i]->GetBndConditions()[n]->GetUserDefined() ==
                    SpatialDomains::eTimeDependent)
                 {
@@ -982,7 +977,7 @@ namespace Nektar
                 }
                 cnt1 += BndExp[n]->GetTotPoints();
             }
-            else if(type == SpatialDomains::eNoUserDefined ||type == SpatialDomains::eWall_Forces || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh) 
+            else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eWall_Forces || type == SpatialDomains::eTimeDependent || type == SpatialDomains::eHigh) 
             {
                 cnt += BndExp[n]->GetExpSize();
             }
@@ -1108,7 +1103,7 @@ namespace Nektar
     
     Array<OneD, NekDouble> IncNavierStokes::GetStdVelocity(
         const Array<OneD, Array<OneD,NekDouble> > inarray)
-	{
+    {
         // Checking if the problem is 2D
         ASSERTL0(m_expdim >= 2, "Method not implemented for 1D");
         
@@ -1126,7 +1121,7 @@ namespace Nektar
         {
             stdVelocity[i] = Array<OneD, NekDouble>(nTotQuadPoints);
         }
-		
+        
         if (nvel == 2)
         {
             for (int el = 0; el < n_element; ++el)
@@ -1242,9 +1237,9 @@ namespace Nektar
                 }
             }
         }
-		
+        
         return stdV;
-	}
+    }
 
 
 

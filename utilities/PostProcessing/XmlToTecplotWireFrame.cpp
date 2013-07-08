@@ -5,11 +5,6 @@
 
 using namespace Nektar;
 
-void CheckTetRotation(Array<OneD, NekDouble> &xc, Array<OneD, NekDouble> &yc, 
-                      Array<OneD, NekDouble> &xz, 
-                      std::map<int,SpatialDomains::TetGeomSharedPtr>::iterator &tetIter,
-                      int id);
-
 int main(int argc, char *argv[])
 {
     Array<OneD,NekDouble>  fce; 
@@ -75,6 +70,7 @@ int main(int argc, char *argv[])
         break;
     case 3:
         {
+            int i;
             NekDouble x,y,z;
             string   outname(strtok(argv[argc-1],"."));
             outname += ".dat";
@@ -85,66 +81,141 @@ int main(int argc, char *argv[])
             SpatialDomains::PrismGeomMap prismgeom = mesh->GetAllPrismGeoms();
             SpatialDomains::HexGeomMap   hexgeom   = mesh->GetAllHexGeoms();
 
+            std::map<int,SpatialDomains::TetGeomSharedPtr>::iterator tetIter;
+            std::map<int,SpatialDomains::PyrGeomSharedPtr>::iterator pyrIter;
+            std::map<int,SpatialDomains::PrismGeomSharedPtr>::iterator prismIter;
+            std::map<int,SpatialDomains::HexGeomSharedPtr>::iterator hexIter;
+
             int nverts = mesh->GetNvertices();
+
+            map<int, int> vertid;
+            vector<int> vertord;
+
+            int cnt = 0;
+            // set up list of all vertex ids
+            for(tetIter = tetgeom.begin(); tetIter != tetgeom.end(); ++tetIter)
+            {
+                for(i = 0; i < 4; ++i)
+                {
+                    int vid = (tetIter->second)->GetVid(i);
+                    if(vertid.count(vid) == 0)
+                    {
+                        vertord.push_back(vid);
+                        vertid[vid] = cnt++;
+                    }
+                }
+            }
+            
+            for(pyrIter = pyrgeom.begin(); pyrIter != pyrgeom.end(); ++pyrIter)
+            {
+                for(i = 0; i < 5; ++i)
+                {
+                    int vid = (pyrIter->second)->GetVid(i);
+                    if(vertid.count(vid) == 0)
+                    {
+                        vertord.push_back(vid);
+                        vertid[vid] = cnt++;
+                    }
+                }
+            }
+            
+
+            for(prismIter = prismgeom.begin(); prismIter != prismgeom.end(); ++prismIter)
+            {
+                for(i = 0; i < 5; ++i)
+                {
+                    int vid = (prismIter->second)->GetVid(i);
+                    if(vertid.count(vid) == 0)
+                    {
+                        vertord.push_back(vid);
+                        vertid[vid] = cnt++;
+                    }
+                }
+            }
+
+            for(hexIter = hexgeom.begin(); hexIter != hexgeom.end(); ++hexIter)
+            {
+                for(i = 0; i < 6; ++i)
+                {
+                    int vid = (hexIter->second)->GetVid(i);
+                    if(vertid.count(vid) == 0)
+                    {
+                        vertord.push_back(vid);
+                        vertid[vid] = cnt++;
+                    }
+                }
+            }
+            
+            ASSERTL0(cnt == nverts,"Vertex count did not match");
 
             fprintf(fp,"Variables = x, y, z\n");
             fprintf(fp,"Zone,N=%d, E=%d,DATAPACKING=POINT,ZONETYPE=FEBRICK\n",nverts,(int)(tetgeom.size() + pyrgeom.size() + prismgeom.size() + hexgeom.size()));
             
             Array<OneD, NekDouble> xc(nverts),yc(nverts),zc(nverts);
             
-            for(int i = 0; i < nverts; ++i)
+            map<int, int>::iterator viter;
+            for(i = 0; i < nverts; ++i)
             {
-                mesh->GetVertex(i)->GetCoords(x,y,z);
+                mesh->GetVertex(vertord[i])->GetCoords(x,y,z);
                 fprintf(fp,"%lf %lf %lf \n",x,y,z);
                 xc[i] = x;
                 yc[i] = y;
                 zc[i] = z;
             }
             
-            std::map<int,SpatialDomains::TetGeomSharedPtr>::iterator tetIter;
-            int cnt = 0;
+            cnt = 0;
             for(tetIter = tetgeom.begin(); tetIter != tetgeom.end(); ++tetIter)
             {
-                // check rotation and dump
-                CheckTetRotation(xc,yc,zc,tetIter,cnt++);
 
-                fprintf(fp,"%d %d %d %d %d %d %d %d\n",(tetIter->second)->GetVid(0)+1,
-                        (tetIter->second)->GetVid(1)+1,(tetIter->second)->GetVid(2)+1,
-                        (tetIter->second)->GetVid(3)+1,(tetIter->second)->GetVid(3)+1,
-                        (tetIter->second)->GetVid(3)+1,(tetIter->second)->GetVid(3)+1,
-                        (tetIter->second)->GetVid(3)+1);
+                fprintf(fp,"%d %d %d %d %d %d %d %d\n",
+                        vertid[(tetIter->second)->GetVid(0)]+1,
+                        vertid[(tetIter->second)->GetVid(1)]+1,
+                        vertid[(tetIter->second)->GetVid(2)]+1,
+                        vertid[(tetIter->second)->GetVid(2)]+1,
+                        vertid[(tetIter->second)->GetVid(3)]+1,
+                        vertid[(tetIter->second)->GetVid(3)]+1,
+                        vertid[(tetIter->second)->GetVid(3)]+1,
+                        vertid[(tetIter->second)->GetVid(3)]+1);
             }
 
 
-            std::map<int,SpatialDomains::PyrGeomSharedPtr>::iterator pyrIter;
             for(pyrIter = pyrgeom.begin(); pyrIter != pyrgeom.end(); ++pyrIter)
             {
-                fprintf(fp,"%d %d %d %d %d %d %d %d\n",(pyrIter->second)->GetVid(0)+1,
-                        (pyrIter->second)->GetVid(1)+1,(pyrIter->second)->GetVid(2)+1,
-                        (pyrIter->second)->GetVid(3)+1,(pyrIter->second)->GetVid(4)+1,
-                        (pyrIter->second)->GetVid(4)+1,(pyrIter->second)->GetVid(4)+1,
-                        (pyrIter->second)->GetVid(5)+1);
+                fprintf(fp,"%d %d %d %d %d %d %d %d\n",
+                        vertid[(pyrIter->second)->GetVid(0)]+1,
+                        vertid[(pyrIter->second)->GetVid(1)]+1,
+                        vertid[(pyrIter->second)->GetVid(3)]+1,
+                        vertid[(pyrIter->second)->GetVid(2)]+1,
+                        vertid[(pyrIter->second)->GetVid(4)]+1,
+                        vertid[(pyrIter->second)->GetVid(4)]+1,
+                        vertid[(pyrIter->second)->GetVid(4)]+1,
+                        vertid[(pyrIter->second)->GetVid(4)]+1);
             }
 
-
-            std::map<int,SpatialDomains::PrismGeomSharedPtr>::iterator prismIter;
             for(prismIter = prismgeom.begin(); prismIter != prismgeom.end(); ++prismIter)
             {
-                fprintf(fp,"%d %d %d %d %d %d %d %d\n",(prismIter->second)->GetVid(0)+1,
-                        (prismIter->second)->GetVid(1)+1,(prismIter->second)->GetVid(2)+1,
-                        (prismIter->second)->GetVid(3)+1,(prismIter->second)->GetVid(4)+1,
-                        (prismIter->second)->GetVid(4)+1,(prismIter->second)->GetVid(5)+1,
-                        (prismIter->second)->GetVid(5)+1);
+                fprintf(fp,"%d %d %d %d %d %d %d %d\n",
+                        vertid[(prismIter->second)->GetVid(0)]+1,
+                        vertid[(prismIter->second)->GetVid(1)]+1,
+                        vertid[(prismIter->second)->GetVid(3)]+1,
+                        vertid[(prismIter->second)->GetVid(2)]+1,
+                        vertid[(prismIter->second)->GetVid(4)]+1,
+                        vertid[(prismIter->second)->GetVid(4)]+1,
+                        vertid[(prismIter->second)->GetVid(5)]+1,
+                        vertid[(prismIter->second)->GetVid(5)]+1);
             }
 
-            std::map<int,SpatialDomains::HexGeomSharedPtr>::iterator hexIter;
             for(hexIter = hexgeom.begin(); hexIter != hexgeom.end(); ++hexIter)
             {
-                fprintf(fp,"%d %d %d %d %d %d %d %d\n",(hexIter->second)->GetVid(0)+1,
-                        (hexIter->second)->GetVid(1)+1,(hexIter->second)->GetVid(2)+1,
-                        (hexIter->second)->GetVid(3)+1,(hexIter->second)->GetVid(4)+1,
-                        (hexIter->second)->GetVid(5)+1,(hexIter->second)->GetVid(6)+1,
-                        (hexIter->second)->GetVid(7)+1);
+                fprintf(fp,"%d %d %d %d %d %d %d %d\n",
+                        vertid[(hexIter->second)->GetVid(0)]+1,
+                        vertid[(hexIter->second)->GetVid(1)]+1,
+                        vertid[(hexIter->second)->GetVid(3)]+1,
+                        vertid[(hexIter->second)->GetVid(2)]+1,
+                        vertid[(hexIter->second)->GetVid(4)]+1,
+                        vertid[(hexIter->second)->GetVid(5)]+1,
+                        vertid[(hexIter->second)->GetVid(7)]+1,
+                        vertid[(hexIter->second)->GetVid(6)]+1);
             }
 
         }            
@@ -168,40 +239,3 @@ public:
     double z;
 };
 
-void CheckTetRotation(Array<OneD, NekDouble> &xc, Array<OneD, NekDouble> &yc, Array<OneD, NekDouble> &zc, std::map<int,SpatialDomains::TetGeomSharedPtr>::iterator &tetIter, int id)
-{
-    Ord       v[4];
-    NekDouble abx,aby,abz; 
-    
-    v[0].x = xc[(tetIter->second)->GetVid(0)];
-    v[0].y = yc[(tetIter->second)->GetVid(0)];
-    v[0].z = zc[(tetIter->second)->GetVid(0)];
-
-    v[1].x = xc[(tetIter->second)->GetVid(1)];
-    v[1].y = yc[(tetIter->second)->GetVid(1)];
-    v[1].z = zc[(tetIter->second)->GetVid(1)];
-
-    v[2].x = xc[(tetIter->second)->GetVid(2)];
-    v[2].y = yc[(tetIter->second)->GetVid(2)];
-    v[2].z = zc[(tetIter->second)->GetVid(2)];
-
-    v[3].x = xc[(tetIter->second)->GetVid(3)];
-    v[3].y = yc[(tetIter->second)->GetVid(3)];
-    v[3].z = zc[(tetIter->second)->GetVid(3)];
-    
-    // cross product of edge 0 and 2
-    abx = (v[1].y-v[0].y)*(v[2].z-v[0].z) - 
-        (v[1].z-v[0].z)*(v[2].y-v[0].y);
-    aby = (v[1].z-v[0].z)*(v[2].x-v[0].x) -
-        (v[1].x-v[0].x)*(v[2].z-v[0].z);
-    abz = (v[1].x-v[0].x)*(v[2].y-v[0].y) -
-        (v[1].y-v[0].y)*(v[2].x-v[0].x);
-
-    // inner product of cross product with respect to edge 3 should be positive 
-    if(((v[3].x-v[0].x)*abx + (v[3].y-v[0].y)*aby +
-        (v[3].z-v[0].z)*abz)<0.0)
-    {
-        cerr << "ERROR: Element " << id + 1 << "is NOT counter-clockwise\n" << endl;
-    }
-    
-}

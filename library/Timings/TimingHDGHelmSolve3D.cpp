@@ -62,19 +62,19 @@ int main(int argc, char *argv[])
     case 1:
         {
             MeshFileDirectory << "RegularHexMeshes";
-            MeshFileName << "UnitSquare_RegularHexMesh_h_1_" << MeshSize << ".xml";
+            MeshFileName << "UnitCube_RegularHexMesh_h_1_" << MeshSize << ".xml";
         }
         break;
     case 2:
         {
             MeshFileDirectory << "DeformedHexMeshes";
-            MeshFileName << "UnitSquare_DeformedHexMesh_h_1_" << MeshSize << ".xml";
+            MeshFileName << "UnitCube_DeformedHexMesh_h_1_" << MeshSize << ".xml";
         }
         break;
     case 3:
         {
             MeshFileDirectory << "RegularTetMeshes";
-            MeshFileName << "UnitSquare_RegularTetMesh_h_1_" << MeshSize << ".xml";
+            MeshFileName << "UnitCube_RegularTetMesh_h_1_" << MeshSize << ".xml";
         }
         break;
     default:
@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
     const LibUtilities::PointsKey PkeyQ3(30,LibUtilities::eGaussLobattoLegendre);
     const LibUtilities::BasisKey  BkeyT1(LibUtilities::eModified_A,NumModes,PkeyT1);
     const LibUtilities::BasisKey  BkeyT2(LibUtilities::eModified_B,NumModes,PkeyT2);
-    const LibUtilities::BasisKey  BkeyT3(LibUtilities::eModified_C,NumModes,PkeyT2);
+    const LibUtilities::BasisKey  BkeyT3(LibUtilities::eModified_C,NumModes,PkeyT3);
     const LibUtilities::BasisKey  BkeyQ1(LibUtilities::eModified_A,NumModes,PkeyQ1);
     const LibUtilities::BasisKey  BkeyQ2(LibUtilities::eModified_A,NumModes,PkeyQ2);
     const LibUtilities::BasisKey  BkeyQ3(LibUtilities::eModified_A,NumModes,PkeyQ3);

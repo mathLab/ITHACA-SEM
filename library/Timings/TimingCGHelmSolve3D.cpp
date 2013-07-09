@@ -62,19 +62,19 @@ int main(int argc, char *argv[])
     case 1:
         {
             MeshFileDirectory << "RegularHexMeshes";
-            MeshFileName << "UnitSquare_RegularHexMesh_h_1_" << MeshSize << ".xml";
+            MeshFileName << "UnitCube_RegularHexMesh_h_1_" << MeshSize << ".xml";
         }
         break;
     case 2:
         {
             MeshFileDirectory << "DeformedHexMeshes";
-            MeshFileName << "UnitSquare_DeformedHexMesh_h_1_" << MeshSize << ".xml";
+            MeshFileName << "UnitCube_DeformedHexMesh_h_1_" << MeshSize << ".xml";
         }
         break;
     case 3:
         {
             MeshFileDirectory << "RegularTetMeshes";
-            MeshFileName << "UnitSquare_RegularTetMesh_h_1_" << MeshSize << ".xml";
+            MeshFileName << "UnitCube_RegularTetMesh_h_1_" << MeshSize << ".xml";
         }
         break;
     default:
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
     chudSetErrorLogFile(stderr);
     chudUmarkPID(getpid(), TRUE);	
     chudAcquireRemoteAccess();
-    chudStartRemotePerfMonitor("TimingCGHelmSolve2D");
+    chudStartRemotePerfMonitor("TimingCGHelmSolve3D");
 #endif
 
     gettimeofday(&timer1, NULL);
@@ -365,7 +365,7 @@ int main(int argc, char *argv[])
     MultiRegions::GlobalMatrixKey key(StdRegions::eHelmholtz,Exp->GetLocalToGlobalMap(),factors);
     int nnz            = Exp->GetGlobalMatrixNnz(key);
 
-    ofstream outfile("TimingCGHelmSolve2D.dat");
+    ofstream outfile("TimingCGHelmSolve3D.dat");
     outfile.precision(0);
     outfile << setw(10) << Type << " ";
     outfile << setw(10) << NumElements << " ";

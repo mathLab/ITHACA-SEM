@@ -471,34 +471,6 @@ namespace Nektar
         Timer  timer;
         bool IsRoot = (m_comm->GetColumnComm()->GetRank())? false:true;
 
-#if 0
-        timer.Start();
-        for(int k = 0; k < 1000; ++k)
-        {
-            m_fields[0]->IProductWRTBase(m_fields[0]->GetPhys(),
-                                         m_fields[0]->UpdateCoeffs());
-
-        }
-        timer.Stop();
-        cout << "\t 1000 Iprods   : "<< timer.TimePerTest(1) << endl;
-#endif
-
-#if 0
-        timer.Start();
-        Array<OneD, NekDouble> out (m_fields[0]->GetTotPoints());
-        Array<OneD, NekDouble> out1(m_fields[0]->GetTotPoints());
-        Array<OneD, NekDouble> out2(m_fields[0]->GetTotPoints());
-        
-        for(int k = 0; k < 10000; ++k)
-        {
-            m_fields[0]->PhysDeriv(out,out1,out2);
-
-        }
-        timer.Stop();
-        cout << "\t 10000 Physderiv   : "<< timer.TimePerTest(1) << endl;
-        exit(1);
-#endif
-
         timer.Start();
         // evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
@@ -876,7 +848,11 @@ namespace Nektar
                     Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals); 
                 }
             }
+            // setting if high order Outflow Pressure BC
+            else if (type == SpatialDomain::eHighOutflow)
+            {
 
+            }
             // setting if just standard BC not High order
             else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
             {

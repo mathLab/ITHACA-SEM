@@ -66,6 +66,7 @@ namespace Nektar
             eI,
             eMG,
             eHigh,
+            eHighOutflow,
             eWall,
             eWALL,
             eWallViscous,
@@ -96,6 +97,7 @@ namespace Nektar
             {
                 std::map<const std::string, BndUserDefinedType>  known_type;
                 known_type["H"] = eHigh;
+                known_type["HOutflow"] = eHighOutflow;
                 known_type["I"] = eI;
                 known_type["MG"] = eMG;
                 known_type["Wall"] = eWall;

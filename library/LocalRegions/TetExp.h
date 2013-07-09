@@ -105,8 +105,8 @@ namespace Nektar
             // Evaluation functions
             //-----------------------------
             LOCAL_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
-                                    const Array<OneD, const NekDouble> &Lcoord,
-                                    const Array<OneD, const NekDouble> &physvals);
+                const Array<OneD, const NekDouble> &Lcoord,
+                const Array<OneD, const NekDouble> &physvals);
 
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble> &coords);
@@ -147,10 +147,11 @@ namespace Nektar
 
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
-            LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(const NekDouble *data,
-                                           const std::vector<unsigned int > &nummodes,  
-                                           const int mode_offset,   
-                                                                    NekDouble * coeffs);
+            LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
+                const NekDouble                 *data,
+                const std::vector<unsigned int> &nummodes,
+                const int                        mode_offset,
+                NekDouble                       *coeffs);
 
             LOCAL_REGIONS_EXPORT virtual 
                 StdRegions::Orientation v_GetFaceOrient(int face);

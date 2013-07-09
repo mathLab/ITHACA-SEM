@@ -462,8 +462,8 @@ namespace Nektar
          * StdExpansion method
          */
         NekDouble TetExp::v_StdPhysEvaluate(
-                                            const Array<OneD, const NekDouble> &Lcoord,
-                                            const Array<OneD, const NekDouble> &physvals)
+            const Array<OneD, const NekDouble> &Lcoord,
+            const Array<OneD, const NekDouble> &physvals)
         {
             // Evaluate point in local (eta) coordinates.
             return StdTetExp::v_PhysEvaluate(Lcoord,physvals);

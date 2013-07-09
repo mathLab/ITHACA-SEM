@@ -564,8 +564,8 @@ namespace Nektar
          * StdExpansion method
          */
         NekDouble PrismExp::v_StdPhysEvaluate(
-                                              const Array<OneD, const NekDouble> &Lcoord,
-                                              const Array<OneD, const NekDouble> &physvals)
+            const Array<OneD, const NekDouble> &Lcoord,
+            const Array<OneD, const NekDouble> &physvals)
         {
             // Evaluate point in local (eta) coordinates.
             return StdPrismExp::v_PhysEvaluate(Lcoord,physvals);

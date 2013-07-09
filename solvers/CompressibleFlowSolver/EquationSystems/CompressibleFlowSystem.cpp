@@ -678,7 +678,7 @@ namespace Nektar
         e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
         // Loop on bcRegions
-        for (e = 0; e_max; ++e)
+        for (e = 0; e < e_max; ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetNumPoints(0);
@@ -881,7 +881,7 @@ namespace Nektar
         e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
         // Loop on the bcRegions
-        for (e = 0; e_max; ++e)
+        for (e = 0; e < e_max; ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetNumPoints(0);
@@ -1025,7 +1025,7 @@ namespace Nektar
         e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
         // Loop on bcRegions
-        for (e = 0; e_max; ++e)
+        for (e = 0; e < e_max; ++e)
         {
             npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetNumPoints(0);

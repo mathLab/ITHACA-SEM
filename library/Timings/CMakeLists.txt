@@ -46,9 +46,12 @@ TARGET_LINK_LIBRARIES(TimingHDGHelmSolve3D ${LinkLibraries})
 SET_LAPACK_LINK_LIBRARIES(TimingHDGHelmSolve3D)
 SET_TARGET_PROPERTIES(TimingHDGHelmSolve3D PROPERTIES COMPILE_FLAGS -DBASE_PATH="\\"${CMAKE_CURRENT_SOURCE_DIR}\\"")
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingHDGHelmSolve3D       
+    ${CMAKE_BINARY_DIR}/dist/bin/do_TimingHDGHelmSolve3D COPYONLY)
+#----------------------------------------------------------------------
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingHelmSolve3D       
     ${CMAKE_BINARY_DIR}/dist/bin/do_TimingHelmSolve3D COPYONLY)
-#----------------------------------------------------------------------
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Scripts/do_TimingHelmSolve2D       
     ${CMAKE_BINARY_DIR}/dist/bin/do_TimingHelmSolve2D COPYONLY)
 #----------------------------------------------------------------------

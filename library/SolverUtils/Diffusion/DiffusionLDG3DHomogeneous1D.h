@@ -64,8 +64,17 @@ namespace Nektar
             int                                          num_planes;
             int                                          nPointsTot_plane;
             int                                          nCoeffs_plane;
+            int                                          i, j, k;
             
-            Array<OneD, unsigned int>                    planes;
+            Array<OneD, unsigned int>                          planes;
+            Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
+                                                               fields_plane;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > inarray_plane;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > outarray_plane;
+            Array<OneD, Array<OneD, NekDouble> >               flux;
+            Array<OneD, Array<OneD, NekDouble> >               flux_homo;
+            Array<OneD, Array<OneD, NekDouble> >               outarray_z;
+            
             
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,

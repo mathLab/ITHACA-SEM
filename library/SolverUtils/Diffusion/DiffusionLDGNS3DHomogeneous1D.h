@@ -64,8 +64,25 @@ namespace Nektar
             int                                          num_planes;
             int                                          nPointsTot_plane;
             int                                          nCoeffs_plane;
+            int                                          nVariables;
+            int                                          i, j, k;
             
             Array<OneD, unsigned int>                    planes;
+            Array<OneD, Array<OneD, NekDouble> >         fluxvector;
+            Array<OneD, Array<OneD, NekDouble> >         derivatives01_homo;
+            Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
+                                                         fields_plane;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                         inarray_plane;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                         derivatives01_plane;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                         outarray_plane;
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
+                                                         fluxvector_homo;
+            Array<OneD, Array<OneD, NekDouble> >         outarray_homo;
+            
+            DiffusionLDGNSSharedPtr                      diffLDGNS;
     
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,

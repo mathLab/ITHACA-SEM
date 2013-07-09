@@ -152,6 +152,44 @@ namespace Nektar
             
             nPointsTot_plane = nPointsTot/num_planes;
             nCoeffs_plane = nCoeffs/num_planes;
+            
+            fields_plane =
+                Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
+                                                                  (num_planes);
+            inarray_plane = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                                  (num_planes);
+            outarray_plane = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                                  (num_planes);
+            for (i = 0; i < num_planes; ++i)
+            {
+                fields_plane[i] = Array<OneD, MultiRegions::ExpListSharedPtr>
+                                                            (nConvectiveFields);
+                inarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
+                                                            (nConvectiveFields);
+                outarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
+                                                            (nConvectiveFields);
+                
+                for (j = 0; j < nConvectiveFields; j ++)
+                {
+                    inarray_plane[i][j] = Array<OneD, NekDouble>
+                                                        (nPointsTot_plane, 0.0);
+                    outarray_plane[i][j] = Array<OneD, NekDouble>
+                                                        (nPointsTot_plane, 0.0);
+                }
+            }
+            
+            flux = Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            flux_homo =
+                Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            outarray_z =
+                Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            
+            for (j = 0; j < nConvectiveFields; j++)
+            {
+                flux[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                flux_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                outarray_z[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+            }
         }
         
         /**
@@ -165,32 +203,12 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int i, j, k;
-            
-            Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
-            fields_plane(num_planes);
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-            inarray_plane(num_planes);
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-            outarray_plane(num_planes);
-            
             for (i = 0; i < num_planes; ++i)
             {
-                fields_plane[i] = Array<OneD, MultiRegions::ExpListSharedPtr>
-                (nConvectiveFields);
-                inarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
-                (nConvectiveFields);
-                outarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
-                (nConvectiveFields);
-                
                 for (j = 0; j < nConvectiveFields; j ++)
                 {
                     fields_plane[i][j]= fields[j]->GetPlane(i);
-                    inarray_plane[i][j] = Array<OneD, NekDouble>
-                    (nPointsTot_plane, 0.0);
-                    outarray_plane[i][j] = Array<OneD, NekDouble>
-                    (nPointsTot_plane, 0.0);
-                    
+                   
                     Vmath::Vcopy(nPointsTot_plane,
                                  &inarray[j][i * nPointsTot_plane], 1,
                                  &inarray_plane[i][j][0], 1);
@@ -209,19 +227,11 @@ namespace Nektar
                 }
             }
             
-            Array<OneD, Array<OneD, NekDouble> > flux(nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> > flux_homo(nConvectiveFields);
-            Array<OneD, Array<OneD, NekDouble> > outarray_z(nConvectiveFields);
-            
             NekDouble beta;
             int Homolen = fields[0]->GetHomoLen();
             
             for (j = 0; j < nConvectiveFields; j++)
             {
-                flux[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                flux_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                outarray_z[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                
                 // Transform flux in Fourier space
                 fields[0]->HomogeneousFwdTrans(inarray[j], flux[j]);
             }

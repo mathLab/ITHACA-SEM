@@ -1348,7 +1348,6 @@ namespace Nektar
                 
                 TimeIntegrationSolutionSharedPtr solvector_new = MemoryManager<TimeIntegrationSolution>::AllocateSharedPtr(key,nvar,npoints); 
                 
-                
                 TimeIntegrate(timestep,solvector->GetSolutionVector(),
                               solvector->GetTimeVector(),
                               solvector_new->UpdateSolutionVector(),

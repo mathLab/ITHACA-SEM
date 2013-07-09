@@ -89,8 +89,9 @@ namespace Nektar
         {
         }
 
-        AssemblyMap::AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession, 
-                                 const std::string variable):
+        AssemblyMap::AssemblyMap(
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string variable):
             m_session(pSession),
             m_comm(pSession->GetComm()),
             m_hash(0),
@@ -103,25 +104,34 @@ namespace Nektar
             m_bndGsh(0)
         {
             // Default value from Solver Info
-            m_solnType = pSession->GetSolverInfoAsEnum<GlobalSysSolnType>("GlobalSysSoln");
-            m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>("Preconditioner");
+            m_solnType = pSession->GetSolverInfoAsEnum<GlobalSysSolnType>(
+                                                            "GlobalSysSoln");
+            m_preconType = pSession->GetSolverInfoAsEnum<PreconditionerType>(
+                                                            "Preconditioner");
 
             // Override values with data from GlobalSysSolnInfo section 
-            if(pSession->DefinesGlobalSysSolnInfo(variable,"GlobalSysSoln"))
+            if(pSession->DefinesGlobalSysSolnInfo(variable, "GlobalSysSoln"))
             {
-                std::string sysSoln = pSession->GetGlobalSysSolnInfo(variable,"GlobalSysSoln");
-                m_solnType = pSession->GetValueAsEnum<GlobalSysSolnType>("GlobalSysSoln",sysSoln);
+                std::string sysSoln = pSession->GetGlobalSysSolnInfo(variable,
+                                                            "GlobalSysSoln");
+                m_solnType = pSession->GetValueAsEnum<GlobalSysSolnType>(
+                                                    "GlobalSysSoln", sysSoln);
             }
-            
-            if(pSession->DefinesGlobalSysSolnInfo(variable,"Preconditioner"))
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable, "Preconditioner"))
             {
-                std::string precon = pSession->GetGlobalSysSolnInfo(variable,"Preconditioner");
-                m_preconType = pSession->GetValueAsEnum<PreconditionerType>("Preconditioner",precon);
+                std::string precon = pSession->GetGlobalSysSolnInfo(variable,
+                                                            "Preconditioner");
+                m_preconType = pSession->GetValueAsEnum<PreconditionerType>(
+                                                    "Preconditioner", precon);
             }
-            
-            if(pSession->DefinesGlobalSysSolnInfo(variable,"IterativeSolverTolerance"))
+
+            if(pSession->DefinesGlobalSysSolnInfo(variable,
+                                                  "IterativeSolverTolerance"))
             {
-                m_iterativeTolerance = boost::lexical_cast<NekDouble>(pSession->GetGlobalSysSolnInfo(variable,"IterativeSolverTolerance").c_str());
+                m_iterativeTolerance = boost::lexical_cast<NekDouble>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "IterativeSolverTolerance").c_str());
             }
             else
             {
@@ -133,7 +143,9 @@ namespace Nektar
 
             if(pSession->DefinesGlobalSysSolnInfo(variable,"SuccessiveRHS"))
             {
-                m_successiveRHS = boost::lexical_cast<int>(pSession->GetGlobalSysSolnInfo(variable,"SuccessiveRHS").c_str());
+                m_successiveRHS = boost::lexical_cast<int>(
+                        pSession->GetGlobalSysSolnInfo(variable,
+                                "SuccessiveRHS").c_str());
             }
             else
             {
@@ -1145,28 +1157,28 @@ namespace Nektar
             return m_patchMapFromPrevLevel;
         }
 
-        bool AssemblyMap::AtLastLevel(void) const
+        bool AssemblyMap::AtLastLevel() const
         {
             return !( m_nextLevelLocalToGlobalMap.get() );
         }
 
 
-        GlobalSysSolnType AssemblyMap::GetGlobalSysSolnType(void) const
+        GlobalSysSolnType AssemblyMap::GetGlobalSysSolnType() const
         {
             return m_solnType;
         }
 
-        PreconditionerType  AssemblyMap::GetPreconType(void) const
+        PreconditionerType  AssemblyMap::GetPreconType() const
         {
             return m_preconType;
         }
 
-        NekDouble AssemblyMap::GetIterativeTolerance(void) const
+        NekDouble AssemblyMap::GetIterativeTolerance() const
         {
             return m_iterativeTolerance;
         }
 
-        int AssemblyMap::GetSuccessiveRHS(void) const
+        int AssemblyMap::GetSuccessiveRHS() const
         {
             return m_successiveRHS;
         }

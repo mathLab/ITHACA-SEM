@@ -70,7 +70,7 @@ namespace Nektar
                       const PointsKey &tpoints0, 
                       NekDouble *to);
 
-        // 2D PhysGalkerinProjection
+        // 2D PhysGalerkinProjection
         LIB_UTILITIES_EXPORT void PhysGalerkinProject2D(const BasisKey &fbasis0, 
                       const BasisKey &fbasis1, 
                       const Array<OneD, const NekDouble>& from,  
@@ -95,33 +95,35 @@ namespace Nektar
 
 
         // 3D PhysGalkerinProjection
-        LIB_UTILITIES_EXPORT void PhysGalerkinProject3D(const BasisKey &fbasis0, 
-                      const BasisKey &fbasis1, 
-                      const BasisKey &fbasis2, 
-                      const Array<OneD, const NekDouble>& from,  
+        LIB_UTILITIES_EXPORT void PhysGalerkinProject3D(
+                      const BasisKey &fbasis0,
+                      const BasisKey &fbasis1,
+                      const BasisKey &fbasis2,
+                      const Array<OneD, const NekDouble>& from,
                       const BasisKey &tbasis0,
                       const BasisKey &tbasis1,
                       const BasisKey &tbasis2,
                       Array<OneD, NekDouble> &to);
 
-        LIB_UTILITIES_EXPORT void PhysGalerkinProject3D(const PointsKey &fpoints0, 
-                      const PointsKey &fpoints1, 
-                      const PointsKey &fpoints2, 
-                      const Array<OneD, const NekDouble>& from,  
+        LIB_UTILITIES_EXPORT void PhysGalerkinProject3D(
+                      const PointsKey &fpoints0,
+                      const PointsKey &fpoints1,
+                      const PointsKey &fpoints2,
+                      const Array<OneD, const NekDouble>& from,
                       const PointsKey &tpoints0,
                       const PointsKey &tpoints1,
                       const PointsKey &tpoints2,
                       Array<OneD, NekDouble> &to);
 
-        LIB_UTILITIES_EXPORT void PhysGalerkinProject3D(const PointsKey &fpoints0, 
-                      const PointsKey &fpoints1, 
-                      const PointsKey &fpoints2, 
-                      const NekDouble *from,  
+        LIB_UTILITIES_EXPORT void PhysGalerkinProject3D(
+                      const PointsKey &fpoints0,
+                      const PointsKey &fpoints1,
+                      const PointsKey &fpoints2,
+                      const NekDouble *from,
                       const PointsKey &tpoints0,
                       const PointsKey &tpoints1,
                       const PointsKey &tpoints2,
                       NekDouble *to);
-
 
     } // end of namespace
 } // end of namespace

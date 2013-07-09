@@ -728,7 +728,7 @@ namespace Nektar
 
 
 
-        /** 
+        /**
          * Given the local cartesian coordinate \a Lcoord evaluate the
          * value of physvals at this point by calling through to the
          * StdExpansion method

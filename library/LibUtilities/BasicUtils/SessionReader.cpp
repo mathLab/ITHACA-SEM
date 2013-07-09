@@ -1242,12 +1242,12 @@ namespace Nektar
                 FirstChildElement("CONDITIONS").Element();
 
             // Read the various sections of the CONDITIONS block
-            ReadParameters (e);
-            ReadSolverInfo (e);
+            ReadParameters        (e);
+            ReadSolverInfo        (e);
             ReadGlobalSysSolnInfo (e);
-            ReadExpressions(e);
-            ReadVariables  (e);
-            ReadFunctions  (e);
+            ReadExpressions       (e);
+            ReadVariables         (e);
+            ReadFunctions         (e);
 
             e = docHandle.FirstChildElement("NEKTAR").
                 FirstChildElement("GEOMETRY").Element();
@@ -1483,7 +1483,7 @@ namespace Nektar
 
             if (m_verbose && m_parameters.size() > 0 && m_comm)
             {
-                if(m_comm->GetRowComm()->GetRank() == 0)
+                if(m_comm->GetRank() == 0)
                 {
                     cout << "Parameters:" << endl;
                     ParameterMap::iterator x;
@@ -1581,7 +1581,7 @@ namespace Nektar
             
             if (m_verbose && m_solverInfo.size() > 0 && m_comm)
             {
-                if(m_comm->GetRowComm()->GetRank() == 0)
+                if(m_comm->GetRank() == 0)
                 {
                     cout << "Solver Info:" << endl;
                     SolverInfoMap::iterator x;
@@ -1608,7 +1608,8 @@ namespace Nektar
                 return;
             }
 
-            TiXmlElement *GlobalSys = conditions->FirstChildElement("GLOBALSYSSOLNINFO");
+            TiXmlElement *GlobalSys =
+                            conditions->FirstChildElement("GLOBALSYSSOLNINFO");
 
             if(!GlobalSys)
             {
@@ -1616,70 +1617,75 @@ namespace Nektar
             }
 
             TiXmlElement *VarInfo   = GlobalSys->FirstChildElement("V");
-            
+
             while (VarInfo)
             {
                 ASSERTL0(VarInfo->Attribute("VAR"),
                          "Missing VAR in attribute of GobalSysSolnInfo section."
-                         "File: '" + m_filename + ", line: " + 
+                         "File: '" + m_filename + ", line: " +
                          boost::lexical_cast<string>(GlobalSys->Row()));
-                
+
                 std::string VarList = VarInfo->Attribute("VAR");
-                
-                // generate a list of variables. 
+
+                // generate a list of variables.
                 std::vector<std::string> varStrings;
-                bool valid = ParseUtils::GenerateOrderedStringVector(VarList.c_str(),varStrings);
-                ASSERTL0(valid,"Unable to process list of variable in GlobalSysSolnInfo"
-                         "data, File '" + m_filename + ", line: " + 
-                         boost::lexical_cast<string>(GlobalSys->Row()));
-                
+                bool valid = ParseUtils::GenerateOrderedStringVector(
+                                                VarList.c_str(),varStrings);
+
+                ASSERTL0(valid,"Unable to process list of variable in "
+                               "GlobalSysSolnInfo data, File '" + m_filename +
+                               ", line: " +
+                               boost::lexical_cast<string>(GlobalSys->Row()));
+
                 if(varStrings.size())
                 {
                     TiXmlElement *SysSolnInfo = VarInfo->FirstChildElement("I");
-                    
+
                     while (SysSolnInfo)
                     {
                         // read the property name
                         ASSERTL0(SysSolnInfo->Attribute("PROPERTY"),
-                                 "Missing PROPERTY attribute in GlobalSysSolnInfo "
-                                 "section. File: '" + m_filename + "', line: " + 
+                                 "Missing PROPERTY attribute in "
+                                 "GlobalSysSolnInfo section. File: '" +
+                                 m_filename + "', line: " +
                                  boost::lexical_cast<string>(VarInfo->Row()));
-                        
-                        std::string SysSolnProperty = 
+
+                        std::string SysSolnProperty =
                             SysSolnInfo->Attribute("PROPERTY");
-                        
+
                         ASSERTL0(!SysSolnProperty.empty(),
-                                 "GlobalSysSolnIno properties must have a non-empty "
-                                 "name for variable(s) : '" + VarList + ". "
-                                 "File: '" + m_filename + ", line: "
+                                 "GlobalSysSolnIno properties must have a "
+                                 "non-empty name for variable(s) : '" +
+                                 VarList + ". File: '" + m_filename + ", line: "
                                  + boost::lexical_cast<string>(VarInfo->Row()));
-                        
+
                         // make sure that solver property is capitalised
                         std::string SysSolnPropertyUpper =
-                            boost::to_upper_copy(SysSolnProperty);
-                        
+                                        boost::to_upper_copy(SysSolnProperty);
+
                         // read the value
                         ASSERTL0(SysSolnInfo->Attribute("VALUE"),
                                  "Missing VALUE attribute in GlobalSysSolnInfo "
                                  "section. File: '" + m_filename + "', line: "
                                  + boost::lexical_cast<string>(VarInfo->Row()));
-                        
-                        std::string SysSolnValue  = SysSolnInfo->Attribute("VALUE");
+
+                        std::string SysSolnValue =
+                                            SysSolnInfo->Attribute("VALUE");
                         ASSERTL0(!SysSolnValue.empty(),
                                  "GlobalSysSolnInfo properties must have a "
-                                 "non-empty value. File: '" + m_filename + "', line: "
+                                 "non-empty value. File: '" + m_filename +
+                                 "', line: "
                                  + boost::lexical_cast<string>(VarInfo->Row()));
-                        
 
-                        // Store values under variable map. 
+                        // Store values under variable map.
                         for(int i = 0; i < varStrings.size(); ++i)
                         {
                             GloSysSolnInfoList::iterator x;
-                            if((x = m_gloSysSolnList.find(varStrings[i])) 
-                               == m_gloSysSolnList.end())
+                            if ((x = m_gloSysSolnList.find(varStrings[i])) ==
+                                    m_gloSysSolnList.end())
                             {
-                                (m_gloSysSolnList[varStrings[i]])[SysSolnPropertyUpper] 
-                                    = SysSolnValue;
+                                (m_gloSysSolnList[varStrings[i]])[
+                                        SysSolnPropertyUpper] = SysSolnValue;
                             }
                             else
                             {
@@ -1692,28 +1698,33 @@ namespace Nektar
                     VarInfo = VarInfo->NextSiblingElement("V");
                 }
             }
-            
+
             if (m_verbose && m_gloSysSolnList.size() > 0 && m_comm)
             {
-                if(m_comm->GetRowComm()->GetRank() == 0)
+                if(m_comm->GetRank() == 0)
                 {
                     cout << "GlobalSysSoln Info:" << endl;
-                    
+
                     GloSysSolnInfoList::iterator x;
-                    for (x = m_gloSysSolnList.begin(); x != m_gloSysSolnList.end(); ++x)
+                    for (x = m_gloSysSolnList.begin();
+                         x != m_gloSysSolnList.end();
+                         ++x)
                     {
                         cout << "\t Variable: " << x->first <<  endl;
-                        
+
                         GloSysInfoMap::iterator y;
                         for (y = x->second.begin(); y != x->second.end(); ++y)
                         {
-                            cout << "\t\t " << y->first  << " = " << y->second << endl;
+                            cout << "\t\t " << y->first  << " = " << y->second
+                                 << endl;
                         }
                     }
                     cout << endl;
                 }
             }
         }
+
+
         /**
          *
          */
@@ -1777,7 +1788,7 @@ namespace Nektar
 
             if (m_verbose && m_geometricInfo.size() > 0 && m_comm)
             {
-                if(m_comm->GetRowComm()->GetRank() == 0)
+                if(m_comm->GetRank() == 0)
                 {
                     cout << "Geometric Info:" << endl;
                     GeometricInfoMap::iterator x;

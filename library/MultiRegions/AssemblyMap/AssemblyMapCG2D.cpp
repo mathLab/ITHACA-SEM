@@ -67,7 +67,8 @@ namespace Nektar
          *
          */
         AssemblyMapCG2D::AssemblyMapCG2D(
-                                         const LibUtilities::SessionReaderSharedPtr &pSession, const std::string variable):
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string variable):
             AssemblyMapCG(pSession,variable)
         {
         }

@@ -85,7 +85,6 @@ namespace Nektar
         }
 
 
-
         //-------------------------------
         // Integration Methods
         //-------------------------------
@@ -558,7 +557,7 @@ namespace Nektar
             }
         }
 
-        /** 
+        /**
          * Given the local cartesian coordinate \a Lcoord evaluate the
          * value of physvals at this point by calling through to the
          * StdExpansion method
@@ -613,10 +612,11 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
-        void PrismExp::v_ExtractDataToCoeffs(const NekDouble *data,
-                                             const std::vector<unsigned int > &nummodes,  
-                                             const int mode_offset,   
-                                             NekDouble * coeffs)
+        void PrismExp::v_ExtractDataToCoeffs(
+                const NekDouble*                  data,
+                const std::vector<unsigned int >& nummodes,
+                const int                         mode_offset,
+                NekDouble*                        coeffs)
         {
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
@@ -634,10 +634,12 @@ namespace Nektar
                     int i,j;
                     int cnt  = 0;
                     int cnt1 = 0;
-                    
-                    ASSERTL1(m_base[1]->GetBasisType() == LibUtilities::eModified_A,
+
+                    ASSERTL1(m_base[1]->GetBasisType() ==
+                             LibUtilities::eModified_A,
                              "Extraction routine not set up for this basis");
-                    ASSERTL1(m_base[2]->GetBasisType() == LibUtilities::eModified_B,
+                    ASSERTL1(m_base[2]->GetBasisType() ==
+                             LibUtilities::eModified_B,
                              "Extraction routine not set up for this basis");
 
                     Vmath::Zero(m_ncoeffs,coeffs,1);
@@ -645,27 +647,28 @@ namespace Nektar
                     {
                         for(i = 0; i < fillorder1; ++i)
                         {
-                            Vmath::Vcopy(fillorder2-j,&data[cnt],1,&coeffs[cnt1],1);
+                            Vmath::Vcopy(fillorder2-j, &data[cnt],    1,
+                                                       &coeffs[cnt1], 1);
                             cnt  += data_order2-j;
                             cnt1 += order2-j;
                         }
-                        
+
                         // count out data for j iteration
                         for(i = fillorder1; i < data_order1; ++i)
                         {
                             cnt += data_order2-j;
                         }
-                        
+
                         for(i = fillorder1; i < order1; ++i)
                         {
                             cnt1 += order2-j;
                         }
-
                     }
                 }
                 break;
             default:
-                ASSERTL0(false,"basis is either not set up or not hierarchicial");
+                ASSERTL0(false, "basis is either not set up or not "
+                                "hierarchicial");
             }
         }
 

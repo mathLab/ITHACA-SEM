@@ -724,10 +724,11 @@ namespace Nektar
 
 
 
-        void TetExp::v_ExtractDataToCoeffs(const NekDouble *data,
-                                           const std::vector<unsigned int > &nummodes,  
-                                           const int mode_offset,   
-                                           NekDouble * coeffs)
+        void TetExp::v_ExtractDataToCoeffs(
+                const NekDouble *data,
+                const std::vector<unsigned int > &nummodes,
+                const int mode_offset,
+                NekDouble * coeffs)
         {
             int data_order0 = nummodes[mode_offset];
             int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
@@ -745,10 +746,12 @@ namespace Nektar
                     int i,j;
                     int cnt  = 0;
                     int cnt1 = 0;
-                    
-                    ASSERTL1(m_base[1]->GetBasisType() == LibUtilities::eModified_B,
+
+                    ASSERTL1(m_base[1]->GetBasisType() ==
+                             LibUtilities::eModified_B,
                              "Extraction routine not set up for this basis");
-                    ASSERTL1(m_base[2]->GetBasisType() == LibUtilities::eModified_C,
+                    ASSERTL1(m_base[2]->GetBasisType() ==
+                             LibUtilities::eModified_C,
                              "Extraction routine not set up for this basis");
 
                     Vmath::Zero(m_ncoeffs,coeffs,1);
@@ -756,17 +759,18 @@ namespace Nektar
                     {
                         for(i = 0; i < fillorder1-j; ++i)
                         {
-                            Vmath::Vcopy(fillorder2-j-i,&data[cnt],1,&coeffs[cnt1],1);
+                            Vmath::Vcopy(fillorder2-j-i, &data[cnt],    1,
+                                                         &coeffs[cnt1], 1);
                             cnt  += data_order2-j-i;
                             cnt1 += order2-j-i;
                         }
-                        
+
                         // count out data for j iteration
                         for(i = fillorder1-j; i < data_order1; ++i)
                         {
                             cnt += data_order2-j-i;
                         }
-                        
+
                         for(i = fillorder1-j; i < order1; ++i)
                         {
                             cnt1 += order2-j-i;
@@ -776,7 +780,8 @@ namespace Nektar
                 }
                 break;
             default:
-                ASSERTL0(false,"basis is either not set up or not hierarchicial");
+                ASSERTL0(false, "basis is either not set up or not "
+                                "hierarchicial");
             }
         }
 
@@ -1390,13 +1395,15 @@ namespace Nektar
                         Array<OneD,NekDouble> &outarray,
                   const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNVarCoeff() == 0 && !mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
+            if( mkey.GetNVarCoeff() == 0 &&
+               !mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
             {
-                // This implementation is only valid when there are no coefficients
-                // associated to the Laplacian operator
+                // This implementation is only valid when there are no
+                // coefficients associated to the Laplacian operator
                 if(m_metricinfo->IsUsingLaplMetrics())
                 {
-                    ASSERTL0(false,"Finish implementing HexExp for Lap metrics");
+                    ASSERTL0(false, "Finish implementing TetExp for Lap "
+                                    "metrics");
                     // Get this from HexExp
                 }
                 else

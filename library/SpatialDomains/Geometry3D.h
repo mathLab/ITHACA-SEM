@@ -77,6 +77,8 @@ namespace Nektar
             // Helper functions
             //---------------------------------------
             SPATIAL_DOMAINS_EXPORT int GetEid(int i) const;
+            SPATIAL_DOMAINS_EXPORT const VertexComponentSharedPtr
+                GetVertex(int i) const;
             SPATIAL_DOMAINS_EXPORT Geometry2DSharedPtr 
                 GetFace(int i);
             SPATIAL_DOMAINS_EXPORT StdRegions::Orientation 

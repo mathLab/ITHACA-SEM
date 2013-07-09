@@ -73,6 +73,14 @@ namespace Nektar
       }
 
       /**
+       * @brief Return vertex i in this element.
+       */
+      const VertexComponentSharedPtr Geometry3D::GetVertex(int i) const
+      {
+          return m_verts[i];
+      }
+
+      /**
        * @brief Return face i in this element.
        */
       Geometry2DSharedPtr Geometry3D::GetFace(int i)

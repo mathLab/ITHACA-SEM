@@ -66,7 +66,7 @@ namespace Nektar
                 m_numFields(0),
                 m_fieldNameToId(),
                 m_comm(pSession->GetComm()),
-                m_weightingRequired(true)
+                m_weightingRequired(false)
         {
             ReadConditions(pSession);
             ReadGeometry(pSession);
@@ -539,9 +539,9 @@ namespace Nektar
 
                 if (solverPropertyUpper == "WEIGHTPARTITIONS") 
                 {
-                    if (propertyValueUpper == "UNIFORM")
+                    if (propertyValueUpper != "UNIFORM")
                     {
-                        m_weightingRequired = false;
+                        m_weightingRequired = true;
                     }
                     return;
                 }
@@ -682,10 +682,12 @@ namespace Nektar
             {
                 int acnt = 0;
                 int vcnt = 0;
+                int nWeight = m_weightingRequired ? 2*nGraphVerts*m_numFields
+                                                  :   nGraphVerts;
                 BoostAdjacencyIterator adjvertit, adjvertit_end;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
-                Array<OneD, int> vwgt(2*nGraphVerts*m_numFields, 1);
+                Array<OneD, int> vwgt(nWeight, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
                 for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                       vertit != vertit_end;

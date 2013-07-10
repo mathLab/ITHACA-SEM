@@ -238,90 +238,16 @@ namespace Nektar
             // Read mesh vertices
             vSubElement = pSession->GetElement("Nektar/Geometry/Vertex");
 
-            NekDouble xscale,yscale,zscale;
-
-            // check to see if any scaling parameters are in
-            // attributes and determine these values
-            LibUtilities::AnalyticExpressionEvaluator expEvaluator;
-            //LibUtilities::ExpressionEvaluator expEvaluator;
-            const char *xscal =  vSubElement->Attribute("XSCALE");
-            if(!xscal)
+            // Retrieve any VERTEX attributes specifying mesh transforms
+            std::string attr[] = {"XSCALE", "YSCALE", "ZSCALE",
+                                  "XMOVE",  "YMOVE",  "ZMOVE" };
+            for (i = 0; i < 6; ++i)
             {
-                xscale = 1.0;
-            }
-            else
-            {
-                std::string xscalstr = xscal;
-                int expr_id = expEvaluator.DefineFunction("",xscalstr);
-                xscale = expEvaluator.Evaluate(expr_id);
-            }
-
-            const char *yscal =  vSubElement->Attribute("YSCALE");
-            if(!yscal)
-            {
-                yscale = 1.0;
-            }
-            else
-            {
-                std::string yscalstr = yscal;
-                int expr_id = expEvaluator.DefineFunction("",yscalstr);
-                yscale = expEvaluator.Evaluate(expr_id);
-            }
-
-            const char *zscal = vSubElement->Attribute("ZSCALE");
-            if(!zscal)
-            {
-                zscale = 1.0;
-            }
-            else
-            {
-                std::string zscalstr = zscal;
-                int expr_id = expEvaluator.DefineFunction("",zscalstr);
-                zscale = expEvaluator.Evaluate(expr_id);
-            }
-
-
-
-            NekDouble xmove,ymove,zmove;
-
-            // check to see if any move parameters are in attributes
-            // and determine these values
-
-            //LibUtilities::ExpressionEvaluator expEvaluator;
-            const char *xmov =  vSubElement->Attribute("XMOVE");
-            if(!xmov)
-            {
-                xmove = 0.0;
-            }
-            else
-            {
-                std::string xmovstr = xmov;
-                int expr_id = expEvaluator.DefineFunction("",xmovstr);
-                xmove = expEvaluator.Evaluate(expr_id);
-            }
-
-            const char *ymov =  vSubElement->Attribute("YMOVE");
-            if(!ymov)
-            {
-                ymove = 0.0;
-            }
-            else
-            {
-                std::string ymovstr = ymov;
-                int expr_id = expEvaluator.DefineFunction("",ymovstr);
-                ymove = expEvaluator.Evaluate(expr_id);
-            }
-
-            const char *zmov = vSubElement->Attribute("ZMOVE");
-            if(!zmov)
-            {
-                zmove = 0.0;
-            }
-            else
-            {
-                std::string zmovstr = zmov;
-                int expr_id = expEvaluator.DefineFunction("",zmovstr);
-                zmove = expEvaluator.Evaluate(expr_id);
+                const char *val =  vSubElement->Attribute(attr[i].c_str());
+                if (val)
+                {
+                    m_vertexAttributes[attr[i]] = std::string(val);
+                }
             }
 
             x = vSubElement->FirstChildElement();
@@ -336,9 +262,9 @@ namespace Nektar
                 std::vector<std::string> vCoords;
                 std::string vCoordStr = x->FirstChild()->ToText()->Value();
                 boost::split(vCoords, vCoordStr, boost::is_any_of("\t "));
-                v.x = atof(vCoords[0].c_str())*xscale + xmove;
-                v.y = atof(vCoords[1].c_str())*yscale + ymove;
-                v.z = atof(vCoords[2].c_str())*zscale + zmove;
+                v.x = atof(vCoords[0].c_str());
+                v.y = atof(vCoords[1].c_str());
+                v.z = atof(vCoords[2].c_str());
                 m_meshVertices[v.id] = v;
                 x = x->NextSiblingElement();
             }
@@ -843,6 +769,7 @@ namespace Nektar
             std::map<int, MeshVertex> vVertices;
             std::map<int, MeshEntity>::iterator vIt;
             std::map<int, MeshVertex>::iterator vVertIt;
+            std::map<std::string, std::string>::iterator vAttrIt;
 
             // Populate lists of elements, edges and vertices required.
             for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
@@ -909,6 +836,14 @@ namespace Nektar
                 y = new TiXmlText(vCoords.str());
                 x->LinkEndChild(y);
                 vVertex->LinkEndChild(x);
+            }
+
+            // Apply transformation attributes to VERTEX section
+            for (vAttrIt  = m_vertexAttributes.begin();
+                 vAttrIt != m_vertexAttributes.end();
+                 ++ vAttrIt)
+            {
+                vVertex->SetAttribute(vAttrIt->first, vAttrIt->second);
             }
 
             if (m_dim >= 2)

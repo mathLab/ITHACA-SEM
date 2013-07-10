@@ -239,25 +239,22 @@ namespace Nektar
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     { 
-        int i;
+        int i, nPlanes;
         int nTracePts = GetTraceTotPoints();
-        int n_planes;
+        int nVariables = physarray.num_elements();
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
-            int nPointsTot = m_fields[0]->GetTotPoints();
-            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            
-            n_planes = nPointsTot/nPointsTot_plane;
-            nTracePts = nTracePts*n_planes;
+            int nSolutionPts = m_fields[0]->GetTotPoints();
+            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            nPlanes = nSolutionPts/nSolutionPtsPlane;
+            nTracePts = nTracePts*nPlanes;
         }
         
-        int nvariables = physarray.num_elements();
-        
-        // get physical values of the forward trace
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (i = 0; i < nvariables; ++i)
+        // Get physical values of the forward trace
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+        for (i = 0; i < nVariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTracePts);
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
@@ -265,50 +262,50 @@ namespace Nektar
         
         // Adjust the physical values of the trace to take 
         // user defined boundaries into account
-        int e, id1, id2, npts;
-        int id2_plane, e_max;
+        int e, id1, id2, nBCEdgePts;
+        int id2Plane, eMax;
         
-        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
-        for (e = 0; e < e_max; ++e)
+        for (e = 0; e < eMax; ++e)
         {
-            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetTotPoints();
-            id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
             
             // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
-                int cnt_plane = cnt/n_planes;
-                int e_plane;
-                int e_max_plane = e_max/n_planes;
+                int ePlane;
+                int cntPlane = cnt/nPlanes;
+                int eMaxPlane = eMax/nPlanes;
                 int nTracePts_plane = GetTraceTotPoints();
                 
-                int planeID = floor((e + 0.5 )/ e_max_plane );
-                e_plane = e - e_max_plane*planeID;
+                int planeID = floor((e + 0.5 )/ eMaxPlane );
+                ePlane = e - eMaxPlane*planeID;
                 
-                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                id2Plane = m_fields[0]->GetTrace()->GetPhys_Offset(
                                 m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(
-                                        cnt_plane + e_plane));
-                id2 = id2_plane + planeID*nTracePts_plane;
+                                        cntPlane + ePlane));
+                id2 = id2Plane + planeID*nTracePts_plane;
                 
             }
             else // For general case
             {
                 id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
-                        m_fields[0]->GetTraceMap()->
-                            GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
+                            m_fields[0]->GetTraceMap()->
+                                GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             }
             
             // For 2D/3D, define: v* = v - 2(v.n)n
-            Array<OneD, NekDouble> tmp(npts, 0.0);
+            Array<OneD, NekDouble> tmp(nBCEdgePts, 0.0);
 
             // Calculate (v.n)
             for (i = 0; i < m_spacedim; ++i)
             {
-                Vmath::Vvtvp(npts,
+                Vmath::Vvtvp(nBCEdgePts,
                              &Fwd[1+i][id2], 1,
                              &m_traceNormals[i][id2], 1,
                              &tmp[0], 1,
@@ -316,22 +313,22 @@ namespace Nektar
             }
 
             // Calculate 2.0(v.n)
-            Vmath::Smul(npts, -2.0, &tmp[0], 1, &tmp[0], 1);
+            Vmath::Smul(nBCEdgePts, -2.0, &tmp[0], 1, &tmp[0], 1);
             
             // Calculate v* = v - 2.0(v.n)n
             for (i = 0; i < m_spacedim; ++i)
             {
-                Vmath::Vvtvp(npts,
+                Vmath::Vvtvp(nBCEdgePts,
                              &tmp[0], 1,
                              &m_traceNormals[i][id2], 1,
                              &Fwd[1+i][id2], 1,
                              &Fwd[1+i][id2], 1);
             }
             
-            // copy boundary adjusted values into the boundary expansion
-            for (i = 0; i < nvariables; ++i)
+            // Copy boundary adjusted values into the boundary expansion
+            for (i = 0; i < nVariables; ++i)
             {
-                Vmath::Vcopy(npts, &Fwd[i][id2], 1,
+                Vmath::Vcopy(nBCEdgePts, &Fwd[i][id2], 1,
                              &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
                              UpdatePhys())[id1], 1);
             }
@@ -346,25 +343,23 @@ namespace Nektar
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     { 
-        int i;
+        int i, nPlanes;
         int nTracePts = GetTraceTotPoints();
-        int n_planes;
+        int nVariables = physarray.num_elements();
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
-            int nPointsTot = m_fields[0]->GetTotPoints();
-            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            
-            n_planes = nPointsTot/nPointsTot_plane;
-            nTracePts = nTracePts * n_planes;
+            int nSolutionPts = m_fields[0]->GetTotPoints();
+            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            nPlanes = nSolutionPts/nSolutionPtsPlane;
+            nTracePts = nTracePts * nPlanes;
         }
         
-        int nvariables      = physarray.num_elements();
         
         // Get physical values of the forward trace
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (i = 0; i < nvariables; ++i)
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+        for (i = 0; i < nVariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTracePts);
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
@@ -372,14 +367,14 @@ namespace Nektar
         
         // Adjust the physical values of the trace to 
         // take user defined boundaries into account
-        int e, id1, id2, npts;
-        int id2_plane, e_max;
+        int e, id1, id2, nBCEdgePts;
+        int id2Plane, eMax;
         
-        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
-        for (e = 0; e < e_max; ++e)
+        for (e = 0; e < eMax; ++e)
         {
-            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetTotPoints();
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
@@ -387,37 +382,37 @@ namespace Nektar
             // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
-                int cnt_plane = cnt/n_planes;
-                int e_plane;
-                int e_max_plane = e_max/n_planes;
+                int ePlane;
+                int cntPlane = cnt/nPlanes;
+                int eMaxPlane = eMax/nPlanes;
                 int nTracePts_plane = GetTraceTotPoints();
                 
-                int planeID = floor((e + 0.5 )/ e_max_plane );
-                e_plane = e - e_max_plane*planeID;
+                int planeID = floor((e + 0.5 )/ eMaxPlane );
+                ePlane = e - eMaxPlane*planeID;
                 
-                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                id2Plane = m_fields[0]->GetTrace()->GetPhys_Offset(
                                 m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(
-                                        cnt_plane + e_plane));
-                id2 = id2_plane + planeID*nTracePts_plane;
+                                        cntPlane + ePlane));
+                id2 = id2Plane + planeID*nTracePts_plane;
                 
             }
             else // For general case
             {
-                id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
-                          m_fields[0]->GetTraceMap()->
+                id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
+                        m_fields[0]->GetTraceMap()->
                             GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             }
             
             for (i = 0; i < m_spacedim; i++)
             {
-                Vmath::Neg(npts, &Fwd[i+1][id2], 1);
+                Vmath::Neg(nBCEdgePts, &Fwd[i+1][id2], 1);
             }
                         
             // Copy boundary adjusted values into the boundary expansion
-            for (i = 0; i < nvariables; ++i)
+            for (i = 0; i < nVariables; ++i)
             {
-                Vmath::Vcopy(npts, &Fwd[i][id2], 1, 
+                Vmath::Vcopy(nBCEdgePts, &Fwd[i][id2], 1, 
                              &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
                                UpdatePhys())[id1], 1);
             }
@@ -432,38 +427,36 @@ namespace Nektar
         int                                      cnt, 
         Array<OneD, Array<OneD, NekDouble> >    &physarray)
     {  
-        int i;
+        int i, nPlanes;
         int nTracePts = GetTraceTotPoints();
-        int n_planes;
+        int nVariables = physarray.num_elements();
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
-            int nPointsTot = m_fields[0]->GetTotPoints();
-            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            
-            n_planes = nPointsTot/nPointsTot_plane;
-            nTracePts = nTracePts * n_planes;
+            int nSolutionPts = m_fields[0]->GetTotPoints();
+            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            nPlanes = nSolutionPts/nSolutionPtsPlane;
+            nTracePts = nTracePts * nPlanes;
         }
         
-        int nvariables      = physarray.num_elements();
         
         // Get physical values of the forward trace (from exp to phys)
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (i = 0; i < nvariables; ++i)
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+        for (i = 0; i < nVariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTracePts);
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
         
-        int e, id1, id2, npts;
-        int id2_plane, e_max;
+        int e, id1, id2, nBCEdgePts;
+        int id2Plane, eMax;
         
-        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
-        for(e = 0; e < e_max; ++e)
+        for (e = 0; e < eMax; ++e)
         {
-            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetTotPoints();
             id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
@@ -471,29 +464,29 @@ namespace Nektar
             // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
-                int cnt_plane = cnt/n_planes;
-                int e_plane;
-                int e_max_plane = e_max/n_planes;
+                int ePlane;
+                int cntPlane = cnt/nPlanes;
+                int eMaxPlane = eMax/nPlanes;
                 int nTracePts_plane = GetTraceTotPoints();
                 
-                int planeID = floor((e + 0.5 )/ e_max_plane );
-                e_plane = e - e_max_plane*planeID;
+                int planeID = floor((e + 0.5 )/ eMaxPlane );
+                ePlane = e - eMaxPlane*planeID;
                 
-                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                id2Plane = m_fields[0]->GetTrace()->GetPhys_Offset(
                                 m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(
-                                        cnt_plane + e_plane));
-                id2 = id2_plane + planeID*nTracePts_plane;
+                                        cntPlane + ePlane));
+                id2 = id2Plane + planeID*nTracePts_plane;
                 
             }
             else // For general case
             {
-                id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
                             m_fields[0]->GetTraceMap()->
                                 GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             }
             
-            switch(m_spacedim)
+            switch (m_spacedim)
             {
                 case 1:
                 {
@@ -504,49 +497,36 @@ namespace Nektar
                 }
                 case 2:
                 {
-                    Array<OneD, NekDouble> tmp_t(npts, 0.0);
+                    Array<OneD, NekDouble> tmp_t(nBCEdgePts, 0.0);
                     
-                    Vmath::Vmul(npts,
-                                &Fwd[1][id2], 1,
-                                &m_traceNormals[1][id2], 1,
-                                &tmp_t[0], 1);
+                    Vmath::Vmul(nBCEdgePts, &Fwd[1][id2], 1,
+                                &m_traceNormals[1][id2], 1, &tmp_t[0], 1);
                     
-                    Vmath::Vvtvm(npts,
-                                 &Fwd[2][id2], 1,
+                    Vmath::Vvtvm(nBCEdgePts, &Fwd[2][id2], 1,
                                  &m_traceNormals[0][id2], 1,
-                                 &tmp_t[0], 1,
-                                 &tmp_t[0], 1);
+                                 &tmp_t[0], 1, &tmp_t[0], 1);
                     
-                    Array<OneD, NekDouble> tmp_n(npts, 0.0);
+                    Array<OneD, NekDouble> tmp_n(nBCEdgePts, 0.0);
                     
                     // rotate back to Cartesian
-                    Vmath::Vmul(npts,
-                                &tmp_t[0], 1,
-                                &m_traceNormals[1][id2], 1,
-                                &Fwd[1][id2], 1);
+                    Vmath::Vmul(nBCEdgePts, &tmp_t[0], 1,
+                                &m_traceNormals[1][id2], 1, &Fwd[1][id2], 1);
                     
-                    Vmath::Vvtvm(npts,
-                                 &tmp_n[0], 1,
-                                 &m_traceNormals[0][id2], 1,
-                                 &Fwd[1][id2], 1,
-                                 &Fwd[1][id2], 1);
+                    Vmath::Vvtvm(nBCEdgePts, &tmp_n[0], 1, 
+                                 &m_traceNormals[0][id2], 1, 
+                                 &Fwd[1][id2], 1, &Fwd[1][id2], 1);
                     
-                    Vmath::Vmul(npts,
-                                &tmp_t[0], 1,
-                                &m_traceNormals[0][id2], 1,
-                                &Fwd[2][id2], 1);
-                    Vmath::Vvtvp(npts,
-                                 &tmp_n[0], 1,
+                    Vmath::Vmul(nBCEdgePts, &tmp_t[0], 1,
+                                &m_traceNormals[0][id2], 1, &Fwd[2][id2], 1);
+                    Vmath::Vvtvp(nBCEdgePts, &tmp_n[0], 1,
                                  &m_traceNormals[1][id2], 1,
-                                 &Fwd[2][id2], 1,
-                                 &Fwd[2][id2], 1);
+                                 &Fwd[2][id2], 1, &Fwd[2][id2], 1);
                     break;
                 }
                 case 3:
                 {
-                    ASSERTL0(false,
-                             "3D not yet implemented for Compressible "
-                             "Flow Equations");
+                    ASSERTL0(false, "3D not yet implemented for Compressible "
+                                    "Flow Equations");
                     break;
                 }
                 default:
@@ -556,10 +536,9 @@ namespace Nektar
             }
             
             // copy boundary adjusted values into the boundary expansion
-            for (i = 0; i < nvariables; ++i)
+            for (i = 0; i < nVariables; ++i)
             {
-                Vmath::Vcopy(npts, 
-                             &Fwd[i][id2], 1, 
+                Vmath::Vcopy(nBCEdgePts, &Fwd[i][id2], 1, 
                              &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
                                UpdatePhys())[id1], 1);	
             }
@@ -576,21 +555,19 @@ namespace Nektar
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
-        int i;
-        int nTracePts              = GetTraceTotPoints();
-        int n_planes;
+        int i, nPlanes;
+        int nTracePts = GetTraceTotPoints();
+        int nVariables = physarray.num_elements();
+        int nDimensions = m_spacedim;
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
-            int nPointsTot = m_fields[0]->GetTotPoints();
-            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            n_planes = nPointsTot/nPointsTot_plane;
-            nTracePts = nTracePts * n_planes;
+            int nSolutionPts = m_fields[0]->GetTotPoints();
+            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            nPlanes = nSolutionPts/nSolutionPtsPlane;
+            nTracePts = nTracePts * nPlanes;
         }
-        
-        int nvariables             = physarray.num_elements();
-        int nvel                   = m_spacedim;
         
         NekDouble gamma            = m_gamma;
         NekDouble gammaInv         = 1.0 / gamma;
@@ -605,12 +582,12 @@ namespace Nektar
         // from outside the computational domain
         Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
         
-        if (nvel == 2 || nvel == 3)
+        if (nDimensions == 2 || nDimensions == 3)
         {
             Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
         }
-        if (nvel == 3)
+        if (nDimensions == 3)
         {
             Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
@@ -618,8 +595,8 @@ namespace Nektar
         }
         
         // Get physical values of the forward trace
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (i = 0; i < nvariables; ++i)
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+        for (i = 0; i < nVariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTracePts);
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
@@ -629,7 +606,7 @@ namespace Nektar
         // from inside the computational domain 
         Array<OneD, NekDouble > Vn (nTracePts, 0.0);
         Array<OneD, NekDouble > Vel(nTracePts, 0.0);
-        for (i = 0; i < nvel; ++i)
+        for (i = 0; i < nDimensions; ++i)
         {
             Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, Vel, 1);
             Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
@@ -637,7 +614,7 @@ namespace Nektar
         
         // Computing the absolute value of the velocity
         Array<OneD, NekDouble > absVel(nTracePts, 0.0);
-        for (i = 0; i < nvel; ++i)
+        for (i = 0; i < nDimensions; ++i)
         {
             Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
             Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
@@ -668,19 +645,19 @@ namespace Nektar
         Vmath::Vdiv(nTracePts, absVel, 1, SoundSpeed, 1, Mach, 1);
                 
         // Auxiliary variables
-        int e, id1, id2, npts, pnt;
-        int id2_plane, e_max;
+        int e, id1, id2, nBCEdgePts, pnt;
+        int id2Plane, eMax;
         NekDouble cPlus, rPlus, cMinus, rMinus;
         NekDouble VelNorm, VelNormRef, VDelta;
         NekDouble rhob, rhoub, rhovb, rhoeb;
         NekDouble ub, vb, cb, sb, pb;
         
-        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
         // Loop on bcRegions
-        for (e = 0; e < e_max; ++e)
+        for (e = 0; e < eMax; ++e)
         {
-            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetNumPoints(0);
             
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
@@ -689,19 +666,19 @@ namespace Nektar
             // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
-                int cnt_plane = cnt/n_planes;
-                int e_plane;
-                int e_max_plane = e_max/n_planes;
+                int cntPlane = cnt/nPlanes;
+                int ePlane;
+                int eMaxPlane = eMax/nPlanes;
                 int nTracePts_plane = GetTraceTotPoints();
                 
-                int planeID = floor((e + 0.5 )/ e_max_plane );
-                e_plane = e - e_max_plane*planeID;
+                int planeID = floor((e + 0.5 )/ eMaxPlane );
+                ePlane = e - eMaxPlane*planeID;
                 
-                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                id2Plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
                                 m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(
-                                        cnt_plane + e_plane));
-                id2 = id2_plane + planeID*nTracePts_plane;
+                                        cntPlane + ePlane));
+                id2 = id2Plane + planeID*nTracePts_plane;
                 
             }
             else // For general case
@@ -712,7 +689,7 @@ namespace Nektar
             }
             
             // Loop on the points of the bcRegion
-            for (i = 0; i < npts; i++)
+            for (i = 0; i < nBCEdgePts; i++)
             {
                 pnt = id2+i;
                 
@@ -797,21 +774,20 @@ namespace Nektar
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
-        int i;
-        int nTracePts               = GetTraceTotPoints();
-        int n_planes;
+        int i, nPlanes;
+        int nTracePts = GetTraceTotPoints();
+        int nVariables = physarray.num_elements();
+        int nDimensions = m_spacedim;
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
-            int nPointsTot = m_fields[0]->GetTotPoints();
-            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int n_planes = nPointsTot/nPointsTot_plane;
-            nTracePts = nTracePts * n_planes;
+            int nSolutionPts = m_fields[0]->GetTotPoints();
+            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int nPlanes = nSolutionPts/nSolutionPtsPlane;
+            nTracePts = nTracePts * nPlanes;
         }
 
-        int nvariables              = physarray.num_elements();
-        int nvel                    = m_spacedim;
         NekDouble gamma             = m_gamma;
         NekDouble gammaInv          = 1.0 / gamma;
         NekDouble gammaMinusOne     = gamma - 1.0;
@@ -825,21 +801,20 @@ namespace Nektar
         // from outside the computational domain
         Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
         
-        if (nvel == 2 || nvel == 3)
+        if (nDimensions == 2 || nDimensions == 3)
         {
             Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
         }
-        if (nvel == 3)
+        if (nDimensions == 3)
         {
             Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
-            
         }
         
         // Get physical values of the forward trace
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (i = 0; i < nvariables; ++i)
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+        for (i = 0; i < nVariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTracePts);
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
@@ -848,7 +823,7 @@ namespace Nektar
         // Get normal velocity
         Array<OneD, NekDouble > Vn(nTracePts, 0.0);
         Array<OneD, NekDouble > Vel(nTracePts, 0.0);
-        for (i = 0; i < nvel; ++i)
+        for (i = 0; i < nDimensions; ++i)
         {
             Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, Vel, 1);
             Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
@@ -871,50 +846,50 @@ namespace Nektar
         Vmath::Vdiv(nTracePts, Vn, 1, SoundSpeed, 1, Mach, 1);
         
         // Auxiliary variables 
-        int e, id1, id2, npts, pnt;
-        int e_max, id2_plane;
+        int e, id1, id2, nBCEdgePts, pnt;
+        int eMax, id2Plane;
         NekDouble cPlus, rPlus, cMinus, rMinus;
         NekDouble VelNorm, VelNormRef, VDelta;
         NekDouble rhob, rhoub, rhovb, rhoeb;
         NekDouble ub, vb, cb, sb, pb;
         
-        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
         // Loop on the bcRegions
-        for (e = 0; e < e_max; ++e)
+        for (e = 0; e < eMax; ++e)
         {
-            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetNumPoints(0);
-            id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e) ;
             
             // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
-                int cnt_plane = cnt/n_planes;
-                int e_plane;
-                int e_max_plane = e_max/n_planes;
+                int ePlane;
+                int cntPlane = cnt/nPlanes;
+                int eMaxPlane = eMax/nPlanes;
                 int nTracePts_plane = GetTraceTotPoints();
                 
-                int planeID = floor((e + 0.5 )/ e_max_plane );
-                e_plane = e - e_max_plane*planeID;
+                int planeID = floor((e + 0.5 )/ eMaxPlane );
+                ePlane = e - eMaxPlane*planeID;
                 
-                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                id2Plane = m_fields[0]->GetTrace()->GetPhys_Offset(
                         m_fields[0]->GetTraceMap()->
                             GetBndCondCoeffsToGlobalCoeffsMap(
-                                cnt_plane + e_plane));
-                id2 = id2_plane + planeID*nTracePts_plane;
+                                cntPlane + ePlane));
+                id2 = id2Plane + planeID*nTracePts_plane;
             }
             else // For general case
             {
 
-                id2  = m_fields[0]->GetTrace()->
+                id2 = m_fields[0]->GetTrace()->
                             GetPhys_Offset(m_fields[0]->GetTraceMap()->
                                 GetBndCondTraceToGlobalTraceMap(cnt++));
             }
             
             // Loop on points of bcRegion 'e'
-            for (i = 0; i < npts; i++)
+            for (i = 0; i < nBCEdgePts; i++)
             {
                 pnt = id2+i;
 
@@ -995,69 +970,67 @@ namespace Nektar
     {
         int i, j;
         int e, pnt;
-        int id1, id2, npts;
-        
-        int nTracePts  = GetTraceTotPoints();
-        int n_planes;
+        int nPlanes;
+        int id1, id2, nBCEdgePts;
+        int nTracePts = GetTraceTotPoints();
+        int nVariables = physarray.num_elements();
+        int nDimensions = m_spacedim;
         
         // For 3DHomogenoeus1D
         if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
         {
-            int nPointsTot = m_fields[0]->GetTotPoints();
-            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int n_planes = nPointsTot/nPointsTot_plane;
-            nTracePts = nTracePts * n_planes;
+            int nSolutionPts = m_fields[0]->GetTotPoints();
+            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int nPlanes = nSolutionPts/nSolutionPtsPlane;
+            nTracePts = nTracePts * nPlanes;
         }
 
-        int nvariables = physarray.num_elements();
-        int nvel       = m_spacedim;
-                
         // Get physical values of the forward trace
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nvariables);
-        for (i = 0; i < nvariables; ++i)
+        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
+        for (i = 0; i < nVariables; ++i)
         {
             Fwd[i] = Array<OneD, NekDouble>(nTracePts);
             m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
         }
 
-        int id2_plane, e_max;
+        int id2Plane, eMax;
         
-        e_max = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
+        eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
         // Loop on bcRegions
-        for (e = 0; e < e_max; ++e)
+        for (e = 0; e < eMax; ++e)
         {
-            npts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetExp(e)->GetNumPoints(0);
-            id1  = m_fields[0]->GetBndCondExpansions()[bcRegion]->
+            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e) ;
             
             // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
-                int cnt_plane = cnt/n_planes;
-                int e_plane;
-                int e_max_plane = e_max/n_planes;
+                int ePlane;
+                int cntPlane = cnt/nPlanes;
+                int eMaxPlane = eMax/nPlanes;
                 int nTracePts_plane = GetTraceTotPoints();
                 
-                int planeID = floor((e + 0.5 )/ e_max_plane );
-                e_plane = e - e_max_plane*planeID;
+                int planeID = floor((e + 0.5 )/ eMaxPlane );
+                ePlane = e - eMaxPlane*planeID;
                 
-                id2_plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
+                id2Plane = m_fields[0]->GetTrace()->GetPhys_Offset(
                                 m_fields[0]->GetTraceMap()->
                                     GetBndCondCoeffsToGlobalCoeffsMap(
-                                        cnt_plane + e_plane));
-                id2 = id2_plane + planeID*nTracePts_plane;
+                                        cntPlane + ePlane));
+                id2 = id2Plane + planeID*nTracePts_plane;
             }
             else // For general case
             {
-                id2  = m_fields[0]->GetTrace()->
+                id2 = m_fields[0]->GetTrace()->
                             GetPhys_Offset(m_fields[0]->GetTraceMap()->
                                 GetBndCondTraceToGlobalTraceMap(cnt++));
             }
             
             // Loop on points of bcRegion 'e'
-            for (i = 0; i < npts; i++)
+            for (i = 0; i < nBCEdgePts; i++)
             {
                 pnt = id2+i;
                 
@@ -1066,15 +1039,15 @@ namespace Nektar
                     UpdatePhys())[id1+i] = Fwd[0][pnt];
                 
                 // Setting up bcs for velocities
-                for (j = 1; j <=nvel; ++j)
+                for (j = 1; j <=nDimensions; ++j)
                 {
                     (m_fields[j]->GetBndCondExpansions()[bcRegion]->
                      UpdatePhys())[id1+i] = Fwd[j][pnt];
                 }
                 
                 // Setting up bcs for energy
-                (m_fields[nvariables-1]->GetBndCondExpansions()[bcRegion]->
-                    UpdatePhys())[id1+i] = Fwd[nvariables-1][pnt];
+                (m_fields[nVariables-1]->GetBndCondExpansions()[bcRegion]->
+                    UpdatePhys())[id1+i] = Fwd[nVariables-1][pnt];
             }
         }
     }
@@ -1145,7 +1118,7 @@ namespace Nektar
     {
         int i, j;
         int nq = physfield[0].num_elements();
-        int nvariables = m_fields.num_elements();
+        int nVariables = m_fields.num_elements();
             
         // Factor to rescale 1d points in dealiasing
         NekDouble OneDptscale = 2; 
@@ -1164,11 +1137,11 @@ namespace Nektar
         Array<OneD, NekDouble> pressure(nq);
         Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
             
-        Array<OneD, Array<OneD, NekDouble> > physfield_interp(nvariables);
+        Array<OneD, Array<OneD, NekDouble> > physfield_interp(nVariables);
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > flux_interp(
-                                                            nvariables);
+                                                            nVariables);
             
-        for (i = 0; i < nvariables; ++ i)
+        for (i = 0; i < nVariables; ++ i)
         {
             physfield_interp[i] = Array<OneD, NekDouble>(nq);
             flux_interp[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
@@ -1285,7 +1258,7 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
         int i, j, k;
-        int nvariables = m_fields.num_elements();
+        int nVariables = m_fields.num_elements();
         int nPts       = physfield[0].num_elements();
              
         // Stokes hypotesis
@@ -1299,29 +1272,29 @@ namespace Nektar
         Array<OneD, NekDouble > temperature(nPts, 0.0);
                 
         // Set up wrapper to fields data storage
-        Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
+        Array<OneD, Array<OneD, NekDouble> > fields(nVariables);
         
         // Reorder storage to list time-integrated fields first
         // For 3DHomogenoeus1D
         if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            int nPointsTot = m_fields[0]->GetTotPoints();
-            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int n_planes = nPointsTot/nPointsTot_plane;
+            int nSolutionPts = m_fields[0]->GetTotPoints();
+            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int nPlanes = nSolutionPts/nSolutionPtsPlane;
             
-            Array<OneD, Array<OneD, NekDouble> > fields_temp(nvariables);
+            Array<OneD, Array<OneD, NekDouble> > fields_temp(nVariables);
             
-            for (i = 0; i < nvariables; ++i)
+            for (i = 0; i < nVariables; ++i)
             {
                 fields[i] =  Array<OneD, NekDouble>(nPts, 0.0);
                 fields_temp[i] = m_fields[i]->UpdatePhys();   
             
                 Vmath::Vcopy(nPts,
-                            &fields_temp[i][m_planeNumber*nPointsTot_plane], 1,
+                            &fields_temp[i][m_planeNumber*nSolutionPtsPlane], 1,
                             &fields[i][0], 1);
             }
             
-            if(m_planeNumber == n_planes - 1)
+            if(m_planeNumber == nPlanes - 1)
             {
                 m_planeNumber = 0;
             }
@@ -1333,7 +1306,7 @@ namespace Nektar
         }
         else // For general case
         {
-            for (i = 0; i < nvariables; ++i)
+            for (i = 0; i < nVariables; ++i)
             {
                 fields[i] = m_fields[i]->UpdatePhys();
             }
@@ -1662,7 +1635,7 @@ namespace Nektar
               Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
     {
         int i, j, k;
-        int nvariables = m_fields.num_elements();
+        int nVariables = m_fields.num_elements();
         int nPts       = physfield[0].num_elements();
         
         int variables_phys = physfield.num_elements();
@@ -1681,7 +1654,7 @@ namespace Nektar
             nPts = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
         }
         
-        int nvariables_aux = derivativesO1[0].num_elements();
+        int nVariables_aux = derivativesO1[0].num_elements();
             
         Array<OneD, Array<OneD, NekDouble> > physfield_interp(variables_phys);
         Array<OneD, Array<OneD, Array<OneD, NekDouble> > > derivativesO1_interp(
@@ -1692,8 +1665,8 @@ namespace Nektar
         for (i = 0; i < m_spacedim; ++ i)
         {
             viscousTensor_interp[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                                    nvariables);
-            for (j = 0; j < nvariables; ++j)
+                                                                    nVariables);
+            for (j = 0; j < nVariables; ++j)
             {
                 viscousTensor_interp[i][j] = Array<OneD, NekDouble>(nPts);
             }
@@ -1710,34 +1683,34 @@ namespace Nektar
         Array<OneD, NekDouble > temperature(nPts, 0.0);
             
         // Set up wrapper to fields data storage
-        Array<OneD, Array<OneD, NekDouble> > fields(nvariables);
-        Array<OneD, Array<OneD, NekDouble> > fields_interp(nvariables);
+        Array<OneD, Array<OneD, NekDouble> > fields(nVariables);
+        Array<OneD, Array<OneD, NekDouble> > fields_interp(nVariables);
             
         // Reorder storage to list time-integrated fields first
         // For 3DHomogenoeus1D
         if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            int nPointsTot = m_fields[0]->GetTotPoints();
-            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int n_planes = nPointsTot/nPointsTot_plane;
+            int nSolutionPts = m_fields[0]->GetTotPoints();
+            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
+            int nPlanes = nSolutionPts/nSolutionPtsPlane;
             
-            Array<OneD, Array<OneD, NekDouble> > fields_temp(nvariables);
+            Array<OneD, Array<OneD, NekDouble> > fields_temp(nVariables);
             
             
-            for (i = 0; i < nvariables; ++i)
+            for (i = 0; i < nVariables; ++i)
             {
                 fields[i] =  Array<OneD, NekDouble>(nPts, 0.0);
                 fields_temp[i] = m_fields[i]->UpdatePhys();
                 
                 Vmath::Vcopy(nPts,
-                             &fields_temp[i][m_planeNumber*nPointsTot_plane], 1,
+                             &fields_temp[i][m_planeNumber*nSolutionPtsPlane], 1,
                              &fields[i][0], 1);
                 
                 fields_interp[i] = Array<OneD, NekDouble> (nPts);
                 
             }
             
-            if(m_planeNumber == n_planes - 1)
+            if(m_planeNumber == nPlanes - 1)
             {
                 m_planeNumber = 0;
             }
@@ -1748,14 +1721,14 @@ namespace Nektar
         }
         else // For general case
         {
-            for (i = 0; i < nvariables; ++i)
+            for (i = 0; i < nVariables; ++i)
             {
                 fields[i] = m_fields[i]->UpdatePhys();
                 fields_interp[i] = Array<OneD, NekDouble> (nPts);
             }
         }
         
-        for (i = 0; i < nvariables; ++i)
+        for (i = 0; i < nVariables; ++i)
         {
             // Interpolation to higher space
             // For 3DHomogenoeus1D
@@ -1792,8 +1765,8 @@ namespace Nektar
         for (i = 0; i < m_spacedim; ++i)
         {
             derivativesO1_interp[i] = Array<OneD, Array<OneD, NekDouble> >(
-                                                            nvariables_aux);    
-            for (j = 0; j < nvariables_aux; ++j)
+                                                            nVariables_aux);    
+            for (j = 0; j < nVariables_aux; ++j)
             {
                 derivativesO1_interp[i][j] = Array<OneD, NekDouble>(nPts);
                 // For 3DHomogenoeus1D
@@ -2143,7 +2116,7 @@ namespace Nektar
             
         for (i = 0; i < m_spacedim; ++i)
         {
-            for (j = 1; j < nvariables; ++j)
+            for (j = 1; j < nVariables; ++j)
             {
                 // Galerkin project solution back to origianl space
                 // For 3DHomogenoeus1D
@@ -2176,23 +2149,23 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD,                   NekDouble>   &pressure)
     {
-        int       npts  = physfield[0].num_elements();
+        int       nBCEdgePts  = physfield[0].num_elements();
         NekDouble alpha = -0.5;
         
         // Calculate ||rho v||^2
-        Vmath::Vmul(npts, physfield[1], 1, physfield[1], 1, pressure, 1);
+        Vmath::Vmul(nBCEdgePts, physfield[1], 1, physfield[1], 1, pressure, 1);
         for (int i = 1; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(npts, physfield[1+i], 1, physfield[1+i], 1, 
+            Vmath::Vvtvp(nBCEdgePts, physfield[1+i], 1, physfield[1+i], 1, 
                                pressure,       1, pressure,       1);
         }
         // Divide by rho to get rho*||v||^2
-        Vmath::Vdiv (npts, pressure, 1, physfield[0], 1, pressure, 1);
+        Vmath::Vdiv (nBCEdgePts, pressure, 1, physfield[0], 1, pressure, 1);
         // pressure <- E - 0.5*pressure
-        Vmath::Svtvp(npts,     alpha, 
+        Vmath::Svtvp(nBCEdgePts,     alpha, 
                      pressure, 1, physfield[m_spacedim+1], 1, pressure, 1);
         // Multiply by (gamma-1)
-        Vmath::Smul (npts, m_gamma-1, pressure, 1, pressure, 1);
+        Vmath::Smul (nBCEdgePts, m_gamma-1, pressure, 1, pressure, 1);
     }
     
     /**
@@ -2213,21 +2186,21 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &velocity,
               Array<OneD,                   NekDouble>   &pressure)
     {
-        int npts = physfield[0].num_elements();
+        int nBCEdgePts = physfield[0].num_elements();
         NekDouble alpha = -0.5;
         
         // Calculate ||\rho v||^2.
-        Vmath::Vmul (npts, velocity[0], 1, physfield[1], 1, pressure, 1);
+        Vmath::Vmul (nBCEdgePts, velocity[0], 1, physfield[1], 1, pressure, 1);
         for (int i = 1; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(npts, velocity[i], 1, physfield[1+i], 1, 
+            Vmath::Vvtvp(nBCEdgePts, velocity[i], 1, physfield[1+i], 1, 
                                pressure,    1, pressure,       1);
         }
         // pressure <- E - 0.5*pressure
-        Vmath::Svtvp(npts,     alpha, 
+        Vmath::Svtvp(nBCEdgePts,     alpha, 
                      pressure, 1, physfield[m_spacedim+1], 1, pressure, 1);
         // Multiply by (gamma-1).
-        Vmath::Smul (npts, m_gamma-1, pressure, 1, pressure, 1);
+        Vmath::Smul (nBCEdgePts, m_gamma-1, pressure, 1, pressure, 1);
     }
     
     /**
@@ -2241,11 +2214,11 @@ namespace Nektar
         const Array<OneD, Array<OneD, NekDouble> > &physfield,
               Array<OneD, Array<OneD, NekDouble> > &velocity)
     {
-        const int npts = physfield[0].num_elements();
+        const int nBCEdgePts = physfield[0].num_elements();
         
         for (int i = 0; i < m_spacedim; ++i)
         {
-            Vmath::Vdiv(npts, physfield[1+i], 1, physfield[0], 1, 
+            Vmath::Vdiv(nBCEdgePts, physfield[1+i], 1, physfield[0], 1, 
                               velocity[i],    1);
         }
     }
@@ -2298,19 +2271,19 @@ namespace Nektar
         Array<OneD,             NekDouble  > &soundspeed,
         Array<OneD,             NekDouble  > &mach)
     {
-        const int npts = m_fields[0]->GetTotPoints();
+        const int nBCEdgePts = m_fields[0]->GetTotPoints();
 
-        Vmath::Vmul(npts, physfield[1], 1, physfield[1], 1, mach, 1);
+        Vmath::Vmul(nBCEdgePts, physfield[1], 1, physfield[1], 1, mach, 1);
 
         for (int i = 1; i < m_spacedim; ++i)
         {
-            Vmath::Vvtvp(npts, physfield[1+i], 1, physfield[1+i], 1, 
+            Vmath::Vvtvp(nBCEdgePts, physfield[1+i], 1, physfield[1+i], 1, 
                                mach,           1, mach,           1);
         }
 
-        Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
-        Vmath::Vdiv(npts, mach, 1, physfield[0], 1, mach, 1);
-        Vmath::Vdiv(npts, mach, 1, soundspeed,   1, mach, 1);
+        Vmath::Vdiv(nBCEdgePts, mach, 1, physfield[0], 1, mach, 1);
+        Vmath::Vdiv(nBCEdgePts, mach, 1, physfield[0], 1, mach, 1);
+        Vmath::Vdiv(nBCEdgePts, mach, 1, soundspeed,   1, mach, 1);
     }
     
     /**
@@ -2326,20 +2299,20 @@ namespace Nektar
         const Array<OneD, const Array<OneD, NekDouble> > &physfield,
               Array<OneD,                   NekDouble  > &mu)
     {
-        const int npts = physfield[0].num_elements();
+        const int nBCEdgePts = physfield[0].num_elements();
         
         NekDouble mu_star = m_mu;
         NekDouble T_star  = m_pInf / (m_rhoInf * m_gasConstant);
-        Vmath::Zero(npts, mu, 1);
+        Vmath::Zero(nBCEdgePts, mu, 1);
         
-        Array<OneD, NekDouble > pressure         (npts, 0.0);
-        Array<OneD, NekDouble > temperature      (npts, 0.0);
-        Array<OneD, NekDouble > temperature_ratio(npts, 0.0);
+        Array<OneD, NekDouble > pressure         (nBCEdgePts, 0.0);
+        Array<OneD, NekDouble > temperature      (nBCEdgePts, 0.0);
+        Array<OneD, NekDouble > temperature_ratio(nBCEdgePts, 0.0);
         
         GetPressure   (physfield, pressure);
         GetTemperature(physfield, pressure, temperature);
         
-        for (int i = 0; i < npts; ++i)
+        for (int i = 0; i < nBCEdgePts; ++i)
         {
             temperature_ratio[i] = temperature[i] / T_star;
             mu[i] = mu_star * pow(temperature_ratio[i], 1.50) * 
@@ -2416,7 +2389,7 @@ namespace Nektar
     {
         int nTotQuadPoints = GetTotPoints();
         int n_element      = m_fields[0]->GetExpSize();
-        int npts           = 0;
+        int nBCEdgePts           = 0;
 
         // Getting the velocity vector on the 2D normal space
         Array<OneD, Array<OneD, NekDouble> > velocity   (m_spacedim);
@@ -2480,12 +2453,12 @@ namespace Nektar
                 {
                     pntVelocity += stdVelocity[j][i]*stdVelocity[j][i];
                 }
-                pntVelocity = sqrt(pntVelocity) + soundspeed[npts];
+                pntVelocity = sqrt(pntVelocity) + soundspeed[nBCEdgePts];
                 if (pntVelocity > stdV[el])
                 {
                     stdV[el] = pntVelocity;
                 }
-                npts++;
+                nBCEdgePts++;
             }
         }
     }

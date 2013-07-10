@@ -969,28 +969,80 @@ namespace Nektar
 
             ASSERTL0(domain, "Unable to find DOMAIN tag in file.");
 
-            // find the non comment portion of the body.
-            TiXmlNode* elementChild = domain->FirstChild();
-            while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
+            /// Elements are of the form: "<D ID = "N"> ... </D>".
+            /// Read the ID field first.
+            TiXmlElement *multidomains = domain->FirstChildElement("D");
+
+            if(multidomains)
             {
-                elementChild = elementChild->NextSibling();
+                int nextDomainNumber = 0;
+                while (multidomains)
+                {
+                    int indx;
+                    int err = multidomains->QueryIntAttribute("ID", &indx);
+                    ASSERTL0(err == TIXML_SUCCESS, 
+                             "Unable to read attribute ID in Domain.");
+
+
+                    TiXmlNode* elementChild = multidomains->FirstChild();
+                    while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
+                    {
+                        elementChild = elementChild->NextSibling();
+                    }
+                    
+                    ASSERTL0(elementChild, "Unable to read DOMAIN body.");
+                    std::string elementStr = elementChild->ToText()->ValueStr();
+                    
+                    elementStr = elementStr.substr(elementStr.find_first_not_of(" "));
+                
+                    std::string::size_type indxBeg = elementStr.find_first_of('[') + 1;
+                    std::string::size_type indxEnd = elementStr.find_last_of(']') - 1;
+                    std::string indxStr = elementStr.substr(indxBeg, indxEnd - indxBeg + 1);
+                    
+                    ASSERTL0(!indxStr.empty(), "Unable to read domain's composite index (index missing?).");
+                    
+                    // Read the domain composites.
+                    // Parse the composites into a list.
+                    CompositeMap unrollDomain;
+                    GetCompositeList(indxStr, unrollDomain);
+                    m_domain.push_back(unrollDomain);
+                
+                    ASSERTL0(!m_domain[nextDomainNumber++].empty(), (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
+
+                    /// Keep looking
+                    multidomains = multidomains->NextSiblingElement("D");
+                }
+
             }
+            else // previous definition of just one composite
+            {
 
-            ASSERTL0(elementChild, "Unable to read DOMAIN body.");
-            std::string elementStr = elementChild->ToText()->ValueStr();
-
-            elementStr = elementStr.substr(elementStr.find_first_not_of(" "));
-
-            std::string::size_type indxBeg = elementStr.find_first_of('[') + 1;
-            std::string::size_type indxEnd = elementStr.find_last_of(']') - 1;
-            std::string indxStr = elementStr.substr(indxBeg, indxEnd - indxBeg + 1);
-
-            ASSERTL0(!indxStr.empty(), "Unable to read domain's composite index (index missing?).");
-
-            // Read the domain composites.
-            // Parse the composites into a list.
-            GetCompositeList(indxStr, m_domain);
-            ASSERTL0(!m_domain.empty(), (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
+                // find the non comment portion of the body.
+                TiXmlNode* elementChild = domain->FirstChild();
+                while(elementChild && elementChild->Type() != TiXmlNode::TEXT)
+                {
+                    elementChild = elementChild->NextSibling();
+                }
+                
+                ASSERTL0(elementChild, "Unable to read DOMAIN body.");
+                std::string elementStr = elementChild->ToText()->ValueStr();
+                
+                elementStr = elementStr.substr(elementStr.find_first_not_of(" "));
+                
+                std::string::size_type indxBeg = elementStr.find_first_of('[') + 1;
+                std::string::size_type indxEnd = elementStr.find_last_of(']') - 1;
+                std::string indxStr = elementStr.substr(indxBeg, indxEnd - indxBeg + 1);
+                
+                ASSERTL0(!indxStr.empty(), "Unable to read domain's composite index (index missing?).");
+                
+                // Read the domain composites.
+                // Parse the composites into a list.
+                CompositeMap fullDomain;
+                GetCompositeList(indxStr, fullDomain);
+                m_domain.push_back(fullDomain);
+                
+                ASSERTL0(!m_domain[0].empty(), (std::string("Unable to obtain domain's referenced composite: ") + indxStr).c_str());
+            }
         }
 
 

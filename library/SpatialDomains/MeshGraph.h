@@ -236,7 +236,7 @@ namespace Nektar
 
                 inline const CompositeMap &GetComposites() const;
 
-                inline const CompositeMap &GetDomain() const;
+                inline const CompositeMap &GetDomain(int domain = 0) const;
 
 
                 /* ---- Expansions ---- */
@@ -357,7 +357,7 @@ namespace Nektar
                 bool                                    m_meshPartitioned;
 
                 CompositeMap                            m_meshComposites;
-                CompositeMap                            m_domain;
+                std::vector<CompositeMap>               m_domain;
 
                 ExpansionMapShPtrMap                    m_expansionMapShPtrMap;
 
@@ -410,9 +410,10 @@ namespace Nektar
         /**
          *
          */
-        inline const CompositeMap &MeshGraph::GetDomain() const
+        inline const CompositeMap &MeshGraph::GetDomain(const int domain) const
         {
-            return m_domain;
+            ASSERTL1(domain < m_domain.size(),"Request for domain which does not exist");
+            return m_domain[domain];
         }
 
 

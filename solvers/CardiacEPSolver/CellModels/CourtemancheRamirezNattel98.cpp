@@ -527,7 +527,7 @@ namespace Nektar
         for (i = 0, v = &tmp_Fn[0], x = &inarray[14][0], x_new = &outarray[14][0], x_tau = &m_gates_tau[13][0];
                 i < n; ++i, ++v, ++x, ++x_new, ++x_tau)
         {
-            *x_tau  = 1.91 + 2.09*(1.0+exp(-(*v - 3.4175e-13)/13.67e-16));
+            *x_tau  = 1.91 + 2.09/(1.0+exp(-(*v - 3.4175e-13)/13.67e-16));
             *x_new = 1.0 - 1.0/(1.0 + exp(-(*v - 6.835e-14)/13.67e-16));
         }
         // w

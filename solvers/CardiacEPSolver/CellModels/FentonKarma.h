@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CourtemancheRamirezNattel.h
+// File: FentonKarma.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Courtemanche-Ramirez-Nattel cell model
+// Description: Fenton-Karma cell model
 //
 ///////////////////////////////////////////////////////////////////////////////
 

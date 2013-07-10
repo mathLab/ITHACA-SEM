@@ -1120,7 +1120,7 @@ namespace Nektar
         }
             
         // Flux vector for energy.
-        Vmath::Vadd(nq, physfield[m_spacedim+1], 1, pressure, 1,
+        Vmath::Vadd(nq, physfield[m_spacedim+1], 1, pressure, 1, 
                     pressure, 1);
             
         for (j = 0; j < m_spacedim; ++j)

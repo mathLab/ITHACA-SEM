@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File CourtemancheRamirezNattel.h
+// File: FentonKarma.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,40 +29,39 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Courtemanche-Ramirez-Nattel cell model
+// Description: Fenton-Karma cell model
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_COURTEMANCHE_H
-#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_COURTEMANCHE_H
+#ifndef NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_FENTONKARMA_H
+#define NEKTAR_SOLVERS_ADRSOLVER_EQUATIONSYSTEMS_FENTONKARMA_H
 
 #include <CardiacEPSolver/CellModels/CellModel.h>
 
 namespace Nektar
 {
-    class CourtemancheRamirezNattel98: public CellModel
+    class FentonKarma: public CellModel
     {
-
     public:
         /// Creates an instance of this class
         static CellModelSharedPtr create(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
                 const MultiRegions::ExpListSharedPtr& pField)
         {
-            return MemoryManager<CourtemancheRamirezNattel98>
-                                        ::AllocateSharedPtr(pSession, pField);
+            return MemoryManager<FentonKarma>
+            ::AllocateSharedPtr(pSession, pField);
         }
 
         /// Name of class
         static std::string className;
 
         /// Constructor
-        CourtemancheRamirezNattel98(
+        FentonKarma(
                 const LibUtilities::SessionReaderSharedPtr& pSession,
                 const MultiRegions::ExpListSharedPtr& pField);
 
         /// Destructor
-        virtual ~CourtemancheRamirezNattel98();
+        virtual ~FentonKarma();
 
     protected:
         /// Computes the reaction terms $f(u,v)$ and $g(u,v)$.
@@ -80,51 +79,40 @@ namespace Nektar
 
     private:
         NekDouble C_m;
-        NekDouble g_Na;
-        NekDouble g_K1;
-        NekDouble g_to;
-        NekDouble g_Kr;
-        NekDouble g_Kur_scaling;
-        NekDouble g_Ks;
-        NekDouble g_b_Na;
-        NekDouble g_b_Ca;
-        NekDouble g_Ca_L;
-        NekDouble R;
-        NekDouble T;
-        NekDouble F;
-        NekDouble Na_o;
-        NekDouble K_o;
-        NekDouble sigma;
-        NekDouble K_i;
-        NekDouble K_m_Na_i;
-        NekDouble I_Na_K_max;
-        NekDouble I_NaCa_max;
-        NekDouble gamma;
-        NekDouble Ca_o;
-        NekDouble K_m_Na;
-        NekDouble K_m_Ca;
-        NekDouble K_sat;
-        NekDouble I_p_Ca_max;
-        NekDouble Trpn_max;
-        NekDouble Km_Trpn;
-        NekDouble Cmdn_max;
-        NekDouble Csqn_max;
-        NekDouble Km_Cmdn;
-        NekDouble Km_Csqn;
-        NekDouble NSR_I_up_max;
-        NekDouble NSR_I_Ca_max;
-        NekDouble NSR_K_up;
-        NekDouble JSR_K_rel;
-        NekDouble JSR_V_cell;
-        NekDouble JSR_V_rel;
-        NekDouble JSR_V_up;
-        NekDouble tau_tr;
-        NekDouble K_Q10;
-        NekDouble V_i;
+        NekDouble V_0;
+        NekDouble u_fi;
+        NekDouble u_c;
+        NekDouble u_v;
+        NekDouble u_r;
+        NekDouble g_fi_max;
+        NekDouble tau_d;
+        NekDouble tau_v1_minus;
+        NekDouble tau_v2_minus;
+        NekDouble tau_v_plus;
+        NekDouble tau_0;
+        NekDouble tau_r;
+        NekDouble tau_si;
+        NekDouble tau_y_plus;
+        NekDouble tau_y_minus;
+        NekDouble u_csi;
+        NekDouble k1;
+        NekDouble k2;
+        NekDouble tau_w_minus;
+        NekDouble tau_w_plus;
+
+        bool isCF3;
 
         enum Variants {
-            eOriginal,
-            eAF
+            eBR,
+            eMBR,
+            eMLR1,
+            eGP,
+            eCF1,
+            eCF2a,
+            eCF2b,
+            eCF2c,
+            eCF3a,
+            eCF3b
         };
         enum Variants model_variant;
 

@@ -57,6 +57,26 @@ namespace Nektar
             
             SolverUtils::AdvectionSharedPtr m_planeAdv;
             
+            int                             i, j, k;
+            int                             nPointsTot;
+            int                             num_planes;
+            int                             nPointsTot_plane;
+            
+            Array<OneD, unsigned int> planes;
+            Array<OneD, Array<OneD, NekDouble> >                fluxvector;
+            Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
+                                                                fluxvector_homo;
+            Array<OneD, Array<OneD, NekDouble> >                outarray_homo;
+            Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
+                                                                fields_plane;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  inarray_plane;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  outarray_plane;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  advVel_plane;
+            
+            virtual void v_InitObject(
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+            
             virtual void v_Advect(
                 const int                                          nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

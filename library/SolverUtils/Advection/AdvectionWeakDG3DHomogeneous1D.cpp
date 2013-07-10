@@ -51,7 +51,91 @@ namespace Nektar
         {
             string advName = "WeakDG";
             m_planeAdv = GetAdvectionFactory().CreateInstance(advName, advName);
+        }
+        
+        /**
+         * @brief Initiliase AdvectionWEakDG3DHomogeneous1D objects and store 
+         * them before starting the time-stepping.
+         *
+         * This routine calls the virtual functions #v_SetupMetrics,
+         * #v_SetupCFunctions and #v_SetupInterpolationMatrices to
+         * initialise the objects needed by AdvectionFR.
+         *
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         */
+        void AdvectionWeakDG3DHomogeneous1D::v_InitObject(
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+        {
+            int nConvectiveFields = pFields.num_elements();
             
+            nPointsTot      = pFields[0]->GetTotPoints();
+            
+            planes = pFields[0]->GetZIDs();
+            num_planes = planes.num_elements();
+            nPointsTot_plane = nPointsTot/num_planes;
+            
+            m_planeAdv->SetRiemannSolver(m_riemann);
+            m_planeAdv->SetFluxVectorVec(m_fluxVector);
+            
+            fluxvector =
+                Array<OneD, Array<OneD, NekDouble> > (nConvectiveFields);
+            
+            for (j = 0; j < nConvectiveFields; j ++)
+            {
+                fluxvector[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+            }
+            
+            fluxvector_homo =
+                Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
+                                                            (num_planes);
+            outarray_homo = Array<OneD, Array<OneD, NekDouble> >
+                                                            (nConvectiveFields);
+            fields_plane =
+                Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
+                                                            (num_planes);
+            inarray_plane = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                            (num_planes);
+            outarray_plane = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                            (num_planes);
+            advVel_plane = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                            (num_planes);
+            
+            for (i = 0; i < num_planes; ++i)
+            {
+                fields_plane[i] = Array<OneD, MultiRegions::ExpListSharedPtr>
+                                                            (nConvectiveFields);
+                inarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
+                                                            (nConvectiveFields);
+                outarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
+                                                            (nConvectiveFields);
+                fluxvector_homo[i] =
+                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
+                                                            (nConvectiveFields);
+                advVel_plane[i] = Array<OneD, Array<OneD, NekDouble> >(3);
+                
+                for (j = 0; j < nConvectiveFields; j ++)
+                {
+                    inarray_plane[i][j] = Array<OneD, NekDouble>
+                                                        (nPointsTot_plane, 0.0);
+                    outarray_plane[i][j] = Array<OneD, NekDouble>
+                                                        (nPointsTot_plane, 0.0);
+                    outarray_homo[j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
+                    
+                    fluxvector_homo[i][j] = Array<OneD, Array<OneD, NekDouble> >
+                                                                            (3);
+                    
+                    for (int k = 0; k < 3 ; ++k)
+                    {
+                        fluxvector_homo[i][j][k] =
+                            Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
+                        
+                        advVel_plane[i][k] = Array<OneD, NekDouble>
+                                                        (nPointsTot_plane, 0.0);
+                    }
+                }
+            }
         }
         
         void AdvectionWeakDG3DHomogeneous1D::v_Advect(
@@ -61,61 +145,13 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int i, j, k;
             int nVel = advVel.num_elements();
-            int nPointsTot      = fields[0]->GetTotPoints();
-            //int nCoeffs         = fields[0]->GetNcoeffs();
-            
-            Array<OneD, unsigned int> planes;
-            planes = fields[0]->GetZIDs();
-            int num_planes = planes.num_elements();
-            
-            int nPointsTot_plane = nPointsTot/num_planes;
-            //int nCoeffs_plane = nCoeffs/num_planes;
-             
-            m_planeAdv->SetRiemannSolver(m_riemann);
-            m_planeAdv->SetFluxVectorVec(m_fluxVector);
-            
-            Array<OneD, Array<OneD, NekDouble> > fluxvector(nConvectiveFields);
-            
-            for (j = 0; j < nConvectiveFields; j ++)
-            {
-                fluxvector[j] = Array<OneD, NekDouble>(nPointsTot);
-            }
-            
-            Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
-                fluxvector_homo(num_planes);
-            Array<OneD, Array<OneD, NekDouble> >
-                outarray_homo(nConvectiveFields);
-            Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
-                fields_plane(num_planes);
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                inarray_plane(num_planes);
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                outarray_plane(num_planes);
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                advVel_plane(num_planes);
             
             for (i = 0; i < num_planes; ++i)
             {
-                fields_plane[i] = Array<OneD, MultiRegions::ExpListSharedPtr>
-                    (nConvectiveFields);
-                inarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
-                    (nConvectiveFields);
-                outarray_plane[i] = Array<OneD, Array<OneD, NekDouble> >
-                    (nConvectiveFields);
-                fluxvector_homo[i] =
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                        (nConvectiveFields);
-                advVel_plane[i] = Array<OneD, Array<OneD, NekDouble> >(nVel);
-                
                 for (j = 0; j < nConvectiveFields; j ++)
                 {
                     fields_plane[i][j]= fields[j]->GetPlane(i);
-                    inarray_plane[i][j] = Array<OneD, NekDouble>
-                                                        (nPointsTot_plane, 0.0);
-                    outarray_plane[i][j] = Array<OneD, NekDouble>
-                                                        (nPointsTot_plane, 0.0);
                     
                     Vmath::Vcopy(nPointsTot_plane,
                                  &inarray[j][i * nPointsTot_plane], 1,
@@ -124,8 +160,6 @@ namespace Nektar
                 
                 for (j = 0; j < nVel; j ++)
                 {
-                    advVel_plane[i][j] = Array<OneD, NekDouble>
-                                                        (nPointsTot_plane, 0.0);
                     if (advVel[j].num_elements() != 0 )
                     {   Vmath::Vcopy(nPointsTot_plane,
                                      &advVel[j][i * nPointsTot_plane], 1,
@@ -137,18 +171,8 @@ namespace Nektar
                                    advVel_plane[i], inarray_plane[i],
                                    outarray_plane[i]);
             
-                
                 for (j = 0; j < nConvectiveFields; j ++)
                 {
-                    fluxvector_homo[i][j] =
-                        Array<OneD, Array<OneD, NekDouble> >(nVel);
-                    
-                    for (k = 0; k < nVel ; ++k)
-                    {
-                        fluxvector_homo[i][j][k] =
-                            Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
-                    }
-                    
                     Vmath::Vcopy(nPointsTot_plane,
                                  &outarray_plane[i][j][0], 1,
                                  &outarray[j][i * nPointsTot_plane], 1);
@@ -166,8 +190,6 @@ namespace Nektar
             
             for (i = 0; i < nConvectiveFields; ++i)
             {
-                outarray_homo[i] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-
                 fields[0]->PhysDeriv(2, fluxvector[i], outarray_homo[i]);
                
                 Vmath::Vadd(nPointsTot,

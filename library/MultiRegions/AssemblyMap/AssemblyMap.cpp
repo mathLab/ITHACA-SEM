@@ -85,7 +85,8 @@ namespace Nektar
             m_solnType(eNoSolnType),
             m_bndSystemBandWidth(0),
             m_gsh(0),
-            m_bndGsh(0)
+            m_bndGsh(0),
+            m_successiveRHS(0)
         {
         }
 
@@ -101,7 +102,8 @@ namespace Nektar
             m_numGlobalDirBndCoeffs(0),
             m_bndSystemBandWidth(0),
             m_gsh(0),
-            m_bndGsh(0)
+            m_bndGsh(0),
+            m_successiveRHS(0)
         {
             // Default value from Solver Info
             m_solnType = pSession->GetSolverInfoAsEnum<GlobalSysSolnType>(
@@ -172,6 +174,7 @@ namespace Nektar
             m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
             m_gsh(oldLevelMap->m_gsh),
             m_bndGsh(oldLevelMap->m_bndGsh),
+            m_successiveRHS(oldLevelMap->m_successiveRHS),
             m_lowestStaticCondLevel(oldLevelMap->m_lowestStaticCondLevel)
         {
             int i;

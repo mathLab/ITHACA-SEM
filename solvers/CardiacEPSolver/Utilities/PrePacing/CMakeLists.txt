@@ -14,7 +14,6 @@ SET(LinkLibraries
 SET(PP_SOURCES ./Prepacing.cpp
         ../../CellModels/CellModel.cpp
         ../../CellModels/CourtemancheRamirezNattel98.cpp
-        ../../CellModels/CourtemancheRamirezNattel98cAF.cpp
  	    ../../CellModels/FentonKarma.cpp
         ../../Stimuli/Stimulus.cpp
         ../../Stimuli/StimulusPoint.cpp

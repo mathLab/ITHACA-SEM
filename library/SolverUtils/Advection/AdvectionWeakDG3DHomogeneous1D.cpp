@@ -54,7 +54,7 @@ namespace Nektar
         }
         
         /**
-         * @brief Initiliase AdvectionWEakDG3DHomogeneous1D objects and store 
+         * @brief Initiliase AdvectionWeakDG3DHomogeneous1D objects and store 
          * them before starting the time-stepping.
          *
          * This routine calls the virtual functions #v_SetupMetrics,
@@ -70,7 +70,18 @@ namespace Nektar
         {
             int nConvectiveFields = pFields.num_elements();
             
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields_plane0
+                                                            (nConvectiveFields);
+            
+            for (int i = 0; i < nConvectiveFields; ++i)
+            {
+                pFields_plane0[i] = pFields[i]->GetPlane(0);
+            }
+            
+            m_planeAdv->InitObject(pSession, pFields_plane0);
+            
             nPointsTot      = pFields[0]->GetTotPoints();
+            nCoeffs         = pFields[0]->GetNcoeffs();
             
             planes = pFields[0]->GetZIDs();
             num_planes = planes.num_elements();
@@ -138,6 +149,18 @@ namespace Nektar
             }
         }
         
+        /**
+        * @brief Compute the advection term at each time-step using the 
+        * Discontinuous Galerkin approach (DG) looping on the planes.
+        *
+        * @param nConvectiveFields   Number of fields.
+        * @param fields              Pointer to fields.
+        * @param advVel              Advection velocities.
+        * @param inarray             Solution at the previous time-step.
+        * @param outarray            Advection term to be passed at the
+        *                            time integration class.
+        *
+        */
         void AdvectionWeakDG3DHomogeneous1D::v_Advect(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

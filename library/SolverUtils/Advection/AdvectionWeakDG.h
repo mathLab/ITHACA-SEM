@@ -55,6 +55,12 @@ namespace Nektar
         protected:
             AdvectionWeakDG();
             
+            int  i, j;
+            
+            virtual void v_InitObject(
+                LibUtilities::SessionReaderSharedPtr              pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+            
             virtual void v_Advect(
                 const int                                         nConvective,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,

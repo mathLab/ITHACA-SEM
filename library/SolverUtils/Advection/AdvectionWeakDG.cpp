@@ -48,6 +48,55 @@ namespace Nektar
         {
         }
         
+        /**
+         * @brief Initiliase AdvectionWeakDG objects and store them before starting
+         * the time-stepping.
+         *
+         * @param pSession  Pointer to session reader.
+         * @param pFields   Pointer to fields.
+         */
+        void AdvectionWeakDG::v_InitObject(
+            LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
+        {
+            int nConvectiveFields = pFields.num_elements();
+            int nDimensions  = pFields[0]->GetCoordim(0);
+            int nSolutionPts = pFields[0]->GetTotPoints();
+            int spaceDim;
+            
+            spaceDim = nDimensions;
+            
+            if (pSession->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                spaceDim = 3;
+            }
+            
+            m_fluxvector = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
+                                                             nConvectiveFields);
+            for (i = 0; i < nConvectiveFields; ++i)
+            {
+                m_fluxvector[i] =
+                    Array<OneD, Array<OneD, NekDouble> >(spaceDim);
+                for (j = 0; j < spaceDim; ++j)
+                {
+                    m_fluxvector[i][j] =
+                        Array<OneD, NekDouble>(nSolutionPts, 0.0);
+                }
+            }
+        }
+        
+        /**
+         * @brief Compute the advection term at each time-step using the 
+         * Discontinuous Glaerkin approach (DG).
+         *
+         * @param nConvectiveFields   Number of fields.
+         * @param fields              Pointer to fields.
+         * @param advVel              Advection velocities.
+         * @param inarray             Solution at the previous time-step.
+         * @param outarray            Advection term to be passed at the
+         *                            time integration class.
+         *
+         */
         void AdvectionWeakDG::v_Advect(
             const int                                         nConvectiveFields,
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -55,30 +104,16 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int num;
-            int i, j;
             int nVel            = advVel.num_elements();
             int nExpDim         = fields[0]->GetCoordim(0);
-            int spaceDim        = max(nVel, nExpDim);
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
 
-            m_fluxvector = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >
-                                                            (nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
 
             ASSERTL1(m_riemann, 
                      "Riemann solver must be provided for AdvectionWeakDG.");
-
-            for (i = 0; i < nConvectiveFields; ++i)
-            {
-                m_fluxvector[i] = Array<OneD, Array<OneD, NekDouble> >(spaceDim);
-                for(j = 0; j < spaceDim ; ++j)
-                {
-                    m_fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot, 0.0);
-                }
-            }
             
             m_fluxVector(inarray, m_fluxvector);
             

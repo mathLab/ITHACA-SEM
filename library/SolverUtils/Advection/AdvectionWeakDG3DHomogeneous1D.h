@@ -57,10 +57,11 @@ namespace Nektar
             
             SolverUtils::AdvectionSharedPtr m_planeAdv;
             
-            int                             i, j, k;
-            int                             nPointsTot;
-            int                             num_planes;
-            int                             nPointsTot_plane;
+            int                                 i, j, k;
+            int                                 nPointsTot;
+            int                                 nCoeffs;
+            int                                 num_planes;
+            int                                 nPointsTot_plane;
             
             Array<OneD, unsigned int> planes;
             Array<OneD, Array<OneD, NekDouble> >                fluxvector;

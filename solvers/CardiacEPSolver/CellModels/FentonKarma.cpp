@@ -391,8 +391,8 @@ namespace Nektar
     
     void FentonKarma::v_PrintSummary(std::ostream &out)
     {
-        out << "	Cell model      : FentonKarma" << std::endl;
-        out << "    Cell model var. : " << lookupIds[model_variant] << std::endl;
+        out << "\tCell model      : FentonKarma" << std::endl;
+        out << "\tCell model var. : " << lookupIds[model_variant] << std::endl;
     }
     
     

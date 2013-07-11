@@ -9,7 +9,7 @@
 
         <SOLVERINFO>
             <I PROPERTY="CellModel" VALUE="CourtemancheRamirezNattel98" />
-            <I PROPERTY="CellModelVariant" VALUE="Original" />
+            <I PROPERTY="CellModelVariant" VALUE="AF" />
         </SOLVERINFO>
 
         <FUNCTION NAME="InitialConditions">

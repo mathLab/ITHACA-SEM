@@ -72,7 +72,7 @@ namespace Nektar
     {
         model_variant = pSession->GetSolverInfoAsEnum<
                 CourtemancheRamirezNattel98::Variants>("CellModelVariant");
-
+cout << model_variant << endl;
         C_m = 100;      // picoF
         g_Na = 7.8;     // nanoS_per_picoF
         g_K1 = 0.09;    // nanoS_per_picoF
@@ -118,10 +118,12 @@ namespace Nektar
                 g_to = 0.1652;  // nanoS_per_picoF
                 g_Kur_scaling = 1.0;
                 g_Ca_L = 0.12375;
+                break;
             case eAF:
                 g_to = 0.0826;  // nanoS_per_picoF
                 g_Kur_scaling = 0.5;
                 g_Ca_L = 0.037125;
+                break;
         }
 
         m_nvar = 21;

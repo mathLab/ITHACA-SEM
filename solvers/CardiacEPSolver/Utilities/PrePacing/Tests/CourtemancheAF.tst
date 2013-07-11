@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <test>
-    <description>Courtemanche Cell model</description>
+    <description>Courtemanche Cell model AF variant</description>
     <executable>PrePacing</executable>
-    <parameters>Courtemanche.xml</parameters>
+    <parameters>CourtemancheAF.xml</parameters>
     <files>
-        <file description="Session File">Courtemanche.xml</file>
+        <file description="Session File">CourtemancheAF.xml</file>
     </files>
     <metrics>
         <metric type="Regex" id="1">
@@ -14,55 +14,55 @@
             <matches>
                 <match>
                     <field>u</field>
-                    <field>-7.51776</field>
+                    <field>-29.3514</field>
                 </match>
                 <match>
                     <field>m</field>
-                    <field>0.987892</field>
+                    <field>0.856243</field>
                 </match>
                 <match>
                     <field>h</field>
-                    <field>2.03226e-178</field>
+                    <field>6.68791e-119</field>
                 </match>
                 <match>
                     <field>j</field>
-                    <field>3.67039e-12</field>
+                    <field>1.61494e-10</field>
                 </match>
                 <match>
                     <field>o_a</field>
-                    <field>0.677556</field>
+                    <field>0.388397</field>
                 </match>
                 <match>
                     <field>o_i</field>
-                    <field>0.00173797</field>
+                    <field>0.0394704</field>
                 </match>
                 <match>
                     <field>u_a</field>
-                    <field>0.915341</field>
+                    <field>0.548199</field>
                 </match>
                 <match>
                     <field>u_i</field>
-                    <field>0.993285</field>
+                    <field>0.994737</field>
                 </match>
                 <match>
                     <field>x_r</field>
-                    <field>0.213132</field>
+                    <field>0.119368</field>
                 </match>
                 <match>
                     <field>x_s</field>
-                    <field>0.0846056</field>
+                    <field>0.070781</field>
                 </match>
                 <match>
                     <field>d</field>
-                    <field>0.580487</field>
+                    <field>0.0847185</field>
                 </match>
                 <match>
                     <field>f</field>
-                    <field>0.67841</field>
+                    <field>0.756132</field>
                 </match>
                 <match>
                     <field>f_Ca</field>
-                    <field>0.350083</field>
+                    <field>0.386251</field>
                 </match>
                 <match>
                     <field>U</field>
@@ -70,31 +70,31 @@
                 </match>
                 <match>
                     <field>V</field>
-                    <field>2.5819e-11</field>
+                    <field>2.58224e-11</field>
                 </match>
                 <match>
                     <field>W</field>
-                    <field>0.94222</field>
+                    <field>0.983249</field>
                 </match>
                 <match>
                     <field>Na_i</field>
-                    <field>11.1712</field>
+                    <field>11.173</field>
                 </match>
                 <match>
                     <field>Ca_i</field>
-                    <field>0.000645922</field>
+                    <field>0.000550987</field>
                 </match>
                 <match>
                     <field>K_i</field>
-                    <field>138.991</field>
+                    <field>138.997</field>
                 </match>
                 <match>
                     <field>Ca_rel</field>
-                    <field>0.218687</field>
+                    <field>0.222938</field>
                 </match>
                 <match>
                     <field>Ca_up</field>
-                    <field>1.58454</field>
+                    <field>1.57489</field>
                 </match>
             </matches>
         </metric>

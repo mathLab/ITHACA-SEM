@@ -25,3 +25,5 @@ SET_LAPACK_LINK_LIBRARIES(PrePacing)
 
 
 ADD_NEKTAR_TEST(Courtemanche)
+ADD_NEKTAR_TEST(CourtemancheAF)
+ADD_NEKTAR_TEST(FentonKarma)

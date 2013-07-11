@@ -8,12 +8,12 @@
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="CellModel" VALUE="CourtemancheRamirezNattel98" />
-            <I PROPERTY="CellModelVariant" VALUE="Original" />
+            <I PROPERTY="CellModel" VALUE="FentonKarma" />
+            <I PROPERTY="CellModelVariant" VALUE="BR" />
         </SOLVERINFO>
 
         <FUNCTION NAME="InitialConditions">
-            <E VAR="u" VALUE="-81.0" />
+            <E VAR="u" VALUE="0.0" />
         </FUNCTION>
     </CONDITIONS>
 

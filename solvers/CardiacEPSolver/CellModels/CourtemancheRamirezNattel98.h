@@ -84,6 +84,7 @@ namespace Nektar
         NekDouble g_K1;
         NekDouble g_to;
         NekDouble g_Kr;
+        NekDouble g_Kur_scaling;
         NekDouble g_Ks;
         NekDouble g_b_Na;
         NekDouble g_b_Ca;
@@ -120,6 +121,15 @@ namespace Nektar
         NekDouble tau_tr;
         NekDouble K_Q10;
         NekDouble V_i;
+
+        enum Variants {
+            eOriginal,
+            eAF
+        };
+        enum Variants model_variant;
+
+        static std::string lookupIds[];
+        static std::string def;
     };
 
 }

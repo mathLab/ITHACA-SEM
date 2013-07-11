@@ -79,9 +79,8 @@ namespace Nektar
             std::string                             m_outputFile;
             std::ofstream                           m_outputStream;
             std::stringstream                       m_historyPointStream;
-            std::list<std::pair<SpatialDomains::VertexComponentSharedPtr, int> >
-            m_historyList;
-            std::map<int, int>                      m_historyLocalPointMap;
+            std::list<std::pair<SpatialDomains::VertexComponentSharedPtr,  Array<OneD, NekDouble> > >       m_historyList;
+            std::map<int, int >  m_historyLocalPointMap;
         };
     }
 }

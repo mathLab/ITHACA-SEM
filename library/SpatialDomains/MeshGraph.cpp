@@ -341,6 +341,49 @@ namespace Nektar
                 zscale = expEvaluator.Evaluate(expr_id);
             }
 
+
+            NekDouble xmove,ymove,zmove;
+
+            // check to see if any moving parameters are in
+            // attributes and determine these values
+
+            //LibUtilities::ExpressionEvaluator expEvaluator;
+            const char *xmov =  element->Attribute("XMOVE");
+            if(!xmov)
+            {
+                xmove = 0.0;
+            }
+            else
+            {
+                std::string xmovstr = xmov;
+                int expr_id = expEvaluator.DefineFunction("",xmovstr);
+                xmove = expEvaluator.Evaluate(expr_id);
+            }
+
+            const char *ymov =  element->Attribute("YMOVE");
+            if(!ymov)
+            {
+                ymove = 0.0;
+            }
+            else
+            {
+                std::string ymovstr = ymov;
+                int expr_id = expEvaluator.DefineFunction("",ymovstr);
+                ymove = expEvaluator.Evaluate(expr_id);
+            }
+
+            const char *zmov = element->Attribute("ZMOVE");
+            if(!zmov)
+            {
+                zmove = 0.0;
+            }
+            else
+            {
+                std::string zmovstr = zmov;
+                int expr_id = expEvaluator.DefineFunction("",zmovstr);
+                zmove = expEvaluator.Evaluate(expr_id);
+            }
+
             TiXmlElement *vertex = element->FirstChildElement("V");
 
             int indx;
@@ -387,9 +430,9 @@ namespace Nektar
                     {
                         vertexDataStrm >> xval >> yval >> zval;
 
-                        xval *= xscale;
-                        yval *= yscale;
-                        zval *= zscale;
+                        xval = xval*xscale + xmove;
+                        yval = yval*yscale + ymove;
+                        zval = zval*zscale + zmove;
                         
                         // Need to check it here because we may not be
                         // good after the read indicating that there
@@ -1416,7 +1459,7 @@ namespace Nektar
         void MeshGraph::SetExpansions(
                 std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
         {
-            int i, j, k, g, h, cnt, id;
+            int i, j, k, cnt, id;
             GeometrySharedPtr geom;
 
             ExpansionMapShPtr expansionMap;
@@ -1438,26 +1481,17 @@ namespace Nektar
                         {
                             m_expansionMapShPtrMap["DefaultVar"] = expansionMap;
                         }
+                    }
 
-                        // loop over all elements and set expansion
-                        for(k = 0; k < fielddef.size(); ++k)
-                        {
-                            for(h = 0; h < fielddef[k]->m_fields.size(); ++h)
-                            {
-                                if(fielddef[k]->m_fields[h] == field)
-                                {
-                                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
-                                    LibUtilities::BasisKeyVector def;
-
-                                    for(g = 0; g < fielddef[k]->m_elementIDs.size(); ++g)
-                                    {
-                                        ExpansionShPtr tmpexp =
-                                                MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
-                                        (*expansionMap)[fielddef[k]->m_elementIDs[g]] = tmpexp;
-                                    }
-                                }
-                            }
-                        }
+                    // loop over all elements and set expansion
+                    expansionMap = m_expansionMapShPtrMap.find(field)->second;
+                    LibUtilities::BasisKeyVector def;
+                                
+                    for(k = 0; k < fielddef[i]->m_elementIDs.size(); ++k)
+                    {
+                        ExpansionShPtr tmpexp =
+                            MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
+                        (*expansionMap)[fielddef[i]->m_elementIDs[k]] = tmpexp;
                     }
                 }
             }

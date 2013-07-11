@@ -918,6 +918,10 @@ namespace Nektar
             }
 
             // virtual functions related to LocalRegions
+            STD_REGIONS_EXPORT NekDouble StdPhysEvaluate(
+                                            const Array<OneD, const NekDouble> &Lcoord,
+                                            const Array<OneD, const NekDouble> &physvals);
+
 
             STD_REGIONS_EXPORT void AddEdgeNormBoundaryInt(const int edge,
                                                 boost::shared_ptr<StdExpansion>    &EdgeExp,
@@ -1012,7 +1016,12 @@ namespace Nektar
             {
                 v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
             }
-            
+
+            void GetTracePhysVals(const int edge, const boost::shared_ptr<StdExpansion> &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray)
+            {
+                v_GetTracePhysVals(edge,EdgeExp,inarray,outarray);
+            }
+                        
             void GetVertexPhysVals(const int vertex,
                                    const Array<OneD, const NekDouble> &inarray,
                                          NekDouble &outarray)
@@ -1625,6 +1634,10 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_SetCoeffsToOrientation(StdRegions::Orientation dir);
 			
+            STD_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
+                                                   const Array<OneD, const NekDouble> &Lcoord,
+                                                   const Array<OneD, const NekDouble> &physvals);
+
             STD_REGIONS_EXPORT virtual void v_AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fx,
@@ -1806,6 +1819,8 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
 
             STD_REGIONS_EXPORT virtual void v_GetEdgePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_GetTracePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient = eNoOrientation);
             
             STD_REGIONS_EXPORT virtual void v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray);
             

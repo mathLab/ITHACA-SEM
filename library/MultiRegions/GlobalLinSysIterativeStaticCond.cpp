@@ -561,9 +561,6 @@ namespace Nektar
                     GetSolverInfoAsEnum<LocalMatrixStorageStrategy>(
                                        "LocalMatrixStorageStrategy");
 
-            bool verbose = (m_expList.lock()->GetSession()->
-                    DefinesCmdLineArgument("verbose"))? true : false;
-
             switch(storageStrategy)
             {
                 case MultiRegions::eContiguous:
@@ -652,17 +649,6 @@ namespace Nektar
                         }
                     }
 
-                    if (verbose)
-                    {
-                        cout << "sizes of local matrices in order: " << endl;
-                        for (int i = 0; i < partitions.size(); i++)
-                        {
-                            cout << " (" << partitions[i].first << ", "
-                                 << partitions[i].second << ")";
-                        }
-                        cout << endl;
-                    }
-
                     MatrixStorage matStorage = eFULL;
 
                     // Create a vector of sparse storage holders
@@ -706,6 +692,7 @@ namespace Nektar
                     matBytes      = m_sparseSchurCompl->GetMemoryFootprint();
                     bsruBlockBytes = m_sparseSchurCompl->GetMemoryFootprint(0);
 
+#if 0 // Is this just a debugging leftover?
                     if (verbose)
                     {
                         cout << "Local matrix memory, bytes = " << matBytes;
@@ -734,6 +721,7 @@ namespace Nektar
                                       << " KB)" << std::endl;
                         }
                     }
+#endif
                     break;
                 }
                 default:

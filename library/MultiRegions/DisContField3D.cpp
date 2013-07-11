@@ -74,7 +74,7 @@ namespace Nektar
             const SpatialDomains::MeshGraphSharedPtr   &graph3D,
             const std::string                          &variable,
             const bool                                  SetUpJustDG)
-            : ExpList3D          (pSession,graph3D),
+            : ExpList3D          (pSession,graph3D,variable),
               m_bndCondExpansions(),
               m_bndConditions    (),
               m_trace(NullExpListSharedPtr)
@@ -146,7 +146,7 @@ namespace Nektar
                
                 if (SetUpJustDG)
                 {
-                    SetUpDG();
+                    SetUpDG(variable);
                 }
                 else
                 {
@@ -229,7 +229,7 @@ namespace Nektar
                         if (ProjectStr == "MixedCGDG"           ||
                             ProjectStr == "Mixed_CG_Discontinuous")
                         {
-                            SetUpDG();
+                            SetUpDG(variable);
                         }
                         else
                         {
@@ -293,7 +293,7 @@ namespace Nektar
         /**
          * @brief Set up all DG member variables and maps.
          */
-        void DisContField3D::SetUpDG()
+        void DisContField3D::SetUpDG(const std::string variable)
         {
             if (m_trace != NullExpListSharedPtr)
             {
@@ -319,7 +319,7 @@ namespace Nektar
             m_trace    = trace;
             m_traceMap = MemoryManager<AssemblyMapDG>::AllocateSharedPtr(
                 m_session,graph3D,trace,*this,m_bndCondExpansions,
-                m_bndConditions, m_periodicFaces);
+                m_bndConditions, m_periodicFaces,variable);
 
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();

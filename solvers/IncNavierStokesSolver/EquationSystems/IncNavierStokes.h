@@ -78,7 +78,7 @@ namespace Nektar
         eLinearised,
         eAdjoint,
         eSkewSymmetric,
-		eNoAdvection,
+        eNoAdvection,
         eAdvectionFormSize
     };
     
@@ -91,7 +91,7 @@ namespace Nektar
         "Linearised",
         "Adjoint",
         "SkewSymmetric"
-		"NoAdvection"
+        "NoAdvection"
     };
 	
     /**
@@ -117,15 +117,33 @@ namespace Nektar
         virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield, 
                                      Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-        NekDouble GetSubstepTimeStep();
+        AdvectionTermSharedPtr GetAdvObject(void)
+        {
+            return m_advObject;
+        }
 
+
+        int GetNConvectiveFields(void)
+        {
+            return m_nConvectiveFields;  
+        }
+
+        Array<OneD, int> &GetVelocity(void)
+        {
+            return  m_velocity; 
+        }
+
+        NekDouble GetSubstepTimeStep();
+        
+        Array<OneD, NekDouble> GetElmtCFLVals(void);
+        
         NekDouble GetCFLEstimate(int &elmtid);
         
         // Mapping of the real convective field on the standard element.
         // This function gives back the convective filed in the standard
         // element to calculate the stability region of the problem in a
         // unique way.
-        Array<OneD,NekDouble> GetStdVelocity(
+        Array<OneD,NekDouble> GetMaxStdVelocity(
             const Array<OneD, Array<OneD,NekDouble> > inarray);
 
 

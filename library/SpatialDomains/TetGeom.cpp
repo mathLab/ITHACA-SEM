@@ -140,18 +140,56 @@ namespace Nektar
         bool TetGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
         {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+
+        }
+
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry and return local caretsian coordinates
+         */
+        bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+                                      Array<OneD, NekDouble> &locCoord,
+                                      NekDouble tol)
+        {
             // Validation checks
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
+
+            // find min, max point and check if within twice this
+            // distance other false this is advisable since
+            // GetLocCoord is expensive for non regular elements.
+            if(GetGtype() !=  eRegular)
+            {
+                int i;
+                Array<OneD, NekDouble> pts; 
+                NekDouble mincoord, maxcoord,diff;
+                
+                v_FillGeom();
+                
+                for(i = 0; i < 3; ++i)
+                {
+                    pts = m_xmap[i]->GetPhys();
+                    mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
+                    
+                    diff = maxcoord - mincoord; 
+                    
+                    if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
+                    {
+                        return false;
+                    }
+                }
+            }
             
             // Convert to the local (eta) coordinates.
-            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
             v_GetLocCoords(gloCoord, locCoord);
             
-            // Check local coordinate is within [-1,1]^3 bounds.
+            // Check local coordinate is within cartesian bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
                 locCoord[2] >= -(1+tol)                            &&
-                locCoord[0] + locCoord[1] + locCoord[2] <= -(1+tol))
+                locCoord[0] + locCoord[1] + locCoord[2] <= -1+tol)
             {
                 return true;
             }
@@ -159,6 +197,8 @@ namespace Nektar
             return false;
         }
 
+
+        /// Get Local cartesian points 
         void TetGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble>& coords,
                   Array<OneD,       NekDouble>& Lcoords)

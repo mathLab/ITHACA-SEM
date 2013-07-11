@@ -100,7 +100,7 @@ namespace Nektar
         {
         }
 
-
+        
         //-----------------------------
         // Integration Methods
         //-----------------------------
@@ -455,6 +455,22 @@ namespace Nektar
         //-----------------------------
         // Evaluation functions
         //-----------------------------
+
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble TetExp::v_StdPhysEvaluate(
+            const Array<OneD, const NekDouble> &Lcoord,
+            const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdTetExp::v_PhysEvaluate(Lcoord,physvals);
+        }
+
+
+
         /**
          * @param   coord       Physical space coordinate
          * @returns Evaluation of expansion at given coordinate.
@@ -482,7 +498,7 @@ namespace Nektar
             m_geom->GetLocCoords(coord,Lcoord);
 
             // Evaluate point in local (eta) coordinates.
-            return StdExpansion3D::v_PhysEvaluate(Lcoord,physvals);
+            return StdTetExp::v_PhysEvaluate(Lcoord,physvals);
         }
 
 
@@ -707,12 +723,89 @@ namespace Nektar
         }
 
 
+
+        void TetExp::v_ExtractDataToCoeffs(
+                const NekDouble *data,
+                const std::vector<unsigned int > &nummodes,
+                const int mode_offset,
+                NekDouble * coeffs)
+        {
+            int data_order0 = nummodes[mode_offset];
+            int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
+            int data_order1 = nummodes[mode_offset+1];
+            int order1      = m_base[1]->GetNumModes();
+            int fillorder1  = min(order1,data_order1);
+            int data_order2 = nummodes[mode_offset+2];
+            int order2      = m_base[2]->GetNumModes();
+            int fillorder2  = min(order2,data_order2);
+
+            switch(m_base[0]->GetBasisType())
+            {
+            case LibUtilities::eModified_A:
+                {
+                    int i,j;
+                    int cnt  = 0;
+                    int cnt1 = 0;
+
+                    ASSERTL1(m_base[1]->GetBasisType() ==
+                             LibUtilities::eModified_B,
+                             "Extraction routine not set up for this basis");
+                    ASSERTL1(m_base[2]->GetBasisType() ==
+                             LibUtilities::eModified_C,
+                             "Extraction routine not set up for this basis");
+
+                    Vmath::Zero(m_ncoeffs,coeffs,1);
+                    for(j = 0; j < fillorder0; ++j)
+                    {
+                        for(i = 0; i < fillorder1-j; ++i)
+                        {
+                            Vmath::Vcopy(fillorder2-j-i, &data[cnt],    1,
+                                                         &coeffs[cnt1], 1);
+                            cnt  += data_order2-j-i;
+                            cnt1 += order2-j-i;
+                        }
+
+                        // count out data for j iteration
+                        for(i = fillorder1-j; i < data_order1; ++i)
+                        {
+                            cnt += data_order2-j-i;
+                        }
+
+                        for(i = fillorder1-j; i < order1; ++i)
+                        {
+                            cnt1 += order2-j-i;
+                        }
+
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false, "basis is either not set up or not "
+                                "hierarchicial");
+            }
+        }
+
+
         StdRegions::Orientation TetExp::v_GetFaceOrient(int face)
         {
             return m_geom->GetFaceOrient(face);
         }
 
       
+        /**
+         * \brief Returns the physical values at the quadrature points of a face
+         * Wrapper function to v_GetFacePhysVals
+         */
+        void TetExp::v_GetTracePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
+        }
+
         /**
          * \brief Returns the physical values at the quadrature points of a face
          */
@@ -810,6 +903,7 @@ namespace Nektar
             SpatialDomains::GeomType            type = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &gmat = geomFactors->GetGmat();
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
+
             int nq = m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
             
@@ -1301,13 +1395,15 @@ namespace Nektar
                         Array<OneD,NekDouble> &outarray,
                   const StdRegions::StdMatrixKey &mkey)
         {
-            if(mkey.GetNVarCoeff() == 0)
+            if( mkey.GetNVarCoeff() == 0 &&
+               !mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio))
             {
-                // This implementation is only valid when there are no coefficients
-                // associated to the Laplacian operator
+                // This implementation is only valid when there are no
+                // coefficients associated to the Laplacian operator
                 if(m_metricinfo->IsUsingLaplMetrics())
                 {
-                    ASSERTL0(false,"Finish implementing HexExp for Lap metrics");
+                    ASSERTL0(false, "Finish implementing TetExp for Lap "
+                                    "metrics");
                     // Get this from HexExp
                 }
                 else
@@ -1484,7 +1580,7 @@ namespace Nektar
             case StdRegions::eLaplacian:
                 {
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed ||
-                        mkey.GetNVarCoeff())
+                       (mkey.GetNVarCoeff() > 0)||(mkey.ConstFactorExists(StdRegions::eFactorSVVCutoffRatio)))
                     {
                         NekDouble one = 1.0;
                         DNekMatSharedPtr mat = GenMatrix(mkey);

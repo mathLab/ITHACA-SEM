@@ -48,7 +48,9 @@ int main(int argc, char *argv[])
         vTime   = 0.0;
         nSteps  = vSession->GetParameter("NumSteps");
 
-        vSol[0][0] = -81.0;
+        LibUtilities::EquationSharedPtr e =
+                            vSession->GetFunction("InitialConditions", "u");
+        vSol[0][0] = e->Evaluate(0.0, 0.0, 0.0, 0.0);
 
         // Time integrate cell model
         for (unsigned int i = 0; i < nSteps; ++i)

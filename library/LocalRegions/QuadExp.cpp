@@ -727,6 +727,20 @@ namespace Nektar
         }
 
 
+
+        /**
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble QuadExp::v_StdPhysEvaluate(
+            const Array<OneD, const NekDouble> &Lcoord,
+            const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdQuadExp::v_PhysEvaluate(Lcoord,physvals);
+        }
+
         NekDouble QuadExp::v_PhysEvaluate(
             const Array<OneD,
             const NekDouble> &coord)
@@ -748,6 +762,7 @@ namespace Nektar
 
             return StdQuadExp::v_PhysEvaluate(Lcoord, physvals);
         }
+
 
         // Get edge values from the 2D Phys space along an edge
         // following a counter clockwise edge convention for definition
@@ -814,6 +829,17 @@ namespace Nektar
                 ASSERTL0(false,"edge value (< 3) is out of range");
                 break;
             }
+        }
+
+
+        void QuadExp::v_GetTracePhysVals(
+             const int edge,
+             const StdRegions::StdExpansionSharedPtr &EdgeExp,
+             const Array<OneD, const NekDouble> &inarray,
+             Array<OneD,NekDouble> &outarray,
+             StdRegions::Orientation  orient)
+        {
+            v_GetEdgePhysVals(edge,EdgeExp,inarray,outarray);
         }
 
 

@@ -77,6 +77,9 @@ namespace Nektar
             //----------------------------
             // Differentiation Methods
             //----------------------------
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
+                    const Array<OneD, const NekDouble> &Lcoord,
+                    const Array<OneD, const NekDouble> &physvals);
             LOCAL_REGIONS_EXPORT virtual void v_PhysDeriv(
                     const Array<OneD, const NekDouble> &inarray,
                           Array<OneD,       NekDouble> &out_d0,
@@ -158,6 +161,12 @@ namespace Nektar
                         const StdRegions::StdExpansionSharedPtr &EdgeExp,
                         const Array<OneD, const NekDouble> &inarray,
                               Array<OneD,       NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
+                        const int edge,
+                        const StdRegions::StdExpansionSharedPtr &EdgeExp,
+                        const Array<OneD, const NekDouble> &inarray,
+                        Array<OneD,       NekDouble> &outarray,
+                        StdRegions::Orientation  orient);
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(
                         const int edge,
                         const Array<OneD, const NekDouble> &inarray,

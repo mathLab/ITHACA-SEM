@@ -62,7 +62,9 @@ namespace Nektar
         	/// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMap();
             /// Constructor with a communicator
-            MULTI_REGIONS_EXPORT AssemblyMap(const LibUtilities::SessionReaderSharedPtr &pSession);
+            MULTI_REGIONS_EXPORT AssemblyMap(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::string variable = "DefaultVar");
 
             /// Constructor for next level in multi-level static condensation.
             MULTI_REGIONS_EXPORT AssemblyMap(AssemblyMap* oldLevelMap,
@@ -281,8 +283,10 @@ namespace Nektar
             /// static condensation.
             MULTI_REGIONS_EXPORT bool AtLastLevel() const;
             /// Returns the method of solving global systems.
-            MULTI_REGIONS_EXPORT GlobalSysSolnType  GetGlobalSysSolnType() const;
-            MULTI_REGIONS_EXPORT PreconditionerType  GetPreconType() const;
+            MULTI_REGIONS_EXPORT GlobalSysSolnType GetGlobalSysSolnType() const;
+            MULTI_REGIONS_EXPORT PreconditionerType GetPreconType() const;
+            MULTI_REGIONS_EXPORT NekDouble GetIterativeTolerance() const;
+            MULTI_REGIONS_EXPORT int GetSuccessiveRHS() const;
 
             MULTI_REGIONS_EXPORT int GetLowestStaticCondLevel() const
             {
@@ -355,7 +359,14 @@ namespace Nektar
             /// The bandwith of the global bnd system
             int m_bndSystemBandWidth;
 
+            /// Type type of preconditioner to use in iterative solver.
             PreconditionerType m_preconType;
+
+            /// Tolerance for iterative solver
+            NekDouble  m_iterativeTolerance;
+
+            /// sucessive RHS  for iterative solver
+            int  m_successiveRHS;
 
             Gs::gs_data * m_gsh;
             Gs::gs_data * m_bndGsh;

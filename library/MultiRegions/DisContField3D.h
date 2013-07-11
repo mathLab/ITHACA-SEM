@@ -132,7 +132,7 @@ namespace Nektar
             vector<int> m_periodicFwdCopy;
             vector<int> m_periodicBwdCopy;
             
-            void SetUpDG();
+            void SetUpDG(const std::string = "DefaultVar");
             bool SameTypeOfBoundaryConditions(const DisContField3D &In);
             void GenerateBoundaryConditionExpansion(
                 const SpatialDomains::MeshGraphSharedPtr &graph3D,

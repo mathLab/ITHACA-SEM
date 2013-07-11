@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test>
+    <description>Courtemanche Cell model</description>
+    <executable>PrePacing</executable>
+    <parameters>Courtemanche.xml</parameters>
+    <files>
+        <file description="Session File">Courtemanche.xml</file>
+    </files>
+    <metrics>
+        <metric type="Regex" id="1">
+            <regex>
+                ^#\s([\w]*)\s*([-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)
+            </regex>
+            <matches>
+                <match>
+                    <field>u</field>
+                    <field>2.71623</field>
+                </match>
+                <match>
+                    <field>m</field>
+                    <field>0.99618</field>
+                </match>
+                <match>
+                    <field>h</field>
+                    <field>1.30341e-18</field>
+                </match>
+                <match>
+                    <field>j</field>
+                    <field>0.154466</field>
+                </match>
+                <match>
+                    <field>o_a</field>
+                    <field>0.81177</field>
+                </match>
+                <match>
+                    <field>o_i</field>
+                    <field>0.597691</field>
+                </match>
+                <match>
+                    <field>u_a</field>
+                    <field>0.975102</field>
+                </match>
+                <match>
+                    <field>u_i</field>
+                    <field>0.996722</field>
+                </match>
+                <match>
+                    <field>x_r</field>
+                    <field>0.0494084</field>
+                </match>
+                <match>
+                    <field>x_s</field>
+                    <field>0.0262905</field>
+                </match>
+                <match>
+                    <field>d</field>
+                    <field>0.884387</field>
+                </match>
+                <match>
+                    <field>f</field>
+                    <field>0.979076</field>
+                </match>
+                <match>
+                    <field>f_Ca</field>
+                    <field>0.535539</field>
+                </match>
+                <match>
+                    <field>U</field>
+                    <field>0.556244</field>
+                </match>
+                <match>
+                    <field>V</field>
+                    <field>0.152624</field>
+                </match>
+                <match>
+                    <field>W</field>
+                    <field>0.880028</field>
+                </match>
+                <match>
+                    <field>Na_i</field>
+                    <field>11.1744</field>
+                </match>
+                <match>
+                    <field>Ca_i</field>
+                    <field>0.000463773</field>
+                </match>
+                <match>
+                    <field>K_i</field>
+                    <field>138.998</field>
+                </match>
+                <match>
+                    <field>Ca_rel</field>
+                    <field>0.441978</field>
+                </match>
+                <match>
+                    <field>Ca_up</field>
+                    <field>1.48957</field>
+                </match>
+            </matches>
+        </metric>
+    </metrics>
+</test>
+
+
+
+

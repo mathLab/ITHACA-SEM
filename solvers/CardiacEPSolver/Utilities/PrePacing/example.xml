@@ -8,7 +8,7 @@
         </PARAMETERS>
 
         <SOLVERINFO>
-            <I PROPERTY="CellModel" VALUE="CourtemancheRamirezNattel98" />
+            <I PROPERTY="CellModel" VALUE="CourtemancheRamirezNattel98cAF" />
         </SOLVERINFO>
     </CONDITIONS>
 

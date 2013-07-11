@@ -119,6 +119,10 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &Lcoords, 
                       Array<OneD,       NekDouble> &coords);
 
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
+                const Array<OneD, const NekDouble> &Lcoord,
+                const Array<OneD, const NekDouble> &physvals);
+
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                 const Array<OneD, const NekDouble> &coord);
 
@@ -139,9 +143,21 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const;
             LOCAL_REGIONS_EXPORT virtual const SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const;
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
+            LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
+                const NekDouble *data,
+                const std::vector<unsigned int > &nummodes,  
+                const int mode_offset,   
+                NekDouble * coeffs);
             LOCAL_REGIONS_EXPORT virtual 
                 StdRegions::Orientation v_GetFaceOrient(int face);
             LOCAL_REGIONS_EXPORT virtual void v_GetFacePhysVals(
+                const int                                face,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient);
+
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
                 const int                                face,
                 const StdRegions::StdExpansionSharedPtr &FaceExp,
                 const Array<OneD, const NekDouble>      &inarray,

@@ -134,7 +134,8 @@ namespace Nektar
                                     m_bndConditions,
                                     m_periodicVerts,
                                     m_periodicEdges,
-                                    CheckIfSingularSystem);
+                                    CheckIfSingularSystem,
+                                    variable);
 
         }
 

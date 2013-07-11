@@ -364,6 +364,7 @@ namespace Nektar
             }
         }
 
+
         /**
          * Computes matrices needed for the HDG formulation. References to
          * equations relate to the following paper (with a suitable changes in

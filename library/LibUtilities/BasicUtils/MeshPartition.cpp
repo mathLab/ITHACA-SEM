@@ -237,6 +237,19 @@ namespace Nektar
 
             // Read mesh vertices
             vSubElement = pSession->GetElement("Nektar/Geometry/Vertex");
+
+            // Retrieve any VERTEX attributes specifying mesh transforms
+            std::string attr[] = {"XSCALE", "YSCALE", "ZSCALE",
+                                  "XMOVE",  "YMOVE",  "ZMOVE" };
+            for (i = 0; i < 6; ++i)
+            {
+                const char *val =  vSubElement->Attribute(attr[i].c_str());
+                if (val)
+                {
+                    m_vertexAttributes[attr[i]] = std::string(val);
+                }
+            }
+
             x = vSubElement->FirstChildElement();
             i = 0;
             while(x)
@@ -756,6 +769,7 @@ namespace Nektar
             std::map<int, MeshVertex> vVertices;
             std::map<int, MeshEntity>::iterator vIt;
             std::map<int, MeshVertex>::iterator vVertIt;
+            std::map<std::string, std::string>::iterator vAttrIt;
 
             // Populate lists of elements, edges and vertices required.
             for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
@@ -822,6 +836,14 @@ namespace Nektar
                 y = new TiXmlText(vCoords.str());
                 x->LinkEndChild(y);
                 vVertex->LinkEndChild(x);
+            }
+
+            // Apply transformation attributes to VERTEX section
+            for (vAttrIt  = m_vertexAttributes.begin();
+                 vAttrIt != m_vertexAttributes.end();
+                 ++ vAttrIt)
+            {
+                vVertex->SetAttribute(vAttrIt->first, vAttrIt->second);
             }
 
             if (m_dim >= 2)

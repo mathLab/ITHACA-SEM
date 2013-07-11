@@ -63,8 +63,9 @@ namespace Nektar
          *
          */
         AssemblyMapCG3D::AssemblyMapCG3D(
-                const LibUtilities::SessionReaderSharedPtr &pSession):
-            AssemblyMapCG(pSession)
+                const LibUtilities::SessionReaderSharedPtr &pSession, 
+                const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
         }
 
@@ -83,8 +84,9 @@ namespace Nektar
                 const PeriodicMap &periodicVerts,
                 const PeriodicMap &periodicEdges,
                 const PeriodicMap &periodicFaces,
-                const bool checkIfSystemSingular):
-            AssemblyMapCG(pSession)
+                const bool checkIfSystemSingular,
+                const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
             SetUp3DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
@@ -94,7 +96,6 @@ namespace Nektar
                                       periodicEdges,
                                       periodicFaces,
                                       checkIfSystemSingular);
-
             CalculateBndSystemBandWidth();
             CalculateFullSystemBandWidth();
         }
@@ -212,7 +213,7 @@ namespace Nektar
             map<int,int>::const_iterator mapConstIt;
             map<int,pair<int, StdRegions::Orientation> >::const_iterator mapFaceIt;
 
-            bool systemSingular = true;
+            bool systemSingular = (checkIfSystemSingular)? true: false;
 
             /**
              * STEP 1: Order the Dirichlet vertices and edges first
@@ -251,7 +252,8 @@ namespace Nektar
                         nLocDirBndCondDofs += bndCondFaceExp->GetNcoeffs();
                     }
                     if (bndConditions[i]->GetBoundaryConditionType() !=
-                        SpatialDomains::eNeumann)
+                        SpatialDomains::eNeumann &&
+                        checkIfSystemSingular == true)
                     {
                         systemSingular = false;
                     }
@@ -1595,7 +1597,7 @@ namespace Nektar
 
             m_hash = boost::hash_range(m_localToGlobalMap.begin(), 
                                        m_localToGlobalMap.end());
-            
+
             // Add up hash values if parallel
             int hash = m_hash;
             m_comm->GetRowComm()->AllReduce(hash, 

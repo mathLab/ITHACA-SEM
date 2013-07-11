@@ -99,7 +99,7 @@ namespace Nektar
         // Setting parameteres for homogenous problems
         m_HomoDirec       = 0;
         m_useFFT          = false;
-        m_dealiasing      = false;
+        m_homogen_dealiasing      = false;
         m_HomogeneousType = eNotHomogeneous;
 	
         		

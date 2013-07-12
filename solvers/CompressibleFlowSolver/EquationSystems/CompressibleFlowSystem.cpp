@@ -71,7 +71,7 @@ namespace Nektar
         {
             m_velLoc[i] = i+1;
         }
-        
+                
         // Get gamma parameter from session file.
         ASSERTL0(m_session->DefinesParameter("Gamma"),
                  "Compressible flow sessions must define a Gamma parameter.");
@@ -497,25 +497,21 @@ namespace Nektar
                 }
                 case 2:
                 {
+                    // Calculating the tangential vector
                     Array<OneD, NekDouble> tmp_t(nBCEdgePts, 0.0);
-                    
                     Vmath::Vmul(nBCEdgePts, &Fwd[1][id2], 1,
                                 &m_traceNormals[1][id2], 1, &tmp_t[0], 1);
-                    
                     Vmath::Vvtvm(nBCEdgePts, &Fwd[2][id2], 1,
                                  &m_traceNormals[0][id2], 1,
                                  &tmp_t[0], 1, &tmp_t[0], 1);
                     
-                    Array<OneD, NekDouble> tmp_n(nBCEdgePts, 0.0);
-                    
-                    // rotate back to Cartesian
+                    // Rotating back to cartesian coordinates
+                    Array<OneD, NekDouble> tmp_n(nBCEdgePts, 0.0); 
                     Vmath::Vmul(nBCEdgePts, &tmp_t[0], 1,
                                 &m_traceNormals[1][id2], 1, &Fwd[1][id2], 1);
-                    
                     Vmath::Vvtvm(nBCEdgePts, &tmp_n[0], 1, 
                                  &m_traceNormals[0][id2], 1, 
                                  &Fwd[1][id2], 1, &Fwd[1][id2], 1);
-                    
                     Vmath::Vmul(nBCEdgePts, &tmp_t[0], 1,
                                 &m_traceNormals[0][id2], 1, &Fwd[2][id2], 1);
                     Vmath::Vvtvp(nBCEdgePts, &tmp_n[0], 1,
@@ -591,7 +587,6 @@ namespace Nektar
         {
             Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
-
         }
         
         // Get physical values of the forward trace
@@ -612,7 +607,8 @@ namespace Nektar
             Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
         }
         
-        // Computing the absolute value of the velocity
+        // Computing the absolute value of the velocity in order to compute the 
+        // Mach number to decide whether supersonic or subsonic
         Array<OneD, NekDouble > absVel(nTracePts, 0.0);
         for (i = 0; i < nDimensions; ++i)
         {
@@ -623,7 +619,7 @@ namespace Nektar
         Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
 
         // Get speed of sound
-        Array<OneD, NekDouble > SoundSpeed(nTracePts);
+        Array<OneD, NekDouble > soundSpeed(nTracePts);
         Array<OneD, NekDouble > pressure  (nTracePts);
         
         for (i = 0; i < nTracePts; i++)
@@ -632,23 +628,26 @@ namespace Nektar
                                 0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] + 
                                        Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
             
-            SoundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
+            soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
         }
         
         // Get Mach
         Array<OneD, NekDouble > Mach(nTracePts);
         
         // This looks wrong
-        //Vmath::Vdiv(nTracePts, Vel, 1, SoundSpeed, 1, Mach, 1);
+        //Vmath::Vdiv(nTracePts, Vel, 1, soundSpeed, 1, Mach, 1);
         
         // The Mach number you should get here is the total Mach number
-        Vmath::Vdiv(nTracePts, absVel, 1, SoundSpeed, 1, Mach, 1);
+        Vmath::Vdiv(nTracePts, absVel, 1, soundSpeed, 1, Mach, 1);
                 
         // Auxiliary variables
-        int e, id1, id2, nBCEdgePts, pnt;
         int id2Plane, eMax;
+        int e, id1, id2, nBCEdgePts, pnt;
         NekDouble cPlus, rPlus, cMinus, rMinus;
-        NekDouble VelNorm, VelNormRef, VDelta;
+        NekDouble VelNorm, VelNormRef, VDelta, Vd, Vb;
+        Array<OneD, NekDouble> stateBC(nVariables, 0.0);
+        Array<OneD, NekDouble> primitiveBC(nVariables, 0.0);
+
         NekDouble rhob, rhoub, rhovb, rhoeb;
         NekDouble ub, vb, cb, sb, pb;
         
@@ -666,12 +665,12 @@ namespace Nektar
             // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
             {
-                int cntPlane = cnt/nPlanes;
                 int ePlane;
+                int cntPlane = cnt/nPlanes;
                 int eMaxPlane = eMax/nPlanes;
                 int nTracePts_plane = GetTraceTotPoints();
                 
-                int planeID = floor((e + 0.5 )/ eMaxPlane );
+                int planeID = floor((e + 0.5 ) / eMaxPlane );
                 ePlane = e - eMaxPlane*planeID;
                 
                 id2Plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
@@ -694,7 +693,54 @@ namespace Nektar
                 pnt = id2+i;
                 
                 // Subsonic flows
-                if(Mach[pnt] < 0.99)
+                if (Mach[pnt] < 0.99)
+                {
+                    // + Characteristic from inside
+                    cPlus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
+                    rPlus = Vn[pnt] + 2.0 * cPlus * gammaMinusOneInv;
+                    
+                    // - Characteristic from boundary
+                    cMinus = sqrt(gamma * m_pInf / m_rhoInf);
+                    rMinus = VnInf[pnt] - 2.0 * cMinus * gammaMinusOneInv;
+                }
+                else
+                {
+                    // + Characteristic from inside
+                    cPlus = sqrt(gamma * m_pInf / m_rhoInf);
+                    rPlus = VnInf[pnt] + 2.0 * cPlus * gammaMinusOneInv;
+                    
+                    // + Characteristic from inside
+                    cMinus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
+                    rMinus = Vn[pnt] - 2.0 * cPlus * gammaMinusOneInv;
+                }
+                
+                // Boundary variables
+                Vb = 0.5 * (rPlus + rMinus);
+                cb = 0.25 * gammaMinusOne * (rPlus - rMinus);
+                Vd = Vb - VnInf[pnt];
+                
+                // Boundary velocities
+                ub = m_uInf + Vd * m_traceNormals[0][pnt];
+                vb = m_vInf + Vd * m_traceNormals[1][pnt];
+                sb = m_pInf / (pow(m_rhoInf, gamma));
+                rhob = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
+                pb = rhob * cb * cb * gammaInv;
+                rhoub = rhob * ub;
+                rhovb = rhob * vb;
+                rhoeb = pb * gammaMinusOneInv + 0.5 * rhob * (ub*ub + vb*vb);
+                
+                (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                 UpdatePhys())[id1+i] = rhob;
+                (m_fields[1]->GetBndCondExpansions()[bcRegion]->
+                 UpdatePhys())[id1+i] = rhoub;
+                (m_fields[2]->GetBndCondExpansions()[bcRegion]->
+                 UpdatePhys())[id1+i] = rhovb;
+                (m_fields[3]->GetBndCondExpansions()[bcRegion]->
+                 UpdatePhys())[id1+i] = rhoeb;
+
+                /*
+                // Subsonic flows
+                if (Mach[pnt] < 0.99)
                 {
                     // + Characteristic from boundary
                     cPlus = sqrt(gamma * m_pInf / m_rhoInf);
@@ -732,34 +778,41 @@ namespace Nektar
                     rhoeb   = pb * gammaMinusOneInv + 
                                 0.5 * (rhoub * ub + rhovb * vb);
                     
-                    // Extrapolation for subsonic cases
+                    // Imposition of the variables
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = 2.0 * rhob - Fwd[0][pnt];
+                        UpdatePhys())[id1+i] = m_rhoInf;
+                        //2.0 * rhob - Fwd[0][pnt];
                     
                     (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = 2.0 * rhoub - Fwd[1][pnt];
+                        UpdatePhys())[id1+i] = m_rhoInf * m_uInf;
+                        //2.0 * rhoub - Fwd[1][pnt];
                     
                     (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = 2.0 * rhovb - Fwd[2][pnt];
+                        UpdatePhys())[id1+i] = m_rhoInf * m_vInf;
+                        //2.0 * rhovb - Fwd[2][pnt];
                     
+                    // Extrapolation for the entropic mode 
+                    // (1 negative eigenvalue)
                     (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[3][pnt];
+                        UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[3][pnt];
                 }
                 // Supersonic flows
                 else
                 {
-                    // Imposition for supersonic cases
+                    // Imposition of all the variables 
+                    // (all eigenvalues are positive) 
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = m_rhoInf;
+                        UpdatePhys())[id1+i] = m_rhoInf;
                     (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = m_rhoInf * m_uInf;
+                        UpdatePhys())[id1+i] = m_rhoInf * m_uInf;
                     (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = m_rhoInf * m_vInf;
+                        UpdatePhys())[id1+i] = m_rhoInf * m_vInf;
                     (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = 
-                                m_pInf / (gamma - 1) + 0.5 * m_rhoInf * 
-                                (m_uInf * m_uInf + m_vInf * m_vInf);
+                        UpdatePhys())[id1+i] = 
+                            m_pInf / (gamma - 1) + 0.5 * m_rhoInf * 
+                            (m_uInf * m_uInf + m_vInf * m_vInf);
                 }
+                */
             }
         }
     }
@@ -829,8 +882,19 @@ namespace Nektar
             Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
         }
         
+        // Computing the absolute value of the velocity in order to compute the 
+        // Mach number to decide whether supersonic or subsonic
+        Array<OneD, NekDouble > absVel(nTracePts, 0.0);
+        for (i = 0; i < nDimensions; ++i)
+        {
+            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
+            Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
+            Vmath::Vadd(nTracePts, tmp1, 1, absVel, 1, absVel, 1);
+        }        
+        Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
+        
         // Get speed of sound
-        Array<OneD, NekDouble > SoundSpeed(nTracePts);
+        Array<OneD, NekDouble > soundSpeed(nTracePts);
         Array<OneD, NekDouble > pressure  (nTracePts);
         for (i = 0; i < nTracePts; i++)
         {
@@ -838,18 +902,19 @@ namespace Nektar
             * (Fwd[3][i] - 0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] + 
                                   Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
             
-            SoundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
+            soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
         }
         
         // Get Mach
-        Array<OneD, NekDouble > Mach(nTracePts);
-        Vmath::Vdiv(nTracePts, Vn, 1, SoundSpeed, 1, Mach, 1);
+        Array<OneD, NekDouble > Mach(nTracePts, 0.0);
+        Vmath::Vdiv(nTracePts, Vn, 1, soundSpeed, 1, Mach, 1);
+        //Vmath::Vdiv(nTracePts, absVel, 1, soundSpeed, 1, Mach, 1);
         
         // Auxiliary variables 
         int e, id1, id2, nBCEdgePts, pnt;
         int eMax, id2Plane;
         NekDouble cPlus, rPlus, cMinus, rMinus;
-        NekDouble VelNorm, VelNormRef, VDelta;
+        NekDouble VelNorm, VelNormRef, VDelta, Vd, Vb;
         NekDouble rhob, rhoub, rhovb, rhoeb;
         NekDouble ub, vb, cb, sb, pb;
         
@@ -903,6 +968,54 @@ namespace Nektar
                     // - Characteristic from boundary
                     cMinus = sqrt(gamma * m_pInf / m_rhoInf);
                     rMinus = VnInf[pnt] - 2.0 * cMinus * gammaMinusOneInv;
+                }
+                else
+                {
+                    // + Characteristic from inside
+                    cPlus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
+                    rPlus = Vn[pnt] + 2.0 * cPlus * gammaMinusOneInv;
+                    
+                    // + Characteristic from inside
+                    cMinus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
+                    rMinus = Vn[pnt] - 2.0 * cPlus * gammaMinusOneInv;
+                }
+                
+                // Boundary variables
+                Vb = 0.5 * (rPlus + rMinus);
+                cb = 0.25 * gammaMinusOne * (rPlus - rMinus);
+                Vd = Vb - Vn[pnt];
+                
+                // Boundary velocities
+                ub = Fwd[1][pnt] / Fwd[0][pnt] + Vd * m_traceNormals[0][pnt];
+                vb = Fwd[2][pnt] / Fwd[0][pnt] + Vd * m_traceNormals[1][pnt];
+                sb = pressure[pnt] / (pow(Fwd[0][pnt], gamma));
+                rhob = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
+                pb = rhob * cb * cb * gammaInv;
+                rhoub = rhob * ub;
+                rhovb = rhob * vb;
+                rhoeb = pb * gammaMinusOneInv + 0.5 * rhob * (ub*ub + vb*vb);
+
+                (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                 UpdatePhys())[id1+i] = rhob;
+                (m_fields[1]->GetBndCondExpansions()[bcRegion]->
+                 UpdatePhys())[id1+i] = rhoub;
+                (m_fields[2]->GetBndCondExpansions()[bcRegion]->
+                 UpdatePhys())[id1+i] = rhovb;
+                (m_fields[3]->GetBndCondExpansions()[bcRegion]->
+                 UpdatePhys())[id1+i] = rhoeb;
+
+                    
+                /*
+                // Subsonic flows
+                if (Mach[pnt] < 0.99)
+                {
+                    // + Characteristic from inside
+                    cPlus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
+                    rPlus = Vn[pnt] + 2.0 * cPlus * gammaMinusOneInv;
+                    
+                    // - Characteristic from boundary
+                    cMinus = sqrt(gamma * m_pInf / m_rhoInf);
+                    rMinus = VnInf[pnt] - 2.0 * cMinus * gammaMinusOneInv;
                     
                     // Boundary Variables
                     VelNorm = 0.5 * (rPlus + rMinus);
@@ -924,37 +1037,34 @@ namespace Nektar
                     rhovb   = rhob * vb;
                     
                     // Boundary energy
-                    rhoeb   = pb * gammaMinusOneInv + 0.5 * 
-                                        (rhoub * ub + rhovb * vb);
+                    rhoeb = pb * gammaMinusOneInv + 0.5 * 
+                                rhob * (ub * ub + vb * vb);
                     
-                    // Partial extrapolation for subsonic cases
+                    // Imposition of the variables
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = Fwd[0][pnt];//2.0*rhob - Fwd[0][pnt];
+                     UpdatePhys())[id1+i] = Fwd[0][pnt];
                     (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = Fwd[1][pnt];//2.0*rhoub - Fwd[1][pnt];
+                     UpdatePhys())[id1+i] = Fwd[1][pnt];
                     (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = Fwd[2][pnt];//2.0*rhovb - Fwd[2][pnt];
-                    
-                    rhoeb = /*m_pressure*/m_pInf * gammaMinusOneInv + 0.5 * 
-                            (Fwd[1][pnt] * Fwd[1][pnt] + 
-                             Fwd[2][pnt] * Fwd[2][pnt])/Fwd[0][pnt];
-                    
+                     UpdatePhys())[id1+i] = Fwd[2][pnt];
                     (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                            UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[3][pnt];
+                     UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[3][pnt];
                 }
                 // Supersonic flows
                 else
                 {
                     // Extrapolation for supersonic cases
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                                            UpdatePhys())[id1+i] = Fwd[0][pnt];
+                     UpdatePhys())[id1+i] = Fwd[0][pnt];
                     (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                                            UpdatePhys())[id1+i] = Fwd[1][pnt];
+                     UpdatePhys())[id1+i] = Fwd[1][pnt];
                     (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                                            UpdatePhys())[id1+i] = Fwd[2][pnt];
+                     UpdatePhys())[id1+i] = Fwd[2][pnt];
                     (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                                            UpdatePhys())[id1+i] = Fwd[3][pnt];
+                     UpdatePhys())[id1+i] = Fwd[3][pnt];
+
                 }
+                */
             }
         }
     }

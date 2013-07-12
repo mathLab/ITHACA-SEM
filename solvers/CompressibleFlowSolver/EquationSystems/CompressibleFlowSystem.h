@@ -208,7 +208,7 @@ namespace Nektar
         {
             return m_velLoc;
         }
-      
+        
         const Array<OneD, const Array<OneD, NekDouble> > &GetNormals()
         {
             return m_traceNormals;

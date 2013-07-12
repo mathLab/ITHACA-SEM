@@ -1,4 +1,4 @@
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 //
 // File EquationSystem.cpp
 //
@@ -2379,6 +2379,10 @@ namespace Nektar
                 else if (UpwindType == "LaxFriedrichs")
                 {
                     out << "\tRiemann Solver  : Lax-Friedrichs"   <<endl;
+                }
+                else if (UpwindType == "Roe")
+                {
+                    out << "\tRiemann Solver  : Roe"   <<endl;
                 }
             }
             

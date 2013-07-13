@@ -72,7 +72,7 @@ namespace Nektar
     {
         model_variant = pSession->GetSolverInfoAsEnum<
                 CourtemancheRamirezNattel98::Variants>("CellModelVariant");
-cout << model_variant << endl;
+
         C_m = 100;      // picoF
         g_Na = 7.8;     // nanoS_per_picoF
         g_K1 = 0.09;    // nanoS_per_picoF

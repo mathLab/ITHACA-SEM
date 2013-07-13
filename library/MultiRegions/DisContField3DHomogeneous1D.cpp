@@ -156,8 +156,8 @@ namespace Nektar
             SpatialDomains::BoundaryConditions &bcs,
             const std::string                   variable)
         {
-
-            int i, j, n;
+            int j, n;
+            
             // Setup an ExpList2DHomogeneous1D expansion for boundary
             // conditions and link to class declared in m_planes
             const SpatialDomains::BoundaryRegionCollection  &bregions =

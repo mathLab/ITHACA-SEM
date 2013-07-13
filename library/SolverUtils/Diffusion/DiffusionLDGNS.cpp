@@ -288,9 +288,7 @@ namespace Nektar
             
             int nBndEdgePts, nBndEdges, nBndRegions;
             
-            int nDim              = fields[0]->GetCoordim(0);
             int nTracePts         = fields[0]->GetTrace()->GetTotPoints();
-            int nConvectiveFields = fields.num_elements();
             int nScalars          = inarray.num_elements();
             
             Array<OneD, NekDouble> tmp1(nTracePts, 0.0);
@@ -554,7 +552,6 @@ namespace Nektar
             int i, e; 
             int id1, id2;
             
-            int nDim        = fields[0]->GetCoordim(0);
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
             

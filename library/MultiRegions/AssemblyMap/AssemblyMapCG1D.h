@@ -55,25 +55,28 @@ namespace Nektar
         public:
             /// Default constructor.
             MULTI_REGIONS_EXPORT AssemblyMapCG1D(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession);
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::string variable = "DefaultVar");
 
 
             /// Constructor for the 1D expansion mappings with boundary
             /// conditions.
             MULTI_REGIONS_EXPORT AssemblyMapCG1D(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                   const int numLocalCoeffs,
-                                   const ExpList &locExp,
-                                   const Array<OneD, const ExpListSharedPtr> &bndCondExp,
-                                   const Array<OneD, const SpatialDomains::BoundaryConditionShPtr> &bndConditions,
-                                   const map<int,int>& periodicVerticesId);
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const int numLocalCoeffs,
+                    const ExpList &locExp,
+                    const Array<OneD, const ExpListSharedPtr> &bndCondExp,
+                    const Array<OneD, const SpatialDomains::
+                                    BoundaryConditionShPtr> &bndConditions,
+                    const map<int,int>& periodicVerticesId,
+                    const std::string variable = "DefaultVar");
 
             /// General constructor for expansions of all dimensions without
             /// boundary conditions.
             MULTI_REGIONS_EXPORT AssemblyMapCG1D(
-                                   const LibUtilities::SessionReaderSharedPtr &pSession,
-                                   const int numLocalCoeffs,
-                                   const ExpList &locExp);
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const int numLocalCoeffs,
+                    const ExpList &locExp);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~AssemblyMapCG1D();

@@ -57,19 +57,19 @@ namespace Nektar
 
         DisContField2D::DisContField2D(
             const DisContField2D &In, 
-            const bool            DeclareCoeffPhysArrays)
-            : ExpList2D            (In,DeclareCoeffPhysArrays),
-              m_bndCondExpansions  (In.m_bndCondExpansions),
-              m_bndConditions      (In.m_bndConditions),
-              m_globalBndMat       (In.m_globalBndMat),
-              m_trace              (In.m_trace),
-              m_traceMap           (In.m_traceMap),
-              m_periodicVerts      (In.m_periodicVerts),
-              m_boundaryEdges      (In.m_boundaryEdges),
-              m_periodicEdges      (In.m_periodicEdges),
-              m_periodicFwdCopy    (In.m_periodicFwdCopy),
-              m_periodicBwdCopy    (In.m_periodicBwdCopy),
-              m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
+            const bool            DeclareCoeffPhysArrays) :
+            ExpList2D            (In,DeclareCoeffPhysArrays),
+            m_bndCondExpansions  (In.m_bndCondExpansions),
+            m_bndConditions      (In.m_bndConditions),
+            m_globalBndMat       (In.m_globalBndMat),
+            m_trace              (In.m_trace),
+            m_traceMap           (In.m_traceMap),
+            m_boundaryEdges      (In.m_boundaryEdges),
+            m_periodicVerts      (In.m_periodicVerts),
+            m_periodicEdges      (In.m_periodicEdges),
+            m_periodicFwdCopy    (In.m_periodicFwdCopy),
+            m_periodicBwdCopy    (In.m_periodicBwdCopy),
+            m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
         {
         }
 
@@ -79,12 +79,12 @@ namespace Nektar
             const std::string                          &variable,
             const bool                                  SetUpJustDG,
             const bool                                  DeclareCoeffPhysArrays)
-            : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays, variable),
+            : ExpList2D(pSession, graph2D, DeclareCoeffPhysArrays),
               m_bndCondExpansions(),
               m_bndConditions(),
               m_trace(NullExpListSharedPtr),
-              m_periodicEdges(),
               m_periodicVerts(),
+              m_periodicEdges(),
               m_periodicFwdCopy(),
               m_periodicBwdCopy()
         {
@@ -105,7 +105,7 @@ namespace Nektar
 
             if (SetUpJustDG)
             {
-                SetUpDG();
+                SetUpDG(variable);
             }
             else
             {
@@ -346,7 +346,7 @@ namespace Nektar
         /**
          * @brief Set up all DG member variables and maps.
          */
-        void DisContField2D::SetUpDG()
+        void DisContField2D::SetUpDG(const std::string variable)
         {
             // Check for multiple calls
             if (m_trace != NullExpListSharedPtr)
@@ -372,7 +372,8 @@ namespace Nektar
             m_traceMap = MemoryManager<AssemblyMapDG>::
                 AllocateSharedPtr(m_session, graph2D, trace, *this,
                                   m_bndCondExpansions, m_bndConditions,
-                                  m_periodicEdges);
+                                  m_periodicEdges,
+                                  variable);
 
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
@@ -1261,7 +1262,6 @@ namespace Nektar
                 {
                     int offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
-                    int edgeGeomId = (*m_exp)[n]->GetGeom2D()->GetEid(e);
 
                     if (m_leftAdjacentEdges[cnt])
                     {

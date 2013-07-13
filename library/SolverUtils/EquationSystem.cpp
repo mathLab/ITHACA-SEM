@@ -721,17 +721,17 @@ namespace Nektar
                                         DeclarePlaneSetCoeffsPhys);
                             }
                         }
-                    }
-                    else
-                    {
-                        for (int i = 0; i < m_forces.num_elements(); i++)
+                        else
                         {
-                            m_forces[i] = MemoryManager<MultiRegions
-                                ::ExpList2D>::AllocateSharedPtr
-                                (*boost::static_pointer_cast<MultiRegions
-                                 ::ExpList2D>(m_fields[i]));
+                            for (int i = 0; i < m_forces.num_elements(); i++)
+                            {
+                                m_forces[i] = MemoryManager<MultiRegions
+                                    ::ExpList2D>::AllocateSharedPtr
+                                    (*boost::static_pointer_cast<MultiRegions
+                                     ::ExpList2D>(m_fields[i]));
                                 
                             Vmath::Zero(nq,(m_forces[i]->UpdatePhys()),1);
+                            }
                         }
                         break;
                     case 3:

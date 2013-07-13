@@ -234,7 +234,7 @@ namespace Nektar
     /**
      * @brief Wall boundary conditions for compressible flow problems.
      */
-    void CompressibleFlowSystem::WallBoundary(
+    void CompressibleFlowSystem::WallBC(
         int                                   bcRegion,
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
@@ -338,7 +338,7 @@ namespace Nektar
     /**
      * @brief Wall boundary conditions for viscous compressible flow problems.
      */
-    void CompressibleFlowSystem::WallBoundaryViscous(
+    void CompressibleFlowSystem::WallViscousBC(
         int                                   bcRegion,
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
@@ -422,7 +422,7 @@ namespace Nektar
     /**
      * @brief Simmetry boundary conditions for compressible flow problems.
      */
-    void CompressibleFlowSystem::SymmetryBoundary(
+    void CompressibleFlowSystem::SymmetryBC(
         int                                      bcRegion, 
         int                                      cnt, 
         Array<OneD, Array<OneD, NekDouble> >    &physarray)
@@ -546,7 +546,7 @@ namespace Nektar
      * @brief Inflow characteristic boundary conditions for compressible 
      * flow problems.
      */
-    void CompressibleFlowSystem::InflowCFSBoundary(
+    void CompressibleFlowSystem::InflowCFSBC(
         int                                   bcRegion, 
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
@@ -822,7 +822,7 @@ namespace Nektar
      * @brief Outflow characteristic boundary conditions for compressible 
      * flow problems.
      */
-    void CompressibleFlowSystem::OutflowCFSBoundary(
+    void CompressibleFlowSystem::OutflowCFSBC(
         int                                   bcRegion, 
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
@@ -1069,11 +1069,23 @@ namespace Nektar
         }
     }
     
+    /**
+     * @brief Outflow characteristic boundary conditions for compressible 
+     * flow problems.
+     */
+    void CompressibleFlowSystem::RiemannInvariantBC(
+        int                                   bcRegion, 
+        int                                   cnt, 
+        Array<OneD, Array<OneD, NekDouble> > &physarray)
+    {
+        
+    }
+    
     /** 
      * @brief Extrapolation of order 0 for all the variables such that, 
      * at the boundaries, a trivial Riemann problem is solved.
      */
-    void CompressibleFlowSystem::ExtrapOrder0Boundary(
+    void CompressibleFlowSystem::ExtrapOrder0BC(
         int                                   bcRegion, 
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)

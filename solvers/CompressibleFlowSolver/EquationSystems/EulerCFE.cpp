@@ -237,7 +237,7 @@ namespace Nektar
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() ==
                 SpatialDomains::eWall)
             {
-                WallBoundary(n, cnt, inarray);
+                WallBC(n, cnt, inarray);
             }
             
             // Wall Boundary Condition
@@ -252,28 +252,28 @@ namespace Nektar
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eSymmetry)
             {
-                SymmetryBoundary(n, cnt, inarray);
+                SymmetryBC(n, cnt, inarray);
             }
             
             // Inflow characteristic Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eInflowCFS)
             {
-                InflowCFSBoundary(n, cnt, inarray);
+                InflowCFSBC(n, cnt, inarray);
             }
             
             // Outflow characteristic Boundary Condition
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eOutflowCFS)
             {
-                OutflowCFSBoundary(n, cnt, inarray);
+                OutflowCFSBC(n, cnt, inarray);
             }
 
             // Extrapolation of the data at the boundaries
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eExtrapOrder0)
             {
-                ExtrapOrder0Boundary(n, cnt, inarray);
+                ExtrapOrder0BC(n, cnt, inarray);
             }
             
             // Time Dependent Boundary Condition (specified in meshfile)

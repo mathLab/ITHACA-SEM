@@ -1433,13 +1433,11 @@ namespace Nektar
                                       GetPhys())[id1], 1,
                                     &scalarVariables[nScalars-1][id2], 1);
                         
-                        /*
-                         // Subtract kinetic energy to E/rho
-                         Vmath::Vsub(nBndEdgePts, 
-                         &scalarVariables[nScalars-1][id2], 1,
-                         &tmp2[id2], 1,
-                         &scalarVariables[nScalars-1][id2], 1);
-                         */
+                        // Subtract kinetic energy to E/rho
+                        Vmath::Vsub(nBndEdgePts, 
+                                    &scalarVariables[nScalars-1][id2], 1,
+                                    &tmp2[id2], 1,
+                                    &scalarVariables[nScalars-1][id2], 1);
                         
                         // Multiply by constant factor (gamma-1)/R 
                         Vmath::Smul(nBndEdgePts, (m_gamma - 1)/m_gasConstant,

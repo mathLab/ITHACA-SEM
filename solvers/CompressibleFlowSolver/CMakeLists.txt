@@ -59,6 +59,17 @@ IF( NEKTAR_SOLVER_COMPRESSIBLE_FLOW )
     ADD_NEKTAR_TEST(CylinderSubsonic_NS_FRHU_LFRHU_SEM_3DHOMO1D_MVM)
     ADD_NEKTAR_TEST(Couette_FRSD_LFRSD_MODIFIED_3DHOMO1D_MVM)
     ADD_NEKTAR_TEST(CylinderSubsonic_NS_FRSD_LFRSD_MODIFIED_3DHOMO1D_MVM)
+    ADD_NEKTAR_TEST(Perturbation_M05_square_CBC_par)
+    ADD_NEKTAR_TEST(Perturbation_M05_square_CBC_back_par)
+    ADD_NEKTAR_TEST(Perturbation_M15_square_CBC_par)
+    ADD_NEKTAR_TEST(Perturbation_M15_square_CBC_back_par)
+    ADD_NEKTAR_TEST(Perturbation_M05_circle_CBC_back_par)
+    ADD_NEKTAR_TEST(Perturbation_M15_circle_CBC_back_par)
+    ADD_NEKTAR_TEST(Perturbation_NS_M05_square_CBC_par)
+    ADD_NEKTAR_TEST(Perturbation_NS_M15_square_CBC_par)
+
+
+
    
     IF (NEKTAR_USE_FFTW)
 	ADD_NEKTAR_TEST(Couette_WeakDG_LDG_SEM_3DHOMO1D_FFT)

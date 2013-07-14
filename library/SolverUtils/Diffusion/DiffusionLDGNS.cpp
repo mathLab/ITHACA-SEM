@@ -288,8 +288,8 @@ namespace Nektar
             
             int nBndEdgePts, nBndEdges, nBndRegions;
             
-            int nTracePts         = fields[0]->GetTrace()->GetTotPoints();
-            int nScalars          = inarray.num_elements();
+            int nTracePts = fields[0]->GetTrace()->GetTotPoints();
+            int nScalars  = inarray.num_elements();
             
             Array<OneD, NekDouble> tmp1(nTracePts, 0.0);
             Array<OneD, NekDouble> tmp2(nTracePts, 0.0);
@@ -436,13 +436,11 @@ namespace Nektar
                                       GetPhys())[id1], 1,
                                     &scalarVariables[nScalars-1][id2], 1);
                         
-                        /*
                         // Subtract kinetic energy to E/rho
                         Vmath::Vsub(nBndEdgePts, 
                                     &scalarVariables[nScalars-1][id2], 1,
                                     &tmp2[id2], 1,
                                     &scalarVariables[nScalars-1][id2], 1);
-                        */
                         
                         // Multiply by constant factor (gamma-1)/R 
                         Vmath::Smul(nBndEdgePts, (m_gamma - 1)/m_gasConstant,

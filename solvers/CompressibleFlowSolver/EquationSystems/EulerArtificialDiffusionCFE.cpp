@@ -210,6 +210,13 @@ namespace Nektar
                 OutflowCFSBC(n, cnt, inarray);
             }
             
+            // Riemann invariant characteristic Boundary Condition (CBC)
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::eRiemannInvariant)
+            {
+                RiemannInvariantBC(n, cnt, inarray);
+            }
+            
             // Extrapolation of the data at the boundaries
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eExtrapOrder0)

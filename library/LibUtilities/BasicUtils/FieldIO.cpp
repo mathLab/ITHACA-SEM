@@ -87,7 +87,8 @@ namespace Nektar
             ProvenanceMap["Timestamp"] = wss.str();
 
             // Hostname
-            ProvenanceMap["Hostname"] = ip::host_name();
+            boost::system::error_code ec;
+            ProvenanceMap["Hostname"] = ip::host_name(ec);
 
             // Git information
             // If built from a distributed package, do not include this

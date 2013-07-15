@@ -1073,7 +1073,7 @@ namespace Nektar
         int                                   cnt, 
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
-        int i, nPlanes;
+        int i, j, nPlanes;
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
         int nDimensions = m_spacedim;
@@ -1095,18 +1095,21 @@ namespace Nektar
         Array<OneD, NekDouble> tmp1 (nTracePts, 0.0);
         Array<OneD, NekDouble> tmp2 (nTracePts, 0.0);
         Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
+        Array<OneD, NekDouble> velInf(nDimensions, 0.0);
         
         // Computing the normal velocity for characteristics coming 
         // from outside the computational domain
+        velInf[0] = m_uInf;
         Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
-        
         if (nDimensions == 2 || nDimensions == 3)
         {
+            velInf[1] = m_vInf;
             Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
         }
         if (nDimensions == 3)
         {
+            velInf[2] = m_wInf;
             Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
             Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
         }
@@ -1162,9 +1165,12 @@ namespace Nektar
         int id2Plane, eMax;
         int e, id1, id2, nBCEdgePts, pnt;
         NekDouble cPlus, rPlus, cMinus, rMinus;
-        NekDouble Vd, Vb;        
+        NekDouble Vd, Vb;
+        Array<OneD, NekDouble> velB(nDimensions, 0.0);
+        Array<OneD, NekDouble> rhoVelB(nDimensions, 0.0);
         NekDouble rhob, rhoub, rhovb, rhoeb;
         NekDouble ub, vb, cb, sb, pb;
+        NekDouble Ek;
         
         eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
@@ -1236,16 +1242,26 @@ namespace Nektar
                     cb = 0.25 * gammaMinusOne * (rPlus - rMinus);
                     Vd = Vb - VnInf[pnt];
                 
-                    // Boundary velocities
-                    ub = m_uInf + Vd * m_traceNormals[0][pnt];
-                    vb = m_vInf + Vd * m_traceNormals[1][pnt];
+                    //ub = m_uInf + Vd * m_traceNormals[0][pnt];
+                    //vb = m_vInf + Vd * m_traceNormals[1][pnt];
                     sb = m_pInf / (pow(m_rhoInf, gamma));
                     rhob = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
                     pb = rhob * cb * cb * gammaInv;
-                    rhoub = rhob * ub;
-                    rhovb = rhob * vb;
-                    rhoeb = pb*gammaMinusOneInv + 0.5 * rhob * (ub*ub + vb*vb);
-                
+                    
+                    // Boundary velocities
+                    for ( j = 0; j < nDimensions; ++j)
+                    {
+                        velB[j] = velInf[j] + Vd * m_traceNormals[j][pnt];
+                        rhoVelB[j] = rhob * velB[j];
+                        Ek += 0.5 * rhob * velB[j]*velB[j]; 
+                    }
+                    
+                    //rhoub = rhob * ub;
+                    //rhovb = rhob * vb;
+                    //rhoeb = pb*gammaMinusOneInv + 0.5 * rhob * (ub*ub + vb*vb);
+                    rhoeb = pb * gammaMinusOneInv + Ek;
+                    
+                    /*
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
                      UpdatePhys())[id1+i] = rhob;
                     (m_fields[1]->GetBndCondExpansions()[bcRegion]->
@@ -1254,7 +1270,17 @@ namespace Nektar
                      UpdatePhys())[id1+i] = rhovb;
                     (m_fields[3]->GetBndCondExpansions()[bcRegion]->
                      UpdatePhys())[id1+i] = rhoeb;
-
+                    */
+                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = rhob;
+                    for (j = 0; j < nDimensions; ++j)
+                    {
+                        (m_fields[j+1]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = rhoVelB[j];
+                    }
+                    (m_fields[nDimensions]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = rhoeb;
+                    
                 }
                 else // Impose outflow Riemann invariant
                 {
@@ -1291,10 +1317,22 @@ namespace Nektar
                     sb = pressure[pnt] / (pow(Fwd[0][pnt], gamma));
                     rhob = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
                     pb = rhob * cb * cb * gammaInv;
-                    rhoub = rhob * ub;
-                    rhovb = rhob * vb;
-                    rhoeb = pb * gammaMinusOneInv + 0.5 * rhob * (ub*ub + vb*vb);
                     
+                    // Boundary velocities
+                    for ( j = 0; j < nDimensions; ++j)
+                    {
+                        velB[j] = Fwd[j+1][pnt] / Fwd[0][pnt] + 
+                                    Vd * m_traceNormals[j][pnt];
+                        rhoVelB[j] = rhob * velB[j];
+                        Ek += 0.5 * rhob * velB[j]*velB[j]; 
+                    }
+                    
+                    //rhoub = rhob * ub;
+                    //rhovb = rhob * vb;
+                    //rhoeb = pb * gammaMinusOneInv + 0.5 * rhob * (ub*ub + vb*vb);
+                    rhoeb = pb * gammaMinusOneInv + Ek;
+
+                    /*
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
                      UpdatePhys())[id1+i] = rhob;
                     (m_fields[1]->GetBndCondExpansions()[bcRegion]->
@@ -1302,6 +1340,16 @@ namespace Nektar
                     (m_fields[2]->GetBndCondExpansions()[bcRegion]->
                      UpdatePhys())[id1+i] = rhovb;
                     (m_fields[3]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = rhoeb;
+                     */
+                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = rhob;
+                    for (j = 0; j < nDimensions; ++j)
+                    {
+                        (m_fields[j+1]->GetBndCondExpansions()[bcRegion]->
+                         UpdatePhys())[id1+i] = rhoVelB[j];
+                    }
+                    (m_fields[nDimensions]->GetBndCondExpansions()[bcRegion]->
                      UpdatePhys())[id1+i] = rhoeb;
                 }
             }

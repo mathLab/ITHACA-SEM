@@ -540,530 +540,6 @@ namespace Nektar
         }
     }
     
-    
-    /**
-     * @brief Inflow characteristic boundary conditions for compressible 
-     * flow problems.
-     */
-    void CompressibleFlowSystem::InflowCFSBC(
-        int                                   bcRegion, 
-        int                                   cnt, 
-        Array<OneD, Array<OneD, NekDouble> > &physarray)
-    {
-        int i, nPlanes;
-        int nTracePts = GetTraceTotPoints();
-        int nVariables = physarray.num_elements();
-        int nDimensions = m_spacedim;
-        
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-        {
-            int nSolutionPts = m_fields[0]->GetTotPoints();
-            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            nPlanes = nSolutionPts/nSolutionPtsPlane;
-            nTracePts = nTracePts * nPlanes;
-        }
-        
-        NekDouble gamma            = m_gamma;
-        NekDouble gammaInv         = 1.0 / gamma;
-        NekDouble gammaMinusOne    = gamma - 1.0;
-        NekDouble gammaMinusOneInv = 1.0 / gammaMinusOne;
-        
-        Array<OneD, NekDouble> tmp1 (nTracePts, 0.0);
-        Array<OneD, NekDouble> tmp2 (nTracePts, 0.0);
-        Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
-
-        // Computing the normal velocity for characteristics coming 
-        // from outside the computational domain
-        Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
-        
-        if (nDimensions == 2 || nDimensions == 3)
-        {
-            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
-            Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
-        }
-        if (nDimensions == 3)
-        {
-            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
-            Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
-        }
-        
-        // Get physical values of the forward trace
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
-        for (i = 0; i < nVariables; ++i)
-        {
-            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-        }
-        
-        // Computing the normal velocity for characteristics coming 
-        // from inside the computational domain 
-        Array<OneD, NekDouble > Vn (nTracePts, 0.0);
-        Array<OneD, NekDouble > Vel(nTracePts, 0.0);
-        for (i = 0; i < nDimensions; ++i)
-        {
-            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, Vel, 1);
-            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
-        }
-        
-        // Computing the absolute value of the velocity in order to compute the 
-        // Mach number to decide whether supersonic or subsonic
-        Array<OneD, NekDouble > absVel(nTracePts, 0.0);
-        for (i = 0; i < nDimensions; ++i)
-        {
-            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
-            Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
-            Vmath::Vadd(nTracePts, tmp1, 1, absVel, 1, absVel, 1);
-        }        
-        Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
-
-        // Get speed of sound
-        Array<OneD, NekDouble > soundSpeed(nTracePts);
-        Array<OneD, NekDouble > pressure  (nTracePts);
-        
-        for (i = 0; i < nTracePts; i++)
-        {
-            pressure[i] = (gammaMinusOne) * (Fwd[3][i] - 
-                                0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] + 
-                                       Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
-            
-            soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
-        }
-                
-        // Get Mach
-        Array<OneD, NekDouble > Mach(nTracePts, 0.0);
-        Vmath::Vdiv(nTracePts, Vn, 1, soundSpeed, 1, Mach, 1);
-        Vmath::Vabs(nTracePts, Mach, 1, Mach, 1);
-                
-        // Auxiliary variables
-        int id2Plane, eMax;
-        int e, id1, id2, nBCEdgePts, pnt;
-        NekDouble cPlus, rPlus, cMinus, rMinus;
-        NekDouble VelNorm, VelNormRef, VDelta, Vd, Vb;
-        Array<OneD, NekDouble> stateBC(nVariables, 0.0);
-        Array<OneD, NekDouble> primitiveBC(nVariables, 0.0);
-
-        NekDouble rhob, rhoub, rhovb, rhoeb;
-        NekDouble ub, vb, cb, sb, pb;
-        
-        eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
-        
-        // Loop on bcRegions
-        for (e = 0; e < eMax; ++e)
-        {
-            nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetExp(e)->GetNumPoints(0);
-            
-            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetPhys_Offset(e);
-            
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-            {
-                int ePlane;
-                int cntPlane = cnt/nPlanes;
-                int eMaxPlane = eMax/nPlanes;
-                int nTracePts_plane = GetTraceTotPoints();
-                
-                int planeID = floor((e + 0.5 ) / eMaxPlane );
-                ePlane = e - eMaxPlane*planeID;
-                
-                id2Plane  = m_fields[0]->GetTrace()->GetPhys_Offset(
-                                m_fields[0]->GetTraceMap()->
-                                    GetBndCondCoeffsToGlobalCoeffsMap(
-                                        cntPlane + ePlane));
-                id2 = id2Plane + planeID*nTracePts_plane;
-                
-            }
-            else // For general case
-            {
-                id2 = m_fields[0]->GetTrace()->
-                    GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                        GetBndCondTraceToGlobalTraceMap(cnt++));
-            }
-            
-            // Loop on the points of the bcRegion
-            for (i = 0; i < nBCEdgePts; i++)
-            {
-                pnt = id2+i;
-                
-                // Subsonic flows
-                if (Mach[pnt] < 1.00)
-                {
-                    // + Characteristic from inside
-                    cPlus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
-                    rPlus = Vn[pnt] + 2.0 * cPlus * gammaMinusOneInv;
-                    
-                    // - Characteristic from boundary
-                    cMinus = sqrt(gamma * m_pInf / m_rhoInf);
-                    rMinus = VnInf[pnt] - 2.0 * cMinus * gammaMinusOneInv;
-                }
-                else
-                {
-                    // + Characteristic from inside
-                    cPlus = sqrt(gamma * m_pInf / m_rhoInf);
-                    rPlus = VnInf[pnt] + 2.0 * cPlus * gammaMinusOneInv;
-                    
-                    // + Characteristic from inside
-                    cMinus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
-                    rMinus = Vn[pnt] - 2.0 * cPlus * gammaMinusOneInv;
-                }
-                
-                // Boundary variables
-                Vb = 0.5 * (rPlus + rMinus);
-                cb = 0.25 * gammaMinusOne * (rPlus - rMinus);
-                Vd = Vb - VnInf[pnt];
-                
-                // Boundary velocities
-                ub = m_uInf + Vd * m_traceNormals[0][pnt];
-                vb = m_vInf + Vd * m_traceNormals[1][pnt];
-                sb = m_pInf / (pow(m_rhoInf, gamma));
-                rhob = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
-                pb = rhob * cb * cb * gammaInv;
-                rhoub = rhob * ub;
-                rhovb = rhob * vb;
-                rhoeb = pb * gammaMinusOneInv + 0.5 * rhob * (ub*ub + vb*vb);
-                
-                (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                 UpdatePhys())[id1+i] = rhob;
-                (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                 UpdatePhys())[id1+i] = rhoub;
-                (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                 UpdatePhys())[id1+i] = rhovb;
-                (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                 UpdatePhys())[id1+i] = rhoeb;
-
-                /*
-                // Subsonic flows
-                if (Mach[pnt] < 0.99)
-                {
-                    // + Characteristic from boundary
-                    cPlus = sqrt(gamma * m_pInf / m_rhoInf);
-                    rPlus = VnInf[pnt] + 2.0 * cPlus * gammaMinusOneInv;
-                    
-                    // - Characteristic from inside
-                    cMinus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
-                    rMinus = Vn[pnt] - 2.0 * cMinus * gammaMinusOneInv;
-                    
-                    // Boundary Variables
-                    VelNorm = 0.5 * (rPlus + rMinus);
-                    cb      = 0.25 * gammaMinusOne * (rPlus - rMinus);
-                    
-                    VDelta  = VelNorm - VnInf[pnt];
-                    
-                    // Boundary velocities
-                    ub      = VnInf[pnt] * m_traceNormals[0][pnt] + 
-                                VDelta * m_traceNormals[0][pnt];
-                    vb      = VnInf[pnt] * m_traceNormals[1][pnt] + 
-                                VDelta * m_traceNormals[1][pnt];
-                    // Boundary entropy 
-                    sb      = m_pInf / (pow(m_rhoInf, gamma));
-    
-                    // Boundary density
-                    rhob    = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
-                    
-                    // Boundary pressure
-                    pb      = rhob * cb * cb * gammaInv;
-                    
-                    // Boundary rhou/rhov
-                    rhoub   = rhob * ub;
-                    rhovb   = rhob * vb;
-                    
-                    // Boundary energy
-                    rhoeb   = pb * gammaMinusOneInv + 
-                                0.5 * (rhoub * ub + rhovb * vb);
-                    
-                    // Imposition of the variables
-                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                        UpdatePhys())[id1+i] = m_rhoInf;
-                        //2.0 * rhob - Fwd[0][pnt];
-                    
-                    (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                        UpdatePhys())[id1+i] = m_rhoInf * m_uInf;
-                        //2.0 * rhoub - Fwd[1][pnt];
-                    
-                    (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                        UpdatePhys())[id1+i] = m_rhoInf * m_vInf;
-                        //2.0 * rhovb - Fwd[2][pnt];
-                    
-                    // Extrapolation for the entropic mode 
-                    // (1 negative eigenvalue)
-                    (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                        UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[3][pnt];
-                }
-                // Supersonic flows
-                else
-                {
-                    // Imposition of all the variables 
-                    // (all eigenvalues are positive) 
-                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                        UpdatePhys())[id1+i] = m_rhoInf;
-                    (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                        UpdatePhys())[id1+i] = m_rhoInf * m_uInf;
-                    (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                        UpdatePhys())[id1+i] = m_rhoInf * m_vInf;
-                    (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                        UpdatePhys())[id1+i] = 
-                            m_pInf / (gamma - 1) + 0.5 * m_rhoInf * 
-                            (m_uInf * m_uInf + m_vInf * m_vInf);
-                }
-                */
-            }
-        }
-    }
-    
-    
-    /**
-     * @brief Outflow characteristic boundary conditions for compressible 
-     * flow problems.
-     */
-    void CompressibleFlowSystem::OutflowCFSBC(
-        int                                   bcRegion, 
-        int                                   cnt, 
-        Array<OneD, Array<OneD, NekDouble> > &physarray)
-    {
-        int i, nPlanes;
-        int nTracePts = GetTraceTotPoints();
-        int nVariables = physarray.num_elements();
-        int nDimensions = m_spacedim;
-        
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-        {
-            int nSolutionPts = m_fields[0]->GetTotPoints();
-            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int nPlanes = nSolutionPts/nSolutionPtsPlane;
-            nTracePts = nTracePts * nPlanes;
-        }
-
-        NekDouble gamma             = m_gamma;
-        NekDouble gammaInv          = 1.0 / gamma;
-        NekDouble gammaMinusOne     = gamma - 1.0;
-        NekDouble gammaMinusOneInv  = 1.0 / gammaMinusOne;
-        
-        Array<OneD, NekDouble> tmp1 (nTracePts, 0.0);
-        Array<OneD, NekDouble> tmp2 (nTracePts, 0.0);
-        Array<OneD, NekDouble> VnInf(nTracePts, 0.0);
-        
-        // Computing the normal velocity for characteristics coming 
-        // from outside the computational domain
-        Vmath::Smul(nTracePts, m_uInf, m_traceNormals[0], 1, VnInf, 1);
-        
-        if (nDimensions == 2 || nDimensions == 3)
-        {
-            Vmath::Smul(nTracePts, m_vInf, m_traceNormals[0], 1, tmp1, 1);
-            Vmath::Vadd(nTracePts, VnInf, 1, tmp1, 1, VnInf, 1);
-        }
-        if (nDimensions == 3)
-        {
-            Vmath::Smul(nTracePts, m_wInf, m_traceNormals[0], 1, tmp2, 1);
-            Vmath::Vadd(nTracePts, VnInf, 1, tmp2, 1, VnInf, 1);
-        }
-        
-        // Get physical values of the forward trace
-        Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
-        for (i = 0; i < nVariables; ++i)
-        {
-            Fwd[i] = Array<OneD, NekDouble>(nTracePts);
-            m_fields[i]->ExtractTracePhys(physarray[i], Fwd[i]);
-        }
-        
-        // Get normal velocity
-        Array<OneD, NekDouble > Vn(nTracePts, 0.0);
-        Array<OneD, NekDouble > Vel(nTracePts, 0.0);
-        for (i = 0; i < nDimensions; ++i)
-        {
-            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, Vel, 1);
-            Vmath::Vvtvp(nTracePts, m_traceNormals[i], 1, Vel, 1, Vn, 1, Vn, 1);
-        }
-        
-        // Computing the absolute value of the velocity in order to compute the 
-        // Mach number to decide whether supersonic or subsonic
-        Array<OneD, NekDouble > absVel(nTracePts, 0.0);
-        for (i = 0; i < nDimensions; ++i)
-        {
-            Vmath::Vdiv(nTracePts, Fwd[i+1], 1, Fwd[0], 1, tmp1, 1);
-            Vmath::Vmul(nTracePts, tmp1, 1, tmp1, 1, tmp1, 1);
-            Vmath::Vadd(nTracePts, tmp1, 1, absVel, 1, absVel, 1);
-        }        
-        Vmath::Vsqrt(nTracePts, absVel, 1, absVel, 1);
-        
-        // Get speed of sound
-        Array<OneD, NekDouble > soundSpeed(nTracePts);
-        Array<OneD, NekDouble > pressure  (nTracePts);
-        for (i = 0; i < nTracePts; i++)
-        {
-            pressure[i] = (gammaMinusOne) 
-            * (Fwd[3][i] - 0.5 * (Fwd[1][i] * Fwd[1][i] / Fwd[0][i] + 
-                                  Fwd[2][i] * Fwd[2][i] / Fwd[0][i]));
-            
-            soundSpeed[i] = sqrt(gamma * pressure[i] / Fwd[0][i]);
-        }
-        
-        // Get Mach
-        Array<OneD, NekDouble > Mach(nTracePts, 0.0);
-        Vmath::Vdiv(nTracePts, Vn, 1, soundSpeed, 1, Mach, 1);
-        Vmath::Vabs(nTracePts, Mach, 1, Mach, 1);
-        
-        // Auxiliary variables 
-        int eMax, id2Plane;
-        int e, id1, id2, nBCEdgePts, pnt;
-        NekDouble cPlus, rPlus, cMinus, rMinus;
-        NekDouble VelNorm, VelNormRef, VDelta, Vd, Vb;
-        NekDouble rhob, rhoub, rhovb, rhoeb;
-        NekDouble ub, vb, cb, sb, pb;
-        
-        eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
-        
-        // Loop on the bcRegions
-        for (e = 0; e < eMax; ++e)
-        {
-            nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetExp(e)->GetNumPoints(0);
-            id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                GetPhys_Offset(e) ;
-            
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-            {
-                int ePlane;
-                int cntPlane = cnt/nPlanes;
-                int eMaxPlane = eMax/nPlanes;
-                int nTracePts_plane = GetTraceTotPoints();
-                
-                int planeID = floor((e + 0.5 )/ eMaxPlane );
-                ePlane = e - eMaxPlane*planeID;
-                
-                id2Plane = m_fields[0]->GetTrace()->GetPhys_Offset(
-                        m_fields[0]->GetTraceMap()->
-                            GetBndCondCoeffsToGlobalCoeffsMap(
-                                cntPlane + ePlane));
-                id2 = id2Plane + planeID*nTracePts_plane;
-            }
-            else // For general case
-            {
-
-                id2 = m_fields[0]->GetTrace()->
-                            GetPhys_Offset(m_fields[0]->GetTraceMap()->
-                                GetBndCondTraceToGlobalTraceMap(cnt++));
-            }
-            
-            // Loop on points of bcRegion 'e'
-            for (i = 0; i < nBCEdgePts; i++)
-            {
-                pnt = id2+i;
-
-                // Subsonic flows
-                if (Mach[pnt] < 1.00)
-                {
-                    // + Characteristic from inside
-                    cPlus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
-                    rPlus = Vn[pnt] + 2.0 * cPlus * gammaMinusOneInv;
-                    
-                    // - Characteristic from boundary
-                    cMinus = sqrt(gamma * m_pInf / m_rhoInf);
-                    rMinus = VnInf[pnt] - 2.0 * cMinus * gammaMinusOneInv;
-                }
-                else
-                {
-                    // + Characteristic from inside
-                    cPlus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
-                    rPlus = Vn[pnt] + 2.0 * cPlus * gammaMinusOneInv;
-                    
-                    // + Characteristic from inside
-                    cMinus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
-                    rMinus = Vn[pnt] - 2.0 * cPlus * gammaMinusOneInv;
-                }
-                
-                // Boundary variables
-                Vb = 0.5 * (rPlus + rMinus);
-                cb = 0.25 * gammaMinusOne * (rPlus - rMinus);
-                Vd = Vb - Vn[pnt];
-                
-                // Boundary velocities
-                ub = Fwd[1][pnt] / Fwd[0][pnt] + Vd * m_traceNormals[0][pnt];
-                vb = Fwd[2][pnt] / Fwd[0][pnt] + Vd * m_traceNormals[1][pnt];
-                sb = pressure[pnt] / (pow(Fwd[0][pnt], gamma));
-                rhob = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
-                pb = rhob * cb * cb * gammaInv;
-                rhoub = rhob * ub;
-                rhovb = rhob * vb;
-                rhoeb = pb * gammaMinusOneInv + 0.5 * rhob * (ub*ub + vb*vb);
-
-                (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                 UpdatePhys())[id1+i] = rhob;
-                (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                 UpdatePhys())[id1+i] = rhoub;
-                (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                 UpdatePhys())[id1+i] = rhovb;
-                (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                 UpdatePhys())[id1+i] = rhoeb;
-
-                    
-                /*
-                // Subsonic flows
-                if (Mach[pnt] < 0.99)
-                {
-                    // + Characteristic from inside
-                    cPlus = sqrt(gamma * pressure[pnt] / Fwd[0][pnt]);
-                    rPlus = Vn[pnt] + 2.0 * cPlus * gammaMinusOneInv;
-                    
-                    // - Characteristic from boundary
-                    cMinus = sqrt(gamma * m_pInf / m_rhoInf);
-                    rMinus = VnInf[pnt] - 2.0 * cMinus * gammaMinusOneInv;
-                    
-                    // Boundary Variables
-                    VelNorm = 0.5 * (rPlus + rMinus);
-                    cb      = 0.25 * gammaMinusOne * (rPlus - rMinus);
-                    sb      = pressure[pnt] / (pow(Fwd[0][pnt], gamma));
-                    rhob    = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
-                    pb      = rhob * cb * cb * gammaInv;
-                    
-                    VDelta  = VelNorm - Vn[pnt];
-
-                    // Boundary velocities
-                    ub      = Fwd[1][pnt] / Fwd[0][pnt] + 
-                                VDelta * m_traceNormals[0][pnt];
-                    vb      = Fwd[2][pnt] / Fwd[0][pnt] + 
-                                VDelta * m_traceNormals[1][pnt];
-                    
-                    // Boundary rhou/rhov
-                    rhoub   = rhob * ub;
-                    rhovb   = rhob * vb;
-                    
-                    // Boundary energy
-                    rhoeb = pb * gammaMinusOneInv + 0.5 * 
-                                rhob * (ub * ub + vb * vb);
-                    
-                    // Imposition of the variables
-                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[0][pnt];
-                    (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[1][pnt];
-                    (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[2][pnt];
-                    (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = 2.0 * rhoeb - Fwd[3][pnt];
-                }
-                // Supersonic flows
-                else
-                {
-                    // Extrapolation for supersonic cases
-                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[0][pnt];
-                    (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[1][pnt];
-                    (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[2][pnt];
-                    (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = Fwd[3][pnt];
-
-                }
-                */
-            }
-        }
-    }
-    
     /**
      * @brief Outflow characteristic boundary conditions for compressible 
      * flow problems.
@@ -1164,13 +640,10 @@ namespace Nektar
         // Auxiliary variables
         int id2Plane, eMax;
         int e, id1, id2, nBCEdgePts, pnt;
-        NekDouble cPlus, rPlus, cMinus, rMinus;
-        NekDouble Vd, Vb;
-        Array<OneD, NekDouble> velB(nDimensions, 0.0);
-        Array<OneD, NekDouble> rhoVelB(nDimensions, 0.0);
-        NekDouble rhob, rhoub, rhovb, rhoeb;
-        NekDouble ub, vb, cb, sb, pb;
-        NekDouble Ek;
+        NekDouble cPlus, rPlus, cMinus, rMinus, VDBC, VNBC;
+        Array<OneD, NekDouble> velBC(nDimensions, 0.0);
+        Array<OneD, NekDouble> rhoVelBC(nDimensions, 0.0);
+        NekDouble rhoBC, EBC, cBC, sBC, pBC;
         
         eMax = m_fields[0]->GetBndCondExpansions()[bcRegion]->GetExpSize();
         
@@ -1178,10 +651,10 @@ namespace Nektar
         for (e = 0; e < eMax; ++e)
         {
             nBCEdgePts = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-            GetExp(e)->GetNumPoints(0);
+                GetExp(e)->GetNumPoints(0);
             
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
-            GetPhys_Offset(e);
+                GetPhys_Offset(e);
             
             // For 3DHomogenoeus1D
             if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
@@ -1237,49 +710,40 @@ namespace Nektar
                         rMinus = VnInf[pnt] - 2.0 * cPlus * gammaMinusOneInv;
                     }
                 
-                    // Boundary variables
-                    Vb = 0.5 * (rPlus + rMinus);
-                    cb = 0.25 * gammaMinusOne * (rPlus - rMinus);
-                    Vd = Vb - VnInf[pnt];
-                
-                    //ub = m_uInf + Vd * m_traceNormals[0][pnt];
-                    //vb = m_vInf + Vd * m_traceNormals[1][pnt];
-                    sb = m_pInf / (pow(m_rhoInf, gamma));
-                    rhob = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
-                    pb = rhob * cb * cb * gammaInv;
+                    // Riemann boundary variables
+                    VNBC = 0.5 * (rPlus + rMinus);
+                    cBC = 0.25 * gammaMinusOne * (rPlus - rMinus);
+                    VDBC = VNBC - VnInf[pnt];
                     
+                    // Thermodynamic boundary variables
+                    sBC = m_pInf / (pow(m_rhoInf, gamma));
+                    rhoBC = pow((cBC * cBC) / (gamma * sBC), gammaMinusOneInv);
+                    pBC = rhoBC * cBC * cBC * gammaInv;
+                    
+                    // Kinetic energy initialiasation
+                    NekDouble EkBC = 0.0;
+
                     // Boundary velocities
                     for ( j = 0; j < nDimensions; ++j)
                     {
-                        velB[j] = velInf[j] + Vd * m_traceNormals[j][pnt];
-                        rhoVelB[j] = rhob * velB[j];
-                        Ek += 0.5 * rhob * velB[j]*velB[j]; 
+                        velBC[j] = velInf[j] + VDBC * m_traceNormals[j][pnt];
+                        rhoVelBC[j] = rhoBC * velBC[j];
+                        EkBC += 0.5 * rhoBC * velBC[j]*velBC[j]; 
                     }
                     
-                    //rhoub = rhob * ub;
-                    //rhovb = rhob * vb;
-                    //rhoeb = pb*gammaMinusOneInv + 0.5 * rhob * (ub*ub + vb*vb);
-                    rhoeb = pb * gammaMinusOneInv + Ek;
+                    // Boundary energy
+                    EBC = pBC * gammaMinusOneInv + EkBC;
                     
-                    /*
+                    // Imposing Riemann Invariant boundary conditions
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhob;
-                    (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhoub;
-                    (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhovb;
-                    (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhoeb;
-                    */
-                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhob;
+                     UpdatePhys())[id1+i] = rhoBC;
                     for (j = 0; j < nDimensions; ++j)
                     {
                         (m_fields[j+1]->GetBndCondExpansions()[bcRegion]->
-                         UpdatePhys())[id1+i] = rhoVelB[j];
+                         UpdatePhys())[id1+i] = rhoVelBC[j];
                     }
-                    (m_fields[nDimensions]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhoeb;
+                    (m_fields[nDimensions+1]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = EBC;
                     
                 }
                 else // Impose outflow Riemann invariant
@@ -1306,51 +770,41 @@ namespace Nektar
                         rMinus = Vn[pnt] - 2.0 * cPlus * gammaMinusOneInv;
                     }
                     
-                    // Boundary variables
-                    Vb = 0.5 * (rPlus + rMinus);
-                    cb = 0.25 * gammaMinusOne * (rPlus - rMinus);
-                    Vd = Vb - Vn[pnt];
+                    // Riemann boundary variables
+                    VNBC = 0.5 * (rPlus + rMinus);
+                    cBC = 0.25 * gammaMinusOne * (rPlus - rMinus);
+                    VDBC = VNBC - Vn[pnt];
                     
-                    // Boundary velocities
-                    ub = Fwd[1][pnt] / Fwd[0][pnt] + Vd * m_traceNormals[0][pnt];
-                    vb = Fwd[2][pnt] / Fwd[0][pnt] + Vd * m_traceNormals[1][pnt];
-                    sb = pressure[pnt] / (pow(Fwd[0][pnt], gamma));
-                    rhob = pow((cb * cb) / (gamma * sb), gammaMinusOneInv);
-                    pb = rhob * cb * cb * gammaInv;
+                    // Thermodynamic boundary variables
+                    sBC = pressure[pnt] / (pow(Fwd[0][pnt], gamma));
+                    rhoBC = pow((cBC * cBC) / (gamma * sBC), gammaMinusOneInv);
+                    pBC = rhoBC * cBC * cBC * gammaInv;
                     
+                    // Kinetic energy initialiasation
+                    NekDouble EkBC = 0.0;
+
                     // Boundary velocities
                     for ( j = 0; j < nDimensions; ++j)
                     {
-                        velB[j] = Fwd[j+1][pnt] / Fwd[0][pnt] + 
-                                    Vd * m_traceNormals[j][pnt];
-                        rhoVelB[j] = rhob * velB[j];
-                        Ek += 0.5 * rhob * velB[j]*velB[j]; 
+                        velBC[j] = Fwd[j+1][pnt] / Fwd[0][pnt] + 
+                                    VDBC * m_traceNormals[j][pnt];
+                        rhoVelBC[j] = rhoBC * velBC[j];
+                        EkBC += 0.5 * rhoBC * velBC[j]*velBC[j]; 
                     }
                     
-                    //rhoub = rhob * ub;
-                    //rhovb = rhob * vb;
-                    //rhoeb = pb * gammaMinusOneInv + 0.5 * rhob * (ub*ub + vb*vb);
-                    rhoeb = pb * gammaMinusOneInv + Ek;
+                    // Boundary energy
+                    EBC = pBC * gammaMinusOneInv + EkBC;
 
-                    /*
+                    // Imposing Riemann Invariant boundary conditions
                     (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhob;
-                    (m_fields[1]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhoub;
-                    (m_fields[2]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhovb;
-                    (m_fields[3]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhoeb;
-                     */
-                    (m_fields[0]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhob;
+                     UpdatePhys())[id1+i] = rhoBC;
                     for (j = 0; j < nDimensions; ++j)
                     {
                         (m_fields[j+1]->GetBndCondExpansions()[bcRegion]->
-                         UpdatePhys())[id1+i] = rhoVelB[j];
+                         UpdatePhys())[id1+i] = rhoVelBC[j];
                     }
-                    (m_fields[nDimensions]->GetBndCondExpansions()[bcRegion]->
-                     UpdatePhys())[id1+i] = rhoeb;
+                    (m_fields[nDimensions+1]->GetBndCondExpansions()[bcRegion]->
+                     UpdatePhys())[id1+i] = EBC;
                 }
             }
         }

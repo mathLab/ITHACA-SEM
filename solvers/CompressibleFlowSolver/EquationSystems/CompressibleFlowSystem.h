@@ -144,14 +144,6 @@ namespace Nektar
             int                                                 bcRegion,
             int                                                 cnt,
             Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void InflowCFSBC(
-            int                                                 bcRegion, 
-            int                                                 cnt, 
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
-        void OutflowCFSBC(
-            int                                                 bcRegion, 
-            int                                                 cnt, 
-            Array<OneD, Array<OneD, NekDouble> >               &physarray);
         void RiemannInvariantBC(
             int                                                 bcRegion, 
             int                                                 cnt, 

@@ -196,20 +196,6 @@ namespace Nektar
                 SymmetryBC(n, cnt, inarray);
             }
             
-            // Inflow characteristic Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eInflowCFS)
-            {
-                InflowCFSBC(n, cnt, inarray);
-            }
-            
-            // Outflow characteristic Boundary Condition
-            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
-                SpatialDomains::eOutflowCFS)
-            {
-                OutflowCFSBC(n, cnt, inarray);
-            }
-            
             // Riemann invariant characteristic Boundary Condition (CBC)
             if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
                 SpatialDomains::eRiemannInvariant)

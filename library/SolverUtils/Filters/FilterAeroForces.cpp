@@ -172,10 +172,10 @@ namespace Nektar
             // Fields are in physical space
             for (int i = 0; i < pFields.num_elements(); ++i)
             {
-                if (m_isHomogeneous1D)
-                {
-                    pFields[i]->SetWaveSpace(false);
-                }
+               // if (m_isHomogeneous1D)
+			  //{
+              //      pFields[i]->SetWaveSpace(false);
+               // }
                 pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
                                      pFields[i]->UpdatePhys());
                 pFields[i]->SetPhysState(true);

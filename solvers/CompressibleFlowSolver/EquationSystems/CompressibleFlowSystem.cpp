@@ -486,56 +486,38 @@ namespace Nektar
                                 GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
             }
             
-            switch (m_spacedim)
+            // For 2D/3D, define: v* = v - 2(v.n)n
+            Array<OneD, NekDouble> tmp(nBCEdgePts, 0.0);
+            
+            // Calculate (v.n)
+            for (i = 0; i < m_spacedim; ++i)
             {
-                case 1:
-                {
-                    ASSERTL0(false, "1D not yet implemented for Compressible " 
-                                    "Flow Equations");
-                    break;
-                }
-                case 2:
-                {
-                    // Calculating the tangential vector
-                    Array<OneD, NekDouble> tmp_t(nBCEdgePts, 0.0);
-                    Vmath::Vmul(nBCEdgePts, &Fwd[1][id2], 1,
-                                &m_traceNormals[1][id2], 1, &tmp_t[0], 1);
-                    Vmath::Vvtvm(nBCEdgePts, &Fwd[2][id2], 1,
-                                 &m_traceNormals[0][id2], 1,
-                                 &tmp_t[0], 1, &tmp_t[0], 1);
-                    
-                    // Rotating back to cartesian coordinates
-                    Array<OneD, NekDouble> tmp_n(nBCEdgePts, 0.0); 
-                    Vmath::Vmul(nBCEdgePts, &tmp_t[0], 1,
-                                &m_traceNormals[1][id2], 1, &Fwd[1][id2], 1);
-                    Vmath::Vvtvm(nBCEdgePts, &tmp_n[0], 1, 
-                                 &m_traceNormals[0][id2], 1, 
-                                 &Fwd[1][id2], 1, &Fwd[1][id2], 1);
-                    Vmath::Vmul(nBCEdgePts, &tmp_t[0], 1,
-                                &m_traceNormals[0][id2], 1, &Fwd[2][id2], 1);
-                    Vmath::Vvtvp(nBCEdgePts, &tmp_n[0], 1,
-                                 &m_traceNormals[1][id2], 1,
-                                 &Fwd[2][id2], 1, &Fwd[2][id2], 1);
-                    break;
-                }
-                case 3:
-                {
-                    ASSERTL0(false, "3D not yet implemented for Compressible "
-                                    "Flow Equations");
-                    break;
-                }
-                default:
-                {
-                    ASSERTL0(false, "Illegal expansion dimension");
-                }
+                Vmath::Vvtvp(nBCEdgePts,
+                             &Fwd[1+i][id2], 1,
+                             &m_traceNormals[i][id2], 1,
+                             &tmp[0], 1,
+                             &tmp[0], 1);
             }
             
-            // copy boundary adjusted values into the boundary expansion
+            // Calculate 2.0(v.n)
+            Vmath::Smul(nBCEdgePts, -2.0, &tmp[0], 1, &tmp[0], 1);
+            
+            // Calculate v* = v - 2.0(v.n)n
+            for (i = 0; i < m_spacedim; ++i)
+            {
+                Vmath::Vvtvp(nBCEdgePts,
+                             &tmp[0], 1,
+                             &m_traceNormals[i][id2], 1,
+                             &Fwd[1+i][id2], 1,
+                             &Fwd[1+i][id2], 1);
+            }
+            
+            // Copy boundary adjusted values into the boundary expansion
             for (i = 0; i < nVariables; ++i)
             {
-                Vmath::Vcopy(nBCEdgePts, &Fwd[i][id2], 1, 
+                Vmath::Vcopy(nBCEdgePts, &Fwd[i][id2], 1,
                              &(m_fields[i]->GetBndCondExpansions()[bcRegion]->
-                               UpdatePhys())[id1], 1);	
+                               UpdatePhys())[id1], 1);
             }
         }
     }

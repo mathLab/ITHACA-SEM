@@ -116,8 +116,26 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-        NekDouble GetSubstepTimeStep();
+        AdvectionTermSharedPtr GetAdvObject(void)
+        {
+            return m_advObject;
+        }
 
+
+        int GetNConvectiveFields(void)
+        {
+            return m_nConvectiveFields;  
+        }
+
+        Array<OneD, int> &GetVelocity(void)
+        {
+            return  m_velocity; 
+        }
+
+        NekDouble GetSubstepTimeStep();
+        
+        Array<OneD, NekDouble> GetElmtCFLVals(void);
+        
         NekDouble GetCFLEstimate(int &elmtid);
 
         // Mapping of the real convective field on the standard element.

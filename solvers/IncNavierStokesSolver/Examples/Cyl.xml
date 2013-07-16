@@ -3268,10 +3268,12 @@
 
         <PARAMETERS>
             <P> TimeStep      = 0.001 </P>
-            <P> NumSteps      = 100000 </P>
+            <P> FinalTime     =300    </P>
+            <P> NumSteps      = FinalTime/TimeStep </P>
             <P> IO_CheckSteps = 1000    </P>
             <P> IO_InfoSteps  = 10    </P>
-            <P> Kinvis        = 0.01   </P>
+            <P> Re=60 </P>
+            <P> Kinvis        = 1/Re   </P>
         </PARAMETERS>
 
         <VARIABLES>

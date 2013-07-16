@@ -312,6 +312,11 @@ namespace Nektar
         return outarray;
     }
 
+    Array<OneD, NekDouble> CellModel::GetCellSolution(unsigned int idx)
+    {
+        return m_cellSol[idx];
+    }
+
     void CellModel::LoadCellModel()
     {
         const bool root = (m_session->GetComm()->GetRank() == 0);

@@ -156,7 +156,7 @@ namespace Nektar
             grad1 = Array<OneD, NekDouble> (pFields[0]->GetNpoints());
             grad2 = Array<OneD, NekDouble> (pFields[0]->GetNpoints());
             
-            if(pFields[0]->GetWaveSpace() == false && m_dealiasing == true )
+            if(pFields[0]->GetWaveSpace() == false && m_homogen_dealiasing == true )
             {
                 ASSERTL0(m_specHP_dealiasing == false,"Spectral/hp element dealaising is not set up for this option");
 
@@ -168,7 +168,7 @@ namespace Nektar
                 Vmath::Vadd(nPointsTot,grad0,1,grad1,1,pOutarray,1);
                 Vmath::Vadd(nPointsTot,grad2,1,pOutarray,1,pOutarray,1);
             }
-            else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == false)
+            else if(pFields[0]->GetWaveSpace() == true && m_homogen_dealiasing == false)
             {
                 // take d/dx, d/dy  gradients in physical Fourier space
                 pFields[0]->PhysDeriv(pV[pVelocityComponent],grad0,grad1);
@@ -213,31 +213,46 @@ namespace Nektar
                     pFields[0]->HomogeneousFwdTrans(grad0,pOutarray);
                 }
             }
-            else if(pFields[0]->GetWaveSpace() == false && m_dealiasing == false) 
+            else if(pFields[0]->GetWaveSpace() == false && m_homogen_dealiasing == false) 
             {
                 
                 pFields[0]->PhysDeriv(pU,grad0,grad1,grad2);
-
-                if(m_specHP_dealiasing)  // interpolate gradient field 
+                
+                if(m_specHP_dealiasing) //interpolate spectral/hp gradient field 
                 {
                     pFields[0]->PhysInterp1DScaled(OneDptscale,grad0,wkSp);
-                    Vmath::Vcopy(nPointsTot,wkSp,1,grad0,1);
-                    pFields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
-                    Vmath::Vcopy(nPointsTot,wkSp,1,grad1,1);
-                    pFields[0]->PhysInterp1DScaled(OneDptscale,grad2,wkSp);
-                    Vmath::Vcopy(nPointsTot,wkSp,1,grad1,2);
+                    Vmath::Vmul(nPointsTot,wkSp,1,AdvVel[0],1,Outarray,1);
+                }
+                else
+                {
+                    Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
                 }
 
-                Vmath::Vmul(nPointsTot,grad0,1,AdvVel[0],1,Outarray,1);
-                Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,Outarray,1);
-                Vmath::Vvtvp(nPointsTot,grad2,1,AdvVel[2],1,Outarray,1,Outarray,1);
 
-                if(m_specHP_dealiasing) // Galerkin project solution back to origianl space 
+                if(m_specHP_dealiasing) //interpolate spectral/hp gradient field 
                 {
+                    pFields[0]->PhysInterp1DScaled(OneDptscale,grad1,wkSp);
+                    Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[1],1,Outarray,1,
+                                 Outarray,1);
+                }
+                else
+                {
+                    Vmath::Vvtvp(nPointsTot,grad1,1,AdvVel[1],1,Outarray,1,
+                                 Outarray,1);
+                }
+		
+                if(m_specHP_dealiasing) //interpolate spectral/hp gradient field 
+                {
+                    pFields[0]->PhysInterp1DScaled(OneDptscale,grad2,wkSp);
+                    Vmath::Vvtvp(nPointsTot,wkSp,1,AdvVel[2],1,Outarray,1,Outarray,1);
                     pFields[0]->PhysGalerkinProjection1DScaled(OneDptscale,Outarray,pOutarray); 
                 }
+                else
+                {
+                    Vmath::Vvtvp(nPointsTot,grad2,1,AdvVel[2],1,Outarray,1,pOutarray,1);
+                }
             }
-            else if(pFields[0]->GetWaveSpace() == true && m_dealiasing == true) 
+            else if(pFields[0]->GetWaveSpace() == true && m_homogen_dealiasing == true) 
             {
                 ASSERTL0(m_specHP_dealiasing == false,"Spectral/hp element dealaising is not set up for this option");
 

@@ -184,6 +184,7 @@ namespace Nektar
             std::map<MeshCurvedKey, MeshCurved> m_meshCurved;
             std::map<int, MeshEntity>           m_meshComposites;
             std::vector<unsigned int>           m_domain;
+            std::map<std::string, std::string>  m_vertexAttributes;
 
             // hierarchial mapping: composite id -> field name -> integer list
             // of directional nummodes described by expansion type clause.

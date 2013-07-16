@@ -1,7 +1,7 @@
 ADD_UTILITIES_EXECUTABLE(AddExprToField   util-extra AddExprToField.cpp)
+ADD_UTILITIES_EXECUTABLE(CalcDivergence  util-extra CalcDivergence.cpp)
 ADD_UTILITIES_EXECUTABLE(CalcGrad   util-extra CalcGrad.cpp)
 ADD_UTILITIES_EXECUTABLE(CalcVorticity   util-extra CalcVorticity.cpp)
-ADD_UTILITIES_EXECUTABLE(FieldToField   util-extra FieldToField.cpp)
 ADD_UTILITIES_EXECUTABLE(FldCalcBCs   util-extra FldCalcBCs.cpp)
 ADD_UTILITIES_EXECUTABLE(L2         util-extra L2.cpp)
 ADD_UTILITIES_EXECUTABLE(Linf         util-extra Linf.cpp)

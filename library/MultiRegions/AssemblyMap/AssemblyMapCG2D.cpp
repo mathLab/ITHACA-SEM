@@ -67,8 +67,9 @@ namespace Nektar
          *
          */
         AssemblyMapCG2D::AssemblyMapCG2D(
-                const LibUtilities::SessionReaderSharedPtr &pSession):
-            AssemblyMapCG(pSession)
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
         }
 
@@ -87,8 +88,9 @@ namespace Nektar
                                                             &bndConditions,
                 const PeriodicMap& periodicVertsId,
                 const PeriodicMap& periodicEdgesId,
-                const bool checkIfSystemSingular) :
-            AssemblyMapCG(pSession)
+                const bool checkIfSystemSingular,
+                const std::string variable) :
+            AssemblyMapCG(pSession,variable)
         {
             SetUp2DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
@@ -109,8 +111,9 @@ namespace Nektar
         AssemblyMapCG2D::AssemblyMapCG2D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
                 const int numLocalCoeffs,
-                const ExpList &locExp):
-            AssemblyMapCG(pSession)
+                const ExpList &locExp,
+                const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
             SetUp2DExpansionC0ContMap(numLocalCoeffs, locExp);
             CalculateBndSystemBandWidth();
@@ -555,10 +558,10 @@ namespace Nektar
                 int mdswitch,
                 bool doInteriorMap)
         {
-            int i,j,k,l,m;
+            int i,j,k,l;
             int cnt = 0;
             int meshVertId, meshVertId2;
-            int meshEdgeId, meshEdgeId2;
+            int meshEdgeId;
             int graphVertId = 0;
             StdRegions::StdExpansion2DSharedPtr  locExpansion;
             LocalRegions::SegExpSharedPtr        bndSegExp;

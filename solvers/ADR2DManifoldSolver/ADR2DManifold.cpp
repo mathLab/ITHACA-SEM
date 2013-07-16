@@ -259,7 +259,7 @@ namespace Nektar
             {
                 if  ( (m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eTimeDependent &&
                         m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eMG   ) &&
-                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eWALL  )
+                        m_fields[0]->GetBndConditions()[n]->GetUserDefined() != SpatialDomains::eWall  )
 
                 {
                     ASSERTL0(false,"Unknown USERDEFINEDTYPE boundary condition");
@@ -1286,7 +1286,7 @@ namespace Nektar
                 MGBoundaryCondtions(n,cnt,time);
             }
 
-            else if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eWALL)
+            else if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == SpatialDomains::eWall)
             {
                 WallBoundary2D(n,cnt,inarray);
             }

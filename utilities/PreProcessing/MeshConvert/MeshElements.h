@@ -183,11 +183,6 @@ namespace Nektar
             /// Generate a %SpatialDomains::VertexComponent for this node.
             SpatialDomains::VertexComponentSharedPtr GetGeom(int coordDim)
             {
-                if (m_geom)
-                {
-                    return m_geom;
-                }
-                
                 m_geom = MemoryManager<SpatialDomains::VertexComponent>::
                     AllocateSharedPtr(coordDim,id,x,y,z);
                 return m_geom;

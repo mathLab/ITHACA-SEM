@@ -271,22 +271,6 @@ namespace Nektar
                               firstNonDirGraphVertId, nExtraDirichlet,
                               bottomUpGraph, extraDir,  false,  4);
         
-#if 0
-        bottomUpGraph->Dump();
-        cout << endl;
-
-        for(i = 0; i < ReorderedGraphVertId[0].size(); ++i)
-        {
-            cout << "Vertex " << i << " Reordered to "<< ReorderedGraphVertId[0][i] << endl;
-            
-        }
-
-        for(i = 0; i < ReorderedGraphVertId[1].size(); ++i)
-        {
-            cout << "Edge " << i << " Reordered to "<< ReorderedGraphVertId[1][i] << endl;
-            
-        }
-#endif
         /**
          * STEP 2a: Set the mean pressure modes to edges depending on
          * type of direct solver technique;
@@ -409,9 +393,6 @@ namespace Nektar
         // Add mean pressure modes; 
         for(i = 0; i < nel; ++i)
         {
-#if 0
-            cout << "Element "<< i << " EdgeId  " << AddMeanPressureToEdgeId[i] << endl;
-#endif
             graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]]+1)*nvel*nz_loc-1] += nz_loc;
             //graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc] += nz_loc;
         }

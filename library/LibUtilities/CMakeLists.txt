@@ -238,10 +238,12 @@ SET(PolylibSources
 
 SET(TimeIntegrationHeaders
         ./TimeIntegration/TimeIntegrationScheme.h
+        ./TimeIntegration/TimeIntegrationWrapper.h
 ) 
 
 SET(TimeIntegrationSources
         ./TimeIntegration/TimeIntegrationScheme.cpp
+        ./TimeIntegration/TimeIntegrationWrapper.cpp
 )
 
 SET(ExpressionTemplates

@@ -2138,13 +2138,45 @@ namespace Nektar
                     if(m_bndConditions[i]->GetBoundaryConditionType()
                        == SpatialDomains::eDirichlet)
                     {
-                    LibUtilities::Equation  condition = boost::static_pointer_cast<
-                        SpatialDomains::DirichletBoundaryCondition >(m_bndConditions[i])->m_dirichletCondition;
-                    
-                    condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
-                    
-                    locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
-                                                        locExpList->UpdateCoeffs());
+                        string filebcs = boost::static_pointer_cast<
+                            SpatialDomains::DirichletBoundaryCondition>(
+                                m_bndConditions[i])->m_filename;
+                        
+                        if(filebcs != "")
+                        {
+                             string var = filebcs.substr(
+                                 0, filebcs.find_last_of("."));
+                             int len = var.length();
+                             var = var.substr(len-1,len);
+
+                             cout << "Boundary condition from file:" 
+                                  << filebcs << endl;
+
+                             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
+                             std::vector<std::vector<NekDouble> > FieldData;
+                             Import(filebcs,FieldDef, FieldData);
+
+                             // copy FieldData into locExpList
+                             locExpList->ExtractDataToCoeffs(
+                                 FieldDef[0], FieldData[0],
+                                 FieldDef[0]->m_fields[0], locExpList->UpdateCoeffs());   
+                             locExpList->BwdTrans_IterPerExp(
+                                 locExpList->GetCoeffs(), 
+                                 locExpList->UpdatePhys());
+                             locExpList->FwdTrans_BndConstrained(
+                                 locExpList->GetPhys(),
+                                 locExpList->UpdateCoeffs());
+                        }
+                        else
+                        {
+                            LibUtilities::Equation  condition = boost::static_pointer_cast<
+                                SpatialDomains::DirichletBoundaryCondition >(m_bndConditions[i])->m_dirichletCondition;
+                            
+                            condition.Evaluate(x0,x1,x2,time,locExpList->UpdatePhys());
+                            
+                            locExpList->FwdTrans_BndConstrained(locExpList->GetPhys(),
+                                                                locExpList->UpdateCoeffs());
+                        }
                     }
                     else if(m_bndConditions[i]->GetBoundaryConditionType()
                             == SpatialDomains::eNeumann)

@@ -72,28 +72,25 @@ namespace Nektar
             config["outfile"] = ConfigOption(false, "", "Output filename.");
         }
 
-        /**
-         * @brief Open a file for input.
-         */
-        void InputModule::OpenStream()
+        void InputModule::AddFile(string fileType, string fileName)
         {
-            string fname = config["infile"].as<string>();
-            mshFile.open(fname.c_str());
-            if (!mshFile.good())
+            // Check to see if this file type is allowed
+            if (allowedFiles.count(fileType) == 0)
             {
-                cerr << "Error opening file: " << fname << endl;
-                abort();
+                cerr << "File type " << fileType << " not supported for this "
+                     << "module." << endl;
             }
+            
+            files[fileType].push_back(fileName);
         }
-
         /**
          * @brief Open a file for output.
          */
         void OutputModule::OpenStream()
         {
             string fname = config["outfile"].as<string>();
-            mshFile.open(fname.c_str());
-            if (!mshFile.good())
+            fldFile.open(fname.c_str());
+            if (!fldFile.good())
             {
                 cerr << "Error opening file: " << fname << endl;
                 abort();
@@ -166,7 +163,8 @@ namespace Nektar
          */
         void InputModule::PrintSummary()
         {
-            cout << "Field size = " << f->data[0].num_elements() * sizeof(NekDouble) << endl;
+            cout << "Field size = " << 
+            f->data[0].size() * sizeof(NekDouble) << endl;
         }
     }
 }

@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Mesh conversion utility.
+//  Description: Field conversion utility.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +94,8 @@ int main(int argc, char* argv[])
     if (vm.count("modules-opt"))
     {
         vector<string> tmp1;
-        boost::split(tmp1, vm["modules-opt"].as<string>(), boost::is_any_of(":"));
+        boost::split(tmp1, vm["modules-opt"].as<string>(), 
+                     boost::is_any_of(":"));
         
         if (tmp1.size() != 2)
         {
@@ -172,9 +173,12 @@ int main(int argc, char* argv[])
     }
     
     // Add input and output modules to beginning and end of this vector.
-    modcmds.insert   (modcmds.begin(), inout[0]);
-    modcmds.push_back(inout[1]);
-        
+    modcmds.insert(modcmds.begin(), inout.begin(), inout.end()-1);
+    modcmds.push_back(*(inout.end()-1));
+    int nInput = inout.size()-1;
+    
+    InputModuleSharedPtr inputModule;
+
     for (int i = 0; i < modcmds.size(); ++i)
     {
         // First split each command by the colon separator.
@@ -184,9 +188,9 @@ int main(int argc, char* argv[])
 
         boost::split(tmp1, modcmds[i], boost::is_any_of(":"));
         
-        if (i == 0 || i == modcmds.size() - 1)
+        if (i < nInput || i == modcmds.size() - 1)
         {
-            module.first = (i == 0 ? eInputModule : eOutputModule);
+            module.first = (i < nInput ? eInputModule : eOutputModule);
                 
             // If no colon detected, automatically detect mesh type from
             // file extension. Otherwise override and use tmp1[1] as the
@@ -200,12 +204,12 @@ int main(int argc, char* argv[])
                 int    dot    = tmp1[0].find_last_of('.') + 1;
                 string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
                 module.second = ext;
-                tmp1.push_back(string(i == 0 ? "infile=" : "outfile=")+tmp1[0]);
+                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")+tmp1[0]);
             }
             else
             {
                 module.second = tmp1[1];
-                tmp1.push_back(string(i == 0 ? "infile=" : "outfile=")+tmp1[0]);
+                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")+tmp1[0]);
                 offset++;
             }
         }
@@ -214,10 +218,29 @@ int main(int argc, char* argv[])
             module.first  = eProcessModule;
             module.second = tmp1[0];
         }
-            
+ 
         // Create module.
-        ModuleSharedPtr mod = GetModuleFactory().CreateInstance(module, f);
-        modules.push_back(mod);
+        ModuleSharedPtr mod;
+        if (i == 0 || i >= nInput)
+        {
+            mod = GetModuleFactory().CreateInstance(module, f);
+            modules.push_back(mod);
+        }
+        
+        if (i == 0)
+        {
+            inputModule = boost::dynamic_pointer_cast<InputModule>(mod);
+        }
+
+        if (i < nInput)
+        {
+            inputModule->AddFile(module.second, tmp1[0]);
+        }
+        
+        if (i >= 1 && i < nInput)
+        {
+            mod = inputModule;
+        }
         
         // Set options for this module.
         for (int j = offset; j < tmp1.size(); ++j)
@@ -245,7 +268,7 @@ int main(int argc, char* argv[])
         mod->SetDefaults();
     }
 
-    // Run mesh process.
+    // Run field process.
     for (int i = 0; i < modules.size(); ++i)
     {
         modules[i]->Process();

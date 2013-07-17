@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Field.h
+//  File: OutputVtk.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,36 +29,37 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Field converter module base classes.
+//  Description: Vtk output module
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <boost/shared_ptr.hpp>
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTVTK
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_OUTPUTVTK
 
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <SpatialDomains/MeshGraph.h>
-#include <MultiRegions/ExpList.h>
+#include <tinyxml/tinyxml.h>
+#include "Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        struct Field {
-            Field() : verbose(false) {}
-
-            vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
-            vector<vector<double> > data;
-            vector<MultiRegions::ExpListSharedPtr> exp;
+        /// Converter from fld to vtk.
+        class OutputVtk : public OutputModule
+        {
+        public:
+            /// Creates an instance of this class
+            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+                return MemoryManager<OutputVtk>::AllocateSharedPtr(f);
+            }
+            static ModuleKey className;
             
-            LibUtilities::SessionReaderSharedPtr session;
-            SpatialDomains::MeshGraphSharedPtr graph;
-
-            bool verbose;
+            OutputVtk(FieldSharedPtr f);
+            virtual ~OutputVtk();
+            
+            /// Write fld to output file.
+            virtual void Process();
         };
-
-        typedef boost::shared_ptr<Field> FieldSharedPtr;
     }
 }
 
+#endif

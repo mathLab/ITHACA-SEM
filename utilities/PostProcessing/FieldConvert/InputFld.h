@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Field.h
+//  File: InputFld.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,36 +29,39 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Field converter module base classes.
+//  Description: FLD converter.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <boost/shared_ptr.hpp>
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTFLD
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_INPUTFLD
 
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <SpatialDomains/MeshGraph.h>
-#include <MultiRegions/ExpList.h>
+#include "Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        struct Field {
-            Field() : verbose(false) {}
+        /**
+         * Converter for Fld files.
+         */
+        class InputFld : public InputModule
+        {
+        public:
+            InputFld(FieldSharedPtr f);
+            virtual ~InputFld();
+            virtual void Process();
 
-            vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
-            vector<vector<double> > data;
-            vector<MultiRegions::ExpListSharedPtr> exp;
+            /// Creates an instance of this class
+            static ModuleSharedPtr create(FieldSharedPtr f) {
+                return MemoryManager<InputFld>::AllocateSharedPtr(f);
+            }
+            /// %ModuleKey for class.
+            static ModuleKey className[];
             
-            LibUtilities::SessionReaderSharedPtr session;
-            SpatialDomains::MeshGraphSharedPtr graph;
-
-            bool verbose;
+        private:
         };
-
-        typedef boost::shared_ptr<Field> FieldSharedPtr;
     }
 }
 
+#endif

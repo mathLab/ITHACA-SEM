@@ -40,6 +40,8 @@
 #include <map>
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <set>
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
 
@@ -144,7 +146,7 @@ namespace Nektar
         /**
          * @brief Abstract base class for input modules.
          *
-         * Input modules should read the contents of #mshFile in the Process()
+         * Input modules should read the contents of #fldFile in the Process()
          * function and populate the members of #m. Typically any given module
          * should populate Mesh::expDim, Mesh::spaceDim, Mesh::node and
          * Mesh::element, then call the protected ProcessX functions to
@@ -154,14 +156,16 @@ namespace Nektar
         {
         public:
             InputModule(FieldSharedPtr p_m);
-            void OpenStream();
+            void AddFile(string fileType, string fileName);
             
         protected:
             /// Print summary of elements.
-            void          PrintSummary();
-            /// Input stream
-            ifstream mshFile;
+            void PrintSummary();
+            map<string, vector<string> > files;
+            set<string> allowedFiles;
         };
+        
+        typedef boost::shared_ptr<InputModule> InputModuleSharedPtr;
 
         /**
          * @brief Abstract base class for processing modules.
@@ -181,7 +185,7 @@ namespace Nektar
          * @brief Abstract base class for output modules.
          *
          * Output modules take the mesh #m and write to the file specified by
-         * the stream #mshFile.
+         * the stream #fldFile.
          */
         class OutputModule : public Module
         {
@@ -191,7 +195,7 @@ namespace Nektar
             
         protected:
             /// Output stream
-            ofstream mshFile;
+            ofstream fldFile;
         };
 
         typedef pair<ModuleType,string> ModuleKey;

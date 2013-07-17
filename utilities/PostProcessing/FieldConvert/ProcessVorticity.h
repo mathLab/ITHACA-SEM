@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File: Field.h
+//  File: ProcessVorticity.h
 //
 //  For more information, please see: http://www.nektar.info/
 //
@@ -29,36 +29,39 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Field converter module base classes.
+//  Description: Computes vorticity field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include <boost/shared_ptr.hpp>
+#ifndef UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSVORTICITY
+#define UTILITIES_PREPROCESSING_FIELDCONVERT_PROCESSVORTICITY
 
-#include <LibUtilities/BasicUtils/NekFactory.hpp>
-#include <LibUtilities/BasicUtils/SharedArray.hpp>
-#include <LibUtilities/BasicUtils/SessionReader.h>
-#include <SpatialDomains/MeshGraph.h>
-#include <MultiRegions/ExpList.h>
+#include "Module.h"
 
 namespace Nektar
 {
     namespace Utilities
     {
-        struct Field {
-            Field() : verbose(false) {}
-
-            vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
-            vector<vector<double> > data;
-            vector<MultiRegions::ExpListSharedPtr> exp;
+        /**
+         * @brief This processing module calculates the vorticity and adds it
+         * as an extra-field to the output file.
+         */
+        class ProcessVorticity : public ProcessModule
+        {
+        public:
+            /// Creates an instance of this class
+            static boost::shared_ptr<Module> create(FieldSharedPtr f) {
+                return MemoryManager<ProcessVorticity>::AllocateSharedPtr(f);
+            }
+            static ModuleKey className;
             
-            LibUtilities::SessionReaderSharedPtr session;
-            SpatialDomains::MeshGraphSharedPtr graph;
-
-            bool verbose;
+            ProcessVorticity(FieldSharedPtr f);
+            virtual ~ProcessVorticity();
+            
+            /// Write mesh to output file.
+            virtual void Process();
         };
-
-        typedef boost::shared_ptr<Field> FieldSharedPtr;
     }
 }
 
+#endif

@@ -54,6 +54,7 @@ namespace Nektar
         {
             m_session = pSession;
             
+            m_EqTypeStr = pSession->GetSolverInfo("EQTYPE");
             // Setting up the normals
             int i;
             int nDim = pFields[0]->GetCoordim(0);
@@ -129,10 +130,68 @@ namespace Nektar
                     fields[i]->BwdTrans             (qcoeffs, qfield[j][i]);
                 }
             }
-            
             // Compute u from q_{\eta} and q_{\xi}
             // Obtain numerical fluxes
             v_NumFluxforVector(fields, inarray, qfield, flux[0]);
+            
+            if (m_EqTypeStr == "EulerADCFE")
+            {
+                
+                Array<OneD, NekDouble>          muvar(nPts, 0.0);
+                m_ArtificialDiffusionVector(inarray, muvar);
+                
+                for (j = 0; j < nDim; ++j)
+                {
+                    for (i = 0; i < nConvectiveFields; ++i)
+                    {
+                        Vmath::Vmul(nPts,qfield[j][i],1,muvar,1,qfield[j][i],1);
+                    }
+                }
+                
+                Array<OneD, NekDouble > FwdMuVar(nTracePts,0.0);
+                Array<OneD, NekDouble > BwdMuVar(nTracePts,0.0);
+                
+                fields[0]->GetFwdBwdTracePhys(muvar,FwdMuVar,BwdMuVar);
+                
+                int nBndRegions = fields[0]->GetBndCondExpansions().num_elements();
+                
+                int cnt = 0;
+                for (int i = 0; i < nBndRegions; ++i)
+                {
+                    // Number of boundary expansion related to that region
+                    int nBndEdges = fields[0]->
+                    GetBndCondExpansions()[i]->GetExpSize();
+                    
+                    // Weakly impose boundary conditions by modifying flux values
+                    for (int e = 0; e < nBndEdges ; ++e)
+                    {
+                        // Number of points on the expansion
+                        int nBndEdgePts = fields[0]->
+                        GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
+                        
+                        int id1 = fields[0]->
+                        GetBndCondExpansions()[i]->GetPhys_Offset(e);
+                        
+                        int id2 = fields[0]->GetTrace()->
+                        GetPhys_Offset(fields[0]->GetTraceMap()->
+                                       GetBndCondTraceToGlobalTraceMap(cnt++));
+                        
+                        for (int k = 0; k < nBndEdgePts; ++k)
+                        {
+                            BwdMuVar[id2+k] = FwdMuVar[id2+k];
+                        }
+                    }
+                }
+                
+                for(i = 0; i < nConvectiveFields; ++i)
+                {
+                    for(int k=0; k<nTracePts; ++k)
+                    {
+                        flux[0][i][k] = 0.5*(FwdMuVar[k]+BwdMuVar[k])*flux[0][i][k];
+                    }
+                }
+                
+            }
 
             for (i = 0; i < nConvectiveFields; ++i)
             {

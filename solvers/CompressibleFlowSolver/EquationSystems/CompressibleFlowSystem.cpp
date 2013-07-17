@@ -2398,7 +2398,7 @@ namespace Nektar
             
             for (int n = 0; n < nQuadPointsElement; n++)
             {
-                NekDouble mu_0 = (sqrt(Area)/pOrderElmt[e])*Lambda[n+PointCount];
+                NekDouble mu_0 = (sqrt(Area)/pOrderElmt[e])*LambdaMax;
                 
                 if (Sensor[n+PointCount] < (m_Skappa-m_Kappa))
                 {

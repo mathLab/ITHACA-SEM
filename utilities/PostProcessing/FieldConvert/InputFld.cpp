@@ -103,7 +103,7 @@ namespace Nektar
             argv[0] = "ProcessField";
             for (int i = 0; i < files["xml"].size(); ++i)
             {
-                argv[i+1] = files["xml"][i].c_str();
+                argv[i+1] = strdup(files["xml"][i].c_str());
             }
             f->session = LibUtilities::SessionReader::
                 CreateInstance(argc, argv);

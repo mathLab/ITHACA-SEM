@@ -80,12 +80,17 @@ namespace Nektar
             
             int i, j;
             int expdim  = f->graph->GetMeshDimension();
+            int spacedim  = f->graph->GetSpaceDimension();
             int nfields = f->fielddef[0]->m_fields.size();
-            int addfields = (nfields == 5)? 3:1;
+            if (spacedim == 1)
+            {
+                ASSERTL0(false, "Error: Vorticity for a 1D problem cannot "
+                                "be computed")
+            }
+            int addfields = (spacedim == 2)? 1:3;
             
             cout << addfields << endl;
             
-            ASSERTL0(nfields >= 3, "Need at least two fields (u,v)");
             int npoints = f->exp[0]->GetNpoints();
             Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
             Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
@@ -101,11 +106,11 @@ namespace Nektar
             }
             
             // Calculate Gradient & Vorticity
-            if (nfields == 4)
+            if (spacedim == 2)
             {
                 cout << "ciao ciao "<<endl;
 
-                for (i = 0; i < nfields; ++i)
+                for (i = 1; i < nfields; ++i)
                 {
                     f->exp[i]->PhysDeriv(f->exp[i]->GetPhys(), grad[i*nfields], 
                                          grad[i*nfields+1]);
@@ -118,7 +123,7 @@ namespace Nektar
             }
             else
             {
-                for (i = 0; i < nfields; ++i)
+                for (i = 1; i < nfields; ++i)
                 {
                     f->exp[i]->PhysDeriv(f->exp[i]->GetPhys(), grad[i*nfields], 
                                          grad[i*nfields+1], grad[i*nfields+2]);
@@ -141,6 +146,7 @@ namespace Nektar
 
                 f->exp[nfields + i]->FwdTrans(outfield[i], f->exp[nfields+i]->
                                               UpdateCoeffs());
+                
                 cout << "ciao ciao "<<endl;
 
             }
@@ -163,7 +169,7 @@ namespace Nektar
                 outname.push_back("W_y");
                 outname.push_back("W_z");
             }
-            
+            /*
             for (j = 0; j < nfields + addfields; ++j)
             {
                 for (i = 0; i < f->fielddef.size(); ++i)
@@ -181,6 +187,7 @@ namespace Nektar
                 }
             }
             LibUtilities::Write("Flate-Plate-coarse.fld", f->fielddef, f->data);
+             */
         }
     }
 }

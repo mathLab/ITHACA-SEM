@@ -3,6 +3,7 @@ SET(FieldConvertHeaders
     Field.h
     InputFld.h
     OutputVtk.h
+    OutputFld.h
     ProcessVorticity.h
 )
 
@@ -11,6 +12,7 @@ SET(FieldConvertSources
     FieldConvert.cpp
     InputFld.cpp
     OutputVtk.cpp
+    OutputFld.cpp
     ProcessVorticity.cpp
 )
   

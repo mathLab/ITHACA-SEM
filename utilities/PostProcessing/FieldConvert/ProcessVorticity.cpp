@@ -94,6 +94,8 @@ namespace Nektar
             int npoints = f->exp[0]->GetNpoints();
             Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
             Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
+            f->exp.resize(nfields+addfields);
+
             
             for (i = 0; i < nfields*nfields; ++i)
             {
@@ -125,6 +127,7 @@ namespace Nektar
             {
                 for (i = 1; i < nfields; ++i)
                 {
+
                     f->exp[i]->PhysDeriv(f->exp[i]->GetPhys(), grad[i*nfields], 
                                          grad[i*nfields+1], grad[i*nfields+2]);
                 }
@@ -144,8 +147,7 @@ namespace Nektar
             {
                 cout << "ciao ciao "<<endl;
 
-                f->exp[nfields + i]->FwdTrans(outfield[i], f->exp[nfields+i]->
-                                              UpdateCoeffs());
+                f->exp[nfields + i]->FwdTrans(outfield[i], f->exp[nfields+i]->UpdateCoeffs());
                 
                 cout << "ciao ciao "<<endl;
 

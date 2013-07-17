@@ -59,7 +59,7 @@ namespace Nektar
         static std::vector<LibUtilities::PointsType> NullPointsTypeVector;
         static std::vector<unsigned int> NullUnsignedIntVector;
 
-        typedef std::map<std::string, NekDouble>  FieldMetaDataMap;
+        typedef std::map<std::string, std::string>  FieldMetaDataMap;
         static  FieldMetaDataMap  NullFieldMetaDataMap;
         
 

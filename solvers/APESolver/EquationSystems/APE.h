@@ -105,7 +105,7 @@ namespace Nektar
     }
     
 	  
-    virtual void v_PrintSummary(std::ostream &out); 
+    virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
     virtual void v_NumericalFlux(Array<OneD, Array<OneD, NekDouble> > &physfield,
 				 Array<OneD, Array<OneD, NekDouble> > &numfluxX,

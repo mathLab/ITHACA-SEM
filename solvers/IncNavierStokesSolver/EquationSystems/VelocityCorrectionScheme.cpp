@@ -319,7 +319,7 @@ namespace Nektar
     }
     
         
-    void VelocityCorrectionScheme::v_PrintSummary(std::ostream &out)
+    void VelocityCorrectionScheme::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         if(m_subSteppingScheme)
         {

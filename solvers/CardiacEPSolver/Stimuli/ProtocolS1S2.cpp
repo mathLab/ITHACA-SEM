@@ -116,7 +116,7 @@ namespace Nektar
         
     }
     
-    void ProtocolS1S2::v_PrintSummary(std::ostream &out)
+    void ProtocolS1S2::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
         
     }

@@ -259,21 +259,6 @@ namespace Nektar
             return m_pressure;
         }
 
-        virtual void v_PrintSummary(std::ostream &out)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
-        virtual void v_DoInitialise(void)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
-        virtual void v_DoSolve(void)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
         virtual void v_TransCoeffToPhys(void)
         {
             ASSERTL0(false,"This method is not defined in this class");

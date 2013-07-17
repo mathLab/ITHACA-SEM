@@ -1172,9 +1172,9 @@ namespace Nektar
         cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
     
-    void CoupledLinearNS::v_PrintSummary(std::ostream &out)
+    void CoupledLinearNS::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        cout <<  "\tSolver Type     : Coupled Linearised NS" <<endl;
+        SolverUtils::AddSummaryItem(s, "Solver Type", "Coupled Linearised NS");
     }
     
     void CoupledLinearNS::v_DoInitialise(void)

@@ -118,9 +118,22 @@ MACRO(SET_COMMON_PROPERTIES name)
                     "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
             ENDIF()
         ENDIF( NOT MSVC)
-                        
+
+        # Attempt to retrieve git branch and SHA1 hash
+        get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+
+        # Define version
+        SET_PROPERTY(TARGET ${name}
+            APPEND PROPERTY COMPILE_DEFINITIONS NEKTAR_VERSION=\"${NEKTAR_VERSION}\")
+
+        # Define the git branch and SHA1 hash if we are in a git repository
+        IF (NOT ${GIT_REFSPEC} STREQUAL "GITDIR-NOTFOUND")
+            SET_PROPERTY(TARGET ${name}
+                APPEND PROPERTY COMPILE_DEFINITIONS GIT_SHA1=\"${GIT_SHA1}\" GIT_BRANCH=\"${GIT_REFSPEC}\")
+        ENDIF ()
+
         SET(CMAKE_CXX_FLAGS_RELEASE 
-                    "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
+                "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
     ENDIF(NOT ${CMAKE_CXX_FLAGS_DEBUG} MATCHES ".*DNEKTAR_DEBUG.*")
         
     IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )

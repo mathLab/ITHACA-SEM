@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
+#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
@@ -149,12 +150,12 @@ namespace Nektar
         // Sub-stepping related methods
         void SubStepAdvection (
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray,
                 const NekDouble time);
 
         void SubStepProjection(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray,
                 const NekDouble time);
 
         void SubStepExtrapoloteField(
@@ -164,7 +165,7 @@ namespace Nektar
         void AddAdvectionPenaltyFlux(
                 const Array<OneD, const Array<OneD, NekDouble> > &velfield,
                 const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray);
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray);
 
     protected:
         /// modal energy file
@@ -177,7 +178,7 @@ namespace Nektar
         /// bool to identify if advection term smoothing is requested
         bool m_SmoothAdvection;
 
-        LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
+        LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
@@ -218,8 +219,7 @@ namespace Nektar
 
         /// Time integration classes
         LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
-        Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>
-                                                     m_integrationScheme;
+        LibUtilities::TimeIntegrationWrapperSharedPtr m_integrationScheme;
 
         /// Number of time integration steps AND Order of extrapolation for
         /// pressure boundary conditions.

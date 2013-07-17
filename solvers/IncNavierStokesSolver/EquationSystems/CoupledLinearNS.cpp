@@ -33,6 +33,7 @@
 // Navier Stokes equations
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <IncNavierStokesSolver/EquationSystems/CoupledLinearNS.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>
@@ -1199,30 +1200,7 @@ namespace Nektar
                 
                 ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
                 
-                switch(intMethod)
-                {
-                    case LibUtilities::eIMEXOrder1: 
-                    {
-                        m_intSteps = 1;
-                        m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
-                        m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                    }
-                    break;
-                    case LibUtilities::eIMEXOrder2: 
-                    {
-                        m_intSteps = 2;
-                        m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXOrder1);
-                        m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
-                        m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-                    }
-                    break;
-                    default:
-                        ASSERTL0(0,"Integration method not setup: Options include ImexOrder1, ImexOrder2");
-                        break;
-                }
+                m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[intMethod]);
                 
                 // Could defind this from IncNavierStokes class? 
                 m_integrationOps.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);

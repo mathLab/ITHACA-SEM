@@ -558,29 +558,22 @@ namespace Nektar
          * @brief Prints a summary with some information regards the 
          * time-stepping.
          */
-        void UnsteadySystem::v_PrintSummary(std::ostream &out)
+        void UnsteadySystem::v_GenerateSummary(SummaryList& s)
         {
-            EquationSystem::v_PrintSummary(out);
-            out << "\tAdvection       : " 
-                << (m_explicitAdvection ? "explicit" : "implicit") << endl;
-            out << "\tDiffusion       : " 
-                << (m_explicitDiffusion ? "explicit" : "implicit") << endl;
+            EquationSystem::v_GenerateSummary(s);
+            AddSummaryItem(s, "Advection", m_explicitAdvection ? "explicit" : "implicit");
+            AddSummaryItem(s, "Diffusion", m_explicitDiffusion ? "explicit" : "implicit");
             
             if (m_session->GetSolverInfo("EQTYPE") 
                 == "SteadyAdvectionDiffusionReaction")
             {
-                out << "\tReaction        : " 
-                    << (m_explicitReaction  ? "explicit" : "implicit") << endl;
+                AddSummaryItem(s, "Reaction", m_explicitReaction  ? "explicit" : "implicit");
             }
             
-            out << "\tIntegration Type: " 
-            << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod]<< endl;
-            out << "\tTime Step       : " 
-            << m_timestep                                             << endl;
-            out << "\tNo. of Steps    : " 
-            << m_steps                                                << endl;
-            out << "\tCheckpoints     : " 
-            << m_checksteps << " steps"                               << endl;
+            AddSummaryItem(s, "Integration Type", LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod]);
+            AddSummaryItem(s, "Time Step", m_timestep);
+            AddSummaryItem(s, "No. of Steps", m_steps);
+            AddSummaryItem(s, "Checkpoints (steps)", m_checksteps);
         }
         
         /**

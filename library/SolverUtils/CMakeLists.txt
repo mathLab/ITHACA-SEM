@@ -1,4 +1,5 @@
 SET(SOLVER_UTILS_SOURCES
+  Core/Misc.cpp
   Advection/Advection.cpp
   Advection/AdvectionFR.cpp
   Advection/AdvectionNonConservative.cpp
@@ -27,6 +28,7 @@ SET(SOLVER_UTILS_SOURCES
 )
 
 SET(SOLVER_UTILS_HEADERS
+  Core/Misc.h
   Advection/Advection.h
   Advection/AdvectionFR.h
   Advection/AdvectionNonConservative.h

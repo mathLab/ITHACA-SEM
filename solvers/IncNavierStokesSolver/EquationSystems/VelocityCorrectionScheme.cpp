@@ -350,7 +350,7 @@ namespace Nektar
             cout << "\tDriver          : "<< endl;
         }
         
-        TimeParamSummary(out);
+        //TimeParamSummary(out);
         cout << "\tTime integ.     : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
         
         if(m_subSteppingScheme)

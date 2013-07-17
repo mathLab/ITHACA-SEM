@@ -148,5 +148,276 @@ namespace LibUtilities {
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
     }
 
+
+    // --------------
+    // IMEXdirk_1_1_1
+    // --------------
+    string TimeIntegrationIMEXdirk_1_1_1::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("IMEXdirk_1_1_1", TimeIntegrationIMEXdirk_1_1_1::create);
+
+    void TimeIntegrationIMEXdirk_1_1_1::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_1_1_1);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+
+    // --------------
+    // IMEXdirk_1_2_1
+    // --------------
+    string TimeIntegrationIMEXdirk_1_2_1::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("IMEXdirk_1_2_1", TimeIntegrationIMEXdirk_1_2_1::create);
+
+    void TimeIntegrationIMEXdirk_1_2_1::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_1_2_1);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+
+    // --------------
+    // IMEXdirk_1_2_2
+    // --------------
+    string TimeIntegrationIMEXdirk_1_2_2::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("IMEXdirk_1_2_2", TimeIntegrationIMEXdirk_1_2_2::create);
+
+    void TimeIntegrationIMEXdirk_1_2_2::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_1_2_2);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+
+    // --------------
+    // IMEXdirk_4_4_3
+    // --------------
+    string TimeIntegrationIMEXdirk_4_4_3::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("IMEXdirk_4_4_3", TimeIntegrationIMEXdirk_4_4_3::create);
+
+    void TimeIntegrationIMEXdirk_4_4_3::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_4_4_3);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+
+    // --------------
+    // IMEXdirk_2_2_2
+    // --------------
+    string TimeIntegrationIMEXdirk_2_2_2::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("IMEXdirk_2_2_2", TimeIntegrationIMEXdirk_2_2_2::create);
+
+    void TimeIntegrationIMEXdirk_2_2_2::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_2_2_2);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+
+    // --------------
+    // IMEXdirk_2_3_3
+    // --------------
+    string TimeIntegrationIMEXdirk_2_3_3::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("IMEXdirk_2_3_3", TimeIntegrationIMEXdirk_2_3_3::create);
+
+    void TimeIntegrationIMEXdirk_2_3_3::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_2_3_3);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+
+    // --------------
+    // IMEXdirk_2_3_2
+    // --------------
+    string TimeIntegrationIMEXdirk_2_3_2::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("IMEXdirk_2_3_2", TimeIntegrationIMEXdirk_2_3_2::create);
+
+    void TimeIntegrationIMEXdirk_2_3_2::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_2_3_2);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+
+    // --------------
+    // IMEXdirk_3_4_3
+    // --------------
+    string TimeIntegrationIMEXdirk_3_4_3::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("IMEXdirk_3_4_3", TimeIntegrationIMEXdirk_3_4_3::create);
+
+    void TimeIntegrationIMEXdirk_3_4_3::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_3_4_3);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+
+    // --------------
+    // DIRKOrder2
+    // --------------
+    string TimeIntegrationDIRKOrder2::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("DIRKOrder2", TimeIntegrationDIRKOrder2::create);
+
+    void TimeIntegrationDIRKOrder2::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eDIRKOrder2);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
+    // DIRKOrder3
+    // --------------
+    string TimeIntegrationDIRKOrder3::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("DIRKOrder3", TimeIntegrationDIRKOrder3::create);
+
+    void TimeIntegrationDIRKOrder3::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eDIRKOrder3);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
+    // ClassicalRungeKutta4
+    // --------------
+    string TimeIntegrationClassicalRungeKutta4::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("ClassicalRungeKutta4", TimeIntegrationClassicalRungeKutta4::create);
+
+    void TimeIntegrationClassicalRungeKutta4::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eClassicalRungeKutta4);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
+    // Midpoint
+    // --------------
+    string TimeIntegrationMidpoint::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("Midpoint", TimeIntegrationMidpoint::create);
+
+    void TimeIntegrationMidpoint::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eMidpoint);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
+    // RungeKutta2_ModifiedEuler
+    // --------------
+    string TimeIntegrationRungeKutta2_ModifiedEuler::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("RungeKutta2_ModifiedEuler", TimeIntegrationRungeKutta2_ModifiedEuler::create);
+
+    void TimeIntegrationRungeKutta2_ModifiedEuler::v_InitObject()
+    {
+        m_intSteps = 1;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eRungeKutta2_ModifiedEuler);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+    }
+
+    // --------------
+    // AdamsBashforthOrder2
+    // --------------
+    string TimeIntegrationAdamsBashforthOrder2::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("AdamsBashforthOrder2", TimeIntegrationAdamsBashforthOrder2::create);
+
+    void TimeIntegrationAdamsBashforthOrder2::v_InitObject()
+    {
+        m_intSteps = 2;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eForwardEuler);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+        TimeIntegrationSchemeKey       IntKey1(eAdamsBashforthOrder2);
+        m_integrationScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
+    }
+
+    // --------------
+    // AdamsBashforthOrder3
+    // --------------
+    string TimeIntegrationAdamsBashforthOrder3::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("AdamsBashforthOrder3", TimeIntegrationAdamsBashforthOrder3::create);
+
+    void TimeIntegrationAdamsBashforthOrder3::v_InitObject()
+    {
+        m_intSteps = 2;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eForwardEuler);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+        TimeIntegrationSchemeKey       IntKey1(eAdamsBashforthOrder3);
+        m_integrationScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
+    }
+
+    // --------------
+    // AdamsMoultonOrder2
+    // --------------
+    string TimeIntegrationAdamsMoultonOrder2::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("AdamsMoultonOrder2", TimeIntegrationAdamsMoultonOrder2::create);
+
+    void TimeIntegrationAdamsMoultonOrder2::v_InitObject()
+    {
+        m_intSteps = 2;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXOrder1);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+        TimeIntegrationSchemeKey       IntKey1(eAdamsMoultonOrder2);
+        m_integrationScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
+    }
+
+    // --------------
+    // IMEXGear
+    // --------------
+    string TimeIntegrationIMEXGear::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("IMEXGear", TimeIntegrationIMEXGear::create);
+
+    void TimeIntegrationIMEXGear::v_InitObject()
+    {
+        m_intSteps = 2;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_2_2_2);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+        TimeIntegrationSchemeKey       IntKey1(eIMEXGear);
+        m_integrationScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
+    }
+
+    // --------------
+    // CNAB
+    // --------------
+    string TimeIntegrationCNAB::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("CNAB", TimeIntegrationCNAB::create);
+
+    void TimeIntegrationCNAB::v_InitObject()
+    {
+        m_intSteps = 3;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_3_4_3);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+        TimeIntegrationSchemeKey       IntKey1(eIMEXdirk_3_4_3);
+        m_integrationScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
+        TimeIntegrationSchemeKey       IntKey2(eCNAB);
+        m_integrationScheme[2] = TimeIntegrationSchemeManager()[IntKey2];
+    }
+
+    // --------------
+    // MCNAB
+    // --------------
+    string TimeIntegrationMCNAB::className  = GetTimeIntegrationWrapperFactory().RegisterCreatorFunction("MCNAB", TimeIntegrationMCNAB::create);
+
+    void TimeIntegrationMCNAB::v_InitObject()
+    {
+        m_intSteps = 3;
+        m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
+        TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_3_4_3);
+        m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
+        TimeIntegrationSchemeKey       IntKey1(eIMEXdirk_3_4_3);
+        m_integrationScheme[1] = TimeIntegrationSchemeManager()[IntKey1];
+        TimeIntegrationSchemeKey       IntKey2(eMCNAB);
+        m_integrationScheme[2] = TimeIntegrationSchemeManager()[IntKey2];
+    }
 }
 }

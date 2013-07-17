@@ -217,7 +217,9 @@ namespace Nektar
             LibUtilities::TimeIntegrationSolutionSharedPtr u;
             int numMultiSteps;
             
-            IntScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod]);
+            IntScheme = LibUtilities::GetTimeIntegrationWrapperFactory().
+                CreateInstance(LibUtilities::TimeIntegrationMethodMap[
+                                   m_timeIntMethod]);
             numMultiSteps = IntScheme->GetIntegrationSteps();
             u = IntScheme->InitializeScheme(m_timestep, fields, m_time, m_ode);
 
@@ -608,32 +610,35 @@ namespace Nektar
 
         void UnsteadySystem::CheckForRestartTime(NekDouble &time)
         {
-            
             if (m_session->DefinesFunction("InitialConditions"))
             {
-                for(int i = 0; i < m_fields.num_elements(); ++i)
+                for (int i = 0; i < m_fields.num_elements(); ++i)
                 {
-                    
                     LibUtilities::FunctionType vType;
-                    
-                    vType = m_session->GetFunctionType("InitialConditions", m_session->GetVariable(i));
+
+                    vType = m_session->GetFunctionType(
+                        "InitialConditions", m_session->GetVariable(i));
+
                     if (vType == LibUtilities::eFunctionTypeFile)
                     {
                         std::string filename
-                            = m_session->GetFunctionFilename("InitialConditions", 
-                                                             m_session->GetVariable(i));
+                            = m_session->GetFunctionFilename(
+                                "InitialConditions", m_session->GetVariable(i));
 
-                        LibUtilities::ImportFieldMetaData(filename,m_fieldMetaDataMap);
-                        
+                        LibUtilities::ImportFieldMetaData(
+                            filename, m_fieldMetaDataMap);
+
                         // check to see if time defined
-                        if(m_fieldMetaDataMap != LibUtilities::NullFieldMetaDataMap)
+                        if (m_fieldMetaDataMap !=
+                                LibUtilities::NullFieldMetaDataMap)
                         {
                             LibUtilities::FieldMetaDataMap::iterator iter; 
                             
                             iter = m_fieldMetaDataMap.find("Time");
-                            if(iter != m_fieldMetaDataMap.end())
+                            if (iter != m_fieldMetaDataMap.end())
                             {
-                                time = boost::lexical_cast<NekDouble>(iter->second);
+                                time = boost::lexical_cast<NekDouble>(
+                                    iter->second);
                             }
                         }
                         

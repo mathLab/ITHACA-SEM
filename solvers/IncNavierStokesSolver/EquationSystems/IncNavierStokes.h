@@ -150,12 +150,12 @@ namespace Nektar
         // Sub-stepping related methods
         void SubStepAdvection (
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray,
                 const NekDouble time);
 
         void SubStepProjection(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray,
                 const NekDouble time);
 
         void SubStepExtrapoloteField(
@@ -165,7 +165,7 @@ namespace Nektar
         void AddAdvectionPenaltyFlux(
                 const Array<OneD, const Array<OneD, NekDouble> > &velfield,
                 const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray);
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray);
 
     protected:
         /// modal energy file
@@ -179,7 +179,6 @@ namespace Nektar
         bool m_SmoothAdvection;
 
         LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
-        //LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;

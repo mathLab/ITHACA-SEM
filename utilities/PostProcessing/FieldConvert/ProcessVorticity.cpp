@@ -92,6 +92,7 @@ namespace Nektar
             cout << addfields << endl;
             
             int npoints = f->exp[0]->GetNpoints();
+            int ncoeffs = f->exp[0]->GetNcoeffs();
             Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
             Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
             f->exp.resize(nfields+addfields);
@@ -143,13 +144,17 @@ namespace Nektar
                             outfield[2], 1);
             }
             
+            
             for (i = 0; i < addfields; ++i)
             {
-                cout << "ciao ciao "<<endl;
-
-                f->exp[nfields + i]->FwdTrans(outfield[i], f->exp[nfields+i]->UpdateCoeffs());
+                cout << "ciao ciao"<<endl;
+                Array<OneD, NekDouble>  tmp(ncoeffs);
                 
-                cout << "ciao ciao "<<endl;
+                //f->exp[nfields + i] = f->AppendExpList();
+                //f->AppendExpList("W_z");
+                f->exp[nfields + i]->FwdTrans(outfield[i], f->exp[nfields + i]->UpdateCoeffs());
+                
+                cout << "ciao ciaoooo"<<endl;
 
             }
 

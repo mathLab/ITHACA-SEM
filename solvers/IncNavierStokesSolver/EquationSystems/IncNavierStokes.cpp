@@ -285,7 +285,7 @@ namespace Nektar
         // Initialise NS solver which is set up to use a GLM method
         // with calls to EvaluateAdvection_SetPressureBCs and
         // SolveUnsteadyStokesSystem
-        m_integrationSoln = m_integrationScheme[m_intSteps-1]->InitializeScheme(m_timestep, fields, m_time, m_integrationOps);
+        m_integrationSoln = m_integrationScheme->InitializeScheme(m_timestep, fields, m_time, m_integrationOps);
 
         std::vector<SolverUtils::FilterSharedPtr>::iterator x;
         for (x = m_filters.begin(); x != m_filters.end(); ++x)
@@ -306,7 +306,7 @@ namespace Nektar
             }
 
 
-            fields = m_integrationScheme[min(n,m_intSteps-1)]->TimeIntegrate(m_timestep, m_integrationSoln, m_integrationOps);
+            fields = m_integrationScheme->TimeIntegrate(n, m_timestep, m_integrationSoln, m_integrationOps);
             
             m_time += m_timestep;
             
@@ -517,7 +517,7 @@ namespace Nektar
             {
                 fields = m_subStepIntegrationScheme->
                     TimeIntegrate(
-                            dt, SubIntegrationSoln, m_subStepIntegrationOps);
+                            n, dt, SubIntegrationSoln, m_subStepIntegrationOps);
             }
             
             // Reset time integrated solution in m_integrationSoln 

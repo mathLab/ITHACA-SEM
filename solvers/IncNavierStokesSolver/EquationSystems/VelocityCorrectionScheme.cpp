@@ -149,6 +149,9 @@ namespace Nektar
             
             m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.5);
             
+            m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[intMethod]);
+            m_intSteps = m_integrationScheme->GetIntegrationSteps();
+
             // Set to 1 for first step and it will then be increased in
             // time advance routines
             switch(intMethod)
@@ -156,13 +159,14 @@ namespace Nektar
             case LibUtilities::eBackwardEuler:
             case LibUtilities::eBDFImplicitOrder1: 
                 {
-                    m_intSteps = 1;
-                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
-                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                        
-                    LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eForwardEuler);
-                    m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
+//                    m_intSteps = 1;
+//                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
+//                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
+//                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+
+                    m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[LibUtilities::eForwardEuler]);
+//                    LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eForwardEuler);
+//                    m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
                     
                     // Fields for linear interpolation
                     m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*m_fields.num_elements());                    
@@ -177,18 +181,19 @@ namespace Nektar
                 break;
             case LibUtilities::eBDFImplicitOrder2:
                 {
-                    m_intSteps = 2;
-                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
+//                    m_intSteps = 2;
+//                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
+//
+//
+//                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eBackwardEuler);
+//                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+//                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
+//                    m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
                     
-                    
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eBackwardEuler);
-                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
-                    m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-                    
-                    LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eRungeKutta2_ImprovedEuler);
-                    
-                    m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
+//                    LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eRungeKutta2_ImprovedEuler);
+//
+//                    m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
+                    m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[LibUtilities::eRungeKutta2_ImprovedEuler]);
                     
                     int nvel = m_velocity.num_elements();
                     
@@ -216,45 +221,46 @@ namespace Nektar
         }
         else // Standard velocity correction scheme
         {
-            
+            m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[intMethod]);
+            m_intSteps = m_integrationScheme->GetIntegrationSteps();
             // Set to 1 for first step and it will then be increased in
             // time advance routines
-            switch(intMethod)
-            {
-                case LibUtilities::eIMEXOrder1: 
-                {
-                    m_intSteps = 1;
-                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
-                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                }
-                break;
-                case LibUtilities::eIMEXOrder2: 
-                {
-                    m_intSteps = 2;
-                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXOrder1);
-                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
-                    m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-                }
-                break;
-                case LibUtilities::eIMEXOrder3: 
-                {
-                    m_intSteps = 3;
-                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXdirk_3_4_3);
-                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(LibUtilities::eIMEXdirk_3_4_3);
-                    m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey2(intMethod);
-                    m_integrationScheme[2] = LibUtilities::TimeIntegrationSchemeManager()[IntKey2];
-                }
-                break;
-                default:
-                    ASSERTL0(0,"Integration method not suitable: Options include IMEXOrder1, IMEXOrder2 or IMEXOrder3");
-                    break;
-            }
+//            switch(intMethod)
+//            {
+//                case LibUtilities::eIMEXOrder1:
+//                {
+//                    m_intSteps = 1;
+//                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
+//                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
+//                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+//                }
+//                break;
+//                case LibUtilities::eIMEXOrder2:
+//                {
+//                    m_intSteps = 2;
+//                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
+//                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXOrder1);
+//                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+//                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
+//                    m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
+//                }
+//                break;
+//                case LibUtilities::eIMEXOrder3:
+//                {
+//                    m_intSteps = 3;
+//                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
+//                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXdirk_3_4_3);
+//                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
+//                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(LibUtilities::eIMEXdirk_3_4_3);
+//                    m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
+//                    LibUtilities::TimeIntegrationSchemeKey       IntKey2(intMethod);
+//                    m_integrationScheme[2] = LibUtilities::TimeIntegrationSchemeManager()[IntKey2];
+//                }
+//                break;
+//                default:
+//                    ASSERTL0(0,"Integration method not suitable: Options include IMEXOrder1, IMEXOrder2 or IMEXOrder3");
+//                    break;
+//            }
             
             // set explicit time-intregration class operators
             m_integrationOps.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
@@ -351,7 +357,7 @@ namespace Nektar
         }
         
         TimeParamSummary(out);
-        cout << "\tTime integ.     : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
+        cout << "\tTime integ.     : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme->GetIntegrationMethod()] << endl;
         
         if(m_subSteppingScheme)
         {

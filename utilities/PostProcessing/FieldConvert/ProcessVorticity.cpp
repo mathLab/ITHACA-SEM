@@ -89,8 +89,6 @@ namespace Nektar
             }
             int addfields = (spacedim == 2)? 1:3;
             
-            cout << addfields << endl;
-            
             int npoints = f->exp[0]->GetNpoints();
             int ncoeffs = f->exp[0]->GetNcoeffs();
             Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
@@ -111,9 +109,7 @@ namespace Nektar
             // Calculate Gradient & Vorticity
             if (spacedim == 2)
             {
-                cout << "ciao ciao "<<endl;
-
-                for (i = 1; i < nfields; ++i)
+                for (i = 0; i < nfields; ++i)
                 {
                     f->exp[i]->PhysDeriv(f->exp[i]->GetPhys(), grad[i*nfields], 
                                          grad[i*nfields+1]);
@@ -121,12 +117,10 @@ namespace Nektar
                 // W_z = Vx - Uy
                 Vmath::Vsub(npoints, grad[1*nfields+0], 1, grad[0*nfields+1], 1, 
                             outfield[0], 1);
-                cout << "ciao ciao "<<endl;
-
             }
             else
             {
-                for (i = 1; i < nfields; ++i)
+                for (i = 0; i < nfields; ++i)
                 {
 
                     f->exp[i]->PhysDeriv(f->exp[i]->GetPhys(), grad[i*nfields], 
@@ -143,19 +137,11 @@ namespace Nektar
                 Vmath::Vsub(npoints, grad[1*nfields+0], 1, grad[0*nfields+1], 1, 
                             outfield[2], 1);
             }
-            
-            
+
             for (i = 0; i < addfields; ++i)
             {
-                cout << "ciao ciao"<<endl;
-                Array<OneD, NekDouble>  tmp(ncoeffs);
-                
-                //f->exp[nfields + i] = f->AppendExpList();
-                //f->AppendExpList("W_z");
+                f->exp[nfields + i] = f->AppendExpList();
                 f->exp[nfields + i]->FwdTrans(outfield[i], f->exp[nfields + i]->UpdateCoeffs());
-                
-                cout << "ciao ciaoooo"<<endl;
-
             }
 
             /*
@@ -176,25 +162,28 @@ namespace Nektar
                 outname.push_back("W_y");
                 outname.push_back("W_z");
             }
-            /*
+            
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
+                    = f->exp[0]->GetFieldDefinitions();
+            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
+            
             for (j = 0; j < nfields + addfields; ++j)
             {
                 for (i = 0; i < f->fielddef.size(); ++i)
                 {   
                     if (j >= nfields)
                     {
-                        f->fielddef[i]->m_fields.push_back(outname[j-nfields]);
+                        FieldDef[i]->m_fields.push_back(outname[j-nfields]);
                     }
                     else
                     {
-                        f->fielddef[i]->m_fields.push_back(f->fielddef[i]->
-                                                           m_fields[j]);
+                        FieldDef[i]->m_fields.push_back(f->fielddef[i]->m_fields[j]);
                     }
-                    f->exp[j]->AppendFieldData(f->fielddef[i], f->data[i]);
+                    f->exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
                 }
             }
-            LibUtilities::Write("Flate-Plate-coarse.fld", f->fielddef, f->data);
-             */
+            LibUtilities::Write("Flate-Plate-coarse.fld", FieldDef, FieldData);
+
         }
     }
 }

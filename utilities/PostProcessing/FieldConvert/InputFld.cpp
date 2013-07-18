@@ -89,8 +89,6 @@ namespace Nektar
         void InputFld::Process()
         {
             map<string, vector<string> >::iterator it;
-
-            string fieldfile();
             
             LibUtilities::Import(files["fld"][0], f->fielddef, f->data);
             

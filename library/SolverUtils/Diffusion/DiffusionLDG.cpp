@@ -178,7 +178,7 @@ namespace Nektar
                         
                         for (int k = 0; k < nBndEdgePts; ++k)
                         {
-                            BwdMuVar[id2+k] = FwdMuVar[id2+k];
+                            BwdMuVar[id2+k] = 0.0;
                         }
                     }
                 }

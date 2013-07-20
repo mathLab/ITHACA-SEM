@@ -1968,7 +1968,7 @@ namespace Nektar
             int nmodes0  = m_base[0]->GetNumModes();
             int nmodes1  = m_base[1]->GetNumModes();
             int numMax   = nmodes0;
-            int numMin2  = 0, i;
+            int numMin2  = nmodes0, i;
             
             Array<OneD, NekDouble> coeff(n_coeffs,0.0);
             Array<OneD, NekDouble> phys_tmp(nqtot,0.0);

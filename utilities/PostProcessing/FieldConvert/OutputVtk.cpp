@@ -66,9 +66,11 @@ namespace Nektar
                 cout << "OutputVtk: Writing file..." << endl;
             }
 
+            // Extract the output filename and extension
+            string filename = config["outfile"].as<string>();
+            
             // Write solution.
-            string fname = std::string("flate-plate.vtu");
-            ofstream outfile(fname.c_str());
+            ofstream outfile(filename.c_str());
             f->exp[0]->WriteVtkHeader(outfile);
             
             
@@ -86,7 +88,7 @@ namespace Nektar
                 f->exp[0]->WriteVtkPieceFooter(outfile, i);
             }
             f->exp[0]->WriteVtkFooter(outfile);
-            cout << "Written file: " << fname << endl;
+            cout << "Written file: " << filename << endl;
         }        
     }
 }

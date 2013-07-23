@@ -170,10 +170,6 @@ namespace Nektar
         /**
          * @brief Abstract base class for processing modules.
          * 
-         * Processing modules take a populated %Mesh object and process it in
-         * some fashion; for example the %ProcessJac module calculates the
-         * Jacobian of each element and prints warnings for non-positive
-         * elements.
          */
         class ProcessModule : public Module
         {
@@ -185,7 +181,7 @@ namespace Nektar
          * @brief Abstract base class for output modules.
          *
          * Output modules take the mesh #m and write to the file specified by
-         * the stream #fldFile.
+         * the stream.
          */
         class OutputModule : public Module
         {
@@ -202,7 +198,8 @@ namespace Nektar
         ostream& operator<<(ostream& os, const ModuleKey& rhs);
 
         typedef boost::shared_ptr<Module> ModuleSharedPtr;
-        typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr> ModuleFactory;
+        typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>
+            ModuleFactory;
         
         ModuleFactory& GetModuleFactory();
     }

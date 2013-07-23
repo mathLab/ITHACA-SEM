@@ -29,7 +29,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description: Refine prismatic boundary layer elements.
+//  Description: Computes vorticity field.
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -53,22 +53,10 @@ namespace Nektar
 
         ProcessVorticity::ProcessVorticity(FieldSharedPtr f) : ProcessModule(f)
         {
-            /*
-            // Vorticity configuration.
-            config["layers"]     = ConfigOption(false, "2",
-                "Number of layers to refine.");
-            config["npoints"]         = ConfigOption(false, "5",
-                "Number of points in high order elements.");
-            config["surf"]       = ConfigOption(false, "",
-                "Tag identifying surface connected to prism.");
-            config["r"]          = ConfigOption(false, "2.0",
-                "Ratio to use in geometry progression.");
-             */
         }
 
         ProcessVorticity::~ProcessVorticity()
         {
-
         }
 
         void ProcessVorticity::Process()
@@ -141,15 +129,9 @@ namespace Nektar
             for (i = 0; i < addfields; ++i)
             {
                 f->exp[nfields + i] = f->AppendExpList();
-                f->exp[nfields + i]->FwdTrans(outfield[i], f->exp[nfields + i]->UpdateCoeffs());
+                f->exp[nfields + i]->FwdTrans(outfield[i],
+                                        f->exp[nfields + i]->UpdateCoeffs());
             }
-
-            /*
-            string out(argv[argc-1]);
-            std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                = f->exp[0]->GetFieldDefinitions();
-            std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
-            */
             
             vector<string > outname;
             if (addfields == 1)
@@ -182,8 +164,9 @@ namespace Nektar
                     f->exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
                 }
             }
-            LibUtilities::Write("Flate-Plate-coarse.fld", FieldDef, FieldData);
-
+            
+            f->fielddef = FieldDef;
+            f->data     = FieldData;
         }
     }
 }

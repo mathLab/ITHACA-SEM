@@ -204,12 +204,14 @@ int main(int argc, char* argv[])
                 int    dot    = tmp1[0].find_last_of('.') + 1;
                 string ext    = tmp1[0].substr(dot, tmp1[0].length() - dot);
                 module.second = ext;
-                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")+tmp1[0]);
+                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
+                               +tmp1[0]);
             }
             else
             {
                 module.second = tmp1[1];
-                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")+tmp1[0]);
+                tmp1.push_back(string(i < nInput ? "infile=" : "outfile=")
+                               +tmp1[0]);
                 offset++;
             }
         }

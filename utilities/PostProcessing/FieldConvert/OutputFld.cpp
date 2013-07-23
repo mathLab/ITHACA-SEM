@@ -50,12 +50,10 @@ namespace Nektar
 
         OutputFld::OutputFld(FieldSharedPtr f) : OutputModule(f)
         {
-            
         }
 
         OutputFld::~OutputFld()
         {
-
         }
         
         void OutputFld::Process()
@@ -65,6 +63,12 @@ namespace Nektar
             {
                 cout << "OutputFld: Writing file..." << endl;
             }
+            
+            // Extract the output filename and extension
+            string filename = config["outfile"].as<string>();
+            
+            // Write the output file
+            LibUtilities::Write(filename, f->fielddef, f->data);
         }        
     }
 }

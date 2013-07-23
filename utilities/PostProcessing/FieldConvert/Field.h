@@ -65,7 +65,7 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr session;
             SpatialDomains::MeshGraphSharedPtr graph;
 
-            MultiRegions::ExpListSharedPtr AppendExpList(/*std::string varName, vector<double> &newData*/)
+            MultiRegions::ExpListSharedPtr AppendExpList()
             {
                 MultiRegions::ExpListSharedPtr tmp;
                 switch (exp[0]->GetGraph()->GetMeshDimension())

@@ -35,6 +35,7 @@
 
 #include <IncNavierStokesSolver/EquationSystems/VelocityCorrectionScheme.h>
 #include <LibUtilities/BasicUtils/Timer.h>
+#include <SolverUtils/Core/Misc.h>
 
 namespace Nektar
 {
@@ -265,63 +266,39 @@ namespace Nektar
     }
     
         
-    void VelocityCorrectionScheme::v_PrintSummary(std::ostream &out)
+    void VelocityCorrectionScheme::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        if(m_subSteppingScheme)
+        UnsteadySystem::v_GenerateSummary(s);
+
+        if (m_subSteppingScheme)
         {
-            cout <<  "\tSolver Type     : Velocity Correction with Substepping" <<endl;
-        }
-        else
-        {
-            cout <<  "\tSolver Type     : Velocity Correction" <<endl;
+            SolverUtils::AddSummaryItem(
+                s, "Substepping", LibUtilities::TimeIntegrationMethodMap[
+                    m_subStepIntegrationScheme->GetIntegrationMethod()]);
         }
 
-        if(m_session->DefinesSolverInfo("EvolutionOperator"))
+        string dealias = m_homogen_dealiasing ? "Homogeneous1D" : "";
+        if (m_advObject->GetSpecHPDealiasing())
         {
-            cout << "\tEvolutionOp     : " << m_session->GetSolverInfo("EvolutionOperator")<< endl;
-            
+            dealias += (dealias == "" ? "" : " + ") + string("spectral/hp");
         }
-        else
+        if (dealias != "")
         {
-            cout << "\tEvolutionOp     : " << endl;
-        }
-
-        if(m_session->DefinesSolverInfo("Driver"))
-        {
-            cout << "\tDriver          : " << m_session->GetSolverInfo("Driver")<< endl;
-            
-        }
-        else
-        {
-            cout << "\tDriver          : "<< endl;
-        }
-        
-        TimeParamSummary(out);
-        cout << "\tTime integ.     : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme->GetIntegrationMethod()] << endl;
-        
-        if(m_subSteppingScheme)
-        {
-            cout << "\tSubstepping     : " << LibUtilities::TimeIntegrationMethodMap[m_subStepIntegrationScheme->GetIntegrationMethod()] << endl;
+            SolverUtils::AddSummaryItem(s, "Dealiasing", dealias);
         }
 
-        if(m_homogen_dealiasing)
+        string smoothing = m_useSpecVanVisc ? "spectral/hp" : "";
+        if (m_useHomo1DSpecVanVisc)
         {
-            cout << "\tDealiasing      : Homogeneous1D"  << endl;
+            smoothing += (smoothing == "" ? "" : " + ") + string("Homogeneous1D");
         }
-        
-        if(m_advObject->GetSpecHPDealiasing())
+        if (smoothing != "")
         {
-            cout << "\tDealiasing      : Spectral/hp "  << endl;
-        }
-
-        if(m_useSpecVanVisc)
-        {
-            cout << "\tSmoothing       : Spectral vanishing viscosity (cut off ratio = " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;        
-        }
-
-        if(m_useHomo1DSpecVanVisc)
-        {
-            cout << "\tSmoothing       : Spectral vanishing viscosity (homogeneous1D, cut off ratio = " << m_sVVCutoffRatio << ", diff coeff = "<< m_sVVDiffCoeff << ")"<< endl;  
+            SolverUtils::AddSummaryItem(
+                s, "Smoothing", "SVV (" + smoothing + " SVV (cut-off = "
+                + boost::lexical_cast<string>(m_sVVCutoffRatio)
+                + ", diff coeff = "
+                + boost::lexical_cast<string>(m_sVVDiffCoeff)+")");
         }
     }
 

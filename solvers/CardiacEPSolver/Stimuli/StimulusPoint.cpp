@@ -108,7 +108,7 @@ namespace Nektar
     /**
      *
      */
-    void StimulusPoint::v_PrintSummary(std::ostream &out)
+    void StimulusPoint::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
 
 

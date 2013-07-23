@@ -570,10 +570,10 @@ namespace Nektar
     /**
     *
     */
-    void CourtemancheRamirezNattel98::v_PrintSummary(std::ostream &out)
+    void CourtemancheRamirezNattel98::v_GenerateSummary(SummaryList& s)
     {
-        out << "\tCell model      : CourtemancheRamirezNattel98" << std::endl;
-        out << "\tCell model var. : " << lookupIds[model_variant] << std::endl;
+        SolverUtils::AddSummaryItem(s, "Cell model","CourtemancheRamirezNattel98");
+        SolverUtils::AddSummaryItem(s, "Cell model var.", lookupIds[model_variant]);
     }
 
 

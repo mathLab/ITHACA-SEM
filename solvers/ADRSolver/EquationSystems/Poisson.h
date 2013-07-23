@@ -63,7 +63,7 @@ namespace Nektar
 
         virtual void v_InitObject();
 
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
     private:
         virtual Array<OneD, bool> v_GetSystemSingularChecks();

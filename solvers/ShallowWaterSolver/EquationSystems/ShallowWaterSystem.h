@@ -102,7 +102,7 @@ namespace Nektar
         virtual void v_DoInitialise();
 
         /// Print a summary of time stepping parameters.
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         ///
         virtual void v_NumericalFlux(

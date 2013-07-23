@@ -91,10 +91,10 @@ namespace Nektar
 
     }
 
-    void EulerArtificialDiffusionCFE::v_PrintSummary(std::ostream &out)
+    void EulerArtificialDiffusionCFE::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        CompressibleFlowSystem::v_PrintSummary(out);
-        out << "\tProblem Type    : " << ProblemTypeMap[m_problemType] << endl;
+        CompressibleFlowSystem::v_GenerateSummary(s);
+        SolverUtils::AddSummaryItem(s, "Problem Type", ProblemTypeMap[m_problemType]);
     }
 
     void EulerArtificialDiffusionCFE::v_SetInitialConditions(

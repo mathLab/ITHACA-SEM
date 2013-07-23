@@ -60,9 +60,9 @@ namespace Nektar
 
     }
 
-    void Helmholtz::v_PrintSummary(std::ostream &out)
+    void Helmholtz::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        Poisson::v_PrintSummary(out);
+        Poisson::v_GenerateSummary(s);
     }
 
     Array<OneD, bool> Helmholtz::v_GetSystemSingularChecks()

@@ -546,9 +546,9 @@ namespace Nektar
     /**
     *
     */
-    void PanditGilesDemir03::v_PrintSummary(std::ostream &out)
+    void PanditGilesDemir03::v_GenerateSummary(SummaryList& s)
     {
-        out << "	Cell model      : PanditGilesDemir03" << std::endl;
+        SolverUtils::AddSummaryItem(s, "Cell model", "PanditGilesDemir03");
     }
 
 }

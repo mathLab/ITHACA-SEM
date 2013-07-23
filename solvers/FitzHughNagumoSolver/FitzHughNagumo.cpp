@@ -1368,7 +1368,7 @@ namespace Nektar
   {   
     cout << "=======================================================================" << endl;
     cout << "\tEquation Type   : "<< kEquationTypeStr[m_equationType] << endl;
-    EquationSystem::SessionSummary(out);
+    //EquationSystem::SessionSummary(out);
     if(m_explicitDiffusion)
       {
 	out << "\tDiffusion Advancement   : Explicit" <<endl;
@@ -1409,7 +1409,7 @@ namespace Nektar
     out << "\tfrequency2 : " << m_frequency2 << endl;
     out << "\tdiffrate : " << m_diffrate << endl;
 
-    EquationSystem::TimeParamSummary(out);
+//    EquationSystem::TimeParamSummary(out);
 
     cout << "=======================================================================" << endl;
   }

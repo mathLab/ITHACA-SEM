@@ -73,6 +73,12 @@ int main(int argc, char *argv[])
             // Output current solution to stdout
             cout << vTime << "   " << vSol[0][0] << endl;
         }
+
+        for (unsigned int i = 0; i < vCell->GetNumCellVariables(); ++i)
+        {
+            cout << "# " << vCell->GetCellVarName(i) << "  "
+                 << vCell->GetCellSolution(i)[0] << endl;
+        }
     }
     catch (...)
     {

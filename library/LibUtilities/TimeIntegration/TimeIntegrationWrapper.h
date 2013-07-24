@@ -59,7 +59,7 @@ namespace LibUtilities {
     class TimeIntegrationWrapper
     {
     public:
-        virtual ~TimeIntegrationWrapper() {}
+        LIB_UTILITIES_EXPORT virtual ~TimeIntegrationWrapper() {}
 
         LIB_UTILITIES_EXPORT inline void InitObject()
         {

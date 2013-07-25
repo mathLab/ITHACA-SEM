@@ -70,7 +70,7 @@ namespace Nektar
             MultiRegions::ExpListSharedPtr AppendExpList()
             {
                 MultiRegions::ExpListSharedPtr tmp;
-                switch (/*exp[0]->GetGraph()->GetMeshDimension()*/  graph->GetMeshDimension())
+                switch (graph->GetMeshDimension())
                 {
                     case 1:
                     {

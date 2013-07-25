@@ -68,7 +68,11 @@ namespace Nektar
             
             int i, j;
             int expdim  = f->graph->GetMeshDimension();
-            int spacedim  = f->graph->GetSpaceDimension();
+            int spacedim  = expdim;
+            if ((f->fielddef[0]->m_numHomogeneousDir) == 1 || 2)
+            {
+                spacedim = 3;
+            }
             int nfields = f->fielddef[0]->m_fields.size();
             if (spacedim == 1)
             {

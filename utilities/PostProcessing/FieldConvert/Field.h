@@ -64,11 +64,13 @@ namespace Nektar
             
             LibUtilities::SessionReaderSharedPtr session;
             SpatialDomains::MeshGraphSharedPtr graph;
+            
+           
 
             MultiRegions::ExpListSharedPtr AppendExpList()
             {
                 MultiRegions::ExpListSharedPtr tmp;
-                switch (exp[0]->GetGraph()->GetMeshDimension())
+                switch (/*exp[0]->GetGraph()->GetMeshDimension()*/  graph->GetMeshDimension())
                 {
                     case 1:
                     {

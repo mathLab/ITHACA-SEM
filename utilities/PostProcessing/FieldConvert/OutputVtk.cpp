@@ -50,12 +50,10 @@ namespace Nektar
 
         OutputVtk::OutputVtk(FieldSharedPtr f) : OutputModule(f)
         {
-            
         }
 
         OutputVtk::~OutputVtk()
         {
-
         }
         
         void OutputVtk::Process()
@@ -72,8 +70,6 @@ namespace Nektar
             // Write solution.
             ofstream outfile(filename.c_str());
             f->exp[0]->WriteVtkHeader(outfile);
-            
-            
             
             // For each field write out field data for each expansion.
             for (i = 0; i < f->exp[0]->GetNumElmts(); ++i)

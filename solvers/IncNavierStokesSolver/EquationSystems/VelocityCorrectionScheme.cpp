@@ -457,6 +457,10 @@ namespace Nektar
         timer.Start();
         // evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
+        if(m_session->DefinesFunction("SpongeCoefficient"))
+        {
+             m_SpongeForcing->Apply(m_fields,inarray,outarray);
+        }
         timer.Stop();
         if(m_showTimings&&IsRoot)
         {

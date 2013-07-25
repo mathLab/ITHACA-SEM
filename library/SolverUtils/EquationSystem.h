@@ -43,6 +43,7 @@
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
+#include <SolverUtils/Forcing/ForcingSponge.h>
 
 namespace Nektar
 {
@@ -405,6 +406,8 @@ namespace Nektar
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
+            /// Sponge forcing term 
+            SolverUtils::ForcingSharedPtr               m_SpongeForcing;     
             /// Filename.
             std::string                                 m_filename;
             /// Name of the session.
@@ -453,7 +456,7 @@ namespace Nektar
             /// Flag to indicate if the fields should be checked for
             /// singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
-            
+       
             /// Map to identify relevant solver info to dump in output fields
             LibUtilities::FieldMetaDataMap            m_fieldMetaDataMap;
 

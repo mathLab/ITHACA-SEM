@@ -176,7 +176,6 @@ namespace Nektar
 
         /// Pointer to field holding pressure field
         MultiRegions::ExpListSharedPtr m_pressure;
-
         /// Kinematic viscosity
         NekDouble   m_kinvis;
         /// dump energy to file at steps time

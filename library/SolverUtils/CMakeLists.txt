@@ -22,6 +22,8 @@ SET(SOLVER_UTILS_SOURCES
   RiemannSolvers/UpwindSolver.cpp
   RiemannSolvers/UpwindLDGSolver.cpp
   UnsteadySystem.cpp
+  Forcing/Forcing.cpp
+  Forcing/ForcingSponge.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
@@ -50,6 +52,8 @@ SET(SOLVER_UTILS_HEADERS
   SolverUtils.hpp
   SolverUtilsDeclspec.h
   UnsteadySystem.h
+  Forcing/Forcing.h
+  Forcing/ForcingSponge.h
 )
 
 IF (NEKTAR_USE_ARPACK)

@@ -47,7 +47,10 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        typedef LibUtilities::NekFactory<std::string, Forcing, std::string>
+	
+
+	class Forcing;
+        typedef LibUtilities::NekFactory<std::string, Forcing>
                 ForcingFactory;
 
         SOLVER_UTILS_EXPORT ForcingFactory& GetForcingFactory();
@@ -57,7 +60,8 @@ namespace Nektar
         public:
             SOLVER_UTILS_EXPORT void InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
+		SpatialDomains::MeshGraphSharedPtr                pGraph);
 
             SOLVER_UTILS_EXPORT void Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -67,7 +71,8 @@ namespace Nektar
         protected:
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
+		SpatialDomains::MeshGraphSharedPtr                pGraph)
             {
             };
 
@@ -79,7 +84,7 @@ namespace Nektar
         };
 
         /// A shared pointer to an EquationSystem object
-        typedef boost::shared_ptr<Forcing> ForcingSharedPtr;
+        SOLVER_UTILS_EXPORT typedef boost::shared_ptr<Forcing> ForcingSharedPtr;
     }
 }
 

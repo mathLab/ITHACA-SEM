@@ -46,12 +46,12 @@ namespace Nektar
                                           Loki::NoDestroy > Type;
             return Type::Instance();
         }
-
         void Forcing::InitObject(
             const LibUtilities::SessionReaderSharedPtr        pSession,
-            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
+	    SpatialDomains::MeshGraphSharedPtr                pGraph)
         {
-            v_InitObject(pSession, pFields);
+            v_InitObject(pSession, pFields, pGraph);
         }
 
         void Forcing::Apply(

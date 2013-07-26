@@ -57,7 +57,8 @@ namespace Nektar
         typedef boost::shared_ptr <GeometryVector> GeometryVectorSharedPtr;
         typedef std::vector< GeometrySharedPtr >::iterator GeometryVectorIter;
 
-
+        class VertexComponent;
+        typedef boost::shared_ptr< VertexComponent >  VertexComponentSharedPtr;
 
         /// \brief Less than operator to sort Geometry objects by global id when sorting 
         /// STL containers.
@@ -77,6 +78,12 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT Geometry(int coordim);
 
                 SPATIAL_DOMAINS_EXPORT virtual ~Geometry();
+
+                //-----------------------------------------
+                // Member accessor functions
+                //----------------------------------------
+                SPATIAL_DOMAINS_EXPORT const VertexComponentSharedPtr
+                    GetVertex(const int i) const;
 
                 //---------------------------------------
                 // Element connection functions
@@ -157,6 +164,10 @@ namespace Nektar
                 void GenGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
 
+
+                virtual const VertexComponentSharedPtr
+                    v_GetVertex(const int i) const;
+
                 //---------------------------------------
                 // Element connection functions
                 //---------------------------------------
@@ -216,7 +227,7 @@ namespace Nektar
                 size_t seed  = 0;
                 int nVert = p->GetNumVerts();
                 std::vector<unsigned int> ids(nVert);
-
+                
                 for (i = 0; i < nVert; ++i)
                 {
                     ids[i] = p->GetVid(i);

@@ -42,111 +42,106 @@ using namespace Nektar::SolverUtils;
 
 namespace Nektar
 {
-  
-	enum UpwindTypePulse
-	{           
-		eNotSetPulse,            ///< flux not defined
-		eUpwindPulse,			 ///< simple upwinding scheme
-		SIZE_UpwindTypePulse     ///< Length of enum list
-	};
-	
-	const char* const UpwindTypeMapPulse[] =
-    {
-		"NoSetPulse",
-		"UpwindPulse",
-	};
-	
-	
+    
+    enum UpwindTypePulse
+    {           
+        eNotSetPulse,            ///< flux not defined
+        eUpwindPulse,			 ///< simple upwinding scheme
+        SIZE_UpwindTypePulse     ///< Length of enum list
+    };
+    
+    const char* const UpwindTypeMapPulse[] =
+        {
+            "NoSetPulse",
+            "UpwindPulse",
+        };
+    
+    
     /// Base class for unsteady solvers.
     class PulseWaveSystem : public UnsteadySystem
     {
     public:
         /// Destructor
         virtual ~PulseWaveSystem();
-		
+
+        int  GetNdomains()
+        {
+            return m_nDomains;
+        }
+
+        Array<OneD, MultiRegions::ExpListSharedPtr> UpdateVessels(void)
+        {
+            return m_vessels;
+        }
     protected:
+        Array<OneD, MultiRegions::ExpListSharedPtr>     m_vessels;
+        int				                m_nDomains; 
+        int                                             m_currentDomain;
+        int                                             m_nVariables;
+        UpwindTypePulse                                 m_upwindTypePulse;
 		
-		Array<OneD, MultiRegions::ExpListSharedPtr>     m_vessels;
-		
-		Array<OneD, MultiRegions::ExpListSharedPtr>     m_outfields;
+        NekDouble                                       m_rho;
+        NekDouble                                       m_pext;
+	
+        NekDouble m_C;
+        NekDouble m_RT;
+        NekDouble m_pout;
+	
+        Array<OneD, Array<OneD, NekDouble> >		m_A_0;
+        Array<OneD, Array<OneD, NekDouble> >		m_A_0_trace;
+        Array<OneD, Array<OneD, NekDouble> >		m_beta;
+        Array<OneD, Array<OneD, NekDouble> >		m_beta_trace;
+        Array<OneD, Array<OneD, NekDouble> >		m_trace_fwd_normal;
 
-		int												m_domainsize;
-		
-		int												m_omega;
-
-		UpwindTypePulse                                 m_upwindTypePulse;
-		
-		NekDouble                                       m_rho;
-		
-		NekDouble                                       m_pext;
-		
-		NekDouble                                       m_nue;
-		
-		NekDouble                                       m_h0;
-		
-		NekDouble m_C;
-		NekDouble m_RT;
-		NekDouble m_pout;
-		
-		Array<OneD, Array<OneD, NekDouble> >			m_A_0global;
-		
-		Array<OneD, NekDouble>							m_A_0;
-
-		Array<OneD, Array<OneD, NekDouble> >			m_betaglobal;
-		
-		Array<OneD, NekDouble>							m_beta;
-
+        
         /// Initialises PulseWaveSystem class members.
         PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session);
-		
-		virtual void v_InitObject();
-		
-		/// Sets up initial conditions.
+        
+        virtual void v_InitObject();
+	
+        /// Sets up initial conditions.
         virtual void v_DoInitialise();
 	
-		/// Solves an unsteady problem.
+        /// Solves an unsteady problem.
         virtual void v_DoSolve();
-		
-		/// Links the subdomains
+	
+        /// Links the subdomains
         void LinkSubdomains(Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &fields);
-		
-		/// Riemann Problem for Bifurcation
-		void BifurcationRiemann1_to_2(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
-									  Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
-		
-		/// Riemann Problem for Junction
-		void JunctionRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
-							 Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
-		
-		/// Riemann Problem for Merging Flow
-		void MergingRiemann2_to_1(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
-								  Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
-		
-		/// Get the cross sectional area from the inputfile 
-		void StaticArea(void);
-		
-		/// Get the material parameters from the inputfile 
-		void MaterialProperties(void);
-		
-		// Ouptut field information
+	
+        /// Riemann Problem for Bifurcation
+        void BifurcationRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
+                                Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
+        
+        /// Riemann Problem for Junction
+        void JunctionRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
+                             Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
+        
+        // Ouptut field information
         virtual void v_Output(void);
-		
-		/// Prepares the multidomain output
-        void PrepareMultidomainOutput(void);
-		
-		/// Compute the L2 error between fields and a given exact solution.
-        NekDouble v_L2Error(unsigned int field,
-							const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray,
-							bool Normalised = false);
 
+        // Checkpoint field output
+        void CheckPoint_Output(const int n);
+	
+#if 0 
+        /// Compute the L2 error between fields and a given exact solution.
+        NekDouble v_L2Error(unsigned int field,
+                            const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray,
+                            bool Normalised = false);
+        
         /// Compute the L_inf error between fields and a given exact solution.
         NekDouble v_LinfError(unsigned int field,
-							  const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
-		
+                              const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
+#endif
+
+        /// Write input fields to the given filename.
+        void WriteVessels(const std::string &outname);
+        
+        
     private:
-		
-				
+        
     };
+        
+    typedef boost::shared_ptr<PulseWaveSystem> PulseWaveSystemSharedPtr;
 }
 
 #endif

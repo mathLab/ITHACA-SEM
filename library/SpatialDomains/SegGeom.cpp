@@ -61,7 +61,8 @@ namespace Nektar
                                           );
             m_shapeType = LibUtilities::eSegment;
             m_eid = id;
-
+            m_globalID = id;
+            
             for(int i = 0; i < m_coordim; ++i)
             {
                 m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
@@ -76,6 +77,7 @@ namespace Nektar
         {
             m_shapeType = LibUtilities::eSegment;
             m_eid   = id;
+            m_globalID = id;
             m_state = eNotFilled;
 
             if (coordim > 0)
@@ -107,6 +109,7 @@ namespace Nektar
         {
             m_shapeType = LibUtilities::eSegment;
             m_eid = id;
+            m_globalID = id; 
             m_state = eNotFilled;
 
             if (coordim > 0)
@@ -189,7 +192,7 @@ namespace Nektar
                                            )
                                           );
             m_eid = id;
-
+            m_globalID = id;
             for(int i = 0; i < m_coordim; ++i)
             {
                 m_xmap[i] = MemoryManager<StdRegions::StdSegExp>::AllocateSharedPtr(B);
@@ -203,6 +206,8 @@ namespace Nektar
 
             // info from EdgeComponent class
             m_eid     = in.m_eid;
+            m_globalID = in.m_globalID;
+
             std::list<CompToElmt>::const_iterator def;
             for(def = in.m_elmtMap.begin(); def != in.m_elmtMap.end(); def++)
             {
@@ -217,6 +222,64 @@ namespace Nektar
 
             m_state = in.m_state;
         }
+
+
+        /** Generate a one dimensional space segment geometry where
+            the vert[0] has the same x value and vert[1] is set to
+            vert[0] plus the length of the original segment  **/
+        SegGeomSharedPtr SegGeom::GenerateOneSpaceDimGeom(void)
+        {
+            SegGeomSharedPtr returnval = MemoryManager<SegGeom>::AllocateSharedPtr();
+            
+
+            // info about numbering 
+            returnval->m_eid     = m_eid;
+            returnval->m_globalID  = m_globalID;
+            returnval->m_elmtMap = m_elmtMap; 
+            
+
+            // geometric information. 
+            returnval->m_coordim = 1;
+            NekDouble x0 = (*m_verts[0])[0];
+            VertexComponentSharedPtr vert0 = MemoryManager<VertexComponent>::AllocateSharedPtr(1,m_verts[0]->GetVid(),x0,0.0,0.0);
+            vert0->SetGlobalID(vert0->GetVid());
+
+            returnval->m_verts[0] = vert0;
+            
+            // Get information to calculate length. 
+            const Array<OneD, const LibUtilities::BasisSharedPtr> base =  m_xmap[0]->GetBase();
+            v_GenGeomFactors(base);
+
+            const Array<OneD, const NekDouble> jac = m_geomFactors->GetJac();
+            
+            NekDouble len;
+            if(jac.num_elements() == 1)
+            {
+                len = jac[0]*2.0;
+            }
+            else
+            {
+                Array<OneD, const NekDouble> w0 = base[0]->GetW();
+
+                for(int i = 0; i < jac.num_elements(); ++i)
+                {
+                    len += jac[i]*w0[i];
+                }
+            }
+            // Set up second vertex. 
+            VertexComponentSharedPtr vert1 = MemoryManager<VertexComponent>::AllocateSharedPtr(1,m_verts[1]->GetVid(),x0+len,0.0,0.0);
+            vert0->SetGlobalID(vert1->GetVid());
+
+            returnval->m_verts[1] = vert1;
+            
+            // at present just use previous m_xmap[0]; 
+            returnval->m_xmap    = Array<OneD, StdRegions::StdExpansion1DSharedPtr>(1);
+            returnval->m_xmap[0] = m_xmap[0];
+            returnval->m_state   = eNotFilled;
+
+            return returnval;
+        }
+
 
         SegGeom::~SegGeom()
         {
@@ -442,7 +505,7 @@ namespace Nektar
             return m_verts[i]->GetVid();
         }
 
-        VertexComponentSharedPtr SegGeom::v_GetVertex(const int i) const
+        const VertexComponentSharedPtr SegGeom::v_GetVertex(const int i) const
         {
             VertexComponentSharedPtr returnval;
 

@@ -116,6 +116,8 @@ namespace Nektar
                     m_vid = vid;
                 }
 
+                virtual int  v_GetVid(int i) const;
+
                 // Math routines
                 SPATIAL_DOMAINS_EXPORT void   Mult (VertexComponent& a, VertexComponent& b);
                 SPATIAL_DOMAINS_EXPORT void   Add  (VertexComponent& a, VertexComponent& b);

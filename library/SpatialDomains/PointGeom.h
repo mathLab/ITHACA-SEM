@@ -72,7 +72,7 @@ namespace Nektar
 
             private:
 
-                virtual VertexComponentSharedPtr v_GetVertex(const int i) const;
+                virtual const VertexComponentSharedPtr v_GetVertex(const int i) const;
                 virtual int v_GetVid(int i) const;
                 virtual NekDouble v_GetCoord(
                             const int i,

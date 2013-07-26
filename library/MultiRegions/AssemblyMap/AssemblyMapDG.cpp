@@ -80,7 +80,45 @@ namespace Nektar
         {
             int i,j;
             int cnt, vid, gid;
+            int ntrace_exp = trace->GetExpSize();
             int nbnd = bndCondExp.num_elements();
+            
+            int nel  = locExp.GetExp()->size();
+            map<int, int> MeshVertId;
+
+            // determine mapping from geometry edges to trace
+            for(i = 0; i < ntrace_exp; ++i)
+            {
+                int id = trace->GetExp(i)->GetGeom()->GetVid(0);
+                MeshVertId[id] = i;
+            }
+
+
+            Array<OneD, StdRegions::StdExpansionSharedPtr> vertmap(2*nel);
+            m_elmtToTrace = Array<OneD, Array<OneD,StdRegions::StdExpansionSharedPtr> >(nel);
+
+            // set up vert expansions links;
+            cnt = 0;
+            for(i = 0; i < nel; ++i)
+            {
+                m_elmtToTrace[i] = vertmap + cnt;
+                
+                for(j = 0; j < locExp.GetExp(i)->GetNverts(); ++j)
+                    {
+                    int id = ((locExp.GetExp(i)->GetGeom())->GetVertex(j))->GetVid();
+                    
+                    if(MeshVertId.count(id) > 0)
+                    {
+                        m_elmtToTrace[i][j] = boost::dynamic_pointer_cast< LocalRegions:: PointExp> ((*trace).GetExp(MeshVertId.find(id)->second));
+                        
+                    }
+                    else
+                    {
+                        ASSERTL0(false,"Failed to find edge map");
+                    }
+                }
+                        cnt += 2;
+            }
 
             // set up Local to Continuous mapping
             Array<OneD,unsigned int> vmap;
@@ -114,7 +152,7 @@ namespace Nektar
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     m_numDirichletBndPhys++;
-                    vid = ((bndCondExp[i])->GetVertex())->GetVid();
+                    vid = ((bndCondExp[i])->GetExp(0)->GetGeom())->GetVid(0);
 
                     MeshVertToLocalVert[vid] = gid++;
                 }
@@ -156,7 +194,7 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
-                vid = ((bndCondExp[i])->GetVertex())->GetVid();
+                vid = ((bndCondExp[i])->GetExp(0)->GetGeom())->GetVid(0);
                 m_bndCondCoeffsToGlobalCoeffsMap[i] = MeshVertToLocalVert.find(vid)->second;
 
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
@@ -169,14 +207,25 @@ namespace Nektar
             m_numGlobalDirBndCoeffs = m_numLocalDirBndCoeffs;
             CalculateBndSystemBandWidth();
 
+
+            m_bndCondTraceToGlobalTraceMap = Array<OneD, int>(nbnd);
+            for(i = 0; i < bndCondExp.num_elements(); ++i)
+            {
+                int id  = bndCondExp[i]->GetExp(0)->GetGeom()->GetVid(0);
+                m_bndCondTraceToGlobalTraceMap[i] = 
+                    MeshVertId.find(id)->second;
+            }
+
+            // Now set up mapping from global coefficients to universal.
+#if 0  // Routines need debugging 
+            ExpListSharedPtr tr = boost::dynamic_pointer_cast<ExpList>(trace);
+            SetUpUniversalDGMap   (locExp);
+            SetUpUniversalTraceMap(locExp, tr, periodicVerts);
+#endif
             m_hash = boost::hash_range(m_localToGlobalBndMap.begin(),
                                        m_localToGlobalBndMap.end());
 
-            // Add up hash values if parallel
-            int hash = m_hash;
-            m_comm->GetRowComm()->AllReduce(hash, 
-                              LibUtilities::ReduceSum);
-            m_hash = hash;
+
         }
 
 

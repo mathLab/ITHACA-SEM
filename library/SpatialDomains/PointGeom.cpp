@@ -100,7 +100,7 @@ namespace Nektar
             return returnval;
         }
 
-        VertexComponentSharedPtr PointGeom::v_GetVertex(const int i) const
+        const VertexComponentSharedPtr PointGeom::v_GetVertex(const int i) const
         {
             VertexComponentSharedPtr returnval;
 

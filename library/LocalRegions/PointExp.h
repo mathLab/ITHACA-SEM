@@ -117,11 +117,6 @@ namespace Nektar
                 return m_geom;
             }
 
-            inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const
-            {
-                return m_geom;
-            }
-            
         protected:
             Array<OneD, NekDouble > m_coeffs; //!< Array containing expansion coefficients
             Array<OneD, NekDouble > m_phys; //!< Array containing physical point which is likely to be the same as the coefficient but is defined for consistency (It is also used in Robin boundary conditions) 

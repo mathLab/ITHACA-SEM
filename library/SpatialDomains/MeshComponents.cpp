@@ -121,6 +121,13 @@ namespace Nektar
                 break;
             }
         }
+        
+        int VertexComponent::v_GetVid(int i) const
+        {
+            ASSERTL2(i ==0,"Verted id must be 0 ");
+            return m_vid;
+        }
+
 
 
         void VertexComponent::UpdatePosition(NekDouble x, NekDouble y, NekDouble z)

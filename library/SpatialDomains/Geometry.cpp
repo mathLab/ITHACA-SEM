@@ -111,6 +111,12 @@ namespace Nektar
         }
 
 
+        const VertexComponentSharedPtr Geometry::GetVertex(const int i) const
+        {
+            return v_GetVertex(i);
+        }
+        
+        
         void Geometry::AddElmtConnected(int gvo_id, int locid)
         {
             return v_AddElmtConnected(gvo_id, locid);
@@ -244,7 +250,7 @@ namespace Nektar
         void Geometry::GenGeomFactors(
                 const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
         {
-            return v_GenGeomFactors(tbasis);
+            v_GenGeomFactors(tbasis);
         }
 
        /** 
@@ -298,6 +304,14 @@ namespace Nektar
             return v_GetBasis(i, j);
         }
 
+
+        const VertexComponentSharedPtr Geometry::v_GetVertex(const int i) const
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function is only valid for expansion type geometries");
+            VertexComponentSharedPtr returnval;
+            return returnval;
+        }
 
         void Geometry::v_AddElmtConnected(int gvo_id, int locid)
         {

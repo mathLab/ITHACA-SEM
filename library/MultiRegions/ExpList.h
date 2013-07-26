@@ -180,6 +180,8 @@ namespace Nektar
             ///Set Modified Basis for the stability analysis
             inline void SetModifiedBasis(const bool modbasis);
             
+            /// Set the \a i th value of \a m_phys to value \a val
+            inline void SetPhys(int i, NekDouble val);
             
             /// This function returns the third direction expansion condition,
             /// which can be in wave space (coefficient) or not
@@ -308,16 +310,8 @@ namespace Nektar
             inline void GetCoords(Array<OneD, NekDouble> &coord_0,
                                   Array<OneD, NekDouble> &coord_1 = NullNekDouble1DArray,
                                   Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
-			
-			/// This function calculates the coordinates of all the elemental
-            /// quadrature points \f$\boldsymbol{x}_i\f$.
-            inline void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
-			
-			/// This function calculates the coordinates of all the elemental
-            /// quadrature points \f$\boldsymbol{x}_i\f$.
-            inline void GetCoord(Array<OneD, NekDouble> &coords);
-			
-			// Homogeneous transforms
+            
+            // Homogeneous transforms
             inline void HomogeneousFwdTrans(const Array<OneD, const NekDouble> &inarray, 
                                             Array<OneD, NekDouble> &outarray, 
                                             
@@ -409,16 +403,6 @@ namespace Nektar
             /// Set the \a i th coefficiient in \a m_coeffs to value \a val
             inline void SetCoeff(int i, NekDouble val);
             
-            /// Set the coefficiient in \a m_coeffs to value \a val (0D Exapnsion)
-            inline void SetCoeff(NekDouble val);
-            
-            /// Set the physical value in \a m_coeffs to value \a val (0D Exapnsion)
-            inline void SetPhys(NekDouble val);
-            
-            inline const SpatialDomains::VertexComponentSharedPtr &GetGeom(void) const;
-            
-            inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const;
-
             /// Set the \a i th coefficiient in  #m_coeffs to value \a val
             inline void SetCoeffs(int i, NekDouble val);
 
@@ -632,8 +616,6 @@ namespace Nektar
              * expansion list.
              */
             inline boost::shared_ptr<ExpList> &GetTrace();
-            
-            inline boost::shared_ptr<ExpList> &GetTrace(int i);
             
             inline boost::shared_ptr<AssemblyMapDG> &GetTraceMap(void);
             
@@ -990,8 +972,6 @@ namespace Nektar
 
             virtual boost::shared_ptr<ExpList> &v_GetTrace();
 			
-            virtual boost::shared_ptr<ExpList> &v_GetTrace(int i);
-
             virtual boost::shared_ptr<AssemblyMapDG> &v_GetTraceMap();
 
             virtual void v_GetNormals(
@@ -1098,18 +1078,6 @@ namespace Nektar
                                      Array<OneD, NekDouble> &coord_1,
                                      Array<OneD, NekDouble> &coord_2 = NullNekDouble1DArray);
 			
-            virtual void v_GetCoords(NekDouble &x,NekDouble &y,NekDouble &z);
-            
-            virtual void v_GetCoord(Array<OneD, NekDouble> &coords);
-
-            virtual void v_SetCoeff(NekDouble val);
-            
-            virtual void v_SetPhys(NekDouble val);
-            
-            virtual const SpatialDomains::VertexComponentSharedPtr &v_GetGeom(void) const;
-            
-            virtual const SpatialDomains::VertexComponentSharedPtr &v_GetVertex(void) const;
-            
             virtual void v_PhysDeriv(
                                      const Array<OneD, const NekDouble> &inarray,
                                      Array<OneD, NekDouble> &out_d0,
@@ -1363,6 +1331,13 @@ namespace Nektar
             return m_WaveSpace;
         }
 
+        /// Set the \a i th value of\a m_phys to value \a val
+        inline void ExpList::SetPhys(int i, NekDouble val)
+        {
+            m_phys[i] = val;
+        }
+
+
         /**
          * This function fills the array \f$\boldsymbol{u}_l\f$, the evaluation
          * of the expansion at the quadrature points (implemented as #m_phys),
@@ -1533,53 +1508,6 @@ namespace Nektar
             v_GetCoords(coord_0,coord_1,coord_2);
         }
 		
-        /**
-         *
-         */
-        inline void ExpList::SetCoeff(NekDouble val)
-		
-        {
-            v_SetCoeff(val);
-        }
-		
-		/**
-         *
-         */
-        inline const SpatialDomains::VertexComponentSharedPtr &ExpList::GetGeom(void) const
-        {
-            return v_GetGeom();
-        }
-	
-        /**
-         *
-         */
-        inline const SpatialDomains::VertexComponentSharedPtr &ExpList::GetVertex(void) const
-        {
-            return v_GetVertex();
-        }
-	
-		
-        /**
-         *
-         */
-        inline void ExpList::SetPhys(NekDouble val)
-            
-        {
-            v_SetPhys(val);
-        }
-	
-        /**
-         *
-         */
-        inline void ExpList::GetCoords(NekDouble &x,NekDouble &y,NekDouble &z)
-        {
-            v_GetCoords(x,y,z);
-        }
-	
-        inline void ExpList::GetCoord(Array<OneD, NekDouble> &coords)
-        {
-            v_GetCoord(coords);
-        }
         
         /**
          *
@@ -1873,11 +1801,6 @@ namespace Nektar
             return v_GetTrace();
         }
 
-        inline boost::shared_ptr<ExpList> &ExpList::GetTrace(int i)
-        {
-            return v_GetTrace(i);
-        }
-		
         inline boost::shared_ptr<AssemblyMapDG> &ExpList::GetTraceMap()
         {
             return v_GetTraceMap();

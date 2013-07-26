@@ -59,11 +59,6 @@ namespace Nektar
             return v_GetXmap(i);
         }
 
-        VertexComponentSharedPtr Geometry1D::GetVertex(const int i) const
-        {
-            return v_GetVertex(i);
-        }
-
         LibUtilities::ShapeType Geometry1D::DetShapeType() const
         {
             return v_DetShapeType();
@@ -102,7 +97,7 @@ namespace Nektar
             return returnval; 
         }
 
-        VertexComponentSharedPtr Geometry1D::v_GetVertex(const int i) const
+        const VertexComponentSharedPtr Geometry1D::v_GetVertex(const int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");

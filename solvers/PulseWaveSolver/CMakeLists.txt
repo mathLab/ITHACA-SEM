@@ -13,6 +13,8 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
     ADD_SOLVER_EXECUTABLE(PulseWaveSolver solvers 
 			${PulseWaveSolverSource})
 
+    SUBDIRS(Utilities)      
+
     #ADD_NEKTAR_TEST(Bifurcation)
     #ADD_NEKTAR_TEST(Junction)
     #ADD_NEKTAR_TEST(Paper1_DG)

@@ -56,17 +56,18 @@ namespace Nektar
         {
         }
 		
-        ExpList0D::ExpList0D(const SpatialDomains::VertexComponentSharedPtr &m_geom):
+        ExpList0D::ExpList0D(const SpatialDomains::VertexComponentSharedPtr &geom):
             ExpList()
         {
-            m_point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(m_geom);
-            
             m_ncoeffs = 1;
             m_npoints = 1;
             
             // Set up m_coeffs, m_phys.
             m_coeffs = Array<OneD, NekDouble>(m_ncoeffs);
             m_phys   = Array<OneD, NekDouble>(m_npoints);
+
+            LocalRegions::PointExpSharedPtr Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(geom);
+            (*m_exp).push_back(Point);
         }
 
         /**
@@ -109,11 +110,13 @@ namespace Nektar
                 {
                     for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
-						PointGeom = bndConstraint[i]->GetVertex();
+                        PointGeom = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent> (bndConstraint[i]->GetExp(0)->GetGeom()); 
+
+
                         Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(PointGeom);
                         
-						EdgeDone[PointGeom->GetVid()] = elmtid;
-						
+                        EdgeDone[PointGeom->GetVid()] = elmtid;
+			
                         Point->SetElmtId(elmtid++);
                         (*m_exp).push_back(Point);
                     }
@@ -126,7 +129,7 @@ namespace Nektar
                 for(j = 0; j < 2; ++j)
                 {
                     PointGeom = (locexp[i]->GetGeom1D())->GetVertex(j);
-					id = PointGeom->GetVid();
+                    id = PointGeom->GetVid();
 					
                     if(EdgeDone.count(id)==0)
                     {						
@@ -186,7 +189,7 @@ namespace Nektar
         }
 		
 		
-		void ExpList0D::SetCoeffPhysOffsets()
+        void ExpList0D::SetCoeffPhysOffsets()
         {
             int i;
 			
@@ -213,39 +216,14 @@ namespace Nektar
         ExpList0D::~ExpList0D()
         {
         }
-		
-        void ExpList0D::v_GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
+
+        void ExpList0D::v_GetCoords(Array<OneD, NekDouble> &coord_0,
+                                    Array<OneD, NekDouble> &coord_1,
+                                    Array<OneD, NekDouble> &coord_2)
         {
-            m_point->GetCoords(x,y,z);
+            (boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>((*m_exp)[0]->GetGeom()))->GetCoords(coord_0[0],coord_1[0],coord_2[0]);
         }
-		
-        void ExpList0D::v_GetCoord(Array<OneD,NekDouble> &coords)
-        {
-            m_point->GetCoords(coords);
-        }
-		
-        void ExpList0D::v_SetCoeff(NekDouble val)
-        {
-            m_coeffs[0] = val;
-        }
-		
-        void ExpList0D::v_SetPhys(NekDouble val)
-        {
-            m_phys[0] = val;
-        }
-		
-        const SpatialDomains::VertexComponentSharedPtr &ExpList0D::v_GetGeom(void) const
-        {
-            return m_point->GetGeom();
-        }
-		
-        const SpatialDomains::VertexComponentSharedPtr &ExpList0D::v_GetVertex(void) const
-        {
-            return m_point->GetVertex();
-        }
-		
-        /**
-         * For each local element, copy the normals stored in the element list
+        /* For each local element, copy the normals stored in the element list
          * into the array \a normals.
          * @param   normals     Multidimensional array in which to copy normals
          *                      to. Must have dimension equal to or larger than
@@ -257,12 +235,12 @@ namespace Nektar
             Array<OneD,Array<OneD,NekDouble> > locnormals;
 			
             // Assume whole array is of same coordinate dimension
-			int coordim = normals.num_elements();
+            int coordim = normals.num_elements();
 			
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "
                      "match coordim");
-			
+            
             // Process each expansion.
             for(i = 0; i < m_exp->size(); ++i)
             {
@@ -288,14 +266,16 @@ namespace Nektar
                     }
                 }
             }
+
+#if 0       // Not sure why this is here? 
             //negate first normal inwards facing into domain
             for (k=0; k<coordim; k++)
             {
                 normals[k][0] = locnormals[k][0];
             }
-	
+#endif
         }
-		
+        
         /**
          * One-dimensional upwind.
          * 

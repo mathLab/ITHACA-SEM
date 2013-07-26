@@ -141,7 +141,7 @@ namespace Nektar
             m_phys(),
             m_physState(false),
             m_exp(MemoryManager<StdRegions::StdExpansionVector>
-                      ::AllocateSharedPtr()),
+                  ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
             m_offset_elmt_id(),
@@ -1742,7 +1742,7 @@ namespace Nektar
         
         void  ExpList::WriteTecplotConnectivity(std::ofstream &outfile)
         {
-            int i,j,k,l;
+            int j,k,l;
             int nbase = (*m_exp)[0]->GetNumBases();
             int cnt = 0;
             
@@ -2139,11 +2139,11 @@ namespace Nektar
         }
 
         void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
-												  int NumHomoDir, 
-												  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
-												  std::vector<NekDouble> &HomoLen,
-												  std::vector<unsigned int> &HomoZIDs,
-												  std::vector<unsigned int> &HomoYIDs)
+                                                  int NumHomoDir, 
+                                                  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
+                                                  std::vector<NekDouble> &HomoLen,
+                                                  std::vector<unsigned int> &HomoZIDs,
+                                                  std::vector<unsigned int> &HomoYIDs)
         {
             int startenum, endenum, s;
 
@@ -2232,6 +2232,7 @@ namespace Nektar
             }
         }
 
+
         //
         // Virtual functions
         //
@@ -2305,7 +2306,7 @@ namespace Nektar
             std::string                               &field,
             Array<OneD, NekDouble>                    &coeffs)
         {     	
-            int i, cnt, expId;
+            int i, expId;
             int offset       = 0;
             int modes_offset = 0;
             int datalen      = fielddata.size()/fielddef->m_fields.size();
@@ -2442,14 +2443,6 @@ namespace Nektar
         }
         
         boost::shared_ptr<ExpList> &ExpList::v_GetTrace()
-        {
-            ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static boost::shared_ptr<ExpList> returnVal;
-            return returnVal;
-        }
-
-        boost::shared_ptr<ExpList> &ExpList::v_GetTrace(int i)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
@@ -2723,59 +2716,7 @@ namespace Nektar
             }
         }
 		
-		/**
-         */
-        void ExpList::v_GetCoords(NekDouble &x,NekDouble &y,NekDouble &z)
-        {
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		/**
-         */
-        void ExpList::v_GetCoord(Array<OneD, NekDouble> &coords)
-        {
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		/**
-         */
-		void ExpList::v_SetCoeff(NekDouble val)
-        {
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		/**
-         */
-		void ExpList::v_SetPhys(NekDouble val)
-        {
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-		}
-		
-		/**
-         */
-		const SpatialDomains::VertexComponentSharedPtr &ExpList::v_GetGeom(void) const
-		{
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::VertexComponentSharedPtr result;
-            return result;
-		}
-		
-		/**
-         */
-		const SpatialDomains::VertexComponentSharedPtr &ExpList::v_GetVertex(void) const
-		{
-			ASSERTL0(false,
-                     "This method is not defined or valid for this class type");
-            static SpatialDomains::VertexComponentSharedPtr result;
-            return result;
-		}
-		
-		/**
+        /**
          */
         void ExpList::v_SetUpPhysNormals()
         {

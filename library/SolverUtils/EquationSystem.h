@@ -122,20 +122,23 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void EvaluateFunction(
                 std::vector<std::string> pFieldNames,
                 Array<OneD, Array<OneD, NekDouble> > &pFields,
-                const std::string& pName);
+                const std::string& pName,
+                const int domain = 0);
             
             /// Populate given fields with the function from session.
             SOLVER_UTILS_EXPORT void EvaluateFunction(
                 std::vector<std::string> pFieldNames,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
-                const std::string& pName);
+                const std::string& pName,
+                const int domain = 0);
             
             // Populate an array with a function variable from session.
             SOLVER_UTILS_EXPORT void EvaluateFunction(
                 std::string pFieldName,
                 Array<OneD, NekDouble>& pArray,
                 const std::string& pFunctionName,
-                const NekDouble& pTime = 0.0);
+                const NekDouble& pTime = 0.0,
+                const int domain = 0);
             
             // Describe a function.
             SOLVER_UTILS_EXPORT std::string DescribeFunction(
@@ -149,7 +152,8 @@ namespace Nektar
             /// Initialise the data in the dependent fields.
             SOLVER_UTILS_EXPORT inline void SetInitialConditions(
                 NekDouble initialtime = 0.0,
-                bool dumpInitialConditions = true);
+                bool dumpInitialConditions = true,
+                const int domain = 0);
             
             /// Evaluates an exact solution
             SOLVER_UTILS_EXPORT inline void EvaluateExactSolution(
@@ -242,6 +246,11 @@ namespace Nektar
                 const std::string &infile,
                 Array<OneD, MultiRegions::ExpListSharedPtr> &pFields);
             
+            /// Input field data from the given file to multiple domains
+            SOLVER_UTILS_EXPORT void ImportFldToMultiDomains(
+                                      const std::string &infile, 
+                                      Array<OneD, MultiRegions::ExpListSharedPtr> &pFields,
+                                      const int ndomains);
             
             /// Output a field.
             /// Input field data into array from the given file.
@@ -528,7 +537,8 @@ namespace Nektar
             
             SOLVER_UTILS_EXPORT virtual void v_SetInitialConditions(
                 NekDouble initialtime = 0.0,
-                bool dumpInitialConditions = true);
+                bool dumpInitialConditions = true,
+                const int domain = 0);
             
             SOLVER_UTILS_EXPORT virtual void v_EvaluateExactSolution(
                 unsigned int field,
@@ -706,9 +716,10 @@ namespace Nektar
         }
         
         inline void EquationSystem::SetInitialConditions(NekDouble initialtime,
-                                                         bool dumpInitialConditions)
+                                                         bool dumpInitialConditions,
+                                                         const int domain)
         {
-            v_SetInitialConditions(initialtime,dumpInitialConditions);
+            v_SetInitialConditions(initialtime,dumpInitialConditions,domain);
         }
         
         /// Evaluates an exact solution
@@ -758,7 +769,7 @@ namespace Nektar
         
         inline int EquationSystem::GetNvariables(void)
         {
-            return m_fields.num_elements();
+            return m_session->GetVariables().size();
         }
         
         inline const std::string EquationSystem::GetVariable(unsigned int i)
@@ -770,7 +781,6 @@ namespace Nektar
         {
             return GetTraceNpoints();
         }
-        
         
         inline int EquationSystem::GetTraceNpoints(void)
         {

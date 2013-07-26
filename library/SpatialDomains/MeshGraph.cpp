@@ -397,6 +397,8 @@ namespace Nektar
                         if (!vertexDataStrm.fail())
                         {
                             VertexComponentSharedPtr vert(MemoryManager<VertexComponent>::AllocateSharedPtr(m_spaceDimension, indx, xval, yval, zval));
+                            // Set geometry identifier GlobalId
+                            vert->SetGlobalID(indx);
                             m_vertSet[indx] = vert;
                         }
                     }
@@ -2957,19 +2959,21 @@ namespace Nektar
             ExpansionMapShPtr returnval;
             returnval = MemoryManager<ExpansionMap>::AllocateSharedPtr();
 
-            const CompositeMap &domain = this->GetDomain();
-            CompositeMap::const_iterator compIter;
-
-            for (compIter = domain.begin(); compIter != domain.end(); ++compIter)
+            for(int d = 0; d < m_domain.size(); ++d)
             {
-                GeometryVector::const_iterator x;
-                for (x = compIter->second->begin(); x != compIter->second->end(); ++x)
+                CompositeMap::const_iterator compIter;
+
+                for (compIter = m_domain[d].begin(); compIter != m_domain[d].end(); ++compIter)
                 {
-                    LibUtilities::BasisKeyVector def;
-                    ExpansionShPtr expansionElementShPtr =
+                    GeometryVector::const_iterator x;
+                    for (x = compIter->second->begin(); x != compIter->second->end(); ++x)
+                    {
+                        LibUtilities::BasisKeyVector def;
+                        ExpansionShPtr expansionElementShPtr =
                             MemoryManager<Expansion>::AllocateSharedPtr(*x, def);
-                    int id = (*x)->GetGlobalID();
-                    (*returnval)[id] = expansionElementShPtr;
+                        int id = (*x)->GetGlobalID();
+                        (*returnval)[id] = expansionElementShPtr;
+                    }
                 }
             }
 

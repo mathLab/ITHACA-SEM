@@ -56,9 +56,7 @@ namespace Nektar
             eNeumann,
             eRobin,
             ePeriodic,
-            eJunction,
-            eBifurcation,
-            eMerging
+            eNotDefined
         };
 
         enum BndUserDefinedType
@@ -150,46 +148,6 @@ namespace Nektar
                 return m_userDefined;
             }
 
-            int m_parent;
-            int m_daughter1;
-            int m_daughter2;
-
-            void SetJunction(int P, int D1)
-            {
-                m_parent = P;
-				m_daughter1 = D1;
-            }
-			
-			void SetBifurcation(int P, int D1, int D2)
-            {
-                m_parent = P;
-				m_daughter1 = D1;
-				m_daughter2 = D2;
-            }
-			
-			void SetMerging(int P, int D1, int D2)
-            {
-                m_parent = P;
-				m_daughter1 = D1;
-				m_daughter2 = D2;
-            }
-			
-			int GetParent() const
-            {
-                return m_parent;
-            }
-			
-			int GetDaughter1() const
-            {
-                return m_daughter1;
-            }
-			
-			int GetDaughter2() const
-            {
-                return m_daughter2;
-            }
-
-
         protected:
             BoundaryConditionType m_boundaryConditionType;
             BndUserDefinedType    m_userDefined;
@@ -264,42 +222,22 @@ namespace Nektar
             unsigned int m_connectedBoundaryRegion;
         };
 
-        struct JunctionBoundaryCondition : public BoundaryConditionBase
+        struct NotDefinedBoundaryCondition : public BoundaryConditionBase
         {
-            JunctionBoundaryCondition( const int &P, const int &D1, const std::string &userDefined = std::string("NoUserDefined")):
-            BoundaryConditionBase(eJunction, userDefined),
-            m_parent(P), m_daughter1(D1)
-            {
-                SetJunction(P, D1);
-            }
-            int m_parent;
-            int m_daughter1;
-        };
 
-        struct BifurcationBoundaryCondition : public BoundaryConditionBase
-        {
-            BifurcationBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
-            BoundaryConditionBase(eBifurcation, userDefined),
-            m_parent(P), m_daughter1(D1), m_daughter2(D2)
-            {
-                SetBifurcation(P, D1, D2);
-            }
-            int m_parent;
-            int m_daughter1;
-            int m_daughter2;
-        };
+               NotDefinedBoundaryCondition(
+                    const LibUtilities::SessionReaderSharedPtr &pSession,
+                    const std::string& eqn,
+                    const std::string& userDefined = std::string("NoUserDefined"),
+                    const std::string& filename=std::string("")):
+            BoundaryConditionBase(eNotDefined, userDefined),
+                m_notDefinedCondition(pSession, eqn),
+                m_filename(filename)
+                {
+                }
 
-        struct MergingBoundaryCondition : public BoundaryConditionBase
-        {
-            MergingBoundaryCondition( const int &P, const int &D1, const int &D2, const std::string &userDefined = std::string("NoUserDefined")):
-            BoundaryConditionBase(eMerging, userDefined),
-            m_parent(P), m_daughter1(D1), m_daughter2(D2)
-            {
-                SetMerging(P, D1, D2);
-            }
-            int m_parent;
-            int m_daughter1;
-            int m_daughter2;
+            LibUtilities::Equation m_notDefinedCondition;
+            std::string m_filename;
         };
 
 
@@ -312,9 +250,7 @@ namespace Nektar
         typedef boost::shared_ptr<DirichletBoundaryCondition> DirichletBCShPtr;
         typedef boost::shared_ptr<NeumannBoundaryCondition>   NeumannBCShPtr;
         typedef boost::shared_ptr<RobinBoundaryCondition>     RobinBCShPtr;
-        typedef boost::shared_ptr<JunctionBoundaryCondition>  JunctionBCShPtr;
-        typedef boost::shared_ptr<BifurcationBoundaryCondition>  BifurcationBCShPtr;
-        typedef boost::shared_ptr<MergingBoundaryCondition>   MergingBCShPtr;
+
         typedef std::map<std::string,BoundaryConditionShPtr>  BoundaryConditionMap;
         typedef boost::shared_ptr<BoundaryConditionMap>  BoundaryConditionMapShPtr;
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
@@ -325,16 +261,29 @@ namespace Nektar
         {
         public:
             SPATIAL_DOMAINS_EXPORT BoundaryConditions(const LibUtilities::SessionReaderSharedPtr &pSession, const MeshGraphSharedPtr &meshGraph);
-            SPATIAL_DOMAINS_EXPORT ~BoundaryConditions();
+
+            SPATIAL_DOMAINS_EXPORT BoundaryConditions(void);
+            SPATIAL_DOMAINS_EXPORT ~BoundaryConditions(void);
 
             const BoundaryRegionCollection &GetBoundaryRegions(void) const
             {
                 return m_boundaryRegions;
             }
 
+            void AddBoundaryRegions(const int regionID, BoundaryRegionShPtr &bRegion)
+            {
+                m_boundaryRegions[regionID] = bRegion;
+            }
+
             const BoundaryConditionCollection &GetBoundaryConditions(void) const
             {
                 return m_boundaryConditions;
+            }
+
+
+            void AddBoundaryConditions(const int regionID, BoundaryConditionMapShPtr &bCond)
+            {
+                m_boundaryConditions[regionID] = bCond; 
             }
 
             const std::string GetVariable(unsigned int indx)
@@ -351,7 +300,6 @@ namespace Nektar
             BoundaryConditionCollection             m_boundaryConditions;
 
         private:
-            BoundaryConditions();
 
             /// Read segments (and general MeshGraph) given TiXmlDocument.
             void Read(TiXmlElement *conditions);

@@ -56,6 +56,8 @@ IF( NEKTAR_SOLVER_INCNAVIERSTOKES )
     ADD_NEKTAR_TEST(Tet_channel_m3)
     ADD_NEKTAR_TEST(Tet_equitri)
     ADD_NEKTAR_TEST(Prism_channel_m6)
+    ADD_NEKTAR_TEST(ChannelSpongeNSE)
+    ADD_NEKTAR_TEST(ChannelSpongeLNSE)
 
     #IF (NEKTAR_USING_ARPACK)
         #ADD_NEKTAR_TEST(ChanStability_adj_Ar) ###

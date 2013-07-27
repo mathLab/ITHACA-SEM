@@ -1355,7 +1355,10 @@ namespace Nektar
         //add the force
         if(m_session->DefinesFunction("BodyForce"))
         {
-           m_BodyForcing->Apply(m_fields,inarray,outarray);     
+            for(int i = 0; i < m_nConvectiveFields; ++i)
+            {
+                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
+            }        
         }
     }
     

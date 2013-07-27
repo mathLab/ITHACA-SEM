@@ -67,6 +67,8 @@ OPTION(NEKTAR_BUILD_UNIT_TESTS "Build unit tests."              ON)
 OPTION(NEKTAR_BUILD_TESTS      "Build regression tests."        ON)
 OPTION(NEKTAR_BUILD_TIMINGS    "Build benchmark timing codes."  OFF)
 
+OPTION(NEKTAR_TEST_ALL  "Include full set of regression tests to this build."  OFF)
+
 # Build options
 OPTION(NEKTAR_FULL_DEBUG "Enable Full Debugging." OFF)
 MARK_AS_ADVANCED(NEKTAR_FULL_DEBUG)

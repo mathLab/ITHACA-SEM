@@ -24,6 +24,7 @@ SET(SOLVER_UTILS_SOURCES
   UnsteadySystem.cpp
   Forcing/Forcing.cpp
   Forcing/ForcingSponge.cpp
+  Forcing/ForcingBody.cpp
 )
 
 SET(SOLVER_UTILS_HEADERS
@@ -54,6 +55,7 @@ SET(SOLVER_UTILS_HEADERS
   UnsteadySystem.h
   Forcing/Forcing.h
   Forcing/ForcingSponge.h
+  Forcing/ForcingBody.h
 )
 
 IF (NEKTAR_USE_ARPACK)

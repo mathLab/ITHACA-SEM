@@ -90,24 +90,16 @@ namespace Nektar
 	    Array<OneD, Array<OneD, NekDouble> >                  m_Sponge;
             Array<OneD, Array<OneD, NekDouble> >                  m_Refflow;
 	    Array<OneD, Array<OneD, NekDouble> >                  m_Forcing;
-            enum HomogeneousType
-            {
-                eHomogeneous1D,
-                eHomogeneous2D,
-                eHomogeneous3D,
-                eNotHomogeneous
-            }; 
-            enum HomogeneousType                                  m_HomogeneousType;
 	    int                                                   m_NumVariable;
-            bool                                                  m_SingleMode;
-            bool                                                  m_HalfMode;
-	private:
+	protected:
 	    void EvaluateFunction(
 		Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
 		LibUtilities::SessionReaderSharedPtr              pSession,
 		std::string 					  pFieldName,
             	Array<OneD, NekDouble>&                           pArray,
-            	const std::string&                                pFunctionName);
+            	const std::string&                                pFunctionName,
+                NekDouble                                         pTime = NekDouble(0));
+	private:
 	    void v_ReadSpongeInfo(
 		LibUtilities::SessionReaderSharedPtr              pSession,
 		Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,

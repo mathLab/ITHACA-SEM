@@ -44,7 +44,7 @@
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/ForcingSponge.h>
-
+#include <SolverUtils/Forcing/ForcingBody.h>
 namespace Nektar
 {
     namespace SolverUtils
@@ -407,7 +407,9 @@ namespace Nektar
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
             /// Sponge forcing term 
-            SolverUtils::ForcingSharedPtr               m_SpongeForcing;     
+            SolverUtils::ForcingSharedPtr               m_SpongeForcing;  
+            /// Sponge forcing term 
+            SolverUtils::ForcingSharedPtr               m_BodyForcing;   
             /// Filename.
             std::string                                 m_filename;
             /// Name of the session.

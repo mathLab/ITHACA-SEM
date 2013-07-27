@@ -479,20 +479,7 @@ namespace Nektar
         if(m_session->DefinesFunction("BodyForce"))
         {
             timer.Start();
-            if(m_fields[0]->GetWaveSpace())
-            {
-                for(int i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_forces[i]->SetWaveSpace(true);					
-                    m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),
-                                          m_forces[i]->UpdatePhys());
-                }
-            }
-            for(int i = 0; i < m_nConvectiveFields; ++i)
-            {
-                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,
-                            outarray[i],1);
-            }
+            m_BodyForcing->Apply(m_fields,inarray,outarray);
             timer.Stop();
             if(m_showTimings&&IsRoot)
             {

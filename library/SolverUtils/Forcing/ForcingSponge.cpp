@@ -40,9 +40,9 @@ namespace Nektar
     namespace SolverUtils
     {
 	
-	std::string ForcingSponge::className = GetForcingFactory().RegisterCreatorFunction("Forcing", ForcingSponge::create, "Forcing Sponge");
+	std::string ForcingSponge::className = GetForcingFactory().RegisterCreatorFunction("SpongeForcing", ForcingSponge::create, "Forcing Sponge");
 
-	ForcingSponge::ForcingSponge():m_SingleMode(false),m_HalfMode(false)
+	ForcingSponge::ForcingSponge()
 	{
 	}
         void ForcingSponge::v_InitObject(
@@ -81,7 +81,8 @@ namespace Nektar
 		LibUtilities::SessionReaderSharedPtr              pSession,
 		std::string 					  pFieldName,
             	Array<OneD, NekDouble>&                           pArray,
-            	const std::string&                                pFunctionName)
+            	const std::string&                                pFunctionName,
+                NekDouble                                         pTime)
 	{
 	
 		ASSERTL0(pSession->DefinesFunction(pFunctionName),
@@ -95,7 +96,6 @@ namespace Nektar
 
 		LibUtilities::FunctionType vType;
 		vType = pSession->GetFunctionType(pFunctionName, pFieldName);
-		NekDouble pTime = NekDouble(0);
                 if (vType == LibUtilities::eFunctionTypeExpression)
                 {
 		        Array<OneD,NekDouble> x0(nq);

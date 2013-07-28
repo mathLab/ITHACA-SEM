@@ -1961,14 +1961,14 @@ namespace Nektar
                     
                     for(int n = 0; n < FieldDef.size(); ++n)
                     {
-                    ASSERTL1(FieldDef[n]->m_fields[i] == m_session->GetVariable(i),
-                             std::string("Order of ") + infile
-                             + std::string(" data and that defined in "
-                                           "m_boundaryconditions differs"));
-
-                    pFields[j*nvariables+i]->ExtractDataToCoeffs(FieldDef[n], FieldData[n],
-                                                                 FieldDef[n]->m_fields[j],
-                                                                 pFields[j*nvariables+i]->UpdateCoeffs());
+                        ASSERTL1(FieldDef[n]->m_fields[i] == m_session->GetVariable(i),
+                                 std::string("Order of ") + infile
+                                 + std::string(" data and that defined in "
+                                               "m_boundaryconditions differs"));
+                        
+                        pFields[j*nvariables+i]->ExtractDataToCoeffs(FieldDef[n], FieldData[n],
+                                                                     FieldDef[n]->m_fields[i],
+                                                                     pFields[j*nvariables+i]->UpdateCoeffs());
                     }
                     pFields[j*nvariables+i]->BwdTrans(pFields[j*nvariables+i]->GetCoeffs(),
                                                       pFields[j*nvariables+i]->UpdatePhys());

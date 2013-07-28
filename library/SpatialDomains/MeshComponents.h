@@ -134,7 +134,7 @@ namespace Nektar
 
             protected:
                 int m_vid;
-                int m_coordim;
+                //int m_coordim; This is defined in class Geometry
                 std::list<CompToElmt> m_elmtMap;
         };
 

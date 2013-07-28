@@ -900,6 +900,10 @@ namespace Nektar
         {
             int p,n,offset, t_offset;
             double vertnorm =0.0;
+
+
+            Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
+                &elmtToTrace = m_traceMap->GetElmtToTrace();
             
             // Basis shared pointer
             LibUtilities::BasisSharedPtr Basis;
@@ -917,8 +921,12 @@ namespace Nektar
                 // Implementation for every points except Gauss points
                 if (Basis->GetBasisType() != LibUtilities::eGauss_Lagrange)
                 {
+#if 0 // Currently assume p=1 normal is always positive and p=1 is
+      // negative since this is the sign-convention of the local
+      // segment. Note that we do not put sign in Fn in 1D since there is only one component
                     for(p = 0; p < 2; ++p)
                     {
+                       
                         vertnorm = 0.0;
                         for (int i=0; i<((*m_exp)[n]->
                                          GetVertexNormal(p)).num_elements(); i++)
@@ -926,7 +934,7 @@ namespace Nektar
                             vertnorm += ((*m_exp)[n]->GetVertexNormal(p))[i][0];
                         }
                         
-                        t_offset = GetTrace()->GetPhys_Offset(n+p);
+                        t_offset = GetTrace()->GetPhys_Offset(elmtToTrace[n][p]->GetElmtId());
                         
                         if (vertnorm >= 0.0)
                         {
@@ -939,6 +947,14 @@ namespace Nektar
                             outarray[offset] -= Fn[t_offset];
                         }
                     }
+#else
+                    t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][0]->GetElmtId());
+                    outarray[offset] -= Fn[t_offset];
+                    
+                    t_offset = GetTrace()->GetCoeff_Offset(elmtToTrace[n][1]->GetElmtId());
+                    outarray[offset+(*m_exp)[n]->GetVertexMap(1)] += Fn[t_offset];
+#endif
+
                 }
                 else
                 {

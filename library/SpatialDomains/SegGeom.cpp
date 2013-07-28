@@ -224,18 +224,19 @@ namespace Nektar
         }
 
 
-        /** Generate a one dimensional space segment geometry where
+        /** \brief Generate a one dimensional space segment geometry where
             the vert[0] has the same x value and vert[1] is set to
-            vert[0] plus the length of the original segment  **/
+            vert[0] plus the length of the original segment  
+            
+        **/
         SegGeomSharedPtr SegGeom::GenerateOneSpaceDimGeom(void)
         {
             SegGeomSharedPtr returnval = MemoryManager<SegGeom>::AllocateSharedPtr();
             
-
             // info about numbering 
-            returnval->m_eid     = m_eid;
+            returnval->m_eid       = m_eid;
             returnval->m_globalID  = m_globalID;
-            returnval->m_elmtMap = m_elmtMap; 
+            returnval->m_elmtMap   = m_elmtMap; 
             
 
             // geometric information. 

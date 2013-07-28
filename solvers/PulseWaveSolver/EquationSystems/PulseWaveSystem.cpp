@@ -273,7 +273,11 @@ namespace Nektar
                 {
                     normals[i] = m_trace_fwd_normal[omega]+i;
                 }
-
+ 
+                // need to set to 1 for consistency since boundary
+                // conditions may not have coordim=1
+               trace->GetExp(0)->GetGeom()->SetCoordim(1); 
+                
                 trace->GetNormals(normals);
             }
         }
@@ -412,7 +416,7 @@ namespace Nektar
             }
             
             // Transform data if needed
-            if(n&&(!((n+1)%m_checksteps)))
+            if(!((n+1)%m_checksteps))
             {
                 for (i = 0; i < m_nVariables; ++i)
                 {
@@ -969,8 +973,7 @@ namespace Nektar
         LibUtilities::Write(outname, FieldDef, FieldData, m_fieldMetaDataMap);
     }    
 
-#if 0 
-     * Compute the error in the L2-norm
+    /* Compute the error in the L2-norm
      * @param   field           The field to compare.
      * @param   exactsoln       The exact solution to compare with.
      * @param   Normalised      Normalise L2-error.
@@ -980,51 +983,72 @@ namespace Nektar
                                          const Array<OneD, NekDouble> &exactsoln,
                                          bool Normalised)
     {    		
-        NekDouble L2error = -1.0;
-        if (m_domainsize > 1)
+        NekDouble L2error = 0.0; 
+        NekDouble L2error_dom;
+        NekDouble Vol     = 0.0;
+
+        if(m_NumQuadPointsError == 0)
         {
-            for (int omega = 0; omega < m_domainsize; omega++)
+            for (int omega = 0; omega < m_nDomains; omega++)
             {
-                m_fields[field] = m_vessels[field];
-		
-                if(m_NumQuadPointsError == 0)
+                int vesselid = field + omega*m_nVariables;
+                
+                if(m_vessels[vesselid]->GetPhysState() == false)
                 {
-                    if(m_fields[field]->GetPhysState() == false)
-                    {
-                        m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
-                                                  m_fields[field]->UpdatePhys());
-                    }
+                    m_vessels[vesselid]->BwdTrans(m_vessels[vesselid]->GetCoeffs(),
+                                                  m_vessels[vesselid]->UpdatePhys());
+                }
+                
+                if(exactsoln.num_elements())
+                {
+                    L2error_dom = m_vessels[vesselid]->L2(exactsoln);
+                }
+                else if (m_session->DefinesFunction("ExactSolution"))
+                {
+                    Array<OneD, NekDouble> exactsoln(m_vessels[vesselid]->GetNpoints());
                     
-                    if(exactsoln.num_elements())
-                    {
-                        L2error = m_fields[field]->L2(exactsoln);
-                    }
-                    else if (m_session->DefinesFunction("ExactSolution"))
-                    {
-                        Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
-			
-                        LibUtilities::EquationSharedPtr vEqu
-                            = m_session->GetFunction("ExactSolution",field);
-                        EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",m_time);
-                        
-                        L2error = m_fields[field]->L2(exactsoln);
-                    }
-                    else
-                    {
-                        L2error = m_fields[field]->L2();
-                    }
+                    LibUtilities::EquationSharedPtr vEqu
+                        = m_session->GetFunction("ExactSolution",field,omega);
+                    EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",
+                                     m_time);
+                    
+                    L2error_dom = m_vessels[vesselid]->L2(exactsoln);
+                    
                 }
                 else
                 {
-                    ASSERTL0(false,"ErrorExtraPoints not allowed for this solver");
+                    L2error_dom = m_vessels[vesselid]->L2();
                 }
+
+                L2error += L2error_dom*L2error_dom;
+                
+                if(Normalised == true)
+                {
+                    Array<OneD, NekDouble> one(m_vessels[vesselid]->GetNpoints(), 1.0);
+                    
+                    Vol += m_vessels[vesselid]->PhysIntegral(one);
+                }
+                
             }
-            return L2error;
         }
         else
         {
-            return EquationSystem::v_L2Error(field, exactsoln);
+            ASSERTL0(false,"Not set up");
         }
+        
+        
+        if(Normalised == true)
+        {
+            m_comm->AllReduce(Vol, LibUtilities::ReduceSum);
+        
+            L2error = sqrt(L2error/Vol);
+        }
+        else
+        {
+            L2error = sqrt(L2error);
+        }            
+
+        return L2error;
     }
     
 	
@@ -1034,55 +1058,70 @@ namespace Nektar
 	 * @param   exactsoln       The exact solution to compare with.
 	 * @returns                 Error in the L_inft-norm.
 	 */
-	NekDouble PulseWaveSystem::v_LinfError(unsigned int field,
-										   const Array<OneD, NekDouble> &exactsoln)
-	{
-		NekDouble Linferror = -1.0;		
-		if (m_domainsize > 1)
-		{
-			for (int omega = 0; omega < m_domainsize; omega++)
-			{
-				m_fields[field] = m_vessels[field];
-			
-				if(m_NumQuadPointsError == 0)
-				{
-					if(m_fields[field]->GetPhysState() == false)
-					{
-						m_fields[field]->BwdTrans(m_fields[field]->GetCoeffs(),
-												  m_fields[field]->UpdatePhys());
-					}
-				
-					if(exactsoln.num_elements())
-					{
-						Linferror = m_fields[field]->Linf(exactsoln);
-					}
-					else if (m_session->DefinesFunction("ExactSolution"))
-					{
-						Array<OneD, NekDouble> exactsoln(m_fields[field]->GetNpoints());
-					
-						EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",m_time);
-					
-						Linferror = m_fields[field]->Linf(exactsoln);
-					}
-					else
-					{
-						Linferror = 0.0;
-					}
-				
-				}
-				else
-				{
-					ASSERTL0(false,"ErrorExtraPoints not allowed for this solver");
-				}
-			}
-			return Linferror;
-		}
-		else 
-		{
-			return EquationSystem::v_LinfError(field, exactsoln);
-		}
-	}
-#endif	
+    NekDouble PulseWaveSystem::v_LinfError(unsigned int field,
+                                           const Array<OneD, NekDouble> &exactsoln)
+    {
+        NekDouble LinferrorDom, Linferror = -1.0;		
+        
+        for (int omega = 0; omega < m_nDomains; omega++)
+        {
+            int vesselid = field + omega*m_nVariables;
+
+            if(m_NumQuadPointsError == 0)
+            {
+                if(m_vessels[vesselid]->GetPhysState() == false)
+                {
+                    m_vessels[vesselid]->BwdTrans(m_vessels[vesselid]->GetCoeffs(),
+                                                  m_vessels[vesselid]->UpdatePhys());
+                }
+		
+                if(exactsoln.num_elements())
+                {
+                    LinferrorDom = m_vessels[vesselid]->Linf(exactsoln);
+                }
+                else if (m_session->DefinesFunction("ExactSolution"))
+                {
+                    Array<OneD, NekDouble> exactsoln(m_vessels[vesselid]->GetNpoints());
+                    
+                    EvaluateFunction(m_session->GetVariable(field),exactsoln,"ExactSolution",
+                                     m_time);
+                    
+                    LinferrorDom = m_vessels[vesselid]->Linf(exactsoln);
+                }
+                else
+                {
+                    LinferrorDom = 0.0;
+                }
+
+                Linferror = (Linferror > LinferrorDom)? Linferror:LinferrorDom;
+                
+            }
+            else
+            {
+                ASSERTL0(false,"ErrorExtraPoints not allowed for this solver");
+            }
+        }
+        return Linferror;
+    }
+    
+    void PulseWaveSystem::CalcCharacteristicVariables(int omega)
+    {
+        int nq = m_vessels[omega]->GetTotPoints();
+        Array<OneD, NekDouble> A = m_vessels[omega]->UpdatePhys();
+        Array<OneD, NekDouble> u = m_vessels[omega+1]->UpdatePhys();
+        Array<OneD, NekDouble> c(nq);
+
+        //Calc 4*c
+        Vmath::Vsqrt(nq,A,1,c,1);
+        Vmath::Vmul(nq,m_beta[omega],1,c,1,c,1);
+        Vmath::Smul(nq,16.0/(2*m_rho),c,1,c,1);
+        Vmath::Vsqrt(nq,c,1,c,1);
+
+        // Characteristics
+        Vmath::Vadd(nq,u,1,c,1,A,1);
+        Vmath::Vsub(nq,u,1,c,1,u,1);
+    }
+
 
 
 }

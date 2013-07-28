@@ -484,6 +484,11 @@ namespace Nektar
             return m_coordim;
         }
 
+        void Geometry::SetCoordim(int coordim) 
+        {
+            m_coordim = coordim;
+        }
+
     }; //end of namespace
 }; //end of namespace
 

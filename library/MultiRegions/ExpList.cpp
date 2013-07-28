@@ -1686,7 +1686,7 @@ namespace Nektar
                 switch((*m_exp)[0]->GetNumBases())
                 {
                 case 1:
-                    ASSERTL0(false,"Not set up for this type of output");
+                    outfile << ", ET=LINESEG" << std::endl;
                     break;
                 case 2:
                     outfile << ", ET=QUADRILATERAL" << std::endl;
@@ -1721,7 +1721,14 @@ namespace Nektar
         {
             int returnval = 0;
 
-            if((*m_exp)[0]->GetNumBases() == 2)
+            if((*m_exp)[0]->GetNumBases() == 1)
+            {
+                for(int i = 0; i < (*m_exp).size(); ++i)
+                {
+                    returnval += (*m_exp)[i]->GetNumPoints(0)-1;
+                }
+            }
+            else if((*m_exp)[0]->GetNumBases() == 2)
             {
                 for(int i = 0; i < (*m_exp).size(); ++i)
                 {
@@ -1748,7 +1755,17 @@ namespace Nektar
             
             for(int i = 0; i < (*m_exp).size(); ++i)
             {
-                if(nbase == 2)
+                if(nbase == 1)
+                {
+                    int np0 = (*m_exp)[i]->GetNumPoints(0);
+                    for(k = 1; k < np0; ++k)
+                    {
+                        outfile << cnt + k  << " ";
+                        outfile << cnt + k + 1 << endl;
+                    }
+                    cnt += np0;
+                }
+                else if(nbase == 2)
                 {
                     int np0 = (*m_exp)[i]->GetNumPoints(0);
                     int np1 = (*m_exp)[i]->GetNumPoints(1);

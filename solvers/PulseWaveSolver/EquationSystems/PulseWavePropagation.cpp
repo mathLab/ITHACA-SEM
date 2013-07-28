@@ -367,8 +367,6 @@ namespace Nektar
                                                Array<OneD, Array<OneD, NekDouble> > &flux)
     {
         int nq = m_vessels[m_currentDomain*m_nVariables]->GetTotPoints();
-        NekDouble rho = m_rho; 
-        NekDouble pext = m_pext; 
         NekDouble p = 0.0;
         NekDouble p_t = 0.0;
 	
@@ -387,9 +385,11 @@ namespace Nektar
                 for (int j = 0; j < nq; j++)
                 {
                     ASSERTL0(physfield[0][j]>=0,"Negative A not allowed.");
-                    p = pext + m_beta[m_currentDomain][j]*
+
+                    p = m_pext + m_beta[m_currentDomain][j]*
                         (sqrt(physfield[0][j]) - sqrt(m_A_0[m_currentDomain][j]));
-                    p_t = (physfield[1][j]*physfield[1][j])/2 + p/rho;
+
+                    p_t = (physfield[1][j]*physfield[1][j])/2 + p/m_rho;
                     flux[0][j] =  p_t;
                 }
             }
@@ -483,14 +483,12 @@ namespace Nektar
         NekDouble p = 0.0;
         NekDouble p_t = 0.0;
         
+#if 0
         // Compute the wave speeds in the normal direction according
         // to the definition of Fwd and Bwd and indicated by n 
-        cL = sqrt(beta*sqrt(AL)/(2*rho))*n;
-        cR = sqrt(beta*sqrt(AR)/(2*rho))*n;
+        cL = sqrt(beta*sqrt(AL)/(2*rho));
+        cR = sqrt(beta*sqrt(AR)/(2*rho));
 
-        ASSERTL1(cL+cR > uL+uR,"Conditions are not sub-sonic");
-        
-#if 0 
         NekDouble c_Roe = 0.0;
         NekDouble u_Roe =0.0;
         Array<OneD, NekDouble> lambda(2);
@@ -498,8 +496,8 @@ namespace Nektar
         
         c_Roe = (cL+cR)/2;		
         u_Roe = (uL+uR)/2;
-        lambda[0]= u_Roe + c_Roe;
-        lambda[1]= u_Roe - c_Roe;
+        lambda[0]= u_Roe + c_Roe*n;
+        lambda[1]= u_Roe - c_Roe*n;
         
         // Calculate the caracteristic variables 
         // Left characteristics \f$W_1^l, W_2^l\f$
@@ -522,21 +520,35 @@ namespace Nektar
             }
         }
 #else
+        // Compute the wave speeds in the normal direction according
+        // to the definition of Fwd and Bwd and indicated by n 
+        cL = sqrt(beta*sqrt(AL)/(2*rho))*n;
+        cR = sqrt(beta*sqrt(AR)/(2*rho))*n;
+
+        ASSERTL1(fabs(cL+cR) > fabs(uL+uR),"Conditions are not sub-sonic");
+
         // If upwinding from left and right for subsonic domain
-        // then know characteristics immediatelyx
+        // then know characteristics immediately
         W[0] = uL + 4*cL;
         W[1] = uR - 4*cR;
 #endif
-        
+
         // Calculate conservative variables from characteristics
-        upwindedphysfield[0]= (0.25*(W[0]-W[1]))*(0.25*(W[0]-W[1]))*
-            (0.25*(W[0]-W[1]))*(0.25*(W[0]-W[1]))*(rho/(2*beta))*(rho/(2*beta));
+        NekDouble w0mw1 = 0.25*(W[0]-W[1]);
+        NekDouble fac = rho/(2*beta);
+        w0mw1 *= w0mw1; // squared
+        w0mw1 *= w0mw1; // fourth power
+        fac *= fac;     // squared
+        upwindedphysfield[0]= w0mw1*fac;
         upwindedphysfield[1]= 0.5*(W[0] + W[1]);
+
+        //fprintf(stdout," Upwind A: %16.14lf\n",upwindedphysfield[0]);
+        //fprintf(stdout," Upwind u: %16.14lf\n",upwindedphysfield[1]);
         
         // Compute the fluxes
         Aflux = upwindedphysfield[0] * upwindedphysfield[1];
         p = pext + beta*(sqrt(upwindedphysfield[0]) - sqrt(A_0));
-        p_t = (upwindedphysfield[1]*upwindedphysfield[1])/2 + p/rho;				
+        p_t = 0.5*(upwindedphysfield[1]*upwindedphysfield[1]) + p/rho;				
         uflux =  p_t;
     }
     

@@ -231,11 +231,11 @@ namespace Nektar
          */
         void ExpList0D::v_GetNormals(Array<OneD, Array<OneD, NekDouble> > &normals)
         {
-			int i,j,k,e_npoints,offset;
+            int i,j,k,e_npoints,offset;
             Array<OneD,Array<OneD,NekDouble> > locnormals;
 			
             // Assume whole array is of same coordinate dimension
-            int coordim = normals.num_elements();
+            int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
 			
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "

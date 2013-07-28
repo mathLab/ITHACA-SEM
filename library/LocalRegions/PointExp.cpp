@@ -45,6 +45,7 @@ namespace Nektar
             m_phys(1,0.0),
             m_geom(m_geom)
         {
+            m_ncoeffs = 1;
         }
         
         PointExp::~PointExp(void)

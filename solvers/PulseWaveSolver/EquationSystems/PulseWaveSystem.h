@@ -73,6 +73,9 @@ namespace Nektar
         {
             return m_vessels;
         }
+
+        void CalcCharacteristicVariables(int omega);
+
     protected:
         Array<OneD, MultiRegions::ExpListSharedPtr>     m_vessels;
         int				                m_nDomains; 
@@ -122,7 +125,6 @@ namespace Nektar
         // Checkpoint field output
         void CheckPoint_Output(const int n);
 	
-#if 0 
         /// Compute the L2 error between fields and a given exact solution.
         NekDouble v_L2Error(unsigned int field,
                             const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray,
@@ -131,8 +133,7 @@ namespace Nektar
         /// Compute the L_inf error between fields and a given exact solution.
         NekDouble v_LinfError(unsigned int field,
                               const Array<OneD,NekDouble> &exactsoln = NullNekDouble1DArray);
-#endif
-
+        
         /// Write input fields to the given filename.
         void WriteVessels(const std::string &outname);
         

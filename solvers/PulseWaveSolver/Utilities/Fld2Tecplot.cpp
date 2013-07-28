@@ -16,7 +16,7 @@ static std::string SetToOneD = LibUtilities::SessionReader::RegisterCmdLineArgum
 
 int main(int argc, char *argv[])
 {
-    if(argc != 3)
+    if((argc < 3)||(argc > 4))
     {
         fprintf(stderr,"Usage: ./Fld2Tecplot [-c] file.xml file.fld\n");
         exit(1);
@@ -45,7 +45,15 @@ int main(int argc, char *argv[])
         
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(newargc, newargv);
+
         
+        bool CalcCharacteristicVariables = false;
+
+        if(session->DefinesCmdLineArgument(cvar))
+        {
+            CalcCharacteristicVariables = true;
+        }
+
         
         // Create driver
         session->LoadSolverInfo("Driver", vDriverModule, "Standard");
@@ -93,20 +101,32 @@ int main(int argc, char *argv[])
             var += session->GetVariable(j) +  ", ";
         }
         var += session->GetVariable(j);
-
+        
+        if(CalcCharacteristicVariables)
+        {
+            var += ", Char1, Char2";
+        }
 
         Vessels[0]->WriteTecplotHeader(outfile,var);
         
         for(int n = 0; n < ndomains; ++n)
         {
-            for(int i = 0; i < Vessels[n]->GetNumElmts(); ++i)
+            Vessels[n*nvariables]->WriteTecplotZone(outfile);
+            for(int j = 0; j < nvariables; ++j)
             {
-                Vessels[n]->WriteTecplotZone(outfile,i);
+                Vessels[n*nvariables+j]->WriteTecplotField(outfile);
+            }
+
+            if(CalcCharacteristicVariables)
+            {
+                PulseWave->CalcCharacteristicVariables(n*nvariables);
+                
                 for(int j = 0; j < nvariables; ++j)
                 {
-                    Vessels[n*nvariables+j]->WriteTecplotField(outfile,i);
+                    Vessels[n*nvariables+j]->WriteTecplotField(outfile);
                 }
             }
+            Vessels[n*nvariables]->WriteTecplotConnectivity(outfile);
         }
     }
     

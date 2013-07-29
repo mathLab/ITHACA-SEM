@@ -56,11 +56,12 @@ namespace SolverUtils
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
                     const LibUtilities::SessionReaderSharedPtr& pSession,
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                    const TiXmlElement* pForce)
             {
                 ForcingSharedPtr p = MemoryManager<ForcingSponge>::
                                                 AllocateSharedPtr(pSession);
-                p->InitObject(pFields);
+                p->InitObject(pFields, pForce);
                 return p;
             }
 
@@ -72,7 +73,8 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> > m_Refflow;
 
             virtual void v_InitObject(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                    const TiXmlElement* pForce);
 
             virtual void v_Apply(
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -82,8 +84,6 @@ namespace SolverUtils
         private:
             ForcingSponge(const LibUtilities::SessionReaderSharedPtr& pSession);
 
-            void ReadSpongeInfo(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
     };
 
 }

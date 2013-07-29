@@ -41,7 +41,7 @@ namespace SolverUtils
 {
 
     std::string ForcingSponge::className = GetForcingFactory().
-                                RegisterCreatorFunction("SpongeForcing",
+                                RegisterCreatorFunction("Sponge",
                                                         ForcingSponge::create,
                                                         "Forcing Sponge");
 
@@ -51,9 +51,47 @@ namespace SolverUtils
     }
 
     void ForcingSponge::v_InitObject(
-            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+            const TiXmlElement* pForce)
     {
-        ReadSpongeInfo(pFields);
+        std::string m_SolverInfo = m_session->GetSolverInfo("SolverType");
+        int nvariables = m_session->GetVariables().size();
+        int npts       = pFields[0]->GetTotPoints();
+
+        if (m_SolverInfo == "VelocityCorrectionScheme")
+        {
+            m_NumVariable = nvariables - 1; // e.g. (u v w p) for 3D case
+        }
+        if (m_SolverInfo == "CoupledLinearisedNS")
+        {
+            m_NumVariable = nvariables; // e.g. (u v w)  for 3D case
+        }
+
+        std::string s_FieldStr;
+        if (m_session->DefinesFunction("SpongeCoefficient"))
+        {
+            m_Sponge  = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+            m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                s_FieldStr = m_session->GetVariable(i);
+                m_Sponge[i]  = Array<OneD, NekDouble> (npts, 0.0);
+                m_Forcing[i] = Array<OneD, NekDouble> (npts, 0.0);
+                EvaluateFunction(pFields, m_session, s_FieldStr,
+                                 m_Sponge[i], "SpongeCoefficient");
+            }
+        }
+        if (m_session->DefinesFunction("RefFields"))
+        {
+            m_Refflow = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                s_FieldStr = m_session->GetVariable(i);
+                m_Refflow[i] = Array<OneD, NekDouble> (npts, 0.0);
+                EvaluateFunction(pFields, m_session, s_FieldStr,
+                                 m_Refflow[i], "RefFields");
+            }
+        }
     }
 
     void ForcingSponge::v_Apply(
@@ -85,57 +123,5 @@ namespace SolverUtils
         }
     }
 
-    void ForcingSponge::ReadSpongeInfo(
-            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
-    {
-        std::string m_SolverInfo = m_session->GetSolverInfo("SolverType");
-        int nvariables = m_session->GetVariables().size();
-        int npts       = pFields[0]->GetTotPoints();
-
-        if (m_SolverInfo == "VelocityCorrectionScheme")
-        {
-            m_NumVariable = nvariables - 1; // e.g. (u v w p) for 3D case
-        }
-        if (m_SolverInfo == "CoupledLinearisedNS")
-        {
-            m_NumVariable = nvariables; // e.g. (u v w)  for 3D case
-        }
-        if (m_session->DefinesFunction("SpongeCoefficient"))
-        {
-            m_Sponge  = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-            m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-            for (int i = 0; i < m_NumVariable; ++i)
-            {
-                m_Sponge[i]  = Array<OneD, NekDouble> (npts, 0.0);
-                m_Forcing[i] = Array<OneD, NekDouble> (npts, 0.0);
-            }
-        }
-        if (m_session->DefinesFunction("RefFields"))
-        {
-            m_Refflow = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-            for (int i = 0; i < m_NumVariable; ++i)
-            {
-                m_Refflow[i] = Array<OneD, NekDouble> (npts, 0.0);
-            }
-        }
-
-        std::string s_FieldStr;
-        for (int i = 0; i < m_NumVariable; ++i)
-        {
-            s_FieldStr = m_session->GetVariable(i);
-            if (m_session->DefinesFunction("SpongeCoefficient"))
-            {
-                EvaluateFunction(pFields, m_session, s_FieldStr,
-                                 m_Sponge[i], "SpongeCoefficient");
-            }
-            if (m_session->DefinesFunction("RefFields"))
-            {
-                EvaluateFunction(pFields, m_session, s_FieldStr,
-                                 m_Refflow[i], "RefFields");
-            }
-        }
-    }/// The end of reading sponge info.
-
 }
 }
-/// Hui XU  2013 Jul 21

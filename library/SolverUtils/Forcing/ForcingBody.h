@@ -57,11 +57,12 @@ namespace SolverUtils
             /// Creates an instance of this class
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
                     const LibUtilities::SessionReaderSharedPtr& pSession,
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                    const TiXmlElement* pForce)
             {
                 ForcingSharedPtr p = MemoryManager<ForcingBody>::
                                                 AllocateSharedPtr(pSession);
-                p->InitObject(pFields);
+                p->InitObject(pFields, pForce);
                 return p;
             }
 
@@ -70,7 +71,8 @@ namespace SolverUtils
 
         protected:
             virtual void v_InitObject(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                    const TiXmlElement* pForce);
 
             virtual void v_Apply(
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -80,8 +82,6 @@ namespace SolverUtils
         private:
             ForcingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
 
-            void ReadForceInfo(
-                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
     };
 
 }

@@ -406,10 +406,8 @@ namespace Nektar
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
-            /// Sponge forcing term 
-            SolverUtils::ForcingSharedPtr               m_SpongeForcing;  
-            /// Sponge forcing term 
-            SolverUtils::ForcingSharedPtr               m_BodyForcing;   
+            /// Forcing terms
+            std::vector<ForcingSharedPtr>               m_forcing;
             /// Filename.
             std::string                                 m_filename;
             /// Name of the session.

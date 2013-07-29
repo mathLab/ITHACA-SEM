@@ -457,10 +457,6 @@ namespace Nektar
         timer.Start();
         // evaluate convection terms
         m_advObject->DoAdvection(m_fields, m_nConvectiveFields, m_velocity,inarray,outarray,m_time);
-        if(m_session->DefinesFunction("SpongeCoefficient"))
-        {
-             m_SpongeForcing->Apply(m_fields,inarray,outarray);
-        }
         timer.Stop();
         if(m_showTimings&&IsRoot)
         {
@@ -475,16 +471,17 @@ namespace Nektar
             }
         }
 
-        //add the force
-        if(m_session->DefinesFunction("BodyForce"))
+        // apply forcing
+        timer.Start();
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            timer.Start();
-            m_BodyForcing->Apply(m_fields,inarray,outarray);
-            timer.Stop();
-            if(m_showTimings&&IsRoot)
-            {
-                cout << "\t Body ForceTime   : "<< timer.TimePerTest(1) << endl;
-            }
+            (*x)->Apply(m_fields, inarray, outarray);
+        }
+        timer.Stop();
+        if(m_showTimings&&IsRoot)
+        {
+            cout << "\t Body ForceTime   : "<< timer.TimePerTest(1) << endl;
         }
         
         if(m_pressureHBCs[0].num_elements() > 0)

@@ -544,7 +544,7 @@ namespace Nektar
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
            
-           if (m_session->DefinesFunction("BodyForce"))
+/*           if (m_session->DefinesFunction("BodyForce"))
             {
                 m_forces    = Array<OneD, MultiRegions::ExpListSharedPtr>(v_GetForceDimension());
                 int nq      = m_fields[0]->GetNpoints();
@@ -632,7 +632,7 @@ namespace Nektar
                     }
                 }
             }
-
+*/
             // If a tangent vector policy is defined then the local tangent
             // vectors on each element need to be generated
             if (m_session->DefinesGeometricInfo("TANGENTDIR"))
@@ -642,15 +642,9 @@ namespace Nektar
 
             // Zero all physical fields initially
             ZeroPhysFields();
-            // Forcing term 
-            if(m_session->DefinesFunction("SpongeCoefficient"))
-            {  
-                m_SpongeForcing = SolverUtils::GetForcingFactory().CreateInstance("SpongeForcing", m_session, m_fields);
-            } 
-            if (m_session->DefinesFunction("BodyForce"))
-            {
-               m_BodyForcing = SolverUtils::GetForcingFactory().CreateInstance("BodyForcing", m_session, m_fields);
-            }
+
+            // Forcing terms
+            m_forcing = SolverUtils::Forcing::Load(m_session, m_fields);
         }
 
         /**

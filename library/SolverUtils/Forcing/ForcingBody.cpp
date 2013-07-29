@@ -41,7 +41,7 @@ namespace SolverUtils
 {
 
     std::string ForcingBody::className = GetForcingFactory().
-                                RegisterCreatorFunction("BodyForcing",
+                                RegisterCreatorFunction("Body",
                                                         ForcingBody::create,
                                                         "Body Forcing");
 
@@ -52,28 +52,8 @@ namespace SolverUtils
     }
 
     void ForcingBody::v_InitObject(
-            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
-    {
-        ReadForceInfo(pFields);
-    }
-
-    void ForcingBody::v_Apply(
-            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-            const Array<OneD, Array<OneD, NekDouble> > &inarray,
-                  Array<OneD, Array<OneD, NekDouble> > &outarray)
-    {
-        if (m_session->DefinesFunction("BodyForce"))
-        {
-            for (int i = 0; i < m_NumVariable; i++)
-            {
-                Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
-                            m_Forcing[i], 1, outarray[i], 1);
-            }
-        }
-    }
-
-    void ForcingBody::ReadForceInfo(
-            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+            const TiXmlElement* pForce)
     {
         std::string m_SolverInfo = m_session->GetSolverInfo("SolverType");
         int nvariables = m_session->GetVariables().size();
@@ -110,8 +90,23 @@ namespace SolverUtils
                                  m_Forcing[i], "BodyForce");
             }
         }
+
     }
 
+    void ForcingBody::v_Apply(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
+                  Array<OneD, Array<OneD, NekDouble> > &outarray)
+    {
+        if (m_session->DefinesFunction("BodyForce"))
+        {
+            for (int i = 0; i < m_NumVariable; i++)
+            {
+                Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+                            m_Forcing[i], 1, outarray[i], 1);
+            }
+        }
+    }
 
 }
 }

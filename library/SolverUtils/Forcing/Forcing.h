@@ -47,6 +47,21 @@ namespace Nektar
 {
 namespace SolverUtils
 {
+    //  Forward declaration
+    class Forcing;
+
+    /// A shared pointer to an EquationSystem object
+    SOLVER_UTILS_EXPORT typedef boost::shared_ptr<Forcing> ForcingSharedPtr;
+
+    /// Declaration of the forcing factory
+    typedef LibUtilities::NekFactory<std::string, Forcing,
+            const LibUtilities::SessionReaderSharedPtr&,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>&,
+            const TiXmlElement*> ForcingFactory;
+
+    /// Declaration of the forcing factory singleton
+    SOLVER_UTILS_EXPORT ForcingFactory& GetForcingFactory();
+
     /**
      * @class Forcing
      * @brief Defines a forcing term to be explicitly applied.
@@ -56,13 +71,18 @@ namespace SolverUtils
         public:
             /// Initialise the forcing object
             SOLVER_UTILS_EXPORT void InitObject(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields);
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields,
+                const TiXmlElement* pForce);
 
             /// Apply the forcing
             SOLVER_UTILS_EXPORT void Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
+
+            static std::vector<ForcingSharedPtr> Load(
+                        const LibUtilities::SessionReaderSharedPtr& pSession,
+                        const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
 
         protected:
             /// Session reader
@@ -76,7 +96,8 @@ namespace SolverUtils
             Forcing(const LibUtilities::SessionReaderSharedPtr&);
 
             virtual void v_InitObject(
-                const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields) = 0;
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields,
+                const TiXmlElement* pForce) = 0;
 
             virtual void v_Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
@@ -91,18 +112,6 @@ namespace SolverUtils
                     NekDouble pTime = NekDouble(0));
 
     };
-
-    /// A shared pointer to an EquationSystem object
-    SOLVER_UTILS_EXPORT typedef boost::shared_ptr<Forcing> ForcingSharedPtr;
-
-    /// Declaration of the forcing factory
-    typedef LibUtilities::NekFactory<std::string, Forcing,
-            const LibUtilities::SessionReaderSharedPtr&,
-            const Array<OneD, MultiRegions::ExpListSharedPtr>& > ForcingFactory;
-
-    /// Declaration of the forcing factory singleton
-    SOLVER_UTILS_EXPORT ForcingFactory& GetForcingFactory();
-
 }
 }
 

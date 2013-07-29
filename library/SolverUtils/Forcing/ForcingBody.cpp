@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Forcing.cpp
+// File: ForcingBody.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Abstract base class for forcing terms.
+// Description: Body forcing
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -37,72 +37,81 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
-    {
-	
-	std::string ForcingBody::className = GetForcingFactory().RegisterCreatorFunction("BodyForcing", ForcingBody::create, "Body Forcing");
+namespace SolverUtils
+{
 
-	ForcingBody::ForcingBody()
-	{
-	}
-        void ForcingBody::v_InitObject(
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-                SpatialDomains::MeshGraphSharedPtr                pGraph)
-        {
-		m_Session = pSession; 
-                v_ReadForceInfo(pSession,pFields,pGraph);
-        }
-	void ForcingBody::v_Apply(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray)
-	{
-		if (m_Session->DefinesFunction("BodyForce"))
-		{
-			for (int i=0; i<m_NumVariable;i++)
-			{	
-				Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1, m_Forcing[i], 1,outarray[i], 1);
-			}
-		}
-        }
-	void ForcingBody::v_ReadForceInfo(
-		LibUtilities::SessionReaderSharedPtr              pSession,
-		Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-                SpatialDomains::MeshGraphSharedPtr                pGraph)
-	{
-                std::string  m_SolverInfo = pSession->GetSolverInfo("SolverType");
-                int nvariables  = pSession->GetVariables().size();
-		
-                if(m_SolverInfo == "VelocityCorrectionScheme")
-                {
-                   m_NumVariable = nvariables-1; // e.g. (u v w p) for 3D case
-                }
-                if(m_SolverInfo == "CoupledLinearisedNS")
-                {
-                   m_NumVariable = nvariables;  // e.g. (u v w)  for 3D case
-                }
-		
-		if(pSession->DefinesFunction("BodyForce"))
-		{		
-			m_Forcing     = Array<OneD, Array<OneD, NekDouble> >(m_NumVariable);
-			for(int i = 0; i < m_NumVariable; ++i)
-                	{						
-				m_Forcing[i]  = Array<OneD, NekDouble> (pFields[0]->GetTotPoints(),0.0);
-			}
-		}
-		
-	        std::string s_FieldStr;
-                for(int i = 0; i < m_NumVariable; ++i)
-                {
-                      	s_FieldStr = pSession->GetVariable(i);
-		     	if(pSession->DefinesFunction("BodyForce"))
-		    	{
-		   	 	EvaluateFunction(pFields, pSession, s_FieldStr, m_Forcing[i],"BodyForce");
-		   	}
-                }	
-	}/// The end of reading sponge info.
-	
+    std::string ForcingBody::className = GetForcingFactory().
+                                RegisterCreatorFunction("BodyForcing",
+                                                        ForcingBody::create,
+                                                        "Body Forcing");
+
+    ForcingBody::ForcingBody(
+            const LibUtilities::SessionReaderSharedPtr& pSession)
+        : Forcing(pSession)
+    {
     }
+
+    void ForcingBody::v_InitObject(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+    {
+        ReadForceInfo(pFields);
+    }
+
+    void ForcingBody::v_Apply(
+            const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+            const Array<OneD, Array<OneD, NekDouble> > &inarray,
+                  Array<OneD, Array<OneD, NekDouble> > &outarray)
+    {
+        if (m_session->DefinesFunction("BodyForce"))
+        {
+            for (int i = 0; i < m_NumVariable; i++)
+            {
+                Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+                            m_Forcing[i], 1, outarray[i], 1);
+            }
+        }
+    }
+
+    void ForcingBody::ReadForceInfo(
+            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+    {
+        std::string m_SolverInfo = m_session->GetSolverInfo("SolverType");
+        int nvariables = m_session->GetVariables().size();
+
+        if (m_SolverInfo == "VelocityCorrectionScheme")
+        {
+            m_NumVariable = nvariables - 1; // e.g. (u v w p) for 3D case
+        }
+        if (m_SolverInfo == "CoupledLinearisedNS")
+        {
+            m_NumVariable = nvariables; // e.g. (u v w)  for 3D case
+        }
+
+        if (m_session->DefinesFunction("BodyForce"))
+        {
+            m_Forcing
+                    = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                m_Forcing[i]
+                        = Array<OneD, NekDouble> (
+                                                  pFields[0]->GetTotPoints(),
+                                                  0.0);
+            }
+        }
+
+        std::string s_FieldStr;
+        for (int i = 0; i < m_NumVariable; ++i)
+        {
+            s_FieldStr = m_session->GetVariable(i);
+            if (m_session->DefinesFunction("BodyForce"))
+            {
+                EvaluateFunction(pFields, m_session, s_FieldStr,
+                                 m_Forcing[i], "BodyForce");
+            }
+        }
+    }
+
+
 }
-/// Hui XU  2013 Jul 26
+}

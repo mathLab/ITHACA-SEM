@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Forcing.h
+// File: ForcingBody.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Abstract base class for advection.
+// Description: Body forcing
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -44,52 +44,47 @@
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/ForcingSponge.h>
 
-#include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
-#include <MultiRegions/ContField3DHomogeneous1D.h>
-#include <MultiRegions/ContField3DHomogeneous2D.h>
-
-#include <MultiRegions/ExpList2D.h>     // for ExpList2D, etc
-#include <MultiRegions/ExpList3D.h>     // for ExpList3D
-#include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList3DHomogeneous2D.h>
-
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+    class ForcingBody : public Forcing
     {
-        
-        class ForcingBody : public ForcingSponge
-        {
-	public:
-	    
-	    friend class MemoryManager<ForcingBody>;
+        public:
+
+            friend class MemoryManager<ForcingBody>;
 
             /// Creates an instance of this class
-            SOLVER_UTILS_EXPORT static ForcingSharedPtr create() {
-                return ForcingSharedPtr(new ForcingBody());
+            SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
+                    const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+            {
+                ForcingSharedPtr p = MemoryManager<ForcingBody>::
+                                                AllocateSharedPtr(pSession);
+                p->InitObject(pFields);
+                return p;
             }
-            SOLVER_UTILS_EXPORT ForcingBody();
-	    ///Name of the class
+
+            ///Name of the class
             static std::string className;
+
         protected:
             virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-		SpatialDomains::MeshGraphSharedPtr                pGraph);
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
+
             virtual void v_Apply(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
-	private:
-	    void v_ReadForceInfo(
-		LibUtilities::SessionReaderSharedPtr              pSession,
-		Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-                SpatialDomains::MeshGraphSharedPtr                pGraph);
-        };
-        
-    }
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                    const Array<OneD, Array<OneD, NekDouble> > &inarray,
+                          Array<OneD, Array<OneD, NekDouble> > &outarray);
+
+        private:
+            ForcingBody(const LibUtilities::SessionReaderSharedPtr& pSession);
+
+            void ReadForceInfo(
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
+    };
+
 }
-// Hui XU  26 Jul 2013 Created 
+}
+
 #endif

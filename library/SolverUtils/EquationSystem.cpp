@@ -643,15 +643,13 @@ namespace Nektar
             // Zero all physical fields initially
             ZeroPhysFields();
             // Forcing term 
-	    if(m_session->DefinesFunction("SpongeCoefficient"))
+            if(m_session->DefinesFunction("SpongeCoefficient"))
             {  
-           	 m_SpongeForcing = SolverUtils::GetForcingFactory().CreateInstance("SpongeForcing");
-                 m_SpongeForcing->InitObject(m_session,m_fields,m_graph);
+                m_SpongeForcing = SolverUtils::GetForcingFactory().CreateInstance("SpongeForcing", m_session, m_fields);
             } 
             if (m_session->DefinesFunction("BodyForce"))
             {
-               m_BodyForcing = SolverUtils::GetForcingFactory().CreateInstance("BodyForcing");
-               m_BodyForcing->InitObject(m_session,m_fields,m_graph);
+               m_BodyForcing = SolverUtils::GetForcingFactory().CreateInstance("BodyForcing", m_session, m_fields);
             }
         }
 

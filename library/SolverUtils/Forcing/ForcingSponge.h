@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: Forcing.h
+// File: ForcingSponge.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,7 +29,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Abstract base class for advection.
+// Description: Sponge forcing.
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -44,69 +44,49 @@
 #include <SolverUtils/SolverUtilsDeclspec.h>
 #include <SolverUtils/Forcing/Forcing.h>
 
-#include <MultiRegions/ContField1D.h>
-#include <MultiRegions/ContField2D.h>
-#include <MultiRegions/ContField3D.h>
-#include <MultiRegions/ContField3DHomogeneous1D.h>
-#include <MultiRegions/ContField3DHomogeneous2D.h>
-
-#include <MultiRegions/ExpList2D.h>     // for ExpList2D, etc
-#include <MultiRegions/ExpList3D.h>     // for ExpList3D
-#include <MultiRegions/ExpList3DHomogeneous1D.h>
-#include <MultiRegions/ExpList3DHomogeneous2D.h>
-
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+    class ForcingSponge : public Forcing
     {
-        
-        class ForcingSponge : public Forcing
-        {
-	public:
-	    
-	    friend class MemoryManager<ForcingSponge>;
+        public:
+            friend class MemoryManager<ForcingSponge> ;
 
             /// Creates an instance of this class
-            SOLVER_UTILS_EXPORT static ForcingSharedPtr create() {
-                return ForcingSharedPtr(new ForcingSponge());
-                //ForcingSharedPtr p = MemoryManager<ForcingSponge>::AllocateSharedPtr();
-		//return p;
+            SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
+                    const LibUtilities::SessionReaderSharedPtr& pSession,
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+            {
+                ForcingSharedPtr p = MemoryManager<ForcingSponge>::
+                                                AllocateSharedPtr(pSession);
+                p->InitObject(pFields);
+                return p;
             }
-            SOLVER_UTILS_EXPORT ForcingSponge();
-	    ///Name of the class
+
+            ///Name of the class
             static std::string className;
-	    //SOLVER_UTILS_EXPORT ForcingSponge();
+
         protected:
+            Array<OneD, Array<OneD, NekDouble> > m_Sponge;
+            Array<OneD, Array<OneD, NekDouble> > m_Refflow;
+
             virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-		SpatialDomains::MeshGraphSharedPtr                pGraph);
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
+
             virtual void v_Apply(
-                const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
-                const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
-	protected:
-	    LibUtilities::SessionReaderSharedPtr                  m_Session;
-	    Array<OneD, Array<OneD, NekDouble> >                  m_Sponge;
-            Array<OneD, Array<OneD, NekDouble> >                  m_Refflow;
-	    Array<OneD, Array<OneD, NekDouble> >                  m_Forcing;
-	    int                                                   m_NumVariable;
-	protected:
-	    void EvaluateFunction(
-		Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-		LibUtilities::SessionReaderSharedPtr              pSession,
-		std::string 					  pFieldName,
-            	Array<OneD, NekDouble>&                           pArray,
-            	const std::string&                                pFunctionName,
-                NekDouble                                         pTime = NekDouble(0));
-	private:
-	    void v_ReadSpongeInfo(
-		LibUtilities::SessionReaderSharedPtr              pSession,
-		Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-                SpatialDomains::MeshGraphSharedPtr                pGraph);
-        };
-        
-    }
+                    const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
+                    const Array<OneD, Array<OneD, NekDouble> > &inarray,
+                          Array<OneD, Array<OneD, NekDouble> > &outarray);
+
+        private:
+            ForcingSponge(const LibUtilities::SessionReaderSharedPtr& pSession);
+
+            void ReadSpongeInfo(
+                    const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
+    };
+
+}
 }
 // Hui XU  21 Jul 2013 Created 
 #endif

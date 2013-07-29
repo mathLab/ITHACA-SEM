@@ -45,47 +45,65 @@
 
 namespace Nektar
 {
-    namespace SolverUtils
+namespace SolverUtils
+{
+    /**
+     * @class Forcing
+     * @brief Defines a forcing term to be explicitly applied.
+     */
+    class Forcing
     {
-	
-
-	class Forcing;
-        typedef LibUtilities::NekFactory<std::string, Forcing>
-                ForcingFactory;
-
-        SOLVER_UTILS_EXPORT ForcingFactory& GetForcingFactory();
-
-        class Forcing
-        {
         public:
+            /// Initialise the forcing object
             SOLVER_UTILS_EXPORT void InitObject(
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-		SpatialDomains::MeshGraphSharedPtr                pGraph);
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields);
 
+            /// Apply the forcing
             SOLVER_UTILS_EXPORT void Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
 
         protected:
+            /// Session reader
+            LibUtilities::SessionReaderSharedPtr m_session;
+            /// Evaluated forcing function
+            Array<OneD, Array<OneD, NekDouble> > m_Forcing;
+            /// Number of variables
+            int m_NumVariable;
+
+            /// Constructor
+            Forcing(const LibUtilities::SessionReaderSharedPtr&);
+
             virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields,
-		SpatialDomains::MeshGraphSharedPtr                pGraph)
-            {
-            };
+                const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields) = 0;
 
             virtual void v_Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray)=0;
 
-        };
+            void EvaluateFunction(
+                    Array<OneD, MultiRegions::ExpListSharedPtr> pFields,
+                    LibUtilities::SessionReaderSharedPtr pSession,
+                    std::string pFieldName, Array<OneD, NekDouble>& pArray,
+                    const std::string& pFunctionName,
+                    NekDouble pTime = NekDouble(0));
 
-        /// A shared pointer to an EquationSystem object
-        SOLVER_UTILS_EXPORT typedef boost::shared_ptr<Forcing> ForcingSharedPtr;
-    }
+    };
+
+    /// A shared pointer to an EquationSystem object
+    SOLVER_UTILS_EXPORT typedef boost::shared_ptr<Forcing> ForcingSharedPtr;
+
+    /// Declaration of the forcing factory
+    typedef LibUtilities::NekFactory<std::string, Forcing,
+            const LibUtilities::SessionReaderSharedPtr&,
+            const Array<OneD, MultiRegions::ExpListSharedPtr>& > ForcingFactory;
+
+    /// Declaration of the forcing factory singleton
+    SOLVER_UTILS_EXPORT ForcingFactory& GetForcingFactory();
+
+}
 }
 
 #endif

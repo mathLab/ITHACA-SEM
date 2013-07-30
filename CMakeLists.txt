@@ -160,7 +160,6 @@ ENDIF ()
 INCLUDE (ThirdPartyTinyxml)
 INCLUDE (ThirdPartyLoki)
 INCLUDE (ThirdPartyMetis)
-INCLUDE (ThirdPartySpblastk)
 INCLUDE (ThirdPartyBoost)
 INCLUDE (ThirdPartyZlib)
 INCLUDE (ThirdPartyFFTW)
@@ -288,7 +287,6 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/Nektar++Config.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindCHUDFramework.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindACML.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindArpack.cmake
-              ${CMAKE_SOURCE_DIR}/cmake/FindNistSparseBlas.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindOpenBlas.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindNativeBlasLapack.cmake
               ${CMAKE_SOURCE_DIR}/cmake/FindMKL.cmake

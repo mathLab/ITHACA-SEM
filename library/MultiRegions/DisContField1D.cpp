@@ -826,6 +826,11 @@ namespace Nektar
                     
                     cnt++;
                 }
+                else if (m_bndConditions[n]->GetBoundaryConditionType() ==
+                         SpatialDomains::eNotDefined)
+                {
+                    // Do nothing
+                }
                 else if (m_bndConditions[n]->GetBoundaryConditionType() !=
                          SpatialDomains::ePeriodic)
                 {
@@ -1193,6 +1198,10 @@ namespace Nektar
                              ::RobinBoundaryCondition>(m_bndConditions[i])
                              ->m_robinPrimitiveCoeff).Evaluate(x0[0],x1[0],x2[0],time));
                         
+                    }
+                    else if (m_bndConditions[i]->GetBoundaryConditionType()
+                             == SpatialDomains::eNotDefined)
+                    {
                     }
                     else
                     {

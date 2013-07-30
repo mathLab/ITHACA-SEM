@@ -56,7 +56,32 @@ namespace Nektar
             "UpwindPulse",
         };
     
-    
+    struct InterfacePoint
+    {
+        InterfacePoint(const int vid, 
+                       const int domain, 
+                       const int elmt, 
+                       const int elmtVert, 
+                       const int traceId,
+                       const int bcpos):
+        m_vid(vid),
+            m_domain(domain),
+            m_elmt(elmt),
+            m_elmtVert(elmtVert),
+            m_traceId(traceId),
+            m_bcPosition(bcpos)
+        {
+        };
+        int m_vid;        // Global Vid of interface point 
+        int m_domain;     // domain interface point belongs to
+        int m_elmt;       // element id of vertex 
+        int m_elmtVert;   // vertex id within local element 
+        int m_traceId;    // Element id  within the trace 
+        int m_bcPosition; // Position of boundary condition in region
+    };
+
+    typedef boost::shared_ptr<InterfacePoint> InterfacePointShPtr;
+
     /// Base class for unsteady solvers.
     class PulseWaveSystem : public UnsteadySystem
     {
@@ -83,6 +108,7 @@ namespace Nektar
         int                                             m_nVariables;
         UpwindTypePulse                                 m_upwindTypePulse;
 		
+        Array<OneD, int>                                m_fieldPhysOffset;
         NekDouble                                       m_rho;
         NekDouble                                       m_pext;
 	
@@ -96,7 +122,11 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> >		m_beta_trace;
         Array<OneD, Array<OneD, NekDouble> >		m_trace_fwd_normal;
 
-        
+
+        std::vector<std::vector<InterfacePointShPtr> >  m_vesselJcts;
+        std::vector<std::vector<InterfacePointShPtr> >  m_bifurcations;
+        std::vector<std::vector<InterfacePointShPtr> >  m_mergingJcts;
+    
         /// Initialises PulseWaveSystem class members.
         PulseWaveSystem(const LibUtilities::SessionReaderSharedPtr& m_session);
         
@@ -114,6 +144,10 @@ namespace Nektar
         /// Riemann Problem for Bifurcation
         void BifurcationRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
                                 Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
+        
+        /// Riemann Problem for Merging Flow
+        void MergingRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
+                            Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0);
         
         /// Riemann Problem for Junction
         void JunctionRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
@@ -137,12 +171,21 @@ namespace Nektar
         /// Write input fields to the given filename.
         void WriteVessels(const std::string &outname);
         
+        void EnforceInterfaceConditions(const Array<OneD, const Array<OneD, NekDouble> > &fields);
         
     private:
-        
+        void SetUpDomainInterfaces(void);
+        void FillDataFromInterfacePoint(InterfacePointShPtr &I, 
+                         const Array<OneD, const Array<OneD, NekDouble> >&field, 
+                                        NekDouble &A, NekDouble &u,
+                                        NekDouble &beta, NekDouble &A_0);
+
+            
     };
         
     typedef boost::shared_ptr<PulseWaveSystem> PulseWaveSystemSharedPtr;
+
+       
 }
 
 #endif

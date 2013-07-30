@@ -138,6 +138,11 @@ namespace Nektar
                 return m_boundaryConditionType;
             }
 
+            void SetBoundaryConditionType(BoundaryConditionType) 
+            {
+                m_boundaryConditionType = m_boundaryConditionType;
+            }
+
             void SetUserDefined(BndUserDefinedType type)
             {
                 m_userDefined = type;

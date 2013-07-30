@@ -145,13 +145,15 @@ namespace Nektar
         // Reset coeff and phys space to be continuous over all domains
         int totcoeffs = 0;
         int totphys   = 0;
+        m_fieldPhysOffset = Array<OneD, int>(m_nDomains);
         for(i = 0; i < m_nDomains; ++i)
         {
             totcoeffs += m_vessels[i*m_nVariables]->GetNcoeffs();
+
+            m_fieldPhysOffset[i] = totphys;
             totphys   += m_vessels[i*m_nVariables]->GetTotPoints();
         }
-        
-
+ 
         for(int n = 0; n < m_nVariables; ++n)
         {
             Array<OneD, NekDouble> coeffs(totcoeffs,0.0);
@@ -276,14 +278,162 @@ namespace Nektar
  
                 // need to set to 1 for consistency since boundary
                 // conditions may not have coordim=1
-               trace->GetExp(0)->GetGeom()->SetCoordim(1); 
+                trace->GetExp(0)->GetGeom()->SetCoordim(1); 
                 
                 trace->GetNormals(normals);
             }
         }
+
+        SetUpDomainInterfaces();
+        
+   }
+
+    void PulseWaveSystem::SetUpDomainInterfaces(void)
+    {
+        map<int,std::vector<InterfacePointShPtr> > VidToDomain;
+        map<int,std::vector<InterfacePointShPtr> >::iterator iter;
+
+        // loop over domain and find out if we have any undefined
+        // boundary conditions representing interfaces. If so make a
+        // map based around vid and storing the domains that are
+        // part of interfaces. 
+        for(int omega = 0; omega < m_nDomains; ++omega)
+        {
+            int vesselID = omega*m_nVariables;
+            
+            for(int i = 0; i < 2; ++i)
+            {
+                if(m_vessels[vesselID]->GetBndConditions()[i]->GetBoundaryConditionType() == SpatialDomains::eNotDefined)
+                {                    
+                    // Get Vid of interface
+                    int vid  = m_vessels[vesselID]->UpdateBndCondExpansion(i)->GetExp(0)->GetGeom()->GetVid(0);
+                    MultiRegions::ExpListSharedPtr trace = m_vessels[vesselID]->GetTrace(); 
+                    InterfacePointShPtr Ipt; 
+
+                    bool finish = false;
+                    // find which elmt, the lcoal vertex and the data offset of point
+                    for(int n = 0; n < m_vessels[vesselID]->GetExpSize(); ++n)
+                    {
+                        for(int p = 0; p < 2; ++p)
+                        {
+                            if(m_vessels[vesselID]->GetTraceMap()->GetElmtToTrace()[n][p]->GetGeom()->GetVid(0) == vid)
+                            {
+                                int eid = m_vessels[vesselID]->GetTraceMap()->GetElmtToTrace()[n][p]->GetElmtId();
+                                int tid = m_vessels[vesselID]->GetTrace()->GetCoeff_Offset(eid);
+                                
+                                Ipt = MemoryManager<InterfacePoint>::AllocateSharedPtr(vid,omega,n,p,tid,i);
+                                finish = true;
+                                break;
+                            }
+                        }
+                        if(finish == true)
+                        {
+                            break;
+                        }
+                    }
+                    
+                    VidToDomain[vid].push_back(Ipt);
+
+                    // finally reset boundary condition to Dirichlet
+                    m_vessels[vesselID]->GetBndConditions()[i]
+                        ->SetBoundaryConditionType(SpatialDomains::eDirichlet);
+                }
+            }
+        }
+
+        // loop over map and set up Interface information;
+        for(iter = VidToDomain.begin(); iter != VidToDomain.end(); ++iter)
+        {
+            if(iter->second.size() == 2) // Vessel jump interface
+            {
+                m_vesselJcts.push_back(iter->second);
+            }
+            else if(iter->second.size() == 3) // Bifurcation or Merging junction. 
+            {
+                int nbeg = 0;
+                int nend = 0;
+
+                // Determine if bifurcation or merging junction
+                // through number of elemnt vertices that meet at
+                // junction. Only one vertex using a m_elmtVert=1
+                // indicates a bifurcation
+                for(int i = 0; i < 3; ++i)
+                {
+                    if(iter->second[i]->m_elmtVert == 0)
+                    {
+                        nbeg += 1;
+                    }
+                    else
+                    {
+                        nend += 1;
+                    }
+                }
+
+                // Set up Bifurcation information 
+                if(nbeg == 2)
+                {
+                    // ensure first InterfacePoint is parent 
+                    if(iter->second[0]->m_elmtVert == 1)
+                    {
+                        m_bifurcations.push_back(iter->second);
+                    }
+                    else
+                    {
+                        //order points according to Riemann solver convention
+                        InterfacePointShPtr I;
+                        //find merging vessel 
+                        if(iter->second[1]->m_elmtVert == 1)
+                        {
+                            I = iter->second[0];
+                            iter->second[0] = iter->second[1];
+                            iter->second[1] = I;
+                        }
+                        else if (iter->second[2]->m_elmtVert == 1)
+                        {
+                            I = iter->second[0];
+                            iter->second[0] = iter->second[2];
+                            iter->second[2] = I;
+                        }
+                        NEKERROR(ErrorUtil::ewarning,"This routine has not been checked");
+                    }                    
+                }
+                else
+                {
+                    // ensure last InterfacePoint is merged vessel
+                    if(iter->second[0]->m_elmtVert == 0)
+                    {
+                        m_mergingJcts.push_back(iter->second);
+                    }
+                    else
+                    {
+                        //order points according to Riemann solver convention
+                        InterfacePointShPtr I;
+                        //find merging vessel 
+                        if(iter->second[1]->m_elmtVert == 0)
+                        {
+                            I = iter->second[0];
+                            iter->second[0] = iter->second[1];
+                            iter->second[1] = I;
+                        }
+                        else if (iter->second[2]->m_elmtVert == 0)
+                        {
+                            I = iter->second[0];
+                            iter->second[0] = iter->second[2];
+                            iter->second[2] = I;
+                        }
+                        NEKERROR(ErrorUtil::ewarning,"This routine has not been checked");
+                    }
+                }
+                
+            }
+            else
+            {
+                ASSERTL0(false,"Unknown junction type");
+            }
+        }
     }
-	
     
+        
     /**
      *  Initialisation routine for multiple subdomain case. Sets the
      *  initial conditions for all arterial subdomains read from the
@@ -394,13 +544,6 @@ namespace Nektar
             Timer timer;
             timer.Start();
             
-#if 0 
-            /* Link the domains:
-             * 1. Set up boundary conditions for all subdomains
-             * then modify the BCs in case of Junction or Bifurcation*/
-            LinkSubdomains(fields);				
-#endif            
-
             fields = IntScheme[0]->TimeIntegrate(m_timestep,u,m_ode);
                 
             m_time += m_timestep;
@@ -439,179 +582,114 @@ namespace Nektar
             Vmath::Vcopy(fields[i].num_elements(), fields[i],1,m_vessels[i]->UpdatePhys(),1);
         }
         
-        cout <<"\nCFL safety factor     : " 
-             << m_cflSafetyFactor << endl;
         cout <<"Time-integration timing : " 
              << IntegrationTime << " s" << endl << endl;
     }	
 	
-#if 0 
 
-    /**
-     *  Links the subdomains for special network boundary
-     *  conditions such as "Bifurcation", "Junction" and "Merging
-     *  Flow" conditions. Calculates the upwinded Au & uu at
-     *  boundaries connected to other subdomains by solving the
-     *  appropriate Riemann problem. The solution satisfies
-     *  conservation of mass and continuity of the total pressure.
-     */
-	void PulseWaveSystem::LinkSubdomains(Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  &fields)
-        {		
-		Array<OneD, NekDouble> Au(3);
-		Array<OneD, NekDouble> uu(3);
-		Array<OneD, NekDouble> beta(3);
-		Array<OneD, NekDouble> A_0(3);
-		
-		int nel_p = 0;
-		int nel_d1 = 0;
-		int nel_d2 = 0;
-		int d1 = 0;
-		int d2 = 0;
-		int p_BCExp = 0;
-		int d1_BCExp = 0;
-		int d2_BCExp = 0;
-		
-		// Set the values of all boundary conditions
-		for (int k = 0; k < m_vessels.num_elements(); k++)
-		{
-                    m_vessels[k]->EvaluateBoundaryConditions(m_time);
-		}
-		
-		// Detect special network boundary conditions
-		for (int omega = 0; omega < m_nDomains; omega++)
-		{
-                    // "Bifurcation": Check if the endpoint of the domain is a "Bifurcation" condition
-                    if (m_vessels[2*omega]->GetBndConditions()[1]->GetBoundaryConditionType() == SpatialDomains::eBifurcation)
-                    {
-                        // Parent vessel
-                        nel_p   = fields[omega][0].num_elements()-1;
-                        Au[0]   = fields[omega][0][nel_p];
-                        uu[0]   = fields[omega][1][nel_p];
-                        beta[0] = m_betaglobal[omega][nel_p];
-                        A_0[0]  = m_A_0global[omega][nel_p];
-                        p_BCExp = 1;
-			
-                        // Daughter vessel 1
-                        d1      = m_vessels[2*omega]->GetBndConditions()[1]->GetDaughter1();
-                        Au[1]   = fields[d1][0][0];
-                        uu[1]   = fields[d1][1][0];
-                        beta[1] = m_betaglobal[d1][0];
-                        A_0[1]  = m_A_0global[d1][0];
-                        d1_BCExp = 0;
-                        
-                        // Daughter vessel 2
-                        d2 = m_vessels[2*omega]->GetBndConditions()[1]->GetDaughter2();
-                        Au[2] = fields[d2][0][0];
-                        uu[2] = fields[d2][1][0];
-                        beta[2] = m_betaglobal[d2][0];
-                        A_0[2] = m_A_0global[d2][0];
-                        d2_BCExp = 0;
-			
-                        // Solve the Riemann problem for a bifurcation
-                        BifurcationRiemann1_to_2(Au, uu, beta, A_0);
-			
-                        // Store the values into the right positions:
-                        // Parent vessel
-                        m_vessels[2*omega]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = Au[0];
-                        m_vessels[2*omega+1]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = uu[0];
-                        
-                        // Daughter vessel 1
-                        m_vessels[2*d1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = Au[1];
-                        m_vessels[2*d1+1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = uu[1];
-                        
-                        // Daughter vessel 2
-                        m_vessels[2*d2]->UpdateBndCondExpansion(d2_BCExp)->UpdateCoeffs()[0] = Au[2];
-                        m_vessels[2*d2+1]->UpdateBndCondExpansion(d2_BCExp)->UpdateCoeffs()[0] = uu[2];
-                        
-                    }
+
+    void PulseWaveSystem::FillDataFromInterfacePoint(InterfacePointShPtr &I, 
+                              const Array<OneD, const Array<OneD, NekDouble> >&fields, 
+                                                     NekDouble &A, NekDouble &u,
+                                                     NekDouble &beta, NekDouble &A_0)
+    {
+        int omega, traceId, eid, vert, phys_offset, vesselID;
+
+
+        // Parent vessel
+        omega    = I->m_domain;
+        traceId  = I->m_traceId;
+        eid      = I->m_elmt;
+        vert     = I->m_elmtVert;
+        vesselID = omega*m_nVariables;
                     
-                    // "Junction": Check if the endpoint of the domain is a "Junction" condition
-                    if (m_vessels[2*omega]->GetBndConditions()[1]->GetBoundaryConditionType() == SpatialDomains::eJunction)
-                    {
-                        //Parent vessel
-                        nel_p = fields[omega][0].num_elements()-1;
-                        Au[0] = fields[omega][0][nel_p];
-                        uu[0] = fields[omega][1][nel_p];
-                        beta[0] = m_betaglobal[omega][nel_p];
-                        A_0[0] = m_A_0global[omega][nel_p];
-			
-                        //Daughter vessel 1
-                        d1 = m_vessels[2*omega]->GetBndConditions()[1]->GetDaughter1();
-                        Au[1] = fields[d1][0][0];
-                        uu[1] = fields[d1][1][0];
-                        beta[1] = m_betaglobal[d1][0];
-                        A_0[1] = m_A_0global[d1][0];
-			
-                        // Solve the Riemann problem for a junction
-                        JunctionRiemann(Au, uu, beta, A_0);
-			
-                        // Store the values into the right positions:
-                        // Parent vessel
-                        p_BCExp = 1;
-                        m_vessels[2*omega]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = Au[0];
-                        m_vessels[2*omega+1]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = uu[0];
-                        
-                        // Daughter vessel 1
-                        d1_BCExp = 0;
-                        m_vessels[2*d1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = Au[1];
-                        m_vessels[2*d1+1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = uu[1];
-                        
-                    }
-                    
-                    // "Merging Flow": Check if the startpoint of the domain is a "Merging Flow" conditon
-                    if (m_vessels[2*omega]->GetBndConditions()[0]->GetBoundaryConditionType() == SpatialDomains::eMerging)
-                    {
-                        //cout << "\nFound the Merging Flow at m_bndcondexp["<<2*omega<<"]"<<" at the beginning of domain "<<omega<<endl;
-			
-                        // Parent vessel (merging vessel)
-                        Au[0] = fields[omega][0][0];
-                        uu[0] = fields[omega][1][0];
-                        beta[0] = m_betaglobal[omega][0];
-                        A_0[0] = m_A_0global[omega][0];
-                        p_BCExp = 0;
-			
-                        // Daughter vessel 1
-                        d1 = m_vessels[2*omega]->GetBndConditions()[0]->GetDaughter1();
-                        nel_d1 = fields[d1][0].num_elements()-1; 
-                        Au[1] = fields[d1][0][nel_d1];
-                        uu[1] = fields[d1][1][nel_d1];
-                        beta[1] = m_betaglobal[d1][0];
-                        A_0[1] = m_A_0global[d1][0];
-                        d1_BCExp = 1;
-			
-                        // Daughter vessel 2
-                        d2 = m_vessels[2*omega]->GetBndConditions()[0]->GetDaughter2();
-                        nel_d2 = fields[d2][0].num_elements()-1; 
-                        Au[2] = fields[d2][0][nel_d2];
-                        uu[2] = fields[d2][1][nel_d2];
-                        beta[2] = m_betaglobal[d2][0];
-                        A_0[2] = m_A_0global[d2][0];
-                        d2_BCExp = 1;
-			
-			
-                        // Solve the Riemann problem for a bifurcation
-                        MergingRiemann2_to_1(Au, uu, beta, A_0);
-			
-			
-                        // Store the values into the right positions:
-                        // Parent vessel
-                        m_vessels[2*omega]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = Au[0];
-                        m_vessels[2*omega+1]->UpdateBndCondExpansion(p_BCExp)->UpdateCoeffs()[0] = uu[0];
-                        
-                        // Daughter vessel 1
-                        m_vessels[2*d1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = Au[1];
-                        m_vessels[2*d1+1]->UpdateBndCondExpansion(d1_BCExp)->UpdateCoeffs()[0] = uu[1];
-                        
-                        // Daughter vessel 2
-                        m_vessels[2*d2]->UpdateBndCondExpansion(d2_BCExp)->UpdateCoeffs()[0] = Au[2];
-                        m_vessels[2*d2+1]->UpdateBndCondExpansion(d2_BCExp)->UpdateCoeffs()[0] = uu[2];
-                    }
-                    
-		}
-                
+        phys_offset = m_vessels[vesselID]->GetPhys_Offset(eid);
+        
+        m_vessels[vesselID]->GetExp(eid)->
+            GetVertexPhysVals(vert, fields[0]+m_fieldPhysOffset[omega]+phys_offset, A);
+        m_vessels[vesselID]->GetExp(eid)->
+            GetVertexPhysVals(vert, fields[1]+m_fieldPhysOffset[omega]+phys_offset, u);
+        
+        beta = m_beta_trace[omega][traceId];
+        A_0  = m_A_0_trace [omega][traceId];
     }
-    
-    
+
+    void PulseWaveSystem::EnforceInterfaceConditions(const Array<OneD, const Array<OneD, NekDouble> > &fields)
+    {
+        int dom, bcpos;
+        Array<OneD, NekDouble>  Au(3),uu(3),beta(3),A_0(3);
+        
+        // Enfore Bifurcations;
+        for(int n = 0; n < m_bifurcations.size(); ++n)
+        {
+            FillDataFromInterfacePoint(m_bifurcations[n][0],fields,
+                                       Au[0],uu[0],beta[0],A_0[0]);
+            FillDataFromInterfacePoint(m_bifurcations[n][1],fields,
+                                       Au[1],uu[1],beta[1],A_0[1]);
+            FillDataFromInterfacePoint(m_bifurcations[n][2],fields,
+                                       Au[2],uu[2],beta[2],A_0[2]);
+            
+            // Solve the Riemann problem for a bifurcation
+            BifurcationRiemann(Au, uu, beta, A_0);
+
+            // Store the values into the right positions:
+            for(int i = 0; i < 3; ++i)
+            {
+                dom   = m_bifurcations[n][i]->m_domain;
+                bcpos = m_bifurcations[n][i]->m_bcPosition;            
+                m_vessels[dom*m_nVariables]  ->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = Au[i];
+                m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = uu[i];
+            }
+        }
+
+
+        // Enfore Bifurcations;
+        for(int n = 0; n < m_mergingJcts.size(); ++n)
+        {
+            // Merged vessel
+            FillDataFromInterfacePoint(m_mergingJcts[n][0],fields,
+                                       Au[0],uu[0],beta[0],A_0[0]);
+            FillDataFromInterfacePoint(m_mergingJcts[n][1],fields,
+                                       Au[1],uu[1],beta[1],A_0[1]);
+            FillDataFromInterfacePoint(m_mergingJcts[n][2],fields,
+                                       Au[2],uu[2],beta[2],A_0[2]);
+            
+            // Solve the Riemann problem for a merging vessel
+            MergingRiemann(Au, uu, beta, A_0);
+
+            // Store the values into the right positions:
+            for(int i = 0; i < 3; ++i)
+            {
+                int dom   = m_mergingJcts[n][i]->m_domain;
+                int bcpos = m_mergingJcts[n][i]->m_bcPosition;            
+                m_vessels[dom*m_nVariables]  ->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = Au[i];
+                m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = uu[i];
+            }
+        }
+
+        for(int n = 0; n < m_vesselJcts.size(); ++n)
+        {
+            
+            FillDataFromInterfacePoint(m_vesselJcts[n][0],fields,
+                                       Au[0],uu[0],beta[0],A_0[0]);
+            FillDataFromInterfacePoint(m_vesselJcts[n][1],fields,
+                                       Au[1],uu[1],beta[1],A_0[1]);
+            
+            JunctionRiemann(Au, uu, beta, A_0);
+
+            // Store the values into the right positions:
+            for(int i = 0; i < 2; ++i)
+            {
+                int dom   = m_vesselJcts[n][i]->m_domain;
+                int bcpos = m_vesselJcts[n][i]->m_bcPosition;            
+                m_vessels[dom*m_nVariables]  ->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = Au[i];
+                m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = uu[i];
+            }
+
+        }
+    }
+            
+            
     /**
      *  Solves the Riemann problem at a bifurcation by assuming
      *  subsonic flow at both sides of the boundary and by
@@ -682,7 +760,8 @@ namespace Nektar
                     NekDouble c2 = sqrt(beta[1]/(2*rho))*sqrt(sqrt(Au[1]));
                     NekDouble c3 = sqrt(beta[2]/(2*rho))*sqrt(sqrt(Au[2]));
                     
-                    // Inverse Jacobian matrix J(x[n])^(-1), is already inverted here analytically
+                    // Inverse Jacobian matrix J(x[n])^(-1), is
+                    // already inverted here analytically
                     k = c1*Au[1]*c3+Au[0]*c3*c2+Au[2]*c1*c2;
                     k1 = (c1-uu[0])*k;
                     inv_J[0][0] = (-c2*uu[0]*c3*Au[0]+Au[2]*c2*c1*c1+Au[1]*c1*c1*c3)/k1;
@@ -770,13 +849,173 @@ namespace Nektar
 	}
 	
 	
-	/**
-	 *  Solves the Riemann problem at an interdomain junction by assuming subsonic flow at
-	 *  both sides of the boundary and by applying conservation of mass and continuity of the
-	 *  total pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$ The other 2 missing equations
-	 *  come from the characteristic variables. For further information see "Pulse WavePropagation
-	 *  in the human vascular system" Section 3.4.
-	 */
+	
+    /**
+     *  Solves the Riemann problem at an merging flow condition by
+     *  assuming subsonic flow at both sides of the boundary and by
+     *  applying conservation of mass and continuity of the total
+     *  pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$ The other 3
+     *  missing equations come from the characteristic variables. For
+     *  further information see "Pulse WavePropagation in the human
+     *  vascular system" Section 3.4.4
+     */
+    void PulseWaveSystem::MergingRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu, Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0)
+    {
+        NekDouble rho = m_rho;
+        Array<OneD, NekDouble> W(3);
+        Array<OneD, NekDouble> W_Au(3);
+        Array<OneD, NekDouble> P_Au(3);
+        Array<OneD, NekDouble> f(6);
+        Array<OneD, NekDouble> g(6);
+        Array<OneD, NekDouble> tmp(6);
+        Array<OneD, Array<OneD, NekDouble> > inv_J(6);
+
+        for (int i=0; i<6; i++)
+        {
+            inv_J[i] = Array<OneD, NekDouble> (6);
+        }
+        
+        NekDouble k = 0.0;
+        NekDouble k1 = 0.0;
+        NekDouble k2 = 0.0;
+        NekDouble k3 = 0.0;
+	
+        int proceed = 1;
+        int iter = 0;
+        int MAX_ITER = 7;
+        
+        // Calculated from input
+        W[0] = uu[0] - 4*sqrt(beta[0]/(2*rho))*(sqrt(sqrt(Au[0])) - sqrt(sqrt(A_0[0])));
+        W[1] = uu[1] + 4*sqrt(beta[1]/(2*rho))*(sqrt(sqrt(Au[1])) - sqrt(sqrt(A_0[1])));
+        W[2] = uu[2] + 4*sqrt(beta[2]/(2*rho))*(sqrt(sqrt(Au[2])) - sqrt(sqrt(A_0[2])));
+        
+        // Tolerances for the algorithm
+        NekDouble Tol = 1.0e-10;
+	
+        // Newton Iteration
+        while ((proceed) && (iter < MAX_ITER))
+        {
+            iter = iter+1;
+            
+            // Calculate the constraint vector, six equations:
+            // 3 characteristic variables, mass conservation, 
+            // total pressure
+            W_Au[0] = 4*sqrt(beta[0]/(2*rho))*(sqrt(sqrt(Au[0])) - sqrt(sqrt(A_0[0])));
+            W_Au[1] = 4*sqrt(beta[1]/(2*rho))*(sqrt(sqrt(Au[1])) - sqrt(sqrt(A_0[1])));
+            W_Au[2] = 4*sqrt(beta[2]/(2*rho))*(sqrt(sqrt(Au[2])) - sqrt(sqrt(A_0[2])));
+            
+            P_Au[0] = beta[0]*(sqrt(Au[0]) - sqrt(A_0[0]));
+            P_Au[1] = beta[1]*(sqrt(Au[1]) - sqrt(A_0[1]));
+            P_Au[2] = beta[2]*(sqrt(Au[2]) - sqrt(A_0[2]));
+            
+            f[0] = uu[0] - W_Au[0] - W[0];
+            f[1] = uu[1] + W_Au[1] - W[1];
+            f[2] = uu[2] + W_Au[2] - W[2];
+            f[3] = Au[0]*uu[0] - Au[1]*uu[1] - Au[2]*uu[2];
+            f[4] = uu[0]*uu[0] + 2.0/rho*P_Au[0] - uu[1]*uu[1] - 2.0/rho*P_Au[1];
+            f[5] = uu[0]*uu[0] + 2.0/rho*P_Au[0] - uu[2]*uu[2] - 2.0/rho*P_Au[2];
+            
+            // Calculate the wave speed at each vessel
+            NekDouble c1 = sqrt(beta[0]/(2*rho))*sqrt(sqrt(Au[0]));
+            NekDouble c2 = sqrt(beta[1]/(2*rho))*sqrt(sqrt(Au[1]));
+            NekDouble c3 = sqrt(beta[2]/(2*rho))*sqrt(sqrt(Au[2]));
+            
+            // Inverse Jacobian matrix J(x[n])^(-1), is already inverted here analytically
+            k = c1*Au[1]*c3+Au[0]*c3*c2+Au[2]*c1*c2;
+            k1 = (c1+uu[0])*k;
+            inv_J[0][0] = (c2*uu[0]*c3*Au[0]+Au[2]*c2*c1*c1+Au[1]*c1*c1*c3)/k1;
+            inv_J[0][1] = Au[1]*(c2+uu[1])*c1*c3/k1;
+            inv_J[0][2] = Au[2]*(c3+uu[2])*c1*c2/k1;
+            inv_J[0][3] = c1*c2*c3/k1;
+            inv_J[0][4] = 0.5*Au[1]*c1*c3/k1;
+            inv_J[0][5] = 0.5*Au[2]*c1*c2/k1;
+            
+            k2 = (c2-uu[1])*k;
+            inv_J[1][0] = Au[0]*(c1-uu[0])*c2*c3/k2;
+            inv_J[1][1] = (-c1*uu[1]*c3*Au[1]+Au[2]*c1*c2*c2+c3*c2*c2*Au[0])/k2;
+            inv_J[1][2] = -Au[2]*(c3+uu[2])*c1*c2/k2;
+            inv_J[1][3] = -c1*c2*c3/k2;
+            inv_J[1][4] = 0.5*(c1*Au[2]+Au[0]*c3)*c2/k2;
+            inv_J[1][5] = -0.5*Au[2]*c1*c2/k2;
+            
+            k3 = (c3-uu[2])*k;
+            inv_J[2][0] = Au[0]*(c1-uu[0])*c2*c3/k3;
+            inv_J[2][1] = -Au[1]*(c2+uu[1])*c1*c3/k3;
+            inv_J[2][2] = -(c1*uu[2]*c2*Au[2]-Au[1]*c1*c3*c3-c2*c3*c3*Au[0])/k3;
+            inv_J[2][3] = -c1*c2*c3/k3;
+            inv_J[2][4] = -0.5*Au[1]*c1*c3/k3;
+            inv_J[2][5] = 0.5*(Au[1]*c1+Au[0]*c2)*c3/k3;
+            
+            inv_J[3][0] = -Au[0]*(Au[0]*c3*c2+uu[0]*c3*Au[1]+uu[0]*c2*Au[2])/k1;
+            inv_J[3][1] = Au[0]*Au[1]*(c2+uu[1])*c3/k1;
+            inv_J[3][2] = Au[0]*Au[2]*(c3+uu[2])*c2/k1;
+            inv_J[3][3] = Au[0]*c3*c2/k1;
+            inv_J[3][4] = 0.5*Au[0]*Au[1]*c3/k1;
+            inv_J[3][5] = 0.5*Au[0]*c2*Au[2]/k1;
+            
+            inv_J[4][0] = -Au[0]*Au[1]*(c1-uu[0])*c3/k2;
+            inv_J[4][1] = Au[1]*(Au[1]*c1*c3-c1*uu[1]*Au[2]-c3*uu[1]*Au[0])/k2;
+            inv_J[4][2] = Au[2]*Au[1]*(c3+uu[2])*c1/k2;
+            inv_J[4][3] = Au[1]*c1*c3/k2;
+            inv_J[4][4] = -0.5*Au[1]*(c1*Au[2]+Au[0]*c3)/k2;
+            inv_J[4][5] = 0.5*Au[2]*Au[1]*c1/k2;
+            
+            inv_J[5][0] = -Au[0]*Au[2]*(c1-uu[0])*c2/k3;
+            inv_J[5][1] = Au[2]*Au[1]*(c2+uu[1])*c1/k3;
+            inv_J[5][2] = Au[2]*(Au[2]*c1*c2-c1*uu[2]*Au[1]-c2*uu[2]*Au[0])/k3;
+            inv_J[5][3] = Au[2]*c1*c2/k3;
+            inv_J[5][4] = 0.5*Au[2]*Au[1]*c1/k3;
+            inv_J[5][5] = -0.5*Au[2]*(Au[1]*c1+Au[0]*c2)/k3;
+            
+            // Solve the system by multiplying the Jacobian with the vector f:
+            // g = (inv_J)*f
+            for (int j=0; j<6; j++)
+            {
+                tmp[j] =0.0;
+                g[j] = 0.0;
+            }
+            
+            for (int j=0; j<6; j++)
+            {
+                for (int i=0; i<6; i++)
+                {
+                    tmp[j] = inv_J[j][i]*f[i];
+                    g[j] += tmp[j];
+                }
+            }
+            
+            // Update the solution: x_new = x_old - dx
+            uu[0] = uu[0] - g[0];
+            uu[1] = uu[1] - g[1];
+            uu[2] = uu[2] - g[2];
+            Au[0] = Au[0] - g[3];
+            Au[1] = Au[1] - g[4];
+            Au[2] = Au[2] - g[5];
+            
+            // Check if the error of the solution is smaller than Tol
+            if ((g[0]*g[0] + g[1]*g[1] + g[2]*g[2] + g[3]*g[3]+ g[4]*g[4] + g[5]*g[5]) < Tol)
+            {
+                proceed = 0;
+            }
+            
+            // Check if solver converges
+            if (iter >= MAX_ITER)
+            {
+                ASSERTL0(false,"Riemann solver for Merging Flow did not converge");
+            }
+            
+        }
+    }
+    
+    /**
+     *  Solves the Riemann problem at an interdomain junction by
+     *  assuming subsonic flow at both sides of the boundary and
+     *  by applying conservation of mass and continuity of the
+     *  total pressure \f$ \frac{p}{rho} + \frac{u^{2}}{2}. \f$
+     *  The other 2 missing equations come from the characteristic
+     *  variables. For further information see "Pulse
+     *  WavePropagation in the human vascular system" Section 3.4.
+     */
     void PulseWaveSystem::JunctionRiemann(Array<OneD, NekDouble> &Au, Array<OneD, NekDouble> &uu,
                                           Array<OneD, NekDouble> &beta, Array<OneD, NekDouble> &A_0)
     {		
@@ -885,7 +1124,6 @@ namespace Nektar
         }
     }
     
-#endif            
 
 	
     /**

@@ -98,8 +98,13 @@ namespace Nektar
         int cnt = 0;
 
 
+        // Set up Inflow and Outflow boundary conditions. 
         SetPulseWaveBoundaryConditions(inarray, outarray, time);
+
+        // Set up any interface conditions and write into boundary condition
+        EnforceInterfaceConditions(inarray);
         
+        // do advection evauation in all domains
         for(int omega=0; omega < m_nDomains; ++omega)
         {
             m_currentDomain = omega;

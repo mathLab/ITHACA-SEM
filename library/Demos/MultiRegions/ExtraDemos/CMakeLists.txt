@@ -8,7 +8,6 @@ SET(LinkLibraries
     optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
     optimized ${ZLIB_LIBRARY_RELEASE} debug ${ZLIB_LIBRARY_DEBUG}
     optimized ${TINYXML_LIB} debug ${TINYXML_LIB}
-    optimized sbtk    debug sbtk
 )
 
 SET(FldToTec2DSource  FldToTec2D.cpp)

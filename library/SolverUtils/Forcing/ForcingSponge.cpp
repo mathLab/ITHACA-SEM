@@ -46,7 +46,8 @@ namespace SolverUtils
                                                         "Forcing Sponge");
 
     ForcingSponge::ForcingSponge(const LibUtilities::SessionReaderSharedPtr& pSession)
-            : Forcing(pSession)
+            : Forcing(pSession),
+              m_hasRefFlow(false)
     {
     }
 
@@ -58,39 +59,51 @@ namespace SolverUtils
         int nvariables = m_session->GetVariables().size();
         int npts       = pFields[0]->GetTotPoints();
 
-        if (m_SolverInfo == "VelocityCorrectionScheme")
-        {
-            m_NumVariable = nvariables - 1; // e.g. (u v w p) for 3D case
-        }
-        if (m_SolverInfo == "CoupledLinearisedNS")
-        {
-            m_NumVariable = nvariables; // e.g. (u v w)  for 3D case
-        }
+        m_NumVariable = (m_SolverInfo == "CoupledLinearisedNS"
+                            ? nvariables
+                            : nvariables - 1);
+
+        const TiXmlElement* funcNameElmt;
+        funcNameElmt = pForce->FirstChildElement("SPONGECOEFF");
+        ASSERTL0(funcNameElmt, "Requires SPONGECOEFF tag, specifying function "
+                               "name which prescribes sponge coefficient.");
+
+        string funcName = funcNameElmt->Text();
+        ASSERTL0(m_session->DefinesFunction(funcName),
+                 "Function '" + funcName + "' not defined.");
 
         std::string s_FieldStr;
-        if (m_session->DefinesFunction("SpongeCoefficient"))
+        m_Sponge  = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+        m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
+        for (int i = 0; i < m_NumVariable; ++i)
         {
-            m_Sponge  = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-            m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-            for (int i = 0; i < m_NumVariable; ++i)
-            {
-                s_FieldStr = m_session->GetVariable(i);
-                m_Sponge[i]  = Array<OneD, NekDouble> (npts, 0.0);
-                m_Forcing[i] = Array<OneD, NekDouble> (npts, 0.0);
-                EvaluateFunction(pFields, m_session, s_FieldStr,
-                                 m_Sponge[i], "SpongeCoefficient");
-            }
+            s_FieldStr = m_session->GetVariable(i);
+            ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
+                     "Variable '" + s_FieldStr + "' not defined.");
+            m_Sponge[i]  = Array<OneD, NekDouble> (npts, 0.0);
+            m_Forcing[i] = Array<OneD, NekDouble> (npts, 0.0);
+            EvaluateFunction(pFields, m_session, s_FieldStr,
+                             m_Sponge[i], funcName);
         }
-        if (m_session->DefinesFunction("RefFields"))
+
+        funcNameElmt = pForce->FirstChildElement("REFFLOW");
+        if (funcNameElmt)
         {
+            string funcName = funcNameElmt->Text();
+            ASSERTL0(m_session->DefinesFunction(funcName),
+                     "Function '" + funcName + "' not defined.");
+
             m_Refflow = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
             for (int i = 0; i < m_NumVariable; ++i)
             {
                 s_FieldStr = m_session->GetVariable(i);
+                ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
+                         "Variable '" + s_FieldStr + "' not defined.");
                 m_Refflow[i] = Array<OneD, NekDouble> (npts, 0.0);
                 EvaluateFunction(pFields, m_session, s_FieldStr,
-                                 m_Refflow[i], "RefFields");
+                                 m_Refflow[i], funcName);
             }
+            m_hasRefFlow = true;
         }
     }
 
@@ -99,15 +112,16 @@ namespace SolverUtils
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
             Array<OneD, Array<OneD, NekDouble> > &outarray)
     {
-        if (m_session->DefinesFunction("RefFields"))
+        int nq = m_Forcing[0].num_elements();
+        if (m_hasRefFlow)
         {
             for (int i = 0; i < m_NumVariable; i++)
             {
-                Vmath::Vsub(m_Forcing[i].num_elements(), inarray[i], 1,
+                Vmath::Vsub(nq, inarray[i], 1,
                             m_Refflow[i], 1, m_Forcing[i], 1);
-                Vmath::Vmul(m_Forcing[i].num_elements(), m_Sponge[i], 1,
+                Vmath::Vmul(nq, m_Sponge[i], 1,
                             m_Forcing[i], 1, m_Forcing[i], 1);
-                Vmath::Vadd(outarray[i].num_elements(), m_Forcing[i], 1,
+                Vmath::Vadd(nq, m_Forcing[i], 1,
                             outarray[i], 1, outarray[i], 1);
             }
         }
@@ -115,9 +129,9 @@ namespace SolverUtils
         {
             for (int i = 0; i < m_NumVariable; i++)
             {
-                Vmath::Vmul(m_Forcing[i].num_elements(), m_Sponge[i], 1,
+                Vmath::Vmul(nq, m_Sponge[i], 1,
                             inarray[i], 1, m_Forcing[i], 1);
-                Vmath::Vadd(outarray[i].num_elements(), m_Forcing[i], 1,
+                Vmath::Vadd(nq, m_Forcing[i], 1,
                             outarray[i], 1, outarray[i], 1);
             }
         }

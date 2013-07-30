@@ -57,6 +57,7 @@ namespace SolverUtils
     {
         std::string m_SolverInfo = m_session->GetSolverInfo("SolverType");
         int nvariables = m_session->GetVariables().size();
+        int nq         = pFields[0]->GetTotPoints();
 
         if (m_SolverInfo == "VelocityCorrectionScheme")
         {
@@ -67,30 +68,25 @@ namespace SolverUtils
             m_NumVariable = nvariables; // e.g. (u v w)  for 3D case
         }
 
-        if (m_session->DefinesFunction("BodyForce"))
-        {
-            m_Forcing
-                    = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-            for (int i = 0; i < m_NumVariable; ++i)
-            {
-                m_Forcing[i]
-                        = Array<OneD, NekDouble> (
-                                                  pFields[0]->GetTotPoints(),
-                                                  0.0);
-            }
-        }
+        TiXmlElement* funcNameElmt = pForce->FirstChildElement("BODYFORCE");
+        ASSERTL0(funcNameElmt, "Requires BODYFORCE tag specifying function "
+                               "name which prescribes body force.");
 
+        string funcName = funcNameElmt->GetText();
+        ASSERTL0(m_session->DefinesFunction(funcName),
+                 "Function '" + funcName + "' not defined.");
+
+        m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
         std::string s_FieldStr;
         for (int i = 0; i < m_NumVariable; ++i)
         {
-            s_FieldStr = m_session->GetVariable(i);
-            if (m_session->DefinesFunction("BodyForce"))
-            {
-                EvaluateFunction(pFields, m_session, s_FieldStr,
-                                 m_Forcing[i], "BodyForce");
-            }
+            m_Forcing[i] = Array<OneD, NekDouble> (nq, 0.0);
+            s_FieldStr   = m_session->GetVariable(i);
+            ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
+                     "Variable '" + s_FieldStr + "' not defined.");
+            EvaluateFunction(pFields, m_session, s_FieldStr,
+                             m_Forcing[i], funcName);
         }
-
     }
 
     void ForcingBody::v_Apply(

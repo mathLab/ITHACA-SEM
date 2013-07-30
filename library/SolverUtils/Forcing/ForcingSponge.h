@@ -69,8 +69,9 @@ namespace SolverUtils
             static std::string className;
 
         protected:
-            Array<OneD, Array<OneD, NekDouble> > m_Sponge;
-            Array<OneD, Array<OneD, NekDouble> > m_Refflow;
+            bool                                    m_hasRefFlow;
+            Array<OneD, Array<OneD, NekDouble> >    m_Sponge;
+            Array<OneD, Array<OneD, NekDouble> >    m_Refflow;
 
             virtual void v_InitObject(
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,

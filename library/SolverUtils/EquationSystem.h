@@ -43,8 +43,8 @@
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
-#include <SolverUtils/Forcing/ForcingSponge.h>
-#include <SolverUtils/Forcing/ForcingBody.h>
+#include <SolverUtils/Forcing/Forcing.h>
+
 namespace Nektar
 {
     namespace SolverUtils

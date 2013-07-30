@@ -117,6 +117,7 @@ namespace Nektar
         m_session->LoadParameter ("mu",            m_mu,            1.78e-05);
         m_session->LoadParameter ("Skappa",        m_Skappa,        -2.048);
         m_session->LoadParameter ("Kappa",         m_Kappa,         0.0);
+        m_session->LoadParameter ("mu0",           m_mu0,           0.0);
         m_session->LoadParameter ("thermalConductivity",
                                   m_thermalConductivity, 0.0257);
         
@@ -2394,11 +2395,9 @@ namespace Nektar
             Array <OneD, NekDouble> one2D(nQuadPointsElement, 1.0);
             NekDouble Area = m_fields[0]->GetExp(e)->Integral(one2D);
             
-            NekDouble mu_max = (sqrt(Area)/pOrderElmt[e])*LambdaMax;
-            
             for (int n = 0; n < nQuadPointsElement; n++)
             {
-                NekDouble mu_0 = (sqrt(Area)/pOrderElmt[e])*LambdaMax;
+                NekDouble mu_0 = m_mu0;
                 
                 if (Sensor[n+PointCount] < (m_Skappa-m_Kappa))
                 {

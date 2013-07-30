@@ -106,6 +106,7 @@ namespace Nektar
         NekDouble                           m_mu;
         NekDouble                           m_Skappa;
         NekDouble                           m_Kappa;
+        NekDouble                           m_mu0;
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;

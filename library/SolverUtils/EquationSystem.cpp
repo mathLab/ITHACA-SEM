@@ -663,7 +663,8 @@ namespace Nektar
         void EquationSystem::EvaluateFunction(
             Array<OneD, Array<OneD, NekDouble> >& pArray,
             std::string pFunctionName,
-            const NekDouble pTime)
+            const NekDouble pTime,
+            const int domain)
         {
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
@@ -672,7 +673,7 @@ namespace Nektar
 
             for(int i = 0 ; i < vFieldNames.size(); i++)
             {
-                EvaluateFunction(vFieldNames[i], pArray[i], pFunctionName, pTime);
+                EvaluateFunction(vFieldNames[i], pArray[i], pFunctionName, pTime,domain);
             }
         }
 
@@ -695,7 +696,7 @@ namespace Nektar
 
             for(int i = 0; i < pFieldNames.size(); i++)
             {
-                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName,domain);
+                EvaluateFunction(pFieldNames[i], pFields[i], pFunctionName,0.0,domain);
             }
         }
 
@@ -717,7 +718,7 @@ namespace Nektar
 
             for(int i = 0; i < pFieldNames.size(); i++)
             {
-                EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(), pFunctionName,domain);
+                EvaluateFunction(pFieldNames[i], pFields[i]->UpdatePhys(), pFunctionName,0.0,domain);
                 pFields[i]->FwdTrans_IterPerExp(pFields[i]->GetPhys(), pFields[i]->UpdateCoeffs());
             }
 
@@ -806,7 +807,8 @@ namespace Nektar
          */
         std::string EquationSystem::DescribeFunction(
             std::string pFieldName,
-            const std::string &pFunctionName)
+            const std::string &pFunctionName,
+            const int domain)
         {
             ASSERTL0(m_session->DefinesFunction(pFunctionName),
                      "Function '" + pFunctionName + "' does not exist.");
@@ -818,13 +820,13 @@ namespace Nektar
             if (vType == LibUtilities::eFunctionTypeExpression)
             {
                 LibUtilities::EquationSharedPtr ffunc
-                    = m_session->GetFunction(pFunctionName, pFieldName);
+                    = m_session->GetFunction(pFunctionName, pFieldName,domain);
                 retVal = ffunc->GetExpression();
             }
             else if (vType == LibUtilities::eFunctionTypeFile)
             {
                 std::string filename
-                    = m_session->GetFunctionFilename(pFunctionName, pFieldName);
+                    = m_session->GetFunctionFilename(pFunctionName, pFieldName,domain);
                 retVal = "from file " + filename;
             }
             
@@ -1041,7 +1043,7 @@ namespace Nektar
                     {
                         std::string varName = m_session->GetVariable(i);
                         cout << "  - Field " << varName << ": "
-                             << DescribeFunction(varName, "InitialConditions")
+                             << DescribeFunction(varName, "InitialConditions",domain)
                              << endl;
                     }
                 }

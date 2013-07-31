@@ -454,8 +454,8 @@ namespace Nektar
          * Conditions read from the inputfile*/
         for (int omega = 0; omega < m_nDomains; omega++)
         {
-            m_fields[0] = m_vessels[2*omega];
-            m_fields[1] = m_vessels[2*omega+1];
+            m_fields[0] = m_vessels[m_nVariables*omega];
+            m_fields[1] = m_vessels[m_nVariables*omega+1];
             
             if (m_session->GetComm()->GetRank() == 0)
             {

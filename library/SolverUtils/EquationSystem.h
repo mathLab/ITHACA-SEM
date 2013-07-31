@@ -116,7 +116,8 @@ namespace Nektar
             SOLVER_UTILS_EXPORT void EvaluateFunction(
                 Array<OneD, Array<OneD, NekDouble> >& pArray,
                 std::string pFunctionName,
-                const NekDouble pTime = 0.0);
+                const NekDouble pTime = 0.0,
+                const int domain = 0);
             
             /// Populate given fields with the function from session.
             SOLVER_UTILS_EXPORT void EvaluateFunction(
@@ -143,7 +144,8 @@ namespace Nektar
             // Describe a function.
             SOLVER_UTILS_EXPORT std::string DescribeFunction(
                 std::string pFieldName,
-                const std::string &pFunctionName);
+                const std::string &pFunctionName,
+                const int domain);
             
             /// Perform initialisation of the base flow.
             SOLVER_UTILS_EXPORT void InitialiseBaseFlow(

@@ -735,7 +735,7 @@ namespace Nektar
                      "Function '" + pFunctionName + "' does not exist.");
 
             unsigned int nq = m_fields[0]->GetNpoints();
-            if (pArray.num_elements() != nq)
+            if (pArray.num_elements() < nq)
             {
                 pArray = Array<OneD, NekDouble>(nq);
             }

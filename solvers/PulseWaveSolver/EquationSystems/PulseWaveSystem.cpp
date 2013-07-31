@@ -145,7 +145,7 @@ namespace Nektar
         // Reset coeff and phys space to be continuous over all domains
         int totcoeffs = 0;
         int totphys   = 0;
-        m_fieldPhysOffset = Array<OneD, int>(m_nDomains);
+        m_fieldPhysOffset = Array<OneD, int>(m_nDomains+1,0);
         for(i = 0; i < m_nDomains; ++i)
         {
             totcoeffs += m_vessels[i*m_nVariables]->GetNcoeffs();
@@ -153,7 +153,8 @@ namespace Nektar
             m_fieldPhysOffset[i] = totphys;
             totphys   += m_vessels[i*m_nVariables]->GetTotPoints();
         }
- 
+        m_fieldPhysOffset[m_nDomains] = totphys;
+
         for(int n = 0; n < m_nVariables; ++n)
         {
             Array<OneD, NekDouble> coeffs(totcoeffs,0.0);

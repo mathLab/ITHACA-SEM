@@ -40,8 +40,6 @@
 #include <LibUtilities/LinearAlgebra/SparseUtils.hpp>
 #include <LibUtilities/LinearAlgebra/SparseMatrix.hpp>
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
-#include <LibUtilities/LinearAlgebra/StorageNistCsr.hpp>
-#include <LibUtilities/LinearAlgebra/StorageNistBsr.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 
 
@@ -141,11 +139,7 @@ namespace Nektar{
         return os;
     }
 
-    template std::ostream& operator<<(std::ostream& os, const NekSparseMatrix<StorageNistCsr<NekDouble> >& rhs);
-    template std::ostream& operator<<(std::ostream& os, const NekSparseMatrix<StorageNistBsr<NekDouble> >& rhs);
     template std::ostream& operator<<(std::ostream& os, const NekSparseMatrix<StorageSmvBsr<NekDouble> >& rhs);
-    template std::ostream& operator<<(std::ostream& os, const NekSparseDiagBlkMatrix<StorageNistCsr<NekDouble> >& rhs);
-    template std::ostream& operator<<(std::ostream& os, const NekSparseDiagBlkMatrix<StorageNistBsr<NekDouble> >& rhs);
     template std::ostream& operator<<(std::ostream& os, const NekSparseDiagBlkMatrix<StorageSmvBsr<NekDouble> >& rhs);
 
 } // namespace

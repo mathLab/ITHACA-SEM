@@ -94,11 +94,6 @@ namespace Nektar
                 pSession->LoadParameter("SparseBlockSize", block_size);
                 ASSERTL1(block_size > 0,"SparseBlockSize parameter must to be positive");
             }
-            else
-            {
-                // Size of dense matrix sub-blocks
-                block_size = 2;
-            }
 
             brows = rows / block_size + (rows % block_size > 0);
             bcols = columns / block_size + (columns % block_size > 0);

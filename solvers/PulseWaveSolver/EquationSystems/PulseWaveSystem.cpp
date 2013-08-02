@@ -334,9 +334,12 @@ namespace Nektar
                     }
                     
                     VidToDomain[vid].push_back(Ipt);
-
+                    
                     // finally reset boundary condition to Dirichlet
                     m_vessels[vesselID]->GetBndConditions()[i]
+                        ->SetBoundaryConditionType(SpatialDomains::eDirichlet);
+                    
+                    m_vessels[vesselID+1]->GetBndConditions()[i]
                         ->SetBoundaryConditionType(SpatialDomains::eDirichlet);
                 }
             }
@@ -638,8 +641,8 @@ namespace Nektar
             {
                 dom   = m_bifurcations[n][i]->m_domain;
                 bcpos = m_bifurcations[n][i]->m_bcPosition;            
-                m_vessels[dom*m_nVariables]  ->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = Au[i];
-                m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = uu[i];
+                m_vessels[dom*m_nVariables]  ->UpdateBndCondExpansion(bcpos)->UpdatePhys()[0] = Au[i];
+                m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdatePhys()[0] = uu[i];
             }
         }
 
@@ -663,8 +666,8 @@ namespace Nektar
             {
                 int dom   = m_mergingJcts[n][i]->m_domain;
                 int bcpos = m_mergingJcts[n][i]->m_bcPosition;            
-                m_vessels[dom*m_nVariables]  ->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = Au[i];
-                m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = uu[i];
+                m_vessels[dom*m_nVariables]  ->UpdateBndCondExpansion(bcpos)->UpdatePhys()[0] = Au[i];
+                m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdatePhys()[0] = uu[i];
             }
         }
 
@@ -683,8 +686,8 @@ namespace Nektar
             {
                 int dom   = m_vesselJcts[n][i]->m_domain;
                 int bcpos = m_vesselJcts[n][i]->m_bcPosition;            
-                m_vessels[dom*m_nVariables]  ->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = Au[i];
-                m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdateCoeffs()[0] = uu[i];
+                m_vessels[dom*m_nVariables]  ->UpdateBndCondExpansion(bcpos)->UpdatePhys()[0] = Au[i];
+                m_vessels[dom*m_nVariables+1]->UpdateBndCondExpansion(bcpos)->UpdatePhys()[0] = uu[i];
             }
 
         }

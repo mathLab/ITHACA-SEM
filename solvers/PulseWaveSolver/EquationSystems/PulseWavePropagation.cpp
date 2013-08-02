@@ -188,7 +188,7 @@ namespace Nektar
                     {
                         // Note: The Q value is contained in A in the
                         // inputfile, the value in u has to be 1.0
-                        ASSERTL0((vessel[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] == 1.0, "For the Q-inflow BC the value in u must be 1.0");
+                        ASSERTL0((vessel[0]->UpdateBndCondExpansion(n))->UpdatePhys()[0] == 1.0, "For the Q-inflow BC the value in u must be 1.0");
                     
                         // Get the values of all variables needed for the Riemann problem
                         Q = (vessel[0]->UpdateBndCondExpansion(0))->GetCoeffs()[0];
@@ -203,8 +203,8 @@ namespace Nektar
                         u_l=2*u_u-u_r;
                         
                         // Store the updated values in the boundary condition
-                        (vessel[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_l;
-                        (vessel[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_l;
+                        (vessel[0]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = A_l;
+                        (vessel[1]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = u_l;
                     }
                     break;
                 case SpatialDomains::eTerminal:
@@ -234,8 +234,8 @@ namespace Nektar
                         u_r = (1-R_t)*((u_l-u_0) + 4*(c_l-c_0)) - u_l;
                         
                         // Store the new values in the boundary condition
-                        (vessel[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_r;
-                        (vessel[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_r;
+                        (vessel[0]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = A_r;
+                        (vessel[1]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = u_r;
                     }
                     break;
                 case SpatialDomains::eRterminal:
@@ -244,7 +244,6 @@ namespace Nektar
                            calculates the updated velocity and area as
                            well as the updated boundary conditions */
                         
-                        // cout << "R boundary condition found" << endl;
                         NekDouble RT = m_RT;
                         NekDouble pout = m_pout;
                         int nq = vessel[0]->GetTotPoints(); 
@@ -265,8 +264,8 @@ namespace Nektar
                         
                         // Store the updated values in the boundary condition
                         
-                        (vessel[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_r;
-                        (vessel[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_r;
+                        (vessel[0]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = A_r;
+                        (vessel[1]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = u_r;
                     }
                     break;
                 case SpatialDomains::eCRterminal:
@@ -298,8 +297,8 @@ namespace Nektar
                         
                         // Store the updated values in the boundary condition
                         
-                        (vessel[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_r;
-                        (vessel[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_r;
+                        (vessel[0]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = A_r;
+                        (vessel[1]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = u_r;
                     }
                     break;
                 case SpatialDomains::eRCRterminal:
@@ -339,8 +338,8 @@ namespace Nektar
                         
                         // Store the updated values in the boundary condition
                         
-                        (vessel[0]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = A_r;
-                        (vessel[1]->UpdateBndCondExpansion(n))->UpdateCoeffs()[0] = u_r;
+                        (vessel[0]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = A_r;
+                        (vessel[1]->UpdateBndCondExpansion(n))->UpdatePhys()[0] = u_r;
                     }
                     break;
                 default:
@@ -602,12 +601,6 @@ namespace Nektar
         // Obtain u_u and A_u
         uu = W2+4*sqrt(beta/(2*rho))*sqrt(sqrt(A_calc)); 
         Au = A_calc;
-	
-        //cout << "-----------------------------------------------------"<<endl;
-        //cout << "| Q_inflow Riemann solver; number of iterations: "<<iter<<"  |"<<endl;
-        //cout << "| A_u = "<<Au<<"\tu_u = "<<uu<<"\tQ = "<<Au*uu<<"\t\t    |"<<endl;
-        //cout << "----------------------------------------------------"<< endl;
-	
     }
     
     void PulseWavePropagation::R_RiemannSolver(NekDouble R,NekDouble A_l,NekDouble u_l,NekDouble A_0, 
@@ -632,7 +625,6 @@ namespace Nektar
         
         // Calculate the wave speed
         c_l = sqrt(beta/(2*rho))*sqrt(sqrt(A_l));
-        // cout << "c_l=" << c_l << endl;
 	
         // Riemann invariant \f$W_1(Al,ul)\f$
         W1 = u_l + 4*c_l;	 
@@ -656,20 +648,14 @@ namespace Nektar
 		//u_u = W1 - 4*sqrt(beta/(2*rho))*(sqrt(sqrt(A_calc))); 
         u_u=(pext+beta*(sqrt(A_calc)-sqrt(A_0))-pout)/(R*A_calc);
         A_u = A_calc;
-        
-        //cout << "----------------------------------------------------"<< endl;
-        //cout << "| A_u = "<<Au<<"\tu_u = "<<uu<<"\tQ = "<<Au*uu<<"\t\t    |"<<endl;
-        //cout << "----------------------------------------------------"<< endl;
-	
     }
     
-	/**
-	 *  CR Riemann solver for pulse wave propagation. 
-	 */
+    /**
+     *  CR Riemann solver for pulse wave propagation. 
+     */
     void PulseWavePropagation::CR_RiemannSolver(NekDouble C,NekDouble R,NekDouble A_l,NekDouble u_l,NekDouble A_0, NekDouble beta, NekDouble pout,
                                                 NekDouble &A_u,NekDouble &u_u)
     {		
-        //cout << "Entering CR_RiemannSolver" << endl;
         NekDouble pext = m_pext;
         NekDouble A_calc = 0.0;
         // to modify
@@ -682,10 +668,6 @@ namespace Nektar
         
         // u_u is assumed to be equal to u_l
         u_u = u_l; 
-	
-        //cout << "----------------------------------------------------"<< endl;
-        //cout << "| A_u = "<<Au<<"\tu_u = "<<uu<<"\tQ = "<<Au*uu<<"\t\t    |"<<endl;
-        //cout << "----------------------------------------------------"<< endl;
 	
     }
     

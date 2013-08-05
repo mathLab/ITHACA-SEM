@@ -8,7 +8,11 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
        ./EquationSystems/PulseWaveSystem.h
        ./EquationSystems/PulseWaveSystem.cpp
        ./EquationSystems/PulseWavePropagation.h
-       ./EquationSystems/PulseWavePropagation.cpp)
+       ./EquationSystems/PulseWavePropagation.cpp
+       ./EquationSystems/PulseWaveFlow.h
+       ./EquationSystems/PulseWaveFlow.cpp
+       ./EquationSystems/ROutflow.h
+       ./EquationSystems/ROutflow.cpp)
 
     ADD_SOLVER_EXECUTABLE(PulseWaveSolver solvers 
 			${PulseWaveSolverSource})

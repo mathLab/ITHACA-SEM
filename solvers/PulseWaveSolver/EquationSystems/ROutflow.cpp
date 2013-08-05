@@ -33,7 +33,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <PulseWaveSolver/EquationSystems/Routflow.h>
+#include <PulseWaveSolver/EquationSystems/ROutflow.h>
 
 namespace Nektar
 {

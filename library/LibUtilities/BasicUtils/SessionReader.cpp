@@ -168,6 +168,12 @@ namespace Nektar
 
             m_filename    = vFilenames[0];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
+            if (m_filename.size() > 3 &&
+                m_filename.substr(m_filename.size() - 3, 3) == ".gz")
+            {
+                m_sessionName =
+                    m_sessionName.substr(0, m_sessionName.find_last_of('.'));
+            }
             m_xmlDoc      = MergeDoc(vFilenames);
 
             // Create communicator
@@ -191,6 +197,12 @@ namespace Nektar
 
             m_filename    = pFilenames[0];
             m_sessionName = m_filename.substr(0, m_filename.find_last_of('.'));
+            if (m_filename.size() > 3 &&
+                m_filename.substr(m_filename.size() - 3, 3) == ".gz")
+            {
+                m_sessionName =
+                    m_sessionName.substr(0, m_sessionName.find_last_of('.'));
+            }
             m_xmlDoc      = MergeDoc(pFilenames);
 
             // Create communicator

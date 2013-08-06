@@ -69,6 +69,7 @@ namespace Nektar
         {
             std::string shortName;
             std::string description;
+            bool        isFlag;
         };
 
         typedef std::map<std::string, CmdLineArg>    CmdLineArgMap;
@@ -377,6 +378,12 @@ namespace Nektar
                 const std::string &pName, 
                 const std::string &pShortName, 
                 const std::string &pDescription);
+            /// Registers a command-line flag with the session reader.
+            LIB_UTILITIES_EXPORT inline static std::string
+              RegisterCmdLineFlag(
+                const std::string &pName,
+                const std::string &pShortName,
+                const std::string &pDescription);
 
             /// Substitutes expressions defined in the XML document.
             LIB_UTILITIES_EXPORT void SubstituteExpressions(std::string &expr);
@@ -630,6 +637,25 @@ namespace Nektar
             CmdLineArg x;
             x.shortName = pShortName;
             x.description = pDescription;
+            x.isFlag = false;
+            m_cmdLineArguments[pName] = x;
+            return pName;
+        }
+
+
+        /**
+         *
+         */
+        inline std::string SessionReader::RegisterCmdLineFlag(
+            const std::string &pName,
+            const std::string &pShortName,
+            const std::string &pDescription)
+        {
+            ASSERTL0(!pName.empty(), "Empty name for cmdline argument.");
+            CmdLineArg x;
+            x.shortName = pShortName;
+            x.description = pDescription;
+            x.isFlag = true;
             m_cmdLineArguments[pName] = x;
             return pName;
         }

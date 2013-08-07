@@ -104,8 +104,6 @@ namespace Nektar
                 known_type["R-terminal"] = eRterminal;
                 known_type["CR-terminal"] = eCRterminal;
                 known_type["RCR-terminal"] = eRCRterminal;
-                known_type["WALL"] = eWALL;
-                known_type["WALLVISCOUS"] = eWALLVISCOUS;
                 known_type["CalcBC"] = eCalcBC;
                 known_type["RinglebFlow"] = eRinglebFlow;
                 known_type["Symmetry"] = eSymmetry;
@@ -230,8 +228,7 @@ namespace Nektar
 
         struct NotDefinedBoundaryCondition : public BoundaryConditionBase
         {
-<<<<<<< HEAD
-
+            
                NotDefinedBoundaryCondition(
                     const LibUtilities::SessionReaderSharedPtr &pSession,
                     const std::string& eqn,
@@ -263,111 +260,14 @@ namespace Nektar
         typedef std::map<int, BoundaryConditionMapShPtr> BoundaryConditionCollection;
 
         const static Array<OneD, BoundaryConditionShPtr> NullBoundaryConditionShPtrArray;
-=======
-            JunctionBoundaryCondition(
-                const int &P, 
-                const int &D1, 
-                const std::string &userDefined = std::string("NoUserDefined")):
-                    BoundaryConditionBase(eJunction, userDefined),
-                    m_parent(P), 
-                    m_daughter1(D1)
-            {
-                SetJunction(P, D1);
-            }
-            
-            int m_parent;
-            int m_daughter1;
-        };
-
-        struct BifurcationBoundaryCondition : public BoundaryConditionBase
-        {
-            BifurcationBoundaryCondition( 
-                const int &P, 
-                const int &D1, 
-                const int &D2, 
-                const std::string &userDefined = std::string("NoUserDefined")):
-                    BoundaryConditionBase(eBifurcation, userDefined),
-                    m_parent(P), 
-                    m_daughter1(D1), 
-                    m_daughter2(D2)
-            {
-                SetBifurcation(P, D1, D2);
-            }
-            
-            int m_parent;
-            int m_daughter1;
-            int m_daughter2;
-        };
-
-        struct MergingBoundaryCondition : public BoundaryConditionBase
-        {
-            MergingBoundaryCondition(
-                const int &P, 
-                const int &D1, 
-                const int &D2, 
-                const std::string &userDefined = std::string("NoUserDefined")):
-                    BoundaryConditionBase(eMerging, userDefined),
-                    m_parent(P), 
-                    m_daughter1(D1),
-                    m_daughter2(D2)
-            {
-                SetMerging(P, D1, D2);
-            }
-            
-            int m_parent;
-            int m_daughter1;
-            int m_daughter2;
-        };
-
-
-        typedef std::map<int, Composite> 
-            BoundaryRegion;
-        typedef boost::shared_ptr<BoundaryRegion> 
-            BoundaryRegionShPtr;
-        typedef boost::shared_ptr<const BoundaryRegion> 
-            ConstBoundaryRegionShPtr;
-        typedef std::map<int, BoundaryRegionShPtr> 
-            BoundaryRegionCollection;
-        typedef boost::shared_ptr<BoundaryConditionBase> 
-            BoundaryConditionShPtr;
-        typedef boost::shared_ptr<DirichletBoundaryCondition> 
-            DirichletBCShPtr;
-        typedef boost::shared_ptr<NeumannBoundaryCondition>   
-            NeumannBCShPtr;
-        typedef boost::shared_ptr<RobinBoundaryCondition>     
-            RobinBCShPtr;
-        typedef boost::shared_ptr<JunctionBoundaryCondition>  
-            JunctionBCShPtr;
-        typedef boost::shared_ptr<BifurcationBoundaryCondition>  
-            BifurcationBCShPtr;
-        typedef boost::shared_ptr<MergingBoundaryCondition>   
-            MergingBCShPtr;
-        typedef std::map<std::string,BoundaryConditionShPtr>  
-            BoundaryConditionMap;
-        typedef boost::shared_ptr<BoundaryConditionMap>  
-            BoundaryConditionMapShPtr;
-        typedef std::map<int, BoundaryConditionMapShPtr> 
-            BoundaryConditionCollection;
-
-        const static Array<OneD, BoundaryConditionShPtr> 
-            NullBoundaryConditionShPtrArray;
->>>>>>> fix/cmdline-no-string
 
         class BoundaryConditions
         {
         public:
-<<<<<<< HEAD
             SPATIAL_DOMAINS_EXPORT BoundaryConditions(const LibUtilities::SessionReaderSharedPtr &pSession, const MeshGraphSharedPtr &meshGraph);
 
             SPATIAL_DOMAINS_EXPORT BoundaryConditions(void);
             SPATIAL_DOMAINS_EXPORT ~BoundaryConditions(void);
-=======
-            SPATIAL_DOMAINS_EXPORT BoundaryConditions(
-                const LibUtilities::SessionReaderSharedPtr &pSession, 
-                const MeshGraphSharedPtr &meshGraph);
-            
-            SPATIAL_DOMAINS_EXPORT ~BoundaryConditions();
->>>>>>> fix/cmdline-no-string
 
             const BoundaryRegionCollection &GetBoundaryRegions(void) const
             {

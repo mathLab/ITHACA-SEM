@@ -109,7 +109,7 @@ namespace Nektar
         m_expdim   = m_graph->GetMeshDimension();
         m_HomoDirec			= 0;
         m_useFFT			= false;
-        m_dealiasing	  	        = false;
+        m_homogen_dealiasing	        = false;
         m_specHP_dealiasing             = false;
         m_HomogeneousType   = eNotHomogeneous;
                         

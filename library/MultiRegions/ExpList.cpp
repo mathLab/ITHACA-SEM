@@ -1759,7 +1759,7 @@ namespace Nektar
         
         void  ExpList::WriteTecplotConnectivity(std::ofstream &outfile)
         {
-            int j,k,l;
+            int i,j,k,l;
             int nbase = (*m_exp)[0]->GetNumBases();
             int cnt = 0;
             

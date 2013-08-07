@@ -9,7 +9,7 @@
 using namespace Nektar;
 using namespace Nektar::SolverUtils;
 
-static std::string cvar = LibUtilities::SessionReader::RegisterCmdLineArgument(
+static std::string cvar = LibUtilities::SessionReader::RegisterCmdLineFlag(
                 "CharateristicVariables","c","Output characteristic variables");
 
 static std::string SetToOneD = LibUtilities::SessionReader::RegisterCmdLineArgument("SetToOneSpaceDimension","1","Redefine mesh to be aligned to x-axis");

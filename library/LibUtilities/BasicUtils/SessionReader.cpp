@@ -264,10 +264,19 @@ namespace Nektar
                 {
                     names += "," + cmdIt->second.shortName;
                 }
-                desc.add_options()
-                    (names.c_str(), po::value<std::string>(), 
-                     cmdIt->second.description.c_str())
-                ;
+                if (cmdIt->second.isFlag)
+                {
+                    desc.add_options()
+                        (names.c_str(), cmdIt->second.description.c_str())
+                    ;
+                }
+                else
+                {
+                    desc.add_options()
+                        (names.c_str(), po::value<std::string>(),
+                         cmdIt->second.description.c_str())
+                    ;
+                }
             }
 
             // List hidden options (e.g. session file arguments are not actually

@@ -33,9 +33,9 @@ int main(int argc, char *argv[])
     }
 
     bool Extrude2DWithHomogeneous = false;
-	
-	bool SingleModePlot=false;
-	bool HalfModePlot=false;
+    
+    bool SingleModePlot=false;
+    bool HalfModePlot=false;
 
 	
     int nExtraPoints, nExtraPlanes;

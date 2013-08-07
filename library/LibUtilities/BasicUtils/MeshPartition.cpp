@@ -66,7 +66,7 @@ namespace Nektar
                 m_numFields(0),
                 m_fieldNameToId(),
                 m_comm(pSession->GetComm()),
-                m_weightingRequired(true)
+                m_weightingRequired(false)
         {
             ReadConditions(pSession);
             ReadGeometry(pSession);
@@ -237,6 +237,19 @@ namespace Nektar
 
             // Read mesh vertices
             vSubElement = pSession->GetElement("Nektar/Geometry/Vertex");
+
+            // Retrieve any VERTEX attributes specifying mesh transforms
+            std::string attr[] = {"XSCALE", "YSCALE", "ZSCALE",
+                                  "XMOVE",  "YMOVE",  "ZMOVE" };
+            for (i = 0; i < 6; ++i)
+            {
+                const char *val =  vSubElement->Attribute(attr[i].c_str());
+                if (val)
+                {
+                    m_vertexAttributes[attr[i]] = std::string(val);
+                }
+            }
+
             x = vSubElement->FirstChildElement();
             i = 0;
             while(x)
@@ -452,9 +465,9 @@ namespace Nektar
 
                 if (solverPropertyUpper == "WEIGHTPARTITIONS") 
                 {
-                    if (propertyValueUpper == "UNIFORM")
+                    if (propertyValueUpper != "UNIFORM")
                     {
-                        m_weightingRequired = false;
+                        m_weightingRequired = true;
                     }
                     return;
                 }
@@ -595,10 +608,12 @@ namespace Nektar
             {
                 int acnt = 0;
                 int vcnt = 0;
+                int nWeight = m_weightingRequired ? 2*nGraphVerts*m_numFields
+                                                  :   nGraphVerts;
                 BoostAdjacencyIterator adjvertit, adjvertit_end;
                 Array<OneD, int> xadj(nGraphVerts+1,0);
                 Array<OneD, int> adjncy(2*nGraphEdges);
-                Array<OneD, int> vwgt(2*nGraphVerts*m_numFields, 1);
+                Array<OneD, int> vwgt(nWeight, 1);
                 Array<OneD, int> vsize(nGraphVerts, 1);
                 for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
                       vertit != vertit_end;
@@ -621,6 +636,10 @@ namespace Nektar
                             vwgt[pGraph[*vertit].id * m_numFields + i] = pGraph[*vertit].weight[i];
                         }
                     }
+                    else
+                    {
+                        vwgt[pGraph[*vertit].id] = 1;
+                    }
                 }
 
                 // Call Metis and partition graph
@@ -635,7 +654,7 @@ namespace Nektar
                     if(m_comm->GetColumnComm()->GetRank() == 0)
                     {
                         // Attempt partitioning using METIS.
-                        int ncon = 2*m_numFields;
+                        int ncon = m_weightingRequired ? 2*m_numFields : 1;
                         Metis::PartGraphVKway(nGraphVerts, ncon, xadj, adjncy, vwgt, vsize, npart, vol, part);
                         // Check METIS produced a valid partition and fix if not.
                         CheckPartitions(part);
@@ -754,6 +773,7 @@ namespace Nektar
             std::map<int, MeshVertex> vVertices;
             std::map<int, MeshEntity>::iterator vIt;
             std::map<int, MeshVertex>::iterator vVertIt;
+            std::map<std::string, std::string>::iterator vAttrIt;
 
             // Populate lists of elements, edges and vertices required.
             for ( boost::tie(vertit, vertit_end) = boost::vertices(pGraph);
@@ -820,6 +840,14 @@ namespace Nektar
                 y = new TiXmlText(vCoords.str());
                 x->LinkEndChild(y);
                 vVertex->LinkEndChild(x);
+            }
+
+            // Apply transformation attributes to VERTEX section
+            for (vAttrIt  = m_vertexAttributes.begin();
+                 vAttrIt != m_vertexAttributes.end();
+                 ++ vAttrIt)
+            {
+                vVertex->SetAttribute(vAttrIt->first, vAttrIt->second);
             }
 
             if (m_dim >= 2)

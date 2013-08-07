@@ -95,6 +95,7 @@ INPUT                  = ./ \
                          ../../../library/SpatialDomains/ \
                          ../../../library/LocalRegions/ \
                          ../../../library/MultiRegions/ \
+                         ../../../library/SolverUtils/ \
                          ../../../solvers/ \
                          ../../../utilities/
 INPUT_ENCODING         = UTF-8

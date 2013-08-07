@@ -63,18 +63,22 @@ namespace Nektar
         typedef std::map<std::string, std::string>  TagMap;
         typedef std::map<std::string, std::string>  FilterParams;
         typedef std::vector<
-            std::pair<std::string, FilterParams> >  FilterMap;
+            std::pair<std::string, FilterParams> >   FilterMap;
 
         struct CmdLineArg
         {
             std::string shortName;
             std::string description;
+            bool        isFlag;
         };
 
-        typedef std::map<std::string, CmdLineArg>  CmdLineArgMap;
+        typedef std::map<std::string, CmdLineArg>    CmdLineArgMap;
 
-        typedef std::map<std::string, int>          EnumMap;
-        typedef std::map<std::string, EnumMap>      EnumMapList;
+        typedef std::map<std::string, int>           EnumMap;
+        typedef std::map<std::string, EnumMap>       EnumMapList;
+
+        typedef std::map<std::string, std::string>   GloSysInfoMap;
+        typedef std::map<std::string, GloSysInfoMap> GloSysSolnInfoList;
 
         typedef std::map<std::string, std::string>   GloSysInfoMap;
         typedef std::map<std::string, GloSysInfoMap> GloSysSolnInfoList;
@@ -266,10 +270,14 @@ namespace Nektar
                 const std::string &pValue);
         
             /* ----GlobalSysSolnInfo ----- */
-            LIB_UTILITIES_EXPORT bool DefinesGlobalSysSolnInfo(const std::string &variable, const std::string &property) const;
 
-            LIB_UTILITIES_EXPORT const std::string& GetGlobalSysSolnInfo(const std::string &variable, const std::string &property) const;
-            
+            LIB_UTILITIES_EXPORT bool DefinesGlobalSysSolnInfo(
+                const std::string &variable,
+                const std::string &property) const;
+
+            LIB_UTILITIES_EXPORT const std::string& GetGlobalSysSolnInfo(
+                const std::string &variable,
+                const std::string &property) const;
 
 
             /* ------ GEOMETRIC INFO ------ */
@@ -302,8 +310,9 @@ namespace Nektar
             /// Returns the name of the variable specified by the given index.
             LIB_UTILITIES_EXPORT const std::string& GetVariable(
                 const unsigned int &idx) const;
-            LIB_UTILITIES_EXPORT void SetVariable(const unsigned int &idx, 
-                                                  std::string newname);
+            LIB_UTILITIES_EXPORT void SetVariable(
+                const unsigned int &idx,
+                      std::string newname);
 
             /// Returns the names of all variables.
             LIB_UTILITIES_EXPORT std::vector<std::string> GetVariables() const;
@@ -380,6 +389,12 @@ namespace Nektar
               RegisterCmdLineArgument(
                 const std::string &pName, 
                 const std::string &pShortName, 
+                const std::string &pDescription);
+            /// Registers a command-line flag with the session reader.
+            LIB_UTILITIES_EXPORT inline static std::string
+              RegisterCmdLineFlag(
+                const std::string &pName,
+                const std::string &pShortName,
                 const std::string &pDescription);
 
             /// Substitutes expressions defined in the XML document.
@@ -475,7 +490,8 @@ namespace Nektar
             /// Reads the SOLVERINFO section of the XML document.
             LIB_UTILITIES_EXPORT void ReadSolverInfo(TiXmlElement *conditions);
             /// Reads the GLOBALSYSSOLNINFO section of the XML document.
-            LIB_UTILITIES_EXPORT void ReadGlobalSysSolnInfo(TiXmlElement *conditions);
+            LIB_UTILITIES_EXPORT void ReadGlobalSysSolnInfo(
+                    TiXmlElement *conditions);
             /// Reads the GEOMETRICINFO section of the XML document.
             LIB_UTILITIES_EXPORT void ReadGeometricInfo(TiXmlElement *geometry);
             /// Reads the EXPRESSIONS section of the XML document.
@@ -516,18 +532,22 @@ namespace Nektar
             const std::string &pName) const
         {
             std::string vName = boost::to_upper_copy(pName);
-            ASSERTL0(DefinesSolverInfo(vName), 
+            ASSERTL0(DefinesSolverInfo(vName),
                      "Solver info '" + pName + "' not defined.");
 
             std::string vValue = GetSolverInfo(vName);
             EnumMapList::iterator x;
             ASSERTL0((x = m_enums.find(vName)) != m_enums.end(),
                      "Enum for SolverInfo property '" + pName + "' not found.");
+
             EnumMap::iterator y;
             ASSERTL0((y = x->second.find(vValue)) != x->second.end(),
-                     "Value of SolverInfo property '" + pName + "' is invalid.");
+                     "Value of SolverInfo property '" + pName +
+                     "' is invalid.");
+
             return T(y->second);
         }
+
 
 
         /**
@@ -630,6 +650,25 @@ namespace Nektar
             CmdLineArg x;
             x.shortName = pShortName;
             x.description = pDescription;
+            x.isFlag = false;
+            m_cmdLineArguments[pName] = x;
+            return pName;
+        }
+
+
+        /**
+         *
+         */
+        inline std::string SessionReader::RegisterCmdLineFlag(
+            const std::string &pName,
+            const std::string &pShortName,
+            const std::string &pDescription)
+        {
+            ASSERTL0(!pName.empty(), "Empty name for cmdline argument.");
+            CmdLineArg x;
+            x.shortName = pShortName;
+            x.description = pDescription;
+            x.isFlag = true;
             m_cmdLineArguments[pName] = x;
             return pName;
         }

@@ -111,10 +111,10 @@ namespace Nektar
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
-                AllocateSharedPtr(
-                    pSession,graph1D,trace,*this,
-                    m_bndCondExpansions,m_bndConditions,periodicVertices);
-            
+                AllocateSharedPtr(pSession,graph1D,trace,*this,
+                                  m_bndCondExpansions,m_bndConditions,periodicVertices,
+                                  variable);
+
             // Scatter trace points to 1D elements. For each element, we find
             // the trace point associated to each vertex. The element then
             // retains a pointer to the trace space points, to ensure

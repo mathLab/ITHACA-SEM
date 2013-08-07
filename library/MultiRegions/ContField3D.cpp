@@ -86,7 +86,8 @@ namespace Nektar
             
             m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
                 m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
-                m_periodicVerts, m_periodicEdges, m_periodicFaces, CheckIfSingularSystem);
+                m_periodicVerts, m_periodicEdges, m_periodicFaces,
+                CheckIfSingularSystem, variable);
         }
 
 
@@ -128,7 +129,8 @@ namespace Nektar
                 SpatialDomains::BoundaryConditions bcs(m_session, graph3D);
                 m_locToGloMap = MemoryManager<AssemblyMapCG3D>::AllocateSharedPtr(
                     m_session,m_ncoeffs,*this,m_bndCondExpansions,m_bndConditions,
-                    m_periodicVerts, m_periodicEdges, m_periodicFaces, CheckIfSingularSystem);
+                    m_periodicVerts, m_periodicEdges, m_periodicFaces,
+                    CheckIfSingularSystem,variable);
             }
             else
             {

@@ -44,8 +44,6 @@
 #include <LibUtilities/LinearAlgebra/NistSparseDescriptors.hpp>
 #include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 #include <LibUtilities/LinearAlgebra/SparseDiagBlkMatrix.hpp>
-#include <LibUtilities/LinearAlgebra/StorageNistCsr.hpp>
-#include <LibUtilities/LinearAlgebra/StorageNistBsr.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 
 #include <boost/lexical_cast.hpp>
@@ -530,8 +528,6 @@ namespace Nektar
 
 
     // explicit instantiation
-    template class NekSparseDiagBlkMatrix<StorageNistCsr<NekDouble> >;
-    template class NekSparseDiagBlkMatrix<StorageNistBsr<NekDouble> >;
     template class NekSparseDiagBlkMatrix<StorageSmvBsr<NekDouble> >;
 
 

@@ -2081,13 +2081,12 @@ namespace Nektar
 			
             return trans;
         }
-        
+
         NekDouble ExpList::v_GetHomoLen(void)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             NekDouble len;
-			
             return len;
         }
 

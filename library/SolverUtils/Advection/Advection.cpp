@@ -46,7 +46,7 @@ namespace Nektar
             Loki::NoDestroy > Type;
             return Type::Instance();
         }
-        
+
         void Advection::InitObject(
             const LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
@@ -62,12 +62,6 @@ namespace Nektar
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
             v_Advect(nConvectiveFields, fields, advVel, inarray, outarray);
-        }
-        
-       void Advection::FluxVec(
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
-        {
-            v_FluxVec(fluxvector);
         }
     }
 }

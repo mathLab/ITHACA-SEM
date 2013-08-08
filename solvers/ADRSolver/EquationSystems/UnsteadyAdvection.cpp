@@ -180,25 +180,24 @@ namespace Nektar
         // For 3DHomogenoeus1D
         if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
-            int nPointsTot = m_fields[0]->GetTotPoints();
+            int nPointsTot       = m_fields[0]->GetTotPoints();
             int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int n_planes = nPointsTot/nPointsTot_plane;
+            int n_planes         = nPointsTot/nPointsTot_plane;
             
             Array<OneD, Array<OneD, NekDouble> >
                 advVel_plane(m_velocity.num_elements());
             
             for (i = 0; i < m_velocity.num_elements(); ++i)
             {
-                advVel_plane[i] = Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
-                Vmath::Vcopy(nPointsTot_plane,
-                             &m_velocity[i][m_planeNumber*nPointsTot_plane ], 1,
-                             &advVel_plane[i][0], 1);
+                advVel_plane[i] = Array<OneD, NekDouble>(
+                    nPointsTot_plane,
+                    m_velocity[i] + m_planeNumber*nPointsTot_plane);
             }
 
             for (i = 0; i < m_velocity.num_elements(); ++i)
             {
                 m_fields[0]->GetPlane(m_planeNumber)->ExtractTracePhys(
-                                                    advVel_plane[i], tmp);
+                    advVel_plane[i], tmp);
                 
                 Vmath::Vvtvp(nTracePts,
                              m_traceNormals[i], 1,
@@ -206,16 +205,8 @@ namespace Nektar
                              m_traceVn, 1,
                              m_traceVn, 1);
             }
-            
-            if(m_planeNumber == n_planes - 1)
-            {
-                m_planeNumber = 0;
-            }
-            else
-            {
-                m_planeNumber = m_planeNumber + 1;
-            }
-            
+
+            m_planeNumber = (m_planeNumber + 1) % n_planes;
         }
         else  // For general case
         {
@@ -341,6 +332,7 @@ namespace Nektar
         int nq = physfield[0].num_elements();
         
         // For 3DHomogenoeus1D
+        /*
         if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
         {
             Array<OneD, Array<OneD, NekDouble> >
@@ -370,6 +362,7 @@ namespace Nektar
         }
         else // For general case
         {
+        */
             for (i = 0; i < flux.num_elements(); ++i)
             {
                 for (j = 0; j < flux[0].num_elements(); ++j)
@@ -378,7 +371,7 @@ namespace Nektar
                             flux[i][j], 1);
                 }
             }
-        }
+            //}
     }
     
     /**

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: AdvectionFR3DHomogeneous1D.h
+// File: Advection3DHomogeneous1D.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -33,8 +33,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef NEKTAR_SOLVERUTILS_ADVECTIONFR3DHOMOGENEOUS1D
-#define NEKTAR_SOLVERUTILS_ADVECTIONFR3DHOMOGENEOUS1D
+#ifndef NEKTAR_SOLVERUTILS_ADVECTION3DHOMOGENEOUS1D
+#define NEKTAR_SOLVERUTILS_ADVECTION3DHOMOGENEOUS1D
 
 #include <SolverUtils/Advection/Advection.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
@@ -44,51 +44,55 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        class AdvectionFR3DHomogeneous1D : public Advection
+        class Advection3DHomogeneous1D : public Advection
         {
         public:
             static AdvectionSharedPtr create(std::string advType)
             {
-                return AdvectionSharedPtr(new AdvectionFR3DHomogeneous1D(
-                                                                    advType));
+                return AdvectionSharedPtr(
+                    new Advection3DHomogeneous1D(advType));
             }
-            static std::string                   type[];
-            
+            static std::string type[];
+
         protected:
-            AdvectionFR3DHomogeneous1D(std::string advType);
-            std::string m_advType;
-            
+            Advection3DHomogeneous1D(std::string advType);
+
+            std::string                     m_advType;
             SolverUtils::AdvectionSharedPtr m_planeAdv;
-            
-            int                                 nPointsTot;
-            int                                 nCoeffs;
-            int                                 nPointsTot_plane;
-            int                                 nCoeffs_plane;
-            int                                 num_planes;
-            int                                 i, j, k;
-            
-            Array<OneD, unsigned int>                           planes;
-            Array<OneD, Array<OneD, NekDouble> >                fluxvector;
+            int                             nPointsTot;
+            int                             nCoeffs;
+            int                             nPointsTot_plane;
+            int                             nCoeffs_plane;
+            int                             num_planes;
+
+            int                             m_planeCounter;
+
+            Array<OneD, unsigned int>                           m_planes;
+
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  m_fluxVecStore;
+            Array<OneD, Array<OneD, NekDouble> >                m_inarrayPlane;
+            Array<OneD, Array<OneD, NekDouble> >                m_outarrayPlane;
+            Array<OneD, MultiRegions::ExpListSharedPtr>         m_fieldsPlane;
+            Array<OneD, Array<OneD, NekDouble> >                m_advVelPlane;
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
-                                                                fluxvector_homo;
-            Array<OneD, Array<OneD, NekDouble> >                outarray_homo;
-            Array <OneD, Array<OneD, MultiRegions::ExpListSharedPtr> >
-                                                                fields_plane;
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  inarray_plane;
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  outarray_plane;
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  advVel_plane;
+                                                                m_fluxVecPlane;
 
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
-            
+
             virtual void v_Advect(
                 const int nConvectiveFields,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
-                      Array<OneD, Array<OneD, NekDouble> >        &outarray);            
-        }; 
+                      Array<OneD, Array<OneD, NekDouble> >        &outarray);
+
+        private:
+            void ModifiedFluxVector(
+                const Array<OneD, Array<OneD, NekDouble> >         &physfield,
+                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+        };
     }
 }
 

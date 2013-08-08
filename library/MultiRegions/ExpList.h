@@ -1172,8 +1172,9 @@ namespace Nektar
             virtual void v_SmoothField(Array<OneD,NekDouble> &field);
 
             virtual void v_IProductWRTBase(
-                    const Array<OneD,const NekDouble> &inarray,Array<OneD,
-                    NekDouble> &outarray, CoeffState coeffstate);
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                CoeffState                          coeffstate);
 			
             virtual void v_IProductWRTBase_IterPerExp(
                 const Array<OneD,const NekDouble> &inarray,
@@ -1260,7 +1261,7 @@ namespace Nektar
             
             virtual void v_GetBoundaryToElmtMap(
                 Array<OneD, int> &ElmtID,
-                Array<OneD,int> &EdgeID);
+                Array<OneD, int> &EdgeID);
 
             virtual void v_ReadGlobalOptimizationParameters();
 

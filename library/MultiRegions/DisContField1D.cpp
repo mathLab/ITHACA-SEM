@@ -208,7 +208,7 @@ namespace Nektar
                 // it, then assume it is a partition edge.
                 if (it == m_boundaryVerts.end())
                 {
-                    ASSERTL0(false,"Parallel method not set up");
+                    //ASSERTL0(false,"Parallel method not set up");
 #if 0 
                     int traceGeomId = traceEl->GetGeom1D()->GetGlobalID();
                     PeriodicMap::iterator pIt = m_periodicVerts.find(

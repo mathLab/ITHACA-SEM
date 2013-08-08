@@ -43,7 +43,7 @@ namespace Nektar
      * @class PulseWaveFlow
      *
      */
-    PulseWaveFlow::PulseWaveFlow()
+    PulseWaveFlow::PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> vessel)
     {
     }
 

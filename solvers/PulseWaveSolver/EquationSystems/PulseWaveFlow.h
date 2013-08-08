@@ -37,6 +37,8 @@
 #define NEKTAR_PULSEWAVEFLOW_H
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
@@ -45,13 +47,15 @@ namespace Nektar
     
     static PulseWaveFlowSharedPtr NullPulseWaveFlowSharedPtr;
 
-    typedef LibUtilities::NekFactory< std::string, PulseWaveFlow > FlowFactory;
+    typedef LibUtilities::NekFactory< std::string, 
+        PulseWaveFlow, 
+        Array<OneD, MultiRegions::ExpListSharedPtr>& > FlowFactory;
     FlowFactory& GetFlowFactory();
     
     class PulseWaveFlow
     {
     public:
-        PulseWaveFlow();
+        PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> vessel);
         virtual ~PulseWaveFlow();
 
         inline void DoRiemannSolver();

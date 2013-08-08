@@ -59,16 +59,13 @@ namespace Nektar
 
             std::string                     m_advType;
             SolverUtils::AdvectionSharedPtr m_planeAdv;
-            int                             nPointsTot;
-            int                             nCoeffs;
-            int                             nPointsTot_plane;
-            int                             nCoeffs_plane;
-            int                             num_planes;
-
+            int                             m_numPoints;
+            int                             m_numPointsPlane;
+            int                             m_numPlanes;
             int                             m_planeCounter;
 
             Array<OneD, unsigned int>                           m_planes;
-
+            Array<OneD, unsigned int>                           m_planePos;
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  m_fluxVecStore;
             Array<OneD, Array<OneD, NekDouble> >                m_inarrayPlane;
             Array<OneD, Array<OneD, NekDouble> >                m_outarrayPlane;

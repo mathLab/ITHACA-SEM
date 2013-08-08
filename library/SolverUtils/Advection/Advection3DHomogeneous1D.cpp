@@ -51,7 +51,7 @@ namespace Nektar
     {
         std::string Advection3DHomogeneous1D::type[] = {
             GetAdvectionFactory().RegisterCreatorFunction(
-                "WeakDG3DHomogeneous1D",   Advection3DHomogeneous1D::create),
+                "WeakDG3DHomogeneous1D", Advection3DHomogeneous1D::create),
             GetAdvectionFactory().RegisterCreatorFunction(
                 "FRDG3DHomogeneous1D",   Advection3DHomogeneous1D::create),
             GetAdvectionFactory().RegisterCreatorFunction(
@@ -77,8 +77,10 @@ namespace Nektar
         Advection3DHomogeneous1D::Advection3DHomogeneous1D(std::string advType)
           : m_advType(advType)
         {
+            // Strip trailing string "3DHomogeneous1D" to determine 2D advection
+            // type, and create an advection object for the plane.
             string advName = advType.substr(
-                0, advType.length()-15);//advType.find_first_of("3DHomogeneous1D"));
+                0, advType.length()-15);
             m_planeAdv = GetAdvectionFactory().CreateInstance(advName, advName);
         }
 
@@ -109,12 +111,10 @@ namespace Nektar
             }
             m_planeAdv->InitObject(pSession, pFields_plane0);
 
-            nPointsTot       = pFields[0]->GetTotPoints();
-            nCoeffs          = pFields[0]->GetNcoeffs();
+            m_numPoints      = pFields[0]->GetTotPoints();
             m_planes         = pFields[0]->GetZIDs();
-            num_planes       = m_planes.num_elements();
-            nPointsTot_plane = nPointsTot/num_planes;
-            nCoeffs_plane    = nCoeffs/num_planes;
+            m_numPlanes      = m_planes.num_elements();
+            m_numPointsPlane = m_numPoints/m_numPlanes;
 
             // Set Riemann solver and flux vector callback for this plane.
             m_planeAdv->SetRiemannSolver(m_riemann);
@@ -131,23 +131,25 @@ namespace Nektar
                 m_fluxVecStore[i] = Array<OneD, Array<OneD, NekDouble> >(3);
                 for (int j = 0; j < 3; ++j)
                 {
-                    m_fluxVecStore[i][j] = Array<OneD, NekDouble>(nPointsTot);
+                    m_fluxVecStore[i][j] = Array<OneD, NekDouble>(m_numPoints);
                 }
             }
 
-            m_fluxVecPlane = Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >(
-                num_planes);
-            m_fieldsPlane   = Array<OneD, MultiRegions::ExpListSharedPtr>(
-                nConvectiveFields);
-            m_inarrayPlane  = Array<OneD, Array<OneD, NekDouble> > (
-                nConvectiveFields);
-            m_outarrayPlane = Array<OneD, Array<OneD, NekDouble> > (
-                nConvectiveFields);
+            m_fluxVecPlane = Array<OneD, Array<OneD,
+                          Array<OneD, Array<OneD, NekDouble> > > >(m_numPlanes);
+            m_fieldsPlane   = Array<OneD, MultiRegions::ExpListSharedPtr>
+                                                            (nConvectiveFields);
+            m_inarrayPlane  = Array<OneD, Array<OneD, NekDouble> >
+                                                            (nConvectiveFields);
+            m_outarrayPlane = Array<OneD, Array<OneD, NekDouble> >
+                                                            (nConvectiveFields);
+            m_planePos      = Array<OneD, unsigned int>     (m_numPlanes);
             m_advVelPlane   = Array<OneD, Array<OneD, NekDouble> > (3);
 
             // Set up memory reference which links fluxVecPlane to fluxVecStore.
-            for (int i = 0; i < num_planes; ++i)
+            for (int i = 0; i < m_numPlanes; ++i)
             {
+                m_planePos[i] = i * m_numPointsPlane;
                 m_fluxVecPlane[i] =
                     Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
                         nConvectiveFields);
@@ -159,22 +161,22 @@ namespace Nektar
                     for (int k = 0; k < 3; ++k)
                     {
                         m_fluxVecPlane[i][j][k] = Array<OneD, NekDouble>(
-                            nPointsTot_plane, m_fluxVecStore[j][k] + i*nPointsTot_plane);
+                            m_numPointsPlane,
+                            m_fluxVecStore[j][k] + m_planePos[i]);
                     }
                 }
             }
         }
 
         /**
-         * @brief Compute the advection term at each time-step using the Flux
-         * Reconstruction approach (FR) looping on the planes.
+         * @brief Compute the advection operator for a given input @a inarray
+         * and put the result in @a outarray.
          *
-         * @param nConvectiveFields   Number of fields.
+         * @param nConvectiveFields   Number of fields to advect.
          * @param fields              Pointer to fields.
          * @param advVel              Advection velocities.
-         * @param inarray             Solution at the previous time-step.
-         * @param outarray            Advection term to be passed at the
-         *                            time integration class.
+         * @param inarray             Input which will be advected.
+         * @param outarray            Computed advection.
          */
         void Advection3DHomogeneous1D::v_Advect(
             const int                                         nConvectiveFields,
@@ -183,29 +185,30 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            Array<OneD, NekDouble> tmp(nPointsTot);
+            Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
             int nVel = advVel.num_elements();
 
-            // Call flux vector function for entire domain.
+            // Call solver's flux vector function to compute the flux vector on
+            // the entire domain.
             m_fluxVector(inarray, m_fluxVecStore);
 
-            for (int i = 0; i < num_planes; ++i)
+            // Loop over each plane.
+            for (int i = 0; i < m_numPlanes; ++i)
             {
-                // Set up memory references.
+                // Set up memory references for fields, inarray and outarray for
+                // this plane.
                 for (int j = 0; j < nConvectiveFields; ++j)
                 {
-                    Array<OneD, NekDouble> tmp2;
                     m_fieldsPlane[j]   = fields[j]->GetPlane(i);
-                    m_inarrayPlane[j]  = Array<OneD, NekDouble>(nPointsTot_plane, tmp2 = inarray[j] + i*nPointsTot_plane);
-                    m_outarrayPlane[j] = Array<OneD, NekDouble>(nPointsTot_plane, tmp2 = outarray[j] + i*nPointsTot_plane);
+                    m_inarrayPlane[j]  = Array<OneD, NekDouble>(
+                        m_numPointsPlane, tmp2 = inarray[j] + m_planePos[i]);
+                    m_outarrayPlane[j] = Array<OneD, NekDouble>(
+                        m_numPointsPlane, tmp2 = outarray[j] + m_planePos[i]);
                 }
 
                 /*
-                Array<OneD, NekDouble> tmp2;
                 for (int j = 0; j < nVel; ++j)
                 {
-                    cout << "advVel num elements = " << advVel[j].num_elements() << endl;
-                    cout << "offset = " << (i*nPointsTot_plane) << endl;
                     if (advVel[j].num_elements() != 0)
                     {
                         m_advVelPlane[j] = Array<OneD, NekDouble>(
@@ -214,18 +217,19 @@ namespace Nektar
                 }
                 */
 
+                // Compute advection term for this plane.
                 m_planeAdv->Advect(nConvectiveFields, m_fieldsPlane,
                                    m_advVelPlane, m_inarrayPlane,
                                    m_outarrayPlane);
             }
 
-            // Calculate Fourier derivative
+            // Calculate Fourier derivative and add to final result.
             for (int i = 0; i < nConvectiveFields; ++i)
             {
                 fields[0]->PhysDeriv(2, m_fluxVecStore[i][2], tmp);
 
-                Vmath::Vadd(nPointsTot, outarray[i], 1, tmp, 1,
-                                        outarray[i], 1);
+                Vmath::Vadd(m_numPoints, outarray[i], 1, tmp, 1,
+                                         outarray[i], 1);
             }
         }
 
@@ -233,9 +237,11 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >               &inarray,
                   Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &outarray)
         {
-            // Increment the plane counter.
-            m_planeCounter = (m_planeCounter + 1) % num_planes;
+            // Return section of flux vector for this plane.
             outarray = m_fluxVecPlane[m_planeCounter];
+
+            // Increment the plane counter.
+            m_planeCounter = (m_planeCounter + 1) % m_numPlanes;
         }
     }
 }

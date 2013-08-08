@@ -115,10 +115,7 @@ namespace Nektar
         protected:
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
-            {
-                // Overridden by subclasses if necessary.
-            }
+                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
 
             virtual void v_Advect(
                 const int nConvectiveFields,
@@ -132,6 +129,8 @@ namespace Nektar
             AdvectionFluxVecCB     m_fluxVector;
             /// Riemann solver for DG-type schemes.
             RiemannSolverSharedPtr m_riemann;
+            /// Storage for space dimension. Used for homogeneous extension.
+            int                    m_spaceDim;
         };
 
         /// A shared pointer to an Advection object.

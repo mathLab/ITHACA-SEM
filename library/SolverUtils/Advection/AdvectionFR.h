@@ -75,7 +75,6 @@ namespace Nektar
             AdvectionFR(std::string advType);
 
             Array<OneD, Array<OneD, NekDouble> >               m_traceNormals;
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fluxvector;
 
             std::string m_advType;
 
@@ -129,12 +128,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &fluxX3,
                 const Array<OneD, const NekDouble> &numericalFlux,
                       Array<OneD,       NekDouble> &divCFlux);
-
-            virtual void v_SetFluxVector(
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
-            {
-                fluxvector = m_fluxvector;
-            }
         };
     }
 }

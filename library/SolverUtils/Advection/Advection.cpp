@@ -63,5 +63,26 @@ namespace Nektar
         {
             v_Advect(nConvectiveFields, fields, advVel, inarray, outarray);
         }
+
+        void Advection::v_InitObject(
+            const LibUtilities::SessionReaderSharedPtr        pSession,
+            Array<OneD, MultiRegions::ExpListSharedPtr>       pFields)
+        {
+            spaceDim = pFields[0]->GetCoordim(0);
+
+            if (pSession->->DefinesSolverInfo("HOMOGENEOUS"))
+            {
+                std::string HomoStr = m_session->GetSolverInfo("HOMOGENEOUS");
+                if (HomoStr == "HOMOGENEOUS1D" || HomoStr == "Homogeneous1D" ||
+                    HomoStr == "1D"            || HomoStr == "Homo1D")
+                {
+                    spaceDim++;
+                }
+                else
+                {
+                    ASSERTL0(false, "Only 1D homogeneous dimension supported.");
+                }
+            }
+        }
     }
 }

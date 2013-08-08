@@ -35,15 +35,8 @@
 
 #include <SolverUtils/Advection/Advection3DHomogeneous1D.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>
-#include <LibUtilities/Foundations/Basis.h>
-#include <LibUtilities/Foundations/Points.h>
-#include <LibUtilities/Polylib/Polylib.h>
-#include <StdRegions/StdSegExp.h>
-#include <MultiRegions/AssemblyMap/AssemblyMapDG.h>
-#include <boost/math/special_functions/gamma.hpp>
 #include <iostream>
 #include <iomanip>
-
 
 namespace Nektar
 {
@@ -79,8 +72,7 @@ namespace Nektar
         {
             // Strip trailing string "3DHomogeneous1D" to determine 2D advection
             // type, and create an advection object for the plane.
-            string advName = advType.substr(
-                0, advType.length()-15);
+            string advName = advType.substr(0, advType.length()-15);
             m_planeAdv = GetAdvectionFactory().CreateInstance(advName, advName);
         }
 
@@ -199,23 +191,21 @@ namespace Nektar
                 // this plane.
                 for (int j = 0; j < nConvectiveFields; ++j)
                 {
-                    m_fieldsPlane[j]   = fields[j]->GetPlane(i);
-                    m_inarrayPlane[j]  = Array<OneD, NekDouble>(
-                        m_numPointsPlane, tmp2 = inarray[j] + m_planePos[i]);
+                    m_fieldsPlane  [j] = fields[j]->GetPlane(i);
+                    m_inarrayPlane [j] = Array<OneD, NekDouble>(
+                        m_numPointsPlane, tmp2 = inarray [j] + m_planePos[i]);
                     m_outarrayPlane[j] = Array<OneD, NekDouble>(
                         m_numPointsPlane, tmp2 = outarray[j] + m_planePos[i]);
                 }
 
-                /*
                 for (int j = 0; j < nVel; ++j)
                 {
                     if (advVel[j].num_elements() != 0)
                     {
                         m_advVelPlane[j] = Array<OneD, NekDouble>(
-                            nPointsTot_plane, tmp2 = advVel[j] + i*nPointsTot_plane);
+                            m_numPointsPlane, tmp2 = advVel[j] + m_planePos[i]);
                     }
                 }
-                */
 
                 // Compute advection term for this plane.
                 m_planeAdv->Advect(nConvectiveFields, m_fieldsPlane,

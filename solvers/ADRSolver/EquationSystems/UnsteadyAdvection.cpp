@@ -331,47 +331,14 @@ namespace Nektar
         int i , j;
         int nq = physfield[0].num_elements();
         
-        // For 3DHomogenoeus1D
-        /*
-        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+        for (i = 0; i < flux.num_elements(); ++i)
         {
-            Array<OneD, Array<OneD, NekDouble> >
-                advVel_plane(m_velocity.num_elements());
-            
-            int nPointsTot = m_fields[0]->GetTotPoints();
-            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int n_planes = nPointsTot/nPointsTot_plane;
-            
-            for (int i = 0; i < m_velocity.num_elements(); ++i)
+            for (j = 0; j < flux[0].num_elements(); ++j)
             {
-                advVel_plane[i] = Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
-            
-                Vmath::Vcopy(nPointsTot_plane,
-                            &m_velocity[i][m_planeNumber*nPointsTot_plane], 1,
-                            &advVel_plane[i][0], 1);
-            }
-            
-            for (int i = 0; i < flux.num_elements(); ++i)
-            {
-                for (j = 0; j < flux[0].num_elements(); ++j)
-                {
-                    Vmath::Vmul(nq, physfield[i], 1, advVel_plane[j], 1,
-                                flux[i][j], 1);
-                }
+                Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
+                            flux[i][j], 1);
             }
         }
-        else // For general case
-        {
-        */
-            for (i = 0; i < flux.num_elements(); ++i)
-            {
-                for (j = 0; j < flux[0].num_elements(); ++j)
-                {
-                    Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
-                            flux[i][j], 1);
-                }
-            }
-            //}
     }
     
     /**

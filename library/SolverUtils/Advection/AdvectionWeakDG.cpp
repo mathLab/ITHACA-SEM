@@ -49,8 +49,8 @@ namespace Nektar
         }
 
         /**
-         * @brief Initiliase AdvectionWeakDG objects and store them before starting
-         * the time-stepping.
+         * @brief Initialise AdvectionWeakDG objects and store them before
+         * starting the time-stepping.
          *
          * @param pSession  Pointer to session reader.
          * @param pFields   Pointer to fields.
@@ -97,8 +97,7 @@ namespace Nektar
                     Array<OneD, Array<OneD, NekDouble> >(nVel);
                 for (j = 0; j < nVel; ++j)
                 {
-                    fluxvector[i][j] =
-                        Array<OneD, NekDouble>(nPointsTot);
+                    fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot);
                 }
             }
 

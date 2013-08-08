@@ -47,8 +47,8 @@ namespace Nektar
     /**
      *
      */
-    Routflow::Routflow(Array<OneD, MultiRegions::ExpListSharedPtr> vessel)
-        : PulseWaveFlow(vessel)
+    Routflow::Routflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel)
+        : PulseWaveFlow(pVessel)
     {
     }
 
@@ -60,10 +60,15 @@ namespace Nektar
 
     }
 
-    void Routflow::v_DoRiemannSolver()
+    void Routflow::v_DoBoundary(int omega)
     { 
+	NekDouble Q, A_r, u_r;
+	NekDouble A_u, u_u;
+        NekDouble R_t, A_l, u_l, u_0, c_0, c_l;
+
+        Array<OneD, MultiRegions::ExpListSharedPtr>     vessel(2);
+
+        vessel[0] = m_vessels[2*omega];
+        vessel[1] = m_vessels[2*omega+1];
     }
-
-
-
 }

@@ -55,22 +55,25 @@ namespace Nektar
     class PulseWaveFlow
     {
     public:
-        PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> vessel);
+        PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel);
+
         virtual ~PulseWaveFlow();
 
-        inline void DoRiemannSolver();
+        inline void DoBoundary(int omega);
 
     protected:
-        virtual void v_DoRiemannSolver() = 0;
+        virtual void v_DoBoundary(int omega) = 0;
+
+        Array<OneD, MultiRegions::ExpListSharedPtr> m_vessels;
     private:
     };
 
     /**
      *
      */
-    inline void PulseWaveFlow::DoRiemannSolver()
+    inline void PulseWaveFlow::DoBoundary(int omega)
     {
-        v_DoRiemannSolver();
+        v_DoBoundary(omega);
     }
 
 

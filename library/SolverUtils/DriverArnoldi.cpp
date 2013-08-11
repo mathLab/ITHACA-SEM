@@ -90,7 +90,7 @@ namespace Nektar
 
                 for(int i = 0; i < m_nfields; ++i)
                 {
-                    m_equ[0]->UpdateForces()[i]->SetWaveSpace(true);
+                    m_equ[0]->UpdateFields()[i]->SetWaveSpace(true);
                 }
 
             }
@@ -167,7 +167,7 @@ namespace Nektar
             }
             else
             {
-                fields = m_equ[0]->UpdateForces();
+                fields = m_equ[0]->UpdateFields();
             }
 
             int nq = fields[0]->GetNcoeffs();

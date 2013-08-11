@@ -43,7 +43,6 @@
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
-#include <SolverUtils/Forcing/Forcing.h>
 
 namespace Nektar
 {
@@ -288,9 +287,6 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline Array<
             OneD, MultiRegions::ExpListSharedPtr> &UpdateFields();
             
-            SOLVER_UTILS_EXPORT inline Array<
-            OneD, MultiRegions::ExpListSharedPtr> &UpdateForces();
-            
 
             /// Get hold of FieldInfoMap so it can be updated
             SOLVER_UTILS_EXPORT inline LibUtilities::FieldMetaDataMap 
@@ -398,16 +394,12 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_base;
-            /// Array holding force values.
-            Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields;
             /// Pointer to boundary conditions object.
             SpatialDomains::BoundaryConditionsSharedPtr m_boundaryConditions;
             /// Pointer to graph defining mesh.
             SpatialDomains::MeshGraphSharedPtr          m_graph;
-            /// Forcing terms
-            std::vector<ForcingSharedPtr>               m_forcing;
             /// Filename.
             std::string                                 m_filename;
             /// Name of the session.
@@ -725,11 +717,6 @@ namespace Nektar
         inline Array<OneD, MultiRegions::ExpListSharedPtr> &EquationSystem::UpdateFields(void)
         {
             return m_fields;
-        }
-        
-        inline Array<OneD, MultiRegions::ExpListSharedPtr> &EquationSystem::UpdateForces(void)
-        {
-            return m_forces;
         }
         
         /// Return final time

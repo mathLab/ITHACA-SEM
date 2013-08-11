@@ -68,7 +68,7 @@ namespace SolverUtils
         ASSERTL0(funcNameElmt, "Requires SPONGECOEFF tag, specifying function "
                                "name which prescribes sponge coefficient.");
 
-        string funcName = funcNameElmt->Text();
+        string funcName = funcNameElmt->GetText();
         ASSERTL0(m_session->DefinesFunction(funcName),
                  "Function '" + funcName + "' not defined.");
 
@@ -89,7 +89,7 @@ namespace SolverUtils
         funcNameElmt = pForce->FirstChildElement("REFFLOW");
         if (funcNameElmt)
         {
-            string funcName = funcNameElmt->Text();
+            string funcName = funcNameElmt->GetText();
             ASSERTL0(m_session->DefinesFunction(funcName),
                      "Function '" + funcName + "' not defined.");
 

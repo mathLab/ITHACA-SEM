@@ -39,6 +39,7 @@
 #include <SolverUtils/UnsteadySystem.h>
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <SolverUtils/Forcing/Forcing.h>
 
 namespace Nektar
 {     
@@ -166,6 +167,9 @@ namespace Nektar
 
         /// Advection term
         AdvectionTermSharedPtr m_advObject;
+
+        /// Forcing terms
+        std::vector<SolverUtils::ForcingSharedPtr>               m_forcing;
 
         /// Number of fields to be convected;
         int   m_nConvectiveFields;

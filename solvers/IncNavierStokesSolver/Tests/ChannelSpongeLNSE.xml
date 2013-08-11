@@ -310,4 +310,11 @@
             <E VAR="v" VALUE="-100*(x>2.5)" />
         </FUNCTION>
     </CONDITIONS>
+
+    <FORCING>
+        <FORCE TYPE="Sponge">
+            <SPONGECOEFF> SpongeCoefficient </SPONGECOEFF>
+        </FORCE>
+    </FORCING>
+
 </NEKTAR>

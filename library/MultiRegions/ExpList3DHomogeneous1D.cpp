@@ -468,6 +468,36 @@ namespace Nektar
             
             return energy;
         }
+
+        void ExpList3DHomogeneous1D::v_PhysInterp1DScaled(
+            const NekDouble               scale,
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble> &outarray)
+        {
+            const int nPlanePts = m_planes[0]->GetNpoints();
+            Array<OneD, NekDouble> tmp;
+
+            for (int i = 0; i < m_planes.num_elements(); ++i)
+            {
+                m_planes[i]->PhysInterp1DScaled(
+                    scale, inarray + i*nPlanePts, tmp = outarray + i*nPlanePts);
+            }
+        }
+
+        void ExpList3DHomogeneous1D::v_PhysGalerkinProjection1DScaled(
+            const NekDouble               scale,
+            const Array<OneD, NekDouble> &inarray,
+                  Array<OneD, NekDouble> &outarray)
+        {
+            const int nPlanePts = m_planes[0]->GetNpoints();
+            Array<OneD, NekDouble> tmp;
+
+            for (int i = 0; i < m_planes.num_elements(); ++i)
+            {
+                m_planes[i]->PhysGalerkinProjection1DScaled(
+                    scale, inarray + i*nPlanePts, tmp = outarray + i*nPlanePts);
+            }
+        }
     } //end of namespace
 } //end of namespace
 

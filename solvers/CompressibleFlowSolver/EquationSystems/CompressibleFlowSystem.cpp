@@ -132,9 +132,7 @@ namespace Nektar
             // Discontinuous field 
             case MultiRegions::eDiscontinuous:
             {
-                string advName;
-                string diffName;
-                string riemName;
+                string advName, diffName, riemName;
                 
                 // Setting up advection and diffusion operators
                 m_session->LoadSolverInfo("AdvectionType", advName, "WeakDG");
@@ -180,25 +178,19 @@ namespace Nektar
 
                 // Setting up parameters for advection operator Riemann solver 
                 m_riemannSolver->SetParam (
-                                    "gamma",  
-                                    &CompressibleFlowSystem::GetGamma,   this);
+                    "gamma",  &CompressibleFlowSystem::GetGamma,   this);
                 m_riemannSolver->SetScalar(
-                                    "velLoc", 
-                                    &CompressibleFlowSystem::GetVelLoc,  this);
+                    "velLoc", &CompressibleFlowSystem::GetVelLoc,  this);
                 m_riemannSolver->SetVector(
-                                    "N",
-                                    &CompressibleFlowSystem::GetNormals, this);
+                    "N",      &CompressibleFlowSystem::GetNormals, this);
                 
                 // Setting up parameters for diffusion operator Riemann solver
                 m_riemannSolverLDG->SetParam (
-                                    "gamma",  
-                                    &CompressibleFlowSystem::GetGamma,   this);
+                    "gamma",  &CompressibleFlowSystem::GetGamma,   this);
                 m_riemannSolverLDG->SetScalar(
-                                    "velLoc", 
-                                    &CompressibleFlowSystem::GetVelLoc,  this);
+                    "velLoc", &CompressibleFlowSystem::GetVelLoc,  this);
                 m_riemannSolverLDG->SetVector(
-                                    "N",
-                                    &CompressibleFlowSystem::GetNormals, this);
+                    "N",      &CompressibleFlowSystem::GetNormals, this);
                 
                 // Concluding initialisation of advection / diffusion operators
                 m_advection->SetRiemannSolver   (m_riemannSolver);
@@ -954,18 +946,8 @@ namespace Nektar
         int nVariables = m_fields.num_elements();
             
         // Factor to rescale 1d points in dealiasing
-        NekDouble OneDptscale = 2; 
-            
-        // Get number of points to dealias a cubic non-linearity
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-        {
-            nq = m_fields[0]->GetPlane(0)->Get1DScaledTotPoints(OneDptscale);
-        }
-        else // For general case
-        {
-            nq = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
-        }
+        NekDouble OneDptscale = 2;
+        nq = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
         
         Array<OneD, NekDouble> pressure(nq);
         Array<OneD, Array<OneD, NekDouble> > velocity(m_spacedim);
@@ -978,20 +960,8 @@ namespace Nektar
         {
             physfield_interp[i] = Array<OneD, NekDouble>(nq);
             flux_interp[i] = Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
-            
-            // Interpolation to higher space
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-            {
-                m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
-                    OneDptscale, physfield[i], physfield_interp[i]);
-
-            }
-            else // For general case
-            {
-                m_fields[0]->PhysInterp1DScaled(
-                    OneDptscale, physfield[i], physfield_interp[i]);
-            }
+            m_fields[0]->PhysInterp1DScaled(
+                OneDptscale, physfield[i], physfield_interp[i]);
             
             for (j = 0; j < m_spacedim; ++j)
             {
@@ -1005,17 +975,8 @@ namespace Nektar
             velocity[i] = Array<OneD, NekDouble>(nq);
                 
             // Galerkin project solution back to original space
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-            {
-                m_fields[0]->GetPlane(0)->PhysGalerkinProjection1DScaled(
-                    OneDptscale, physfield_interp[i+1], flux[0][i]);
-            }
-            else // For general case
-            {
-                m_fields[0]->PhysGalerkinProjection1DScaled(
-                    OneDptscale, physfield_interp[i+1], flux[0][i]);
-            }
+            m_fields[0]->PhysGalerkinProjection1DScaled(
+                OneDptscale, physfield_interp[i+1], flux[0][i]);
         }
             
         GetVelocityVector(physfield_interp, velocity);
@@ -1040,17 +1001,8 @@ namespace Nektar
         {
             for (j = 0; j < m_spacedim; ++j)
             {
-                // For 3DHomogenoeus1D
-                if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-                {
-                    m_fields[0]->GetPlane(0)->PhysGalerkinProjection1DScaled(
-                        OneDptscale, flux_interp[i+1][j], flux[i+1][j]);
-                }
-                else // For general case
-                {
-                    m_fields[0]->PhysGalerkinProjection1DScaled(
-                        OneDptscale, flux_interp[i+1][j], flux[i+1][j]);
-                }
+                m_fields[0]->PhysGalerkinProjection1DScaled(
+                    OneDptscale, flux_interp[i+1][j], flux[i+1][j]);
             }
         }
             
@@ -1065,18 +1017,10 @@ namespace Nektar
                 
             // Galerkin project solution back to origianl space
             // For 3DHomogenoeus1D
-            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-            {
-                m_fields[0]->GetPlane(0)->PhysGalerkinProjection1DScaled(
-                    OneDptscale, flux_interp[i+1][j], flux[i+1][j]);
-            }
-            else // For general case
-            {
-                m_fields[0]->PhysGalerkinProjection1DScaled(
-                                                OneDptscale,
-                                                flux_interp[m_spacedim+1][j],
-                                                flux[m_spacedim+1][j]);
-            }
+            m_fields[0]->PhysGalerkinProjection1DScaled(
+                OneDptscale,
+                flux_interp[m_spacedim+1][j],
+                flux[m_spacedim+1][j]);
         }
     }
 

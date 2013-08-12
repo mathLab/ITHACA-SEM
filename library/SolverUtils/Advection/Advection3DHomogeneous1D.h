@@ -44,6 +44,44 @@ namespace Nektar
 {
     namespace SolverUtils
     {
+        /**
+         * @brief Wrapper class for Riemann solver scalars.
+         */
+        class HomoRSScalar
+        {
+        public:
+            HomoRSScalar(RSScalarFuncType func,
+                         int              nPlanes)
+                : m_func       (func),
+                  m_planeNumber(0),
+                  m_numPlanes  (nPlanes),
+                  m_tmp        ()
+            {
+            }
+
+            const Array<OneD, const NekDouble>& Exec()
+            {
+                if (m_planeNumber == 0)
+                {
+                    m_tmp = m_func();
+                }
+
+                const int nPts   = m_tmp.num_elements() / m_numPlanes;
+                const int offset = m_planeNumber * nPts;
+                Array<OneD, NekDouble> tmp(nPts, m_tmp + offset);
+
+                m_planeNumber = (m_planeNumber + 1) % m_numPlanes;
+
+                return tmp;
+            }
+
+        private:
+            int                          m_planeNumber;
+            int                          m_numPlanes;
+            RSScalarFuncType             m_func;
+            Array<OneD, const NekDouble> m_tmp;
+        };
+
         class Advection3DHomogeneous1D : public Advection
         {
         public:
@@ -72,7 +110,7 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> >               m_advVelPlane;
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
                                                                m_fluxVecPlane;
-
+            
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
@@ -88,12 +126,6 @@ namespace Nektar
             void ModifiedFluxVector(
                 const Array<OneD, Array<OneD, NekDouble> >         &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
-            /*
-            const Array<OneD, const NekDouble>               &ModifiedRSScalar(
-                string name);
-            const Array<OneD, const Array<OneD, NekDouble> > &ModifiedRSVector(
-                string name);
-            */
         };
     }
 }

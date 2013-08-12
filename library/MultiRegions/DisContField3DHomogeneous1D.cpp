@@ -70,9 +70,8 @@ namespace Nektar
               m_bndCondExpansions    (In.m_bndCondExpansions),
               m_bndConditions        (In.m_bndConditions)
         {
-            if(DeclarePlanesSetCoeffPhys)
+            if (DeclarePlanesSetCoeffPhys)
             {
-                bool False = false;
                 DisContField2DSharedPtr zero_plane =
                     boost::dynamic_pointer_cast<DisContField2D> (In.m_planes[0]);
 
@@ -80,7 +79,7 @@ namespace Nektar
                 {
                     m_planes[n] =
                         MemoryManager<DisContField2D>::
-                          AllocateSharedPtr(*zero_plane,False);
+                          AllocateSharedPtr(*zero_plane, false);
                 }
 
                 SetCoeffPhys();
@@ -101,14 +100,12 @@ namespace Nektar
               m_bndConditions()
         {
             int i, n, nel;
-            bool True  = true;
-            bool False = false;
             DisContField2DSharedPtr plane_zero;
             SpatialDomains::BoundaryConditions bcs(m_session, graph2D);
 
             // note that nzplanes can be larger than nzmodes
             m_planes[0] = plane_zero = MemoryManager<DisContField2D>::
-                AllocateSharedPtr(pSession, graph2D, variable, True, False);
+                AllocateSharedPtr(pSession, graph2D, variable, true, false);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::
                 AllocateSharedPtr();
@@ -123,12 +120,22 @@ namespace Nektar
             {
                 m_planes[n] = MemoryManager<DisContField2D>::
                     AllocateSharedPtr(*plane_zero, graph2D,
-                                      variable,True,False);
+                                      variable, true, false);
                 for(i = 0; i < nel; ++i)
                 {
                     (*m_exp).push_back((*m_exp)[i]);
                 }
             }
+
+            // Set up trace object.
+            Array<OneD, ExpListSharedPtr> trace(m_planes.num_elements());
+            for (n = 0; n < m_planes.num_elements(); ++n)
+            {
+                trace[n] = m_planes[n]->GetTrace();
+            }
+
+            m_trace = MemoryManager<ExpList2DHomogeneous1D>::AllocateSharedPtr(
+                pSession, HomoBasis, lhom, useFFT, dealiasing, trace);
 
             // Setup default optimisation information
             nel = GetExpSize();
@@ -195,26 +202,16 @@ namespace Nektar
                 if(boundaryCondition->GetBoundaryConditionType() !=
                    SpatialDomains::ePeriodic)
                 {
-
-                    boost::shared_ptr<StdRegions::StdExpansionVector> exp =
-                        MemoryManager<StdRegions::StdExpansionVector>::
-                            AllocateSharedPtr();
-
                     for (n = 0; n < nplanes; ++n)
                     {
                         PlanesBndCondExp[n] = m_planes[n]->
                             UpdateBndCondExpansion(cnt);
-
-                        for (j = 0; j < PlanesBndCondExp[n]->GetExpSize(); ++j)
-                        {
-                            (*exp).push_back(PlanesBndCondExp[n]->GetExp(j));
-                        }
                     }
 
                     m_bndCondExpansions[cnt++] =
                         MemoryManager<ExpList2DHomogeneous1D>::
                             AllocateSharedPtr(m_session, HomoBasis, lhom,
-                                              m_useFFT, false, exp,
+                                              m_useFFT, false,
                                               PlanesBndCondExp);
                 }
             }
@@ -520,7 +517,14 @@ namespace Nektar
         */
         void DisContField3DHomogeneous1D::SetUpDG()
         {
-        }
+            const int nPlanes   = m_planes.num_elements();
+            const int nPtsPlane = m_planes[0]->GetNpoints();
 
+            
+
+            // Get trace map from first plane.
+            AssemblyMapDGSharedPtr traceMap = m_planes[0]->GetTraceMap();
+            
+        }
     } // end of namespace
 } //end of namespace

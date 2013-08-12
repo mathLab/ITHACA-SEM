@@ -50,25 +50,31 @@ namespace Nektar
         // Constructor for ExpList2DHomogeneous1D to act as a Explist2D field
         ExpList2DHomogeneous1D::ExpList2DHomogeneous1D(
             const LibUtilities::SessionReaderSharedPtr &pSession,
-            const LibUtilities::BasisKey &HomoBasis,
-            const NekDouble lhom,
-            const bool useFFT,
-            const bool dealiasing,
-            const boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
-            const Array<OneD, ExpListSharedPtr> &planes):
-            ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
+            const LibUtilities::BasisKey               &HomoBasis,
+            const NekDouble                             lhom,
+            const bool                                  useFFT,
+            const bool                                  dealiasing,
+            const Array<OneD, ExpListSharedPtr>        &planes)
+            : ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
-            int n, nel;
+            int i, n, cnt, nel;
 
             ASSERTL1(m_planes.num_elements() == planes.num_elements(),
                      "Size of basis number of points and number"
                      "of planes are not the same");
 
-            m_exp = exp;
+            // Set up expansion list with elements from all planes.
+            m_exp = MemoryManager<StdRegions::StdExpansionVector>
+                ::AllocateSharedPtr(
+                    planes.num_elements() * planes[0]->GetExpSize());
 
-            for(n = 0; n < planes.num_elements(); ++n)
+            for(cnt = n = 0; n < planes.num_elements(); ++n)
             {
                 m_planes[n] = planes[n];
+                for (i = 0; i < planes[n]->GetExpSize(); ++i)
+                {
+                    (*m_exp)[cnt++] = planes[n]->GetExp(i);
+                }
             }
 
             // Setup Default optimisation information.
@@ -90,12 +96,11 @@ namespace Nektar
             ExpListHomogeneous1D(pSession,HomoBasis,lhom,useFFT,dealiasing)
         {
             int n, j, nel;
-            bool False = false;
             ExpList1DSharedPtr plane_zero;
 
             // note that nzplanes can be larger than nzmodes
             m_planes[0] = plane_zero = MemoryManager<ExpList1D>::
-                AllocateSharedPtr(m_session,graph1D, False);
+                AllocateSharedPtr(m_session, graph1D, false);
 
             m_exp = MemoryManager<StdRegions::StdExpansionVector>::
                 AllocateSharedPtr();
@@ -109,7 +114,7 @@ namespace Nektar
             for (n = 1; n < m_planes.num_elements(); ++n)
             {
                 m_planes[n] = MemoryManager<ExpList1D>::
-                    AllocateSharedPtr(*plane_zero,False);
+                    AllocateSharedPtr(*plane_zero, false);
                 for(j = 0; j < nel; ++j)
                 {
                     (*m_exp).push_back((*m_exp)[j]);
@@ -132,15 +137,13 @@ namespace Nektar
             const ExpList2DHomogeneous1D &In):
             ExpListHomogeneous1D(In)
         {
-            bool False = false;
-
             ExpList1DSharedPtr zero_plane =
                 boost::dynamic_pointer_cast<ExpList1D> (In.m_planes[0]);
 
             for (int n = 0; n < m_planes.num_elements(); ++n)
             {
                 m_planes[n] = MemoryManager<ExpList1D>::
-                    AllocateSharedPtr(*zero_plane,False);
+                    AllocateSharedPtr(*zero_plane, false);
             }
 
             SetCoeffPhys();
@@ -426,13 +429,32 @@ namespace Nektar
             outfile << "      <PointData>" << endl;
         }
 
+        void ExpList2DHomogeneous1D::v_GetNormals(
+            Array<OneD, Array<OneD, NekDouble> > &normals)
+        {
+            int nPlanes   = m_planes.num_elements();
+            int nPtsPlane = m_planes[0]->GetNpoints();
+            int nDim      = GetCoordim(0) + 1;
 
+            ASSERTL1(normals.num_elements() >= nDim,
+                     "Output vector does not have sufficient dimensions to"
+                     "match coordim");
+            ASSERTL1(normals[0].num_elements() >= nPtsPlane,
+                     "Output vector does not have sufficient dimensions to"
+                     "match coordim");
+
+            // Calculate normals from plane 0.
+            m_planes[0]->GetNormals(normals);
+
+            // Copy remaining planes.
+            for (int i = 0; i < nDim; ++i)
+            {
+                for (int n = 0; n < nPlanes; ++n)
+                {
+                    Vmath::Vcopy(nPtsPlane, &normals[i][0], 1,
+                                 &normals[i][n*nPtsPlane], 1);
+                }
+            }
+        }
     } //end of namespace
 } //end of namespace
-
-
-/**
-* $Log: v $
-*
-**/
-

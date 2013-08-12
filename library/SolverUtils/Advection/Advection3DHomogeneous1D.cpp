@@ -80,10 +80,6 @@ namespace Nektar
          * @brief Initiliase Advection3DHomogeneous1D objects and store them
          * before starting the time-stepping.
          *
-         * This routine calls the virtual functions #v_SetupMetrics,
-         * #v_SetupCFunctions and #v_SetupInterpolationMatrices to
-         * initialise the objects needed by AdvectionFR.
-         *
          * @param pSession  Pointer to session reader.
          * @param pFields   Pointer to fields.
          */
@@ -115,26 +111,27 @@ namespace Nektar
             m_planeCounter = 0;
 
             // Override Riemann solver scalar and vector callbacks.
-            /*
             map<string, RSScalarFuncType>::iterator it1;
-            map<string, RSScalarFuncType>::iterator it2;
-            m_scalars = m_riemann->GetScalars();
-            m_vectors = m_riemann->GetVectors();
+            //map<string, RSScalarFuncType>::iterator it2;
+            map<string, RSScalarFuncType> scalars = m_riemann->GetScalars();
+            //m_vectors = m_riemann->GetVectors();
 
             for (it1 = scalars.begin(); it1 != scalars.end(); ++it1)
             {
-                m_riemann->AddScalar(
-                    boost::bind(&Advection3DHomogeneous1D::ModifiedRSScalar,
-                                this, it1->first));
+                boost::shared_ptr<HomoRSScalar> tmp = MemoryManager<HomoRSScalar>
+                    ::AllocateSharedPtr(it1->second, m_numPlanes);
+                m_riemann->SetScalar(it1->first, &HomoRSScalar::Exec, tmp);
             }
 
+            /*
             for (it2 = vectors.begin(); it2 != vectors.end(); ++it2)
             {
-                m_riemann->AddVector(
+                m_riemann->SetVector(it2->first,
                     boost::bind(&Advection3DHomogeneous1D::ModifiedRSVector,
                                 this, it2->first));
             }
             */
+
             m_fluxVecStore = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
                 nConvectiveFields);
 
@@ -254,16 +251,5 @@ namespace Nektar
             // Increment the plane counter.
             m_planeCounter = (m_planeCounter + 1) % m_numPlanes;
         }
-
-        /*
-        const Array<OneD, const NekDouble>
-            &Advection3DHomogeneous1D::ModifiedRSScalar(string name)
-        {
-            if (m_rsPlaneNumber == 0)
-            {
-                
-            }
-        }
-        */
     }
 }

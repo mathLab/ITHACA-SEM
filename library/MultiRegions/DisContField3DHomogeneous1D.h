@@ -183,7 +183,9 @@ namespace Nektar
 
             Array<OneD, MultiRegions::ExpListSharedPtr>  m_bndCondExpansions;
 
-            Array<OneD, MultiRegions::ExpListSharedPtr>  m_trace;
+            ExpListSharedPtr m_trace;
+
+            Array<OneD, unsigned int> m_traceBndMap;
 
             /**
              * \brief An array which contains the information about
@@ -200,9 +202,9 @@ namespace Nektar
             }
 
             virtual void v_GetBCValues(
-                Array<OneD, NekDouble> &BndVals,
+                      Array<OneD, NekDouble> &BndVals,
                 const Array<OneD, NekDouble> &TotField,
-                int BndID)
+                int                           BndID)
             {
                 GetBCValues(BndVals, TotField, BndID);
             }
@@ -222,7 +224,7 @@ namespace Nektar
             /// @todo Fix in another way considering all the planes
             virtual ExpListSharedPtr &v_GetTrace()
             {
-                return m_planes[0]->GetTrace();
+                return m_trace;
             }
 
             /// @todo Fix in another way considering all the planes
@@ -276,6 +278,11 @@ namespace Nektar
 
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions();
+
+            virtual const Array<OneD, const unsigned int> &v_GetTraceBndMap()
+            {
+                return m_traceBndMap;
+            }
         };
 
         typedef boost::shared_ptr<DisContField3DHomogeneous1D>

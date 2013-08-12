@@ -70,23 +70,23 @@ namespace Nektar
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                const LibUtilities::BasisKey &HomoBasis,
-                const NekDouble lz,
-                const bool useFFT,
-                const bool dealiasing,
-                const SpatialDomains::MeshGraphSharedPtr &graph1D);
+                const LibUtilities::BasisKey               &HomoBasis,
+                const NekDouble                             lz,
+                const bool                                  useFFT,
+                const bool                                  dealiasing,
+                const SpatialDomains::MeshGraphSharedPtr   &graph1D);
 
             MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(
                 const LibUtilities::SessionReaderSharedPtr &pSession,
-                const LibUtilities::BasisKey &HomoBasis,
-                const NekDouble lhom,
-                const bool useFFT,
-                const bool dealiasing,
-                const boost::shared_ptr<StdRegions::StdExpansionVector> &exp,
-                const Array<OneD, ExpListSharedPtr> &planes);
+                const LibUtilities::BasisKey               &HomoBasis,
+                const NekDouble                             lhom,
+                const bool                                  useFFT,
+                const bool                                  dealiasing,
+                const Array<OneD, ExpListSharedPtr>        &planes);
 
             /// Copy constructor.
-            MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(const ExpList2DHomogeneous1D &In);
+            MULTI_REGIONS_EXPORT ExpList2DHomogeneous1D(
+                const ExpList2DHomogeneous1D &In);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList2DHomogeneous1D();
@@ -107,8 +107,8 @@ namespace Nektar
 
             /// Definition of the total number of degrees of freedom and
             /// quadrature points. Sets up the storage for \a m_coeff and \a
-            ///  m_phys.
-            void             SetCoeffPhys(void);
+            /// m_phys.
+            void SetCoeffPhys(void);
 
             //  virtual functions
 
@@ -125,6 +125,9 @@ namespace Nektar
             virtual void v_WriteVtkPieceHeader(
                 std::ofstream &outfile,
                 int expansion);
+
+            virtual void v_GetNormals(
+                Array<OneD, Array<OneD, NekDouble> > &normals);
 
         private:
         };

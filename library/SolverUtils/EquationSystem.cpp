@@ -617,50 +617,13 @@ namespace Nektar
                 m_traceNormals =
                     Array<OneD, Array<OneD, NekDouble> >(m_spacedim);
                 
-                // For 3DHomogenoeus1D
-                if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
+                for (i = 0; i < m_spacedim; ++i)
                 {
-                    Array<OneD, Array<OneD, NekDouble> >
-                                            m_traceNormals_tmp(m_spacedim);
-                    
-                    int nPointsTot = m_fields[0]->GetTotPoints();
-                    int nPointsTot_plane =
-                                    m_fields[0]->GetPlane(0)->GetTotPoints();
-                    int n_planes = nPointsTot/nPointsTot_plane;
-                    
-                    for (i = 0; i < m_spacedim; ++i)
-                    {
-                        m_traceNormals_tmp[i] =
-                            Array<OneD, NekDouble> (GetTraceNpoints(), 0.0);
-                        
-                        m_traceNormals[i] = Array<OneD, NekDouble>
-                                              (GetTraceNpoints()*n_planes, 0.0);
-                    }
-                    
-                    m_fields[0]->GetTrace()->GetNormals(m_traceNormals_tmp);
-                    
-                    for (int z = 0; z < n_planes; ++z)
-                    {
-                        for (i = 0; i < m_spacedim; ++i)
-                        {
-                            Vmath::Vcopy(GetTraceNpoints(),
-                                        &m_traceNormals_tmp[i][0],
-                                        1,
-                                        &m_traceNormals[i][z*GetTraceNpoints()],
-                                        1);
-                        }
-                    }
+                    m_traceNormals[i] =
+                        Array<OneD, NekDouble> (GetTraceNpoints(), 0.0);
                 }
-                else // For general case
-                {
-                    for (i = 0; i < m_spacedim; ++i)
-                    {
-                        m_traceNormals[i] =
-                            Array<OneD, NekDouble> (GetTraceNpoints(), 0.0);
-                    }
 
-                    m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
-                }
+                m_fields[0]->GetTrace()->GetNormals(m_traceNormals);
             }
 
             // Set Default Parameter

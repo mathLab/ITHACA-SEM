@@ -231,18 +231,9 @@ namespace Nektar
         int                                   cnt,
         Array<OneD, Array<OneD, NekDouble> > &physarray)
     {
-        int i, nPlanes;
+        int i;
         int nTracePts = GetTraceTotPoints();
         int nVariables = physarray.num_elements();
-
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-        {
-            int nSolutionPts = m_fields[0]->GetTotPoints();
-            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            nPlanes = nSolutionPts/nSolutionPtsPlane;
-            nTracePts = nTracePts*nPlanes;
-        }
 
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);
@@ -265,31 +256,9 @@ namespace Nektar
                 GetExp(e)->GetTotPoints();
             id1 = m_fields[0]->GetBndCondExpansions()[bcRegion]->
                 GetPhys_Offset(e);
-
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 &&  m_HomogeneousType == eHomogeneous1D)
-            {
-                int ePlane;
-                int cntPlane = cnt/nPlanes;
-                int eMaxPlane = eMax/nPlanes;
-                int nTracePts_plane = GetTraceTotPoints();
-
-                int planeID = floor((e + 0.5 )/ eMaxPlane );
-                ePlane = e - eMaxPlane*planeID;
-
-                id2Plane = m_fields[0]->GetTrace()->GetPhys_Offset(
-                                m_fields[0]->GetTraceMap()->
-                                    GetBndCondCoeffsToGlobalCoeffsMap(
-                                        cntPlane + ePlane));
-                id2 = id2Plane + planeID*nTracePts_plane;
-
-            }
-            else // For general case
-            {
-                id2  = m_fields[0]->GetTrace()->GetPhys_Offset(
-                            m_fields[0]->GetTraceMap()->
-                                GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
-            }
+            id2 = m_fields[0]->GetTrace()->GetPhys_Offset(
+                m_fields[0]->GetTraceMap()
+                    ->GetBndCondCoeffsToGlobalCoeffsMap(cnt+e));
 
             // For 2D/3D, define: v* = v - 2(v.n)n
             Array<OneD, NekDouble> tmp(nBCEdgePts, 0.0);
@@ -347,7 +316,6 @@ namespace Nektar
             nPlanes = nSolutionPts/nSolutionPtsPlane;
             nTracePts = nTracePts * nPlanes;
         }
-
 
         // Get physical values of the forward trace
         Array<OneD, Array<OneD, NekDouble> > Fwd(nVariables);

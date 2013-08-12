@@ -57,20 +57,22 @@ namespace Nektar
 
         DisContField2D::DisContField2D(
             const DisContField2D &In, 
-            const bool            DeclareCoeffPhysArrays) :
-            ExpList2D            (In,DeclareCoeffPhysArrays),
-            m_bndCondExpansions  (In.m_bndCondExpansions),
-            m_bndConditions      (In.m_bndConditions),
-            m_globalBndMat       (In.m_globalBndMat),
-            m_trace              (In.m_trace),
-            m_traceMap           (In.m_traceMap),
-            m_boundaryEdges      (In.m_boundaryEdges),
-            m_periodicVerts      (In.m_periodicVerts),
-            m_periodicEdges      (In.m_periodicEdges),
-            m_periodicFwdCopy    (In.m_periodicFwdCopy),
-            m_periodicBwdCopy    (In.m_periodicBwdCopy),
-            m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
+            const bool            DeclareCoeffPhysArrays)
+            : ExpList2D            (In,DeclareCoeffPhysArrays),
+              m_bndCondExpansions  (In.m_bndCondExpansions),
+              m_bndConditions      (In.m_bndConditions),
+              m_globalBndMat       (In.m_globalBndMat),
+              m_traceMap           (In.m_traceMap),
+              m_boundaryEdges      (In.m_boundaryEdges),
+              m_periodicVerts      (In.m_periodicVerts),
+              m_periodicEdges      (In.m_periodicEdges),
+              m_periodicFwdCopy    (In.m_periodicFwdCopy),
+              m_periodicBwdCopy    (In.m_periodicBwdCopy),
+              m_leftAdjacentEdges  (In.m_leftAdjacentEdges)
         {
+            m_trace = MemoryManager<ExpList1D>::AllocateSharedPtr(
+                *boost::dynamic_pointer_cast<ExpList1D>(In.m_trace),
+                DeclareCoeffPhysArrays);
         }
 
         DisContField2D::DisContField2D(

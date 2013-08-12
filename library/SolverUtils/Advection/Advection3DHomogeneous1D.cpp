@@ -114,6 +114,27 @@ namespace Nektar
                 &Advection3DHomogeneous1D::ModifiedFluxVector, this);
             m_planeCounter = 0;
 
+            // Override Riemann solver scalar and vector callbacks.
+            /*
+            map<string, RSScalarFuncType>::iterator it1;
+            map<string, RSScalarFuncType>::iterator it2;
+            m_scalars = m_riemann->GetScalars();
+            m_vectors = m_riemann->GetVectors();
+
+            for (it1 = scalars.begin(); it1 != scalars.end(); ++it1)
+            {
+                m_riemann->AddScalar(
+                    boost::bind(&Advection3DHomogeneous1D::ModifiedRSScalar,
+                                this, it1->first));
+            }
+
+            for (it2 = vectors.begin(); it2 != vectors.end(); ++it2)
+            {
+                m_riemann->AddVector(
+                    boost::bind(&Advection3DHomogeneous1D::ModifiedRSVector,
+                                this, it2->first));
+            }
+            */
             m_fluxVecStore = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
                 nConvectiveFields);
 
@@ -233,5 +254,16 @@ namespace Nektar
             // Increment the plane counter.
             m_planeCounter = (m_planeCounter + 1) % m_numPlanes;
         }
+
+        /*
+        const Array<OneD, const NekDouble>
+            &Advection3DHomogeneous1D::ModifiedRSScalar(string name)
+        {
+            if (m_rsPlaneNumber == 0)
+            {
+                
+            }
+        }
+        */
     }
 }

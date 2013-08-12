@@ -57,29 +57,28 @@ namespace Nektar
         protected:
             Advection3DHomogeneous1D(std::string advType);
 
-            std::string                     m_advType;
-            SolverUtils::AdvectionSharedPtr m_planeAdv;
-            int                             m_numPoints;
-            int                             m_numPointsPlane;
-            int                             m_numPlanes;
-            int                             m_planeCounter;
-
-            Array<OneD, unsigned int>                           m_planes;
-            Array<OneD, unsigned int>                           m_planePos;
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > >  m_fluxVecStore;
-            Array<OneD, Array<OneD, NekDouble> >                m_inarrayPlane;
-            Array<OneD, Array<OneD, NekDouble> >                m_outarrayPlane;
-            Array<OneD, MultiRegions::ExpListSharedPtr>         m_fieldsPlane;
-            Array<OneD, Array<OneD, NekDouble> >                m_advVelPlane;
+            std::string                                        m_advType;
+            SolverUtils::AdvectionSharedPtr                    m_planeAdv;
+            int                                                m_numPoints;
+            int                                                m_numPointsPlane;
+            int                                                m_numPlanes;
+            int                                                m_planeCounter;
+            Array<OneD, unsigned int>                          m_planes;
+            Array<OneD, unsigned int>                          m_planePos;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fluxVecStore;
+            Array<OneD, Array<OneD, NekDouble> >               m_inarrayPlane;
+            Array<OneD, Array<OneD, NekDouble> >               m_outarrayPlane;
+            Array<OneD, MultiRegions::ExpListSharedPtr>        m_fieldsPlane;
+            Array<OneD, Array<OneD, NekDouble> >               m_advVelPlane;
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
-                                                                m_fluxVecPlane;
+                                                               m_fluxVecPlane;
 
             virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr              pSession,
-                Array<OneD, MultiRegions::ExpListSharedPtr>       pFields);
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
 
             virtual void v_Advect(
-                const int nConvectiveFields,
+                const int                                          nConvField,
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &advVel,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
@@ -89,6 +88,12 @@ namespace Nektar
             void ModifiedFluxVector(
                 const Array<OneD, Array<OneD, NekDouble> >         &physfield,
                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+            /*
+            const Array<OneD, const NekDouble>               &ModifiedRSScalar(
+                string name);
+            const Array<OneD, const Array<OneD, NekDouble> > &ModifiedRSVector(
+                string name);
+            */
         };
     }
 }

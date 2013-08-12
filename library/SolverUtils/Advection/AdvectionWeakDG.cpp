@@ -59,7 +59,7 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr        pSession,
             Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
-
+            Advection::v_InitObject(pSession, pFields);
         }
 
         /**
@@ -80,8 +80,7 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            int nVel            = advVel.num_elements();
-            int nExpDim         = fields[0]->GetCoordim(0);
+            int nDim            = fields[0]->GetCoordim(0);
             int nPointsTot      = fields[0]->GetTotPoints();
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
@@ -91,11 +90,12 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxvector(
                 nConvectiveFields);
 
+            // Allocate storage for flux vector F(u).
             for (i = 0; i < nConvectiveFields; ++i)
             {
                 fluxvector[i] =
-                    Array<OneD, Array<OneD, NekDouble> >(nVel);
-                for (j = 0; j < nVel; ++j)
+                    Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
+                for (j = 0; j < m_spaceDim; ++j)
                 {
                     fluxvector[i][j] = Array<OneD, NekDouble>(nPointsTot);
                 }
@@ -111,7 +111,7 @@ namespace Nektar
             {
                 tmp[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
 
-                for (j = 0; j < nExpDim; ++j)
+                for (j = 0; j < nDim; ++j)
                 {
                     fields[i]->IProductWRTDerivBase(j, fluxvector[i][j],
                                                        outarray[i]);

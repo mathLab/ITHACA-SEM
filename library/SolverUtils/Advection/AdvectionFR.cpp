@@ -87,8 +87,9 @@ namespace Nektar
                 LibUtilities::SessionReaderSharedPtr        pSession,
                 Array<OneD, MultiRegions::ExpListSharedPtr> pFields)
         {
-            v_SetupMetrics(pSession, pFields);
-            v_SetupCFunctions(pSession, pFields);
+            Advection::v_InitObject(pSession, pFields);
+            v_SetupMetrics         (pSession, pFields);
+            v_SetupCFunctions      (pSession, pFields);
         }
         
         /**
@@ -815,7 +816,7 @@ namespace Nektar
                 fluxvector[i] =
                     Array<OneD, Array<OneD, NekDouble> >(m_spaceDim);
 
-                for (j = 0; j < nVel; ++j)
+                for (j = 0; j < m_spaceDim; ++j)
                 {
                     fluxvector[i][j] = Array<OneD, NekDouble>(nSolutionPts);
                 }

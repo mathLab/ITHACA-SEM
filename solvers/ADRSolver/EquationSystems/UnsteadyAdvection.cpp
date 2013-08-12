@@ -115,19 +115,17 @@ namespace Nektar
                 {
                     m_advection->SetFluxVector(
                         &UnsteadyAdvection::GetFluxVectorDeAlias, this);
-
                 }
                 else 
                 {
                     m_advection->SetFluxVector(
                         &UnsteadyAdvection::GetFluxVector, this);
-
                 }
                 m_session->LoadSolverInfo(
                     "UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::
                     GetRiemannSolverFactory().CreateInstance(riemName);
-                m_riemannSolver->AddScalar(
+                m_riemannSolver->SetScalar(
                     "Vn", &UnsteadyAdvection::GetNormalVelocity, this);
                 
                 m_advection->SetRiemannSolver(m_riemannSolver);

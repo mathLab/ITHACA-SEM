@@ -88,7 +88,7 @@ namespace Nektar
                 m_session->LoadSolverInfo("UpwindType", riemName, "Upwind");
                 m_riemannSolver = SolverUtils::GetRiemannSolverFactory().
                     CreateInstance(riemName);
-                m_riemannSolver->AddScalar("Vn", &UnsteadyAdvectionDiffusion::
+                m_riemannSolver->SetScalar("Vn", &UnsteadyAdvectionDiffusion::
                                            GetNormalVelocity, this);
                 m_advection->SetRiemannSolver(m_riemannSolver);
                 m_advection->InitObject      (m_session, m_fields);
@@ -195,16 +195,8 @@ namespace Nektar
                              m_traceVn, 1,
                              m_traceVn, 1);
             }
-            
-            if(m_planeNumber == n_planes - 1)
-            {
-                m_planeNumber = 0;
-            }
-            else
-            {
-                m_planeNumber = m_planeNumber + 1;
-            }
-            
+
+            m_planeNumber = (m_planeNumber + 1) % n_planes;
         }
         else  // For general case
         {
@@ -224,7 +216,8 @@ namespace Nektar
     }
 
     
-    /* @brief Compute the right-hand side for the unsteady linear advection 
+    /**
+     * @brief Compute the right-hand side for the unsteady linear advection 
      * diffusion problem.
      * 
      * @param inarray    Given fields.
@@ -386,46 +379,15 @@ namespace Nektar
     {
         ASSERTL1(flux[0].num_elements() == m_velocity.num_elements(),
                  "Dimension of flux array and velocity array do not match");
-        
-        int i , j;
-        int nq = physfield[0].num_elements();
-        
-        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+
+        const int nq = m_fields[0]->GetNpoints();
+
+        for (int i = 0; i < flux.num_elements(); ++i)
         {
-            Array<OneD, Array<OneD, NekDouble> >
-            advVel_plane(m_velocity.num_elements());
-            
-            int nPointsTot = m_fields[0]->GetTotPoints();
-            int nPointsTot_plane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int n_planes = nPointsTot/nPointsTot_plane;
-            
-            for (int i = 0; i < m_velocity.num_elements(); ++i)
+            for (int j = 0; j < flux[0].num_elements(); ++j)
             {
-                advVel_plane[i] = Array<OneD, NekDouble>(nPointsTot_plane, 0.0);
-                
-                Vmath::Vcopy(nPointsTot_plane,
-                             &m_velocity[i][m_planeNumber*nPointsTot_plane], 1,
-                             &advVel_plane[i][0], 1);
-            }
-            
-            for (int i = 0; i < flux.num_elements(); ++i)
-            {
-                for (j = 0; j < flux[0].num_elements(); ++j)
-                {
-                    Vmath::Vmul(nq, physfield[i], 1, advVel_plane[j], 1,
-                                flux[i][j], 1);
-                }
-            }
-        }
-        else
-        {
-            for (i = 0; i < flux.num_elements(); ++i)
-            {
-                for (j = 0; j < flux[0].num_elements(); ++j)
-                {
-                    Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
-                                flux[i][j], 1);
-                }
+                Vmath::Vmul(nq, physfield[i], 1, m_velocity[j], 1,
+                            flux[i][j], 1);
             }
         }
     }

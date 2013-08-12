@@ -179,24 +179,24 @@ namespace Nektar
                                                 .CreateInstance("UpwindLDG");
 
                 // Setting up parameters for advection operator Riemann solver 
-                m_riemannSolver->AddParam (
+                m_riemannSolver->SetParam (
                                     "gamma",  
                                     &CompressibleFlowSystem::GetGamma,   this);
-                m_riemannSolver->AddScalar(
+                m_riemannSolver->SetScalar(
                                     "velLoc", 
                                     &CompressibleFlowSystem::GetVelLoc,  this);
-                m_riemannSolver->AddVector(
+                m_riemannSolver->SetVector(
                                     "N",
                                     &CompressibleFlowSystem::GetNormals, this);
                 
                 // Setting up parameters for diffusion operator Riemann solver
-                m_riemannSolverLDG->AddParam (
+                m_riemannSolverLDG->SetParam (
                                     "gamma",  
                                     &CompressibleFlowSystem::GetGamma,   this);
-                m_riemannSolverLDG->AddScalar(
+                m_riemannSolverLDG->SetScalar(
                                     "velLoc", 
                                     &CompressibleFlowSystem::GetVelLoc,  this);
-                m_riemannSolverLDG->AddVector(
+                m_riemannSolverLDG->SetVector(
                                     "N",
                                     &CompressibleFlowSystem::GetNormals, this);
                 

@@ -20,20 +20,22 @@ namespace Nektar {
         typedef NekFactory<
                 std::string, TimeIntegrationWrapper
             > TimeIntegrationWrapperFactory;
-        TimeIntegrationWrapperFactory& GetTimeIntegrationWrapperFactory();
+        LIB_UTILITIES_EXPORT TimeIntegrationWrapperFactory&
+                                        GetTimeIntegrationWrapperFactory();
 
         typedef boost::shared_ptr<TimeIntegrationWrapper> TimeIntegrationWrapperSharedPtr;
 
         class TimeIntegrationWrapper
         {
             public:
-                virtual ~TimeIntegrationWrapper() {}
+                LIB_UTILITIES_EXPORT virtual ~TimeIntegrationWrapper() {}
 
-                inline void InitObject()
+                LIB_UTILITIES_EXPORT inline void InitObject()
                 {
                     v_InitObject();
                 }
 
+                LIB_UTILITIES_EXPORT
                 TimeIntegrationSolutionSharedPtr InitializeScheme(
                         const NekDouble                      timestep,
                               TimeIntegrationScheme::ConstDoubleArray &y_0,
@@ -43,6 +45,7 @@ namespace Nektar {
                     return m_integrationScheme[m_intSteps-1]->InitializeScheme(timestep, y_0, time, op);
                 }
 
+                LIB_UTILITIES_EXPORT
                 TimeIntegrationScheme::ConstDoubleArray&
                 TimeIntegrate(
                         const int                               timestep,
@@ -53,11 +56,13 @@ namespace Nektar {
                     return m_integrationScheme[min(timestep,m_intSteps-1)]->TimeIntegrate(delta_t, solvector, op);
                 }
 
+                LIB_UTILITIES_EXPORT
                 TimeIntegrationMethod GetIntegrationMethod()
                 {
                     return m_method;
                 }
 
+                LIB_UTILITIES_EXPORT
                 unsigned int GetIntegrationSteps()
                 {
                     return m_intSteps;

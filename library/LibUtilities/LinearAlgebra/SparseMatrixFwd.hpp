@@ -68,8 +68,6 @@ namespace Nektar
     typedef Array<OneD, BCOMatType>             BCOMatVector;
 
 
-    template<typename DataType> class StorageNistCsr;
-    template<typename DataType> class StorageNistBsr;
     template<typename DataType> class StorageSmvBsr;
 
     template<typename SparseStorageType> class NekSparseMatrix;

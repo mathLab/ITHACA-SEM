@@ -38,6 +38,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXOrder1::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eIMEXOrder1;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXOrder1);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -52,6 +53,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXOrder2::v_InitObject()
     {
         m_intSteps = 2;
+        m_method = eIMEXOrder2;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXOrder1);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -68,6 +70,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXOrder3::v_InitObject()
     {
         m_intSteps = 3;
+        m_method = eIMEXOrder3;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_3_4_3);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -86,6 +89,7 @@ namespace LibUtilities {
     void TimeIntegrationForwardEuler::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eForwardEuler;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eForwardEuler);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -99,6 +103,7 @@ namespace LibUtilities {
     void TimeIntegrationBackwardEuler::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eBackwardEuler;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eBackwardEuler);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -113,6 +118,7 @@ namespace LibUtilities {
     void TimeIntegrationBDFImplicitOrder1::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eBDFImplicitOrder1;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eBDFImplicitOrder1);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -127,6 +133,7 @@ namespace LibUtilities {
     void TimeIntegrationBDFImplicitOrder2::v_InitObject()
     {
         m_intSteps = 2;
+        m_method = eBDFImplicitOrder2;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eBackwardEuler);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -143,6 +150,7 @@ namespace LibUtilities {
     void TimeIntegrationRungeKutta2_ImprovedEuler::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eRungeKutta2_ImprovedEuler;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eRungeKutta2_ImprovedEuler);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -157,6 +165,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXdirk_1_1_1::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eIMEXdirk_1_1_1;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_1_1_1);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -171,6 +180,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXdirk_1_2_1::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eIMEXdirk_1_2_1;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_1_2_1);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -185,6 +195,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXdirk_1_2_2::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eIMEXdirk_1_2_2;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_1_2_2);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -199,6 +210,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXdirk_4_4_3::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eIMEXdirk_4_4_3;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_4_4_3);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -213,6 +225,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXdirk_2_2_2::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eIMEXdirk_2_2_2;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_2_2_2);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -227,6 +240,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXdirk_2_3_3::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eIMEXdirk_2_3_3;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_2_3_3);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -241,6 +255,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXdirk_2_3_2::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eIMEXdirk_2_3_2;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_2_3_2);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -255,6 +270,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXdirk_3_4_3::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eIMEXdirk_3_4_3;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_3_4_3);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -269,6 +285,7 @@ namespace LibUtilities {
     void TimeIntegrationDIRKOrder2::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eDIRKOrder2;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eDIRKOrder2);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -282,6 +299,7 @@ namespace LibUtilities {
     void TimeIntegrationDIRKOrder3::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eDIRKOrder3;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eDIRKOrder3);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -295,6 +313,7 @@ namespace LibUtilities {
     void TimeIntegrationClassicalRungeKutta4::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eClassicalRungeKutta4;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eClassicalRungeKutta4);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -308,6 +327,7 @@ namespace LibUtilities {
     void TimeIntegrationMidpoint::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eMidpoint;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eMidpoint);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -321,6 +341,7 @@ namespace LibUtilities {
     void TimeIntegrationRungeKutta2_ModifiedEuler::v_InitObject()
     {
         m_intSteps = 1;
+        m_method = eRungeKutta2_ModifiedEuler;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eRungeKutta2_ModifiedEuler);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -334,6 +355,7 @@ namespace LibUtilities {
     void TimeIntegrationAdamsBashforthOrder2::v_InitObject()
     {
         m_intSteps = 2;
+        m_method = eAdamsBashforthOrder2;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eForwardEuler);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -349,6 +371,7 @@ namespace LibUtilities {
     void TimeIntegrationAdamsBashforthOrder3::v_InitObject()
     {
         m_intSteps = 2;
+        m_method = eAdamsBashforthOrder3;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eForwardEuler);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -364,6 +387,7 @@ namespace LibUtilities {
     void TimeIntegrationAdamsMoultonOrder2::v_InitObject()
     {
         m_intSteps = 2;
+        m_method = eAdamsMoultonOrder2;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXOrder1);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -379,6 +403,7 @@ namespace LibUtilities {
     void TimeIntegrationIMEXGear::v_InitObject()
     {
         m_intSteps = 2;
+        m_method = eIMEXGear;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_2_2_2);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -394,6 +419,7 @@ namespace LibUtilities {
     void TimeIntegrationCNAB::v_InitObject()
     {
         m_intSteps = 3;
+        m_method = eCNAB;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_3_4_3);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];
@@ -411,6 +437,7 @@ namespace LibUtilities {
     void TimeIntegrationMCNAB::v_InitObject()
     {
         m_intSteps = 3;
+        m_method = eMCNAB;
         m_integrationScheme = std::vector<TimeIntegrationSchemeSharedPtr> (m_intSteps);
         TimeIntegrationSchemeKey       IntKey0(eIMEXdirk_3_4_3);
         m_integrationScheme[0] = TimeIntegrationSchemeManager()[IntKey0];

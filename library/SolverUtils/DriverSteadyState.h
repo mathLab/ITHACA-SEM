@@ -74,6 +74,16 @@ namespace Nektar
                               const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
                               Array<OneD, Array<OneD, NekDouble> > &q1,
                               Array<OneD, Array<OneD, NekDouble> > &qBar1);
+			
+			void BDF3_for_SFD(const int i,
+                              const Array<OneD, const Array<OneD, NekDouble> > &qMinus2,
+                              const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus2,
+							  const Array<OneD, const Array<OneD, NekDouble> > &qMinus1,
+                              const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
+                              const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                              const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                              Array<OneD, Array<OneD, NekDouble> > &q1,
+                              Array<OneD, Array<OneD, NekDouble> > &qBar1);
             
             
             void CalcAverage(const int i,
@@ -121,6 +131,22 @@ namespace Nektar
             NekDouble a24;
             NekDouble c1;
             NekDouble c2;
+			
+			//For implementation BDF2_for_SFD
+            NekDouble b11;
+            NekDouble b12;
+            NekDouble b13;
+            NekDouble b14;
+			NekDouble b15;
+            NekDouble b16;
+            NekDouble b21;
+            NekDouble b22;
+            NekDouble b23;
+            NekDouble b24;
+			NekDouble b25;
+            NekDouble b26;
+            //NekDouble c1;
+            //NekDouble c2;
             
             int m_n;
             int m_Check;

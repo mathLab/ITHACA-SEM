@@ -89,6 +89,10 @@ namespace Nektar
             //For BDF2 implementation
             Array<OneD, Array<OneD, NekDouble> > qMinus1(NumElmVelocity);
             Array<OneD, Array<OneD, NekDouble> > qBarMinus1(NumElmVelocity);
+			
+			//For BDF3 implementation
+            Array<OneD, Array<OneD, NekDouble> > qMinus2(NumElmVelocity);
+            Array<OneD, Array<OneD, NekDouble> > qBarMinus2(NumElmVelocity);
             
             Array<OneD, Array<OneD, NekDouble> > qMean(NumElmVelocity);
             FirstIterOfAverage = true;
@@ -134,6 +138,24 @@ namespace Nektar
             a22 = 4.0/c2;
             a23 = - 2.0/(m_Delta*c1*c2);
             a24 = - 1.0/c2;
+			
+			//For implementation BDF3
+            c1 = 11.0 + 6.0*m_X;
+            c2 = 11.0 + 6.0/m_Delta - 36.0*m_X/(m_Delta*c1);
+            
+            b11 = 18.0/c1 + 648.0*m_X/(m_Delta*c1*c1*c2);
+            b12 = 108.0*m_X/(c1*c2);
+            b13 = - (9.0/c1 + 324.0*m_X/(m_Delta*c1*c1*c2));
+            b14 = - 54.0*m_X/(c1*c2);
+			b15 = 2.0/c1 + 72.0*m_X/(m_Delta*c1*c1*c2);
+            b16 = 12.0*m_X/(c1*c2);
+            b21 = 108.0/(m_Delta*c1*c2);
+            b22 = 18.0/c2;
+            b23 = - 54.0/(m_Delta*c1*c2);
+            b24 = - 9.0/c2;
+			b25 = 12.0/(m_Delta*c1*c2);
+            b26 = 2.0/c2;
+
             
             
             
@@ -166,6 +188,10 @@ namespace Nektar
                 //For BDF2 implentation
                 qMinus1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
                 qBarMinus1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
+				
+				//For BDF3 implentation
+                qMinus2[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
+                qBarMinus2[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
                 
                 
                 qDiff[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
@@ -193,12 +219,22 @@ namespace Nektar
                         //cout << "We do Normal implicit SFD" << endl;
                         EvaluateNextSFDVariables(i, q0, qBar0, q1, qBar1);
                     }
-                    else
+                    else if (m_n == 1) //FOR BDF3 implementation
                     {
                         //cout << "We do BDF2_for_SFD!!!" << endl;
                         BDF2_for_SFD(i, qMinus1, qBarMinus1, q0, qBar0, q1, qBar1);
                     }
+					else
+					{
+						BDF3_for_SFD(i, qMinus2, qBarMinus2, qMinus1, qBarMinus1, q0, qBar0, q1, qBar1);
+					}
                     
+					if (m_n > 0)
+					{
+						qMinus2[i] = qMinus1[i];
+						qBarMinus2[i] = qBarMinus2[i];
+					}
+					
                     qMinus1[i] = q0[i];
                     qBarMinus1[i] = qBar0[i];
                     
@@ -306,6 +342,35 @@ namespace Nektar
             
         }
         
+		void DriverSteadyState::BDF3_for_SFD(const int i,
+											 const Array<OneD, const Array<OneD, NekDouble> > &qMinus2,
+                                             const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus2,
+                                             const Array<OneD, const Array<OneD, NekDouble> > &qMinus1,
+                                             const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
+                                             const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                             const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                                             Array<OneD, Array<OneD, NekDouble> > &q1,
+                                             Array<OneD, Array<OneD, NekDouble> > &qBar1)
+        {
+            q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
+            qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
+            
+            //BDF3
+            Vmath::Svtvp(q1[i].num_elements(), b11, q0[i], 1, q1[i], 1, q1[i], 1 );
+            Vmath::Svtvp(q1[i].num_elements(), b12, qBar0[i], 1, q1[i], 1, q1[i], 1 );
+            Vmath::Svtvp(q1[i].num_elements(), b13, qMinus1[i], 1, q1[i], 1, q1[i], 1 );
+            Vmath::Svtvp(q1[i].num_elements(), b14, qBarMinus1[i], 1, q1[i], 1, q1[i], 1 );
+			Vmath::Svtvp(q1[i].num_elements(), b15, qMinus2[i], 1, q1[i], 1, q1[i], 1 );
+            Vmath::Svtvp(q1[i].num_elements(), b16, qBarMinus2[i], 1, q1[i], 1, q1[i], 1 );
+            
+            Vmath::Svtvp(qBar1[i].num_elements(), b21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );
+            Vmath::Svtvp(qBar1[i].num_elements(), b22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 );
+            Vmath::Svtvp(qBar1[i].num_elements(), b23, qMinus1[i], 1, qBar1[i], 1, qBar1[i], 1 );
+            Vmath::Svtvp(qBar1[i].num_elements(), b24, qBarMinus1[i], 1, qBar1[i], 1, qBar1[i], 1 );
+			Vmath::Svtvp(qBar1[i].num_elements(), b25, qMinus2[i], 1, qBar1[i], 1, qBar1[i], 1 );
+            Vmath::Svtvp(qBar1[i].num_elements(), b26, qBarMinus2[i], 1, qBar1[i], 1, qBar1[i], 1 );
+            
+        }
         
         void DriverSteadyState::EvaluateNextSFDVariables(const int i,
                                                          const Array<OneD, const Array<OneD, NekDouble> > &q0,

@@ -401,7 +401,7 @@ namespace Nektar
 
                     m->element[m->expDim].push_back(elmt);
                 }
-#if 0
+
                 // Now check to see if this one of the quadrilateral faces is
                 // associated with a boundary condition. If it is, we split the
                 // face into two triangles and mark the existing face for
@@ -474,7 +474,6 @@ namespace Nektar
                         }
                     }
                 }
-#endif
             }
 
             // Remove 2D elements.

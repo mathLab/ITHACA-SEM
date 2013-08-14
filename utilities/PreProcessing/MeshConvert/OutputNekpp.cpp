@@ -258,7 +258,7 @@ namespace Nektar
                     curved->LinkEndChild(e);
                 }
             }
-#if 0 
+
             // 2D elements in 3-space, output face curvature information
             if (m->expDim == 2 && m->spaceDim == 3)
             {
@@ -301,7 +301,7 @@ namespace Nektar
                     }
                 }
             }
-#endif
+
             pRoot->LinkEndChild( curved );
         }
 

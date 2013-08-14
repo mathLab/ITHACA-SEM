@@ -37,12 +37,13 @@
 using namespace std;
 
 #include "MeshElements.h"
+#include "InputNek.h"
 #include "ProcessTetSplit.h"
 
 #include <StdRegions/StdNodalPrismExp.h>
 #include <LocalRegions/PrismExp.h>
-#include <LocalRegions/NodalTriExp.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
+#include <LibUtilities/Foundations/ManagerAccess.h>
 
 #include <boost/tuple/tuple.hpp>
 #include <boost/unordered_map.hpp>
@@ -163,6 +164,20 @@ namespace Nektar
             static int tetFaceNodes[4][3] = {
                 {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
 
+            static NodeSharedPtr stdPrismNodes[6] = {
+                NodeSharedPtr(new Node(0,-1,-1,-1)),
+                NodeSharedPtr(new Node(1, 1,-1,-1)),
+                NodeSharedPtr(new Node(2, 1, 1,-1)),
+                NodeSharedPtr(new Node(3,-1, 1,-1)),
+                NodeSharedPtr(new Node(4,-1,-1, 1)),
+                NodeSharedPtr(new Node(5,-1, 1, 1))
+            };
+
+            // Generate equally spaced nodal points on triangle.
+            Array<OneD, NekDouble> rp(nq*(nq+1)/2), sp(nq*(nq+1)/2);
+            LibUtilities::PointsKey elec(nq, LibUtilities::eNodalTriEvenlySpaced);
+            LibUtilities::PointsManager()[elec]->GetPoints(rp,sp);
+
             // Make a copy of the element list.
             vector<ElementSharedPtr> el = m->element[m->expDim];
             m->element[m->expDim].clear();
@@ -271,10 +286,18 @@ namespace Nektar
                     nodalPrism->ModalToNodal(nodalPrism->GetCoeffs(), xn[j]);
                 }
 
+                // Store map of nodes.
+                map<int, int> prismVerts;
+                for (int j = 0; j < 6; ++j)
+                {
+                    prismVerts[el[i]->GetVertex(j)->id] = j;
+                }
+
                 for (int j = 0; j < 3; ++j)
                 {
                     vector<NodeSharedPtr> tetNodes(4);
 
+                    // Extract vertices for tetrahedron.
                     for (int k = 0; k < 4; ++k)
                     {
                         tetNodes[k] = nodeList[indir[minId][prismTet[j+offset][k]]];
@@ -286,7 +309,7 @@ namespace Nektar
                         // Determine prismatic nodes which correspond with this
                         // edge. Apply prism map to this to get Nektar++
                         // ordering (this works since as a permutation,
-                        // prismMap^{-1} = prismMap).
+                        // prismMap^2 = id).
                         int n1 = mapPrism[
                             indir[minId][prismTet[j+offset][tetEdges[k][0]]]];
                         int n2 = mapPrism[
@@ -325,12 +348,56 @@ namespace Nektar
                         }
                     }
 
-                    // Create new tetrahedron with edge curvature. TODO: face
-                    // nodes.
+                    // Create new tetrahedron with edge curvature.
                     vector<int> tags = el[i]->GetTagList();
                     ElmtConfig conf(eTetrahedron, nq-1, false, false);
                     ElementSharedPtr elmt = GetElementFactory().
                         CreateInstance(eTetrahedron,conf,tetNodes,tags);
+
+                    // Extract interior face data.
+                    for (int k = 0; k < 4; ++k)
+                    {
+                        // First determine which nodes of prism are being used
+                        // for this face.
+                        FaceSharedPtr face = elmt->GetFace(k);
+                        vector<NodeSharedPtr> triNodes(3);
+
+                        for (int l = 0; l < 3; ++l)
+                        {
+                            NodeSharedPtr v = face->vertexList[l];
+                            triNodes[l] =
+                                stdPrismNodes[prismVerts[v->id]];
+                        }
+
+                        // Create a triangle with the standard nodes of the
+                        // prism.
+                        vector<int> tags;
+                        ElmtConfig conf(eTriangle, 1, false, false);
+                        ElementSharedPtr elmt = GetElementFactory().
+                            CreateInstance(eTriangle,conf,triNodes,tags);
+                        SpatialDomains::GeometrySharedPtr triGeom =
+                            elmt->GetGeom(3);
+                        triGeom->FillGeom();
+                        o = 3 + 3*ne;
+                        face->curveType = LibUtilities::eNodalTriEvenlySpaced;
+
+                        for (int l = 0; l < nft; ++l)
+                        {
+                            Array<OneD, NekDouble> tmp1(2), tmp2(3);
+                            tmp1[0] = rp[o + l];
+                            tmp1[1] = sp[o + l];
+                            tmp2[0] = triGeom->GetCoord(0, tmp1);
+                            tmp2[1] = triGeom->GetCoord(1, tmp1);
+                            tmp2[2] = triGeom->GetCoord(2, tmp1);
+
+                            // PhysEvaluate on prism geometry.
+                            NekDouble xc = geomLayer->GetCoord(0, tmp2);
+                            NekDouble yc = geomLayer->GetCoord(1, tmp2);
+                            NekDouble zc = geomLayer->GetCoord(2, tmp2);
+                            face->faceNodes.push_back(
+                                NodeSharedPtr(new Node(nodeId++, xc, yc, zc)));
+                        }
+                    }
 
                     m->element[m->expDim].push_back(elmt);
                 }

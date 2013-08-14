@@ -598,7 +598,10 @@ namespace Nektar
         }
     }
 
-
+    void IncNavierStokes::AddForcing(const SolverUtils::ForcingSharedPtr& pForce)
+    {
+        m_forcing.push_back(pForce);
+    }
 
     void IncNavierStokes::v_GetFluxVector(const int i, 
                                           Array<OneD, Array<OneD, NekDouble> > &physfield,

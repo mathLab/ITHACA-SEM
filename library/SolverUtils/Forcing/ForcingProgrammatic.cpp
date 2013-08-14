@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File: ForcingBody.cpp
+// File: ForcingProgrammatic.cpp
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -29,29 +29,34 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 //
-// Description: Body forcing
+// Description: Programmatic forcing
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <SolverUtils/Forcing/ForcingBody.h>
+#include <SolverUtils/Forcing/ForcingProgrammatic.h>
 
 namespace Nektar
 {
 namespace SolverUtils
 {
 
-    std::string ForcingBody::className = GetForcingFactory().
-                                RegisterCreatorFunction("Body",
-                                                        ForcingBody::create,
-                                                        "Body Forcing");
+    std::string ForcingProgrammatic::className = GetForcingFactory().
+                                RegisterCreatorFunction("Programamtic",
+                                                        ForcingProgrammatic::create,
+                                                        "Programmatic Forcing");
 
-    ForcingBody::ForcingBody(
+    ForcingProgrammatic::ForcingProgrammatic(
             const LibUtilities::SessionReaderSharedPtr& pSession)
         : Forcing(pSession)
     {
     }
 
-    void ForcingBody::v_InitObject(
+    Array<OneD, Array<OneD, NekDouble> >& ForcingProgrammatic::UpdateForces()
+    {
+        return m_Forcing;
+    }
+
+    void ForcingProgrammatic::v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
             const TiXmlElement* pForce)
     {
@@ -68,28 +73,14 @@ namespace SolverUtils
             m_NumVariable = nvariables; // e.g. (u v w)  for 3D case
         }
 
-        TiXmlElement* funcNameElmt = pForce->FirstChildElement("BODYFORCE");
-        ASSERTL0(funcNameElmt, "Requires BODYFORCE tag specifying function "
-                               "name which prescribes body force.");
-
-        string funcName = funcNameElmt->GetText();
-        ASSERTL0(m_session->DefinesFunction(funcName),
-                 "Function '" + funcName + "' not defined.");
-
         m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
-        std::string s_FieldStr;
         for (int i = 0; i < m_NumVariable; ++i)
         {
             m_Forcing[i] = Array<OneD, NekDouble> (nq, 0.0);
-            s_FieldStr   = m_session->GetVariable(i);
-            ASSERTL0(m_session->DefinesFunction(funcName, s_FieldStr),
-                     "Variable '" + s_FieldStr + "' not defined.");
-            EvaluateFunction(pFields, m_session, s_FieldStr,
-                             m_Forcing[i], funcName);
         }
     }
 
-    void ForcingBody::v_Apply(
+    void ForcingProgrammatic::v_Apply(
             const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
             const Array<OneD, Array<OneD, NekDouble> > &inarray,
                   Array<OneD, Array<OneD, NekDouble> > &outarray)

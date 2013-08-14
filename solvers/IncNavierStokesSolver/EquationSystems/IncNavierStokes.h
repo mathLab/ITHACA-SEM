@@ -149,6 +149,8 @@ namespace Nektar
                 const Array<OneD, const Array<OneD, NekDouble> > &physfield,
                       Array<OneD, Array<OneD, NekDouble> > &outarray);
 
+        void AddForcing(const SolverUtils::ForcingSharedPtr& pForce);
+
     protected:
         /// modal energy file
         std::ofstream m_mdlFile;

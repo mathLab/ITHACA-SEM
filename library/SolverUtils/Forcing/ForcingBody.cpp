@@ -34,7 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Forcing/ForcingBody.h>
-#include <MultiRegions/ExpList3DHomogeneous1D.h>
+#include <MultiRegions/ExpList.h>
 
 namespace Nektar
 {
@@ -101,25 +101,17 @@ namespace SolverUtils
             // Temporary array
             Array<OneD, NekDouble> forcingCoeff(pFields[0]->GetNcoeffs(), 0.0);
 
-            // Cast pFields[0] to a more primative explist
-            MultiRegions::ExpList3DHomogeneous1DSharedPtr pFieldExp =
-                    boost::static_pointer_cast<
-                            MultiRegions::ExpList3DHomogeneous1D>(pFields[0]);
-
-            // Use simple explist field for transformation
-            MultiRegions::ExpList3DHomogeneous1DSharedPtr forceFld =
-                    MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::
-                                        AllocateSharedPtr(*pFieldExp, true);
-
+            bool w = pFields[0]->GetWaveSpace();
             for (int i = 0; i < m_NumVariable; ++i)
             {
                 // FwdTrans in SEM and Fourier
-                forceFld->SetWaveSpace(false);
-                forceFld->FwdTrans(m_Forcing[i], forcingCoeff);
+                pFields[0]->SetWaveSpace(false);
+                pFields[0]->FwdTrans_IterPerExp(m_Forcing[i], forcingCoeff);
                 // BwdTrans in SEM only
-                forceFld->SetWaveSpace(true);
-                forceFld->BwdTrans(forcingCoeff, m_Forcing[i]);
+                pFields[0]->SetWaveSpace(true);
+                pFields[0]->BwdTrans(forcingCoeff, m_Forcing[i]);
             }
+            pFields[0]->SetWaveSpace(w);
         }
 
     }

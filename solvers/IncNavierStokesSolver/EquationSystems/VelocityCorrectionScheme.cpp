@@ -476,14 +476,14 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            (*x)->Apply(m_fields, inarray, outarray);
+            (*x)->Apply(m_fields, outarray, outarray);
         }
         timer.Stop();
         if(m_showTimings&&IsRoot)
         {
             cout << "\t Body ForceTime   : "<< timer.TimePerTest(1) << endl;
         }
-        
+
         if(m_pressureHBCs[0].num_elements() > 0)
         {
             // Set pressure BCs

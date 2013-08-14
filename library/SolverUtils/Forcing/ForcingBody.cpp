@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Forcing/ForcingBody.h>
+#include <MultiRegions/ExpList3DHomogeneous1D.h>
 
 namespace Nektar
 {
@@ -76,6 +77,10 @@ namespace SolverUtils
         ASSERTL0(m_session->DefinesFunction(funcName),
                  "Function '" + funcName + "' not defined.");
 
+        bool singleMode, halfMode;
+        m_session->MatchSolverInfo("ModeType", "SingleMode", singleMode, false);
+        m_session->MatchSolverInfo("ModeType", "HalfMode", halfMode, false);
+
         m_Forcing = Array<OneD, Array<OneD, NekDouble> > (m_NumVariable);
         std::string s_FieldStr;
         for (int i = 0; i < m_NumVariable; ++i)
@@ -87,6 +92,36 @@ namespace SolverUtils
             EvaluateFunction(pFields, m_session, s_FieldStr,
                              m_Forcing[i], funcName);
         }
+
+        // If singleMode or halfMode, transform the forcing term to be in
+        // physical space in the plane, but Fourier space in the homogeneous
+        // direction
+        if (singleMode || halfMode)
+        {
+            // Temporary array
+            Array<OneD, NekDouble> forcingCoeff(pFields[0]->GetNcoeffs(), 0.0);
+
+            // Cast pFields[0] to a more primative explist
+            MultiRegions::ExpList3DHomogeneous1DSharedPtr pFieldExp =
+                    boost::static_pointer_cast<
+                            MultiRegions::ExpList3DHomogeneous1D>(pFields[0]);
+
+            // Use simple explist field for transformation
+            MultiRegions::ExpList3DHomogeneous1DSharedPtr forceFld =
+                    MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::
+                                        AllocateSharedPtr(*pFieldExp, true);
+
+            for (int i = 0; i < m_NumVariable; ++i)
+            {
+                // FwdTrans in SEM and Fourier
+                forceFld->SetWaveSpace(false);
+                forceFld->FwdTrans(m_Forcing[i], forcingCoeff);
+                // BwdTrans in SEM only
+                forceFld->SetWaveSpace(true);
+                forceFld->BwdTrans(forcingCoeff, m_Forcing[i]);
+            }
+        }
+
     }
 
     void ForcingBody::v_Apply(
@@ -96,7 +131,7 @@ namespace SolverUtils
     {
         for (int i = 0; i < m_NumVariable; i++)
         {
-            Vmath::Vadd(outarray[i].num_elements(), outarray[i], 1,
+            Vmath::Vadd(outarray[i].num_elements(), inarray[i], 1,
                         m_Forcing[i], 1, outarray[i], 1);
         }
     }

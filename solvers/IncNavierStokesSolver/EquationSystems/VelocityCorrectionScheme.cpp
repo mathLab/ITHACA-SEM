@@ -476,7 +476,7 @@ namespace Nektar
         std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
         for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            (*x)->Apply(m_fields, outarray, outarray);
+            (*x)->Apply(m_fields, inarray, outarray);
         }
         timer.Stop();
         if(m_showTimings&&IsRoot)

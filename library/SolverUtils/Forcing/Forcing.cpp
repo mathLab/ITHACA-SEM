@@ -60,6 +60,12 @@ namespace Nektar
             v_InitObject(pFields, pForce);
         }
 
+
+        /**
+         * @param   fields      Expansion lists corresponding to input arrays
+         * @param   inarray     u^n from previous timestep
+         * @param   outarray    output array to append forcing to
+         */
         void Forcing::Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& fields,
                 const Array<OneD, Array<OneD, NekDouble> >&        inarray,

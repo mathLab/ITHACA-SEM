@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     string   out(strtok(argv[1],"."));
     string   endfile(".fld");
     out += endfile;
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
 
     Exp->GetFieldDefinitions(FieldDef);
 
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
         Exp->AppendFieldData(FieldDef[i], FieldData[i]);
     }
 
-    graph2D->Write(out, FieldDef, FieldData);
+    LibUtilities::Write(out, FieldDef, FieldData);
     //-----------------------------------------------
 
     vSession->Finalise();

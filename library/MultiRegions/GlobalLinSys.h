@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-// File GlobalLinSys.h
+// File: GlobalLinSys.h
 //
 // For more information, please see: http://www.nektar.info
 //
@@ -100,22 +100,15 @@ namespace Nektar
                     = NullNekDouble1DArray);
 
             /// Returns a shared pointer to the current object.
-	    boost::shared_ptr<GlobalLinSys> GetSharedThisPtr()
-	    {
-	        return shared_from_this();
-	    }
+            boost::shared_ptr<GlobalLinSys> GetSharedThisPtr()
+            {
+                return shared_from_this();
+            }
 
             inline int                     GetNumBlocks      ();
             inline DNekScalMatSharedPtr    GetBlock          (unsigned int n);
             inline DNekScalBlkMatSharedPtr GetStaticCondBlock(unsigned int n);
-
-        protected:
-            /// Key associated with this linear system.
-            const GlobalLinSysKey                m_linSysKey;
-            /// Local Matrix System
-            const boost::weak_ptr<ExpList>       m_expList;
-            /// Robin boundary info
-            const map<int, RobinBCInfoSharedPtr> m_robinBCInfo;
+            inline void                    DropStaticCondBlock(unsigned int n);
 
             /// Solve the linear system for given input and output vectors.
             inline void SolveLinearSystem(
@@ -125,9 +118,18 @@ namespace Nektar
                 const AssemblyMapSharedPtr        &locToGloMap,
                 const int                          pNumDir = 0);
             
+        protected:
+            /// Key associated with this linear system.
+            const GlobalLinSysKey                m_linSysKey;
+            /// Local Matrix System
+            const boost::weak_ptr<ExpList>       m_expList;
+            /// Robin boundary info
+            const map<int, RobinBCInfoSharedPtr> m_robinBCInfo;
+
             virtual int                     v_GetNumBlocks      ();
             virtual DNekScalMatSharedPtr    v_GetBlock          (unsigned int n);
             virtual DNekScalBlkMatSharedPtr v_GetStaticCondBlock(unsigned int n);
+            virtual void                    v_DropStaticCondBlock(unsigned int n);
 
         private:
             /// Solve a linear system based on mapping.
@@ -218,6 +220,11 @@ namespace Nektar
         inline DNekScalBlkMatSharedPtr GlobalLinSys::GetStaticCondBlock(unsigned int n)
         {
             return v_GetStaticCondBlock(n);
+        }
+
+        inline void GlobalLinSys::DropStaticCondBlock(unsigned int n)
+        {
+            return v_DropStaticCondBlock(n);
         }
 
         inline int GlobalLinSys::GetNumBlocks()

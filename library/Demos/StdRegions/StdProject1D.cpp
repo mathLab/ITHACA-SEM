@@ -27,12 +27,11 @@ int main(int argc, char *argv[])
     fprintf(stderr,"\t Modified_A = 4\n");
     fprintf(stderr,"\t Fourier    = 7\n");
     fprintf(stderr,"\t Lagrange   = 8\n");
-    fprintf(stderr,"\t Legendre   = 9\n"); 
-    fprintf(stderr,"\t Chebyshev  = 10\n");
-    fprintf(stderr,"\t Monomial   = 11\n");
-    fprintf(stderr,"\t FourierSingleMode   = 12\n");
-    fprintf(stderr,"\t Gauss Lagrange   = 15\n");
-
+    fprintf(stderr,"\t Gauss Lagrange = 9\n");  
+    fprintf(stderr,"\t Legendre   = 10\n"); 
+    fprintf(stderr,"\t Chebyshev  = 11\n");
+    fprintf(stderr,"\t Monomial   = 12\n");
+    fprintf(stderr,"\t FourierSingleMode   = 13\n");
  
     fprintf(stderr,"Note type = 1,2,4,5 are for higher dimensional basis\n");
 
@@ -61,29 +60,19 @@ int main(int argc, char *argv[])
 
   sol = Array<OneD, NekDouble>(nq);
   
-/*
-  if(btype != LibUtilities::eFourier)
+  if(btype== LibUtilities::eFourier)
   {
-      Qtype = LibUtilities::eGaussLobattoLegendre; 
+      Qtype = LibUtilities::eFourierEvenlySpaced;
+ }
+  else if(btype== LibUtilities::eFourierSingleMode)
+  {
+      Qtype = LibUtilities::eFourierSingleModeSpaced;
+
   }
   else
   {
-      Qtype = LibUtilities::eFourierEvenlySpaced;
+      Qtype = LibUtilities::eGaussLobattoLegendre;
   }
-*/	
- 
-	if(btype== LibUtilities::eFourier)
-	{
-		Qtype = LibUtilities::eFourierEvenlySpaced;
-	}
-	else if(btype== LibUtilities::eFourierSingleMode)
-	{
-		Qtype = LibUtilities::eFourierSingleModeSpaced;
-	}
-	else
-	{
-            Qtype = LibUtilities::eGaussLobattoLegendre; 
-	}
 
 	
 	

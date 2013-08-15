@@ -23,9 +23,10 @@ int main(int argc, char *argv[])
     
     int           order1,order2, nq1,nq2;
     LibUtilities::PointsType    Qtype1,Qtype2;
-    LibUtilities::BasisType     btype1,btype2;
-    LibUtilities::PointsType     NodalType;
-    StdRegions::ExpansionType    regionshape;
+    LibUtilities::BasisType     btype1 =   LibUtilities::eOrtho_A;
+    LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
+    LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
+    LibUtilities::ShapeType     regionshape;
     StdRegions::StdExpansion2D *E;
     Array<OneD, NekDouble> sol;
     Array<OneD, NekDouble> coords(8);
@@ -41,8 +42,8 @@ int main(int argc, char *argv[])
         
         fprintf(stderr,"Where RegionShape is an integer value which "
                 "dictates the region shape:\n");
-        fprintf(stderr,"\t Triangle      = 2\n");
-        fprintf(stderr,"\t Quadrilateral = 3\n");
+        fprintf(stderr,"\t Triangle      = 3\n");
+        fprintf(stderr,"\t Quadrilateral = 4\n");
         
         fprintf(stderr,"Where type is an integer value which "
                 "dictates the basis as:\n");
@@ -53,10 +54,11 @@ int main(int argc, char *argv[])
         fprintf(stderr,"\t Modified_B = 5\n");
         fprintf(stderr,"\t Fourier    = 7\n");
         fprintf(stderr,"\t Lagrange   = 8\n");
-        fprintf(stderr,"\t Legendre   = 9\n");
-        fprintf(stderr,"\t Chebyshev  = 10\n");
-        fprintf(stderr,"\t Nodal tri (Electro) = 11\n");
-        fprintf(stderr,"\t Nodal tri (Fekete)  = 12\n");
+        fprintf(stderr,"\t Gauss Lagrange =  9\n");
+        fprintf(stderr,"\t Legendre   = 10\n");
+        fprintf(stderr,"\t Chebyshev  = 11\n");
+        fprintf(stderr,"\t Nodal tri (Electro) = 13\n");
+        fprintf(stderr,"\t Nodal tri (Fekete)  = 14\n");
         
         fprintf(stderr,"Note type = 3,6 are for three-dimensional basis\n");
         
@@ -64,10 +66,10 @@ int main(int argc, char *argv[])
         exit(1);
     }
     
-    regionshape = (StdRegions::ExpansionType) atoi(argv[1]);
+    regionshape = (LibUtilities::ShapeType) atoi(argv[1]);
     
     // Check to see if 2D region
-    if((regionshape != StdRegions::eTriangle)&&(regionshape != StdRegions::eQuadrilateral))
+    if((regionshape != LibUtilities::eTriangle)&&(regionshape != LibUtilities::eQuadrilateral))
     {
         NEKERROR(ErrorUtil::efatal,"This shape is not a 2D region");
     }
@@ -75,17 +77,17 @@ int main(int argc, char *argv[])
     int btype1_val = atoi(argv[2]);
     int btype2_val = atoi(argv[3]);
     
-    if(( btype1_val <= 10)&&( btype2_val <= 10))
+    if(( btype1_val <= 11)&&( btype2_val <= 11))
     {
         btype1 =   (LibUtilities::BasisType) btype1_val;
         btype2 =   (LibUtilities::BasisType) btype2_val;
     }
-    else if(( btype1_val >=11)&&(btype2_val <= 12))
+    else if(( btype1_val >=13)&&(btype2_val <= 14))
     {
         btype1 =   LibUtilities::eOrtho_A;
         btype2 =   LibUtilities::eOrtho_B;
         
-        if(btype1_val == 11)
+        if(btype1_val == 13)
         {
             NodalType = LibUtilities::eNodalTriElec;
         }
@@ -99,7 +101,7 @@ int main(int argc, char *argv[])
     // Check to see that correct Expansions are used
     switch(regionshape)
     {
-    case StdRegions::eTriangle:
+    case LibUtilities::eTriangle:
         if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eModified_B))
         {
             NEKERROR(ErrorUtil::efatal,
@@ -107,7 +109,7 @@ int main(int argc, char *argv[])
         }
         
         break;
-    case StdRegions::eQuadrilateral:
+    case LibUtilities::eQuadrilateral:
         if((btype1 == LibUtilities::eOrtho_B)||(btype1 == LibUtilities::eOrtho_C)||
            (btype1 == LibUtilities::eModified_B)||(btype1 == LibUtilities::eModified_C))
         {
@@ -145,7 +147,7 @@ int main(int argc, char *argv[])
     
     if(btype2 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTriangle) {
+        if (regionshape == LibUtilities::eTriangle) {
             Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
         else
@@ -163,9 +165,8 @@ int main(int argc, char *argv[])
     
     switch(regionshape)
     {
-    case StdRegions::eTriangle:
+    case LibUtilities::eTriangle:
         {
-            
             coords[0]    =   atof(argv[8]);
             coords[1]    =   atof(argv[9]);
             coords[2]    =   atof(argv[10]);
@@ -202,7 +203,7 @@ int main(int argc, char *argv[])
             const LibUtilities::BasisKey  Bkey1(btype1,order1,Pkey1);
             const LibUtilities::BasisKey  Bkey2(btype2,order2,Pkey2);
 
-            if(btype1_val >= 10)
+            if(btype1_val >= 11)
             {
                 E = new LocalRegions::NodalTriExp(Bkey1,Bkey2,NodalType,geom);
             }
@@ -225,7 +226,7 @@ int main(int argc, char *argv[])
             
         }
         break;
-    case StdRegions::eQuadrilateral:
+    case  LibUtilities::eQuadrilateral:
         {
             // Gather coordinates
             coords[0]    =   atof(argv[8]);
@@ -319,7 +320,7 @@ int main(int argc, char *argv[])
     x[0] = (coords[0] + coords[2])*0.5;
     x[1] = (coords[1] + coords[5])*0.5;
     
-    if(regionshape == StdRegions::eTriangle)
+    if(regionshape == LibUtilities::eTriangle)
     {
         sol[0] = Tri_sol(x[0],x[1],order1,order2);
     }

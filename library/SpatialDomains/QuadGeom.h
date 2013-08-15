@@ -90,9 +90,14 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &Lcoord);
   
             /// Get the orientation of face1.
-            SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation 
-                    GetFaceOrientation(const QuadGeom &face1,
-                                         const QuadGeom &face2);
+            SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
+                GetFaceOrientation(
+                    const QuadGeom              &face1,
+                    const QuadGeom              &face2);
+            SPATIAL_DOMAINS_EXPORT static StdRegions::Orientation
+                GetFaceOrientation(
+                    const VertexComponentVector &face1,
+                    const VertexComponentVector &face2);
 
             SPATIAL_DOMAINS_EXPORT static const int kNverts = 4;
             SPATIAL_DOMAINS_EXPORT static const int kNedges = 4;
@@ -173,6 +178,10 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &gloCoord, 
                     NekDouble tol = 0.0);
 
+            SPATIAL_DOMAINS_EXPORT virtual bool v_ContainsPoint(
+                                    const Array<OneD, const NekDouble> &gloCoord, 
+                                    Array<OneD, NekDouble> &locCoord,
+                                    NekDouble                     tol = 0.0);
         private:
             /// Boolean indicating whether object owns the data
             bool                                m_ownData;

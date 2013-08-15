@@ -73,6 +73,14 @@ namespace Nektar
       }
 
       /**
+       * @brief Return vertex i in this element.
+       */
+      const VertexComponentSharedPtr Geometry3D::GetVertex(int i) const
+      {
+          return m_verts[i];
+      }
+
+      /**
        * @brief Return face i in this element.
        */
       Geometry2DSharedPtr Geometry3D::GetFace(int i)
@@ -88,6 +96,15 @@ namespace Nektar
           return v_GetFaceOrient(i);
       }
 
+
+      /**
+       * @brief Returns the element coordinate direction corresponding to a
+       * given face coordinate direction
+       */
+      int Geometry3D::GetDir(const int faceidx, const int facedir) const
+      {
+          return v_GetDir(faceidx, facedir);
+      }
 
       //---------------------------------------
       // 3D Geometry Methods

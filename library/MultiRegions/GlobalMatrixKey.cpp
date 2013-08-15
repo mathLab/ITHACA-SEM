@@ -45,7 +45,7 @@ namespace Nektar
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varCoeffs) :
             m_matrixType(matrixType),
-            m_expansionType(StdRegions::eNoExpansionType),
+            m_shapeType(LibUtilities::eNoShapeType),
             m_constFactors(factors),
             m_varCoeffs(varCoeffs),
             m_locToGloMap(locToGloMap)
@@ -53,9 +53,9 @@ namespace Nektar
         }
 
         GlobalMatrixKey::GlobalMatrixKey(const GlobalMatrixKey &key,
-                        const StdRegions::ExpansionType expType):
+                                         const LibUtilities::ShapeType shapeType):
             m_matrixType(key.m_matrixType),
-            m_expansionType(expType),
+            m_shapeType(shapeType),
             m_constFactors(key.m_constFactors),
             m_varCoeffs(key.m_varCoeffs),
             m_locToGloMap(key.m_locToGloMap)
@@ -64,7 +64,7 @@ namespace Nektar
 
         GlobalMatrixKey::GlobalMatrixKey(const GlobalMatrixKey &key):
             m_matrixType(key.m_matrixType),
-            m_expansionType(key.m_expansionType),
+            m_shapeType(key.m_shapeType),
             m_constFactors(key.m_constFactors),
             m_varCoeffs(key.m_varCoeffs),
             m_locToGloMap(key.m_locToGloMap)
@@ -88,13 +88,13 @@ namespace Nektar
             }
 
 
-            if(lhs.m_expansionType < rhs.m_expansionType)
+            if(lhs.m_shapeType < rhs.m_shapeType)
             {
                 return true;
             }
             
 
-            if(lhs.m_expansionType > rhs.m_expansionType)
+            if(lhs.m_shapeType > rhs.m_shapeType)
             {
                 return false;
             }

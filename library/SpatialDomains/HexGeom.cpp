@@ -43,15 +43,25 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
+        const unsigned int HexGeom::VertexEdgeConnectivity[8][3] = {
+            {0,3,4},{0,1,5},{1,2,6},{2,3,7},
+            {4,8,11},{5,8,9},{6,9,10},{7,10,11}};
+        const unsigned int HexGeom::VertexFaceConnectivity[8][3] = {
+            {0,1,4},{0,1,2},{0,2,3},{0,3,4},
+            {1,4,5},{1,2,5},{2,3,5},{3,4,5}};
+        const unsigned int HexGeom::EdgeFaceConnectivity[12][2] = {
+            {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},
+            {1,5},{2,5},{3,5},{4,5}};
+
         HexGeom::HexGeom()
         {
-            m_geomShapeType = eHexahedron;
+            m_shapeType = LibUtilities::eHexahedron;
         }
 
         HexGeom::HexGeom(const QuadGeomSharedPtr faces[]):
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_geomShapeType = eHexahedron;
+            m_shapeType = LibUtilities::eHexahedron;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+HexGeom::kNfaces);
@@ -360,6 +370,32 @@ namespace Nektar
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
 
+           // find min, max point and check if within twice this
+            // distance other false this is advisable since
+            // GetLocCoord is expensive for non regular elements.
+            if(GetGtype() !=  eRegular)
+            {
+                int i;
+                Array<OneD, NekDouble> pts; 
+                NekDouble mincoord, maxcoord,diff;
+                
+                v_FillGeom();
+                
+                for(i = 0; i < 3; ++i)
+                {
+                    pts = m_xmap[i]->GetPhys();
+                    mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
+                    
+                    diff = maxcoord - mincoord; 
+                    
+                    if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
+                    {
+                        return false;
+                    }
+                }
+            }
+            
             Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
             v_GetLocCoords(gloCoord, stdCoord);
             if (stdCoord[0] >= -(1+tol) && stdCoord[0] <= 1+tol
@@ -388,30 +424,34 @@ namespace Nektar
 
         int HexGeom::v_GetVertexEdgeMap(const int i, const int j) const
 	{
-	    const unsigned int VertexEdgeConnectivity[][3] = {
-	        {0,3,4},{0,1,5},{1,2,6},{2,3,7},
-                {4,8,11},{5,8,9},{6,9,10},{7,10,11}};
-
 	    return VertexEdgeConnectivity[i][j];
 	}
 
         int HexGeom::v_GetVertexFaceMap(const int i, const int j) const
 	{
-	    const unsigned int VertexFaceConnectivity[][3] = {
-	        {0,1,4},{0,1,2},{0,2,3},{0,3,4},
-	        {1,4,5},{1,2,5},{2,3,5},{3,4,5}};
-
 	    return VertexFaceConnectivity[i][j];
 	}
 
         int HexGeom::v_GetEdgeFaceMap(const int i, const int j) const
 	{
-	    const unsigned int EdgeFaceConnectivity[][2] = {
-                {0,1},{0,2},{0,3},{0,4},{1,4},{1,2},{2,3},{3,4},
-	        {1,5},{2,5},{3,5},{4,5}};
-
 	    return EdgeFaceConnectivity[i][j];
 	}
+
+        int HexGeom::v_GetDir(const int faceidx, const int facedir) const
+        {
+            if (faceidx == 0 || faceidx == 1)
+            {
+                return facedir;
+            }
+            else if (faceidx == 1 || faceidx == 3)
+            {
+                return 2 * facedir;
+            }
+            else
+            {
+                return 1 + facedir;
+            }
+        }
 
         void HexGeom::SetUpLocalEdges()
         {

@@ -47,16 +47,6 @@ namespace Nektar
     {
         class StdMatrixKey;
 
-        namespace StdTriData
-        {
-            inline int getNumberOfCoefficients(int Na, int Nb)
-            {
-                ASSERTL0(Na <= Nb, "order in 'a' direction is higher "
-                         "than order in 'b' direction");
-                return Na*(Na+1)/2 + Na*(Nb-Na);
-            }
-        }
-
         class StdTriExp : virtual public StdExpansion2D
         {
         public:
@@ -171,7 +161,7 @@ namespace Nektar
             //---------------------------
             STD_REGIONS_EXPORT virtual int  v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int  v_GetNedges() const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int  v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_NumDGBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int  v_GetEdgeNcoeffs(const int i) const;
@@ -242,6 +232,9 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                 const StdMatrixKey                 &mkey);
+            STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
+                      Array<OneD, NekDouble> &array,
+                const StdMatrixKey &mkey);
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                 const int                           k1,
                 const int                           k2,

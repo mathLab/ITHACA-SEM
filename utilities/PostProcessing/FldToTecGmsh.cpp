@@ -33,9 +33,9 @@ int main(int argc, char *argv[])
     }
 
     bool Extrude2DWithHomogeneous = false;
-	
-	bool SingleModePlot=false;
-	bool HalfModePlot=false;
+    
+    bool SingleModePlot=false;
+    bool HalfModePlot=false;
 
 	
     int nExtraPoints, nExtraPlanes;
@@ -47,14 +47,13 @@ int main(int argc, char *argv[])
     vSession->LoadParameter("OutputExtraPlanes",nExtraPlanes,0);
 
     vSession->MatchSolverInfo("Extrude2DWithHomogeneous","True",Extrude2DWithHomogeneous,false);
-	vSession->MatchSolverInfo("ModeType","SingleMode",SingleModePlot,false);
-	vSession->MatchSolverInfo("ModeType","HalfMode",HalfModePlot,false);
+    vSession->MatchSolverInfo("ModeType","SingleMode",SingleModePlot,false);
+    vSession->MatchSolverInfo("ModeType","HalfMode",HalfModePlot,false);
 
 
     // Read in mesh from input file
     SpatialDomains::MeshGraphSharedPtr graphShPt = SpatialDomains::MeshGraph::Read(vSession);
-	//----------------------------------------------
-
+    //----------------------------------------------
     for (int n = 1; n < argc; ++n)
     {
         string fname = std::string(argv[n]);
@@ -69,6 +68,17 @@ int main(int argc, char *argv[])
             if (ending == ".chk" || ending == ".fld")
             {
                 fname = fname.substr(0,fdot);
+            }
+            else if (ending == ".gz")
+            {
+                fname = fname.substr(0,fdot);
+                fdot = fname.find_last_of('.');
+                ASSERTL0(fdot != std::string::npos,
+                         "Error: expected file extension before .gz.");
+                ending = fname.substr(fdot);
+                ASSERTL0(ending == ".xml",
+                         "Compressed non-xml files are not supported.");
+                continue;
             }
             else if (ending == ".xml")
             {
@@ -94,9 +104,9 @@ int main(int argc, char *argv[])
         //----------------------------------------------
         // Import field file.
         string fieldfile(argv[n]);
-        vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+        vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
         vector<vector<NekDouble> > fielddata;
-        graphShPt->Import(fieldfile,fielddef,fielddata);
+        LibUtilities::Import(fieldfile,fielddef,fielddata);
         //----------------------------------------------
 
         if(Extrude2DWithHomogeneous) // Set up Homogeneous information
@@ -497,13 +507,27 @@ int main(int argc, char *argv[])
 
             ofstream outfile(fname.c_str());
 
-            Exp[0]->WriteTecplotHeader(outfile,var);
-            for(int i = 0; i < Exp[0]->GetNumElmts(); ++i)
+            if(expdim == 3)
             {
-                Exp[0]->WriteTecplotZone(outfile,i);
+
+                Exp[0]->WriteTecplotHeader(outfile,var);
+                Exp[0]->WriteTecplotZone(outfile);
                 for(int j = 0; j < Exp.num_elements(); ++j)
                 {
-                    Exp[j]->WriteTecplotField(outfile,i);
+                    Exp[j]->WriteTecplotField(outfile);
+                }
+                Exp[0]->WriteTecplotConnectivity(outfile);
+            }
+            else
+            {
+                Exp[0]->WriteTecplotHeader(outfile,var);
+                for(int i = 0; i < Exp[0]->GetNumElmts(); ++i)
+                {
+                    Exp[0]->WriteTecplotZone(outfile,i);
+                    for(int j = 0; j < Exp.num_elements(); ++j)
+                    {
+                        Exp[j]->WriteTecplotField(outfile,i);
+                    }
                 }
             }
 

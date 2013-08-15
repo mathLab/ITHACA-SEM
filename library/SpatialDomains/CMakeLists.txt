@@ -24,7 +24,6 @@ PyrGeom.cpp
 QuadGeom.cpp
 SegGeom.cpp
 PointGeom.cpp
-SpatialData.cpp
 TetGeom.cpp
 #TriFaceComponent.cpp
 TriGeom.cpp
@@ -34,7 +33,6 @@ SET(SPATIAL_DOMAINS_HEADERS
 Conditions.h
 Curve.hpp
 #EdgeComponent.h
-GeometryShapeType.h
 GeomFactors.h
 GeomFactors1D.h
 GeomFactors2D.h
@@ -58,7 +56,6 @@ PyrGeom.h
 QuadGeom.h
 SegGeom.h
 PointGeom.h
-SpatialData.h
 SpatialDomainsDeclspec.h
 TetGeom.h
 #TriFaceComponent.h

@@ -542,7 +542,7 @@ namespace Nektar
                 IProductWRTBase(inarray,outarray);
 
                 // get Mass matrix inverse
-                StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
+                StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
                 DNekMatSharedPtr matsys = GetStdMatrix(masskey);
 
                 // copy inarray in case inarray == outarray
@@ -608,7 +608,7 @@ namespace Nektar
                                                Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -726,7 +726,7 @@ namespace Nektar
                     break;
             }
 
-            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -873,9 +873,9 @@ namespace Nektar
         }
 
 
-        ExpansionType StdHexExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdHexExp::v_DetShapeType() const
         {
-            return eHexahedron;
+            return LibUtilities::eHexahedron;
         };
 
 
@@ -1208,7 +1208,7 @@ namespace Nektar
 
 
         /**
-         * Only for basis type Modified_A in all directions.
+         * Only for basis type Modified_A or GLL_LAGRANGE in all directions.
          */
         void StdHexExp::v_GetFaceToElementMap(
             const int                  fid,
@@ -1222,14 +1222,15 @@ namespace Nektar
             const int nummodes0 = m_base[0]->GetNumModes();
             const int nummodes1 = m_base[1]->GetNumModes();
             const int nummodes2 = m_base[2]->GetNumModes();
-
+            
             ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1) &&
                      GetEdgeBasisType(0) == GetEdgeBasisType(2),
                      "Method only implemented if BasisType is indentical in "
                      "all directions");
-            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A,
-                      "Method only implemented for Modified_A BasisType");
-
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A ||
+                     GetEdgeBasisType(0) == LibUtilities::eGLL_Lagrange,
+                     "Method only implemented for Modified_A or GLL_Lagrange BasisType");
+                        
             if (nummodesA == -1)
             {
                 switch(fid)
@@ -1251,14 +1252,16 @@ namespace Nektar
                         break;
                 }
             }
-
+            
+            
+            bool modified = GetEdgeBasisType(0) == LibUtilities::eModified_A;
             int nFaceCoeffs = nummodesA*nummodesB;
-
+            
             if(maparray.num_elements() != nFaceCoeffs)
             {
                 maparray = Array<OneD, unsigned int>(nFaceCoeffs);
             }
-
+            
             if(signarray.num_elements() != nFaceCoeffs)
             {
                 signarray = Array<OneD, int>(nFaceCoeffs,1);
@@ -1267,9 +1270,9 @@ namespace Nektar
             {
                 fill( signarray.get() , signarray.get()+nFaceCoeffs, 1 );
             }
-
+            
             Array<OneD, int> arrayindx(nFaceCoeffs);
-
+            
             for(i = 0; i < nummodesB; i++)
             {
                 for(j = 0; j < nummodesA; j++)
@@ -1284,129 +1287,236 @@ namespace Nektar
                     }
                 }
             }
-
+            
             int offset = 0;
             int jump1 = 1;
             int jump2 = 1;
-
+            
             switch(fid)
             {
-            case 5:
+                case 5:
                 {
-                    offset = nummodes0*nummodes1;
+                    if (modified)
+                    {
+                        offset = nummodes0*nummodes1;
+                    }
+                    else
+                    {
+                        offset = (nummodes2-1)*nummodes0*nummodes1;
+                        jump1 = nummodes0;
+                    }
                 }
-            case 0:
+                case 0:
                 {
                     jump1 = nummodes0;
                 }
-                break;
-            case 3:
+                    break;
+                case 3:
                 {
-                    offset = nummodes0;
+                    if (modified)
+                    {
+                        offset = nummodes0;
+                    }
+                    else
+                    {
+                        offset = nummodes0*(nummodes1-1);
+                        jump1 = nummodes0*nummodes1;
+                    }
                 }
-            case 1:
+                case 1:
                 {
                     jump1 = nummodes0*nummodes1;
                 }
-                break;
-            case 2:
+                    break;
+                case 2:
                 {
-                    offset = 1;
+                    if (modified)
+                    {
+                        offset = 1;
+                    }
+                    else
+                    {
+                        offset = nummodes0-1;
+                        jump1 = nummodes0*nummodes1;
+                        jump2 = nummodes0;
+                        
+                    }
                 }
-            case 4:
+                case 4:
                 {
                     jump1 = nummodes0*nummodes1;
                     jump2 = nummodes0;
                 }
-                break;
-            default:
-                ASSERTL0(false,"fid must be between 0 and 5");
+                    break;
+                default:
+                    ASSERTL0(false,"fid must be between 0 and 5");
             }
-
+            
             for(i = 0; i < nummodesB; i++)
             {
                 for(j = 0; j < nummodesA; j++)
                 {
                     maparray[ arrayindx[i*nummodesA+j] ]
-                                = i*jump1 + j*jump2 + offset;
+                    = i*jump1 + j*jump2 + offset;
                 }
             }
-
+            
+            
+            
             if( (faceOrient==6) || (faceOrient==8) ||
-                (faceOrient==11) || (faceOrient==12) )
+               (faceOrient==11) || (faceOrient==12) )
             {
-
                 if(faceOrient<9)
                 {
-                    for(i = 3; i < nummodesB; i+=2)
+                    if (modified)
                     {
-                        for(j = 0; j < nummodesA; j++)
+                        for(i = 3; i < nummodesB; i+=2)
                         {
-                            signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            for(j = 0; j < nummodesA; j++)
+                            {
+                                signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            }
                         }
+                        
+                        for(i = 0; i < nummodesA; i++)
+                        {
+                            swap( maparray[i] , maparray[i+nummodesA] );
+                            swap( signarray[i] , signarray[i+nummodesA] );
+                        }
+                        
                     }
-
-                    for(i = 0; i < nummodesA; i++)
+                    else
                     {
-                        swap( maparray[i] , maparray[i+nummodesA] );
-                        swap( signarray[i] , signarray[i+nummodesA] );
+                        for(i = 0; i < nummodesA; i++)
+                        {
+                            for(j = 0; j < nummodesB/2; j++)
+                            {
+                                swap( maparray[i + j*nummodesA],
+                                     maparray[i+nummodesA*nummodesB
+                                              -nummodesA -j*nummodesA] );
+                                swap( signarray[i + j*nummodesA],
+                                     signarray[i+nummodesA*nummodesB
+                                              -nummodesA -j*nummodesA]);
+                            }
+                        }
                     }
                 }
                 else
                 {
-                    for(i = 0; i < nummodesB; i++)
+                    if (modified)
                     {
-                        for(j = 3; j < nummodesA; j+=2)
+                        for(i = 0; i < nummodesB; i++)
                         {
-                            signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            for(j = 3; j < nummodesA; j+=2)
+                            {
+                                signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            }
                         }
+                        
+                        for(i = 0; i < nummodesB; i++)
+                        {
+                            swap( maparray[i] , maparray[i+nummodesB] );
+                            swap( signarray[i] , signarray[i+nummodesB] );
+                        }
+                        
                     }
-
-                    for(i = 0; i < nummodesB; i++)
+                    else
                     {
-                        swap( maparray[i] , maparray[i+nummodesB] );
-                        swap( signarray[i] , signarray[i+nummodesB] );
+                        for(i = 0; i < nummodesA; i++)
+                        {
+                            for(j = 0; j < nummodesB/2; j++)
+                            {
+                                swap( maparray[i*nummodesB + j],
+                                     maparray[i*nummodesB + nummodesB -1 -j]);
+                                swap( signarray[i*nummodesB + j],
+                                     signarray[i*nummodesB + nummodesB -1 -j]);
+                            }
+                        }
                     }
                 }
             }
-
+            
             if( (faceOrient==7) || (faceOrient==8) ||
-                (faceOrient==10) || (faceOrient==12) )
+               (faceOrient==10) || (faceOrient==12) )
             {
                 if(faceOrient<9)
                 {
-                    for(i = 0; i < nummodesB; i++)
+                    if (modified)
                     {
-                        for(j = 3; j < nummodesA; j+=2)
+                        for(i = 0; i < nummodesB; i++)
                         {
-                            signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            for(j = 3; j < nummodesA; j+=2)
+                            {
+                                signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            }
+                        }
+                        
+                        for(i = 0; i < nummodesB; i++)
+                        {
+                            swap( maparray[i*nummodesA],
+                                 maparray[i*nummodesA+1]);
+                            swap( signarray[i*nummodesA],
+                                 signarray[i*nummodesA+1]);
                         }
                     }
-
-                    for(i = 0; i < nummodesB; i++)
+                    else
                     {
-                        swap( maparray[i*nummodesA], maparray[i*nummodesA+1]);
-                        swap( signarray[i*nummodesA], signarray[i*nummodesA+1]);
+                        for(i = 0; i < nummodesB; i++)
+                        {
+                            for(j = 0; j < nummodesA/2; j++)
+                            {
+                                swap( maparray[i*nummodesA + j],
+                                     maparray[i*nummodesA + nummodesA -1 -j]);
+                                swap( signarray[i*nummodesA + j],
+                                     signarray[i*nummodesA + nummodesA -1 -j]);
+                            }
+                        }
                     }
+                    
+                    
+                    
                 }
                 else
                 {
-                    for(i = 3; i < nummodesB; i+=2)
+                    if (modified)
                     {
-                        for(j = 0; j < nummodesA; j++)
+                        for(i = 3; i < nummodesB; i+=2)
                         {
-                            signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            for(j = 0; j < nummodesA; j++)
+                            {
+                                signarray[ arrayindx[i*nummodesA+j] ] *= -1;
+                            }
+                        }
+                        
+                        for(i = 0; i < nummodesA; i++)
+                        {
+                            swap( maparray[i*nummodesB],
+                                 maparray[i*nummodesB+1]);
+                            swap( signarray[i*nummodesB],
+                                 signarray[i*nummodesB+1]);
                         }
                     }
-
-                    for(i = 0; i < nummodesA; i++)
+                    else
                     {
-                        swap( maparray[i*nummodesB], maparray[i*nummodesB+1]);
-                        swap( signarray[i*nummodesB], signarray[i*nummodesB+1]);
+                        for(i = 0; i < nummodesB; i++)
+                        {
+                            for(j = 0; j < nummodesA/2; j++)
+                            {
+                                swap( maparray[i + j*nummodesB] ,
+                                     maparray[i+nummodesA*nummodesB -
+                                              nummodesB -j*nummodesB] );
+                                swap( signarray[i + j*nummodesB] ,
+                                     signarray[i+nummodesA*nummodesB -
+                                               nummodesB -j*nummodesB] );
+                                
+                            }
+                        }
+                        
                     }
                 }
             }
         }
+
 
 
         /**
@@ -1535,7 +1645,7 @@ namespace Nektar
             bool reverseOrdering = false;
             bool signChange = false;
 
-            int IdxRange [3][2];
+            int IdxRange [3][2] = {{0,0},{0,0},{0,0}};
 
             switch(eid)
             {
@@ -1830,8 +1940,8 @@ namespace Nektar
                                                        GetBasisType(1),
                                                        GetBasisType(2)};
 
-            int nummodesA;
-            int nummodesB;
+            int nummodesA = 0;
+            int nummodesB = 0;
 
             // Determine the number of modes in face directions A & B based
             // on the face index given.
@@ -2521,6 +2631,64 @@ namespace Nektar
                             outarray.get()+i*nq01, 1);
             }
         }
+        
+        void StdHexExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                              const StdMatrixKey &mkey)
+        {
+            // Generate an orthonogal expansion
+            int qa = m_base[0]->GetNumPoints();
+            int qb = m_base[1]->GetNumPoints();
+            int qc = m_base[2]->GetNumPoints();
+            int nmodes_a = m_base[0]->GetNumModes();
+            int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes_c = m_base[2]->GetNumModes();
+            // Declare orthogonal basis. 
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+            LibUtilities::PointsKey pc(qc,m_base[2]->GetPointsType());
+
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
+            LibUtilities::BasisKey Bc(LibUtilities::eOrtho_A,nmodes_c,pc);
+            StdHexExp OrthoExp(Ba,Bb,Bc);
+            
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
+            int i,j,k;
+            
+            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            
+            // project onto modal  space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+            
+
+            //  Filter just trilinear space
+            int nmodes = max(nmodes_a,nmodes_b);
+            nmodes = max(nmodes,nmodes_c);
+
+            Array<OneD, NekDouble> fac(nmodes,1.0);
+            for(j = cutoff; j < nmodes; ++j)
+            {
+                fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
+            }
+
+            for(i = 0; i < nmodes_a; ++i)
+            {
+                for(j = 0; j < nmodes_b; ++j)
+                {
+                    for(k =  0; k < nmodes_c; ++k)
+                    {
+                        if((i >= cutoff)||(j >= cutoff)||(k >= cutoff))
+                        {
+                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]*fac[j]*fac[k]));
+                        }
+                    }
+                }
+            }
+            
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }                        
 
     }
 }

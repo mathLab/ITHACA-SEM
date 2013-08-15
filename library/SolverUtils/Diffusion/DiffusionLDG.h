@@ -60,7 +60,8 @@ namespace Nektar
             LibUtilities::SessionReaderSharedPtr              m_session;
             
             virtual void v_InitObject(
-                LibUtilities::SessionReaderSharedPtr               pSession);
+                LibUtilities::SessionReaderSharedPtr               pSession,
+                Array<OneD, MultiRegions::ExpListSharedPtr>        pFields);
             
             virtual void v_Diffuse(
                 const int                                          nConvective,
@@ -77,8 +78,7 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const int                                          var,
                 const Array<OneD, const NekDouble>                &ufield,
-                      Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          time);
+                      Array<OneD,       NekDouble>                &penaltyflux);
             
             virtual void v_NumFluxforVector(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>       &fields,
@@ -92,8 +92,7 @@ namespace Nektar
                 const int                                          dir,
                 const Array<OneD, const NekDouble>                &qfield,
                       Array<OneD,       NekDouble>                &penaltyflux,
-                NekDouble                                          C11,
-                NekDouble                                          time);
+                NekDouble                                          C11);
         }; 
     }
 }

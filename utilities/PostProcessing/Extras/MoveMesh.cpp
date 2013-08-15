@@ -146,9 +146,9 @@ cout<<"ok"<<endl;
 cout<<"read alpha="<<charalp<<endl;
     // Import field file.
     string fieldfile(argv[argc-3]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------      
    
 //cout<<"dim st="<<fielddef[0]->m_fields.size()<<endl;
@@ -966,7 +966,6 @@ cout<<"nlays="<<nlays<<endl;
     for(int i=0; i<nVertTot; i++)
     {
          bool mvpoint =false;
-       	 NekDouble ratio;  
          SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(i);
          NekDouble x,y,z;
          vertex->GetCoords(x,y,z); 
@@ -1317,9 +1316,6 @@ cout<<x_tmpQ[u]<<"      "<<tmpnyQ[u]<<endl;
        
        
        //interpolate the values into phys points(curved points)
-       int segid,offset;
-            
-
        for(int k=0; k<nedges; k++)
        {
 //cout<<"edge:"<<k<<endl;       	       
@@ -1793,7 +1789,6 @@ if(m== 0)
          Array<OneD, NekDouble> Pxinterp(closepoints);
 
          //check if any edge has less than npedge points
-         int edgecount=0;
          int pointscount=0;
          for(int q=0; q<np_lay; q++)
          {
@@ -1926,12 +1921,12 @@ cout<<tmpx[g]<<"    "<<tmpy[g]<<endl;
              //middle points
              for(int r=0; r< npedge-2; r++)
              {
-//cout<<"determine value for x="<<Addpointsx[g*(npedge-2) +r]<<endl;
+                 //cout<<"determine value for x="<<Addpointsx[g*(npedge-2) +r]<<endl;
                  //determine closest point index:
                  index = 
-                 DetermineclosePointxindex( Addpointsx[g*(npedge-2) +r], tmpx);
-//cout<<"  vert+"<<index<<endl;
-
+                     DetermineclosePointxindex( Addpointsx[g*(npedge-2) +r], tmpx);
+                 //cout<<"  vert+"<<index<<endl;
+                 
                  ASSERTL0( index<= tmpy.num_elements()-1, " index wrong");
                  //generate neighbour arrays Pyinterp,Pxinterp
                  GenerateNeighbourArrays(index, closepoints,tmpx,tmpy,Pxinterp,Pyinterp);
@@ -1939,20 +1934,16 @@ cout<<tmpx[g]<<"    "<<tmpy[g]<<endl;
                  layers_y[m][g*npedge +r+1]=
                                  LagrangeInterpolant(
                           Addpointsx[g*(npedge-2) +r],closepoints,Pxinterp,Pyinterp  );
-//cout<<"x value="<<Addpointsx[g*(npedge-2) +r]<<endl;
+                 //cout<<"x value="<<Addpointsx[g*(npedge-2) +r]<<endl;
                  layers_x[m][g*npedge +r+1]=  Addpointsx[g*(npedge-2) +r];
 
-
-
-
-/*
-for(int t=0; t<6; t++)
-{
-cout<<"Px="<<Pxinterp[t]<<"    "<<Pyinterp[t]<<endl;
-}
-*/
+                 /*
+                   for(int t=0; t<6; t++)
+                   {
+                   cout<<"Px="<<Pxinterp[t]<<"    "<<Pyinterp[t]<<endl;
+                   }
+                 */
              }
-
 
              }//if edge closed g
          }
@@ -1990,7 +1981,7 @@ cout<<std::setprecision(8)<<xnew[lay_Vids[m][l] ]<<"    "<<ynew[lay_Vids[m][l] ]
           SpatialDomains::VertexComponentSharedPtr vertex = graphShPt->GetVertex(n);
           NekDouble x,y,z;
           vertex->GetCoords(x,y,z); 
-          int qp_closer,diff;
+          int qp_closer;
           //determine the closer xold_up
           NekDouble tmp=1000;
 

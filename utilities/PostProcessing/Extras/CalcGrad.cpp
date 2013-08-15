@@ -41,9 +41,9 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import field file.
     string fieldfile(argv[argc-1]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     bool useFFT = false;
     bool dealiasing = false;
     //----------------------------------------------
@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
     Array<OneD, NekDouble> Dy(nq);
     Array<OneD, NekDouble> Dz(nq);
     Array<OneD, NekDouble> Dx(nq);
-
+    
     switch(expdim)
     {
     case 1:
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
     string   out = fldfilename.substr(0, fldfilename.find_last_of("."));
     string   endfile("_with_grad.fld");
     out += endfile;
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                 = Exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -333,7 +333,7 @@ int main(int argc, char *argv[])
             Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
         }
     }
-    graphShPt->Write(out, FieldDef, FieldData);
+    LibUtilities::Write(out, FieldDef, FieldData);
     //-----------------------------------------------
 
     return 0;

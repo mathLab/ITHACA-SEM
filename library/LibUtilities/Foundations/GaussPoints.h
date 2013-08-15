@@ -108,6 +108,8 @@ namespace Nektar
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));
 		m_InterpManager.RegisterCreator(PointsKey(0, eBoundaryLayerPoints),
                     boost::bind(&GaussPoints::CreateMatrix, this, _1));            
+		m_InterpManager.RegisterCreator(PointsKey(0, eBoundaryLayerPointsRev),
+                    boost::bind(&GaussPoints::CreateMatrix, this, _1));            
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussGaussLegendre),
                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eGaussRadauMLegendre),
@@ -145,7 +147,10 @@ namespace Nektar
                 m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, ePolyEvenlySpaced),
                     boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
 		m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eBoundaryLayerPoints),
-                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));            }
+                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+		m_GalerkinProjectionManager.RegisterCreator(PointsKey(0, eBoundaryLayerPointsRev),
+                    boost::bind(&GaussPoints::CreateGPMatrix, this, _1));
+            }
 
 
         private:

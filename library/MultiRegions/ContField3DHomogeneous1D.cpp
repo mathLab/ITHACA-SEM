@@ -233,7 +233,7 @@ namespace Nektar
                     beta = 2*M_PI*(m_transposition->GetK(n))/m_lhom;
                     new_factors = factors;
                     // add in Homogeneous Fourier direction and SVV if turned on
-                    new_factors[StdRegions::eFactorLambda] += beta*beta*(1+m_transposition->GetSpecVanVisc(n));
+                    new_factors[StdRegions::eFactorLambda] += beta*beta*(1+GetSpecVanVisc(n));
                     
                     m_planes[n]->HelmSolve(fce + cnt,
                                            e_out = outarray + cnt1,

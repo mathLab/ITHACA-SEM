@@ -53,7 +53,7 @@ namespace Nektar
         {
         public:
             STD_REGIONS_EXPORT StdMatrixKey( const StdRegions::MatrixType matrixType,
-                          const StdRegions::ExpansionType expansionType,
+                          const LibUtilities::ShapeType shapeType,
                           const StdRegions::StdExpansion &stdExpansion,
                           const ConstFactorMap &factorMap = NullConstFactorMap,
                           const VarCoeffMap &varCoeffMap = NullVarCoeffMap,
@@ -84,9 +84,9 @@ namespace Nektar
                 return m_matrixType;
             }
 
-            ExpansionType GetExpansionType() const
+            LibUtilities::ShapeType GetShapeType() const
             {
-                return m_expansionType;
+                return m_shapeType;
             }
 
             LibUtilities::PointsType GetNodalPointsType() const
@@ -128,6 +128,17 @@ namespace Nektar
                 return x->second;
             }
 
+            inline  bool ConstFactorExists(const ConstFactorType& factor) const
+            {
+                ConstFactorMap::const_iterator x = m_factors.find(factor);
+                if(x != m_factors.end())
+                {
+                    return true;
+                }
+                
+                return false;
+            }
+
             inline const ConstFactorMap& GetConstFactors() const
             {
                 return m_factors;
@@ -165,7 +176,7 @@ namespace Nektar
             }
 
         protected:
-            ExpansionType m_expansionType;
+            LibUtilities::ShapeType m_shapeType;
             Array<OneD, const LibUtilities::BasisSharedPtr> m_base;
 
             unsigned int m_ncoeffs;

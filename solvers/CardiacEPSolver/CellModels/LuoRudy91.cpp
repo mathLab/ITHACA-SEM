@@ -89,58 +89,78 @@ namespace Nektar
             const NekDouble var_slow_inward_current__i_si = 0.09 * var_slow_inward_current__d * var_slow_inward_current__f * (var_slow_inward_current__V - var_slow_inward_current__E_si); // microA_per_cm2
             const NekDouble var_time_dependent_potassium_current__V = var_chaste_interface__membrane__V; // millivolt
             const NekDouble var_time_dependent_potassium_current__X = var_chaste_interface__time_dependent_potassium_current_X_gate__X; // dimensionless
+#if 0 
             const NekDouble var_fast_sodium_current_m_gate__m = var_fast_sodium_current__m; // dimensionless
+#endif
             const NekDouble var_fast_sodium_current_m_gate__V = var_fast_sodium_current__V; // millivolt
             const NekDouble var_fast_sodium_current_m_gate__alpha_m = (0.32 * (var_fast_sodium_current_m_gate__V + 47.13)) / (1.0 - exp((-0.1) * (var_fast_sodium_current_m_gate__V + 47.13))); // per_millisecond
             const NekDouble var_fast_sodium_current_m_gate__beta_m = 0.08 * exp((-var_fast_sodium_current_m_gate__V) / 11.0); // per_millisecond
+#if 0 
             const NekDouble var_fast_sodium_current_m_gate__d_m_d_environment__time = (var_fast_sodium_current_m_gate__alpha_m * (1.0 - var_fast_sodium_current_m_gate__m)) - (var_fast_sodium_current_m_gate__beta_m * var_fast_sodium_current_m_gate__m); // per_millisecond
             const NekDouble var_fast_sodium_current__fast_sodium_current_m_gate__d_m_d_environment__time = var_fast_sodium_current_m_gate__d_m_d_environment__time; // per_millisecond
+#endif
             const NekDouble var_fast_sodium_current_h_gate__V = var_fast_sodium_current__V; // millivolt
             const NekDouble var_fast_sodium_current_h_gate__beta_h = (var_fast_sodium_current_h_gate__V < (-40.0)) ? ((3.56 * exp(0.079 * var_fast_sodium_current_h_gate__V)) + (310000.0 * exp(0.35 * var_fast_sodium_current_h_gate__V))) : (1.0 / (0.13 * (1.0 + exp((var_fast_sodium_current_h_gate__V + 10.66) / (-11.1))))); // per_millisecond
             const NekDouble var_fast_sodium_current_h_gate__alpha_h = (var_fast_sodium_current_h_gate__V < (-40.0)) ? (0.135 * exp((80.0 + var_fast_sodium_current_h_gate__V) / (-6.8))) : 0.0; // per_millisecond
+#if 0 
             const NekDouble var_fast_sodium_current_h_gate__h = var_fast_sodium_current__h; // dimensionless
             const NekDouble var_fast_sodium_current_h_gate__d_h_d_environment__time = (var_fast_sodium_current_h_gate__alpha_h * (1.0 - var_fast_sodium_current_h_gate__h)) - (var_fast_sodium_current_h_gate__beta_h * var_fast_sodium_current_h_gate__h); // per_millisecond
             const NekDouble var_fast_sodium_current__fast_sodium_current_h_gate__d_h_d_environment__time = var_fast_sodium_current_h_gate__d_h_d_environment__time; // per_millisecond
+#endif
             const NekDouble var_fast_sodium_current_j_gate__V = var_fast_sodium_current__V; // millivolt
             const NekDouble var_fast_sodium_current_j_gate__alpha_j = (var_fast_sodium_current_j_gate__V < (-40.0)) ? (((((-127140.0) * exp(0.2444 * var_fast_sodium_current_j_gate__V)) - (3.474e-05 * exp((-0.04391) * var_fast_sodium_current_j_gate__V))) * (var_fast_sodium_current_j_gate__V + 37.78)) / (1.0 + exp(0.311 * (var_fast_sodium_current_j_gate__V + 79.23)))) : 0.0; // per_millisecond
             const NekDouble var_fast_sodium_current_j_gate__beta_j = (var_fast_sodium_current_j_gate__V < (-40.0)) ? ((0.1212 * exp((-0.01052) * var_fast_sodium_current_j_gate__V)) / (1.0 + exp((-0.1378) * (var_fast_sodium_current_j_gate__V + 40.14)))) : ((0.3 * exp((-2.535e-07) * var_fast_sodium_current_j_gate__V)) / (1.0 + exp((-0.1) * (var_fast_sodium_current_j_gate__V + 32.0)))); // per_millisecond
+#if 0 
             const NekDouble var_fast_sodium_current_j_gate__j = var_fast_sodium_current__j; // dimensionless
             const NekDouble var_fast_sodium_current_j_gate__d_j_d_environment__time = (var_fast_sodium_current_j_gate__alpha_j * (1.0 - var_fast_sodium_current_j_gate__j)) - (var_fast_sodium_current_j_gate__beta_j * var_fast_sodium_current_j_gate__j); // per_millisecond
             const NekDouble var_fast_sodium_current__fast_sodium_current_j_gate__d_j_d_environment__time = var_fast_sodium_current_j_gate__d_j_d_environment__time; // per_millisecond
+#endif
             const NekDouble var_slow_inward_current_d_gate__V = var_slow_inward_current__V; // millivolt
             const NekDouble var_slow_inward_current_d_gate__alpha_d = (0.095 * exp((-0.01) * (var_slow_inward_current_d_gate__V - 5.0))) / (1.0 + exp((-0.072) * (var_slow_inward_current_d_gate__V - 5.0))); // per_millisecond
+#if 0 
             const NekDouble var_slow_inward_current_d_gate__d = var_slow_inward_current__d; // dimensionless
+#endif
             const NekDouble var_slow_inward_current_d_gate__beta_d = (0.07 * exp((-0.017) * (var_slow_inward_current_d_gate__V + 44.0))) / (1.0 + exp(0.05 * (var_slow_inward_current_d_gate__V + 44.0))); // per_millisecond
+#if 0 
             const NekDouble var_slow_inward_current_d_gate__d_d_d_environment__time = (var_slow_inward_current_d_gate__alpha_d * (1.0 - var_slow_inward_current_d_gate__d)) - (var_slow_inward_current_d_gate__beta_d * var_slow_inward_current_d_gate__d); // per_millisecond
             const NekDouble var_slow_inward_current__slow_inward_current_d_gate__d_d_d_environment__time = var_slow_inward_current_d_gate__d_d_d_environment__time; // per_millisecond
             const NekDouble var_slow_inward_current_f_gate__f = var_slow_inward_current__f; // dimensionless
+#endif
             const NekDouble var_slow_inward_current_f_gate__V = var_slow_inward_current__V; // millivolt
             const NekDouble var_slow_inward_current_f_gate__alpha_f = (0.012 * exp((-0.008) * (var_slow_inward_current_f_gate__V + 28.0))) / (1.0 + exp(0.15 * (var_slow_inward_current_f_gate__V + 28.0))); // per_millisecond
             const NekDouble var_slow_inward_current_f_gate__beta_f = (0.0065 * exp((-0.02) * (var_slow_inward_current_f_gate__V + 30.0))) / (1.0 + exp((-0.2) * (var_slow_inward_current_f_gate__V + 30.0))); // per_millisecond
+#if 0 
             const NekDouble var_slow_inward_current_f_gate__d_f_d_environment__time = (var_slow_inward_current_f_gate__alpha_f * (1.0 - var_slow_inward_current_f_gate__f)) - (var_slow_inward_current_f_gate__beta_f * var_slow_inward_current_f_gate__f); // per_millisecond
             const NekDouble var_slow_inward_current__slow_inward_current_f_gate__d_f_d_environment__time = var_slow_inward_current_f_gate__d_f_d_environment__time; // per_millisecond
             const NekDouble var_time_dependent_potassium_current_X_gate__X = var_time_dependent_potassium_current__X; // dimensionless
+#endif
             const NekDouble var_time_dependent_potassium_current_X_gate__V = var_time_dependent_potassium_current__V; // millivolt
             const NekDouble var_time_dependent_potassium_current_X_gate__beta_X = (0.0013 * exp((-0.06) * (var_time_dependent_potassium_current_X_gate__V + 20.0))) / (1.0 + exp((-0.04) * (var_time_dependent_potassium_current_X_gate__V + 20.0))); // per_millisecond
             const NekDouble var_time_dependent_potassium_current_X_gate__alpha_X = (0.0005 * exp(0.083 * (var_time_dependent_potassium_current_X_gate__V + 50.0))) / (1.0 + exp(0.057 * (var_time_dependent_potassium_current_X_gate__V + 50.0))); // per_millisecond
+#if 0 
             const NekDouble var_time_dependent_potassium_current_X_gate__d_X_d_environment__time = (var_time_dependent_potassium_current_X_gate__alpha_X * (1.0 - var_time_dependent_potassium_current_X_gate__X)) - (var_time_dependent_potassium_current_X_gate__beta_X * var_time_dependent_potassium_current_X_gate__X); // per_millisecond
             const NekDouble var_time_dependent_potassium_current__time_dependent_potassium_current_X_gate__d_X_d_environment__time = var_time_dependent_potassium_current_X_gate__d_X_d_environment__time; // per_millisecond
+#endif
             const NekDouble var_intracellular_calcium_concentration__Cai = var_chaste_interface__intracellular_calcium_concentration__Cai; // millimolar
             const NekDouble var_intracellular_calcium_concentration__i_si = var_slow_inward_current__i_si; // microA_per_cm2
             const NekDouble var_intracellular_calcium_concentration__d_Cai_d_environment__time = (((-0.0001) / 1.0) * var_intracellular_calcium_concentration__i_si) + (0.07 * (0.0001 - var_intracellular_calcium_concentration__Cai)); // 'millimole per litre per millisecond'
+#if 0
             const NekDouble var_chaste_interface__fast_sodium_current_m_gate__d_m_d_environment__time = var_fast_sodium_current__fast_sodium_current_m_gate__d_m_d_environment__time; // per_millisecond
             const NekDouble var_chaste_interface__fast_sodium_current_h_gate__d_h_d_environment__time = var_fast_sodium_current__fast_sodium_current_h_gate__d_h_d_environment__time; // per_millisecond
             const NekDouble var_chaste_interface__fast_sodium_current_j_gate__d_j_d_environment__time = var_fast_sodium_current__fast_sodium_current_j_gate__d_j_d_environment__time; // per_millisecond
             const NekDouble var_chaste_interface__slow_inward_current_d_gate__d_d_d_environment__time = var_slow_inward_current__slow_inward_current_d_gate__d_d_d_environment__time; // per_millisecond
             const NekDouble var_chaste_interface__slow_inward_current_f_gate__d_f_d_environment__time = var_slow_inward_current__slow_inward_current_f_gate__d_f_d_environment__time; // per_millisecond
             const NekDouble var_chaste_interface__time_dependent_potassium_current_X_gate__d_X_d_environment__time = var_time_dependent_potassium_current__time_dependent_potassium_current_X_gate__d_X_d_environment__time; // per_millisecond
+#endif
             const NekDouble var_chaste_interface__intracellular_calcium_concentration__d_Cai_d_environment__time = var_intracellular_calcium_concentration__d_Cai_d_environment__time; // ___units_16
+#if 0
             const NekDouble d_dt_chaste_interface__fast_sodium_current_m_gate__m = var_chaste_interface__fast_sodium_current_m_gate__d_m_d_environment__time; // per_millisecond
             const NekDouble d_dt_chaste_interface__fast_sodium_current_h_gate__h = var_chaste_interface__fast_sodium_current_h_gate__d_h_d_environment__time; // per_millisecond
             const NekDouble d_dt_chaste_interface__fast_sodium_current_j_gate__j = var_chaste_interface__fast_sodium_current_j_gate__d_j_d_environment__time; // per_millisecond
             const NekDouble d_dt_chaste_interface__slow_inward_current_d_gate__d = var_chaste_interface__slow_inward_current_d_gate__d_d_d_environment__time; // per_millisecond
             const NekDouble d_dt_chaste_interface__slow_inward_current_f_gate__f = var_chaste_interface__slow_inward_current_f_gate__d_f_d_environment__time; // per_millisecond
             const NekDouble d_dt_chaste_interface__time_dependent_potassium_current_X_gate__X = var_chaste_interface__time_dependent_potassium_current_X_gate__d_X_d_environment__time; // per_millisecond
+#endif
             const NekDouble d_dt_chaste_interface__intracellular_calcium_concentration__Cai = var_chaste_interface__intracellular_calcium_concentration__d_Cai_d_environment__time; // 'millimole per litre per millisecond'
             
             const NekDouble var_membrane__R = 8314.0; // joule_per_kilomole_kelvin

@@ -35,6 +35,7 @@
 
 
 #include <LocalRegions/PrismExp.h>
+#include <SpatialDomains/SegGeom.h>
 #include <LibUtilities/Foundations/Interp.h>
 
 namespace Nektar
@@ -46,10 +47,10 @@ namespace Nektar
                            const LibUtilities::BasisKey &Bb,
                            const LibUtilities::BasisKey &Bc,
                            const SpatialDomains::PrismGeomSharedPtr &geom):
-            StdExpansion  (StdRegions::StdPrismData::getNumberOfCoefficients(
+            StdExpansion  (LibUtilities::StdPrismData::getNumberOfCoefficients(
                                Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()),
                            3, Ba, Bb, Bc),
-            StdExpansion3D(StdRegions::StdPrismData::getNumberOfCoefficients(
+            StdExpansion3D(LibUtilities::StdPrismData::getNumberOfCoefficients(
                                Ba.GetNumModes(), Bb.GetNumModes(), Bc.GetNumModes()), 
                            Ba, Bb, Bc),
             StdPrismExp   (Ba, Bb, Bc),
@@ -224,7 +225,7 @@ namespace Nektar
 
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
-                                              DetExpansionType(),*this);
+                                              DetShapeType(),*this);
                 DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
                 // copy inarray in case inarray == outarray
@@ -552,6 +553,19 @@ namespace Nektar
             }
         }
 
+        /**
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble PrismExp::v_StdPhysEvaluate(
+            const Array<OneD, const NekDouble> &Lcoord,
+            const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdPrismExp::v_PhysEvaluate(Lcoord,physvals);
+        }
+
         NekDouble PrismExp::v_PhysEvaluate(const Array<OneD, const NekDouble>& coord)
         {
             return PhysEvaluate(coord, m_phys);
@@ -579,12 +593,83 @@ namespace Nektar
             return m_geom->GetCoordim();
         }
 
+        void PrismExp::v_ExtractDataToCoeffs(
+                const NekDouble*                  data,
+                const std::vector<unsigned int >& nummodes,
+                const int                         mode_offset,
+                NekDouble*                        coeffs)
+        {
+            int data_order0 = nummodes[mode_offset];
+            int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
+            int data_order1 = nummodes[mode_offset+1];
+            int order1      = m_base[1]->GetNumModes();
+            int fillorder1  = min(order1,data_order1);
+            int data_order2 = nummodes[mode_offset+2];
+            int order2      = m_base[2]->GetNumModes();
+            int fillorder2  = min(order2,data_order2);
+
+            switch(m_base[0]->GetBasisType())
+            {
+            case LibUtilities::eModified_A:
+                {
+                    int i,j;
+                    int cnt  = 0;
+                    int cnt1 = 0;
+
+                    ASSERTL1(m_base[1]->GetBasisType() ==
+                             LibUtilities::eModified_A,
+                             "Extraction routine not set up for this basis");
+                    ASSERTL1(m_base[2]->GetBasisType() ==
+                             LibUtilities::eModified_B,
+                             "Extraction routine not set up for this basis");
+
+                    Vmath::Zero(m_ncoeffs,coeffs,1);
+                    for(j = 0; j < fillorder0; ++j)
+                    {
+                        for(i = 0; i < fillorder1; ++i)
+                        {
+                            Vmath::Vcopy(fillorder2-j, &data[cnt],    1,
+                                                       &coeffs[cnt1], 1);
+                            cnt  += data_order2-j;
+                            cnt1 += order2-j;
+                        }
+
+                        // count out data for j iteration
+                        for(i = fillorder1; i < data_order1; ++i)
+                        {
+                            cnt += data_order2-j;
+                        }
+
+                        for(i = fillorder1; i < order1; ++i)
+                        {
+                            cnt1 += order2-j;
+                        }
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false, "basis is either not set up or not "
+                                "hierarchicial");
+            }
+        }
+
+
         StdRegions::Orientation PrismExp::v_GetFaceOrient(int face)
         {
             return GetGeom3D()->GetFaceOrient(face);
         }
 
         ///Returns the physical values at the quadrature points of a face
+        void PrismExp::v_GetTracePhysVals(
+            const int                                face,
+            const StdRegions::StdExpansionSharedPtr &FaceExp,
+            const Array<OneD, const NekDouble>      &inarray,
+                  Array<OneD,       NekDouble>      &outarray,
+            StdRegions::Orientation                  orient)
+        {
+            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
+        }
+
         void PrismExp::v_GetFacePhysVals(
             const int                                face,
             const StdRegions::StdExpansionSharedPtr &FaceExp,
@@ -878,26 +963,26 @@ namespace Nektar
 
         void PrismExp::v_ComputeFaceNormal(const int face)
         {
-            const SpatialDomains::GeomFactorsSharedPtr &geomFactors = 
+            const SpatialDomains::GeomFactorsSharedPtr &geomFactors =
                 GetGeom()->GetMetricInfo();
             SpatialDomains::GeomType type            = geomFactors->GetGtype();
             const Array<TwoD, const NekDouble> &df   = geomFactors->GetDerivFactors();
             const Array<OneD, const NekDouble> &jac  = geomFactors->GetJac();
-            
+
             // Number of quadrature points in face expansion.
             int nq        = m_base[0]->GetNumPoints()*m_base[0]->GetNumPoints();
             int vCoordDim = GetCoordim();
             int i;
-            
+
             m_faceNormals[face] = Array<OneD, Array<OneD, NekDouble> >(vCoordDim);
             Array<OneD, Array<OneD, NekDouble> > &normal = m_faceNormals[face];
             for (i = 0; i < vCoordDim; ++i)
             {
                 normal[i] = Array<OneD, NekDouble>(nq);
             }
-            
+
             // Regular geometry case
-            if (type == SpatialDomains::eRegular      || 
+            if (type == SpatialDomains::eRegular      ||
                 type == SpatialDomains::eMovingRegular)
             {
                 NekDouble fac;
@@ -959,143 +1044,152 @@ namespace Nektar
                 {
                     Vmath::Smul(nq,fac,normal[i],1,normal[i],1);
                 }
-	    }
+            }
             else
             {
                 // Set up deformed normals.
-	        int j, k;
+                int j, k;
 
-                int nquad0 = geomFactors->GetPointsKey(0).GetNumPoints();
-                int nquad1 = geomFactors->GetPointsKey(1).GetNumPoints();
-		int nquad2 = geomFactors->GetPointsKey(2).GetNumPoints();
-		int nqtot;
-                
+                int nq0  = geomFactors->GetPointsKey(0).GetNumPoints();
+                int nq1  = geomFactors->GetPointsKey(1).GetNumPoints();
+                int nq2  = geomFactors->GetPointsKey(2).GetNumPoints();
+                int nq01 = nq0*nq1;
+                int nqtot;
+
                 // Determine number of quadrature points on the face.
                 if (face == 0)
                 {
-                    nqtot = nquad0*nquad1;
+                    nqtot = nq0*nq1;
                 }
                 else if (face == 1 || face == 3)
                 {
-                    nqtot = nquad0*nquad2;
+                    nqtot = nq0*nq2;
                 }
                 else
                 {
-                    nqtot = nquad1*nquad2;
+                    nqtot = nq1*nq2;
                 }
-                
+
                 LibUtilities::PointsKey points0;
-		LibUtilities::PointsKey points1;
-                
+                LibUtilities::PointsKey points1;
+
                 Array<OneD, NekDouble> work   (nq,             0.0);
                 Array<OneD, NekDouble> normals(vCoordDim*nqtot,0.0);
-                
+
                 // Extract Jacobian along face and recover local derivatives
                 // (dx/dr) for polynomial interpolation by multiplying m_gmat by
                 // jacobian
                 switch(face)
-	        {
+                {
                     case 0:
                     {
-                        for(j = 0; j < nquad0*nquad1; ++j)
+                        for(j = 0; j < nq01; ++j)
                         {
                             normals[j]         = -df[2][j]*jac[j];
                             normals[nqtot+j]   = -df[5][j]*jac[j];
                             normals[2*nqtot+j] = -df[8][j]*jac[j];
                         }
-                        
+
                         points0 = geomFactors->GetPointsKey(0);
                         points1 = geomFactors->GetPointsKey(1);
                         break;
                     }
-                    
+
                     case 1:
                     {
-                        int tmp = nquad0*nquad1;
-                        
-                        for (j = 0; j < nquad0; ++j)
+                        for (j = 0; j < nq0; ++j)
                         {
-                            for(k = 0; k < nquad2; ++k)
+                            for(k = 0; k < nq2; ++k)
                             {
-                                normals[j+k*nquad0]          = 
-                                    -df[1][j+tmp*k]*jac[j+tmp*k];
-                                normals[nqtot+j+k*nquad0]    = 
-                                    -df[4][j+tmp*k]*jac[j+tmp*k];
-                                normals[2*nqtot+j+k*nquad0]  = 
-                                    -df[7][j+tmp*k]*jac[j+tmp*k];
-                            } 
+                                int tmp = j+nq01*k;
+                                normals[j+k*nq0]          =
+                                    -df[1][tmp]*jac[tmp];
+                                normals[nqtot+j+k*nq0]    =
+                                    -df[4][tmp]*jac[tmp];
+                                normals[2*nqtot+j+k*nq0]  =
+                                    -df[7][tmp]*jac[tmp];
+                            }
                         }
 
                         points0 = geomFactors->GetPointsKey(0);
                         points1 = geomFactors->GetPointsKey(2);
                         break;
                     }
-                    
+
                     case 2:
                     {
-                        for (j = 0; j < nquad1; ++j)
+                        for (j = 0; j < nq1; ++j)
                         {
-                            for(k = 0; k < nquad2; ++k)
+                            for(k = 0; k < nq2; ++k)
                             {
-                                normals[j+k*nquad0]  = (df[0][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                                        +df[2][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                                normals[nqtot+j+k*nquad0]  = (df[3][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                                              +df[5][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                                normals[2*nqtot+j+k*nquad0]  = (df[6][nquad0-1+nquad0*j+nquad0*nquad1*k]
-                                                                +df[8][nquad0-1+nquad0*j+nquad0*nquad1*k])*jac[nquad0-1+nquad0*j+nquad0*nquad1*k];
-                            } 
+                                int tmp = nq0-1+nq0*j+nq01*k;
+                                normals[j+k*nq1]         =
+                                    (df[0][tmp]+df[2][tmp])*jac[tmp];
+                                normals[nqtot+j+k*nq1]   =
+                                    (df[3][tmp]+df[5][tmp])*jac[tmp];
+                                normals[2*nqtot+j+k*nq1] =
+                                    (df[6][tmp]+df[8][tmp])*jac[tmp];
+                            }
                         }
-                        
+
                         points0 = geomFactors->GetPointsKey(1);
                         points1 = geomFactors->GetPointsKey(2);
                         break;
                     }
-                        
+
                     case 3:
                     {
-                        for (j=0; j< nquad0; ++j)
+                        for (j = 0; j < nq0; ++j)
                         {
-                            for(k=0; k<nquad2; ++k)
+                            for(k = 0; k < nq2; ++k)
                             {
-                                normals[j+k*nquad0]  = df[1][nquad0*(nquad1-1)+j+nquad0*nquad1*k]*jac[nquad0*(nquad1-1)+j+nquad0*nquad1*k];
-                                normals[nqtot+j+k*nquad0]  = df[4][nquad0*(nquad1-1)+j+nquad0*nquad1*k]*jac[nquad0*(nquad1-1)+j+nquad0*nquad1*k];
-                                normals[2*nqtot+j+k*nquad0]  = df[7][nquad0*(nquad1-1)+j+nquad0*nquad1*k]*jac[nquad0*(nquad1-1)+j+nquad0*nquad1*k];
-                            } 
+                                int tmp = nq0*(nq1-1) + j + nq01*k;
+                                normals[j+k*nq0]         =
+                                    df[1][tmp]*jac[tmp];
+                                normals[nqtot+j+k*nq0]   =
+                                    df[4][tmp]*jac[tmp];
+                                normals[2*nqtot+j+k*nq0] =
+                                    df[7][tmp]*jac[tmp];
+                            }
                         }
-                        
+
                         points0 = geomFactors->GetPointsKey(0);
                         points1 = geomFactors->GetPointsKey(2);
                         break;
                     }
-                    
+
                     case 4:
                     {
-                        for (j=0; j< nquad0; ++j)
+                        for (j = 0; j < nq1; ++j)
                         {
-                            for(k=0; k<nquad2; ++k)
+                            for(k = 0; k < nq2; ++k)
                             {
-                                normals[j+k*nquad0]  = -df[0][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                                normals[nqtot+j+k*nquad0]  = -df[3][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                                normals[2*nqtot+j+k*nquad0]  = -df[6][j*nquad0+nquad0*nquad1*k]*jac[j*nquad0+nquad0*nquad1*k];
-                            } 
+                                int tmp = j*nq0+nq01*k;
+                                normals[j+k*nq1]         =
+                                    -df[0][tmp]*jac[tmp];
+                                normals[nqtot+j+k*nq1]   =
+                                    -df[3][tmp]*jac[tmp];
+                                normals[2*nqtot+j+k*nq1] =
+                                    -df[6][tmp]*jac[tmp];
+                            }
                         }
-                        
+
                         points0 = geomFactors->GetPointsKey(1);
                         points1 = geomFactors->GetPointsKey(2);
                         break;
                     }
-                        
+
                     default:
                         ASSERTL0(false,"face is out of range (face < 4)");
-		}
+                }
 
                 // Interpolate Jacobian and invert
-                LibUtilities::Interp2D(points0, points1, jac, 
+                LibUtilities::Interp2D(points0, points1, jac,
                                        m_base[0]->GetPointsKey(),
                                        m_base[0]->GetPointsKey(),
                                        work);
                 Vmath::Sdiv(nq, 1.0, &work[0], 1, &work[0], 1);
-                    
+
                 // Interpolate normal and multiply by inverse Jacobian.
                 for(i = 0; i < vCoordDim; ++i)
                 {
@@ -1113,14 +1207,14 @@ namespace Nektar
                 {
                     Vmath::Vvtvp(nq,normal[i],1,normal[i],1,work,1,work,1);
                 }
-                
+
                 Vmath::Vsqrt(nq,work,1,work,1);
                 Vmath::Sdiv (nq,1.0,work,1,work,1);
 
                 for(i = 0; i < GetCoordim(); ++i)
                 {
                     Vmath::Vmul(nq,normal[i],1,work,1,normal[i],1);
-		}
+                }
             }
         }
 
@@ -1372,6 +1466,11 @@ namespace Nektar
             return m_staticCondMatrixManager[mkey];
         }
 
+        void PrismExp::v_DropLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            m_staticCondMatrixManager.DeleteObject(mkey);
+        }
+
         DNekScalMatSharedPtr PrismExp::CreateMatrix(const MatrixKey &mkey)
         {
             DNekScalMatSharedPtr returnval;
@@ -1403,7 +1502,7 @@ namespace Nektar
                     if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
                     {
                         NekDouble one = 1.0;
-                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetExpansionType(),*this);
+                        StdRegions::StdMatrixKey masskey(StdRegions::eMass,DetShapeType(),*this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
 
@@ -1451,11 +1550,11 @@ namespace Nektar
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
-                                            mkey.GetExpansionType(), *this);  
+                                            mkey.GetShapeType(), *this);  
                         MatrixKey deriv1key(StdRegions::eWeakDeriv1,
-                                            mkey.GetExpansionType(), *this);
+                                            mkey.GetShapeType(), *this);
                         MatrixKey deriv2key(StdRegions::eWeakDeriv2,
-                                            mkey.GetExpansionType(), *this);
+                                            mkey.GetShapeType(), *this);
 
                         DNekMat &deriv0 = *GetStdMatrix(deriv0key);
                         DNekMat &deriv1 = *GetStdMatrix(deriv1key);
@@ -1488,17 +1587,17 @@ namespace Nektar
                     else
                     {
                         MatrixKey lap00key(StdRegions::eLaplacian00,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap01key(StdRegions::eLaplacian01,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap02key(StdRegions::eLaplacian02,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap11key(StdRegions::eLaplacian11,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap12key(StdRegions::eLaplacian12,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap22key(StdRegions::eLaplacian22,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
 
                         DNekMat &lap00 = *GetStdMatrix(lap00key);
                         DNekMat &lap01 = *GetStdMatrix(lap01key);
@@ -1548,10 +1647,10 @@ namespace Nektar
                 {
                     NekDouble factor = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
-                                      mkey.GetExpansionType(), *this);    
+                                      mkey.GetShapeType(), *this);    
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                                     mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -1565,7 +1664,6 @@ namespace Nektar
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,helm);            
                     break;
                 }
-
                 case StdRegions::eHybridDGHelmholtz:
                 case StdRegions::eHybridDGLamToU:
                 case StdRegions::eHybridDGLamToQ0:
@@ -1584,7 +1682,7 @@ namespace Nektar
                 {
                     NekDouble one = 1.0;
                     
-                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
 //                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
 //                                                  DetExpansionType(),*this,
 //                                                  mkey.GetConstant(0),
@@ -1612,7 +1710,50 @@ namespace Nektar
                     }
                     break;
                 }
-                default:
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+                    
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconR:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
+                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
+                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconRT:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekScalMatSharedPtr Blk01 =helmStatCond->GetBlock(0,1);
+                    DNekScalMatSharedPtr Blk10 =helmStatCond->GetBlock(1,0);
+                    DNekScalMatSharedPtr Blk11 =helmStatCond->GetBlock(1,1);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            default:
                 {
                     NekDouble        one = 1.0;
                     DNekMatSharedPtr mat = GenMatrix(mkey);
@@ -1634,16 +1775,15 @@ namespace Nektar
             int nbdry = NumBndryCoeffs();
             int nint = m_ncoeffs - nbdry;
 
-            unsigned int exp_size[] = {nbdry, nint};
-            int nblks = 2;
-            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); //Really need a constructor which takes Arrays
             NekDouble factor = 1.0;
+            unsigned int exp_size[] = {nbdry, nint};
+            int nblks=2;
+            returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); 
 
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eLaplacian:
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
-
                 // use Deformed case for both regular and deformed geometries
                 factor = 1.0;
                 goto UseLocRegionsMatrix;
@@ -1734,6 +1874,7 @@ namespace Nektar
                     returnval->SetBlock(1,1,Atmp = MemoryManager<DNekScalMat>::AllocateSharedPtr(invfactor,D));
 
                 }
+                break;
             }
             return returnval;
         }
@@ -1910,5 +2051,6 @@ namespace Nektar
             Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
             Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
         }
+
     }//end of namespace
 }//end of namespace

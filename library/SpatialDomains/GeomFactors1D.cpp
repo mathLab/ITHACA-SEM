@@ -92,7 +92,7 @@ namespace Nektar
             }
 
             // Get the shape of the expansion
-            StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
+            LibUtilities::ShapeType shape = Coords[0]->DetShapeType();
 
             // The quadrature points of the mapping
             // (as specified in Coords)

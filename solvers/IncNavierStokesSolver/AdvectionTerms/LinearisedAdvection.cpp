@@ -273,7 +273,7 @@ namespace Nektar
                         for(i = 0 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                         }
                     }
                     
@@ -301,7 +301,7 @@ namespace Nektar
                             for(i = 0 ; i < m_base.num_elements(); i++)
                             {								
                                 m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                                 m_base[i]->SetWaveSpace(true);
                                 
 				
@@ -316,7 +316,7 @@ namespace Nektar
                             for(i = 0 ; i < m_base.num_elements(); i++)
                             {																
                                 m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                                 m_base[i]->SetWaveSpace(true);
                                 
                             } 
@@ -331,7 +331,7 @@ namespace Nektar
                             for(i = 0 ; i < m_base.num_elements(); i++)
                             {
                                 m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                                 m_base[i]->SetWaveSpace(false);
                             } 
                             
@@ -399,7 +399,7 @@ namespace Nektar
                         for(i = 0 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                         }
                     }
                     else 
@@ -424,7 +424,7 @@ namespace Nektar
                         for(i = 0 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                         }
 			
 			
@@ -461,13 +461,13 @@ namespace Nektar
     void LinearisedAdvection::ImportFldBase(std::string pInfile,
             SpatialDomains::MeshGraphSharedPtr pGraph, int cnt)
     {
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef;
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef;
         std::vector<std::vector<NekDouble> > FieldData;
-		int nqtot = m_base[0]->GetTotPoints();
-
-		//Get Homogeneous
-
-        pGraph->Import(pInfile,FieldDef,FieldData);
+        int nqtot = m_base[0]->GetTotPoints();
+        
+        //Get Homogeneous
+        
+        LibUtilities::Import(pInfile,FieldDef,FieldData);
         
         int nvar = m_session->GetVariables().size();
         int s;
@@ -482,41 +482,42 @@ namespace Nektar
         {
             for(int i = 0; i < FieldDef.size(); ++i)
             {
-                if((m_session->DefinesSolverInfo("HOMOGENEOUS") && (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D"|| m_session->GetSolverInfo("HOMOGENEOUS")=="1D"||m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D"))&& nvar==3)
+                if((m_session->DefinesSolverInfo("HOMOGENEOUS") &&
+                   (m_session->GetSolverInfo("HOMOGENEOUS")=="HOMOGENEOUS1D" ||
+                    m_session->GetSolverInfo("HOMOGENEOUS")=="1D" ||
+                    m_session->GetSolverInfo("HOMOGENEOUS")=="Homo1D")) &&
+                     m_MultipleModes==false)
                 {
-                    
                     // w-component must be ignored and set to zero.
-                    if(j!=nvar-2)
+                    if (j != nvar - 2)
                     {
                         // p component (it is 4th variable of the 3D and corresponds 3nd variable of 2D)
-                        if(j==nvar-1)
-                        {
-                            s=2;
-                        }
-                        else 
-                        {
-                            s=j;	
-                        }
-			
+                        s = (j == nvar - 1) ? 2 : j;
+
                         //extraction of the 2D
-                        m_base[j]->ExtractDataToCoeffs(FieldDef[i], FieldData[i],
-                                                       FieldDef[i]->m_fields[s],
-                                                       m_base[j]->UpdateCoeffs());
+                        m_base[j]->ExtractDataToCoeffs(
+                                            FieldDef[i],
+                                            FieldData[i],
+                                            FieldDef[i]->m_fields[s],
+                                            m_base[j]->UpdateCoeffs());
                         
                     }
+
                     //Put zero on higher modes
-                    int ncplane=(m_base[0]->GetNcoeffs())/m_npointsZ;
-                    if(m_npointsZ>2)
+                    int ncplane = (m_base[0]->GetNcoeffs()) / m_npointsZ;
+
+                    if (m_npointsZ > 2)
                     {
-                        Vmath::Zero(ncplane*(m_npointsZ-2),&m_base[j]->UpdateCoeffs()[2*ncplane],1);
+                        Vmath::Zero(ncplane*(m_npointsZ-2),
+                                    &m_base[j]->UpdateCoeffs()[2*ncplane], 1);
                     }
-                    
                 }
-                //2D cases and Homogeneous1D Base Flows
+                // 2D cases and Homogeneous1D Base Flows
                 else
                 {
-                    bool flag = FieldDef[i]->m_fields[j]
-                        == m_session->GetVariable(j);
+                    bool flag = FieldDef[i]->m_fields[j] ==
+                                                    m_session->GetVariable(j);
+
                     ASSERTL1(flag, (std::string("Order of ") + pInfile
                                     + std::string(" data and that defined in "
                                                   "m_boundaryconditions differs")).c_str());
@@ -705,7 +706,7 @@ namespace Nektar
             {
                 //x-equation	
             case 0:
-                if(m_dealiasing)
+                if(m_homogen_dealiasing)
                 {
                     //U du'/dx
                     pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
@@ -747,7 +748,7 @@ namespace Nektar
                 break;
                 //y-equation	
             case 1:
-                if(m_dealiasing)
+                if(m_homogen_dealiasing)
                 {
                     //U dv'/dx
                     pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
@@ -787,7 +788,7 @@ namespace Nektar
                 
                 //z-equation	
             case 2:
-                if(m_dealiasing)
+                if(m_homogen_dealiasing)
                 {
                     //U dw'/dx
                     pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
@@ -883,7 +884,7 @@ namespace Nektar
     void LinearisedAdvection::WriteFldBase(std::string &outname, MultiRegions::ExpListSharedPtr &field, Array<OneD, Array<OneD, NekDouble> > &fieldcoeffs, Array<OneD, std::string> &variables)
     {
         
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef= field->GetFieldDefinitions();
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef= field->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 	
         // copy Data into FieldData and set variable
@@ -897,7 +898,7 @@ namespace Nektar
                 field->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
             }            
         }
-        m_graph->Write(outname,FieldDef,FieldData);
+        LibUtilities::Write(outname,FieldDef,FieldData);
     }
     
     
@@ -925,7 +926,7 @@ namespace Nektar
         StdRegions::StdSegExp StdSeg(BK);
 	
         StdRegions::StdMatrixKey matkey(StdRegions::eFwdTrans,
-                                        StdSeg.DetExpansionType(),
+                                        StdSeg.DetShapeType(),
                                         StdSeg);
         
         loc_mat = StdSeg.GetStdMatrix(matkey);

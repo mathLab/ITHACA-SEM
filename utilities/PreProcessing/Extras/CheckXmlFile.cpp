@@ -98,6 +98,19 @@ int main(int argc, char *argv[])
                 zc[i] = z;
                 
             }
+
+            for (int i = 0; i < nverts; ++i)
+            {
+                for (int j = i+1; j < nverts; ++j)
+                {
+                    if ((xc[i]-xc[j])*(xc[i]-xc[j]) +
+                        (yc[i]-yc[j])*(yc[i]-yc[j]) +
+                        (zc[i]-zc[j])*(zc[i]-zc[j]) < 1e-10)
+                    {
+                        cout << "Duplicate vertices: " << i << " " << j << endl;
+                    }
+                }
+            }
             
             std::map<int,SpatialDomains::TetGeomSharedPtr>::iterator tetIter;
             int cnt = 0;
@@ -111,7 +124,7 @@ int main(int argc, char *argv[])
                 // Check face rotation 
                 if((tetIter->second)->GetFace(0)->GetVid(2) != (tetIter->second)->GetVid(2))
                 {
-                    cout << "ERROR: Face " << tetIter->second->GetFid(0) << " is not aligned with Vertex 3  of Tet " << (tetIter->second)->GetGlobalID() << endl;
+                    cout << "ERROR: Face " << tetIter->second->GetFid(0) << " (vert "<< (tetIter->second)->GetFace(0)->GetVid(2) << ") is not aligned with base vertex of Tet " << (tetIter->second)->GetGlobalID() << " (vert "<< (tetIter->second)->GetVid(2) <<")" << endl;
                     NoRotateIssues = false; 
                 }
 
@@ -120,7 +133,7 @@ int main(int argc, char *argv[])
                 {
                     if((tetIter->second)->GetFace(i)->GetVid(2) != (tetIter->second)->GetVid(3))
                     {
-                        cout << "Face " << tetIter->second->GetFid(i) << " is not aligned with Vertex 4  of Tet " << (tetIter->second)->GetGlobalID() << endl;
+                        cout << "ERROR: Face " << tetIter->second->GetFid(i) << " is not aligned with top Vertex of Tet " << (tetIter->second)->GetGlobalID() << endl;
                         NoRotateIssues = false; 
                     }
                 }
@@ -144,12 +157,35 @@ int main(int argc, char *argv[])
             }
 
 
-            std::map<int,SpatialDomains::PrismGeomSharedPtr>::iterator prismIter;
-            for(prismIter = prismgeom.begin(); prismIter != prismgeom.end(); ++prismIter)
+            // Put prism checks in here
+            std::map<int,SpatialDomains::PrismGeomSharedPtr>::iterator Iter;
+            NoRotateIssues = true;
+            NoOrientationIssues = true;
+            for(Iter = prismgeom.begin(); Iter != prismgeom.end(); ++Iter)
             {
-                // Put prism checks in here
+                
+                // Check face rotation 
+                if((Iter->second)->GetFace(1)->GetVid(2) != (Iter->second)->GetVid(4))
+                {
+                    cout << "ERROR: Face " << Iter->second->GetFid(1) << " (vert "<< (Iter->second)->GetFace(1)->GetVid(2) << ") not aligned to face 1 singular vert of Prism " << (Iter->second)->GetGlobalID() << " (vert "<< (Iter->second)->GetVid(4) <<")" << endl;
+                    NoRotateIssues = false; 
+                }
+                
+                
+                // Check face rotation 
+                if((Iter->second)->GetFace(3)->GetVid(2) != (Iter->second)->GetVid(5))
+                {
+                    cout << "ERROR: Face " << Iter->second->GetFid(3) << " (vert "<< (Iter->second)->GetFace(3)->GetVid(2) << ") not aligned to face 3 singular vert of Prism " << (Iter->second)->GetGlobalID() << " (vert "<< (Iter->second)->GetVid(5) <<")" << endl;
+                    NoRotateIssues = false; 
+                }
+                
             }
-
+                
+            if(NoRotateIssues)
+            {
+                cout << "All Prism Tri faces are correctly aligned" << endl;
+            }
+            
             std::map<int,SpatialDomains::HexGeomSharedPtr>::iterator hexIter;
             for(hexIter = hexgeom.begin(); hexIter != hexgeom.end(); ++hexIter)
             {

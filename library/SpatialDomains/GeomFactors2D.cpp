@@ -148,7 +148,7 @@ namespace Nektar
                 m_coords[i] = Coords[i];
             }
 
-            StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
+            LibUtilities::ShapeType shape = Coords[0]->DetShapeType();
 
             // The quadrature points of the mapping
             // (as specified in Coords)
@@ -603,6 +603,5 @@ namespace Nektar
                 VectorNormalise(m_tangents[1]);
             }
         }
-
     }
 }

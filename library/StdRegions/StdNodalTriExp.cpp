@@ -50,11 +50,11 @@ namespace Nektar
             const LibUtilities::BasisKey &Ba, 
             const LibUtilities::BasisKey &Bb, 
             LibUtilities::PointsType Ntype):
-            StdExpansion  (StdTriData::getNumberOfCoefficients(
+            StdExpansion  (LibUtilities::StdTriData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes()),
                            2,Ba,Bb),
-            StdExpansion2D(StdTriData::getNumberOfCoefficients(
+            StdExpansion2D(LibUtilities::StdTriData::getNumberOfCoefficients(
                                Ba.GetNumModes(),
                                Bb.GetNumModes()),
                            Ba,Bb),
@@ -95,7 +95,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey   Nkey(eInvNBasisTrans, DetExpansionType(), *this,
+            StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
                                 m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
@@ -115,7 +115,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey   Nkey(eInvNBasisTrans, DetExpansionType(), *this,
+            StdMatrixKey   Nkey(eInvNBasisTrans, DetShapeType(), *this,
                                 NullConstFactorMap, NullVarCoeffMap,
                                 m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  inv_vdm = GetStdMatrix(Nkey);
@@ -134,7 +134,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray)
         {
-            StdMatrixKey      Nkey(eNBasisTrans, DetExpansionType(), *this,
+            StdMatrixKey      Nkey(eNBasisTrans, DetShapeType(), *this,
                                     NullConstFactorMap, NullVarCoeffMap,
                                     m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  vdm = GetStdMatrix(Nkey);
@@ -215,7 +215,7 @@ namespace Nektar
             v_IProductWRTBase(inarray,outarray);
             
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass, DetExpansionType(), *this,
+            StdMatrixKey      masskey(eInvMass, DetShapeType(), *this,
                                       NullConstFactorMap, NullVarCoeffMap,
                                       m_nodalPointsKey->GetPointsType());
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);

@@ -38,7 +38,7 @@
 #define NEKTAR_SPATIALDOMAINS_GEOMETRY_H
 
 #include <SpatialDomains/GeomFactors.h>
-#include <SpatialDomains/GeometryShapeType.h>
+#include <LibUtilities/BasicUtils/ShapeType.hpp>
 
 #include <boost/unordered_set.hpp>
 #include <boost/functional/hash.hpp>
@@ -49,19 +49,6 @@ namespace Nektar
 {
     namespace SpatialDomains
     {
-
-        const char* const GeomShapeTypeMap[] =
-        {
-            "NoGeomShapeType",
-            "Segment",
-            "Point",
-            "Triangle",
-            "Quadrilateral",
-            "Tetrahedron",
-            "Pyramid",
-            "Prism",
-            "Hexahedron"
-        };
 
         class Geometry; // Forward declaration for typedef.
         typedef boost::shared_ptr<Geometry> GeometrySharedPtr;
@@ -109,8 +96,10 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline int GetCoordim() const;
                 SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetGeomFactors(
                         const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
+                SPATIAL_DOMAINS_EXPORT GeomFactorsSharedPtr GetRefGeomFactors(
+                        const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis);
                 SPATIAL_DOMAINS_EXPORT inline GeomFactorsSharedPtr GetMetricInfo();
-                SPATIAL_DOMAINS_EXPORT inline GeomShapeType GetGeomShapeType(void);
+                SPATIAL_DOMAINS_EXPORT LibUtilities::ShapeType GetShapeType(void);
                 SPATIAL_DOMAINS_EXPORT inline int GetGlobalID(void);
                 SPATIAL_DOMAINS_EXPORT inline void SetGlobalID(int globalid);
                 SPATIAL_DOMAINS_EXPORT inline int GetVid(int i) const;
@@ -126,6 +115,7 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline int GetShapeDim() const;
                 SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
+                              Array<OneD, NekDouble> &locCoord,
                               NekDouble tol = 0.0);
                 SPATIAL_DOMAINS_EXPORT inline int GetVertexEdgeMap(int i, int j) const;
                 SPATIAL_DOMAINS_EXPORT inline int GetVertexFaceMap(int i, int j) const;
@@ -144,7 +134,6 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline const LibUtilities::BasisSharedPtr
                             GetBasis(const int i, const int j);
 
-
             protected:
 
                 SPATIAL_DOMAINS_EXPORT static GeomFactorsSharedPtr
@@ -159,7 +148,7 @@ namespace Nektar
                 /// enum identifier to determine if quad points are filled
                 GeomState            m_state;
                 GeomType             m_geomType;
-                GeomShapeType        m_geomShapeType;
+                LibUtilities::ShapeType   m_shapeType;
                 int                  m_globalID;
 
                 void GenGeomFactors(
@@ -196,10 +185,13 @@ namespace Nektar
                 virtual int  v_GetCoordim() const;
                 virtual bool v_ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
-                              NekDouble tol = 0.0);
+                        Array<OneD, NekDouble>& locCoord,
+                        NekDouble tol = 0.0);
+
                 virtual int v_GetVertexEdgeMap(int i,int j) const;
                 virtual int v_GetVertexFaceMap(int i,int j) const;
                 virtual int v_GetEdgeFaceMap(int i,int j) const;
+
                 virtual void v_FillGeom();
                 virtual NekDouble v_GetCoord(
                             const int i,
@@ -269,9 +261,9 @@ namespace Nektar
             return m_geomFactors;
         }
 
-        inline GeomShapeType Geometry::GetGeomShapeType(void)
+        inline LibUtilities::ShapeType Geometry::GetShapeType()
         {
-            return m_geomShapeType;
+            return m_shapeType;
         }
 
         inline int Geometry::GetGlobalID(void)
@@ -331,9 +323,10 @@ namespace Nektar
 
         inline bool Geometry::ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
+                      Array<OneD, NekDouble> &locCoord,
                       NekDouble tol)
         {
-            return v_ContainsPoint(gloCoord,tol);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
         }
 
         inline int Geometry::GetVertexEdgeMap(int i, int j) const

@@ -145,6 +145,9 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual void v_GetCoord(
                             const Array<OneD, const NekDouble>& Lcoords,
                                   Array<OneD,NekDouble> &coords);
+            LOCAL_REGIONS_EXPORT virtual NekDouble v_StdPhysEvaluate(
+                            const Array<OneD, const NekDouble> &Lcoord,
+                            const Array<OneD, const NekDouble> &physvals);
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
                             const Array<OneD, const NekDouble> &coord);
             LOCAL_REGIONS_EXPORT virtual NekDouble v_PhysEvaluate(
@@ -155,6 +158,16 @@ namespace Nektar
                             const StdRegions::StdExpansionSharedPtr &EdgeExp,
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray);
+            LOCAL_REGIONS_EXPORT virtual void v_GetTracePhysVals(
+                            const int edge,
+                            const StdRegions::StdExpansionSharedPtr &EdgeExp,
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray,
+                            StdRegions::Orientation  orient);
+            LOCAL_REGIONS_EXPORT virtual void v_GetEdgeInterpVals(
+                            const int edge,
+                            const Array<OneD, const NekDouble> &inarray,
+                            Array<OneD,NekDouble> &outarray);
             LOCAL_REGIONS_EXPORT virtual void v_GetEdgeQFactors(
                             const int edge,
                             Array<OneD, NekDouble> &outarray);
@@ -206,6 +219,10 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual
                 DNekScalBlkMatSharedPtr v_GetLocStaticCondMatrix(
                             const MatrixKey &mkey);
+
+            LOCAL_REGIONS_EXPORT void v_DropLocStaticCondMatrix(
+                            const MatrixKey &mkey);
+
 
             LOCAL_REGIONS_EXPORT virtual void v_MassMatrixOp(
                             const Array<OneD, const NekDouble> &inarray,

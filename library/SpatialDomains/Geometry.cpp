@@ -48,7 +48,7 @@ namespace Nektar
             m_coordim(0),
             m_geomFactorsState(eNotFilled),
             m_state(eNotFilled),
-            m_geomShapeType(eNoGeomShapeType),
+            m_shapeType(LibUtilities::eNoShapeType),
             m_globalID(-1)
         {
         }
@@ -57,7 +57,7 @@ namespace Nektar
             m_coordim(coordim),
             m_geomFactorsState(eNotFilled),
             m_state(eNotFilled),
-            m_geomShapeType(eNoGeomShapeType),
+            m_shapeType(LibUtilities::eNoShapeType),
             m_globalID(-1)
         {
         }
@@ -111,7 +111,11 @@ namespace Nektar
         }
 
 
-
+        void Geometry::GenGeomFactors(
+                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
+        {
+            return v_GenGeomFactors(tbasis);
+        }
 
         void Geometry::v_AddElmtConnected(int gvo_id, int locid)
         {
@@ -192,7 +196,7 @@ namespace Nektar
         int Geometry::v_GetNumFaces() const
         {
             NEKERROR(ErrorUtil::efatal,
-                "This function is only valid for shape type geometries");
+                     "This function is only valid for shape type geometries");
             return 0;
         }
 
@@ -206,6 +210,17 @@ namespace Nektar
         bool Geometry::v_ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
                       NekDouble tol)
+        {
+            NEKERROR(ErrorUtil::efatal,
+                     "This function has not been defined for this geometry");
+            return false;
+        }
+
+
+        bool Geometry::v_ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                Array<OneD, NekDouble> &locCoord,
+                NekDouble tol)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function has not been defined for this geometry");

@@ -34,6 +34,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <SolverUtils/Advection/AdvectionWeakDG.h>
+#include <iostream>
+#include <iomanip>
 
 namespace Nektar
 {
@@ -59,9 +61,9 @@ namespace Nektar
             int nCoeffs         = fields[0]->GetNcoeffs();
             int nTracePointsTot = fields[0]->GetTrace()->GetTotPoints();
 
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > fluxvector(nConvectiveFields);
-            //Array<OneD, Array<OneD, NekDouble> > fluxvector(nVelDim);
-            Array<OneD, Array<OneD, NekDouble> > tmp       (nConvectiveFields);
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > 
+                fluxvector(nConvectiveFields);
+            Array<OneD, Array<OneD, NekDouble> > tmp(nConvectiveFields);
 
             ASSERTL1(m_riemann, 
                      "Riemann solver must be provided for AdvectionWeakDG.");
@@ -90,7 +92,7 @@ namespace Nektar
                 }
             }
             
-            // Store forwards/backwards space along trace space.
+            // Store forwards/backwards space along trace space
             Array<OneD, Array<OneD, NekDouble> > Fwd    (nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > Bwd    (nConvectiveFields);
             Array<OneD, Array<OneD, NekDouble> > numflux(nConvectiveFields);

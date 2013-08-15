@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    StdRegions::ExpansionType regionShape = StdRegions::ePrism;
+    LibUtilities::ShapeType regionShape = LibUtilities::ePrism;
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
     int bType_z_val = atoi(argv[3]);
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     }
 
     // Check to see that correct Expansions are used
-    if( regionShape == StdRegions::ePrism) 
+    if( regionShape == LibUtilities::ePrism) 
     {
         if( (bType_x == LibUtilities::eOrtho_B) || (bType_x == LibUtilities::eModified_B) ) {
             NEKERROR(ErrorUtil::efatal, "Basis 1 cannot be of type Ortho_B or Modified_B");
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     // Define a 3D expansion based on basis definition    
     StdRegions::StdExpansion3D *lpr = 0;
     
-    if( regionShape == StdRegions::ePrism ) 
+    if( regionShape == LibUtilities::ePrism ) 
     {
         // //////////////////////////////////////////////////////
         // Set up Prism vertex coordinates
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
 
          Array<OneD, StdRegions::StdExpansion3DSharedPtr> xMap(3);
          for(int i=0; i < 3; ++i){
-            xMap[i] = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(basisKey_x, basisKey_y, basisKey_z);
+             xMap[i] = MemoryManager<StdRegions::StdPrismExp>::AllocateSharedPtr(basisKey_x, basisKey_y, basisKey_z);
 
          }
 
@@ -250,7 +250,8 @@ int main(int argc, char *argv[])
     t[1] = 0.5;
     t[2] = 0.2;
     
-    if( regionShape == StdRegions::ePrism ) {
+    if( regionShape == LibUtilities::ePrism ) 
+    {
         solution[0] = Prism_sol( t[0], t[1], t[2], P, Q, R, bType_x, bType_y, bType_z );
     }
     

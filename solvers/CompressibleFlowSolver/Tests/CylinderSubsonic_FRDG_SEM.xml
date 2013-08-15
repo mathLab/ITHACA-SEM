@@ -2830,7 +2830,7 @@
     <CONDITIONS>
         
         <PARAMETERS>
-            <P> TimeStep        = 0.001     </P>
+            <P> TimeStep        = 0.00001     </P>
             <P> FinTime         = 0.0       </P>
             <P> NumSteps        = 5         </P>
             <P> IO_CheckSteps   = 100       </P>
@@ -2869,19 +2869,13 @@
                 <D VAR="rho"    VALUE="rhoInf"          />
                 <D VAR="rhou"   VALUE="rhoInf * uInf"   />
                 <D VAR="rhov"   VALUE="rhoInf * vInf"   />
-                <!-- Temporary value for E-->
-                <D VAR="E"      VALUE="0.0149875"       /> 
-                <!-- Proper equation to compute E -->
-                <!--D VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/-->
+                <D VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/>
             </REGION>
             <REGION REF="1">
                 <D VAR="rho"    VALUE="rhoInf"          />
                 <D VAR="rhou"   VALUE="rhoInf * uInf"   />
                 <D VAR="rhov"   VALUE="rhoInf * vInf"   />
-                <!-- Temporary value for E-->
-                <D VAR="E"      VALUE="0.0149875"       /> 
-                <!-- Proper equation to compute E -->
-                <!--D VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/-->
+                <D VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/>
             </REGION>
             <REGION REF="2">
                 <D VAR="rho"    USERDEFINEDTYPE="Wall" VALUE="0"/>
@@ -2895,10 +2889,7 @@
             <E VAR="rho"    VALUE="rhoInf"          />
             <E VAR="rhou"   VALUE="rhoInf * uInf"   />
             <E VAR="rhov"   VALUE="rhoInf * vInf"   />
-            <!-- Temporary value for E-->
-            <E VAR="E"      VALUE="0.0149875"       /> 
-            <!-- Proper equation to compute E -->
-            <!--E VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/-->       
+            <E VAR="E"      VALUE="pInf / (Gamma - 1) + 0.5 * rhoInf * (uInf * uInf + vInf * vInf)"/>       
         </FUNCTION>
     </CONDITIONS>
     

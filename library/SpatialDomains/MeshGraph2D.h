@@ -94,10 +94,10 @@ namespace Nektar
                 return int(m_segGeoms.size());
             }
 
-            inline int GetVidFromElmt(StdRegions::ExpansionType expansion,
+            inline int GetVidFromElmt(LibUtilities::ShapeType shape,
                 const int vert, const int elmt) const
             {
-                if(expansion == StdRegions::eTriangle)
+                if(shape == LibUtilities::eTriangle)
                 {
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
@@ -113,10 +113,10 @@ namespace Nektar
                 }
             }
 
-            inline int GetEidFromElmt(StdRegions::ExpansionType expansion,
+            inline int GetEidFromElmt(LibUtilities::ShapeType shape,
                 const int edge, const int elmt) const
             {
-                if(expansion == StdRegions::eTriangle)
+                if(shape == LibUtilities::eTriangle)
                 {
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
@@ -132,9 +132,9 @@ namespace Nektar
                 }
             }
 
-            inline StdRegions::Orientation GetEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
+            inline StdRegions::Orientation GetEorientFromElmt(LibUtilities::ShapeType shape,const int edge, const int elmt) const
             {
-                if(expansion == StdRegions::eTriangle)
+                if(shape == LibUtilities::eTriangle)
                 {
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");
@@ -151,11 +151,11 @@ namespace Nektar
             }
 
 
-            inline StdRegions::Orientation GetCartesianEorientFromElmt(StdRegions::ExpansionType expansion,const int edge, const int elmt) const
+            inline StdRegions::Orientation GetCartesianEorientFromElmt(LibUtilities::ShapeType shape,const int edge, const int elmt) const
             {
                 StdRegions::Orientation returnval;
 
-                if(expansion == StdRegions::eTriangle)
+                if(shape == LibUtilities::eTriangle)
                 {
                     ASSERTL2(m_triGeoms.find(elmt) != m_triGeoms.end(),
                         "eid is out of range");

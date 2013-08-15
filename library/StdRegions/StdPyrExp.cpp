@@ -47,11 +47,11 @@ namespace Nektar
         StdPyrExp::StdPyrExp(const LibUtilities::BasisKey &Ba,
                              const LibUtilities::BasisKey &Bb,
                              const LibUtilities::BasisKey &Bc) 
-            : StdExpansion  (StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(),
+            : StdExpansion  (LibUtilities::StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(),
                                                                  Bb.GetNumModes(),
                                                                  Bc.GetNumModes()),
                              3, Ba, Bb, Bc),
-              StdExpansion3D(StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(),
+              StdExpansion3D(LibUtilities::StdPyrData::getNumberOfCoefficients(Ba.GetNumModes(),
                                                                  Bb.GetNumModes(),
                                                                  Bc.GetNumModes()),
                              Ba, Bb, Bc)
@@ -567,7 +567,7 @@ namespace Nektar
             v_IProductWRTBase(inarray,outarray);
 
             // get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
+            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
 
             // copy inarray in case inarray == outarray
@@ -785,9 +785,9 @@ namespace Nektar
             return 5;
         }
         
-        ExpansionType StdPyrExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdPyrExp::v_DetShapeType() const
         {
-            return ePyramid;
+            return LibUtilities::ePyramid;
         }
 
         int StdPyrExp::v_NumBndryCoeffs() const
@@ -875,7 +875,7 @@ namespace Nektar
             const std::vector<unsigned int> &nummodes, 
             int &modes_offset)
         {
-            int nmodes = StdRegions::StdPyrData::getNumberOfCoefficients(
+            int nmodes = LibUtilities::StdPyrData::getNumberOfCoefficients(
                 nummodes[modes_offset],
                 nummodes[modes_offset+1],
                 nummodes[modes_offset+2]);
@@ -920,14 +920,15 @@ namespace Nektar
             const int nummodes2 = m_base[2]->GetNumModes();
             //int nummodesA, nummodesB, P, Q;
 
-            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
-            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
-            const LibUtilities::BasisType bType2 = GetEdgeBasisType(4);
-            
-            ASSERTL1( (bType0==bType1),
-                      "Method only implemented if BasisType is indentical in x and y directions");
-            ASSERTL1( (bType0==LibUtilities::eModified_A) && (bType1==LibUtilities::eModified_A) && (bType2==LibUtilities::eModified_C),
-                      "Method only implemented for Modified_A BasisType (x and y direction) and Modified_C BasisType (z direction)");
+            ASSERTL1( GetEdgeBasisType(0) == GetEdgeBasisType(1),
+                      "Method only implemented if BasisType is indentical in "
+                      "x and y directions");
+            ASSERTL1( GetEdgeBasisType(0) == LibUtilities::eModified_A &&
+                      GetEdgeBasisType(1) == LibUtilities::eModified_A &&
+                      GetEdgeBasisType(4) == LibUtilities::eModified_C,
+                      "Method only implemented for Modified_A BasisType (x "
+                      "and y direction) and Modified_C BasisType (z "
+                      "direction)");
 
             bool isQuad = true;
 

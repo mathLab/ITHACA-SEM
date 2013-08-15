@@ -110,7 +110,7 @@ namespace Nektar
 
         // Process output file line by line searching for regex matches
         std::string line;
-        while (getline(pStdout, line))
+        while (getline(pStdout, line) && m_matches.size() > 0)
         {
             // Test to see if we have a match on this line.
             if (boost::regex_match(line.c_str(), matches, m_regex))

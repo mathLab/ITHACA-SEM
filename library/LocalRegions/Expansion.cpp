@@ -63,11 +63,25 @@ namespace Nektar
             return v_GetLocMatrix(mkey);
         }
 
+        DNekMatSharedPtr Expansion::BuildTransformationMatrix(
+            const DNekScalMatSharedPtr &r_bnd, 
+            const StdRegions::MatrixType matrixType)
+        {
+            return v_BuildTransformationMatrix(r_bnd,matrixType);
+        }
+
+        
+        DNekMatSharedPtr Expansion::BuildVertexMatrix(
+            const DNekScalMatSharedPtr &r_bnd)
+        {
+            return v_BuildVertexMatrix(r_bnd);
+        }
+
         DNekScalMatSharedPtr Expansion::GetLocMatrix(const StdRegions::MatrixType mtype,
                     const StdRegions::ConstFactorMap &factors,
                     const StdRegions::VarCoeffMap &varcoeffs)
         {
-            MatrixKey mkey(mtype, DetExpansionType(), *this, factors, varcoeffs);
+            MatrixKey mkey(mtype, DetShapeType(), *this, factors, varcoeffs);
             return GetLocMatrix(mkey);
         }
 
@@ -122,6 +136,21 @@ namespace Nektar
 
             MultiplyByStdQuadratureMetric(m_metrics[MetricQuadrature],
                                                    m_metrics[MetricQuadrature]);
+		}
+		
+        DNekMatSharedPtr Expansion::v_BuildTransformationMatrix(
+            const DNekScalMatSharedPtr &r_bnd, 
+            const StdRegions::MatrixType matrixType)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+            return NullDNekMatSharedPtr;
+        }
+
+        DNekMatSharedPtr Expansion::v_BuildVertexMatrix(
+            const DNekScalMatSharedPtr &r_bnd)
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
+            return NullDNekMatSharedPtr;
         }
 
     } //end of namespace

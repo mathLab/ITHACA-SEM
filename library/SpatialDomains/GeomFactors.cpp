@@ -204,7 +204,7 @@ namespace Nektar
          * Placeholder function.
          */
         void GeomFactors::v_SetUpQuadratureMetrics(
-                        StdRegions::ExpansionType shape,
+                        LibUtilities::ShapeType shape,
                         const Array<OneD, const LibUtilities::BasisSharedPtr>
                                                                         &tbasis)
         {
@@ -215,7 +215,7 @@ namespace Nektar
          * Placeholder function.
          */
         void GeomFactors::v_SetUpLaplacianMetrics(
-                        StdRegions::ExpansionType shape,
+                        LibUtilities::ShapeType shape,
                         const Array<OneD, const LibUtilities::BasisSharedPtr>
                                                                         &tbasis)
         {

@@ -240,9 +240,9 @@ namespace Nektar
             }
 
             LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                       vExp->DetExpansionType(),
-                                       *vExp, m_linSysKey.GetConstFactors(),
-                                       vVarCoeffMap);
+                                           vExp->DetShapeType(),
+                                           *vExp, m_linSysKey.GetConstFactors(),
+                                           vVarCoeffMap);
             loc_mat = vExp->GetLocMatrix(matkey);
 
             // apply robin boundary conditions to the matrix.
@@ -309,7 +309,7 @@ namespace Nektar
             }
 
             LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
-                                           vExp->DetExpansionType(),
+                                           vExp->DetShapeType(),
                                            *vExp,
                                            m_linSysKey.GetConstFactors(),
                                            vVarCoeffMap);
@@ -344,6 +344,43 @@ namespace Nektar
             }
 
             return loc_mat;
+        }
+
+        /**
+         * @brief Releases the static condensation block matrices from NekManager
+         * of n-th expansion using the matrix key provided by the #m_linSysKey.
+         * 
+         * @param   n           Number of the expansion
+         */
+        void GlobalLinSys::v_DropStaticCondBlock(unsigned int n)
+        {
+            boost::shared_ptr<MultiRegions::ExpList> expList = m_expList.lock();
+
+            StdRegions::StdExpansionSharedPtr vExp = expList->GetExp(n);
+
+            // need to be initialised with zero size for non variable
+            // coefficient case
+            StdRegions::VarCoeffMap vVarCoeffMap;
+
+            // retrieve variable coefficients
+            if(m_linSysKey.GetNVarCoeffs() > 0)
+            {
+                StdRegions::VarCoeffMap::const_iterator x;
+                int cnt = expList->GetPhys_Offset(n);
+                for (x  = m_linSysKey.GetVarCoeffs().begin(); 
+                     x != m_linSysKey.GetVarCoeffs().end  (); ++x)
+                {
+                    vVarCoeffMap[x->first] = x->second + cnt;
+                }
+            }
+
+            LocalRegions::MatrixKey matkey(m_linSysKey.GetMatrixType(),
+                                           vExp->DetShapeType(),
+                                           *vExp,
+                                           m_linSysKey.GetConstFactors(),
+                                           vVarCoeffMap);
+
+            vExp->DropLocStaticCondMatrix(matkey);
         }
 
         const DNekMatSharedPtr& GlobalLinSys::v_GetGmat(void) const

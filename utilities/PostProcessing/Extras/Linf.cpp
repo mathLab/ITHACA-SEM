@@ -36,9 +36,9 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import field file.
     string fieldfile(argv[argc-1]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     bool useFFT = false;
     bool dealiasing = false;
     //----------------------------------------------

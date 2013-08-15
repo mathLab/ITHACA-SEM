@@ -96,7 +96,14 @@ namespace Nektar
             return m_nvar;
         }
 
+        std::string GetCellVarName(unsigned int idx)
+        {
+            return v_GetCellVarName(idx);
+        }
+
         Array<OneD, NekDouble> GetCellSolutionCoeffs(unsigned int idx);
+
+        Array<OneD, NekDouble> GetCellSolution(unsigned int idx);
 
     protected:
         /// Session
@@ -139,7 +146,14 @@ namespace Nektar
 
         virtual void v_PrintSummary(std::ostream &out) = 0;
 
+        virtual std::string v_GetCellVarName(unsigned int idx)
+        {
+            return "Var" + boost::lexical_cast<std::string>(idx);
+        }
+
         virtual void v_SetInitialConditions() = 0;
+
+        void LoadCellModel();
     };
 
 }

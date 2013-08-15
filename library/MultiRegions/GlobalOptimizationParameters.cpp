@@ -56,11 +56,12 @@ namespace Nektar
          */
         GlobalOptParam::GlobalOptParam(const int nel):
             m_doGlobalMatOp(SIZE_OptimizeOperationType,false),
-            m_shapeList(1,StdRegions::eNoExpansionType),
+            m_shapeList(1,LibUtilities::eNoShapeType),
             m_shapeNumElements(1,nel)
         {
             Array<OneD, bool> set_false(1,false);
-            m_doBlockMatOp = Array<OneD, Array<OneD, bool > > (SIZE_OptimizeOperationType,set_false);
+            m_doBlockMatOp = Array<OneD, Array<OneD, bool > > 
+                (SIZE_OptimizeOperationType,set_false);
         }
 
         /**
@@ -85,17 +86,17 @@ namespace Nektar
                 break;
             case 2:
                 numShapes = 2;
-                m_shapeList = Array<OneD, StdRegions::ExpansionType>(numShapes);
-                m_shapeList[0] = StdRegions::eTriangle;
-                m_shapeList[1] = StdRegions::eQuadrilateral;
+                m_shapeList = Array<OneD, LibUtilities::ShapeType>(numShapes);
+                m_shapeList[0] = LibUtilities::eTriangle;
+                m_shapeList[1] = LibUtilities::eQuadrilateral;
                 break;
             case 3:
                 numShapes = 4;
-                m_shapeList = Array<OneD, StdRegions::ExpansionType>(numShapes);
-                m_shapeList[0] = StdRegions::eTetrahedron;
-                m_shapeList[1] = StdRegions::ePyramid;
-                m_shapeList[2] = StdRegions::ePrism;
-                m_shapeList[3] = StdRegions::eHexahedron;
+                m_shapeList = Array<OneD, LibUtilities::ShapeType>(numShapes);
+                m_shapeList[0] = LibUtilities::eTetrahedron;
+                m_shapeList[1] = LibUtilities::ePyramid;
+                m_shapeList[2] = LibUtilities::ePrism;
+                m_shapeList[3] = LibUtilities::eHexahedron;
                 break;
             }
 

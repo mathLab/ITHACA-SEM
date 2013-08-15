@@ -2,7 +2,7 @@
 <test>
     <description>StdProject_Diff2D Quadrilateral Orthonormal basis P=6 Q=7</description>
     <executable>StdProject_Diff2D</executable>
-    <parameters>3 1 1 6 6 7 7</parameters>
+    <parameters>4 1 1 6 6 7 7</parameters>
     <metrics>
         <metric type="L2" id="1">
             <value tolerance="1e-12">3.27917e-14</value>

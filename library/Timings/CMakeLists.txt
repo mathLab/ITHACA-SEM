@@ -6,12 +6,11 @@ SET(LinkLibraries
     optimized LibUtilities debug LibUtilities-g
     optimized ${Boost_THREAD_LIBRARY_RELEASE} debug ${Boost_THREAD_LIBRARY_DEBUG}
     optimized ${Boost_IOSTREAMS_LIBRARY_RELEASE} debug ${Boost_IOSTREAMS_LIBRARY_DEBUG}
-    optimized ${Boost_ZLIB_LIBRARY_RELEASE} debug ${Boost_ZLIB_LIBRARY_DEBUG}	
+    optimized ${ZLIB_LIBRARY_RELEASE} debug ${ZLIB_LIBRARY_DEBUG}	
     optimized ${Boost_DATE_TIME_LIBRARY_RELEASE} debug ${Boost_DATE_TIME_LIBRARY_DEBUG}
     optimized ${Boost_FILESYSTEM_LIBRARY_RELEASE} debug ${Boost_FILESYSTEM_LIBRARY_DEBUG}
     optimized ${Boost_SYSTEM_LIBRARY_RELEASE} debug ${Boost_SYSTEM_LIBRARY_DEBUG}
-    optimized tinyxml debug tinyxml
-    optimized sbtk    debug sbtk)
+    optimized tinyxml debug tinyxml)
 
 SET(TimingCGHelmSolve2DSource TimingCGHelmSolve2D.cpp)
 ADD_NEKTAR_EXECUTABLE(TimingCGHelmSolve2D timing TimingCGHelmSolve2DSource)

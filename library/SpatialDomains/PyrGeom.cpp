@@ -49,13 +49,13 @@ namespace Nektar
     {
         PyrGeom::PyrGeom()
         {
-            m_geomShapeType = ePyramid;
+            m_shapeType = LibUtilities::ePyramid;
         }
 
         PyrGeom::PyrGeom(const Geometry2DSharedPtr faces[]) :
             Geometry3D(faces[0]->GetEdge(0)->GetVertex(0)->GetCoordim())
         {
-            m_geomShapeType = ePyramid;
+            m_shapeType = LibUtilities::ePyramid;
 
             /// Copy the face shared pointers
             m_faces.insert(m_faces.begin(), faces, faces+PyrGeom::kNfaces);
@@ -150,6 +150,22 @@ namespace Nektar
         int PyrGeom::v_GetNumEdges() const
         {
             return 8;
+        }
+
+        int PyrGeom::v_GetDir(const int faceidx, const int facedir) const
+        {
+            if (faceidx == 0)
+            {
+                return facedir;
+            }
+            else if (faceidx == 1 || faceidx == 3)
+            {
+                return 2 * facedir;
+            }
+            else
+            {
+                return 1 + facedir;
+            }
         }
 
         void PyrGeom::SetUpLocalEdges()

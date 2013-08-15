@@ -298,7 +298,7 @@ namespace Nektar
 
                 // get Mass matrix inverse
                 MatrixKey             masskey(StdRegions::eInvMass,
-                                              DetExpansionType(),*this);
+                                              DetShapeType(),*this);
                 DNekScalMatSharedPtr  matsys = m_matrixManager[masskey];
 
                 // copy inarray in case inarray == outarray
@@ -505,7 +505,7 @@ namespace Nektar
                 break;
             }  
             
-            MatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            MatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekScalMatSharedPtr iprodmat = m_matrixManager[iprodmatkey];
             
             Blas::Dgemv('N',m_ncoeffs,nq,iprodmat->Scale(),(iprodmat->GetOwnedMatrix())->GetPtr().get(),
@@ -516,6 +516,22 @@ namespace Nektar
         //-----------------------------
         // Evaluation functions
         //-----------------------------
+
+
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble HexExp::v_StdPhysEvaluate(
+                const Array<OneD, const NekDouble> &Lcoord,
+                const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local coordinates.
+            return StdHexExp::v_PhysEvaluate(Lcoord,physvals);
+        }
+
+
         /**
          * \brief Interpolate the solution at given coordinates
 	 *
@@ -782,12 +798,98 @@ namespace Nektar
 
 
         /// Return the region shape using the enum-list of ShapeType
-        StdRegions::ExpansionType HexExp::v_DetExpansionType() const
+        LibUtilities::ShapeType HexExp::v_DetShapeType() const
         {
-            return StdRegions::eHexahedron;
+            return LibUtilities::eHexahedron;
         }
 
         
+        const SpatialDomains::GeomFactorsSharedPtr& HexExp::v_GetMetricInfo() const
+        {
+            return m_metricinfo;
+        }
+
+        
+        /// Returns the HexGeom object associated with this expansion.
+        const SpatialDomains::GeometrySharedPtr HexExp::v_GetGeom() const
+        {
+            return m_geom;
+        }
+
+        
+        /// Returns the HexGeom object associated with this expansion.
+        const SpatialDomains::Geometry3DSharedPtr& HexExp::v_GetGeom3D() const
+        {
+            return m_geom;
+        }
+
+        
+        int HexExp::v_GetCoordim()
+        {
+            return m_geom->GetCoordim();
+        }
+
+        
+        void HexExp::v_ExtractDataToCoeffs(
+                const NekDouble *data,
+                const std::vector<unsigned int > &nummodes,
+                const int mode_offset,
+                NekDouble * coeffs)
+        {
+            int data_order0 = nummodes[mode_offset];
+            int fillorder0  = min(m_base[0]->GetNumModes(),data_order0);
+            int data_order1 = nummodes[mode_offset+1];
+            int order1      = m_base[1]->GetNumModes();
+            int fillorder1  = min(order1,data_order1);
+            int data_order2 = nummodes[mode_offset+2];
+            int order2      = m_base[2]->GetNumModes();
+            int fillorder2  = min(order2,data_order2);
+
+            switch(m_base[0]->GetBasisType())
+            {
+            case LibUtilities::eModified_A:
+                {
+                    int i,j;
+                    int cnt  = 0;
+                    int cnt1 = 0;
+
+                    ASSERTL1(m_base[1]->GetBasisType() ==
+                             LibUtilities::eModified_A,
+                             "Extraction routine not set up for this basis");
+                    ASSERTL1(m_base[2]->GetBasisType() ==
+                             LibUtilities::eModified_A,
+                             "Extraction routine not set up for this basis");
+
+                    Vmath::Zero(m_ncoeffs,coeffs,1);
+                    for(j = 0; j < fillorder0; ++j)
+                    {
+                        for(i = 0; i < fillorder1; ++i)
+                        {
+                            Vmath::Vcopy(fillorder2, &data[cnt],    1,
+                                                     &coeffs[cnt1], 1);
+                            cnt  += data_order2;
+                            cnt1 += order2;
+                        }
+
+                        // count out data for j iteration
+                        for(i = fillorder1; i < data_order1; ++i)
+                        {
+                            cnt += data_order2;
+                        }
+
+                        for(i = fillorder1; i < order1; ++i)
+                        {
+                            cnt1 += order2;
+                        }
+                    }
+                }
+                break;
+            default:
+                ASSERTL0(false, "basis is either not set up or not "
+                                "hierarchicial");
+            }
+        }
+
         StdRegions::Orientation HexExp::v_GetFaceOrient(int face)
         {
             return GetGeom3D()->GetFaceOrient(face);
@@ -804,6 +906,18 @@ namespace Nektar
                    fo == StdRegions::eDir1FwdDir2_Dir2BwdDir1;
         }
 
+
+        void HexExp::v_GetTracePhysVals(
+                const int                                face,
+                const StdRegions::StdExpansionSharedPtr &FaceExp,
+                const Array<OneD, const NekDouble>      &inarray,
+                      Array<OneD,       NekDouble>      &outarray,
+                StdRegions::Orientation                  orient)
+        {
+            v_GetFacePhysVals(face,FaceExp,inarray,outarray,orient);
+        }
+
+
         ///Returns the physical values at the quadrature points of a face
         void HexExp::v_GetFacePhysVals(
             const int                                face,
@@ -815,7 +929,7 @@ namespace Nektar
             int nquad0 = m_base[0]->GetNumPoints();
             int nquad1 = m_base[1]->GetNumPoints();
             int nquad2 = m_base[2]->GetNumPoints();
-            
+                
             if (orient == StdRegions::eNoOrientation)
             {
                 orient = GetFaceOrient(face);
@@ -863,18 +977,18 @@ namespace Nektar
 		}
 		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
-		    //Transposed, Direction A positive and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1-i),nquad0,&(outarray[0])+(i*nquad1),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
 		    //Transposed, Direction A negative and B positive
 		    for (int i=0; i<nquad0; i++)
                     {
 		        Vmath::Vcopy(nquad1,&(inarray[0])+i+nquad0*(nquad1-1),-nquad0,&(outarray[0])+(i*nquad1),1);
+                    }
+		} 
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		{
+		    //Transposed, Direction A positive and B negative
+		    for (int i=0; i<nquad0; i++)
+                    {
+		        Vmath::Vcopy(nquad1,&(inarray[0])+(nquad0-1-i),nquad0,&(outarray[0])+(i*nquad1),1);
                     }
 		} 
 		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
@@ -934,20 +1048,20 @@ namespace Nektar
 		}
 		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
-		    //Transposed, Direction A positive and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0-1-i),nquad0*nquad1,
-                                     &(outarray[0])+(i*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
 		    //Transposed, Direction A negative and B positive
 		    for (int i=0; i<nquad0; i++)
                     {
 		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*nquad1*(nquad2-1)+i,
                                      -nquad0*nquad1,&(outarray[0])+(i*nquad2),1);
+                    }
+		} 
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		{
+		    //Transposed, Direction A positive and B negative
+		    for (int i=0; i<nquad0; i++)
+                    {
+		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0-1-i),nquad0*nquad1,
+                                     &(outarray[0])+(i*nquad2),1);
                     }
 		} 
 		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
@@ -1005,20 +1119,20 @@ namespace Nektar
 		}
 		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
-		    //Transposed, Direction A positive and B negative
-		    for (int j=0; j<nquad0; j++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*nquad1-1-j*nquad0),
-                                     nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
 		    //Transposed, Direction A negative and B positive
 		    for (int j=0; j<nquad0; j++)
                     {
 		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*nquad1*(nquad2-1)+nquad0+j*nquad0,
                                      -nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
+                    }
+		} 
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		{
+		    //Transposed, Direction A positive and B negative
+		    for (int j=0; j<nquad0; j++)
+                    {
+		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*nquad1-1-j*nquad0),
+                                     nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
                     }
 		} 
 		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
@@ -1079,19 +1193,19 @@ namespace Nektar
 		}
 		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
-		    //Transposed, Direction A positive and B negative
+		    //Transposed, Direction A negative and B positive
 		    for (int i=0; i<nquad0; i++)
                     {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*nquad1-1-i),nquad0*nquad1,
+		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*(nquad1*nquad2-1)+i,-nquad0*nquad1,
                                      &(outarray[0])+(i*nquad2),1);
                     }
 		} 
 		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
 		{
-		    //Transposed, Direction A negative and B positive
+		    //Transposed, Direction A positive and B negative
 		    for (int i=0; i<nquad0; i++)
                     {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*(nquad1*nquad2-1)+i,-nquad0*nquad1,
+		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*nquad1-1-i),nquad0*nquad1,
                                      &(outarray[0])+(i*nquad2),1);
                     }
 		} 
@@ -1149,20 +1263,20 @@ namespace Nektar
 		}
 		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
-		    //Transposed, Direction A positive and B negative
-		    for (int j=0; j<nquad0; j++)
-                    {
-		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*(nquad1-1)-j*nquad0),
-                                     nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
 		    //Transposed, Direction A negative and B positive
 		    for (int j=0; j<nquad0; j++)
                     {
 		        Vmath::Vcopy(nquad2,&(inarray[0])+nquad0*nquad1*(nquad2-1)+j*nquad0,
                                      -nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
+                    }
+		} 
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		{
+		    //Transposed, Direction A positive and B negative
+		    for (int j=0; j<nquad0; j++)
+                    {
+		        Vmath::Vcopy(nquad2,&(inarray[0])+(nquad0*(nquad1-1)-j*nquad0),
+                                     nquad0*nquad1,&(outarray[0])+(j*nquad2),1);
                     }
 		} 
 		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
@@ -1219,20 +1333,20 @@ namespace Nektar
 		}
 		else if(orient == StdRegions::eDir1FwdDir2_Dir2BwdDir1)
 		{
-		    //Transposed, Direction A positive and B negative
-		    for (int i=0; i<nquad0; i++)
-                    {
-		        Vmath::Vcopy(nquad1,&(inarray[0])+nquad0*nquad1*(nquad2-1)+(nquad0-1-i),
-                                     nquad0,&(outarray[0])+(i*nquad1),1);
-                    }
-		} 
-		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
-		{
 		    //Transposed, Direction A negative and B positive
 		    for (int i=0; i<nquad0; i++)
                     {
 		        Vmath::Vcopy(nquad1,&(inarray[0])+nquad0*(nquad1*nquad2-1)+i,-nquad0,
                                      &(outarray[0])+(i*nquad1),1);
+                    }
+		} 
+		else if(orient == StdRegions::eDir1BwdDir2_Dir2FwdDir1)
+		{
+                    //Transposed, Direction A positive and B negative
+		    for (int i=0; i<nquad0; i++)
+                    {
+		        Vmath::Vcopy(nquad1,&(inarray[0])+nquad0*nquad1*(nquad2-1)+(nquad0-1-i),
+                                     nquad0,&(outarray[0])+(i*nquad1),1);
                     }
 		} 
 		else if(orient == StdRegions::eDir1BwdDir2_Dir2BwdDir1)
@@ -1877,7 +1991,7 @@ namespace Nektar
                     {
                         NekDouble one = 1.0;
                         StdRegions::StdMatrixKey masskey(StdRegions::eMass,
-                                                    DetExpansionType(), *this);
+                                                    DetShapeType(), *this);
                         DNekMatSharedPtr mat = GenMatrix(masskey);
                         mat->Invert();
 
@@ -1930,11 +2044,11 @@ namespace Nektar
                         }
 
                         MatrixKey deriv0key(StdRegions::eWeakDeriv0,
-                                            mkey.GetExpansionType(), *this);
+                                            mkey.GetShapeType(), *this);
                         MatrixKey deriv1key(StdRegions::eWeakDeriv1,
-                                            mkey.GetExpansionType(), *this);
+                                            mkey.GetShapeType(), *this);
                         MatrixKey deriv2key(StdRegions::eWeakDeriv2,
-                                            mkey.GetExpansionType(), *this);
+                                            mkey.GetShapeType(), *this);
 
                         DNekMat &deriv0 = *GetStdMatrix(deriv0key);
                         DNekMat &deriv1 = *GetStdMatrix(deriv1key);
@@ -1969,17 +2083,17 @@ namespace Nektar
                     else
                     {
                         MatrixKey lap00key(StdRegions::eLaplacian00,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap01key(StdRegions::eLaplacian01,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap02key(StdRegions::eLaplacian02,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap11key(StdRegions::eLaplacian11,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap12key(StdRegions::eLaplacian12,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
                         MatrixKey lap22key(StdRegions::eLaplacian22,
-                                           mkey.GetExpansionType(), *this);
+                                           mkey.GetShapeType(), *this);
 
                         DNekMat &lap00 = *GetStdMatrix(lap00key);
                         DNekMat &lap01 = *GetStdMatrix(lap01key);
@@ -2024,15 +2138,14 @@ namespace Nektar
                     }
                 }
                 break;
-            case StdRegions::ePreconditioner:
             case StdRegions::eHelmholtz:
                 {
                     NekDouble lambda = mkey.GetConstFactor(StdRegions::eFactorLambda);
                     MatrixKey masskey(StdRegions::eMass,
-                                      mkey.GetExpansionType(), *this);
+                                      mkey.GetShapeType(), *this);
                     DNekScalMat &MassMat = *(this->m_matrixManager[masskey]);
                     MatrixKey lapkey(StdRegions::eLaplacian,
-                                     mkey.GetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                                     mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekScalMat &LapMat = *(this->m_matrixManager[lapkey]);
 
                     int rows = LapMat.GetRows();
@@ -2079,14 +2192,51 @@ namespace Nektar
                     NekDouble one = 1.0;
 
 //                    StdRegions::StdMatrixKey hkey(StdRegions::eHybridDGHelmholtz,
-//                                                  DetExpansionType(),*this,
+//                                                  DetShapeType(),*this,
 //                                                  mkey.GetConstant(0),
 //                                                  mkey.GetConstant(1));
-                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetExpansionType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    MatrixKey hkey(StdRegions::eHybridDGHelmholtz, DetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
                     DNekMatSharedPtr mat = GenMatrix(hkey);
 
                     mat->Invert();
                     returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,mat);
+                }
+                break;
+            case StdRegions::ePreconLinearSpace:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this, mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+                    DNekMatSharedPtr R=BuildVertexMatrix(A);
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconR:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr R=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,R);
+                }
+                break;
+            case StdRegions::ePreconRT:
+                {
+                    NekDouble one = 1.0;
+                    MatrixKey helmkey(StdRegions::eHelmholtz, mkey.GetShapeType(), *this,mkey.GetConstFactors(), mkey.GetVarCoeffs());
+                    DNekScalBlkMatSharedPtr helmStatCond = GetLocStaticCondMatrix(helmkey);
+                    DNekScalMatSharedPtr A =helmStatCond->GetBlock(0,0);
+
+                    DNekScalMatSharedPtr Atmp;
+                    DNekMatSharedPtr RT=BuildTransformationMatrix(A,mkey.GetMatrixType());
+
+                    returnval = MemoryManager<DNekScalMat>::AllocateSharedPtr(one,RT);
                 }
                 break;
             default:
@@ -2120,7 +2270,6 @@ namespace Nektar
             switch(mkey.GetMatrixType())
             {
             case StdRegions::eLaplacian:
-            case StdRegions::ePreconditioner:
             case StdRegions::eHelmholtz: // special case since Helmholtz not defined in StdRegions
 
                 // use Deformed case for both regular and deformed geometries
@@ -2229,7 +2378,11 @@ namespace Nektar
         {
             return m_staticCondMatrixManager[mkey];
         }
-        
+
+        void HexExp::v_DropLocStaticCondMatrix(const MatrixKey &mkey)
+        {
+            m_staticCondMatrixManager.DeleteObject(mkey);
+        }
 
         void HexExp::LaplacianMatrixOp_MatFree_Kernel(
                 const Array<OneD, const NekDouble> &inarray,

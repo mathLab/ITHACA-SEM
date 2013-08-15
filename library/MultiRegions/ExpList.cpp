@@ -45,6 +45,7 @@
 #include <MultiRegions/GlobalMatrix.h>  // for GlobalMatrix, etc
 #include <MultiRegions/GlobalMatrixKey.h>  // for GlobalMatrixKey
 
+#include <LibUtilities/LinearAlgebra/SparseMatrixFwd.hpp>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
 #include <LibUtilities/LinearAlgebra/NekMatrix.hpp>
 
@@ -422,7 +423,7 @@ namespace Nektar
             // matrix multiplies
             const Array<OneD, const bool>  doBlockMatOp
                 = m_globalOptParam->DoBlockMatOp(StdRegions::eIProductWRTBase);
-            const Array<OneD, StdRegions::ExpansionType> shape = m_globalOptParam->GetShapeList();
+            const Array<OneD, LibUtilities::ShapeType> shape = m_globalOptParam->GetShapeList();
             const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
 
             Array<OneD,NekDouble> tmp_outarray;
@@ -717,14 +718,14 @@ namespace Nektar
             DNekScalMatSharedPtr    loc_mat;
             DNekScalBlkMatSharedPtr BlkMatrix;
             map<int,int> elmt_id;
-            StdRegions::ExpansionType ExpType = gkey.GetExpansionType();
+            LibUtilities::ShapeType ShapeType = gkey.GetShapeType();
 
-            if(ExpType != StdRegions::eNoExpansionType)
+            if(ShapeType != LibUtilities::eNoShapeType)
             {
                 for(i = 0 ; i < (*m_exp).size(); ++i)
                 {
-                    if((*m_exp)[m_offset_elmt_id[i]]->DetExpansionType()
-                       == ExpType)
+                    if((*m_exp)[m_offset_elmt_id[i]]->DetShapeType()
+                       == ShapeType)
                     {
                         elmt_id[n_exp++] = m_offset_elmt_id[i];
                     }
@@ -833,7 +834,7 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(gkey.GetMatrixType(),
-                                               (*m_exp)[eid]->DetExpansionType(),
+                                               (*m_exp)[eid]->DetShapeType(),
                                                *(*m_exp)[eid],
                                                gkey.GetConstFactors(),
                                                varcoeffs );
@@ -877,7 +878,7 @@ namespace Nektar
             {
                 if(doBlockMatOp[n])
                 {
-                    const StdRegions::ExpansionType vType
+                    const LibUtilities::ShapeType vType
                                     = m_globalOptParam->GetShapeList()[n];
                     const MultiRegions::GlobalMatrixKey vKey(gkey, vType);
                     if (cnt < m_offset_elmt_id.num_elements())
@@ -909,7 +910,7 @@ namespace Nektar
                         }
 
                         StdRegions::StdMatrixKey mkey(gkey.GetMatrixType(),
-                                                      (*m_exp)[eid]->DetExpansionType(),
+                                                      (*m_exp)[eid]->DetShapeType(),
                                                       *((*m_exp)[eid]),
                                                       gkey.GetConstFactors(),varcoeffs);
 
@@ -984,8 +985,8 @@ namespace Nektar
                 }
             }
 
-            map< pair< int,  int>, NekDouble > spcoomat;
-            pair<int,int> coord;
+            COOMatType spcoomat;
+            CoordType  coord;
 
             int nvarcoeffs = mkey.GetNVarCoeffs();
             int eid;
@@ -1007,7 +1008,7 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                              (*m_exp)[eid]->DetExpansionType(),
+                                              (*m_exp)[eid]->DetShapeType(),
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
@@ -1061,7 +1062,7 @@ namespace Nektar
             }
 
             return MemoryManager<GlobalMatrix>
-                ::AllocateSharedPtr(glob_rows,glob_cols,spcoomat);
+                ::AllocateSharedPtr(m_session,glob_rows,glob_cols,spcoomat);
         }
 
 
@@ -1127,7 +1128,7 @@ namespace Nektar
                 }
 
                 LocalRegions::MatrixKey matkey(mkey.GetMatrixType(),
-                                              (*m_exp)[eid]->DetExpansionType(),
+                                              (*m_exp)[eid]->DetShapeType(),
                                               *((*m_exp)[eid]),
                                               mkey.GetConstFactors(),varcoeffs);
 
@@ -1269,7 +1270,7 @@ namespace Nektar
             // matrix multiplies
             const Array<OneD, const bool>  doBlockMatOp
                 = m_globalOptParam->DoBlockMatOp(StdRegions::eBwdTrans);
-            const Array<OneD, StdRegions::ExpansionType> shape = m_globalOptParam->GetShapeList();
+            const Array<OneD, LibUtilities::ShapeType> shape = m_globalOptParam->GetShapeList();
             const Array<OneD, const int> num_elmts = m_globalOptParam->GetShapeNumElements();
 
             Array<OneD,NekDouble> tmp_outarray;
@@ -1329,6 +1330,16 @@ namespace Nektar
                                  const Array<OneD, const NekDouble> &gloCoord,
                                  NekDouble tol)
         {
+            Array<OneD, NekDouble> Lcoords(gloCoord.num_elements()); 
+            
+            return GetExpIndex(gloCoord,Lcoords,tol);
+        }
+        
+
+        int ExpList::GetExpIndex(const Array<OneD, const NekDouble> &gloCoords,
+                                 Array<OneD, NekDouble> &locCoords,
+                                 NekDouble tol)
+        {
             static int start = 0;
             LocalRegions::ExpansionSharedPtr exp;
             // start search at previous element or 0 
@@ -1336,7 +1347,7 @@ namespace Nektar
             {
                 exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
 
-                if (exp->GetGeom()->ContainsPoint(gloCoord,tol))
+                if (exp->GetGeom()->ContainsPoint(gloCoord, locCoords, tol))
                 {
                     start = i;
                     return i;
@@ -1347,7 +1358,7 @@ namespace Nektar
             {
                 exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
 
-                if (exp->GetGeom()->ContainsPoint(gloCoord,tol))
+                if (exp->GetGeom()->ContainsPoint(gloCoord, locCoords, tol))
                 {
                     start = i;
                     return i;
@@ -1452,181 +1463,199 @@ namespace Nektar
         void ExpList::WriteToFile(std::ofstream &out, OutputFormat format,
                                 std::string var)
         {
-            if(format==eTecplot)
+            switch(format)
             {
-                int i;
-
-                Array<OneD, const NekDouble> phys = m_phys;
-
-                if(m_physState == false)
+            case eTecplot:
+            case eTecplotZones:
                 {
-                    BwdTrans(m_coeffs,m_phys);
+                    int i;
+                    
+                    Array<OneD, const NekDouble> phys = m_phys;
+                    
+                    if(m_physState == false)
+                    {
+                        BwdTrans(m_coeffs,m_phys);
+                    }
+                    
+                    (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
+                    (*m_exp)[0]->WriteToFile(out,eTecplot,true,var);
+                    
+                    for(i= 1; i < (*m_exp).size(); ++i)
+                    {
+                        (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
+                        (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
+                    }
                 }
-
-                (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
-                (*m_exp)[0]->WriteToFile(out,eTecplot,true,var);
-
-                for(i= 1; i < (*m_exp).size(); ++i)
+                break;
+            case eTecplotSingleBlock:
                 {
+                    if(m_physState == false)
+                    {
+                        BwdTrans(m_coeffs,m_phys);
+                    }
+                    WriteTecplotHeader(out,var);
+                    WriteTecplotZone(out);
+                    WriteTecplotField(out);
+                    WriteTecplotConnectivity(out);
+                }
+                break;
+            case eGnuplot:
+                {
+                    int i;
+                    
+                    Array<OneD, const NekDouble> phys = m_phys;
+                    
+                    if(m_physState == false)
+                    {
+                        BwdTrans(m_coeffs,m_phys);
+                    }
+                    
+                    (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
+                    (*m_exp)[0]->WriteToFile(out,eGnuplot,true,var);
+                    
+                    for(i= 1; i < (*m_exp).size(); ++i)
+                    {
                     (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
                     (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
-                }
-            }
-            else if(format==eGnuplot)
-            {
-                int i;
-
-                Array<OneD, const NekDouble> phys = m_phys;
-
-                if(m_physState == false)
-                {
-                    BwdTrans(m_coeffs,m_phys);
-                }
-
-                (*m_exp)[0]->SetPhys(phys+m_phys_offset[0]);
-                (*m_exp)[0]->WriteToFile(out,eGnuplot,true,var);
-
-                for(i= 1; i < (*m_exp).size(); ++i)
-                {
-                    (*m_exp)[i]->SetPhys(phys+m_phys_offset[i]);
-                    (*m_exp)[i]->WriteToFile(out,eTecplot,false,var);
-                }
-            }
-            else if(format==eGmsh)
-            {
-
-                out<<"View.MaxRecursionLevel = 4;"<<endl;
-                out<<"View.TargetError = 0.00;"<<endl;
-                out<<"View.AdaptVisualizationGrid = 1;"<<endl;
-
-                int i,j,k;
-                int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
-                int nDumpCoeffs =  nElementalCoeffs*nElementalCoeffs;
-                Array<TwoD, int> exponentMap(nDumpCoeffs,3,0);
-                int cnt = 0;
-                for(i = 0; i < nElementalCoeffs; i++)
-                {
-                    for(j = 0; j < nElementalCoeffs; j++)
-                    {
-                        exponentMap[cnt][0] = j;
-                        exponentMap[cnt++][1] = i;
                     }
                 }
-
-                PutCoeffsInToElmtExp();
-                bool dumpNewView = true;
-                bool closeView = false;
-                for(i= 0; i < (*m_exp).size(); ++i)
+                break;
+            case eGmsh:
                 {
-                    if(nElementalCoeffs != (*m_exp)[i]->GetBasisNumModes(0))
+                    
+                    out<<"View.MaxRecursionLevel = 4;"<<endl;
+                    out<<"View.TargetError = 0.00;"<<endl;
+                    out<<"View.AdaptVisualizationGrid = 1;"<<endl;
+                    
+                    int i,j,k;
+                    int nElementalCoeffs =  (*m_exp)[0]->GetBasisNumModes(0);
+                    int nDumpCoeffs =  nElementalCoeffs*nElementalCoeffs;
+                    Array<TwoD, int> exponentMap(nDumpCoeffs,3,0);
+                    int cnt = 0;
+                    for(i = 0; i < nElementalCoeffs; i++)
                     {
-                        ASSERTL0(false,"Not all elements have the same number "
-                                       "of expansions, this will probably lead "
-                                       "to a corrupt Gmsh-output file.")
-                    }
-
-                    if(i>0)
-                    {
-                        if ( ((*m_exp)[i]->DetExpansionType())
-                                        !=((*m_exp)[i-1]->DetExpansionType()) )
+                        for(j = 0; j < nElementalCoeffs; j++)
                         {
-                            dumpNewView = true;
-                        }
-                        else
-                        {
-                            dumpNewView = false;
-                        }
-                    }
-                    if(i<(*m_exp).size()-1)
-                    {
-                        if ( ((*m_exp)[i]->DetExpansionType())
-                                        !=((*m_exp)[i+1]->DetExpansionType()) )
-                        {
-                            closeView = true;
-                        }
-                        else
-                        {
-                            closeView = false;
+                            exponentMap[cnt][0] = j;
+                            exponentMap[cnt++][1] = i;
                         }
                     }
-                    else
+                    
+                    PutCoeffsInToElmtExp();
+                    bool dumpNewView = true;
+                    bool closeView = false;
+                    for(i= 0; i < (*m_exp).size(); ++i)
                     {
-                            closeView = true;
-                    }
-
-                    if(dumpNewView)
-                    {
-                        out<<"View \" \" {"<<endl;
-                    }
-
-                    (*m_exp)[i]->WriteToFile(out,eGmsh,false);
-
-                    if(closeView)
-                    {
-                        out<<"INTERPOLATION_SCHEME"<<endl;
-                        out<<"{"<<endl;
-                        for(k=0; k < nDumpCoeffs; k++)
+                        if(nElementalCoeffs != (*m_exp)[i]->GetBasisNumModes(0))
                         {
-                            out<<"{";
-                            for(j = 0; j < nDumpCoeffs; j++)
+                            ASSERTL0(false,"Not all elements have the same number "
+                                     "of expansions, this will probably lead "
+                                     "to a corrupt Gmsh-output file.")
+                                }
+                        
+                        if(i>0)
+                        {
+                            if ( ((*m_exp)[i]->DetShapeType())
+                                 !=((*m_exp)[i-1]->DetShapeType()) )
                             {
-                                if(k==j)
+                            dumpNewView = true;
+                            }
+                            else
+                            {
+                                dumpNewView = false;
+                            }
+                        }
+                        if(i<(*m_exp).size()-1)
+                        {
+                            if ( ((*m_exp)[i]->DetShapeType())
+                                 !=((*m_exp)[i+1]->DetShapeType()) )
+                            {
+                                closeView = true;
+                            }
+                            else
+                            {
+                                closeView = false;
+                            }
+                        }
+                        else
+                        {
+                            closeView = true;
+                        }
+                        
+                        if(dumpNewView)
+                        {
+                            out<<"View \" \" {"<<endl;
+                        }
+                        
+                        (*m_exp)[i]->WriteToFile(out,eGmsh,false);
+                        
+                        if(closeView)
+                        {
+                            out<<"INTERPOLATION_SCHEME"<<endl;
+                            out<<"{"<<endl;
+                            for(k=0; k < nDumpCoeffs; k++)
+                            {
+                                out<<"{";
+                                for(j = 0; j < nDumpCoeffs; j++)
                                 {
-                                    out<<"1.00";
+                                    if(k==j)
+                                    {
+                                        out<<"1.00";
+                                    }
+                                    else
+                                    {
+                                        out<<"0.00";
+                                    }
+                                    if(j < nDumpCoeffs - 1)
+                                    {
+                                        out<<", ";
+                                    }
+                                }
+                                if(k < nDumpCoeffs - 1)
+                                {
+                                    out<<"},"<<endl;
                                 }
                                 else
                                 {
-                                    out<<"0.00";
+                                    out<<"}"<<endl<<"}"<<endl;
                                 }
-                                if(j < nDumpCoeffs - 1)
+                            }
+                            
+                            out<<"{"<<endl;
+                            for(k=0; k < nDumpCoeffs; k++)
+                            {
+                                out<<"{";
+                                for(j = 0; j < 3; j++)
                                 {
-                                    out<<", ";
+                                    out<<exponentMap[k][j];
+                                    if(j < 2)
+                                    {
+                                        out<<", ";
+                                    }
                                 }
-                            }
-                            if(k < nDumpCoeffs - 1)
-                            {
-                                out<<"},"<<endl;
-                            }
-                            else
-                            {
-                                out<<"}"<<endl<<"}"<<endl;
-                            }
-                        }
-
-                        out<<"{"<<endl;
-                        for(k=0; k < nDumpCoeffs; k++)
-                        {
-                            out<<"{";
-                            for(j = 0; j < 3; j++)
-                            {
-                                out<<exponentMap[k][j];
-                                if(j < 2)
+                                if(k < nDumpCoeffs - 1)
                                 {
-                                    out<<", ";
+                                    out<<"},"<<endl;
+                                }
+                                else
+                                {
+                                    out<<"}"<<endl<<"};"<<endl;
                                 }
                             }
-                            if(k < nDumpCoeffs - 1)
-                            {
-                                out<<"},"<<endl;
-                            }
-                            else
-                            {
-                                out<<"}"<<endl<<"};"<<endl;
-                            }
+                            out<<"};"<<endl;
                         }
-                        out<<"};"<<endl;
                     }
+                    out<<"Combine ElementsFromAllViews;"<<endl;
+                    out<<"View.Name = \"\";"<<endl;
                 }
-                out<<"Combine ElementsFromAllViews;"<<endl;
-                out<<"View.Name = \"\";"<<endl;
-            }
-            else
-            {
-                ASSERTL0(false, "Output routine not implemented for requested "
-                                "type of output");
+                break;
+            default:
+                {
+                    ASSERTL0(false, "Output routine not implemented for requested "
+                             "type of output");
+                }
             }
         }
-
 
         /**
          * Write Tecplot Files Header
@@ -1634,12 +1663,12 @@ namespace Nektar
          * @param   var                 variables names
          */
         void ExpList::v_WriteTecplotHeader(std::ofstream &outfile,
-                        std::string var)
+                                           std::string var)
         {
 
             int coordim  = GetExp(0)->GetCoordim();
             outfile << "Variables = x";
-
+            
             if(coordim == 2)
             {
                 outfile << ", y";
@@ -1659,8 +1688,140 @@ namespace Nektar
          */
         void ExpList::v_WriteTecplotZone(std::ofstream &outfile, int expansion)
         {
-            (*m_exp)[expansion]->WriteTecplotZone(outfile);
+            if(expansion == -1) //write as full block zeon
+            {
+                int i,j;
+                int coordim   = GetCoordim(0);
+                int totpoints = GetTotPoints();
+                
+                Array<OneD,NekDouble> coords[3];
+                
+                coords[0] = Array<OneD,NekDouble>(totpoints);
+                coords[1] = Array<OneD,NekDouble>(totpoints);
+                coords[2] = Array<OneD,NekDouble>(totpoints);
+                
+                GetCoords(coords[0],coords[1],coords[2]);
+                
+                outfile << "Zone, N=" << GetTotPoints() << ", E="<<
+                    GetNumTecplotBlocks() << ", F=FEBlock" ;
+                
+                switch((*m_exp)[0]->GetNumBases())
+                {
+                case 1:
+                    ASSERTL0(false,"Not set up for this type of output");
+                    break;
+                case 2:
+                    outfile << ", ET=QUADRILATERAL" << std::endl;
+                    break;
+                case 3:
+                    outfile << ", ET=BRICK" << std::endl;
+                    break;
+                }
+                
+                // write out coordinates in block format 
+                for(j = 0; j < coordim; ++j)
+                {
+                    for(i = 0; i < totpoints; ++i)
+                    {
+                        outfile << coords[j][i] << " ";
+                        if((!(i % 1000))&&i)
+                        {
+                            outfile << std::endl;
+                        }
+                    }
+                    outfile << std::endl;
+                }
+                
+            }
+            else
+            {
+                (*m_exp)[expansion]->WriteTecplotZone(outfile);
+            }
         }
+
+        int  ExpList::GetNumTecplotBlocks(void)
+        {
+            int returnval = 0;
+
+            if((*m_exp)[0]->GetNumBases() == 2)
+            {
+                for(int i = 0; i < (*m_exp).size(); ++i)
+                {
+                    returnval += ((*m_exp)[i]->GetNumPoints(0)-1)*((*m_exp)[i]->GetNumPoints(1)-1);
+                }
+            }
+            else
+            {
+                for(int i = 0; i < (*m_exp).size(); ++i)
+                {
+                    returnval += ((*m_exp)[i]->GetNumPoints(0)-1)*((*m_exp)[i]->GetNumPoints(1)-1)*((*m_exp)[i]->GetNumPoints(2)-1);
+                }
+            }
+
+            return returnval;
+        }
+
+        
+        void  ExpList::WriteTecplotConnectivity(std::ofstream &outfile)
+        {
+            int i,j,k,l;
+            int nbase = (*m_exp)[0]->GetNumBases();
+            int cnt = 0;
+            
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                if(nbase == 2)
+                {
+                    int np0 = (*m_exp)[i]->GetNumPoints(0);
+                    int np1 = (*m_exp)[i]->GetNumPoints(1);
+                    
+                    for(j = 1; j < np1; ++j)
+                    {
+                        for(k = 1; k < np0; ++k)
+                        {
+                            outfile << cnt + (j-1)*np0 + k  << " ";
+                            outfile << cnt + (j-1)*np0 + k +1 << " ";
+                            outfile << cnt + j*np0 + k +1 << " ";
+                            outfile << cnt + j*np0 + k    << endl;
+                        }
+                    }
+                    
+                    cnt += np0*np1;
+                }
+                else if(nbase == 3)
+                {
+                    int np0 = (*m_exp)[i]->GetNumPoints(0);
+                    int np1 = (*m_exp)[i]->GetNumPoints(1);
+                    int np2 = (*m_exp)[i]->GetNumPoints(2);
+                    
+                    for(j = 1; j < np2; ++j)
+                    {
+                        for(k = 1; k < np1; ++k)
+                        {
+                            for(l = 1; l < np0; ++l)
+                            {
+                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l  << " ";
+                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l +1 << " ";
+                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l +1 << " ";
+                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l  << " ";
+
+                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l  << " ";
+                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l +1 << " ";
+                                outfile << cnt + j*np0*np1 +  k*np0 + l +1 << " ";
+                                outfile << cnt + j*np0*np1 +  k*np0 + l  << endl;
+                            }
+                        }
+                    }
+                    cnt += np0*np1*np2;
+                }
+                else
+                {
+                    ASSERTL0(false,"Not set up for this dimension");
+                }
+
+            }
+        }
+
 
         /**
          * Write Tecplot Files Field
@@ -1669,8 +1830,31 @@ namespace Nektar
          */
         void ExpList::v_WriteTecplotField(std::ofstream &outfile, int expansion)
         {
-            (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]);
-            (*m_exp)[expansion]->WriteTecplotField(outfile);
+
+            if(expansion == -1)
+            {
+                int totpoints = GetTotPoints();
+                if(m_physState == false)
+                {
+                    BwdTrans(m_coeffs,m_phys);
+                }
+                
+                for(int i = 0; i < totpoints; ++i)
+                {
+                    outfile << m_phys[i] << " ";
+                    if((!(i % 1000))&&i)
+                    {
+                        outfile << std::endl;
+                    }
+                }
+                outfile << std::endl;
+                
+            }
+            else
+            {
+                (*m_exp)[expansion]->SetPhys(m_phys+m_phys_offset[expansion]);
+                (*m_exp)[expansion]->WriteTecplotField(outfile);
+            }
         }
 
 
@@ -1878,6 +2062,21 @@ namespace Nektar
             return sqrt(err);
         }
 		
+
+        NekDouble ExpList::v_Integral(const Array<OneD, const NekDouble> &inarray)
+        {
+            NekDouble err = 0.0;
+            int       i   = 0;
+
+            for(i = 0; i < (*m_exp).size(); ++i)
+            {
+                err += (*m_exp)[m_offset_elmt_id[i]]->Integral(inarray+m_phys_offset[i]);
+            }
+            m_comm->GetRowComm()->AllReduce(err, LibUtilities::ReduceSum);
+
+            return err;
+        }
+
         Array<OneD, const NekDouble> ExpList::v_HomogeneousEnergy (void)
         {
             ASSERTL0(false,
@@ -1961,7 +2160,7 @@ namespace Nektar
             return sqrt(err);
         }
 
-        void  ExpList::GeneralGetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef, 
+        void  ExpList::GeneralGetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef, 
 												  int NumHomoDir, 
 												  Array<OneD, LibUtilities::BasisSharedPtr> &HomoBasis, 
 												  std::vector<NekDouble> &HomoLen,
@@ -1977,23 +2176,27 @@ namespace Nektar
             switch((*m_exp)[0]->GetShapeDimension())
             {
             case 1:
-                startenum = (int) SpatialDomains::eSegment;
-                endenum   = (int) SpatialDomains::eSegment;
+                startenum = (int) LibUtilities::eSegment;
+                endenum   = (int) LibUtilities::eSegment;
                 break;
             case 2:
-                startenum = (int) SpatialDomains::eTriangle;
-                endenum   = (int) SpatialDomains::eQuadrilateral;
+                startenum = (int) LibUtilities::eTriangle;
+                endenum   = (int) LibUtilities::eQuadrilateral;
                 break;
             case 3:
-                startenum = (int) SpatialDomains::eTetrahedron;
-                endenum   = (int) SpatialDomains::eHexahedron;
+                startenum = (int) LibUtilities::eTetrahedron;
+                endenum   = (int) LibUtilities::eHexahedron;
                 break;
             }
 
             for(s = startenum; s <= endenum; ++s)
             {
+<<<<<<< HEAD
                 LocalRegions::ExpansionSharedPtr      exp;
                 SpatialDomains::GeomShapeType         shape;
+=======
+                LibUtilities::ShapeType               shape;
+>>>>>>> master
                 std::vector<unsigned int>             elementIDs;
                 std::vector<LibUtilities::BasisType>  basis;
                 std::vector<unsigned int>             numModes;
@@ -2006,12 +2209,12 @@ namespace Nektar
                 for(int i = 0; i < (*m_exp).size(); ++i)
                 {
                     exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
-                    if(exp->GetGeom()->GetGeomShapeType() == (SpatialDomains::GeomShapeType) s)
+                    if(exp->GetGeom()->GetShapeType() == (LibUtilities::ShapeType) s)
                     {
                         elementIDs.push_back(exp->GetGeom()->GetGlobalID());
                         if(first)
                         {
-                            shape = (SpatialDomains::GeomShapeType) s;
+                            shape = (LibUtilities::ShapeType) s;
                             for(int j = 0; j < (*m_exp)[i]->GetNumBases(); ++j)
                             {
                                 basis.push_back((*m_exp)[i]->GetBasis(j)->GetBasisType());
@@ -2051,7 +2254,7 @@ namespace Nektar
 
                 if(elementIDs.size() > 0)
                 {
-                    SpatialDomains::FieldDefinitionsSharedPtr fdef  = MemoryManager<SpatialDomains::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
+                    LibUtilities::FieldDefinitionsSharedPtr fdef  = MemoryManager<LibUtilities::FieldDefinitions>::AllocateSharedPtr(shape, elementIDs, basis, UniOrder, numModes,fields, NumHomoDir, HomoLen, HomoZIDs, HomoYIDs);
                     fielddef.push_back(fdef);
                 }
             }
@@ -2060,26 +2263,26 @@ namespace Nektar
         //
         // Virtual functions
         //
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> ExpList::v_GetFieldDefinitions()
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> ExpList::v_GetFieldDefinitions()
         {
-            std::vector<SpatialDomains::FieldDefinitionsSharedPtr> returnval;
+            std::vector<LibUtilities::FieldDefinitionsSharedPtr> returnval;
             v_GetFieldDefinitions(returnval);
             return returnval;
         }
 
-        void  ExpList::v_GetFieldDefinitions(std::vector<SpatialDomains::FieldDefinitionsSharedPtr> &fielddef)
+        void  ExpList::v_GetFieldDefinitions(std::vector<LibUtilities::FieldDefinitionsSharedPtr> &fielddef)
         {
             GeneralGetFieldDefinitions(fielddef);
         }
 
         //Append the element data listed in elements
         //fielddef->m_ElementIDs onto fielddata
-        void ExpList::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
+        void ExpList::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata)
         {
             v_AppendFieldData(fielddef,fielddata,m_coeffs);
         }
         
-        void ExpList::v_AppendFieldData(SpatialDomains::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
+        void ExpList::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
             LocalRegions::ExpansionSharedPtr exp;
             int i;
@@ -2105,7 +2308,7 @@ namespace Nektar
         
         /// Extract the data in fielddata into the coeffs
         void ExpList::ExtractDataToCoeffs(
-                                   SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+                                   LibUtilities::FieldDefinitionsSharedPtr &fielddef,
                                    std::vector<NekDouble> &fielddata,
                                    std::string &field,
                                    Array<OneD, NekDouble> &coeffs)
@@ -2127,12 +2330,12 @@ namespace Nektar
          * @param coeffs     Resulting coefficient array.
          */
         void ExpList::v_ExtractDataToCoeffs(
-            SpatialDomains::FieldDefinitionsSharedPtr &fielddef,
+            LibUtilities::FieldDefinitionsSharedPtr   &fielddef,
             std::vector<NekDouble>                    &fielddata,
             std::string                               &field,
             Array<OneD, NekDouble>                    &coeffs)
         {     	
-            int i, cnt, expId;
+            int i, expId;
             int offset       = 0;
             int modes_offset = 0;
             int datalen      = fielddata.size()/fielddef->m_fields.size();
@@ -2147,17 +2350,12 @@ namespace Nektar
                 offset += datalen;
             }
             
-            if(i == fielddef->m_fields.size())
-            {
-                cerr << "Field (" << field << ") not found in data file; "
-                     << "Setting it to zero. " << endl;
-                Vmath::Zero(coeffs.num_elements(),coeffs,1);
-                return;
-            }
+            ASSERTL0(i != fielddef->m_fields.size(),
+                     "Field (" + field + ") not found in file.");
 
             // Determine mapping from element ids to location in expansion list
             map<int, int> elmtToExpId;
-
+            
             // Loop in reverse order so that in case where using a Homogeneous
             // expansion it sets geometry ids to first part of m_exp
             // list. Otherwise will set to second (complex) expansion
@@ -2167,164 +2365,47 @@ namespace Nektar
                 exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
                 elmtToExpId[exp->GetGeom()->GetGlobalID()] = i;
             }
-
-            // If no session is set, we use the non-parallel version of this
-            // routine. This is used for reading BCs from files - note therefore
-            // that this will probably not work in parallel.
-            if (!m_session)
-            {
-                for (cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
-                {
-                    const int elmtId = fielddef->m_elementIDs[i];
-                    if (elmtToExpId.count(elmtId) == 0)
-                    {
-                        continue;
-                    }
-                    
-                    expId   = elmtToExpId[elmtId];
-                    datalen = (*m_exp)[expId]->CalcNumberOfCoefficients(
-                        fielddef->m_numModes, modes_offset);
-
-                    // Reset modes_offset in the case where all expansions of
-                    // the same order.
-                    if (fielddef->m_uniOrder == true)
-                    {
-                        modes_offset = 0;
-                    }
-
-                    if (datalen == (*m_exp)[expId]->GetNcoeffs())
-                    {
-                        Vmath::Vcopy(datalen, &fielddata[offset], 1, 
-                                     &coeffs[m_coeff_offset[expId]], 1);
-                    }
-                    else
-                    {
-                        (*m_exp)[expId]->ExtractDataToCoeffs(
-                            &fielddata[offset], fielddef->m_numModes,
-                            modes_offset, &coeffs[m_coeff_offset[expId]]);
-                    }
-                    
-                    offset += datalen;
-                }
-
-                return;
-            }
-
-            // Determine rank and number of processors.
-            LibUtilities::CommSharedPtr vComm =
-                m_session->GetComm()->GetRowComm();
-            int n = vComm->GetSize();
-            int p = vComm->GetRank();
-
-            // Determine number of elements in fielddef located on this process.
-            for(cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
-            {
-                if (elmtToExpId.count(fielddef->m_elementIDs[i]) == 0)
-                {
-                    continue;
-                }
-                ++cnt;
-            }
-
-            // Exchange this information between processors.
-            Array<OneD, int> numEls(n, 0);
-            numEls[p] = cnt;
-            vComm->AllReduce(numEls, LibUtilities::ReduceSum);
-            int totEls = Vmath::Vsum(n, numEls, 1);
-                
-            Array<OneD, int> elOffsets(n, 0);
-            elOffsets[0] = 0;
-            for (i = 1; i < n; ++i)
-            {
-                elOffsets[i] = elOffsets[i-1] + numEls[i-1];
-            }
             
-            // Storage holding number of coefficients per element and their
-            // global IDs.
-            Array<OneD, int> coeffsPerEl  (totEls, 0);
-            Array<OneD, int> elmtGlobalIds(totEls, 0);
-                
-            // Determine number of coefficients in each local (to this
-            // partition) element and store in the arrays above.
-            for(cnt = i = 0; i < fielddef->m_elementIDs.size(); ++i)
-            {
-                const int elmtId = fielddef->m_elementIDs[i];
-                
-                if (elmtToExpId.count(elmtId) == 0)
-                {
-                    continue;
-                }
-
-                expId   = elmtToExpId[elmtId];
-                datalen = (*m_exp)[expId]->CalcNumberOfCoefficients(
-                    fielddef->m_numModes, modes_offset);
-
-                if(fielddef->m_uniOrder == true)
-                {
-                    modes_offset = 0;
-                }
-
-                elmtGlobalIds[cnt + elOffsets[p]] = fielddef->m_elementIDs[i];
-                coeffsPerEl  [cnt + elOffsets[p]] = datalen;
-                cnt++;
-            }
-
-            // Exchange this information so that each processor knows about all
-            // coefficients per element and the corresponding global ID.
-            vComm->AllReduce(coeffsPerEl,   LibUtilities::ReduceSum);
-            vComm->AllReduce(elmtGlobalIds, LibUtilities::ReduceSum);
-
-            // Map taking element global ID to number of coefficients for that
-            // element.
-            map<int,int> coeffsElmtMap;
-
-            for (i = 0; i < totEls; ++i)
-            {
-                // Ensure that global IDs are mapped precisely once.
-                ASSERTL0(coeffsElmtMap.count(elmtGlobalIds[i]) == 0,
-                         "Error in communicating global ids for field "+
-                         field + "!");
-                coeffsElmtMap[elmtGlobalIds[i]] = coeffsPerEl[i];
-            }
-                
             for (i = 0; i < fielddef->m_elementIDs.size(); ++i)
             {
-                const int elmtId = fielddef->m_elementIDs[i];
-
-                if (elmtToExpId.count(elmtId) == 0)
-                {
-                    ASSERTL1(coeffsElmtMap.count(elmtId) == 1,
-                             "Couldn't find element!");
-                    offset += coeffsElmtMap[elmtId];
-                    continue;
-                }
-                    
-                expId   = elmtToExpId  [elmtId];
-                datalen = coeffsElmtMap[elmtId];
-
-                if(fielddef->m_uniOrder == true)
+                // Reset modes_offset in the case where all expansions of
+                // the same order.
+                if (fielddef->m_uniOrder == true)
                 {
                     modes_offset = 0;
                 }
-
-                if(datalen == (*m_exp)[expId]->GetNcoeffs())
+                
+                datalen = LibUtilities::GetNumberOfCoefficients(fielddef->m_shapeType,
+                                                                fielddef->m_numModes, modes_offset);
+                
+                const int elmtId = fielddef->m_elementIDs[i];
+                if (elmtToExpId.count(elmtId) == 0)
                 {
-                    // Copy data if it is the same length as expansion.
+                    offset += datalen;
+                    continue;
+                }
+                
+                expId   = elmtToExpId[elmtId];
+                
+                if (datalen == (*m_exp)[expId]->GetNcoeffs())
+                {
                     Vmath::Vcopy(datalen, &fielddata[offset], 1, 
                                  &coeffs[m_coeff_offset[expId]], 1);
                 }
                 else
                 {
-                    // unpack data to new order
                     (*m_exp)[expId]->ExtractDataToCoeffs(
-                        &fielddata[offset], fielddef->m_numModes,
-                        modes_offset, &coeffs[m_coeff_offset[expId]]);
+                                                         &fielddata[offset], fielddef->m_numModes,
+                                                         modes_offset, &coeffs[m_coeff_offset[expId]]);
                 }
-                    
+                
                 offset += datalen;
-            }                
+                modes_offset += (*m_exp)[0]->GetNumBases();
+            }
+            
+            return;
         }
-
+        
         void ExpList::v_ExtractCoeffsToCoeffs(const boost::shared_ptr<ExpList> &fromExpList, const Array<OneD, const NekDouble> &fromCoeffs, Array<OneD, NekDouble> &toCoeffs)
         {     	
             int i;
@@ -2811,18 +2892,20 @@ namespace Nektar
 		/**
          */
         void ExpList::v_GetPeriodicEdges(
-            vector<map<int,int> > &periodicVertices,
-            map<int,int>          &periodicEdges)
+            PeriodicMap &periodicVerts,
+            PeriodicMap &periodicEdges)
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
         }
 
-        SpatialDomains::BoundaryConditionShPtr ExpList::GetBoundaryCondition(const SpatialDomains::BoundaryConditionCollection& collection,
-                                                                             unsigned int index, const std::string& variable)
+        SpatialDomains::BoundaryConditionShPtr ExpList::GetBoundaryCondition(
+            const SpatialDomains::BoundaryConditionCollection& collection,
+            unsigned int regionId,
+            const std::string& variable)
         {
-            SpatialDomains::BoundaryConditionCollection::const_iterator collectionIter = collection.find(index);
-            ASSERTL1(collectionIter != collection.end(), "Unable to locate collection.");
+            SpatialDomains::BoundaryConditionCollection::const_iterator collectionIter = collection.find(regionId);
+            ASSERTL1(collectionIter != collection.end(), "Unable to locate collection "+boost::lexical_cast<string>(regionId));
             const SpatialDomains::BoundaryConditionMapShPtr boundaryConditionMap = (*collectionIter).second;
             SpatialDomains::BoundaryConditionMap::const_iterator conditionMapIter = boundaryConditionMap->find(variable);
             ASSERTL1(conditionMapIter != boundaryConditionMap->end(), "Unable to locate condition map.");

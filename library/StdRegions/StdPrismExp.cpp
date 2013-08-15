@@ -47,12 +47,12 @@ namespace Nektar
         StdPrismExp::StdPrismExp(const LibUtilities::BasisKey &Ba, 
                                  const LibUtilities::BasisKey &Bb, 
                                  const LibUtilities::BasisKey &Bc) 
-            : StdExpansion  (StdPrismData::getNumberOfCoefficients(
+            : StdExpansion  (LibUtilities::StdPrismData::getNumberOfCoefficients(
                                  Ba.GetNumModes(), 
                                  Bb.GetNumModes(), 
                                  Bc.GetNumModes()),
                              3,Ba,Bb,Bc),
-              StdExpansion3D(StdPrismData::getNumberOfCoefficients(
+              StdExpansion3D(LibUtilities::StdPrismData::getNumberOfCoefficients(
                                  Ba.GetNumModes(), 
                                  Bb.GetNumModes(), 
                                  Bc.GetNumModes()), 
@@ -586,7 +586,7 @@ namespace Nektar
             v_IProductWRTBase(inarray, outarray);
 
             // Get Mass matrix inverse
-            StdMatrixKey      masskey(eInvMass,DetExpansionType(),*this);
+            StdMatrixKey      masskey(eInvMass,DetShapeType(),*this);
             DNekMatSharedPtr  matsys = GetStdMatrix(masskey);
             
             // copy inarray in case inarray == outarray
@@ -657,7 +657,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             int nq = GetTotPoints();
-            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(eIProductWRTBase,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -785,7 +785,7 @@ namespace Nektar
                     break;
             }
 
-            StdMatrixKey      iprodmatkey(mtype,DetExpansionType(),*this);
+            StdMatrixKey      iprodmatkey(mtype,DetShapeType(),*this);
             DNekMatSharedPtr  iprodmat = GetStdMatrix(iprodmatkey);
 
             Blas::Dgemv('N',m_ncoeffs,nq,1.0,iprodmat->GetPtr().get(),
@@ -981,9 +981,9 @@ namespace Nektar
          * \brief Return Shape of region, using ShapeType enum list;
          * i.e. prism.
          */
-        ExpansionType StdPrismExp::v_DetExpansionType() const
+        LibUtilities::ShapeType StdPrismExp::v_DetShapeType() const
         {
-            return ePrism;
+            return LibUtilities::ePrism;
         }
         
         int StdPrismExp::v_NumBndryCoeffs() const
@@ -1046,6 +1046,15 @@ namespace Nektar
                 return GetBasisNumModes(2);
             }
         }
+
+        int StdPrismExp::v_GetTotalEdgeIntNcoeffs() const
+        {
+            int P = GetBasisNumModes(0)-2;
+            int Q = GetBasisNumModes(1)-2;
+            int R = GetBasisNumModes(2)-2;
+
+            return 2*P+3*Q+3*R;
+	}
         
         int StdPrismExp::v_GetFaceNcoeffs(const int i) const
         {
@@ -1086,6 +1095,17 @@ namespace Nektar
                 return Qi * Ri;
             }
         }
+
+        int StdPrismExp::v_GetTotalFaceIntNcoeffs() const
+        {
+            int Pi = GetBasisNumModes(0) - 2;
+            int Qi = GetBasisNumModes(1) - 2;
+            int Ri = GetBasisNumModes(2) - 2;
+
+            return Pi * Qi +
+                Pi * (2*Ri - Pi - 1) +
+                2* Qi * Ri;
+	}
         
         int StdPrismExp::v_GetFaceNumPoints(const int i) const
         {
@@ -1131,7 +1151,7 @@ namespace Nektar
         int StdPrismExp::v_CalcNumberOfCoefficients(const std::vector<unsigned int> &nummodes, 
                                                     int &modes_offset)
         {
-            int nmodes = StdPrismData::getNumberOfCoefficients(
+            int nmodes = LibUtilities::StdPrismData::getNumberOfCoefficients(
                 nummodes[modes_offset],
                 nummodes[modes_offset+1],
                 nummodes[modes_offset+2]);
@@ -1244,17 +1264,14 @@ namespace Nektar
             int                        nummodesA,
             int                        nummodesB)
         {
-            const LibUtilities::BasisType bType0 = GetEdgeBasisType(0);
-            const LibUtilities::BasisType bType1 = GetEdgeBasisType(1);
-            const LibUtilities::BasisType bType2 = GetEdgeBasisType(4);
-            
-            ASSERTL1(bType0 == bType1,
+            ASSERTL1(GetEdgeBasisType(0) == GetEdgeBasisType(1),
                      "Method only implemented if BasisType is identical"
                      "in x and y directions");
-            ASSERTL1(bType0 == LibUtilities::eModified_A && 
-                     bType2 == LibUtilities::eModified_B,
+            ASSERTL1(GetEdgeBasisType(0) == LibUtilities::eModified_A && 
+                     GetEdgeBasisType(4) == LibUtilities::eModified_B,
                      "Method only implemented for Modified_A BasisType"
-                     "(x and y direction) and Modified_B BasisType (z direction)");
+                     "(x and y direction) and Modified_B BasisType (z "
+                     "direction)");
 
             int i, j, p, q, r, nFaceCoeffs, idx = 0;
 
@@ -2021,6 +2038,65 @@ namespace Nektar
                     ASSERTL0(false, "Quadrature point type not supported for this element.");
                     break;
             }
+        
         }
+        
+        void StdPrismExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
+                                               const StdMatrixKey &mkey)
+        {
+            // Generate an orthonogal expansion
+            int qa = m_base[0]->GetNumPoints();
+            int qb = m_base[1]->GetNumPoints();
+            int qc = m_base[2]->GetNumPoints();
+            int nmodes_a = m_base[0]->GetNumModes();
+            int nmodes_b = m_base[1]->GetNumModes();
+            int nmodes_c = m_base[2]->GetNumModes();
+            // Declare orthogonal basis. 
+            LibUtilities::PointsKey pa(qa,m_base[0]->GetPointsType());
+            LibUtilities::PointsKey pb(qb,m_base[1]->GetPointsType());
+            LibUtilities::PointsKey pc(qc,m_base[2]->GetPointsType());
+            
+            LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
+            LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
+            LibUtilities::BasisKey Bc(LibUtilities::eOrtho_B,nmodes_c,pc);
+            StdPrismExp OrthoExp(Ba,Bb,Bc);
+            
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
+            int i,j,k;
+            
+            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            
+            // project onto modal  space.
+            OrthoExp.FwdTrans(array,orthocoeffs);
+            
+            //  Filter just trilinear space
+            int nmodes = max(nmodes_a,nmodes_b);
+            nmodes = max(nmodes,nmodes_c);
+            
+            Array<OneD, NekDouble> fac(nmodes,1.0);
+            for(j = cutoff; j < nmodes; ++j)
+            {
+                fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
+            }
+            
+            for(i = 0; i < nmodes_a; ++i)
+            {
+                for(j = 0; j < nmodes_b; ++j)
+                {
+                    for(k =  0; k +j < nmodes_c; ++k)
+                    {
+                        if((i >= cutoff)||(j +k >= cutoff))
+                        {
+                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]*fac[j+k]*fac[j+k]));
+                        }
+                    }
+                }
+            }
+            
+            // backward transform to physical space
+            OrthoExp.BwdTrans(orthocoeffs,array);
+        }                        
+        
     }//end namespace
 }//end namespace

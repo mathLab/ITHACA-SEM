@@ -34,9 +34,9 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Import field file.
     string fieldfile(argv[argc-1]);
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    graphShPt->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     bool useFFT = false;
     bool deal = false;
     //----------------------------------------------
@@ -51,17 +51,17 @@ int main(int argc, char *argv[])
     {
     case 1:
         {
-			ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 2,"Quasi-3D approach is only set up for 1 or 2 homogeneous directions");
+            ASSERTL0(fielddef[0]->m_numHomogeneousDir <= 2,"Quasi-3D approach is only set up for 1 or 2 homogeneous directions");
             
             if(fielddef[0]->m_numHomogeneousDir == 1)
             {
                 MultiRegions::ExpList2DHomogeneous1DSharedPtr Exp2DH1;
-
+                
                 // Define Homogeneous expansion
                 //int nplanes = fielddef[0]->m_numModes[1];
-				int nplanes; 
-				vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[1]);
-
+                int nplanes; 
+                vSession->LoadParameter("HomModesZ",nplanes,fielddef[0]->m_numModes[1]);
+                
                 // choose points to be at evenly spaced points at
                 const LibUtilities::PointsKey Pkey(nplanes+1,LibUtilities::ePolyEvenlySpaced);
                 const LibUtilities::BasisKey  Bkey(fielddef[0]->m_basis[1],nplanes,Pkey);
@@ -201,7 +201,6 @@ int main(int argc, char *argv[])
     //----------------------------------------------
     // Add expression to field
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     int nq = Exp[0]->GetNpoints();
     Array<OneD, NekDouble> x(nq);
     Array<OneD, NekDouble> y(nq);
@@ -220,32 +219,30 @@ cout<<"before  Exp[0][1]="<<Exp[0]->GetPhys()[9]<<endl;
            //Vmath::Vadd(nq, Exp[0]->GetPhys(),1,tmp,1,Exp[0]->UpdatePhys(),1);    
            Exp[0]->UpdatePhys()[i] = Exp[0]->GetPhys()[i] +tmp;
     }
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //-----------------------------------------------
     // Write solution to file with additional computed fields
     string   fldfilename(argv[2]);
     string   out = fldfilename.substr(0, fldfilename.find_last_of("."));
     string   endfile("_add.fld");
     out += endfile;
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                 = Exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
     Array<OneD, Array<OneD, NekDouble> > fieldcoeffs(Exp.num_elements());   	
 
     for(int j = 0; j < nfields ; ++j)
     {
-                Exp[j]->FwdTrans_IterPerExp(Exp[j]->GetPhys(),Exp[j]->UpdateCoeffs());	
-cout<<"  Exp[0][0]="<<Exp[0]->GetPhys()[9]<<endl;	     
-		fieldcoeffs[j] = Exp[j]->UpdateCoeffs();
-		for(int i = 0; i < FieldDef.size(); ++i)
-		{
-			FieldDef[i]->m_fields.push_back(fielddef[i]->m_fields[j]);
-			Exp[j]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
-		}
+        Exp[j]->FwdTrans_IterPerExp(Exp[j]->GetPhys(),Exp[j]->UpdateCoeffs());	
+        cout<<"  Exp[0][0]="<<Exp[0]->GetPhys()[9]<<endl;	     
+        fieldcoeffs[j] = Exp[j]->UpdateCoeffs();
+        for(int i = 0; i < FieldDef.size(); ++i)
+        {
+            FieldDef[i]->m_fields.push_back(fielddef[i]->m_fields[j]);
+            Exp[j]->AppendFieldData(FieldDef[i], FieldData[i], fieldcoeffs[j]);
+        }
     }
-    graphShPt->Write(out, FieldDef, FieldData);
+    LibUtilities::Write(out, FieldDef, FieldData);
     //-----------------------------------------------
 
     return 0;

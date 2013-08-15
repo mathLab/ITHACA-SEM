@@ -94,6 +94,13 @@ namespace Nektar
                     return boost::dynamic_pointer_cast<Expansion>(pSrc);
                 }
 
+                LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildTransformationMatrix(
+                    const DNekScalMatSharedPtr &r_bnd, 
+                    const StdRegions::MatrixType matrixType);
+
+                LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix(
+                    const DNekScalMatSharedPtr &r_bnd);
+
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
@@ -109,6 +116,13 @@ namespace Nektar
                 virtual void v_ComputeLaplacianMetric() {};
 
                 virtual DNekScalMatSharedPtr v_GetLocMatrix(const LocalRegions::MatrixKey &mkey);
+
+                virtual DNekMatSharedPtr v_BuildTransformationMatrix(
+                    const DNekScalMatSharedPtr &r_bnd, 
+                    const StdRegions::MatrixType matrixType);
+
+                virtual DNekMatSharedPtr v_BuildVertexMatrix(
+                    const DNekScalMatSharedPtr &r_bnd);  
 
             private:
 

@@ -77,7 +77,7 @@ namespace Nektar
                 m_coords[i] = Coords[i];
             }
 
-            StdRegions::ExpansionType shape = Coords[0]->DetExpansionType();
+            LibUtilities::ShapeType shape = Coords[0]->DetShapeType();
 
             // The quadrature points of the mapping
             // (as specified in Coords)
@@ -270,7 +270,7 @@ namespace Nektar
             ASSERTL1(tbasis.num_elements() == m_expDim,
                      "Inappropriate dimension of tbasis");
 
-            int i,j,k;
+            int i,j;
             int nquad0 = m_pointsKey[0].GetNumPoints();
             int nquad1 = m_pointsKey[1].GetNumPoints();
             int nquad2 = m_pointsKey[2].GetNumPoints();
@@ -295,10 +295,19 @@ namespace Nektar
             const Array<OneD, const NekDouble>& w1 = tbasis[1]->GetW();
             const Array<OneD, const NekDouble>& w2 = tbasis[2]->GetW();
 
+            if (w0.num_elements() == 0 ||
+                w1.num_elements() == 0 ||
+                w2.num_elements() == 0)
+            {
+                m_isUsingQuadMetrics = false;
+                m_weightedjac = Array<OneD, NekDouble>();
+                return;
+            }
+
             // Multiply the jacobian with the quadrature weights
             switch(shape)
             {
-                case StdRegions::eHexahedron:
+            case LibUtilities::eHexahedron:
                 {
                     for(i = 0; i < nquad1*nquad2; ++i)
                     {
@@ -320,7 +329,7 @@ namespace Nektar
                     break;
                 }
                 
-                case StdRegions::ePrism:
+            case LibUtilities::ePrism:
                 {
                     const Array<OneD, const NekDouble>& z2 = tbasis[2]->GetZ();
                     
@@ -371,7 +380,7 @@ namespace Nektar
                     }
                     break;
                 }
-                case StdRegions::eTetrahedron:
+            case LibUtilities::eTetrahedron:
                 {
                     const Array<OneD, const NekDouble>& z1 = tbasis[1]->GetZ();
                     const Array<OneD, const NekDouble>& z2 = tbasis[2]->GetZ();

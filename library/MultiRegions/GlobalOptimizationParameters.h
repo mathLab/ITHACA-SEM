@@ -93,7 +93,7 @@ namespace Nektar
             // inline
             inline const Array<OneD, const bool>  &DoBlockMatOp(const StdRegions::MatrixType i) const;
             
-            inline const Array<OneD, const StdRegions::ExpansionType>  &GetShapeList() const;
+            inline const Array<OneD, const LibUtilities::ShapeType>  &GetShapeList() const;
             inline const Array<OneD, const int>  &GetShapeNumElements() const; 
 
         private:
@@ -113,7 +113,7 @@ namespace Nektar
             /// A list ExpansionTypes indicating the order in which
             /// shapes are listed to call the appropriate key for the
             /// block matrices.
-            Array<OneD, StdRegions::ExpansionType> m_shapeList;
+            Array<OneD, LibUtilities::ShapeType> m_shapeList;
 
             /// A list of  number of elements contained within each shape type
             Array<OneD, const int> m_shapeNumElements;
@@ -233,7 +233,7 @@ namespace Nektar
             return m_shapeNumElements;
         }
 
-        inline const Array<OneD, const StdRegions::ExpansionType>  &GlobalOptParam::GetShapeList() const
+        inline const Array<OneD, const LibUtilities::ShapeType>  &GlobalOptParam::GetShapeList() const
         {
             return m_shapeList;
         }

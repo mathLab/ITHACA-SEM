@@ -63,8 +63,9 @@ namespace Nektar
          *
          */
         AssemblyMapCG1D::AssemblyMapCG1D(
-                const LibUtilities::SessionReaderSharedPtr &pSession):
-            AssemblyMapCG(pSession)
+                const LibUtilities::SessionReaderSharedPtr &pSession,
+                const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
         }
 
@@ -80,8 +81,9 @@ namespace Nektar
                                                             &bndCondExp,
                 const Array<OneD, const SpatialDomains::BoundaryConditionShPtr>
                                                             &bndConditions,
-                const map<int,int>& periodicVerticesId):
-            AssemblyMapCG(pSession)
+                const map<int,int>& periodicVerticesId,
+                const std::string variable):
+            AssemblyMapCG(pSession,variable)
         {
             SetUp1DExpansionC0ContMap(numLocalCoeffs,
                                       locExp,
@@ -280,6 +282,10 @@ namespace Nektar
             SetUpUniversalC0ContMap(locExp);
 
             m_hash = boost::hash_range(m_localToGlobalMap.begin(), m_localToGlobalMap.end());
+            // Add up hash values if parallel
+            int hash = m_hash;
+            m_comm->AllReduce(hash, LibUtilities::ReduceSum);
+            m_hash = hash;
         }
 
 

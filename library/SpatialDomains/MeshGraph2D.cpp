@@ -732,7 +732,7 @@ namespace Nektar
 
             int edge_id = (*elements)[0]->m_EdgeIndx;
 
-            if((*elements)[0]->m_Element->GetGeomShapeType() == eTriangle)
+            if((*elements)[0]->m_Element->GetShapeType() == LibUtilities::eTriangle)
             {
                 edge_id = (edge_id)? 1:0;
             }
@@ -744,7 +744,7 @@ namespace Nektar
             int nummodes  = expansion->m_basisKeyVector[edge_id].GetNumModes();
             int numpoints = expansion->m_basisKeyVector[edge_id].GetNumPoints();
 
-            if((*elements)[0]->m_Element->GetGeomShapeType() == eTriangle)
+            if((*elements)[0]->m_Element->GetShapeType() == LibUtilities::eTriangle)
             {
                 // Use edge 0 to define basis of order relevant to edge
                 switch(expansion->m_basisKeyVector[edge_id].GetBasisType())

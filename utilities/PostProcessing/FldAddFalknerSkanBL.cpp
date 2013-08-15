@@ -380,13 +380,13 @@ int main(int argc, char *argv[])
 
     
     //! Definition of the Field
-    std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef = Exp[0]->GetFieldDefinitions();
+    std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef = Exp[0]->GetFieldDefinitions();
     std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
         
     for(j = 0; j < nFields; ++j)
     {
-		for(i = 0; i < FieldDef.size(); ++i)
-		{
+        for(i = 0; i < FieldDef.size(); ++i)
+        {
             if(j == 0)
             {
                 FieldDef[i]->m_fields.push_back("u");
@@ -402,9 +402,11 @@ int main(int argc, char *argv[])
             Exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
         }
     }    
-    graphShPt->Write(FalknerSkan, FieldDef, FieldData);
+
+    LibUtilities::Write(FalknerSkan, FieldDef, FieldData);
+
     std::cout<<"-------------------------------------------------------------------\n";
-    //! --------------------------------------------------------------------------------------------
+    //! ----------------------------------------------------------------------------
 
     return 0;
 }

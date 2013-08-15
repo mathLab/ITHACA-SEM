@@ -58,7 +58,7 @@ int main(int argc, char *argv[]){
     PointsType    Qtype1,Qtype2,Qtype3;
     BasisType     btype1,btype2,btype3;
 
-    ExpansionType regionshape;
+    ShapeType regionshape;
     StdExpansion* E;
     Array<OneD, NekDouble> sol;
 
@@ -69,9 +69,9 @@ int main(int argc, char *argv[]){
                        "x3 y3 z3 [x4 y4 z4...]\n");
         fprintf(stderr,"Where RegionShape is an integer value which "
                        "dictates the region shape:\n");
-        fprintf(stderr,"\t Tetrahedron   = 4\n");
-        fprintf(stderr,"\t Prism         = 6\n");
-        fprintf(stderr,"\t Hexahedron    = 7\n");
+        fprintf(stderr,"\t Tetrahedron   = 5\n");
+        fprintf(stderr,"\t Prism         = 7\n");
+        fprintf(stderr,"\t Hexahedron    = 8\n");
 
 
         fprintf(stderr,"Where type is an integer value which "
@@ -91,12 +91,12 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
-    regionshape = (StdRegions::ExpansionType) atoi(argv[1]);
+    regionshape = (LibUtilities::ShapeType) atoi(argv[1]);
 
     // Check to see if 3D region
-    if (regionshape != StdRegions::eTetrahedron &&
-        regionshape != StdRegions::ePrism       &&
-        regionshape != StdRegions::eHexahedron)
+    if (regionshape != LibUtilities::eTetrahedron &&
+        regionshape != LibUtilities::ePrism       &&
+        regionshape != LibUtilities::eHexahedron)
     {
         NEKERROR(ErrorUtil::efatal,"This shape is not a 3D region");
     }
@@ -111,7 +111,7 @@ int main(int argc, char *argv[]){
     // Check to see that correct Expansions are used
     switch(regionshape)
     {
-        case StdRegions::eTetrahedron:
+        case LibUtilities::eTetrahedron:
             if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
                || (btype1 == eModified_B) || (btype1 == eModified_C))
             {
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]){
                          "or Modified_B");
             }
             break;
-        case StdRegions::ePrism:
+        case LibUtilities::ePrism:
             if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
                || (btype1 == eModified_B) || (btype1 == eModified_C))
             {
@@ -157,7 +157,7 @@ int main(int argc, char *argv[]){
                          "or Modified_C");
             }
             break;
-        case StdRegions::eHexahedron:
+        case LibUtilities::eHexahedron:
             if((btype1 == eOrtho_B) || (btype1 == eOrtho_C)
                || (btype1 == eModified_B) || (btype1 == eModified_C))
             {
@@ -204,7 +204,7 @@ int main(int argc, char *argv[]){
 
     if(btype2 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTetrahedron) {
+        if (regionshape == LibUtilities::eTetrahedron) {
             Qtype2 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
         else
@@ -219,10 +219,11 @@ int main(int argc, char *argv[]){
 
     if(btype3 != LibUtilities::eFourier)
     {
-        if (regionshape == StdRegions::eTetrahedron) {
+        if (regionshape == LibUtilities::eTetrahedron) 
+        {
             Qtype3 = LibUtilities::eGaussRadauMAlpha2Beta0;
         }
-        else if (regionshape == StdRegions::ePrism)
+        else if (regionshape == LibUtilities::ePrism)
         {
             Qtype3 = LibUtilities::eGaussRadauMAlpha1Beta0;
         }
@@ -251,7 +252,7 @@ int main(int argc, char *argv[]){
 
     switch(regionshape)
     {
-        case StdRegions::eTetrahedron:
+    case LibUtilities::eTetrahedron:
         {
             SpatialDomains::TetGeomSharedPtr geom = CreateTetGeom(argc, argv);
             E = new LocalRegions::TetExp(Bkey1, Bkey2, Bkey3, geom);
@@ -266,7 +267,7 @@ int main(int argc, char *argv[]){
             //----------------------------------------------
         }
         break;
-        case StdRegions::ePrism:
+    case LibUtilities::ePrism:
         {
             SpatialDomains::PrismGeomSharedPtr geom = CreatePrismGeom(argc, argv);
             E = new LocalRegions::PrismExp(Bkey1, Bkey2, Bkey3, geom);
@@ -281,7 +282,7 @@ int main(int argc, char *argv[]){
             //----------------------------------------------
         }
         break;
-        case StdRegions::eHexahedron:
+    case LibUtilities::eHexahedron:
         {
             SpatialDomains::HexGeomSharedPtr geom = CreateHexGeom(argc, argv);
             E = new LocalRegions::HexExp(Bkey1, Bkey2, Bkey3, geom);

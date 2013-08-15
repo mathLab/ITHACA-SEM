@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    StdRegions::ExpansionType regionShape = eHexahedron;
+    LibUtilities::ShapeType regionShape = LibUtilities::eHexahedron;
 
     int bType_x_val = atoi(argv[1]);
     int bType_y_val = atoi(argv[2]);
@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
     t[1] = -0.25;
     t[2] = 0.5;
 
-    if( regionShape == StdRegions::eHexahedron ) {
+    if( regionShape == LibUtilities::eHexahedron ) {
         solution[0] = Hex_sol( t[0], t[1], t[2], P, Q, R,
                                bType_x, bType_y, bType_z );
     }

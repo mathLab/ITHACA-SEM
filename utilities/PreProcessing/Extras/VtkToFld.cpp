@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
         {
             out += "." + boost::lexical_cast<string>(vSession->GetComm()->GetRank());
         }
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                     = Exp->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
 
@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
             FieldDef[i]->m_fields.push_back("intensity");
             Exp->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        graph2D->Write(out, FieldDef, FieldData);
+        LibUtilities::Write(out, FieldDef, FieldData);
         //-----------------------------------------------
     }
     catch (...) {

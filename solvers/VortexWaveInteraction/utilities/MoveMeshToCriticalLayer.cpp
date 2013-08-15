@@ -192,9 +192,9 @@ void GetStreakLocation(LibUtilities::SessionReaderSharedPtr &vSession,
 
     //----------------------------------------------
     // Import field file.
-    vector<SpatialDomains::FieldDefinitionsSharedPtr> fielddef;
+    vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
     vector<vector<NekDouble> > fielddata;
-    mesh->Import(fieldfile,fielddef,fielddata);
+    LibUtilities::Import(fieldfile,fielddef,fielddata);
     //----------------------------------------------
 
     //----------------------------------------------

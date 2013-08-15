@@ -81,9 +81,9 @@ namespace Nektar
         const StdRegions::StdExpansionVector &locExpVector = *(fields[0]->GetExp());
         int eid, id, diff;
         int nel = fields[0]->GetNumElmts();
-        
-        map<int,int> periodicEdges;
-        vector<map<int,int> > periodicVertices;
+
+        MultiRegions::PeriodicMap periodicVerts;
+        MultiRegions::PeriodicMap periodicEdges;
         Array<OneD, map<int,int> > ReorderedGraphVertId(2);
         MultiRegions::BottomUpSubStructuredGraphSharedPtr bottomUpGraph;
         int staticCondLevel = 0;
@@ -105,7 +105,7 @@ namespace Nektar
          */
 
         // Obtain any periodic information and allocate default mapping array
-        fields[0]->GetPeriodicEdges(periodicVertices,periodicEdges);
+        fields[0]->GetPeriodicEdges(periodicVerts,periodicEdges);
 
 
         const Array<OneD, const MultiRegions::ExpListSharedPtr> bndCondExp = fields[0]->GetBndCondExpansions();
@@ -267,27 +267,11 @@ namespace Nektar
         SetUp2DGraphC0ContMap(*fields[0],
                               bndCondExp,
                               bndConditionsVec,
-                              periodicVertices,       periodicEdges,
+                              periodicVerts,          periodicEdges,
                               Dofs,                   ReorderedGraphVertId,
                               firstNonDirGraphVertId, nExtraDirichlet,
                               bottomUpGraph, extraDir,  false,  4);
         
-#if 0
-        bottomUpGraph->Dump();
-        cout << endl;
-
-        for(i = 0; i < ReorderedGraphVertId[0].size(); ++i)
-        {
-            cout << "Vertex " << i << " Reordered to "<< ReorderedGraphVertId[0][i] << endl;
-            
-        }
-
-        for(i = 0; i < ReorderedGraphVertId[1].size(); ++i)
-        {
-            cout << "Edge " << i << " Reordered to "<< ReorderedGraphVertId[1][i] << endl;
-            
-        }
-#endif
         /**
          * STEP 2a: Set the mean pressure modes to edges depending on
          * type of direct solver technique;
@@ -410,9 +394,6 @@ namespace Nektar
         // Add mean pressure modes; 
         for(i = 0; i < nel; ++i)
         {
-#if 0
-            cout << "Element "<< i << " EdgeId  " << AddMeanPressureToEdgeId[i] << endl;
-#endif
             graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]]+1)*nvel*nz_loc-1] += nz_loc;
             //graphVertOffset[(ReorderedGraphVertId[1][AddMeanPressureToEdgeId[i]])*nvel*nz_loc] += nz_loc;
         }

@@ -105,9 +105,8 @@ namespace Nektar
 
         if(dumpInitialConditions)
         {
-            // dump initial conditions to file
-            std::string outname = m_sessionName + "_initial.chk";
-            WriteFld(outname);
+            // Dump initial conditions to file
+            Checkpoint_Output(0);
         }
     }
 
@@ -195,6 +194,27 @@ namespace Nektar
                 SpatialDomains::eSymmetry)
             {
                 SymmetryBoundary(n, cnt, inarray);
+            }
+            
+            // Inflow characteristic Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::eInflowCFS)
+            {
+                InflowCFSBoundary(n, cnt, inarray);
+            }
+            
+            // Outflow characteristic Boundary Condition
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::eOutflowCFS)
+            {
+                OutflowCFSBoundary(n, cnt, inarray);
+            }
+            
+            // Extrapolation of the data at the boundaries
+            if (m_fields[0]->GetBndConditions()[n]->GetUserDefined() == 
+                SpatialDomains::eExtrapOrder0)
+            {
+                ExtrapOrder0Boundary(n, cnt, inarray);
             }
     
             // Time Dependent Boundary Condition (specified in meshfile)

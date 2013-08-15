@@ -44,37 +44,6 @@ namespace Nektar
 {
     namespace StdRegions
     {
-        namespace StdPyrData
-        {
-            inline int getNumberOfCoefficients(int Na, int Nb, int Nc)
-            {
-                int nCoef = 0;
-                for (int c = 0; c < Nc; ++c)
-                {
-                    for (int b = 0; b < min(Nc-c,Nb); ++b)
-                    {
-                        for (int a = 0 ; a < min(Nc-c,Na); ++a)
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                /*
-                for (int a = 0; a < Na; ++a)
-                {
-                    for (int b = 0; b < Nb; ++b)
-                    {
-                        for (int c = 0; c < Nc - a - b; ++c)
-                        {
-                            ++nCoef;
-                        }
-                    }
-                }
-                */
-                cout << "Na = " << Na << " Nb = " << Nb << " Nc = " << Nc << " nCoef = " << nCoef << endl;
-                return nCoef;
-            }
-        }
 
         class StdPyrExp : virtual public StdExpansion3D
         {
@@ -199,7 +168,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual int v_GetNverts() const;
             STD_REGIONS_EXPORT virtual int v_GetNedges() const;
             STD_REGIONS_EXPORT virtual int v_GetNfaces() const;
-            STD_REGIONS_EXPORT virtual ExpansionType v_DetExpansionType() const;
+            STD_REGIONS_EXPORT virtual LibUtilities::ShapeType v_DetShapeType() const;
             STD_REGIONS_EXPORT virtual int v_NumBndryCoeffs() const;
             STD_REGIONS_EXPORT virtual int v_GetEdgeNcoeffs(const int i) const;
             STD_REGIONS_EXPORT virtual int v_GetFaceNcoeffs(const int i) const;
@@ -392,9 +361,9 @@ namespace Nektar
                 return 5;
             }
 
-            virtual ExpansionType v_DetExpansionType() const
+            virtual LibUtilities::ShapeType v_DetShapeType() const
             {
-                return DetExpansionType();
+                return DetShapeType();
             }
 
             virtual int v_GetFaceNcoeffs(const int i) const

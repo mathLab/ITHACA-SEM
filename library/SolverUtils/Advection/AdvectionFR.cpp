@@ -202,7 +202,7 @@ namespace Nektar
                         phys_offset = pFields[0]->GetPhys_Offset(n);
                         
                         jac  = LocalRegions::Expansion2D::FromStdExp(pFields[0]->GetExp(n))->GetGeom2D()->GetMetricInfo()->GetJac();
-                        gmat = LocalRegions::Expansion2D::FromStdExp(pFields[0]->GetExp(n))->GetGeom2D()->GetMetricInfo()->GetGmat();
+                        gmat = LocalRegions::Expansion2D::FromStdExp(pFields[0]->GetExp(n))->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                         
                         if (LocalRegions::Expansion2D::FromStdExp(pFields[0]->GetExp(n))->GetGeom2D()->GetMetricInfo()->GetGtype()
                             == SpatialDomains::eDeformed)

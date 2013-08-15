@@ -479,9 +479,10 @@ namespace Nektar
             cnt = 0;
             for (int n = 0; n < m_exp->size(); ++n)
             {
-                for (int e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                exp2d = LocalRegions::Expansion2D::FromStdExp((*m_exp)[n]);
+                for (int e = 0; e < exp2d->GetNedges(); ++e, ++cnt)
                 {
-                    int edgeGeomId = (*m_exp)[n]->GetGeom2D()->GetEid(e);
+                    int edgeGeomId = exp2d->GetGeom2D()->GetEid(e);
                     int offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
 

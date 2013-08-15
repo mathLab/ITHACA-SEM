@@ -234,7 +234,7 @@ namespace Nektar
             // find min, max point and check if within twice this
             // distance other false this is advisable since
             // GetLocCoord is expensive for non regular elements.
-            if(GetGtype() !=  eRegular)
+            if(GetMetricInfo()->GetGtype() !=  eRegular)
             {
                 int i;
                 Array<OneD, NekDouble> pts; 

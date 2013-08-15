@@ -661,7 +661,7 @@ namespace Nektar
                 else if (bndCondExp.num_elements() == 0)
                 {
                     // All boundaries are periodic.
-                    meshVertId = locExpVector[0]->GetGeom2D()->GetVid(0);
+                    meshVertId = LocalRegions::Expansion2D::FromStdExp(locExpVector[0])->GetGeom2D()->GetVid(0);
                 }
                 else
                 {
@@ -754,7 +754,7 @@ namespace Nektar
                     
                     for(k = 0; k < locExpansion->GetNverts(); k++)
                     {
-                        meshVertId = locExpansion->GetGeom2D()->GetVid(k);
+                        meshVertId = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetVid(k);
                         if (ReorderedGraphVertId[0].count(meshVertId) != 0)
                         {
                             continue;

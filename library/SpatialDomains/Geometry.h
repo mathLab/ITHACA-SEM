@@ -115,6 +115,9 @@ namespace Nektar
                 SPATIAL_DOMAINS_EXPORT inline int GetShapeDim() const;
                 SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
+                              NekDouble tol = 0.0);
+                SPATIAL_DOMAINS_EXPORT inline bool ContainsPoint(
+                        const Array<OneD, const NekDouble>& gloCoord,
                               Array<OneD, NekDouble> &locCoord,
                               NekDouble tol = 0.0);
                 SPATIAL_DOMAINS_EXPORT inline int GetVertexEdgeMap(int i, int j) const;
@@ -183,6 +186,9 @@ namespace Nektar
                 virtual int  v_GetNumFaces() const;
                 virtual int  v_GetShapeDim() const;
                 virtual int  v_GetCoordim() const;
+                virtual bool v_ContainsPoint(
+                        const Array<OneD, const NekDouble>& gloCoord,
+                              NekDouble tol = 0.0);
                 virtual bool v_ContainsPoint(
                         const Array<OneD, const NekDouble>& gloCoord,
                         Array<OneD, NekDouble>& locCoord,
@@ -319,6 +325,13 @@ namespace Nektar
         inline int Geometry::GetShapeDim() const
         {
             return v_GetShapeDim();
+        }
+
+        inline bool Geometry::ContainsPoint(
+                const Array<OneD, const NekDouble>& gloCoord,
+                NekDouble tol)
+        {
+            return v_ContainsPoint(gloCoord,tol);
         }
 
         inline bool Geometry::ContainsPoint(

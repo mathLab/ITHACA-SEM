@@ -804,32 +804,6 @@ namespace Nektar
         }
 
         
-        const SpatialDomains::GeomFactorsSharedPtr& HexExp::v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-        
-        /// Returns the HexGeom object associated with this expansion.
-        const SpatialDomains::GeometrySharedPtr HexExp::v_GetGeom() const
-        {
-            return m_geom;
-        }
-
-        
-        /// Returns the HexGeom object associated with this expansion.
-        const SpatialDomains::Geometry3DSharedPtr& HexExp::v_GetGeom3D() const
-        {
-            return m_geom;
-        }
-
-        
-        int HexExp::v_GetCoordim()
-        {
-            return m_geom->GetCoordim();
-        }
-
-        
         void HexExp::v_ExtractDataToCoeffs(
                 const NekDouble *data,
                 const std::vector<unsigned int > &nummodes,

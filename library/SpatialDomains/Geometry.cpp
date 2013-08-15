@@ -110,13 +110,6 @@ namespace Nektar
             return lhs->GetGlobalID() == rhs->GetGlobalID();
         }
 
-
-        void Geometry::GenGeomFactors(
-                const Array<OneD, const LibUtilities::BasisSharedPtr>& tbasis)
-        {
-            return v_GenGeomFactors(tbasis);
-        }
-
         void Geometry::v_AddElmtConnected(int gvo_id, int locid)
         {
             NEKERROR(ErrorUtil::efatal,
@@ -216,11 +209,10 @@ namespace Nektar
             return false;
         }
 
-
         bool Geometry::v_ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
-                Array<OneD, NekDouble> &locCoord,
-                NekDouble tol)
+                Array<OneD, NekDouble>& locCoord,
+                NekDouble tol = 0.0)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function has not been defined for this geometry");

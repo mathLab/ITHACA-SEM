@@ -1347,7 +1347,7 @@ namespace Nektar
             {
                 exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
 
-                if (exp->GetGeom()->ContainsPoint(gloCoord, locCoords, tol))
+                if (exp->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
                 {
                     start = i;
                     return i;
@@ -1358,7 +1358,7 @@ namespace Nektar
             {
                 exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
 
-                if (exp->GetGeom()->ContainsPoint(gloCoord, locCoords, tol))
+                if (exp->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
                 {
                     start = i;
                     return i;
@@ -2191,12 +2191,8 @@ namespace Nektar
 
             for(s = startenum; s <= endenum; ++s)
             {
-<<<<<<< HEAD
                 LocalRegions::ExpansionSharedPtr      exp;
-                SpatialDomains::GeomShapeType         shape;
-=======
                 LibUtilities::ShapeType               shape;
->>>>>>> master
                 std::vector<unsigned int>             elementIDs;
                 std::vector<LibUtilities::BasisType>  basis;
                 std::vector<unsigned int>             numModes;

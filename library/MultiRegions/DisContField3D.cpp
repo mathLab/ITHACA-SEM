@@ -426,9 +426,10 @@ namespace Nektar
             cnt = 0;
             for (int n = 0; n < m_exp->size(); ++n)
             {
-                for (int e = 0; e < (*m_exp)[n]->GetNfaces(); ++e, ++cnt)
+                exp3d = LocalRegions::Expansion3D::FromStdExp((*m_exp)[n]);
+                for (int e = 0; e < exp3d->GetNfaces(); ++e, ++cnt)
                 {
-                    int faceGeomId = (*m_exp)[n]->GetGeom3D()->GetFid(e);
+                    int faceGeomId = exp3d->GetGeom3D()->GetFid(e);
                     int offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
 

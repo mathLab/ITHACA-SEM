@@ -69,7 +69,7 @@ namespace SolverUtils
             m_NumVariable = nvariables; // e.g. (u v w)  for 3D case
         }
 
-        TiXmlElement* funcNameElmt = pForce->FirstChildElement("BODYFORCE");
+        const TiXmlElement* funcNameElmt = pForce->FirstChildElement("BODYFORCE");
         ASSERTL0(funcNameElmt, "Requires BODYFORCE tag specifying function "
                                "name which prescribes body force.");
 

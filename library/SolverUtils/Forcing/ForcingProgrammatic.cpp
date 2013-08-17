@@ -41,7 +41,7 @@ namespace SolverUtils
 {
 
     std::string ForcingProgrammatic::className = GetForcingFactory().
-                                RegisterCreatorFunction("Programamtic",
+                                RegisterCreatorFunction("Programmatic",
                                                         ForcingProgrammatic::create,
                                                         "Programmatic Forcing");
 

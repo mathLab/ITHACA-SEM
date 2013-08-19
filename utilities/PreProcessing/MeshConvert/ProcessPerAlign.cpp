@@ -81,6 +81,9 @@ namespace Nektar
 
         void ProcessPerAlign::Process()
         {
+            static int tetFaceNodes[4][3] = {
+                {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
+
             int    surf1 = config["surf1"].as<int>();
             int    surf2 = config["surf2"].as<int>();
             string dir   = config["dir"].  as<string>();
@@ -166,7 +169,6 @@ namespace Nektar
                     centroid += *(c1->items[i]->GetVertex(j));
                 }
                 centroid /= (NekDouble)c1->items[i]->GetVertexCount();
-                bool found = false;
 
                 for (it = centroidMap.begin(); it != centroidMap.end(); ++it)
                 {
@@ -182,12 +184,71 @@ namespace Nektar
                         // Found match
                         elmtDone.insert(it->first);
                         elmtPairs[i] = it->first;
-                        found = true;
+
+                        // In the case of triangles, test for alignment issues.
+                        if (c1->items[i]->GetConf().e != eTriangle)
+                        {
+                            break;
+                        }
+
+                        SpatialDomains::TriGeomSharedPtr tri1 =
+                            boost::dynamic_pointer_cast<
+                                SpatialDomains::TriGeom>(
+                                    c1->items[i]->GetGeom(m->spaceDim));
+                        SpatialDomains::TriGeomSharedPtr tri2 =
+                            boost::dynamic_pointer_cast<
+                                SpatialDomains::TriGeom>(
+                                    c2->items[it->first]->GetGeom(m->spaceDim));
+
+                        // Calculate relative orientations.
+                        StdRegions::Orientation o =
+                            SpatialDomains::TriGeom::GetFaceOrientation(
+                                *tri1, *tri2);
+
+                        if (o == StdRegions::eDir1FwdDir1_Dir2FwdDir2 ||
+                            o == StdRegions::eDir1BwdDir1_Dir2FwdDir2)
+                        {
+                            break;
+                        }
+
+                        cout << o << " " << StdRegions::OrientationMap[o] << endl;
+                        
+                        FaceSharedPtr    f    = c1->items[i]->GetFaceLink();
+                        ElementSharedPtr el   = f->elLink[0].first;
+                        int              fNum = f->elLink[0].second;
+
+                        if (el->GetConf().e == eTetrahedron)
+                        {
+                            /*
+                            NodeSharedPtr tmp(new Node(0, 0.0, 0.0, 0.0));
+                            NodeSharedPtr n[3] = {
+                                el->GetVertex(tetFaceNodes[fNum][0]),
+                                el->GetVertex(tetFaceNodes[fNum][1]),
+                                el->GetVertex(tetFaceNodes[fNum][2])
+                            };
+
+                            // Swap vertices
+                            el->SetVertex(tetFaceNodes[fNum][0], tmp);
+                            el->SetVertex(tetFaceNodes[fNum][2], n[0]);
+                            el->SetVertex(tetFaceNodes[fNum][0], n[2]);
+                            */
+                            swap(f->vertexList[0], f->vertexList[2]);
+                            EdgeSharedPtr e0 = f->edgeList[0];
+                            EdgeSharedPtr e1 = f->edgeList[1];
+                            EdgeSharedPtr e2 = f->edgeList[2];
+                            f->edgeList[0] = e2;
+                            f->edgeList[1] = e1;
+                            f->edgeList[2] = e0;
+                        }
+                        else
+                        {
+                            cerr << "Warning: Can't align prism yet" << endl;
+                        }
                         break;
                     }
                 }
 
-                if (!found)
+                if (it == centroidMap.end())
                 {
                     cerr << "WARNING: Could not find matching edge for surface "
                          << "element " << c1->items[i]->GetId() << ". "

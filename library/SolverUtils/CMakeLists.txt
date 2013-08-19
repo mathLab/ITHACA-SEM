@@ -15,8 +15,9 @@ SET(SOLVER_UTILS_SOURCES
   DriverSteadyState.cpp	
   EquationSystem.cpp
   Filters/Filter.cpp
-  Filters/FilterCheckpoint.cpp
   Filters/FilterAeroForces.cpp
+  Filters/FilterCheckpoint.cpp
+  Filters/FilterEnergy.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterThresholdMax.cpp
   RiemannSolvers/RiemannSolver.cpp
@@ -42,8 +43,9 @@ SET(SOLVER_UTILS_HEADERS
   DriverSteadyState.h
   EquationSystem.h
   Filters/Filter.h
-  Filters/FilterCheckpoint.h
   Filters/FilterAeroForces.h
+  Filters/FilterCheckpoint.h
+  Filters/FilterEnergy.h
   Filters/FilterHistoryPoints.h
   Filters/FilterThresholdMax.h
   RiemannSolvers/RiemannSolver.h

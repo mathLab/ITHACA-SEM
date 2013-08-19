@@ -751,10 +751,18 @@ namespace Nektar
             void SetEdgeLink(EdgeSharedPtr pLink) {
                 m_edgeLink = pLink;
             }
+            /// Get correspondence between this element and an edge.
+            EdgeSharedPtr GetEdgeLink() {
+                return m_edgeLink;
+            }
             /// Set a correspondence between this element and a face
             /// (3D boundary element).
             void SetFaceLink(FaceSharedPtr pLink) {
                 m_faceLink = pLink;
+            }
+            /// Get correspondence between this element and a face.
+            FaceSharedPtr GetFaceLink() {
+                return m_faceLink;
             }
             /// Set a correspondence between edge or face i and its
             /// representative boundary element m->element[expDim-1][j].

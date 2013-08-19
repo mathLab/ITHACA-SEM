@@ -305,6 +305,7 @@ namespace Nektar
             ASSERTL1(EndOfDomain.size() == 2,"Did not find two ends of domain");
              
             map<int,SpatialDomains::GeometrySharedPtr>::iterator regIt;
+	    int numNewBc = 1;
             for(regIt = EndOfDomain.begin(); regIt != EndOfDomain.end(); ++regIt)
             {
                 if(GeometryToRegionsMap.count(regIt->first) != 0) // Set up boundary condition up
@@ -331,7 +332,7 @@ namespace Nektar
                     gvec->push_back(regIt->second);
                     (*breg)[regIt->first] = gvec;
 
-                    returnval->AddBoundaryRegions(bregions.size()+1,breg);
+                    returnval->AddBoundaryRegions(bregions.size()+numNewBc,breg);
 
                     SpatialDomains::BoundaryConditionMapShPtr bCondition = MemoryManager<SpatialDomains::BoundaryConditionMap>::AllocateSharedPtr();
 
@@ -339,7 +340,8 @@ namespace Nektar
                     SpatialDomains::BoundaryConditionShPtr notDefinedCondition(MemoryManager<SpatialDomains::NotDefinedBoundaryCondition>::AllocateSharedPtr(m_session, "0"));
                     (*bCondition)[variable] = notDefinedCondition;
                     
-                    returnval->AddBoundaryConditions(bregions.size()+1,bCondition);
+                    returnval->AddBoundaryConditions(bregions.size()+numNewBc,bCondition);
+		    ++numNewBc;
 
                 }
             }

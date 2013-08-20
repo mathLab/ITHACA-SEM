@@ -6,7 +6,7 @@ IF (THIRDPARTY_BUILD_METIS)
     EXTERNALPROJECT_ADD(
         modmetis-5.1.0
         PREFIX ${TPSRC}
-        URL ${TPURL}/modmetis-5.1.0.tar.bz2
+        URL ${TPURL}/modmetis-5.1.0_1.tar.bz2
         URL_MD5 "6c6816aea0f53db6c71b1d98ed4ad42b"
         DOWNLOAD_DIR ${TPSRC}
         CONFIGURE_COMMAND ${CMAKE_COMMAND}

@@ -151,15 +151,14 @@ namespace Nektar
 
             NekDouble f_min = m_session->GetParameter("d_min");
             NekDouble f_max = m_session->GetParameter("d_max");
-            NekDouble f_range = f_max - f_min;
 
             EvaluateFunction(varName, vTemp, "IsotropicConductivity");
 
             // Threshold based on d_min, d_max
             for (int j = 0; j < nq; ++j)
             {
-                vTemp = (vTemp[j] < f_min ? f_min : vTemp[j]);
-                vTemp = (vTemp[j] > f_max ? f_max : vTemp[j]);
+                vTemp[j] = (vTemp[j] < f_min ? f_min : vTemp[j]);
+                vTemp[j] = (vTemp[j] > f_max ? f_max : vTemp[j]);
             }
 
             // Rescale to s \in [0,1] (0 maps to d_max, 1 maps to d_min)

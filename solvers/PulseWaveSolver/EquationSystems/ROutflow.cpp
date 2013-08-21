@@ -40,7 +40,7 @@ namespace Nektar
 
     std::string Routflow::className
     = GetFlowFactory().RegisterCreatorFunction(
-        "Routflow",
+        "Resistance",
         Routflow::create,
         "Resistive outflow boundary condition");
 

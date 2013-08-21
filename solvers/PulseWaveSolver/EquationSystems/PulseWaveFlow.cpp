@@ -43,8 +43,9 @@ namespace Nektar
      * @class PulseWaveFlow
      *
      */
-    PulseWaveFlow::PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel)
-        : m_vessels(pVessel)
+  PulseWaveFlow::PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, const LibUtilities::SessionReaderSharedPtr pSession)
+    : m_vessels(pVessel),
+      m_session(pSession)
     {
     }
 

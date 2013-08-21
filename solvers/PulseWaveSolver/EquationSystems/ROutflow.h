@@ -52,15 +52,16 @@ namespace Nektar
     {
     public:
         /// Creates an instance of this class
-        static PulseWaveFlowSharedPtr create(Array<OneD, MultiRegions::ExpListSharedPtr>& pVessel)
+      static PulseWaveFlowSharedPtr create(Array<OneD, MultiRegions::ExpListSharedPtr>& pVessel, 
+					   const LibUtilities::SessionReaderSharedPtr& pSession)
         {
-            return MemoryManager<Routflow>::AllocateSharedPtr(pVessel);
+	  return MemoryManager<Routflow>::AllocateSharedPtr(pVessel,pSession);
         }
 
         /// Name of class
         static std::string className;
         
-        Routflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel);
+        Routflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, const LibUtilities::SessionReaderSharedPtr pSession);
         virtual ~Routflow();
     protected:
         virtual void v_DoBoundary(int omega);

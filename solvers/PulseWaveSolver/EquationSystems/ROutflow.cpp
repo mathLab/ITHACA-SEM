@@ -47,8 +47,8 @@ namespace Nektar
     /**
      *
      */
-    Routflow::Routflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel)
-        : PulseWaveFlow(pVessel)
+    Routflow::Routflow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel, const LibUtilities::SessionReaderSharedPtr pSession)
+      : PulseWaveFlow(pVessel,pSession)
     {
     }
 

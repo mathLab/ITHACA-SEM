@@ -37,6 +37,7 @@
 #define NEKTAR_SOLVERS_PULSEWAVESOLVER_EQUATIONSYSTEMS_PULSEWAVEPROPAGATION_H
 
 #include <PulseWaveSolver/EquationSystems/PulseWaveSystem.h>
+#include <PulseWaveSolver/EquationSystems/PulseWaveFlow.h>
 
 using namespace Nektar::SolverUtils;
 
@@ -59,7 +60,7 @@ namespace Nektar
         static std::string className;
         
         virtual ~PulseWavePropagation();
-
+	
 		
     protected:
         PulseWavePropagation(const LibUtilities::SessionReaderSharedPtr& pSession);
@@ -104,6 +105,7 @@ namespace Nektar
         NekDouble pc;
         /// Print Summary
         virtual void v_PrintSummary(std::ostream &out);
+	PulseWaveFlowSharedPtr m_OutFlow;
     };
 }
 

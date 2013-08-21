@@ -37,6 +37,7 @@
 #define NEKTAR_PULSEWAVEFLOW_H
 
 #include <LibUtilities/BasicUtils/NekFactory.hpp>
+#include <LibUtilities/BasicUtils/SessionReader.h>
 #include <LibUtilities/BasicUtils/SharedArray.hpp>
 #include <MultiRegions/ExpList.h>
 
@@ -49,13 +50,15 @@ namespace Nektar
 
     typedef LibUtilities::NekFactory< std::string, 
         PulseWaveFlow, 
-        Array<OneD, MultiRegions::ExpListSharedPtr>& > FlowFactory;
+      Array<OneD, MultiRegions::ExpListSharedPtr>&, 
+      const LibUtilities::SessionReaderSharedPtr& > FlowFactory;
     FlowFactory& GetFlowFactory();
     
     class PulseWaveFlow
     {
     public:
-        PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel);
+PulseWaveFlow(Array<OneD, MultiRegions::ExpListSharedPtr> pVessel,
+		const LibUtilities::SessionReaderSharedPtr pSession);
 
         virtual ~PulseWaveFlow();
 
@@ -65,6 +68,8 @@ namespace Nektar
         virtual void v_DoBoundary(int omega) = 0;
 
         Array<OneD, MultiRegions::ExpListSharedPtr> m_vessels;
+	LibUtilities::SessionReaderSharedPtr m_session;
+
     private:
     };
 

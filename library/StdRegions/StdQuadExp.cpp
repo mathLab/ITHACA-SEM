@@ -1472,51 +1472,22 @@ namespace Nektar
             OrthoExp.FwdTrans(array,orthocoeffs);
             
             //To avoid the fac[j] from blowing up
-            NekDouble epsilon = 0.01;
+            NekDouble epsilon = 1;
             
             //Transfer "Coefficient"
             NekDouble T = 0.0;
 
             int nmodes = min(nmodes_a,nmodes_b);
-            // apply SVV filter. 
-            //std::cout<< "SVV filtering of the linear space"<< std::endl; //newline JEL : testing if my test case is calling this function
-//            std::cout<< "nmodes_a : "<< nmodes_a <<std::endl; //newline JEL : testing if my test case is calling this function
-//            std::cout<< "nmodes_b : "<< nmodes_b <<std::endl; //newline JEL : testing if my test case is calling this function
-//            cnt = cutoff;
             
             for(cnt = j = 0; j < nmodes_a; ++j)
             {
                 for(k = 0; k < nmodes_b; ++k)
                 {
-//                    if(j + k >= cutoff)
-                   if(j >= cutoff_a || k >= cutoff_b)//to filter out only the "high-modes"
+                   if(j + k >= cutoff) //to filter out only the "high-modes"
+                       
                     {
-                        
-                        //------"New" Version-----------------------------------
-                        //for debuggin purposes
-                        cout << "j = " << j << " k = " << k << endl;
-                        std::cout<< "before : mode " << cnt << "( of "<< sizeof(orthocoeffs) << ")" << " orthocoeff " << orthocoeffs[cnt];
-                        //new transfer function :
-                        // Following Sagaut (LES for Inc. Flows, p.22) we define the transfer function in Fourier space (which has a corresponding filter function in physical space). It is a Gaussian centered on the cutoff mode. Hence the modes just higher that the cutoff mode are not damped and T->1. For the high-modes T-> 0.
-                        T =exp(-(M_PI*M_PI*(j-cutoff_a)*(j-cutoff_a))/(2*c*c*(nmodes_a-cutoff_a)*(nmodes_a-cutoff_a)))*exp(-(M_PI*M_PI*(k-cutoff_b)*(k-cutoff_b))/(2*c*c*(nmodes_b-cutoff_b)*(nmodes_b-cutoff_b)));
-                        orthocoeffs[cnt] *= T;
-                    
-                        
-                        //for debuggin purposes
-                        std::cout<< " and SVV transfer fct value = " << T << std::endl;                        
-                        std::cout<< "after  : mode " << cnt << " orthocoeff = " << orthocoeffs[cnt] << std::endl; //newline JEL : testing if my test
-                        
-                        
-                        
-
-//                        //------"Old" Version-----------------------------------
-//                        //for debugging purposes
-//                        std::cout<< "before : mode " << j*nmodes_b+k << " orthocoeff = " << orthocoeffs[j*nmodes_b+k];
-//                        T = (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+1)*(j+k-cutoff+1)))));
-//                        orthocoeffs[j*nmodes_b+k] *= T;//working but wrong theoretically
-//                        //for debugging purposes
-//                        std::cout<< " and SVV transfer fct value = " << T << std::endl;
-//                        std::cout<< "after  : mode " << j*nmodes_b+k << " orthocoeff = " << orthocoeffs[j*nmodes_b+k] << std::endl;
+                        //------"New" Version August 22nd '13--------------------
+                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
                     }
                     cnt++; 
                 }

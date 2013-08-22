@@ -1670,7 +1670,7 @@ namespace Nektar
                      (GetEdgeBasisType(localVertexId)==LibUtilities::eModified_C),
                      "Mapping not defined for this type of basis");
 
-            int localDOF;
+            int localDOF = 0;
             switch(localVertexId)
             {
                 case 0:
@@ -2162,6 +2162,15 @@ namespace Nektar
         void StdTetExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                              const StdMatrixKey &mkey)
         {
+            //To do : 1) add a test to ensure 0 \leq SvvCutoff \leq 1.
+            //        2) check if the transfer function needs an analytical
+            //           Fourier transform.
+            //        3) if it doesn't : find a transfer function that renders
+            //           the if( cutoff_a ...) useless to reduce computational
+            //           cost.
+            //        4) add SVVDiffCoef to both models!!
+            
+            std::cout<< " called stdTetExp::v_SVVLaplacianFilter "<< std::endl; //newline JEL : testing if my test case is calling this function
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();
             int qc = m_base[2]->GetNumPoints();
@@ -2177,34 +2186,83 @@ namespace Nektar
             LibUtilities::BasisKey Ba(LibUtilities::eOrtho_A,nmodes_a,pa);
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_B,nmodes_b,pb);
             LibUtilities::BasisKey Bc(LibUtilities::eOrtho_C,nmodes_c,pc);
+
             StdTetExp OrthoExp(Ba,Bb,Bc);
             
-            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int i,j,k;
             
-            int cnt;
-            int cuttoff = (int) (mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio)*nmodes_a);
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            int i,j,k,cnt = 0;
+
+            //SVV filter paramaters (how much added diffusion relative to physical one
+            // and fraction of modes from which you start applying this added diffusion)
+            //
             NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+            
+            //Defining the cut of mode
+            int cutoff_a = (int) (SVVCutOff*nmodes_a);
+            int cutoff_b = (int) (SVVCutOff*nmodes_b);
+            int cutoff_c = (int) (SVVCutOff*nmodes_c);
+            //Paramater used in the SVV transfer function (Sagaut : Inc. LES, p. 22)
+            // essentially a knob that controls the bandwidth of the transfer function
+            NekDouble gamma = 6.0;
+            NekDouble gamma2 = 2.0;//for the Model 2 Tranfer Function
+
             
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             
-            // apply SVV filter. 
+            // apply SVV filter : following Sagaut "Incompressible LES", p.16-22 :
+            // we apply the Gaussian Filter (as a transfer
+            // function because we are working in the Fourier space i.e. :
+            // \overbar \hat{\Phi} = \hat{G}\hat{\Phi}
+            // where \hat{G} is the transfer function associated with the filter G
+            // and \hat{\Phi} is the spectrum associated to \Phi
+
+            // Note we suppose the orthocoeffs array is ordered as follows \hat{u}_PQR with
+            // 0 \leq p \leq P, p+q \leq Q, p+q+r \leq R
+            // and the coefficients are ordered such that first come the r indices, then the q and finally the p :
+            // u_{000}, u_{001}, ... u_{00R}, u_{010}, ..., u_{01R}, ..., u_{0Q0}, ..., u_{0QR}, u_{100}, ...... u_{PQR}
+
             for(cnt = i = 0; i < nmodes_a; ++i)
             {
-                for(cnt = j = 0; j < nmodes_b-j; ++j)
+                for(cnt = j = 0; j < nmodes_b; ++j)
                 {
-                    for(k = 0; k < nmodes_c-j-k; ++k)
+                    for(k = 0; k < nmodes_c; ++k)
                     {
-                        if(i + j + k >= cuttoff)
+                        //------------------------------------------------------------------
+                        // First SVV model :
+                        // This model uses and "if" test to cutoff damp out only the higher
+                        // modes. The transfer function used is a Gaussian, but the fact that
+                        // the filter is only applied past the cutoff mode implies it doesn't
+                        // really have an analytical expression either and hence it doens't
+                        // either have an analytical fourier transform...
+                        if(1)
                         {
-                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(i+j+k-nmodes_a)*(i+j+k-nmodes_a)/((NekDouble)((i+j+k-cuttoff+1)*(i+j+k-cuttoff+1)))));
+                            if(i >= cutoff_a || j >= cutoff_b || k >= cutoff_c)
+                            {
+                                orthocoeffs[cnt] *= exp(-(M_PI*M_PI*i*i)/(cutoff_a*cutoff_a*4*gamma))*exp(-(M_PI*M_PI*j*j)/(cutoff_b*cutoff_b*4*gamma))*exp(-(M_PI*M_PI*k*k)/(cutoff_c*cutoff_c*4*gamma));
+                            }
+                            cnt++;
                         }
-                        cnt++;
+                        //------------------------------------------------------------------
+                        // Second SVV model :
+                        // This second model of a transfer function uses a generalized Gaussin
+                        // with \beta = 4 so that it leaves the low modes nearly unchanged
+                        // yet still strongly damps the higher modes thus rendering the
+                        // "if" test from the first model useless. This model is quicker to
+                        // execute but this transfer function does not have an analytical
+                        // inverse Fourier transform so it isn't clear what effect the filter
+                        // has in physical space!
+                        if(0)
+                        {
+                            orthocoeffs[cnt] *= exp(-(i*i*i*i)/(cutoff_a*cutoff_a*cutoff_a*cutoff_a*4*gamma2))*exp(-(j*j*j*j)/(cutoff_b*cutoff_b*cutoff_b*cutoff_b*4*gamma2))*exp(-(k*k*k*k)/(cutoff_c*cutoff_c*cutoff_c*cutoff_c*4*gamma2));
+                            cnt++;
+                            
+                        }
                     }
                 }
-            }
-            
+            }   
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }

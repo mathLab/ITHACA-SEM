@@ -1611,6 +1611,7 @@ namespace Nektar
         void StdTriExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                              const StdMatrixKey &mkey)
         {
+            std::cout<< " called stdTriExp::v_SVVLaplacianFilter "<< std::endl; //newline JEL : testing if my test case is calling this function
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();
             int nmodes_a = m_base[0]->GetNumModes();
@@ -1627,21 +1628,31 @@ namespace Nektar
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
             int j,k;
             
-            int cnt;
-            int cuttoff = (int) (mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio)*nmodes_a);
-            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+            
+            int cutoff_a = (int) (SVVCutOff*nmodes_a);
+            int cutoff_b = (int) (SVVCutOff*nmodes_b);
+            NekDouble gamma = 6.0;
+            
+            //To avoid the fac[j] from blowing up
+//            NekDouble epsilon = 0.001;
+            
             
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             
-            // apply SVV filter. 
+            
+            cout << "nmodes_a = " << nmodes_a << " and nmodes_b = " << nmodes_b << "and and orthocoeffs is of size " << sizeof(orthocoeffs) << endl;
+            // apply SVV filter (JEL)
             for(cnt = j = 0; j < nmodes_a; ++j)
             {
                 for(k = 0; k < nmodes_b-j; ++k)
                 {
-                    if(j + k >= cuttoff)
+                    if(j + k >= cutoff)
                     {
-                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes_a)*(j+k-nmodes_a)/((NekDouble)((j+k-cuttoff+1)*(j+k-cuttoff+1)))));
+                        orthocoeffs[cnt] *= exp(-(M_PI*M_PI*(j+k)*(j+k))/(cutoff_a*cutoff_a*4*gamma));
                     }
                     cnt++;
                 }

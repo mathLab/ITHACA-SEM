@@ -2044,6 +2044,7 @@ namespace Nektar
         void StdPrismExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                                const StdMatrixKey &mkey)
         {
+            std::cout<< " called stdPrismExp::v_SVVLaplacianFilter "<< std::endl; //newline JEL : testing if my test case is calling this function
             // Generate an orthonogal expansion
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();
@@ -2070,8 +2071,21 @@ namespace Nektar
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             
-            //  Filter just trilinear space
-            int nmodes = max(nmodes_a,nmodes_b);
+            // apply SVV filter : following Sagaut "Incompressible LES", p.16-22 :
+            // we apply the Gaussian Filter (as a transfer
+            // function because we are working in the Fourier space i.e. :
+            // \overbar \hat{\Phi} = \hat{G}\hat{\Phi}
+            // where \hat{G} is the transfer function associated with the filter G
+            // and \hat{\Phi} is the spectrum associated to \Phi
+            
+            // Note we suppose the orthocoeffs array is ordered as follows \hat{u}_PQR with
+            // 0 \leq p \leq P, 0 \leq q \leq Q and p+r \leq R
+            // and the coefficients are ordered such that first come the r indices, then the q and finally the p :
+            // u_{000}, u_{001}, ... u_{00R}, u_{010}, ..., u_{01R}, ..., u_{0Q0}, ..., u_{0QR}, u_{100}, ...... u_{PQR}
+            
+
+            //  Filter just trilinear space : OLD implementation
+/*            int nmodes = max(nmodes_a,nmodes_b);
             nmodes = max(nmodes,nmodes_c);
             
             Array<OneD, NekDouble> fac(nmodes,1.0);
@@ -2093,7 +2107,7 @@ namespace Nektar
                     }
                 }
             }
-            
+ */           
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        

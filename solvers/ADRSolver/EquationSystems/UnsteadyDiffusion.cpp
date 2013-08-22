@@ -129,6 +129,17 @@ namespace Nektar
     {
     }
 
+    void UnsteadyDiffusion::v_PrintSummary(std::ostream &out) //
+    {
+        if(m_useSpecVanVisc)
+        {
+            out << "\tSmoothing       : Spectral vanishing viscosity " << endl;
+            out << "\t                  (cut off ratio = " << m_sVVCutoffRatio
+            << ", diff coeff = " << m_sVVDiffCoeff << ")"<< endl;
+        }
+    }
+    
+    
     /* @brief Compute the right-hand side for the unsteady diffusion problem.
      * 
      * @param inarray    Given fields.
@@ -214,6 +225,17 @@ namespace Nektar
         int npoints    = m_fields[0]->GetNpoints();
         factors[StdRegions::eFactorLambda] = 1.0 / lambda / m_epsilon;
         factors[StdRegions::eFactorTau]    = 1.0;
+        
+        
+        //Newlines JEL START
+        if(m_useSpecVanVisc)
+        {
+            factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_epsilon;//here you define factors
+        }
+        //Newlines JEL END
+        
+        
 
         // We solve ( \nabla^2 - HHlambda ) Y[i] = rhs [i]
         // inarray = input: \hat{rhs} -> output: \hat{Y}

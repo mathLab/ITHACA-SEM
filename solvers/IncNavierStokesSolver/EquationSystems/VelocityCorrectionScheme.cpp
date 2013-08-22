@@ -522,7 +522,8 @@ namespace Nektar
         if(m_useSpecVanVisc)
         {
             factors[StdRegions::eFactorSVVCutoffRatio] = m_sVVCutoffRatio;
-            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;
+            factors[StdRegions::eFactorSVVDiffCoeff]   = m_sVVDiffCoeff/m_kinvis;//here you define factors
+            cout << "Setup the SVV paramaters VCScheme.cpp" << endl;
         }
         
         // Solve Helmholtz system and put in Physical space

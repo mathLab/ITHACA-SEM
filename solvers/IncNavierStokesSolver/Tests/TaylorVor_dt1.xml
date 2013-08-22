@@ -146,29 +146,7 @@
             <REGION REF="0">
                 <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
                 <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0" />
-            </REGION>
-            <REGION REF="1">
-                <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-                <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-                <D VAR="p" USERDEFINEDTYPE="TimeDependent"
-                    VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)" />
-            </REGION>
-            <REGION REF="2">
-                <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-                <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0" />
-            </REGION>
-            <REGION REF="3">
-                <D VAR="u" USERDEFINEDTYPE="TimeDependent" VALUE="-cos(x)*sin(y)*exp(-2*t*Kinvis)" />
-                <D VAR="v" USERDEFINEDTYPE="TimeDependent" VALUE="sin(x)*cos(y)*exp(-2*t*Kinvis)" />
-                <D VAR="p" USERDEFINEDTYPE="TimeDependent"
-                    VALUE="-0.25*(cos(2*x)+cos(2*y))*exp(-4*t*Kinvis)" />
-            </REGION>
-        </BOUNDARYCONDITIONS>
-
-        <FUNCTION NAME="InitialConditions">
-            <E VAR="u" VALUE="-cos(x)*sin(y)" />
+                <N VAR="p" USERDEFINEDTYPE="H" VALUE="0.0" />`        <E VAR="u" VALUE="-cos(x)*sin(y)" />
             <E VAR="v" VALUE="sin(x)*cos(y)" />
             <E VAR="p" VALUE="-0.25*(cos(2*x)+cos(2*y))" />
         </FUNCTION>

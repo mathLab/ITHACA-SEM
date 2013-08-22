@@ -395,8 +395,7 @@ namespace Nektar
                 out << "\tReaction        : " 
                     << (m_explicitReaction  ? "explicit" : "implicit") << endl;
             }
-            
-            out << "\tIntegration Type: " 
+            out << "\tIntegration Type: "
             << LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod]<< endl;
             out << "\tTime Step       : " 
             << m_timestep                                             << endl;

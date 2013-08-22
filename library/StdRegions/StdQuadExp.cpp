@@ -86,11 +86,12 @@ namespace Nektar
         // Differentiation Methods //
         /////////////////////////////
 
-        /** \brief Calculate the derivative of the physical points 
+        /** \brief Calculate the derivative of the physical points
          *
          *  For quadrilateral region can use the Tensor_Deriv function
          *  defined under StdExpansion.
          */
+
         void StdQuadExp::v_PhysDeriv(const Array<OneD, const NekDouble>& inarray,
                             Array<OneD, NekDouble> &out_d0,
                             Array<OneD, NekDouble> &out_d1,
@@ -138,6 +139,7 @@ namespace Nektar
         {
             //PhysTensorDeriv(inarray, outarray);            
             StdQuadExp::v_PhysDeriv(dir,inarray,outarray);
+
         }
 
 
@@ -1349,6 +1351,7 @@ namespace Nektar
                              Array<OneD,NekDouble> &outarray,
                              const StdMatrixKey &mkey)
         {
+            
             DNekMatSharedPtr mat = m_stdMatrixManager[mkey];
             
             if(inarray.get() == outarray.get())
@@ -1373,6 +1376,7 @@ namespace Nektar
                              Array<OneD,NekDouble> &outarray,
                              const StdMatrixKey &mkey)
         {
+
             if(mkey.GetNVarCoeff() == 0)
             {
                 // This implementation is only valid when there are no coefficients
@@ -1445,55 +1449,79 @@ namespace Nektar
             LibUtilities::BasisKey Bb(LibUtilities::eOrtho_A,nmodes_b,pb);
             StdQuadExp OrthoExp(Ba,Bb);
             
-            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
-            int j,k;
+            Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
+            int j,k,cnt=0;
             
+            //for the "old" implementation
             int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
+
+            //SVV parameters loaded from the .xml case file
+            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
             
+            //Defining the cutoff modes for each of the two axes
+            int cutoff_a = (int) (SVVCutOff*nmodes_a);
+            int cutoff_b = (int) (SVVCutOff*nmodes_b);
+            
+            //SVV-model constant (c.f. P. Sagaut "LES for Inc. Flows", p.22)
+            NekDouble gamma = 0.5;
+            //SVV-model Gaussian constant "c" insuring
+            NekDouble c = 0.5;
+
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             
+            //To avoid the fac[j] from blowing up
+            NekDouble epsilon = 0.01;
+            
+            //Transfer "Coefficient"
+            NekDouble T = 0.0;
 
-#if 0      //  Filter just linear space
             int nmodes = min(nmodes_a,nmodes_b);
             // apply SVV filter. 
-            for(j = 0; j < nmodes_a; ++j)
-            {
-                for(k = 0; k < nmodes_b; ++k)
-                {
-                    if(j + k >= cutoff)
-                    {
-                        orthocoeffs[j*nmodes_b+k] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+1)*(j+k-cutoff+1)))));
-                    }
-                }
-            }
-#else   //  Filter just bilinear space
-            int nmodes = max(nmodes_a,nmodes_b);
-
-            Array<OneD, NekDouble> fac(nmodes,0.0);
-            for(j = cutoff; j < nmodes; ++j)
-            {
-                fac[j] = exp(-(j-nmodes)*(j-nmodes)/((NekDouble) (j-cutoff+1.0)*(j-cutoff+1.0)));
-            }
-
-
-            for(j = 0; j < nmodes_a; ++j)
-            {
-                for(k = 0; k < nmodes_b; ++k)
-                {
-                    if(j >= cutoff)
-                    {
-                        if((j >= cutoff)||(k >= cutoff))
-                        {
-                            orthocoeffs[j*nmodes_b + k] *= (1.0+SvvDiffCoeff*exp(-fac[j]*fac[k]));
-                            
-                        }
-                    }
-                }
-            }
-#endif
+            //std::cout<< "SVV filtering of the linear space"<< std::endl; //newline JEL : testing if my test case is calling this function
+//            std::cout<< "nmodes_a : "<< nmodes_a <<std::endl; //newline JEL : testing if my test case is calling this function
+//            std::cout<< "nmodes_b : "<< nmodes_b <<std::endl; //newline JEL : testing if my test case is calling this function
+//            cnt = cutoff;
             
+            for(cnt = j = 0; j < nmodes_a; ++j)
+            {
+                for(k = 0; k < nmodes_b; ++k)
+                {
+//                    if(j + k >= cutoff)
+                   if(j >= cutoff_a || k >= cutoff_b)//to filter out only the "high-modes"
+                    {
+                        
+                        //------"New" Version-----------------------------------
+                        //for debuggin purposes
+                        cout << "j = " << j << " k = " << k << endl;
+                        std::cout<< "before : mode " << cnt << "( of "<< sizeof(orthocoeffs) << ")" << " orthocoeff " << orthocoeffs[cnt];
+                        //new transfer function :
+                        // Following Sagaut (LES for Inc. Flows, p.22) we define the transfer function in Fourier space (which has a corresponding filter function in physical space). It is a Gaussian centered on the cutoff mode. Hence the modes just higher that the cutoff mode are not damped and T->1. For the high-modes T-> 0.
+                        T =exp(-(M_PI*M_PI*(j-cutoff_a)*(j-cutoff_a))/(2*c*c(nmodes_a-cutoff_a)*(nmodes_a-cutoff_a)))*exp(-(M_PI*M_PI*(k-cutoff_b)*(k-cutoff_b))/(2*c*c*(nmodes_b-cutoff_b)*(nmodes_b-cutoff_b)));
+                        orthocoeffs[cnt] *= T;
+                    
+                        
+                        //for debuggin purposes
+                        std::cout<< " and SVV transfer fct value = " << T << std::endl;                        
+                        std::cout<< "after  : mode " << cnt << " orthocoeff = " << orthocoeffs[cnt] << std::endl; //newline JEL : testing if my test
+                        
+                        
+                        
+
+//                        //------"Old" Version-----------------------------------
+//                        //for debugging purposes
+//                        std::cout<< "before : mode " << j*nmodes_b+k << " orthocoeff = " << orthocoeffs[j*nmodes_b+k];
+//                        T = (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+1)*(j+k-cutoff+1)))));
+//                        orthocoeffs[j*nmodes_b+k] *= T;//working but wrong theoretically
+//                        //for debugging purposes
+//                        std::cout<< " and SVV transfer fct value = " << T << std::endl;
+//                        std::cout<< "after  : mode " << j*nmodes_b+k << " orthocoeff = " << orthocoeffs[j*nmodes_b+k] << std::endl;
+                    }
+                    cnt++; 
+                }
+            }
+
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        

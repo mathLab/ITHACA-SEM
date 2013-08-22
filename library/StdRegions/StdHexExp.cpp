@@ -2635,6 +2635,7 @@ namespace Nektar
         void StdHexExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                               const StdMatrixKey &mkey)
         {
+            std::cout<< " called stdHexExp::v_SVVLaplacianFilter "<< std::endl; //newline JEL : testing if my test case is calling this function
             // Generate an orthonogal expansion
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();
@@ -2670,6 +2671,7 @@ namespace Nektar
             for(j = cutoff; j < nmodes; ++j)
             {
                 fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
+                fac[j] *= fac[j]; //added this line to conform with equation
             }
 
             for(i = 0; i < nmodes_a; ++i)
@@ -2680,7 +2682,8 @@ namespace Nektar
                     {
                         if((i >= cutoff)||(j >= cutoff)||(k >= cutoff))
                         {
-                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]*fac[j]*fac[k]));
+                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]+fac[j]+fac[k]));
+                            //changed * to + in exp.
                         }
                     }
                 }

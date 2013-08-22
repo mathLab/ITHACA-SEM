@@ -1498,7 +1498,7 @@ namespace Nektar
                         std::cout<< "before : mode " << cnt << "( of "<< sizeof(orthocoeffs) << ")" << " orthocoeff " << orthocoeffs[cnt];
                         //new transfer function :
                         // Following Sagaut (LES for Inc. Flows, p.22) we define the transfer function in Fourier space (which has a corresponding filter function in physical space). It is a Gaussian centered on the cutoff mode. Hence the modes just higher that the cutoff mode are not damped and T->1. For the high-modes T-> 0.
-                        T =exp(-(M_PI*M_PI*(j-cutoff_a)*(j-cutoff_a))/(2*c*c(nmodes_a-cutoff_a)*(nmodes_a-cutoff_a)))*exp(-(M_PI*M_PI*(k-cutoff_b)*(k-cutoff_b))/(2*c*c*(nmodes_b-cutoff_b)*(nmodes_b-cutoff_b)));
+                        T =exp(-(M_PI*M_PI*(j-cutoff_a)*(j-cutoff_a))/(2*c*c*(nmodes_a-cutoff_a)*(nmodes_a-cutoff_a)))*exp(-(M_PI*M_PI*(k-cutoff_b)*(k-cutoff_b))/(2*c*c*(nmodes_b-cutoff_b)*(nmodes_b-cutoff_b)));
                         orthocoeffs[cnt] *= T;
                     
                         

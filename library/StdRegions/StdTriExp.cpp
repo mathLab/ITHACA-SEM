@@ -1626,7 +1626,7 @@ namespace Nektar
             StdTriExp OrthoExp(Ba,Bb);
             
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int j,k;
+            int j,k,cnt = 0;
             
             int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
             NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);

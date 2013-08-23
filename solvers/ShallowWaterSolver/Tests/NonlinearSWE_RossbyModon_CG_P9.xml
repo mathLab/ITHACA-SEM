@@ -259,15 +259,14 @@
 
         <SOLVERINFO>
             <I PROPERTY="EQType" VALUE="NonlinearSWE" />
-            <I PROPERTY="Projection" VALUE="DisContinuous" />
+            <I PROPERTY="Projection" VALUE="Continuous" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
-            <I PROPERTY="UpwindType" VALUE="HLLC" />
-        </SOLVERINFO>
+	</SOLVERINFO>
 
 
         <PARAMETERS>
             <P> TimeStep       = 0.04             </P>
-            <P> NumSteps       = 1000             </P>
+            <P> NumSteps       = 500             </P>
             <P> FinTime        = TimeStep*NumSteps </P>
             <P> IO_CheckSteps  = 100               </P>
             <P> IO_InfoSteps   = 100              </P>
@@ -280,15 +279,21 @@
             <V ID="2"> hv </V>
         </VARIABLES>
 
-        <BOUNDARYREGIONS>
-            <B ID="0"> C[1,2,3,4]  </B>
+         <BOUNDARYREGIONS>
+            <B ID="0"> C[2,4]  </B>
+            <B ID="1"> C[1,3] </B>
         </BOUNDARYREGIONS>
 
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="h" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="hu" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="hv" USERDEFINEDTYPE="Wall" VALUE="0" />
+                <N VAR="h" VALUE="0" />
+                <D VAR="hu" VALUE="0" />
+                <N VAR="hv" VALUE="0" />
+            </REGION>
+            <REGION REF="1">
+                <N VAR="h" VALUE="0" />
+                <N VAR="hu" VALUE="0" />
+                <D VAR="hv" VALUE="0" />
             </REGION>
         </BOUNDARYCONDITIONS>
 

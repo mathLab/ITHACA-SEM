@@ -19,8 +19,10 @@ IF( NEKTAR_SOLVER_PULSEWAVE )
 
     SUBDIRS(Utilities)      
 
-    #ADD_NEKTAR_TEST(Bifurcation)
-    #ADD_NEKTAR_TEST(Junction)
+    ADD_NEKTAR_TEST(Bifurcation)
+    ADD_NEKTAR_TEST(Junction)
+    ADD_NEKTAR_TEST(TwoBifurcations)
+    ADD_NEKTAR_TEST(Merging)
     #ADD_NEKTAR_TEST(Paper1_DG)
     #ADD_NEKTAR_TEST(Paper2_DG)
     #ADD_NEKTAR_TEST(Paper3_DG)

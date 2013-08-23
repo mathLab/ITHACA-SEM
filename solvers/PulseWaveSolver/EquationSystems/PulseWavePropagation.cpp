@@ -183,7 +183,7 @@ namespace Nektar
             for(int n = 0; n < vessel[0]->GetBndConditions().num_elements(); ++n)
             {			
 	      //SpatialDomains::BndUserDefinedType type = vessel[0]->GetBndConditions()[n]->GetUserDefined()
-	      m_OutFlow=GetFlowFactory().CreateInstance("Resistance",m_vessels,m_session);
+	      // m_OutFlow=GetFlowFactory().CreateInstance("Resistance",m_vessels,m_session);
            
                 switch(vessel[0]->GetBndConditions()[n]->GetUserDefined())
                 {

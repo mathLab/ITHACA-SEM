@@ -212,17 +212,6 @@ namespace Nektar
         }
 
         /**
-         * Placeholder function.
-         */
-        void GeomFactors::v_SetUpLaplacianMetrics(
-                        LibUtilities::ShapeType shape,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                                        &tbasis)
-        {
-            ASSERTL0(false, "Laplacian Metrics not implemented.");
-        }
-
-        /**
          * @brief Establishes if two GeomFactors objects are equal.
          */
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs)

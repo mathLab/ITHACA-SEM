@@ -238,6 +238,8 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT void v_ComputeConditionNumberOfMatrix(
                 const DNekScalMatSharedPtr & mat);
 
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
+
         private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;

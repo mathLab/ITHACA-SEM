@@ -267,6 +267,10 @@ namespace Nektar
                             const Array<OneD, const NekDouble> &inarray,
                                   Array<OneD,NekDouble> &outarray,
                             const StdRegions::StdMatrixKey &mkey);
+            LOCAL_REGIONS_EXPORT virtual void LaplacianMatrixOp_MatFree_Kernel(
+                        const Array<OneD, const NekDouble> &inarray,
+                              Array<OneD,       NekDouble> &outarray,
+                              Array<OneD,       NekDouble> &wsp);
 
             virtual void v_ComputeLaplacianMetric();
 

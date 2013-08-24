@@ -128,20 +128,11 @@ namespace Nektar
             /// Flag indicating if quadrature metrics are in use.
             inline bool IsUsingQuadMetrics() const;
 
-            /// Flag indicating if Laplacian metrics are in use.
-            inline bool IsUsingLaplMetrics() const;
-
             /// Flag indicating if Tangents have been computed.
             inline bool IsUsingTangents() const;
 
             /// Set up quadrature metrics
             inline void SetUpQuadratureMetrics(
-                LibUtilities::ShapeType shape,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
-
-            /// Set up Laplacian metrics
-            inline void SetUpLaplacianMetrics(
                 LibUtilities::ShapeType shape,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
                     &tbasis);
@@ -152,13 +143,6 @@ namespace Nektar
             /// Retrieve the quadrature metrics.
             inline const Array<OneD, const NekDouble> &GetQuadratureMetrics()
                         const;
-
-            /// Retrieve the Laplacian metrics.
-            inline const Array<TwoD, const NekDouble> &GetLaplacianMetrics()
-                        const;
-
-            /// Indicates if the Laplacian metric with index \a indx is zero.
-            inline bool LaplacianMetricIsZero(const int indx) const;
 
             /// Computes the edge tangents from 1D element
             inline void ComputeEdgeTangents(
@@ -263,12 +247,6 @@ namespace Nektar
             /// quadrature point.
             Array<TwoD,NekDouble> m_gmat;
 
-            ///
-            Array<TwoD,NekDouble> m_laplacianmetrics;
-
-            ///
-            Array<OneD,bool>      m_laplacianMetricIsZero;
-
             /// Array of size coordim which stores a key describing the
             /// location of the quadrature points in each dimension.
             Array<OneD,LibUtilities::PointsKey> m_pointsKey;
@@ -323,12 +301,6 @@ namespace Nektar
 
             /// Set up quadrature metrics
             virtual void v_SetUpQuadratureMetrics(
-                LibUtilities::ShapeType shape,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
-
-            /// Set up Laplacian metrics
-            virtual void v_SetUpLaplacianMetrics(
                 LibUtilities::ShapeType shape,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
                     &tbasis);
@@ -388,12 +360,6 @@ namespace Nektar
             return m_isUsingQuadMetrics;
         }
 
-        /// Flag indicating if Laplacian metrics are in use.
-        inline bool GeomFactors::IsUsingLaplMetrics() const
-        {
-            return m_isUsingLaplMetrics;
-        }
-
         /// Flag indicating if Tangents are in use.
         inline bool GeomFactors::IsUsingTangents() const
         {
@@ -407,15 +373,6 @@ namespace Nektar
                                                                     &tbasis)
         {
             v_SetUpQuadratureMetrics(shape, tbasis);
-        }
-
-        /// Set up Laplacian metrics
-        inline void GeomFactors::SetUpLaplacianMetrics(
-                    LibUtilities::ShapeType shape,
-                    const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                                    &tbasis)
-        {
-            v_SetUpLaplacianMetrics(shape, tbasis);
         }
 
         /// Set up Tangents
@@ -434,26 +391,6 @@ namespace Nektar
                      "expansion");
             return m_weightedjac;
         }
-
-        /// Retrieve the Laplacian metrics.
-        inline const Array<TwoD, const NekDouble>
-                                    &GeomFactors::GetLaplacianMetrics() const
-        {
-            ASSERTL0(m_isUsingLaplMetrics,
-                     "This metric has not been set up for this type of "
-                     "expansion");
-            return m_laplacianmetrics;
-        }
-
-        /// Indicates if the Laplacian metric with index \a indx is zero.
-        inline bool GeomFactors::LaplacianMetricIsZero(const int indx) const
-        {
-            ASSERTL0(m_isUsingLaplMetrics,
-                     "This metric has not been set up for this type of "
-                     "expansion");
-            return m_laplacianMetricIsZero[indx];
-        }
-
 
         /// Computes the edge tangents from a 1D element
         inline void GeomFactors::ComputeEdgeTangents(

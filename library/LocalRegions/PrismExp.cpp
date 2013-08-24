@@ -1309,13 +1309,13 @@ namespace Nektar
             {
                 // This implementation is only valid when there are no
                 // coefficients associated to the Laplacian operator
-                if(m_metricinfo->IsUsingLaplMetrics())
-                {
-                    ASSERTL0(false,"Finish implementing HexExp for Lap metrics");
-                    // Get this from HexExp
-                }
-                else
-                {
+//                if(m_metricinfo->IsUsingLaplMetrics())
+//                {
+//                    ASSERTL0(false,"Finish implementing HexExp for Lap metrics");
+//                    // Get this from HexExp
+//                }
+//                else
+//                {
                     int nquad0  = m_base[0]->GetNumPoints();
                     int nquad1  = m_base[1]->GetNumPoints();
                     int nquad2  = m_base[2]->GetNumPoints();
@@ -1333,7 +1333,7 @@ namespace Nektar
                     // Backwards transform to obtain u = B * u_hat.
                     BwdTrans_SumFacKernel   (base0,base1,base2,inarray,wsp1,wsp,true,true,true);
                     LaplacianMatrixOp_Kernel(wsp1, outarray, wsp);
-                }
+//                }
             }
             else
             {
@@ -1377,12 +1377,12 @@ namespace Nektar
                   Array<OneD,       NekDouble> &outarray,
             const StdRegions::StdMatrixKey     &mkey)
         {
-            if(m_metricinfo->IsUsingLaplMetrics())
-            {
-                ASSERTL0(false,"Finish implementing PrismExp Helmholtz for Lapl Metrics");
-            }
-            else
-            {
+//            if(m_metricinfo->IsUsingLaplMetrics())
+//            {
+//                ASSERTL0(false,"Finish implementing PrismExp Helmholtz for Lapl Metrics");
+//            }
+//            else
+//            {
                 int nquad0  = m_base[0]->GetNumPoints();
                 int nquad1  = m_base[1]->GetNumPoints();
                 int nquad2  = m_base[2]->GetNumPoints();
@@ -1416,7 +1416,7 @@ namespace Nektar
                 //          = (lambda * M + L ) * u_hat
                 Vmath::Svtvp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,
                              &outarray[0],1); 
-           }
+//           }
         }    
         
         //---------------------------------------

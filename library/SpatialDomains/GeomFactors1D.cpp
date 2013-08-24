@@ -153,12 +153,6 @@ namespace Nektar
             {
                 SetUpQuadratureMetrics(shape,tbasis);
             }
-            // 3. A combination of the metrics above that allows
-            //    for more efficient evaluation of the laplacian
-            if(LaplMetrics)
-            {
-                SetUpLaplacianMetrics (shape,tbasis);
-            }
         }
 
 

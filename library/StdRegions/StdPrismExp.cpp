@@ -2063,51 +2063,42 @@ namespace Nektar
             StdPrismExp OrthoExp(Ba,Bb,Bc);
             
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs()); 
-            int i,j,k;
+            int i,j,k,cnt = 0;
             
-            int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
-            NekDouble  SvvDiffCoeff  = mkey.GetConstFactor(eFactorSVVDiffCoeff);
+            //SVV filter paramaters (how much added diffusion relative to physical one
+            // and fraction of modes from which you start applying this added diffusion)
+            //
+            NekDouble  SvvDiffCoeff = mkey.GetConstFactor(StdRegions::eFactorSVVDiffCoeff);
+            NekDouble  SVVCutOff = mkey.GetConstFactor(StdRegions::eFactorSVVCutoffRatio);
+            
+            //Defining the cut of mode
+            int cutoff_a = (int) (SVVCutOff*nmodes_a);
+            int cutoff_b = (int) (SVVCutOff*nmodes_b);
+            int cutoff_c = (int) (SVVCutOff*nmodes_c);
+            //To avoid the fac[j] from blowing up
+            NekDouble epsilon = 1;
             
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
+            int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
+            NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
             
-            // apply SVV filter : following Sagaut "Incompressible LES", p.16-22 :
-            // we apply the Gaussian Filter (as a transfer
-            // function because we are working in the Fourier space i.e. :
-            // \overbar \hat{\Phi} = \hat{G}\hat{\Phi}
-            // where \hat{G} is the transfer function associated with the filter G
-            // and \hat{\Phi} is the spectrum associated to \Phi
-            
-            // Note we suppose the orthocoeffs array is ordered as follows \hat{u}_PQR with
-            // 0 \leq p \leq P, 0 \leq q \leq Q and p+r \leq R
-            // and the coefficients are ordered such that first come the r indices, then the q and finally the p :
-            // u_{000}, u_{001}, ... u_{00R}, u_{010}, ..., u_{01R}, ..., u_{0Q0}, ..., u_{0QR}, u_{100}, ...... u_{PQR}
-            
-
-            //  Filter just trilinear space : OLD implementation
-/*            int nmodes = max(nmodes_a,nmodes_b);
-            nmodes = max(nmodes,nmodes_c);
-            
-            Array<OneD, NekDouble> fac(nmodes,1.0);
-            for(j = cutoff; j < nmodes; ++j)
+            //------"New" Version August 22nd '13--------------------
+            for(i = 0; i < nmodes_a; ++i)//P
             {
-                fac[j] = fabs((j-nmodes)/((NekDouble) (j-cutoff+1.0)));
-            }
-            
-            for(i = 0; i < nmodes_a; ++i)
-            {
-                for(j = 0; j < nmodes_b; ++j)
+                for(cnt = j = 0; j < nmodes_b; ++j) //Q
                 {
-                    for(k =  0; k +j < nmodes_c; ++k)
+                    for(k = 0; k < nmodes_c-i; ++k) //R
                     {
-                        if((i >= cutoff)||(j +k >= cutoff))
+                        if(j >= cutoff ||  i + k >= cutoff)
                         {
-                            orthocoeffs[i*nmodes_a*nmodes_b + j*nmodes_c + k] *= (1.0+SvvDiffCoeff*exp(-fac[i]*fac[j+k]*fac[j+k]));
+                            orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(i+k-nmodes)*(i+k-nmodes)/((NekDouble)((i+k-cutoff+epsilon)*(i+k-cutoff+epsilon))))*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon)))));
                         }
+                        cnt++;
                     }
                 }
             }
- */           
+            
             // backward transform to physical space
             OrthoExp.BwdTrans(orthocoeffs,array);
         }                        

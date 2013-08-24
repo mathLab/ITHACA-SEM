@@ -1450,7 +1450,6 @@ namespace Nektar
             StdQuadExp OrthoExp(Ba,Bb);
             
             Array<OneD, NekDouble> orthocoeffs(OrthoExp.GetNcoeffs());
-            int j,k,cnt=0;
             
             //for the "old" implementation
             int cutoff = (int) (mkey.GetConstFactor(eFactorSVVCutoffRatio)*min(nmodes_a,nmodes_b));
@@ -1462,32 +1461,26 @@ namespace Nektar
             //Defining the cutoff modes for each of the two axes
             int cutoff_a = (int) (SVVCutOff*nmodes_a);
             int cutoff_b = (int) (SVVCutOff*nmodes_b);
-            
-            //SVV-model constant (c.f. P. Sagaut "LES for Inc. Flows", p.22)
-            NekDouble gamma = 0.5;
-            //SVV-model Gaussian constant "c" insuring
-            NekDouble c = 0.5;
 
             // project onto modal  space.
             OrthoExp.FwdTrans(array,orthocoeffs);
             
-            //To avoid the fac[j] from blowing up
+            //To avoid the exponential from blowing up
             NekDouble epsilon = 1;
-            
-            //Transfer "Coefficient"
-            NekDouble T = 0.0;
 
+            //counters for scanning through orthocoeffs array
+            int j, k, cnt = 0;
             int nmodes = min(nmodes_a,nmodes_b);
             
-            for(cnt = j = 0; j < nmodes_a; ++j)
+            //------"New" Version August 22nd '13--------------------            
+            for(j = 0; j < nmodes_a; ++j)
             {
                 for(k = 0; k < nmodes_b; ++k)
                 {
+//                   if(j >= cutoff || k >= cutoff) //to filter out only the "high-modes"
                    if(j + k >= cutoff) //to filter out only the "high-modes"
-                       
-                    {
-                        //------"New" Version August 22nd '13--------------------
-                        orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j+k-nmodes)*(j+k-nmodes)/((NekDouble)((j+k-cutoff+epsilon)*(j+k-cutoff+epsilon)))));
+                   {
+                       orthocoeffs[cnt] *= (1.0+SvvDiffCoeff*exp(-(j-nmodes)*(j-nmodes)/((NekDouble)((j-cutoff+epsilon)*(j-cutoff+epsilon))))*exp(-(k-nmodes)*(k-nmodes)/((NekDouble)((k-cutoff+epsilon)*(k-cutoff+epsilon)))));
                     }
                     cnt++; 
                 }

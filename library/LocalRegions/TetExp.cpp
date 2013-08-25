@@ -1535,7 +1535,7 @@ namespace Nektar
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> gmat
                                                 = m_metricinfo->GetGmat();
-                        int dir;
+                        int dir = 0;
 
                         switch(mkey.GetMatrixType())
                         {
@@ -1569,8 +1569,8 @@ namespace Nektar
                         DNekMatSharedPtr WeakDeriv = MemoryManager<DNekMat>
                                                 ::AllocateSharedPtr(rows,cols);
                         (*WeakDeriv) = gmat[3*dir][0]*deriv0
-                                                + gmat[3*dir+1][0]*deriv1
-												+ gmat[3*dir+2][0]*deriv2;
+                                     + gmat[3*dir+1][0]*deriv1
+                                     + gmat[3*dir+2][0]*deriv2;
 
                         returnval = MemoryManager<DNekScalMat>
                                             ::AllocateSharedPtr(jac,WeakDeriv);

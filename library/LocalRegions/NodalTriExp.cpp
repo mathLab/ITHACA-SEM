@@ -285,7 +285,7 @@ namespace Nektar
                                                      Array<OneD, NekDouble> &outarray)
         { 
             int nq = GetTotPoints();            
-            StdRegions::MatrixType mtype;
+            StdRegions::MatrixType mtype = StdRegions::eIProductWRTDerivBase0;
 
             switch(dir)
             {

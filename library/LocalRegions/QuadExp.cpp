@@ -546,7 +546,7 @@ namespace Nektar
                   Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            StdRegions::MatrixType mtype;
+            StdRegions::MatrixType mtype = StdRegions::eIProductWRTDerivBase0;
 
             switch (dir)
             {
@@ -1953,7 +1953,7 @@ namespace Nektar
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> gmat =
                             m_metricinfo->GetGmat();
-                        int dir;
+                        int dir = 0;
 
                         switch(mkey.GetMatrixType())
                         {
@@ -2136,7 +2136,7 @@ namespace Nektar
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         const Array<TwoD, const NekDouble>& gmat =
                                                         m_metricinfo->GetGmat();
-                        int dir;
+                        int dir = 0;
 
                         switch(mkey.GetMatrixType())
                         {

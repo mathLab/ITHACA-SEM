@@ -1551,7 +1551,7 @@ namespace Nektar
                     {
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> gmat = m_metricinfo->GetGmat();
-                        int dir;
+                        int dir = 0;
 
                         switch(mkey.GetMatrixType())
                         {

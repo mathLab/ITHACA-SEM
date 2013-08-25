@@ -1606,7 +1606,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &iFlux,
                   Array<OneD,       NekDouble>                &derCFlux)
         {
-            int i, n;
+            int n;
             int nLocalSolutionPts, phys_offset;
             
             Array<OneD,       NekDouble> auxArray1, auxArray2;
@@ -1698,9 +1698,6 @@ namespace Nektar
             Array<OneD, const NekDouble> jac;
             
             int nElements   = fields[0]->GetExpSize();
-            int nDim = fields[0]->GetCoordim(0);  
-            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
-            
             int trace_offset, phys_offset;
             int nLocalSolutionPts;
             int nquad0, nquad1;
@@ -1916,9 +1913,6 @@ namespace Nektar
             int n, e, i, j, cnt;
             
             int nElements = fields[0]->GetExpSize();
-            int nDim      = fields[0]->GetCoordim(0);  
-            int nTracePts = fields[0]->GetTrace()->GetTotPoints();
-            
             int nLocalSolutionPts;
             int nEdgePts;  
             int trace_offset; 
@@ -2112,16 +2106,12 @@ namespace Nektar
             int n, e, i, j, cnt;
             
             int nElements   = fields[0]->GetExpSize();
-            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
-            
             int nLocalSolutionPts;
             int nEdgePts;
             int trace_offset;
             int phys_offset;
             int nquad0;
             int nquad1;
-            
-            NekDouble fac;
             
             Array<OneD, NekDouble> auxArray1, auxArray2;
             Array<OneD, LibUtilities::BasisSharedPtr> base;

@@ -996,7 +996,7 @@ namespace Nektar
             const Array<OneD, const NekDouble>                &numericalFlux,
                   Array<OneD,       NekDouble>                &divCFlux)
         {
-            int i, n;
+            int n;
             int nLocalSolutionPts, phys_offset;
                         
             LibUtilities::BasisSharedPtr Basis;
@@ -1264,8 +1264,6 @@ namespace Nektar
             int n, e, i, j, cnt;
             
             int nElements   = fields[0]->GetExpSize();
-            int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
-            
             int nLocalSolutionPts;
             int nEdgePts;
             int trace_offset;

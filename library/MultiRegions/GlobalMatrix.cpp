@@ -73,7 +73,6 @@ namespace Nektar
                                    const MatrixStorage& matStorage):
             m_smvbsrmatrix(),
             m_rows(rows),
-            m_cols(columns),
             m_mulCallsCounter(0)
         {
             MatrixStorageType storageType = pSession->
@@ -170,6 +169,8 @@ namespace Nektar
 
                 Vmath::Vcopy(m_rows, &m_tmpout[0], 1, &out[0], 1);
             }
+
+            m_mulCallsCounter++;
         }
 
         const unsigned long GlobalMatrix::GetMulCallsCounter() const 

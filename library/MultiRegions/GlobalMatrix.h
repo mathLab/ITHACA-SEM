@@ -74,7 +74,6 @@ namespace Nektar
             DNekSmvBsrMatSharedPtr       m_smvbsrmatrix;
 
             unsigned int                 m_rows;
-            unsigned int                 m_cols;
             Array<OneD, NekDouble>       m_tmpin;
             Array<OneD, NekDouble>       m_tmpout;
 

@@ -136,7 +136,7 @@ namespace Nektar
          */
         NekDouble UnsteadySystem::MaxTimeStepEstimator()
         {
-            NekDouble TimeStability;
+            NekDouble TimeStability = 0.0;
             switch(m_timeIntMethod)
             {
                 case LibUtilities::eForwardEuler:

@@ -137,7 +137,7 @@ cout<<"cr="<<cr<<endl;
     }
     fields= Array<OneD, MultiRegions::ExpListSharedPtr>(nfields);    
 
-    int lastfield;
+    int lastfield = 0;
     if(solvtype == "CoupledLinearisedNS" && nfields!=2)
     {
         SetFields(graphShPt,boundaryConditions,vSession,fields,nfields-1);

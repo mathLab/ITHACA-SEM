@@ -227,7 +227,6 @@ namespace Nektar
         void OutputNekpp::WriteXmlCurves(TiXmlElement * pRoot)
         {
             int edgecnt = 0;
-            int facecnt = 0;
 
             bool curve = false;
             EdgeSet::iterator it;
@@ -259,6 +258,8 @@ namespace Nektar
                 }
             }
 #if 0 
+            int facecnt = 0;
+
             // 2D elements in 3-space, output face curvature information
             if (m->expDim == 2 && m->spaceDim == 3)
             {

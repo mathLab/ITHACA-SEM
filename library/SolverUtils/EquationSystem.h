@@ -43,6 +43,7 @@
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include <MultiRegions/ExpList.h>
 #include <SolverUtils/SolverUtilsDeclspec.h>
+#include <SolverUtils/Core/Misc.h>
 
 namespace Nektar
 {
@@ -59,7 +60,7 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr&
         > EquationSystemFactory;
         SOLVER_UTILS_EXPORT EquationSystemFactory& GetEquationSystemFactory();
-        
+
         /// A base class for describing how to solve specific equations.
         class EquationSystem
         {
@@ -95,6 +96,13 @@ namespace Nektar
             SOLVER_UTILS_EXPORT std::string GetSessionName()
             {
                 return m_sessionName;
+            }
+
+
+            /// Reset Session name
+            SOLVER_UTILS_EXPORT void ResetSessionName(std::string newname)
+            {
+                m_sessionName = newname;
             }
             
             /// Get Session name
@@ -275,14 +283,8 @@ namespace Nektar
             /// Probe each history point and write to file.
             SOLVER_UTILS_EXPORT void WriteHistoryData (std::ostream &out);
             
-            /// Write out a full summary.
-            SOLVER_UTILS_EXPORT void Summary          (std::ostream &out);
-            
             /// Write out a session summary.
-            SOLVER_UTILS_EXPORT void SessionSummary   (std::ostream &out);
-            
-            /// Write out a summary of the time parameters.
-            SOLVER_UTILS_EXPORT void TimeParamSummary (std::ostream &out);
+            SOLVER_UTILS_EXPORT void SessionSummary   (SummaryList& vSummary);
             
             SOLVER_UTILS_EXPORT inline Array<
             OneD, MultiRegions::ExpListSharedPtr> &UpdateFields();
@@ -430,23 +432,25 @@ namespace Nektar
             bool                                        m_MultipleModes;
             /// Flag to determine if FFT is used for homogeneous transform.
             bool                                        m_useFFT;
-            /// Flag to determine if dealiasing is used for homogeneous
-            /// simulations.
-            bool                                        m_dealiasing;
-            /// Flag to determine if dealisising is usde for the
-            /// Spectral/hp element discretisation.
+            /**
+             * \brief Flag to determine if dealiasing is used for
+             * homogeneous simulations.
+             */
+            bool m_homogen_dealiasing;
+            /**
+             * \brief Flag to determine if dealisising is usde for the
+             * Spectral/hp element discretisation.
+             */
             bool                                        m_specHP_dealiasing;
             /// Type of projection; e.g continuous or discontinuous.
             enum MultiRegions::ProjectionType           m_projectionType;
-            /// Array holding trace normals for DG simulations in the forwards
-            /// direction.
+            /// Array holding trace normals for DG simulations in the forwards direction.
             Array<OneD, Array<OneD, NekDouble> >        m_traceNormals;
             /// 1 x nvariable x nq
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_gradtan;
             /// 2 x m_spacedim x nq
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
-            /// Flag to indicate if the fields should be checked for
-            /// singularity.
+            /// Flag to indicate if the fields should be checked for singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
        
             /// Map to identify relevant solver info to dump in output fields
@@ -518,9 +522,9 @@ namespace Nektar
             /// Virtual function for transformation to coefficient space.
             SOLVER_UTILS_EXPORT virtual void v_TransPhysToCoeff();
             
-            /// Virtual function for printing summary information.
-            SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
-            
+            /// Virtual function for generating summary information.
+            SOLVER_UTILS_EXPORT virtual void v_GenerateSummary(SummaryList& l);
+
             SOLVER_UTILS_EXPORT virtual void v_SetInitialConditions(
                 NekDouble initialtime = 0.0,
                 bool dumpInitialConditions = true);
@@ -684,16 +688,20 @@ namespace Nektar
         {
             if (m_session->GetComm()->GetRank() == 0)
             {
+                std::vector<std::pair<std::string, std::string> > vSummary;
+                v_GenerateSummary(vSummary);
+
                 out << "=======================================================================" << endl;
-                out << "\tEquation Type   : " << m_session->GetSolverInfo("EQTYPE") << endl;
-                SessionSummary(out);
-                
-                v_PrintSummary(out);
-                
+                SummaryList::const_iterator x;
+                for (x = vSummary.begin(); x != vSummary.end(); ++x)
+                {
+                    out << "\t";
+                    out.width(20);
+                    out << x->first << ": " << x->second << endl;
+                }
                 out << "=======================================================================" << endl;
             }
         }
-        
         
         inline void EquationSystem::SetLambda(NekDouble lambda)
         {

@@ -208,7 +208,7 @@ namespace Nektar
         void Rotate(Array<OneD, Array<OneD, NekDouble> > &input);
 
         // Virtual functions
-        virtual void v_PrintSummary(std::ostream &out);
+        virtual void v_GenerateSummary(SolverUtils::SummaryList& s);
 
         virtual void v_DoSolve(void);
 

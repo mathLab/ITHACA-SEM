@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 #define NEKTAR_SOLVERS_INCNAVIERSTOKES_H
 
+#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <SolverUtils/UnsteadySystem.h>
 #include <IncNavierStokesSolver/AdvectionTerms/AdvectionTerm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
@@ -117,27 +118,45 @@ namespace Nektar
                 Array<OneD, Array<OneD, NekDouble> > &physfield,
                 Array<OneD, Array<OneD, NekDouble> > &numflux);
 
-        NekDouble GetSubstepTimeStep();
+        AdvectionTermSharedPtr GetAdvObject(void)
+        {
+            return m_advObject;
+        }
 
+
+        int GetNConvectiveFields(void)
+        {
+            return m_nConvectiveFields;  
+        }
+
+        Array<OneD, int> &GetVelocity(void)
+        {
+            return  m_velocity; 
+        }
+
+        NekDouble GetSubstepTimeStep();
+        
+        Array<OneD, NekDouble> GetElmtCFLVals(void);
+        
         NekDouble GetCFLEstimate(int &elmtid);
 
         // Mapping of the real convective field on the standard element.
         // This function gives back the convective filed in the standard
         // element to calculate the stability region of the problem in a
         // unique way.
-        Array<OneD,NekDouble> GetStdVelocity(
+        Array<OneD,NekDouble> GetMaxStdVelocity(
                 const Array<OneD, Array<OneD,NekDouble> > inarray);
 
 
         // Sub-stepping related methods
         void SubStepAdvection (
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray,
                 const NekDouble time);
 
         void SubStepProjection(
                 const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray,
                 const NekDouble time);
 
         void SubStepExtrapoloteField(
@@ -147,7 +166,7 @@ namespace Nektar
         void AddAdvectionPenaltyFlux(
                 const Array<OneD, const Array<OneD, NekDouble> > &velfield,
                 const Array<OneD, const Array<OneD, NekDouble> > &physfield,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray);
+                      Array<OneD,       Array<OneD, NekDouble> > &outarray);
 
         void AddForcing(const SolverUtils::ForcingSharedPtr& pForce);
 
@@ -162,7 +181,7 @@ namespace Nektar
         /// bool to identify if advection term smoothing is requested
         bool m_SmoothAdvection;
 
-        LibUtilities::TimeIntegrationSchemeSharedPtr m_subStepIntegrationScheme;
+        LibUtilities::TimeIntegrationWrapperSharedPtr m_subStepIntegrationScheme;
         LibUtilities::TimeIntegrationSchemeOperators m_subStepIntegrationOps;
 
         Array<OneD, Array<OneD, NekDouble> > m_previousVelFields;
@@ -205,8 +224,7 @@ namespace Nektar
 
         /// Time integration classes
         LibUtilities::TimeIntegrationSchemeOperators m_integrationOps;
-        Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr>
-                                                     m_integrationScheme;
+        LibUtilities::TimeIntegrationWrapperSharedPtr m_integrationScheme;
 
         /// Number of time integration steps AND Order of extrapolation for
         /// pressure boundary conditions.
@@ -244,21 +262,6 @@ namespace Nektar
         virtual MultiRegions::ExpListSharedPtr v_GetPressure()
         {
             return m_pressure;
-        }
-
-        virtual void v_PrintSummary(std::ostream &out)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
-        virtual void v_DoInitialise(void)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
-        }
-
-        virtual void v_DoSolve(void)
-        {
-            ASSERTL0(false,"This method is not defined in this class");
         }
 
         virtual void v_TransCoeffToPhys(void)

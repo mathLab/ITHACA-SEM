@@ -102,10 +102,10 @@ namespace Nektar
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
-                AllocateSharedPtr(
-                    pSession,graph1D,trace,*this,
-                    m_bndCondExpansions,m_bndConditions,periodicVertices);
-            
+                AllocateSharedPtr(pSession,graph1D,trace,*this,
+                                  m_bndCondExpansions,m_bndConditions,periodicVertices,
+                                  variable);
+
             tmpBndSol = Array<OneD,NekDouble>
                 (m_traceMap->GetNumLocalBndCoeffs());
             
@@ -197,12 +197,12 @@ namespace Nektar
             m_traces[i] = boost::dynamic_pointer_cast<ExpList>(traces);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
-                AllocateSharedPtr(
-                    pSession,graph1D,
-                    traces,*this,
-                    m_bndCondExpansions,
-                    m_bndConditions,
-                    periodicVertices);
+                AllocateSharedPtr(pSession,graph1D,
+                                  traces,*this,
+                                  m_bndCondExpansions,
+                                  m_bndConditions,
+                                  periodicVertices,
+                                  variable);
             
             tmpBndSol = Array<OneD,NekDouble>
                 (m_traceMap->GetNumLocalBndCoeffs());

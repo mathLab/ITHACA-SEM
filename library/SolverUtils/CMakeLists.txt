@@ -1,4 +1,5 @@
 SET(SOLVER_UTILS_SOURCES
+  Core/Misc.cpp
   Advection/Advection.cpp
   Advection/AdvectionFR.cpp
   Advection/AdvectionNonConservative.cpp
@@ -16,6 +17,8 @@ SET(SOLVER_UTILS_SOURCES
   EquationSystem.cpp
   Filters/Filter.cpp
   Filters/FilterCheckpoint.cpp
+  Filters/FilterAeroForces.cpp
+  Filters/FilterModalEnergy.cpp
   Filters/FilterHistoryPoints.cpp
   Filters/FilterThresholdMax.cpp
   RiemannSolvers/RiemannSolver.cpp
@@ -29,6 +32,7 @@ SET(SOLVER_UTILS_SOURCES
 )
 
 SET(SOLVER_UTILS_HEADERS
+  Core/Misc.h
   Advection/Advection.h
   Advection/AdvectionFR.h
   Advection/AdvectionNonConservative.h
@@ -46,6 +50,8 @@ SET(SOLVER_UTILS_HEADERS
   EquationSystem.h
   Filters/Filter.h
   Filters/FilterCheckpoint.h
+  Filters/FilterAeroForces.h
+  Filters/FilterModalEnergy.h
   Filters/FilterHistoryPoints.h
   Filters/FilterThresholdMax.h
   RiemannSolvers/RiemannSolver.h

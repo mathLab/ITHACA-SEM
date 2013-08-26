@@ -500,9 +500,9 @@ namespace Nektar
     /**
      *
      */
-    void TenTusscher06M::v_PrintSummary(std::ostream &out)
+    void TenTusscher06M::v_GenerateSummary(SummaryList& s)
     {
-        out << "	Cell model      : TenTusscher06M" << std::endl;
+        SolverUtils::AddSummaryItem(s, "Cell model", "TenTusscher06M");
     }
 
 

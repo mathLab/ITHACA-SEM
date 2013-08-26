@@ -33,6 +33,7 @@
 // Navier Stokes equations
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <LibUtilities/TimeIntegration/TimeIntegrationWrapper.h>
 #include <IncNavierStokesSolver/EquationSystems/CoupledLinearNS.h>
 #include <LibUtilities/BasicUtils/Timer.h>
 #include <LocalRegions/MatrixKey.h>
@@ -84,7 +85,7 @@ namespace Nektar
                 ASSERTL0(m_fields.num_elements() > 2,"Expect to have three at least three components of velocity variables");
                 LibUtilities::BasisKey Homo1DKey = m_fields[0]->GetHomogeneousBasis()->GetBasisKey();
                 
-                m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_session, Homo1DKey, m_LhomZ, m_useFFT,m_dealiasing, pressure_exp);
+                m_pressure = MemoryManager<MultiRegions::ExpList3DHomogeneous1D>::AllocateSharedPtr(m_session, Homo1DKey, m_LhomZ, m_useFFT,m_homogen_dealiasing, pressure_exp);
                 
                 ASSERTL1(m_npointsZ%2==0,"Non binary number of planes have been specified");
                 nz = m_npointsZ/2;                
@@ -1172,9 +1173,9 @@ namespace Nektar
         cout << "Multilevel condensation: " << timer.TimePerTest(1) << endl;
     }
     
-    void CoupledLinearNS::v_PrintSummary(std::ostream &out)
+    void CoupledLinearNS::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        cout <<  "\tSolver Type     : Coupled Linearised NS" <<endl;
+        SolverUtils::AddSummaryItem(s, "Solver Type", "Coupled Linearised NS");
     }
     
     void CoupledLinearNS::v_DoInitialise(void)
@@ -1199,30 +1200,7 @@ namespace Nektar
                 
                 ASSERTL0(i != (int) LibUtilities::SIZE_TimeIntegrationMethod, "Invalid time integration type.");
                 
-                switch(intMethod)
-                {
-                    case LibUtilities::eIMEXOrder1: 
-                    {
-                        m_intSteps = 1;
-                        m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
-                        m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                    }
-                    break;
-                    case LibUtilities::eIMEXOrder2: 
-                    {
-                        m_intSteps = 2;
-                        m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXOrder1);
-                        m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                        LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
-                        m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-                    }
-                    break;
-                    default:
-                        ASSERTL0(0,"Integration method not setup: Options include ImexOrder1, ImexOrder2");
-                        break;
-                }
+                m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[intMethod]);
                 
                 // Could defind this from IncNavierStokes class? 
                 m_integrationOps.DefineOdeRhs(&CoupledLinearNS::EvaluateAdvection, this);

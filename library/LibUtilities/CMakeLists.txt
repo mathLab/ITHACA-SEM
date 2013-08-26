@@ -105,7 +105,7 @@ SET(FoundationHeaders
 )
 
 SET(FoundationSources
-	./Foundations/Basis.cpp
+        ./Foundations/Basis.cpp
 	./Foundations/BLPoints.cpp
 	./Foundations/FourierPoints.cpp
 	./Foundations/FourierSingleModePoints.cpp
@@ -114,14 +114,14 @@ SET(FoundationSources
 	./Foundations/InterpCoeff.cpp
 	./Foundations/Interp.cpp
 	./Foundations/ManagerAccess.cpp
-    ./Foundations/NodalPrismEvenlySpaced.cpp
+        ./Foundations/NodalPrismEvenlySpaced.cpp
 	./Foundations/NodalTetElec.cpp
-    ./Foundations/NodalTetEvenlySpaced.cpp
+        ./Foundations/NodalTetEvenlySpaced.cpp
 	./Foundations/NodalTriElec.cpp
-    ./Foundations/NodalTriEvenlySpaced.cpp
+        ./Foundations/NodalTriEvenlySpaced.cpp
 	./Foundations/NodalTriFekete.cpp
 	./Foundations/NodalUtil.cpp
-    ./Foundations/PhysGalerkinProject.cpp       
+        ./Foundations/PhysGalerkinProject.cpp       
 	./Foundations/Points.cpp
 	./Foundations/PolyEPoints.cpp
 )
@@ -238,10 +238,12 @@ SET(PolylibSources
 
 SET(TimeIntegrationHeaders
         ./TimeIntegration/TimeIntegrationScheme.h
+        ./TimeIntegration/TimeIntegrationWrapper.h
 ) 
 
 SET(TimeIntegrationSources
         ./TimeIntegration/TimeIntegrationScheme.cpp
+        ./TimeIntegration/TimeIntegrationWrapper.cpp
 )
 
 SET(ExpressionTemplates

@@ -95,7 +95,7 @@ namespace Nektar
             SOLVER_UTILS_EXPORT virtual void v_DoInitialise();
 
             /// Print a summary of time stepping parameters.
-            SOLVER_UTILS_EXPORT virtual void v_PrintSummary(std::ostream &out);
+            SOLVER_UTILS_EXPORT virtual void v_GenerateSummary(SummaryList& s);
             
             /// Print the solution at each solution point in a txt file
             SOLVER_UTILS_EXPORT virtual void v_AppendOutput1D(

@@ -33,11 +33,22 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
+#include <boost/asio/ip/host_name.hpp>
+
 #include <LibUtilities/BasicUtils/FieldIO.h>
 #include "zlib.h"
 
 // Buffer size for zlib compression/decompression
 #define CHUNK 16384
+
+#ifndef NEKTAR_VERSION
+#define NEKTAR_VERSION "Unknown"
+#endif
+
+namespace ptime = boost::posix_time;
+namespace ip = boost::asio::ip;
 
 namespace Nektar
 {
@@ -51,8 +62,8 @@ namespace Nektar
                    std::vector<std::vector<NekDouble> > &fielddata, 
                    FieldMetaDataMap &fieldmetadatamap)
         {
-           ASSERTL1(fielddefs.size() == fielddata.size(),
-                     "Length of fielddefs and fielddata incompatible");
+            ASSERTL1(fielddefs.size() == fielddata.size(),
+                      "Length of fielddefs and fielddata incompatible");
 
             TiXmlDocument doc;
             TiXmlDeclaration * decl = new TiXmlDeclaration("1.0", "utf-8", "");
@@ -63,26 +74,56 @@ namespace Nektar
             TiXmlElement * root = new TiXmlElement("NEKTAR");
             doc.LinkEndChild(root);
 
+            FieldMetaDataMap ProvenanceMap;
+
+            // Nektar++ release version from VERSION file
+            ProvenanceMap["NektarVersion"] = string(NEKTAR_VERSION);
+
+            // Date/time stamp
+            ptime::time_facet *facet = new ptime::time_facet("%d-%b-%Y %H:%M:%S");
+            std::stringstream wss;
+            wss.imbue(locale(wss.getloc(), facet));
+            wss << ptime::second_clock::local_time();
+            ProvenanceMap["Timestamp"] = wss.str();
+
+            // Hostname
+            boost::system::error_code ec;
+            ProvenanceMap["Hostname"] = ip::host_name(ec);
+
+            // Git information
+            // If built from a distributed package, do not include this
+#ifdef GIT_SHA1
+            ProvenanceMap["GitSHA1"] = string(GIT_SHA1);
+#endif
+#ifdef GIT_BRANCH
+            ProvenanceMap["GitBranch"] = string(GIT_BRANCH);
+#endif
+
+            TiXmlElement * infoTag = new TiXmlElement("Metadata");
+            root->LinkEndChild(infoTag);
+
+            TiXmlElement * v;
+            FieldMetaDataMap::iterator infoit;
+
+            TiXmlElement * provTag = new TiXmlElement("Provenance");
+            infoTag->LinkEndChild(provTag);
+            for (infoit = ProvenanceMap.begin(); infoit != ProvenanceMap.end(); ++infoit)
+            {
+                v = new TiXmlElement( (infoit->first).c_str() );
+                v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
+                provTag->LinkEndChild(v);
+            }
+
             //---------------------------------------------
-            // write field info section 
+            // write field info section
             if(fieldmetadatamap != NullFieldMetaDataMap)
             {
-                TiXmlElement * infoTag = new TiXmlElement("FIELDMETADATA");
-                root->LinkEndChild(infoTag);
-                
-                FieldMetaDataMap::iterator infoit;
-                
                 for(infoit = fieldmetadatamap.begin(); infoit != fieldmetadatamap.end(); ++infoit)
                 {
-                    NekDouble val = infoit->second;
-                    stringstream s;
-                    s << val; 
-                    TiXmlElement * v = new TiXmlElement( "P" );
-                    v->SetAttribute("PARAM",(infoit->first).c_str());
-                    v->LinkEndChild(new TiXmlText(s.str()));
+                    v = new TiXmlElement( (infoit->first).c_str() );
+                    v->LinkEndChild(new TiXmlText((infoit->second).c_str()));
                     infoTag->LinkEndChild(v);
                 }
-
             }
 
             for (int f = 0; f < fielddefs.size(); ++f)
@@ -346,30 +387,26 @@ namespace Nektar
         {
             
             TiXmlHandle docHandle(&doc);
-            TiXmlElement* master = NULL;    // Master tag within which all data is contained.
+            TiXmlElement* master = 0;    // Master tag within which all data is contained.
+            TiXmlElement* metadata = 0;
             
             master = doc.FirstChildElement("NEKTAR");
             ASSERTL0(master, "Unable to find NEKTAR tag in file.");
             std::string strLoop = "NEKTAR";
 
-
-            TiXmlElement* metadata = master->FirstChildElement("FIELDMETADATA");
-            
-            if(!metadata) // section not available so just exit
+            // Retain original metadata structure for backwards compatibility
+            // TODO: Remove old metadata format
+            metadata = master->FirstChildElement("FIELDMETADATA");
+            if(metadata)
             {
-                return;
-            }
-            else
-            {
-                
                 TiXmlElement *param = metadata->FirstChildElement("P");
-                    
+
                 while (param)
                 {
                     TiXmlAttribute *paramAttr = param->FirstAttribute();
                     std::string attrName(paramAttr->Name());
                     std::string paramString;
-                    
+
                     if(attrName == "PARAM")
                     {
                         paramString.insert(0,paramAttr->Value());
@@ -381,30 +418,37 @@ namespace Nektar
 
                     // Now read body of param
                     std::string paramBodyStr;
-                    
-                    TiXmlNode *paramBody = param->FirstChild();
-                    
-                    paramBodyStr += paramBody->ToText()->Value();
-                    
-                    NekDouble value;
-                    std::istringstream paramStrm(paramBodyStr.c_str());
-                    
-                    try
-                    {
-                        while(!paramStrm.fail())
-                        {
-                            paramStrm >> value;
-                        }
-                    }
-                    catch(...)
-                    {
-                        ASSERTL0(false,"Failied to read PARAM data");
-                    }
 
-                    fieldmetadatamap[paramString] = value; 
+                    TiXmlNode *paramBody = param->FirstChild();
+
+                    paramBodyStr += paramBody->ToText()->Value();
+
+                    fieldmetadatamap[paramString] = paramBodyStr;
                     param = param->NextSiblingElement("P");
                 }
             }
+
+            // New metadata format
+            metadata = master->FirstChildElement("Metadata");
+            if(metadata)
+            {
+                TiXmlElement *param = metadata->FirstChildElement();
+                    
+                while (param)
+                {
+                    std::string paramString = param->Value();
+                    if (paramString != "Provenance")
+                    {
+                        // Now read body of param
+                        TiXmlNode *paramBody = param->FirstChild();
+                        std::string paramBodyStr = paramBody->ToText()->Value();
+
+                        fieldmetadatamap[paramString] = paramBodyStr;
+                    }
+                    param = param->NextSiblingElement();
+                }
+            }
+
         }
         
 

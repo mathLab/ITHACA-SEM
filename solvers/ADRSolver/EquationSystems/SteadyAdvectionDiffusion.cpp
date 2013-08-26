@@ -66,9 +66,9 @@ namespace Nektar
 
     }
 
-    void SteadyAdvectionDiffusion::v_PrintSummary(std::ostream &out)
+    void SteadyAdvectionDiffusion::v_GenerateSummary(SolverUtils::SummaryList& s)
     {
-        out << "\tLambda          : " << m_lambda << endl;
+        SolverUtils::AddSummaryItem(s, "Lambda", m_lambda);
     }
 
 

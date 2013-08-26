@@ -789,7 +789,6 @@ namespace Nektar
                     Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals); 
                 }
             }
-
             // setting if just standard BC not High order
             else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
             {

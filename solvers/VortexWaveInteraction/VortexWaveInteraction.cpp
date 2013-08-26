@@ -388,7 +388,10 @@ namespace Nektar
                     m_solverRoll->DoInitialise();
                     m_vwiForcingObj = boost::dynamic_pointer_cast<SolverUtils::ForcingProgrammatic>(GetForcingFactory().CreateInstance("Programmatic", m_sessionRoll, m_solverRoll->UpdateFields(), 0));
 
-                    m_solverRoll->EvaluateFunction(m_vwiForcingObj->UpdateForces(), "BodyForce", 0.0);
+                    std::vector<std::string> vFieldNames = m_sessionRoll->GetVariables();
+                    vFieldNames.erase(vFieldNames.end()-1);
+
+                    m_solverRoll->EvaluateFunction(vFieldNames, m_vwiForcingObj->UpdateForces(), "BodyForce");
 
                     // Scale forcing
                     for(int i = 0; i < m_vwiForcingObj->UpdateForces().num_elements(); ++i)

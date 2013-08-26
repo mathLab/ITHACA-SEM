@@ -333,27 +333,35 @@ namespace Nektar
             SegGeomSharedPtr edge;
 
             // First set up the 3 bottom edges
+
+            if(m_faces[0]->GetEid(0) != m_faces[1]->GetEid(0))
+            {
+                std::ostringstream errstrm;
+                errstrm << "Local edge 0 (eid=" << m_faces[0]->GetEid(0);
+                errstrm  << ") on face " <<  m_faces[0]->GetFid(); 
+                errstrm << " must be the same as local edge 0 (eid="<<m_faces[1]->GetEid(0);
+                errstrm << ") on face " <<   m_faces[1]->GetFid(); 
+                ASSERTL0(false, errstrm.str());
+            }
+
             int faceConnected;
             for(faceConnected = 1; faceConnected < 4 ; faceConnected++)
             {
                 check = 0;
                 for(i = 0; i < 3; i++)
                 {
-                    for(j = 0; j < 3; j++)
+                    if( (m_faces[0])->GetEid(i) == (m_faces[faceConnected])->GetEid(0) )
                     {
-                        if( (m_faces[0])->GetEid(i) == (m_faces[faceConnected])->GetEid(j) )
-                        {
-                            edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
-                            m_edges.push_back(edge);
-                            check++;
-                        }
+                        edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
+                        m_edges.push_back(edge);
+                        check++;
                     }
                 }
 
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
-                    errstrm << "Connected faces do not share an edge. Faces ";
+                    errstrm << "Face 0 does not share an edge with first edge of adjacent face. Faces ";
                     errstrm << (m_faces[0])->GetFid() << ", " << (m_faces[faceConnected])->GetFid();
                     ASSERTL0(false, errstrm.str());
                 }
@@ -365,6 +373,7 @@ namespace Nektar
                     ASSERTL0(false, errstrm.str());
                 }
             }
+
 
             // Then, set up the 3 vertical edges
             check = 0;

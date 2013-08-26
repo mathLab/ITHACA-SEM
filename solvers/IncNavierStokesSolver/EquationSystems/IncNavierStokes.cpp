@@ -1239,7 +1239,7 @@ namespace Nektar
                 }		
                 
                 Array<TwoD, const NekDouble> gmat =
-                        el3D->GetGeom3D()->GetMetricInfo()->GetGmat();
+                        el3D->GetGeom3D()->GetMetricInfo()->GetDerivFactors();
                 
                 if (el3D->GetGeom3D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)

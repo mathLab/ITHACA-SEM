@@ -359,7 +359,7 @@ namespace Nektar
                 Array<OneD, const NekDouble> jac  = 
                         el2D->GetGeom2D()->GetMetricInfo()->GetJac();
                 Array<TwoD, const NekDouble> gmat = 
-                        el2D->GetGeom2D()->GetMetricInfo()->GetGmat();
+                        el2D->GetGeom2D()->GetMetricInfo()->GetDerivFactors();
                 
                 if (el2D->GetGeom2D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
@@ -411,7 +411,7 @@ namespace Nektar
                 Array<OneD, const NekDouble> jac =
                         el3D->GetGeom3D()->GetMetricInfo()->GetJac();
                 Array<TwoD, const NekDouble> gmat =
-                        el3D->GetGeom3D()->GetMetricInfo()->GetGmat();
+                        el3D->GetGeom3D()->GetMetricInfo()->GetDerivFactors();
                 
                 if (el3D->GetGeom3D()->GetMetricInfo()->GetGtype()
                     == SpatialDomains::eDeformed)
@@ -436,7 +436,7 @@ namespace Nektar
                     Array<OneD, const NekDouble> jac =
                             el3D->GetGeom3D()->GetMetricInfo()->GetJac();
                     Array<TwoD, const NekDouble> gmat = 
-                            el3D->GetGeom3D()->GetMetricInfo()->GetGmat();
+                            el3D->GetGeom3D()->GetMetricInfo()->GetDerivFactors();
                     
                     for (int i = 0; i < n_points; i++)
                     {

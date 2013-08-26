@@ -1797,11 +1797,99 @@ namespace Nektar
                   Array<OneD,       NekDouble> &outarray,
                   Array<OneD,       NekDouble> &wsp)
         {
+            // This implementation is only valid when there are no
+            // coefficients associated to the Laplacian operator
+            if (m_metrics.count(MetricLaplacian00) == 0)
+            {
+                ComputeLaplacianMetric();
+            }
+
             int nquad0  = m_base[0]->GetNumPoints();
             int nquad1  = m_base[1]->GetNumPoints();
             int nquad2  = m_base[2]->GetNumPoints();
             int nqtot   = nquad0*nquad1*nquad2;
             int i, j;
+
+            ASSERTL1(wsp.num_elements() >= 6*nqtot,
+                     "Insufficient workspace size.");
+
+            const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
+            const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
+            const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
+            const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
+            const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
+            const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
+            const Array<OneD, const NekDouble>& metric00 = m_metrics[MetricLaplacian00];
+            const Array<OneD, const NekDouble>& metric01 = m_metrics[MetricLaplacian01];
+            const Array<OneD, const NekDouble>& metric02 = m_metrics[MetricLaplacian02];
+            const Array<OneD, const NekDouble>& metric11 = m_metrics[MetricLaplacian11];
+            const Array<OneD, const NekDouble>& metric12 = m_metrics[MetricLaplacian12];
+            const Array<OneD, const NekDouble>& metric22 = m_metrics[MetricLaplacian22];
+
+            // Allocate temporary storage
+            Array<OneD,NekDouble> wsp0 (wsp);
+            Array<OneD,NekDouble> wsp1 (wsp+1*nqtot   );// TensorDeriv 1
+            Array<OneD,NekDouble> wsp2 (wsp+2*nqtot);// TensorDeriv 2
+            Array<OneD,NekDouble> wsp3 (wsp+3*nqtot);// TensorDeriv 3
+            Array<OneD,NekDouble> wsp4 (wsp+4*nqtot);// wsp4 == g1
+            Array<OneD,NekDouble> wsp5 (wsp+5*nqtot);// wsp5 == g2
+            
+            // LAPLACIAN MATRIX OPERATION
+            // wsp1 = du_dxi1 = D_xi1 * inarray = D_xi1 * u
+            // wsp2 = du_dxi2 = D_xi2 * inarray = D_xi2 * u
+            // wsp2 = du_dxi3 = D_xi3 * inarray = D_xi3 * u
+            StdExpansion3D::PhysTensorDeriv(inarray,wsp0,wsp1,wsp2);
+
+            // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+            // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
+            // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
+            // especially for this purpose
+            Vmath::Vvtvvtp(nqtot,&metric00[0],1,&wsp0[0],1,&metric01[0],1,&wsp1[0],1,&wsp3[0],1);
+            Vmath::Vvtvp  (nqtot,&metric02[0],1,&wsp2[0],1,&wsp3[0],1,&wsp3[0],1);
+            Vmath::Vvtvvtp(nqtot,&metric01[0],1,&wsp0[0],1,&metric11[0],1,&wsp1[0],1,&wsp4[0],1);
+            Vmath::Vvtvp  (nqtot,&metric12[0],1,&wsp2[0],1,&wsp4[0],1,&wsp4[0],1);
+            Vmath::Vvtvvtp(nqtot,&metric02[0],1,&wsp0[0],1,&metric12[0],1,&wsp1[0],1,&wsp5[0],1);
+            Vmath::Vvtvp  (nqtot,&metric22[0],1,&wsp2[0],1,&wsp5[0],1,&wsp5[0],1);
+
+            // outarray = m = (D_xi1 * B)^T * k
+            // wsp1     = n = (D_xi2 * B)^T * l
+            IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp3,outarray,wsp0,false,true,true);
+            IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp4,wsp1,    wsp0,true,false,true);
+            IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp5,wsp2,    wsp0,true,true,false);
+
+            // outarray = outarray + wsp1
+            //          = L * u_hat
+            Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
+            Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
+        }
+
+
+        void TetExp::v_ComputeLaplacianMetric()
+        {
+            if (m_metrics.count(MetricQuadrature) == 0)
+            {
+                ComputeQuadratureMetric();
+            }
+
+            int i, j;
+            const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
+            const unsigned int nqtot = GetTotPoints();
+            const unsigned int dim = 3;
+            const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
+                                       {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
+                                       {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
+            };
+
+            Array<OneD, NekDouble> dEta_dXi[2] = {Array<OneD, NekDouble>(nqtot,1.0),
+                                                  Array<OneD, NekDouble>(nqtot,1.0)};
+
+            for (unsigned int i = 0; i < dim; ++i)
+            {
+                for (unsigned int j = i; j < dim; ++j)
+                {
+                    m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
+                }
+            }
 
             // Allocate temporary storage
             Array<OneD,NekDouble> alloc(13*nqtot,0.0);
@@ -1825,195 +1913,11 @@ namespace Nektar
             Array<OneD,NekDouble> wsp7 (alloc+ 9*nqtot);// wsp7 == h0
             Array<OneD,NekDouble> wsp8 (alloc+10*nqtot);// wsp8 == h1
             Array<OneD,NekDouble> wsp9 (alloc+11*nqtot);// wsp9 == h2
-            
-            const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-            const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-            const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
-            const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
-            const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-            const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
-            
-            // LAPLACIAN MATRIX OPERATION
-            // wsp1 = du_dxi1 = D_xi1 * inarray = D_xi1 * u
-            // wsp2 = du_dxi2 = D_xi2 * inarray = D_xi2 * u
-            // wsp2 = du_dxi3 = D_xi3 * inarray = D_xi3 * u
-            StdExpansion3D::PhysTensorDeriv(inarray,wsp1,wsp2,wsp3);
 
-            const Array<TwoD, const NekDouble>& gmat = m_metricinfo->GetGmat();
-            const Array<OneD, const NekDouble>& z0   = m_base[0]->GetZ();
-            const Array<OneD, const NekDouble>& z1   = m_base[1]->GetZ();
-            const Array<OneD, const NekDouble>& z2   = m_base[2]->GetZ();
-            
-            // Step 2. Calculate the metric terms of the collapsed
-            // coordinate transformation (Spencer's book P152)
-            for(j = 0; j < nquad2; ++j)
-            {
-                for(i = 0; i < nquad1; ++i)
-                {
-                    Vmath::Fill(nquad0, 4.0/(1.0-z1[i])/(1.0-z2[j]), &h0[0]+i*nquad0 + j*nquad0*nquad1,1);
-                    Vmath::Fill(nquad0, 2.0/(1.0-z1[i])/(1.0-z2[j]), &h1[0]+i*nquad0 + j*nquad0*nquad1,1);
-                    Vmath::Fill(nquad0, 2.0/(1.0-z2[j]),             &h2[0]+i*nquad0 + j*nquad0*nquad1,1);
-                    Vmath::Fill(nquad0, (1.0+z1[i])/(1.0-z2[j]),     &h3[0]+i*nquad0 + j*nquad0*nquad1,1);
-                }
-            }
-            for(i = 0; i < nquad0; i++)
-            {
-                Blas::Dscal(nquad1*nquad2, 1+z0[i], &h1[0]+i, nquad0);
-            }
-            
-            // Step 3. Construct combined metric terms for physical space to
-            // collapsed coordinate system.
-            // Order of construction optimised to minimise temporary storage
-            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
-            {
-                // wsp4
-                Vmath::Vadd(nqtot, &gmat[1][0], 1, &gmat[2][0], 1, &wsp4[0], 1);
-                Vmath::Vvtvvtp(nqtot, &gmat[0][0], 1, &h0[0], 1, &wsp4[0], 1, &h1[0], 1, &wsp4[0], 1);
-                // wsp5
-                Vmath::Vadd(nqtot, &gmat[4][0], 1, &gmat[5][0], 1, &wsp5[0], 1);
-                Vmath::Vvtvvtp(nqtot, &gmat[3][0], 1, &h0[0], 1, &wsp5[0], 1, &h1[0], 1, &wsp5[0], 1);
-                // wsp6
-                Vmath::Vadd(nqtot, &gmat[7][0], 1, &gmat[8][0], 1, &wsp6[0], 1);
-                Vmath::Vvtvvtp(nqtot, &gmat[6][0], 1, &h0[0], 1, &wsp6[0], 1, &h1[0], 1, &wsp6[0], 1);
-                
-                // g0
-                Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g0[0], 1);
-                Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g0[0],   1, &g0[0],   1);
-                
-                // g4
-                Vmath::Vvtvvtp(nqtot, &gmat[2][0], 1, &wsp4[0], 1, &gmat[5][0], 1, &wsp5[0], 1, &g4[0], 1);
-                Vmath::Vvtvp  (nqtot, &gmat[8][0], 1, &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
-                
-                // overwrite h0, h1, h2
-                // wsp7 (h2f1 + h3f2)
-                Vmath::Vvtvvtp(nqtot, &gmat[1][0], 1, &h2[0], 1, &gmat[2][0], 1, &h3[0], 1, &wsp7[0], 1);
-                // wsp8 (h2f4 + h3f5)
-                Vmath::Vvtvvtp(nqtot, &gmat[4][0], 1, &h2[0], 1, &gmat[5][0], 1, &h3[0], 1, &wsp8[0], 1);
-                // wsp9 (h2f7 + h3f8)
-                Vmath::Vvtvvtp(nqtot, &gmat[7][0], 1, &h2[0], 1, &gmat[8][0], 1, &h3[0], 1, &wsp9[0], 1);
-                
-                // g3
-                Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp7[0], 1, &wsp5[0], 1, &wsp8[0], 1, &g3[0], 1);
-                Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp9[0], 1, &g3[0],   1, &g3[0],   1);
-                
-                // overwrite wsp4, wsp5, wsp6
-                // g1
-                Vmath::Vvtvvtp(nqtot, &wsp7[0], 1, &wsp7[0], 1, &wsp8[0], 1, &wsp8[0], 1, &g1[0], 1);
-                Vmath::Vvtvp  (nqtot, &wsp9[0], 1, &wsp9[0], 1, &g1[0],   1, &g1[0],   1);
-                
-                // g5
-                Vmath::Vvtvvtp(nqtot, &gmat[2][0], 1, &wsp7[0], 1, &gmat[5][0], 1, &wsp8[0], 1, &g5[0], 1);
-                Vmath::Vvtvp  (nqtot, &gmat[8][0], 1, &wsp9[0], 1, &g5[0], 1, &g5[0], 1);
-                
-                // g2
-                Vmath::Vvtvvtp(nqtot, &gmat[2][0], 1, &gmat[2][0], 1, &gmat[5][0], 1, &gmat[5][0], 1, &g2[0], 1);
-                Vmath::Vvtvp  (nqtot, &gmat[8][0], 1, &gmat[8][0], 1, &g2[0],      1, &g2[0],      1);
-            }
-            else
-            {
-                // wsp4
-                Vmath::Svtsvtp(nqtot, gmat[0][0], &h0[0], 1, gmat[1][0] + gmat[2][0], &h1[0], 1, &wsp4[0], 1);
-                // wsp5
-                Vmath::Svtsvtp(nqtot, gmat[3][0], &h0[0], 1, gmat[4][0] + gmat[5][0], &h1[0], 1, &wsp5[0], 1);
-                // wsp6
-                Vmath::Svtsvtp(nqtot, gmat[6][0], &h0[0], 1, gmat[7][0] + gmat[8][0], &h1[0], 1, &wsp6[0], 1);
-                
-                // g0
-                Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g0[0], 1);
-                Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g0[0],   1, &g0[0],   1);
-                
-                // g4
-                Vmath::Svtsvtp(nqtot, gmat[2][0], &wsp4[0], 1, gmat[5][0], &wsp5[0], 1, &g4[0], 1);
-                Vmath::Svtvp  (nqtot, gmat[8][0], &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
-                
-                // overwrite h0, h1, h2
-                // wsp7 (h2f1 + h3f2)
-                Vmath::Svtsvtp(nqtot, gmat[1][0], &h2[0], 1, gmat[2][0], &h3[0], 1, &wsp7[0], 1);
-                // wsp8 (h2f4 + h3f5)
-                Vmath::Svtsvtp(nqtot, gmat[4][0], &h2[0], 1, gmat[5][0], &h3[0], 1, &wsp8[0], 1);
-                // wsp9 (h2f7 + h3f8)
-                Vmath::Svtsvtp(nqtot, gmat[7][0], &h2[0], 1, gmat[8][0], &h3[0], 1, &wsp9[0], 1);
-                
-                // g3
-                Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp7[0], 1, &wsp5[0], 1, &wsp8[0], 1, &g3[0], 1);
-                Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp9[0], 1, &g3[0],   1, &g3[0],   1);
-                
-                // overwrite wsp4, wsp5, wsp6
-                // g1
-                Vmath::Vvtvvtp(nqtot, &wsp7[0], 1, &wsp7[0], 1, &wsp8[0], 1, &wsp8[0], 1, &g1[0], 1);
-                Vmath::Vvtvp  (nqtot, &wsp9[0], 1, &wsp9[0], 1, &g1[0],   1, &g1[0],   1);
-                
-                // g5
-                Vmath::Svtsvtp(nqtot, gmat[2][0], &wsp7[0], 1, gmat[5][0], &wsp8[0], 1, &g5[0], 1);
-                Vmath::Svtvp  (nqtot, gmat[8][0], &wsp9[0], 1, &g5[0], 1, &g5[0], 1);
-                
-                // g2
-                Vmath::Fill(nqtot, gmat[2][0]*gmat[2][0] + gmat[5][0]*gmat[5][0] + gmat[8][0]*gmat[8][0], &g2[0], 1);
-            }
-            
-            // Compute component derivatives into wsp7, 8, 9
-            Vmath::Vvtvvtp(nqtot,&g0[0],1,&wsp1[0],1,&g3[0],1,&wsp2[0],1,&wsp7[0],1);
-            Vmath::Vvtvp  (nqtot,&g4[0],1,&wsp3[0],1,&wsp7[0],1,&wsp7[0],1);
-            Vmath::Vvtvvtp(nqtot,&g1[0],1,&wsp2[0],1,&g3[0],1,&wsp1[0],1,&wsp8[0],1);
-            Vmath::Vvtvp  (nqtot,&g5[0],1,&wsp3[0],1,&wsp8[0],1,&wsp8[0],1);
-            Vmath::Vvtvvtp(nqtot,&g2[0],1,&wsp3[0],1,&g4[0],1,&wsp1[0],1,&wsp9[0],1);
-            Vmath::Vvtvp  (nqtot,&g5[0],1,&wsp2[0],1,&wsp9[0],1,&wsp9[0],1);
-            
-            // Step 4.
-            // Multiply by quadrature metric
-            MultiplyByQuadratureMetric(wsp7,wsp7);
-            MultiplyByQuadratureMetric(wsp8,wsp8);
-            MultiplyByQuadratureMetric(wsp9,wsp9);
-            
-            IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp7,wsp1,    wsp,false,true,true);
-            IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp8,wsp2,    wsp,true,false,true);
-            IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp9,outarray,wsp,true,true,false);
-            
-            // Step 5.
-            // Sum contributions from wsp1, wsp2 and outarray.
-            Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);
-            Vmath::Vadd(m_ncoeffs,wsp2.get(),1,outarray.get(),1,outarray.get(),1);
-        }
-
-
-        void TetExp::v_ComputeLaplacianMetric()
-        {
-            if (m_metrics.count(MetricQuadrature) == 0)
-            {
-                ComputeQuadratureMetric();
-            }
-
-            int i, j;
-            const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
-            const unsigned int nqtot = GetTotPoints();
-            const unsigned int dim = 2;
-            const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
-                                       {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
-                                       {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
-            };
-
-            Array<OneD, NekDouble> dEta_dXi[2] = {Array<OneD, NekDouble>(nqtot,1.0),
-                                                  Array<OneD, NekDouble>(nqtot,1.0)};
-
-            for (unsigned int i = 0; i < dim; ++i)
-            {
-                for (unsigned int j = i; j < dim; ++j)
-                {
-                    m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
-                }
-            }
-
-            Array<OneD,NekDouble> alloc(13*nqtot,0.0);
-
-            Array<OneD,NekDouble> h0   (alloc+ 9*nqtot);// h0
-            Array<OneD,NekDouble> h1   (alloc+10*nqtot);// h1
-            Array<OneD,NekDouble> h2   (alloc+11*nqtot);// h2
-            Array<OneD,NekDouble> h3   (alloc+12*nqtot);// h3
-
-            const Array<TwoD, const NekDouble>& gmat   = m_metricinfo->GetGmat();
-            const Array<OneD, const NekDouble>& z0   = m_base[0]->GetZ();
-            const Array<OneD, const NekDouble>& z1   = m_base[1]->GetZ();
-            const Array<OneD, const NekDouble>& z2   = m_base[2]->GetZ();
+            const Array<TwoD, const NekDouble>& df = m_metricinfo->GetDerivFactors();
+            const Array<OneD, const NekDouble>& z0 = m_base[0]->GetZ();
+            const Array<OneD, const NekDouble>& z1 = m_base[1]->GetZ();
+            const Array<OneD, const NekDouble>& z2 = m_base[2]->GetZ();
             const unsigned int nquad0 = m_base[0]->GetNumPoints();
             const unsigned int nquad1 = m_base[1]->GetNumPoints();
             const unsigned int nquad2 = m_base[2]->GetNumPoints();
@@ -2033,7 +1937,105 @@ namespace Nektar
                 Blas::Dscal(nquad1*nquad2, 1+z0[i], &h1[0]+i, nquad0);
             }
 
+            // Step 3. Construct combined metric terms for physical space to
+            // collapsed coordinate system.
+            // Order of construction optimised to minimise temporary storage
+            if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
+            {
+                // wsp4
+                Vmath::Vadd(nqtot, &df[1][0], 1, &df[2][0], 1, &wsp4[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[0][0], 1, &h0[0], 1, &wsp4[0], 1, &h1[0], 1, &wsp4[0], 1);
+                // wsp5
+                Vmath::Vadd(nqtot, &df[4][0], 1, &df[5][0], 1, &wsp5[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[3][0], 1, &h0[0], 1, &wsp5[0], 1, &h1[0], 1, &wsp5[0], 1);
+                // wsp6
+                Vmath::Vadd(nqtot, &df[7][0], 1, &df[8][0], 1, &wsp6[0], 1);
+                Vmath::Vvtvvtp(nqtot, &df[6][0], 1, &h0[0], 1, &wsp6[0], 1, &h1[0], 1, &wsp6[0], 1);
 
+                // g0
+                Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g0[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g0[0],   1, &g0[0],   1);
+
+                // g4
+                Vmath::Vvtvvtp(nqtot, &df[2][0], 1, &wsp4[0], 1, &df[5][0], 1, &wsp5[0], 1, &g4[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[8][0], 1, &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
+
+                // overwrite h0, h1, h2
+                // wsp7 (h2f1 + h3f2)
+                Vmath::Vvtvvtp(nqtot, &df[1][0], 1, &h2[0], 1, &df[2][0], 1, &h3[0], 1, &wsp7[0], 1);
+                // wsp8 (h2f4 + h3f5)
+                Vmath::Vvtvvtp(nqtot, &df[4][0], 1, &h2[0], 1, &df[5][0], 1, &h3[0], 1, &wsp8[0], 1);
+                // wsp9 (h2f7 + h3f8)
+                Vmath::Vvtvvtp(nqtot, &df[7][0], 1, &h2[0], 1, &df[8][0], 1, &h3[0], 1, &wsp9[0], 1);
+
+                // g3
+                Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp7[0], 1, &wsp5[0], 1, &wsp8[0], 1, &g3[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp9[0], 1, &g3[0],   1, &g3[0],   1);
+
+                // overwrite wsp4, wsp5, wsp6
+                // g1
+                Vmath::Vvtvvtp(nqtot, &wsp7[0], 1, &wsp7[0], 1, &wsp8[0], 1, &wsp8[0], 1, &g1[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp9[0], 1, &wsp9[0], 1, &g1[0],   1, &g1[0],   1);
+
+                // g5
+                Vmath::Vvtvvtp(nqtot, &df[2][0], 1, &wsp7[0], 1, &df[5][0], 1, &wsp8[0], 1, &g5[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[8][0], 1, &wsp9[0], 1, &g5[0], 1, &g5[0], 1);
+
+                // g2
+                Vmath::Vvtvvtp(nqtot, &df[2][0], 1, &df[2][0], 1, &df[5][0], 1, &df[5][0], 1, &g2[0], 1);
+                Vmath::Vvtvp  (nqtot, &df[8][0], 1, &df[8][0], 1, &g2[0],      1, &g2[0],      1);
+            }
+            else
+            {
+                // wsp4
+                Vmath::Svtsvtp(nqtot, df[0][0], &h0[0], 1, df[1][0] + df[2][0], &h1[0], 1, &wsp4[0], 1);
+                // wsp5
+                Vmath::Svtsvtp(nqtot, df[3][0], &h0[0], 1, df[4][0] + df[5][0], &h1[0], 1, &wsp5[0], 1);
+                // wsp6
+                Vmath::Svtsvtp(nqtot, df[6][0], &h0[0], 1, df[7][0] + df[8][0], &h1[0], 1, &wsp6[0], 1);
+
+                // g0
+                Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp4[0], 1, &wsp5[0], 1, &wsp5[0], 1, &g0[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp6[0], 1, &g0[0],   1, &g0[0],   1);
+
+                // g4
+                Vmath::Svtsvtp(nqtot, df[2][0], &wsp4[0], 1, df[5][0], &wsp5[0], 1, &g4[0], 1);
+                Vmath::Svtvp  (nqtot, df[8][0], &wsp6[0], 1, &g4[0], 1, &g4[0], 1);
+
+                // overwrite h0, h1, h2
+                // wsp7 (h2f1 + h3f2)
+                Vmath::Svtsvtp(nqtot, df[1][0], &h2[0], 1, df[2][0], &h3[0], 1, &wsp7[0], 1);
+                // wsp8 (h2f4 + h3f5)
+                Vmath::Svtsvtp(nqtot, df[4][0], &h2[0], 1, df[5][0], &h3[0], 1, &wsp8[0], 1);
+                // wsp9 (h2f7 + h3f8)
+                Vmath::Svtsvtp(nqtot, df[7][0], &h2[0], 1, df[8][0], &h3[0], 1, &wsp9[0], 1);
+
+                // g3
+                Vmath::Vvtvvtp(nqtot, &wsp4[0], 1, &wsp7[0], 1, &wsp5[0], 1, &wsp8[0], 1, &g3[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp6[0], 1, &wsp9[0], 1, &g3[0],   1, &g3[0],   1);
+
+                // overwrite wsp4, wsp5, wsp6
+                // g1
+                Vmath::Vvtvvtp(nqtot, &wsp7[0], 1, &wsp7[0], 1, &wsp8[0], 1, &wsp8[0], 1, &g1[0], 1);
+                Vmath::Vvtvp  (nqtot, &wsp9[0], 1, &wsp9[0], 1, &g1[0],   1, &g1[0],   1);
+
+                // g5
+                Vmath::Svtsvtp(nqtot, df[2][0], &wsp7[0], 1, df[5][0], &wsp8[0], 1, &g5[0], 1);
+                Vmath::Svtvp  (nqtot, df[8][0], &wsp9[0], 1, &g5[0], 1, &g5[0], 1);
+
+                // g2
+                Vmath::Fill(nqtot, df[2][0]*df[2][0] + df[5][0]*df[5][0] + df[8][0]*df[8][0], &g2[0], 1);
+            }
+
+            for (unsigned int i = 0; i < dim; ++i)
+            {
+                for (unsigned int j = i; j < dim; ++j)
+                {
+                    MultiplyByQuadratureMetric(m_metrics[m[i][j]],
+                                               m_metrics[m[i][j]]);
+
+                }
+            }
 
 
         }

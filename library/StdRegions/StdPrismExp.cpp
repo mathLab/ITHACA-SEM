@@ -2086,7 +2086,7 @@ namespace Nektar
             //------"New" Version August 22nd '13--------------------
             for(i = 0; i < nmodes_a; ++i)//P
             {
-                for(cnt = j = 0; j < nmodes_b; ++j) //Q
+                for(j = 0; j < nmodes_b; ++j) //Q
                 {
                     for(k = 0; k < nmodes_c-i; ++k) //R
                     {

@@ -34,7 +34,6 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-
 #include <StdRegions/StdExpansion.h>
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for BasisManager, etc
 
@@ -301,8 +300,9 @@ namespace Nektar
             Array<OneD, NekDouble> wsp(ntot);
 
             Vmath::Vmul(ntot, m_phys, 1, m_phys, 1, wsp, 1);
-            val   = sqrt(v_Integral(wsp));
 
+            val   = sqrt(v_Integral(wsp));
+            
             return val;
         }
 
@@ -1028,6 +1028,13 @@ namespace Nektar
         {
             v_SetUpPhysTangents(exp2d, edge);
         }
+
+        NekDouble StdExpansion::StdPhysEvaluate(const Array<OneD, const NekDouble> &Lcoord,
+                                                const Array<OneD, const NekDouble> &physvals)
+        {
+            return v_StdPhysEvaluate(Lcoord,physvals);
+        }
+
         void StdExpansion::AddEdgeNormBoundaryInt(const int edge,
                                                   boost::shared_ptr<StdExpansion>    &EdgeExp,
                                                   const Array<OneD, const NekDouble> &Fx,
@@ -1155,6 +1162,14 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
         }
         
+
+        NekDouble StdExpansion::v_StdPhysEvaluate(const Array<OneD, const NekDouble> &Lcoord,
+                                                  const Array<OneD, const NekDouble> &physvals)
+            
+        {
+            NEKERROR(ErrorUtil::efatal, "This function is not defined for this shape");
+            return 0;
+        }
 
         void StdExpansion::v_AddEdgeNormBoundaryInt(const int edge,
                                                     boost::shared_ptr<StdExpansion>    &EdgeExp,
@@ -1524,6 +1539,11 @@ namespace Nektar
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
             }
         
+        void StdExpansion::v_GetTracePhysVals(const int edge,  const boost::shared_ptr<StdExpansion>  &EdgeExp, const Array<OneD, const NekDouble> &inarray, Array<OneD,NekDouble> &outarray, StdRegions::Orientation  orient)
+            {
+                NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );
+            }
+
             void StdExpansion::v_GetVertexPhysVals(const int vertex, const Array<OneD, const NekDouble> &inarray, NekDouble &outarray)
             {
                 NEKERROR(ErrorUtil::efatal,"Method does not exist for this shape or library" );

@@ -89,8 +89,10 @@ namespace Nektar
         m_session->MatchSolverInfo("SpectralVanishingViscosity","True",m_useSpecVanVisc,false);
         m_session->LoadParameter("SVVCutoffRatio",m_sVVCutoffRatio,0.75);
         m_session->LoadParameter("SVVDiffCoeff",m_sVVDiffCoeff,0.1);
-        m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
             
+        // Needs to be set outside of next if so that it is turned off by default
+        m_session->MatchSolverInfo("SpectralVanishingViscosityHomo1D","True",m_useHomo1DSpecVanVisc,false);
+
         if(m_HomogeneousType == eHomogeneous1D)
         {
             ASSERTL0(m_nConvectiveFields > 2,"Expect to have three velcoity fields with homogenous expansion");
@@ -140,6 +142,9 @@ namespace Nektar
         m_session->MatchSolverInfo("SmoothAdvection", "True",
                                    m_SmoothAdvection, false);
 
+        m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(TimeIntStr);
+        m_intSteps = m_integrationScheme->GetIntegrationSteps();
+
         if(m_subSteppingScheme)
         {
             
@@ -147,6 +152,7 @@ namespace Nektar
             
             m_session->LoadParameter("SubStepCFL", m_cflSafetyFactor, 0.5);
             
+
             // Set to 1 for first step and it will then be increased in
             // time advance routines
             switch(intMethod)
@@ -154,13 +160,7 @@ namespace Nektar
             case LibUtilities::eBackwardEuler:
             case LibUtilities::eBDFImplicitOrder1: 
                 {
-                    m_intSteps = 1;
-                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
-                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                        
-                    LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eForwardEuler);
-                    m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
+                    m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("ForwardEuler");
                     
                     // Fields for linear interpolation
                     m_previousVelFields = Array<OneD, Array<OneD, NekDouble> >(2*m_fields.num_elements());                    
@@ -175,18 +175,7 @@ namespace Nektar
                 break;
             case LibUtilities::eBDFImplicitOrder2:
                 {
-                    m_intSteps = 2;
-                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                    
-                    
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eBackwardEuler);
-                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
-                    m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-                    
-                    LibUtilities::TimeIntegrationSchemeKey     SubIntKey(LibUtilities::eRungeKutta2_ImprovedEuler);
-                    
-                    m_subStepIntegrationScheme = LibUtilities::TimeIntegrationSchemeManager()[SubIntKey];
+                    m_subStepIntegrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance("RungeKutta2_ImprovedEuler");
                     
                     int nvel = m_velocity.num_elements();
                     
@@ -199,7 +188,7 @@ namespace Nektar
                     {
                         m_previousVelFields[i] = m_previousVelFields[i-1] + ntotpts; 
                     }
-                    
+                 
                 }
                 break;
             default:
@@ -214,49 +203,8 @@ namespace Nektar
         }
         else // Standard velocity correction scheme
         {
-            
-            // Set to 1 for first step and it will then be increased in
-            // time advance routines
-            switch(intMethod)
-            {
-                case LibUtilities::eIMEXOrder1: 
-                {
-                    m_intSteps = 1;
-                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(intMethod);
-                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                }
-                break;
-                case LibUtilities::eIMEXOrder2: 
-                {
-                    m_intSteps = 2;
-                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXOrder1);
-                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(intMethod);
-                    m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-                }
-                break;
-                case LibUtilities::eIMEXOrder3: 
-                {
-                    m_intSteps = 3;
-                    m_integrationScheme = Array<OneD, LibUtilities::TimeIntegrationSchemeSharedPtr> (m_intSteps);
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey0(LibUtilities::eIMEXdirk_3_4_3);
-                    m_integrationScheme[0] = LibUtilities::TimeIntegrationSchemeManager()[IntKey0];
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey1(LibUtilities::eIMEXdirk_3_4_3);
-                    m_integrationScheme[1] = LibUtilities::TimeIntegrationSchemeManager()[IntKey1];
-                    LibUtilities::TimeIntegrationSchemeKey       IntKey2(intMethod);
-                    m_integrationScheme[2] = LibUtilities::TimeIntegrationSchemeManager()[IntKey2];
-                }
-                break;
-                default:
-                    ASSERTL0(0,"Integration method not suitable: Options include IMEXOrder1, IMEXOrder2 or IMEXOrder3");
-                    break;
-            }
-            
             // set explicit time-intregration class operators
             m_integrationOps.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
-            
         }
         // Count number of HBC conditions
         Array<OneD, const SpatialDomains::BoundaryConditionShPtr > PBndConds = m_pressure->GetBndConditions();
@@ -349,19 +297,19 @@ namespace Nektar
         }
         
         TimeParamSummary(out);
-        cout << "\tTime integ.     : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme[m_intSteps-1]->GetIntegrationMethod()] << endl;
+        cout << "\tTime integ.     : " << LibUtilities::TimeIntegrationMethodMap[m_integrationScheme->GetIntegrationMethod()] << endl;
         
         if(m_subSteppingScheme)
         {
             cout << "\tSubstepping     : " << LibUtilities::TimeIntegrationMethodMap[m_subStepIntegrationScheme->GetIntegrationMethod()] << endl;
         }
 
-        if(m_dealiasing)
+        if(m_homogen_dealiasing)
         {
             cout << "\tDealiasing      : Homogeneous1D"  << endl;
         }
         
-        if(m_specHP_dealiasing)
+        if(m_advObject->GetSpecHPDealiasing())
         {
             cout << "\tDealiasing      : Spectral/hp "  << endl;
         }
@@ -382,29 +330,17 @@ namespace Nektar
 
         UnsteadySystem::v_DoInitialise();
 
+        // Set up Field Meta Data for output files
+        m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
+        m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
+
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
             m_fields[i]->LocalToGlobal();
             m_fields[i]->ImposeDirichletConditions(m_fields[i]->UpdateCoeffs());
             m_fields[i]->GlobalToLocal();
-            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),m_fields[i]->UpdatePhys());
-        }
-        
-        //insert white noise in initial condition
-        NekDouble Noise;
-        int phystot = m_fields[0]->GetTotPoints();
-        Array<OneD, NekDouble> noise(phystot);
-	
-        m_session->LoadParameter("Noise", Noise,0.0);
-	
-        if(Noise > 0.0)
-        {
-            for(int i = 0; i < m_nConvectiveFields; i++)
-            {
-                Vmath::FillWhiteNoise(phystot,Noise,noise,1,m_comm->GetColumnComm()->GetRank()+1);
-                Vmath::Vadd(phystot,m_fields[i]->GetPhys(),1,noise,1,m_fields[i]->UpdatePhys(),1);
-                m_fields[i]->FwdTrans_IterPerExp(m_fields[i]->GetPhys(),m_fields[i]->UpdateCoeffs());
-            }
+            m_fields[i]->BwdTrans(m_fields[i]->GetCoeffs(),
+                                  m_fields[i]->UpdatePhys());
         }
     }
     
@@ -470,34 +406,6 @@ namespace Nektar
         
         Timer  timer;
         bool IsRoot = (m_comm->GetColumnComm()->GetRank())? false:true;
-
-#if 0
-        timer.Start();
-        for(int k = 0; k < 1000; ++k)
-        {
-            m_fields[0]->IProductWRTBase(m_fields[0]->GetPhys(),
-                                         m_fields[0]->UpdateCoeffs());
-
-        }
-        timer.Stop();
-        cout << "\t 1000 Iprods   : "<< timer.TimePerTest(1) << endl;
-#endif
-
-#if 0
-        timer.Start();
-        Array<OneD, NekDouble> out (m_fields[0]->GetTotPoints());
-        Array<OneD, NekDouble> out1(m_fields[0]->GetTotPoints());
-        Array<OneD, NekDouble> out2(m_fields[0]->GetTotPoints());
-        
-        for(int k = 0; k < 10000; ++k)
-        {
-            m_fields[0]->PhysDeriv(out,out1,out2);
-
-        }
-        timer.Stop();
-        cout << "\t 10000 Physderiv   : "<< timer.TimePerTest(1) << endl;
-        exit(1);
-#endif
 
         timer.Start();
         // evaluate convection terms
@@ -567,7 +475,8 @@ namespace Nektar
         factors[StdRegions::eFactorLambda] = 0.0;
         Timer timer;
         bool IsRoot = (m_comm->GetColumnComm()->GetRank())? false:true;
-
+        static int ncalls = 0;
+        
         for(n = 0; n < m_nConvectiveFields; ++n)
         {
             F[n] = Array<OneD, NekDouble> (phystot);
@@ -582,6 +491,8 @@ namespace Nektar
 		
         // Pressure Forcing = Divergence Velocity; 
         timer.Start();
+
+        ncalls++;
         SetUpPressureForcing(inarray, F, aii_Dt);
         timer.Stop();
         if(m_showTimings&&IsRoot)
@@ -589,7 +500,7 @@ namespace Nektar
             cout << "\t Pressure Forcing : "<< timer.TimePerTest(1) << endl;
 	}
 
-        // Solver Pressure Poisson Equation 
+        // Solver Pressure Poisson Equation
         timer.Start();
         m_pressure->HelmSolve(F[0], m_pressure->UpdateCoeffs(), NullFlagList, factors);
         timer.Stop();
@@ -618,7 +529,7 @@ namespace Nektar
         timer.Start();
         for(i = 0; i < m_nConvectiveFields; ++i)
         {
-            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);            
+            m_fields[i]->HelmSolve(F[i], m_fields[i]->UpdateCoeffs(), NullFlagList, factors);    
         }
         timer.Stop();
         if(m_showTimings&&IsRoot)
@@ -713,12 +624,14 @@ namespace Nektar
                                   accelerationTerm,    1);
             }
         }
-        
+      
+#if 1
         // Adding acceleration term to HOPBCs
         Vmath::Svtvp(cnt, -1.0/m_timestep,
                           accelerationTerm,  1,
                           m_pressureHBCs[0], 1,
                           m_pressureHBCs[0], 1);
+#endif
 
         // Extrapolate to n+1
         Vmath::Smul(cnt, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
@@ -868,15 +781,13 @@ namespace Nektar
                     boundary = m_pressureBCtoTraceID[cnt];
                     
                     // Get edge values and put into Uy, Vx
-                    elmt->GetEdgePhysVals(boundary,Pbc,Qy,Uy);
-                    elmt->GetEdgePhysVals(boundary,Pbc,Qx,Vx);
+                    elmt->GetEdgePhysVals(boundary,Pbc,Qy,Uy);                    elmt->GetEdgePhysVals(boundary,Pbc,Qx,Vx);
                     
                     // calcuate (phi, dp/dn = [N-kinvis curl x curl v].n) 
                     Pvals = PBndExp[n]->UpdateCoeffs()+PBndExp[n]->GetCoeff_Offset(i);
                     Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals); 
                 }
             }
-
             // setting if just standard BC not High order
             else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
             {
@@ -1259,7 +1170,7 @@ namespace Nektar
                     VBndExp[n]->GetExp(i)->BwdTrans(VBndExp[n]->GetCoeffs() + VBndExp[n]->GetCoeff_Offset(i),vbc);
                     
                     
-                        // Get edge values and put into Nu,Nv
+                    // Get edge values and put into Nu,Nv
                     elmt->GetEdgePhysVals(boundary,Pbc,Nu,N1);
                     elmt->GetEdgePhysVals(boundary,Pbc,Nv,N2);
                     
@@ -1350,17 +1261,20 @@ namespace Nektar
                     boundary = m_pressureBCtoTraceID[cnt];
                     
                     // Get velocity bc
-                    UBndExp[n]->GetExp(i)->BwdTrans(UBndExp[n]->GetCoeffs() + UBndExp[n]->GetCoeff_Offset(i),ubc);
-                    VBndExp[n]->GetExp(i)->BwdTrans(VBndExp[n]->GetCoeffs() + VBndExp[n]->GetCoeff_Offset(i),vbc);
-                    WBndExp[n]->GetExp(i)->BwdTrans(WBndExp[n]->GetCoeffs() + WBndExp[n]->GetCoeff_Offset(i),wbc);
+                    UBndExp[n]->GetExp(i)->BwdTrans(UBndExp[n]->GetCoeffs() + 
+                                                    UBndExp[n]->GetCoeff_Offset(i),ubc);
+                    VBndExp[n]->GetExp(i)->BwdTrans(VBndExp[n]->GetCoeffs() + 
+                                                    VBndExp[n]->GetCoeff_Offset(i),vbc);
+                    WBndExp[n]->GetExp(i)->BwdTrans(WBndExp[n]->GetCoeffs() + 
+                                                    WBndExp[n]->GetCoeff_Offset(i),wbc);
                     
-                    // Get edge values and put into Nu,Nv
+                    // Get edge values and put into N1,N2,N3
                     elmt->GetFacePhysVals(boundary,Pbc,Nu,N1);
                     elmt->GetFacePhysVals(boundary,Pbc,Nv,N2);
                     elmt->GetFacePhysVals(boundary,Pbc,Nw,N3);
                     
                     
-                    // Take different as Forward Euler but N1,N2
+                    // Take different as Forward Euler but N1,N2,N3
                     // actually contain the integration of the
                     // previous steps from the time integration
                     // scheme.
@@ -1404,7 +1318,6 @@ namespace Nektar
         Array<OneD, NekDouble> wk = Array<OneD, NekDouble>(physTot);
         int nvel = m_velocity.num_elements();
         
-#if 1
         Vmath::Zero(physTot,Forcing[0],1);
         
         for(i = 0; i < nvel; ++i)
@@ -1412,22 +1325,6 @@ namespace Nektar
             m_fields[i]->PhysDeriv(MultiRegions::DirCartesianMap[i],fields[i], wk);
             Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
         }
-#else
-        if(nvel == 2)
-        {
-            m_fields[0]->PhysDeriv(fields[0],Forcing[0],NullNekDouble1DArray);
-            m_fields[1]->PhysDeriv(fields[1],NullNekDouble1DArray,wk);
-            Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
-        }
-        else
-        {
-            m_fields[0]->PhysDeriv(fields[0],Forcing[0],NullNekDouble1DArray,NullNekDouble1DArray);
-            m_fields[1]->PhysDeriv(fields[1],NullNekDouble1DArray,wk,NullNekDouble1DArray);
-            Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
-            m_fields[2]->PhysDeriv(fields[2],NullNekDouble1DArray,NullNekDouble1DArray,wk);
-            Vmath::Vadd(physTot,wk,1,Forcing[0],1,Forcing[0],1);
-        }
-#endif  
         Vmath::Smul(physTot,1.0/aii_Dt,Forcing[0],1,Forcing[0],1);        
     }
     

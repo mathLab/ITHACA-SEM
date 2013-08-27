@@ -268,6 +268,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble>& inarray,
                       Array<OneD,       NekDouble>& outarray);
 
+            STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(Array<OneD, NekDouble> &array, const StdMatrixKey &mkey);
         private:
             //---------------------------------------
             // Private helper functions

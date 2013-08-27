@@ -140,18 +140,56 @@ namespace Nektar
         bool TetGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
         {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+
+        }
+
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry and return local caretsian coordinates
+         */
+        bool TetGeom::v_ContainsPoint(const Array<OneD, const NekDouble> &gloCoord, 
+                                      Array<OneD, NekDouble> &locCoord,
+                                      NekDouble tol)
+        {
             // Validation checks
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
+
+            // find min, max point and check if within twice this
+            // distance other false this is advisable since
+            // GetLocCoord is expensive for non regular elements.
+            if(GetGtype() !=  eRegular)
+            {
+                int i;
+                Array<OneD, NekDouble> pts; 
+                NekDouble mincoord, maxcoord,diff;
+                
+                v_FillGeom();
+                
+                for(i = 0; i < 3; ++i)
+                {
+                    pts = m_xmap[i]->GetPhys();
+                    mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
+                    
+                    diff = maxcoord - mincoord; 
+                    
+                    if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
+                    {
+                        return false;
+                    }
+                }
+            }
             
             // Convert to the local (eta) coordinates.
-            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
             v_GetLocCoords(gloCoord, locCoord);
             
-            // Check local coordinate is within [-1,1]^3 bounds.
+            // Check local coordinate is within cartesian bounds.
             if (locCoord[0] >= -(1+tol) && locCoord[1] >= -(1+tol) &&
                 locCoord[2] >= -(1+tol)                            &&
-                locCoord[0] + locCoord[1] + locCoord[2] <= -(1+tol))
+                locCoord[0] + locCoord[1] + locCoord[2] <= -1+tol)
             {
                 return true;
             }
@@ -159,6 +197,8 @@ namespace Nektar
             return false;
         }
 
+
+        /// Get Local cartesian points 
         void TetGeom::v_GetLocCoords(
             const Array<OneD, const NekDouble>& coords,
                   Array<OneD,       NekDouble>& Lcoords)
@@ -293,27 +333,35 @@ namespace Nektar
             SegGeomSharedPtr edge;
 
             // First set up the 3 bottom edges
+
+            if(m_faces[0]->GetEid(0) != m_faces[1]->GetEid(0))
+            {
+                std::ostringstream errstrm;
+                errstrm << "Local edge 0 (eid=" << m_faces[0]->GetEid(0);
+                errstrm  << ") on face " <<  m_faces[0]->GetFid(); 
+                errstrm << " must be the same as local edge 0 (eid="<<m_faces[1]->GetEid(0);
+                errstrm << ") on face " <<   m_faces[1]->GetFid(); 
+                ASSERTL0(false, errstrm.str());
+            }
+
             int faceConnected;
             for(faceConnected = 1; faceConnected < 4 ; faceConnected++)
             {
                 check = 0;
                 for(i = 0; i < 3; i++)
                 {
-                    for(j = 0; j < 3; j++)
+                    if( (m_faces[0])->GetEid(i) == (m_faces[faceConnected])->GetEid(0) )
                     {
-                        if( (m_faces[0])->GetEid(i) == (m_faces[faceConnected])->GetEid(j) )
-                        {
-                            edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
-                            m_edges.push_back(edge);
-                            check++;
-                        }
+                        edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
+                        m_edges.push_back(edge);
+                        check++;
                     }
                 }
 
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
-                    errstrm << "Connected faces do not share an edge. Faces ";
+                    errstrm << "Face 0 does not share an edge with first edge of adjacent face. Faces ";
                     errstrm << (m_faces[0])->GetFid() << ", " << (m_faces[faceConnected])->GetFid();
                     ASSERTL0(false, errstrm.str());
                 }
@@ -325,6 +373,7 @@ namespace Nektar
                     ASSERTL0(false, errstrm.str());
                 }
             }
+
 
             // Then, set up the 3 vertical edges
             check = 0;

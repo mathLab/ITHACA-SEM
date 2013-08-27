@@ -247,16 +247,6 @@ namespace Nektar
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey); 
             
-	    LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray,
-                const StdRegions::StdMatrixKey &mkey);
-            
-	    LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray,
-                const StdRegions::StdMatrixKey &mkey);
-
 
             //---------------------------------------
             // Matrix creation functions
@@ -292,7 +282,7 @@ namespace Nektar
 
             HexExp();
 
-            LOCAL_REGIONS_EXPORT void LaplacianMatrixOp_MatFree_Kernel(
+            virtual void v_LaplacianMatrixOp_MatFree_Kernel(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       Array<OneD,       NekDouble> &wsp);

@@ -1717,6 +1717,14 @@ namespace Nektar
             LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
         }
         
+        void StdExpansion::v_LaplacianMatrixOp_MatFree_Kernel(
+                            const Array<OneD, const NekDouble> &inarray,
+                                  Array<OneD,       NekDouble> &outarray,
+                                  Array<OneD,       NekDouble> &wsp)
+        {
+            ASSERTL0(false, "Not implemented.");
+        }
+
         void StdExpansion::v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                        Array<OneD,NekDouble> &outarray,
                                                        const StdMatrixKey &mkey)

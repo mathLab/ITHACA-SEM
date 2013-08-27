@@ -1584,6 +1584,14 @@ namespace Nektar
                 v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
+            STD_REGIONS_EXPORT void LaplacianMatrixOp_MatFree_Kernel(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      Array<OneD,       NekDouble> &wsp)
+            {
+                v_LaplacianMatrixOp_MatFree_Kernel(inarray, outarray, wsp);
+            }
+
             STD_REGIONS_EXPORT void LaplacianMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                              Array<OneD,NekDouble> &outarray,
                                                              const StdMatrixKey &mkey);
@@ -1898,6 +1906,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey);
+
+            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree_Kernel(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                      Array<OneD,       NekDouble> &wsp);
 
             STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,

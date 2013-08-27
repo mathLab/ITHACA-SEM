@@ -1143,142 +1143,6 @@ namespace Nektar
         }
 
 
-        /**
-	 * \brief Evaluates the Helmholtz operator using a matrix-free approach.
-	 *
-         * To construct the Helmholtz operator in a physical tetrahedron
-         * requires coordinate transforms from both the collapsed coordinate
-         * system to the standard region and from the standard region to the
-         * local region. This double application of the chain rule requires the
-         * calculation of two sets of geometric factors:
-         * @f[ h_{ij} = \frac{\partial \eta_i}{\partial \xi_j} @f]
-         * and
-         * @f[ g_{ij} = \frac{\partial \xi_i}{\partial x_j} @f]
-         *
-         * From the definition of the collapsed coordinates, the @f$h_{ij}@f$
-         * terms are (Sherwin & Karniadakis, p152)
-         * @f[
-         *      \mathbf{H} = \left[\begin{array}{ccc}
-         *          \frac{4}{(1-\eta_2)(1-\eta_3)} &
-         *          \frac{2(1+\eta_1)}{(1-\eta_2)(1-\eta_3)} &
-         *          \frac{2(1+\eta_1)}{(1-\eta_2)(1-\eta_3)} \\
-         *          0 &
-         *          \frac{2}{1-eta_3} &
-         *          \frac{1+\eta_2}{1-\eta_3} \\
-         *          0 &
-         *          0 &
-         *          1
-         *      \end{array}\right]
-         * @f]
-         * This maps from the collapsed coordinate system to the standard
-         * tetrahedral region. The mapping to the local region is then given
-         * by the @f$g_{ij}@f$ computed in the GeomFactors3D class. The
-         * cumulative factors for mapping the collapsed coordinate system to
-         * the physical region are therefore given by
-         * @f$\mathbf{F} = \mathbf{GH^{\top}}@f$, i.e.
-         * @f[
-         *      f_{ij} = \frac{\partial \eta_i}{\partial x_j}
-         *              = \sum_k g_{ik} h_{kj}
-         * @f]
-         *
-         * Finally, the evaluation of the Helmholtz matrix operator requires
-         * the summation of these factors as follows. For the case of deformed
-         * elements, these coefficients are vectors, whereas for regular
-         * elements they are just scalars.
-         * @f[
-         *      \begin{array}{l}
-         *      p_0 = \sum_k f_{1k}^2 \\
-         *      p_1 = \sum_k f_{2k}^2 \\
-         *      p_2 = \sum_k f_{3k}^2 \\
-         *      p_3 = \sum_k f_{1k}f_{2k} \\
-         *      p_4 = \sum_k f_{1k}f_{3k} \\
-         *      p_5 = \sum_k f_{2k}f_{3k}
-         *      \end{array}
-         * @f]
-         * to give the Helmholtz operator:
-         * @f{align}
-         *      \mathbf{L^e\hat{u}}
-         *          = \mathbf{B^{\top}D_{\eta_1}^{\top}Wp_0D_{\eta_1}B\hat{u}}
-         *          + \mathbf{B^{\top}D_{\eta_2}^{\top}Wp_1D_{\eta_2}B\hat{u}}
-         *          + \mathbf{B^{\top}D_{\eta_3}^{\top}Wp_2D_{\eta_3}B\hat{u}}\\
-         *          + \mathbf{B^{\top}D_{\eta_1}^{\top}Wp_3D_{\eta_2}B\hat{u}}
-         *          + \mathbf{B^{\top}D_{\eta_1}^{\top}Wp_4D_{\eta_3}B\hat{u}}
-         *          + \mathbf{B^{\top}D_{\eta_2}^{\top}Wp_5D_{\eta_3}B\hat{u}}
-         * @f}
-         * Therefore, we construct the operator as follows:
-         * -# Apply the mass matrix for the @f$\lambda@f$ term
-         *    @f$ \mathbf{B^{\top}WB\hat{u}} @f$.
-         *    and compute the derivatives @f$ \mathbf{D_{\xi_i}B} @f$.
-         * -# Compute the non-trivial @f$ \mathbf{H} @f$ matrix terms.
-         * -# Compute the intermediate factors @f$ \mathbf{G} @f$ and
-         *    @f$ f_{ij} @f$ and then compute the combined terms @f$ p_i @f$.
-         * -# Apply quadrature weights and inner product with respect to the
-         *    derivative bases.
-         * -# Combine to produce the complete operator.
-         */
-        void TetExp::v_HelmholtzMatrixOp_MatFree(
-                  const Array<OneD, const NekDouble> &inarray,
-                        Array<OneD,NekDouble> &outarray,
-                  const StdRegions::StdMatrixKey &mkey)
-        {
-            if(mkey.GetNVarCoeff() == 0)
-            {
-                int nquad0  = m_base[0]->GetNumPoints();
-                int nquad1  = m_base[1]->GetNumPoints();
-                int nquad2  = m_base[2]->GetNumPoints();
-                int nqtot   = nquad0*nquad1*nquad2;
-                int nmodes0 = m_base[0]->GetNumModes();
-                int nmodes1 = m_base[1]->GetNumModes();
-                int nmodes2 = m_base[2]->GetNumModes();
-                int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
-                                  nquad2*nmodes0*nmodes1*(nmodes1+1)/2+
-                                  nquad2*nquad1*nmodes0);
-                
-                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
-
-                const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
-                const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
-                const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
-                Array<OneD,NekDouble> wsp (wspsize);
-                Array<OneD,NekDouble> wsp0(nqtot);
-                Array<OneD,NekDouble> wsp1(nqtot);
-                
-                if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
-                     m_base[2]->Collocation()))
-                {
-                    // MASS MATRIX OPERATION
-                    // The following is being calculated:
-                    // wsp0     = B   * u_hat = u
-                    // wsp1     = W   * wsp0
-                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat
-                    BwdTrans_SumFacKernel           (base0,base1,base2,inarray,
-                                                     wsp0,wsp,true,true,true);
-                    MultiplyByQuadratureMetric      (wsp0,wsp1);
-                    IProductWRTBase_SumFacKernel    (base0,base1,base2,wsp1,
-                                                     outarray,wsp,true,true,true);
-                    LaplacianMatrixOp_MatFree_Kernel(wsp0,wsp1,wsp);
-                }
-                else
-                {
-                    // specialised implementation for the classical spectral
-                    // element method
-                    MultiplyByQuadratureMetric      (inarray,outarray);
-                    LaplacianMatrixOp_MatFree_Kernel(inarray,wsp1,wsp);
-                }
-
-                // outarray = lambda * outarray + wsp1
-                //          = (lambda * M + L ) * u_hat
-                Vmath::Svtvp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,
-                             &outarray[0],1); 
-            }
-            else
-            {
-                StdExpansion::HelmholtzMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }
-
-        }
-
-
         void TetExp::v_LaplacianMatrixOp(
                   const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,NekDouble> &outarray,
@@ -1296,38 +1160,6 @@ namespace Nektar
         {
             StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,
                                                         mkey);
-        }
-
-        void TetExp::v_LaplacianMatrixOp_MatFree(
-                  const Array<OneD, const NekDouble> &inarray,
-                        Array<OneD,NekDouble> &outarray,
-                  const StdRegions::StdMatrixKey &mkey)
-        {
-            if(mkey.GetNVarCoeff() == 0)
-            {
-                // This implementation is only valid when there are no
-                // coefficients associated to the Laplacian operator
-                int nqtot = GetTotPoints();
-
-                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-                const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
-
-                // Allocate temporary storage
-                Array<OneD,NekDouble> wsp0(7*nqtot);
-                Array<OneD,NekDouble> wsp1(wsp0+nqtot);
-
-                // LAPLACIAN MATRIX OPERATION
-                // wsp0 = u       = B   * u_hat
-                // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
-                // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                BwdTrans_SumFacKernel(base0,base1,base2,inarray,wsp0,wsp1,true,true,true);
-                LaplacianMatrixOp_MatFree_Kernel(wsp0,outarray,wsp1);
-            }
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }
         }
 
 
@@ -1792,7 +1624,7 @@ namespace Nektar
         }
 
 
-        void TetExp::LaplacianMatrixOp_MatFree_Kernel(
+        void TetExp::v_LaplacianMatrixOp_MatFree_Kernel(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
                   Array<OneD,       NekDouble> &wsp)
@@ -1808,7 +1640,6 @@ namespace Nektar
             int nquad1  = m_base[1]->GetNumPoints();
             int nquad2  = m_base[2]->GetNumPoints();
             int nqtot   = nquad0*nquad1*nquad2;
-            int i, j;
 
             ASSERTL1(wsp.num_elements() >= 6*nqtot,
                      "Insufficient workspace size.");
@@ -1872,16 +1703,12 @@ namespace Nektar
             }
 
             int i, j;
-            const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
             const unsigned int nqtot = GetTotPoints();
             const unsigned int dim = 3;
             const MetricType m[3][3] = { {MetricLaplacian00, MetricLaplacian01, MetricLaplacian02},
                                        {MetricLaplacian01, MetricLaplacian11, MetricLaplacian12},
                                        {MetricLaplacian02, MetricLaplacian12, MetricLaplacian22}
             };
-
-            Array<OneD, NekDouble> dEta_dXi[2] = {Array<OneD, NekDouble>(nqtot,1.0),
-                                                  Array<OneD, NekDouble>(nqtot,1.0)};
 
             for (unsigned int i = 0; i < dim; ++i)
             {

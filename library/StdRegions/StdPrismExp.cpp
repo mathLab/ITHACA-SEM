@@ -516,7 +516,7 @@ namespace Nektar
         }
 
 
-        void StdPrismExp::BwdTrans_SumFacKernel(
+        void StdPrismExp::v_BwdTrans_SumFacKernel(
             const Array<OneD, const NekDouble> &base0,
             const Array<OneD, const NekDouble> &base1,
             const Array<OneD, const NekDouble> &base2,
@@ -685,7 +685,7 @@ namespace Nektar
                                          true,true,true);
         }
         
-        void StdPrismExp::IProductWRTBase_SumFacKernel(
+        void StdPrismExp::v_IProductWRTBase_SumFacKernel(
             const Array<OneD, const NekDouble>& base0,
             const Array<OneD, const NekDouble>& base1,
             const Array<OneD, const NekDouble>& base2,

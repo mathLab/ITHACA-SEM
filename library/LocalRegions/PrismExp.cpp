@@ -1300,48 +1300,6 @@ namespace Nektar
             StdExpansion::LaplacianMatrixOp_MatFree(k1,k2,inarray,outarray,mkey);
         }
 
-        void PrismExp::v_LaplacianMatrixOp_MatFree(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            const StdRegions::StdMatrixKey     &mkey)
-        {
-            if(mkey.GetNVarCoeff() == 0)
-            {
-                // This implementation is only valid when there are no
-                // coefficients associated to the Laplacian operator
-//                if(m_metricinfo->IsUsingLaplMetrics())
-//                {
-//                    ASSERTL0(false,"Finish implementing HexExp for Lap metrics");
-//                    // Get this from HexExp
-//                }
-//                else
-//                {
-                    int nquad0  = m_base[0]->GetNumPoints();
-                    int nquad1  = m_base[1]->GetNumPoints();
-                    int nquad2  = m_base[2]->GetNumPoints();
-                    int nmodes0 = m_base[0]->GetNumModes ();
-                    int nmodes1 = m_base[1]->GetNumModes ();
-                    int nqtot   = nquad0*nquad1*nquad2;
-                    
-                    const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
-                    const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
-                    const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
-
-                    Array<OneD,NekDouble> wsp (nquad2*nmodes0*(nquad1+nmodes1));
-                    Array<OneD,NekDouble> wsp1(nqtot);
-                    
-                    // Backwards transform to obtain u = B * u_hat.
-                    BwdTrans_SumFacKernel   (base0,base1,base2,inarray,wsp1,wsp,true,true,true);
-                    LaplacianMatrixOp_Kernel(wsp1, outarray, wsp);
-//                }
-            }
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(
-                    inarray,outarray,mkey);
-            }
-        }
-
         void PrismExp::v_HelmholtzMatrixOp(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
@@ -1372,52 +1330,6 @@ namespace Nektar
             }
         }
         
-        void PrismExp::v_HelmholtzMatrixOp_MatFree(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            const StdRegions::StdMatrixKey     &mkey)
-        {
-//            if(m_metricinfo->IsUsingLaplMetrics())
-//            {
-//                ASSERTL0(false,"Finish implementing PrismExp Helmholtz for Lapl Metrics");
-//            }
-//            else
-//            {
-                int nquad0  = m_base[0]->GetNumPoints();
-                int nquad1  = m_base[1]->GetNumPoints();
-                int nquad2  = m_base[2]->GetNumPoints();
-                int nmodes0 = m_base[0]->GetNumModes ();
-                int nmodes1 = m_base[1]->GetNumModes ();
-                int nqtot   = nquad0*nquad1*nquad2;
-                
-                const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
-                const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
-                const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
-                
-                Array<OneD,NekDouble> wsp (nquad2*nmodes0*(nquad1+nmodes1));
-                Array<OneD,NekDouble> wsp0(nqtot);
-                Array<OneD,NekDouble> wsp1(nqtot);
-
-                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
-                
-                // MASS MATRIX OPERATION
-                // The following is being calculated:
-                // wsp0     = B   * u_hat = u
-                // wsp1     = W   * wsp0
-                // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat
-                BwdTrans_SumFacKernel       (base0,base1,base2,inarray,
-                                             wsp0,wsp,true,true,true);
-                MultiplyByQuadratureMetric  (wsp0,wsp1);
-                IProductWRTBase_SumFacKernel(base0,base1,base2,wsp1,
-                                             outarray,wsp,true,true,true);
-                LaplacianMatrixOp_Kernel    (wsp0,wsp1,wsp);
-                
-                // outarray = lambda * outarray + wsp1
-                //          = (lambda * M + L ) * u_hat
-                Vmath::Svtvp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,
-                             &outarray[0],1); 
-//           }
-        }    
         
         //---------------------------------------
         // Matrix creation functions
@@ -1898,7 +1810,7 @@ namespace Nektar
          * 
          * @see %TetExp::v_HelmholtzMatrixOp_MatFree
          */
-        void PrismExp::LaplacianMatrixOp_Kernel(
+        void PrismExp::v_LaplacianMatrixOp_MatFree_Kernel(
             const Array<OneD, const NekDouble> &inarray,
                   Array<OneD,       NekDouble> &outarray,
                   Array<OneD,       NekDouble> &wsp)

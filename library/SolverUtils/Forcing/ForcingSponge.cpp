@@ -53,15 +53,11 @@ namespace SolverUtils
 
     void ForcingSponge::v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+            const unsigned int& pNumForcingFields,
             const TiXmlElement* pForce)
     {
-        std::string m_SolverInfo = m_session->GetSolverInfo("SolverType");
-        int nvariables = m_session->GetVariables().size();
+        m_NumVariable = pNumForcingFields;
         int npts       = pFields[0]->GetTotPoints();
-
-        m_NumVariable = (m_SolverInfo == "CoupledLinearisedNS"
-                            ? nvariables
-                            : nvariables - 1);
 
         const TiXmlElement* funcNameElmt;
         funcNameElmt = pForce->FirstChildElement("SPONGECOEFF");

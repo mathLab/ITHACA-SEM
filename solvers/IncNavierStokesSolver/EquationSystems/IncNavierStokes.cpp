@@ -177,7 +177,8 @@ namespace Nektar
         }
         
         // Forcing terms
-        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields);
+        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
+                                               v_GetForceDimension());
 
         // check to see if any Robin boundary conditions and if so set
         // up m_field to boundary condition maps;
@@ -1160,6 +1161,10 @@ namespace Nektar
         return maxV;
     }
 
+    int IncNavierStokes::v_GetForceDimension()
+    {
+        return m_session->GetVariables().size();
+    }
 
 
 

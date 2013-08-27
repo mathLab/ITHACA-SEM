@@ -386,7 +386,7 @@ namespace Nektar
                 if(init)
                 {
                     m_solverRoll->DoInitialise();
-                    m_vwiForcingObj = boost::dynamic_pointer_cast<SolverUtils::ForcingProgrammatic>(GetForcingFactory().CreateInstance("Programmatic", m_sessionRoll, m_solverRoll->UpdateFields(), 0));
+                    m_vwiForcingObj = boost::dynamic_pointer_cast<SolverUtils::ForcingProgrammatic>(GetForcingFactory().CreateInstance("Programmatic", m_sessionRoll, m_solverRoll->UpdateFields(), m_solverRoll->UpdateFields().num_elements() - 1, 0));
 
                     std::vector<std::string> vFieldNames = m_sessionRoll->GetVariables();
                     vFieldNames.erase(vFieldNames.end()-1);

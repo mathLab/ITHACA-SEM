@@ -57,6 +57,7 @@ namespace SolverUtils
     typedef LibUtilities::NekFactory<std::string, Forcing,
             const LibUtilities::SessionReaderSharedPtr&,
             const Array<OneD, MultiRegions::ExpListSharedPtr>&,
+            const unsigned int&,
             const TiXmlElement*> ForcingFactory;
 
     /// Declaration of the forcing factory singleton
@@ -72,6 +73,7 @@ namespace SolverUtils
             /// Initialise the forcing object
             SOLVER_UTILS_EXPORT void InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields,
+                const unsigned int& pNumForcingFields,
                 const TiXmlElement* pForce);
 
             /// Apply the forcing
@@ -82,7 +84,8 @@ namespace SolverUtils
 
             static std::vector<ForcingSharedPtr> Load(
                         const LibUtilities::SessionReaderSharedPtr& pSession,
-                        const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields);
+                        const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                        const unsigned int& pNumForcingFields = 0);
 
         protected:
             /// Session reader
@@ -97,6 +100,7 @@ namespace SolverUtils
 
             virtual void v_InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields,
+                const unsigned int& pNumForcingFields,
                 const TiXmlElement* pForce) = 0;
 
             virtual void v_Apply(

@@ -54,20 +54,11 @@ namespace SolverUtils
 
     void ForcingBody::v_InitObject(
             const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+            const unsigned int& pNumForcingFields,
             const TiXmlElement* pForce)
     {
-        std::string m_SolverInfo = m_session->GetSolverInfo("SolverType");
-        int nvariables = m_session->GetVariables().size();
+        m_NumVariable = pNumForcingFields;
         int nq         = pFields[0]->GetTotPoints();
-
-        if (m_SolverInfo == "VelocityCorrectionScheme")
-        {
-            m_NumVariable = nvariables - 1; // e.g. (u v w p) for 3D case
-        }
-        if (m_SolverInfo == "CoupledLinearisedNS")
-        {
-            m_NumVariable = nvariables; // e.g. (u v w)  for 3D case
-        }
 
         const TiXmlElement* funcNameElmt = pForce->FirstChildElement("BODYFORCE");
         ASSERTL0(funcNameElmt, "Requires BODYFORCE tag specifying function "

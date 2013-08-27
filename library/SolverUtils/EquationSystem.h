@@ -551,7 +551,6 @@ namespace Nektar
         private:
             
             SOLVER_UTILS_EXPORT virtual Array<OneD, bool> v_GetSystemSingularChecks();
-            SOLVER_UTILS_EXPORT virtual int v_GetForceDimension();
             SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
                 const int i, Array<OneD,
                 Array<OneD, NekDouble> >&physfield,

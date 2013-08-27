@@ -55,9 +55,10 @@ namespace Nektar
 
         void Forcing::InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                const unsigned int& pNumForcingFields,
                 const TiXmlElement* pForce)
         {
-            v_InitObject(pFields, pForce);
+            v_InitObject(pFields, pNumForcingFields, pForce);
         }
 
 
@@ -80,7 +81,8 @@ namespace Nektar
          */
         vector<ForcingSharedPtr> Forcing::Load(
                             const LibUtilities::SessionReaderSharedPtr& pSession,
-                            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields)
+                            const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                            const unsigned int& pNumForcingFields)
         {
             vector<ForcingSharedPtr> vForceList;
 
@@ -92,6 +94,11 @@ namespace Nektar
             TiXmlElement* vForcing = pSession->GetElement("Nektar/Forcing");
             if (vForcing)
             {
+                unsigned int vNumForcingFields = pNumForcingFields;
+                if (!pNumForcingFields)
+                {
+                    vNumForcingFields = pFields.num_elements();
+                }
 
                 TiXmlElement* vForce = vForcing->FirstChildElement("FORCE");
                 while (vForce)
@@ -99,7 +106,8 @@ namespace Nektar
                     string vType = vForce->Attribute("TYPE");
 
                     vForceList.push_back(GetForcingFactory().CreateInstance(
-                                            vType, pSession, pFields, vForce));
+                                            vType, pSession, pFields,
+                                            vNumForcingFields, vForce));
                     vForce = vForce->NextSiblingElement("FORCE");
                 }
             }

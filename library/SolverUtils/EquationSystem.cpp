@@ -2095,11 +2095,6 @@ namespace Nektar
             return Array<OneD, bool>(m_session->GetVariables().size(), false);
         }
 
-        int EquationSystem::v_GetForceDimension()
-        {
-            return 0;
-        }
-
         void EquationSystem::v_GetFluxVector(
             const int i, Array<OneD,
             Array<OneD, NekDouble> > &physfield,

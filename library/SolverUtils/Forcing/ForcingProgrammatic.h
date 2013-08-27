@@ -64,11 +64,12 @@ namespace SolverUtils
             SOLVER_UTILS_EXPORT static ForcingSharedPtr create(
                     const LibUtilities::SessionReaderSharedPtr& pSession,
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                    const unsigned int& pNumForcingFields,
                     const TiXmlElement* pForce)
             {
                 ForcingSharedPtr p = MemoryManager<ForcingProgrammatic>::
                                                 AllocateSharedPtr(pSession);
-                p->InitObject(pFields, pForce);
+                p->InitObject(pFields, pNumForcingFields, pForce);
                 return p;
             }
 
@@ -80,6 +81,7 @@ namespace SolverUtils
         protected:
             virtual void v_InitObject(
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
+                    const unsigned int& pNumForcingFields,
                     const TiXmlElement* pForce);
 
             virtual void v_Apply(

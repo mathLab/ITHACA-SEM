@@ -331,8 +331,8 @@ namespace Nektar
         UnsteadySystem::v_DoInitialise();
 
         // Set up Field Meta Data for output files
-        m_fieldMetaDataMap["Kinvis"] = m_kinvis;
-        m_fieldMetaDataMap["TimeStep"] = m_timestep;
+        m_fieldMetaDataMap["Kinvis"] = boost::lexical_cast<std::string>(m_kinvis);
+        m_fieldMetaDataMap["TimeStep"] = boost::lexical_cast<std::string>(m_timestep);
 
         for(int i = 0; i < m_nConvectiveFields; ++i)
         {
@@ -789,7 +789,6 @@ namespace Nektar
                     Pbc->NormVectorIProductWRTBase(Uy,Vx,Pvals); 
                 }
             }
-
             // setting if just standard BC not High order
             else if(type == SpatialDomains::eNoUserDefined || type == SpatialDomains::eTimeDependent) 
             {

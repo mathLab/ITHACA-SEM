@@ -267,9 +267,9 @@
 
         <PARAMETERS>
             <P> TimeStep       = 0.04             </P>
-            <P> NumSteps       = 500             </P>
+            <P> NumSteps       = 100             </P>
             <P> FinTime        = TimeStep*NumSteps </P>
-            <P> IO_CheckSteps  = 100               </P>
+            <P> IO_CheckSteps  = 1000               </P>
             <P> IO_InfoSteps   = 100              </P>
             <P> Gravity        = 1.0               </P>
         </PARAMETERS>

@@ -2044,7 +2044,7 @@ namespace Nektar
         void StdPrismExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                                const StdMatrixKey &mkey)
         {
-            std::cout<< " called stdPrismExp::v_SVVLaplacianFilter "<< std::endl; //newline JEL : testing if my test case is calling this function
+            //std::cout<< " called stdPrismExp::v_SVVLaplacianFilter "<< std::endl; //newline JEL : testing if my test case is calling this function
             // Generate an orthonogal expansion
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();

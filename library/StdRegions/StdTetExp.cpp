@@ -2170,7 +2170,7 @@ namespace Nektar
             //           cost.
             //        4) add SVVDiffCoef to both models!!
             
-            std::cout<< " called stdTetExp::v_SVVLaplacianFilter "<< std::endl; //newline JEL : testing if my test case is calling this function
+            //std::cout<< " called stdTetExp::v_SVVLaplacianFilter "<< std::endl; //newline JEL : testing if my test case is calling this function
             int qa = m_base[0]->GetNumPoints();
             int qb = m_base[1]->GetNumPoints();
             int qc = m_base[2]->GetNumPoints();
@@ -2210,7 +2210,7 @@ namespace Nektar
             NekDouble gamma2 = 2.0;//for the Model 2 Tranfer Function
             int nmodes = min(min(nmodes_a,nmodes_b),nmodes_c);
             NekDouble cutoff = min(min(cutoff_a,cutoff_b),cutoff_c);
-                        NekDouble epsilon = 1;
+            NekDouble epsilon = 1;
             
             // project onto physical space.
             OrthoExp.FwdTrans(array,orthocoeffs);
@@ -2218,15 +2218,15 @@ namespace Nektar
             //------"New" Version August 22nd '13--------------------
             for(i = 0; i < nmodes_a; ++i)
             {
-                for(j = 0; j < nmodes_b; ++j)
+                for(j = 0; j < nmodes_b-i; ++j)
                 {
-                    for(k = 0; k < nmodes_c; ++k)
+                    for(k = 0; k < nmodes_c-i-j; ++k)
                     {
                         if(i + j + k >= cutoff)
-                            {
-                                orthocoeffs[cnt] *= ((1.0+SvvDiffCoeff)*exp(-(i+j+k-nmodes)*(i+j+k-nmodes)/((NekDouble)((i+j+k-cutoff+epsilon)*(i+j+k-cutoff+epsilon)))));
-                            }
-                            cnt++;
+                        {
+                            orthocoeffs[cnt] *= ((1.0+SvvDiffCoeff)*exp(-(i+j+k-nmodes)*(i+j+k-nmodes)/((NekDouble)((i+j+k-cutoff+epsilon)*(i+j+k-cutoff+epsilon)))));
+                        }
+                        cnt++;
                     }
                 }
             }   

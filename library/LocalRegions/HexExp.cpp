@@ -1868,27 +1868,13 @@ namespace Nektar
                         DNekMatSharedPtr lap = MemoryManager<DNekMat>
                                                 ::AllocateSharedPtr(rows,cols);
 
-                        (*lap) = gmat[0][0]*lap00 + gmat[4][0]*lap11 + gmat[8][0]*lap22
+                        (*lap)  = gmat[0][0]*lap00
+                                + gmat[4][0]*lap11
+                                + gmat[8][0]*lap22
                                 + gmat[3][0]*(lap01 + Transpose(lap01))
                                 + gmat[6][0]*(lap02 + Transpose(lap02))
                                 + gmat[7][0]*(lap12 + Transpose(lap12));
-/*
-                        (*lap) = (gmat[0][0]*gmat[0][0] + gmat[3][0]*gmat[3][0]
-                                        + gmat[6][0]*gmat[6][0])*lap00
-                               + (gmat[1][0]*gmat[1][0] + gmat[4][0]*gmat[4][0]
-                                        + gmat[7][0]*gmat[7][0])*lap11
-                               + (gmat[2][0]*gmat[2][0] + gmat[5][0]*gmat[5][0]
-                                        + gmat[8][0]*gmat[8][0])*lap22
-                               + (gmat[0][0]*gmat[1][0] + gmat[3][0]*gmat[4][0]
-                                        + gmat[6][0]*gmat[7][0])
-                                 *(lap01 + Transpose(lap01))
-                               + (gmat[0][0]*gmat[2][0] + gmat[3][0]*gmat[5][0]
-                                        + gmat[6][0]*gmat[8][0])
-                                 *(lap02 + Transpose(lap02))
-                               + (gmat[1][0]*gmat[2][0] + gmat[4][0]*gmat[5][0]
-                                        + gmat[7][0]*gmat[8][0])
-                                 *(lap12 + Transpose(lap12));
-*/
+
                         returnval = MemoryManager<DNekScalMat>
                                                 ::AllocateSharedPtr(jac,lap);
                     }

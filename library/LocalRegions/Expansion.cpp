@@ -136,8 +136,8 @@ namespace Nektar
 
             MultiplyByStdQuadratureMetric(m_metrics[MetricQuadrature],
                                                    m_metrics[MetricQuadrature]);
-		}
-		
+        }
+
         DNekMatSharedPtr Expansion::v_BuildTransformationMatrix(
             const DNekScalMatSharedPtr &r_bnd, 
             const StdRegions::MatrixType matrixType)

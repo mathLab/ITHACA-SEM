@@ -408,7 +408,7 @@ namespace Nektar
                     const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
                     const Array<OneD, const SpatialDomains
                                            ::BoundaryConditionShPtr>  &bndCond,
-                    const StdRegions::StdExpansionVector &locexp,
+                    const LocalRegions::ExpansionVector &locexp,
                     const SpatialDomains::MeshGraphSharedPtr &graph2D,
                     const PeriodicMap &periodicEdges,
                     const bool DeclareCoeffPhysArrays,
@@ -789,7 +789,7 @@ namespace Nektar
 		
 
 	void ExpList1D::SetUpPhysTangents(
-		const StdRegions::StdExpansionVector &locexp)
+		const LocalRegions::ExpansionVector &locexp)
 	{
 	    map<int, int> EdgeGID;
 	    int i,cnt,n,id;
@@ -1032,7 +1032,7 @@ namespace Nektar
 //        }
 
         void ExpList1D::v_SetUpPhysTangents(
-                    const StdRegions::StdExpansionVector &locexp)
+                    const LocalRegions::ExpansionVector &locexp)
         {
             SetUpPhysTangents(locexp);
         }

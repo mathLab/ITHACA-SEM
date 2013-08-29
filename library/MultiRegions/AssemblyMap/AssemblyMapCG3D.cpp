@@ -203,7 +203,7 @@ namespace Nektar
             Array<OneD, int>                    faceInteriorSign;
             PeriodicMap::const_iterator pIt;
 
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
 
             m_signChange = false;
             //m_systemSingular = false;

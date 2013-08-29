@@ -40,7 +40,7 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <LibUtilities/BasicUtils/SessionReader.h>
 #include <MultiRegions/MultiRegions.hpp>
-#include <StdRegions/StdExpansion.h>
+#include <LocalRegions/Expansion.h>
 #include <MultiRegions/GlobalMatrix.h>
 #include <MultiRegions/GlobalMatrixKey.h>
 #include <SpatialDomains/MeshGraph.h>
@@ -555,15 +555,15 @@ namespace Nektar
             }
 
             /// This function returns the vector of elements in the expansion.
-            inline const boost::shared_ptr<StdRegions::StdExpansionVector> GetExp() const;
+            inline const boost::shared_ptr<LocalRegions::ExpansionVector> GetExp() const;
 
             /// This function returns (a shared pointer to) the local elemental
             /// expansion of the \f$n^{\mathrm{th}}\f$ element.
-            inline StdRegions::StdExpansionSharedPtr& GetExp(int n) const;
+            inline LocalRegions::ExpansionSharedPtr& GetExp(int n) const;
 
             /// This function returns (a shared pointer to) the local elemental
             /// expansion containing the arbitrary point given by \a gloCoord.
-            MULTI_REGIONS_EXPORT StdRegions::StdExpansionSharedPtr& GetExp(
+            MULTI_REGIONS_EXPORT LocalRegions::ExpansionSharedPtr& GetExp(
                                                                            const Array<OneD, const NekDouble> &gloCoord);
 
             /// This function returns the index of the local elemental
@@ -908,7 +908,7 @@ namespace Nektar
              * where most of the routines for the derived classes are defined
              * in the #ExpList base class.
              */
-            boost::shared_ptr<StdRegions::StdExpansionVector> m_exp;
+            boost::shared_ptr<LocalRegions::ExpansionVector> m_exp;
 
             /// Offset of elemental data into the array #m_coeffs
             Array<OneD, int>  m_coeff_offset;
@@ -1788,7 +1788,7 @@ namespace Nektar
          * @return  (A shared pointer to) the local expansion of the
          *          \f$n^{\mathrm{th}}\f$ element.
          */
-        inline StdRegions::StdExpansionSharedPtr& ExpList::GetExp(int n) const
+        inline LocalRegions::ExpansionSharedPtr& ExpList::GetExp(int n) const
         {
             return (*m_exp)[n];
         }
@@ -1796,7 +1796,7 @@ namespace Nektar
         /**
          * @return  (A const shared pointer to) the local expansion vector #m_exp
          */
-        inline const boost::shared_ptr<StdRegions::StdExpansionVector> ExpList::GetExp(void) const
+        inline const boost::shared_ptr<LocalRegions::ExpansionVector> ExpList::GetExp(void) const
         {
             return m_exp;
         }

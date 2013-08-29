@@ -1350,8 +1350,8 @@ namespace Nektar
             LocalRegions::ExpansionSharedPtr exp;
             for(cnt = n = 0; n < GetExpSize(); ++n)
             {
-                exp = LocalRegions::Expansion::FromStdExp((*m_exp)[n]);
-                for(i = 0; i < (*m_exp)[n]->GetNverts(); ++i)
+                exp = (*m_exp)[n];
+                for(i = 0; i < exp->GetNverts(); ++i)
                 {
                     id = exp->GetGeom()->GetVid(i);
 

@@ -80,7 +80,7 @@ namespace Nektar
                 const Array<OneD,const ExpListSharedPtr> &bndConstraint,
                 const Array<OneD,const SpatialDomains
                             ::BoundaryConditionShPtr>  &bndCond,
-                const StdRegions::StdExpansionVector &locexp,
+                const LocalRegions::ExpansionVector &locexp,
                 const SpatialDomains::MeshGraphSharedPtr &graph1D,
                 const map<int,int> &periodicVertices,
                 const bool DeclareCoeffPhysArrays = true);

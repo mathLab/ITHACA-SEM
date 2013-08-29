@@ -134,7 +134,7 @@ namespace Nektar
             Array<OneD, unsigned int>   interiorMap;
             PeriodicMap::const_iterator pIt;
 
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
             LibUtilities::CommSharedPtr vCommRow = m_comm->GetRowComm();
 
             m_globalToUniversalMap = Nektar::Array<OneD, int>(m_numGlobalCoeffs, -1);
@@ -145,7 +145,7 @@ namespace Nektar
             // Loop over all the elements in the domain to gather mesh data
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = LocalRegions::Expansion::FromStdExp(locExpVector[i]);
+                locExpansion = locExpVector[i];
                 nVert += locExpansion->GetNverts();
                 nEdge += locExpansion->GetNedges();
                 nFace += locExpansion->GetNfaces();
@@ -176,7 +176,7 @@ namespace Nektar
             // Assemble global to universal mapping for this process
             for(i = 0; i < locExpVector.size(); ++i)
             {
-                locExpansion = LocalRegions::Expansion::FromStdExp(locExpVector[i]);
+                locExpansion = locExpVector[i];
                 nDim = locExpansion->GetShapeDimension();
                 cnt = locExp.GetCoeff_Offset(i);
 
@@ -314,7 +314,7 @@ namespace Nektar
 
             int i, j;
             int nverts = 0;
-            const boost::shared_ptr<StdRegions::StdExpansionVector> exp
+            const boost::shared_ptr<LocalRegions::ExpansionVector> exp
                 = locexp.GetExp();
             int nelmts = exp->size();
 

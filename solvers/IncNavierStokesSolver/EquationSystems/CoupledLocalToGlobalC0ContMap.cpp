@@ -78,7 +78,7 @@ namespace Nektar
         Array<OneD, int>                    edgeInteriorSign;
         int nvel = fields.num_elements();
         
-        const StdRegions::StdExpansionVector &locExpVector = *(fields[0]->GetExp());
+        const LocalRegions::ExpansionVector &locExpVector = *(fields[0]->GetExp());
         int eid, id, diff;
         int nel = fields[0]->GetNumElmts();
 
@@ -741,7 +741,7 @@ namespace Nektar
 
 
 void CoupledLocalToGlobalC0ContMap::FindEdgeIdToAddMeanPressure(Array<OneD, map<int,int> > &ReorderedGraphVertId,
-										 int &nel, const StdRegions::StdExpansionVector &locExpVector,
+										 int &nel, const LocalRegions::ExpansionVector &locExpVector,
 										 int &edgeId, int &vertId, int &firstNonDirGraphVertId, map<int,int> &IsDirEdgeDof,
 										 MultiRegions::BottomUpSubStructuredGraphSharedPtr &bottomUpGraph,
 										 Array<OneD, int> &AddMeanPressureToEdgeId)

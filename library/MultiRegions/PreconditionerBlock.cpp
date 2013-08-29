@@ -117,7 +117,7 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
-            StdRegions::StdExpansionSharedPtr locExpansion;
+            LocalRegions::ExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
             int i, j, k, nel;
@@ -301,8 +301,8 @@ namespace Nektar
                 locExpansion = expList->GetExp(nel);
                 nCoeffs=locExpansion->NumBndryCoeffs();
 
-                nVerts=LocalRegions::Expansion::FromStdExp(locExpansion)->GetGeom()->GetNumVerts();
-                nEdges=LocalRegions::Expansion::FromStdExp(locExpansion)->GetGeom()->GetNumEdges();
+                nVerts=locExpansion->GetGeom()->GetNumVerts();
+                nEdges=locExpansion->GetGeom()->GetNumEdges();
 
                 //Get statically condensed matrix
                 loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);
@@ -472,7 +472,7 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
-            StdRegions::StdExpansionSharedPtr locExpansion;
+            LocalRegions::ExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
             int i, j, k, nel;
@@ -749,9 +749,9 @@ namespace Nektar
                 locExpansion = expList->GetExp(nel);
                 nCoeffs=locExpansion->NumBndryCoeffs();
 
-                nVerts=LocalRegions::Expansion::FromStdExp(locExpansion)->GetGeom()->GetNumVerts();
-                nEdges=LocalRegions::Expansion::FromStdExp(locExpansion)->GetGeom()->GetNumEdges();
-                nFaces=LocalRegions::Expansion::FromStdExp(locExpansion)->GetGeom()->GetNumFaces();
+                nVerts=locExpansion->GetGeom()->GetNumVerts();
+                nEdges=locExpansion->GetGeom()->GetNumEdges();
+                nFaces=locExpansion->GetGeom()->GetNumFaces();
 
                 //Get statically condensed matrix
                 loc_mat = (m_linsys.lock())->GetStaticCondBlock(n);

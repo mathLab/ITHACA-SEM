@@ -167,7 +167,7 @@ namespace Nektar
             StdRegions::Orientation         edgeOrient;
             Array<OneD, unsigned int>           edgeInteriorMap;
             Array<OneD, int>                    edgeInteriorSign;
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
             m_signChange = false;
             m_systemSingular = false;
             Array<OneD, map<int,int> > ReorderedGraphVertId(2);
@@ -567,7 +567,7 @@ namespace Nektar
             StdRegions::StdExpansion2DSharedPtr  locExpansion;
             LocalRegions::SegExpSharedPtr        bndSegExp;
             MultiRegions::ExpList0DSharedPtr     bndVertExp;
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
             map<int,int>::iterator mapIt;
             map<int,int>::const_iterator mapConstIt;
             bool systemSingular = true;

@@ -89,7 +89,7 @@ namespace Nektar
             Array<OneD,unsigned int> vmap;
             LocalRegions::SegExpSharedPtr locSegExp;
 
-            const boost::shared_ptr<StdRegions::StdExpansionVector> exp1D = locExp.GetExp();
+            const boost::shared_ptr<LocalRegions::ExpansionVector> exp1D = locExp.GetExp();
 
             m_numGlobalBndCoeffs  = exp1D->size()+1;
             m_numGlobalCoeffs = m_numGlobalBndCoeffs;
@@ -206,7 +206,7 @@ namespace Nektar
             LocalRegions::TriExpSharedPtr  locTriExp;
             SpatialDomains::Geometry1DSharedPtr SegGeom;
 
-            const boost::shared_ptr<StdRegions::StdExpansionVector> exp2D = locExp.GetExp();
+            const boost::shared_ptr<LocalRegions::ExpansionVector> exp2D = locExp.GetExp();
             int nel        = exp2D->size();
 
             map<int, int> MeshEdgeId;
@@ -649,7 +649,7 @@ namespace Nektar
             SpatialDomains::Geometry2DSharedPtr FaceGeom;
             StdRegions::StdExpansionSharedPtr   locBndExp;
 
-            const boost::shared_ptr<StdRegions::StdExpansionVector> exp3D = 
+            const boost::shared_ptr<LocalRegions::ExpansionVector> exp3D =
                 locExp.GetExp();
             int nel = exp3D->size();
 
@@ -1028,7 +1028,7 @@ namespace Nektar
             int nDim      = 0;
             int i,j,k;
 
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
 
             // Initialise the global to universal maps.
             m_globalToUniversalBndMap = Nektar::Array<OneD, int>(m_numGlobalBndCoeffs, -1);
@@ -1208,7 +1208,7 @@ namespace Nektar
             int i;
             int maxQuad = 0, quad = 0, nDim = 0, eid = 0, offset = 0;
 
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
 
             int nTracePhys = trace->GetTotPoints();
 
@@ -1243,7 +1243,7 @@ namespace Nektar
             {
                 for (int i = 0; i < trace->GetExpSize(); ++i)
                 {
-                    eid = LocalRegions::Expansion::FromStdExp(trace->GetExp(i))->GetGeom()->GetGlobalID();
+                    eid = trace->GetExp(i)->GetGeom()->GetGlobalID();
                     offset = trace->GetPhys_Offset(i);
                     m_traceToUniversalMap[offset] = eid*maxQuad+1;
                 }
@@ -1252,7 +1252,7 @@ namespace Nektar
             {
                 for (int i = 0; i < trace->GetExpSize(); ++i)
                 {
-                    eid    = LocalRegions::Expansion::FromStdExp(trace->GetExp(i))->GetGeom()->GetGlobalID();
+                    eid    = trace->GetExp(i)->GetGeom()->GetGlobalID();
                     offset = trace->GetPhys_Offset(i);
                     quad   = trace->GetExp(i)->GetTotPoints();
 

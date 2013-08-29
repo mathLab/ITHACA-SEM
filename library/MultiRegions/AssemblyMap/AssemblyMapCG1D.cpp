@@ -152,7 +152,7 @@ namespace Nektar
             int graphVertId = 0;
             int globalId;
 
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
 
             LocalRegions::SegExpSharedPtr locSegExp;
 

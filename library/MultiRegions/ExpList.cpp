@@ -87,7 +87,7 @@ namespace Nektar
             m_coeffs(),
             m_phys(),
             m_physState(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
@@ -113,7 +113,7 @@ namespace Nektar
             m_coeffs(),
             m_phys(),
             m_physState(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
@@ -140,7 +140,7 @@ namespace Nektar
             m_coeffs(),
             m_phys(),
             m_physState(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
@@ -1303,15 +1303,13 @@ namespace Nektar
             }
         }
 
-        StdRegions::StdExpansionSharedPtr& ExpList::GetExp(
+        LocalRegions::ExpansionSharedPtr& ExpList::GetExp(
                     const Array<OneD, const NekDouble> &gloCoord)
         {
             Array<OneD, NekDouble> stdCoord(GetCoordim(0),0.0);
             for (int i = 0; i < (*m_exp).size(); ++i)
             {
-                LocalRegions::ExpansionSharedPtr exp =
-                        LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
-                if (exp->GetGeom()->ContainsPoint(gloCoord))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoord))
                 {
                     return (*m_exp)[i];
                 }
@@ -1341,13 +1339,10 @@ namespace Nektar
                                  NekDouble tol)
         {
             static int start = 0;
-            LocalRegions::ExpansionSharedPtr exp;
             // start search at previous element or 0 
             for (int i = start; i < (*m_exp).size(); ++i)
             {
-                exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
-
-                if (exp->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
                 {
                     start = i;
                     return i;
@@ -1356,9 +1351,7 @@ namespace Nektar
 
             for (int i = 0; i < start; ++i)
             {
-                exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
-
-                if (exp->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
                 {
                     start = i;
                     return i;
@@ -1393,9 +1386,7 @@ namespace Nektar
             Array<OneD,Array<OneD, NekDouble> > loctangent;
 
             // Assume whole array is of same coordinate dimension
-            LocalRegions::ExpansionSharedPtr exp =
-                    LocalRegions::Expansion::FromStdExp((*m_exp)[0]);
-            int coordim = exp->GetGeom()->GetCoordim();
+            int coordim = (*m_exp)[0]->GetGeom()->GetCoordim();
 
             ASSERTL0(tangents.num_elements() > 0,
                      "Must have storage for at least one tangent");
@@ -1407,13 +1398,12 @@ namespace Nektar
             for(i = 0; i < m_exp->size(); ++i)
             {
                 // Get the number of points and normals for this expansion.
-                exp        = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
-                e_npoints  = exp->GetTotPoints();
+                e_npoints  = (*m_exp)[i]->GetTotPoints();
                 offset     = m_phys_offset[i];
 
                 for (j = 0; j < tangents.num_elements(); ++j)
                 {
-                    loctangent = exp->GetMetricInfo()->GetTangent(j);
+                    loctangent = (*m_exp)[i]->GetMetricInfo()->GetTangent(j);
                     // Get the physical data offset for this expansion.
 
                     for (k = 0; k < coordim; ++k)
@@ -1441,13 +1431,11 @@ namespace Nektar
             m_session->LoadGeometricInfo("TangentCentreX",coords[0],0.0);
             m_session->LoadGeometricInfo("TangentCentreY",coords[1],0.0);
 
-            LocalRegions::ExpansionSharedPtr exp;
             // Apply geometric info to each expansion.
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
-                exp->GetMetricInfo()->SetTangentOrientation(dir);
-                exp->GetMetricInfo()->SetTangentCircularCentre(coords);
+                (*m_exp)[i]->GetMetricInfo()->SetTangentOrientation(dir);
+                (*m_exp)[i]->GetMetricInfo()->SetTangentCircularCentre(coords);
             }
         }
 
@@ -2191,7 +2179,6 @@ namespace Nektar
 
             for(s = startenum; s <= endenum; ++s)
             {
-                LocalRegions::ExpansionSharedPtr      exp;
                 LibUtilities::ShapeType               shape;
                 std::vector<unsigned int>             elementIDs;
                 std::vector<LibUtilities::BasisType>  basis;
@@ -2204,10 +2191,9 @@ namespace Nektar
 
                 for(int i = 0; i < (*m_exp).size(); ++i)
                 {
-                    exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
-                    if(exp->GetGeom()->GetShapeType() == (LibUtilities::ShapeType) s)
+                    if((*m_exp)[i]->GetGeom()->GetShapeType() == (LibUtilities::ShapeType) s)
                     {
-                        elementIDs.push_back(exp->GetGeom()->GetGlobalID());
+                        elementIDs.push_back((*m_exp)[i]->GetGeom()->GetGlobalID());
                         if(first)
                         {
                             shape = (LibUtilities::ShapeType) s;
@@ -2280,7 +2266,6 @@ namespace Nektar
         
         void ExpList::v_AppendFieldData(LibUtilities::FieldDefinitionsSharedPtr &fielddef, std::vector<NekDouble> &fielddata, Array<OneD, NekDouble> &coeffs)
         {
-            LocalRegions::ExpansionSharedPtr exp;
             int i;
             // Determine mapping from element ids to location in
             // expansion list
@@ -2289,8 +2274,7 @@ namespace Nektar
             map<int, int> ElmtID_to_ExpID;
             for(i = 0; i < (*m_exp).size(); ++i)
             {
-                exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
-                ElmtID_to_ExpID[exp->GetGeom()->GetGlobalID()] = i;
+                ElmtID_to_ExpID[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
 
             for(i = 0; i < fielddef->m_elementIDs.size(); ++i)
@@ -2355,11 +2339,9 @@ namespace Nektar
             // Loop in reverse order so that in case where using a Homogeneous
             // expansion it sets geometry ids to first part of m_exp
             // list. Otherwise will set to second (complex) expansion
-            LocalRegions::ExpansionSharedPtr exp;
             for(i = (*m_exp).size()-1; i >= 0; --i)
             {
-                exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
-                elmtToExpId[exp->GetGeom()->GetGlobalID()] = i;
+                elmtToExpId[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
             
             for (i = 0; i < fielddef->m_elementIDs.size(); ++i)

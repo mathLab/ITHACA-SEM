@@ -1532,11 +1532,9 @@ namespace Nektar
 
             // Populate global ID map (takes global geometry ID to local
             // expansion list ID).
-            LocalRegions::ExpansionSharedPtr exp;
             for (i = 0; i < GetExpSize(); ++i)
             {
-                exp = LocalRegions::Expansion::FromStdExp((*m_exp)[i]);
-                globalIdMap[exp->GetGeom()->GetGlobalID()] = i;
+                globalIdMap[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
             
             // Determine number of boundary condition expansions.

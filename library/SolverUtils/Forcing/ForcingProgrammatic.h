@@ -79,12 +79,12 @@ namespace SolverUtils
             Array<OneD, Array<OneD, NekDouble> >& UpdateForces();
 
         protected:
-            virtual void v_InitObject(
+            SOLVER_UTILS_EXPORT virtual void v_InitObject(
                     const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                     const unsigned int& pNumForcingFields,
                     const TiXmlElement* pForce);
 
-            virtual void v_Apply(
+            SOLVER_UTILS_EXPORT virtual void v_Apply(
                     const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                     const Array<OneD, Array<OneD, NekDouble> > &inarray,
                           Array<OneD, Array<OneD, NekDouble> > &outarray);

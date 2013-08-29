@@ -82,7 +82,7 @@ namespace SolverUtils
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
 
-            static std::vector<ForcingSharedPtr> Load(
+            SOLVER_UTILS_EXPORT static std::vector<ForcingSharedPtr> Load(
                         const LibUtilities::SessionReaderSharedPtr& pSession,
                         const Array<OneD, MultiRegions::ExpListSharedPtr>& pFields,
                         const unsigned int& pNumForcingFields = 0);
@@ -96,14 +96,15 @@ namespace SolverUtils
             int m_NumVariable;
 
             /// Constructor
-            Forcing(const LibUtilities::SessionReaderSharedPtr&);
+            SOLVER_UTILS_EXPORT Forcing(
+                const LibUtilities::SessionReaderSharedPtr&);
 
-            virtual void v_InitObject(
+            SOLVER_UTILS_EXPORT virtual void v_InitObject(
                 const Array<OneD, MultiRegions::ExpListSharedPtr>&       pFields,
                 const unsigned int& pNumForcingFields,
                 const TiXmlElement* pForce) = 0;
 
-            virtual void v_Apply(
+            SOLVER_UTILS_EXPORT virtual void v_Apply(
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray)=0;

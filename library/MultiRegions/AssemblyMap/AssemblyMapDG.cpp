@@ -327,6 +327,7 @@ namespace Nektar
             // Set up integer mapping array and sign change for each
             // degree of freedom + initialise some more data members
             m_staticCondLevel = 0;
+            m_lowestStaticCondLevel = 0;
             m_numPatches = nel;
             m_numLocalBndCoeffsPerPatch =  Array<OneD, unsigned int>(nel);
             m_numLocalIntCoeffsPerPatch =  Array<OneD, unsigned int>(nel);
@@ -735,6 +736,7 @@ namespace Nektar
             // Set up integer mapping array and sign change for each
             // degree of freedom + initialise some more data members
             m_staticCondLevel           = 0;
+            m_lowestStaticCondLevel     = 0;
             m_numPatches                = nel;
             m_numLocalBndCoeffsPerPatch = Array<OneD, unsigned int>(nel);
             m_numLocalIntCoeffsPerPatch = Array<OneD, unsigned int>(nel);

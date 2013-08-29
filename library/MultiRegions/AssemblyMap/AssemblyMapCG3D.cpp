@@ -1327,6 +1327,7 @@ namespace Nektar
              * in all other elements.
              */
             cnt = 0;
+
             // Loop over all the elements in the domain
             for(i = 0; i < locExpVector.size(); ++i)
             {
@@ -1492,6 +1493,33 @@ namespace Nektar
                         nEdgeInteriorCoeffs = bndCondFaceExp->GetEdgeNcoeffs(k)-2;
                         edgeOrient          = LocalRegions::Expansion2D::FromStdExp(bndCondFaceExp)->GetGeom2D()->GetEorient(k);
                         meshEdgeId          = LocalRegions::Expansion2D::FromStdExp(bndCondFaceExp)->GetGeom2D()->GetEid(k);
+
+                        pIt = periodicEdges.find(meshEdgeId);
+
+                        // See if this edge is periodic. If it is, then we map
+                        // all edges to the one with lowest ID, and align all
+                        // coefficients to this edge orientation.
+                        if (pIt != periodicEdges.end())
+                        {
+                            int minId  = pIt->second[0].id;
+                            int minIdL = 0;
+                            for (l = 1; l < pIt->second.size(); ++l)
+                            {
+                                if (pIt->second[l].id < minId)
+                                {
+                                    minId  = min(minId, pIt->second[l].id);
+                                    minIdL = l;
+                                }
+                            }
+
+                            if (pIt->second[minIdL].orient == StdRegions::eBackwards &&
+                                meshEdgeId != min(minId, meshEdgeId))
+                            {
+                                edgeOrient = edgeOrient == StdRegions::eForwards ?
+                                    StdRegions::eBackwards :
+                                    StdRegions::eForwards;
+                            }
+                        }
 
                         bndCondFaceExp->GetEdgeInteriorMap(
                             k,edgeOrient,edgeInteriorMap,edgeInteriorSign);

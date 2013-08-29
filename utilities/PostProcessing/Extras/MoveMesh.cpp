@@ -2849,7 +2849,7 @@ cout<<"NewtonIt result  x="<<x0<<"  y="<<coords[1]<<"   U="<<U<<endl;
         void MapEdgeVertices(MultiRegions::ExpListSharedPtr field, Array<OneD, int> &V1,
                  Array<OneD, int> &V2)
         {
-            const boost::shared_ptr<StdRegions::StdExpansionVector> exp2D = field->GetExp();
+            const boost::shared_ptr<LocalRegions::ExpansionVector> exp2D = field->GetExp();
             int nel        = exp2D->size();
             LocalRegions::QuadExpSharedPtr locQuadExp;
             LocalRegions::TriExpSharedPtr  locTriExp;

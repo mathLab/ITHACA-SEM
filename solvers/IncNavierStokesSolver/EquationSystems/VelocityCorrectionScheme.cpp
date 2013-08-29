@@ -401,31 +401,19 @@ namespace Nektar
             }
         }
 
-        //add the force
-        if(m_session->DefinesFunction("BodyForce"))
+        // apply forcing
+        timer.Start();
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            timer.Start();
-            if(m_fields[0]->GetWaveSpace())
-            {
-                for(int i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_forces[i]->SetWaveSpace(true);					
-                    m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),
-                                          m_forces[i]->UpdatePhys());
-                }
-            }
-            for(int i = 0; i < m_nConvectiveFields; ++i)
-            {
-                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,
-                            outarray[i],1);
-            }
-            timer.Stop();
-            if(m_showTimings&&IsRoot)
-            {
-                cout << "\t Body ForceTime   : "<< timer.TimePerTest(1) << endl;
-            }
+            (*x)->Apply(m_fields, inarray, outarray);
         }
-        
+        timer.Stop();
+        if(m_showTimings&&IsRoot)
+        {
+            cout << "\t Body ForceTime   : "<< timer.TimePerTest(1) << endl;
+        }
+
         if(m_pressureHBCs[0].num_elements() > 0)
         {
             // Set pressure BCs

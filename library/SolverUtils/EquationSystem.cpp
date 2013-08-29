@@ -543,95 +543,6 @@ namespace Nektar
             m_session->LoadParameter("NumQuadPointsError",
                                      m_NumQuadPointsError, 0);
 
-            if (m_session->DefinesFunction("BodyForce"))
-            {
-                m_forces    = Array<OneD, MultiRegions::ExpListSharedPtr>(v_GetForceDimension());
-                int nq      = m_fields[0]->GetNpoints();
-                
-                switch(m_expdim)
-                {
-                case 1:
-                    if(m_HomogeneousType == eHomogeneous2D
-                       || m_HomogeneousType == eHomogeneous3D)
-                    {
-                        bool DeclarePlaneSetCoeffsPhys = true;
-                        for(int i = 0; i < m_forces.num_elements(); i++)
-                        {
-                            m_forces[i] = MemoryManager<MultiRegions
-                                ::ExpList3DHomogeneous2D>
-                                ::AllocateSharedPtr(*boost
-                                                    ::static_pointer_cast<MultiRegions
-                                                    ::ExpList3DHomogeneous2D>(m_fields[i]),
-                                                    DeclarePlaneSetCoeffsPhys);
-                        }
-                    }
-                    else 
-                    {
-                        m_forces[0] = MemoryManager<MultiRegions
-                            ::DisContField1D>::AllocateSharedPtr
-                            (*boost::static_pointer_cast<MultiRegions
-                             ::DisContField1D>(m_fields[0]));
-                            
-                        Vmath::Zero(nq, (m_forces[0]->UpdatePhys()), 1);
-                    }
-                    break;
-                case 2:
-                    if(m_HomogeneousType == eHomogeneous1D)
-                    {
-                        bool DeclarePlaneSetCoeffsPhys = true;
-                        for(int i = 0; i < m_forces.num_elements(); i++)
-                        {
-                            m_forces[i]= MemoryManager<MultiRegions::
-                                ExpList3DHomogeneous1D>::AllocateSharedPtr(*boost
-                                                                           ::static_pointer_cast<MultiRegions
-                                                                           ::ExpList3DHomogeneous1D>(m_fields[i]),
-                                                                           DeclarePlaneSetCoeffsPhys);
-                        }
-                    }
-                    else
-                    {
-                        for(int i = 0; i < m_forces.num_elements(); i++)
-                        {
-                            m_forces[i] = MemoryManager<MultiRegions
-                                ::ExpList2D>::AllocateSharedPtr
-                                (*boost::static_pointer_cast<MultiRegions
-                                 ::ExpList2D>(m_fields[i]));
-                                
-                            Vmath::Zero(nq,(m_forces[i]->UpdatePhys()),1);
-                        }
-                    }
-                    break;
-                case 3:
-                    for (int i = 0; i < m_forces.num_elements(); i++)
-                    {
-                        m_forces[i] = MemoryManager<MultiRegions::ExpList3D>
-                            ::AllocateSharedPtr(*boost::static_pointer_cast<
-                                                MultiRegions::ExpList3D>(m_fields[i]));
-                        Vmath::Zero(nq, m_forces[i]->UpdatePhys(), 1);
-                    }
-                    break;
-                }
-               
-                // Check for file
-                std::vector<std::string> fieldStr;
-                for(int i = 0; i < v_GetForceDimension(); ++i)
-                {
-                    fieldStr.push_back(m_session->GetVariable(i));
-                }
-                EvaluateFunction(fieldStr, m_forces, "BodyForce");
-			
-                if(m_SingleMode || m_HalfMode)
-                {
-                    for(int i=0; i< v_GetForceDimension(); ++i)
-                    {					
-                        // Bring the forcing to be in SEM & Fourier coefficient 
-                        // space (full transformation)
-                        m_forces[i]->FwdTrans(m_forces[i]->GetPhys(),
-                                              m_forces[i]->UpdateCoeffs());
-                    }
-                }
-            }
-
             // If a tangent vector policy is defined then the local tangent
             // vectors on each element need to be generated
             if (m_session->DefinesGeometricInfo("TANGENTDIR"))
@@ -641,7 +552,6 @@ namespace Nektar
 
             // Zero all physical fields initially
             ZeroPhysFields();
-			
         }
 
         /**
@@ -2183,11 +2093,6 @@ namespace Nektar
         Array<OneD, bool> EquationSystem::v_GetSystemSingularChecks()
         {
             return Array<OneD, bool>(m_session->GetVariables().size(), false);
-        }
-
-        int EquationSystem::v_GetForceDimension()
-        {
-            return 0;
         }
 
         void EquationSystem::v_GetFluxVector(

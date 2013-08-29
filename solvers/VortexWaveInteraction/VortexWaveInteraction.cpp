@@ -37,6 +37,7 @@
 #include <MultiRegions/GlobalLinSysKey.h>
 #include <MultiRegions/ExpList1D.h>
 #include <SolverUtils/Driver.h>
+#include <IncNavierStokesSolver/EquationSystems/IncNavierStokes.h>
 
 namespace Nektar
 {
@@ -169,8 +170,9 @@ namespace Nektar
         }
 
         // Fill forcing into m_vwiForcing
-        Vmath::Vcopy(ncoeffs,m_solverRoll->UpdateForces()[0]->GetCoeffs(),1,m_vwiForcing[0],1);
-        Vmath::Vcopy(ncoeffs,m_solverRoll->UpdateForces()[1]->GetCoeffs(),1,m_vwiForcing[1],1);
+        // Has forcing even been initialised yet?
+//        Vmath::Vcopy(ncoeffs,m_solverRoll->UpdateForces()[0]->GetCoeffs(),1,m_vwiForcing[0],1);
+//        Vmath::Vcopy(ncoeffs,m_solverRoll->UpdateForces()[1]->GetCoeffs(),1,m_vwiForcing[1],1);
         
 
         // Create AdvDiff Streak solver 
@@ -377,46 +379,42 @@ namespace Nektar
             }
             else
             {
+                const int npoints = m_solverRoll->GetNpoints();
+                const int ncoeffs = m_solverRoll->GetNcoeffs();
+
                 static int init = 1;
                 if(init)
                 {
-                    // Read vwi file
-                    std::string forcefile
-                        = m_sessionRoll->GetFunctionFilename("BodyForce", 0);
-                    
                     m_solverRoll->DoInitialise();
-                    
-                    if(forcefile != "")
-                    {
-                        m_solverRoll->ImportFld(forcefile,m_solverRoll->UpdateForces());
-                        int ncoeffs = m_solverRoll->UpdateForces()[0]->GetNcoeffs();
-                        
-                        // Scale forcing
-                        int npoints = m_solverRoll->UpdateForces()[0]->GetNpoints();
-                        for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
-                        {
-                            Vmath::Smul(npoints,m_rollForceScale,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
-                            
-                            Vmath::Vcopy(ncoeffs,m_solverRoll->UpdateForces()[i]->GetCoeffs(),1,m_vwiForcing[2+i],1);
+                    m_vwiForcingObj = boost::dynamic_pointer_cast<SolverUtils::ForcingProgrammatic>(GetForcingFactory().CreateInstance("Programmatic", m_sessionRoll, m_solverRoll->UpdateFields(), m_solverRoll->UpdateFields().num_elements() - 1, 0));
 
-                        }
+                    std::vector<std::string> vFieldNames = m_sessionRoll->GetVariables();
+                    vFieldNames.erase(vFieldNames.end()-1);
+
+                    m_solverRoll->EvaluateFunction(vFieldNames, m_vwiForcingObj->UpdateForces(), "BodyForce");
+
+                    // Scale forcing
+                    for(int i = 0; i < m_vwiForcingObj->UpdateForces().num_elements(); ++i)
+                    {
+                        m_solverRoll->UpdateFields()[0]->FwdTrans(m_vwiForcingObj->UpdateForces()[i], m_vwiForcing[2+i]);
+                        Vmath::Smul(npoints,m_rollForceScale,m_vwiForcingObj->UpdateForces()[i],1,m_vwiForcingObj->UpdateForces()[i],1);
                     }
-                    
+
+                    IncNavierStokesSharedPtr ins = boost::dynamic_pointer_cast<IncNavierStokes>(m_solverRoll);
+                    ins->AddForcing(m_vwiForcingObj);
+
                     init = 0;
                 }
                 else // use internal definition of forcing in m_vwiForcing
                 {
                     // Scale forcing
-                    int npoints = m_solverRoll->UpdateForces()[0]->GetNpoints();
-                    Array<OneD, NekDouble> physForce(npoints);
-                    for(int i = 0; i < m_solverRoll->UpdateForces().num_elements(); ++i)
+                    for(int i = 0; i < m_vwiForcingObj->UpdateForces().num_elements(); ++i)
                     {
-                        m_solverRoll->UpdateForces()[i]->BwdTrans(m_vwiForcing[i],physForce);
-                        Vmath::Smul(npoints,m_rollForceScale,physForce,1,m_solverRoll->UpdateForces()[i]->UpdatePhys(),1);
+                        m_solverRoll->UpdateFields()[i]->BwdTrans(m_vwiForcing[i],m_vwiForcingObj->UpdateForces()[i]);
+                        Vmath::Smul(npoints,m_rollForceScale,m_vwiForcingObj->UpdateForces()[i],1,m_vwiForcingObj->UpdateForces()[i],1);
                     }
                     
                     // Shift m_vwiForcing for new restart in case of relaxation 
-                    int ncoeffs = m_solverRoll->UpdateForces()[0]->GetNcoeffs();
                     Vmath::Vcopy(ncoeffs,m_vwiForcing[0],1,m_vwiForcing[2],1);
                     Vmath::Vcopy(ncoeffs,m_vwiForcing[1],1,m_vwiForcing[3],1);
                 }

@@ -176,6 +176,10 @@ namespace Nektar
             m_advObject = GetAdvectionTermFactory().CreateInstance(vConvectiveType, m_session, m_graph);
         }
         
+        // Forcing terms
+        m_forcing = SolverUtils::Forcing::Load(m_session, m_fields,
+                                               v_GetForceDimension());
+
         // check to see if any Robin boundary conditions and if so set
         // up m_field to boundary condition maps;
         m_fieldsBCToElmtID  = Array<OneD, Array<OneD, int> >(m_fields.num_elements());
@@ -567,27 +571,17 @@ namespace Nektar
         }
         
         //add the force
-        if(m_session->DefinesFunction("BodyForce"))
+        std::vector<SolverUtils::ForcingSharedPtr>::const_iterator x;
+        for (x = m_forcing.begin(); x != m_forcing.end(); ++x)
         {
-            if(m_SingleMode || m_HalfMode)
-            {
-                for(int i = 0; i < m_nConvectiveFields; ++i)
-                {
-                    m_forces[i]->SetWaveSpace(true);    
-                    m_forces[i]->BwdTrans(m_forces[i]->GetCoeffs(),
-                                          m_forces[i]->UpdatePhys());
-                }
-            }
- 
-            int nqtot = m_fields[0]->GetTotPoints();
-            for(int i = 0; i < m_nConvectiveFields; ++i)
-            {
-                Vmath::Vadd(nqtot,outarray[i],1,(m_forces[i]->GetPhys()),1,outarray[i],1);
-            }
+            (*x)->Apply(m_fields, outarray, outarray);
         }
     }
 
-
+    void IncNavierStokes::AddForcing(const SolverUtils::ForcingSharedPtr& pForce)
+    {
+        m_forcing.push_back(pForce);
+    }
 
     void IncNavierStokes::v_GetFluxVector(const int i, 
                                           Array<OneD, Array<OneD, NekDouble> > &physfield,
@@ -1167,6 +1161,10 @@ namespace Nektar
         return maxV;
     }
 
+    int IncNavierStokes::v_GetForceDimension()
+    {
+        return m_session->GetVariables().size();
+    }
 
 
 

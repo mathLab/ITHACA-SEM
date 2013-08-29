@@ -289,9 +289,6 @@ namespace Nektar
             SOLVER_UTILS_EXPORT inline Array<
             OneD, MultiRegions::ExpListSharedPtr> &UpdateFields();
             
-            SOLVER_UTILS_EXPORT inline Array<
-            OneD, MultiRegions::ExpListSharedPtr> &UpdateForces();
-            
 
             /// Get hold of FieldInfoMap so it can be updated
             SOLVER_UTILS_EXPORT inline LibUtilities::FieldMetaDataMap 
@@ -399,8 +396,6 @@ namespace Nektar
             Array<OneD, MultiRegions::ExpListSharedPtr> m_fields;
             /// Base fields.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_base;
-            /// Array holding force values.
-            Array<OneD, MultiRegions::ExpListSharedPtr> m_forces;
             /// Array holding all dependent variables.
             Array<OneD, MultiRegions::ExpListSharedPtr> m_derivedfields;
             /// Pointer to boundary conditions object.
@@ -457,7 +452,7 @@ namespace Nektar
             Array<OneD, Array<OneD, Array<OneD,NekDouble> > > m_tanbasis;
             /// Flag to indicate if the fields should be checked for singularity.
             Array<OneD, bool>                           m_checkIfSystemSingular;
-            
+       
             /// Map to identify relevant solver info to dump in output fields
             LibUtilities::FieldMetaDataMap            m_fieldMetaDataMap;
 
@@ -556,7 +551,6 @@ namespace Nektar
         private:
             
             SOLVER_UTILS_EXPORT virtual Array<OneD, bool> v_GetSystemSingularChecks();
-            SOLVER_UTILS_EXPORT virtual int v_GetForceDimension();
             SOLVER_UTILS_EXPORT virtual void v_GetFluxVector(
                 const int i, Array<OneD,
                 Array<OneD, NekDouble> >&physfield,
@@ -730,11 +724,6 @@ namespace Nektar
         inline Array<OneD, MultiRegions::ExpListSharedPtr> &EquationSystem::UpdateFields(void)
         {
             return m_fields;
-        }
-        
-        inline Array<OneD, MultiRegions::ExpListSharedPtr> &EquationSystem::UpdateForces(void)
-        {
-            return m_forces;
         }
         
         /// Return final time

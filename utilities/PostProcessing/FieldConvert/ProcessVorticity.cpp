@@ -49,7 +49,7 @@ namespace Nektar
         ModuleKey ProcessVorticity::className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eProcessModule, "vorticity"), 
-                    ProcessVorticity::create, "Computes vorticity field.");
+                ProcessVorticity::create, "Computes vorticity field.");
 
         ProcessVorticity::ProcessVorticity(FieldSharedPtr f) : ProcessModule(f)
         {
@@ -61,19 +61,19 @@ namespace Nektar
 
         void ProcessVorticity::Process()
         {
-            if (f->verbose)
+            if (m_f->m_verbose)
             {
                 cout << "ProcessVorticity: Calculating vorticity..." << endl;
             }
             
             int i, j;
-            int expdim  = f->graph->GetMeshDimension();
+            int expdim    = m_f->m_graph->GetMeshDimension();
             int spacedim  = expdim;
-            if ((f->fielddef[0]->m_numHomogeneousDir) == 1 || 2)
+            if ((m_f->m_fielddef[0]->m_numHomogeneousDir) == 1 || 2)
             {
                 spacedim = 3;
             }
-            int nfields = f->fielddef[0]->m_fields.size();
+            int nfields = m_f->m_fielddef[0]->m_fields.size();
             if (spacedim == 1)
             {
                 ASSERTL0(false, "Error: Vorticity for a 1D problem cannot "
@@ -81,11 +81,11 @@ namespace Nektar
             }
             int addfields = (spacedim == 2)? 1:3;
             
-            int npoints = f->exp[0]->GetNpoints();
-            int ncoeffs = f->exp[0]->GetNcoeffs();
+            int npoints = m_f->m_exp[0]->GetNpoints();
+            int ncoeffs = m_f->m_exp[0]->GetNcoeffs();
             Array<OneD, Array<OneD, NekDouble> > grad(nfields*nfields);
             Array<OneD, Array<OneD, NekDouble> > outfield(addfields);
-            f->exp.resize(nfields+addfields);
+            m_f->m_exp.resize(nfields+addfields);
 
             
             for (i = 0; i < nfields*nfields; ++i)
@@ -103,11 +103,13 @@ namespace Nektar
             {
                 for (i = 0; i < nfields; ++i)
                 {
-                    f->exp[i]->PhysDeriv(f->exp[i]->GetPhys(), grad[i*nfields], 
-                                         grad[i*nfields+1]);
+                    m_f->m_exp[i]->PhysDeriv(m_f->m_exp[i]->GetPhys(), 
+                                             grad[i*nfields], 
+                                             grad[i*nfields+1]);
                 }
                 // W_z = Vx - Uy
-                Vmath::Vsub(npoints, grad[1*nfields+0], 1, grad[0*nfields+1], 1, 
+                Vmath::Vsub(npoints, grad[1*nfields+0], 1, 
+                            grad[0*nfields+1], 1, 
                             outfield[0], 1);
             }
             else
@@ -115,8 +117,10 @@ namespace Nektar
                 for (i = 0; i < nfields; ++i)
                 {
 
-                    f->exp[i]->PhysDeriv(f->exp[i]->GetPhys(), grad[i*nfields], 
-                                         grad[i*nfields+1], grad[i*nfields+2]);
+                    m_f->m_exp[i]->PhysDeriv(m_f->m_exp[i]->GetPhys(), 
+                                             grad[i*nfields], 
+                                             grad[i*nfields+1],
+                                             grad[i*nfields+2]);
                 }
                 
                 // W_x = Wy - Vz
@@ -132,9 +136,9 @@ namespace Nektar
 
             for (i = 0; i < addfields; ++i)
             {
-                f->exp[nfields + i] = f->AppendExpList();
-                f->exp[nfields + i]->FwdTrans(outfield[i],
-                                        f->exp[nfields + i]->UpdateCoeffs());
+                m_f->m_exp[nfields + i] = m_f->AppendExpList();
+                m_f->m_exp[nfields + i]->FwdTrans(outfield[i],
+                                    m_f->m_exp[nfields + i]->UpdateCoeffs());
             }
             
             vector<string > outname;
@@ -150,12 +154,12 @@ namespace Nektar
             }
             
             std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
-                    = f->exp[0]->GetFieldDefinitions();
+                = m_f->m_exp[0]->GetFieldDefinitions();
             std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
             
             for (j = 0; j < nfields + addfields; ++j)
             {
-                for (i = 0; i < f->fielddef.size(); ++i)
+                for (i = 0; i < m_f->m_fielddef.size(); ++i)
                 {   
                     if (j >= nfields)
                     {
@@ -163,14 +167,14 @@ namespace Nektar
                     }
                     else
                     {
-                        FieldDef[i]->m_fields.push_back(f->fielddef[i]->m_fields[j]);
+                        FieldDef[i]->m_fields.push_back(m_f->m_fielddef[i]->m_fields[j]);
                     }
-                    f->exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
+                    m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
                 }
             }
             
-            f->fielddef = FieldDef;
-            f->data     = FieldData;
+            m_f->m_fielddef = FieldDef;
+            m_f->m_data     = FieldData;
         }
     }
 }

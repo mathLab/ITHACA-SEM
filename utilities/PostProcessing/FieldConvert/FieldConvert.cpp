@@ -137,6 +137,14 @@ int main(int argc, char* argv[])
         cerr << "Usage: FieldConvert [options] inputfile.ext1 outputfile.ext2" 
              << endl;
         cout << desc;
+        cout << endl;
+        cout << "Example Usage: \n" << endl;
+        cout << "\t FieldConvert -m vorticity file.xml file.fld file_vort.fld " << endl;
+        cout << "(This will add vorticity to file file.fld and put it in a new file file_vort.fld) " << endl;
+        cout << endl;
+        cout << "\t FieldConvert file.xml file_vort.fld file_vort.dat " << endl;
+        cout << "(process file_vort.fld and make a tecplot output file_vort.dat) " << endl;
+
         return 1;
     }
     
@@ -164,7 +172,7 @@ int main(int argc, char* argv[])
     
     if (vm.count("verbose"))
     {
-        f->verbose = true;
+        f->m_verbose = true;
     }
 
     if (vm.count("module"))

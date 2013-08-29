@@ -56,104 +56,100 @@ namespace Nektar
     namespace Utilities
     {
         struct Field {
-            Field() : verbose(false) {}
-
-            vector<LibUtilities::FieldDefinitionsSharedPtr> fielddef;
-            vector<vector<double> > data;
-            vector<MultiRegions::ExpListSharedPtr> exp;
+        Field() : m_verbose(false) {}
             
-            LibUtilities::SessionReaderSharedPtr session;
-            SpatialDomains::MeshGraphSharedPtr graph;
+            vector<LibUtilities::FieldDefinitionsSharedPtr> m_fielddef;
+            vector<vector<double> > m_data;
+            vector<MultiRegions::ExpListSharedPtr> m_exp;
             
-           
-
+            LibUtilities::SessionReaderSharedPtr m_session;
+            SpatialDomains::MeshGraphSharedPtr   m_graph;
+            
+            
+            
             MultiRegions::ExpListSharedPtr AppendExpList()
             {
                 MultiRegions::ExpListSharedPtr tmp;
-                switch (graph->GetMeshDimension())
+                switch (m_graph->GetMeshDimension())
                 {
                     case 1:
-                    {
-                        if (fielddef[0]->m_numHomogeneousDir == 1)
                         {
-                            MultiRegions::ExpList2DHomogeneous1DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<MultiRegions::
-                                    ExpList2DHomogeneous1D>(exp[0]);
-                            
-                            tmp = MemoryManager<MultiRegions::
-                                ExpList2DHomogeneous1D>::
+                            if (m_fielddef[0]->m_numHomogeneousDir == 1)
+                            {
+                                MultiRegions::ExpList2DHomogeneous1DSharedPtr tmp2 =
+                                    boost::dynamic_pointer_cast<MultiRegions::
+                                    ExpList2DHomogeneous1D>(m_exp[0]);
+                                
+                                tmp = MemoryManager<MultiRegions::
+                                    ExpList2DHomogeneous1D>::
                                     AllocateSharedPtr(*tmp2);
-
-                        }
-                        else if (fielddef[0]->m_numHomogeneousDir == 2)
-                        {
-                            MultiRegions::ExpList3DHomogeneous2DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<MultiRegions::
-                                    ExpList3DHomogeneous2D>(exp[0]);
-                            
-                            tmp = MemoryManager<MultiRegions::
-                                ExpList3DHomogeneous2D>::
+                                
+                            }
+                            else if (m_fielddef[0]->m_numHomogeneousDir == 2)
+                            {
+                                MultiRegions::ExpList3DHomogeneous2DSharedPtr tmp2 =
+                                    boost::dynamic_pointer_cast<MultiRegions::
+                                    ExpList3DHomogeneous2D>(m_exp[0]);
+                                
+                                tmp = MemoryManager<MultiRegions::
+                                    ExpList3DHomogeneous2D>::
                                     AllocateSharedPtr(*tmp2);
+                            }
+                            else
+                            {
+                                MultiRegions::ExpList1DSharedPtr tmp2 =
+                                    boost::dynamic_pointer_cast<MultiRegions::
+                                    ExpList1D>(m_exp[0]);
+                                
+                                tmp = MemoryManager<MultiRegions::ExpList1D>::
+                                    AllocateSharedPtr(*tmp2);
+                            }
                         }
-                        else
-                        {
-                            MultiRegions::ExpList1DSharedPtr tmp2 =
-                                boost::dynamic_pointer_cast<MultiRegions::
-                                    ExpList1D>(exp[0]);
-                            
-                            tmp = MemoryManager<MultiRegions::ExpList1D>::
-                                AllocateSharedPtr(*tmp2);
-                        }
-                    }
                         break;
-                    case 2:
+                case 2:
                     {   
-                        if (fielddef[0]->m_numHomogeneousDir == 1)
+                        if (m_fielddef[0]->m_numHomogeneousDir == 1)
                         {
                             
                             MultiRegions::ExpList3DHomogeneous1DSharedPtr tmp2 =
                                 boost::dynamic_pointer_cast<MultiRegions::
-                                    ExpList3DHomogeneous1D>(exp[0]);
+                                ExpList3DHomogeneous1D>(m_exp[0]);
                             
                             tmp = MemoryManager<MultiRegions::
                                 ExpList3DHomogeneous1D>::
-                                    AllocateSharedPtr(*tmp2);
+                                AllocateSharedPtr(*tmp2);
                         }
                         else
                         {
                             MultiRegions::ExpList2DSharedPtr tmp2 =
                                 boost::dynamic_pointer_cast<MultiRegions::
-                                    ExpList2D>(exp[0]);
+                                ExpList2D>(m_exp[0]);
                             
                             tmp = MemoryManager<MultiRegions::ExpList2D>::
                                 AllocateSharedPtr(*tmp2);
                         }
                     }
-                        break;
-                    case 3:
+                    break;
+                case 3:
                     {
                         MultiRegions::ExpList3DSharedPtr tmp2 =
                             boost::dynamic_pointer_cast<MultiRegions::
-                                ExpList3D>(exp[0]);
+                            ExpList3D>(m_exp[0]);
                         
                         tmp = MemoryManager<MultiRegions::ExpList3D>::
                             AllocateSharedPtr(*tmp2);
-
+                        
                     }
-                        break;
-                    default:
-                        ASSERTL0(false, "Expansion dimension not recognised");
-                        break;
+                    break;
+                default:
+                    ASSERTL0(false, "Expansion dimension not recognised");
+                    break;
                 }
-                
-                //data.push_back(newdata);
-                //exp.push_back(tmp);
-                //fielddef.push_back();
                 
                 return tmp;
             }
             
-            bool verbose;
+            bool m_verbose;
         };
 
         typedef boost::shared_ptr<Field> FieldSharedPtr;

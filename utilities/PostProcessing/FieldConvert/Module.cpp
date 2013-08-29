@@ -64,33 +64,33 @@ namespace Nektar
 
         InputModule::InputModule(FieldSharedPtr m) : Module(m)
         {
-            config["infile"] = ConfigOption(false, "", "Input filename.");
+            m_config["infile"] = ConfigOption(false, "", "Input filename.");
         }
         
         OutputModule::OutputModule(FieldSharedPtr m) : Module(m)
         {
-            config["outfile"] = ConfigOption(false, "", "Output filename.");
+            m_config["outfile"] = ConfigOption(false, "", "Output filename.");
         }
 
         void InputModule::AddFile(string fileType, string fileName)
         {
             // Check to see if this file type is allowed
-            if (allowedFiles.count(fileType) == 0)
+            if (m_allowedFiles.count(fileType) == 0)
             {
                 cerr << "File type " << fileType << " not supported for this "
                      << "module." << endl;
             }
             
-            files[fileType].push_back(fileName);
+            m_files[fileType].push_back(fileName);
         }
         /**
          * @brief Open a file for output.
          */
         void OutputModule::OpenStream()
         {
-            string fname = config["outfile"].as<string>();
-            fldFile.open(fname.c_str());
-            if (!fldFile.good())
+            string fname = m_config["outfile"].as<string>();
+            m_fldFile.open(fname.c_str());
+            if (!m_fldFile.good())
             {
                 cerr << "Error opening file: " << fname << endl;
                 abort();
@@ -102,22 +102,22 @@ namespace Nektar
          */
         void Module::RegisterConfig(string key, string val)
         {
-            map<string, ConfigOption>::iterator it = config.find(key);
-            if (it == config.end())
+            map<string, ConfigOption>::iterator it = m_config.find(key);
+            if (it == m_config.end())
             {
                 cerr << "WARNING: Unrecognised config option " << key
                      << ", proceeding anyway." << endl;
             }
 
-            it->second.beenSet = true;
+            it->second.m_beenSet = true;
             
-            if (it->second.isBool)
+            if (it->second.m_isBool)
             {
-                it->second.value = "1";
+                it->second.m_value = "1";
             }
             else
             {
-                it->second.value = val;
+                it->second.m_value = val;
             }
         }
         
@@ -128,15 +128,15 @@ namespace Nektar
         {
             map<string, ConfigOption>::iterator it;
             
-            if (config.size() == 0)
+            if (m_config.size() == 0)
             {
                 cerr << "No configuration options for this module." << endl;
                 return;
             }
             
-            for (it = config.begin(); it != config.end(); ++it)
+            for (it = m_config.begin(); it != m_config.end(); ++it)
             {
-                cerr << setw(10) << it->first << ": " << it->second.desc 
+                cerr << setw(10) << it->first << ": " << it->second.m_desc 
                      << endl;
             }
         }
@@ -149,11 +149,11 @@ namespace Nektar
         {
             map<string, ConfigOption>::iterator it;
             
-            for (it = config.begin(); it != config.end(); ++it)
+            for (it = m_config.begin(); it != m_config.end(); ++it)
             {
-                if (!it->second.beenSet)
+                if (!it->second.m_beenSet)
                 {
-                    it->second.value = it->second.defValue;
+                    it->second.m_value = it->second.m_defValue;
                 }
             }
         }
@@ -164,7 +164,7 @@ namespace Nektar
         void InputModule::PrintSummary()
         {
             cout << "Field size = " << 
-            f->data[0].size() * sizeof(NekDouble) << endl;
+                m_f->m_data[0].size() * sizeof(NekDouble) << endl;
         }
     }
 }

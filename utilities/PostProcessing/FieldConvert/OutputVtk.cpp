@@ -59,31 +59,31 @@ namespace Nektar
         void OutputVtk::Process()
         {
             int i, j;
-            if (f->verbose)
+            if (m_f->m_verbose)
             {
                 cout << "OutputVtk: Writing file..." << endl;
             }
 
             // Extract the output filename and extension
-            string filename = config["outfile"].as<string>();
+            string filename = m_config["outfile"].as<string>();
             
             // Write solution.
             ofstream outfile(filename.c_str());
-            f->exp[0]->WriteVtkHeader(outfile);
+            m_f->m_exp[0]->WriteVtkHeader(outfile);
             
             // For each field write out field data for each expansion.
-            for (i = 0; i < f->exp[0]->GetNumElmts(); ++i)
+            for (i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
             {
-                f->exp[0]->WriteVtkPieceHeader(outfile,i);
+                m_f->m_exp[0]->WriteVtkPieceHeader(outfile,i);
                 // For this expansion write out each field.
-                for (j = 0; j < f->fielddef[0]->m_fields.size(); ++j)
+                for (j = 0; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
                 {
-                    f->exp[j]->WriteVtkPieceData(outfile, i, 
-                                                 f->fielddef[0]->m_fields[j]);
+                    m_f->m_exp[j]->WriteVtkPieceData(outfile, i, 
+                                               m_f->m_fielddef[0]->m_fields[j]);
                 }
-                f->exp[0]->WriteVtkPieceFooter(outfile, i);
+                m_f->m_exp[0]->WriteVtkPieceFooter(outfile, i);
             }
-            f->exp[0]->WriteVtkFooter(outfile);
+            m_f->m_exp[0]->WriteVtkFooter(outfile);
             cout << "Written file: " << filename << endl;
         }        
     }

@@ -83,11 +83,12 @@ namespace Nektar
              * @param defValue  Default value of the option.
              * @param desc      Description of the option.
              */
-            ConfigOption(bool isBool, string defValue, string desc) :
-                isBool(isBool), beenSet(false), value(), defValue(defValue), 
-                desc(desc) {}
-            ConfigOption() :
-                isBool(false), beenSet(false), value(), defValue(), desc() {}
+        ConfigOption(bool isBool, string defValue, string desc) :
+            m_isBool(isBool), m_beenSet(false), m_value(), 
+                m_defValue(defValue), m_desc(desc) {}
+        ConfigOption() :
+            m_isBool(false), m_beenSet(false), m_value(), 
+                m_defValue(), m_desc() {}
             
             /**
              * @brief Re-interpret the value stored in #value as some type using
@@ -98,7 +99,7 @@ namespace Nektar
             {
                 try
                 {
-                    return boost::lexical_cast<T>(value);
+                    return boost::lexical_cast<T>(m_value);
                 }
                 catch(const exception &e)
                 {
@@ -109,16 +110,16 @@ namespace Nektar
             
             /// True if the configuration option is a boolean (thus does not
             /// need additional arguments).
-            bool   isBool;
+            bool   m_isBool;
             /// True if the configuration option has been set at command
             /// line. If false, the default value will be put into #value.
-            bool   beenSet;
+            bool   m_beenSet;
             /// The value of the configuration option.
-            string value;
+            string m_value;
             /// Default value of the configuration option.
-            string defValue;
+            string m_defValue;
             /// Description of the configuration option.
-            string desc;
+            string m_desc;
         };
         
         /**
@@ -129,7 +130,7 @@ namespace Nektar
         class Module
         {
         public:
-            Module(FieldSharedPtr p_f) : f(p_f) {}
+        Module(FieldSharedPtr p_f) : m_f(p_f) {}
             virtual void Process() = 0;
             
             void RegisterConfig(string key, string value);
@@ -138,9 +139,9 @@ namespace Nektar
             
         protected:
             /// Field object
-            FieldSharedPtr f;
+            FieldSharedPtr m_f;
             /// List of configuration values.
-            map<string, ConfigOption> config;
+            map<string, ConfigOption> m_config;
         };
         
         /**
@@ -161,8 +162,8 @@ namespace Nektar
         protected:
             /// Print summary of elements.
             void PrintSummary();
-            map<string, vector<string> > files;
-            set<string> allowedFiles;
+            map<string, vector<string> > m_files;
+            set<string> m_allowedFiles;
         };
         
         typedef boost::shared_ptr<InputModule> InputModuleSharedPtr;
@@ -191,12 +192,12 @@ namespace Nektar
             
         protected:
             /// Output stream
-            ofstream fldFile;
+            ofstream m_fldFile;
         };
-
+        
         typedef pair<ModuleType,string> ModuleKey;
         ostream& operator<<(ostream& os, const ModuleKey& rhs);
-
+        
         typedef boost::shared_ptr<Module> ModuleSharedPtr;
         typedef LibUtilities::NekFactory<ModuleKey, Module, FieldSharedPtr>
             ModuleFactory;

@@ -59,45 +59,45 @@ namespace Nektar
         void OutputTecplot::Process()
         {
             int i, j;
-            if (f->verbose)
+            if (m_f->m_verbose)
             {
                 cout << "OutputTecplot: Writing file..." << endl;
             }
             
-            int expdim  = f->graph->GetMeshDimension();
+            int expdim  = m_f->m_graph->GetMeshDimension();
 
             // Extract the output filename and extension
-            string filename = config["outfile"].as<string>();
+            string filename = m_config["outfile"].as<string>();
             
             // Write solution.
             ofstream outfile(filename.c_str());
     
             std::string var = "";
                 
-            for (int j = 0; j < f->fielddef[0]->m_fields.size(); ++j)
+            for (int j = 0; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
             {
-                var = var + ", " + f->fielddef[0]->m_fields[j];
+                var = var + ", " + m_f->m_fielddef[0]->m_fields[j];
             }
                 
             if (expdim == 3)
             {
-                f->exp[0]->WriteTecplotHeader(outfile,var);
-                f->exp[0]->WriteTecplotZone(outfile);
-                for(int j = 0; j < f->fielddef[0]->m_fields.size(); ++j)
+                m_f->m_exp[0]->WriteTecplotHeader(outfile,var);
+                m_f->m_exp[0]->WriteTecplotZone(outfile);
+                for(int j = 0; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
                 {
-                    f->exp[j]->WriteTecplotField(outfile);
+                    m_f->m_exp[j]->WriteTecplotField(outfile);
                 }
-                    f->exp[0]->WriteTecplotConnectivity(outfile);
+                m_f->m_exp[0]->WriteTecplotConnectivity(outfile);
             }
             else
             {
-                f->exp[0]->WriteTecplotHeader(outfile,var);
-                for (int i = 0; i < f->exp[0]->GetNumElmts(); ++i)
+                m_f->m_exp[0]->WriteTecplotHeader(outfile,var);
+                for (int i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
                 {
-                    f->exp[0]->WriteTecplotZone(outfile,i);
-                    for (int j = 0; j < f->fielddef[0]->m_fields.size(); ++j)
+                    m_f->m_exp[0]->WriteTecplotZone(outfile,i);
+                    for (int j = 0; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
                     {
-                        f->exp[j]->WriteTecplotField(outfile,i);
+                        m_f->m_exp[j]->WriteTecplotField(outfile,i);
                     }
                 }
             }

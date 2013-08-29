@@ -59,16 +59,16 @@ namespace Nektar
         void OutputFld::Process()
         {
             int i, j;
-            if (f->verbose)
+            if (m_f->m_verbose)
             {
                 cout << "OutputFld: Writing file..." << endl;
             }
             
             // Extract the output filename and extension
-            string filename = config["outfile"].as<string>();
+            string filename = m_config["outfile"].as<string>();
             
             // Write the output file
-            LibUtilities::Write(filename, f->fielddef, f->data);
+            LibUtilities::Write(filename, m_f->m_fielddef, m_f->m_data);
         }        
     }
 }

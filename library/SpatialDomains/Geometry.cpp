@@ -212,7 +212,7 @@ namespace Nektar
         bool Geometry::v_ContainsPoint(
                 const Array<OneD, const NekDouble>& gloCoord,
                 Array<OneD, NekDouble>& locCoord,
-                NekDouble tol = 0.0)
+                NekDouble tol)
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function has not been defined for this geometry");

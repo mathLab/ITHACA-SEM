@@ -1787,6 +1787,7 @@ namespace Nektar
                 ComputeQuadratureMetric();
             }
 
+            unsigned int i, j;
             const SpatialDomains::GeomType type = m_metricinfo->GetGtype();
             const unsigned int nqtot = GetTotPoints();
             const unsigned int dim = 2;
@@ -1798,9 +1799,9 @@ namespace Nektar
             Array<OneD, NekDouble> dEta_dXi[2] = {Array<OneD, NekDouble>(nqtot,1.0),
                                                   Array<OneD, NekDouble>(nqtot,1.0)};
 
-            for (unsigned int i = 0; i < dim; ++i)
+            for (i = 0; i < dim; ++i)
             {
-                for (unsigned int j = i; j < dim; ++j)
+                for (j = i; j < dim; ++j)
                 {
                     m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
                 }

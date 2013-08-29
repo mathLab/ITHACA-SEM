@@ -76,7 +76,8 @@ namespace SolverUtils
             ///Name of the class
             static std::string className;
 
-            Array<OneD, Array<OneD, NekDouble> >& UpdateForces();
+            SOLVER_UTILS_EXPORT Array<OneD, Array<OneD, NekDouble> >&
+                        UpdateForces();
 
         protected:
             SOLVER_UTILS_EXPORT virtual void v_InitObject(

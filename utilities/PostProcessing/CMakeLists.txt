@@ -15,6 +15,7 @@ ADD_UTILITIES_EXECUTABLE(ProbeFld          util-extra ProbeFld.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToTecplot      util XmlToTecplot.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToTecplotWireFrame  util XmlToTecplotWireFrame.cpp)
 ADD_UTILITIES_EXECUTABLE(XmlToVtk          util XmlToVtk.cpp)
+ADD_UTILITIES_EXECUTABLE(Fld2DTo2D5        Fld2DTo2D5.cpp)
 
 # Generate list of available solvers
 FILE(GLOB dir_list "*")

@@ -15,37 +15,23 @@ int main(int argc, char *argv[])
 {
     int i,j,k;
 
-    if(argc != 5)
+    if(argc != 6)
     {
         fprintf(stderr,
-                "Usage: Fld2DTo2D5 3dmeshfile outfile 2dmeshfile 2dfieldfile\n");
+                "Usage: Fld2DTo2D5 3dmeshfile 3dfieldfile 2dmeshfile 2dfieldfile outfield\n");
         exit(1);
     }
-    string datasave(argv[2]);
-    
-    char **argv2d;
-    char **argv3d;
-    argv2d=new char*[2];
-    argv3d=new char*[2];
-    argv2d[0] =new char[strlen(argv[0])];
-    argv2d[1] =new char[strlen(argv[3])];
-    argv3d[0] =new char[strlen(argv[0])];
-    argv3d[1] =new char[strlen(argv[1])];
-    strcpy(argv2d[0],argv[0]);
-    strcpy(argv2d[1],argv[3]);
-    strcpy(argv3d[0],argv[0]);
-    strcpy(argv3d[1],argv[1]);
+    string datasave(argv[5]);
     string mesh2d(argv[3]);
     string mesh3d(argv[1]);
-    
     //create 2d session
     LibUtilities::SessionReaderSharedPtr vSession2d
-            = LibUtilities::SessionReader::CreateInstance(2, argv2d);
+            = LibUtilities::SessionReader::CreateInstance(2, argv);
     std::vector<std::string> filenames;
     filenames.push_back(mesh3d);
     //create 3D session
     LibUtilities::SessionReaderSharedPtr vSession3d
-            = LibUtilities::SessionReader::CreateInstance(2, argv3d, filenames, vSession2d->GetComm());
+            = LibUtilities::SessionReader::CreateInstance(2, argv, filenames, vSession2d->GetComm());
 
     //----------------------------------------------
     // Read in 2d and 2d5 mesh from input file
@@ -89,9 +75,9 @@ int main(int argc, char *argv[])
     bool useFFT = false;
     bool dealiasing = false;
     // Define Expansion
-    int expdim2d  = graphShPt2d->GetMeshDimension();
+    //int expdim2d  = graphShPt2d->GetMeshDimension();
     int nfields2d = field2ddef[0]->m_fields.size();
-    int expdim3d  = graphShPt3d->GetMeshDimension();
+    //int expdim3d  = graphShPt3d->GetMeshDimension();
     int nfields3d = field3ddef[0]->m_fields.size();
     //Gen 2d
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp2d(nfields2d);
@@ -141,12 +127,6 @@ int main(int argc, char *argv[])
     	}
     }
     LibUtilities::Write(datasave,field3ddef,field3ddatanew);
-    delete[] argv2d[0];
-    delete[] argv2d[1];
-    delete[] argv2d;
-    delete[] argv3d[0];
-    delete[] argv3d[1];
-    delete[] argv3d;
     return 0;
 }
 // Only for 2d to 2d5 Hui Xu 23 Aug 2013

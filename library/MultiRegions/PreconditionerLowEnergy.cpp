@@ -328,7 +328,6 @@ namespace Nektar
             int edgematrixoffset=0;
             int facematrixoffset=0;
             int vGlobal;
-            int nbndCoeffs=0;
 
             for(n=0; n < n_exp; ++n)
             {
@@ -384,7 +383,6 @@ namespace Nektar
                         facematrixoffset+=nfacemodes*nfacemodes;
                     }
                 }
-                nbndCoeffs=+locExpansion->NumBndryCoeffs();
             }
 
             edgematrixoffset=0;
@@ -1014,9 +1012,9 @@ namespace Nektar
          
             StdRegions::StdExpansionSharedPtr locExpansion;                
             locExpansion = expList->GetExp(offset);
-            int nbnd=locExpansion->NumBndryCoeffs();
-            int ncoeffs=locExpansion->GetNcoeffs();
-            int nint=ncoeffs-nbnd;
+            unsigned int nbnd=locExpansion->NumBndryCoeffs();
+            unsigned int ncoeffs=locExpansion->GetNcoeffs();
+            unsigned int nint=ncoeffs-nbnd;
 
             //This is the SC elemental matrix in the orginal basis (S1)
             //DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
@@ -1060,7 +1058,7 @@ namespace Nektar
             DNekScalBlkMatSharedPtr returnval;
             DNekScalMatSharedPtr tmp_mat;
             unsigned int exp_size[] = {nbnd, nint};
-            int nblks = 1;
+            unsigned int nblks = 1;
             returnval = MemoryManager<DNekScalBlkMat>::
                 AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
 

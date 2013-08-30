@@ -215,10 +215,8 @@ namespace Nektar
             
             LibUtilities::TimeIntegrationWrapperSharedPtr IntScheme;
             LibUtilities::TimeIntegrationSolutionSharedPtr u;
-            int numMultiSteps;
             
             IntScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(LibUtilities::TimeIntegrationMethodMap[m_timeIntMethod]);
-            numMultiSteps = IntScheme->GetIntegrationSteps();
             u = IntScheme->InitializeScheme(m_timestep, fields, m_time, m_ode);
 
             std::vector<FilterSharedPtr>::iterator x;

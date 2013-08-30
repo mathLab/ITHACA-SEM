@@ -1147,8 +1147,8 @@ namespace Nektar
             const DNekScalMatSharedPtr &r_bnd, 
             const StdRegions::MatrixType matrixType)
         {
-            int nVerts, nEdges, nFaces;
-            int eid, fid, vid, cnt, n, i;
+            int nVerts, nEdges;
+            int eid, fid, vid, n, i;
 
             int nBndCoeffs = NumBndryCoeffs();
 
@@ -1157,7 +1157,6 @@ namespace Nektar
             // Get geometric information about this element
             nVerts = GetNverts();
             nEdges = GetNedges();
-            nFaces = GetNfaces();
 
             /*************************************/
             /* Vetex-edge & vertex-face matrices */
@@ -1423,7 +1422,7 @@ namespace Nektar
             // Build the edge/face transform matrix: This matrix is constructed
             // from the submatrices corresponding to the couping between a
             // specific edge and the two attached faces.
-            for (cnt = eid = 0; eid < nEdges; ++eid)
+            for (eid = 0; eid < nEdges; ++eid)
             {
                 // Row and column size of the vertex-edge/face matrix
                 efCol = GetFaceIntNcoeffs(geom->GetEdgeFaceMap(eid, 0)) +

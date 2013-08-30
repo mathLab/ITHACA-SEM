@@ -1528,7 +1528,7 @@ namespace Nektar
             int cnt = 0;
             int nBndEdges, nBndEdgePts;
             int i, e; 
-            int id1, id2;
+            int id2;
             
             int nTracePts   = fields[0]->GetTrace()->GetTotPoints();
             int nBndRegions = fields[var]->GetBndCondExpansions().num_elements();
@@ -1551,9 +1551,6 @@ namespace Nektar
                 {
                     nBndEdgePts = fields[var]->
                     GetBndCondExpansions()[i]->GetExp(e)->GetNumPoints(0);
-                    
-                    id1 = fields[var]->
-                    GetBndCondExpansions()[i]->GetPhys_Offset(e);
                     
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->

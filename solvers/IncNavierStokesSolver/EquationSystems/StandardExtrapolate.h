@@ -84,7 +84,8 @@ namespace Nektar
         virtual void v_SubStepSaveFields(const int nstep);
         virtual void v_SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, const NekDouble Aii_DT);
         virtual void v_SubStepAdvance(const int nstep, NekDouble m_time);
-        virtual void v_AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);
+		virtual void v_EvaluatePressureBCs(const MultiRegions::ExpListSharedPtr &pField,const Array<OneD, const Array<OneD, NekDouble> > &fields,const Array<OneD, const Array<OneD, NekDouble> >  &N,const int kinvis,);
+		virtual void v_CalcPressureBCs(const MultiRegions::ExpListSharedPtr &pField,const Array<OneD, const Array<OneD, NekDouble> > &fields,const Array<OneD, const Array<OneD, NekDouble> >  &N,const int kinvis);
     };
 
 }

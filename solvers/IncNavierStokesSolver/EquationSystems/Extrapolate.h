@@ -112,9 +112,7 @@ namespace Nektar
 										  const NekDouble Aii_DT);
         inline void SubStepAdvance(const int nstep, 
 								   NekDouble m_time);
-        inline void AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-							NekDouble Aii_Dt);
-		
+        
 		inline void EvaluatePressureBCs(const MultiRegions::ExpListSharedPtr &pField,
 										const Array<OneD, const Array<OneD, NekDouble> > &fields,
 										const Array<OneD, const Array<OneD, NekDouble> >  &N,
@@ -131,7 +129,6 @@ namespace Nektar
         virtual void v_SubStepSaveFields(const int nstep)=0;
         virtual void v_SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, const NekDouble Aii_DT)=0;
         virtual void v_SubStepAdvance(const int nstep, NekDouble m_time)=0;
-        virtual void v_AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt)=0;
 		virtual void v_EvaluatePressureBCs(const MultiRegions::ExpListSharedPtr &pField,const Array<OneD, const Array<OneD, NekDouble> > &fields,const Array<OneD, const Array<OneD, NekDouble> >  &N,const int kinvis,);
 		virtual void v_CalcPressureBCs(const MultiRegions::ExpListSharedPtr &pField,const Array<OneD, const Array<OneD, NekDouble> > &fields,const Array<OneD, const Array<OneD, NekDouble> >  &N,const int kinvis);
 		
@@ -230,15 +227,6 @@ namespace Nektar
 												   const NekDouble Aii_DT)
     {
         v_SubStepSetPressureBCs(inarray,Aii_DT);
-    }
-
-    /**
-     *
-     */
-    inline void Extrapolate::AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, 
-									 NekDouble Aii_Dt)
-    {
-        v_AddDuDt(N,Aii_Dt);
     }
 
     /**

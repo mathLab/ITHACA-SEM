@@ -90,14 +90,6 @@ namespace Nektar
      */
     void StandardExtrapolate::v_SubStepSaveFields(const int nstep)
     {
-    }
-
-    /** 
-     * 
-     */
-    void StandardExtrapolate::v_AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt)
-    {
-    }
-    
+    }    
 }
 

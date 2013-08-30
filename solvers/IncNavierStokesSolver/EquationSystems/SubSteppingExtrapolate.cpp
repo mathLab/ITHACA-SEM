@@ -628,7 +628,7 @@ namespace Nektar
     /** 
      * 
      */
-    void SubSteppingExtrapolate::v_AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt)
+    void SubSteppingExtrapolate::AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt)
     {
         /*switch(m_velocity.num_elements())
         {

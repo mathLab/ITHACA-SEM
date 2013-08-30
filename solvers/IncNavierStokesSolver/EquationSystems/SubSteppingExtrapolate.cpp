@@ -119,7 +119,8 @@ namespace Nektar
     /** 
      * 
      */
-    void SubSteppingExtrapolate::v_SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, const NekDouble Aii_DT)
+    void SubSteppingExtrapolate::v_SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, 
+														 const NekDouble Aii_DT)
     {
         Array<OneD, Array<OneD, NekDouble> > velfields(m_velocity.num_elements());
         
@@ -128,7 +129,9 @@ namespace Nektar
             velfields[i] = m_fields[m_velocity[i]]->GetPhys(); 
         }
 
-        //EvaluatePressureBCs();
+        EvaluatePressureBCs(pField,velfields,inarray,kinvis);
+		
+		AddDuDt(inarray,Aii_Dt);
     }
 
     /** 
@@ -438,10 +441,9 @@ namespace Nektar
     /** 
      * Explicit Advection terms used by SubStepAdvance time integration
      */
-    void SubSteppingExtrapolate::SubStepAdvection(
-        const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
-        Array<OneD, Array<OneD,       NekDouble> > &outarray,
-        const NekDouble time)
+    void SubSteppingExtrapolate::SubStepAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
+												  Array<OneD, Array<OneD,       NekDouble> > &outarray,
+												  const NekDouble time)
     {
         /*int i;
         int nVariables     = inarray.num_elements();
@@ -515,10 +517,9 @@ namespace Nektar
             }*/
     }
 
-    void SubSteppingExtrapolate::AddAdvectionPenaltyFlux(
-        const Array<OneD, const Array<OneD, NekDouble> > &velfield, 
-        const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
-        Array<OneD, Array<OneD, NekDouble> > &Outarray)
+    void SubSteppingExtrapolate::AddAdvectionPenaltyFlux(const Array<OneD, const Array<OneD, NekDouble> > &velfield, 
+														 const Array<OneD, const Array<OneD, NekDouble> > &physfield, 
+														 Array<OneD, Array<OneD, NekDouble> > &Outarray)
     {
         /*ASSERTL1(physfield.num_elements() == Outarray.num_elements(),"Physfield and outarray are of different dimensions");
         
@@ -575,7 +576,9 @@ namespace Nektar
     /** 
      * Projection used by SubStepAdvance time integration
      */
-    void SubSteppingExtrapolate::SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  Array<OneD, Array<OneD, NekDouble> > &outarray, const NekDouble time)
+    void SubSteppingExtrapolate::SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  
+												   Array<OneD, Array<OneD, NekDouble> > &outarray, 
+												   const NekDouble time)
     {
         /*ASSERTL1(inarray.num_elements() == outarray.num_elements(),"Inarray and outarray of different sizes ");
 
@@ -589,7 +592,8 @@ namespace Nektar
      * Extrapolate field using equally time spaced field un,un-1,un-2, (at
      * dt intervals) to time n+t at order Ord 
     */
-    void SubSteppingExtrapolate::SubStepExtrapoloteField(NekDouble toff, Array< OneD, Array<OneD, NekDouble> > &ExtVel)
+    void SubSteppingExtrapolate::SubStepExtrapoloteField(NekDouble toff, 
+														 Array< OneD, Array<OneD, NekDouble> > &ExtVel)
     {
         /*int npts = m_fields[0]->GetTotPoints();
         int nvel = m_velocity.num_elements();
@@ -624,11 +628,23 @@ namespace Nektar
             }
             }*/
     }
-
+	
+	/** 
+     * 
+     */
+	void SubSteppingExtrapolate::v_MountHOPBCs(int HBCdata, 
+											   NekDouble kinvis, 
+											   Array<OneD, NekDouble> &Q, 
+											   Array<OneD, NekDouble> &Advection)
+	{
+		Vmath::Smul(HBCdata,-kinvis,Q,1,Q,1);
+	}
+	
     /** 
      * 
      */
-    void SubSteppingExtrapolate::AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt)
+    void SubSteppingExtrapolate::AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, 
+										 NekDouble Aii_Dt)
     {
         /*switch(m_velocity.num_elements())
         {
@@ -647,7 +663,8 @@ namespace Nektar
     /** 
      * 
      */    
-    void SubSteppingExtrapolate::AddDuDt2D(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt)
+    void SubSteppingExtrapolate::AddDuDt2D(const Array<OneD, const Array<OneD, NekDouble> >  &N, 
+										   NekDouble Aii_Dt)
     {
         /*int i,n;
         ASSERTL0(m_velocity.num_elements() == 2," Routine currently only set up for 2D");
@@ -741,7 +758,8 @@ namespace Nektar
     /** 
      * 
      */   
-    void SubSteppingExtrapolate::AddDuDt3D(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt)
+    void SubSteppingExtrapolate::AddDuDt3D(const Array<OneD, const Array<OneD, NekDouble> >  &N, 
+										   NekDouble Aii_Dt)
     {
         /*int i,n;
         ASSERTL0(m_velocity.num_elements() == 3," Routine currently only set up for 3D");

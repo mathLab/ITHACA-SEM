@@ -55,7 +55,12 @@ namespace Nektar
           m_velocity(pVel),
           m_comm(pSession->GetComm())
     {
-
+		// count number of fields to get which one is the pressure
+		int numfields = pFields.num_elements();
+		
+		// generating the HOPBC map and setting dimensionality
+		// for following calculation (CurlCurl, tec.)
+		GenerateHOPBCMap(pFields[numfields-1]);
     }
 
     Extrapolate::~Extrapolate()
@@ -66,6 +71,211 @@ namespace Nektar
     std::string Extrapolate::def =
         LibUtilities::SessionReader::RegisterDefaultSolverInfo(
             "NoSubStepping", "No SubStepping");
+	
+	/** 
+	 * Function to extrapolate the new pressure boundary condition.
+	 * Based on the velocity field and on the advection term.
+	 * Acceleration term is also computed.
+	 * This routine is a general one for 2d and 3D application and it can be called
+	 * directly from velocity correction scheme. Specialisation on dimensionality is
+	 * redirected to the CalcPressureBCs method.
+	 */
+	void Extrapolate::EvaluatePressureBCs(const MultiRegions::ExpListSharedPtr &pField,
+										  const Array<OneD, const Array<OneD, NekDouble> > &fields,
+										  const Array<OneD, const Array<OneD, NekDouble> >  &N,
+										  const int kinvis)
+	{		
+		
+		Array<OneD, NekDouble> tmp;
+		Array<OneD, NekDouble> accelerationTerm;
+		
+		int  n,cnt;
+		int  nint    = min(m_pressureCalls++,m_intSteps);
+		int  nlevels = m_pressureHBCs.num_elements();
+		
+		int acc_order = 0;
+        
+		accelerationTerm = Array<OneD, NekDouble>(m_acceleration[0].num_elements(), 0.0);
+		
+		// Rotate HOPBCs storage
+		RollOver(m_pressureHBCs);
+		
+		// Rotate acceleration term
+		RollOver(m_acceleration);
+		
+		// Calculate BCs at current level
+		CalcPressureBCs(pField,fields,N,kinvis);
+		
+		// Copy High order values into storage array 
+		for(cnt = n = 0; n < PBndConds.num_elements(); ++n)
+		{
+			// High order boundary condition;
+			if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+			{
+				int nq = m_PBndExp[n]->GetNcoeffs();
+				Vmath::Vcopy(nq,&(m_PBndExp[n]->GetCoeffs()[0]),1,&(m_pressureHBCs[0])[cnt],1);
+				cnt += nq;
+			}
+		}
+		
+		//Calculate acceleration term at level n based on previous steps
+		if (m_pressureCalls > 2)
+		{
+			acc_order = min(m_pressureCalls-2,m_intSteps);
+			Vmath::Smul(cnt, StifflyStable_Gamma0_Coeffs[acc_order-1],
+						m_acceleration[0], 1,
+						accelerationTerm,  1);
+			
+			for(int i = 0; i < acc_order; i++)
+			{
+				Vmath::Svtvp(cnt, -1*StifflyStable_Alpha_Coeffs[acc_order-1][i],
+							 m_acceleration[i+1], 1,
+							 accelerationTerm,    1,
+							 accelerationTerm,    1);
+			}
+		}
+		
+		// Adding acceleration term to HOPBCs
+		Vmath::Svtvp(cnt, -1.0/m_timestep,
+					 accelerationTerm,  1,
+					 m_pressureHBCs[0], 1,
+					 m_pressureHBCs[0], 1);
+		
+		// Extrapolate to n+1
+		Vmath::Smul(cnt, StifflyStable_Betaq_Coeffs[nint-1][nint-1],
+					m_pressureHBCs[nint-1],    1,
+					m_pressureHBCs[nlevels-1], 1);
+		
+		for(n = 0; n < nint-1; ++n)
+		{
+			Vmath::Svtvp(cnt,StifflyStable_Betaq_Coeffs[nint-1][n],
+						 m_pressureHBCs[n],1,m_pressureHBCs[nlevels-1],1,
+						 m_pressureHBCs[nlevels-1],1);
+		}
+		
+		// Copy values of [dP/dn]^{n+1} in the pressure bcs storage.
+		// m_pressureHBCS[nlevels-1] will be cancelled at next time step
+		for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+		{
+			// High order boundary condition;
+			if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+			{
+				int nq = m_PBndExp[n]->GetNcoeffs();
+				Vmath::Vcopy(nq,&(m_pressureHBCs[nlevels-1])[cnt],1,&(m_PBndExp[n]->UpdateCoeffs()[0]),1);
+				cnt += nq;
+			}
+		}
+	}
+    
+	
+	/**
+     * Unified routine for calculation high-oder terms
+     */
+    void Extrapolate::CalcPressureBCs(const MultiRegions::ExpListSharedPtr &pField,
+									  const Array<OneD, const Array<OneD, NekDouble> > &fields,
+									  const Array<OneD, const Array<OneD, NekDouble> >  &N,
+									  const int kinvis)
+    {	
+        Array<OneD, NekDouble> Pvals;
+        Array<OneD, NekDouble> Uvals;
+        StdRegions::StdExpansionSharedPtr Pbc;
+		
+        Array<OneD, <Array<OneD, const NekDouble> > Velocity(m_curl_dim);
+        Array<OneD, <Array<OneD, const NekDouble> > Advection(m_bnd_dim);
+        
+        Array<OneD, <Array<OneD, NekDouble> > BndValues(m_bnd_dim);
+        Array<OneD, <Array<OneD, NekDouble> > Q(m_bnd_dim);
+		
+        for(int i = 0; i < m_bnd_dim; i++)
+        {
+            BndValues[i] = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
+            Q[i]         = Array<OneD, NekDouble> (m_pressureBCsMaxPts,0.0);
+        }
+		
+        for(int j = 0 ; j < m_HBCdata.num_elements() ; j++)
+        {
+            /// Casting the boundary expansion to the specific case
+            Pbc =  boost::dynamic_pointer_cast<StdRegions::StdExpansion> (m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetExp(m_HBCdata[j].m_bndElmtOffset));
+			
+			/// Picking up the element where the HOPBc is located
+			m_elmt = pField->GetExp(m_HBCdata[j].m_globalElmtID);
+			
+			/// Assigning 
+			for(int i = 0; i < m_bnd_dim; i++)
+			{
+				Velocity[i]  = fields[i] + m_HBCdata[j].m_physOffset;
+				Advection[i] = N[i]      + m_HBCdata[j].m_physOffset;
+			}
+			
+			// for the 3DH1D case we need to grap the conjugate mode
+			if(pField->GetExpType() == MultiRegions::e3DH1D)
+			{
+				Velocity[2]  = fields[2] + m_HBCdata[j].m_assPhysOffset;
+			}
+			
+			/// Calculating the curl-curl and storing it in Q
+			CurlCurl(pField,Velocity,Q,j);
+			
+			// Mounting advection component into the high-order condition
+			for(int i = 0; m_bnd_dim; i++)
+			{
+				MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
+			}
+			
+			Pvals = m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset);
+			Uvals = (m_acceleration[0]) + m_HBCdata[j].m_coeffOffset;
+			
+			// Getting values on the edge and filling the pressure boundary expansion
+			// and the acceleration term. Multiplication by the normal is required
+			switch(pField->GetExpType())
+			{
+				case MultiRegions::e2D:
+				case MultiRegions::e3DH1D:
+				{
+					m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[0],BndValues[0]);
+					m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[1],BndValues[1]);
+					Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],Pvals);
+					
+					m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[0],BndValues[0]);
+					m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[1],BndValues[1]);
+					Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],Uvals);
+				}
+					break;
+					
+				case MultiRegions::e3DH2D:
+				{
+					if(m_HBCdata[j].m_elmtTraceID == 0)
+					{
+						(m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset))[0] = -1.0*Q[0][0];
+					}
+					else if (m_HBCdata[j].m_elmtTraceID == 1)
+					{
+						(m_PBndExp[m_HBCdata[j].m_bndryElmtID]->UpdateCoeffs()+m_PBndExp[m_HBCdata[j].m_bndryElmtID]->GetCoeff_Offset(m_HBCdata[j].m_bndElmtOffset))[0] = Q[0][m_HBCdata[j].m_ptsInElmt-1];
+					}
+					else 
+					{
+						ASSERTL0(false,"In the 3D homogeneous 2D approach BCs edge ID can be just 0 or 1 ");
+					}
+					
+				}
+					break;
+					
+				case MultiRegions::e3D:
+				{
+					m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[0],BndValues[0]);
+					m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[1],BndValues[1]);
+					m_elmt->GetFacePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Q[2],BndValues[2]);
+					Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],BndValues[2],Pvals);
+					
+					m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[0],BndValues[0]);
+					m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[1],BndValues[1]);
+					m_elmt->GetEdgePhysVals(m_HBCdata[j].m_elmtTraceID,Pbc,Velocity[2],BndValues[2]);
+					Pbc->NormVectorIProductWRTBase(BndValues[0],BndValues[1],BndValues[2],Uvals);
+				}
+					break;
+			}
+		}
+	}
 	
 	
 	/**
@@ -203,9 +413,79 @@ namespace Nektar
 	/**
 	 * Map to directly locate HOPBCs position and offsets in all scenarios
 	 */
-	void Extrapolate::GenerateHOPBCMap(const MultiRegionss::ExpListSharedPtr &pField,
-									const int HOPBCnumber)
+	void Extrapolate::GenerateHOPBCMap(const MultiRegionss::ExpListSharedPtr &pField)
 	{
+		
+		m_PBndConds   = pField->GetBndConditions();
+		m_PBndExp     = pField->GetBndCondExpansions();
+		
+		// Set up mapping from pressure boundary condition to pressure element details.
+		pField->GetBoundaryToElmtMap(m_pressureBCtoElmtID,m_pressureBCtoTraceID);
+		
+		// find the maximum values of points  for pressure BC evaluation
+		m_pressureBCsMaxPts = 0; 
+		int cnt, n;
+		for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+		{
+			for(int i = 0; i < m_PBndExp[n]->GetExpSize(); ++i)
+			{
+				m_pressureBCsMaxPts = max(m_pressureBCsMaxPts, PressureField->GetExp(m_pressureBCtoElmtID[cnt++])->GetTotPoints());
+			}
+		}
+		
+		// Storage array for high order pressure BCs
+		m_pressureHBCs = Array<OneD, Array<OneD, NekDouble> > (m_intSteps);
+		m_acceleration = Array<OneD, Array<OneD, NekDouble> > (m_intSteps + 1);
+		
+		int HBCnumber = 0;
+		for(cnt = n = 0; n < m_PBndConds.num_elements(); ++n)
+		{
+			// High order boundary condition;
+			if(m_PBndConds[n]->GetUserDefined() == SpatialDomains::eHigh)
+			{
+                cnt += m_PBndExp[n]->GetNcoeffs();
+                HBCnumber += m_PBndExp[n]->GetExpSize();
+			}
+		}
+		
+		ASSERTL0(HBCnumber > 0 ,"At least one high-order pressure boundary condition is required for scheme consistency");
+		
+		m_acceleration[0] = Array<OneD, NekDouble>(cnt, 0.0);
+		for(n = 0; n < m_intSteps; ++n)
+		{
+			m_pressureHBCs[n]   = Array<OneD, NekDouble>(cnt, 0.0);
+			m_acceleration[n+1] = Array<OneD, NekDouble>(cnt, 0.0);
+		}
+		
+		switch(pField->GetExpType())
+		{
+			case MultiRegions::e2D:
+			{
+				m_curl_dim = 2;
+				m_bnd_dim  = 2;
+			}
+				break;
+			case MultiRegions::e3DH1D:
+			{
+				m_curl_dim = 3;
+				m_bnd_dim  = 2;
+			}
+				break;
+			case MultiRegions::e3DH2D:
+			{
+				m_curl_dim = 3;
+				m_bnd_dim  = 1;
+			}
+				break;
+			case MultiRegions::e3D:
+			{
+				m_curl_dim = 3;
+				m_bnd_dim  = 3;
+			}
+				break;
+		}
+		
+		
 		m_HBCdata = Array<OneD, HBCInfo>(HOPBCnumber);
 		
         switch(pField->GetExpType())

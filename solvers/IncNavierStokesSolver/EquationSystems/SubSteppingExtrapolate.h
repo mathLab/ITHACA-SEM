@@ -84,17 +84,14 @@ namespace Nektar
         virtual void v_SubStepSaveFields(const int nstep);
         virtual void v_SubStepSetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray, const NekDouble Aii_DT);
         virtual void v_SubStepAdvance(const int nstep, NekDouble m_time);
-		virtual void v_EvaluatePressureBCs(const MultiRegions::ExpListSharedPtr &pField,const Array<OneD, const Array<OneD, NekDouble> > &fields,const Array<OneD, const Array<OneD, NekDouble> >  &N,const int kinvis,);
-		virtual void v_CalcPressureBCs(const MultiRegions::ExpListSharedPtr &pField,const Array<OneD, const Array<OneD, NekDouble> > &fields,const Array<OneD, const Array<OneD, NekDouble> >  &N,const int kinvis);
+		virtual void v_MountHOPBCs(int HBCdata, NekDouble kinvis, Array<OneD, NekDouble> &Q, Array<OneD, NekDouble> &Advection);
 
         void AddDuDt(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt)
 		void AddDuDt2D(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);
         void AddDuDt3D(const Array<OneD, const Array<OneD, NekDouble> >  &N, NekDouble Aii_Dt);
 
         void SubStepAdvection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  Array<OneD, Array<OneD,NekDouble> > &outarray, const NekDouble time);
-        
         void SubStepProjection(const Array<OneD, const Array<OneD, NekDouble> > &inarray,  Array<OneD, Array<OneD, NekDouble> > &outarray, const NekDouble time);
-        
         void SubStepExtrapoloteField(NekDouble toff, Array< OneD, Array<OneD, NekDouble> > &ExtVel);
 
         void AddAdvectionPenaltyFlux(const Array<OneD, const Array<OneD, NekDouble> > &velfield,const Array<OneD, const Array<OneD, NekDouble> > &physfield,Array<OneD, Array<OneD, NekDouble> > &outarray);

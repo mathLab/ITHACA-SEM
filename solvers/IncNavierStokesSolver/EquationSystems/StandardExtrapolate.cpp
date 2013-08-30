@@ -38,10 +38,6 @@
 
 namespace Nektar
 {
-    /*********************************/
-    /* No Standard Extrapolate class */
-    /*********************************/
-
     /**
      * Registers the class with the Factory.
      */
@@ -90,6 +86,17 @@ namespace Nektar
      */
     void StandardExtrapolate::v_SubStepSaveFields(const int nstep)
     {
-    }    
+    }
+	
+	/** 
+     * 
+     */
+	void StandardExtrapolate::v_MountHOPBCs(int HBCdata, 
+											NekDouble kinvis, 
+											Array<OneD, NekDouble> &Q, 
+											Array<OneD, NekDouble> &Advection)
+	{
+		Vmath::Svtvp(HBCdata,-kinvis,Q,1,Advection,1,Q,1);
+	}
 }
 

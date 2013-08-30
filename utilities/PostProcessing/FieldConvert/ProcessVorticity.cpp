@@ -159,7 +159,7 @@ namespace Nektar
             
             for (j = 0; j < nfields + addfields; ++j)
             {
-                for (i = 0; i < m_f->m_fielddef.size(); ++i)
+                for (i = 0; i < FieldDef.size(); ++i)
                 {   
                     if (j >= nfields)
                     {
@@ -167,7 +167,7 @@ namespace Nektar
                     }
                     else
                     {
-                        FieldDef[i]->m_fields.push_back(m_f->m_fielddef[i]->m_fields[j]);
+                        FieldDef[i]->m_fields.push_back(m_f->m_fielddef[0]->m_fields[j]);
                     }
                     m_f->m_exp[j]->AppendFieldData(FieldDef[i], FieldData[i]);
                 }

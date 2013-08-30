@@ -150,9 +150,9 @@ int main(int argc, char* argv[])
     
     vector<string> inout = vm["input-file"].as<vector<string> >();
     
-    if (inout.size() < 2)
+    if (inout.size() < 3)
     {
-        cerr << "ERROR: You must specify an input and output file." << endl;
+        cerr << "ERROR: You must specify input(s) and and output file." << endl;
         return 1;
     }
 

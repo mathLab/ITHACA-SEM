@@ -20,3 +20,7 @@ SET(FieldConvertSources
   
 ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvertHeaders})
 
+
+    ADD_NEKTAR_TEST(chan3D_tec)
+
+

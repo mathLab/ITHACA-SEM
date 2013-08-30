@@ -66,7 +66,6 @@ namespace Nektar
         {
             m_nConvectiveFields = m_fields.num_elements()-1;
             m_pressure = m_fields[m_nConvectiveFields];
-            m_pressureCalls = 1;
         }
         else
         {
@@ -136,10 +135,7 @@ namespace Nektar
             
         }
 
-        m_session->MatchSolverInfo("ShowTimings","True",m_showTimings,false);
-
-        m_session->MatchSolverInfo("SmoothAdvection", "True",
-                                   m_SmoothAdvection, false);
+        m_session->MatchSolverInfo("SmoothAdvection", "True",m_SmoothAdvection, false);
 
         m_integrationScheme = LibUtilities::GetTimeIntegrationWrapperFactory().CreateInstance(TimeIntStr);
         m_intSteps = m_integrationScheme->GetIntegrationSteps();

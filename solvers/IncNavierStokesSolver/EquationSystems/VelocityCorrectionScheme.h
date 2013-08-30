@@ -59,33 +59,28 @@ namespace Nektar
 
 
         /// Constructor.
-        VelocityCorrectionScheme(
-                const LibUtilities::SessionReaderSharedPtr& pSession);
+        VelocityCorrectionScheme(const LibUtilities::SessionReaderSharedPtr& pSession);
 
         virtual ~VelocityCorrectionScheme();
 
         virtual void v_InitObject();
 
-        void SetUpPressureForcing(
-                const Array<OneD, const Array<OneD, NekDouble> > &fields,
-                      Array<OneD, Array<OneD, NekDouble> > &Forcing,
-                const NekDouble aii_Dt);
+        void SetUpPressureForcing(const Array<OneD, const Array<OneD, NekDouble> > &fields,
+								  Array<OneD, Array<OneD, NekDouble> > &Forcing,
+								  const NekDouble aii_Dt);
 
-        void SetUpViscousForcing(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &Forcing,
-                const NekDouble aii_Dt);
+        void SetUpViscousForcing(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+								 Array<OneD, Array<OneD, NekDouble> > &Forcing,
+								 const NekDouble aii_Dt);
 
-        void SolveUnsteadyStokesSystem(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
-                const NekDouble time,
-                const NekDouble a_iixDt);
+        void SolveUnsteadyStokesSystem(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+									   Array<OneD, Array<OneD, NekDouble> > &outarray,
+									   const NekDouble time,
+									   const NekDouble a_iixDt);
 
-        void EvaluateAdvection_SetPressureBCs(
-                const Array<OneD, const Array<OneD, NekDouble> > &inarray,
-                      Array<OneD, Array<OneD, NekDouble> > &outarray,
-                const NekDouble time);
+        void EvaluateAdvection_SetPressureBCs(const Array<OneD, const Array<OneD, NekDouble> > &inarray,
+											  Array<OneD, Array<OneD, NekDouble> > &outarray,
+											  const NekDouble time);
 
     protected:
 

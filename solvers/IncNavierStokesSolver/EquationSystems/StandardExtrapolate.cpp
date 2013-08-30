@@ -44,7 +44,7 @@ namespace Nektar
     std::string StandardExtrapolate::className = GetExtrapolateFactory().RegisterCreatorFunction(
         "StandardExtrapolate",
         StandardExtrapolate::create,
-        "No SubStepping");
+        "StandardExtrapolate");
 
     StandardExtrapolate::StandardExtrapolate(
         const LibUtilities::SessionReaderSharedPtr pSession,

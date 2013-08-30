@@ -18,33 +18,32 @@ int main(int argc, char *argv[])
     if(argc != 6)
     {
         fprintf(stderr,
-                "Usage: Fld2DTo2D5 3dmeshfile 3dfieldfile 2dmeshfile 2dfieldfile outfield\n");
+                "Usage: Fld2DTo2D5 2dmeshfile 2dfieldfile 3dmeshfile 3dfieldfile outfield\n");
         exit(1);
     }
     string datasave(argv[5]);
-    string mesh2d(argv[3]);
-    string mesh3d(argv[1]);
-    //create 2d session
+    
+    string mesh2d(argv[1]);
+    string mesh3d(argv[3]);
+    
+    // create 2d session
     LibUtilities::SessionReaderSharedPtr vSession2d
             = LibUtilities::SessionReader::CreateInstance(2, argv);
     std::vector<std::string> filenames;
     filenames.push_back(mesh3d);
-    //create 3D session
+    // create 3D session
     LibUtilities::SessionReaderSharedPtr vSession3d
             = LibUtilities::SessionReader::CreateInstance(2, argv, filenames, vSession2d->GetComm());
-
-    //----------------------------------------------
-    // Read in 2d and 2d5 mesh from input file
     
     SpatialDomains::MeshGraphSharedPtr graphShPt2d = SpatialDomains::MeshGraph::Read(vSession2d);
     SpatialDomains::MeshGraphSharedPtr graphShPt3d = SpatialDomains::MeshGraph::Read(vSession3d);
-    //2D
-    string field2dfile(argv[4]);
+    // 2D
+    string field2dfile(argv[2]);
     vector<LibUtilities::FieldDefinitionsSharedPtr> field2ddef;
     vector<vector<NekDouble> > field2ddata;
     LibUtilities::Import(field2dfile,field2ddef,field2ddata);
-    //3D
-    string field3dfile(argv[2]);
+    // 3D
+    string field3dfile(argv[4]);
     vector<LibUtilities::FieldDefinitionsSharedPtr> field3ddef;
     vector<vector<NekDouble> > field3ddata;
     LibUtilities::Import(field3dfile,field3ddef,field3ddata);
@@ -75,11 +74,9 @@ int main(int argc, char *argv[])
     bool useFFT = false;
     bool dealiasing = false;
     // Define Expansion
-    //int expdim2d  = graphShPt2d->GetMeshDimension();
     int nfields2d = field2ddef[0]->m_fields.size();
-    //int expdim3d  = graphShPt3d->GetMeshDimension();
     int nfields3d = field3ddef[0]->m_fields.size();
-    //Gen 2d
+    // Gen 2d
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp2d(nfields2d);
     MultiRegions::ExpList2DSharedPtr Exp2D;
     Exp2D = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(vSession2d,graphShPt2d);
@@ -88,7 +85,7 @@ int main(int argc, char *argv[])
     {
         Exp2d[i] = MemoryManager<MultiRegions::ExpList2D>::AllocateSharedPtr(*Exp2D);
     }
-    //Gen 3d
+    // Gen 3d
     Array<OneD, MultiRegions::ExpListSharedPtr> Exp3d(nfields3d);
     MultiRegions::ExpList3DHomogeneous1DSharedPtr Exp3DH1;
     // Define Homogeneous expansion

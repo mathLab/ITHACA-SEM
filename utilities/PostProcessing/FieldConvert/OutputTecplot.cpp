@@ -43,20 +43,21 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey OutputTecplot::className =
+        ModuleKey OutputTecplot::m_className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eOutputModule, "dat"), OutputTecplot::create,
                 "Writes a Tecplot file.");
 
         OutputTecplot::OutputTecplot(FieldSharedPtr f) : OutputModule(f)
         {
+            m_requireEquiSpaced = true;
         }
 
         OutputTecplot::~OutputTecplot()
         {
         }
         
-        void OutputTecplot::Process()
+        void OutputTecplot::Process(po::variables_map &vm)
         {
             int i, j;
             if (m_f->m_verbose)
@@ -83,7 +84,7 @@ namespace Nektar
             {
                 m_f->m_exp[0]->WriteTecplotHeader(outfile,var);
                 m_f->m_exp[0]->WriteTecplotZone(outfile);
-                for(int j = 0; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
+                for(int j = 0; j < m_f->m_exp.size(); ++j)
                 {
                     m_f->m_exp[j]->WriteTecplotField(outfile);
                 }

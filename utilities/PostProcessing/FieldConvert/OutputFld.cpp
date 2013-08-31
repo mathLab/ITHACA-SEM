@@ -43,7 +43,7 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey OutputFld::className =
+        ModuleKey OutputFld::m_className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eOutputModule, "fld"), OutputFld::create,
                 "Writes a FLD file.");
@@ -56,7 +56,7 @@ namespace Nektar
         {
         }
         
-        void OutputFld::Process()
+        void OutputFld::Process(po::variables_map &vm)
         {
             int i, j;
             if (m_f->m_verbose)

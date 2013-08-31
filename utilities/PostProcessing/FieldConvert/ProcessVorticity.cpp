@@ -59,7 +59,7 @@ namespace Nektar
         {
         }
 
-        void ProcessVorticity::Process()
+        void ProcessVorticity::Process(po::variables_map &vm)
         {
             if (m_f->m_verbose)
             {

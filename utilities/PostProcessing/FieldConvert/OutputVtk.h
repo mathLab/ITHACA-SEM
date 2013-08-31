@@ -51,13 +51,13 @@ namespace Nektar
             static boost::shared_ptr<Module> create(FieldSharedPtr f) {
                 return MemoryManager<OutputVtk>::AllocateSharedPtr(f);
             }
-            static ModuleKey className;
+            static ModuleKey m_className;
             
             OutputVtk(FieldSharedPtr f);
             virtual ~OutputVtk();
             
             /// Write fld to output file.
-            virtual void Process();
+            virtual void Process(po::variables_map &vm);
         };
     }
 }

@@ -42,14 +42,14 @@
 using namespace std;
 using namespace Nektar::Utilities;
 
-namespace po = boost::program_options;
-
 int main(int argc, char* argv[]) 
 {
     po::options_description desc("Available options");
     desc.add_options()
         ("help,h",         "Produce this help message.")
         ("modules-list,l", "Print the list of available modules.")
+        ("output-points,n",po::value<string>(),
+         "Output at p equipspaced points (for .dat, .vtk).")
         ("modules-opt,p",  po::value<string>(),
              "Print options for a module.")
         ("module,m",       po::value<vector<string> >(), 
@@ -228,7 +228,7 @@ int main(int argc, char* argv[])
             module.first  = eProcessModule;
             module.second = tmp1[0];
         }
- 
+        
         // Create module.
         ModuleSharedPtr mod;
         if (i == 0 || i >= nInput)
@@ -241,7 +241,7 @@ int main(int argc, char* argv[])
         {
             inputModule = boost::dynamic_pointer_cast<InputModule>(mod);
         }
-
+        
         if (i < nInput)
         {
             inputModule->AddFile(module.second, tmp1[0]);
@@ -278,10 +278,27 @@ int main(int argc, char* argv[])
         mod->SetDefaults();
     }
 
+    // if any output module has to reset points then set intput modules to match 
+    bool RequiresEquiSpaced = false;
+    for (int i = 0; i < modules.size(); ++i)
+    {
+        if(modules[i]->GetRequireEquiSpaced())
+        {
+            RequiresEquiSpaced = true;
+        }
+    }
+    if(RequiresEquiSpaced)
+    {
+        for (int i = 0; i < modules.size(); ++i)
+        {
+            modules[i]->SetRequireEquiSpaced(true);
+        }
+    }
+
     // Run field process.
     for (int i = 0; i < modules.size(); ++i)
     {
-        modules[i]->Process();
+        modules[i]->Process(vm);
     }
     
     return 0;

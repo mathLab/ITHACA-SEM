@@ -43,20 +43,21 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey OutputVtk::className =
+        ModuleKey OutputVtk::m_className =
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eOutputModule, "vtu"), OutputVtk::create,
                 "Writes a VTU file.");
 
         OutputVtk::OutputVtk(FieldSharedPtr f) : OutputModule(f)
         {
+            m_requireEquiSpaced = true;
         }
 
         OutputVtk::~OutputVtk()
         {
         }
         
-        void OutputVtk::Process()
+        void OutputVtk::Process(po::variables_map &vm)
         {
             int i, j;
             if (m_f->m_verbose)

@@ -59,7 +59,7 @@ namespace Nektar
             virtual ~ProcessVorticity();
             
             /// Write mesh to output file.
-            virtual void Process();
+            virtual void Process(po::variables_map &vm);
         };
     }
 }

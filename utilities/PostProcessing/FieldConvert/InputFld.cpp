@@ -47,11 +47,15 @@ using namespace std;
 #include <MultiRegions/ExpList3DHomogeneous1D.h>
 #include <MultiRegions/ExpList3DHomogeneous2D.h>
 
+
+static std::string npts = LibUtilities::SessionReader::RegisterCmdLineArgument(
+                "NumberOfPoints","n","Define number of points to dump output");
+
 namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey InputFld::className[4] = {
+        ModuleKey InputFld::m_className[4] = {
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eInputModule, "xml"), InputFld::create,
                 "Reads Fld file."),
@@ -86,7 +90,7 @@ namespace Nektar
         /**
          *
          */
-        void InputFld::Process()
+        void InputFld::Process(po::variables_map &vm)
         {
             map<string, vector<string> >::iterator it;
             
@@ -111,6 +115,53 @@ namespace Nektar
             int expdim  = m_f->m_graph->GetMeshDimension();
             int nfields = m_f->m_fielddef[0]->m_fields.size();
             
+            int nPoints = 0, nzPlanes = 0;
+            if(vm.count("output-points"))
+            {
+                LibUtilities::Equation expession(m_f->m_session, 
+                                                 vm["output-points"].as<string>());
+                                
+                nPoints = expession.Evaluate();
+            }
+
+            if(m_requireEquiSpaced) // set up points to be equispaced 
+            {
+                int i,j;
+
+                for(i = 0; i < m_f->m_fielddef.size(); ++i)
+                {
+                    vector<LibUtilities::PointsType> ptype;
+                    for(j = 0; j < 3; ++j)
+                    {
+                        ptype.push_back(LibUtilities::ePolyEvenlySpaced);
+                    }
+                    
+                    m_f->m_fielddef[i]->m_pointsDef = true;
+                    m_f->m_fielddef[i]->m_points    = ptype;
+                    
+                    vector<unsigned int> porder;
+                    if(m_f->m_fielddef[i]->m_numPointsDef == false)
+                    {
+                        for(j = 0; j < m_f->m_fielddef[i]->m_numModes.size(); ++j)
+                        {
+                            porder.push_back(nPoints);
+                        }
+                        
+                        m_f->m_fielddef[i]->m_numPointsDef = true;
+                    }
+                    else
+                    {
+                        for(j = 0; j < m_f->m_fielddef[i]->m_numPoints.size(); ++j)
+                        {
+                            porder.push_back(nPoints);
+                        }
+                    }
+                    m_f->m_fielddef[i]->m_numPoints = porder;
+                }
+                
+                m_f->m_graph->SetExpansions(m_f->m_fielddef);
+            }
+
             m_f->m_exp.resize(nfields);
             
             bool useFFT     = false;

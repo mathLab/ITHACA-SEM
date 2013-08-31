@@ -47,6 +47,8 @@
 
 #include "Field.h"
 
+namespace po = boost::program_options;
+
 namespace Nektar
 {
     namespace Utilities
@@ -131,17 +133,29 @@ namespace Nektar
         {
         public:
         Module(FieldSharedPtr p_f) : m_f(p_f) {}
-            virtual void Process() = 0;
+            virtual void Process(po::variables_map &vm) = 0;
             
             void RegisterConfig(string key, string value);
             void PrintConfig();
             void SetDefaults();
             
+            bool GetRequireEquiSpaced(void)
+            {
+                return m_requireEquiSpaced;
+            }
+
+            void SetRequireEquiSpaced(bool pVal)
+            {
+                m_requireEquiSpaced = pVal;
+            }
+
         protected:
             /// Field object
             FieldSharedPtr m_f;
             /// List of configuration values.
             map<string, ConfigOption> m_config;
+            bool m_requireEquiSpaced;
+            
         };
         
         /**
@@ -164,6 +178,7 @@ namespace Nektar
             void PrintSummary();
             map<string, vector<string> > m_files;
             set<string> m_allowedFiles;
+
         };
         
         typedef boost::shared_ptr<InputModule> InputModuleSharedPtr;
@@ -176,6 +191,7 @@ namespace Nektar
         {
         public:
             ProcessModule(FieldSharedPtr p_f) : Module(p_f) {}
+
         };
         
         /**
@@ -193,6 +209,7 @@ namespace Nektar
         protected:
             /// Output stream
             ofstream m_fldFile;
+        
         };
         
         typedef pair<ModuleType,string> ModuleKey;

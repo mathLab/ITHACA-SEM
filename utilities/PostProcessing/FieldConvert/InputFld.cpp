@@ -55,10 +55,13 @@ namespace Nektar
 {
     namespace Utilities
     {
-        ModuleKey InputFld::m_className[4] = {
+        ModuleKey InputFld::m_className[5] = {
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eInputModule, "xml"), InputFld::create,
-                "Reads Fld file."),
+                "Reads Xml file."),
+            GetModuleFactory().RegisterCreatorFunction(
+                ModuleKey(eInputModule, "xml.gz"), InputFld::create,
+                "Reads Xml file."),
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eInputModule, "fld"), InputFld::create,
                 "Reads Fld file."),
@@ -67,7 +70,7 @@ namespace Nektar
                 "Reads Fld file."),
             GetModuleFactory().RegisterCreatorFunction(
                 ModuleKey(eInputModule, "rst"), InputFld::create,
-                "Reads Fld file.")
+                "Reads Fld file."),
         };
 
         /**
@@ -77,6 +80,7 @@ namespace Nektar
         InputFld::InputFld(FieldSharedPtr f) : InputModule(f)
         {
             m_allowedFiles.insert("xml");
+            m_allowedFiles.insert("xml.gz");
             m_allowedFiles.insert("fld");
             m_allowedFiles.insert("chk");
             m_allowedFiles.insert("rst");
@@ -94,18 +98,30 @@ namespace Nektar
         {
             map<string, vector<string> >::iterator it;
             
+
             LibUtilities::Import(m_files["fld"][0], m_f->m_fielddef, m_f->m_data);
             
-            if (m_files.count("xml") == 0)
+            if (m_files.count("xml") == 0 && m_files.count("xml.gz") == 0 )
             {
                 return;
             }
-            int argc = m_files["xml"].size()+1;
+            
+            string xml_ending; 
+            if(m_files.count("xml") == 0)
+            {
+                xml_ending = "xml.gz";
+            }
+            else
+            {
+                xml_ending = "xml";
+            }
+
+            int argc = m_files[xml_ending].size()+1;
             char *argv[argc];
             argv[0] = "ProcessField";
-            for (int i = 0; i < m_files["xml"].size(); ++i)
+            for (int i = 0; i < m_files[xml_ending].size(); ++i)
             {
-                argv[i+1] = strdup(m_files["xml"][i].c_str());
+                argv[i+1] = strdup(m_files[xml_ending][i].c_str());
             }
             m_f->m_session = LibUtilities::SessionReader::
                 CreateInstance(argc, argv);
@@ -115,18 +131,19 @@ namespace Nektar
             int expdim  = m_f->m_graph->GetMeshDimension();
             int nfields = m_f->m_fielddef[0]->m_fields.size();
             
-            int nPoints = 0, nzPlanes = 0;
-            if(vm.count("output-points"))
-            {
-                LibUtilities::Equation expession(m_f->m_session, 
-                                                 vm["output-points"].as<string>());
-                                
-                nPoints = expession.Evaluate();
-            }
 
             if(m_requireEquiSpaced) // set up points to be equispaced 
             {
                 int i,j;
+                int nPointsNew = -1;
+                
+                if(vm.count("output-points"))
+                {
+                    LibUtilities::Equation expession(m_f->m_session, 
+                                                     vm["output-points"].as<string>());
+                    nPointsNew = expession.Evaluate();
+                }
+                
 
                 for(i = 0; i < m_f->m_fielddef.size(); ++i)
                 {
@@ -140,22 +157,22 @@ namespace Nektar
                     m_f->m_fielddef[i]->m_points    = ptype;
                     
                     vector<unsigned int> porder;
-                    if(m_f->m_fielddef[i]->m_numPointsDef == false)
+                    if(nPointsNew != -1)
                     {
                         for(j = 0; j < m_f->m_fielddef[i]->m_numModes.size(); ++j)
                         {
-                            porder.push_back(nPoints);
+                            porder.push_back(nPointsNew);
                         }
-                        
-                        m_f->m_fielddef[i]->m_numPointsDef = true;
                     }
                     else
                     {
-                        for(j = 0; j < m_f->m_fielddef[i]->m_numPoints.size(); ++j)
+                        for(j = 0; j < m_f->m_fielddef[i]->m_numModes.size(); ++j)
                         {
-                            porder.push_back(nPoints);
+                            porder.push_back(m_f->m_fielddef[i]->m_numModes[j]);
                         }
                     }
+                    
+                    m_f->m_fielddef[i]->m_numPointsDef = true;
                     m_f->m_fielddef[i]->m_numPoints = porder;
                 }
                 

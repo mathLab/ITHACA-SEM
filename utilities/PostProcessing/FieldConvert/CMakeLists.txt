@@ -22,6 +22,7 @@ ADD_UTILITIES_EXECUTABLE(FieldConvert util ${FieldConvertSources} ${FieldConvert
 
 
     ADD_NEKTAR_TEST(chan3D_tec)
+    ADD_NEKTAR_TEST(chan3D_tec_n10)
     ADD_NEKTAR_TEST(chan3D_vtu)
 
 

@@ -10,7 +10,7 @@
      <metrics>
         <metric type="file" id="1">
             <file filename="chan3D.vtu">
-                <sha1>6d7edc7dac35ae0b7626e90564d31c98eaaa1d9d</sha1>
+                <sha1>ac74dd20883482c3b529e4aa82fbf1291c0d17d0</sha1>
              </file>
          </metric>
     </metrics>

@@ -145,6 +145,9 @@ namespace Nektar
                 }
                 
 
+                
+
+
                 for(i = 0; i < m_f->m_fielddef.size(); ++i)
                 {
                     vector<LibUtilities::PointsType> ptype;
@@ -180,7 +183,7 @@ namespace Nektar
             }
 
             m_f->m_exp.resize(nfields);
-            
+        
             bool useFFT     = false;
             bool dealiasing = false;
 

@@ -1483,16 +1483,33 @@ namespace Nektar
                         }
                     }
 
-                    // loop over all elements and set expansion
+                    // loop over all elements in partition and set expansion
                     expansionMap = m_expansionMapShPtrMap.find(field)->second;
                     LibUtilities::BasisKeyVector def;
                                 
+#if 0               // This version will not work in parallel  
                     for(k = 0; k < fielddef[i]->m_elementIDs.size(); ++k)
                     {
                         ExpansionShPtr tmpexp =
                             MemoryManager<Expansion>::AllocateSharedPtr(geom, def);
                         (*expansionMap)[fielddef[i]->m_elementIDs[k]] = tmpexp;
                     }
+#else
+                    CompositeMap::const_iterator compIter;
+
+                    for (compIter = m_domain.begin(); compIter != m_domain.end(); ++compIter)
+                    {
+                        GeometryVector::const_iterator x;
+                        for (x = compIter->second->begin(); x != compIter->second->end(); ++x)
+                        {
+                            ExpansionShPtr expansionElementShPtr =
+                                MemoryManager<Expansion>::AllocateSharedPtr(*x, def);
+                            int id = (*x)->GetGlobalID();
+                            (*expansionMap)[id] = expansionElementShPtr;
+                            
+                        }
+                    }
+#endif
                 }
             }
 
@@ -1542,8 +1559,11 @@ namespace Nektar
                         {
                         case LibUtilities::eSegment:
                         {
-                            ASSERTL0(m_segGeoms.count(fielddef[i]->m_elementIDs[j]),
-                                    "Failed to find geometry with same global id");
+                            if(m_segGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
+                            {
+                                // skip element likely from parallel read
+                                continue;
+                            }
                             geom = m_segGeoms[fielddef[i]->m_elementIDs[j]];
 
                             LibUtilities::PointsKey pkey(nmodes[cnt]+1, LibUtilities::eGaussLobattoLegendre);
@@ -1575,8 +1595,11 @@ namespace Nektar
                         break;
                         case LibUtilities::eTriangle:
                         {
-                            ASSERTL0(m_triGeoms.count(fielddef[i]->m_elementIDs[j]),
-                                    "Failed to find geometry with same global id");
+                            if(m_triGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
+                            {
+                                // skip element likely from parallel read
+                                continue;
+                            }
                             geom = m_triGeoms[fielddef[i]->m_elementIDs[j]];
 
                             LibUtilities::PointsKey pkey(nmodes[cnt]+1, LibUtilities::eGaussLobattoLegendre);
@@ -1626,8 +1649,12 @@ namespace Nektar
                         break;
                         case LibUtilities::eQuadrilateral:
                         {
-                            ASSERTL0(m_quadGeoms.count(fielddef[i]->m_elementIDs[j]),
-                                    "Failed to find geometry with same global id");
+                            if(m_quadGeoms.count(fielddef[i]->m_elementIDs[j]) == 0)
+                            {
+                                // skip element likely from parallel read
+                                continue;
+                            }
+
                             geom = m_quadGeoms[fielddef[i]->m_elementIDs[j]];
 
                             for(int b = 0; b < 2; ++b)
@@ -1663,8 +1690,14 @@ namespace Nektar
                         case LibUtilities::eTetrahedron:
                         {
                             k = fielddef[i]->m_elementIDs[j];
-                            ASSERTL0(m_tetGeoms.find(k) != m_tetGeoms.end(),
-                                    "Failed to find geometry with same global id");
+                            
+                            // allow for possibility that fielddef is
+                            // larger than m_graph which can happen in
+                            // parallel runs
+                            if(m_tetGeoms.count(k) == 0)
+                            {
+                                continue;
+                            }
                             geom = m_tetGeoms[k];
 
                             for(int b = 0; b < 3; ++b)
@@ -1701,8 +1734,10 @@ namespace Nektar
                         case LibUtilities::ePrism:
                         {
                             k = fielddef[i]->m_elementIDs[j];
-                            ASSERTL0(m_prismGeoms.find(k) != m_prismGeoms.end(),
-                                    "Failed to find geometry with same global id");
+                            if(m_prismGeoms.count(k) == 0)
+                            {
+                                continue;
+                            }
                             geom = m_prismGeoms[k];
 
                             for(int b = 0; b < 3; ++b)
@@ -1738,8 +1773,11 @@ namespace Nektar
                         case LibUtilities::eHexahedron:
                         {
                             k = fielddef[i]->m_elementIDs[j];
-                            ASSERTL0(m_hexGeoms.find(k) != m_hexGeoms.end(),
-                                    "Failed to find geometry with same global id");
+                            if(m_hexGeoms.count(k) == 0)
+                            {
+                                continue;
+                            }
+
                             geom = m_hexGeoms[k];
 
                             for(int b = 0; b < 3; ++b)

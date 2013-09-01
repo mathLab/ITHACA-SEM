@@ -66,6 +66,15 @@ namespace Nektar
             
             // Extract the output filename and extension
             string filename = m_config["outfile"].as<string>();
+            // amend for parallel output if required 
+            if(m_f->m_session->GetComm()->GetSize() != 1)
+            {
+                int    dot  = filename.find_last_of('.');
+                string ext = filename.substr(dot,filename.length()-dot);
+                string procId = "_P" + boost::lexical_cast<std::string>(m_f->m_session->GetComm()->GetRank());
+                string start = filename.substr(0,dot);
+                filename = start + procId + ext;
+            }
             
             // Write the output file
             LibUtilities::Write(filename, m_f->m_fielddef, m_f->m_data);

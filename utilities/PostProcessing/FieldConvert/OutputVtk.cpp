@@ -96,6 +96,8 @@ namespace Nektar
             }
             m_f->m_exp[0]->WriteVtkFooter(outfile);
             cout << "Written file: " << filename << endl;
+            //  Put in a block ot amke sure all outputs have been completed
+            m_f->m_session->GetComm()->Block(); 
         }        
     }
 }

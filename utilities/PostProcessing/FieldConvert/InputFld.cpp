@@ -96,10 +96,26 @@ namespace Nektar
          */
         void InputFld::Process(po::variables_map &vm)
         {
-            map<string, vector<string> >::iterator it;
-            
+            string fldending;
+            //Determine appropriate field input 
+            if(m_files.count("fld") != 0)
+            {
+                fldending = "fld";
+            }
+            else if(m_files.count("chk") != 0)
+            {
+                fldending = "chk";
+            }
+            else if (m_files.count("rst") != 0)
+            {
+                fldending = "rst";
+            }
+            else
+            {
+                ASSERTL0(false,"no input file found");
+            }
 
-            LibUtilities::Import(m_files["fld"][0], m_f->m_fielddef, m_f->m_data);
+            LibUtilities::Import(m_files[fldending][0], m_f->m_fielddef, m_f->m_data);
             
             if (m_files.count("xml") == 0 && m_files.count("xml.gz") == 0 )
             {
@@ -144,7 +160,7 @@ namespace Nektar
                     nPointsNew = expession.Evaluate();
                 }
                 
-
+                
                 
 
 

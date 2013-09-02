@@ -78,6 +78,9 @@ namespace Nektar
             
             // Write the output file
             LibUtilities::Write(filename, m_f->m_fielddef, m_f->m_data);
+            //  Put in a block ot amke sure all outputs have been completed
+            m_f->m_session->GetComm()->Block(); 
+
         }        
     }
 }

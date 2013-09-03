@@ -304,7 +304,7 @@ namespace Nektar
                     break;
                 case LibUtilities::eGauss_Lagrange:
                 {
-                    int nInteriorDofs = m_ncoeffs;
+                    nInteriorDofs = m_ncoeffs;
                     offset = 0;
                 }
                 break;
@@ -716,6 +716,7 @@ namespace Nektar
             switch(Btype)
             {
             case LibUtilities::eGLL_Lagrange:
+            case LibUtilities::eGauss_Lagrange:
             case LibUtilities::eChebyshev:
             case LibUtilities::eFourier:
                 for(i = 0 ; i < GetNcoeffs()-2;i++)
@@ -730,10 +731,6 @@ namespace Nektar
                     outarray[i] = i+2;
                 }
                 break;
-            case LibUtilities::eGauss_Lagrange:
-            {
-                outarray[i] = i;
-            }
             default:
                 ASSERTL0(0,"Mapping array is not defined for this expansion");
                 break;

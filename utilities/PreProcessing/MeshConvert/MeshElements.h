@@ -791,7 +791,7 @@ namespace Nektar
                     break;
                 case 2:
                     {
-                        NekDouble cross;
+                        NekDouble cross = 0.0;
                         
                         // caclulate sign based on cross product of vertices
                         if(edge[0]->n1 == edge[1]->n1)

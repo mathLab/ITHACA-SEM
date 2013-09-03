@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
     LibUtilities::BasisType     btype2 =   LibUtilities::eOrtho_B;
     LibUtilities::PointsType    NodalType = LibUtilities::eNodalTriElec;
     LibUtilities::ShapeType     regionshape;
-    StdRegions::StdExpansion2D *E;
+    StdRegions::StdExpansion2D *E = NULL;
     Array<OneD, NekDouble> sol,x,y,dx,dy;
     Array<OneD, NekDouble> coords(8);
     StdRegions::Orientation edgeDir = StdRegions::eForwards;

@@ -127,7 +127,7 @@ namespace Nektar
 
             int vMap1, vMap2, sign1, sign2;
             int m, v, eMap1, eMap2;
-            int offset, globalrow, globalcol, nCoeffs;
+            int offset, globalrow, globalcol;
 
             //matrix storage
             MatrixStorage storage = eFULL;
@@ -246,7 +246,6 @@ namespace Nektar
 
             int edgematrixoffset=0;
             int vGlobal;
-            int nbndCoeffs=0;
 
             for(n=0; n < n_exp; ++n)
             {
@@ -277,7 +276,6 @@ namespace Nektar
                         edgematrixoffset+=nedgemodes*nedgemodes;
                     }
                 }
-                nbndCoeffs=+locExpansion->NumBndryCoeffs();
             }
 
             edgematrixoffset=0;
@@ -299,7 +297,6 @@ namespace Nektar
                 nel = expList->GetOffset_Elmt_Id(n);
                 
                 locExpansion = expList->GetExp(nel);
-                nCoeffs=locExpansion->NumBndryCoeffs();
 
                 nVerts=locExpansion->GetGeom()->GetNumVerts();
                 nEdges=locExpansion->GetGeom()->GetNumEdges();
@@ -482,7 +479,7 @@ namespace Nektar
 
             int vMap1, vMap2, sign1, sign2;
             int m, v, eMap1, eMap2, fMap1, fMap2;
-            int offset, globalrow, globalcol, nCoeffs;
+            int offset, globalrow, globalcol;
 
             //matrix storage
             MatrixStorage storage = eFULL;
@@ -668,7 +665,6 @@ namespace Nektar
             int edgematrixoffset=0;
             int facematrixoffset=0;
             int vGlobal;
-            int nbndCoeffs=0;
 
             for(n=0; n < n_exp; ++n)
             {
@@ -724,7 +720,6 @@ namespace Nektar
                         facematrixoffset+=nfacemodes*nfacemodes;
                     }
                 }
-                nbndCoeffs=+locExpansion->NumBndryCoeffs();
             }
 
             edgematrixoffset=0;
@@ -747,7 +742,6 @@ namespace Nektar
                 nel = expList->GetOffset_Elmt_Id(n);
                 
                 locExpansion = expList->GetExp(nel);
-                nCoeffs=locExpansion->NumBndryCoeffs();
 
                 nVerts=locExpansion->GetGeom()->GetNumVerts();
                 nEdges=locExpansion->GetGeom()->GetNumEdges();

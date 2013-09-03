@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     NekDouble x[2];
     LibUtilities::PointsType Qtype;
     LibUtilities::BasisType  btype;
-    StdRegions::StdExpansion1D  *E;
+    StdRegions::StdExpansion1D  *E = NULL;
 
     if(argc != 6)
     {

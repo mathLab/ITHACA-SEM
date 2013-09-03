@@ -808,9 +808,6 @@ namespace Nektar
             // Number of solution points of each element
             int nLocalSolutionPts;
             
-            // Number of coeffients points of each element
-            int nLocalCoeffPts;
-            
             // Initial index of each element
             int phys_offset;
             

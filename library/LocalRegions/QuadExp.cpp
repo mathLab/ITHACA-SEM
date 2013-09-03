@@ -546,7 +546,7 @@ namespace Nektar
                   Array<OneD, NekDouble> &outarray)
         {
             int nq = GetTotPoints();
-            StdRegions::MatrixType mtype;
+            StdRegions::MatrixType mtype = StdRegions::eIProductWRTDerivBase0;
 
             switch (dir)
             {
@@ -1953,7 +1953,7 @@ namespace Nektar
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> gmat =
                             m_metricinfo->GetGmat();
-                        int dir;
+                        int dir = 0;
 
                         switch(mkey.GetMatrixType())
                         {
@@ -2136,7 +2136,7 @@ namespace Nektar
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         const Array<TwoD, const NekDouble>& gmat =
                                                         m_metricinfo->GetGmat();
-                        int dir;
+                        int dir = 0;
 
                         switch(mkey.GetMatrixType())
                         {
@@ -2244,10 +2244,10 @@ namespace Nektar
                      "Geometric information is not set up");
 
             // set up block matrix system
-            int nbdry = NumBndryCoeffs();
-            int nint = m_ncoeffs - nbdry;
+            unsigned int nbdry = NumBndryCoeffs();
+            unsigned int nint = (unsigned int)(m_ncoeffs - nbdry);
             unsigned int exp_size[] = {nbdry,nint};
-            int nblks = 2;
+            unsigned int nblks = 2;
             returnval = MemoryManager<DNekScalBlkMat>::
                 AllocateSharedPtr(nblks,nblks,exp_size,exp_size);
                 //Really need a constructor which takes Arrays

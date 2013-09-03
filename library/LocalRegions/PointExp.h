@@ -114,12 +114,12 @@ namespace Nektar
                 v->GetCoords(coords);
             }
 
-            inline const SpatialDomains::VertexComponentSharedPtr &GetGeom(void) const
+            inline const SpatialDomains::VertexComponentSharedPtr GetGeom() const
             {
                 return boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>(m_geom);
             }
 
-            inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const
+            inline const SpatialDomains::VertexComponentSharedPtr GetVertex() const
             {
                 return boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>(m_geom);;
             }

@@ -105,7 +105,7 @@ namespace Nektar
             // Calculate area/volume of domain.
             if (m_homogeneous)
             {
-                m_planes = pFields[0]->GetZIDs();
+                m_planes  = pFields[0]->GetZIDs();
                 areaField = pFields[0]->GetPlane(0);
             }
             else
@@ -121,6 +121,7 @@ namespace Nektar
                 m_area *= m_homogeneousLength;
             }
 
+            // Output values at initial time.
             v_Update(pFields, time);
         }
 
@@ -150,6 +151,10 @@ namespace Nektar
                 if (m_homogeneous)
                 {
                     pFields[i]->HomogeneousBwdTrans(pFields[i]->GetPhys(), tmp);
+                }
+                else
+                {
+                    tmp = pFields[i]->GetPhys();
                 }
 
                 u[i] = Array<OneD, NekDouble>(nPoints);

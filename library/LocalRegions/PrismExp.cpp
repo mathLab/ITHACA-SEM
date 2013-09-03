@@ -1444,7 +1444,7 @@ namespace Nektar
                     {
                         NekDouble jac = (m_metricinfo->GetJac())[0];
                         Array<TwoD, const NekDouble> df = m_metricinfo->GetDerivFactors();
-                        int dir;
+                        int dir = 0;
 
                         switch(mkey.GetMatrixType())
                         {
@@ -1670,13 +1670,12 @@ namespace Nektar
             ASSERTL2(m_metricinfo->GetGtype() != SpatialDomains::eNoGeomType,"Geometric information is not set up");
 
             // set up block matrix system
-            int nbdry = NumBndryCoeffs();
-            int nint = m_ncoeffs - nbdry;
-
-            NekDouble factor = 1.0;
+            unsigned int nbdry = NumBndryCoeffs();
+            unsigned int nint = (unsigned int)(m_ncoeffs - nbdry);
             unsigned int exp_size[] = {nbdry, nint};
-            int nblks=2;
+            unsigned int nblks=2;
             returnval = MemoryManager<DNekScalBlkMat>::AllocateSharedPtr(nblks, nblks, exp_size, exp_size); 
+            NekDouble factor = 1.0;
 
             switch(mkey.GetMatrixType())
             {

@@ -428,7 +428,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         break;
                     case LibUtilities::eGauss_Lagrange:
                     {
-                        int nInteriorDofs = m_ncoeffs;
+                        nInteriorDofs = m_ncoeffs;
                         offset = 0;
                     }
                         break;
@@ -1486,7 +1486,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     }
                     else
                     {
-                        int dir;
+                        int dir = 0;
                         switch(mkey.GetMatrixType())
                         {
                             case StdRegions::eWeakDeriv0:

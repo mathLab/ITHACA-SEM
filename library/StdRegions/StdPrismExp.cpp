@@ -1698,7 +1698,7 @@ namespace Nektar
                     nummodesA = P-1;
                     nummodesB = Q-1;
                 }
-                else if (fid == 2 || fid == 4) // front and back quad
+                else // front and back quad
                 {
                     nummodesA = Q-1;
                     nummodesB = R-1;

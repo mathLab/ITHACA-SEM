@@ -680,7 +680,6 @@ cout<<"nlays="<<nlays<<endl;
     NekDouble tright = 10;
     NekDouble bright = -10;
     NekDouble tleft  = 10;
-    int bottomleft, topright,bottomright,topleft;
     for(int i=0; i<nVertTot; i++)
     {
          bool mvpoint =false;
@@ -700,28 +699,24 @@ cout<<"nlays="<<nlays<<endl;
             && y> bleft)
          {
               bleft = y;
-              bottomleft = i;
          }
          //top, right
          if(x== xold_c[nvertl-1] && y> yold_up[nvertl-1]
             && y<tright)
          {
               tright = y;
-              topright = i;
          }
          //bottom, right]
          if(x==xold_c[nvertl-1] && y<yold_low[nvertl-1]
             && y> bright)
          {
               bright = y;
-              bottomright = i;
          } 
          //top, left
          if(x== 0 && y> yold_up[0]
             && y<tleft)
          {
               tleft = y;
-              topleft = i;
          }
          //find the corresponding yold_l and deltaold
          for(int j=0; j<nvertl; j++)
@@ -1023,13 +1018,11 @@ cout<<"wrong="<<wrong<<endl;
         //the same derivative sign (before or after)
         
         int edgebef;
-        int edgeaft;        
         
         
         for(int q=0; q<2; q++)
         {
              edgebef = edgeinterp[q]-1;
-             edgeaft = edgeinterp[q]+1;
              incbefore = (txQ[edgebef*nqedge+nqedge-1]-txQ[edgebef*nqedge])/
                         (xcQ[edgebef*nqedge+nqedge-1]-xcQ[edgebef*nqedge]);
              inc =  (txQ[edgeinterp[q]*nqedge+nqedge-1]-txQ[edgeinterp[q]*nqedge])/
@@ -2383,7 +2376,7 @@ cout<<"nlays="<<nlays<<endl;
       
       //determine the others verts and edge for each layer
       NekDouble normbef, normtmp,xbef,ybef,xtmp,ytmp,normnext,xnext,ynext,diff;
-      NekDouble Ubef, Utmp, Unext,diffU;
+      NekDouble Ubef, Utmp, Unext;
       Array<OneD, NekDouble> coord(2);
       int elmtid,offset;     
       int nTotEdges = V1.num_elements();
@@ -2470,7 +2463,6 @@ cout<<"edgetmp="<<h<<endl;
              }
 
              diff =1000;
-             diffU =1000;
              Array<OneD, NekDouble > diffarray(cnt);             
              Array<OneD, NekDouble > diffUarray(cnt);
 cout<<"normbef="<<normbef<<endl;
@@ -2520,7 +2512,6 @@ cout<<xtmp<<"  ytmp="<<ytmp<<"    diff="<<abs(((xtmp*xbef+ytmp*ybef)/(normtmp*no
                           ynext = ytmp;
                           xnext = xtmp; 
                           Unext = Utmp;
-                          diffU = abs(Ubef-Utmp);
                       }
                  }
                  else if( Vids_lay[m][g]==V2[edgestmp[e]] )
@@ -2552,7 +2543,6 @@ cout<<xtmp<<"  ytmp="<<ytmp<<"    diff="<<abs(((xtmp*xbef+ytmp*ybef)/(normtmp*no
                           ynext = ytmp;
                           xnext = xtmp; 
                           Unext = Utmp;
-                          diffU = abs(Ubef-Utmp);                                             
                       }
                       	     
                  }                 
@@ -3419,7 +3409,8 @@ void MoveOutsidePointsNnormpos(int npedge, SpatialDomains::MeshGraphSharedPtr me
      NekDouble xmin = Vmath::Vmin(nvertl, xoldup,1);       
      
      //update vertices coords outside layers region
-     NekDouble ratiox,ratioy;
+     NekDouble ratiox;
+     //NekDouble ratioy;
 
      int nVertTot =  mesh->GetNvertices();
      for(int n=0; n<nVertTot; n++)
@@ -3472,24 +3463,24 @@ void MoveOutsidePointsNnormpos(int npedge, SpatialDomains::MeshGraphSharedPtr me
               }   
           }
           
-          int qp_closernormoldup;
+//          int qp_closernormoldup;
           Vmath::Sadd(nvertl, -x,xoldup,1, tmp,1);
           Vmath::Vmul(nvertl, tmp,1,tmp,1,tmp,1);
           Vmath::Sadd(nvertl,-y,yoldup,1,norm,1);
           Vmath::Vmul(nvertl, norm,1,norm,1,norm,1);
           Vmath::Vadd(nvertl, norm,1,tmp,1,norm,1);
-          qp_closernormoldup = Vmath::Imin(nvertl, norm,1);
+//          qp_closernormoldup = Vmath::Imin(nvertl, norm,1);
           
           Vmath::Zero(nvertl, norm,1);
           Vmath::Zero(nvertl, tmp,1);          
           
-          int qp_closernormolddown;          
+//          int qp_closernormolddown;
           Vmath::Sadd(nvertl, -x,xolddown,1, tmp,1);
           Vmath::Vmul(nvertl, tmp,1,tmp,1,tmp,1);
           Vmath::Sadd(nvertl,-y,yolddown,1,norm,1);
           Vmath::Vmul(nvertl, norm,1,norm,1,norm,1);
           Vmath::Vadd(nvertl, norm,1,tmp,1,norm,1);     
-          qp_closernormolddown = Vmath::Imin(nvertl, norm,1);
+//          qp_closernormolddown = Vmath::Imin(nvertl, norm,1);
           
           Vmath::Zero(nvertl, norm,1);
           Vmath::Zero(nvertl, tmp,1); 
@@ -3524,8 +3515,8 @@ void MoveOutsidePointsNnormpos(int npedge, SpatialDomains::MeshGraphSharedPtr me
               ratio = (1-ynew_up[qp_closerup])/
                     (  (1-yoldup[qp_closeroldup]) );
                     
-              ratioy = (1-ynew_up[qp_closernormup])/
-                    (  (1-yoldup[qp_closernormoldup]) ); 
+//              ratioy = (1-ynew_up[qp_closernormup])/
+//                    (  (1-yoldup[qp_closernormoldup]) );
               //distance prop to layerup
               ynew[n] = ynew_up[qp_closerup] 
                       + (y-yoldup[qp_closeroldup])*ratio;  
@@ -3574,8 +3565,8 @@ void MoveOutsidePointsNnormpos(int npedge, SpatialDomains::MeshGraphSharedPtr me
               ratio = (1+ynew_down[qp_closerdown])/
                     (  (1+yolddown[qp_closerolddown]) );
                     
-              ratioy = (1-ynew_down[qp_closernormdown])/
-                    (  (1-yolddown[qp_closernormolddown]) );      
+//              ratioy = (1-ynew_down[qp_closernormdown])/
+//                    (  (1-yolddown[qp_closernormolddown]) );
                
               //distance prop to layerlow
               ynew[n] = ynew_down[qp_closerdown] 

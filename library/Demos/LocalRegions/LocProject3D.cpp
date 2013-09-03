@@ -59,7 +59,7 @@ int main(int argc, char *argv[]){
     BasisType     btype1,btype2,btype3;
 
     ShapeType regionshape;
-    StdExpansion* E;
+    StdExpansion* E = NULL;
     Array<OneD, NekDouble> sol;
 
     if(argc < 23)

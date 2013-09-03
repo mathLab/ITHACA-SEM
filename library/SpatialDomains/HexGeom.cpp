@@ -364,8 +364,23 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry.
+         */
         bool HexGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+
+        }
+
+
+        bool HexGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord,
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol)
         {
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
@@ -396,11 +411,11 @@ namespace Nektar
                 }
             }
             
-            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
-            v_GetLocCoords(gloCoord, stdCoord);
-            if (stdCoord[0] >= -(1+tol) && stdCoord[0] <= 1+tol
-                && stdCoord[1] >= -(1+tol) && stdCoord[1] <= 1+tol
-                && stdCoord[2] >= -(1+tol) && stdCoord[2] <= 1+tol)
+            v_GetLocCoords(gloCoord, locCoord);
+
+            if (locCoord[0] >= -(1+tol) && locCoord[0] <= 1+tol
+                && locCoord[1] >= -(1+tol) && locCoord[1] <= 1+tol
+                && locCoord[2] >= -(1+tol) && locCoord[2] <= 1+tol)
             {
                 return true;
             }

@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
     LibUtilities::BasisType     btype1,btype2,btype3;
 
     LibUtilities::ShapeType    regionshape;
-    StdRegions::StdExpansion *E;
+    StdRegions::StdExpansion *E = NULL;
     Array<OneD, NekDouble> x, y, z, sol, dx, dy, dz;
 
     if(argc < 23)

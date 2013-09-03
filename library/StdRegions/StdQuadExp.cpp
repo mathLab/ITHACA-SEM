@@ -775,7 +775,7 @@ namespace Nektar
             int i;
             int cnt=0;
             int nummodes0, nummodes1;
-            int value1, value2;
+            int value1 = 0, value2 = 0;
             if(outarray.num_elements()!=NumBndryCoeffs())
             {
                 outarray = Array<OneD, unsigned int>(NumBndryCoeffs());
@@ -892,7 +892,7 @@ namespace Nektar
 
         int StdQuadExp::v_GetVertexMap(int localVertexId)
         {
-            int localDOF;
+            int localDOF = 0;
             switch(localVertexId)
             {
             case 0:

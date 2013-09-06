@@ -59,7 +59,6 @@ namespace Nektar
         
         void OutputTecplot::Process(po::variables_map &vm)
         {
-            int i, j;
             if (m_f->m_verbose)
             {
                 cout << "OutputTecplot: Writing file..." << endl;
@@ -82,32 +81,32 @@ namespace Nektar
             // Write solution.
             ofstream outfile(filename.c_str());
     
-            std::string var = "";
+            std::string var = m_f->m_fielddef[0]->m_fields[0];
                 
-            for (int j = 0; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
+            for (int j = 1; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
             {
                 var = var + ", " + m_f->m_fielddef[0]->m_fields[j];
             }
                 
             if (expdim == 3)
             {
-                m_f->m_exp[0]->WriteTecplotHeader(outfile,var);
-                m_f->m_exp[0]->WriteTecplotZone(outfile);
+                WriteTecplotHeader(outfile,var);
+                WriteTecplotZone(outfile);
                 for(int j = 0; j < m_f->m_exp.size(); ++j)
                 {
-                    m_f->m_exp[j]->WriteTecplotField(outfile);
+                    WriteTecplotField(j,outfile);
                 }
-                m_f->m_exp[0]->WriteTecplotConnectivity(outfile);
+                WriteTecplotConnectivity(outfile);
             }
             else
             {
-                m_f->m_exp[0]->WriteTecplotHeader(outfile,var);
+                WriteTecplotHeader(outfile,var);
                 for (int i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
                 {
-                    m_f->m_exp[0]->WriteTecplotZone(outfile,i);
+                    WriteTecplotZone(outfile,i);
                     for (int j = 0; j < m_f->m_fielddef[0]->m_fields.size(); ++j)
                     {
-                        m_f->m_exp[j]->WriteTecplotField(outfile,i);
+                        WriteTecplotField(j,outfile,i);
                     }
                 }
             }
@@ -117,5 +116,217 @@ namespace Nektar
             m_f->m_session->GetComm()->Block(); 
         }        
 
+        /**
+         * Write Tecplot Files Header
+         * @param   outfile Output file name.
+         * @param   var                 variables names
+         */
+        void OutputTecplot::WriteTecplotHeader(std::ofstream &outfile,
+                                               std::string var)
+        {
+            
+            int coordim  = m_f->m_exp[0]->GetExp(0)->GetCoordim();
+            outfile << "Variables = x";
+            
+            if(coordim == 2)
+            {
+                outfile << ", y";
+            }
+            else if (coordim == 3)
+            {
+                outfile << ", y, z";
+            }
+            outfile << ", "<< var << std::endl << std::endl;
+        }
+
+
+        /**
+         * Write Tecplot Files Zone
+         * @param   outfile    Output file name.
+         * @param   expansion  Expansion that is considered
+         */
+        void OutputTecplot::WriteTecplotZone(std::ofstream &outfile, 
+                                             int expansion)
+        {
+            if(expansion == -1) //write as full block zone
+            {
+                int i,j;
+                int coordim   = m_f->m_exp[0]->GetCoordim(0);
+                int totpoints = m_f->m_exp[0]->GetTotPoints();
+                
+                Array<OneD,NekDouble> coords[3];
+                
+                coords[0] = Array<OneD,NekDouble>(totpoints);
+                coords[1] = Array<OneD,NekDouble>(totpoints);
+                coords[2] = Array<OneD,NekDouble>(totpoints);
+                
+                m_f->m_exp[0]->GetCoords(coords[0],coords[1],coords[2]);
+                
+                outfile << "Zone, N=" << totpoints << ", E="<<
+                    GetNumTecplotBlocks() << ", F=FEBlock" ;
+                
+                switch(m_f->m_exp[0]->GetExp(0)->GetNumBases())
+                {
+                case 1:
+                    ASSERTL0(false,"Not set up for this type of output");
+                    break;
+                case 2:
+                    outfile << ", ET=QUADRILATERAL" << std::endl;
+                    break;
+                case 3:
+                    outfile << ", ET=BRICK" << std::endl;
+                    break;
+                }
+                
+                // write out coordinates in block format 
+                for(j = 0; j < coordim; ++j)
+                {
+                    for(i = 0; i < totpoints; ++i)
+                    {
+                        outfile << coords[j][i] << " ";
+                        if((!(i % 1000))&&i)
+                        {
+                            outfile << std::endl;
+                        }
+                    }
+                    outfile << std::endl;
+                }
+                
+            }
+            else
+            {
+                m_f->m_exp[0]->GetExp(expansion)->WriteTecplotZone(outfile);
+            }
+        }
+
+        int OutputTecplot::GetNumTecplotBlocks(void)
+        {
+            int returnval = 0;
+
+            if(m_f->m_exp[0]->GetExp(0)->GetNumBases() == 2)
+            {
+                for(int i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
+                {
+                    returnval += (m_f->m_exp[0]->GetExp(i)->GetNumPoints(0)-1)*
+                        (m_f->m_exp[0]->GetExp(i)->GetNumPoints(1)-1);
+                }
+            }
+            else
+            {
+                for(int i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
+                {
+                    returnval += (m_f->m_exp[0]->GetExp(i)->GetNumPoints(0)-1)*
+                        (m_f->m_exp[0]->GetExp(i)->GetNumPoints(1)-1)*
+                        (m_f->m_exp[0]->GetExp(i)->GetNumPoints(2)-1);
+                }
+            }
+
+            return returnval;
+        }
+
+
+        /**
+         * Write Tecplot Files Field
+         * @param   outfile    Output file name.
+         * @param   expansion  Expansion that is considered
+         */
+        void OutputTecplot::WriteTecplotField(const int field, 
+                                              std::ofstream &outfile, 
+                                              int expansion)
+        {
+            
+            if(expansion == -1)
+            {
+                int totpoints = m_f->m_exp[0]->GetTotPoints();
+
+                if(m_f->m_exp[field]->GetPhysState() == false)
+                {
+                    m_f->m_exp[field]->BwdTrans(m_f->m_exp[field]->GetCoeffs(),
+                                                m_f->m_exp[field]->UpdatePhys());
+                }
+                
+                for(int i = 0; i < totpoints; ++i)
+                {
+                    outfile << m_f->m_exp[field]->GetPhys()[i] << " ";
+                    if((!(i % 1000))&&i)
+                    {
+                        outfile << std::endl;
+                    }
+                }
+                outfile << std::endl;
+            }
+            else
+            {
+                m_f->m_exp[field]->GetExp(expansion)->SetPhys(
+                                  m_f->m_exp[field]->GetPhys()+
+                                  m_f->m_exp[field]->GetPhys_Offset(expansion));
+                m_f->m_exp[field]->GetExp(expansion)->WriteTecplotField(outfile);
+            }
+        }
+
+        void  OutputTecplot::WriteTecplotConnectivity(std::ofstream &outfile)
+        {
+            int i,j,k,l;
+            int nbase = m_f->m_exp[0]->GetExp(0)->GetNumBases();
+            int cnt = 0;
+            
+            for(i = 0; i < m_f->m_exp[0]->GetNumElmts(); ++i)
+            {
+                if(nbase == 2)
+                {
+                    int np0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
+                    int np1 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(1);
+                    
+                    for(j = 1; j < np1; ++j)
+                    {
+                        for(k = 1; k < np0; ++k)
+                        {
+                            outfile << cnt + (j-1)*np0 + k  << " ";
+                            outfile << cnt + (j-1)*np0 + k +1 << " ";
+                            outfile << cnt + j*np0 + k +1 << " ";
+                            outfile << cnt + j*np0 + k    << endl;
+                        }
+                    }
+                    
+                    cnt += np0*np1;
+                }
+                else if(nbase == 3)
+                {
+                    int np0 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(0);
+                    int np1 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(1);
+                    int np2 = m_f->m_exp[0]->GetExp(i)->GetNumPoints(2);
+                    
+                    for(j = 1; j < np2; ++j)
+                    {
+                        for(k = 1; k < np1; ++k)
+                        {
+                            for(l = 1; l < np0; ++l)
+                            {
+                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l  << " ";
+                                outfile << cnt + (j-1)*np0*np1 + (k-1)*np0 + l +1 << " ";
+                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l +1 << " ";
+                                outfile << cnt + (j-1)*np0*np1 +  k*np0 + l  << " ";
+
+                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l  << " ";
+                                outfile << cnt + j*np0*np1 + (k-1)*np0 + l +1 << " ";
+                                outfile << cnt + j*np0*np1 +  k*np0 + l +1 << " ";
+                                outfile << cnt + j*np0*np1 +  k*np0 + l  << endl;
+                            }
+                        }
+                    }
+                    cnt += np0*np1*np2;
+                }
+                else
+                {
+                    ASSERTL0(false,"Not set up for this dimension");
+                }
+
+            }
+        }
+
     }
 }
+
+
+
+

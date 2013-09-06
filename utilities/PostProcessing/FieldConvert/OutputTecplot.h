@@ -58,7 +58,23 @@ namespace Nektar
             
             /// Write fld to output file.
             virtual void Process(po::variables_map &vm);
+
+        private:
+            void WriteTecplotHeader(std::ofstream &outfile,
+                               std::string var);
+
+            void WriteTecplotZone(std::ofstream &outfile, 
+                                  int expansion = -1);
+
+            int GetNumTecplotBlocks(void);
+
+            void WriteTecplotField(const int field, 
+                                   std::ofstream &outfile, 
+                                   int expansion = -1);
+
+            void WriteTecplotConnectivity(std::ofstream &outfile);
         };
+
     }
 }
 

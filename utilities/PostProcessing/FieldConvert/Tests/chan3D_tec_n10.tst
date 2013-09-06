@@ -10,7 +10,7 @@
      <metrics>
         <metric type="file" id="1">
             <file filename="chan3D.dat">
-                <sha1>6a722d6cbf14af6b94546dc1cef289f74c182456</sha1>
+                <sha1>65bfbc766df0551d63e243d8dfbaad8ebcd14747</sha1>
              </file>
          </metric>
     </metrics>

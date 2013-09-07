@@ -269,7 +269,7 @@ namespace Nektar
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->
                                    GetBndCondTraceToGlobalTraceMap(cnt++));
-                    
+
                     // For Dirichlet boundary condition: uflux = g_D
                     if (fields[var]->GetBndConditions()[i]->
                         GetBoundaryConditionType() == SpatialDomains::eDirichlet)

@@ -1256,7 +1256,7 @@ namespace Nektar
                     // Offset of the boundary expansion
                     id1 = fields[var]->
                     GetBndCondExpansions()[i]->GetPhys_Offset(e);
-                    
+
                     // Offset of the trace space related to boundary expansion
                     id2 = fields[0]->GetTrace()->
                     GetPhys_Offset(fields[0]->GetTraceMap()->

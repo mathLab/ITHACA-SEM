@@ -363,8 +363,9 @@ namespace Nektar
              */
             inline int GetNumPoints(const int dir) const
             {
-                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
-                return(m_base[dir]->GetNumPoints());
+                ASSERTL1(dir < m_numbases || dir == 0,
+                         "dir is larger than m_numbases");
+                return(m_base.num_elements() > 0 ? m_base[dir]->GetNumPoints() : 1);
             }
 
             /** \brief This function returns a pointer to the array containing

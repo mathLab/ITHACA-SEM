@@ -82,7 +82,7 @@ namespace Nektar
          *
          */
         QuadGeom::QuadGeom(const int id,
-                           const VertexComponentSharedPtr verts[],
+                           const PointGeomSharedPtr verts[],
                            const SegGeomSharedPtr edges[],
                            const StdRegions::Orientation eorient[]):
             Geometry2D(verts[0]->GetCoordim()),
@@ -337,8 +337,8 @@ namespace Nektar
         }
 
         StdRegions::Orientation QuadGeom::GetFaceOrientation(
-            const VertexComponentVector &face1,
-            const VertexComponentVector &face2)
+            const PointGeomVector &face1,
+            const PointGeomVector &face2)
         {
             int i, j, vmap[4] = {-1,-1,-1,-1};
             NekDouble x, y, z, x1, y1, z1, cx = 0.0, cy = 0.0, cz = 0.0;
@@ -659,8 +659,8 @@ namespace Nektar
             if(GetMetricInfo()->GetGtype() == eRegular)
             { 
                 NekDouble coords2 = (m_coordim == 3)? coords[2]: 0.0; 
-                VertexComponent dv1, dv2, norm, orth1, orth2;
-                VertexComponent xin(m_coordim,0,coords[0],coords[1],coords2);
+                PointGeom dv1, dv2, norm, orth1, orth2;
+                PointGeom xin(m_coordim,0,coords[0],coords[1],coords2);
 
                 // Calculate edge vectors from 0-1 and 0-3 edges. 
                 dv1.Sub(*m_verts[1],*m_verts[0]);
@@ -789,7 +789,7 @@ namespace Nektar
         /**
          *
          */
-        const VertexComponentSharedPtr QuadGeom::v_GetVertex(int i) const
+        const PointGeomSharedPtr QuadGeom::v_GetVertex(int i) const
         {
             ASSERTL2((i >=0) && (i <= 3),"Vertex id must be between 0 and 3");
             return m_verts[i];

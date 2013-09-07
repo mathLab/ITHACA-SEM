@@ -2767,21 +2767,21 @@ namespace Nektar
 		
 		/**
          */
-		const SpatialDomains::VertexComponentSharedPtr &ExpList::v_GetGeom(void) const
+		const SpatialDomains::PointGeomSharedPtr ExpList::v_GetGeom(void) const
 		{
 			ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static SpatialDomains::VertexComponentSharedPtr result;
+            static SpatialDomains::PointGeomSharedPtr result;
             return result;
 		}
 		
 		/**
          */
-		const SpatialDomains::VertexComponentSharedPtr &ExpList::v_GetVertex(void) const
+		const SpatialDomains::PointGeomSharedPtr ExpList::v_GetVertex(void) const
 		{
 			ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static SpatialDomains::VertexComponentSharedPtr result;
+            static SpatialDomains::PointGeomSharedPtr result;
             return result;
 		}
 		

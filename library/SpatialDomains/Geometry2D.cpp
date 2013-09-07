@@ -90,7 +90,7 @@ namespace Nektar
             return v_GetEdge(i);
         }
 
-        const VertexComponentSharedPtr Geometry2D::GetVertex(int i) const
+        const PointGeomSharedPtr Geometry2D::GetVertex(int i) const
         {
             return v_GetVertex(i);
         }
@@ -210,11 +210,11 @@ namespace Nektar
             return returnval;
         }
 
-        const VertexComponentSharedPtr Geometry2D::v_GetVertex(int i) const
+        const PointGeomSharedPtr Geometry2D::v_GetVertex(int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for shape type geometries");
-            VertexComponentSharedPtr returnval;
+            PointGeomSharedPtr returnval;
             return returnval;
         }
 

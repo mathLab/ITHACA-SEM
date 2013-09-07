@@ -98,7 +98,7 @@ namespace Nektar
                     m_bndConditions,
                     *m_exp,graph1D,
                     periodicVertices);
-            
+
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
@@ -506,7 +506,7 @@ namespace Nektar
 
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
-            SpatialDomains::VertexComponentSharedPtr vert;
+            SpatialDomains::PointGeomSharedPtr vert;
 
             cnt = 0;
             // list Dirichlet boundaries first
@@ -531,7 +531,7 @@ namespace Nektar
                         for (k = 0; k < bregionIt->second->size(); k++)
                         {
                             if ((vert = boost::dynamic_pointer_cast
-                                    <SpatialDomains::VertexComponent>(
+                                    <SpatialDomains::PointGeom>(
                                          (*bregionIt->second)[k])))
                             {
                                 locPointExp
@@ -568,7 +568,7 @@ namespace Nektar
                             for (k = 0; k < bregionIt->second->size(); k++)
                             {
                                 if((vert = boost::dynamic_pointer_cast
-                                        <SpatialDomains::VertexComponent>(
+                                        <SpatialDomains::PointGeom>(
                                             (*bregionIt->second)[k])))
                                 {
                                     locPointExp
@@ -632,7 +632,7 @@ namespace Nektar
 
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
-            SpatialDomains::VertexComponentSharedPtr vert;
+            SpatialDomains::PointGeomSharedPtr vert;
             
             // Find the first boundary condition in the current domain
             int firstcondition = subdomain*2;
@@ -664,7 +664,7 @@ namespace Nektar
                         for(k = 0; k < bregionIt->second->size(); k++)
                         {
                             if ((vert = boost::dynamic_pointer_cast
-                                    <SpatialDomains::VertexComponent>
+                                    <SpatialDomains::PointGeom>
                                         ((*bregionIt->second)[k])))
                             {
                                 locPointExp =
@@ -701,7 +701,7 @@ namespace Nektar
                             for (k = 0; k < bregionIt->second->size(); k++)
                             {
                                 if((vert = boost::dynamic_pointer_cast<
-                                        SpatialDomains::VertexComponent>(
+                                        SpatialDomains::PointGeom>(
                                             (*bregionIt->second)[k])))
                                 {
                                     locPointExp =
@@ -915,15 +915,13 @@ namespace Nektar
             }
             
             for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {		
+            {
+                int vid = m_bndCondExpansions[n]->GetVertex()->GetVid();
                 // Check if the current boundary condition
                 // belongs to the current subdomain
-                if ((m_bndCondExpansions[n]->GetVertex()->GetVid() >=
-                        firstVertex)
-                   && (m_bndCondExpansions[n]->GetVertex()->GetVid() <=
-                       lastVertex)
-                   && (processed[n] !=
-                       m_bndCondExpansions[n]->GetVertex()->GetVid()))
+                if ((vid >= firstVertex)
+                   && (vid <= lastVertex)
+                   && (processed[n] != vid))
                 {
                     if ((m_bndConditions[n]->GetBoundaryConditionType() ==
                         SpatialDomains::eDirichlet) ||
@@ -934,24 +932,17 @@ namespace Nektar
                         (m_bndConditions[n]->GetBoundaryConditionType() ==
                          SpatialDomains::eMerging))
                     {
-                        if (m_bndCondExpansions[n]->GetVertex()->GetVid() ==
-                           lastVertex)
+                        if (vid == lastVertex)
                         {
-                            id1            = 0; //GetCoeff_Offset(n)+1;
-                            id2            =
-                                m_bndCondExpansions[n]->GetVertex()->GetVid()
-                                - subdomain_offset;
-                            Bwd[id2]       =
-                                m_bndCondExpansions[n]->GetCoeff(id1);
-                            processed[n+1] =
-                                m_bndCondExpansions[n]->GetVertex()->GetVid();
+                            id1        = 0; //GetCoeff_Offset(n)+1;
+                            id2        = vid - subdomain_offset;
+                            Bwd[id2]   = m_bndCondExpansions[n]->GetCoeff(id1);
+                            processed[n+1] = vid;
                         }
                         else
                         {
                             id1        = 0; //GetCoeff_Offset(n);
-                            id2        =
-                                m_bndCondExpansions[n]->GetVertex()->GetVid()
-                                - subdomain_offset;
+                            id2        = vid - subdomain_offset;
                             Fwd[id2]   = m_bndCondExpansions[n]->GetCoeff(id1);
                         }
                         
@@ -1339,7 +1330,7 @@ namespace Nektar
             // setup map of all global ids along boundary
             for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                Vid =  m_bndCondExpansions[n]->GetGeom()->GetVid();
+                Vid =  m_bndCondExpansions[n]->GetVertex()->GetVid();
                 VertGID[Vid] = cnt++;
             }
 

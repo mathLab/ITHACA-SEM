@@ -117,7 +117,7 @@ namespace Nektar
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
                 {
                     m_numDirichletBndPhys++;
-                    vid = ((bndCondExp[i])->GetVertex())->GetVid();
+                    vid = bndCondExp[i]->GetVertex()->GetVid();
 
                     MeshVertToLocalVert[vid] = gid++;
                 }
@@ -159,7 +159,7 @@ namespace Nektar
 
             for(i = 0; i < nbnd; ++i)
             {
-                vid = ((bndCondExp[i])->GetVertex())->GetVid();
+                vid = bndCondExp[i]->GetVertex()->GetVid();
                 m_bndCondCoeffsToGlobalCoeffsMap[i] = MeshVertToLocalVert.find(vid)->second;
 
                 if(bndCond[i]->GetBoundaryConditionType() == SpatialDomains::eDirichlet)
@@ -196,7 +196,6 @@ namespace Nektar
                                      const std::string variable) :
             AssemblyMap(pSession,variable)
         {
-
 
             int i,j,k,cnt,eid, id, id1, order_e,gid;
             int ntrace_exp = trace->GetExpSize();

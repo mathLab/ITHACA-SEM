@@ -37,7 +37,7 @@
 #define POINTEXP_H
 
 #include <StdRegions/StdPointExp.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <LocalRegions/Expansion0D.h>
 
@@ -48,7 +48,7 @@ namespace Nektar
         class PointExp: virtual public StdRegions::StdPointExp, virtual public Expansion0D
         {
         public:
-            LOCAL_REGIONS_EXPORT PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom);
+            LOCAL_REGIONS_EXPORT PointExp(const SpatialDomains::PointGeomSharedPtr &m_geom);
             LOCAL_REGIONS_EXPORT ~PointExp(void);
 
             inline const Array<OneD, const NekDouble>& GetCoeffs(void) const
@@ -104,24 +104,24 @@ namespace Nektar
 
             inline void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z)
             {
-                SpatialDomains::VertexComponentSharedPtr v = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>(m_geom);
+                SpatialDomains::PointGeomSharedPtr v = boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
                 v->GetCoords(x,y,z);
             }
 
             inline void GetCoords(Array<OneD,NekDouble> &coords)
             {
-                SpatialDomains::VertexComponentSharedPtr v = boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>(m_geom);
+                SpatialDomains::PointGeomSharedPtr v = boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
                 v->GetCoords(coords);
             }
 
-            inline const SpatialDomains::VertexComponentSharedPtr GetGeom() const
+            inline const SpatialDomains::PointGeomSharedPtr GetGeom() const
             {
-                return boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>(m_geom);
+                return boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);
             }
 
-            inline const SpatialDomains::VertexComponentSharedPtr GetVertex() const
+            inline const SpatialDomains::PointGeomSharedPtr GetVertex() const
             {
-                return boost::dynamic_pointer_cast<SpatialDomains::VertexComponent>(m_geom);;
+                return boost::dynamic_pointer_cast<SpatialDomains::PointGeom>(m_geom);;
             }
             
         protected:

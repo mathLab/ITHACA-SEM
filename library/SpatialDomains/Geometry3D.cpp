@@ -37,7 +37,7 @@
 
 #include <SpatialDomains/Geometry2D.h>
 #include <SpatialDomains/GeomFactors3D.h>
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/PointGeom.h>
 #include <SpatialDomains/SegGeom.h>     // for SegGeomSharedPtr
 
 namespace Nektar
@@ -75,7 +75,7 @@ namespace Nektar
       /**
        * @brief Return vertex i in this element.
        */
-      const VertexComponentSharedPtr Geometry3D::GetVertex(int i) const
+      const PointGeomSharedPtr Geometry3D::GetVertex(int i) const
       {
           return m_verts[i];
       }

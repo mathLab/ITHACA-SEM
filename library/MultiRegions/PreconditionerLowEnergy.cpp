@@ -1140,11 +1140,11 @@ namespace Nektar
                 {-1,1,0}, {0,-1,sqrt(double(3))}, {0,1,sqrt(double(3))},
             };
             
-            //boost::shared_ptr<SpatialDomains::VertexComponent> verts[6];
-            SpatialDomains::VertexComponentSharedPtr verts[6];
+            //boost::shared_ptr<SpatialDomains::PointGeom> verts[6];
+            SpatialDomains::PointGeomSharedPtr verts[6];
             for(int i=0; i < nVerts; ++i)
             {
-                verts[i] =  MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr
+                verts[i] =  MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr
                     ( three, i, point[i][0], point[i][1], point[i][2] );
             }
             const int nEdges = 9;
@@ -1156,7 +1156,7 @@ namespace Nektar
             // Populate the list of edges
             SpatialDomains::SegGeomSharedPtr edges[nEdges]; 
             for(int i=0; i < nEdges; ++i){
-                SpatialDomains::VertexComponentSharedPtr vertsArray[2];
+                SpatialDomains::PointGeomSharedPtr vertsArray[2];
                 for(int j=0; j<2; ++j)
                 {
                     vertsArray[j] = verts[vertexConnectivity[i][j]];
@@ -1232,11 +1232,11 @@ namespace Nektar
                 {0,2/sqrt(double(3)),-1/sqrt(double(6))},
                 {0,0,3/sqrt(double(6))}};
             
-            boost::shared_ptr<SpatialDomains::VertexComponent> verts[4];
+            boost::shared_ptr<SpatialDomains::PointGeom> verts[4];
 	    for(i=0; i < nVerts; ++i)
 	    {
 	        verts[i] =  
-                    MemoryManager<SpatialDomains::VertexComponent>::
+                    MemoryManager<SpatialDomains::PointGeom>::
                     AllocateSharedPtr
                     ( three, i, point[i][0], point[i][1], point[i][2] );
 	    }
@@ -1255,7 +1255,7 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr edges[nEdges];
             for(i=0; i < nEdges; ++i)
             {
-                boost::shared_ptr<SpatialDomains::VertexComponent> 
+                boost::shared_ptr<SpatialDomains::PointGeom>
                     vertsArray[2];
                 for(j=0; j<2; ++j)
                 {
@@ -1324,9 +1324,9 @@ namespace Nektar
             };
 
             // Populate the list of verts
-            SpatialDomains::VertexComponentSharedPtr verts[8];
+            SpatialDomains::PointGeomSharedPtr verts[8];
             for( int i = 0; i < nVerts; ++i ) {
-                verts[i] = MemoryManager<SpatialDomains::VertexComponent>
+                verts[i] = MemoryManager<SpatialDomains::PointGeom>
                     ::AllocateSharedPtr(three,  i,   point[i][0],
                                         point[i][1], point[i][2]);
             }
@@ -1345,7 +1345,7 @@ namespace Nektar
             // Populate the list of edges
             SpatialDomains::SegGeomSharedPtr edges[nEdges];
             for( int i = 0; i < nEdges; ++i ) {
-                SpatialDomains::VertexComponentSharedPtr vertsArray[2];
+                SpatialDomains::PointGeomSharedPtr vertsArray[2];
                 for( int j = 0; j < 2; ++j ) {
                     vertsArray[j] = verts[vertexConnectivity[i][j]];
                 }

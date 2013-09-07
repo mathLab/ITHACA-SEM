@@ -415,9 +415,9 @@ namespace Nektar
             /// Set the physical value in \a m_coeffs to value \a val (0D Exapnsion)
             inline void SetPhys(NekDouble val);
             
-            inline const SpatialDomains::VertexComponentSharedPtr &GetGeom(void) const;
+            inline const SpatialDomains::PointGeomSharedPtr GetGeom(void) const;
             
-            inline const SpatialDomains::VertexComponentSharedPtr &GetVertex(void) const;
+            inline const SpatialDomains::PointGeomSharedPtr GetVertex(void) const;
 
             /// Set the \a i th coefficiient in  #m_coeffs to value \a val
             inline void SetCoeffs(int i, NekDouble val);
@@ -1117,9 +1117,9 @@ namespace Nektar
             
             virtual void v_SetPhys(NekDouble val);
             
-            virtual const SpatialDomains::VertexComponentSharedPtr &v_GetGeom(void) const;
+            virtual const SpatialDomains::PointGeomSharedPtr v_GetGeom(void) const;
             
-            virtual const SpatialDomains::VertexComponentSharedPtr &v_GetVertex(void) const;
+            virtual const SpatialDomains::PointGeomSharedPtr v_GetVertex(void) const;
             
             virtual void v_PhysDeriv(
                                      const Array<OneD, const NekDouble> &inarray,
@@ -1556,7 +1556,7 @@ namespace Nektar
 		/**
          *
          */
-        inline const SpatialDomains::VertexComponentSharedPtr &ExpList::GetGeom(void) const
+        inline const SpatialDomains::PointGeomSharedPtr ExpList::GetGeom(void) const
         {
             return v_GetGeom();
         }
@@ -1564,7 +1564,7 @@ namespace Nektar
         /**
          *
          */
-        inline const SpatialDomains::VertexComponentSharedPtr &ExpList::GetVertex(void) const
+        inline const SpatialDomains::PointGeomSharedPtr ExpList::GetVertex(void) const
         {
             return v_GetVertex();
         }

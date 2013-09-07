@@ -687,7 +687,7 @@ namespace Nektar
             // lie on this process.
             map<int,int>                                   perComps;
             map<int,vector<int> >                          allVerts;
-            map<int,SpatialDomains::VertexComponentVector> allCoord;
+            map<int,SpatialDomains::PointGeomVector>       allCoord;
             map<int,vector<int> >                          allEdges;
             map<int,vector<StdRegions::Orientation> >      allOrient;
             set<int>                                       locVerts;
@@ -767,7 +767,7 @@ namespace Nektar
                     // Loop over vertices and edges of the face to populate
                     // allVerts, allEdges and allCoord maps.
                     vector<int> vertList, edgeList;
-                    SpatialDomains::VertexComponentVector coordVec;
+                    SpatialDomains::PointGeomVector coordVec;
                     vector<StdRegions::Orientation> orientVec;
                     for (j = 0; j < faceGeom->GetNumVerts(); ++j)
                     {
@@ -938,20 +938,20 @@ namespace Nektar
             // routine, but now hold information for all periodic vertices.
             map<int, vector<int> >                          vertMap;
             map<int, vector<int> >                          edgeMap;
-            map<int, SpatialDomains::VertexComponentVector> coordMap;
+            map<int, SpatialDomains::PointGeomVector>       coordMap;
 
             // These final two maps are required for determining the relative
             // orientation of periodic edges. vCoMap associates vertex IDs with
             // their coordinates, and eIdMap maps an edge ID to the two vertices
             // which construct it.
-            map<int, SpatialDomains::VertexComponentSharedPtr> vCoMap;
-            map<int, pair<int, int> >                          eIdMap;
+            map<int, SpatialDomains::PointGeomSharedPtr>    vCoMap;
+            map<int, pair<int, int> >                       eIdMap;
 
             for (cnt = i = 0; i < totFaces; ++i)
             {
                 vector<int> edges(faceVerts[i]);
                 vector<int> verts(faceVerts[i]);
-                SpatialDomains::VertexComponentVector coord(faceVerts[i]);
+                SpatialDomains::PointGeomVector coord(faceVerts[i]);
 
                 // Keep track of cnt to enable correct edge vertices to be
                 // inserted into eIdMap.
@@ -960,7 +960,7 @@ namespace Nektar
                 {
                     edges[j] = edgeIds[cnt];
                     verts[j] = vertIds[cnt];
-                    coord[j]  = MemoryManager<SpatialDomains::VertexComponent>
+                    coord[j]  = MemoryManager<SpatialDomains::PointGeom>
                         ::AllocateSharedPtr(
                             3, verts[j], vertX[cnt], vertY[cnt], vertZ[cnt]);
                     vCoMap[vertIds[cnt]] = coord[j];
@@ -1143,7 +1143,7 @@ namespace Nektar
 
                     // Loop up coordinates of the faces, check they have the
                     // same number of vertices.
-                    SpatialDomains::VertexComponentVector tmpVec[2]
+                    SpatialDomains::PointGeomVector tmpVec[2]
                         = { coordMap[ids[0]], coordMap[ids[1]] };
 
                     ASSERTL0(tmpVec[0].size() == tmpVec[1].size(),
@@ -1416,7 +1416,7 @@ namespace Nektar
                 // Find edge coordinates
                 map<int, pair<int, int> >::iterator eIt
                     = eIdMap.find(perIt->first);
-                SpatialDomains::VertexComponent v[2] = {
+                SpatialDomains::PointGeom v[2] = {
                     *vCoMap[eIt->second.first],
                     *vCoMap[eIt->second.second]
                 };
@@ -1428,7 +1428,7 @@ namespace Nektar
                 {
                     eIt = eIdMap.find(perIt->second[i].id);
 
-                    SpatialDomains::VertexComponent w[2] = {
+                    SpatialDomains::PointGeom w[2] = {
                         *vCoMap[eIt->second.first],
                         *vCoMap[eIt->second.second]
                     };

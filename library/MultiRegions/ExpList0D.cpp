@@ -56,7 +56,7 @@ namespace Nektar
         {
         }
 		
-        ExpList0D::ExpList0D(const SpatialDomains::VertexComponentSharedPtr &m_geom):
+        ExpList0D::ExpList0D(const SpatialDomains::PointGeomSharedPtr &m_geom):
             ExpList()
         {
             m_point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(m_geom);
@@ -99,7 +99,7 @@ namespace Nektar
             map<int,int> EdgeDone;
             map<int,int> NormalSet;
 
-            SpatialDomains::VertexComponentSharedPtr PointGeom;
+            SpatialDomains::PointGeomSharedPtr PointGeom;
             LocalRegions::PointExpSharedPtr Point;
 			LocalRegions::Expansion1DSharedPtr exp;
 			
@@ -110,11 +110,11 @@ namespace Nektar
                 {
                     for(j = 0; j < bndConstraint[i]->GetExpSize(); ++j)
                     {
-						PointGeom = bndConstraint[i]->GetVertex();
+                        PointGeom = bndConstraint[i]->GetVertex();
                         Point = MemoryManager<LocalRegions::PointExp>::AllocateSharedPtr(PointGeom);
-                        
-						EdgeDone[PointGeom->GetVid()] = elmtid;
-						
+
+                        EdgeDone[PointGeom->GetVid()] = elmtid;
+
                         Point->SetElmtId(elmtid++);
                         (*m_exp).push_back(Point);
                     }
@@ -235,12 +235,12 @@ namespace Nektar
             m_phys[0] = val;
         }
 		
-        const SpatialDomains::VertexComponentSharedPtr &ExpList0D::v_GetGeom(void) const
+        const SpatialDomains::PointGeomSharedPtr ExpList0D::v_GetGeom(void) const
         {
             return m_point->GetGeom();
         }
 		
-        const SpatialDomains::VertexComponentSharedPtr &ExpList0D::v_GetVertex(void) const
+        const SpatialDomains::PointGeomSharedPtr ExpList0D::v_GetVertex(void) const
         {
             return m_point->GetVertex();
         }

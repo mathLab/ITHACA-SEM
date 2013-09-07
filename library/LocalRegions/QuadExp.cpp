@@ -2505,7 +2505,7 @@ namespace Nektar
                 for (unsigned int j = i; j < dim; ++j)
                 {
                     m_metrics[m[i][j]] = Array<OneD, NekDouble>(nqtot);
-                    Vmath::Vcopy(nqtot, &m_metricinfo->GetGmat()[i*dim+j][0], 1,
+                    Vmath::Vcopy(pts, &m_metricinfo->GetGmat()[i*dim+j][0], 1,
                                         &m_metrics[m[i][j]][0], 1);
                     MultiplyByQuadratureMetric(m_metrics[m[i][j]],
                                                m_metrics[m[i][j]]);

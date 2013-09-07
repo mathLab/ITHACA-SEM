@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
                 coeff_idx = Exp->GetCoeff_Offset(i) + e->GetVertexMap(j);
 
                 // Get the coordinates of the vertex
-                SpatialDomains::VertexComponentSharedPtr vert = LocalRegions::Expansion2D::FromStdExp(e)->GetGeom2D()->GetVertex(j);
+                SpatialDomains::PointGeomSharedPtr vert = LocalRegions::Expansion2D::FromStdExp(e)->GetGeom2D()->GetVertex(j);
                 vert->GetCoords(x,y,z);
 
                 // Look up the vertex in the VertexSet

@@ -249,7 +249,6 @@ namespace Nektar
                 int nquad0  = m_base[0]->GetNumPoints();
                 int nquad1  = m_base[1]->GetNumPoints();
                 int nquad2  = m_base[2]->GetNumPoints();
-                int nqtot   = nquad0*nquad1*nquad2;
                 int nmodes0 = m_base[0]->GetNumModes();
                 int nmodes1 = m_base[1]->GetNumModes();
                 int nmodes2 = m_base[2]->GetNumModes();

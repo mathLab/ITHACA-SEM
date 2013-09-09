@@ -42,7 +42,6 @@
 
 namespace Nektar
 {
-
     namespace SpatialDomains
     {
         // Forward declarations
@@ -59,9 +58,7 @@ namespace Nektar
                 const Array<OneD, const StdRegions
                     ::StdExpansion3DSharedPtr> &Coords,
                 const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis,
-                const bool QuadMetrics = false,
-                const bool LaplMetrics  = false);
+                    &tbasis);
             
         private:
             // Set up 3D Jacobian
@@ -77,7 +74,6 @@ namespace Nektar
         typedef std::vector< GeomFactors3DSharedPtr > GeomFactors3DVector;
         /// Iterator for the vector of shared pointers.
         typedef GeomFactors3DVector::iterator GeomFactors3DVectorIter;
-
     }
 }
 

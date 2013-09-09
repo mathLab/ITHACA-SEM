@@ -2794,7 +2794,7 @@ namespace Nektar
         }
 
         void ExpList::v_SetUpPhysTangents(
-                    const StdRegions::StdExpansionVector &locexp)
+                    const LocalRegions::ExpansionVector &locexp)
         {
             ASSERTL0(false,
                       "This method is not defined or valid for this class type");

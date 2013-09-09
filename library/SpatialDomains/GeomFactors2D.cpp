@@ -117,8 +117,6 @@ namespace Nektar
          * @param   coordim     Dimension of coordinate system.
          * @param   Coords      Coordinate information.
          * @param   tbasis      Tangent basis.
-         * @param   SetUpQuadratureMetrics  Compute quadrature metrics.
-         * @param   SetUpLaplacianMetrics   Compute Laplacian metrics.
          */
         GeomFactors2D::GeomFactors2D(
                         const GeomType gtype,
@@ -127,28 +125,21 @@ namespace Nektar
                                             ::StdExpansion2DSharedPtr> &Coords,
                         const Array<OneD, const LibUtilities::BasisSharedPtr>
                                             &tbasis,
-                        const bool QuadMetrics,
-                        const bool LaplMetrics,
                         const bool CheckJacPositive ) :
-            GeomFactors(gtype,2,coordim,QuadMetrics,LaplMetrics)
+            GeomFactors(gtype, 2, coordim)
         {
             // Sanity checks.
-            ASSERTL1((coordim == 2)||(coordim == 3),
+            ASSERTL1(coordim == 2 || coordim == 3,
                      "The coordinate dimension should be equal to two or three"
                      "for two-dimensional elements");
-            ASSERTL1(tbasis.num_elements()==2,
+            ASSERTL1(tbasis.num_elements() == 2,
                      "tbasis should be an array of size two");
-            ASSERTL1(LaplMetrics?QuadMetrics:true,
-                     "SetUpQuadratureMetrics should be true if "
-                     "SetUpLaplacianMetrics is true");
 
             // Copy shared pointers.
             for (int i = 0; i < m_coordDim; ++i)
             {
                 m_coords[i] = Coords[i];
             }
-
-            LibUtilities::ShapeType shape = Coords[0]->DetShapeType();
 
             // The quadrature points of the mapping
             // (as specified in Coords)

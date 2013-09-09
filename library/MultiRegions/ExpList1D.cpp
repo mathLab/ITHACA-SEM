@@ -799,7 +799,7 @@ namespace Nektar
 	    //setup map of all global ids along booundary
 	    for(cnt = i=0; i< (*m_exp).size(); ++i)
 	    {
-            exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
+                exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
 	        id = exp1D->GetGeom1D()->GetEid();
 	        EdgeGID[id] = cnt++;
 	    }
@@ -809,13 +809,13 @@ namespace Nektar
 	    {
 	       for(i=0; i < locexp[n]->GetNedges(); ++i)
 	       {
-              exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[n]);
-              id = exp2D->GetGeom2D()->GetEid(i);
-	       	  if(EdgeGID.count(id)> 0)
-	       	  {
-	       	      (*m_exp)[EdgeGID.find(id)->second]
-	       	      			->SetUpPhysTangents(locexp[n],i);
-	       	  }
+                   exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[n]);
+                   id = exp2D->GetGeom2D()->GetEid(i);
+                   if(EdgeGID.count(id)> 0)
+                   {
+                       (*m_exp)[EdgeGID.find(id)->second]
+                           ->SetUpPhysTangents(locexp[n],i);
+                   }
 	       }
 	    }
 	}

@@ -41,9 +41,8 @@
 #include <LibUtilities/Foundations/Basis.h>
 #include <SpatialDomains/SpatialDomains.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
-#include <StdRegions/StdExpansion.h>    // for StdExpansionSharedPtr
+#include <StdRegions/StdExpansion.h>
 #include <StdRegions/StdRegions.hpp>
-
 
 namespace Nektar
 {
@@ -125,24 +124,11 @@ namespace Nektar
             /// Return the number of dimensions of the coordinate system.
             inline int GetCoordim() const;
 
-            /// Flag indicating if quadrature metrics are in use.
-            inline bool IsUsingQuadMetrics() const;
-
             /// Flag indicating if Tangents have been computed.
             inline bool IsUsingTangents() const;
 
-            /// Set up quadrature metrics
-            inline void SetUpQuadratureMetrics(
-                LibUtilities::ShapeType shape,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
-
             /// Set up Tangents
             inline void SetUpTangents();
-
-            /// Retrieve the quadrature metrics.
-            inline const Array<OneD, const NekDouble> &GetQuadratureMetrics()
-                        const;
 
             /// Computes the edge tangents from 1D element
             inline void ComputeEdgeTangents(
@@ -204,8 +190,6 @@ namespace Nektar
                 boost::hash_combine(hash, (int)m_type);
                 boost::hash_combine(hash, m_expDim);
                 boost::hash_combine(hash, m_coordDim);
-                boost::hash_combine(hash, m_isUsingQuadMetrics);
-                boost::hash_combine(hash, m_isUsingLaplMetrics);
                 boost::hash_range(hash, m_jac.begin(), m_jac.end());
                 for (int i = 0; i < m_gmat.GetRows(); ++i)
                 {
@@ -223,10 +207,6 @@ namespace Nektar
             int m_coordDim;
             /// Stores information about the expansion.
             Array<OneD, StdRegions::StdExpansionSharedPtr> m_coords;
-            /// Use Quadrature metrics
-            bool m_isUsingQuadMetrics;
-            /// Use Laplacian metrics
-            bool m_isUsingLaplMetrics;
             /// Principle tangent direction.
             enum GeomTangents m_tangentDir;
             /// Principle tangent circular dir coords
@@ -238,9 +218,6 @@ namespace Nektar
             /// number of quadrature points and contains the Jacobian evaluated
             /// at each of those points.
             Array<OneD,NekDouble> m_jac;
-
-            ///
-            Array<OneD,NekDouble> m_weightedjac;
 
             /// Array of size coordim x nquad which holds the inverse of the
             /// derivative of the local map in each direction at each
@@ -279,9 +256,7 @@ namespace Nektar
             /// instantiated externally.
             GeomFactors(const GeomType gtype,
                         const int expdim,
-                        const int coordim,
-                        const bool UseQuadMet,
-                        const bool UseLaplMet);
+                        const int coordim);
 
             /// Copy constructor.
             GeomFactors(const GeomFactors &S);
@@ -298,12 +273,6 @@ namespace Nektar
 
             /// Set up the tangent vectors
             virtual void v_ComputeTangents();
-
-            /// Set up quadrature metrics
-            virtual void v_SetUpQuadratureMetrics(
-                LibUtilities::ShapeType shape,
-                const Array<OneD, const LibUtilities::BasisSharedPtr>
-                    &tbasis);
         };
 
         /// A hash functor for geometric factors. Utilises
@@ -354,25 +323,10 @@ namespace Nektar
             return m_coordDim;
         }
 
-        /// Flag indicating if quadrature metrics are in use.
-        inline bool GeomFactors::IsUsingQuadMetrics() const
-        {
-            return m_isUsingQuadMetrics;
-        }
-
         /// Flag indicating if Tangents are in use.
         inline bool GeomFactors::IsUsingTangents() const
         {
             return (m_tangents.num_elements() != 0);
-        }
-
-        /// Set up quadrature metrics
-        inline void GeomFactors::SetUpQuadratureMetrics(
-                    LibUtilities::ShapeType shape,
-                    const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                                    &tbasis)
-        {
-            v_SetUpQuadratureMetrics(shape, tbasis);
         }
 
         /// Set up Tangents
@@ -380,16 +334,6 @@ namespace Nektar
         {
             cout << "GeomFactors: Setting up tangents" << endl;
             v_ComputeTangents();
-        }
-
-        /// Retrieve the quadrature metrics.
-        inline const Array<OneD, const NekDouble>
-                                    &GeomFactors::GetQuadratureMetrics() const
-        {
-            ASSERTL0(m_isUsingQuadMetrics,
-                     "This metric has not been set up for this type of "
-                     "expansion");
-            return m_weightedjac;
         }
 
         /// Computes the edge tangents from a 1D element

@@ -203,15 +203,7 @@ namespace Nektar
                 // Loop over all edges of element i
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
-                    if (nDim == 2)
-                    {
-                        meshEdgeId   = LocalRegions::Expansion2D::FromStdExp(locExpansion)->GetGeom2D()->GetEid(j);
-                    }
-                    else
-                    {
-                        meshEdgeId   = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
-                    }
-
+                    meshEdgeId = locExpansion->GetGeom()->GetEid(j);
                     pIt = perEdges.find(meshEdgeId);
                     if (pIt != perEdges.end())
                     {
@@ -239,11 +231,13 @@ namespace Nektar
                 // Loop over all faces of element i
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
-                    faceOrient          = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFaceOrient(j);
+                    faceOrient = boost::dynamic_pointer_cast<
+                        LocalRegions::Expansion3D>(
+                            locExpansion)->GetGeom3D()->GetFaceOrient(j);
 
                     locExpansion->GetFaceInteriorMap(j,faceOrient,faceInteriorMap,faceInteriorSign);
                     dof = locExpansion->GetFaceIntNcoeffs(j);
-                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
+                    meshFaceId = locExpansion->GetGeom()->GetFid(j);
 
                     pIt = perFaces.find(meshFaceId);
                     if (pIt != perFaces.end())

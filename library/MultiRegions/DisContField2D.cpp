@@ -445,17 +445,15 @@ namespace Nektar
             }
                 
             // Set up information for periodic boundary conditions.
-            LocalRegions::Expansion2DSharedPtr exp2d;
             boost::unordered_map<int,pair<int,int> > perEdgeToExpMap;
             boost::unordered_map<int,pair<int,int> >::iterator it2;
             for (cnt = n = 0; n < m_exp->size(); ++n)
             {
-                exp2d = LocalRegions::Expansion2D::FromStdExp((*m_exp)[n]);
-                for (e = 0; e < exp2d->GetNedges(); ++e, ++cnt)
+                for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
                 {
                     PeriodicMap::iterator it = m_periodicEdges.find(
-                        exp2d->GetGeom2D()->GetEid(e));
-                        
+                        (*m_exp)[n]->GetGeom()->GetEid(e));
+
                     if (it != m_periodicEdges.end())
                     {
                         perEdgeToExpMap[it->first] = make_pair(n, e);
@@ -468,8 +466,7 @@ namespace Nektar
             cnt = 0;
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                exp2d = LocalRegions::Expansion2D::FromStdExp((*m_exp)[i]);
-                for (int j = 0; j < exp2d->GetNedges(); ++j, ++cnt)
+                for (int j = 0; j < (*m_exp)[i]->GetNedges(); ++j, ++cnt)
                 {
                     m_leftAdjacentEdges[cnt] = IsLeftAdjacentEdge(i, j);
                 }
@@ -479,10 +476,9 @@ namespace Nektar
             cnt = 0;
             for (int n = 0; n < m_exp->size(); ++n)
             {
-                exp2d = LocalRegions::Expansion2D::FromStdExp((*m_exp)[n]);
-                for (int e = 0; e < exp2d->GetNedges(); ++e, ++cnt)
+                for (int e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
                 {
-                    int edgeGeomId = exp2d->GetGeom2D()->GetEid(e);
+                    int edgeGeomId = (*m_exp)[n]->GetGeom()->GetEid(e);
                     int offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
 

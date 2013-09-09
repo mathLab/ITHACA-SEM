@@ -705,7 +705,7 @@ namespace Nektar
 
             inline void SetUpPhysNormals();
 
-            inline void SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
+            inline void SetUpPhysTangents(const LocalRegions::ExpansionVector &locexp);
  	                
 
             inline void SetUpTangents();
@@ -1097,7 +1097,7 @@ namespace Nektar
 			
             virtual void v_IProductWRTBase_IterPerExp(const Array<OneD,const NekDouble> &inarray,  Array<OneD,      NekDouble> &outarray);
 			
-            virtual void v_SetUpPhysTangents(const StdRegions::StdExpansionVector &locexp);
+            virtual void v_SetUpPhysTangents(const LocalRegions::ExpansionVector &locexp);
             
             virtual void v_GeneralMatrixOp(
                                            const GlobalMatrixKey             &gkey,
@@ -2014,7 +2014,7 @@ namespace Nektar
         }
 
         inline void ExpList::SetUpPhysTangents(
-                                const StdRegions::StdExpansionVector &locexp)
+                                const LocalRegions::ExpansionVector &locexp)
         {
             v_SetUpPhysTangents(locexp);
         }

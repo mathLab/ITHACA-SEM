@@ -46,7 +46,7 @@
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
-namespace Nektar { namespace LocalRegions { class MatrixKey; } }
+namespace Nektar { namespace LocalRegions { class MatrixKey; class Expansion; } }
 
 
 namespace Nektar
@@ -848,7 +848,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const int edge);
 
-	    STD_REGIONS_EXPORT virtual void SetUpPhysTangents(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge);
+	    STD_REGIONS_EXPORT virtual void SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion>  &exp2d, const int edge);
 
 
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
@@ -1304,7 +1304,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
 
-	    STD_REGIONS_EXPORT virtual void v_SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge);
+	    STD_REGIONS_EXPORT virtual void v_SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge);
 
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
             

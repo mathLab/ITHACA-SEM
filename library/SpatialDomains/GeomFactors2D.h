@@ -49,16 +49,15 @@ namespace Nektar
         public:
             /// One dimensional geometric factors based on one-, two- or three-
             /// dimensional coordinate description.
-            SPATIAL_DOMAINS_EXPORT GeomFactors2D(const GeomType gtype,
-                                                 const int coordim,
-                                                 const Array<OneD, const StdRegions
-                                                 ::StdExpansion2DSharedPtr> &Coords,
-                                                 const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                 &tbasis,
-                                                 const bool QuadMetrics = false,
-                                                 const bool LaplMetrics  = false,
-                                                 const bool CheckJacPositive = true);
-
+            SPATIAL_DOMAINS_EXPORT GeomFactors2D(
+                    const GeomType gtype,
+                    const int coordim,
+                    const Array<OneD, const StdRegions
+                        ::StdExpansion2DSharedPtr> &Coords,
+                    const Array<OneD, const LibUtilities::BasisSharedPtr>
+                         &tbasis,
+                    const bool CheckJacPositive = true);
+            
             /// Copy constructor.
             SPATIAL_DOMAINS_EXPORT GeomFactors2D(const GeomFactors2D& S);
 

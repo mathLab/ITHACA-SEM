@@ -145,6 +145,11 @@ namespace Nektar
             virtual void ProcessElements();
             /// Generate composites
             virtual void ProcessComposites();
+
+            void ReorderPrisms(map<int, int> &perFaces);
+            void PrismLines   (int                       prism,
+                               set<int>                 &prismsDone,
+                               vector<ElementSharedPtr> &line);
         };
         
         /**

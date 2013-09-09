@@ -186,6 +186,7 @@ namespace Nektar
                         }
 
                         // Prism nodes need re-ordering for Nektar++.
+                        it->second.reorient = false;
                         if (it->second.e == ePrism)
                         {
                             // Mirror first in uv plane to swap around
@@ -254,6 +255,9 @@ namespace Nektar
             ProcessFaces     ();
             ProcessElements  ();
             ProcessComposites();
+
+            map<int,int> asd;
+            ReorderPrisms(asd);
         }
 
         /**

@@ -118,7 +118,7 @@ namespace Nektar
             
             return nEnt;
         }
-        
+
         /**
          * @brief Test equality of two conditions - i.e. compare types, fields
          * and values but _not_ composite ids.

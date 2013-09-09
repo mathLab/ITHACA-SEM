@@ -161,10 +161,10 @@ namespace Nektar
             int nLocBndCondDofs = 0;
             int nLocDirBndCondDofs = 0;
             int nExtraDirichlet = 0;
-            LocalRegions::Expansion2DSharedPtr locExpansion;
+            LocalRegions::Expansion2DSharedPtr  locExpansion;
             LocalRegions::SegExpSharedPtr       bndSegExp;
             LibUtilities::BasisType             bType;
-            StdRegions::Orientation         edgeOrient;
+            StdRegions::Orientation             edgeOrient;
             Array<OneD, unsigned int>           edgeInteriorMap;
             Array<OneD, int>                    edgeInteriorSign;
             const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());

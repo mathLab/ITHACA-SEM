@@ -85,7 +85,7 @@ namespace Nektar
         class Node {
         public:
             /// Create a new node at a specified coordinate.
-            Node(unsigned int pId, double pX, double pY, double pZ)
+            Node(int pId, double pX, double pY, double pZ)
                 : id(pId), x(pX), y(pY), z(pZ), m_geom() {}
             /// Copy an existing node.
             Node(const Node& pSrc)
@@ -101,7 +101,7 @@ namespace Nektar
             }
 
             /// Get the local id;
-            unsigned int GetID(void)
+            int GetID(void)
             {
                 return id;
             }
@@ -194,7 +194,7 @@ namespace Nektar
             }
             
             /// ID of node.
-            unsigned int id;
+            int id;
             /// X-coordinate.
             double x;
             /// Y-coordinate.

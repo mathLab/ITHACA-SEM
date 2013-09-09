@@ -69,8 +69,6 @@ namespace Nektar
                 "Tag identifying first surface.");
             config["dir"]   = ConfigOption(false, "",
                 "Direction in which to align (either x, y, or z)");
-            config["dump"]  = ConfigOption(true, "0",
-                "Dump out list of periodic faces");
         }
 
         /**
@@ -89,8 +87,6 @@ namespace Nektar
             int      surf1 = config["surf1"].as<int>();
             int      surf2 = config["surf2"].as<int>();
             string   dir   = config["dir"].  as<string>();
-            bool     dump  = config["dump"]. as<bool>();
-            ofstream strm;
 
             if (surf1 == -1)
             {
@@ -111,11 +107,6 @@ namespace Nektar
                 cerr << "WARNING: dir must be set to either x, y or z. "
                      << "Skipping periodic alignment." << endl;
                 return;
-            }
-
-            if (dump)
-            {
-                strm.open("per-faces.txt");
             }
 
             NekDouble vec[3];
@@ -204,22 +195,6 @@ namespace Nektar
                          << "Skipping periodic alignment." << endl;
                     return;
                 }
-
-                if (dump)
-                {
-                    // Dump out list of periodic faces
-                    FaceSharedPtr face1 = c1->items[i]        ->GetFaceLink();
-                    FaceSharedPtr face2 = c2->items[it->first]->GetFaceLink();
-                    strm << face1->elLink[0].first->id << " "
-                         << face1->elLink[1].second    << " "
-                         << face2->elLink[0].frist->id << " "
-                         << face2->elLink[1].second    << endl;
-                }
-            }
-
-            if (dump)
-            {
-                strm.close();
             }
 
             // Reorder vectors.

@@ -464,7 +464,8 @@ namespace Nektar
                             ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         LibUtilities::BasisKey bkey1 = bndConstraint[i]
                             ->GetExp(j)->GetBasis(1)->GetBasisKey();
-                        FaceGeom = bndConstraint[i]->GetExp(j)->GetGeom();
+                        FaceGeom = LocalRegions::Expansion2D::FromStdExp(
+                            bndConstraint[i]->GetExp(j))->GetGeom2D();
 
                         //if face is a quad
                         if((FaceQuadGeom = boost::dynamic_pointer_cast<

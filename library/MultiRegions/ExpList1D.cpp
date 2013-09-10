@@ -436,7 +436,7 @@ namespace Nektar
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
                         exp1D = LocalRegions::Expansion1D::FromStdExp(
                             bndConstraint[i]->GetExp(j));
-                        SegGeom = exp1D->GetGeom1D();
+                        segGeom = exp1D->GetGeom1D();
                         seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(bkey, segGeom);
                         edgesDone.insert(segGeom->GetEid());

@@ -440,35 +440,15 @@ namespace Nektar
 
             if(m_metricinfo->GetGtype() == SpatialDomains::eDeformed)
             {
-<<<<<<< HEAD
-                Vmath::Vmul(nq,&gmat[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
-                Vmath::Vmul(nq,&gmat[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
-                Vmath::Vmul(nq,&gmat[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
-||||||| merged common ancestors
-                Vmath::Vmul(nqtot,&gmat[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
-                Vmath::Vmul(nqtot,&gmat[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
-                Vmath::Vmul(nqtot,&gmat[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
-=======
-                Vmath::Vmul(nqtot,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
-                Vmath::Vmul(nqtot,&df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
-                Vmath::Vmul(nqtot,&df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
->>>>>>> master
+                Vmath::Vmul(nq,&df[3*dir][0],  1,tmp1.get(),1,tmp2.get(),1);
+                Vmath::Vmul(nq,&df[3*dir+1][0],1,tmp1.get(),1,tmp3.get(),1);
+                Vmath::Vmul(nq,&df[3*dir+2][0],1,tmp1.get(),1,tmp4.get(),1);
             }
             else
             {
-<<<<<<< HEAD
-                Vmath::Smul(nq,gmat[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
-                Vmath::Smul(nq,gmat[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
-                Vmath::Smul(nq,gmat[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
-||||||| merged common ancestors
-                Vmath::Smul(nqtot, gmat[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
-                Vmath::Smul(nqtot, gmat[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
-                Vmath::Smul(nqtot, gmat[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
-=======
-                Vmath::Smul(nqtot, df[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
-                Vmath::Smul(nqtot, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
-                Vmath::Smul(nqtot, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
->>>>>>> master
+                Vmath::Smul(nq, df[3*dir][0],  tmp1.get(),1,tmp2.get(), 1);
+                Vmath::Smul(nq, df[3*dir+1][0],tmp1.get(),1,tmp3.get(), 1);
+                Vmath::Smul(nq, df[3*dir+2][0],tmp1.get(),1,tmp4.get(), 1);
             }  
             
             IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
@@ -883,7 +863,8 @@ namespace Nektar
                                 "hierarchicial");
             }
         }
-        
+
+#if 0
         void HexExp::v_ExtractDataToCoeffs(
             const NekDouble                 *data,
             const std::vector<unsigned int> &nummodes,
@@ -1117,6 +1098,7 @@ namespace Nektar
                     ASSERTL0(false,"basis is either not set up or not hierarchicial");
             }
         }
+#endif
 
         StdRegions::Orientation HexExp::v_GetFaceOrient(int face)
         {
@@ -1759,20 +1741,10 @@ namespace Nektar
                         {
                             for(k = 0; k < nqe2; ++k)
                             {
-<<<<<<< HEAD
                                 int idx = j + nqe01*k;
-                                normal[0][j+k*nqe0] = -gmat[1][idx]*jac[idx];
-                                normal[1][j+k*nqe0] = -gmat[4][idx]*jac[idx];
-                                normal[2][j+k*nqe0] = -gmat[7][idx]*jac[idx];
-||||||| merged common ancestors
-                                normal[0][j+k*nqe0] = -gmat[1][j+nqe01*k]*jac[j+nqe01*k];
-                                normal[1][j+k*nqe0] = -gmat[4][j+nqe01*k]*jac[j+nqe01*k];
-                                normal[2][j+k*nqe0] = -gmat[7][j+nqe01*k]*jac[j+nqe01*k];
-=======
-                                normal[0][j+k*nqe0] = -df[1][j+nqe01*k]*jac[j+nqe01*k];
-                                normal[1][j+k*nqe0] = -df[4][j+nqe01*k]*jac[j+nqe01*k];
-                                normal[2][j+k*nqe0] = -df[7][j+nqe01*k]*jac[j+nqe01*k];
->>>>>>> master
+                                normal[0][j+k*nqe0] = -df[1][idx]*jac[idx];
+                                normal[1][j+k*nqe0] = -df[4][idx]*jac[idx];
+                                normal[2][j+k*nqe0] = -df[7][idx]*jac[idx];
                             }
                         }
                         break;
@@ -1781,20 +1753,10 @@ namespace Nektar
                         {
                             for(k = 0; k < nqe2; ++k)
                             {
-<<<<<<< HEAD
                                 int idx = nqe0-1+nqe0*j+nqe01*k;
-                                normal[0][j+k*nqe0] = gmat[0][idx]*jac[idx];
-                                normal[1][j+k*nqe0] = gmat[3][idx]*jac[idx];
-                                normal[2][j+k*nqe0] = gmat[6][idx]*jac[idx];
-||||||| merged common ancestors
-                                normal[0][j+k*nqe0] = gmat[0][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
-                                normal[1][j+k*nqe0] = gmat[3][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
-                                normal[2][j+k*nqe0] = gmat[6][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
-=======
-                                normal[0][j+k*nqe0] = df[0][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
-                                normal[1][j+k*nqe0] = df[3][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
-                                normal[2][j+k*nqe0] = df[6][nqe0-1+nqe0*j+nqe01*k]*jac[nqe0-1+nqe0*j+nqe01*k];
->>>>>>> master
+                                normal[0][j+k*nqe0] = df[0][idx]*jac[idx];
+                                normal[1][j+k*nqe0] = df[3][idx]*jac[idx];
+                                normal[2][j+k*nqe0] = df[6][idx]*jac[idx];
                             }
                         }
                         break;
@@ -1803,20 +1765,10 @@ namespace Nektar
                         {
                             for(k = 0; k < nqe2; ++k)
                             {
-<<<<<<< HEAD
                                 int idx = nqe0*(nqe1-1)+j+nqe01*k;
-                                normal[0][j+k*nqe0] = gmat[1][idx]*jac[idx];
-                                normal[1][j+k*nqe0] = gmat[4][idx]*jac[idx];
-                                normal[2][j+k*nqe0] = gmat[7][idx]*jac[idx];
-||||||| merged common ancestors
-                                normal[0][j+k*nqe0] = gmat[1][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
-                                normal[1][j+k*nqe0] = gmat[4][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
-                                normal[1][j+k*nqe0] = gmat[7][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
-=======
-                                normal[0][j+k*nqe0] = df[1][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
-                                normal[1][j+k*nqe0] = df[4][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
-                                normal[1][j+k*nqe0] = df[7][nqe0*(nqe1-1)+j+nqe0*nqe1*k]*jac[nqe0*(nqe1-1)+j+nqe01*k];
->>>>>>> master
+                                normal[0][j+k*nqe0] = df[1][idx]*jac[idx];
+                                normal[1][j+k*nqe0] = df[4][idx]*jac[idx];
+                                normal[2][j+k*nqe0] = df[7][idx]*jac[idx];
                             }
                         }
                         break;
@@ -1825,40 +1777,20 @@ namespace Nektar
                         {
                             for(k = 0; k < nqe2; ++k)
                             {
-<<<<<<< HEAD
                                 int idx = j*nqe0+nqe01*k;
-                                normal[0][j+k*nqe0] = -gmat[0][idx]*jac[idx];
-                                normal[1][j+k*nqe0] = -gmat[3][idx]*jac[idx];
-                                normal[2][j+k*nqe0] = -gmat[6][idx]*jac[idx];
-||||||| merged common ancestors
-                                normal[0][j+k*nqe0] = -gmat[0][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
-                                normal[1][j+k*nqe0] = -gmat[3][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
-                                normal[2][j+k*nqe0] = -gmat[6][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
-=======
-                                normal[0][j+k*nqe0] = -df[0][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
-                                normal[1][j+k*nqe0] = -df[3][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
-                                normal[2][j+k*nqe0] = -df[6][j*nqe0+nqe01*k]*jac[j*nqe0+nqe01*k];
->>>>>>> master
+                                normal[0][j+k*nqe0] = -df[0][idx]*jac[idx];
+                                normal[1][j+k*nqe0] = -df[3][idx]*jac[idx];
+                                normal[2][j+k*nqe0] = -df[6][idx]*jac[idx];
                             }
                         }
                         break;
                     case 5:
                         for (j = 0; j < nqe01; ++j)
                         {
-<<<<<<< HEAD
                             int idx = j+nqe01*(nqe2-1);
-                            normal[0][j] = gmat[2][idx]*jac[idx];
-                            normal[1][j] = gmat[5][idx]*jac[idx];
-                            normal[2][j] = gmat[8][idx]*jac[idx];
-||||||| merged common ancestors
-                            normal[0][j] = gmat[2][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
-                            normal[1][j] = gmat[5][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
-                            normal[2][j] = gmat[8][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
-=======
-                            normal[0][j] = df[2][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
-                            normal[1][j] = df[5][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
-                            normal[2][j] = df[8][j+nqe01*(nqe2-1)]*jac[j+nqe01*(nqe2-1)];
->>>>>>> master
+                            normal[0][j] = df[2][idx]*jac[idx];
+                            normal[1][j] = df[5][idx]*jac[idx];
+                            normal[2][j] = df[8][idx]*jac[idx];
                         }
                         break;
                     default:
@@ -2020,130 +1952,6 @@ namespace Nektar
             }
         }
 
-        
-<<<<<<< HEAD
-        /**
-         * @param   inarray     Input coefficients.
-         * @param   output      Output coefficients.
-         * @param   mkey        Matrix key 
-         */
-        void HexExp::v_LaplacianMatrixOp_MatFree(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray,
-                const StdRegions::StdMatrixKey &mkey)
-        {
-            if(mkey.GetNVarCoeff() == 0)
-            {
-                // This implementation is only valid when there are no coefficients
-                // associated to the Laplacian operator
-                if(m_metricinfo->IsUsingLaplMetrics())       
-                {
-                    ASSERTL0(false,"Finish implementing HexExp for Lap metrics");
-/*                  int       nquad0  = m_base[0]->GetNumPoints();
-                    int       nquad1  = m_base[1]->GetNumPoints();
-                    int       nquad2  = m_base[2]->GetNumPoints();
-                    int       nqtot   = nquad0*nquad1*nquad2; 
-                    int       nmodes0 = m_base[0]->GetNumModes();
-                    int       nmodes1 = m_base[1]->GetNumModes();
-                    int       nmodes2 = m_base[2]->GetNumModes();
-                    int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                    
-                    const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-                    const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-                    const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
-                    const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
-                    const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-                    const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
-                    const Array<TwoD, const NekDouble>& metric = m_metricinfo->GetLaplacianMetrics(); 
-                    
-                    // Allocate temporary storage
-                    Array<OneD,NekDouble> wsp0(4*wspsize);
-                    Array<OneD,NekDouble> wsp1(wsp0+wspsize);
-                    Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-                    Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
-                    
-                    if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-                    {  
-                        // LAPLACIAN MATRIX OPERATION
-                        // wsp0 = u       = B   * u_hat 
-                        // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
-                        // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                        StdHexExp::BwdTrans_SumFacKernel(base0,base1,base2,inarray,wsp0,wsp1,true,true,true);
-                        StdExpansion3D::PhysTensorDeriv(wsp0,wsp1,wsp2,wsp3);
-                    }
-                    else
-                    {
-                        StdExpansion3D::PhysTensorDeriv(inarray,wsp1,wsp2,wsp3);                    
-                    }
-                    
-                    // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                    // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                    // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
-                    // especially for this purpose
-                    if(!m_metricinfo->LaplacianMetricIsZero(1))
-                    {
-                        Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
-                        Vmath::Vvtvvtp(nqtot,&metric[1][0],1,&wsp1[0],1,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
-                    }
-                    else
-                    {
-                        // special implementation in case g1 = 0 (which should hold for undistorted quads)
-                        // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
-                        // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
-                        Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
-                        Vmath::Vmul(nqtot,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
-                    }
-                    
-                    // outarray = m = (D_xi1 * B)^T * k 
-                    // wsp1     = n = (D_xi2 * B)^T * l 
-                    IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp0,outarray,wsp1,false,true,true);
-                    IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp2,wsp1,    wsp0,true,false,true);
-//                    IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp2,wsp1,    wsp0,true,true,false);
-                    
-                    // outarray = outarray + wsp1
-                    //          = L * u_hat
-                    Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);      
-*/                }
-                else
-                {
-                    int nquad0  = m_base[0]->GetNumPoints();
-                    int nquad1  = m_base[1]->GetNumPoints();
-                    int nquad2  = m_base[2]->GetNumPoints();
-                    int nqtot   = nquad0*nquad1*nquad2;
-                    int nmodes0 = m_base[0]->GetNumModes();
-                    int nmodes1 = m_base[1]->GetNumModes();
-                    int nmodes2 = m_base[2]->GetNumModes();
-                    int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
-                                      nquad0*nquad1*(nquad2+nmodes0)+
-                                      nmodes0*nmodes1*nquad2);
-                    
-                    const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
-                    const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
-                    const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
-
-                    Array<OneD,NekDouble> wsp (wspsize);
-                    Array<OneD,NekDouble> wsp1(nqtot);
-                    
-                    // Backwards transform to obtain u = B * u_hat.
-                    if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
-                         m_base[2]->Collocation()))
-                    {
-                        BwdTrans_SumFacKernel           (base0,base1,base2,inarray,
-                                                         wsp1,wsp,true,true,true);
-                        LaplacianMatrixOp_MatFree_Kernel(wsp1, outarray, wsp);
-                    }
-                    else
-                    {
-                        LaplacianMatrixOp_MatFree_Kernel(wsp1, outarray, wsp);
-                    }
-                }
-            }
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }
-        }
-        
         /**
          * This function is used to compute exactly the advective numerical flux
          * on the interface of two elements with different expansions, hence an
@@ -2223,392 +2031,6 @@ namespace Nektar
                 bortho0, bortho1, bortho2, coeff_tmp2,
                 b0,      b1,      b2,      outarray);
         }
-
-        void HexExp::v_HelmholtzMatrixOp_MatFree(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray,
-                const StdRegions::StdMatrixKey &mkey)
-        {
-            if(m_metricinfo->IsUsingLaplMetrics())
-            {
-                ASSERTL0(false,"Finish implementing HexExp Helmholtz for Lapl Metrics");
-/*              int       nquad0  = m_base[0]->GetNumPoints();
-                int       nquad1  = m_base[1]->GetNumPoints();
-                int       nqtot   = nquad0*nquad1; 
-                int       nmodes0 = m_base[0]->GetNumModes();
-                int       nmodes1 = m_base[1]->GetNumModes();
-                int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                NekDouble lambda  = mkey.GetConstant(0);
-                
-                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-                const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
-                const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-                const Array<TwoD, const NekDouble>& metric = m_metricinfo->GetLaplacianMetrics(); 
-                
-                // Allocate temporary storage
-                Array<OneD,NekDouble> wsp0(4*wspsize);
-                Array<OneD,NekDouble> wsp1(wsp0+wspsize);
-                Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-                Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
-                
-                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-                {  
-                    // MASS MATRIX OPERATION
-                    // The following is being calculated:
-                    // wsp0     = B   * u_hat = u
-                    // wsp1     = W   * wsp0
-                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat 
-                    BwdTrans_SumFacKernel       (base0,base1,inarray,wsp0,    wsp1,true,true);
-                    MultiplyByQuadratureMetric  (wsp0,wsp2);
-                    IProductWRTBase_SumFacKernel(base0,base1,wsp2,   outarray,wsp1,true,true);
-                    
-                    // LAPLACIAN MATRIX OPERATION
-                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
-                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                    StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
-                }
-                else
-                {
-                    // specialised implementation for the classical spectral element method
-                    StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
-                    MultiplyByQuadratureMetric(inarray,outarray);
-                }
-                
-                // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g1 * du_dxi1 + g2 * du_dxi2
-                // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
-                // especially for this purpose
-                if(!m_metricinfo->LaplacianMetricIsZero(1))
-                {
-                    Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
-                    Vmath::Vvtvvtp(nqtot,&metric[1][0],1,&wsp1[0],1,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
-                }
-                else
-                {
-                    // special implementation in case g1 = 0 (which should hold for undistorted quads)
-                    // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
-                    // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
-                    Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
-                    Vmath::Vmul(nqtot,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
-                }
-                
-                // wsp1 = m = (D_xi1 * B)^T * k 
-                // wsp0 = n = (D_xi2 * B)^T * l 
-                IProductWRTBase_SumFacKernel(dbase0,base1,wsp0,wsp1,wsp3,false,true);
-                IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp0,wsp3,true,false);
-                
-                // outarray = lambda * outarray + (wsp0 + wsp1)
-                //          = (lambda * M + L ) * u_hat
-                Vmath::Vstvpp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,&wsp0[0],1,&outarray[0],1);
-*/            }
-            else
-            {
-                int nquad0  = m_base[0]->GetNumPoints();
-                int nquad1  = m_base[1]->GetNumPoints();
-                int nquad2  = m_base[2]->GetNumPoints();
-                int nqtot   = nquad0*nquad1*nquad2;
-                int nmodes0 = m_base[0]->GetNumModes();
-                int nmodes1 = m_base[1]->GetNumModes();
-                int nmodes2 = m_base[2]->GetNumModes();
-                int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
-                                  nquad0*nquad1*(nquad2+nmodes0)+
-                                  nmodes0*nmodes1*nquad2);
-                
-                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
-
-                const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
-                const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
-                const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
-                Array<OneD,NekDouble> wsp (wspsize);
-                Array<OneD,NekDouble> wsp0(nqtot);
-                Array<OneD,NekDouble> wsp1(nqtot);
-                
-                if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
-                     m_base[2]->Collocation()))
-                {
-                    // MASS MATRIX OPERATION
-                    // The following is being calculated:
-                    // wsp0     = B   * u_hat = u
-                    // wsp1     = W   * wsp0
-                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat
-                    BwdTrans_SumFacKernel           (base0,base1,base2,inarray,
-                                                     wsp0,wsp,true,true,true);
-                    MultiplyByQuadratureMetric      (wsp0,wsp1);
-                    IProductWRTBase_SumFacKernel    (base0,base1,base2,wsp1,
-                                                     outarray,wsp,true,true,true);
-                    LaplacianMatrixOp_MatFree_Kernel(wsp0,wsp1,wsp);
-                }
-                else
-                {
-                    // specialised implementation for the classical spectral
-                    // element method
-                    MultiplyByQuadratureMetric      (inarray,outarray);
-                    LaplacianMatrixOp_MatFree_Kernel(inarray,wsp1,wsp);
-                }
-
-                // outarray = lambda * outarray + wsp1
-                //          = (lambda * M + L ) * u_hat
-                Vmath::Svtvp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,
-                             &outarray[0],1); 
-            }
-        }
-||||||| merged common ancestors
-        /**
-         * @param   inarray     Input coefficients.
-         * @param   output      Output coefficients.
-         * @param   mkey        Matrix key 
-         */
-        void HexExp::v_LaplacianMatrixOp_MatFree(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray,
-                const StdRegions::StdMatrixKey &mkey)
-        {
-            if(mkey.GetNVarCoeff() == 0)
-            {
-                // This implementation is only valid when there are no coefficients
-                // associated to the Laplacian operator
-                if(m_metricinfo->IsUsingLaplMetrics())       
-                {
-                    ASSERTL0(false,"Finish implementing HexExp for Lap metrics");
-/*                  int       nquad0  = m_base[0]->GetNumPoints();
-                    int       nquad1  = m_base[1]->GetNumPoints();
-                    int       nquad2  = m_base[2]->GetNumPoints();
-                    int       nqtot   = nquad0*nquad1*nquad2; 
-                    int       nmodes0 = m_base[0]->GetNumModes();
-                    int       nmodes1 = m_base[1]->GetNumModes();
-                    int       nmodes2 = m_base[2]->GetNumModes();
-                    int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                    
-                    const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-                    const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-                    const Array<OneD, const NekDouble>& base2  = m_base[2]->GetBdata();
-                    const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
-                    const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-                    const Array<OneD, const NekDouble>& dbase2 = m_base[2]->GetDbdata();
-                    const Array<TwoD, const NekDouble>& metric = m_metricinfo->GetLaplacianMetrics(); 
-                    
-                    // Allocate temporary storage
-                    Array<OneD,NekDouble> wsp0(4*wspsize);
-                    Array<OneD,NekDouble> wsp1(wsp0+wspsize);
-                    Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-                    Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
-                    
-                    if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-                    {  
-                        // LAPLACIAN MATRIX OPERATION
-                        // wsp0 = u       = B   * u_hat 
-                        // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
-                        // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                        StdHexExp::BwdTrans_SumFacKernel(base0,base1,base2,inarray,wsp0,wsp1,true,true,true);
-                        StdExpansion3D::PhysTensorDeriv(wsp0,wsp1,wsp2,wsp3);
-                    }
-                    else
-                    {
-                        StdExpansion3D::PhysTensorDeriv(inarray,wsp1,wsp2,wsp3);                    
-                    }
-                    
-                    // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                    // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                    // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
-                    // especially for this purpose
-                    if(!m_metricinfo->LaplacianMetricIsZero(1))
-                    {
-                        Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
-                        Vmath::Vvtvvtp(nqtot,&metric[1][0],1,&wsp1[0],1,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
-                    }
-                    else
-                    {
-                        // special implementation in case g1 = 0 (which should hold for undistorted quads)
-                        // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
-                        // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
-                        Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
-                        Vmath::Vmul(nqtot,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
-                    }
-                    
-                    // outarray = m = (D_xi1 * B)^T * k 
-                    // wsp1     = n = (D_xi2 * B)^T * l 
-                    IProductWRTBase_SumFacKernel(dbase0,base1,base2,wsp0,outarray,wsp1,false,true,true);
-                    IProductWRTBase_SumFacKernel(base0,dbase1,base2,wsp2,wsp1,    wsp0,true,false,true);
-//                    IProductWRTBase_SumFacKernel(base0,base1,dbase2,wsp2,wsp1,    wsp0,true,true,false);
-                    
-                    // outarray = outarray + wsp1
-                    //          = L * u_hat
-                    Vmath::Vadd(m_ncoeffs,wsp1.get(),1,outarray.get(),1,outarray.get(),1);      
-*/                }
-                else
-                {
-                    int nquad0  = m_base[0]->GetNumPoints();
-                    int nquad1  = m_base[1]->GetNumPoints();
-                    int nquad2  = m_base[2]->GetNumPoints();
-                    int nqtot   = nquad0*nquad1*nquad2;
-                    int nmodes0 = m_base[0]->GetNumModes();
-                    int nmodes1 = m_base[1]->GetNumModes();
-                    int nmodes2 = m_base[2]->GetNumModes();
-                    int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
-                                      nquad0*nquad1*(nquad2+nmodes0)+
-                                      nmodes0*nmodes1*nquad2);
-                    
-                    const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
-                    const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
-                    const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
-
-                    Array<OneD,NekDouble> wsp (wspsize);
-                    Array<OneD,NekDouble> wsp1(nqtot);
-                    
-                    // Backwards transform to obtain u = B * u_hat.
-                    if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
-                         m_base[2]->Collocation()))
-                    {
-                        BwdTrans_SumFacKernel           (base0,base1,base2,inarray,
-                                                         wsp1,wsp,true,true,true);
-                        LaplacianMatrixOp_MatFree_Kernel(wsp1, outarray, wsp);
-                    }
-                    else
-                    {
-                        LaplacianMatrixOp_MatFree_Kernel(wsp1, outarray, wsp);
-                    }
-                }
-            }
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(inarray,outarray,mkey);
-            }
-        }
-
-
-        void HexExp::v_HelmholtzMatrixOp_MatFree(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray,
-                const StdRegions::StdMatrixKey &mkey)
-        {
-            if(m_metricinfo->IsUsingLaplMetrics())
-            {
-                ASSERTL0(false,"Finish implementing HexExp Helmholtz for Lapl Metrics");
-/*              int       nquad0  = m_base[0]->GetNumPoints();
-                int       nquad1  = m_base[1]->GetNumPoints();
-                int       nqtot   = nquad0*nquad1; 
-                int       nmodes0 = m_base[0]->GetNumModes();
-                int       nmodes1 = m_base[1]->GetNumModes();
-                int       wspsize = max(max(max(nqtot,m_ncoeffs),nquad1*nmodes0),nquad0*nmodes1);
-                NekDouble lambda  = mkey.GetConstant(0);
-                
-                const Array<OneD, const NekDouble>& base0  = m_base[0]->GetBdata();
-                const Array<OneD, const NekDouble>& base1  = m_base[1]->GetBdata();
-                const Array<OneD, const NekDouble>& dbase0 = m_base[0]->GetDbdata();
-                const Array<OneD, const NekDouble>& dbase1 = m_base[1]->GetDbdata();
-                const Array<TwoD, const NekDouble>& metric = m_metricinfo->GetLaplacianMetrics(); 
-                
-                // Allocate temporary storage
-                Array<OneD,NekDouble> wsp0(4*wspsize);
-                Array<OneD,NekDouble> wsp1(wsp0+wspsize);
-                Array<OneD,NekDouble> wsp2(wsp0+2*wspsize);
-                Array<OneD,NekDouble> wsp3(wsp0+3*wspsize);
-                
-                if(!(m_base[0]->Collocation() && m_base[1]->Collocation()))
-                {  
-                    // MASS MATRIX OPERATION
-                    // The following is being calculated:
-                    // wsp0     = B   * u_hat = u
-                    // wsp1     = W   * wsp0
-                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat 
-                    BwdTrans_SumFacKernel       (base0,base1,inarray,wsp0,    wsp1,true,true);
-                    MultiplyByQuadratureMetric  (wsp0,wsp2);
-                    IProductWRTBase_SumFacKernel(base0,base1,wsp2,   outarray,wsp1,true,true);
-                    
-                    // LAPLACIAN MATRIX OPERATION
-                    // wsp1 = du_dxi1 = D_xi1 * wsp0 = D_xi1 * u
-                    // wsp2 = du_dxi2 = D_xi2 * wsp0 = D_xi2 * u
-                    StdExpansion2D::PhysTensorDeriv(wsp0,wsp1,wsp2);
-                }
-                else
-                {
-                    // specialised implementation for the classical spectral element method
-                    StdExpansion2D::PhysTensorDeriv(inarray,wsp1,wsp2);
-                    MultiplyByQuadratureMetric(inarray,outarray);
-                }
-                
-                // wsp0 = k = g0 * wsp1 + g1 * wsp2 = g0 * du_dxi1 + g1 * du_dxi2
-                // wsp2 = l = g1 * wsp1 + g2 * wsp2 = g1 * du_dxi1 + g2 * du_dxi2
-                // where g0, g1 and g2 are the metric terms set up in the GeomFactors class
-                // especially for this purpose
-                if(!m_metricinfo->LaplacianMetricIsZero(1))
-                {
-                    Vmath::Vvtvvtp(nqtot,&metric[0][0],1,&wsp1[0],1,&metric[1][0],1,&wsp2[0],1,&wsp0[0],1);
-                    Vmath::Vvtvvtp(nqtot,&metric[1][0],1,&wsp1[0],1,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
-                }
-                else
-                {
-                    // special implementation in case g1 = 0 (which should hold for undistorted quads)
-                    // wsp0 = k = g0 * wsp1 = g0 * du_dxi1
-                    // wsp2 = l = g2 * wsp2 = g2 * du_dxi2           
-                    Vmath::Vmul(nqtot,&metric[0][0],1,&wsp1[0],1,&wsp0[0],1);
-                    Vmath::Vmul(nqtot,&metric[2][0],1,&wsp2[0],1,&wsp2[0],1);
-                }
-                
-                // wsp1 = m = (D_xi1 * B)^T * k 
-                // wsp0 = n = (D_xi2 * B)^T * l 
-                IProductWRTBase_SumFacKernel(dbase0,base1,wsp0,wsp1,wsp3,false,true);
-                IProductWRTBase_SumFacKernel(base0,dbase1,wsp2,wsp0,wsp3,true,false);
-                
-                // outarray = lambda * outarray + (wsp0 + wsp1)
-                //          = (lambda * M + L ) * u_hat
-                Vmath::Vstvpp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,&wsp0[0],1,&outarray[0],1);
-*/            }
-            else
-            {
-                int nquad0  = m_base[0]->GetNumPoints();
-                int nquad1  = m_base[1]->GetNumPoints();
-                int nquad2  = m_base[2]->GetNumPoints();
-                int nqtot   = nquad0*nquad1*nquad2;
-                int nmodes0 = m_base[0]->GetNumModes();
-                int nmodes1 = m_base[1]->GetNumModes();
-                int nmodes2 = m_base[2]->GetNumModes();
-                int wspsize = max(nquad0*nmodes2*(nmodes1+nquad1),
-                                  nquad0*nquad1*(nquad2+nmodes0)+
-                                  nmodes0*nmodes1*nquad2);
-                
-                NekDouble lambda  = mkey.GetConstFactor(StdRegions::eFactorLambda);
-
-                const Array<OneD, const NekDouble>& base0 = m_base[0]->GetBdata ();
-                const Array<OneD, const NekDouble>& base1 = m_base[1]->GetBdata ();
-                const Array<OneD, const NekDouble>& base2 = m_base[2]->GetBdata ();
-                Array<OneD,NekDouble> wsp (wspsize);
-                Array<OneD,NekDouble> wsp0(nqtot);
-                Array<OneD,NekDouble> wsp1(nqtot);
-                
-                if(!(m_base[0]->Collocation() && m_base[1]->Collocation() &&
-                     m_base[2]->Collocation()))
-                {
-                    // MASS MATRIX OPERATION
-                    // The following is being calculated:
-                    // wsp0     = B   * u_hat = u
-                    // wsp1     = W   * wsp0
-                    // outarray = B^T * wsp1  = B^T * W * B * u_hat = M * u_hat
-                    BwdTrans_SumFacKernel           (base0,base1,base2,inarray,
-                                                     wsp0,wsp,true,true,true);
-                    MultiplyByQuadratureMetric      (wsp0,wsp1);
-                    IProductWRTBase_SumFacKernel    (base0,base1,base2,wsp1,
-                                                     outarray,wsp,true,true,true);
-                    LaplacianMatrixOp_MatFree_Kernel(wsp0,wsp1,wsp);
-                }
-                else
-                {
-                    // specialised implementation for the classical spectral
-                    // element method
-                    MultiplyByQuadratureMetric      (inarray,outarray);
-                    LaplacianMatrixOp_MatFree_Kernel(inarray,wsp1,wsp);
-                }
-
-                // outarray = lambda * outarray + wsp1
-                //          = (lambda * M + L ) * u_hat
-                Vmath::Svtvp(m_ncoeffs,lambda,&outarray[0],1,&wsp1[0],1,
-                             &outarray[0],1); 
-            }
-        }
-=======
->>>>>>> master
-
 
         //-----------------------------
         // Matrix creation functions

@@ -272,10 +272,6 @@ namespace Nektar
                               int numMin,
                               const Array<OneD, const NekDouble> &inarray,
                               Array<OneD, NekDouble> &outarray);
-            LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
-                        const Array<OneD, const NekDouble> &inarray,
-                              Array<OneD,       NekDouble> &outarray,
-                        const StdRegions::StdMatrixKey &mkey);
             LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
 
         private:

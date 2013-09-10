@@ -1082,7 +1082,7 @@ namespace Nektar
          */
         int InputNek::GetNnodes(ElementType InputNekEntity)
         {
-            int nNodes;
+            int nNodes = 0;
 
             switch(InputNekEntity)
             {

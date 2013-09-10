@@ -408,7 +408,7 @@ namespace Nektar
                     const Array<OneD,const ExpListSharedPtr>  &bndConstraint,
                     const Array<OneD, const SpatialDomains
                                            ::BoundaryConditionShPtr>  &bndCond,
-                    const StdRegions::StdExpansionVector &locexp,
+                    const LocalRegions::ExpansionVector &locexp,
                     const SpatialDomains::MeshGraphSharedPtr &graph2D,
                     const PeriodicMap &periodicEdges,
                     const bool DeclareCoeffPhysArrays,
@@ -419,7 +419,9 @@ namespace Nektar
             set<int> edgesDone;
 
             SpatialDomains::Geometry1DSharedPtr segGeom;
-            LocalRegions::SegExpSharedPtr seg;
+            LocalRegions::SegExpSharedPtr       seg;
+            LocalRegions::Expansion1DSharedPtr  exp1D;
+            LocalRegions::Expansion2DSharedPtr  exp2D;
 
             // First loop over boundary conditions to renumber
             // Dirichlet boundaries
@@ -432,8 +434,9 @@ namespace Nektar
                     {
                         LibUtilities::BasisKey bkey = bndConstraint[i]
                                     ->GetExp(j)->GetBasis(0)->GetBasisKey();
-                        segGeom = bndConstraint[i]->GetExp(j)->GetGeom1D();
-
+                        exp1D = LocalRegions::Expansion1D::FromStdExp(
+                            bndConstraint[i]->GetExp(j));
+                        SegGeom = exp1D->GetGeom1D();
                         seg = MemoryManager<LocalRegions::SegExp>
                                             ::AllocateSharedPtr(bkey, segGeom);
                         edgesDone.insert(segGeom->GetEid());
@@ -450,9 +453,10 @@ namespace Nektar
 
             for(i = 0; i < locexp.size(); ++i)
             {
+                exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[i]);
                 for(j = 0; j < locexp[i]->GetNedges(); ++j)
                 {
-                    segGeom = locexp[i]->GetGeom2D()->GetEdge(j);
+                    segGeom = exp2D->GetGeom2D()->GetEdge(j);
                     id      = segGeom->GetEid();
 
                     // Ignore Dirichlet edges
@@ -786,15 +790,18 @@ namespace Nektar
 		
 
 	void ExpList1D::SetUpPhysTangents(
-		const StdRegions::StdExpansionVector &locexp)
+		const LocalRegions::ExpansionVector &locexp)
 	{
 	    map<int, int> EdgeGID;
 	    int i,cnt,n,id;
-	    
+	    LocalRegions::Expansion1DSharedPtr exp1D;
+	    LocalRegions::Expansion2DSharedPtr exp2D;
+
 	    //setup map of all global ids along booundary
 	    for(cnt = i=0; i< (*m_exp).size(); ++i)
 	    {
-	        id = (*m_exp)[i]->GetGeom1D()->GetEid();
+                exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
+	        id = exp1D->GetGeom1D()->GetEid();
 	        EdgeGID[id] = cnt++;
 	    }
 	    
@@ -803,12 +810,13 @@ namespace Nektar
 	    {
 	       for(i=0; i < locexp[n]->GetNedges(); ++i)
 	       {
-	       	  id = locexp[n]->GetGeom2D()->GetEid(i);
-	       	  if(EdgeGID.count(id)> 0)
-	       	  {
-	       	      (*m_exp)[EdgeGID.find(id)->second]
-	       	      			->SetUpPhysTangents(locexp[n],i);
-	       	  }
+                   exp2D = LocalRegions::Expansion2D::FromStdExp(locexp[n]);
+                   id = exp2D->GetGeom2D()->GetEid(i);
+                   if(EdgeGID.count(id)> 0)
+                   {
+                       (*m_exp)[EdgeGID.find(id)->second]
+                           ->SetUpPhysTangents(locexp[n],i);
+                   }
 	       }
 	    }
 	}
@@ -834,7 +842,7 @@ namespace Nektar
             NekDouble Vn;
 
             // Assume whole array is of same coordimate dimension
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+            int coordim = GetCoordim(0);
 
             ASSERTL1(Vec.num_elements() >= coordim,
                     "Input vector does not have sufficient dimensions to "
@@ -933,7 +941,7 @@ namespace Nektar
             Array<OneD,Array<OneD,NekDouble> > locnormals;
 
             // Assume whole array is of same coordinate dimension
-            int coordim = (*m_exp)[0]->GetGeom1D()->GetCoordim();
+            int coordim = GetCoordim(0);
 
             ASSERTL1(normals.num_elements() >= coordim,
                      "Output vector does not have sufficient dimensions to "
@@ -1048,7 +1056,7 @@ namespace Nektar
 //        }
 
         void ExpList1D::v_SetUpPhysTangents(
-                    const StdRegions::StdExpansionVector &locexp)
+                    const LocalRegions::ExpansionVector &locexp)
         {
             SetUpPhysTangents(locexp);
         }

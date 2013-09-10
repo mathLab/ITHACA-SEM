@@ -273,7 +273,7 @@ namespace Nektar
                         for(i = 0 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous2D>
-                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                         }
                     }
                     
@@ -301,7 +301,7 @@ namespace Nektar
                             for(i = 0 ; i < m_base.num_elements(); i++)
                             {								
                                 m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                                 m_base[i]->SetWaveSpace(true);
                                 
 				
@@ -316,7 +316,7 @@ namespace Nektar
                             for(i = 0 ; i < m_base.num_elements(); i++)
                             {																
                                 m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                                 m_base[i]->SetWaveSpace(true);
                                 
                             } 
@@ -331,7 +331,7 @@ namespace Nektar
                             for(i = 0 ; i < m_base.num_elements(); i++)
                             {
                                 m_base[i] = MemoryManager<MultiRegions::ContField3DHomogeneous1D>
-                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                    ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                                 m_base[i]->SetWaveSpace(false);
                             } 
                             
@@ -399,7 +399,7 @@ namespace Nektar
                         for(i = 0 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous2D>
-                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                ::AllocateSharedPtr(m_session,BkeyY,BkeyZ,m_LhomY,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                         }
                     }
                     else 
@@ -424,7 +424,7 @@ namespace Nektar
                         for(i = 0 ; i < m_base.num_elements(); i++)
                         {
                             m_base[i] = MemoryManager<MultiRegions::DisContField3DHomogeneous1D>
-                                ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_dealiasing,m_graph,m_session->GetVariable(i));
+                                ::AllocateSharedPtr(m_session,BkeyZ,m_LhomZ,m_useFFT,m_homogen_dealiasing,m_graph,m_session->GetVariable(i));
                         }
 			
 			
@@ -706,7 +706,7 @@ namespace Nektar
             {
                 //x-equation	
             case 0:
-                if(m_dealiasing)
+                if(m_homogen_dealiasing)
                 {
                     //U du'/dx
                     pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
@@ -748,7 +748,7 @@ namespace Nektar
                 break;
                 //y-equation	
             case 1:
-                if(m_dealiasing)
+                if(m_homogen_dealiasing)
                 {
                     //U dv'/dx
                     pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);
@@ -788,7 +788,7 @@ namespace Nektar
                 
                 //z-equation	
             case 2:
-                if(m_dealiasing)
+                if(m_homogen_dealiasing)
                 {
                     //U dw'/dx
                     pFields[0]->DealiasedProd(m_base[0]->GetPhys(),grad0,grad0,m_CoeffState);

@@ -156,7 +156,7 @@ namespace Nektar
                         // don't check here.
                         if (!edgeDataStrm.fail())
                         {
-                            VertexComponentSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
+                            PointGeomSharedPtr vertices[2] = {GetVertex(vertex1), GetVertex(vertex2)};
                             SegGeomSharedPtr edge;
 
                             if (edge_curved.count(indx) == 0)

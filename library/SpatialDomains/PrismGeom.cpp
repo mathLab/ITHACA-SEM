@@ -214,12 +214,50 @@ namespace Nektar
         bool PrismGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
         {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);            
+        }
+
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry.
+         */
+        bool PrismGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord, 
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol)
+        {
             // Validation checks
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
-            
+           
+            // find min, max point and check if within twice this
+            // distance other false this is advisable since
+            // GetLocCoord is expensive for non regular elements.
+            if(GetMetricInfo()->GetGtype() !=  eRegular)
+            {
+                int i;
+                Array<OneD, NekDouble> pts; 
+                NekDouble mincoord, maxcoord,diff;
+                
+                v_FillGeom();
+                
+                for(i = 0; i < 3; ++i)
+                {
+                    pts = m_xmap[i]->GetPhys();
+                    mincoord = Vmath::Vmin(pts.num_elements(),pts,1);
+                    maxcoord = Vmath::Vmax(pts.num_elements(),pts,1);
+                    
+                    diff = maxcoord - mincoord; 
+                    
+                    if((gloCoord[i] < mincoord - diff)||(gloCoord[i] > maxcoord + diff))
+                    {
+                        return false;
+                    }
+                }
+            }
+ 
             // Convert to the local (eta) coordinates.
-            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
             v_GetLocCoords(gloCoord, locCoord);
             
             // Check local coordinate is within [-1,1]^3 bounds.
@@ -287,7 +325,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis, true);
+                    Gtype, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
             }
@@ -299,13 +337,13 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Lcoords)
         {
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {
                 // Point inside tetrahedron
-                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+                PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
 
                 // Edges
-                VertexComponent er0, e10, e30, e40;
+                PointGeom er0, e10, e30, e40;
                 er0.Sub(r,*m_verts[0]);
                 e10.Sub(*m_verts[1],*m_verts[0]);
                 e30.Sub(*m_verts[3],*m_verts[0]);
@@ -313,7 +351,7 @@ namespace Nektar
 
 
                 // Cross products (Normal times area)
-                VertexComponent cp1030, cp3040, cp4010;
+                PointGeom cp1030, cp3040, cp4010;
                 cp1030.Mult(e10,e30);
                 cp3040.Mult(e30,e40);
                 cp4010.Mult(e40,e10);
@@ -384,6 +422,7 @@ namespace Nektar
 	{
 	    return EdgeFaceConnectivity[i][j];
 	}
+
 
         void PrismGeom::SetUpLocalEdges(){
             // find edge 0

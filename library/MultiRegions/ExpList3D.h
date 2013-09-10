@@ -70,10 +70,11 @@ namespace Nektar
             /// Sets up a list of local expansions based on an input mesh.
             MULTI_REGIONS_EXPORT ExpList3D(
                         const LibUtilities::SessionReaderSharedPtr &pSession,
-                        const SpatialDomains::MeshGraphSharedPtr &graph3D);
+                        const SpatialDomains::MeshGraphSharedPtr &graph3D,
+                        const std::string  &variable = "DefaultVar");
 
             /// Sets up a list of local expansions based on an expansion vector
-            ExpList3D(const SpatialDomains::ExpansionMap &expansions);
+            MULTI_REGIONS_EXPORT  ExpList3D(const SpatialDomains::ExpansionMap &expansions);
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList3D();
@@ -98,6 +99,10 @@ namespace Nektar
             virtual void v_ReadGlobalOptimizationParameters();
 
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
+
+            virtual void v_PhysInterp1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
+
+            virtual void v_PhysGalerkinProjection1DScaled(const NekDouble scale, const Array<OneD, NekDouble> &inarray, Array<OneD, NekDouble> &outarray);
 
         };
 

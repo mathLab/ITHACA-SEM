@@ -44,16 +44,15 @@ namespace Nektar
             const LibUtilities::SessionReaderSharedPtr& pSession)
         : Poisson(pSession)
     {
+        if (pSession->DefinesParameter("Lambda"))
+        {
+            m_factors[StdRegions::eFactorLambda] = m_session->GetParameter("Lambda");
+        }
     }
 
     void Helmholtz::v_InitObject()
     {
         Poisson::v_InitObject();
-
-        if (m_session->DefinesParameter("Lambda"))
-        {
-            m_factors[StdRegions::eFactorLambda] = m_session->GetParameter("Lambda");
-        }
     }
 
     Helmholtz::~Helmholtz()
@@ -68,7 +67,7 @@ namespace Nektar
 
     Array<OneD, bool> Helmholtz::v_GetSystemSingularChecks()
     {
-        if (m_lambda == 0)
+        if (m_factors[StdRegions::eFactorLambda] == 0)
         {
             return Array<OneD, bool>(m_session->GetVariables().size(), true);
         }

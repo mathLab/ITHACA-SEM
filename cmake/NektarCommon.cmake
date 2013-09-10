@@ -47,10 +47,6 @@ MACRO(SET_LAPACK_LINK_LIBRARIES name)
 
     ENDIF( NEKTAR_USE_BLAS_LAPACK )
 
-    IF( NEKTAR_USE_NIST_SPARSE_BLAS_TOOLKIT AND NIST_SPARSE_BLAS_FOUND )   
-        TARGET_LINK_LIBRARIES(${name} ${NIST_SPARSE_BLAS} )
-    ENDIF( NEKTAR_USE_NIST_SPARSE_BLAS_TOOLKIT AND NIST_SPARSE_BLAS_FOUND )
-        
     IF( NEKTAR_USE_METIS )    
         TARGET_LINK_LIBRARIES(${name} optimized ${METIS_LIB} debug 
             ${METIS_LIB} )
@@ -118,9 +114,22 @@ MACRO(SET_COMMON_PROPERTIES name)
                     "${CMAKE_CXX_FLAGS_DEBUG} -fpermissive")
             ENDIF()
         ENDIF( NOT MSVC)
-                        
+
+        # Attempt to retrieve git branch and SHA1 hash
+        get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+
+        # Define version
+        SET_PROPERTY(TARGET ${name}
+            APPEND PROPERTY COMPILE_DEFINITIONS NEKTAR_VERSION=\"${NEKTAR_VERSION}\")
+
+        # Define the git branch and SHA1 hash if we are in a git repository
+        IF (NOT ${GIT_REFSPEC} STREQUAL "GITDIR-NOTFOUND")
+            SET_PROPERTY(TARGET ${name}
+                APPEND PROPERTY COMPILE_DEFINITIONS GIT_SHA1=\"${GIT_SHA1}\" GIT_BRANCH=\"${GIT_REFSPEC}\")
+        ENDIF ()
+
         SET(CMAKE_CXX_FLAGS_RELEASE 
-                    "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
+                "${CMAKE_CXX_FLAGS_RELEASE} -DNEKTAR_RELEASE")
     ENDIF(NOT ${CMAKE_CXX_FLAGS_DEBUG} MATCHES ".*DNEKTAR_DEBUG.*")
         
     IF( CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" )
@@ -225,10 +234,8 @@ ENDMACRO(ADD_NEKTAR_EXECUTABLE name component sources)
 MACRO(ADD_NEKTAR_LIBRARY name component type)
     ADD_LIBRARY(${name} ${type} ${ARGN})
 
-    # NIST Sparse BLAS only static, so link into Nektar libraries directly.
-    TARGET_LINK_LIBRARIES( ${name} ${NIST_SPARSE_BLAS} ${METIS_LIB})
-    ADD_DEPENDENCIES(${name} spblastk0.9b modmetis-5.1.0 boost tinyxml
-        zlib-1.2.7)
+    TARGET_LINK_LIBRARIES( ${name} ${METIS_LIB} )
+    ADD_DEPENDENCIES(${name}  modmetis-5.1.0 boost tinyxml zlib-1.2.7)
     SET_PROPERTY(TARGET ${name} PROPERTY FOLDER ${component})
     IF (NEKTAR_USE_MPI)
         TARGET_LINK_LIBRARIES( ${name} ${GSMPI_LIBRARY} ${XXT_LIBRARY})
@@ -264,3 +271,11 @@ MACRO(ADD_NEKTAR_TEST name)
     ADD_TEST(NAME ${dir}_${name}
          COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
 ENDMACRO(ADD_NEKTAR_TEST)
+
+MACRO(ADD_NEKTAR_TEST_LENGTHY name)
+    IF (NEKTAR_TEST_ALL)
+        GET_FILENAME_COMPONENT(dir ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+        ADD_TEST(NAME ${dir}_${name}
+             COMMAND Tester ${CMAKE_CURRENT_SOURCE_DIR}/Tests/${name}.tst)
+    ENDIF(NEKTAR_TEST_ALL)
+ENDMACRO(ADD_NEKTAR_TEST_LENGTHY)

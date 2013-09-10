@@ -137,7 +137,7 @@ int main(int argc, char *argv[]) {
     //-----------------------------------------------
     // Define a 3D expansion based on basis definition
     
-    StdRegions::StdExpansion3D *spe;
+    StdRegions::StdExpansion3D *spe = NULL;
     
     if( regionShape == LibUtilities::ePrism ) 
     { 

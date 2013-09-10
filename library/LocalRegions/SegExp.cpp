@@ -59,8 +59,8 @@ namespace Nektar
             StdExpansion(Ba.GetNumModes(), 1, Ba),
             StdExpansion1D(Ba.GetNumModes(), Ba),
             StdRegions::StdSegExp(Ba),
-            m_geom(geom),
-            m_metricinfo(m_geom->GetGeomFactors(m_base)),
+            Expansion(geom),
+            Expansion1D(geom),
             m_matrixManager(
                     boost::bind(&SegExp::CreateMatrix, this, _1),
                     std::string("SegExpMatrix")),
@@ -76,9 +76,11 @@ namespace Nektar
          * @param   S           Existing segment to duplicate.
          */
         SegExp::SegExp(const SegExp &S):
+            StdExpansion(S),
+            StdExpansion1D(S),
             StdRegions::StdSegExp(S),
-            m_geom(S.m_geom),
-            m_metricinfo(S.m_metricinfo),
+            Expansion(S),
+            Expansion1D(S),
             m_matrixManager(S.m_matrixManager),
             m_staticCondMatrixManager(S.m_staticCondMatrixManager)
         {
@@ -91,6 +93,7 @@ namespace Nektar
         SegExp::~SegExp()
         {
         }
+
 
         //----------------------------
         // Integration Methods
@@ -290,7 +293,7 @@ namespace Nektar
                     v_PhysDeriv(inarray,inarray_d0,inarray_d1);
                     Array<OneD, Array<OneD, NekDouble> > normals;
                     normals = Array<OneD, Array<OneD, NekDouble> >(coordim);
-cout<<"der_n"<<endl;
+                    cout<<"der_n"<<endl;
                     for(int k=0; k<coordim; ++k)
                     {
                         normals[k]= Array<OneD, NekDouble>(nquad0);
@@ -425,7 +428,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                         break;
                     case LibUtilities::eGauss_Lagrange:
                     {
-                        int nInteriorDofs = m_ncoeffs;
+                        nInteriorDofs = m_ncoeffs;
                         offset = 0;
                     }
                         break;
@@ -645,6 +648,20 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         //-----------------------------
         // Evaluation functions
         //-----------------------------
+
+
+        /** 
+         * Given the local cartesian coordinate \a Lcoord evaluate the
+         * value of physvals at this point by calling through to the
+         * StdExpansion method
+         */
+        NekDouble SegExp::v_StdPhysEvaluate(
+            const Array<OneD, const NekDouble> &Lcoord,
+            const Array<OneD, const NekDouble> &physvals)
+        {
+            // Evaluate point in local (eta) coordinates.
+            return StdSegExp::v_PhysEvaluate(Lcoord,physvals);
+        }
 
         NekDouble SegExp::v_PhysEvaluate(
             const Array<OneD, const NekDouble>& coord)
@@ -921,14 +938,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
             return m_geom->GetCoordim();
         }
 
-        /// Returns a pointer to the GeomFactors object describing the
-        /// metric information for the segment.
-        const SpatialDomains::GeomFactorsSharedPtr& SegExp::v_GetMetricInfo() const
-        {
-            return m_metricinfo;
-        }
-
-
         const Array<OneD, const NekDouble>& SegExp::v_GetPhysNormals(void)
         {
             NEKERROR(ErrorUtil::efatal, "Got to SegExp");
@@ -938,22 +947,6 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
         SpatialDomains::GeomType SegExp::v_MetricInfoType()
         {
             return m_metricinfo->GetGtype();
-        }
-
-
-
-        /// Returns a pointer to a Geometry object describing the
-        /// geometry of the segment.
-        const SpatialDomains::GeometrySharedPtr SegExp::v_GetGeom() const
-        {
-            return m_geom;
-        }
-
-        /// Returns a pointer to a Geometry1D object describing the
-        /// geometry of the segment.
-        const SpatialDomains::Geometry1DSharedPtr& SegExp::v_GetGeom1D() const
-        {
-            return m_geom;
         }
 
         /** \brief Virtual function to evaluate the discrete \f$ L_\infty\f$
@@ -1070,7 +1063,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
 
 
         void SegExp::v_SetUpPhysTangents(
-                const StdRegions::StdExpansionSharedPtr &exp2D,
+                const ExpansionSharedPtr &exp2D,
                 const int edge)
         {
              GetMetricInfo()->ComputeEdgeTangents(exp2D->GetGeom(),
@@ -1493,7 +1486,7 @@ cout<<"deps/dx ="<<inarray_d0[i]<<"  deps/dy="<<inarray_d1[i]<<endl;
                     }
                     else
                     {
-                        int dir;
+                        int dir = 0;
                         switch(mkey.GetMatrixType())
                         {
                             case StdRegions::eWeakDeriv0:

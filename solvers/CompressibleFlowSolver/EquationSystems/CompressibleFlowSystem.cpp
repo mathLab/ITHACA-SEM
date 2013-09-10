@@ -2066,11 +2066,11 @@ namespace Nektar
         { 
             // Possible bug: not multiply by jacobian??
             const Array<TwoD, const NekDouble> &gmat = 
-                m_fields[0]->GetExp(el)->GetGeom()->GetGmat();
+                    m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetDerivFactors();
             
             int nq = m_fields[0]->GetExp(el)->GetTotPoints();
             
-            if(m_fields[0]->GetExp(el)->GetGeom()->GetGtype() == 
+            if(m_fields[0]->GetExp(el)->GetGeom()->GetMetricInfo()->GetGtype() ==
                    SpatialDomains::eDeformed)
             {
                 // d xi/ dx = gmat = 1/J * d x/d xi

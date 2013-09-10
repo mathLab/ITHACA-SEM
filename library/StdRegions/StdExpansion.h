@@ -46,7 +46,7 @@
 #include <StdRegions/StdMatrixKey.h>
 #include <StdRegions/IndexMapKey.h>
 #include <LibUtilities/LinearAlgebra/NekTypeDefs.hpp>
-namespace Nektar { namespace LocalRegions { class MatrixKey; } }
+namespace Nektar { namespace LocalRegions { class MatrixKey; class Expansion; } }
 
 
 namespace Nektar
@@ -74,7 +74,7 @@ namespace Nektar
 
             /** \brief Constructor */
             STD_REGIONS_EXPORT StdExpansion(const int numcoeffs, const int numbases,
-                         const LibUtilities::BasisKey &Ba,
+                         const LibUtilities::BasisKey &Ba = LibUtilities::NullBasisKey,
                          const LibUtilities::BasisKey &Bb = LibUtilities::NullBasisKey,
                          const LibUtilities::BasisKey &Bc = LibUtilities::NullBasisKey);
 
@@ -363,8 +363,9 @@ namespace Nektar
              */
             inline int GetNumPoints(const int dir) const
             {
-                ASSERTL1(dir < m_numbases, "dir is larger than m_numbases");
-                return(m_base[dir]->GetNumPoints());
+                ASSERTL1(dir < m_numbases || dir == 0,
+                         "dir is larger than m_numbases");
+                return(m_base.num_elements() > 0 ? m_base[dir]->GetNumPoints() : 1);
             }
 
             /** \brief This function returns a pointer to the array containing
@@ -847,7 +848,7 @@ namespace Nektar
 
             STD_REGIONS_EXPORT virtual void SetUpPhysNormals(const int edge);
 
-	    STD_REGIONS_EXPORT virtual void SetUpPhysTangents(const boost::shared_ptr<StdExpansion>  &exp2d, const int edge);
+	    STD_REGIONS_EXPORT virtual void SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion>  &exp2d, const int edge);
 
 
             void NormVectorIProductWRTBase(const Array<OneD, const NekDouble> &Fx, const Array<OneD, const NekDouble> &Fy, Array< OneD, NekDouble> &outarray)
@@ -1059,6 +1060,20 @@ namespace Nektar
                 StdRegions::Orientation                  orient = eNoOrientation)
             {
                 v_GetFacePhysVals(face, FaceExp, inarray, outarray, orient);
+            }
+
+            void MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> &outarray)
+            {
+                v_MultiplyByQuadratureMetric(inarray, outarray);
+            }
+
+            void MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                          Array<OneD, NekDouble> & outarray)
+            {
+                v_MultiplyByStdQuadratureMetric(inarray, outarray);
             }
 
             // Matrix Routines
@@ -1283,33 +1298,13 @@ namespace Nektar
                 return v_GetMetricInfo();
             }
 
-            const boost::shared_ptr<SpatialDomains::Geometry> GetGeom(void) const
-            {
-                return v_GetGeom();
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry1D>& GetGeom1D(void) const
-            {
-                return v_GetGeom1D();
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry2D>& GetGeom2D(void) const
-            {
-                return v_GetGeom2D();
-            }
-
-            const boost::shared_ptr<SpatialDomains::Geometry3D>& GetGeom3D(void) const
-            {
-                return v_GetGeom3D();
-            }
-
             STD_REGIONS_EXPORT virtual const Array<OneD, const NekDouble>& v_GetPhysNormals(void);
 
             STD_REGIONS_EXPORT virtual void v_SetPhysNormals(Array<OneD, const NekDouble> &normal);
 
             STD_REGIONS_EXPORT virtual void v_SetUpPhysNormals(const int edge);
 
-	    STD_REGIONS_EXPORT virtual void v_SetUpPhysTangents(const boost::shared_ptr<StdExpansion> &exp2d, const int edge);
+	    STD_REGIONS_EXPORT virtual void v_SetUpPhysTangents(const boost::shared_ptr<LocalRegions::Expansion> &exp2d, const int edge);
 
             STD_REGIONS_EXPORT virtual int v_CalcNumberOfCoefficients(const std::vector<unsigned int>  &nummodes, int &modes_offset);
             
@@ -1590,6 +1585,14 @@ namespace Nektar
                 v_LaplacianMatrixOp_MatFree(inarray,outarray,mkey);
             }
 
+            STD_REGIONS_EXPORT void LaplacianMatrixOp_MatFree_Kernel(
+                const Array<OneD, const NekDouble> &inarray,
+                      Array<OneD,       NekDouble> &outarray,
+                      Array<OneD,       NekDouble> &wsp)
+            {
+                v_LaplacianMatrixOp_MatFree_Kernel(inarray, outarray, wsp);
+            }
+
             STD_REGIONS_EXPORT void LaplacianMatrixOp_MatFree_GenericImpl(const Array<OneD, const NekDouble> &inarray,
                                                              Array<OneD,NekDouble> &outarray,
                                                              const StdMatrixKey &mkey);
@@ -1838,19 +1841,19 @@ namespace Nektar
                       Array<OneD,       NekDouble>      &outarray,
                 StdRegions::Orientation                  orient);
 
+            STD_REGIONS_EXPORT virtual void v_MultiplyByQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
+                    Array<OneD, NekDouble> &outarray);
+
             STD_REGIONS_EXPORT virtual void v_WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
 
             STD_REGIONS_EXPORT virtual void v_ReadFromFile(std::ifstream &infile, OutputFormat format, const bool dumpVar = true);
 
             STD_REGIONS_EXPORT virtual const  boost::shared_ptr<SpatialDomains::GeomFactors>& v_GetMetricInfo() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry> v_GetGeom() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry1D>& v_GetGeom1D() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry2D>& v_GetGeom2D() const;
-
-            STD_REGIONS_EXPORT virtual const boost::shared_ptr<SpatialDomains::Geometry3D>& v_GetGeom3D() const;
 
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(const Array<OneD, const NekDouble>& inarray,
                                            Array<OneD, NekDouble> &outarray);
@@ -1904,6 +1907,11 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,
                                                            const StdMatrixKey &mkey);
+
+            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree_Kernel(
+                                const Array<OneD, const NekDouble> &inarray,
+                                      Array<OneD,       NekDouble> &outarray,
+                                      Array<OneD,       NekDouble> &wsp);
 
             STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(const Array<OneD, const NekDouble> &inarray,
                                                            Array<OneD,NekDouble> &outarray,

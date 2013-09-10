@@ -136,15 +136,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT virtual 
                 LibUtilities::ShapeType v_DetShapeType() const;
 
-            LOCAL_REGIONS_EXPORT virtual const 
-                SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const;
-
-            LOCAL_REGIONS_EXPORT virtual const 
-                SpatialDomains::GeometrySharedPtr v_GetGeom() const;
-
-            LOCAL_REGIONS_EXPORT virtual const 
-                SpatialDomains::Geometry3DSharedPtr& v_GetGeom3D() const;
-
             LOCAL_REGIONS_EXPORT virtual int v_GetCoordim();
 
             LOCAL_REGIONS_EXPORT virtual void v_ExtractDataToCoeffs(
@@ -191,11 +182,6 @@ namespace Nektar
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey);
 
-            LOCAL_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray,
-                const StdRegions::StdMatrixKey &mkey);
-
             LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray,
@@ -207,12 +193,6 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,NekDouble> &outarray,
                 const StdRegions::StdMatrixKey &mkey);
-
-            LOCAL_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,NekDouble> &outarray,
-                const StdRegions::StdMatrixKey &mkey);
-
 
             //-----------------------------
             // Matrix creation functions
@@ -247,10 +227,9 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT void v_ComputeConditionNumberOfMatrix(
                 const DNekScalMatSharedPtr & mat);
 
-        private:
-            SpatialDomains::Geometry3DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
+            LOCAL_REGIONS_EXPORT virtual void v_ComputeLaplacianMetric();
 
+        private:
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
 
@@ -260,10 +239,7 @@ namespace Nektar
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                 const StdRegions::StdMatrixKey      &mkey);
-            LOCAL_REGIONS_EXPORT void MultiplyByQuadratureMetric(
-                const Array<OneD, const NekDouble> &inarray,
-                      Array<OneD,       NekDouble> &outarray);
-            LOCAL_REGIONS_EXPORT void LaplacianMatrixOp_MatFree_Kernel(
+            virtual void v_LaplacianMatrixOp_MatFree_Kernel(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray,
                       Array<OneD,       NekDouble> &wsp);

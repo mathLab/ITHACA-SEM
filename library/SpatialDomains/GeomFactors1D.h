@@ -65,9 +65,7 @@ namespace Nektar
                           const Array<OneD, const StdRegions
                                             ::StdExpansion1DSharedPtr> &Coords,
                           const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                            &tbasis,
-                          const bool QuadMetrics = false,
-                          const bool LaplMetrics  = false);
+                                            &tbasis);
 
             /// Copy constructor
             SPATIAL_DOMAINS_EXPORT GeomFactors1D(const GeomFactors1D& S);
@@ -84,11 +82,6 @@ namespace Nektar
             	    	const GeometrySharedPtr &geom,
             	    	const int edge,
             	    	const LibUtilities::PointsKey &to_key);            
-
-            /**
-             * @todo Implement 1D quadrature metrics.
-             * @todo Implement 1D laplacian metrics.
-             */
         };
     }
 }

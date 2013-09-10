@@ -42,8 +42,6 @@ namespace Nektar
 {
     namespace LocalRegions 
     {
-        Expansion3D::Expansion3D() : m_requireNeg() {}
-        
         void Expansion3D::AddHDGHelmholtzTraceTerms(
             const NekDouble                                tau,
             const Array<OneD, const NekDouble>            &inarray, 

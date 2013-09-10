@@ -44,23 +44,23 @@ namespace Nektar
     namespace HexExpTests
     {
         SpatialDomains::SegGeomSharedPtr CreateSegGeom(unsigned int id, 
-            SpatialDomains::VertexComponentSharedPtr v0,
-            SpatialDomains::VertexComponentSharedPtr v1)
+            SpatialDomains::PointGeomSharedPtr v0,
+            SpatialDomains::PointGeomSharedPtr v1)
         {
-            SpatialDomains::VertexComponentSharedPtr vertices[] = {v0, v1};
+            SpatialDomains::PointGeomSharedPtr vertices[] = {v0, v1};
             SpatialDomains::SegGeomSharedPtr result(new SpatialDomains::SegGeom(id, 3, vertices));
             return result;
         }
 
         SpatialDomains::HexGeomSharedPtr CreateHex(
-            SpatialDomains::VertexComponentSharedPtr v0,
-            SpatialDomains::VertexComponentSharedPtr v1,
-            SpatialDomains::VertexComponentSharedPtr v2,
-            SpatialDomains::VertexComponentSharedPtr v3,
-            SpatialDomains::VertexComponentSharedPtr v4,
-            SpatialDomains::VertexComponentSharedPtr v5,
-            SpatialDomains::VertexComponentSharedPtr v6,
-            SpatialDomains::VertexComponentSharedPtr v7)
+            SpatialDomains::PointGeomSharedPtr v0,
+            SpatialDomains::PointGeomSharedPtr v1,
+            SpatialDomains::PointGeomSharedPtr v2,
+            SpatialDomains::PointGeomSharedPtr v3,
+            SpatialDomains::PointGeomSharedPtr v4,
+            SpatialDomains::PointGeomSharedPtr v5,
+            SpatialDomains::PointGeomSharedPtr v6,
+            SpatialDomains::PointGeomSharedPtr v7)
         {
             Nektar::SpatialDomains::SegGeomSharedPtr e0 = CreateSegGeom(0, v0, v1);
             Nektar::SpatialDomains::SegGeomSharedPtr e1 = CreateSegGeom(1, v1, v2);
@@ -157,14 +157,14 @@ namespace Nektar
 
         BOOST_AUTO_TEST_CASE(TestHexExpThatIsStdRegion)
         {
-            SpatialDomains::VertexComponentSharedPtr v0(new SpatialDomains::VertexComponent(3u, 0u, -1.0, -1.0, -1.0));
-            SpatialDomains::VertexComponentSharedPtr v1(new SpatialDomains::VertexComponent(3u, 1u, 1.0, -1.0, -1.0));
-            SpatialDomains::VertexComponentSharedPtr v2(new SpatialDomains::VertexComponent(3u, 2u, 1.0, 1.0, -1.0));
-            SpatialDomains::VertexComponentSharedPtr v3(new SpatialDomains::VertexComponent(3u, 3u, -1.0, 1.0, -1.0));
-            SpatialDomains::VertexComponentSharedPtr v4(new SpatialDomains::VertexComponent(3u, 4u, -1.0, -1.0, 1.0));
-            SpatialDomains::VertexComponentSharedPtr v5(new SpatialDomains::VertexComponent(3u, 5u, 1.0, -1.0, 1.0));
-            SpatialDomains::VertexComponentSharedPtr v6(new SpatialDomains::VertexComponent(3u, 6u, 1.0, 1.0, 1.0));
-            SpatialDomains::VertexComponentSharedPtr v7(new SpatialDomains::VertexComponent(3u, 7u, -1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, -1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 1.0, -1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, -1.0, 1.0, -1.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, -1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 1.0, -1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 1.0, 1.0, 1.0));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, -1.0, 1.0, 1.0));
             
             SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
             
@@ -196,14 +196,14 @@ namespace Nektar
         
         BOOST_AUTO_TEST_CASE(TestScaledAndTranslatedHexExp)
         {
-            SpatialDomains::VertexComponentSharedPtr v0(new SpatialDomains::VertexComponent(3u, 0u, 0.0, 0.0, 0.0));
-            SpatialDomains::VertexComponentSharedPtr v1(new SpatialDomains::VertexComponent(3u, 1u, 0.5, 0.0, 0.0));
-            SpatialDomains::VertexComponentSharedPtr v2(new SpatialDomains::VertexComponent(3u, 2u, 0.5, 0.5, 0.0));
-            SpatialDomains::VertexComponentSharedPtr v3(new SpatialDomains::VertexComponent(3u, 3u, 0.0, 0.5, 0.0));
-            SpatialDomains::VertexComponentSharedPtr v4(new SpatialDomains::VertexComponent(3u, 4u, 0.0, 0.0, 0.5));
-            SpatialDomains::VertexComponentSharedPtr v5(new SpatialDomains::VertexComponent(3u, 5u, 0.5, 0.0, 0.5));
-            SpatialDomains::VertexComponentSharedPtr v6(new SpatialDomains::VertexComponent(3u, 6u, 0.5, 0.5, 0.5));
-            SpatialDomains::VertexComponentSharedPtr v7(new SpatialDomains::VertexComponent(3u, 7u, 0.0, 0.5, 0.5));
+            SpatialDomains::PointGeomSharedPtr v0(new SpatialDomains::PointGeom(3u, 0u, 0.0, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v1(new SpatialDomains::PointGeom(3u, 1u, 0.5, 0.0, 0.0));
+            SpatialDomains::PointGeomSharedPtr v2(new SpatialDomains::PointGeom(3u, 2u, 0.5, 0.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v3(new SpatialDomains::PointGeom(3u, 3u, 0.0, 0.5, 0.0));
+            SpatialDomains::PointGeomSharedPtr v4(new SpatialDomains::PointGeom(3u, 4u, 0.0, 0.0, 0.5));
+            SpatialDomains::PointGeomSharedPtr v5(new SpatialDomains::PointGeom(3u, 5u, 0.5, 0.0, 0.5));
+            SpatialDomains::PointGeomSharedPtr v6(new SpatialDomains::PointGeom(3u, 6u, 0.5, 0.5, 0.5));
+            SpatialDomains::PointGeomSharedPtr v7(new SpatialDomains::PointGeom(3u, 7u, 0.0, 0.5, 0.5));
 
             SpatialDomains::HexGeomSharedPtr hexGeom = CreateHex(v0, v1, v2, v3, v4, v5, v6, v7);
 

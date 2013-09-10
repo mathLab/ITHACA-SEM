@@ -863,6 +863,8 @@ namespace Nektar
         int AssemblyMap::GetBndCondTraceToGlobalTraceMap(
                     const int i)
         {
+            ASSERTL1(i < m_bndCondTraceToGlobalTraceMap.num_elements(),
+                     "Index out of range.");
             return m_bndCondTraceToGlobalTraceMap[i];
         }
 

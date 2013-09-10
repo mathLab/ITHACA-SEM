@@ -516,7 +516,7 @@ namespace Nektar
         }
 
 
-        void StdPrismExp::BwdTrans_SumFacKernel(
+        void StdPrismExp::v_BwdTrans_SumFacKernel(
             const Array<OneD, const NekDouble> &base0,
             const Array<OneD, const NekDouble> &base1,
             const Array<OneD, const NekDouble> &base2,
@@ -685,7 +685,7 @@ namespace Nektar
                                          true,true,true);
         }
         
-        void StdPrismExp::IProductWRTBase_SumFacKernel(
+        void StdPrismExp::v_IProductWRTBase_SumFacKernel(
             const Array<OneD, const NekDouble>& base0,
             const Array<OneD, const NekDouble>& base1,
             const Array<OneD, const NekDouble>& base2,
@@ -1979,7 +1979,7 @@ namespace Nektar
                 (Q+1)*(p*R + 1-(p-2)*(p-1)/2); // Skip along rows    (p-direction)
         }
 
-        void StdPrismExp::MultiplyByQuadratureMetric(
+        void StdPrismExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
                   Array<OneD,       NekDouble>& outarray)
         {

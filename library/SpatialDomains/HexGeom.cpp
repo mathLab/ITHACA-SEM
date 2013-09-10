@@ -277,7 +277,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis, true);
+                    Gtype, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
             }
@@ -292,7 +292,7 @@ namespace Nektar
             v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {   
                 NekDouble len0 = 0.0 ;
                 NekDouble len1 = 0.0;
@@ -388,7 +388,7 @@ namespace Nektar
            // find min, max point and check if within twice this
             // distance other false this is advisable since
             // GetLocCoord is expensive for non regular elements.
-            if(GetGtype() !=  eRegular)
+            if(GetMetricInfo()->GetGtype() !=  eRegular)
             {
                 int i;
                 Array<OneD, NekDouble> pts; 

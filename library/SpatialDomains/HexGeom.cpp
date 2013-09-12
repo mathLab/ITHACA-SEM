@@ -277,7 +277,7 @@ namespace Nektar
                 }
 
                 m_geomFactors = MemoryManager<GeomFactors3D>::AllocateSharedPtr(
-                    Gtype, m_coordim, m_xmap, tbasis, true);
+                    Gtype, m_coordim, m_xmap, tbasis);
 
                 m_geomFactorsState = ePtsFilled;
             }
@@ -292,7 +292,7 @@ namespace Nektar
             v_FillGeom();
 
             // calculate local coordinate for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {   
                 NekDouble len0 = 0.0 ;
                 NekDouble len1 = 0.0;
@@ -364,8 +364,23 @@ namespace Nektar
             }
         }
 
+        /**
+         * @brief Determines if a point specified in global coordinates is
+         * located within this tetrahedral geometry.
+         */
         bool HexGeom::v_ContainsPoint(
             const Array<OneD, const NekDouble> &gloCoord, NekDouble tol)
+        {
+            Array<OneD,NekDouble> locCoord(GetCoordim(),0.0);
+            return v_ContainsPoint(gloCoord,locCoord,tol);
+
+        }
+
+
+        bool HexGeom::v_ContainsPoint(
+            const Array<OneD, const NekDouble> &gloCoord,
+            Array<OneD, NekDouble> &locCoord,
+            NekDouble tol)
         {
             ASSERTL1(gloCoord.num_elements() == 3,
                      "Three dimensional geometry expects three coordinates.");
@@ -373,7 +388,7 @@ namespace Nektar
            // find min, max point and check if within twice this
             // distance other false this is advisable since
             // GetLocCoord is expensive for non regular elements.
-            if(GetGtype() !=  eRegular)
+            if(GetMetricInfo()->GetGtype() !=  eRegular)
             {
                 int i;
                 Array<OneD, NekDouble> pts; 
@@ -396,11 +411,11 @@ namespace Nektar
                 }
             }
             
-            Array<OneD,NekDouble> stdCoord(GetCoordim(),0.0);
-            v_GetLocCoords(gloCoord, stdCoord);
-            if (stdCoord[0] >= -(1+tol) && stdCoord[0] <= 1+tol
-                && stdCoord[1] >= -(1+tol) && stdCoord[1] <= 1+tol
-                && stdCoord[2] >= -(1+tol) && stdCoord[2] <= 1+tol)
+            v_GetLocCoords(gloCoord, locCoord);
+
+            if (locCoord[0] >= -(1+tol) && locCoord[0] <= 1+tol
+                && locCoord[1] >= -(1+tol) && locCoord[1] <= 1+tol
+                && locCoord[2] >= -(1+tol) && locCoord[2] <= 1+tol)
             {
                 return true;
             }

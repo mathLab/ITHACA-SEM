@@ -1,13 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  File:  MeshComponents.cpp
+//  File: Geometry1D.cpp
 //
 //  For more information, please see: http://www.nektar.info/
 //
 //  The MIT License
 //
 //  Copyright (c) 2006 Division of Applied Mathematics, Brown University (USA),
-//  Department of Aeronautics, Imperial College London (UK), and Scientific
+//  Department of Aeronautics, Imperial College London (UK), and Scientific 
 //  Computing and Imaging Institute, University of Utah (USA).
 //
 //  License for the specific language governing rights and limitations under
@@ -29,18 +29,30 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //
-//  Description:
+//  Description:  1D geometry information
 //
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-#include <SpatialDomains/MeshComponents.h>
+#include <SpatialDomains/Geometry0D.h>
 
 namespace Nektar
 {
     namespace SpatialDomains
     {
 
+        Geometry0D::Geometry0D():
+            Geometry()
+        {
+        }
+
+        Geometry0D::Geometry0D(const int coordim):
+            Geometry(coordim)
+        {
+        }
+
+        Geometry0D::~Geometry0D()
+        {
+        }
+
     }; //end of namespace
 }; //end of namespace
-

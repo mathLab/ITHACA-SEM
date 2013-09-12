@@ -3,14 +3,14 @@ CMAKE_DEPENDENT_OPTION(NEKTAR_SOLVER_DIFFUSION
     "NEKTAR_BUILD_SOLVERS" OFF)
 
 IF( NEKTAR_SOLVER_DIFFUSION )
-    SET(DiffusionTestSource 
-       ./DiffusionTest.cpp)
-    SET(DiffusionTestTISource
-        ./DiffusionTestTI.cpp)
+    SET(DiffusionSolverSource 
+        ./DiffusionSolver.cpp)
+    SET(DiffusionSolverTimeIntSource
+        ./DiffusionSolverTimeInt.cpp)
         
-    ADD_SOLVER_EXECUTABLE(DiffusionTest solvers 
-			${DiffusionTestSource})
-    ADD_SOLVER_EXECUTABLE(DiffusionTestTI solvers 
-            ${DiffusionTestTISource})
+    ADD_SOLVER_EXECUTABLE(DiffusionSolver solvers 
+        ${DiffusionSolverSource})
+    ADD_SOLVER_EXECUTABLE(DiffusionSolverTimeInt solvers 
+        ${DiffusionSolverTimeIntSource})
 
 ENDIF( NEKTAR_SOLVER_DIFFUSION )

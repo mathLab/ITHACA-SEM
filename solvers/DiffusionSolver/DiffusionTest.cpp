@@ -34,6 +34,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <LibUtilities/BasicUtils/SessionReader.h>
+#include <LibUtilities/BasicUtils/FieldIO.h>
 #include <SpatialDomains/MeshGraph.h>
 #include <MultiRegions/ContField2D.h>
 
@@ -42,88 +43,56 @@ using namespace Nektar;
 int main(int argc, char *argv[])
 {
     LibUtilities::SessionReaderSharedPtr session;
-    string sessionName;
-    string fileName;
-    SpatialDomains::MeshGraphSharedPtr graph;
-    MultiRegions::ContField2DSharedPtr field;
+    SpatialDomains::MeshGraphSharedPtr   graph;
+    MultiRegions::ContField2DSharedPtr   field;
+    LibUtilities::EquationSharedPtr      ffunc, ex_sol;
+    StdRegions::ConstFactorMap           factors;
 
     try
     {
         // Create session reader.
         session = LibUtilities::SessionReader::CreateInstance(argc, argv);
 
-        // Filename of the session file
-        fileName = session->GetFilename();
-
-        // Save the basename of input file name for output details
-        sessionName = session->GetSessionName();
+        // Get some information about the session
+        string       fileName    = session->GetFilename();
+        string       sessionName = session->GetSessionName();
+        string       outFile     = sessionName + ".fld";
+        unsigned int nSteps      = session->GetParameter("NumSteps");
+        NekDouble    delta_t     = session->GetParameter("TimeStep");
+        NekDouble    epsilon     = session->GetParameter("epsilon" );
 
         // Read the geometry and the expansion information
         graph = SpatialDomains::MeshGraph::Read(session);
 
-
+        // Create field
         field = MemoryManager<MultiRegions::ContField2D>
             ::AllocateSharedPtr(session, graph, session->GetVariable(0));
 
         // Get coordinates of physical points
         unsigned int nq = field->GetNpoints();
-        Array<OneD,NekDouble> x0(nq);
-        Array<OneD,NekDouble> x1(nq);
-        Array<OneD,NekDouble> x2(nq);
+        Array<OneD,NekDouble> x0(nq), x1(nq), x2(nq);
         field->GetCoords(x0,x1,x2);
 
-        // Evaluate initial condition
-        LibUtilities::EquationSharedPtr ffunc
-            = session->GetFunction("ExactSolution", "u");
-        ffunc->Evaluate(x0,x1,x2,0.0,field->UpdatePhys());
-        field->FwdTrans(field->GetPhys(), field->UpdateCoeffs());
-        field->BwdTrans(field->GetCoeffs(), field->UpdatePhys());
+        // Evaluate initial condition at these points
+        ffunc = session->GetFunction("ExactSolution", "u");
+        ffunc->Evaluate(x0, x1, x2, 0.0, field->UpdatePhys());
 
-        // Get parameters and set up arrays
-        unsigned int nSteps = session->GetParameter("NumSteps");
-        NekDouble delta_t = session->GetParameter("TimeStep");
-        NekDouble epsilon = session->GetParameter("epsilon");
-        Array<OneD, NekDouble> u_old(nq, 0.0);
-        Array<OneD, NekDouble> u_tmp(nq, 0.0);
-        NekDouble lambda = 1.0/delta_t/epsilon;
-        cout << "Lambda: " << lambda << endl;
-        StdRegions::ConstFactorMap factors;
+        // Compute lambda in the Helmholtz problem
+        factors[StdRegions::eFactorLambda] = 1.0/delta_t/epsilon;
 
-        // Perform first step using backward euler
-        if (nSteps > 0)
+        // Time integrate using backward Euler
+        for (unsigned int n = 0; n < nSteps; ++n)
         {
-            Vmath::Vcopy(nq, field->GetPhys(), 1, u_old, 1);
+            Vmath::Smul(nq, -1.0/delta_t/epsilon, field->GetPhys(),    1,
+                                                  field->UpdatePhys(), 1);
 
-            factors[StdRegions::eFactorLambda] = lambda;
-            Vmath::Smul(nq, -1.0/delta_t/epsilon, field->GetPhys(), 1, field->UpdatePhys(), 1);
-cout << "before helmsolve: " << Vmath::Dot(nq, field->GetPhys(), field->GetPhys()) << endl;
             field->HelmSolve(field->GetPhys(), field->UpdateCoeffs(), NullFlagList, factors);
+
             field->BwdTrans(field->GetCoeffs(), field->UpdatePhys());
-cout << "after helmsolve: " << Vmath::Dot(nq, field->GetPhys(), field->GetPhys()) << endl;
-
         }
-
-        // Perform subsequent steps using BFDImplicitOrder2
-        factors[StdRegions::eFactorLambda] = 3.0*lambda/2.0;
-        for (unsigned int n = 1; n < nSteps; ++n)
-        {
-            cout << "eFactorLambda = " << factors[StdRegions::eFactorLambda] << endl;
-            cout << "BDF2 Step " << n << endl;
-cout << "u_old norm: " << Vmath::Dot(nq, u_old, 1, u_old, 1) << endl;
-cout << "u_n norm  : " << Vmath::Dot(nq, field->GetPhys(), 1, field->GetPhys(), 1) << endl;
-            Vmath::Svtvp(nq, -4.0, field->GetPhys(), 1, u_old, 1, u_tmp, 1);
-            Vmath::Smul(nq, lambda/2.0, u_tmp, 1, u_tmp, 1);
-            Vmath::Vcopy(nq, field->GetPhys(), 1, u_old, 1);
-cout << "before helmsolve: " << Vmath::Dot(nq, u_tmp, u_tmp) << endl;
-            field->HelmSolve(u_tmp, field->UpdateCoeffs(), NullFlagList, factors);
-            field->BwdTrans(field->GetCoeffs(), field->UpdatePhys());
-cout << "after helmsolve: " << Vmath::Dot(nq, field->GetPhys(), field->GetPhys()) << endl;
-        }
-
 
         // Write solution to file
-        string   out(session->GetSessionName() + ".fld");
-        std::vector<SpatialDomains::FieldDefinitionsSharedPtr> FieldDef
+        std::vector<LibUtilities::FieldDefinitionsSharedPtr> FieldDef
                                                     = field->GetFieldDefinitions();
         std::vector<std::vector<NekDouble> > FieldData(FieldDef.size());
         for(int i = 0; i < FieldDef.size(); ++i)
@@ -131,27 +100,24 @@ cout << "after helmsolve: " << Vmath::Dot(nq, field->GetPhys(), field->GetPhys()
             FieldDef[i]->m_fields.push_back("u");
             field->AppendFieldData(FieldDef[i], FieldData[i]);
         }
-        graph->Write(out, FieldDef, FieldData);
+        LibUtilities::Write(outFile, FieldDef, FieldData);
 
-        //----------------------------------------------
-        // See if there is an exact solution, if so
-        // evaluate and plot errors
-        LibUtilities::EquationSharedPtr ex_sol = session->GetFunction("ExactSolution",0);
-        Array<OneD, NekDouble> exact(nq);
+        // Check for exact solution
+        ex_sol = session->GetFunction("ExactSolution",0);
         if(ex_sol)
         {
+            // Allocate storage
+            Array<OneD, NekDouble> exact(nq);
+
             //----------------------------------------------
             // evaluate exact solution
             ex_sol->Evaluate(x0, x1, x2, (nSteps)*delta_t, exact);
 
             //--------------------------------------------
             // Calculate errors
-            NekDouble vLinfError = field->Linf(exact);
-            NekDouble vL2Error   = field->L2(exact);
-            NekDouble vH1Error   = field->H1(exact);
-            cout << "L infinity error: " << vLinfError << endl;
-            cout << "L 2 error:        " << vL2Error << endl;
-            cout << "H 1 error:        " << vH1Error << endl;
+            cout << "L infinity error: " << field->Linf(exact) << endl;
+            cout << "L 2 error:        " << field->L2(exact) << endl;
+            cout << "H 1 error:        " << field->H1(exact) << endl;
             //--------------------------------------------
         }
 

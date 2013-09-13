@@ -124,6 +124,17 @@ namespace Nektar
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
 
+            STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2);
+
             STD_REGIONS_EXPORT virtual void v_FwdTrans(
                     const Array<OneD, const NekDouble>& inarray,
                           Array<OneD, NekDouble> &outarray);
@@ -135,6 +146,17 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase(
                 const Array<OneD, const NekDouble> &inarray,
                       Array<OneD,       NekDouble> &outarray);
+
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFacKernel(
+                    const Array<OneD, const NekDouble>& base0,
+                    const Array<OneD, const NekDouble>& base1,
+                    const Array<OneD, const NekDouble>& base2,
+                    const Array<OneD, const NekDouble>& inarray,
+                          Array<OneD, NekDouble> &outarray,
+                          Array<OneD, NekDouble> &wsp,
+                    bool doCheckCollDir0,
+                    bool doCheckCollDir1,
+                    bool doCheckCollDir2);
 
             /*
             STD_REGIONS_EXPORT virtual void v_IProductWRTDerivBase(

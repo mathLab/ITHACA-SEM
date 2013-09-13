@@ -460,7 +460,7 @@ namespace Nektar
          * @todo    Account for some directions being collocated. See
          *          StdQuadExp as an example.
          */
-        void StdHexExp::BwdTrans_SumFacKernel(
+        void StdHexExp::v_BwdTrans_SumFacKernel(
                     const Array<OneD, const NekDouble>& base0,
                     const Array<OneD, const NekDouble>& base1,
                     const Array<OneD, const NekDouble>& base2,
@@ -645,7 +645,7 @@ namespace Nektar
          * Implementation of the sum-factorisation inner product operation.
          * @todo    Implement cases where only some directions are collocated.
          */
-        void StdHexExp::IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0,
+        void StdHexExp::v_IProductWRTBase_SumFacKernel(const Array<OneD, const NekDouble>& base0,
                                                      const Array<OneD, const NekDouble>& base1,
                                                      const Array<OneD, const NekDouble>& base2,
                                                      const Array<OneD, const NekDouble>& inarray,
@@ -2599,7 +2599,7 @@ namespace Nektar
         }
 
 
-        void StdHexExp::MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
+        void StdHexExp::v_MultiplyByStdQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
                                                  Array<OneD, NekDouble> &outarray)
         {
             int    i;

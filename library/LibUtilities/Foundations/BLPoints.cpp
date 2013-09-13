@@ -45,7 +45,7 @@ namespace Nektar
     namespace LibUtilities 
     {
         // Default value.
-        NekDouble BLPoints::delta_star = 1.0;
+        //NekDouble BLPoints::delta_star = 1.0;
         
         void BLPoints::CalculatePoints()
         {
@@ -54,7 +54,8 @@ namespace Nektar
             unsigned int npts = m_pointsKey.GetNumPoints(); 
 
 	    // Derived power coefficient.
-            NekDouble r = BLPoints::delta_star;
+            NekDouble r = m_pointsKey.GetFactor();
+            ASSERTL0(r != NekConstants::kNekUnsetDouble,"Must set factor in BLPoints key");
             NekDouble a = 2.0 * (1.0-r) / (1.0 - pow(r,(double)npts));
             m_points[0][0] = -1.0;
             

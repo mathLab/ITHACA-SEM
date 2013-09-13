@@ -86,7 +86,7 @@ namespace Nektar
                 {
                     // We can do the new in the constructor list because the thread specific 
                     // pointer doesn't have a supporting constructor.
-                    m_pool = new boost::pool<>(ByteSize);
+                    m_pool = new boost::pool<>(m_blockSize);
                 }
 
                 ~ThreadSpecificPool()

@@ -117,7 +117,7 @@
             <I PROPERTY="EQType" VALUE="LinearSWE" />
             <I PROPERTY="Projection" VALUE="Continuous" />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4" />
-            <I PROPERTY="UpwindType" VALUE="Average" />
+            <I PROPERTY="UpwindType" VALUE="LinearAverage" />
         </SOLVERINFO>
 
         <PARAMETERS>
@@ -144,20 +144,32 @@
         </VARIABLES>
 
         <BOUNDARYREGIONS>
-            <B ID="0"> C[3,4]  </B>
-            <B ID="1"> C[1,2] </B>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
         </BOUNDARYREGIONS>
-
+        
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <N VAR="eta" VALUE="0" />
-                <D VAR="u" VALUE="0" />
-                <N VAR="v" VALUE="0" />
+                <P VAR="eta"  VALUE="B[1]" />
+                <P VAR="u"    VALUE="B[1]" />
+                <P VAR="v"    VALUE="B[1]" />
             </REGION>
             <REGION REF="1">
-                <N VAR="eta" VALUE="0" />
-                <N VAR="u" VALUE="0" />
-                <D VAR="v" VALUE="0" />
+                <P VAR="eta"  VALUE="B[0]" />
+                <P VAR="u"    VALUE="B[0]" />
+                <P VAR="v"    VALUE="B[0]" />
+            </REGION>
+            <REGION REF="2">
+                <P VAR="eta"  VALUE="B[3]" />
+                <P VAR="u"    VALUE="B[3]" />
+                <P VAR="v"    VALUE="B[3]" />
+            </REGION>
+            <REGION REF="3">
+                <P VAR="eta"  VALUE="B[2]" />
+                <P VAR="u"    VALUE="B[2]" />
+                <P VAR="v"    VALUE="B[2]" />
             </REGION>
         </BOUNDARYCONDITIONS>
 

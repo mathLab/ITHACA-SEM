@@ -2,9 +2,9 @@
 <test>
     <description>Standing Wave, DG, P=4</description>
     <executable>ShallowWaterSolver</executable>
-    <parameters>StandingWave_DG_P4.xml</parameters>
+    <parameters>LinearSWE_StandingWave_WallBC_DG_P4.xml</parameters>
     <files>
-        <file description="Session File">StandingWave_DG_P4.xml</file>
+        <file description="Session File">LinearSWE_StandingWave_WallBC_DG_P4.xml</file>
     </files>
     <metrics>
         <metric type="L2" id="1">

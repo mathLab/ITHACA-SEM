@@ -118,7 +118,7 @@
             <I PROPERTY="Projection"            VALUE="DisContinuous"       />
             <I PROPERTY="AdvectionType"         VALUE="WeakDG"              />
             <I PROPERTY="TimeIntegrationMethod" VALUE="ClassicalRungeKutta4"/>
-            <I PROPERTY="UpwindType"            VALUE="HLL"                 />
+            <I PROPERTY="UpwindType"            VALUE="LinearHLL"       />
         </SOLVERINFO>
 
         <PARAMETERS>
@@ -143,16 +143,34 @@
             <V ID="1"> u    </V>
             <V ID="2"> v    </V>
         </VARIABLES>
-
+        
         <BOUNDARYREGIONS>
-            <B ID="0"> C[1,2,3,4] </B>
+            <B ID="0"> C[1] </B>
+            <B ID="1"> C[2] </B>
+            <B ID="2"> C[3] </B>
+            <B ID="3"> C[4] </B>
         </BOUNDARYREGIONS>
-
+        
         <BOUNDARYCONDITIONS>
             <REGION REF="0">
-                <D VAR="eta" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="u" USERDEFINEDTYPE="Wall" VALUE="0" />
-                <D VAR="v" USERDEFINEDTYPE="Wall" VALUE="0" />
+                <P VAR="eta"  VALUE="B[1]" />
+                <P VAR="u"    VALUE="B[1]" />
+                <P VAR="v"    VALUE="B[1]" />
+            </REGION>
+            <REGION REF="1">
+                <P VAR="eta"  VALUE="B[0]" />
+                <P VAR="u"    VALUE="B[0]" />
+                <P VAR="v"    VALUE="B[0]" />
+            </REGION>
+            <REGION REF="2">
+                <P VAR="eta"  VALUE="B[3]" />
+                <P VAR="u"    VALUE="B[3]" />
+                <P VAR="v"    VALUE="B[3]" />
+            </REGION>
+            <REGION REF="3">
+                <P VAR="eta"  VALUE="B[2]" />
+                <P VAR="u"    VALUE="B[2]" />
+                <P VAR="v"    VALUE="B[2]" />
             </REGION>
         </BOUNDARYCONDITIONS>
 

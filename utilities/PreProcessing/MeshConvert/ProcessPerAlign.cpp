@@ -145,6 +145,8 @@ namespace Nektar
             c1->reorder = false;
             c2->reorder = false;
 
+            map<int, pair<FaceSharedPtr, vector<int> > > perFaces;
+
             // Loop over elements, calculate centroids of elements in c2.
             map<int, Node> centroidMap;
             map<int, Node>::iterator it;
@@ -160,7 +162,9 @@ namespace Nektar
             }
 
             boost::unordered_set<int> elmtDone;
-            map<int,int> elmtPairs;
+            map<int, int> elmtPairs;
+            map<int, int> vertCheck;
+
             for (int i = 0; i < c1->items.size(); ++i)
             {
                 Node centroid;
@@ -182,8 +186,68 @@ namespace Nektar
                              sqrt(dx.abs2()) - 1.0) < 1e-6)
                     {
                         // Found match
+                        int id1 = c1->items[i]        ->GetFaceLink()->id;
+                        int id2 = c2->items[it->first]->GetFaceLink()->id;
+
                         elmtDone.insert(it->first);
                         elmtPairs[i] = it->first;
+
+                        // Identify periodic vertices
+                        int nVerts = c1->items[i]->GetVertexCount();
+                        vector<int> perVerts(nVerts, 0), perVertsInv(nVerts, 0);
+
+                        for (int k = 0; k < nVerts; ++k)
+                        {
+                            NodeSharedPtr n1 = c1->items[i]->GetFaceLink()->vertexList[k];
+                            int l;
+
+                            for (l = 0; l < nVerts; ++l)
+                            {
+                                NodeSharedPtr n2 =
+                                    c2->items[it->first]->GetFaceLink()->vertexList[l];
+
+                                Node dn = *n2 - *n1;
+                                if (fabs(fabs(dn.x*vec[0] + dn.y*vec[1] +
+                                              dn.z*vec[2])/
+                                         sqrt(dn.abs2()) - 1.0) < 1e-6)
+                                {
+                                    perVerts   [k] = l;
+                                    perVertsInv[l] = k;
+
+                                    int id1 = n1->id;
+                                    int id2 = n2->id;
+                                    if (vertCheck.count(id1) == 0)
+                                    {
+                                        vertCheck[id1] = id2;
+                                    }
+                                    else
+                                    {
+                                        ASSERTL0(vertCheck[id1] == id2,
+                                                 "Periodic vertex already "
+                                                 "identified!");
+                                    }
+                                    break;
+                                }
+                            }
+                            ASSERTL1(l < nVerts,
+                                     "Could not identify periodic vertices.");
+                        }
+
+                        int tot1 = 0, tot2 = 0;
+                        for (int k = 0; k < nVerts; ++k)
+                        {
+                            tot1 += perVerts   [k];
+                            tot2 += perVertsInv[k];
+                        }
+
+                        ASSERTL0(tot1 == nVerts*(nVerts-1)/2 &&
+                                 tot2 == nVerts*(nVerts-1)/2,
+                                 "Error identifying periodic vertices");
+
+                        perFaces[id1] = make_pair(
+                            c2->items[it->first]->GetFaceLink(), perVerts);
+                        perFaces[id2] = make_pair(
+                            c1->items[i]        ->GetFaceLink(), perVertsInv);
                         break;
                     }
                 }
@@ -206,6 +270,8 @@ namespace Nektar
             {
                 c2->items[i] = tmp[elmtPairs[i]];
             }
+
+            ReorderPrisms(perFaces);
         }
     }
 }

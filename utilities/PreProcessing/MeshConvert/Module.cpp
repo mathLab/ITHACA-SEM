@@ -387,7 +387,7 @@ namespace Nektar
          *
          * NOTE: This routine does not copy high-order information yet!
          */
-        void Module::ReorderPrisms(map<int, int> &perFaces)
+        void Module::ReorderPrisms(PerMap &perFaces)
         {
             // Loop over elements and extract any that are prisms.
             int i, j, k;
@@ -397,8 +397,9 @@ namespace Nektar
                 return;
             }
 
-            map<int, int> lines;
-            set<int> prismsDone, tetsDone;
+            map<int, int>    lines;
+            set<int>         prismsDone, tetsDone;
+            PerMap::iterator pIt;
 
             // Compile list of prisms and tets.
             for (i = 0; i < m->element[3].size(); ++i)
@@ -429,7 +430,7 @@ namespace Nektar
             // facesDone tracks face IDs inside prisms which have already been
             // aligned.
             boost::unordered_set<int> facesDone;
-            boost::unordered_set<int>::iterator fIt[2];
+            boost::unordered_set<int>::iterator fIt[2], fIt2;
 
             // Loop over prisms until we've found all lines of prisms.
             while (prismsDone.size() > 0)
@@ -438,7 +439,7 @@ namespace Nektar
 
                 // Call PrismLines to identify all prisms connected to
                 // prismDone.begin() and place them in line[].
-                PrismLines(*prismsDone.begin(), prismsDone, line);
+                PrismLines(*prismsDone.begin(), perFaces, prismsDone, line);
 
                 // Loop over each prism, figure out which line of vertices
                 // contains the vertex with highest ID.
@@ -456,6 +457,26 @@ namespace Nektar
 
                     fIt[0] = facesDone.find(f[0]->id);
                     fIt[1] = facesDone.find(f[1]->id);
+
+                    // See if either of these faces is periodic. If it is, then
+                    // assign ids accordingly.
+                    for (j = 0; j < 2; ++j)
+                    {
+                        pIt = perFaces.find(f[j]->id);
+
+                        if (pIt == perFaces.end())
+                        {
+                            continue;
+                        }
+
+                        fIt2 = facesDone.find(pIt->second.first->id);
+
+                        if (fIt[j] == facesDone.end() &&
+                            fIt2   != facesDone.end())
+                        {
+                            fIt[j] = fIt2;
+                        }
+                    }
 
                     if (fIt[0] != facesDone.end() &&
                         fIt[1] != facesDone.end())
@@ -519,7 +540,7 @@ namespace Nektar
                             swap(tmp2[0], tmp2[2]);
                         }
 
-                        // Renumber this face so that highest ID matches the 
+                        // Renumber this face so that highest ID matches.
                         for (j = 0; j < 3; ++j)
                         {
                             NodeSharedPtr n = nodes[prismTris[t][tmp2[j]]];
@@ -544,6 +565,36 @@ namespace Nektar
 
                     // Replace old prism.
                     m->element[3][line[i]->GetId()] = el;
+                }
+            }
+
+            // Loop over periodic faces, enumerate vertices.
+            for (pIt = perFaces.begin(); pIt != perFaces.end(); ++pIt)
+            {
+                FaceSharedPtr f2       = pIt->second.first;
+                FaceSharedPtr f1       = perFaces[f2->id].first;
+                vector<int>   perVerts = pIt->second.second;
+                int           nVerts   = perVerts.size();
+
+                // Number periodic vertices first.
+                for (j = 0; j < nVerts; ++j)
+                {
+                    NodeSharedPtr n1 = f1->vertexList[j];
+                    NodeSharedPtr n2 = f2->vertexList[perVerts[j]];
+
+                    if (n1->id == -1 && n2->id == -1)
+                    {
+                        n1->id = nodeId++;
+                        n2->id = nodeId++;
+                    }
+                    else if (n1->id != -1 && n2->id != -1)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        ASSERTL0(false, "Periodic face renumbering error");
+                    }
                 }
             }
 
@@ -584,11 +635,13 @@ namespace Nektar
         }
 
         void Module::PrismLines(int                       prism,
+                                PerMap                   &perFaces,
                                 set<int>                 &prismsDone,
                                 vector<ElementSharedPtr> &line)
         {
-            int i;
+            int                i;
             set<int>::iterator it = prismsDone.find(prism);
+            PerMap::iterator   it2;
 
             if (it == prismsDone.end())
             {
@@ -603,6 +656,19 @@ namespace Nektar
             for (i = 1; i <= 3; i += 2)
             {
                 FaceSharedPtr f = m->element[3][prism]->GetFace(i);
+                int nextId;
+
+                // See if this face is periodic.
+                it2 = perFaces.find(f->id);
+                
+                if (it2 != perFaces.end())
+                {
+                    int id2 = it2->second.first->id;
+                    nextId  = it2->second.first->elLink[0].first->GetId();
+                    perFaces.erase(it2);
+                    perFaces.erase(id2);
+                    PrismLines(nextId, perFaces, prismsDone, line);
+                }
 
                 // Nothing else connected to this face.
                 if (f->elLink.size() == 1)
@@ -610,13 +676,13 @@ namespace Nektar
                     continue;
                 }
 
-                int nextId = f->elLink[0].first->GetId();
+                nextId = f->elLink[0].first->GetId();
                 if (nextId == m->element[3][prism]->GetId())
                 {
                     nextId = f->elLink[1].first->GetId();
                 }
 
-                PrismLines(nextId, prismsDone, line);
+                PrismLines(nextId, perFaces, prismsDone, line);
             }
         }
 

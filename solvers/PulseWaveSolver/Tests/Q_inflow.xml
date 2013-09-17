@@ -33,7 +33,9 @@
             <C ID="1"> V[0] </C>
             <C ID="2"> V[11] </C>
         </COMPOSITE>
-        <DOMAIN> C[0] </DOMAIN>
+        <DOMAIN>  
+      	    <D ID="0"> C[0] 
+	</DOMAIN>
     </GEOMETRY>
 
 
@@ -92,16 +94,16 @@
         </FUNCTION>
 
         <FUNCTION NAME="A_0">
-            <E VAR="A_0[0]" VALUE="1.0" />
+            <E VAR="A_0" DOMAIN="0" VALUE="1.0" />
         </FUNCTION>
         
         <FUNCTION NAME="MaterialProperties"> 
-            <E VAR="beta[0]" VALUE="100" />     	
+            <E VAR="beta" DOMAIN="0" VALUE="100" />     	
         </FUNCTION>
 
         <FUNCTION NAME="ExactSolution">
-            <E VAR="A" VALUE="0" />
-            <E VAR="u" VALUE="0" />
+            <E VAR="A" DOMAIN="0" VALUE="0" />
+            <E VAR="u" DOMAIN="0" VALUE="0" />
         </FUNCTION>
 
     </CONDITIONS>

@@ -80,9 +80,9 @@
 
         <PARAMETERS>
 	    <P> TimeStep       = 0.0001             </P> 
-            <P> FinTime        = 0.5                </P>
-            <P> NumSteps       = FinTime/TimeStep   </P>
-            <P> IO_CheckSteps  = NumSteps/50           </P>
+            <P> FinTime        = 20                 </P>
+            <P> NumSteps       = 8000               </P>
+            <P> IO_CheckSteps  = 200                </P>
             <P> IO_InfoSteps   = 200                </P>
             <P> T              = 1.0                </P>
             <P> omega          = 2*PI/T             </P>
@@ -111,8 +111,7 @@
 
         <BOUNDARYREGIONS>
             <B ID="0"> C[1] </B> <!-- Inflow -->
-
-            <B ID="1"> C[8] </B> <!-- Outflow -->
+	    <B ID="1"> C[8] </B> <!-- Outflow -->
             <B ID="2"> C[11] </B>
             <B ID="3"> C[14] </B>
   

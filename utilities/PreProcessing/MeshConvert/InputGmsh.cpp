@@ -256,7 +256,7 @@ namespace Nektar
             ProcessElements  ();
             ProcessComposites();
 
-            map<int,int> asd;
+            PerMap asd;
             ReorderPrisms(asd);
         }
 

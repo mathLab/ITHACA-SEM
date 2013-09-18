@@ -63,12 +63,14 @@ namespace Nektar
          */
         ProcessPerAlign::ProcessPerAlign(MeshSharedPtr m) : ProcessModule(m)
         {
-            config["surf1"] = ConfigOption(false, "-1",
+            config["surf1"]  = ConfigOption(false, "-1",
                 "Tag identifying first surface.");
-            config["surf2"] = ConfigOption(false, "-1",
+            config["surf2"]  = ConfigOption(false, "-1",
                 "Tag identifying first surface.");
-            config["dir"]   = ConfigOption(false, "",
+            config["dir"]    = ConfigOption(false, "",
                 "Direction in which to align (either x, y, or z)");
+            config["orient"] = ConfigOption(true,  "0",
+                "Attempt to reorient tets and prisms");
         }
 
         /**
@@ -84,9 +86,10 @@ namespace Nektar
             static int tetFaceNodes[4][3] = {
                 {0,1,2},{0,1,3},{1,2,3},{0,2,3}};
 
-            int      surf1 = config["surf1"].as<int>();
-            int      surf2 = config["surf2"].as<int>();
-            string   dir   = config["dir"].  as<string>();
+            int    surf1  = config["surf1"]. as<int>   ();
+            int    surf2  = config["surf2"]. as<int>   ();
+            string dir    = config["dir"].   as<string>();
+            bool   orient = config["orient"].as<bool>  ();
 
             if (surf1 == -1)
             {
@@ -271,7 +274,10 @@ namespace Nektar
                 c2->items[i] = tmp[elmtPairs[i]];
             }
 
-            ReorderPrisms(perFaces);
+            if (orient)
+            {
+                ReorderPrisms(perFaces);
+            }
         }
     }
 }

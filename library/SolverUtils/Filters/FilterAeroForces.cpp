@@ -248,7 +248,7 @@ namespace Nektar
                 pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
                                      pFields[i]->UpdatePhys());
 				pFields[i]->SetPhysState(true);
-				//pFields[i]->PutPhysInToElmtExp();
+				pFields[i]->PutPhysInToElmtExp();
             }
 
             // Homogeneous 1D case  Compute forces on all WALL boundaries
@@ -425,7 +425,7 @@ namespace Nektar
                 pFields[0]->GetBoundaryToElmtMap(BoundarytoElmtID,
                                                  BoundarytoTraceID);
                 BndExp = pFields[0]->GetBndCondExpansions();
-                LocalRegions:: Expansion2DSharedPtr bc;
+                LocalRegions::Expansion2DSharedPtr bc;
 
                 // loop over the types of boundary conditions
                 for(cnt = n = 0; n < BndExp.num_elements(); ++n)
@@ -652,8 +652,8 @@ namespace Nektar
                             elmt->PhysDeriv(U,gradU[0],gradU[1]);
                             elmt->PhysDeriv(V,gradV[0],gradV[1]);
 
-                            bc =  boost::dynamic_pointer_cast<StdRegions
-                                    ::StdExpansion1D> (BndExp[n]->GetExp(i));
+                            bc =  boost::dynamic_pointer_cast<LocalRegions
+								::Expansion1D> (BndExp[n]->GetExp(i));
 
                             int nbc = bc->GetTotPoints();
                             Array<OneD, NekDouble> Pb(nbc);

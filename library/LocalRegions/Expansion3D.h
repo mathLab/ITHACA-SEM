@@ -114,6 +114,8 @@ namespace Nektar
                 const int                           face, 
                 const Array<OneD, const NekDouble> &primCoeffs, 
                 DNekMatSharedPtr                   &inoutmat);
+			
+			virtual NekDouble v_Integrate(const Array<OneD, const NekDouble>& inarray);
 
             //-----------------------------
             // Low Energy Basis functions

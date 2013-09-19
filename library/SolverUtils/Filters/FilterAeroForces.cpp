@@ -419,9 +419,6 @@ namespace Nektar
             //3D WALL case
             else if(dim==3 && !m_isHomogeneous1D)
             {
-                ASSERTL1(dim==3 && !m_isHomogeneous1D,
-                         "Forces have not been tested for full 3D");
-
                 pFields[0]->GetBoundaryToElmtMap(BoundarytoElmtID,
                                                  BoundarytoTraceID);
                 BndExp = pFields[0]->GetBndCondExpansions();
@@ -527,68 +524,70 @@ namespace Nektar
                             //                          dx_j    dx_i
 
                             //a) DRAG TERMS
-                            //-rho*kinvis*
-                            //    (2*du/dx*nx+(du/dy+dv/dx)*ny+(du/dz+dw/dx)*nz)
-                            Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,temp,1);
-                            Vmath::Neg(nbc,temp,1);
-                            Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
-
-                            Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
-                            Vmath::Neg(nbc,drag_t,1);
-                            Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
-
-                            Vmath::Smul(nbc,-2.0,fgradU[0],1,fgradU[0],1);
-                            Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
-                            Vmath::Smul(nbc,-0.5,fgradU[0],1,fgradU[0],1);
-
-                            Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
-                            Vmath::Vadd(nbc,temp,1,drag_t,1,drag_t,1);
-                            Vmath::Smul(nbc,mu,drag_t,1,drag_t,1);
-
-                            //zero temporary storage vector
-                            Vmath::Zero(nbc,temp,0);
-                            Vmath::Zero(nbc,temp2,0);
-
-
-                            //b) LIFT TERMS
-                            //-rho*kinvis*
-                            //    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
-                            Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
-                            Vmath::Neg(nbc,temp,1);
-                            Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
-
-                            Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
-                            Vmath::Neg(nbc,lift_t,1);
-                            Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
-
-                            Vmath::Smul(nbc,-2.0,fgradV[1],1,fgradV[1],1);
-                            Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
-                            Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
-
-                            Vmath::Vadd(nbc,temp2,1,lift_t,1,lift_t,1);
-                            Vmath::Smul(nbc,mu,lift_t,1,lift_t,1);
+							//-rho*kinvis*
+							//    (2*du/dx*nx+(du/dy+dv/dx)*ny+(du/dz+dw/dx)*nz)
+							Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,temp,1);
+							Vmath::Neg(nbc,temp,1);
+							Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
+							
+							Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
+							Vmath::Neg(nbc,drag_t,1);
+							Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
+							
+							Vmath::Smul(nbc,-2.0,fgradU[0],1,fgradU[0],1);
+							Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
+							Vmath::Smul(nbc,-0.5,fgradU[0],1,fgradU[0],1);
+							
+							Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
+							Vmath::Vadd(nbc,temp,1,drag_t,1,drag_t,1);
+							Vmath::Smul(nbc,mu,drag_t,1,drag_t,1);
 							
 							//zero temporary storage vector
-                            Vmath::Zero(nbc,temp,0);
-                            Vmath::Zero(nbc,temp2,0);
+							Vmath::Zero(nbc,temp,0);
+							Vmath::Zero(nbc,temp2,0);
+							
+							
+							//b) LIFT TERMS
+							//-rho*kinvis*
+							//    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
+							Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
+							Vmath::Neg(nbc,temp,1);
+							Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
+							
+							Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
+							Vmath::Neg(nbc,lift_t,1);
+							Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
+							
+							Vmath::Smul(nbc,-2.0,fgradV[1],1,fgradV[1],1);
+							Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
+							Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
+							
+							Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
+							Vmath::Vadd(nbc,temp,1,lift_t,1,lift_t,1);
+							Vmath::Smul(nbc,mu,lift_t,1,lift_t,1);
+							
+							//zero temporary storage vector
+							Vmath::Zero(nbc,temp,0);
+							Vmath::Zero(nbc,temp2,0);
 							
 							//b) SIDE TERMS
-                            //-rho*kinvis*
-                            //    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
-                            Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
-                            Vmath::Neg(nbc,temp,1);
-                            Vmath::Vmul(nbc,temp,1,normals[1],1,temp,1);
+							//-rho*kinvis*
+							//    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
+							Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
+							Vmath::Neg(nbc,temp,1);
+							Vmath::Vmul(nbc,temp,1,normals[1],1,temp,1);
 							
-                            Vmath::Vadd(nbc,fgradU[2],1,fgradW[1],1,side_t,1);
-                            Vmath::Neg(nbc,side_t,1);
-                            Vmath::Vmul(nbc,side_t,1,normals[0],1,side_t,1);
+							Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,side_t,1);
+							Vmath::Neg(nbc,side_t,1);
+							Vmath::Vmul(nbc,side_t,1,normals[0],1,side_t,1);
 							
-                            Vmath::Smul(nbc,-2.0,fgradW[2],1,fgradW[2],1);
-                            Vmath::Vmul(nbc,fgradW[2],1,normals[2],1,temp2,1);
-                            Vmath::Smul(nbc,-0.5,fgradW[2],1,fgradW[2],1);
+							Vmath::Smul(nbc,-2.0,fgradW[2],1,fgradW[2],1);
+							Vmath::Vmul(nbc,fgradW[2],1,normals[2],1,temp2,1);
+							Vmath::Smul(nbc,-0.5,fgradW[2],1,fgradW[2],1);
 							
-                            Vmath::Vadd(nbc,temp2,1,side_t,1,side_t,1);
-                            Vmath::Smul(nbc,mu,side_t,1,side_t,1);
+							Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
+							Vmath::Vadd(nbc,temp,1,side_t,1,side_t,1);
+							Vmath::Smul(nbc,mu,side_t,1,side_t,1);
 
 
                             // Compute normal tractive forces on all WALL

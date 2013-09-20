@@ -102,8 +102,8 @@ namespace Nektar
             m_planes[0] = plane_zero = MemoryManager<ExpList1D>::
                 AllocateSharedPtr(m_session, graph1D, false);
 
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>::
-                AllocateSharedPtr();
+            m_exp = MemoryManager<LocalRegions::ExpansionVector>::AllocateSharedPtr();
+
             nel = m_planes[0]->GetExpSize();
 
             for (j = 0; j < nel; ++j)

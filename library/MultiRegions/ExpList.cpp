@@ -87,7 +87,7 @@ namespace Nektar
             m_coeffs(),
             m_phys(),
             m_physState(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
@@ -113,7 +113,7 @@ namespace Nektar
             m_coeffs(),
             m_phys(),
             m_physState(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
@@ -140,7 +140,7 @@ namespace Nektar
             m_coeffs(),
             m_phys(),
             m_physState(false),
-            m_exp(MemoryManager<StdRegions::StdExpansionVector>
+            m_exp(MemoryManager<LocalRegions::ExpansionVector>
                       ::AllocateSharedPtr()),
             m_coeff_offset(),
             m_phys_offset(),
@@ -1303,7 +1303,7 @@ namespace Nektar
             }
         }
 
-        StdRegions::StdExpansionSharedPtr& ExpList::GetExp(
+        LocalRegions::ExpansionSharedPtr& ExpList::GetExp(
                     const Array<OneD, const NekDouble> &gloCoord)
         {
             Array<OneD, NekDouble> stdCoord(GetCoordim(0),0.0);
@@ -1342,7 +1342,7 @@ namespace Nektar
             // start search at previous element or 0 
             for (int i = start; i < (*m_exp).size(); ++i)
             {
-                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords,locCoords, tol))
+                if ((*m_exp)[i]->GetGeom()->ContainsPoint(gloCoords, locCoords, tol))
                 {
                     start = i;
                     return i;
@@ -1399,7 +1399,7 @@ namespace Nektar
             {
                 // Get the number of points and normals for this expansion.
                 e_npoints  = (*m_exp)[i]->GetTotPoints();
-                offset = m_phys_offset[i];
+                offset     = m_phys_offset[i];
 
                 for (j = 0; j < tangents.num_elements(); ++j)
                 {
@@ -2776,21 +2776,21 @@ namespace Nektar
 		
 		/**
          */
-		const SpatialDomains::VertexComponentSharedPtr &ExpList::v_GetGeom(void) const
+		const SpatialDomains::PointGeomSharedPtr ExpList::v_GetGeom(void) const
 		{
 			ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static SpatialDomains::VertexComponentSharedPtr result;
+            static SpatialDomains::PointGeomSharedPtr result;
             return result;
 		}
 		
 		/**
          */
-		const SpatialDomains::VertexComponentSharedPtr &ExpList::v_GetVertex(void) const
+		const SpatialDomains::PointGeomSharedPtr ExpList::v_GetVertex(void) const
 		{
 			ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            static SpatialDomains::VertexComponentSharedPtr result;
+            static SpatialDomains::PointGeomSharedPtr result;
             return result;
 		}
 		
@@ -2803,7 +2803,7 @@ namespace Nektar
         }
 
         void ExpList::v_SetUpPhysTangents(
-                    const StdRegions::StdExpansionVector &locexp)
+                    const LocalRegions::ExpansionVector &locexp)
         {
             ASSERTL0(false,
                       "This method is not defined or valid for this class type");

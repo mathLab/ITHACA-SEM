@@ -71,16 +71,6 @@ namespace Nektar
             LOCAL_REGIONS_EXPORT void GetCoord(const Array<OneD, const NekDouble>& Lcoords, 
                           Array<OneD,NekDouble> &coords);
 
-            const SpatialDomains::GeometrySharedPtr GetGeom() const
-            {
-                return m_geom;
-            }
-            
-            const SpatialDomains::Geometry2DSharedPtr& GetGeom2D() const
-            {
-                return m_geom;
-            }
-
             LOCAL_REGIONS_EXPORT void WriteToFile(std::ofstream &outfile, OutputFormat format, const bool dumpVar = true, std::string var = "v");
             
             //----------------------------
@@ -169,9 +159,6 @@ namespace Nektar
             DNekScalMatSharedPtr    CreateMatrix(const MatrixKey &mkey);
             DNekScalBlkMatSharedPtr  CreateStaticCondMatrix(const MatrixKey &mkey);
 
-            void MultiplyByQuadratureMetric(const Array<OneD, const NekDouble>& inarray,
-                                            Array<OneD, NekDouble> &outarray);      
-
             void IProductWRTBase_SumFac(const Array<OneD, const NekDouble>& inarray, 
                                         Array<OneD, NekDouble> &outarray);
             void IProductWRTBase_MatOp(const Array<OneD, const NekDouble>& inarray, 
@@ -192,9 +179,6 @@ namespace Nektar
             virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
         private:           
-            SpatialDomains::Geometry2DSharedPtr m_geom;
-            SpatialDomains::GeomFactorsSharedPtr  m_metricinfo;
-
             LibUtilities::NekManager<MatrixKey, DNekScalMat, MatrixKey::opLess> m_matrixManager;
             LibUtilities::NekManager<MatrixKey, DNekScalBlkMat, MatrixKey::opLess> m_staticCondMatrixManager;
             
@@ -209,21 +193,6 @@ namespace Nektar
                 return StdNodalTriExp::GenNBasisTransMatrix();
             }
             
-            virtual const SpatialDomains::GeomFactorsSharedPtr& v_GetMetricInfo() const
-            {
-                return m_metricinfo;
-            }
-
-            virtual const SpatialDomains::GeometrySharedPtr v_GetGeom() const
-            {
-                return GetGeom();
-            }
-
-            virtual const SpatialDomains::Geometry2DSharedPtr& v_GetGeom2D() const
-            {
-                return GetGeom2D();
-            }
-
             virtual void v_GetCoords(Array<OneD, NekDouble> &coords_0,
                                      Array<OneD, NekDouble> &coords_1 = NullNekDouble1DArray,
                                      Array<OneD, NekDouble> &coords_2 = NullNekDouble1DArray)
@@ -237,11 +206,6 @@ namespace Nektar
                 GetCoord(lcoord, coord);
             }
 
-            virtual int v_GetCoordim()
-            {
-                return m_geom->GetCoordim();
-            }
-            
             virtual void v_GetNodalPoints(Array<OneD, const NekDouble> &x, 
                                           Array<OneD, const NekDouble> &y)
             {

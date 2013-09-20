@@ -458,7 +458,7 @@ namespace Nektar
                 for (e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
                 {
                     PeriodicMap::iterator it = m_periodicEdges.find(
-                        (*m_exp)[n]->GetGeom2D()->GetEid(e));
+                        (*m_exp)[n]->GetGeom()->GetEid(e));
 
                     if (it != m_periodicEdges.end())
                     {
@@ -484,7 +484,7 @@ namespace Nektar
             {
                 for (int e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
                 {
-                    int edgeGeomId = (*m_exp)[n]->GetGeom2D()->GetEid(e);
+                    int edgeGeomId = (*m_exp)[n]->GetGeom()->GetEid(e);
                     int offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
 
@@ -1248,6 +1248,7 @@ namespace Nektar
             Array<OneD,NekDouble> e_tmp;
             PeriodicMap::iterator it2;
             boost::unordered_map<int,pair<int,int> >::iterator it3;
+            LocalRegions::Expansion2DSharedPtr exp2d;
 
             Array<OneD, Array<OneD, StdRegions::StdExpansionSharedPtr> >
                 &elmtToTrace = m_traceMap->GetElmtToTrace();
@@ -1258,22 +1259,23 @@ namespace Nektar
 
             for(cnt = n = 0; n < nexp; ++n)
             {
+                exp2d = LocalRegions::Expansion2D::FromStdExp((*m_exp)[n]);
                 phys_offset = GetPhys_Offset(n);
 
-                for(e = 0; e < (*m_exp)[n]->GetNedges(); ++e, ++cnt)
+                for(e = 0; e < exp2d->GetNedges(); ++e, ++cnt)
                 {
                     int offset = m_trace->GetPhys_Offset(
                         elmtToTrace[n][e]->GetElmtId());
 
                     if (m_leftAdjacentEdges[cnt])
                     {
-                        (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e],
+                        exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Fwd + offset);
                     }
                     else
                     {
-                        (*m_exp)[n]->GetEdgePhysVals(e, elmtToTrace[n][e],
+                        exp2d->GetEdgePhysVals(e, elmtToTrace[n][e],
                                                      field + phys_offset,
                                                      e_tmp = Bwd + offset);
                     }
@@ -1536,7 +1538,7 @@ namespace Nektar
             // expansion list ID).
             for (i = 0; i < GetExpSize(); ++i)
             {
-                globalIdMap[(*m_exp)[i]->GetGeom2D()->GetGlobalID()] = i;
+                globalIdMap[(*m_exp)[i]->GetGeom()->GetGlobalID()] = i;
             }
             
             // Determine number of boundary condition expansions.
@@ -1556,14 +1558,15 @@ namespace Nektar
                 EdgeID = Array<OneD, int>(nbcs);
             }
 
+            LocalRegions::Expansion1DSharedPtr exp1d;
             for(cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
                 for(i = 0; i < m_bndCondExpansions[n]->GetExpSize(); ++i, ++cnt)
                 {
+                    exp1d = LocalRegions::Expansion1D::FromStdExp(m_bndCondExpansions[n]->GetExp(i));
                     // Use edge to element map from MeshGraph2D.
                     SpatialDomains::ElementEdgeVectorSharedPtr tmp =
-                        graph2D->GetElementsFromEdge(
-                            m_bndCondExpansions[n]->GetExp(i)->GetGeom1D());
+                        graph2D->GetElementsFromEdge(exp1d->GetGeom1D());
 
                     ElmtID[cnt] = globalIdMap[(*tmp)[0]->
                                               m_Element->GetGlobalID()];

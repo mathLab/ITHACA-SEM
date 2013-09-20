@@ -152,7 +152,7 @@ namespace Nektar
             int graphVertId = 0;
             int globalId;
 
-            const StdRegions::StdExpansionVector &locExpVector = *(locExp.GetExp());
+            const LocalRegions::ExpansionVector &locExpVector = *(locExp.GetExp());
 
             LocalRegions::SegExpSharedPtr locSegExp;
 
@@ -204,7 +204,7 @@ namespace Nektar
             {
                 if(bndConditions[i]->GetBoundaryConditionType()==SpatialDomains::eDirichlet)
                 {
-                    meshVertId = ((bndCondExp[i])->GetVertex())->GetVid();
+                    meshVertId = bndCondExp[i]->GetVertex()->GetVid();
                     vertReorderedGraphVertId[meshVertId] = graphVertId++;
                     m_numGlobalDirBndCoeffs++;
                     m_numLocalDirBndCoeffs++;
@@ -257,7 +257,7 @@ namespace Nektar
             // Set up the mapping for the boundary conditions
             for(i = 0; i < nbnd; i++)
             {
-                meshVertId = ((bndCondExp[i])->GetVertex())->GetVid();
+                meshVertId = bndCondExp[i]->GetVertex()->GetVid();
                 m_bndCondCoeffsToGlobalCoeffsMap[i] = vertReorderedGraphVertId[meshVertId];
             }
 

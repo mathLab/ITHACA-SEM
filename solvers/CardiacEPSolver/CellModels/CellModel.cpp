@@ -365,7 +365,7 @@ namespace Nektar
                 iter = fieldMetaDataMap.find("Time");
                 if(iter != fieldMetaDataMap.end())
                 {
-                    m_lastTime = iter->second;
+                    m_lastTime = boost::lexical_cast<NekDouble>(iter->second);
                 }
 
                 // Extract the data into the modal coefficients

@@ -100,14 +100,13 @@ namespace Nektar
             /// Specialised constructor for trace expansions.
             MULTI_REGIONS_EXPORT ExpList1D(
                 const Array<OneD,const ExpListSharedPtr> &bndConstraint,
-                const Array<OneD,const SpatialDomains::BoundaryConditionShPtr>
-                    &bndCond,
-                const StdRegions::StdExpansionVector &locexp,
+                const Array<OneD,const SpatialDomains
+                                            ::BoundaryConditionShPtr>  &bndCond,
+                const LocalRegions::ExpansionVector &locexp,
                 const SpatialDomains::MeshGraphSharedPtr &graph2D,
                 const PeriodicMap &periodicEdges,
                 const bool DeclareCoeffPhysArrays = true,
                 const std::string variable = "DefaultVar");
-            
 
             /// Destructor.
             MULTI_REGIONS_EXPORT virtual ~ExpList1D();
@@ -134,7 +133,7 @@ namespace Nektar
 
 	    /// Set up the tangents on each expansion
 	    MULTI_REGIONS_EXPORT void SetUpPhysTangents(
-                const StdRegions::StdExpansionVector &locexp);
+                const LocalRegions::ExpansionVector &locexp);
 	    
             // direction =  1: Upwind
             // direction = -1: Downwind
@@ -176,7 +175,7 @@ namespace Nektar
 
             /// Set up the tangents on each expansion.
             virtual void v_SetUpPhysTangents(
-            	    		const StdRegions::StdExpansionVector &locexp);
+            	    		const LocalRegions::ExpansionVector &locexp);
             
             virtual void v_WriteVtkPieceHeader(std::ofstream &outfile, int expansion);
 

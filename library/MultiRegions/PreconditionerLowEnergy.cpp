@@ -107,7 +107,7 @@ namespace Nektar
         {
             boost::shared_ptr<MultiRegions::ExpList> 
                 expList=((m_linsys.lock())->GetLocMat()).lock();
-            StdRegions::StdExpansionSharedPtr locExpansion;
+            LocalRegions::ExpansionSharedPtr locExpansion;
             GlobalLinSysKey m_linSysKey=(m_linsys.lock())->GetKey();
             StdRegions::VarCoeffMap vVarCoeffMap;
             int i, j, k, nel;
@@ -215,13 +215,13 @@ namespace Nektar
                     {
                         for(k = 0; k < bndCondFaceExp->GetNedges(); k++)
                         {
-                            meshEdgeId = (bndCondFaceExp->GetGeom2D())->GetEid(k);
+                            meshEdgeId = (LocalRegions::Expansion2D::FromStdExp(bndCondFaceExp)->GetGeom2D())->GetEid(k);
                             if(edgeDirMap.count(meshEdgeId) == 0)
                             {
                                 edgeDirMap[meshEdgeId] = 1;
                             }
                         }
-                        meshFaceId = (bndCondFaceExp->GetGeom2D())->GetFid();
+                        meshFaceId = (LocalRegions::Expansion2D::FromStdExp(bndCondFaceExp)->GetGeom2D())->GetFid();
                         faceDirMap[meshFaceId] = 1;
                     }
                 }
@@ -248,7 +248,7 @@ namespace Nektar
                 {
                     dof    = locExpansion->GetEdgeNcoeffs(j)-2;
                     maxEdgeDof = (dof > maxEdgeDof ? dof : maxEdgeDof);
-                    meshEdgeId = locExpansion->GetGeom3D()->GetEid(j);
+                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
 
                     if(edgeDirMap.count(meshEdgeId)==0)
                     {
@@ -287,7 +287,7 @@ namespace Nektar
                     dof    = locExpansion->GetFaceIntNcoeffs(j);
                     maxFaceDof = (dof > maxFaceDof ? dof : maxFaceDof);
 
-                    meshFaceId = locExpansion->GetGeom3D()->GetFid(j);
+                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
 
                     if(faceDirMap.count(meshFaceId)==0)
                     {
@@ -328,7 +328,6 @@ namespace Nektar
             int edgematrixoffset=0;
             int facematrixoffset=0;
             int vGlobal;
-            int nbndCoeffs=0;
 
             for(n=0; n < n_exp; ++n)
             {
@@ -340,7 +339,7 @@ namespace Nektar
                 for(j = 0; j < locExpansion->GetNedges(); ++j)
                 {
                     //get mesh edge id
-                    meshEdgeId = locExpansion->GetGeom3D()->GetEid(j);
+                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(j);
 
                     nedgemodes=locExpansion->GetEdgeNcoeffs(j)-2;
 
@@ -364,7 +363,7 @@ namespace Nektar
                 for(j = 0; j < locExpansion->GetNfaces(); ++j)
                 {
                     //get mesh face id
-                    meshFaceId = locExpansion->GetGeom3D()->GetFid(j);
+                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(j);
 
                     nfacemodes = locExpansion->GetFaceIntNcoeffs(j);
 
@@ -384,7 +383,6 @@ namespace Nektar
                         facematrixoffset+=nfacemodes*nfacemodes;
                     }
                 }
-                nbndCoeffs=+locExpansion->NumBndryCoeffs();
             }
 
             edgematrixoffset=0;
@@ -471,7 +469,7 @@ namespace Nektar
                             //offset for dirichlet conditions
                             if (globalcol == globalrow)
                             {
-                                meshVertId = locExpansion->GetGeom3D()->GetVid(v);
+                                meshVertId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetVid(v);
 
                                 //modal connectivity between elements
                                 sign1 = m_locToGloMap->
@@ -498,7 +496,7 @@ namespace Nektar
                         MemoryManager<DNekMat>::AllocateSharedPtr
                         (nedgemodes,nedgemodes,zero,storage);
                     
-                    meshEdgeId = locExpansion->GetGeom3D()->GetEid(eid);
+                    meshEdgeId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetEid(eid);
                     Array<OneD, unsigned int> edgemodearray = locExpansion->GetEdgeInverseBoundaryMap(eid);
 
                     if(edgeDirMap.count(meshEdgeId)==0)
@@ -535,7 +533,7 @@ namespace Nektar
                         MemoryManager<DNekMat>::AllocateSharedPtr
                         (nfacemodes,nfacemodes,zero,storage);
 
-                    meshFaceId = locExpansion->GetGeom3D()->GetFid(fid);
+                    meshFaceId = LocalRegions::Expansion3D::FromStdExp(locExpansion)->GetGeom3D()->GetFid(fid);
                     
                     Array<OneD, unsigned int> facemodearray = locExpansion->GetFaceInverseBoundaryMap(fid);
 
@@ -1014,9 +1012,9 @@ namespace Nektar
          
             StdRegions::StdExpansionSharedPtr locExpansion;                
             locExpansion = expList->GetExp(offset);
-            int nbnd=locExpansion->NumBndryCoeffs();
-            int ncoeffs=locExpansion->GetNcoeffs();
-            int nint=ncoeffs-nbnd;
+            unsigned int nbnd=locExpansion->NumBndryCoeffs();
+            unsigned int ncoeffs=locExpansion->GetNcoeffs();
+            unsigned int nint=ncoeffs-nbnd;
 
             //This is the SC elemental matrix in the orginal basis (S1)
             //DNekScalBlkMatSharedPtr loc_mat = (m_linsys.lock())->GetStaticCondBlock(expList->GetOffset_Elmt_Id(offset));
@@ -1060,7 +1058,7 @@ namespace Nektar
             DNekScalBlkMatSharedPtr returnval;
             DNekScalMatSharedPtr tmp_mat;
             unsigned int exp_size[] = {nbnd, nint};
-            int nblks = 1;
+            unsigned int nblks = 1;
             returnval = MemoryManager<DNekScalBlkMat>::
                 AllocateSharedPtr(nblks, nblks, exp_size, exp_size);
 
@@ -1142,11 +1140,11 @@ namespace Nektar
                 {-1,1,0}, {0,-1,sqrt(double(3))}, {0,1,sqrt(double(3))},
             };
             
-            //boost::shared_ptr<SpatialDomains::VertexComponent> verts[6];
-            SpatialDomains::VertexComponentSharedPtr verts[6];
+            //boost::shared_ptr<SpatialDomains::PointGeom> verts[6];
+            SpatialDomains::PointGeomSharedPtr verts[6];
             for(int i=0; i < nVerts; ++i)
             {
-                verts[i] =  MemoryManager<SpatialDomains::VertexComponent>::AllocateSharedPtr
+                verts[i] =  MemoryManager<SpatialDomains::PointGeom>::AllocateSharedPtr
                     ( three, i, point[i][0], point[i][1], point[i][2] );
             }
             const int nEdges = 9;
@@ -1158,7 +1156,7 @@ namespace Nektar
             // Populate the list of edges
             SpatialDomains::SegGeomSharedPtr edges[nEdges]; 
             for(int i=0; i < nEdges; ++i){
-                SpatialDomains::VertexComponentSharedPtr vertsArray[2];
+                SpatialDomains::PointGeomSharedPtr vertsArray[2];
                 for(int j=0; j<2; ++j)
                 {
                     vertsArray[j] = verts[vertexConnectivity[i][j]];
@@ -1234,11 +1232,11 @@ namespace Nektar
                 {0,2/sqrt(double(3)),-1/sqrt(double(6))},
                 {0,0,3/sqrt(double(6))}};
             
-            boost::shared_ptr<SpatialDomains::VertexComponent> verts[4];
+            boost::shared_ptr<SpatialDomains::PointGeom> verts[4];
 	    for(i=0; i < nVerts; ++i)
 	    {
 	        verts[i] =  
-                    MemoryManager<SpatialDomains::VertexComponent>::
+                    MemoryManager<SpatialDomains::PointGeom>::
                     AllocateSharedPtr
                     ( three, i, point[i][0], point[i][1], point[i][2] );
 	    }
@@ -1257,7 +1255,7 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr edges[nEdges];
             for(i=0; i < nEdges; ++i)
             {
-                boost::shared_ptr<SpatialDomains::VertexComponent> 
+                boost::shared_ptr<SpatialDomains::PointGeom>
                     vertsArray[2];
                 for(j=0; j<2; ++j)
                 {
@@ -1326,9 +1324,9 @@ namespace Nektar
             };
 
             // Populate the list of verts
-            SpatialDomains::VertexComponentSharedPtr verts[8];
+            SpatialDomains::PointGeomSharedPtr verts[8];
             for( int i = 0; i < nVerts; ++i ) {
-                verts[i] = MemoryManager<SpatialDomains::VertexComponent>
+                verts[i] = MemoryManager<SpatialDomains::PointGeom>
                     ::AllocateSharedPtr(three,  i,   point[i][0],
                                         point[i][1], point[i][2]);
             }
@@ -1347,7 +1345,7 @@ namespace Nektar
             // Populate the list of edges
             SpatialDomains::SegGeomSharedPtr edges[nEdges];
             for( int i = 0; i < nEdges; ++i ) {
-                SpatialDomains::VertexComponentSharedPtr vertsArray[2];
+                SpatialDomains::PointGeomSharedPtr vertsArray[2];
                 for( int j = 0; j < 2; ++j ) {
                     vertsArray[j] = verts[vertexConnectivity[i][j]];
                 }

@@ -52,15 +52,11 @@ namespace Nektar
          */
         GeomFactors::GeomFactors(const GeomType gtype,
                                  const int expdim,
-                                 const int coordim,
-                                 const bool UseQuadMet,
-                                 const bool UseLaplMet):
+                                 const int coordim) :
             m_type(gtype),
             m_expDim(expdim),
             m_coordDim(coordim),
             m_coords(Array<OneD, StdRegions::StdExpansionSharedPtr>(m_coordDim)),
-            m_isUsingQuadMetrics(UseQuadMet),
-            m_isUsingLaplMetrics(UseLaplMet),
             m_pointsKey(expdim)
         {
         }
@@ -73,8 +69,6 @@ namespace Nektar
             m_expDim(S.m_expDim),
             m_coordDim(S.m_coordDim),
             m_coords(S.m_coords),
-            m_isUsingQuadMetrics(S.m_isUsingQuadMetrics),
-            m_isUsingLaplMetrics(S.m_isUsingLaplMetrics),
             m_pointsKey(S.m_pointsKey)
         {
         }
@@ -201,28 +195,6 @@ namespace Nektar
         }
 
         /**
-         * Placeholder function.
-         */
-        void GeomFactors::v_SetUpQuadratureMetrics(
-                        LibUtilities::ShapeType shape,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                                        &tbasis)
-        {
-            ASSERTL0(false, "Quadrature Metrics not implemented.");
-        }
-
-        /**
-         * Placeholder function.
-         */
-        void GeomFactors::v_SetUpLaplacianMetrics(
-                        LibUtilities::ShapeType shape,
-                        const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                                                        &tbasis)
-        {
-            ASSERTL0(false, "Laplacian Metrics not implemented.");
-        }
-
-        /**
          * @brief Establishes if two GeomFactors objects are equal.
          */
         bool operator==(const GeomFactors &lhs, const GeomFactors &rhs)
@@ -238,16 +210,6 @@ namespace Nektar
             }
 
             if(!(lhs.m_coordDim == rhs.m_coordDim))
-            {
-                return false;
-            }
-
-            if(!(lhs.m_isUsingQuadMetrics == rhs.m_isUsingQuadMetrics))
-            {
-                return false;
-            }
-
-            if(!(lhs.m_isUsingLaplMetrics == rhs.m_isUsingLaplMetrics))
             {
                 return false;
             }

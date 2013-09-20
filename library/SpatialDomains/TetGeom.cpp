@@ -160,7 +160,7 @@ namespace Nektar
             // find min, max point and check if within twice this
             // distance other false this is advisable since
             // GetLocCoord is expensive for non regular elements.
-            if(GetGtype() !=  eRegular)
+            if(GetMetricInfo()->GetGtype() !=  eRegular)
             {
                 int i;
                 Array<OneD, NekDouble> pts; 
@@ -205,13 +205,13 @@ namespace Nektar
         {
             
             // calculate local coordinates (eta) for coord
-            if(GetGtype() == eRegular)
+            if(GetMetricInfo()->GetGtype() == eRegular)
             {   
                 // Point inside tetrahedron
-                VertexComponent r(m_coordim, 0, coords[0], coords[1], coords[2]);
+                PointGeom r(m_coordim, 0, coords[0], coords[1], coords[2]);
 
                 // Edges
-                VertexComponent er0, e10, e20, e30;
+                PointGeom er0, e10, e20, e30;
                 er0.Sub(r,*m_verts[0]);
                 e10.Sub(*m_verts[1],*m_verts[0]);
                 e20.Sub(*m_verts[2],*m_verts[0]);
@@ -219,7 +219,7 @@ namespace Nektar
 
 
                 // Cross products (Normal times area)
-                VertexComponent cp1020, cp2030, cp3010;
+                PointGeom cp1020, cp2030, cp3010;
                 cp1020.Mult(e10,e20);
                 cp2030.Mult(e20,e30);
                 cp3010.Mult(e30,e10);
@@ -333,27 +333,35 @@ namespace Nektar
             SegGeomSharedPtr edge;
 
             // First set up the 3 bottom edges
+
+            if(m_faces[0]->GetEid(0) != m_faces[1]->GetEid(0))
+            {
+                std::ostringstream errstrm;
+                errstrm << "Local edge 0 (eid=" << m_faces[0]->GetEid(0);
+                errstrm  << ") on face " <<  m_faces[0]->GetFid(); 
+                errstrm << " must be the same as local edge 0 (eid="<<m_faces[1]->GetEid(0);
+                errstrm << ") on face " <<   m_faces[1]->GetFid(); 
+                ASSERTL0(false, errstrm.str());
+            }
+
             int faceConnected;
             for(faceConnected = 1; faceConnected < 4 ; faceConnected++)
             {
                 check = 0;
                 for(i = 0; i < 3; i++)
                 {
-                    for(j = 0; j < 3; j++)
+                    if( (m_faces[0])->GetEid(i) == (m_faces[faceConnected])->GetEid(0) )
                     {
-                        if( (m_faces[0])->GetEid(i) == (m_faces[faceConnected])->GetEid(j) )
-                        {
-                            edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
-                            m_edges.push_back(edge);
-                            check++;
-                        }
+                        edge = boost::dynamic_pointer_cast<SegGeom>((m_faces[0])->GetEdge(i));
+                        m_edges.push_back(edge);
+                        check++;
                     }
                 }
 
                 if( check < 1 )
                 {
                     std::ostringstream errstrm;
-                    errstrm << "Connected faces do not share an edge. Faces ";
+                    errstrm << "Face 0 does not share an edge with first edge of adjacent face. Faces ";
                     errstrm << (m_faces[0])->GetFid() << ", " << (m_faces[faceConnected])->GetFid();
                     ASSERTL0(false, errstrm.str());
                 }
@@ -365,6 +373,7 @@ namespace Nektar
                     ASSERTL0(false, errstrm.str());
                 }
             }
+
 
             // Then, set up the 3 vertical edges
             check = 0;

@@ -59,7 +59,7 @@ namespace Nektar
             return v_GetXmap(i);
         }
 
-        VertexComponentSharedPtr Geometry1D::GetVertex(const int i) const
+        PointGeomSharedPtr Geometry1D::GetVertex(const int i) const
         {
             return v_GetVertex(i);
         }
@@ -102,11 +102,11 @@ namespace Nektar
             return returnval; 
         }
 
-        VertexComponentSharedPtr Geometry1D::v_GetVertex(const int i) const
+        PointGeomSharedPtr Geometry1D::v_GetVertex(const int i) const
         {
             NEKERROR(ErrorUtil::efatal,
                      "This function is only valid for expansion type geometries");
-            VertexComponentSharedPtr returnval;
+            PointGeomSharedPtr returnval;
             return returnval;
         }
 

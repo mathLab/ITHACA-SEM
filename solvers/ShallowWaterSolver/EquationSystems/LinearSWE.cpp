@@ -112,13 +112,13 @@ namespace Nektar
 	  //                                 .CreateInstance("UpwindLDG");
 	  
 	  // Setting up parameters for advection operator Riemann solver 
-	  m_riemannSolver->AddParam (
+	  m_riemannSolver->SetParam (
                                      "gravity",  
                                      &LinearSWE::GetGravity,   this);
-	  m_riemannSolver->AddScalar(
+	  m_riemannSolver->SetScalar(
                                      "velLoc", 
                                      &LinearSWE::GetVelLoc,  this);
-	  m_riemannSolver->AddVector(
+	  m_riemannSolver->SetVector(
 				     "N",
 				     &LinearSWE::GetNormals, this);
 	
@@ -128,10 +128,10 @@ namespace Nektar
 	  m_dBwd = Array<OneD, NekDouble>(nTracePointsTot);
 	  m_fields[0]->GetFwdBwdTracePhys(m_depth, m_dFwd, m_dBwd);
 	  CopyBoundaryTrace(m_dFwd,m_dBwd);
-	  m_riemannSolver->AddScalar(
+	  m_riemannSolver->SetScalar(
 				     "depthFwd",
 				     &LinearSWE::GetDepthFwd, this);
-	  m_riemannSolver->AddScalar(
+	  m_riemannSolver->SetScalar(
 				     "depthBwd",
 				     &LinearSWE::GetDepthBwd, this);
 

@@ -52,9 +52,9 @@ namespace Nektar
         public:
             HomoRSScalar(RSScalarFuncType func,
                          int              nPlanes)
-                : m_func       (func),
-                  m_planeNumber(0),
+                : m_planeNumber(0),
                   m_numPlanes  (nPlanes),
+                  m_func       (func),
                   m_tmp        ()
             {
             }

@@ -36,6 +36,7 @@
 #ifndef NEKTAR_SOLVERUTILS_DIFFUSION3DHOMOGENEOUS1D
 #define NEKTAR_SOLVERUTILS_DIFFUSION3DHOMOGENEOUS1D
 
+#include <SolverUtils/Advection/Advection3DHomogeneous1D.h>
 #include <SolverUtils/Diffusion/Diffusion.h>
 
 namespace Nektar
@@ -50,15 +51,15 @@ namespace Nektar
                 return DiffusionSharedPtr(
                     new Diffusion3DHomogeneous1D(diffType));
             }
-            static std::string type;
+            static std::string type[];
             
         protected:
-            Diffusion3DHomogeneous1D();
+            Diffusion3DHomogeneous1D(std::string diffType);
 
-            SolverUtils::DiffusionSharedPtr                    m_planeDiff;
             LibUtilities::TranspositionSharedPtr               m_trans;
             std::string                                        m_diffType;
-            SolverUtils::AdvectionSharedPtr                    m_planeAdv;
+            SolverUtils::DiffusionSharedPtr                    m_planeDiff;
+            NekDouble                                          m_homoLen;
             int                                                m_numPoints;
             int                                                m_numPointsPlane;
             int                                                m_numPlanes;

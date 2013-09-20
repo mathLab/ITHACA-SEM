@@ -64,7 +64,7 @@ namespace Nektar
                      "of planes are not the same");
 
             // Set up expansion list with elements from all planes.
-            m_exp = MemoryManager<StdRegions::StdExpansionVector>
+            m_exp = MemoryManager<LocalRegions::ExpansionVector>
                 ::AllocateSharedPtr(
                     planes.num_elements() * planes[0]->GetExpSize());
 

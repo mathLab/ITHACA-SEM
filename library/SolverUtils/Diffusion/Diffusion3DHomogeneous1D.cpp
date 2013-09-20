@@ -41,7 +41,7 @@ namespace Nektar
 {
     namespace SolverUtils
     {
-        std::string Advection3DHomogeneous1D::type[] = {
+        std::string Diffusion3DHomogeneous1D::type[] = {
             GetDiffusionFactory().RegisterCreatorFunction(
                 "LDG3DHomogeneous1D",   Diffusion3DHomogeneous1D::create),
             GetDiffusionFactory().RegisterCreatorFunction(
@@ -92,11 +92,12 @@ namespace Nektar
             m_planes         = pFields[0]->GetZIDs();
             m_numPlanes      = m_planes.num_elements();
             m_numPointsPlane = m_numPoints/m_numPlanes;
+            m_homoLen        = pFields[0]->GetHomoLen();
 
             // Set Riemann solver and flux vector callback for this plane.
             m_planeDiff->SetRiemannSolver(m_riemann);
-            m_planeDiff->SetFluxVector   (
-                &Diffusion3DHomogeneous1D::ModifiedFluxVector, this);
+            //m_planeDiff->SetFluxVector   (
+            //    &Diffusion3DHomogeneous1D::ModifiedFluxVector, this);
             m_planeCounter = 0;
 
             // Override Riemann solver scalar and vector callbacks.
@@ -165,41 +166,48 @@ namespace Nektar
             const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                   Array<OneD, Array<OneD, NekDouble> >        &outarray)
         {
-            
+            Array<OneD, NekDouble> tmp(m_numPoints), tmp2;
+            const int nPointsTot = fields[0]->GetNpoints();
+            int i, j;
             NekDouble beta;
-            int Homolen = fields[0]->GetHomoLen();
-            
-            for (j = 0; j < nConvectiveFields; j++)
-            {
-                // Transform flux in Fourier space
-                fields[0]->HomogeneousFwdTrans(inarray[j], flux[j]);
-            }
-            
-            m_transpositionLDG = fields[0]->GetTransposition();
 
-            for (i = 0; i < num_planes; ++i)
+            for (i = 0; i < m_numPlanes; ++i)
             {
-                beta = 2*M_PI*(m_transpositionLDG->GetK(i))/Homolen;
-                
-                for (j = 0; j < nConvectiveFields; j++)
+                // Set up memory references for fields, inarray and outarray for
+                // this plane.
+                for (int j = 0; j < nConvectiveFields; ++j)
                 {
-                    // Derivative in Fourier space
-                    Vmath::Smul(nPointsTot_plane,
-                                beta*beta ,
-                                &flux[j][0] + i*nPointsTot_plane, 1,
-                                &flux_homo[j][0] + i*nPointsTot_plane, 1);
+                    m_fieldsPlane  [j] = fields[j]->GetPlane(i);
+                    m_inarrayPlane [j] = Array<OneD, NekDouble>(
+                        m_numPointsPlane, tmp2 = inarray [j] + m_planePos[i]);
+                    m_outarrayPlane[j] = Array<OneD, NekDouble>(
+                        m_numPointsPlane, tmp2 = outarray[j] + m_planePos[i]);
                 }
-            }
-            
-            for  (j = 0; j < nConvectiveFields; ++j)
-            {
-                // Transform back in physical space
-                fields[0]->HomogeneousBwdTrans(flux_homo[j], outarray_z[j]);
 
-                Vmath::Vsub(nPointsTot,
-                            outarray[j], 1,
-                            outarray_z[j], 1,
-                            outarray[j], 1);
+                m_planeDiff->Diffuse(nConvectiveFields,
+                                     m_fieldsPlane,
+                                     m_inarrayPlane,
+                                     m_outarrayPlane);
+            }
+
+            for (j = 0; j < nConvectiveFields; ++j)
+            {
+                fields[j]->HomogeneousFwdTrans(inarray[j], tmp);
+
+                for (i = 0; i < m_numPlanes; ++i)
+                {
+                    beta  = 2*M_PI*m_trans->GetK(i)/m_homoLen;
+                    beta *= beta;
+
+                    Vmath::Smul(m_numPointsPlane,
+                                beta,
+                                &tmp[0] + i*m_numPointsPlane, 1,
+                                &tmp[0] + i*m_numPointsPlane, 1);
+                }
+
+                fields[0]->HomogeneousBwdTrans(tmp, tmp);
+
+                Vmath::Vsub(nPointsTot, outarray[j], 1, tmp, 1, outarray[j], 1);
             }
         }
 

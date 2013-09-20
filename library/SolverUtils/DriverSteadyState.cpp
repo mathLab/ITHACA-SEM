@@ -87,18 +87,12 @@ namespace Nektar
             Array<OneD, Array<OneD, NekDouble> > qBar1(NumElmVelocity);
             
             //For BDF2 implementation
-            Array<OneD, Array<OneD, NekDouble> > qMinus1(NumElmVelocity);
-            Array<OneD, Array<OneD, NekDouble> > qBarMinus1(NumElmVelocity);
+            Array<OneD, Array<OneD, NekDouble> > qMinusHalf(NumElmVelocity);
+            Array<OneD, Array<OneD, NekDouble> > qBarMinusHalf(NumElmVelocity);
             
-            //For BDF3 implementation
-            //Array<OneD, Array<OneD, NekDouble> > qMinus2(NumElmVelocity);
-            //Array<OneD, Array<OneD, NekDouble> > qBarMinus2(NumElmVelocity);
-            
-            Array<OneD, Array<OneD, NekDouble> > qMean(NumElmVelocity);
-            FirstIterOfAverage = true;
-            m_AverageCoeff = 0.5;
-            
-            Array<OneD, Array<OneD, NekDouble> > qDiff(NumElmVelocity); //Store the value of q when |q-qBar| is minimum
+            //For Strang scheme
+            Array<OneD, Array<OneD, NekDouble> > qTilde(NumElmVelocity);
+            Array<OneD, Array<OneD, NekDouble> > qBarTilde(NumElmVelocity);
             
             NekDouble TOL(0);
             m_n=0;
@@ -113,9 +107,7 @@ namespace Nektar
             m_dt = m_equ[0]->GetTimeStep();
             
             m_Delta = m_Delta0;
-            
-            m_X = m_X0;
-            
+            m_X = m_X0;            
             //m_cst1=m_X*m_dt;
             m_cst1=m_X;
             m_cst2=1.0/(1.0 + m_cst1);
@@ -123,41 +115,34 @@ namespace Nektar
             m_cst3=1.0/m_Delta;
             m_cst4=m_cst2*m_cst3;
             m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+             
             
             
+            //To run each integration of the linear filters problem on half a time-step we add:
+            m_X = 0.5*m_X0;
+            m_Delta = 2.0*m_Delta0;
             
-            //For implementation BDF2
+            //BDF1 Matrix
+            c1 = 1.0 + m_X;
+            c2 = 1.0 + 1.0/m_Delta - m_X/(m_Delta*c1);
+            
+            a11 = 1.0/c1 + m_X/(m_Delta*c1*c1*c2);
+            a12 = m_X/(c1*c2);
+            a21 = 1.0/(m_Delta*c1*c2);
+            a22 = 1.0/c2;
+            
+            //BDF2 Matrix
             c1 = 3.0 + 2.0*m_X;
             c2 = 3.0 + 2.0/m_Delta - 4.0*m_X/(m_Delta*c1);
             
-            a11 = 4.0/c1 + 16.0*m_X/(m_Delta*c1*c1*c2);
-            a12 = 8.0*m_X/(c1*c2);
-            a13 = - (1.0/c1 + 4.0*m_X/(m_Delta*c1*c1*c2));
-            a14 = - 2.0*m_X/(c1*c2);
-            a21 = 8.0/(m_Delta*c1*c2);
-            a22 = 4.0/c2;
-            a23 = - 2.0/(m_Delta*c1*c2);
-            a24 = - 1.0/c2;
-            
-            //For implementation BDF3
-            /*c1 = 11.0 + 6.0*m_X;
-            c2 = 11.0 + 6.0/m_Delta - 36.0*m_X/(m_Delta*c1);
-            
-            b11 = 18.0/c1 + 648.0*m_X/(m_Delta*c1*c1*c2);
-            b12 = 108.0*m_X/(c1*c2);
-            b13 = - (9.0/c1 + 324.0*m_X/(m_Delta*c1*c1*c2));
-            b14 = - 54.0*m_X/(c1*c2);
-            b15 = 2.0/c1 + 72.0*m_X/(m_Delta*c1*c1*c2);
-            b16 = 12.0*m_X/(c1*c2);
-            b21 = 108.0/(m_Delta*c1*c2);
-            b22 = 18.0/c2;
-            b23 = - 54.0/(m_Delta*c1*c2);
-            b24 = - 9.0/c2;
-            b25 = 12.0/(m_Delta*c1*c2);
-            b26 = 2.0/c2;*/
-            
-            
-            
+            b11 = 4.0/c1 + 16.0*m_X/(m_Delta*c1*c1*c2);
+            b12 = 8.0*m_X/(c1*c2);
+            b13 = - (1.0/c1 + 4.0*m_X/(m_Delta*c1*c1*c2));
+            b14 = - 2.0*m_X/(c1*c2);
+            b21 = 8.0/(m_Delta*c1*c2);
+            b22 = 4.0/c2;
+            b23 = - 2.0/(m_Delta*c1*c2);
+            b24 = - 1.0/c2;            
             
             
             
@@ -186,16 +171,12 @@ namespace Nektar
                 m_equ[0]->CopyFromPhysField(i, qBar0[i]); //qBar0 is initially set at beiing equal to the initial conditions provided in the input file
                 
                 //For BDF2 implentation
-                qMinus1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
-                qBarMinus1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
+                qMinusHalf[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
+                qBarMinusHalf[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);     
                 
-                //For BDF3 implentation
-                //qMinus2[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
-                //qBarMinus2[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
-                
-                
-                qDiff[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
-                qMean[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
+                //For Strang scheme
+                qTilde[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);
+                qBarTilde[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(), 0.0);   
             }
             
             MaxNormDiff_q_qBar = 1.0;
@@ -207,46 +188,67 @@ namespace Nektar
             
             while (MaxNormDiff_q_qBar > TOL)
             {
+               
+                
+                //Implementation of the second order sequential operator-splitting method (i.e. Strang splitting)
+                
+                //First intergration on half a step
+                for(int i = 0; i < NumElmVelocity; ++i)
+                { 
+                    m_equ[0]->CopyFromPhysField(i, q0[i]);
+                    
+                    if (m_n == 0)
+                    {
+                        RunBDF1(i, q0, qBar0, q1, qBar1);
+                    }
+                    else
+                    {
+                        RunBDF2(i, qMinusHalf, qBarMinusHalf, q0, qBar0, q1, qBar1);
+                    }
+                    
+                    qMinusHalf[i] = q1[i];
+                    qBarMinusHalf[i] = qBar1[i];
+                    
+                    qBarTilde[i] = qBar1[i];                    
+                    m_equ[0]->CopyToPhysField(i, q1[i]);                    
+                }
+                
+                //Run NS solver a one time step
                 m_equ[0]->DoSolve();
                 
+                //Second intergration on the other half step
+                for(int i = 0; i < NumElmVelocity; ++i)
+                {
+                    m_equ[0]->CopyFromPhysField(i, qTilde[i]);
+                    
+                    RunBDF2(i, qMinusHalf, qBarMinusHalf, qTilde, qBarTilde, q1, qBar1);
+                        
+                    qMinusHalf[i] = qTilde[i];
+                    qBarMinusHalf[i] = qBarTilde[i];
+                    
+                    qBar0[i] = qBar1[i];                    
+                    m_equ[0]->CopyToPhysField(i, q1[i]);                    
+                }
+                
+                
+                /*
+                m_equ[0]->DoSolve();
                 for(int i = 0; i < NumElmVelocity; ++i)
                 {
                     m_equ[0]->CopyFromPhysField(i, q0[i]);
                     
-                    //for BDF2 implementation
-                    if (m_n == 0)
-                    {
-                        //cout << "We do Normal implicit SFD" << endl;
-                        EvaluateNextSFDVariables(i, q0, qBar0, q1, qBar1);
-                    }
-                    else
-                    {
-                        //cout << "We do BDF2_for_SFD!!!" << endl;
-                        BDF2_for_SFD(i, qMinus1, qBarMinus1, q0, qBar0, q1, qBar1);
-                    }
-                    /*else
-                     *					{
-                     *						BDF3_for_SFD(i, qMinus2, qBarMinus2, qMinus1, qBarMinus1, q0, qBar0, q1, qBar1);
-                     }*/
-                    
-                    /*if (m_n > 0)
-                    {
-                        qMinus2[i] = qMinus1[i];
-                        qBarMinus2[i] = qBarMinus2[i];
-                    }*/
-                    
-                    qMinus1[i] = q0[i];
-                    qBarMinus1[i] = qBar0[i];
+                    EvaluateNextSFDVariables(i, q0, qBar0, q1, qBar1);
                     
                     qBar0[i] = qBar1[i];
-                    
                     m_equ[0]->CopyToPhysField(i, q1[i]);                    
                 }
+                */
                 
                 
                 if(m_infosteps && !((m_n+1)%m_infosteps))
                 {
                     ConvergenceHistory(qBar1, MaxNormDiff_q_qBar);
+                    //ConvergenceHistory(q0, MaxNormDiff_q_qBar);
                 }
                 
                 if(m_checksteps && m_n&&(!((m_n+1)%m_checksteps)))
@@ -255,22 +257,7 @@ namespace Nektar
                     m_equ[0]->Checkpoint_Output(m_Check);                       
                 }
                 
-                
-                //For Calculating average flow for X=1 and Delta=0.5
-                /*for(int i = 0; i < NumElmVelocity; ++i)
-                 *               {
-                 *                   if (m_n > 10)
-                 *                   {
-                 *                       CalcAverage(i, q1, qMean, qMean);                       
-                 *                       if(m_n > 20000)
-                 *                       {
-                 *                           cout << "\nCombien de fois on passe ici ???\n" << endl;
-                 *                           m_equ[0]->CopyToPhysField(i, qMean[i]);
-                 *                           MaxNormDiff_q_qBar = 1.0e-09;
-            }
-            }
-            }*/
-                
+                //cout << "Step " << m_n << " just finished!" << endl;
                 m_n++;
             }
             
@@ -300,25 +287,24 @@ namespace Nektar
         }
         
         
-        
-        void DriverSteadyState::CalcAverage(const int i,
-                                            const Array<OneD, const Array<OneD, NekDouble> > &q1,
-                                            const Array<OneD, const Array<OneD, NekDouble> > &qMeanIN, 
-                                            Array<OneD, Array<OneD, NekDouble> > &qMeanOUT)
+        void DriverSteadyState::RunBDF1(const int i,
+                                        const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                        const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                                        Array<OneD, Array<OneD, NekDouble> > &q1,
+                                        Array<OneD, Array<OneD, NekDouble> > &qBar1)
         {
-            //cout << "\nWe are in the CalcAverage routine!!!\n" << endl;
-            Vmath::Vadd(q1[i].num_elements(), q1[i], 1, qMeanIN[i], 1, qMeanOUT[i], 1);
+            q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
+            qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
             
-            if (FirstIterOfAverage == false)
-            {
-                //cout << "\nAfter second step!\n" << endl;
-                Vmath::Smul(q1[i].num_elements(), m_AverageCoeff, qMeanOUT[i], 1, qMeanOUT[i], 1);
-            }
-            FirstIterOfAverage = false;
+            //BDF1            
+            Vmath::Svtvp(q1[i].num_elements(), a11, q0[i], 1, q1[i], 1, q1[i], 1 );    
+            Vmath::Svtvp(q1[i].num_elements(), a12, qBar0[i], 1, q1[i], 1, q1[i], 1 ); 
+            
+            Vmath::Svtvp(qBar1[i].num_elements(), a21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );    
+            Vmath::Svtvp(qBar1[i].num_elements(), a22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 );             
         }
         
-        
-        void DriverSteadyState::BDF2_for_SFD(const int i,
+        void DriverSteadyState::RunBDF2(const int i,
                                              const Array<OneD, const Array<OneD, NekDouble> > &qMinus1,
                                              const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
                                              const Array<OneD, const Array<OneD, NekDouble> > &q0,
@@ -330,46 +316,15 @@ namespace Nektar
             qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
             
             //BDF2            
-            Vmath::Svtvp(q1[i].num_elements(), a11, q0[i], 1, q1[i], 1, q1[i], 1 );    
-            Vmath::Svtvp(q1[i].num_elements(), a12, qBar0[i], 1, q1[i], 1, q1[i], 1 ); 
-            Vmath::Svtvp(q1[i].num_elements(), a13, qMinus1[i], 1, q1[i], 1, q1[i], 1 ); 
-            Vmath::Svtvp(q1[i].num_elements(), a14, qBarMinus1[i], 1, q1[i], 1, q1[i], 1 ); 
+            Vmath::Svtvp(q1[i].num_elements(), b11, q0[i], 1, q1[i], 1, q1[i], 1 );    
+            Vmath::Svtvp(q1[i].num_elements(), b12, qBar0[i], 1, q1[i], 1, q1[i], 1 ); 
+            Vmath::Svtvp(q1[i].num_elements(), b13, qMinus1[i], 1, q1[i], 1, q1[i], 1 ); 
+            Vmath::Svtvp(q1[i].num_elements(), b14, qBarMinus1[i], 1, q1[i], 1, q1[i], 1 ); 
             
-            Vmath::Svtvp(qBar1[i].num_elements(), a21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );    
-            Vmath::Svtvp(qBar1[i].num_elements(), a22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 ); 
-            Vmath::Svtvp(qBar1[i].num_elements(), a23, qMinus1[i], 1, qBar1[i], 1, qBar1[i], 1 ); 
-            Vmath::Svtvp(qBar1[i].num_elements(), a24, qBarMinus1[i], 1, qBar1[i], 1, qBar1[i], 1 ); 
-            
-        }
-        
-        void DriverSteadyState::BDF3_for_SFD(const int i,
-                                             const Array<OneD, const Array<OneD, NekDouble> > &qMinus2,
-                                             const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus2,
-                                             const Array<OneD, const Array<OneD, NekDouble> > &qMinus1,
-                                             const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
-                                             const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                                             const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                                             Array<OneD, Array<OneD, NekDouble> > &q1,
-                                             Array<OneD, Array<OneD, NekDouble> > &qBar1)
-        {
-            q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
-            qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
-            
-            //BDF3
-            Vmath::Svtvp(q1[i].num_elements(), b11, q0[i], 1, q1[i], 1, q1[i], 1 );
-            Vmath::Svtvp(q1[i].num_elements(), b12, qBar0[i], 1, q1[i], 1, q1[i], 1 );
-            Vmath::Svtvp(q1[i].num_elements(), b13, qMinus1[i], 1, q1[i], 1, q1[i], 1 );
-            Vmath::Svtvp(q1[i].num_elements(), b14, qBarMinus1[i], 1, q1[i], 1, q1[i], 1 );
-            Vmath::Svtvp(q1[i].num_elements(), b15, qMinus2[i], 1, q1[i], 1, q1[i], 1 );
-            Vmath::Svtvp(q1[i].num_elements(), b16, qBarMinus2[i], 1, q1[i], 1, q1[i], 1 );
-            
-            Vmath::Svtvp(qBar1[i].num_elements(), b21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );
-            Vmath::Svtvp(qBar1[i].num_elements(), b22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 );
-            Vmath::Svtvp(qBar1[i].num_elements(), b23, qMinus1[i], 1, qBar1[i], 1, qBar1[i], 1 );
-            Vmath::Svtvp(qBar1[i].num_elements(), b24, qBarMinus1[i], 1, qBar1[i], 1, qBar1[i], 1 );
-            Vmath::Svtvp(qBar1[i].num_elements(), b25, qMinus2[i], 1, qBar1[i], 1, qBar1[i], 1 );
-            Vmath::Svtvp(qBar1[i].num_elements(), b26, qBarMinus2[i], 1, qBar1[i], 1, qBar1[i], 1 );
-            
+            Vmath::Svtvp(qBar1[i].num_elements(), b21, q0[i], 1, qBar1[i], 1, qBar1[i], 1 );    
+            Vmath::Svtvp(qBar1[i].num_elements(), b22, qBar0[i], 1, qBar1[i], 1, qBar1[i], 1 ); 
+            Vmath::Svtvp(qBar1[i].num_elements(), b23, qMinus1[i], 1, qBar1[i], 1, qBar1[i], 1 ); 
+            Vmath::Svtvp(qBar1[i].num_elements(), b24, qBarMinus1[i], 1, qBar1[i], 1, qBar1[i], 1 ); 
         }
         
         void DriverSteadyState::EvaluateNextSFDVariables(const int i,
@@ -431,14 +386,14 @@ namespace Nektar
             if (MPIrank==0)
             {
                 //cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
-                cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<"; for X = " << m_cst1 <<" and Delta = " << 1.0/m_cst3 <<endl;
+                cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<"; for X_tilde = " << m_X*m_dt <<" and Delta_tilde = " << m_Delta/m_dt <<endl;
                 std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
                 m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
                 m_file.close();
             }
             #else
             //cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
-            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<"; for X = " << m_cst1 <<" and Delta = " << 1.0/m_cst3 <<endl;
+            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<"; for X_tilde = " << m_X <<" and Delta_tilde = " << m_Delta <<endl;
             std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
             m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
             m_file.close();
@@ -452,49 +407,49 @@ namespace Nektar
              *                {
              *                    m_Oscillation = 0;
              *                    m_First_MinNormDiff_q_qBar=0;
-        }
-        }
-        if (MaxNormDiff_q_qBar < m_MaxNormDiff_q_qBar && m_Growing==true)
-        {
-            m_Growing=false;
-            m_MaxNormDiff_q_qBar=0;
-        }
-        if (m_Growing==false && MaxNormDiff_q_qBar < m_MinNormDiff_q_qBar)
-        {
-            m_MinNormDiff_q_qBar=MaxNormDiff_q_qBar;
-            m_Shrinking=true;
-            if (m_Oscillation==0)
-            {
-                m_First_MinNormDiff_q_qBar=m_MinNormDiff_q_qBar;
-        }
-        }
-        if (MaxNormDiff_q_qBar > m_MinNormDiff_q_qBar && m_Shrinking==true)
-        {
-            m_Shrinking=false;
-            m_MinNormDiff_q_qBar=1000;
-            m_Oscillation=m_Oscillation+1;
-        }
-        
-        if (m_Oscillation==10)
-        {                   
-            //m_Delta = m_Delta + 0.25;
-            //m_X = 0.99*(1.0/m_Delta);
-            
-            mult = mult + mult*0.25;
-            
-            m_X = mult*(coeff - 1.0)/m_dt;
-            m_Delta = 100*mult*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
-            
-            m_cst1=m_X*m_dt;
-            m_cst2=1.0/(1.0 + m_cst1);
-            m_cst3=m_dt/m_Delta;
-            m_cst4=m_cst2*m_cst3;
-            m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
-            
-            cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
-            
-            m_Oscillation=0;
-            //m_equ[0]->DoInitialise();
+             }
+             }
+             if (MaxNormDiff_q_qBar < m_MaxNormDiff_q_qBar && m_Growing==true)
+             {
+                 m_Growing=false;
+                 m_MaxNormDiff_q_qBar=0;
+             }
+             if (m_Growing==false && MaxNormDiff_q_qBar < m_MinNormDiff_q_qBar)
+             {
+                 m_MinNormDiff_q_qBar=MaxNormDiff_q_qBar;
+                 m_Shrinking=true;
+                 if (m_Oscillation==0)
+                 {
+                     m_First_MinNormDiff_q_qBar=m_MinNormDiff_q_qBar;
+                 }
+             }
+             if (MaxNormDiff_q_qBar > m_MinNormDiff_q_qBar && m_Shrinking==true)
+             {
+                 m_Shrinking=false;
+                 m_MinNormDiff_q_qBar=1000;
+                 m_Oscillation=m_Oscillation+1;
+             }
+             
+             if (m_Oscillation==10)
+             {                   
+                 //m_Delta = m_Delta + 0.25;
+                 //m_X = 0.99*(1.0/m_Delta);
+                 
+                 mult = mult + mult*0.25;
+                 
+                 m_X = mult*(coeff - 1.0)/m_dt;
+                 m_Delta = 100*mult*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
+                 
+                 m_cst1=m_X*m_dt;
+                 m_cst2=1.0/(1.0 + m_cst1);
+                 m_cst3=m_dt/m_Delta;
+                 m_cst4=m_cst2*m_cst3;
+                 m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+                 
+                 cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
+                 
+                 m_Oscillation=0;
+                 //m_equ[0]->DoInitialise();
         }*/
             
             
@@ -520,9 +475,9 @@ namespace Nektar
                  
                  m_LIM = m_LIM/5.0;
                  //m_LIM = m_LIM/1000.0;
-        }
-        
-        if (MaxNormDiff_q_qBar > 9999999.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
+    }
+    
+    if (MaxNormDiff_q_qBar > 9999999.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
             {        
                 Min_MaxNormDiff_q_qBar = 1.0;
                 
@@ -546,16 +501,16 @@ namespace Nektar
                 for(int i = 0; i < NumElmVelocity; ++i)
                 {
                     m_equ[0]->CopyToPhysField(i, qMin[i]); //We reinitialize the problem with the value where |q-qBar| was minimal 
-        }
-        m_equ[0]->DoInitialise();
-        
-        m_Check++;                    
-        m_equ[0]->Checkpoint_Output(m_Check);
-        
-        }*/
+                }
+                m_equ[0]->DoInitialise();
+                
+                m_Check++;                    
+                m_equ[0]->Checkpoint_Output(m_Check);
+                
+    }*/
             
             
-        }
     }
+}
 }
 

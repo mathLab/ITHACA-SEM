@@ -2086,11 +2086,9 @@ namespace Nektar
         {
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
-            NekDouble len;
+            NekDouble len = 0.0;
             return len;
         }
-
-
 
         Array<OneD, const unsigned int> ExpList::v_GetZIDs(void)
         {
@@ -2481,6 +2479,14 @@ namespace Nektar
             ASSERTL0(false,
                      "This method is not defined or valid for this class type");
             static boost::shared_ptr<AssemblyMapDG> result;
+            return result;
+        }
+
+        Array<OneD, unsigned int> &ExpList::v_GetTraceBndMap()
+        {
+            ASSERTL0(false,
+                     "This method is not defined or valid for this class type");
+            static Array<OneD, unsigned int> result;
             return result;
         }
 

@@ -43,13 +43,29 @@ namespace Nektar
     {
         std::string Diffusion3DHomogeneous1D::type[] = {
             GetDiffusionFactory().RegisterCreatorFunction(
-                "LDG3DHomogeneous1D",   Diffusion3DHomogeneous1D::create),
+                "LDG3DHomogeneous1D",       Diffusion3DHomogeneous1D::create),
             GetDiffusionFactory().RegisterCreatorFunction(
-                "LFR3DHomogeneous1D",   Diffusion3DHomogeneous1D::create),
+                "LFRDG3DHomogeneous1D",     Diffusion3DHomogeneous1D::create),
             GetDiffusionFactory().RegisterCreatorFunction(
-                "LDGNS3DHomogeneous1D", Diffusion3DHomogeneous1D::create),
+                "LFRSD3DHomogeneous1D",     Diffusion3DHomogeneous1D::create),
             GetDiffusionFactory().RegisterCreatorFunction(
-                "LFRNS3DHomogeneous1D", Diffusion3DHomogeneous1D::create)
+                "LFRHU3DHomogeneous1D",     Diffusion3DHomogeneous1D::create),
+            GetDiffusionFactory().RegisterCreatorFunction(
+                "LFRcmin3DHomogeneous1D",   Diffusion3DHomogeneous1D::create),
+            GetDiffusionFactory().RegisterCreatorFunction(
+                "LFRcinf3DHomogeneous1D",   Diffusion3DHomogeneous1D::create),
+            GetDiffusionFactory().RegisterCreatorFunction(
+                "LDGNS3DHomogeneous1D",     Diffusion3DHomogeneous1D::create),
+            GetDiffusionFactory().RegisterCreatorFunction(
+                "LFRDGNS3DHomogeneous1D",   Diffusion3DHomogeneous1D::create),
+            GetDiffusionFactory().RegisterCreatorFunction(
+                "LFRSDNS3DHomogeneous1D",   Diffusion3DHomogeneous1D::create),
+            GetDiffusionFactory().RegisterCreatorFunction(
+                "LFRHUNS3DHomogeneous1D",   Diffusion3DHomogeneous1D::create),
+            GetDiffusionFactory().RegisterCreatorFunction(
+                "LFRcminNS3DHomogeneous1D", Diffusion3DHomogeneous1D::create),
+            GetDiffusionFactory().RegisterCreatorFunction(
+                "LFRcinfNS3DHomogeneous1D", Diffusion3DHomogeneous1D::create)
         };
 
         /**
@@ -59,8 +75,8 @@ namespace Nektar
          */
         Diffusion3DHomogeneous1D::Diffusion3DHomogeneous1D(std::string diffType)
         {
-            // Strip trailing string "3DHomogeneous1D" to determine 2D advection
-            // type, and create an advection object for the plane.
+            // Strip trailing string "3DHomogeneous1D" to determine 2D diffusion
+            // type, and create a diffusion object for the plane.
             string name = diffType.substr(0, diffType.length()-15);
             m_planeDiff = GetDiffusionFactory().CreateInstance(name, name);
         }
@@ -93,39 +109,29 @@ namespace Nektar
             m_numPlanes      = m_planes.num_elements();
             m_numPointsPlane = m_numPoints/m_numPlanes;
             m_homoLen        = pFields[0]->GetHomoLen();
-
-            // Set Riemann solver and flux vector callback for this plane.
-            m_planeDiff->SetRiemannSolver(m_riemann);
+            m_trans          = pFields[0]->GetTransposition();
+            m_planeCounter = 0;
             //m_planeDiff->SetFluxVector   (
             //    &Diffusion3DHomogeneous1D::ModifiedFluxVector, this);
-            m_planeCounter = 0;
 
-            // Override Riemann solver scalar and vector callbacks.
-            map<string, RSScalarFuncType>::iterator it1;
-            map<string, RSScalarFuncType> scalars = m_riemann->GetScalars();
-
-            for (it1 = scalars.begin(); it1 != scalars.end(); ++it1)
+            if (m_riemann)
             {
-                boost::shared_ptr<HomoRSScalar> tmp = MemoryManager<HomoRSScalar>
-                   ::AllocateSharedPtr(it1->second, m_numPlanes);
-                m_riemann->SetScalar(it1->first, &HomoRSScalar::Exec, tmp);
-            }
+                // Set Riemann solver and flux vector callback for this plane.
+                m_planeDiff->SetRiemannSolver(m_riemann);
 
-            m_fluxVecStore = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
-                nConvectiveFields);
+                // Override Riemann solver scalar and vector callbacks.
+                map<string, RSScalarFuncType>::iterator it1;
+                map<string, RSScalarFuncType> scalars = m_riemann->GetScalars();
 
-            // Set up storage for flux vector.
-            for (int i = 0; i < nConvectiveFields; ++i)
-            {
-                m_fluxVecStore[i] = Array<OneD, Array<OneD, NekDouble> >(3);
-                for (int j = 0; j < 3; ++j)
+                for (it1 = scalars.begin(); it1 != scalars.end(); ++it1)
                 {
-                    m_fluxVecStore[i][j] = Array<OneD, NekDouble>(m_numPoints);
+                    boost::shared_ptr<HomoRSScalar> tmp =
+                        MemoryManager<HomoRSScalar>
+                            ::AllocateSharedPtr(it1->second, m_numPlanes);
+                    m_riemann->SetScalar(it1->first, &HomoRSScalar::Exec, tmp);
                 }
             }
 
-            m_fluxVecPlane = Array<OneD, Array<OneD,
-                          Array<OneD, Array<OneD, NekDouble> > > >(m_numPlanes);
             m_fieldsPlane   = Array<OneD, MultiRegions::ExpListSharedPtr>
                                                             (nConvectiveFields);
             m_inarrayPlane  = Array<OneD, Array<OneD, NekDouble> >
@@ -134,28 +140,71 @@ namespace Nektar
                                                             (nConvectiveFields);
             m_planePos      = Array<OneD, unsigned int>     (m_numPlanes);
 
-            // Set up memory reference which links fluxVecPlane to fluxVecStore.
             for (int i = 0; i < m_numPlanes; ++i)
             {
                 m_planePos[i] = i * m_numPointsPlane;
-                m_fluxVecPlane[i] =
-                    Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
-                        nConvectiveFields);
+            }
 
-                for (int j = 0; j < nConvectiveFields; ++j)
+            if (m_fluxVectorNS)
+            {
+                m_fluxVecNSStore = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
+                    nConvectiveFields);
+                m_derivStore     = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
+                    3);
+                m_homoDerivStore = Array<OneD, Array<OneD, NekDouble> >(
+                    nConvectiveFields);
+                m_homoDerivPlane = Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
+                    m_numPlanes);
+                m_fluxVecNSPlane =
+                    Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >(
+                        m_numPlanes);
+
+                // Set up storage for flux vector.
+                for (int i = 0; i < nConvectiveFields; ++i)
                 {
-                    m_fluxVecPlane[i][j] =
-                        Array<OneD, Array<OneD, NekDouble> >(3);
-                    for (int k = 0; k < 3; ++k)
+                    m_fluxVecNSStore[i] = Array<OneD, Array<OneD, NekDouble> >(3);
+                    m_homoDerivStore[i] = Array<OneD, NekDouble>(m_numPoints);
+                    for (int j = 0; j < 3; ++j)
                     {
-                        m_fluxVecPlane[i][j][k] = Array<OneD, NekDouble>(
+                        m_fluxVecNSStore[i][j] = Array<OneD, NekDouble>(m_numPoints);
+                    }
+                }
+
+                for (int i = 0; i < 3; ++i)
+                {
+                    m_derivStore[i] = Array<OneD, Array<OneD, NekDouble> >(
+                        nConvectiveFields);
+                    for (int j = 0; j < nConvectiveFields; ++j)
+                    {
+                        m_derivStore[i][j] = Array<OneD, NekDouble>(m_numPoints);
+                    }
+                }
+
+                for (int i = 0; i < m_numPlanes; ++i)
+                {
+                    m_fluxVecNSPlane[i] =
+                        Array<OneD, Array<OneD, Array<OneD, NekDouble> > >(
+                            nConvectiveFields);
+                    m_homoDerivPlane[i] = Array<OneD, Array<OneD, NekDouble> >(
+                        nConvectiveFields);
+                    for (int j = 0; j < nConvectiveFields; ++j)
+                    {
+                        m_homoDerivPlane[i][j] = Array<OneD, NekDouble>(
                             m_numPointsPlane,
-                            m_fluxVecStore[j][k] + m_planePos[i]);
+                            m_homoDerivStore[j] + m_planePos[i]);
+                        m_fluxVecNSPlane[i][j] =
+                            Array<OneD, Array<OneD, NekDouble> >(3);
+                        for (int k = 0; k < 3; ++k)
+                        {
+                            m_fluxVecNSPlane[i][j][k] = Array<OneD, NekDouble>(
+                                m_numPointsPlane,
+                                m_fluxVecNSStore[j][k] + m_planePos[i]);
+                        }
                     }
                 }
             }
         }
-        
+
         /**
          * @brief Calculate WeakDG Diffusion for the linear problems
          * using an LDG interface flux and the the flux in the third direction.
@@ -171,6 +220,14 @@ namespace Nektar
             int i, j;
             NekDouble beta;
 
+            if (m_fluxVectorNS)
+            {
+                for (i = 0; i < nConvectiveFields - 1; ++i)
+                {
+                    fields[0]->PhysDeriv(2, inarray[i], m_homoDerivStore[i]);
+                }
+            }
+
             for (i = 0; i < m_numPlanes; ++i)
             {
                 // Set up memory references for fields, inarray and outarray for
@@ -184,6 +241,7 @@ namespace Nektar
                         m_numPointsPlane, tmp2 = outarray[j] + m_planePos[i]);
                 }
 
+                m_planeDiff->SetHomoDerivs(m_homoDerivPlane[i]);
                 m_planeDiff->Diffuse(nConvectiveFields,
                                      m_fieldsPlane,
                                      m_inarrayPlane,
@@ -211,12 +269,13 @@ namespace Nektar
             }
         }
 
-        void Diffusion3DHomogeneous1D::ModifiedFluxVector(
-            const Array<OneD, Array<OneD, NekDouble> >               &inarray,
-                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &outarray)
+        void Diffusion3DHomogeneous1D::ModifiedNSFluxVector(
+            const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+                  Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor)
         {
             // Return section of flux vector for this plane.
-            outarray = m_fluxVecPlane[m_planeCounter];
+            //outarray = m_fluxVecPlane[m_planeCounter];
 
             // Increment the plane counter.
             m_planeCounter = (m_planeCounter + 1) % m_numPlanes;

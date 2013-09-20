@@ -62,11 +62,5 @@ namespace Nektar
         {
             v_Diffuse(nConvectiveFields, fields, inarray, outarray);
         }
-        
-        void Diffusion::FluxVec(
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
-        {
-            v_FluxVec(fluxvector);
-        }
     }
 }

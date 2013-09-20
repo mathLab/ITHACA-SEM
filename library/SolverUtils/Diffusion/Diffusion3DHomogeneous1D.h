@@ -66,13 +66,16 @@ namespace Nektar
             int                                                m_planeCounter;
             Array<OneD, unsigned int>                          m_planes;
             Array<OneD, unsigned int>                          m_planePos;
-            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fluxVecStore;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_fluxVecNSStore;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_derivStore;
+            Array<OneD, Array<OneD, NekDouble> >               m_homoDerivStore;
+            Array<OneD, Array<OneD, Array<OneD, NekDouble> > > m_homoDerivPlane;
             Array<OneD, Array<OneD, NekDouble> >               m_inarrayPlane;
             Array<OneD, Array<OneD, NekDouble> >               m_outarrayPlane;
             Array<OneD, MultiRegions::ExpListSharedPtr>        m_fieldsPlane;
             Array<OneD, Array<OneD, NekDouble> >               m_advVelPlane;
             Array<OneD, Array<OneD, Array<OneD, Array<OneD, NekDouble> > > >
-                                                               m_fluxVecPlane;
+                                                               m_fluxVecNSPlane;
 
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr               pSession,
@@ -84,9 +87,10 @@ namespace Nektar
                       Array<OneD, Array<OneD, NekDouble> >        &outarray);
 
         private:
-            void ModifiedFluxVector(
-                const Array<OneD, Array<OneD, NekDouble> >         &physfield,
-                Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &flux);
+            void ModifiedNSFluxVector(
+                const Array<OneD, Array<OneD, NekDouble> >               &physfield,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &derivatives,
+                      Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &viscousTensor);
         }; 
     }
 }

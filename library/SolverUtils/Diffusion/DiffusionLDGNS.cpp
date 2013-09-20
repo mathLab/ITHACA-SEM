@@ -135,7 +135,6 @@ namespace Nektar
                     numericalFluxO1[j][i] = Array<OneD, NekDouble>(
                                                                 nTracePts, 0.0);
                     derivativesO1[j][i]   = Array<OneD, NekDouble>(nPts, 0.0);
-                    
                 }
             }
             
@@ -150,7 +149,6 @@ namespace Nektar
                     Vmath::Neg                      (nCoeffs, tmp1, 1);
                     fields[i]->AddTraceIntegral     (numericalFluxO1[j][i], 
                                                      tmp1);
-                    
                     fields[i]->SetPhysState         (false);
                     fields[i]->MultiplyByElmtInvMass(tmp1, tmp1);
                     fields[i]->BwdTrans             (tmp1, derivativesO1[j][i]);
@@ -164,7 +162,6 @@ namespace Nektar
                 {
                     derivativesO1[2][i] = m_homoDerivs[i];
                 }
-                
             }
             
             // Initialisation viscous tensor
@@ -189,31 +186,27 @@ namespace Nektar
             
             m_fluxVectorNS(inarray, derivativesO1, m_viscTensor);
             
-             // Compute u from q_{\eta} and q_{\xi}
-             // Obtain numerical fluxes
-             v_NumericalFluxO2(fields, inarray, m_viscTensor, viscousFlux);
+            // Compute u from q_{\eta} and q_{\xi}
+            // Obtain numerical fluxes
+            v_NumericalFluxO2(fields, inarray, m_viscTensor, viscousFlux);
              
-             for (i = 0; i < nConvectiveFields; ++i)
-             {
-                 tmp2[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
-             
-                 for (j = 0; j < nDim; ++j)
-                 {
-                     //Vmath::Vcopy(nPts, qfield[j][i], 1, fluxvector[j], 1);
-             
-                     fields[i]->IProductWRTDerivBase(j, m_viscTensor[j][i],
-                                                     tmp1);
-             
-                     Vmath::Vadd(nCoeffs, tmp1, 1, tmp2[i], 1, tmp2[i], 1);
-                 }
-             
-             // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
-             Vmath::Neg(nCoeffs, tmp2[i], 1);
-             fields[i]->AddTraceIntegral(viscousFlux[i], tmp2[i]);
-             fields[i]->SetPhysState(false);
-             fields[i]->MultiplyByElmtInvMass(tmp2[i], tmp2[i]);
-             fields[i]->BwdTrans(tmp2[i], outarray[i]);
-             }
+            for (i = 0; i < nConvectiveFields; ++i)
+            {
+                tmp2[i] = Array<OneD, NekDouble>(nCoeffs, 0.0);
+
+                for (j = 0; j < nDim; ++j)
+                {
+                    fields[i]->IProductWRTDerivBase(j, m_viscTensor[j][i], tmp1);
+                    Vmath::Vadd(nCoeffs, tmp1, 1, tmp2[i], 1, tmp2[i], 1);
+                }
+
+                // Evaulate  <\phi, \hat{F}\cdot n> - outarray[i]
+                Vmath::Neg                      (nCoeffs, tmp2[i], 1);
+                fields[i]->AddTraceIntegral     (viscousFlux[i], tmp2[i]);
+                fields[i]->SetPhysState         (false);
+                fields[i]->MultiplyByElmtInvMass(tmp2[i], tmp2[i]);
+                fields[i]->BwdTrans             (tmp2[i], outarray[i]);
+            }
         }
         
         /**

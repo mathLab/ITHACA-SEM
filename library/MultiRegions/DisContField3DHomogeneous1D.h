@@ -279,7 +279,7 @@ namespace Nektar
             virtual Array<OneD, SpatialDomains::BoundaryConditionShPtr>
                 &v_UpdateBndConditions();
 
-            virtual const Array<OneD, const unsigned int> &v_GetTraceBndMap()
+            virtual Array<OneD, unsigned int> &v_GetTraceBndMap()
             {
                 return m_traceBndMap;
             }

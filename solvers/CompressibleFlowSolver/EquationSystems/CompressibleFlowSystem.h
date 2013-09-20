@@ -105,10 +105,6 @@ namespace Nektar
         NekDouble                           m_thermalConductivity;
         NekDouble                           m_Cp;
         NekDouble                           m_Prandtl;
-        
-        // Plane (used only for Discontinous projection
-        //        with 3DHomogenoeus1D expansion)
-        int                                 m_planeNumber;
 
         CompressibleFlowSystem(
             const LibUtilities::SessionReaderSharedPtr& pSession);

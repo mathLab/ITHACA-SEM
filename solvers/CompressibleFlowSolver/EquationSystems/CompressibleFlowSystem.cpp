@@ -52,7 +52,7 @@ namespace Nektar
         const LibUtilities::SessionReaderSharedPtr& pSession)
         : UnsteadySystem(pSession)
     {
-        m_planeNumber = 0;
+
     }
 
     /**
@@ -1007,7 +1007,7 @@ namespace Nektar
         int nPts       = physfield[0].num_elements();
 
         // Stokes hypotesis
-        NekDouble lambda = -0.66666;
+        const NekDouble lambda = -2.0/3.0;
 
         // Auxiliary variables
         Array<OneD, NekDouble > mu         (nPts, 0.0);
@@ -1020,41 +1020,9 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > fields(nVariables);
 
         // Reorder storage to list time-integrated fields first
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+        for (i = 0; i < nVariables; ++i)
         {
-            int nSolutionPts = m_fields[0]->GetTotPoints();
-            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int nPlanes = nSolutionPts/nSolutionPtsPlane;
-
-            Array<OneD, Array<OneD, NekDouble> > fields_temp(nVariables);
-
-            for (i = 0; i < nVariables; ++i)
-            {
-                fields[i] =  Array<OneD, NekDouble>(nPts, 0.0);
-                fields_temp[i] = m_fields[i]->UpdatePhys();
-
-                Vmath::Vcopy(nPts,
-                            &fields_temp[i][m_planeNumber*nSolutionPtsPlane], 1,
-                            &fields[i][0], 1);
-            }
-
-            if(m_planeNumber == nPlanes - 1)
-            {
-                m_planeNumber = 0;
-            }
-            else
-            {
-                m_planeNumber = m_planeNumber + 1;
-            }
-
-        }
-        else // For general case
-        {
-            for (i = 0; i < nVariables; ++i)
-            {
-                fields[i] = m_fields[i]->UpdatePhys();
-            }
+            fields[i] = m_fields[i]->UpdatePhys();
         }
 
         // Thermodynamic related quantities
@@ -1389,15 +1357,7 @@ namespace Nektar
         NekDouble OneDptscale = 2;
 
         // Get number of points to dealias a cubic non-linearity
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-        {
-            nPts = m_fields[0]->GetPlane(0)->Get1DScaledTotPoints(OneDptscale);
-        }
-        else // For general case
-        {
-            nPts = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
-        }
+        nPts = m_fields[0]->Get1DScaledTotPoints(OneDptscale);
 
         int nVariables_aux = derivativesO1[0].num_elements();
 
@@ -1418,7 +1378,7 @@ namespace Nektar
         }
 
         // Stokes hypotesis
-        NekDouble lambda = -0.66666;
+        NekDouble lambda = -2.0/3.0;
 
         // Auxiliary variables
         Array<OneD, NekDouble > mu         (nPts, 0.0);
@@ -1432,61 +1392,17 @@ namespace Nektar
         Array<OneD, Array<OneD, NekDouble> > fields_interp(nVariables);
 
         // Reorder storage to list time-integrated fields first
-        // For 3DHomogenoeus1D
-        if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
+        for (i = 0; i < nVariables; ++i)
         {
-            int nSolutionPts = m_fields[0]->GetTotPoints();
-            int nSolutionPtsPlane = m_fields[0]->GetPlane(0)->GetTotPoints();
-            int nPlanes = nSolutionPts/nSolutionPtsPlane;
-
-            Array<OneD, Array<OneD, NekDouble> > fields_temp(nVariables);
-
-
-            for (i = 0; i < nVariables; ++i)
-            {
-                fields[i] =  Array<OneD, NekDouble>(nPts, 0.0);
-                fields_temp[i] = m_fields[i]->UpdatePhys();
-
-                Vmath::Vcopy(nPts,
-                             &fields_temp[i][m_planeNumber*nSolutionPtsPlane], 1,
-                             &fields[i][0], 1);
-
-                fields_interp[i] = Array<OneD, NekDouble> (nPts);
-
-            }
-
-            if(m_planeNumber == nPlanes - 1)
-            {
-                m_planeNumber = 0;
-            }
-            else
-            {
-                m_planeNumber = m_planeNumber + 1;
-            }
-        }
-        else // For general case
-        {
-            for (i = 0; i < nVariables; ++i)
-            {
-                fields[i] = m_fields[i]->UpdatePhys();
-                fields_interp[i] = Array<OneD, NekDouble> (nPts);
-            }
+            fields[i] = m_fields[i]->UpdatePhys();
+            fields_interp[i] = Array<OneD, NekDouble> (nPts);
         }
 
         for (i = 0; i < nVariables; ++i)
         {
             // Interpolation to higher space
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-            {
-                m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
-                                        OneDptscale,fields[i], fields_interp[i]);
-            }
-            else // For general case
-            {
-                m_fields[0]->PhysInterp1DScaled(OneDptscale,fields[i],
+            m_fields[0]->PhysInterp1DScaled(OneDptscale,fields[i],
                                             fields_interp[i] );
-            }
         }
 
         for (i = 0; i < variables_phys; ++i)
@@ -1494,17 +1410,8 @@ namespace Nektar
             physfield_interp[i] = Array<OneD, NekDouble> (nPts);
 
             // Interpolation to higher space
-            // For 3DHomogenoeus1D
-            if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-            {
-                m_fields[0]->GetPlane(0)->PhysInterp1DScaled(
-                                OneDptscale, physfield[i], physfield_interp[i]);
-            }
-            else // For genearal case
-            {
-                m_fields[0]->PhysInterp1DScaled(OneDptscale, physfield[i],
+            m_fields[0]->PhysInterp1DScaled(OneDptscale, physfield[i],
                                             physfield_interp[i]);
-            }
         }
 
         for (i = 0; i < m_spacedim; ++i)
@@ -1514,19 +1421,9 @@ namespace Nektar
             for (j = 0; j < nVariables_aux; ++j)
             {
                 derivativesO1_interp[i][j] = Array<OneD, NekDouble>(nPts);
-                // For 3DHomogenoeus1D
-                if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-                {
-                    m_fields[0]->GetPlane(0)->PhysInterp1DScaled(OneDptscale,
-                                                    derivativesO1[i][j],
-                                                    derivativesO1_interp[i][j]);
-                }
-                else // For genearal case
-                {
-                    m_fields[0]->PhysInterp1DScaled(OneDptscale,
-                                                derivativesO1[i][j],
-                                                derivativesO1_interp[i][j]);
-                }
+                m_fields[0]->PhysInterp1DScaled(
+                    OneDptscale, derivativesO1[i][j],
+                    derivativesO1_interp[i][j]);
             }
         }
 
@@ -1864,20 +1761,10 @@ namespace Nektar
             for (j = 1; j < nVariables; ++j)
             {
                 // Galerkin project solution back to origianl space
-                // For 3DHomogenoeus1D
-                if (m_expdim == 2 && m_HomogeneousType == eHomogeneous1D)
-                {
-                    m_fields[0]->GetPlane(0)->PhysGalerkinProjection1DScaled(
-                                            OneDptscale,
-                                            viscousTensor_interp[i][j],
-                                            viscousTensor[i][j]);
-                }
-                else // For genearal case
-                {
-                    m_fields[0]->PhysGalerkinProjection1DScaled(OneDptscale,
-                                                    viscousTensor_interp[i][j],
-                                                    viscousTensor[i][j]);
-                }
+                m_fields[0]->PhysGalerkinProjection1DScaled(
+                    OneDptscale,
+                    viscousTensor_interp[i][j],
+                    viscousTensor[i][j]);
             }
         }
     }

@@ -86,7 +86,6 @@ namespace Nektar
                 m_fluxVector = boost::bind(func, obj, _1, _2, _3, _4, _5);
             }
             
-            
             void SetFluxVectorVec(DiffusionFluxVecCB fluxVector)
             {
                 m_fluxVector = fluxVector;
@@ -107,7 +106,12 @@ namespace Nektar
             {
                 m_riemann = riemann;
             }
-            
+
+            inline void SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
+            {
+                v_SetHomoDerivs(deriv);
+            }
+
         protected:
             virtual void v_InitObject(
                 LibUtilities::SessionReaderSharedPtr              pSession,
@@ -121,12 +125,11 @@ namespace Nektar
                 const Array<OneD, MultiRegions::ExpListSharedPtr> &fields,
                 const Array<OneD, Array<OneD, NekDouble> >        &inarray,
                       Array<OneD, Array<OneD, NekDouble> >        &outarray)=0;
-            
-            virtual void v_FluxVec(
-                 Array<OneD, Array<OneD, Array<OneD, NekDouble> > > &fluxvector)
+
+            virtual void v_SetHomoDerivs(Array<OneD, Array<OneD, NekDouble> > &deriv)
             {
-                
-            };
+
+            }
 
             DiffusionFluxVecCB     m_fluxVector;
             DiffusionFluxVecCBNS   m_fluxVectorNS;

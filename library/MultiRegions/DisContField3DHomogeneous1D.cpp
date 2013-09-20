@@ -164,7 +164,7 @@ namespace Nektar
             SpatialDomains::BoundaryConditions &bcs,
             const std::string                   variable)
         {
-            int j, n;
+            int n;
 
             // Setup an ExpList2DHomogeneous1D expansion for boundary
             // conditions and link to class declared in m_planes
@@ -521,10 +521,10 @@ namespace Nektar
             const int nPlanes   = m_planes.num_elements();
             const int nPtsPlane = m_planes[0]->GetNpoints();
 
-            
-
             // Get trace map from first plane.
             AssemblyMapDGSharedPtr traceMap = m_planes[0]->GetTraceMap();
+            
+            // Set up trace boundary map
             
         }
     } // end of namespace

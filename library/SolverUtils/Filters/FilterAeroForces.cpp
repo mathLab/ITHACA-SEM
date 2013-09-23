@@ -177,7 +177,7 @@ namespace Nektar
                 m_outputStream.open(m_outputFile.c_str());
                 m_outputStream << "# Time\t Fx (press)\t Fx (visc)\t Fx (tot)\t"
                     " Fy (press)\t Fy (visc)\t Fy (tot)\t" 
-				    " Fz (press)\t Fz (visc)\t Fz (tot)\t";
+                    " Fz (press)\t Fz (visc)\t Fz (tot)\t";
                 m_outputStream << endl;
             }
 
@@ -223,198 +223,199 @@ namespace Nektar
             Array<OneD, NekDouble> values;
             LibUtilities::CommSharedPtr vComm = pFields[0]->GetComm();
 
-			NekDouble Fx,Fy,Fz,Fxp,Fxv,Fyp,Fyv,Fzp,Fzv;
+            NekDouble Fx,Fy,Fz,Fxp,Fxv,Fyp,Fyv,Fzp,Fzv;
 
-			Fxp = 0.0; // x-component of the force due to pressure difference
-			Fxv = 0.0; // x-component of the force due to viscous stress
-			Fx = 0.0;  // x-component of the force (total) Fx = Fxp + Fxv (Drag) 
-			
-			Fyp = 0.0; // y-component of the force due to pressure difference
-			Fyv = 0.0; // y-component of the force due to viscous stress
-			Fy = 0.0;  // y-component of the force (total) Fy = Fyp + Fyv (Lift)
-			
-			Fzp = 0.0; // z-component of the force due to pressure difference
-			Fzv = 0.0; // z-component of the force due to viscous stress
-			Fz = 0.0;  // z-component of the force (total) Fz = Fzp + Fzv (Side)
-            
+            Fxp = 0.0; // x-component of the force due to pressure difference
+            Fxv = 0.0; // x-component of the force due to viscous stress
+            Fx = 0.0;  // x-component of the force (total) Fx = Fxp + Fxv (Drag) 
+
+            Fyp = 0.0; // y-component of the force due to pressure difference
+            Fyv = 0.0; // y-component of the force due to viscous stress
+            Fy = 0.0;  // y-component of the force (total) Fy = Fyp + Fyv (Lift)
+
+            Fzp = 0.0; // z-component of the force due to pressure difference
+            Fzv = 0.0; // z-component of the force due to viscous stress
+            Fz = 0.0;  // z-component of the force (total) Fz = Fzp + Fzv (Side)
+
             NekDouble rho = (m_session->DefinesParameter("rho"))
                     ? (m_session->GetParameter("rho"))
                     : 1;
             NekDouble mu = rho*m_session->GetParameter("Kinvis");
-			
+            
             for(int i = 0; i < pFields.num_elements(); ++i)
             {
-				pFields[i]->SetWaveSpace(false);
+                pFields[i]->SetWaveSpace(false);
                 pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
                                      pFields[i]->UpdatePhys());
-				pFields[i]->SetPhysState(true);
-				pFields[i]->PutPhysInToElmtExp();
+                pFields[i]->SetPhysState(true);
+                pFields[i]->PutPhysInToElmtExp();
             }
 
             // Homogeneous 1D case  Compute forces on all WALL boundaries
             // This only has to be done on the zero (mean) Fourier mode.
             if(m_isHomogeneous1D)
             {
-				if(vComm->GetColumnComm()->GetRank() == 0)
-				{
-					pFields[0]->GetPlane(0)->GetBoundaryToElmtMap(
-																  BoundarytoElmtID,BoundarytoTraceID);
-					BndExp = pFields[0]->GetPlane(0)->GetBndCondExpansions();
-					StdRegions::StdExpansion1DSharedPtr bc;
+                if(vComm->GetColumnComm()->GetRank() == 0)
+                {
+                    pFields[0]->GetPlane(0)->GetBoundaryToElmtMap(
+                                         BoundarytoElmtID,BoundarytoTraceID);
+                    BndExp = pFields[0]->GetPlane(0)->GetBndCondExpansions();
+                    StdRegions::StdExpansion1DSharedPtr bc;
 
-					// loop over the types of boundary conditions
-					for(cnt = n = 0; n < BndExp.num_elements(); ++n)
-					{
-						if(m_boundaryRegionIsInList[n] == 1)
-						{
-							for(int i = 0; i <  BndExp[n]->GetExpSize(); ++i, cnt++)
-							{
-								// find element of this expansion.
-								elmtid = BoundarytoElmtID[cnt];
-								elmt   = pFields[0]->GetPlane(0)->GetExp(elmtid);
-								nq     = elmt->GetTotPoints();
-								offset = pFields[0]->GetPlane(0)->GetPhys_Offset(elmtid);
+                    // loop over the types of boundary conditions
+                    for(cnt = n = 0; n < BndExp.num_elements(); ++n)
+                    {
+                        if(m_boundaryRegionIsInList[n] == 1)
+                        {
+                            for(int i = 0; i <  BndExp[n]->GetExpSize(); 
+                                    ++i, cnt++)
+                            {
+                                // find element of this expansion.
+                                elmtid = BoundarytoElmtID[cnt];
+                                elmt   = pFields[0]->GetPlane(0)->GetExp(elmtid);
+                                nq     = elmt->GetTotPoints();
+                                offset = pFields[0]->GetPlane(0)->GetPhys_Offset(elmtid);
                             
-								// Initialise local arrays for the velocity
-								// gradients size of total number of quadrature
-								// points for each element (hence local).
-								for(int j = 0; j < dim; ++j)
-								{
-									gradU[j] = Array<OneD, NekDouble>(nq);
-									gradV[j] = Array<OneD, NekDouble>(nq);
-									gradW[j] = Array<OneD, NekDouble>(nq);
-								}
+                                // Initialise local arrays for the velocity
+                                // gradients size of total number of quadrature
+                                // points for each element (hence local).
+                                for(int j = 0; j < dim; ++j)
+                                {
+                                    gradU[j] = Array<OneD, NekDouble>(nq);
+                                    gradV[j] = Array<OneD, NekDouble>(nq);
+                                    gradW[j] = Array<OneD, NekDouble>(nq);
+                                }
 
-								// identify boundary of element
-								boundary = BoundarytoTraceID[cnt];
+                                // identify boundary of element
+                                boundary = BoundarytoTraceID[cnt];
 
-								// Extract  fields
-								U = pFields[0]->GetPlane(0)->GetPhys() + offset;
-								V = pFields[1]->GetPlane(0)->GetPhys() + offset;
-								P = pFields[3]->GetPlane(0)->GetPhys() + offset;
+                                // Extract  fields
+                                U = pFields[0]->GetPlane(0)->GetPhys() + offset;
+                                V = pFields[1]->GetPlane(0)->GetPhys() + offset;
+                                P = pFields[3]->GetPlane(0)->GetPhys() + offset;
 
-								// compute the gradients
-								elmt->PhysDeriv(U,gradU[0],gradU[1]);
-								elmt->PhysDeriv(V,gradV[0],gradV[1]);
+                                // compute the gradients
+                                elmt->PhysDeriv(U,gradU[0],gradU[1]);
+                                elmt->PhysDeriv(V,gradV[0],gradV[1]);
 
-								// Get face 1D expansion from element expansion
-								bc =  boost::dynamic_pointer_cast<LocalRegions
-											::Expansion1D> (BndExp[n]->GetExp(i));
+                                // Get face 1D expansion from element expansion
+                                bc =  boost::dynamic_pointer_cast<LocalRegions
+                                            ::Expansion1D> (BndExp[n]->GetExp(i));
 
-								// number of points on the boundary
-								int nbc = bc->GetTotPoints();
+                                // number of points on the boundary
+                                int nbc = bc->GetTotPoints();
 
-								// several vectors for computing the forces
-								Array<OneD, NekDouble> Pb(nbc);
+                                // several vectors for computing the forces
+                                Array<OneD, NekDouble> Pb(nbc);
 
-								for(int j = 0; j < dim; ++j)
-								{
-									fgradU[j] = Array<OneD, NekDouble>(nbc);
-									fgradV[j] = Array<OneD, NekDouble>(nbc);
-								}
+                                for(int j = 0; j < dim; ++j)
+                                {
+                                    fgradU[j] = Array<OneD, NekDouble>(nbc);
+                                    fgradV[j] = Array<OneD, NekDouble>(nbc);
+                                }
 
-								Array<OneD, NekDouble>  drag_t(nbc);
-								Array<OneD, NekDouble>  lift_t(nbc);
-								Array<OneD, NekDouble>  drag_p(nbc);
-								Array<OneD, NekDouble>  lift_p(nbc);
-								Array<OneD, NekDouble>  temp(nbc);
-								Array<OneD, NekDouble>  temp2(nbc);
+                                Array<OneD, NekDouble>  drag_t(nbc);
+                                Array<OneD, NekDouble>  lift_t(nbc);
+                                Array<OneD, NekDouble>  drag_p(nbc);
+                                Array<OneD, NekDouble>  lift_p(nbc);
+                                Array<OneD, NekDouble>  temp(nbc);
+                                Array<OneD, NekDouble>  temp2(nbc);
 
-								// identify boundary of element .
-								boundary = BoundarytoTraceID[cnt];
+                                // identify boundary of element .
+                                boundary = BoundarytoTraceID[cnt];
 
-								// extraction of the pressure and wss on the
-								// boundary of the element
-								elmt->GetEdgePhysVals(boundary,bc,P,Pb);
+                                // extraction of the pressure and wss on the
+                                // boundary of the element
+                                elmt->GetEdgePhysVals(boundary,bc,P,Pb);
 
-								for(int j = 0; j < dim; ++j)
-								{
-									elmt->GetEdgePhysVals(boundary,bc,gradU[j],
-														  fgradU[j]);
-									elmt->GetEdgePhysVals(boundary,bc,gradV[j],
-														  fgradV[j]);
-								}
+                                for(int j = 0; j < dim; ++j)
+                                {
+                                    elmt->GetEdgePhysVals(boundary,bc,gradU[j],
+                                                          fgradU[j]);
+                                    elmt->GetEdgePhysVals(boundary,bc,gradV[j],
+                                                          fgradV[j]);
+                                }
 
-								//normals of the element
-								const Array<OneD, Array<OneD, NekDouble> > &normals
-											= elmt->GetEdgeNormal(boundary);
+                                //normals of the element
+                                const Array<OneD, Array<OneD, NekDouble> > &normals
+                                            = elmt->GetEdgeNormal(boundary);
 
-								//
-								// Compute viscous tractive forces on wall from
-								//
-								//  t_i  = - T_ij * n_j  (minus sign for force 
-								//                        exerted BY fluid ON wall),
-								//
-								// where
-								//
-								//  T_ij = viscous stress tensor (here in Cartesian
-								//         coords)
-								//                          dU_i    dU_j
-								//       = RHO * KINVIS * ( ----  + ---- ) .
-								//                          dx_j    dx_i
+                                //
+                                // Compute viscous tractive forces on wall from
+                                //
+                                //  t_i  = - T_ij * n_j  (minus sign for force 
+                                //                        exerted BY fluid ON wall),
+                                //
+                                // where
+                                //
+                                //  T_ij = viscous stress tensor (here in Cartesian
+                                //         coords)
+                                //                          dU_i    dU_j
+                                //       = RHO * KINVIS * ( ----  + ---- ) .
+                                //                          dx_j    dx_i
 
-								//a) DRAG TERMS
-								//-rho*kinvis*(2*du/dx*nx+(du/dy+dv/dx)*ny
+                                //a) DRAG TERMS
+                                //-rho*kinvis*(2*du/dx*nx+(du/dy+dv/dx)*ny
 
-								Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
-								Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
+                                Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
+                                Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
 
-								Vmath::Smul(nbc,2.0,fgradU[0],1,fgradU[0],1);
-								Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
-								Vmath::Smul(nbc,0.5,fgradU[0],1,fgradU[0],1);
+                                Vmath::Smul(nbc,2.0,fgradU[0],1,fgradU[0],1);
+                                Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
+                                Vmath::Smul(nbc,0.5,fgradU[0],1,fgradU[0],1);
 
-								Vmath::Vadd(nbc,temp2,1,drag_t,1,drag_t,1);
-								Vmath::Smul(nbc,-mu,drag_t,1,drag_t,1);
+                                Vmath::Vadd(nbc,temp2,1,drag_t,1,drag_t,1);
+                                Vmath::Smul(nbc,-mu,drag_t,1,drag_t,1);
 
-								//zero temporary storage vector
-								Vmath::Zero(nbc,temp,0);
-								Vmath::Zero(nbc,temp2,0);
-
-
-								//b) LIFT TERMS
-								//-rho*kinvis*(2*dv/dy*nx+(du/dy+dv/dx)*nx
-
-								Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
-								Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
-
-								Vmath::Smul(nbc,2.0,fgradV[1],1,fgradV[1],1);
-								Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
-								Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
+                                //zero temporary storage vector
+                                Vmath::Zero(nbc,temp,0);
+                                Vmath::Zero(nbc,temp2,0);
 
 
-								Vmath::Vadd(nbc,temp2,1,lift_t,1,lift_t,1);
-								Vmath::Smul(nbc,-mu,lift_t,1,lift_t,1);
+                                //b) LIFT TERMS
+                                //-rho*kinvis*(2*dv/dy*nx+(du/dy+dv/dx)*nx
 
-								// Compute normal tractive forces on all WALL
-								// boundaries
+                                Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
+                                Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
 
-								Vmath::Vvtvp(nbc,Pb,1,normals[0],1,
-												drag_p,1,drag_p, 1);
-								Vmath::Vvtvp(nbc,Pb,1,normals[1],1,
-												lift_p,1,lift_p,1);
+                                Vmath::Smul(nbc,2.0,fgradV[1],1,fgradV[1],1);
+                                Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
+                                Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
 
-								//integration over the boundary
-								Fxv += bc->Integral(drag_t);
-								Fyv += bc->Integral(lift_t);
 
-								Fxp += bc->Integral(drag_p);
-								Fyp += bc->Integral(lift_p);
-							}
-						}
-						else
-						{
-								cnt += BndExp[n]->GetExpSize();
-						}
-					}
-				}
-				
-				for(int i = 0; i < pFields.num_elements(); ++i)
-				{
-					pFields[i]->SetWaveSpace(true);
-					pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
-										 pFields[i]->UpdatePhys());
-					pFields[i]->SetPhysState(false);
-				}
+                                Vmath::Vadd(nbc,temp2,1,lift_t,1,lift_t,1);
+                                Vmath::Smul(nbc,-mu,lift_t,1,lift_t,1);
+
+                                // Compute normal tractive forces on all WALL
+                                // boundaries
+
+                                Vmath::Vvtvp(nbc,Pb,1,normals[0],1,
+                                                drag_p,1,drag_p, 1);
+                                Vmath::Vvtvp(nbc,Pb,1,normals[1],1,
+                                                lift_p,1,lift_p,1);
+
+                                //integration over the boundary
+                                Fxv += bc->Integral(drag_t);
+                                Fyv += bc->Integral(lift_t);
+
+                                Fxp += bc->Integral(drag_p);
+                                Fyp += bc->Integral(lift_p);
+                            }
+                        }
+                        else
+                        {
+                                cnt += BndExp[n]->GetExpSize();
+                        }
+                    }
+                }
+                
+                for(int i = 0; i < pFields.num_elements(); ++i)
+                {
+                    pFields[i]->SetWaveSpace(true);
+                    pFields[i]->BwdTrans(pFields[i]->GetCoeffs(),
+                                         pFields[i]->UpdatePhys());
+                    pFields[i]->SetPhysState(false);
+                }
             }
             //3D WALL case
             else if(dim==3 && !m_isHomogeneous1D)
@@ -481,10 +482,10 @@ namespace Nektar
 
                             Array<OneD, NekDouble>  drag_t(nbc);
                             Array<OneD, NekDouble>  lift_t(nbc);
-							Array<OneD, NekDouble>  side_t(nbc);
+                            Array<OneD, NekDouble>  side_t(nbc);
                             Array<OneD, NekDouble>  drag_p(nbc);
                             Array<OneD, NekDouble>  lift_p(nbc);
-							Array<OneD, NekDouble>  side_p(nbc);
+                            Array<OneD, NekDouble>  side_p(nbc);
                             Array<OneD, NekDouble>  temp(nbc);
                             Array<OneD, NekDouble>  temp2(nbc);
 
@@ -524,70 +525,70 @@ namespace Nektar
                             //                          dx_j    dx_i
 
                             //a) DRAG TERMS
-							//-rho*kinvis*
-							//    (2*du/dx*nx+(du/dy+dv/dx)*ny+(du/dz+dw/dx)*nz)
-							Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,temp,1);
-							Vmath::Neg(nbc,temp,1);
-							Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
-							
-							Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
-							Vmath::Neg(nbc,drag_t,1);
-							Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
-							
-							Vmath::Smul(nbc,-2.0,fgradU[0],1,fgradU[0],1);
-							Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
-							Vmath::Smul(nbc,-0.5,fgradU[0],1,fgradU[0],1);
-							
-							Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
-							Vmath::Vadd(nbc,temp,1,drag_t,1,drag_t,1);
-							Vmath::Smul(nbc,mu,drag_t,1,drag_t,1);
-							
-							//zero temporary storage vector
-							Vmath::Zero(nbc,temp,0);
-							Vmath::Zero(nbc,temp2,0);
-							
-							
-							//b) LIFT TERMS
-							//-rho*kinvis*
-							//    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
-							Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
-							Vmath::Neg(nbc,temp,1);
-							Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
-							
-							Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
-							Vmath::Neg(nbc,lift_t,1);
-							Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
-							
-							Vmath::Smul(nbc,-2.0,fgradV[1],1,fgradV[1],1);
-							Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
-							Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
-							
-							Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
-							Vmath::Vadd(nbc,temp,1,lift_t,1,lift_t,1);
-							Vmath::Smul(nbc,mu,lift_t,1,lift_t,1);
-							
-							//zero temporary storage vector
-							Vmath::Zero(nbc,temp,0);
-							Vmath::Zero(nbc,temp2,0);
-							
-							//b) SIDE TERMS
-							//-rho*kinvis*
-							//    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
-							Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
-							Vmath::Neg(nbc,temp,1);
-							Vmath::Vmul(nbc,temp,1,normals[1],1,temp,1);
-							
-							Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,side_t,1);
-							Vmath::Neg(nbc,side_t,1);
-							Vmath::Vmul(nbc,side_t,1,normals[0],1,side_t,1);
-							
-							Vmath::Smul(nbc,-2.0,fgradW[2],1,fgradW[2],1);
-							Vmath::Vmul(nbc,fgradW[2],1,normals[2],1,temp2,1);
-							Vmath::Smul(nbc,-0.5,fgradW[2],1,fgradW[2],1);
-							
-							Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
-							Vmath::Vadd(nbc,temp,1,side_t,1,side_t,1);
-							Vmath::Smul(nbc,mu,side_t,1,side_t,1);
+                            //-rho*kinvis*
+                            //    (2*du/dx*nx+(du/dy+dv/dx)*ny+(du/dz+dw/dx)*nz)
+                            Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,temp,1);
+                            Vmath::Neg(nbc,temp,1);
+                            Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
+                            
+                            Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,drag_t,1);
+                            Vmath::Neg(nbc,drag_t,1);
+                            Vmath::Vmul(nbc,drag_t,1,normals[1],1,drag_t,1);
+                            
+                            Vmath::Smul(nbc,-2.0,fgradU[0],1,fgradU[0],1);
+                            Vmath::Vmul(nbc,fgradU[0],1,normals[0],1,temp2,1);
+                            Vmath::Smul(nbc,-0.5,fgradU[0],1,fgradU[0],1);
+                            
+                            Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
+                            Vmath::Vadd(nbc,temp,1,drag_t,1,drag_t,1);
+                            Vmath::Smul(nbc,mu,drag_t,1,drag_t,1);
+                            
+                            //zero temporary storage vector
+                            Vmath::Zero(nbc,temp,0);
+                            Vmath::Zero(nbc,temp2,0);
+                            
+                            
+                            //b) LIFT TERMS
+                            //-rho*kinvis*
+                            //    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
+                            Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
+                            Vmath::Neg(nbc,temp,1);
+                            Vmath::Vmul(nbc,temp,1,normals[2],1,temp,1);
+                            
+                            Vmath::Vadd(nbc,fgradU[1],1,fgradV[0],1,lift_t,1);
+                            Vmath::Neg(nbc,lift_t,1);
+                            Vmath::Vmul(nbc,lift_t,1,normals[0],1,lift_t,1);
+                            
+                            Vmath::Smul(nbc,-2.0,fgradV[1],1,fgradV[1],1);
+                            Vmath::Vmul(nbc,fgradV[1],1,normals[1],1,temp2,1);
+                            Vmath::Smul(nbc,-0.5,fgradV[1],1,fgradV[1],1);
+                            
+                            Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
+                            Vmath::Vadd(nbc,temp,1,lift_t,1,lift_t,1);
+                            Vmath::Smul(nbc,mu,lift_t,1,lift_t,1);
+                            
+                            //zero temporary storage vector
+                            Vmath::Zero(nbc,temp,0);
+                            Vmath::Zero(nbc,temp2,0);
+                            
+                            //b) SIDE TERMS
+                            //-rho*kinvis*
+                            //    (2*dv/dy*nx+(du/dy+dv/dx)*nx+(dv/dz+dw/dy)*nz)
+                            Vmath::Vadd(nbc,fgradV[2],1,fgradW[1],1,temp,1);
+                            Vmath::Neg(nbc,temp,1);
+                            Vmath::Vmul(nbc,temp,1,normals[1],1,temp,1);
+                            
+                            Vmath::Vadd(nbc,fgradU[2],1,fgradW[0],1,side_t,1);
+                            Vmath::Neg(nbc,side_t,1);
+                            Vmath::Vmul(nbc,side_t,1,normals[0],1,side_t,1);
+                            
+                            Vmath::Smul(nbc,-2.0,fgradW[2],1,fgradW[2],1);
+                            Vmath::Vmul(nbc,fgradW[2],1,normals[2],1,temp2,1);
+                            Vmath::Smul(nbc,-0.5,fgradW[2],1,fgradW[2],1);
+                            
+                            Vmath::Vadd(nbc,temp,1,temp2,1,temp,1);
+                            Vmath::Vadd(nbc,temp,1,side_t,1,side_t,1);
+                            Vmath::Smul(nbc,mu,side_t,1,side_t,1);
 
 
                             // Compute normal tractive forces on all WALL
@@ -596,17 +597,17 @@ namespace Nektar
                                              drag_p,1,drag_p,1);
                             Vmath::Vvtvp(nbc,Pb,1,normals[1],1,
                                              lift_p,1,lift_p,1);
-							Vmath::Vvtvp(nbc,Pb,1,normals[2],1,
-										 side_p,1,side_p,1);
+                            Vmath::Vvtvp(nbc,Pb,1,normals[2],1,
+                                         side_p,1,side_p,1);
 
                             //integration over the boundary
                             Fxv += bc->Expansion::Integral(drag_t);
                             Fyv += bc->Expansion::Integral(lift_t);
-							Fzv += bc->Expansion::Integral(side_t);
+                            Fzv += bc->Expansion::Integral(side_t);
 
                             Fxp += bc->Expansion::Integral(drag_p);
                             Fyp += bc->Expansion::Integral(lift_p);
-							Fzp += bc->Expansion::Integral(side_p);
+                            Fzp += bc->Expansion::Integral(side_p);
                         }
                     }
                     else
@@ -652,7 +653,7 @@ namespace Nektar
                             elmt->PhysDeriv(V,gradV[0],gradV[1]);
 
                             bc =  boost::dynamic_pointer_cast<LocalRegions
-								::Expansion1D> (BndExp[n]->GetExp(i));
+                                ::Expansion1D> (BndExp[n]->GetExp(i));
 
                             int nbc = bc->GetTotPoints();
                             Array<OneD, NekDouble> Pb(nbc);
@@ -724,17 +725,17 @@ namespace Nektar
             }
 
             vComm->AllReduce(Fxp, LibUtilities::ReduceSum);
-			vComm->AllReduce(Fxv, LibUtilities::ReduceSum);
-			Fx = Fxp + Fxv;
-			
+            vComm->AllReduce(Fxv, LibUtilities::ReduceSum);
+            Fx = Fxp + Fxv;
+            
             vComm->AllReduce(Fyp, LibUtilities::ReduceSum);
-			vComm->AllReduce(Fyv, LibUtilities::ReduceSum);
-			Fy = Fyp + Fyv;
-			
-			vComm->AllReduce(Fzp, LibUtilities::ReduceSum);
-			vComm->AllReduce(Fzv, LibUtilities::ReduceSum);
-			Fz = Fzp + Fzv;
-			
+            vComm->AllReduce(Fyv, LibUtilities::ReduceSum);
+            Fy = Fyp + Fyv;
+            
+            vComm->AllReduce(Fzp, LibUtilities::ReduceSum);
+            vComm->AllReduce(Fzv, LibUtilities::ReduceSum);
+            Fz = Fzp + Fzv;
+            
 
             if (vComm->GetRank() == 0)
             {
@@ -754,8 +755,8 @@ namespace Nektar
                 m_outputStream << setprecision(8) << Fyv;
                 m_outputStream.width(25);
                 m_outputStream << setprecision(8) << Fy;
-				
-				m_outputStream.width(25);
+
+                m_outputStream.width(25);
                 m_outputStream << setprecision(8) << Fzp;
                 m_outputStream.width(25);
                 m_outputStream << setprecision(8) << Fzv;

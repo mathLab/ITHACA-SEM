@@ -152,7 +152,6 @@ namespace Nektar
             NEKERROR(ErrorUtil::efatal, "This function is only valid for LocalRegions");
             return NullDNekMatSharedPtr;
         }
-
     } //end of namespace
 } //end of namespace
 

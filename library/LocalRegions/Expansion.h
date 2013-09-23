@@ -100,7 +100,7 @@ namespace Nektar
 
                 LOCAL_REGIONS_EXPORT DNekMatSharedPtr BuildVertexMatrix(
                     const DNekScalMatSharedPtr &r_bnd);
-
+			
             protected:
                 SpatialDomains::GeometrySharedPtr  m_geom;
                 SpatialDomains::GeomFactorsSharedPtr m_metricinfo;
@@ -122,12 +122,11 @@ namespace Nektar
                     const StdRegions::MatrixType matrixType);
 
                 virtual DNekMatSharedPtr v_BuildVertexMatrix(
-                    const DNekScalMatSharedPtr &r_bnd);  
-
+                    const DNekScalMatSharedPtr &r_bnd); 
+			
             private:
 
         };
-
     } //end of namespace
 } //end of namespace
 

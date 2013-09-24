@@ -113,73 +113,18 @@ namespace Nektar
             m_vardiff[varCoeffEnum[i]] = Array<OneD, NekDouble>(nq, 1.0);
         }
 
-        // Apply intensity map (range d_min -> d_max)
-        if (m_session->DefinesFunction("IsotropicConductivity"))
-        {
-            if (m_session->DefinesCmdLineArgument("verbose"))
-            {
-                cout << "Loading Isotropic Conductivity map." << endl;
-            }
-            EvaluateFunction(varName, vTemp, "IsotropicConductivity");
-            for (int i = 0; i < m_spacedim; ++i)
-            {
-                Vmath::Vmul(nq, vTemp, 1,
-                                m_vardiff[varCoeffEnum[i]], 1,
-                                m_vardiff[varCoeffEnum[i]], 1);
-            }
-        }
-
-        if (!m_vardiff.empty())
-        {
-            // Process each of the defined variable coefficients
-            for (int i = 0; i < m_spacedim; ++i)
-            {
-                // If scaling parameters defined, do scaling
-                if (m_session->DefinesParameter("d_min"))
-                {
-                    // Normalise and invert
-                    NekDouble f_min = m_session->GetParameter("d_min");
-                    NekDouble f_max = m_session->GetParameter("d_max");
-                    NekDouble f_range = f_max - f_min;
-                    NekDouble o_min = m_session->GetParameter("o_min");
-                    NekDouble o_max = m_session->GetParameter("o_max");
-                    Vmath::Sadd(nq, -f_min, 
-                                    m_vardiff[varCoeffEnum[i]], 1,
-                                    m_vardiff[varCoeffEnum[i]], 1);
-                    for (int j = 0; j < nq; ++j)
-                    {
-                        if (m_vardiff[varCoeffEnum[i]][j] < 0)
-                        {
-                            m_vardiff[varCoeffEnum[i]][j] = 0.0;
-                        }
-                        if (m_vardiff[varCoeffEnum[i]][j] > f_range)
-                        {
-                            m_vardiff[varCoeffEnum[i]][j] = f_range;
-                        }
-                    }
-                    Vmath::Smul(nq, -1.0/f_range, 
-                                    m_vardiff[varCoeffEnum[i]], 1,
-                                    m_vardiff[varCoeffEnum[i]], 1);
-                    Vmath::Sadd(nq, 1.0, 
-                                    m_vardiff[varCoeffEnum[i]], 1,
-                                    m_vardiff[varCoeffEnum[i]], 1);
-                    Vmath::Smul(nq, o_max-o_min, 
-                                    m_vardiff[varCoeffEnum[i]], 1,
-                                    m_vardiff[varCoeffEnum[i]], 1);
-                    Vmath::Sadd(nq, o_min, 
-                                    m_vardiff[varCoeffEnum[i]], 1,
-                                    m_vardiff[varCoeffEnum[i]], 1);
-                }
-            }
-        }
-
-        // Apply fibre map (range 0 -> 1)
+        // Apply fibre map f \in [0,1], scale to conductivity range
+        // [o_min,o_max], specified by the session parameters o_min and o_max
         if (m_session->DefinesFunction("AnisotropicConductivity"))
         {
             if (m_session->DefinesCmdLineArgument("verbose"))
             {
                 cout << "Loading Anisotropic Fibre map." << endl;
             }
+
+            NekDouble o_min = m_session->GetParameter("o_min");
+            NekDouble o_max = m_session->GetParameter("o_max");
+
             for (int i = 0; i < m_spacedim; ++i)
             {
                 ASSERTL0(m_session->DefinesFunction("AnisotropicConductivity",
@@ -188,22 +133,63 @@ namespace Nektar
                          "defined.");
                 EvaluateFunction(aniso_var[i], vTemp,
                                  "AnisotropicConductivity");
+                Vmath::Smul(nq, o_max-o_min, vTemp, 1,
+                                m_vardiff[varCoeffEnum[i]], 1);
+                Vmath::Sadd(nq, o_min, m_vardiff[varCoeffEnum[i]], 1,
+                                       m_vardiff[varCoeffEnum[i]], 1);
+            }
+        }
+
+        // Scale by scar map (range 0->1) derived from intensity map
+        // (range d_min -> d_max)
+        if (m_session->DefinesFunction("IsotropicConductivity"))
+        {
+            if (m_session->DefinesCmdLineArgument("verbose"))
+            {
+                cout << "Loading Isotropic Conductivity map." << endl;
+            }
+
+            NekDouble f_min = m_session->GetParameter("d_min");
+            NekDouble f_max = m_session->GetParameter("d_max");
+
+            EvaluateFunction(varName, vTemp, "IsotropicConductivity");
+
+            // Threshold based on d_min, d_max
+            for (int j = 0; j < nq; ++j)
+            {
+                vTemp[j] = (vTemp[j] < f_min ? f_min : vTemp[j]);
+                vTemp[j] = (vTemp[j] > f_max ? f_max : vTemp[j]);
+            }
+
+            // Rescale to s \in [0,1] (0 maps to d_max, 1 maps to d_min)
+            Vmath::Sadd(nq, -f_min, vTemp, 1, vTemp, 1);
+            Vmath::Smul(nq, -1.0/(f_max-f_min), vTemp, 1, vTemp, 1);
+            Vmath::Sadd(nq, 1.0, vTemp, 1, vTemp, 1);
+
+            // Scale anisotropic conductivity values
+            for (int i = 0; i < m_spacedim; ++i)
+            {
                 Vmath::Vmul(nq, vTemp, 1,
                                 m_vardiff[varCoeffEnum[i]], 1,
                                 m_vardiff[varCoeffEnum[i]], 1);
-
-                // Transform variable coefficient and write out to file.
-                m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[i]],
-                                                 m_fields[0]->UpdateCoeffs());
-                std::stringstream filename;
-                filename << "AnisotropicConductivity_" << aniso_var[i];
-                if (m_comm->GetSize() > 1)
-                {
-                    filename << "_P" << m_comm->GetRank();
-                }
-                filename << ".fld";
-                WriteFld(filename.str());
             }
+        }
+
+
+        // Write out conductivity values
+        for (int i = 0; i < m_spacedim; ++i)
+        {
+            // Transform variable coefficient and write out to file.
+            m_fields[0]->FwdTrans_IterPerExp(m_vardiff[varCoeffEnum[i]],
+                                             m_fields[0]->UpdateCoeffs());
+            std::stringstream filename;
+            filename << "Conductivity_" << aniso_var[i];
+            if (m_comm->GetSize() > 1)
+            {
+                filename << "_P" << m_comm->GetRank();
+            }
+            filename << ".fld";
+            WriteFld(filename.str());
         }
 
         // Search through the loaded filters and pass the cell model to any

@@ -37,6 +37,8 @@
 #include <LibUtilities/Foundations/ManagerAccess.h>  // for PointsManager, etc
 #include <StdRegions/StdSegExp.h>
 #include <StdRegions/StdPointExp.h>
+#include <LocalRegions/Expansion.h>
+#include <LocalRegions/Expansion2D.h>
 
 namespace Nektar
 {
@@ -619,7 +621,7 @@ namespace Nektar
         {
             int i,n;
             int ncoeffs_per_plane = m_planes[0]->GetNcoeffs();
-            
+
             // Determine mapping from element ids to location in
             // expansion list
             map<int, int> ElmtID_to_ExpID;
@@ -669,7 +671,6 @@ namespace Nektar
                 offset += datalen;
             }
 
-                    
             if(i == fielddef->m_fields.size())
             {
                 cout << "Field "<< field<< "not found in data file. "  << endl;

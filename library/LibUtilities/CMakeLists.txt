@@ -182,10 +182,7 @@ SET(LinearAlgebraHeaders
     ./LinearAlgebra/StandardMatrix.hpp
     ./LinearAlgebra/TransF77.hpp
 
-    ./LinearAlgebra/NistSparseBlas.hpp
     ./LinearAlgebra/StorageSmvBsr.hpp
-    ./LinearAlgebra/StorageNistBsr.hpp
-    ./LinearAlgebra/StorageNistCsr.hpp
     ./LinearAlgebra/NistSparseDescriptors.hpp
     ./LinearAlgebra/SparseDiagBlkMatrix.hpp
     ./LinearAlgebra/SparseMatrix.hpp
@@ -209,8 +206,6 @@ SET(LinearAlgebraSources
     ./LinearAlgebra/StandardMatrix.cpp
     ./LinearAlgebra/SparseUtils.cpp
     ./LinearAlgebra/StorageSmvBsr.cpp
-    ./LinearAlgebra/StorageNistBsr.cpp
-    ./LinearAlgebra/StorageNistCsr.cpp
     ./LinearAlgebra/SparseDiagBlkMatrix.cpp
     ./LinearAlgebra/SparseMatrix.cpp
 )

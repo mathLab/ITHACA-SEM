@@ -141,8 +141,8 @@ namespace Nektar
 
                     ASSERTL0(!elementDataStrm.fail(), (std::string("Unable to read element data for SEGMENT: ") + elementStr).c_str());
 
-                    VertexComponentSharedPtr v1 = GetVertex(vertex1);
-                    VertexComponentSharedPtr v2 = GetVertex(vertex2);
+                    PointGeomSharedPtr v1 = GetVertex(vertex1);
+                    PointGeomSharedPtr v2 = GetVertex(vertex2);
                     SegGeomSharedPtr seg = MemoryManager<SegGeom>::AllocateSharedPtr(indx, v1,v2);
                     seg->SetGlobalID(indx);
                     m_segGeoms[indx] = seg;

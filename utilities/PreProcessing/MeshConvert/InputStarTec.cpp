@@ -884,7 +884,7 @@ namespace Nektar
                 int indx0 = FaceNodes[ElementFaces[0]][0];
                 int indx1 = FaceNodes[ElementFaces[0]][1];
                 int indx2 = FaceNodes[ElementFaces[0]][2];
-                int indx3;
+                int indx3 = -1;
 
 
                 // calculate 0-1,

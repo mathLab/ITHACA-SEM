@@ -102,7 +102,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFac(
                     const Array<OneD, const NekDouble>& inarray,
                     Array<OneD, NekDouble> &outarray);
-            STD_REGIONS_EXPORT virtual void BwdTrans_SumFacKernel(
+            STD_REGIONS_EXPORT virtual void v_BwdTrans_SumFacKernel(
                     const Array<OneD, const NekDouble>& base0, 
                     const Array<OneD, const NekDouble>& base1,
                     const Array<OneD, const NekDouble>& inarray, 
@@ -126,7 +126,7 @@ namespace Nektar
             STD_REGIONS_EXPORT virtual void v_IProductWRTBase_MatOp(
                     const Array<OneD, const NekDouble>& inarray, 
                     Array<OneD, NekDouble> &outarray);
-            STD_REGIONS_EXPORT void IProductWRTBase_SumFacKernel(
+            STD_REGIONS_EXPORT virtual void v_IProductWRTBase_SumFacKernel(
                     const Array<OneD, const NekDouble>& base0,
                     const Array<OneD, const NekDouble>& base1,
                     const Array<OneD, const NekDouble>& inarray,
@@ -243,24 +243,15 @@ namespace Nektar
                     const Array<OneD, const NekDouble> &inarray,
                     Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
-            STD_REGIONS_EXPORT virtual void v_LaplacianMatrixOp_MatFree(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,NekDouble> &outarray,
-                    const StdMatrixKey &mkey);
             STD_REGIONS_EXPORT virtual void v_SVVLaplacianFilter(
                     Array<OneD, NekDouble> &array,
-                    const StdMatrixKey &mkey);
-            STD_REGIONS_EXPORT virtual void v_HelmholtzMatrixOp_MatFree(
-                    const Array<OneD, const NekDouble> &inarray,
-                    Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
             STD_REGIONS_EXPORT void v_GeneralMatrixOp_MatOp(const Array<OneD, 
                     const NekDouble> &inarray,
                     Array<OneD,NekDouble> &outarray,
                     const StdMatrixKey &mkey);
-
-            STD_REGIONS_EXPORT void MultiplyByQuadratureMetric(
-                    const Array<OneD, const NekDouble>& inarray,
+            STD_REGIONS_EXPORT void v_MultiplyByStdQuadratureMetric(
+                    const Array<OneD, const NekDouble> &inarray,
                     Array<OneD, NekDouble> &outarray);
         };
         typedef boost::shared_ptr<StdQuadExp> StdQuadExpSharedPtr;

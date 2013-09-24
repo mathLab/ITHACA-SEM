@@ -223,7 +223,7 @@ int main(int argc, char *argv[])
     //------------------------------------------------
     //check 2Dmeshes compatibilities
     // same max min values x,y...
-    bool check;    
+    bool check = false;    
     if(expdim ==2)
     {
         check = Checkbndmeshes2D(x0, y0, x1, y1);

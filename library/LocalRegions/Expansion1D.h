@@ -40,6 +40,7 @@
 #include <LocalRegions/LocalRegionsDeclspec.h>
 #include <StdRegions/StdExpansion1D.h>
 #include <boost/weak_ptr.hpp>
+#include <SpatialDomains/Geometry1D.h>
 
 namespace Nektar
 {
@@ -49,10 +50,17 @@ namespace Nektar
         typedef boost::shared_ptr<Expansion2D> Expansion2DSharedPtr;
         typedef boost::weak_ptr<Expansion2D> Expansion2DWeakPtr;
         
+        class Expansion1D;
+        typedef boost::shared_ptr<Expansion1D> Expansion1DSharedPtr;
+        typedef boost::weak_ptr<Expansion1D> Expansion1DWeakPtr;
+        typedef std::vector< Expansion1DSharedPtr > Expansion1DVector;
+        typedef std::vector< Expansion1DSharedPtr >::iterator Expansion1DVectorIter;
+
+
         class Expansion1D: virtual public Expansion, virtual public StdRegions::StdExpansion1D
         {
             public:
-                LOCAL_REGIONS_EXPORT Expansion1D() : Expansion(), StdExpansion1D()
+                LOCAL_REGIONS_EXPORT Expansion1D(SpatialDomains::Geometry1DSharedPtr pGeom) : Expansion(pGeom), StdExpansion1D()
                 {
                     m_elementEdgeLeft = -1;
                     m_elementEdgeRight = -1;
@@ -82,6 +90,13 @@ namespace Nektar
                         const Array<OneD,const NekDouble> &inarray,
                               Array<OneD,NekDouble> &outarray);
 
+                inline SpatialDomains::Geometry1DSharedPtr GetGeom1D() const;
+
+                static Expansion1DSharedPtr FromStdExp(const StdRegions::StdExpansionSharedPtr& pSrc)
+                {
+                    return boost::dynamic_pointer_cast<Expansion1D>(pSrc);
+                }
+			
             protected:
                 virtual DNekMatSharedPtr v_GenMatrix(const StdRegions::StdMatrixKey &mkey);
 
@@ -94,7 +109,7 @@ namespace Nektar
                         const int vert,
                         const Array<OneD, const NekDouble > &primCoeffs,
                               Array<OneD, NekDouble> &coeffs);
-
+			
             private:
                 Expansion2DWeakPtr m_elementLeft;
                 Expansion2DWeakPtr m_elementRight;
@@ -102,12 +117,6 @@ namespace Nektar
                 int m_elementEdgeRight;
 
         };
-        
-        // type defines for use of PrismExp in a boost vector
-        typedef boost::shared_ptr<Expansion1D> Expansion1DSharedPtr;
-        typedef boost::weak_ptr<Expansion1D> Expansion1DWeakPtr;
-        typedef std::vector< Expansion1DSharedPtr > Expansion1DVector;
-        typedef std::vector< Expansion1DSharedPtr >::iterator Expansion1DVectorIter;
         
         inline Expansion2DSharedPtr Expansion1D::GetLeftAdjacentElementExp() const
         {
@@ -147,6 +156,10 @@ namespace Nektar
             }
         }
 
+        inline SpatialDomains::Geometry1DSharedPtr Expansion1D::GetGeom1D() const
+        {
+            return boost::dynamic_pointer_cast<SpatialDomains::Geometry1D>(m_geom);
+        }
     } //end of namespace
 } //end of namespace
 

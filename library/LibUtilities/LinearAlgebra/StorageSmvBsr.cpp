@@ -42,7 +42,6 @@
 
 #include <LibUtilities/BasicConst/NektarUnivConsts.hpp>
 #include <LibUtilities/LinearAlgebra/Blas.hpp>
-#include <LibUtilities/LinearAlgebra/NistSparseBlas.hpp>
 #include <LibUtilities/LinearAlgebra/StorageSmvBsr.hpp>
 #include <LibUtilities/LinearAlgebra/NistSparseDescriptors.hpp>
 

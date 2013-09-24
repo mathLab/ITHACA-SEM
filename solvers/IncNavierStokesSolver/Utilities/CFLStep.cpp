@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         Array<OneD, MultiRegions::ExpListSharedPtr> fields = IncNav->UpdateFields();
         int i,n,nquad,cnt;
         int nfields = fields.num_elements();
-        int nexp = fields[n]->GetExpSize();
+        int nexp = fields[0]->GetExpSize();
         
         int elmtid = Vmath::Imax(nexp,cfl,1);
 

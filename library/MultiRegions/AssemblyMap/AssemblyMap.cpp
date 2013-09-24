@@ -84,9 +84,9 @@ namespace Nektar
             m_numGlobalDirBndCoeffs(0),
             m_solnType(eNoSolnType),
             m_bndSystemBandWidth(0),
+            m_successiveRHS(0),
             m_gsh(0),
-            m_bndGsh(0),
-            m_successiveRHS(0)
+            m_bndGsh(0)
         {
         }
 
@@ -101,9 +101,9 @@ namespace Nektar
             m_numLocalDirBndCoeffs(0),
             m_numGlobalDirBndCoeffs(0),
             m_bndSystemBandWidth(0),
+            m_successiveRHS(0),
             m_gsh(0),
-            m_bndGsh(0),
-            m_successiveRHS(0)
+            m_bndGsh(0)
         {
             // Default value from Solver Info
             m_solnType = pSession->GetSolverInfoAsEnum<GlobalSysSolnType>(
@@ -172,9 +172,9 @@ namespace Nektar
             m_solnType(oldLevelMap->m_solnType),
             m_preconType(oldLevelMap->m_preconType),
             m_iterativeTolerance(oldLevelMap->m_iterativeTolerance),
+            m_successiveRHS(oldLevelMap->m_successiveRHS),
             m_gsh(oldLevelMap->m_gsh),
             m_bndGsh(oldLevelMap->m_bndGsh),
-            m_successiveRHS(oldLevelMap->m_successiveRHS),
             m_lowestStaticCondLevel(oldLevelMap->m_lowestStaticCondLevel)
         {
             int i;
@@ -863,6 +863,8 @@ namespace Nektar
         int AssemblyMap::GetBndCondTraceToGlobalTraceMap(
                     const int i)
         {
+            ASSERTL1(i < m_bndCondTraceToGlobalTraceMap.num_elements(),
+                     "Index out of range.");
             return m_bndCondTraceToGlobalTraceMap[i];
         }
 

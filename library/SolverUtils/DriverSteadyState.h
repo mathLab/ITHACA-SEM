@@ -59,7 +59,9 @@ namespace Nektar
             static std::string className;
             
             void ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
-                                    NekDouble &MaxNormDiff_q_qBar);
+                                    const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                    NekDouble &MaxNormDiff_q_qBar,
+                                    NekDouble &MaxNormDiff_q1_q0);
             
             void EvaluateNextSFDVariables(const int i,
                                           const Array<OneD, const Array<OneD, NekDouble> > &q0,
@@ -147,6 +149,8 @@ namespace Nektar
             int MPIrank;
             
             NekDouble MaxNormDiff_q_qBar;
+            NekDouble MaxNormDiff_q1_q0;
+            
             NekDouble Min_MaxNormDiff_q_qBar;
             
             NekDouble m_LIM;

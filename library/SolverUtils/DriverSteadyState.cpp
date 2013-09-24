@@ -115,7 +115,7 @@ namespace Nektar
             m_cst3=1.0/m_Delta;
             m_cst4=m_cst2*m_cst3;
             m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
-             
+            
             
             
             //To run each integration of the linear filters problem on half a time-step we add:
@@ -188,8 +188,6 @@ namespace Nektar
             
             while (MaxNormDiff_q_qBar > TOL)
             {
-               
-                
                 //Implementation of the second order sequential operator-splitting method (i.e. Strang splitting)
                 
                 //First intergration on half a step
@@ -222,7 +220,7 @@ namespace Nektar
                     m_equ[0]->CopyFromPhysField(i, qTilde[i]);
                     
                     RunBDF2(i, qMinusHalf, qBarMinusHalf, qTilde, qBarTilde, q1, qBar1);
-                        
+                    
                     qMinusHalf[i] = qTilde[i];
                     qBarMinusHalf[i] = qBarTilde[i];
                     
@@ -232,23 +230,22 @@ namespace Nektar
                 
                 
                 /*
-                m_equ[0]->DoSolve();
-                for(int i = 0; i < NumElmVelocity; ++i)
-                {
-                    m_equ[0]->CopyFromPhysField(i, q0[i]);
-                    
-                    EvaluateNextSFDVariables(i, q0, qBar0, q1, qBar1);
-                    
-                    qBar0[i] = qBar1[i];
-                    m_equ[0]->CopyToPhysField(i, q1[i]);                    
-                }
-                */
+                 *                m_equ[0]->DoSolve();
+                 *                for(int i = 0; i < NumElmVelocity; ++i)
+                 *                {
+                 *                    m_equ[0]->CopyFromPhysField(i, q0[i]);
+                 *                    
+                 *                    EvaluateNextSFDVariables(i, q0, qBar0, q1, qBar1);
+                 *                    
+                 *                    qBar0[i] = qBar1[i];
+                 *                    m_equ[0]->CopyToPhysField(i, q1[i]);                    
+                 }
+                 */
                 
                 
                 if(m_infosteps && !((m_n+1)%m_infosteps))
                 {
-                    ConvergenceHistory(qBar1, MaxNormDiff_q_qBar);
-                    //ConvergenceHistory(q0, MaxNormDiff_q_qBar);
+                    ConvergenceHistory(qBar1, q0, MaxNormDiff_q_qBar, MaxNormDiff_q1_q0);
                 }
                 
                 if(m_checksteps && m_n&&(!((m_n+1)%m_checksteps)))
@@ -305,12 +302,12 @@ namespace Nektar
         }
         
         void DriverSteadyState::RunBDF2(const int i,
-                                             const Array<OneD, const Array<OneD, NekDouble> > &qMinus1,
-                                             const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
-                                             const Array<OneD, const Array<OneD, NekDouble> > &q0,
-                                             const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
-                                             Array<OneD, Array<OneD, NekDouble> > &q1,
-                                             Array<OneD, Array<OneD, NekDouble> > &qBar1)
+                                        const Array<OneD, const Array<OneD, NekDouble> > &qMinus1,
+                                        const Array<OneD, const Array<OneD, NekDouble> > &qBarMinus1,
+                                        const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                        const Array<OneD, const Array<OneD, NekDouble> > &qBar0,
+                                        Array<OneD, Array<OneD, NekDouble> > &q1,
+                                        Array<OneD, Array<OneD, NekDouble> > &qBar1)
         {
             q1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
             qBar1[i] = Array<OneD, NekDouble> (m_equ[0]->GetTotPoints(),0.0);
@@ -359,25 +356,36 @@ namespace Nektar
         
         
         void DriverSteadyState::ConvergenceHistory(const Array<OneD, const Array<OneD, NekDouble> > &qBar1,
-                                                   NekDouble &MaxNormDiff_q_qBar)
+                                                   const Array<OneD, const Array<OneD, NekDouble> > &q0,
+                                                   NekDouble &MaxNormDiff_q_qBar,
+                                                   NekDouble &MaxNormDiff_q1_q0)
         {
-            //This routine evaluates |q-qBar|L2 and save the value in "ConvergenceHistory.txt"
-            //Moreover, a procedure to change the parameters Delta and X after 25 oscillations of |q-qBar| is implemented
+            //This routine evaluates |q-qBar|_L2 and save the value in "ConvergenceHistory.txt"
             
             Array<OneD, NekDouble > NormDiff_q_qBar(NumElmVelocity, 1.0);
+            Array<OneD, NekDouble > NormDiff_q1_q0(NumElmVelocity, 1.0);
             
             MaxNormDiff_q_qBar=0.0;
+            MaxNormDiff_q1_q0=0.0;
             
             //Norm Calculation
             for(int i = 0; i < NumElmVelocity; ++i)
             {
+                //To check convergence of SFD
                 //NormDiff_q_qBar[i] = m_equ[0]->L2Error(i, qBar1[i], false);
                 NormDiff_q_qBar[i] = m_equ[0]->LinfError(i, qBar1[i]);
                 
+                //To check convergence of Navier-Stokes
+                NormDiff_q1_q0[i] = m_equ[0]->LinfError(i, q0[i]);
+                
                 if (MaxNormDiff_q_qBar < NormDiff_q_qBar[i])
                 {
-                    //MaxNormDiff_q_qBar = m_cst1*NormDiff_q_qBar[i];
                     MaxNormDiff_q_qBar = NormDiff_q_qBar[i];
+                }
+                
+                if (MaxNormDiff_q1_q0 < NormDiff_q1_q0[i])
+                {
+                    MaxNormDiff_q1_q0 = NormDiff_q1_q0[i];
                 }
             }
             
@@ -386,16 +394,16 @@ namespace Nektar
             if (MPIrank==0)
             {
                 //cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
-                cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<"; for X_tilde = " << m_X*m_dt <<" and Delta_tilde = " << m_Delta/m_dt <<endl;
+                cout << "SFD (MPI) - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X_tilde = " << m_X <<" and Delta_tilde = " << m_Delta <<endl;
                 std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
-                m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
+                m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
                 m_file.close();
             }
             #else
             //cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|L2 = " << MaxNormDiff_q_qBar <<endl;
-            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar <<"; for X_tilde = " << m_X <<" and Delta_tilde = " << m_Delta <<endl;
+            cout << "SFD - Step: " << m_n+1 << "; Time: " << m_equ[0]->GetFinalTime() <<  "; |q-qBar|inf = " << MaxNormDiff_q_qBar << "; |q1-q0|inf = " << MaxNormDiff_q1_q0 << ";\t for X_tilde = " << m_X <<" and Delta_tilde = " << m_Delta <<endl;
             std::ofstream m_file( "ConvergenceHistory.txt", std::ios_base::app); 
-            m_file << m_n+1 << "\t" << MaxNormDiff_q_qBar << endl;
+            m_file << m_n+1 << "\t" << m_equ[0]->GetFinalTime() << "\t" << MaxNormDiff_q_qBar << "\t" << MaxNormDiff_q1_q0 << endl;
             m_file.close();
             #endif  
             
@@ -407,49 +415,49 @@ namespace Nektar
              *                {
              *                    m_Oscillation = 0;
              *                    m_First_MinNormDiff_q_qBar=0;
-             }
-             }
-             if (MaxNormDiff_q_qBar < m_MaxNormDiff_q_qBar && m_Growing==true)
-             {
-                 m_Growing=false;
-                 m_MaxNormDiff_q_qBar=0;
-             }
-             if (m_Growing==false && MaxNormDiff_q_qBar < m_MinNormDiff_q_qBar)
-             {
-                 m_MinNormDiff_q_qBar=MaxNormDiff_q_qBar;
-                 m_Shrinking=true;
-                 if (m_Oscillation==0)
-                 {
-                     m_First_MinNormDiff_q_qBar=m_MinNormDiff_q_qBar;
-                 }
-             }
-             if (MaxNormDiff_q_qBar > m_MinNormDiff_q_qBar && m_Shrinking==true)
-             {
-                 m_Shrinking=false;
-                 m_MinNormDiff_q_qBar=1000;
-                 m_Oscillation=m_Oscillation+1;
-             }
-             
-             if (m_Oscillation==10)
-             {                   
-                 //m_Delta = m_Delta + 0.25;
-                 //m_X = 0.99*(1.0/m_Delta);
-                 
-                 mult = mult + mult*0.25;
-                 
-                 m_X = mult*(coeff - 1.0)/m_dt;
-                 m_Delta = 100*mult*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
-                 
-                 m_cst1=m_X*m_dt;
-                 m_cst2=1.0/(1.0 + m_cst1);
-                 m_cst3=m_dt/m_Delta;
-                 m_cst4=m_cst2*m_cst3;
-                 m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
-                 
-                 cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
-                 
-                 m_Oscillation=0;
-                 //m_equ[0]->DoInitialise();
+        }
+        }
+        if (MaxNormDiff_q_qBar < m_MaxNormDiff_q_qBar && m_Growing==true)
+        {
+            m_Growing=false;
+            m_MaxNormDiff_q_qBar=0;
+        }
+        if (m_Growing==false && MaxNormDiff_q_qBar < m_MinNormDiff_q_qBar)
+        {
+            m_MinNormDiff_q_qBar=MaxNormDiff_q_qBar;
+            m_Shrinking=true;
+            if (m_Oscillation==0)
+            {
+                m_First_MinNormDiff_q_qBar=m_MinNormDiff_q_qBar;
+        }
+        }
+        if (MaxNormDiff_q_qBar > m_MinNormDiff_q_qBar && m_Shrinking==true)
+        {
+            m_Shrinking=false;
+            m_MinNormDiff_q_qBar=1000;
+            m_Oscillation=m_Oscillation+1;
+        }
+        
+        if (m_Oscillation==10)
+        {                   
+            //m_Delta = m_Delta + 0.25;
+            //m_X = 0.99*(1.0/m_Delta);
+            
+            mult = mult + mult*0.25;
+            
+            m_X = mult*(coeff - 1.0)/m_dt;
+            m_Delta = 100*mult*( ( coeff*m_X*m_dt*m_dt/(1.0+m_X*m_dt-coeff) - m_dt )/(1.0+m_X*m_dt) );
+            
+            m_cst1=m_X*m_dt;
+            m_cst2=1.0/(1.0 + m_cst1);
+            m_cst3=m_dt/m_Delta;
+            m_cst4=m_cst2*m_cst3;
+            m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+            
+            cout << "\nNew Filter Width: Delta = " << m_Delta << "; New Control Coeff: X = " << m_X << "\n" << endl;
+            
+            m_Oscillation=0;
+            //m_equ[0]->DoInitialise();
         }*/
             
             
@@ -457,27 +465,27 @@ namespace Nektar
             /*if (MaxNormDiff_q_qBar < Min_MaxNormDiff_q_qBar)
              *            {
              *                Min_MaxNormDiff_q_qBar = MaxNormDiff_q_qBar;               
-             }
-             
-             if (MaxNormDiff_q_qBar < m_LIM)
-             {                   
-                 m_Delta = m_Delta + m_Delta*0.1;
-                 m_X = 1.0/m_Delta;
-                 
-                 m_cst1=m_X;
-                 m_cst2=1.0/(1.0 + m_cst1);
-                 //m_cst3=m_dt/m_Delta;
-                 m_cst3=1.0/m_Delta;
-                 m_cst4=m_cst2*m_cst3;
-                 m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
-                 
-                 cout << "\n New Control Coeff: X = " << m_X << "; New Filter Width: Delta =" << m_Delta << "\n" << endl;
-                 
-                 m_LIM = m_LIM/5.0;
-                 //m_LIM = m_LIM/1000.0;
-    }
-    
-    if (MaxNormDiff_q_qBar > 9999999.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
+        }
+        
+        if (MaxNormDiff_q_qBar < m_LIM)
+        {                   
+            m_Delta = m_Delta + m_Delta*0.1;
+            m_X = 1.0/m_Delta;
+            
+            m_cst1=m_X;
+            m_cst2=1.0/(1.0 + m_cst1);
+            //m_cst3=m_dt/m_Delta;
+            m_cst3=1.0/m_Delta;
+            m_cst4=m_cst2*m_cst3;
+            m_cst5=1.0/(1.0 + m_cst3*(1.0-m_cst1*m_cst2));
+            
+            cout << "\n New Control Coeff: X = " << m_X << "; New Filter Width: Delta =" << m_Delta << "\n" << endl;
+            
+            m_LIM = m_LIM/5.0;
+            //m_LIM = m_LIM/1000.0;
+        }
+        
+        if (MaxNormDiff_q_qBar > 9999999.0*Min_MaxNormDiff_q_qBar) // It means that the algo has failed to converge
             {        
                 Min_MaxNormDiff_q_qBar = 1.0;
                 
@@ -501,12 +509,12 @@ namespace Nektar
                 for(int i = 0; i < NumElmVelocity; ++i)
                 {
                     m_equ[0]->CopyToPhysField(i, qMin[i]); //We reinitialize the problem with the value where |q-qBar| was minimal 
-                }
-                m_equ[0]->DoInitialise();
-                
-                m_Check++;                    
-                m_equ[0]->Checkpoint_Output(m_Check);
-                
+    }
+    m_equ[0]->DoInitialise();
+    
+    m_Check++;                    
+    m_equ[0]->Checkpoint_Output(m_Check);
+    
     }*/
             
             

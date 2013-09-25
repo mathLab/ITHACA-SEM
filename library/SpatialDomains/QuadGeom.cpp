@@ -370,7 +370,7 @@ namespace Nektar
                     x1 = (*face2[j])(0)-cx;
                     y1 = (*face2[j])(1)-cy;
                     z1 = (*face2[j])(2)-cz;
-                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-5)
+                    if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z)) < 1e-8)
                     {
                         vmap[j] = i;
                         break;

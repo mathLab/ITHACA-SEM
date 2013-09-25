@@ -674,7 +674,7 @@ namespace Nektar
             // composites (i.e. if composites 1 and 2 are periodic then this map
             // will contain either the pair (1,2) or (2,1) but not both).
             //
-            // The three maps allVerts, allCoord, allEdges and allOrient map a
+            // The four maps allVerts, allCoord, allEdges and allOrient map a
             // periodic face to a vector containing the vertex ids of the face;
             // their coordinates; the edge ids of the face; and their
             // orientation within that face respectively.
@@ -967,7 +967,7 @@ namespace Nektar
                         eIdMap.insert(make_pair(
                             edgeIds[cnt],
                             make_pair(vertIds[tmp+j],
-                                      vertIds[tmp+(j+1) % faceVerts[i]])));
+                                      vertIds[tmp+((j+1) % faceVerts[i])])));
 
                     if (testIns.second == false)
                     {
@@ -1018,8 +1018,8 @@ namespace Nektar
             quadVertMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 1,0,3,2;
             quadVertMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += 2,3,0,1;
             quadVertMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += 0,3,2,1;
-            quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 3,0,1,2;
-            quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 1,2,3,0;
+            quadVertMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 1,2,3,0;
+            quadVertMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 3,0,1,2;
             quadVertMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 2,1,0,3;
 
             map<StdRegions::Orientation, vector<int> > quadEdgeMap;
@@ -1028,8 +1028,8 @@ namespace Nektar
             quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2FwdDir2] += 0,3,2,1;
             quadEdgeMap[StdRegions::eDir1BwdDir1_Dir2BwdDir2] += 2,3,0,1;
             quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2FwdDir1] += 3,2,1,0;
-            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 3,0,1,2;
-            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 1,2,3,0;
+            quadEdgeMap[StdRegions::eDir1FwdDir2_Dir2BwdDir1] += 1,2,3,0;
+            quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2FwdDir1] += 3,0,1,2;
             quadEdgeMap[StdRegions::eDir1BwdDir2_Dir2BwdDir1] += 1,0,3,2;
 
             map<StdRegions::Orientation, vector<int> > triVertMap;
@@ -1447,7 +1447,7 @@ namespace Nektar
                             NekDouble z1 = w[k](2)-cz;
 
                             if (sqrt((x1-x)*(x1-x)+(y1-y)*(y1-y)+(z1-z)*(z1-z))
-                                    < 1e-5)
+                                    < 1e-8)
                             {
                                 vMap[k] = j;
                                 break;

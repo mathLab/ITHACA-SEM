@@ -271,12 +271,14 @@ namespace Nektar
                                   inarray,outarray,wsp);
         }
 
-        void StdTriExp::BwdTrans_SumFacKernel(
+        void StdTriExp::v_BwdTrans_SumFacKernel(
             const Array<OneD, const NekDouble>& base0, 
             const Array<OneD, const NekDouble>& base1,
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray,
-                  Array<OneD,       NekDouble>& wsp)
+                  Array<OneD,       NekDouble>& wsp,
+                  bool                          doCheckCollDir0,
+                  bool                          doCheckCollDir1)
         {
             int  i;
             int  mode;
@@ -502,12 +504,14 @@ namespace Nektar
                 tmp,outarray,wsp);
         }
         
-        void StdTriExp::IProductWRTBase_SumFacKernel(
+        void StdTriExp::v_IProductWRTBase_SumFacKernel(
             const Array<OneD, const NekDouble>& base0, 
             const Array<OneD, const NekDouble>& base1,
             const Array<OneD, const NekDouble>& inarray, 
                   Array<OneD,       NekDouble>& outarray,
-                  Array<OneD,       NekDouble>& wsp)
+                  Array<OneD,       NekDouble>& wsp,
+                  bool                          doCheckCollDir0,
+                  bool                          doCheckCollDir1)
         {
             int    i;
             int    mode;
@@ -553,7 +557,7 @@ namespace Nektar
                   Array<OneD,       NekDouble>& outarray)
         {
             int nq = GetTotPoints();
-            MatrixType mtype;
+            MatrixType mtype = eIProductWRTDerivBase0;
 
             switch(dir)
             {
@@ -639,7 +643,7 @@ namespace Nektar
           
                     IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
                                                  m_base[1]->GetBdata(),
-                                                 tmp0,tmp3,gfac0); 
+                                                 tmp0,tmp3,gfac0);
 
                     MultiplyByQuadratureMetric(inarray,tmp0);
                     IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
@@ -1282,7 +1286,7 @@ namespace Nektar
                 GetEdgeBasisType(localVertexId) == LibUtilities::eModified_B,
                 "Mapping not defined for this type of basis");
             
-            int localDOF;
+            int localDOF = 0;
             switch(localVertexId)
             {
                 case 0:
@@ -1536,77 +1540,6 @@ namespace Nektar
             StdTriExp::v_HelmholtzMatrixOp_MatFree(inarray,outarray,mkey);
         }
         
-        void StdTriExp::v_LaplacianMatrixOp_MatFree(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            const StdMatrixKey                 &mkey)
-        {
-            if(mkey.GetNVarCoeff() == 0)
-            {
-                // This implementation is only valid when there are no
-                // coefficients associated to the Laplacian operator
-                int    i;
-                int    nquad0 = m_base[0]->GetNumPoints();
-                int    nquad1 = m_base[1]->GetNumPoints();
-                int    nquadmax = max(nquad0,nquad1);
-                int    nqtot = nquad0*nquad1; 
-
-                Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
-                Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
-                Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
-                Array<OneD,NekDouble> tmp(physValues+3*nqtot);
-                Array<OneD,NekDouble> gfac0(physValues+3*nqtot+m_ncoeffs);
-
-                BwdTrans_SumFac(inarray,physValues);
-
-                // Laplacian matrix operation
-                PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-                // multiply with metric terms of collapsed coordinate system
-                const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
-                const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
-
-                for(i = 0; i < nquad0; ++i)
-                {
-                    gfac0[i] = 0.5*(1+z0[i]);
-                }        
-            
-                for(i = 0; i < nquad1; ++i) 
-                {
-                    Vmath::Vvtvp(nquad0,&gfac0[0],1,
-                                 dPhysValuesdy.get()+i*nquad0,1,
-                                 dPhysValuesdx.get()+i*nquad0,1,
-                                 dPhysValuesdx.get()+i*nquad0,1);
-                } 
-
-                for(i = 0; i < nquad1; ++i)
-                {
-                    gfac0[i] = 2.0/(1-z1[i]);
-                }
-
-                for(i = 0; i < nquad1; ++i)  
-                {
-                    Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
-                }
-             
-                MultiplyByQuadratureMetric(dPhysValuesdx,dPhysValuesdx);
-                MultiplyByQuadratureMetric(dPhysValuesdy,dPhysValuesdy);
-                
-                IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
-                                             m_base[1]->GetBdata(),
-                                             dPhysValuesdx,outarray,physValues);
-                IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                             m_base[1]->GetDbdata(),
-                                             dPhysValuesdy,tmp,physValues);  
-                Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,
-                            outarray.get(),1);          
-            }    
-            else
-            {
-                StdExpansion::LaplacianMatrixOp_MatFree_GenericImpl(
-                    inarray,outarray,mkey);
-            }    
-        }       
-
 
         void StdTriExp::v_SVVLaplacianFilter(Array<OneD, NekDouble> &array,
                                              const StdMatrixKey &mkey)
@@ -1651,72 +1584,6 @@ namespace Nektar
             OrthoExp.BwdTrans(orthocoeffs,array);
         }
         
-        void StdTriExp::v_HelmholtzMatrixOp_MatFree(
-            const Array<OneD, const NekDouble> &inarray,
-                  Array<OneD,       NekDouble> &outarray,
-            const StdMatrixKey                 &mkey)
-        {
-            int    i;
-            int    nquad0 = m_base[0]->GetNumPoints();
-            int    nquad1 = m_base[1]->GetNumPoints();
-            int    nqtot = nquad0*nquad1; 
-            int    nquadmax = max(nquad0,nquad1);
-            NekDouble lambda = mkey.GetConstFactor(eFactorLambda);
-
-            Array<OneD,NekDouble> physValues(3*nqtot+m_ncoeffs+nquadmax);
-            Array<OneD,NekDouble> dPhysValuesdx(physValues+nqtot);
-            Array<OneD,NekDouble> dPhysValuesdy(physValues+2*nqtot);
-            Array<OneD,NekDouble> tmp(physValues+3*nqtot);
-            Array<OneD,NekDouble> gfac0(physValues+3*nqtot+m_ncoeffs);
-
-            BwdTrans_SumFac(inarray,physValues);
-
-            // mass matrix operation
-            IProductWRTBase_SumFac(physValues,tmp);
-
-            // Laplacian matrix operation
-            PhysDeriv(physValues,dPhysValuesdx,dPhysValuesdy);
-            // multiply with metric terms of collapsed coordinate system
-            const Array<OneD,const NekDouble>& z0 = m_base[0]->GetZ();
-            const Array<OneD,const NekDouble>& z1 = m_base[1]->GetZ();
-
-            for(i = 0; i < nquad0; ++i)
-            {
-                gfac0[i] = 0.5*(1+z0[i]);
-            }        
-            
-            for(i = 0; i < nquad1; ++i) 
-            {
-                Vmath::Vvtvp(nquad0,&gfac0[0],1,
-                             dPhysValuesdy.get()+i*nquad0,1,
-                             dPhysValuesdx.get()+i*nquad0,1,
-                             dPhysValuesdx.get()+i*nquad0,1);
-            } 
-
-            for(i = 0; i < nquad1; ++i)
-            {
-                gfac0[i] = 2.0/(1-z1[i]);
-            }
-
-            for(i = 0; i < nquad1; ++i)  
-            {
-                Blas::Dscal(nquad0,gfac0[i],dPhysValuesdx.get()+i*nquad0,1);
-            }
-             
-            MultiplyByQuadratureMetric(dPhysValuesdx,dPhysValuesdx);
-            MultiplyByQuadratureMetric(dPhysValuesdy,dPhysValuesdy);
-            
-            IProductWRTBase_SumFacKernel(m_base[0]->GetDbdata(),
-                                         m_base[1]->GetBdata(),
-                                         dPhysValuesdx,outarray,physValues);
-            Blas::Daxpy(m_ncoeffs, lambda, tmp.get(), 1, outarray.get(), 1);
-
-            IProductWRTBase_SumFacKernel(m_base[0]->GetBdata(),
-                                         m_base[1]->GetDbdata(),
-                                         dPhysValuesdy,tmp,physValues);  
-            Vmath::Vadd(m_ncoeffs,tmp.get(),1,outarray.get(),1,
-                        outarray.get(),1);                  
-        }
 
         void StdTriExp::v_GeneralMatrixOp_MatOp(
             const Array<OneD, const NekDouble> &inarray,
@@ -1744,7 +1611,7 @@ namespace Nektar
         // Private helper functions
         //---------------------------------------
         
-        void StdTriExp::MultiplyByQuadratureMetric(
+        void StdTriExp::v_MultiplyByStdQuadratureMetric(
             const Array<OneD, const NekDouble>& inarray,
             Array<OneD, NekDouble> &outarray)
         {
@@ -1765,7 +1632,8 @@ namespace Nektar
                 
             switch(m_base[1]->GetPointsType())
             {
-                // Legendre inner product 
+                // Legendre inner product
+                case LibUtilities::ePolyEvenlySpaced:
                 case LibUtilities::eGaussLobattoLegendre: 
                     for(i = 0; i < nquad1; ++i)
                     {

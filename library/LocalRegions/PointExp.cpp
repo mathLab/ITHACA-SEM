@@ -40,10 +40,14 @@ namespace Nektar
     namespace LocalRegions
     {
 
-        PointExp::PointExp(const SpatialDomains::VertexComponentSharedPtr &m_geom):
+        PointExp::PointExp(const SpatialDomains::PointGeomSharedPtr &geom):
+            StdExpansion  (1,0),
+            StdExpansion0D(),
+            StdRegions::StdPointExp(),
+            Expansion     (geom),
+            Expansion0D   (geom),
             m_coeffs(1,0.0),
-            m_phys(1,0.0),
-            m_geom(m_geom)
+            m_phys(1,0.0)
         {
         }
         

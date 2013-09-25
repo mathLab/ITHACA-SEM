@@ -98,7 +98,7 @@ namespace Nektar
                     m_bndConditions,
                     *m_exp,graph1D,
                     periodicVertices);
-            
+
             m_trace = boost::dynamic_pointer_cast<ExpList>(trace);
 
             m_traceMap = MemoryManager<AssemblyMapDG>::
@@ -117,11 +117,14 @@ namespace Nektar
             
             int ElmtPointGeom = 0;
             int TracePointGeom = 0;
+            LocalRegions::Expansion0DSharedPtr exp0d;
+            LocalRegions::Expansion1DSharedPtr exp1d;
             for (int i = 0; i < m_exp->size(); ++i)
             {
-                for (int j = 0; j < (*m_exp)[i]->GetNverts(); ++j)
+                exp1d = LocalRegions::Expansion1D::FromStdExp((*m_exp)[i]);
+                for (int j = 0; j < exp1d->GetNverts(); ++j)
                 {
-                    ElmtPointGeom  = ((*m_exp)[i]->GetGeom1D())->GetVid(j);
+                    ElmtPointGeom  = (exp1d->GetGeom1D())->GetVid(j);
                     
                     for (int k = 0; k < m_trace->GetExpSize(); ++k)
                     {
@@ -129,14 +132,7 @@ namespace Nektar
                         
                         if (TracePointGeom == ElmtPointGeom)
                         {
-                            LocalRegions::Expansion1DSharedPtr exp1d
-                                = boost::dynamic_pointer_cast
-                                    <LocalRegions::Expansion1D>((*m_exp)[i]);
-                            LocalRegions::Expansion0DSharedPtr exp0d
-                                = boost::dynamic_pointer_cast
-                                    <LocalRegions::Expansion0D>
-                                        (m_trace->GetExp(k));
-                            
+                            exp0d = LocalRegions::Expansion0D::FromStdExp(m_trace->GetExp(k));
                             exp0d->SetAdjacentElementExp(j,exp1d);
                             break;
                         }
@@ -214,11 +210,14 @@ namespace Nektar
             // elements which do not lie in a plane.
             int ElmtPointGeom = 0;
             int TracePointGeom = 0;
+            LocalRegions::Expansion0DSharedPtr exp0d;
+            LocalRegions::Expansion1DSharedPtr exp1d;
             for (int l = 0; l < m_exp->size(); ++l)
             {
-                for (int j = 0; j < (*m_exp)[l]->GetNverts(); ++j)
+                exp1d = LocalRegions::Expansion1D::FromStdExp((*m_exp)[l]);
+                for (int j = 0; j < exp1d->GetNverts(); ++j)
                 {
-                    ElmtPointGeom  = ((*m_exp)[l]->GetGeom1D())->GetVid(j);
+                    ElmtPointGeom  = (exp1d->GetGeom1D())->GetVid(j);
                     
                     for (int k = 0; k < m_traces[i]->GetExpSize(); ++k)
                     {
@@ -226,15 +225,7 @@ namespace Nektar
 			
                         if (TracePointGeom == ElmtPointGeom)
                         {
-                            LocalRegions::Expansion1DSharedPtr exp1d
-                                = boost::dynamic_pointer_cast
-                            <LocalRegions::Expansion1D>((*m_exp)[l]);
-                            
-                            LocalRegions::Expansion0DSharedPtr exp0d
-                                = boost::dynamic_pointer_cast
-                                    <LocalRegions::Expansion0D>
-                                        (m_traces[i]->GetExp(k));
-                            
+                            exp0d = LocalRegions::Expansion0D::FromStdExp(m_traces[i]->GetExp(k));
                             exp0d->SetAdjacentElementExp(j,exp1d);
                             break;
                         }
@@ -515,7 +506,7 @@ namespace Nektar
 
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
-            SpatialDomains::VertexComponentSharedPtr vert;
+            SpatialDomains::PointGeomSharedPtr vert;
 
             cnt = 0;
             // list Dirichlet boundaries first
@@ -540,7 +531,7 @@ namespace Nektar
                         for (k = 0; k < bregionIt->second->size(); k++)
                         {
                             if ((vert = boost::dynamic_pointer_cast
-                                    <SpatialDomains::VertexComponent>(
+                                    <SpatialDomains::PointGeom>(
                                          (*bregionIt->second)[k])))
                             {
                                 locPointExp
@@ -577,7 +568,7 @@ namespace Nektar
                             for (k = 0; k < bregionIt->second->size(); k++)
                             {
                                 if((vert = boost::dynamic_pointer_cast
-                                        <SpatialDomains::VertexComponent>(
+                                        <SpatialDomains::PointGeom>(
                                             (*bregionIt->second)[k])))
                                 {
                                     locPointExp
@@ -641,7 +632,7 @@ namespace Nektar
 
             MultiRegions::ExpList0DSharedPtr         locPointExp;
             SpatialDomains::BoundaryConditionShPtr   locBCond;
-            SpatialDomains::VertexComponentSharedPtr vert;
+            SpatialDomains::PointGeomSharedPtr vert;
             
             // Find the first boundary condition in the current domain
             int firstcondition = subdomain*2;
@@ -673,7 +664,7 @@ namespace Nektar
                         for(k = 0; k < bregionIt->second->size(); k++)
                         {
                             if ((vert = boost::dynamic_pointer_cast
-                                    <SpatialDomains::VertexComponent>
+                                    <SpatialDomains::PointGeom>
                                         ((*bregionIt->second)[k])))
                             {
                                 locPointExp =
@@ -710,7 +701,7 @@ namespace Nektar
                             for (k = 0; k < bregionIt->second->size(); k++)
                             {
                                 if((vert = boost::dynamic_pointer_cast<
-                                        SpatialDomains::VertexComponent>(
+                                        SpatialDomains::PointGeom>(
                                             (*bregionIt->second)[k])))
                                 {
                                     locPointExp =
@@ -799,6 +790,11 @@ namespace Nektar
                   Array<OneD,       NekDouble> &Fwd,
                   Array<OneD,       NekDouble> &Bwd)
         {
+            // Expansion casts
+            LocalRegions::Expansion1DSharedPtr exp1D;
+            LocalRegions::Expansion1DSharedPtr exp1DFirst;
+            LocalRegions::Expansion1DSharedPtr exp1DLast;
+
             // Counter variables
             int  n, p, i;
             
@@ -807,9 +803,6 @@ namespace Nektar
             
             // Number of solution points of each element
             int nLocalSolutionPts;
-            
-            // Number of coeffients points of each element
-            int nLocalCoeffPts;
             
             // Initial index of each element
             int phys_offset;
@@ -830,9 +823,17 @@ namespace Nektar
             Vmath::Zero(Fwd.num_elements(), Fwd, 1);
             Vmath::Zero(Bwd.num_elements(), Bwd, 1);
 			
+            if (nElements > 0)
+            {
+                exp1DFirst = LocalRegions::Expansion1D::FromStdExp((*m_exp)[0]);
+                exp1DLast  = LocalRegions::Expansion1D::FromStdExp((*m_exp)[nElements - 1]);
+            }
+
             // Loop on the elements
             for (n = 0; n < nElements; ++n)
             {
+                exp1D = LocalRegions::Expansion1D::FromStdExp((*m_exp)[n]);
+
                 // Set the offset of each element
                 phys_offset = GetPhys_Offset(n);
                 
@@ -845,8 +846,8 @@ namespace Nektar
                 for (p = 0; p < 2; ++p)
                 {
                     vertex_coord       = 0.0;
-                    interface_offset   = (*m_exp)[n]->GetGeom1D()->GetVid(p);
-                    subdomain_offset   = (*m_exp)[0]->GetGeom1D()->GetVid(0);
+                    interface_offset   = exp1D->GetGeom1D()->GetVid(p);
+                    subdomain_offset   = exp1DFirst->GetGeom1D()->GetVid(0);
                     interface_offset  -= subdomain_offset;
                     
                     for (i = 0;
@@ -900,8 +901,8 @@ namespace Nektar
             // Fill boundary conditions into the missing elements
             int id1         = 0;
             int id2         = 0;
-            int firstVertex = (*m_exp)[0]->GetGeom1D()->GetVid(0);
-            int lastVertex  = (*m_exp)[nElements-1]->GetGeom1D()->GetVid(1);
+            int firstVertex = exp1DFirst->GetGeom1D()->GetVid(0);
+            int lastVertex  = exp1DLast->GetGeom1D()->GetVid(1);
             Array<OneD, NekDouble>  processed(
                 m_bndCondExpansions.num_elements()+1, -1.0);
             
@@ -914,15 +915,13 @@ namespace Nektar
             }
             
             for (n = 0; n < m_bndCondExpansions.num_elements(); ++n)
-            {		
+            {
+                int vid = m_bndCondExpansions[n]->GetVertex()->GetVid();
                 // Check if the current boundary condition
                 // belongs to the current subdomain
-                if ((m_bndCondExpansions[n]->GetVertex()->GetVid() >=
-                        firstVertex)
-                   && (m_bndCondExpansions[n]->GetVertex()->GetVid() <=
-                       lastVertex)
-                   && (processed[n] !=
-                       m_bndCondExpansions[n]->GetVertex()->GetVid()))
+                if ((vid >= firstVertex)
+                   && (vid <= lastVertex)
+                   && (processed[n] != vid))
                 {
                     if ((m_bndConditions[n]->GetBoundaryConditionType() ==
                         SpatialDomains::eDirichlet) ||
@@ -933,24 +932,17 @@ namespace Nektar
                         (m_bndConditions[n]->GetBoundaryConditionType() ==
                          SpatialDomains::eMerging))
                     {
-                        if (m_bndCondExpansions[n]->GetVertex()->GetVid() ==
-                           lastVertex)
+                        if (vid == lastVertex)
                         {
-                            id1            = 0; //GetCoeff_Offset(n)+1;
-                            id2            =
-                                m_bndCondExpansions[n]->GetVertex()->GetVid()
-                                - subdomain_offset;
-                            Bwd[id2]       =
-                                m_bndCondExpansions[n]->GetCoeff(id1);
-                            processed[n+1] =
-                                m_bndCondExpansions[n]->GetVertex()->GetVid();
+                            id1        = 0; //GetCoeff_Offset(n)+1;
+                            id2        = vid - subdomain_offset;
+                            Bwd[id2]   = m_bndCondExpansions[n]->GetCoeff(id1);
+                            processed[n+1] = vid;
                         }
                         else
                         {
                             id1        = 0; //GetCoeff_Offset(n);
-                            id2        =
-                                m_bndCondExpansions[n]->GetVertex()->GetVid()
-                                - subdomain_offset;
+                            id2        = vid - subdomain_offset;
                             Fwd[id2]   = m_bndCondExpansions[n]->GetCoeff(id1);
                         }
                         
@@ -1338,16 +1330,18 @@ namespace Nektar
             // setup map of all global ids along boundary
             for (cnt = n = 0; n < m_bndCondExpansions.num_elements(); ++n)
             {
-                Vid =  m_bndCondExpansions[n]->GetGeom()->GetVid();
+                Vid =  m_bndCondExpansions[n]->GetVertex()->GetVid();
                 VertGID[Vid] = cnt++;
             }
 
             // Loop over elements and find verts that match;
-            for (cnt = n = 0; n < GetExpSize(); ++n)
+            LocalRegions::ExpansionSharedPtr exp;
+            for(cnt = n = 0; n < GetExpSize(); ++n)
             {
-                for (i = 0; i < (*m_exp)[n]->GetNverts(); ++i)
+                exp = (*m_exp)[n];
+                for(i = 0; i < exp->GetNverts(); ++i)
                 {
-                    id = (*m_exp)[n]->GetGeom()->GetVid(i);
+                    id = exp->GetGeom()->GetVid(i);
 
                     if (VertGID.count(id) > 0)
                     {

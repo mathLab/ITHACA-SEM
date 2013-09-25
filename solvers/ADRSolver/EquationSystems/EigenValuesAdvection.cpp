@@ -75,7 +75,7 @@ namespace Nektar
     void EigenValuesAdvection::v_DoSolve()
     {
         int nvariables = 1;
-		int i,dofs;
+        int i,dofs = GetNcoeffs();
 		//bool UseContCoeffs = false;
 		
 		Array<OneD, Array<OneD, NekDouble> > inarray(nvariables);

@@ -180,10 +180,15 @@ namespace Nektar
                             z*pSrc.x-x*pSrc.z, x*pSrc.y-y*pSrc.x);
             }
 
-            /// Generate a %SpatialDomains::VertexComponent for this node.
-            SpatialDomains::VertexComponentSharedPtr GetGeom(int coordDim)
+            /// Generate a %SpatialDomains::PointGeom for this node.
+            SpatialDomains::PointGeomSharedPtr GetGeom(int coordDim)
             {
-                m_geom = MemoryManager<SpatialDomains::VertexComponent>::
+                if (m_geom)
+                {
+                    return m_geom;
+                }
+                
+                m_geom = MemoryManager<SpatialDomains::PointGeom>::
                     AllocateSharedPtr(coordDim,id,x,y,z);
                 return m_geom;
             }
@@ -198,7 +203,7 @@ namespace Nektar
             double z;
             
         private:
-            SpatialDomains::VertexComponentSharedPtr m_geom;
+            SpatialDomains::PointGeomSharedPtr m_geom;
         };
         /// Shared pointer to a Node.
         typedef boost::shared_ptr<Node> NodeSharedPtr;
@@ -275,7 +280,7 @@ namespace Nektar
             SpatialDomains::SegGeomSharedPtr GetGeom(int coordDim)
             {
                 // Create edge vertices.
-                SpatialDomains::VertexComponentSharedPtr p[2];
+                SpatialDomains::PointGeomSharedPtr p[2];
                 p[0] = n1->GetGeom(coordDim);
                 p[1] = n2->GetGeom(coordDim);
                 
@@ -786,7 +791,7 @@ namespace Nektar
                     break;
                 case 2:
                     {
-                        NekDouble cross;
+                        NekDouble cross = 0.0;
                         
                         // caclulate sign based on cross product of vertices
                         if(edge[0]->n1 == edge[1]->n1)

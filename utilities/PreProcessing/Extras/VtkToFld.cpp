@@ -2,6 +2,7 @@
 #include <LibUtilities/Communication/Comm.h>
 #include <SpatialDomains/MeshGraph2D.h>
 #include <MultiRegions/ExpList2D.h>
+#include <LocalRegions/Expansion2D.h>
 
 #include <vtkPolyDataReader.h>
 #include <vtkPolyData.h>
@@ -142,7 +143,7 @@ int main(int argc, char* argv[])
                 coeff_idx = Exp->GetCoeff_Offset(i) + e->GetVertexMap(j);
 
                 // Get the coordinates of the vertex
-                SpatialDomains::VertexComponentSharedPtr vert = e->GetGeom2D()->GetVertex(j);
+                SpatialDomains::PointGeomSharedPtr vert = LocalRegions::Expansion2D::FromStdExp(e)->GetGeom2D()->GetVertex(j);
                 vert->GetCoords(x,y,z);
 
                 // Look up the vertex in the VertexSet

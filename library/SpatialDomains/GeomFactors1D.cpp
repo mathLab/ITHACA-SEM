@@ -63,36 +63,26 @@ namespace Nektar
          * @param   coordim     Dimension of coordinate system.
          * @param   Coords      ?
          * @param   tbasis      Basis for derivatives
-         * @param   SetUpQuadratureMetrics  ?
-         * @param   SetUpLaplacianMetrics   ?
          */
         GeomFactors1D::GeomFactors1D(const GeomType gtype,
                         const int coordim,
                         const Array<OneD, const StdRegions
                                             ::StdExpansion1DSharedPtr> &Coords,
                         const Array<OneD, const LibUtilities::BasisSharedPtr>
-                                            &tbasis,
-                        const bool QuadMetrics,
-                        const bool LaplMetrics):
-            GeomFactors(gtype,1,coordim,QuadMetrics,LaplMetrics)
+                                            &tbasis) :
+            GeomFactors(gtype, 1, coordim)
         {
             // Perform sanity checks
-            ASSERTL1((coordim == 1)||(coordim == 2)||(coordim == 3),
+            ASSERTL1(coordim == 1 || coordim == 2 || coordim == 3,
                      "The coordinate dimension should be equal to one, two or "
                      "three for one-dimensional elements");
-            ASSERTL1(tbasis.num_elements()==1,
+            ASSERTL1(tbasis.num_elements() == 1,
                      "tbasis should be an array of size one");
-            ASSERTL1(LaplMetrics?QuadMetrics:true,
-                     "SetUpQuadratureMetrics should be true if "
-                     "SetUpLaplacianMetrics is true");
 
             for (int i = 0; i < m_coordDim; ++i)
             {
                 m_coords[i] = Coords[i];
             }
-
-            // Get the shape of the expansion
-            LibUtilities::ShapeType shape = Coords[0]->DetShapeType();
 
             // The quadrature points of the mapping
             // (as specified in Coords)
@@ -147,18 +137,6 @@ namespace Nektar
             // 1. The (determinant of the) jacobian and the differentation
             // metrics
             SetUpJacGmat1D();
-
-            // 2. the jacobian muliplied with the quadrature weights
-            if(QuadMetrics)
-            {
-                SetUpQuadratureMetrics(shape,tbasis);
-            }
-            // 3. A combination of the metrics above that allows
-            //    for more efficient evaluation of the laplacian
-            if(LaplMetrics)
-            {
-                SetUpLaplacianMetrics (shape,tbasis);
-            }
         }
 
 

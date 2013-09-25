@@ -1186,7 +1186,7 @@ namespace Nektar
             case eUnsteadyNavierStokes:
             {
                 
-                LibUtilities::TimeIntegrationMethod intMethod;
+                LibUtilities::TimeIntegrationMethod intMethod = LibUtilities::SIZE_TimeIntegrationMethod;
                 std::string TimeIntStr = m_session->GetSolverInfo("TIMEINTEGRATIONMETHOD");
                 int i;
                 for(i = 0; i < (int) LibUtilities::SIZE_TimeIntegrationMethod; ++i)

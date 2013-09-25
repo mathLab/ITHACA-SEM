@@ -36,7 +36,7 @@
 #ifndef NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
 #define NEKTAR_SPATIALDOMAINS_MESHCOMPONENTS_H
 
-#include <SpatialDomains/Geometry.h>
+#include <SpatialDomains/Geometry0D.h>
 #include <LibUtilities/LinearAlgebra/NekPoint.hpp>
 #include <SpatialDomains/SpatialDomainsDeclspec.h>
 #include <set>
@@ -82,59 +82,6 @@ namespace Nektar
 
         };
 
-        // --------------------------------------------------------------------
-        /// Vertex Component
-        class VertexComponent: public Geometry, public NekPoint <NekDouble>
-        {
-        public:
-                SPATIAL_DOMAINS_EXPORT VertexComponent(const int coordim, const int vid,
-                    NekDouble x, NekDouble y, NekDouble z);
-                SPATIAL_DOMAINS_EXPORT VertexComponent(){}
-                SPATIAL_DOMAINS_EXPORT ~VertexComponent();
-                SPATIAL_DOMAINS_EXPORT VertexComponent(const VertexComponent &T);
-
-                SPATIAL_DOMAINS_EXPORT void AddElmtConnected(int gvo_id, int locid);
-                SPATIAL_DOMAINS_EXPORT int  NumElmtConnected() const;
-                SPATIAL_DOMAINS_EXPORT bool IsElmtConnected(int gvo_id, int locid) const;
-                SPATIAL_DOMAINS_EXPORT void GetCoords(NekDouble &x, NekDouble &y, NekDouble &z);
-                SPATIAL_DOMAINS_EXPORT void GetCoords(Array<OneD,NekDouble> &coords);
-                SPATIAL_DOMAINS_EXPORT void UpdatePosition(NekDouble x, NekDouble y, NekDouble z);
-
-
-                inline int GetCoordim() const
-                {
-                    return m_coordim;
-                }
-
-                inline int GetVid() const
-                {
-                    return m_vid;
-                }
-
-                inline void SetVid(const int vid)
-                {
-                    m_vid = vid;
-                }
-
-                // Math routines
-                SPATIAL_DOMAINS_EXPORT void   Mult (VertexComponent& a, VertexComponent& b);
-                SPATIAL_DOMAINS_EXPORT void   Add  (VertexComponent& a, VertexComponent& b);
-                SPATIAL_DOMAINS_EXPORT void   Sub  (VertexComponent& a, VertexComponent& b);
-                SPATIAL_DOMAINS_EXPORT NekDouble dist  (VertexComponent& a);
-                SPATIAL_DOMAINS_EXPORT NekDouble dot   (VertexComponent& a);
-
-                SPATIAL_DOMAINS_EXPORT friend bool operator == (const VertexComponent &x, const VertexComponent &y);
-                SPATIAL_DOMAINS_EXPORT friend bool operator == (const VertexComponent &x, const VertexComponent *y);
-                SPATIAL_DOMAINS_EXPORT friend bool operator == (const VertexComponent *x, const VertexComponent &y);
-                SPATIAL_DOMAINS_EXPORT friend bool operator != (const VertexComponent &x, const VertexComponent &y);
-                SPATIAL_DOMAINS_EXPORT friend bool operator != (const VertexComponent &x, const VertexComponent *y);
-                SPATIAL_DOMAINS_EXPORT friend bool operator != (const VertexComponent *x, const VertexComponent &y);
-
-            protected:
-                int m_vid;
-                int m_coordim;
-                std::list<CompToElmt> m_elmtMap;
-        };
 
         // -----------------------------------------------------------------------
         // WireFrame
@@ -161,11 +108,6 @@ namespace Nektar
         protected:
         private:
         };
-
-        typedef boost::shared_ptr< VertexComponent >  VertexComponentSharedPtr;
-        typedef std::set< VertexComponentSharedPtr >  VertexComponentSet;
-        typedef std::vector< VertexComponentSharedPtr >  VertexComponentVector;
-        typedef std::vector< VertexComponentSharedPtr >::iterator  VertexComponentVectorIter;
 
     }; //end of namespace
 }; //end of namespace

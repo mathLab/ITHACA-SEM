@@ -59,7 +59,7 @@ namespace Nektar
         m_session->LoadParameter("TimeStep", m_timestep,   0.01);  
         // generating the HOPBC map and setting dimensionality
         // for following calculation (CurlCurl, tec.)
-        GenerateHOPBCMap();
+        //GenerateHOPBCMap();
     }
     
     Extrapolate::~Extrapolate()
@@ -87,8 +87,9 @@ namespace Nektar
         Array<OneD, NekDouble> tmp;
         Array<OneD, NekDouble> accelerationTerm;
         
+		m_pressureCalls++;
         int  n,cnt;
-        int  nint    = min(m_pressureCalls++,m_intSteps);
+        int  nint    = min(m_pressureCalls,m_intSteps);
         int  nlevels = m_pressureHBCs.num_elements();
 	
         int acc_order = 0;
@@ -217,7 +218,7 @@ namespace Nektar
             CurlCurl(Velocity,Q,j);
             
             // Mounting advection component into the high-order condition
-            for(int i = 0; m_bnd_dim; i++)
+            for(int i = 0; i < m_bnd_dim; i++)
             {
                 MountHOPBCs(m_HBCdata[j].m_ptsInElmt,kinvis,Q[i],Advection[i]);
             }
@@ -298,7 +299,7 @@ namespace Nektar
                 Array<OneD,NekDouble> Dummy(m_pressureBCsMaxPts);
 
                 m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[0],Vel[1],Vx);
-                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vel[2],Uy);  
+                m_elmt->PhysDeriv(MultiRegions::DirCartesianMap[1],Vel[0],Uy);  
 		
                 Vmath::Vsub(m_HBCdata[j].m_ptsInElmt,Vx,1,Uy,1,Dummy,1);
                 

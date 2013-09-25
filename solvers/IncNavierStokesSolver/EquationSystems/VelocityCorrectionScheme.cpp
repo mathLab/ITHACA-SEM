@@ -156,9 +156,12 @@ namespace Nektar
         }
         else // Standard velocity correction scheme
         {
+			m_extrapolation->SubSteppingTimeIntegration(intMethod);
             // set explicit time-intregration class operators
             m_integrationOps.DefineOdeRhs(&VelocityCorrectionScheme::EvaluateAdvection_SetPressureBCs, this);
         }
+		
+		m_extrapolation->GenerateHOPBCMap();
         
         // set implicit time-intregration class operators
         m_integrationOps.DefineImplicitSolve(&VelocityCorrectionScheme::SolveUnsteadyStokesSystem,this);

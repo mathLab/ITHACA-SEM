@@ -105,6 +105,8 @@ namespace Nektar
             AdvectionTermSharedPtr advObject);
         
         virtual ~Extrapolate();
+		
+		void GenerateHOPBCMap();
 
         inline void SubSteppingTimeIntegration(
             int intMethod);
@@ -243,8 +245,6 @@ namespace Nektar
 
     private:
         static std::string def;
-        
-        void GenerateHOPBCMap();
     };
 
     /**

@@ -259,7 +259,6 @@ namespace Nektar
                 m_velocity,
                 m_advObject);
         }
-		
     }
 
     /**

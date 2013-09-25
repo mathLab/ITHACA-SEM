@@ -109,7 +109,8 @@ namespace Nektar
                 ASSERTL0(0,"Integration method not suitable: Options include BackwardEuler or BDFImplicitOrder1");
                 break;
         }
-            
+		
+		m_intSteps = m_subStepIntegrationScheme->GetIntegrationSteps();
         // set explicit time-integration class operators
         m_subStepIntegrationOps.DefineOdeRhs(&SubSteppingExtrapolate::SubStepAdvection, this);
         m_subStepIntegrationOps.DefineProjection(&SubSteppingExtrapolate::SubStepProjection, this);
